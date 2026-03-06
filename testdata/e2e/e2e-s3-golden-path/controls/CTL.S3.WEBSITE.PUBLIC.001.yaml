@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.S3.WEBSITE.PUBLIC.001
+name: No Public Website Hosting with Public Read
+description: >
+  S3 buckets with static website hosting enabled must not also have
+  public read access. Website hosting combined with public read
+  serves content directly to the internet.
+domain: exposure
+exposure:
+  type: website_public
+  principal_scope: public
+severity: critical
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket has static website hosting enabled with public read access.
+    Content is served directly to the internet via the S3 website endpoint.
+  action: >
+    If public hosting is not intended, disable static website hosting
+    and remove public read access. If hosting is intended, move content
+    behind CloudFront with an Origin Access Control (OAC) and remove
+    direct public access from the bucket.
+  example: |
+    {
+      "storage": {
+        "website": {
+          "enabled": true
+        },
+        "visibility": {
+          "public_read": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.website.enabled
+      op: eq
+      value: true
+    - field: properties.storage.visibility.public_read
+      op: eq
+      value: true

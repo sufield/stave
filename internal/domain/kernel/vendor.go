@@ -19,13 +19,11 @@ func (v Vendor) String() string {
 }
 
 // ParseVendor validates and normalizes a vendor value.
+// Any non-empty string is accepted; the value is lowercased and trimmed.
 func ParseVendor(s string) (Vendor, error) {
 	v := Vendor(strings.ToLower(strings.TrimSpace(s)))
 	if v == "" {
 		return "", fmt.Errorf("vendor name cannot be empty")
-	}
-	if v != VendorAWS {
-		return "", fmt.Errorf("unsupported vendor: %q", s)
 	}
 	return v, nil
 }

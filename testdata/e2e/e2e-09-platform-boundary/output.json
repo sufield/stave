@@ -1,0 +1,45 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "66d65263fc9d1fae00c254731b9fc1bb171a5331bf11cbb858452d524061ed50",
+        "2026-01-11T00:00:00Z.json": "a2e64325e8666b66c46786b82fd2a09ce3b94e58b698826783a5152ddbb01927"
+      },
+      "overall": "8ab9597cd94ddd7397ae1a775bb7870b261e77559ff547cd7ea8efa24bcc9114"
+    },
+    "pack_hash": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f"
+  },
+  "summary": {
+    "resources_evaluated": 0,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "skipped": [
+    {
+      "control_id": "CTL.TP.PLATFORM.001",
+      "control_name": "Third-Party Platform Boundaries",
+      "reason": "type not evaluatable: authorization_boundary"
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-09-platform-boundary/controls",
+      "observations": "testdata/e2e/e2e-09-platform-boundary/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
+  }
+}

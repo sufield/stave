@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.S3.WRITE.SCOPE.001
+name: S3 Signed Upload Must Bind To Exact Object Key
+description: >
+  Signed upload policies must restrict write permission to a single exact
+  object key. Prefix-wide permissions (e.g., starts-with $key files/)
+  enable arbitrary overwrite and cross-tenant tampering.
+domain: exposure
+exposure:
+  type: write_scope_prefix
+  principal_scope: public
+severity: high
+scope_tags: [aws, s3]
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Signed upload policy uses prefix-wide write permissions instead of
+    binding to an exact object key. This enables arbitrary overwrite and
+    cross-tenant tampering.
+  action: >
+    Change the signed upload policy to use an exact key condition
+    (eq instead of starts-with) that binds each upload to a specific
+    object path. Generate unique object keys server-side.
+  example: |
+    {
+      "s3_upload": {
+        "operation": "write",
+        "allowed_key_mode": "exact"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: type
+      op: eq
+      value: "s3_upload_policy"
+    - field: properties.s3_upload.operation
+      op: eq
+      value: "write"
+    - field: properties.s3_upload.allowed_key_mode
+      op: eq
+      value: "prefix"

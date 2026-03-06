@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (6ms)
+Done:    evaluate controls against observations (11ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-mapbox-202725/controls --observations testdata/e2e/e2e-h1-mapbox-202725/observations
 

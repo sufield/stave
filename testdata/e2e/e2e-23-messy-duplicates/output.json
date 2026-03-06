@@ -1,0 +1,74 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "078d1cfb9786d903c9779e89ed38d5cb61124d8ebd7f07c0adf4b31d6a7bc540",
+        "2026-01-11T00:00:00Z.json": "2b5a3346b00a760e5915518b905f55bcf1342d6ac308e196ccdc54f9745b58aa"
+      },
+      "overall": "60855722c6aa93480afaf34ca4a9fdbed33ce3cb03804dad81b5746d92fd6f68"
+    },
+    "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.ID.KUBE.001",
+      "control_name": "Cluster-Admin Binding Detected",
+      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
+      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "asset_vendor": "kubernetes",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "binds_to_cluster_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Control violation detected.",
+        "action": "Review the unsafe configuration and remediate."
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-23-messy-duplicates/controls",
+      "observations": "testdata/e2e/e2e-23-messy-duplicates/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-23-messy-duplicates/controls/CTL.ID.KUBE.001.yaml"
+      ]
+    }
+  }
+}

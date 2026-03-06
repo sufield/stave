@@ -104,11 +104,17 @@ ci: tidy check build
 golden: build
 	@echo "Updating golden files..."
 	@for case in testdata/e2e/e2e-*; do \
+		if [ -f "$$case/command.txt" ]; then continue; fi; \
+		extra=""; \
+		if [ -f "$$case/args.txt" ]; then \
+			extra="$$(sed "s|\$$CASE_DIR|$$case|g" "$$case/args.txt" | tr '\n' ' ')"; \
+		fi; \
 		./stave apply \
 			--controls "$$case/controls" \
 			--observations "$$case/observations" \
 			--max-unsafe 168h \
 			--now 2026-01-11T00:00:00Z \
+			$$extra \
 			> "$$case/output.json" 2> "$$case/err.txt" || true; \
 		if [ -f "$$case/output.json" ] && jq -e '.summary' "$$case/output.json" > /dev/null 2>&1; then \
 			jq -S '.summary' "$$case/output.json" > "$$case/expected.summary.json"; \

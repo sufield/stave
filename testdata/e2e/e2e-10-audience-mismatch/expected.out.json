@@ -1,0 +1,45 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "fb135951341146e005650db2e31b27e47ebdd8f6708fa688f650646c7440b5c2",
+        "2026-01-11T00:00:00Z.json": "febda3381d7816a294e94bd382ff520dcfa1c8edbe7f880a7fab4f5eab42d853"
+      },
+      "overall": "398b93b0739848c22cea803552d87b28a352d58d369409dda542f5e573459a9b"
+    },
+    "pack_hash": "d35f1f4104337cec0597a5b8e3754d4da764d8dfb89525de9cff277d9e7d9eff"
+  },
+  "summary": {
+    "resources_evaluated": 0,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "skipped": [
+    {
+      "control_id": "CTL.PROC.MAIL.001",
+      "control_name": "Process Audience Verification",
+      "reason": "type not evaluatable: audience_boundary"
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-10-audience-mismatch/controls",
+      "observations": "testdata/e2e/e2e-10-audience-mismatch/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
+  }
+}

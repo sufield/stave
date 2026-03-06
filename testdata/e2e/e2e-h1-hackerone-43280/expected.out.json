@@ -1,0 +1,38 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2015-01-18T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2015-01-11T00:00:00Z.json": "cc103f7dcccc004f88ce262b30f4518660e843b730468dfcf795079104977227",
+        "2015-01-18T00:00:00Z.json": "4e6a916973e0be26f8ca1c377de266edfe86a20ce688ae358ac9539265fc5dc5"
+      },
+      "overall": "74e8df0b7f7a40aa6651859b6e9a4cd869909a383a2f168630f662b6ff75ca1d"
+    },
+    "pack_hash": "7fecf54b24c5d39cbc5fde80d979fb9e165bb2a765cfa650dabd241dc5f30042"
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-hackerone-43280/controls",
+      "observations": "testdata/e2e/e2e-h1-hackerone-43280/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
+  }
+}

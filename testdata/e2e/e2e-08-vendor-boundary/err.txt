@@ -1,14 +1,5 @@
-Plan Summary
-------------
-Ready: false
-Controls: testdata/e2e/e2e-08-vendor-boundary/controls
-Observations: testdata/e2e/e2e-08-vendor-boundary/observations
-Checked: 0 controls, 0 snapshots, 0 resource observations
+Running: evaluate controls against observations...
+Done:    evaluate controls against observations (19ms)
+Evaluation complete. No violations found.
 
-Issues:
-  [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest
-    Fix: install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-  [FAIL] OBSERVATION_LOAD_FAILED: Check that the observations directory exists and contains valid JSON files
-    Fix: Check that the observations directory exists and contains valid JSON files
-
-Next: stave plan
+Need help? Run 'stave bug-report' to create a diagnostic bundle.

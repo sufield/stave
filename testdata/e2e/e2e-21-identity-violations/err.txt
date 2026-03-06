@@ -1,22 +1,12 @@
-Plan Summary
-------------
-Ready: false
-Controls: testdata/e2e/e2e-21-identity-violations/controls
-Observations: testdata/e2e/e2e-21-identity-violations/observations
-Checked: 0 controls, 0 snapshots, 0 resource observations
+WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-21-identity-violations/controls/CTL.ID.KUBE.001.yaml, stave/testdata/e2e/e2e-21-identity-violations/controls/CTL.ID.KUBE.003.yaml). This run may not reflect committed state.
+Running: evaluate controls against observations...
+warning: snapshot[0] has unsupported source_type "kubernetes.rbac", proceeding anyway
+warning: snapshot[1] has unsupported source_type "kubernetes.rbac", proceeding anyway
+Done:    evaluate controls against observations (21ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-21-identity-violations/controls --observations testdata/e2e/e2e-21-identity-violations/observations
 
-Issues:
-  [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest
-    Fix: install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-  [FAIL] SCHEMA_VIOLATION: Fix control to match DSL schema
-    Fix: Fix control to match DSL schema
-  [FAIL] SCHEMA_VIOLATION: Fix control to match DSL schema
-    Fix: Fix control to match DSL schema
-  [FAIL] SCHEMA_VIOLATION: Fix control to match DSL schema
-    Fix: Fix control to match DSL schema
-  [FAIL] SCHEMA_VIOLATION: Set /type to one of the allowed values.
-    Fix: Set /type to one of the allowed values.
-  [FAIL] OBSERVATION_LOAD_FAILED: Check that the observations directory exists and contains valid JSON files
-    Fix: Check that the observations directory exists and contains valid JSON files
-
-Next: stave plan
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-21-identity-violations/controls --observations testdata/e2e/e2e-21-identity-violations/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

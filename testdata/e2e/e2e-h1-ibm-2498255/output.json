@@ -1,0 +1,76 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2024-05-17T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2024-05-09T00:00:00Z.json": "841bc7f10777c68626a7b1c7b145a3e6491d7814e308526a879e5fd414a47377",
+        "2024-05-17T00:00:00Z.json": "7f3476f52663013797165060486a326119e0093be99fe44c958c2b1f7434a979"
+      },
+      "overall": "106faccc809a4521f167eecbee399fdc535bab04a9e03477137e54c6de7f4d92"
+    },
+    "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e"
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
+      "asset_id": "apptio-endpoint-ref-1",
+      "asset_type": "s3_bucket_reference",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2024-05-09T00:00:00Z",
+        "last_seen_unsafe_at": "2024-05-17T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "s3_ref.bucket_exists",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "s3_ref.bucket_owned",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2024-05-09T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-ibm-2498255/controls",
+      "observations": "testdata/e2e/e2e-h1-ibm-2498255/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
+  }
+}

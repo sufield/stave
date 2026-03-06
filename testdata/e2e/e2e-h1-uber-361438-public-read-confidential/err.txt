@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (4ms)
+Done:    evaluate controls against observations (20ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-uber-361438-public-read-confidential/controls --observations testdata/e2e/e2e-h1-uber-361438-public-read-confidential/observations
 

@@ -1,1 +1,1 @@
-schema validation failed
+UNSUPPORTED_SCHEMA_VERSION

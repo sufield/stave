@@ -1,0 +1,38 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2022-12-10T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2022-12-03T00:00:00Z.json": "08648a93f7823d658a55b4241820b3636b7574b9bcb54b2e6262f64ff99316b6",
+        "2022-12-10T00:00:00Z.json": "4b1fe1a4fe36e0573895b947dd3076551571e42e9e354e7bc66b61d7f59620fb"
+      },
+      "overall": "a5770b19483f52d0e73d7486283f208d6a0371df93212c00047b7e9a350a9f1c"
+    },
+    "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e"
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-brave-1791558/controls",
+      "observations": "testdata/e2e/e2e-h1-brave-1791558/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
+  }
+}

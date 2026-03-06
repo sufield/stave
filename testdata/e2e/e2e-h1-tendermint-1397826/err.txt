@@ -1,8 +1,11 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (1ms)
-[ERR] Command failed (INTERNAL_ERROR)
-Description: evaluation runner: snapshot[0] missing generated_by.source_type (use --allow-unknown-input to skip)
-Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input
-More info: run 'stave docs search allow-unknown-input source_type'
-Fix: Try `stave apply --controls ./controls --observations ./observations --allow-unknown-input`. Check the command arguments and rerun with -v or -vv for additional context.
-More info: run 'stave docs search allow-unknown-input source_type'
+warning: snapshot[0] has no generated_by.source_type, proceeding anyway
+warning: snapshot[1] has no generated_by.source_type, proceeding anyway
+Done:    evaluate controls against observations (10ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-h1-tendermint-1397826/controls --observations testdata/e2e/e2e-h1-tendermint-1397826/observations
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-tendermint-1397826/controls --observations testdata/e2e/e2e-h1-tendermint-1397826/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

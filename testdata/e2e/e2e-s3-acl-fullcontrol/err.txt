@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (4ms)
+Done:    evaluate controls against observations (11ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-acl-fullcontrol/controls --observations testdata/e2e/e2e-s3-acl-fullcontrol/observations
 
