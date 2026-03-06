@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+  attestations: write
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+
+      - name: Extract version
+        id: version
+        run: |
+          FILE_VERSION=$(cat VERSION)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+            if [[ "$TAG_VERSION" != "$FILE_VERSION" ]]; then
+              echo "::error::Tag version ($TAG_VERSION) does not match VERSION file ($FILE_VERSION)"
+              exit 1
+            fi
+            echo "version=v${FILE_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=v${FILE_VERSION}-dev.$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run tests
+        run: make sync-schemas && go test -v -race ./...
+
+      - name: Cross-compile
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p dist
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            bin="stave_${VERSION}_${os}_${arch}"
+            if [ "$os" = "windows" ]; then
+              bin="${bin}.exe"
+            fi
+            echo "Building ${bin}"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
+              go build -trimpath \
+              -ldflags "-s -w -buildid= -X github.com/sufield/stave/cmd/stave/cmd.Version=${VERSION}" \
+              -o "dist/${bin}" \
+              ./cmd/stave
+          done
+
+      - name: Create archives
+        working-directory: dist
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for bin in stave_${VERSION}_*; do
+            case "$bin" in
+              *.exe)
+                archive="${bin%.exe}.zip"
+                zip "$archive" "$bin"
+                ;;
+              *)
+                tar -czf "${bin}.tar.gz" "$bin"
+                ;;
+            esac
+          done
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action/download-syft@28d71544de8eaf1b958d335707167c5f783590ad # v0.22.2
+
+      - name: Run Syft
+        run: syft dir:. --output spdx-json=dist/sbom.spdx.json
+
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum *.tar.gz *.zip sbom.spdx.json > SHA256SUMS
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+
+      - name: Sign checksums
+        working-directory: dist
+        run: cosign sign-blob --yes --bundle SHA256SUMS.sigstore.json SHA256SUMS
+
+      - name: Sign SBOM
+        working-directory: dist
+        run: cosign sign-blob --yes --bundle sbom.spdx.json.sigstore.json sbom.spdx.json
+
+      - name: Validate SBOM
+        run: syft validate dist/sbom.spdx.json
+
+      - name: Attest provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/SHA256SUMS
+            dist/SHA256SUMS.sigstore.json
+            dist/sbom.spdx.json
+            dist/sbom.spdx.json.sigstore.json

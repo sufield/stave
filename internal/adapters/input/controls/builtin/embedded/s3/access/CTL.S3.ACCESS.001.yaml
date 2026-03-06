@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESS.001
+name: No Unauthorized Cross-Account Access
+description: >
+  S3 bucket policies must not grant access to external AWS accounts.
+  `allowed_accounts` contains trusted external AWS account IDs (12-digit).
+  Access from accounts outside this allowlist is unsafe.
+domain: exposure
+exposure:
+  type: cross_account_access
+  principal_scope: cross_account
+severity: high
+compliance:
+  cis_aws_v1.4.0: "1.16"
+  pci_dss_v3.2.1: "7.1"
+  soc2: "CC6.3"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  # External AWS account IDs (12-digit) allowed to access this bucket.
+  # Empty list means no external account access is allowed.
+  allowed_accounts: []
+remediation:
+  description: >
+    Bucket policy grants access to external AWS accounts outside your
+    organization. Cross-account access may be unintended.
+  action: >
+    Review bucket policy Principal elements for external account IDs.
+    Remove statements granting access to accounts not in your organization.
+    Use aws:PrincipalOrgID condition to restrict access to your AWS Organization.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "has_external_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.external_account_ids
+      op: not_subset_of_field
+      value: params.allowed_accounts

@@ -1,0 +1,1 @@
+--ignore $CASE_DIR/ignore.yaml

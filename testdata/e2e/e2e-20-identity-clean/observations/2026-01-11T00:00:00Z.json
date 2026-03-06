@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "kubernetes.rbac",
+    "tool": "stave-extract-k8s-rbac"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "k8s:ClusterRole/developer-role",
+      "type": "k8s.clusterrole",
+      "vendor": "kubernetes",
+      "properties": {
+        "name": "developer-role",
+        "is_cluster_scoped": true,
+        "rule_count": 2,
+        "has_wildcard_verbs": false,
+        "has_wildcard_resources": false,
+        "has_wildcard_apigroups": false,
+        "is_cluster_admin": false,
+        "all_verbs": ["get", "list", "watch"],
+        "all_resources": ["pods", "services"]
+      },
+      "source": { "file": "rbac.yaml", "line": 1 }
+    },
+    {
+      "id": "k8s:ClusterRoleBinding/developer-binding",
+      "type": "k8s.clusterrolebinding",
+      "vendor": "kubernetes",
+      "properties": {
+        "name": "developer-binding",
+        "is_cluster_scoped": true,
+        "subject_count": 1,
+        "subjects": [{ "kind": "Group", "name": "developers" }],
+        "subject_kinds": ["Group"],
+        "has_dangerous_subject": false,
+        "binds_to_cluster_admin": false,
+        "binds_to_system_authenticated": false,
+        "binds_to_system_unauthenticated": false,
+        "binds_to_system_masters": false,
+        "role_ref": { "kind": "ClusterRole", "name": "developer-role" }
+      },
+      "source": { "file": "rbac.yaml", "line": 15 }
+    }
+  ]
+}

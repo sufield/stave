@@ -1,0 +1,69 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "4d08254b48a57414a7e3faf95ed1322b369d4aae33f95582e1c82cd5772e83d2",
+        "2026-01-11T00:00:00Z.json": "fcaff4a0f29ce5c4da05c8c487d21b04dab03ba72020ea853cb5dfe41621d129"
+      },
+      "overall": "03ff368693e9ccb152ac0425b90c891bae78eaaecc617f36be801d8d09d45b67"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.ACCESS.003",
+      "control_name": "No External Write Access",
+      "control_description": "S3 buckets must not grant write or delete permissions to external AWS accounts. Cross-account read access may be acceptable for analytics or auditing, but write access from external accounts creates data integrity and supply chain risks.\n",
+      "asset_id": "shared-upload-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access.has_external_write",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-external-write/invariants",
+      "observations": "testdata/e2e/e2e-s3-external-write/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

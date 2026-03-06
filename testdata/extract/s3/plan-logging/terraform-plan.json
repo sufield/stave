@@ -1,0 +1,52 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.logged_with_prefix",
+          "type": "aws_s3_bucket",
+          "name": "logged_with_prefix",
+          "values": {
+            "bucket": "logged-with-prefix"
+          }
+        },
+        {
+          "address": "aws_s3_bucket_logging.logged_with_prefix",
+          "type": "aws_s3_bucket_logging",
+          "name": "logged_with_prefix",
+          "values": {
+            "bucket": "logged-with-prefix",
+            "target_bucket": "central-logs-bucket",
+            "target_prefix": "s3-access-logs/"
+          }
+        },
+        {
+          "address": "aws_s3_bucket.logged_no_prefix",
+          "type": "aws_s3_bucket",
+          "name": "logged_no_prefix",
+          "values": {
+            "bucket": "logged-no-prefix"
+          }
+        },
+        {
+          "address": "aws_s3_bucket_logging.logged_no_prefix",
+          "type": "aws_s3_bucket_logging",
+          "name": "logged_no_prefix",
+          "values": {
+            "bucket": "logged-no-prefix",
+            "target_bucket": "central-logs-bucket"
+          }
+        },
+        {
+          "address": "aws_s3_bucket.no_logging",
+          "type": "aws_s3_bucket",
+          "name": "no_logging",
+          "values": {
+            "bucket": "no-logging-bucket"
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": []
+}

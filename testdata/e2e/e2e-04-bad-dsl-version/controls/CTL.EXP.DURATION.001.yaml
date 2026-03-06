@@ -1,0 +1,12 @@
+dsl_version: inv.v99.0
+id: CTL.EXP.DURATION.001
+name: Unsafe Exposure Duration Bound
+description: Bad DSL version
+type: unsafe_duration
+params:
+  max_unsafe_duration: "168h"
+unsafe_predicate:
+  any:
+    - field: "properties.public"
+      op: "eq"
+      value: true

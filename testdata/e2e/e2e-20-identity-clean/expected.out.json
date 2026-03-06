@@ -1,0 +1,31 @@
+{
+  "findings": [],
+  "kind": "evaluation",
+  "run": {
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "30977e1c41dada6d7f609ca71eb30bb2307a52fc323da5882c3fac7d2eedada5",
+        "2026-01-11T00:00:00Z.json": "f8f9e4f43fc35b60c404022ebd8b3efe159dff87965000294a2391353584111f"
+      },
+      "overall": "a2742225a36e576b0ab2bf49d46401f2f9524218d4d3b0d55e674a1adbe4811c"
+    },
+    "max_unsafe": "168h0m0s",
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "snapshots": 2,
+    "tool_version": "0.0.1"
+  },
+  "schema_version": "out.v0.1",
+  "skipped": [
+    {
+      "control_id": "CTL.ID.KUBE.001",
+      "control_name": "Cluster-Admin Binding Detected",
+      "reason": "type not evaluatable: k8s_rbac_security"
+    }
+  ],
+  "summary": {
+    "attack_surface": 0,
+    "resources_evaluated": 0,
+    "violations": 0
+  }
+}

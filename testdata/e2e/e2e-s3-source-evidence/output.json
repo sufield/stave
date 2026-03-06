@@ -1,0 +1,164 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "f8f78d018ccaa6e5a9351e0f39f1f738628d35cb2fb3eda4b5df28b066a1fbd8",
+        "2026-01-11T00:00:00Z.json": "56b3653854116381c8234e3ae3cfcd7256647e8c340b72b8a98864a29c12fd42"
+      },
+      "overall": "13312059f4e1912d0a8f8a5e0da2ab519006448be72b87173bff23012e6d7e57"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 2
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant public read access (Principal=*) to PHI data.",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 0,
+        "misconfigurations": [
+          {
+            "property": "storage.visibility.public_read_via_policy",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "policy"
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource is publicly exposed beyond threshold.",
+        "action": "Remove public access, confirm via new snapshot."
+      },
+      "fix_plan": {
+        "id": "fix-69f1197e1528d255",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via ACL",
+      "control_description": "S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers for PHI data.",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 0,
+        "misconfigurations": [
+          {
+            "property": "storage.visibility.public_read_via_acl",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "acl"
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource is publicly exposed beyond threshold.",
+        "action": "Remove public access, confirm via new snapshot."
+      },
+      "fix_plan": {
+        "id": "fix-74a98b703ae2cf01",
+        "target": {
+          "asset_id": "exposed-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-source-evidence/invariants",
+      "observations": "testdata/e2e/e2e-s3-source-evidence/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

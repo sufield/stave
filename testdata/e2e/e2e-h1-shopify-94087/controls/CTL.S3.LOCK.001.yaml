@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOCK.001
+name: Compliance-Tagged Buckets Must Have Object Lock Enabled
+description: >
+  S3 buckets tagged with any compliance framework (soc2, gdpr, hipaa,
+  pci-dss, etc.) must have S3 Object Lock enabled. Object Lock provides
+  WORM (Write Once Read Many) protection, preventing objects from being
+  deleted or overwritten for a specified retention period. Regulatory
+  frameworks require immutable storage for audit logs, compliance
+  records, and protected data.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.compliance
+      op: present
+      value: true
+    - field: properties.storage.object_lock.enabled
+      op: eq
+      value: false

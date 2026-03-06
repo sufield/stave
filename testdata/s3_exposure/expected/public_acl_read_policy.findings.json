@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "id": "CTL.S3.PUBLIC.ACL.READ.001",
+      "bucket": "acl-readable-bucket",
+      "exposure_type": "public_acl_read",
+      "principal_scope": "public",
+      "actions": [
+        "s3:GetBucketAcl"
+      ],
+      "evidence_path": [
+        "bucket.policy.statements[0].effect",
+        "bucket.policy.statements[0].principal",
+        "bucket.policy.statements[0].actions"
+      ]
+    }
+  ]
+}

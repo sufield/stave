@@ -1,0 +1,20 @@
+dsl_version: ctrl.v1
+id: CTL.EXP.STATE.001
+name: Sensitive Data Public Exposure
+description: |
+  Detects resources containing sensitive data exposed to public access.
+  DISC breaches show highly predictable patterns (entropy ≈ 0.0),
+  indicating systematic exposure rather than random events.
+  Pattern classification: structured (high confidence)
+type: unsafe_state
+severity: critical
+params:
+  max_unsafe_duration: "0h"
+unsafe_predicate:
+  all:
+    - field: "properties.public"
+      op: "eq"
+      value: true
+    - field: "properties.contains_pii"
+      op: "eq"
+      value: true

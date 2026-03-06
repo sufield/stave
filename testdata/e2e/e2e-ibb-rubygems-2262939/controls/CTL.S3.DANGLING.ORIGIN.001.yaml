@@ -1,0 +1,21 @@
+dsl_version: ctrl.v1
+id: CTL.S3.DANGLING.ORIGIN.001
+name: CDN S3 Origins Must Not Be Dangling
+description: >
+  CloudFront distributions must not reference S3 origins that do not exist.
+  A missing/unclaimed origin bucket enables takeover and CDN content poisoning.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+  - cloudfront
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: "distribution"
+    - field: properties.cdn.origins_has_dangling_s3
+      op: eq
+      value: true

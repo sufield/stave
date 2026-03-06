@@ -1,0 +1,20 @@
+dsl_version: ctrl.v1
+id: CTL.S3.VERSION.001
+name: Versioning Required
+description: >
+  S3 buckets must have versioning enabled to protect against
+  accidental deletion and enable recovery from negligent operations.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.versioning.enabled
+      op: eq
+      value: false

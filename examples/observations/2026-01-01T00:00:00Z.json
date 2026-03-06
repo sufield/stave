@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.6.3",
+    "provider": "hashicorp/aws",
+    "provider_version": "5.31.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:aws:s3:bucket:public-bucket",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "public": true,
+        "acl": "public-read"
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 42
+      }
+    },
+    {
+      "id": "res:aws:s3:bucket:private-bucket",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "public": false,
+        "acl": "private"
+      },
+      "source": {
+        "file": "infra/main.tf",
+        "line": 58
+      }
+    }
+  ]
+}

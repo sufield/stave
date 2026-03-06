@@ -1,0 +1,18 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public Read via Bucket Policy
+description: S3 bucket policies must not grant public read access (Principal=*) to
+  PHI data.
+domain: storage
+scope_tags:
+- aws
+- s3
+version: ctrl.v1
+type: unsafe_duration
+params:
+  max_unsafe_duration: 0h
+unsafe_predicate:
+  any:
+  - field: properties.storage.visibility.public_read_via_policy
+    op: eq
+    value: true

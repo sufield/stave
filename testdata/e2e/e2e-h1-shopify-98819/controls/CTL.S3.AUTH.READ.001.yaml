@@ -1,0 +1,18 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AUTH.READ.001
+name: No Authenticated-Users Read Access
+description: >
+  S3 buckets must not grant read access to all authenticated AWS users.
+  AuthenticatedUsers scope means any AWS account can read objects,
+  which is nearly as dangerous as fully public access.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.authenticated_users_read
+      op: eq
+      value: true

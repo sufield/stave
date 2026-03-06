@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2015-10-23T00:00:00Z",
+  "resources": [
+    {
+      "id": "shopify-merchant-assets",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "shopify-merchant-assets",
+          "id": "aws:s3:::shopify-merchant-assets",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "tags": {
+            "tenant_mode": "shared",
+            "tenant_prefix": "shops/{shop_id}/",
+            "data-classification": "merchant_pii"
+          }
+        }
+      }
+    }
+  ],
+  "identities": [
+    {
+      "id": "appsigner:s3:merchant-cdn-signer",
+      "type": "app_signer",
+      "vendor": "aws",
+      "properties": {
+        "owner": "platform-cdn-team",
+        "purpose": "signs_downloads;enforce_prefix=false;allow_traversal=true",
+        "grants": {
+          "has_wildcard": false
+        },
+        "scope": {
+          "distinct_systems": 1,
+          "distinct_resource_groups": 1
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "Buckets": [
+    {
+      "Name": "acme-secure-records",
+      "CreationDate": "2023-06-15T10:30:00Z"
+    }
+  ],
+  "Owner": {
+    "DisplayName": "acme-healthcare",
+    "ID": "abc123def456"
+  }
+}

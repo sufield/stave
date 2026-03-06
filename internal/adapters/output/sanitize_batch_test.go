@@ -1,0 +1,200 @@
+package output_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"strings"
+	"testing"
+
+	"github.com/sufield/stave/internal/adapters/output"
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/sanitize"
+)
+
+func TestSanitizeFindings_Redaction(t *testing.T) {
+	r := sanitize.New()
+
+	src := &asset.SourceRef{File: "/home/user/ctl/public.yaml", Line: 10}
+	stmts := []string{"AllowPublicRead", "AllowPublicList"}
+	grantees := []string{"http://acs.amazonaws.com/groups/global/AllUsers"}
+
+	findings := []remediation.Finding{{
+		Finding: evaluation.Finding{
+			ControlID: "CTL.S3.PUBLIC.001",
+			AssetID:   "my-phi-bucket",
+			AssetType: kernel.TypeStorageBucket,
+			Source:    src,
+			Evidence: evaluation.Evidence{
+				Misconfigurations: []policy.Misconfiguration{
+					{Property: "properties.storage.visibility.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+				},
+				SourceEvidence: &evaluation.SourceEvidence{
+					PolicyPublicStatements: stmts,
+					ACLPublicGrantees:      grantees,
+				},
+				WhyNow: "Unsafe for 24h, threshold is 0h",
+			},
+		},
+	}}
+
+	sanitized := output.SanitizeFindings(r, findings)
+
+	s := sanitized[0]
+	if s.AssetID == "my-phi-bucket" {
+		t.Error("AssetID not sanitized")
+	}
+	if string(s.AssetID) != "SANITIZED_"+crypto.ShortToken("my-phi-bucket") {
+		t.Errorf("AssetID = %q", s.AssetID)
+	}
+	if s.Source.File != "public.yaml" {
+		t.Errorf("Source.File = %q, want public.yaml", s.Source.File)
+	}
+	if s.Evidence.Misconfigurations[0].ActualValue != "[SANITIZED]" {
+		t.Errorf("Misconfigurations[0].ActualValue = %v, want [SANITIZED]", s.Evidence.Misconfigurations[0].ActualValue)
+	}
+	if s.Evidence.Misconfigurations[0].Property != "properties.storage.visibility.public_read" {
+		t.Errorf("Misconfigurations[0].Property changed")
+	}
+	for i, v := range s.Evidence.SourceEvidence.PolicyPublicStatements {
+		if v != "[SANITIZED]" {
+			t.Errorf("PolicyPublicStatements[%d] = %q, want [SANITIZED]", i, v)
+		}
+	}
+	for i, v := range s.Evidence.SourceEvidence.ACLPublicGrantees {
+		if v != "[SANITIZED]" {
+			t.Errorf("ACLPublicGrantees[%d] = %q, want [SANITIZED]", i, v)
+		}
+	}
+	if s.Evidence.WhyNow != findings[0].Evidence.WhyNow {
+		t.Errorf("WhyNow changed: %q", s.Evidence.WhyNow)
+	}
+}
+
+func TestSanitizeSkippedAssets(t *testing.T) {
+	r := sanitize.New()
+	resources := []asset.SkippedAsset{
+		{ID: "my-bucket", Pattern: "*", Reason: "ignored"},
+	}
+	sanitized := output.SanitizeSkippedAssets(r, resources)
+	if sanitized[0].ID == "my-bucket" {
+		t.Error("SkippedAsset.ID not sanitized")
+	}
+	if sanitized[0].Reason != "ignored" {
+		t.Error("SkippedAsset.Reason changed")
+	}
+}
+
+func TestSanitizeInputHashKeys(t *testing.T) {
+	r := sanitize.New()
+	hashes := &evaluation.InputHashes{
+		Overall: "abc123",
+		Files: map[evaluation.FilePath]kernel.Digest{
+			"/home/user/obs/snap1.json": "hash1",
+			"/home/user/obs/snap2.json": "hash2",
+		},
+	}
+	sanitized := output.SanitizeInputHashKeys(r, hashes)
+	if sanitized.Overall != "abc123" {
+		t.Error("Overall hash changed")
+	}
+	if _, ok := sanitized.Files["snap1.json"]; !ok {
+		t.Error("Expected basename key snap1.json")
+	}
+	if _, ok := sanitized.Files["snap2.json"]; !ok {
+		t.Error("Expected basename key snap2.json")
+	}
+}
+
+func TestSanitizeInputHashKeys_Nil(t *testing.T) {
+	r := sanitize.New()
+	if got := output.SanitizeInputHashKeys(r, nil); got != nil {
+		t.Error("Expected nil for nil input")
+	}
+}
+
+func TestSanitizeReport_Nil(t *testing.T) {
+	r := sanitize.New()
+	if got := output.SanitizeReport(r, nil); got != nil {
+		t.Error("Expected nil for nil input")
+	}
+}
+
+var sensitivePatterns = []string{
+	"my-phi-bucket",
+	"my-bucket",
+	"arn:aws:s3:::my-phi-bucket",
+	"AllowPublicRead",
+	"http://acs.amazonaws.com/",
+	"/home/user/",
+}
+
+func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
+	r := sanitize.New()
+	src := &asset.SourceRef{File: "/home/user/ctl/public.yaml", Line: 10}
+	f := remediation.Finding{
+		Finding: evaluation.Finding{
+			ControlID: "CTL.S3.PUBLIC.001",
+			AssetID:   "my-phi-bucket",
+			AssetType: kernel.TypeStorageBucket,
+			Source:    src,
+			Evidence: evaluation.Evidence{
+				Misconfigurations: []policy.Misconfiguration{
+					{Property: "properties.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+				},
+				SourceEvidence: &evaluation.SourceEvidence{
+					PolicyPublicStatements: []string{"AllowPublicRead"},
+					ACLPublicGrantees:      []string{"http://acs.amazonaws.com/groups/global/AllUsers"},
+				},
+			},
+		},
+	}
+
+	sanitized := output.SanitizeFindings(r, []remediation.Finding{f})
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	if err := enc.Encode(sanitized[0]); err != nil {
+		t.Fatalf("json encode: %v", err)
+	}
+	out := buf.String()
+	for _, pattern := range sensitivePatterns {
+		if strings.Contains(out, pattern) {
+			t.Errorf("sanitized JSON output contains sensitive pattern %q:\n%s", pattern, out)
+		}
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &decoded); err != nil {
+		t.Errorf("sanitized output is not valid JSON: %v", err)
+	}
+}
+
+func TestRedactedDiagnosticJSON_NoSensitivePatterns(t *testing.T) {
+	r := sanitize.New()
+	report := &diagnosis.Report{
+		Entries: []diagnosis.Entry{
+			{
+				Case:     "violation_evidence",
+				Signal:   "Continuous unsafe streak",
+				Evidence: "resource=my-phi-bucket control=CTL.S3.PUBLIC.001 duration=24h",
+				Action:   "Check snapshot coverage",
+				AssetID:  "my-phi-bucket",
+			},
+		},
+	}
+
+	sanitized := output.SanitizeReport(r, report)
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	if err := enc.Encode(sanitized); err != nil {
+		t.Fatalf("json encode: %v", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "my-phi-bucket") {
+		t.Errorf("sanitized diagnostic JSON contains bucket name:\n%s", out)
+	}
+}

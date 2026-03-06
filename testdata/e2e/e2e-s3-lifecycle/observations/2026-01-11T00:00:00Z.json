@@ -1,0 +1,115 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.9.8"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "retention-no-rules",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "retention-no-rules",
+          "tags": { "data-retention": "6-year" },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
+          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
+          "versioning": { "enabled": false, "mfa_delete_enabled": false },
+          "logging": { "enabled": false, "target_bucket": "", "target_prefix": "" },
+          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
+          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
+          "lifecycle": { "rules_configured": false, "rule_count": 0, "has_expiration": false, "has_transition": false, "min_expiration_days": 0, "has_noncurrent_version_expiration": false },
+          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+        }
+      }
+    },
+    {
+      "id": "phi-short-expiry",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "phi-short-expiry",
+          "tags": { "data-classification": "phi" },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
+          "encryption": { "at_rest_enabled": true, "algorithm": "aws:kms", "kms_key_id": "arn:aws:kms:us-east-1:111:key/abc", "in_transit_enforced": true },
+          "versioning": { "enabled": true, "mfa_delete_enabled": false },
+          "logging": { "enabled": true, "target_bucket": "log-bucket", "target_prefix": "phi-logs/" },
+          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
+          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
+          "lifecycle": { "rules_configured": true, "rule_count": 1, "has_expiration": true, "has_transition": false, "min_expiration_days": 90, "has_noncurrent_version_expiration": false },
+          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+        }
+      }
+    },
+    {
+      "id": "retention-with-rules",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "retention-with-rules",
+          "tags": { "data-retention": "6-year" },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
+          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
+          "versioning": { "enabled": true, "mfa_delete_enabled": false },
+          "logging": { "enabled": true, "target_bucket": "log-bucket", "target_prefix": "" },
+          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
+          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
+          "lifecycle": { "rules_configured": true, "rule_count": 2, "has_expiration": true, "has_transition": true, "min_expiration_days": 2555, "has_noncurrent_version_expiration": false },
+          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+        }
+      }
+    },
+    {
+      "id": "phi-long-expiry",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "phi-long-expiry",
+          "tags": { "data-classification": "phi" },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
+          "encryption": { "at_rest_enabled": true, "algorithm": "aws:kms", "kms_key_id": "arn:aws:kms:us-east-1:111:key/def", "in_transit_enforced": true },
+          "versioning": { "enabled": true, "mfa_delete_enabled": false },
+          "logging": { "enabled": true, "target_bucket": "log-bucket", "target_prefix": "phi-logs/" },
+          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
+          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
+          "lifecycle": { "rules_configured": true, "rule_count": 1, "has_expiration": true, "has_transition": false, "min_expiration_days": 2555, "has_noncurrent_version_expiration": false },
+          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+        }
+      }
+    },
+    {
+      "id": "no-tags-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "no-tags-bucket",
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
+          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
+          "versioning": { "enabled": false, "mfa_delete_enabled": false },
+          "logging": { "enabled": false, "target_bucket": "", "target_prefix": "" },
+          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
+          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
+          "lifecycle": { "rules_configured": false, "rule_count": 0, "has_expiration": false, "has_transition": false, "min_expiration_days": 0, "has_noncurrent_version_expiration": false },
+          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+        }
+      }
+    }
+  ]
+}

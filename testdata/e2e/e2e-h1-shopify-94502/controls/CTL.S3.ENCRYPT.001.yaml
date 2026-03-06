@@ -1,0 +1,20 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.001
+name: Encryption at Rest Required
+description: >
+  S3 buckets must have server-side encryption enabled.
+  Unencrypted storage is the top audit finding in regulated industries.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false

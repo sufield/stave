@@ -1,0 +1,47 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "acl-readable-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "acl-readable-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_acl_readable": true
+          },
+          "controls": {
+            "public_access_fully_blocked": false
+          }
+        }
+      }
+    },
+    {
+      "id": "safe-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "safe-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_acl_readable": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true
+          }
+        }
+      }
+    }
+  ]
+}

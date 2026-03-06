@@ -1,0 +1,23 @@
+dsl_version: ctrl.v1
+id: CTL.S3.GOVERNANCE.001
+name: Data Classification Tag Required
+description: >
+  S3 buckets must have a data-classification tag. Without this tag,
+  tag-conditional invariants for PHI, PII, confidential data, backup
+  integrity, and compliance retention cannot evaluate — the bucket
+  silently passes all sensitivity-gated checks regardless of actual
+  content.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.data-classification
+      op: missing
+      value: true

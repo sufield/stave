@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "kubernetes.rbac",
+    "tool": "stave-extract-k8s-rbac"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "k8s:ClusterRoleBinding/admin-binding",
+      "type": "k8s.clusterrolebinding",
+      "vendor": "kubernetes",
+      "properties": {
+        "name": "admin-binding",
+        "is_cluster_scoped": true,
+        "binds_to_cluster_admin": true
+      }
+    }
+  ]
+}

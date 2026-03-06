@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACL.FULLCONTROL.001
+name: No FULL_CONTROL ACL Grants to Public
+description: >
+  S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or
+  AuthenticatedUsers. FULL_CONTROL is the worst-case ACL
+  misconfiguration — the grantee can read, write, and delete
+  objects and modify the ACL itself.
+domain: exposure
+exposure:
+  type: acl_full_control
+  principal_scope: public
+severity: critical
+scope_tags: [aws, s3]
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers.
+    This grants complete control including object read/write/delete
+    and ACL modification.
+  action: >
+    Replace the bucket ACL with "BucketOwnerFullControl" or remove
+    the FULL_CONTROL grant to public groups. Enable S3 Public Access
+    Block with BlockPublicAcls and IgnorePublicAcls set to true.
+  example: |
+    {
+      "storage": {
+        "acl": {
+          "has_full_control_public": false,
+          "has_full_control_authenticated": false
+        }
+      }
+    }
+unsafe_predicate_alias: s3.has_full_control_grant

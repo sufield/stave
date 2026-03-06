@@ -1,0 +1,16 @@
+{
+  "TagSet": [
+    {
+      "Key": "DataDomain",
+      "Value": "health"
+    },
+    {
+      "Key": "containsPHI",
+      "Value": "true"
+    },
+    {
+      "Key": "Environment",
+      "Value": "production"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2015-11-15T00:00:00Z",
+  "resources": [
+    {
+      "id": "shopify-internal-assets",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "shopify-internal-assets",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "public_write_via_acl": true,
+            "authenticated_users_read": true,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

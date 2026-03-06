@@ -1,0 +1,17 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.003
+name: No Public Write Access
+description: >
+  S3 buckets must not allow public write or delete access.
+  Public write enables data injection, ransomware, and policy takeover.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.public_write
+      op: eq
+      value: true

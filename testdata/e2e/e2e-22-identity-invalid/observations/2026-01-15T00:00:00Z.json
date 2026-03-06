@@ -1,0 +1,9 @@
+{
+  "schema_version": "obs.v999.invalid",
+  "generated_by": {
+    "source_type": "kubernetes.rbac",
+    "tool": "stave-extract-k8s-rbac"
+  },
+  "captured_at": "2026-01-15T00:00:00Z",
+  "resources": []
+}

@@ -1,0 +1,21 @@
+{
+  "buckets": [
+    {
+      "name": "deletable-bucket",
+      "exists": true,
+      "external_reference": false,
+      "website": { "enabled": false },
+      "policy": {
+        "statements": [
+          {
+            "effect": "Allow",
+            "principal": "*",
+            "actions": ["s3:DeleteObject"],
+            "resources": ["arn:aws:s3:::deletable-bucket/*"]
+          }
+        ]
+      },
+      "acl": { "grants": [] }
+    }
+  ]
+}

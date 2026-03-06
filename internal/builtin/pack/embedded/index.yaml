@@ -1,0 +1,152 @@
+version: v1
+packs:
+  s3/public-exposure:
+    description: S3 public exposure baseline pack
+    controls:
+      - CTL.S3.PUBLIC.001
+      - CTL.S3.PUBLIC.003
+      - CTL.S3.ACL.WRITE.001
+  s3:
+    description: Default S3 built-in pack for MVP
+    controls:
+      - CTL.S3.PUBLIC.001
+      - CTL.S3.PUBLIC.002
+      - CTL.S3.PUBLIC.003
+      - CTL.S3.PUBLIC.004
+      - CTL.S3.PUBLIC.005
+      - CTL.S3.PUBLIC.006
+      - CTL.S3.PUBLIC.007
+      - CTL.S3.PUBLIC.008
+      - CTL.S3.PUBLIC.LIST.001
+      - CTL.S3.PUBLIC.LIST.002
+      - CTL.S3.ACL.WRITE.001
+controls:
+  CTL.S3.ACCESS.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/access/CTL.S3.ACCESS.001.yaml
+    summary: No Unauthorized Cross-Account Access
+  CTL.S3.ACCESS.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/access/CTL.S3.ACCESS.002.yaml
+    summary: No Wildcard Action Policies
+  CTL.S3.ACCESS.003:
+    path: internal/adapters/input/controls/builtin/embedded/s3/access/CTL.S3.ACCESS.003.yaml
+    summary: No External Write Access
+  CTL.S3.AUTH.READ.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/access/CTL.S3.AUTH.READ.001.yaml
+    summary: No Authenticated-Users Read Access
+  CTL.S3.AUTH.WRITE.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/access/CTL.S3.AUTH.WRITE.001.yaml
+    summary: No Authenticated-Users Write Access
+  CTL.S3.ACL.ESCALATION.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/acl/CTL.S3.ACL.ESCALATION.001.yaml
+    summary: No Public ACL Modification
+  CTL.S3.ACL.FULLCONTROL.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/acl/CTL.S3.ACL.FULLCONTROL.001.yaml
+    summary: No FULL_CONTROL ACL Grants to Public
+  CTL.S3.ACL.RECON.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/acl/CTL.S3.ACL.RECON.001.yaml
+    summary: No Public ACL Readability
+  CTL.S3.REPO.ARTIFACT.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/artifacts/CTL.S3.REPO.ARTIFACT.001.yaml
+    summary: Public Buckets Must Not Expose VCS Artifacts
+  CTL.S3.ENCRYPT.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/encrypt/CTL.S3.ENCRYPT.001.yaml
+    summary: Encryption at Rest Required
+  CTL.S3.ENCRYPT.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/encrypt/CTL.S3.ENCRYPT.002.yaml
+    summary: Transport Encryption Required
+  CTL.S3.ENCRYPT.003:
+    path: internal/adapters/input/controls/builtin/embedded/s3/encrypt/CTL.S3.ENCRYPT.003.yaml
+    summary: PHI Buckets Must Use SSE-KMS with Customer-Managed Key
+  CTL.S3.ENCRYPT.004:
+    path: internal/adapters/input/controls/builtin/embedded/s3/encrypt/CTL.S3.ENCRYPT.004.yaml
+    summary: Sensitive Data Requires KMS Encryption
+  CTL.S3.GOVERNANCE.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/governance/CTL.S3.GOVERNANCE.001.yaml
+    summary: Data Classification Tag Required
+  CTL.S3.LIFECYCLE.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/lifecycle/CTL.S3.LIFECYCLE.001.yaml
+    summary: Retention-Tagged Buckets Must Have Lifecycle Rules
+  CTL.S3.LIFECYCLE.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/lifecycle/CTL.S3.LIFECYCLE.002.yaml
+    summary: PHI Buckets Must Not Expire Data Before Minimum Retention
+  CTL.S3.LOCK.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/lock/CTL.S3.LOCK.001.yaml
+    summary: Compliance-Tagged Buckets Must Have Object Lock Enabled
+  CTL.S3.LOCK.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/lock/CTL.S3.LOCK.002.yaml
+    summary: PHI Buckets Must Use COMPLIANCE Mode Object Lock
+  CTL.S3.LOCK.003:
+    path: internal/adapters/input/controls/builtin/embedded/s3/lock/CTL.S3.LOCK.003.yaml
+    summary: PHI Object Lock Retention Must Meet Minimum Period
+  CTL.S3.LOG.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/logging/CTL.S3.LOG.001.yaml
+    summary: Access Logging Required
+  CTL.S3.CONTROLS.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/misc/CTL.S3.CONTROLS.001.yaml
+    summary: Public Access Block Must Be Enabled
+  CTL.S3.INCOMPLETE.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/misc/CTL.S3.INCOMPLETE.001.yaml
+    summary: Complete Data Required for Safety Assessment
+  CTL.S3.NETWORK.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/network/CTL.S3.NETWORK.001.yaml
+    summary: Public-Principal Policies Must Have Network Conditions
+  CTL.S3.ACL.WRITE.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.ACL.WRITE.001.yaml
+    summary: No Public Write via ACL
+  CTL.S3.PUBLIC.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.001.yaml
+    summary: No Public S3 Bucket Read
+  CTL.S3.PUBLIC.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.002.yaml
+    summary: No Public S3 Buckets With Sensitive Data
+  CTL.S3.PUBLIC.003:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.003.yaml
+    summary: No Public Write Access
+  CTL.S3.PUBLIC.004:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.004.yaml
+    summary: No Public Read via ACL
+  CTL.S3.PUBLIC.005:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.005.yaml
+    summary: No Latent Public Read Exposure
+  CTL.S3.PUBLIC.006:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.006.yaml
+    summary: No Latent Public Bucket Listing
+  CTL.S3.PUBLIC.007:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.007.yaml
+    summary: No Public Read via Policy
+  CTL.S3.PUBLIC.008:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.008.yaml
+    summary: No Public List via Policy
+  CTL.S3.PUBLIC.LIST.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.LIST.001.yaml
+    summary: No Public S3 Bucket Listing
+  CTL.S3.PUBLIC.LIST.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.LIST.002.yaml
+    summary: Anonymous S3 Listing Must Be Explicitly Intended
+  CTL.S3.PUBLIC.PREFIX.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.PUBLIC.PREFIX.001.yaml
+    summary: Protected Prefixes Must Not Be Publicly Readable
+  CTL.S3.WEBSITE.PUBLIC.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/public/CTL.S3.WEBSITE.PUBLIC.001.yaml
+    summary: No Public Website Hosting with Public Read
+  CTL.S3.BUCKET.TAKEOVER.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/takeover/CTL.S3.BUCKET.TAKEOVER.001.yaml
+    summary: Referenced S3 Buckets Must Exist And Be Owned
+  CTL.S3.DANGLING.ORIGIN.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/takeover/CTL.S3.DANGLING.ORIGIN.001.yaml
+    summary: CDN S3 Origins Must Not Be Dangling
+  CTL.S3.TENANT.ISOLATION.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/tenant/CTL.S3.TENANT.ISOLATION.001.yaml
+    summary: Shared-Bucket Tenant Isolation Must Enforce Prefix
+  CTL.S3.VERSION.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/versioning/CTL.S3.VERSION.001.yaml
+    summary: Versioning Required
+  CTL.S3.VERSION.002:
+    path: internal/adapters/input/controls/builtin/embedded/s3/versioning/CTL.S3.VERSION.002.yaml
+    summary: Backup Buckets Must Have MFA Delete Enabled
+  CTL.S3.WRITE.CONTENT.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/write_scope/CTL.S3.WRITE.CONTENT.001.yaml
+    summary: S3 Signed Upload Must Restrict Content Types
+  CTL.S3.WRITE.SCOPE.001:
+    path: internal/adapters/input/controls/builtin/embedded/s3/write_scope/CTL.S3.WRITE.SCOPE.001.yaml
+    summary: S3 Signed Upload Must Bind To Exact Object Key

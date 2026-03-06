@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stave:schema:diagnose:v1",
+  "title": "Stave Diagnose Output Schema v1",
+  "description": "Schema for Stave diagnose JSON output. Contains diagnostic cases with signals, evidence, and suggested remediation actions.",
+  "type": "object",
+  "required": ["schema_version", "report"],
+  "properties": {
+    "schema_version": {
+      "const": "diagnose.v1",
+      "title": "Schema Version",
+      "description": "Diagnose output schema version identifier."
+    },
+    "report": {
+      "type": "object",
+      "title": "Diagnostic Report",
+      "description": "The diagnostic report containing individual diagnostic cases and an evaluation summary.",
+      "required": ["diagnostics", "summary"],
+      "properties": {
+        "diagnostics": {
+          "type": "array",
+          "title": "Diagnostic Cases",
+          "description": "List of diagnostic cases identified during analysis.",
+          "items": {
+            "type": "object",
+            "title": "Diagnostic Case Entry",
+            "description": "A single diagnostic case with its signal, evidence, and recommended action.",
+            "required": ["case", "signal", "evidence", "action"],
+            "properties": {
+              "case": {
+                "type": "string",
+                "title": "Case Identifier",
+                "description": "Diagnostic case identifier (e.g., single-snapshot, missing-controls)."
+              },
+              "signal": {
+                "type": "string",
+                "title": "Signal Level",
+                "description": "Signal level indicating the diagnostic severity (e.g., warning, info, error)."
+              },
+              "evidence": {
+                "type": "string",
+                "title": "Supporting Evidence",
+                "description": "Human-readable evidence supporting this diagnostic case."
+              },
+              "action": {
+                "type": "string",
+                "title": "Recommended Action",
+                "description": "Recommended remediation action to resolve this diagnostic."
+              },
+              "command": {
+                "type": "string",
+                "title": "Suggested Command",
+                "description": "Optional suggested CLI command to help resolve this diagnostic."
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "summary": {
+          "type": "object",
+          "title": "Evaluation Context Summary",
+          "description": "Summary of the evaluation context used during diagnosis.",
+          "required": [
+            "total_snapshots",
+            "total_resources",
+            "total_controls",
+            "time_span",
+            "min_captured_at",
+            "max_captured_at",
+            "evaluation_time",
+            "max_unsafe_threshold",
+            "violations_found",
+            "attack_surface"
+          ],
+          "properties": {
+            "total_snapshots": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Total Snapshot Count",
+              "description": "Total number of observation snapshots analyzed."
+            },
+            "total_resources": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Total Resource Count",
+              "description": "Total number of unique resources across all snapshots."
+            },
+            "total_controls": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Total Control Count",
+              "description": "Total number of controls loaded for evaluation."
+            },
+            "time_span": {
+              "type": "string",
+              "title": "Observation Time Span",
+              "description": "Human-readable duration between the earliest and latest observation snapshots (e.g., 10d, 48h)."
+            },
+            "min_captured_at": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Earliest Capture Timestamp",
+              "description": "UTC timestamp (RFC 3339) of the earliest observation snapshot."
+            },
+            "max_captured_at": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Latest Capture Timestamp",
+              "description": "UTC timestamp (RFC 3339) of the latest observation snapshot."
+            },
+            "evaluation_time": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Evaluation Reference Time",
+              "description": "UTC timestamp (RFC 3339) used as the evaluation reference time."
+            },
+            "max_unsafe_threshold": {
+              "type": "string",
+              "title": "Max Unsafe Threshold",
+              "description": "Maximum unsafe duration threshold (e.g., 12h, 7d)."
+            },
+            "violations_found": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Violations Found Count",
+              "description": "Number of control violations detected."
+            },
+            "attack_surface": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Currently Unsafe Count",
+              "description": "Number of resources currently in an unsafe state."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

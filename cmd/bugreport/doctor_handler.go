@@ -1,0 +1,68 @@
+package bugreport
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/doctor"
+	staveversion "github.com/sufield/stave/internal/version"
+)
+
+var doctorFormat string
+
+func runDoctor(cmd *cobra.Command, _ []string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("resolve current directory: %w", err)
+	}
+
+	binaryPath, _ := os.Executable()
+
+	// 1. Logic: Call the internal service.
+	// Internal defaults (LookPathFn, GetenvFn, etc.) are handled by diagnostics.Run.
+	checks, hasFail := doctor.Run(doctor.Context{
+		Cwd:          cwd,
+		BinaryPath:   binaryPath,
+		StaveVersion: staveversion.Version,
+	})
+
+	// 2. Format Selection: Resolve text vs json
+	formatRaw := strings.TrimSpace(doctorFormat)
+	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
+		formatRaw = "json"
+	}
+
+	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	if err != nil {
+		return err
+	}
+
+	// 3. Presentation: Render results to the user
+	if format.IsJSON() {
+		return json.NewEncoder(cmd.OutOrStdout()).Encode(struct {
+			Ready  bool           `json:"ready"`
+			Checks []doctor.Check `json:"checks"`
+		}{
+			Ready:  !hasFail,
+			Checks: checks,
+		})
+	}
+
+	for _, c := range checks {
+		fmt.Fprintf(cmd.OutOrStdout(), "[%s] %s: %s\n", c.Status, c.Name, c.Message)
+		if c.Fix != "" {
+			fmt.Fprintf(cmd.OutOrStdout(), "      Fix: %s\n", c.Fix)
+		}
+	}
+
+	if hasFail {
+		return fmt.Errorf("doctor found required issues")
+	}
+	return nil
+}

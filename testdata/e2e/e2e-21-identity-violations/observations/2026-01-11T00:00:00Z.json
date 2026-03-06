@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "kubernetes.rbac",
+    "tool": "stave-extract-k8s-rbac"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "k8s:ClusterRole/cluster-admin",
+      "type": "k8s.clusterrole",
+      "vendor": "kubernetes",
+      "properties": {
+        "name": "cluster-admin",
+        "is_cluster_scoped": true,
+        "rule_count": 1,
+        "has_wildcard_verbs": true,
+        "has_wildcard_resources": true,
+        "has_wildcard_apigroups": true,
+        "is_cluster_admin": true,
+        "all_verbs": ["*"],
+        "all_resources": ["*"]
+      },
+      "source": { "file": "rbac.yaml", "line": 1 }
+    },
+    {
+      "id": "k8s:ClusterRoleBinding/admin-binding",
+      "type": "k8s.clusterrolebinding",
+      "vendor": "kubernetes",
+      "properties": {
+        "name": "admin-binding",
+        "is_cluster_scoped": true,
+        "subject_count": 1,
+        "subjects": [{ "kind": "User", "name": "admin@example.com" }],
+        "subject_kinds": ["User"],
+        "has_dangerous_subject": false,
+        "binds_to_cluster_admin": true,
+        "binds_to_system_authenticated": false,
+        "binds_to_system_unauthenticated": false,
+        "binds_to_system_masters": false,
+        "role_ref": { "kind": "ClusterRole", "name": "cluster-admin" }
+      },
+      "source": { "file": "rbac.yaml", "line": 15 }
+    },
+    {
+      "id": "k8s:ClusterRoleBinding/anonymous-binding",
+      "type": "k8s.clusterrolebinding",
+      "vendor": "kubernetes",
+      "properties": {
+        "name": "anonymous-binding",
+        "is_cluster_scoped": true,
+        "subject_count": 1,
+        "subjects": [{ "kind": "Group", "name": "system:unauthenticated" }],
+        "subject_kinds": ["Group"],
+        "has_dangerous_subject": true,
+        "dangerous_subjects": ["system:unauthenticated"],
+        "binds_to_cluster_admin": false,
+        "binds_to_system_authenticated": false,
+        "binds_to_system_unauthenticated": true,
+        "binds_to_system_masters": false,
+        "role_ref": { "kind": "ClusterRole", "name": "viewer" }
+      },
+      "source": { "file": "rbac.yaml", "line": 30 }
+    }
+  ]
+}

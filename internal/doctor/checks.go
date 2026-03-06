@@ -1,0 +1,162 @@
+package doctor
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
+
+func checkVersionInfo(ctx Context) Check {
+	msg := fmt.Sprintf("stave_version=%s go_version=%s os=%s arch=%s", ctx.StaveVersion, ctx.GoVersion, ctx.Goos, ctx.Goarch)
+	if ctx.BinaryPath != "" {
+		msg += fmt.Sprintf(" binary=%s", ctx.BinaryPath)
+	}
+	return Check{Name: "version-info", Status: StatusPass, Message: msg}
+}
+
+func checkOSVersion(ctx Context) Check {
+	if osVer := detectOSVersion(ctx.Goos); osVer != "" {
+		return Check{Name: "os-version", Status: StatusPass, Message: osVer}
+	}
+	return Check{}
+}
+
+func checkShell(ctx Context) Check {
+	if shell := ctx.GetenvFn("SHELL"); shell != "" {
+		return Check{Name: "shell", Status: StatusPass, Message: shell}
+	}
+	return Check{}
+}
+
+func checkCI(ctx Context) Check {
+	if ci := detectCI(ctx.GetenvFn); ci != "" {
+		return Check{Name: "ci-environment", Status: StatusPass, Message: ci}
+	}
+	return Check{}
+}
+
+func checkContainer(_ Context) Check {
+	if container := detectContainer(); container != "" {
+		return Check{Name: "container", Status: StatusPass, Message: container}
+	}
+	return Check{}
+}
+
+func checkWorkspaceWritable(ctx Context) Check {
+	if err := CheckWritableDir(ctx.Cwd); err != nil {
+		return Check{
+			Name:    "workspace-writable",
+			Status:  StatusFail,
+			Message: fmt.Sprintf("cannot write in %s (%v)", ctx.Cwd, err),
+			Fix:     "run in a writable directory or adjust permissions (chmod/chown)",
+		}
+	}
+	return Check{
+		Name:    "workspace-writable",
+		Status:  StatusPass,
+		Message: fmt.Sprintf("current directory is writable: %s", ctx.Cwd),
+	}
+}
+
+func checkGit(ctx Context) Check {
+	return checkBinary(ctx, BinaryCheckRequest{
+		BinaryName:  "git",
+		CheckName:   "git",
+		WarnMessage: "git not found; project/bootstrap workflows may be limited",
+		Fix:         "install git (https://git-scm.com/downloads)",
+		PassMessage: "git available",
+	})
+}
+
+func checkAWS(ctx Context) Check {
+	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
+	return checkBinary(ctx, BinaryCheckRequest{
+		BinaryName:  "aws",
+		CheckName:   "aws-cli",
+		WarnMessage: "aws not found; cannot collect real S3 snapshots for ingest",
+		Fix:         "install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)",
+		PassMessage: "AWS CLI available",
+	})
+}
+
+func checkJQ(ctx Context) Check {
+	return checkBinary(ctx, BinaryCheckRequest{
+		BinaryName:  "jq",
+		CheckName:   "jq",
+		WarnMessage: "jq not found; JSON filtering examples may not work",
+		Fix:         "install jq (https://jqlang.org/download/)",
+		PassMessage: "jq available",
+	})
+}
+
+func checkGraphviz(ctx Context) Check {
+	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
+	return checkBinary(ctx, BinaryCheckRequest{
+		BinaryName:  "dot",
+		CheckName:   "graphviz",
+		WarnMessage: "dot not found; graph coverage DOT output cannot be rendered to PNG",
+		Fix:         "install graphviz (https://graphviz.org/download/)",
+		PassMessage: "graphviz (dot) available",
+	})
+}
+
+func checkClipboard(ctx Context) Check {
+	switch ctx.Goos {
+	case "darwin":
+		if _, err := ctx.LookPathFn("pbcopy"); err != nil {
+			return Check{
+				Name:    "clipboard-tool",
+				Status:  StatusWarn,
+				Message: "pbcopy not found",
+				Fix:     "install/enable pbcopy to use generated files with clipboard tools",
+			}
+		}
+		return Check{Name: "clipboard-tool", Status: StatusPass, Message: "pbcopy available"}
+	case "linux":
+		_, xclipErr := ctx.LookPathFn("xclip")
+		_, wlcopyErr := ctx.LookPathFn("wl-copy")
+		if xclipErr != nil && wlcopyErr != nil {
+			return Check{
+				Name:    "clipboard-tool",
+				Status:  StatusWarn,
+				Message: "xclip/wl-copy not found",
+				Fix:     "install xclip or wl-clipboard for clipboard piping examples",
+			}
+		}
+		return Check{Name: "clipboard-tool", Status: StatusPass, Message: "clipboard tool available (xclip or wl-copy)"}
+	default:
+		return Check{Name: "clipboard-tool", Status: StatusWarn, Message: "clipboard check skipped on this OS"}
+	}
+}
+
+func checkOfflineProxyEnv(ctx Context) Check {
+	var proxySet []string
+	for _, k := range kernel.DefaultPolicy().ProxyEnvVars {
+		if strings.TrimSpace(ctx.GetenvFn(k)) != "" {
+			proxySet = append(proxySet, k)
+		}
+	}
+	if len(proxySet) > 0 {
+		return Check{
+			Name:    "offline-proxy-env",
+			Status:  StatusWarn,
+			Message: fmt.Sprintf("proxy variables set: %s", strings.Join(proxySet, ", ")),
+			Fix:     "unset proxy vars for strict offline runs, or use --require-offline to enforce",
+		}
+	}
+	return Check{Name: "offline-proxy-env", Status: StatusPass, Message: "no proxy environment variables set"}
+}
+
+func CheckWritableDir(dir string) error {
+	probe, err := os.CreateTemp(dir, ".stave-doctor-*")
+	if err != nil {
+		return err
+	}
+	name := probe.Name()
+	_ = probe.Close()
+	// #nosec G703 -- name is generated by CreateTemp under the caller-selected directory.
+	_ = os.Remove(name)
+	return nil
+}

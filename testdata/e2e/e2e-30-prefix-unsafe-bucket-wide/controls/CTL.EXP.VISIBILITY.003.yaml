@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.EXP.VISIBILITY.003
+name: Public Read Allowed Only for Approved Prefixes
+description: >
+  Public read access must be limited to explicitly approved prefixes.
+  All other prefixes are private by default.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+version: ctrl.v1
+type: prefix_exposure
+params:
+  allowed_public_prefixes:
+    - "images/"
+  protected_prefixes:
+    - "invoices/"
+unsafe_predicate:
+  any:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket

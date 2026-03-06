@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACL.ESCALATION.001
+name: No Public ACL Modification
+description: >
+  S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers.
+  WRITE_ACP permission enables attackers to modify the ACL itself,
+  granting themselves FULL_CONTROL and escalating to read, write,
+  and delete all objects.
+domain: exposure
+scope_tags: [aws, s3]
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket grants ACL modification (WRITE_ACP) to public or authenticated
+    users. An attacker can call PutBucketAcl to grant themselves
+    FULL_CONTROL, then read or modify all objects.
+  action: >
+    Remove WRITE_ACP grants from the bucket ACL and remove policy
+    statements granting s3:PutBucketAcl or s3:PutObjectAcl to public
+    principals. Enable S3 Public Access Block with BlockPublicAcls
+    set to true.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "public_acl_writable": false,
+          "authenticated_users_acl_writable": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.public_acl_writable
+      op: eq
+      value: true
+    - field: properties.storage.visibility.authenticated_users_acl_writable
+      op: eq
+      value: true

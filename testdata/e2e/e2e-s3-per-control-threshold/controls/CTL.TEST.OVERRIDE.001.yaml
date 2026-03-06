@@ -1,0 +1,17 @@
+dsl_version: ctrl.v1
+id: CTL.TEST.OVERRIDE.001
+name: Immediate Violation (0h override)
+description: Tests per-control max_unsafe_duration=0h overriding CLI default.
+domain: storage
+scope_tags:
+- aws
+- s3
+version: ctrl.v1
+type: unsafe_duration
+params:
+  max_unsafe_duration: 0h
+unsafe_predicate:
+  any:
+  - field: properties.storage.visibility.public_read
+    op: eq
+    value: true

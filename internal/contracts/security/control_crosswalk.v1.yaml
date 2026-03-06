@@ -1,0 +1,237 @@
+version: control_crosswalk.v1
+checks:
+  SC.BUILDINFO.PRESENT:
+    - framework: nist_800_53
+      control_id: SA-11
+      rationale: Build metadata supports software verification and integrity assessments.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.1
+      rationale: Dependency visibility supports secure baseline governance.
+    - framework: soc2
+      control_id: CC7.1
+      rationale: Change and component inventory evidence improves monitoring controls.
+    - framework: pci_dss_v3.2.1
+      control_id: 6.2
+      rationale: Dependency visibility supports vulnerability management requirements.
+  SC.SBOM.GENERATED:
+    - framework: nist_800_53
+      control_id: SI-2
+      rationale: SBOM evidence supports vulnerability and patch management activities.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.2
+      rationale: Secure configuration programs require documented component inventories.
+    - framework: soc2
+      control_id: CC6.7
+      rationale: Risk management requires understanding third-party software composition.
+    - framework: pci_dss_v3.2.1
+      control_id: 6.1
+      rationale: Security processes require identification of vulnerable system components.
+  SC.VULN.RESULTS:
+    - framework: nist_800_53
+      control_id: RA-5
+      rationale: Vulnerability scanning evidence maps directly to RA-5 requirements.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.3
+      rationale: Continuous vulnerability checks support CIS benchmark governance.
+    - framework: soc2
+      control_id: CC7.2
+      rationale: Monitoring controls require timely detection of vulnerabilities.
+    - framework: pci_dss_v3.2.1
+      control_id: 11.2
+      rationale: PCI requires vulnerability scanning and remediation workflows.
+  SC.BINARY.SHA256:
+    - framework: nist_800_53
+      control_id: SI-7
+      rationale: Checksum evidence supports software integrity verification controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.4
+      rationale: Integrity validation aligns with secure supply-chain expectations.
+    - framework: soc2
+      control_id: CC6.1
+      rationale: Integrity mechanisms support system protection objectives.
+    - framework: pci_dss_v3.2.1
+      control_id: 10.5
+      rationale: Integrity controls require detection of unauthorized modification.
+  SC.SIGNATURE.VERIFIED:
+    - framework: nist_800_53
+      control_id: SA-10
+      rationale: Signed artifact verification supports trusted software delivery.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.5
+      rationale: Release provenance and signature checks strengthen deployment trust.
+    - framework: soc2
+      control_id: CC6.8
+      rationale: Integrity validation of software artifacts supports secure change management.
+    - framework: pci_dss_v3.2.1
+      control_id: 6.4
+      rationale: Verified release artifacts support controlled change procedures.
+  RB.NETWORK.RUNTIME_NONE:
+    - framework: nist_800_53
+      control_id: SC-7
+      rationale: Restricting runtime network paths supports boundary protection controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 2.1
+      rationale: Network minimization aligns with CIS hardening principles.
+    - framework: soc2
+      control_id: CC6.6
+      rationale: Logical access controls include network communication restrictions.
+    - framework: pci_dss_v3.2.1
+      control_id: 1.2
+      rationale: Network segmentation and restriction controls map to PCI requirements.
+  RB.OFFLINE.ENFORCEMENT:
+    - framework: nist_800_53
+      control_id: CM-7
+      rationale: Offline enforcement supports reduced attack surface configuration baselines.
+    - framework: cis_aws_v1.4.0
+      control_id: 2.2
+      rationale: Explicit offline controls reduce unintended network exposure.
+    - framework: soc2
+      control_id: CC6.1
+      rationale: Configuration controls should enforce approved operating constraints.
+    - framework: pci_dss_v3.2.1
+      control_id: 2.2
+      rationale: Secure configuration standards require disabling unnecessary network paths.
+  RB.FS.ACCESS.DISCLOSURE:
+    - framework: nist_800_53
+      control_id: AC-6
+      rationale: Declared file access supports least-privilege review of local operations.
+    - framework: cis_aws_v1.4.0
+      control_id: 2.3
+      rationale: Explicit data-access declarations support controlled operations.
+    - framework: soc2
+      control_id: CC6.3
+      rationale: Access control evidence includes filesystem interaction boundaries.
+    - framework: pci_dss_v3.2.1
+      control_id: 7.1
+      rationale: Access restrictions require documented scope of system interactions.
+  RB.PRIVILEGE.NO_SUDO:
+    - framework: nist_800_53
+      control_id: AC-6
+      rationale: Non-privileged execution aligns with least-privilege controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 2.4
+      rationale: Privilege minimization aligns with benchmark hardening goals.
+    - framework: soc2
+      control_id: CC6.2
+      rationale: Privileged access should be limited and justified.
+    - framework: pci_dss_v3.2.1
+      control_id: 7.2
+      rationale: Privilege assignment must follow least-privilege requirements.
+  RB.IAM.S3.MINPERMS:
+    - framework: nist_800_53
+      control_id: AC-3
+      rationale: Explicit IAM action scopes support access enforcement controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.16
+      rationale: IAM least-privilege practices are core CIS benchmark expectations.
+    - framework: soc2
+      control_id: CC6.1
+      rationale: Access restrictions require documented minimum permission sets.
+    - framework: pci_dss_v3.2.1
+      control_id: 7.1
+      rationale: Access control policies must define minimum required privileges.
+  DP.CREDENTIAL.STORAGE:
+    - framework: nist_800_53
+      control_id: IA-5
+      rationale: Credential handling restrictions support authenticator management controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 1.4
+      rationale: Avoiding credential leakage supports secure operations.
+    - framework: soc2
+      control_id: CC6.1
+      rationale: Sensitive credential handling is part of logical security controls.
+    - framework: pci_dss_v3.2.1
+      control_id: 3.5
+      rationale: Sensitive authentication data must be protected from exposure.
+  DP.REDACTION.POLICY:
+    - framework: nist_800_53
+      control_id: MP-6
+      rationale: Redaction controls support media/data sanitization requirements.
+    - framework: cis_aws_v1.4.0
+      control_id: 3.1
+      rationale: Data minimization and protection controls align with secure reporting.
+    - framework: soc2
+      control_id: CC8.1
+      rationale: Confidential information protection includes output redaction controls.
+    - framework: pci_dss_v3.2.1
+      control_id: 3.3
+      rationale: Sensitive data masking/redaction supports disclosure minimization.
+  DP.TELEMETRY.DISCLOSURE:
+    - framework: nist_800_53
+      control_id: AR-4
+      rationale: Data disclosure transparency supports privacy impact requirements.
+    - framework: cis_aws_v1.4.0
+      control_id: 3.2
+      rationale: Explicit telemetry declarations reduce unapproved data egress risk.
+    - framework: soc2
+      control_id: CC2.1
+      rationale: Communication of data handling practices supports trust criteria.
+    - framework: pci_dss_v3.2.1
+      control_id: 12.1
+      rationale: Security governance requires documented data handling behavior.
+  DP.PRIVACY.MODE:
+    - framework: nist_800_53
+      control_id: PT-2
+      rationale: Privacy configuration assertions support privacy engineering controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 3.3
+      rationale: Configurable privacy safeguards align with secure operations.
+    - framework: soc2
+      control_id: P6.1
+      rationale: Privacy commitments require operational enforcement checks.
+    - framework: pci_dss_v3.2.1
+      control_id: 12.10
+      rationale: Incident and privacy posture checks support governance controls.
+  IC.BUILD.HARDENING:
+    - framework: nist_800_53
+      control_id: SI-7
+      rationale: Hardened build controls support software integrity protections.
+    - framework: cis_aws_v1.4.0
+      control_id: 2.5
+      rationale: Secure build configuration supports benchmark-driven hardening.
+    - framework: soc2
+      control_id: CC8.1
+      rationale: Change management controls include secure build standards.
+    - framework: pci_dss_v3.2.1
+      control_id: 6.5
+      rationale: Secure development requirements include hardening practices.
+  IC.AUDIT.LOGGING:
+    - framework: nist_800_53
+      control_id: AU-2
+      rationale: Audit event generation is required for accountability and traceability.
+    - framework: cis_aws_v1.4.0
+      control_id: 3.4
+      rationale: Logging controls are required for security monitoring.
+    - framework: soc2
+      control_id: CC7.2
+      rationale: Monitoring criteria require log-based detection and evidence.
+    - framework: pci_dss_v3.2.1
+      control_id: 10.2
+      rationale: Audit logs must capture critical security-relevant activity.
+  IC.CONTROL.MAPPING:
+    - framework: nist_800_53
+      control_id: CA-2
+      rationale: Assessment activities require traceability to applicable controls.
+    - framework: cis_aws_v1.4.0
+      control_id: 4.1
+      rationale: Governance reporting requires control-aligned evidence.
+    - framework: soc2
+      control_id: CC1.2
+      rationale: Control framework alignment is required for effective governance.
+    - framework: pci_dss_v3.2.1
+      control_id: 12.5
+      rationale: Security governance requires mapping operational checks to controls.
+  IC.CONTROL.MAPPING_MISSING:
+    - framework: nist_800_53
+      control_id: CA-2
+      rationale: Missing mappings indicate incomplete control assessment traceability.
+    - framework: cis_aws_v1.4.0
+      control_id: 4.1
+      rationale: Mapping gaps represent governance evidence deficiencies.
+    - framework: soc2
+      control_id: CC1.2
+      rationale: Governance controls require complete mapping coverage.
+    - framework: pci_dss_v3.2.1
+      control_id: 12.5
+      rationale: Control mapping completeness is required for audit readiness.
+

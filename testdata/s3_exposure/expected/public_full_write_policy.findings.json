@@ -1,0 +1,20 @@
+{
+  "findings": [
+    {
+      "id": "CTL.S3.PUBLIC.WRITE.001",
+      "bucket": "public-full-write-bucket",
+      "exposure_type": "public_write",
+      "principal_scope": "public",
+      "actions": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "write_scope": "full",
+      "evidence_path": [
+        "bucket.policy.statements[0].effect",
+        "bucket.policy.statements[0].principal",
+        "bucket.policy.statements[0].actions"
+      ]
+    }
+  ]
+}

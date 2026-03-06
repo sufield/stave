@@ -1,0 +1,83 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.kms_bucket",
+          "type": "aws_s3_bucket",
+          "name": "kms_bucket",
+          "values": {
+            "bucket": "kms-encrypted-bucket",
+            "arn": "arn:aws:s3:::kms-encrypted-bucket",
+            "tags": {
+              "DataDomain": "health",
+              "data-classification": "phi"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_server_side_encryption_configuration.kms_enc",
+          "type": "aws_s3_bucket_server_side_encryption_configuration",
+          "name": "kms_enc",
+          "values": {
+            "bucket": "kms-encrypted-bucket",
+            "rule": [
+              {
+                "apply_server_side_encryption_by_default": [
+                  {
+                    "sse_algorithm": "aws:kms",
+                    "kms_master_key_id": "arn:aws:kms:us-east-1:123456789012:key/abcd-1234"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.aes_bucket",
+          "type": "aws_s3_bucket",
+          "name": "aes_bucket",
+          "values": {
+            "bucket": "aes-encrypted-bucket",
+            "arn": "arn:aws:s3:::aes-encrypted-bucket",
+            "tags": {
+              "DataDomain": "health"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_server_side_encryption_configuration.aes_enc",
+          "type": "aws_s3_bucket_server_side_encryption_configuration",
+          "name": "aes_enc",
+          "values": {
+            "bucket": "aes-encrypted-bucket",
+            "rule": [
+              {
+                "apply_server_side_encryption_by_default": [
+                  {
+                    "sse_algorithm": "AES256"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.no_enc_bucket",
+          "type": "aws_s3_bucket",
+          "name": "no_enc_bucket",
+          "values": {
+            "bucket": "no-encryption-bucket",
+            "arn": "arn:aws:s3:::no-encryption-bucket",
+            "tags": {
+              "DataDomain": "health"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": []
+}

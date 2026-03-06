@@ -1,0 +1,12 @@
+{
+  "buckets": [
+    {
+      "name": "dangling-origin-bucket",
+      "exists": false,
+      "external_reference": true,
+      "website": { "enabled": false },
+      "policy": { "statements": [] },
+      "acl": { "grants": [] }
+    }
+  ]
+}

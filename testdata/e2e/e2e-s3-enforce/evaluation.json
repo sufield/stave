@@ -1,0 +1,18 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "findings": [
+    {
+      "control_id": "CTL.S3.PUBLIC.005",
+      "asset_id": "aws:s3:::z-latent-bucket"
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "asset_id": "aws:s3:::ignored-non-public"
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "aws:s3:::a-public-bucket"
+    }
+  ]
+}

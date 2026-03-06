@@ -1,0 +1,21 @@
+{
+  "buckets": [
+    {
+      "name": "public-read-bucket",
+      "exists": true,
+      "external_reference": false,
+      "website": { "enabled": false },
+      "policy": {
+        "statements": [
+          {
+            "effect": "Allow",
+            "principal": "*",
+            "actions": ["s3:GetObject"],
+            "resources": ["arn:aws:s3:::public-read-bucket/*"]
+          }
+        ]
+      },
+      "acl": { "grants": [] }
+    }
+  ]
+}

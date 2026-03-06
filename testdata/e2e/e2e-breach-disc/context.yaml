@@ -1,0 +1,6 @@
+breach_type: DISC
+incident_id: "PRC-DISC-2024-001"
+description: |
+  Test case derived from prc-entropy analysis showing
+  DISC breach patterns are highly structured (entropy ≈ 0.0).
+  Simulates recurring public exposure of sensitive data.

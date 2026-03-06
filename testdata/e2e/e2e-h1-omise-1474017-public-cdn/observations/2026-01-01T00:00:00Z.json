@@ -1,0 +1,114 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "omise-cdn-2",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "id": "aws:s3:::omise-cdn-2",
+          "name": "omise-cdn-2",
+          "tags": {
+            "Project": "omise-cdn",
+            "Environment": "production",
+            "ManagedBy": "manual",
+            "data-classification": "public",
+            "Owner": "platform-engineering"
+          },
+          "visibility": {
+            "public_read": true,
+            "public_list": true,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": true,
+            "public_list_via_policy": true,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": false,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": true,
+            "has_external_write": false
+          },
+          "policy": {
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": "public"
+          },
+          "lifecycle": {
+            "rules_configured": false,
+            "rule_count": 0,
+            "has_expiration": false,
+            "has_transition": false,
+            "min_expiration_days": 0,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
+        },
+        "vendor": {
+          "aws": {
+            "s3": {
+              "arn": "arn:aws:s3:::omise-cdn-2",
+              "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadGetObject\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Resource\":[\"arn:aws:s3:::omise-cdn-2\",\"arn:aws:s3:::omise-cdn-2/*\"]}]}",
+              "acl_grants": [
+                {
+                  "Grantee": "b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2",
+                  "Permission": "FULL_CONTROL"
+                },
+                {
+                  "Grantee": "http://acs.amazonaws.com/groups/global/AllUsers",
+                  "Permission": "READ"
+                }
+              ],
+              "public_access_block": {
+                "block_public_acls": false,
+                "ignore_public_acls": false,
+                "block_public_policy": false,
+                "restrict_public_buckets": false
+              },
+              "cdn_endpoint": "https://cdn2.omise.co/"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

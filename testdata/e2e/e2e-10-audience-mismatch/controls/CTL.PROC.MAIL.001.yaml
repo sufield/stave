@@ -1,0 +1,28 @@
+dsl_version: ctrl.v1
+id: CTL.PROC.MAIL.001
+name: Process Audience Verification
+description: |
+  Prevents misdirected disclosure by enforcing intended audience must match actual audience.
+  Required properties for dispatch_event resources:
+  - channel (string): email, print, portal, other
+  - sender (string): who is sending
+  - intended_audience (list of strings): who the sender meant to reach
+  - actual_audience (list of strings): who will actually receive
+  - data_tags (list of strings): e.g., PHI, PII
+  Violation occurs when:
+  - actual_audience contains any principal not in intended_audience
+  - OR intended_audience is empty
+  - OR actual_audience is empty
+type: audience_boundary
+params: {}
+unsafe_predicate:
+  any:
+    - field: "properties.intended_audience"
+      op: "list_empty"
+      value: true
+    - field: "properties.actual_audience"
+      op: "list_empty"
+      value: true
+    - field: "properties.actual_audience"
+      op: "not_subset_of_field"
+      value: "properties.intended_audience"

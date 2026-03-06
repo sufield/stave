@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2024-03-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "mofo-infographics",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "id": "aws:s3:::mofo-infographics",
+          "name": "mofo-infographics",
+          "visibility": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "content": {
+            "exposed_repo_artifacts": false,
+            "exposed_paths": []
+          },
+          "tags": {
+            "purpose": "static_site",
+            "report": "2383486"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.S3.TENANT.ISOLATION.001
+name: Shared-Bucket Tenant Isolation Must Enforce Prefix
+description: >
+  When a shared S3 bucket uses prefix-based tenant isolation, every
+  app-signer identity that produces presigned URLs must enforce the
+  tenant prefix.  An identity that allows path traversal (../) or
+  disables prefix enforcement lets one tenant read or overwrite
+  another tenant's objects.
+domain: exposure
+exposure:
+  type: tenant_isolation_breach
+  principal_scope: cross_account
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Shared bucket has an app-signer identity that allows path traversal
+    or disables prefix enforcement. One tenant can read or overwrite
+    another tenant's objects.
+  action: >
+    Update the app-signer configuration to enforce tenant prefix
+    restrictions (enforce_prefix=true) and block path traversal
+    (allow_traversal=false) on all presigned URL signers.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "tenant_mode": "shared",
+          "tenant_prefix": "org-123"
+        }
+      },
+      "identities": [
+        {
+          "type": "app_signer",
+          "id": "appsigner:s3:uploads",
+          "purpose": "enforce_prefix=true allow_traversal=false"
+        }
+      ]
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.tenant_mode
+      op: eq
+      value: shared
+    - field: properties.storage.tags.tenant_prefix
+      op: present
+      value: true
+    - field: identities
+      op: any_match
+      value:
+        all:
+          - field: type
+            op: eq
+            value: app_signer
+          - field: id
+            op: contains
+            value: "appsigner:s3:"
+          - any:
+              - field: purpose
+                op: contains
+                value: "allow_traversal=true"
+              - field: purpose
+                op: contains
+                value: "enforce_prefix=false"

@@ -1,0 +1,21 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESS.002
+name: No Wildcard Action Policies
+description: >
+  S3 bucket policies must not use wildcard actions (s3:* or *).
+  Wildcard policies grant more permissions than intended and
+  violate the principle of least privilege.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_wildcard_policy
+      op: eq
+      value: true

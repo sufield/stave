@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stave:schema:finding:v1",
+  "title": "Stave Finding Contract v1",
+  "description": "Contract schema for individual Stave findings. Each finding represents a single control violation detected for a specific asset.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "control_id",
+    "control_name",
+    "control_description",
+    "asset_id",
+    "asset_type",
+    "asset_vendor",
+    "evidence",
+    "remediation"
+  ],
+  "properties": {
+    "control_id": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Control ID",
+      "description": "Unique identifier of the control that was violated (e.g., CTL.S3.PUBLIC.001)."
+    },
+    "control_name": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Control Name",
+      "description": "Human-readable name of the violated control."
+    },
+    "control_description": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Control Description",
+      "description": "Detailed description of the unsafe condition detected by the control."
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Asset ID",
+      "description": "Unique identifier of the asset that violated the control."
+    },
+    "asset_type": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Asset Type",
+      "description": "Type of the asset (e.g., storage_bucket, iam_role)."
+    },
+    "asset_vendor": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Asset Vendor",
+      "description": "Cloud vendor or platform of the asset (e.g., aws, gcp, azure)."
+    },
+    "source": {
+      "$ref": "#/$defs/sourceRef",
+      "title": "Source Reference",
+      "description": "Optional reference to the source file and line where the asset was defined."
+    },
+    "evidence": {
+      "$ref": "#/$defs/evidence",
+      "title": "Violation Evidence",
+      "description": "Temporal and causal evidence supporting this finding."
+    },
+    "remediation": {
+      "$ref": "#/$defs/remediation",
+      "title": "Remediation Guidance",
+      "description": "Guidance for remediating this specific violation."
+    },
+    "fix_plan": {
+      "$ref": "#/$defs/fixPlan",
+      "title": "Fix Plan",
+      "description": "Machine-readable deterministic fix plan for supported finding classes."
+    },
+    "exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Exposure Classification",
+      "description": "Classifies who can reach the asset and how.",
+      "required": ["type", "principal_scope"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Exposure Type",
+          "description": "Kind of exposure (e.g., public_read, acl_write, bucket_takeover)."
+        },
+        "principal_scope": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Principal Scope",
+          "description": "Audience that gains access (e.g., global, authenticated, cross_account)."
+        }
+      }
+    },
+    "posture_drift": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Posture Drift Classification",
+      "description": "Classifies the temporal behavior pattern of the violation, computed from the asset timeline.",
+      "required": ["pattern", "episode_count"],
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "enum": ["persistent", "degraded", "intermittent"],
+          "title": "Drift Pattern",
+          "description": "persistent = unsafe since first observation; degraded = was safe, now unsafe; intermittent = toggled between safe and unsafe."
+        },
+        "episode_count": {
+          "type": "integer",
+          "minimum": 1,
+          "title": "Episode Count",
+          "description": "Total number of unsafe episodes (closed + currently open)."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Source Reference",
+      "description": "Reference to a source file and line for traceability.",
+      "properties": {
+        "file": {
+          "type": "string",
+          "title": "Source File Path",
+          "description": "Path to the source file."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "title": "Source Line Number",
+          "description": "Line number in the source file."
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Temporal Evidence",
+      "description": "Temporal evidence proving the duration and nature of the unsafe condition.",
+      "required": [
+        "first_seen_unsafe",
+        "unsafe_duration_hours",
+        "threshold_hours",
+        "reason"
+      ],
+      "properties": {
+        "first_seen_unsafe": {
+          "type": "string",
+          "format": "date-time",
+          "title": "First Seen Unsafe",
+          "description": "UTC timestamp (RFC 3339) of the earliest observation snapshot where the asset was in an unsafe state."
+        },
+        "unsafe_duration_hours": {
+          "type": "number",
+          "minimum": 0,
+          "title": "Unsafe Duration Hours",
+          "description": "Number of hours the asset has been continuously unsafe, computed from first_seen_unsafe to the evaluation time."
+        },
+        "threshold_hours": {
+          "type": "number",
+          "minimum": 0,
+          "title": "Threshold Hours",
+          "description": "The max-unsafe threshold (in hours) that was exceeded to trigger this violation."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Violation Reason",
+          "description": "Human-readable explanation of why the asset is considered unsafe (e.g., which predicate rule matched)."
+        },
+        "value": {
+          "title": "Matched Field Value",
+          "description": "The actual field value that triggered the predicate match. Type varies by control."
+        },
+        "source_evidence": {
+          "type": "array",
+          "title": "Snapshot Source Evidence",
+          "description": "Per-snapshot source references showing where the unsafe state was observed across time.",
+          "items": {
+            "$ref": "#/$defs/sourceEvidence"
+          }
+        }
+      }
+    },
+    "sourceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Snapshot Source Evidence",
+      "description": "Source reference for a specific observation snapshot that contributed to the finding.",
+      "required": [
+        "snapshot_index"
+      ],
+      "properties": {
+        "snapshot_index": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "Snapshot Index",
+          "description": "Zero-based index of the observation snapshot in chronological order."
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Snapshot Timestamp",
+          "description": "UTC timestamp (RFC 3339) when this snapshot was captured."
+        },
+        "source": {
+          "$ref": "#/$defs/sourceRef",
+          "title": "Source Reference",
+          "description": "Source file and line reference for this snapshot's asset definition."
+        }
+      }
+    },
+    "remediation": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Remediation Guidance",
+      "description": "Remediation guidance for resolving this violation.",
+      "required": [
+        "description",
+        "action"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Remediation Description",
+          "description": "Human-readable explanation of how to fix the unsafe condition."
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Remediation Action",
+          "description": "Concrete remediation action (e.g., a CLI command, API call, or configuration change)."
+        },
+        "example": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Remediation Example",
+          "description": "Optional example showing the remediation action applied to a real asset."
+        }
+      }
+    },
+    "fixPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "asset_id",
+            "asset_type"
+          ],
+          "properties": {
+            "asset_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "asset_type": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "action_type",
+              "path"
+            ],
+            "properties": {
+              "action_type": {
+                "type": "string",
+                "enum": [
+                  "set",
+                  "add",
+                  "remove"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {}
+            }
+          }
+        },
+        "expected_effect": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

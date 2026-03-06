@@ -1,0 +1,45 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2017-07-25T00:00:00Z",
+  "resources": [
+    {
+      "id": "unikrn-files",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "unikrn-files",
+          "tags": {
+            "tenant_mode": "shared",
+            "tenant_prefix": "users/{user_id}/{date}/"
+          },
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false
+          }
+        }
+      }
+    },
+    {
+      "id": "upload-api-unikrn-files",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "unikrn-files",
+          "operation": "write",
+          "allowed_key_mode": "prefix",
+          "allowed_prefix": "users/"
+        }
+      }
+    }
+  ]
+}

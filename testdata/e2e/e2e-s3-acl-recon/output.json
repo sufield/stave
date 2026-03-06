@@ -1,0 +1,64 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "4841bf3df41322d34b652dfdfbd9880c246d393cc1b41adb46f95334d3bf0b8b",
+        "2026-01-11T00:00:00Z.json": "d8fe5db52e17b09da963bc853d3c480c8174b58d9b07d8df9e3dd02726f9c194"
+      },
+      "overall": "6159e0817d303540434b7bdd968c38a931a3be63316fe933b4cb610946650e51"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 2,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.ACL.RECON.001",
+      "control_name": "No Public ACL Readability",
+      "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
+      "asset_id": "acl-readable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.visibility.public_acl_readable",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.\n",
+        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_acl_readable\": false\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-acl-recon/invariants",
+      "observations": "testdata/e2e/e2e-s3-acl-recon/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

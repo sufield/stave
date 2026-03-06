@@ -1,0 +1,19 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2024-05-17T00:00:00Z",
+  "resources": [
+    {
+      "id": "apptio-endpoint-ref-1",
+      "type": "s3_bucket_reference",
+      "vendor": "aws",
+      "properties": {
+        "s3_ref": {
+          "endpoint": "apptio.example.com",
+          "bucket": "apptio-endpoint-bucket",
+          "bucket_exists": false,
+          "bucket_owned": false
+        }
+      }
+    }
+  ]
+}

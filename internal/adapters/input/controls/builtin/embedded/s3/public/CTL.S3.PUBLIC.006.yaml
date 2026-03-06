@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.006
+name: No Latent Public Bucket Listing
+description: >
+  S3 bucket has a policy or ACL that would allow public listing
+  if the public access block were removed. The public access block
+  is currently the only control preventing directory enumeration.
+  This is a latent vulnerability — one configuration change away
+  from exposing all object keys.
+domain: exposure
+exposure:
+  type: latent_public_list
+  principal_scope: public
+severity: critical
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket has a policy or ACL that would allow public listing if the
+    Public Access Block were removed. One configuration change away from
+    exposing all object keys.
+  action: >
+    Remove the underlying policy statement or ACL entry that grants
+    s3:ListBucket to Principal "*" or AllUsers. Do not rely solely on
+    PAB to prevent directory enumeration.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "visibility": {
+          "latent_public_list": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.visibility.latent_public_list
+      op: eq
+      value: true

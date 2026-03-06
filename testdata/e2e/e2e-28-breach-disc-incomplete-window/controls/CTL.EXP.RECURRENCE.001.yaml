@@ -1,0 +1,13 @@
+dsl_version: ctrl.v1
+id: CTL.EXP.RECURRENCE.001
+name: Unsafe Exposure Recurrence Limit
+description: A resource must not have too many unsafe episodes within a rolling window.
+type: unsafe_recurrence
+params:
+  recurrence_limit: 2
+  window_days: 90
+unsafe_predicate:
+  any:
+    - field: "properties.public"
+      op: "eq"
+      value: true

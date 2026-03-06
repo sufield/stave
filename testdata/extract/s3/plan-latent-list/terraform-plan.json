@@ -1,0 +1,45 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.latent_list_bucket",
+          "type": "aws_s3_bucket",
+          "name": "latent_list_bucket",
+          "values": {
+            "bucket": "latent-listable-bucket",
+            "arn": "arn:aws:s3:::latent-listable-bucket",
+            "tags": {
+              "DataDomain": "health",
+              "containsPHI": "true"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_policy.latent_list_policy",
+          "type": "aws_s3_bucket_policy",
+          "name": "latent_list_policy",
+          "values": {
+            "bucket": "latent-listable-bucket",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicListAccess\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:ListBucket\"],\"Resource\":[\"arn:aws:s3:::latent-listable-bucket\"]}]}"
+          }
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.latent_list_pab",
+          "type": "aws_s3_bucket_public_access_block",
+          "name": "latent_list_pab",
+          "values": {
+            "bucket": "latent-listable-bucket",
+            "block_public_acls": true,
+            "ignore_public_acls": true,
+            "block_public_policy": true,
+            "restrict_public_buckets": true
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": []
+}

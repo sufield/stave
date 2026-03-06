@@ -1,0 +1,18 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACL.WRITE.001
+name: No Public Write via ACL
+description: >
+  S3 bucket ACLs must not grant write access to AllUsers or
+  AuthenticatedUsers. ACL-based write access enables attackers to
+  upload malicious objects or overwrite existing content.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.public_write_via_acl
+      op: eq
+      value: true

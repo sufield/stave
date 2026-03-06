@@ -1,0 +1,36 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-10T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 3,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "5958deab1fc998607da0ec6fef8053b37255dfb4218768d56ff3ebeb7f75335a",
+        "2026-01-05T00:00:00Z.json": "cfadda76d2d80b34e5a83bd8b128bdaf7429bab19b43951888d5f23304670c38",
+        "2026-01-10T00:00:00Z.json": "d8bac57f68be1205a274e465b7a48187b53f7ea8d54b72b6430ba19c4e2de8fc"
+      },
+      "overall": "baa2adec739226abbbf638615769faa8ba2857045b578d270f1cf42188629ebf"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-28-breach-disc-incomplete-window/invariants",
+      "observations": "testdata/e2e/e2e-28-breach-disc-incomplete-window/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

@@ -1,0 +1,42 @@
+package service
+
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/evaluation/engine"
+	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
+)
+
+// EvaluateInput holds loaded models and runtime options for evaluation processing.
+type EvaluateInput struct {
+	Controls          []policy.ControlDefinition
+	Snapshots         []asset.Snapshot
+	MaxUnsafe         time.Duration
+	Clock             ports.Clock
+	ExemptionConfig   *policy.ExemptionConfig
+	SuppressionConfig *policy.SuppressionConfig
+	ToolVersion       string
+	InputHashes       *evaluation.InputHashes
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	Metadata          evaluation.Metadata
+}
+
+// Evaluate runs domain evaluation over already-loaded inputs.
+func Evaluate(input EvaluateInput) evaluation.Result {
+	runner := engine.Runner{
+		Controls:        input.Controls,
+		MaxUnsafe:       input.MaxUnsafe,
+		Clock:           input.Clock,
+		Exemptions:      input.ExemptionConfig,
+		Suppressions:    input.SuppressionConfig,
+		ToolVersion:     input.ToolVersion,
+		InputHashes:     input.InputHashes,
+		PredicateParser: input.PredicateParser,
+	}
+	result := runner.Evaluate(input.Snapshots)
+	result.Metadata = input.Metadata
+	return result
+}

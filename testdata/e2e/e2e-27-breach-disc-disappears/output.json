@@ -1,0 +1,68 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-01T02:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 3,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "577ba60919a5853b968abe6f1f7f9243dbacc88e2cee5fd608bb61bf9eb21f07",
+        "2026-01-01T01:00:00Z.json": "e93ea32e17adf79b70a9e4c0a609a5d31eb7fa9c5edb9573214832c297e1f8ed",
+        "2026-01-01T02:00:00Z.json": "71aa591b8ce452eed0f2253baa3a4daa59ee352e556320fdbe526c8d5c3a7fea"
+      },
+      "overall": "b00b6286598318664592241d1b7feae20506bc3037387b4890c0dc57686cbed9"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.EXP.DURATION.001",
+      "control_name": "Unsafe Exposure Duration Bound",
+      "control_description": "A resource must not remain unsafe beyond the configured time window.",
+      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "source": {
+        "file": "infra/main.tf",
+        "line": 42
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-01T02:00:00Z",
+        "unsafe_duration_hours": 2,
+        "threshold_hours": 1,
+        "misconfigurations": [
+          {
+            "property": "public",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 2 hours (threshold: 1 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Invariant violation detected.",
+        "action": "Review the unsafe configuration and remediate."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-27-breach-disc-disappears/invariants",
+      "observations": "testdata/e2e/e2e-27-breach-disc-disappears/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

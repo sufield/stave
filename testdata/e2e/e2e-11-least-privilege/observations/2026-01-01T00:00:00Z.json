@@ -1,0 +1,121 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "access:001-own-data",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-001",
+        "actor": "user:alice",
+        "action": "read",
+        "asset_type": "record",
+        "asset_id": "rec:patient:alice-12345",
+        "subject_id": "patient:alice",
+        "actor_subject_id": "patient:alice",
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 1 }
+    },
+    {
+      "id": "access:002-other-data-violation",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-002",
+        "actor": "user:bob",
+        "action": "read",
+        "asset_type": "record",
+        "asset_id": "rec:patient:alice-12345",
+        "subject_id": "patient:alice",
+        "actor_subject_id": "patient:bob",
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 20 }
+    },
+    {
+      "id": "access:003-export-allowed",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-003",
+        "actor": "user:dr-smith",
+        "action": "export",
+        "asset_type": "record",
+        "asset_id": "rec:patient:alice-12345",
+        "subject_id": "patient:alice",
+        "allowed_subjects": ["patient:alice", "patient:bob", "patient:charlie"],
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 40 }
+    },
+    {
+      "id": "access:004-export-not-allowed-violation",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-004",
+        "actor": "user:dr-jones",
+        "action": "export",
+        "asset_type": "document",
+        "asset_id": "doc:patient:eve-67890",
+        "subject_id": "patient:eve",
+        "allowed_subjects": ["patient:alice", "patient:bob"],
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 60 }
+    },
+    {
+      "id": "access:005-read-not-in-allowlist-safe",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-005",
+        "actor": "user:nurse-jane",
+        "action": "read",
+        "asset_type": "record",
+        "asset_id": "rec:patient:eve-67890",
+        "subject_id": "patient:eve",
+        "allowed_subjects": ["patient:alice"],
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 80 }
+    },
+    {
+      "id": "access:006-service-principal-safe",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-006",
+        "actor": "service:billing-system",
+        "action": "read",
+        "asset_type": "claim",
+        "asset_id": "claim:patient:alice-99999",
+        "subject_id": "patient:alice",
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 100 }
+    },
+    {
+      "id": "access:007-export-no-allowlist-violation",
+      "type": "access_event",
+      "vendor": "internal",
+      "properties": {
+        "event_id": "evt-007",
+        "actor": "user:admin",
+        "action": "export",
+        "asset_type": "claim",
+        "asset_id": "claim:patient:mallory-11111",
+        "subject_id": "patient:mallory",
+        "timestamp": "2026-01-01T00:00:00Z"
+      },
+      "source": { "file": "access/events.json", "line": 120 }
+    }
+  ]
+}

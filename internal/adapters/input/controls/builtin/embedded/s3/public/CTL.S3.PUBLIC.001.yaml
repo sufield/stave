@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public S3 Bucket Read
+description: >
+  S3 buckets must not allow public read access.
+  Detects buckets with anonymous read exposure via policy or ACL.
+domain: exposure
+exposure:
+  type: public_read
+  principal_scope: public
+severity: critical
+compliance:
+  cis_aws_v1.4.0: "2.1.5"
+  pci_dss_v3.2.1: "1.2.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket has public read access enabled via policy or ACL.
+    Anyone on the internet can access objects in this bucket.
+  action: >
+    Enable S3 Public Access Block (all four settings).
+    Remove any bucket policy statements granting access to Principal "*".
+    Remove any ACL grants to AllUsers or AuthenticatedUsers.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "public_read": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.public_read
+      op: eq
+      value: true

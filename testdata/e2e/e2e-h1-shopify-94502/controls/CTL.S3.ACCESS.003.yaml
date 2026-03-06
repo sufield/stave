@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESS.003
+name: No External Write Access
+description: >
+  S3 buckets must not grant write or delete permissions to external
+  AWS accounts. Cross-account read access may be acceptable for
+  analytics or auditing, but write access from external accounts
+  creates data integrity and supply chain risks.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_external_write
+      op: eq
+      value: true

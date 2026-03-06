@@ -1,0 +1,42 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.9.8"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "latent-listable-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "latent-listable-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": true,
+            "latent_public_read": false,
+            "latent_public_list": true
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

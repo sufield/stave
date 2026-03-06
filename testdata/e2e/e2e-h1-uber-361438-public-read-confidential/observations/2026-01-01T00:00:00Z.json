@@ -1,0 +1,109 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "ubergreece",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "id": "aws:s3:::ubergreece",
+          "name": "ubergreece",
+          "tags": {
+            "Project": "uber-greece",
+            "Environment": "production",
+            "ManagedBy": "manual",
+            "data-classification": "confidential",
+            "Owner": "operations"
+          },
+          "visibility": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": false,
+            "algorithm": "",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": false,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": true,
+            "has_external_write": false
+          },
+          "policy": {
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": "public"
+          },
+          "lifecycle": {
+            "rules_configured": false,
+            "rule_count": 0,
+            "has_expiration": false,
+            "has_transition": false,
+            "min_expiration_days": 0,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
+        },
+        "vendor": {
+          "aws": {
+            "s3": {
+              "arn": "arn:aws:s3:::ubergreece",
+              "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadGetObject\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::ubergreece/*\"}]}",
+              "acl_grants": [
+                {
+                  "Grantee": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+                  "Permission": "FULL_CONTROL"
+                }
+              ],
+              "public_access_block": {
+                "block_public_acls": false,
+                "ignore_public_acls": false,
+                "block_public_policy": false,
+                "restrict_public_buckets": false
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schema_version": "obs.v99.0",
+  "generated_by": { "source_type": "terraform.plan_json" },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": []
+}

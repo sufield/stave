@@ -1,0 +1,74 @@
+package eval
+
+import (
+	"context"
+	"testing"
+
+	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
+)
+
+func TestResolveProjectConfig_InvalidSuppressionExpiry(t *testing.T) {
+	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+		Suppressions: []SuppressionInput{
+			{
+				ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
+				AssetID:   asset.ID("res-1"),
+				Reason:    "test",
+				Expires:   "bad-date",
+			},
+		},
+	})
+	if err == nil {
+		t.Fatal("expected invalid suppression expiry error")
+	}
+}
+
+func TestResolveProjectConfig_PackSelectionConflict(t *testing.T) {
+	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+		EnabledControlPacks: []string{"s3/public-exposure"},
+		ControlsFlagSet:     true,
+	})
+	if err == nil {
+		t.Fatal("expected conflict error when packs and --controls are both set")
+	}
+}
+
+func TestResolveProjectConfig_UnknownPack(t *testing.T) {
+	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+		EnabledControlPacks: []string{"does-not-exist"},
+	})
+	if err == nil {
+		t.Fatal("expected unknown pack error")
+	}
+}
+
+func TestResolveProjectConfig_LoadsEnabledPack(t *testing.T) {
+	got, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+		EnabledControlPacks: []string{"s3/public-exposure"},
+		BuiltinLoader:       builtin.LoadAll,
+	})
+	if err != nil {
+		t.Fatalf("ResolveProjectConfig() error = %v", err)
+	}
+	if len(got.PreloadedControls) == 0 {
+		t.Fatal("expected preloaded controls for enabled pack")
+	}
+	if got.ControlSource.Source != "packs" {
+		t.Fatalf("ControlSource.Source = %q, want packs", got.ControlSource.Source)
+	}
+}
+
+func TestResolveProjectConfig_NoPacks(t *testing.T) {
+	got, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{})
+	if err != nil {
+		t.Fatalf("ResolveProjectConfig() error = %v", err)
+	}
+	if len(got.PreloadedControls) != 0 {
+		t.Fatal("expected no preloaded controls when no packs")
+	}
+	if got.ControlSource.Source != "" {
+		t.Fatalf("ControlSource.Source = %q, want empty", got.ControlSource.Source)
+	}
+}

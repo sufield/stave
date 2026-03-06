@@ -1,0 +1,69 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2021-11-23T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2021-11-15T00:00:00Z.json": "fad34e5e6d3561e59a3ba888a8125f0e4fe02ac9f3bca92e433477125b0fb1cc",
+        "2021-11-23T00:00:00Z.json": "bac0a0bcf3444fde38def088c6a37706946e72e70effd7a5dfa01ffbcd30295e"
+      },
+      "overall": "b196f60fe1a390c7d56bbde0998b9ac564d943dc858b2fbb4c22f1c49490a482"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
+      "asset_id": "tendermint-packages-ref",
+      "asset_type": "s3_bucket_reference",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2021-11-15T00:00:00Z",
+        "last_seen_unsafe_at": "2021-11-23T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "s3_ref.bucket_exists",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "s3_ref.bucket_owned",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2021-11-15T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-tendermint-1397826/invariants",
+      "observations": "testdata/e2e/e2e-h1-tendermint-1397826/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

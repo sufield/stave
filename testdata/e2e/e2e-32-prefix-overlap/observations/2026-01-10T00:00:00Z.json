@@ -1,0 +1,29 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.9.8"
+  },
+  "captured_at": "2026-01-10T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:aws:s3:bucket:example-bucket",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "example-bucket",
+          "policy_statements": [],
+          "public_access_block": {
+            "block_public_policy": true,
+            "block_public_acls": true,
+            "ignore_public_acls": true
+          },
+          "acl_grants": []
+        }
+      }
+    }
+  ]
+}

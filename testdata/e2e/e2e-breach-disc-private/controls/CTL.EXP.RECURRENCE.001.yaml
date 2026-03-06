@@ -1,0 +1,17 @@
+dsl_version: ctrl.v1
+id: CTL.EXP.RECURRENCE.001
+name: Recurring Public Exposure
+description: |
+  Resources repeatedly becoming public indicates process failure.
+  DISC zero-entropy pattern suggests these are systematic, not accidents.
+  Derived from prc-entropy analysis: entropy=0.0, pattern=highly structured
+type: unsafe_recurrence
+severity: high
+params:
+  recurrence_limit: 2
+  window_days: 90
+unsafe_predicate:
+  any:
+    - field: "properties.public"
+      op: "eq"
+      value: true

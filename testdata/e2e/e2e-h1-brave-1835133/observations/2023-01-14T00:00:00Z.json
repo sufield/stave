@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2023-01-14T00:00:00Z",
+  "resources": [
+    {
+      "id": "brave-install-ref-1",
+      "type": "s3_bucket_reference",
+      "vendor": "aws",
+      "properties": {
+        "s3_ref": {
+          "endpoint": "s3-us-west-2.amazonaws.com/brave-browser-rpm-staging-release-test/",
+          "bucket": "brave-browser-rpm-staging-release-test",
+          "bucket_exists": false,
+          "bucket_owned": false,
+          "context": {
+            "blast_radius": "software_distribution",
+            "artifact_type": "keyrings_packages",
+            "entrypoint": "community.brave.com_install_guide",
+            "report": "1835133"
+          }
+        }
+      }
+    }
+  ]
+}

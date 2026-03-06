@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.004
+name: Sensitive Data Requires KMS Encryption
+description: >
+  S3 buckets with any non-public data classification must use SSE-KMS
+  encryption with a customer-managed key, not SSE-S3 (AES256). AES256
+  uses AWS-managed keys with no customer control over key rotation,
+  access policies, or audit trails. This fires on all classified data
+  except explicitly public or non-sensitive buckets.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket with classified data is using SSE-S3 (AES256) instead of
+    SSE-KMS. AWS-managed keys provide no customer control over key
+    rotation, access policies, or audit trails.
+  action: >
+    Change the bucket default encryption to SSE-KMS with a
+    customer-managed key. Re-encrypt existing objects by copying them
+    in place with the new encryption settings.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "tags": {
+          "data-classification": "confidential"
+        },
+        "encryption": {
+          "algorithm": "aws:kms"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.data-classification
+      op: present
+      value: true
+    - field: properties.storage.tags.data-classification
+      op: ne
+      value: "public"
+    - field: properties.storage.tags.data-classification
+      op: ne
+      value: "non-sensitive"
+    - field: properties.storage.encryption.algorithm
+      op: ne
+      value: "aws:kms"

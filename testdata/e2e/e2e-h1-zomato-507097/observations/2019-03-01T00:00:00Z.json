@@ -1,0 +1,42 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2019-03-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "zomato-chat-images",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "zomato-chat-images",
+          "visibility": {
+            "public_read": true,
+            "public_list": true,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": false,
+            "public_list_via_policy": true,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stave:schema:control:v1",
+  "title": "Stave Control Contract v1",
+  "description": "Contract schema for ctrl.v1 controls (safety rules). Each control defines an unsafe condition that Stave evaluates against observation snapshots.",
+  "$ref": "#/$defs/canonicalInvariant",
+  "$defs": {
+    "controlType": {
+      "type": "string",
+      "title": "Control Check Type",
+      "description": "Category of safety check this control performs.",
+      "enum": [
+        "unsafe_state",
+        "unsafe_duration",
+        "unsafe_recurrence",
+        "authorization_boundary",
+        "audience_boundary",
+        "justification_required",
+        "ownership_required",
+        "visibility_required",
+        "prefix_exposure"
+      ]
+    },
+    "predicateRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Predicate Rule",
+      "description": "A single predicate rule that tests a resource field, or a nested logical group of rules.",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Field Path",
+          "description": "Dot-separated field path to evaluate on the resource (e.g., properties.public, properties.acl.grants)."
+        },
+        "op": {
+          "type": "string",
+          "title": "Comparison Operator",
+          "description": "Comparison operator to apply between the field value and the target value.",
+          "enum": [
+            "eq",
+            "ne",
+            "lt",
+            "gt",
+            "gte",
+            "lte",
+            "missing",
+            "present",
+            "contains",
+            "in",
+            "any_match",
+            "list_empty",
+            "neq_field",
+            "not_in_field",
+            "not_subset_of_field"
+          ]
+        },
+        "value": {
+          "title": "Comparison Value",
+          "description": "Literal value to compare against. Type depends on the operator (boolean, string, number, array, etc.)."
+        },
+        "value_from_param": {
+          "type": "string",
+          "title": "Parameter Reference",
+          "description": "Name of a parameter in the control's params object whose value is used instead of a literal value."
+        },
+        "any": {
+          "type": "array",
+          "title": "Any Match Rules",
+          "description": "Nested OR logic: at least one child rule must match for this group to match.",
+          "items": {
+            "$ref": "#/$defs/predicateRule"
+          }
+        },
+        "all": {
+          "type": "array",
+          "title": "All Match Rules",
+          "description": "Nested AND logic: all child rules must match for this group to match.",
+          "items": {
+            "$ref": "#/$defs/predicateRule"
+          }
+        }
+      }
+    },
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Unsafe Predicate",
+      "description": "Top-level predicate defining unsafe conditions using logical combinators (any/all).",
+      "properties": {
+        "any": {
+          "type": "array",
+          "title": "Any Match Rules",
+          "description": "OR logic: at least one rule must match for the predicate to hold.",
+          "items": {
+            "$ref": "#/$defs/predicateRule"
+          }
+        },
+        "all": {
+          "type": "array",
+          "title": "All Match Rules",
+          "description": "AND logic: all rules must match for the predicate to hold.",
+          "items": {
+            "$ref": "#/$defs/predicateRule"
+          }
+        }
+      }
+    },
+    "canonicalInvariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Canonical Control",
+      "description": "A complete control definition including metadata, predicate logic, and optional remediation guidance.",
+      "required": [
+        "dsl_version",
+        "id",
+        "name",
+        "description",
+        "type"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "unsafe_predicate"
+          ]
+        },
+        {
+          "required": [
+            "unsafe_predicate_alias"
+          ]
+        }
+      ],
+      "properties": {
+        "dsl_version": {
+          "type": "string",
+          "enum": ["ctrl.v1"],
+          "title": "DSL Version",
+          "description": "DSL version identifier."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Control ID",
+          "description": "Unique control identifier following the naming convention (e.g., CTL.S3.PUBLIC.001)."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Control Name",
+          "description": "Short human-readable name summarizing what the control checks."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Control Description",
+          "description": "Detailed explanation of the unsafe condition this control detects."
+        },
+        "version": {
+          "type": "string",
+          "title": "Control Version",
+          "description": "Optional control document version marker used by curated packs."
+        },
+        "domain": {
+          "type": "string",
+          "title": "Control Domain",
+          "description": "Optional domain label for grouping controls (e.g., exposure, governance, access)."
+        },
+        "scope_tags": {
+          "type": "array",
+          "title": "Scope Tags",
+          "description": "Optional tags describing applicability scope (e.g., aws, s3, prod).",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "type": {
+          "$ref": "#/$defs/controlType",
+          "title": "Check Type",
+          "description": "Category of safety check (e.g., unsafe_state, authorization_boundary)."
+        },
+        "severity": {
+          "type": "string",
+          "title": "Severity Level",
+          "description": "Severity level assigned to violations of this control.",
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "info"
+          ]
+        },
+        "compliance": {
+          "type": "object",
+          "title": "Compliance Framework Mappings",
+          "description": "Maps compliance framework names to control IDs (e.g., cis_aws_v1.4.0: \"2.1.1\").",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "params": {
+          "type": "object",
+          "title": "Configurable Parameters",
+          "description": "Configurable parameters referenced by value_from_param in predicate rules. Intentionally flexible (any JSON object) to support diverse parameterization patterns."
+        },
+        "unsafe_predicate": {
+          "$ref": "#/$defs/predicate",
+          "title": "Unsafe Predicate",
+          "description": "Predicate that defines when a resource is considered unsafe. When this predicate matches, a finding is generated."
+        },
+        "unsafe_predicate_alias": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Unsafe Predicate Alias",
+          "description": "Built-in semantic predicate alias expanded deterministically during control loading (for example: s3.is_public_readable)."
+        },
+        "exposure": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Exposure Classification",
+          "description": "Classifies who can reach the resource and how.",
+          "required": ["type", "principal_scope"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Exposure Type",
+              "description": "Kind of exposure (e.g., public_read, acl_write, bucket_takeover)."
+            },
+            "principal_scope": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Principal Scope",
+              "description": "Audience that gains access (e.g., global, authenticated, cross_account)."
+            }
+          }
+        },
+        "remediation": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Remediation Guidance",
+          "description": "Guidance for remediating violations of this control.",
+          "required": [
+            "description",
+            "action"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Remediation Description",
+              "description": "Human-readable explanation of how to fix the unsafe condition."
+            },
+            "action": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Remediation Action",
+              "description": "Concrete remediation action (e.g., a CLI command, API call, or configuration change)."
+            },
+            "example": {
+              "type": "string",
+              "title": "Remediation Example",
+              "description": "Optional example showing the remediation action applied to a real resource."
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,90 @@
+package validate
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/diag"
+
+	appservice "github.com/sufield/stave/internal/app/service"
+	appvalidation "github.com/sufield/stave/internal/app/validation"
+)
+
+// runValidate is kept for compatibility with existing tests and callers.
+func runValidate(cmd *cobra.Command, _ []string) error {
+	return runValidateWithOptions(cmd, ui.NewRuntime(nil, nil), validateOpts)
+}
+
+// runValidateWithOptions parses flags, calls app layer, prints results, and sets exit code.
+func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
+	if opts == nil {
+		opts = defaultOptions()
+	}
+	if rt == nil {
+		rt = ui.NewRuntime(nil, nil)
+	}
+	if err := prepareValidateCommand(cmd, opts); err != nil {
+		return err
+	}
+
+	rt.Quiet = opts.QuietMode || cmdutil.QuietEnabled(cmd)
+	out := validateOutputWithOptions(opts)
+	if opts.InFile != "" {
+		return runValidateSingleFileWithOptions(cmd, out, opts)
+	}
+	if err := ensureValidateModeFlags(opts); err != nil {
+		return err
+	}
+
+	params := parseValidateParams(opts)
+	if len(params.issues) > 0 {
+		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
+		return outputAndExitWithOptions(cmd, out, result, validateIsJSONOutput(), opts)
+	}
+
+	done := rt.BeginProgress("validate artifacts")
+	result, err := executeValidateRun(cmd, params, opts)
+	done()
+	if err != nil {
+		return err
+	}
+	result.Diagnostics.AddAll(PackConfigIssues())
+
+	return outputValidateResult(cmd, out, result, opts)
+}
+
+func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
+	obsLoader, err := cmdutil.NewObservationRepository()
+	if err != nil {
+		return nil, err
+	}
+	ctlLoader, err := cmdutil.NewControlRepository()
+	if err != nil {
+		return nil, err
+	}
+
+	validateRun := appvalidation.NewRun(obsLoader, ctlLoader)
+	cfg := appvalidation.Config{
+		ControlsDir:     opts.ControlsDir,
+		ObservationsDir: opts.ObservationsDir,
+		MaxUnsafe:       *params.maxUnsafe,
+		NowTime:         params.nowTime,
+		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
+	}
+
+	return validateRun.Execute(context.Background(), cfg)
+}
+
+func outputValidateResult(cmd *cobra.Command, out io.Writer, result *appservice.ValidationResult, opts *options) error {
+	exitErr := outputAndExitWithOptions(cmd, out, result, validateIsJSONOutput(), opts)
+	if exitErr == nil && !opts.QuietMode && !cmdutil.QuietEnabled(cmd) {
+		fmt.Fprintf(os.Stderr, "Hint:\n  stave apply --controls %s --observations %s\n",
+			opts.ControlsDir, opts.ObservationsDir)
+	}
+	return exitErr
+}

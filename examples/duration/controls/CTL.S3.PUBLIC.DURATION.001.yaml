@@ -1,0 +1,25 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.DURATION.001
+name: Public Exposure Duration Bound
+description: >
+  S3 buckets must not remain publicly readable beyond the configured
+  maximum unsafe duration. Tracks how long public_read has been true
+  and flags violations when the threshold is exceeded.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_duration
+params: {}
+remediation:
+  description: >
+    Bucket has been publicly readable for longer than the allowed
+    maximum unsafe duration threshold.
+  action: >
+    Remediate the public exposure immediately. Enable S3 Public Access
+    Block and remove public-granting policy statements or ACL entries.
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.public_read
+      op: eq
+      value: true

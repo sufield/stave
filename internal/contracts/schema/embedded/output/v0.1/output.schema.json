@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stave:schema:output:v0.1",
+  "title": "Stave Output Schema v0.1",
+  "description": "Schema for Stave evaluation and verification output artifacts. Uses oneOf to distinguish evaluation results from verification (before/after) results.",
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "Evaluation Output",
+      "description": "Evaluation output: results from running controls against a set of observation snapshots.",
+      "required": ["schema_version", "kind", "run", "summary", "findings"],
+      "properties": {
+        "schema_version": {
+          "const": "out.v0.1",
+          "title": "Schema Version",
+          "description": "Output schema version identifier."
+        },
+        "kind": {
+          "const": "evaluation",
+          "title": "Output Kind",
+          "description": "Output kind discriminator. Value 'evaluation' indicates this is a standard evaluation run."
+        },
+        "run": {
+          "type": "object",
+          "title": "Run Metadata",
+          "description": "Metadata about the evaluation run including tool version, timing, and input parameters.",
+          "required": ["tool_version", "offline", "now", "max_unsafe", "snapshots"],
+          "properties": {
+            "tool_version": {
+              "type": "string",
+              "title": "Tool Version",
+              "description": "Version of the Stave CLI that produced this output."
+            },
+            "offline": {
+              "type": "boolean",
+              "title": "Offline Mode Flag",
+              "description": "Whether this evaluation was run in offline mode (no network access)."
+            },
+            "now": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Evaluation Timestamp",
+              "description": "Effective evaluation timestamp (RFC 3339). May be capped to the last snapshot's captured_at."
+            },
+            "max_unsafe": {
+              "type": "string",
+              "title": "Max Unsafe Duration",
+              "description": "Maximum unsafe duration threshold used for this evaluation (e.g., 12h, 7d)."
+            },
+            "snapshots": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Snapshot Count",
+              "description": "Number of observation snapshots loaded for this evaluation."
+            },
+            "input_hashes": {
+              "type": "object",
+              "title": "Input Content Hashes",
+              "description": "Content hashes of input files for reproducibility verification.",
+              "required": ["files", "overall"],
+              "properties": {
+                "files": {
+                  "type": "object",
+                  "additionalProperties": { "type": "string" },
+                  "title": "Per-File Hashes",
+                  "description": "Map of input file paths to their individual content hashes."
+                },
+                "overall": {
+                  "type": "string",
+                  "title": "Overall Content Hash",
+                  "description": "Combined hash of all input files for quick reproducibility check."
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "summary": {
+          "type": "object",
+          "title": "Evaluation Summary",
+          "description": "Aggregate counts summarizing the evaluation results.",
+          "required": ["resources_evaluated", "attack_surface", "violations"],
+          "properties": {
+            "resources_evaluated": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Assets Evaluated Count",
+              "description": "Total number of assets evaluated across all controls."
+            },
+            "attack_surface": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Currently Unsafe Count",
+              "description": "Number of assets currently in an unsafe state."
+            },
+            "violations": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Violation Count",
+              "description": "Number of findings that exceeded the max-unsafe threshold."
+            }
+          },
+          "additionalProperties": true
+        },
+        "findings": {
+          "type": "array",
+          "title": "Evaluation Findings",
+          "description": "List of control violations detected during evaluation.",
+          "items": {
+            "type": "object",
+            "title": "Violation Finding",
+            "description": "A single finding representing a control violation for a specific asset.",
+            "required": [
+              "control_id",
+              "control_name",
+              "control_description",
+              "asset_id",
+              "asset_type",
+              "asset_vendor",
+              "evidence",
+              "remediation"
+            ],
+            "properties": {
+              "control_id": {
+                "type": "string",
+                "title": "Control Identifier",
+                "description": "Unique identifier of the violated control."
+              },
+              "control_name": {
+                "type": "string",
+                "title": "Control Name",
+                "description": "Human-readable name of the violated control."
+              },
+              "control_description": {
+                "type": "string",
+                "title": "Control Description",
+                "description": "Description of the unsafe condition detected by the control."
+              },
+              "asset_id": {
+                "type": "string",
+                "title": "Asset Identifier",
+                "description": "Unique identifier of the violating asset."
+              },
+              "asset_type": {
+                "type": "string",
+                "title": "Asset Type",
+                "description": "Type of the violating asset."
+              },
+              "asset_vendor": {
+                "type": "string",
+                "title": "Asset Vendor",
+                "description": "Cloud vendor of the violating asset."
+              },
+              "source": {
+                "type": "object",
+                "title": "Source File Reference",
+                "description": "Source file reference for the asset definition.",
+                "required": ["file", "line"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "title": "Source File Path",
+                    "description": "Path to the source file."
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "title": "Source Line Number",
+                    "description": "Line number in the source file."
+                  }
+                },
+                "additionalProperties": true
+              },
+              "evidence": {
+                "type": "object",
+                "title": "Violation Evidence",
+                "description": "Temporal and causal evidence supporting this finding."
+              },
+              "remediation": {
+                "type": "object",
+                "title": "Remediation Guidance",
+                "description": "Remediation guidance for resolving this violation.",
+                "required": ["description", "action"],
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "title": "Remediation Description",
+                    "description": "Human-readable explanation of the remediation."
+                  },
+                  "action": {
+                    "type": "string",
+                    "title": "Remediation Action",
+                    "description": "Concrete remediation action."
+                  },
+                  "example": {
+                    "type": "string",
+                    "title": "Remediation Example",
+                    "description": "Optional example of the remediation applied."
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "skipped": {
+          "type": "array",
+          "title": "Skipped Controls",
+          "description": "Controls that were skipped during evaluation (e.g., due to missing asset types).",
+          "items": {
+            "type": "object",
+            "title": "Skipped Control Entry",
+            "description": "A skipped control entry.",
+            "required": ["control_id", "control_name", "reason"],
+            "properties": {
+              "control_id": {
+                "type": "string",
+                "title": "Control Identifier",
+                "description": "Unique identifier of the skipped control."
+              },
+              "control_name": {
+                "type": "string",
+                "title": "Control Name",
+                "description": "Human-readable name of the skipped control."
+              },
+              "reason": {
+                "type": "string",
+                "title": "Skip Reason",
+                "description": "Reason the control was skipped."
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "skipped_resources": {
+          "type": "array",
+          "title": "Skipped Assets",
+          "description": "Assets that were excluded from evaluation (e.g., by scope exclusion rules).",
+          "items": {
+            "type": "object",
+            "title": "Skipped Asset Entry",
+            "description": "A skipped asset entry.",
+            "required": ["asset_id", "matched_pattern", "reason"],
+            "properties": {
+              "asset_id": {
+                "type": "string",
+                "title": "Asset Identifier",
+                "description": "Unique identifier of the skipped asset."
+              },
+              "matched_pattern": {
+                "type": "string",
+                "title": "Matched Exclusion Pattern",
+                "description": "Exclusion pattern that matched this asset."
+              },
+              "reason": {
+                "type": "string",
+                "title": "Exclusion Reason",
+                "description": "Reason the asset was excluded."
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "suppressed_findings": {
+          "type": "array",
+          "title": "Suppressed Findings",
+          "description": "Findings that matched a suppression rule. These were evaluated but excluded from the violation count.",
+          "items": {
+            "type": "object",
+            "title": "Suppressed Finding Entry",
+            "description": "A finding that was suppressed by a suppression rule.",
+            "required": ["control_id", "asset_id", "reason"],
+            "properties": {
+              "control_id": {
+                "type": "string",
+                "title": "Control Identifier",
+                "description": "Unique identifier of the suppressed control."
+              },
+              "asset_id": {
+                "type": "string",
+                "title": "Asset Identifier",
+                "description": "Unique identifier of the suppressed asset."
+              },
+              "reason": {
+                "type": "string",
+                "title": "Suppression Reason",
+                "description": "Reason the finding was suppressed."
+              },
+              "expires": {
+                "type": "string",
+                "title": "Suppression Expiry",
+                "description": "Date when the suppression expires (YYYY-MM-DD)."
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "remediation_groups": {
+          "type": "array",
+          "title": "Remediation Groups",
+          "description": "Findings clustered by shared fix plan actions per asset. Reveals when multiple findings converge on the same remediation.",
+          "items": {
+            "type": "object",
+            "title": "Remediation Group",
+            "required": ["asset_id", "asset_type", "fix_plan", "contributing_controls", "finding_count"],
+            "properties": {
+              "asset_id": {
+                "type": "string",
+                "title": "Asset Identifier",
+                "description": "Unique identifier of the asset targeted by this remediation group."
+              },
+              "asset_type": {
+                "type": "string",
+                "title": "Asset Type",
+                "description": "Type of the asset targeted by this remediation group."
+              },
+              "fix_plan": {
+                "type": "object",
+                "title": "Fix Plan",
+                "description": "The shared fix plan for all findings in this group."
+              },
+              "contributing_controls": {
+                "type": "array",
+                "title": "Contributing Controls",
+                "description": "Unique control IDs whose findings share this fix plan on this asset.",
+                "items": { "type": "string" },
+                "minItems": 1
+              },
+              "finding_count": {
+                "type": "integer",
+                "minimum": 1,
+                "title": "Finding Count",
+                "description": "Total number of findings in this group (may exceed contributing_controls length when one control produces multiple findings)."
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "title": "Extension Data",
+          "description": "Optional extension data for custom tooling integrations."
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "title": "Verification Output",
+      "description": "Verification output: results from comparing before and after observation snapshots to measure remediation progress.",
+      "required": ["schema_version", "kind", "run", "summary", "resolved", "remaining", "introduced"],
+      "properties": {
+        "schema_version": {
+          "const": "out.v0.1",
+          "title": "Schema Version",
+          "description": "Output schema version identifier."
+        },
+        "kind": {
+          "const": "verification",
+          "title": "Output Kind",
+          "description": "Output kind discriminator. Value 'verification' indicates this is a before/after comparison."
+        },
+        "run": {
+          "type": "object",
+          "title": "Run Metadata",
+          "description": "Metadata about the verification run including tool version, timing, and snapshot counts.",
+          "required": ["tool_version", "offline", "now", "max_unsafe", "before_snapshots", "after_snapshots"],
+          "properties": {
+            "tool_version": {
+              "type": "string",
+              "title": "Tool Version",
+              "description": "Version of the Stave CLI that produced this output."
+            },
+            "offline": {
+              "type": "boolean",
+              "title": "Offline Mode Flag",
+              "description": "Whether this verification was run in offline mode."
+            },
+            "now": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Evaluation Timestamp",
+              "description": "Effective evaluation timestamp (RFC 3339)."
+            },
+            "max_unsafe": {
+              "type": "string",
+              "title": "Max Unsafe Duration",
+              "description": "Maximum unsafe duration threshold used for both before and after evaluations."
+            },
+            "before_snapshots": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Before Snapshot Count",
+              "description": "Number of observation snapshots in the before (pre-remediation) set."
+            },
+            "after_snapshots": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "After Snapshot Count",
+              "description": "Number of observation snapshots in the after (post-remediation) set."
+            }
+          },
+          "additionalProperties": true
+        },
+        "summary": {
+          "type": "object",
+          "title": "Verification Summary",
+          "description": "Aggregate counts comparing before and after violation states.",
+          "required": ["before_violations", "after_violations", "resolved", "remaining", "introduced"],
+          "properties": {
+            "before_violations": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Before Violation Count",
+              "description": "Number of violations in the before (pre-remediation) evaluation."
+            },
+            "after_violations": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "After Violation Count",
+              "description": "Number of violations in the after (post-remediation) evaluation."
+            },
+            "resolved": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Resolved Violation Count",
+              "description": "Number of violations present before but absent after remediation."
+            },
+            "remaining": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Remaining Violation Count",
+              "description": "Number of violations present in both before and after evaluations."
+            },
+            "introduced": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "Introduced Violation Count",
+              "description": "Number of new violations absent before but present after (regressions)."
+            }
+          },
+          "additionalProperties": true
+        },
+        "resolved": {
+          "type": "array",
+          "title": "Resolved Violations",
+          "description": "Violations that were present before remediation but are now resolved.",
+          "items": { "$ref": "#/$defs/verification_entry" }
+        },
+        "remaining": {
+          "type": "array",
+          "title": "Remaining Violations",
+          "description": "Violations that persist after remediation.",
+          "items": { "$ref": "#/$defs/verification_entry" }
+        },
+        "introduced": {
+          "type": "array",
+          "title": "Introduced Violations",
+          "description": "New violations introduced after remediation (regressions).",
+          "items": { "$ref": "#/$defs/verification_entry" }
+        }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "$defs": {
+    "verification_entry": {
+      "type": "object",
+      "title": "Verification Entry",
+      "description": "A single entry in a verification result list (resolved, remaining, or introduced).",
+      "required": ["control_id", "control_name", "asset_id", "asset_type"],
+      "properties": {
+        "control_id": {
+          "type": "string",
+          "title": "Control Identifier",
+          "description": "Unique identifier of the control."
+        },
+        "control_name": {
+          "type": "string",
+          "title": "Control Name",
+          "description": "Human-readable name of the control."
+        },
+        "asset_id": {
+          "type": "string",
+          "title": "Asset Identifier",
+          "description": "Unique identifier of the asset."
+        },
+        "asset_type": {
+          "type": "string",
+          "title": "Asset Type",
+          "description": "Type of the asset."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
