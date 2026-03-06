@@ -1,0 +1,115 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "89cb987e7bd09ecc1bfac62052d53ef33205144ca8c4305f7ef15a67cb28eb02",
+        "2026-01-11T00:00:00Z.json": "f42c961e0839be92fa5ed9b80263ee8b7efbb9f1c797572ac01bbe3fcc0ab1d6"
+      },
+      "overall": "d35bff4a013bfa09258f9af8651598c978b191c539ce9724283b08a26ed9ba71"
+    },
+    "pack_hash": "d947d36c17b8076b35fa252cf155e5696670e376a7eee714dffbbb79a999ab84"
+  },
+  "summary": {
+    "resources_evaluated": 3,
+    "attack_surface": 2,
+    "violations": 2
+  },
+  "findings": [
+    {
+      "control_id": "CTL.ID.KUBE.001",
+      "control_name": "Cluster-Admin Binding Detected",
+      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
+      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "asset_vendor": "kubernetes",
+      "source": {
+        "file": "rbac.yaml",
+        "line": 15
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "binds_to_cluster_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Control violation detected.",
+        "action": "Review the unsafe configuration and remediate."
+      }
+    },
+    {
+      "control_id": "CTL.ID.KUBE.003",
+      "control_name": "Binding to system:unauthenticated",
+      "control_description": "Bindings that grant permissions to system:unauthenticated allow anonymous access.\nApplies to: k8s.clusterrolebinding, k8s.rolebinding resources\n",
+      "asset_id": "k8s:ClusterRoleBinding/anonymous-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "asset_vendor": "kubernetes",
+      "source": {
+        "file": "rbac.yaml",
+        "line": 30
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "binds_to_system_unauthenticated",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Control violation detected.",
+        "action": "Review the unsafe configuration and remediate."
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-21-identity-violations/controls",
+      "observations": "testdata/e2e/e2e-21-identity-violations/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-21-identity-violations/controls/CTL.ID.KUBE.001.yaml",
+        "stave/testdata/e2e/e2e-21-identity-violations/controls/CTL.ID.KUBE.003.yaml"
+      ]
+    }
+  }
+}

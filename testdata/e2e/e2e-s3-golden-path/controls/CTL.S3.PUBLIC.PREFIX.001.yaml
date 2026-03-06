@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.PREFIX.001
+name: Protected Prefixes Must Not Be Publicly Readable
+description: >
+  S3 bucket prefixes marked as protected must not be publicly readable.
+  Evaluates bucket policies, ACL grants, and public access block settings
+  to determine effective public read access for each protected prefix.
+  Customize the prefix lists below to match your bucket layout.
+domain: exposure
+exposure:
+  type: prefix_exposure
+  principal_scope: public
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: prefix_exposure
+params:
+  protected_prefixes:
+    - "invoices/"
+    - "secrets/"
+    - "internal/"
+    - "backups/"
+  allowed_public_prefixes:
+    - "images/"
+    - "static/"
+    - "public/"
+remediation:
+  description: >
+    One or more protected S3 prefixes are publicly readable via bucket
+    policy or ACL grants. Objects under these prefixes can be downloaded
+    by anyone on the internet.
+  action: >
+    1. Review the protected_prefixes and allowed_public_prefixes lists
+       in this control and adjust them to match your bucket layout.
+    2. Enable S3 Public Access Block to restrict policy and ACL exposure.
+    3. Remove bucket policy statements granting s3:GetObject to Principal "*"
+       for protected prefixes.
+    4. Remove ACL grants to AllUsers or AuthenticatedUsers.
+  example: |
+    params:
+      protected_prefixes:
+        - "invoices/"
+        - "secrets/"
+      allowed_public_prefixes:
+        - "images/"
+        - "static/"
+unsafe_predicate:
+  any:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket

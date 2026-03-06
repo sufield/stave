@@ -1,0 +1,41 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "30977e1c41dada6d7f609ca71eb30bb2307a52fc323da5882c3fac7d2eedada5",
+        "2026-01-11T00:00:00Z.json": "f8f9e4f43fc35b60c404022ebd8b3efe159dff87965000294a2391353584111f"
+      },
+      "overall": "a2742225a36e576b0ab2bf49d46401f2f9524218d4d3b0d55e674a1adbe4811c"
+    },
+    "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
+  },
+  "summary": {
+    "resources_evaluated": 2,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-20-identity-clean/controls",
+      "observations": "testdata/e2e/e2e-20-identity-clean/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-20-identity-clean/controls/CTL.ID.KUBE.001.yaml"
+      ]
+    }
+  }
+}

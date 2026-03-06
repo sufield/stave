@@ -1,1 +1,0 @@
---out $CASE_DIR/outdir

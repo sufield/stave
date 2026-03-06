@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -16,9 +17,15 @@ func TestParseVendor_NormalizesCaseAndWhitespace(t *testing.T) {
 	}
 }
 
-func TestParseVendor_RejectsNonAWSVendors(t *testing.T) {
-	if _, err := kernel.ParseVendor("Kubernetes"); err == nil {
-		t.Fatal("expected error for unsupported vendor")
+func TestParseVendor_AcceptsAnyNonEmptyVendor(t *testing.T) {
+	for _, input := range []string{"Kubernetes", "google", "internal", "azure"} {
+		got, err := kernel.ParseVendor(input)
+		if err != nil {
+			t.Fatalf("ParseVendor(%q) returned error: %v", input, err)
+		}
+		if got != kernel.Vendor(strings.ToLower(input)) {
+			t.Fatalf("vendor = %q, want %q", got, strings.ToLower(input))
+		}
 	}
 }
 

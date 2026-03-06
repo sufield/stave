@@ -1,0 +1,31 @@
+dsl_version: ctrl.v1
+id: CTL.S3.INCOMPLETE.001
+name: Complete Data Required for Safety Assessment
+description: S3 bucket safety cannot be proven when policy or ACL data is missing
+  from the snapshot.
+domain: storage
+severity: low
+scope_tags:
+- aws
+- s3
+version: ctrl.v1
+type: unsafe_duration
+params:
+  max_unsafe_duration: 0h
+remediation:
+  description: >
+    Bucket safety cannot be assessed because policy or ACL data is missing
+    from the observation snapshot. The bucket may be safe but cannot be proven so.
+  action: >
+    Re-run the observation collector with full permissions to read bucket
+    policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy,
+    s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.
+  example: |
+    {
+      "safety_provable": true
+    }
+unsafe_predicate:
+  any:
+  - field: properties.safety_provable
+    op: eq
+    value: false

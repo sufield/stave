@@ -1,1 +1,1 @@
-verify --before $CASE_DIR/before --after $CASE_DIR/after --invariants $CASE_DIR/invariants --max-unsafe 168h --now 2026-01-11T00:00:00Z
+verify --before $CASE_DIR/before --after $CASE_DIR/after --controls $CASE_DIR/controls --max-unsafe 168h --now 2026-01-11T00:00:00Z

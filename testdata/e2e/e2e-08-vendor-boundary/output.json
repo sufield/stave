@@ -1,0 +1,45 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "2f612065b88990b01c2608ed607d10ed2b956161dbd7e22b690e24ba3b2f12d1",
+        "2026-01-11T00:00:00Z.json": "114574aa0de1bd3a3d46b39a293beabf23e561e646a0de7de679f6d54fb431ce"
+      },
+      "overall": "fda2021cccb23706a40b71631a2ca651ecd429f2c01f999bf6726eb9f032b3bd"
+    },
+    "pack_hash": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46"
+  },
+  "summary": {
+    "resources_evaluated": 0,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "skipped": [
+    {
+      "control_id": "CTL.TP.VENDOR.001",
+      "control_name": "Third-Party Vendor Data Boundaries",
+      "reason": "type not evaluatable: authorization_boundary"
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-08-vendor-boundary/controls",
+      "observations": "testdata/e2e/e2e-08-vendor-boundary/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
+  }
+}

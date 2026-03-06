@@ -3,7 +3,7 @@ id: CTL.ID.KUBE.001
 name: Cluster-Admin Binding Detected
 description: |
   Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.
-type: k8s_rbac_security
+type: unsafe_state
 severity: critical
 params: {}
 unsafe_predicate:

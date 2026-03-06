@@ -4,7 +4,7 @@ name: Binding to system:unauthenticated
 description: |
   Bindings that grant permissions to system:unauthenticated allow anonymous access.
   Applies to: k8s.clusterrolebinding, k8s.rolebinding resources
-type: k8s_rbac_security
+type: unsafe_state
 severity: critical
 params: {}
 unsafe_predicate:

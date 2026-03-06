@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.S3.NETWORK.001
+name: Public-Principal Policies Must Have Network Conditions
+description: >
+  S3 bucket policies that grant access to Principal * (any AWS
+  principal) must include network-scoping conditions such as
+  aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or
+  aws:PrincipalOrgID. Without these conditions, the bucket is
+  accessible to anyone on the internet. This control detects
+  policies where wildcard principals are used without network
+  restrictions.
+domain: exposure
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket policy grants access to Principal * without network-scoping
+    conditions. The bucket is accessible to anyone on the internet.
+  action: >
+    Add network-scoping conditions to the bucket policy: aws:SourceIp
+    for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions,
+    aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for
+    organization-only access.
+  example: |
+    {
+      "storage": {
+        "policy": {
+          "effective_network_scope": "vpc"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.policy.effective_network_scope
+      op: eq
+      value: "public"

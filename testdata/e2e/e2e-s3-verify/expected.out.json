@@ -2,10 +2,10 @@
   "schema_version": "out.v0.1",
   "kind": "verification",
   "run": {
+    "max_unsafe": "168h0m0s",
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
     "before_snapshots": 2,
     "after_snapshots": 2
   },

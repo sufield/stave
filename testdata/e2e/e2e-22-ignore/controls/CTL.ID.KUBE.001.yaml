@@ -4,7 +4,7 @@ name: Cluster-Admin Binding Detected
 description: |
   Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.
   Applies to: k8s.clusterrolebinding resources
-type: k8s_rbac_security
+type: unsafe_state
 severity: critical
 params: {}
 unsafe_predicate:

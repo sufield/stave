@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "7d",
+    "max_unsafe": "1d",
     "snapshots": 2,
     "input_hashes": {
       "files": {

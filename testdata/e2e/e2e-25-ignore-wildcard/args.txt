@@ -1,1 +1,1 @@
---ignore $CASE_DIR/ignore.yaml
+--ignore $CASE_DIR/ignore.yaml --allow-unknown-input

@@ -1,0 +1,73 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave",
+    "tool_version": "0.1.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "public-phi-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "public-phi-bucket",
+          "visibility": {
+            "public_read": true,
+            "public_list": true,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": false,
+            "public_list_via_policy": true
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "tags": {
+            "data-classification": "phi",
+            "Environment": "production"
+          }
+        }
+      }
+    },
+    {
+      "id": "private-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "private-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

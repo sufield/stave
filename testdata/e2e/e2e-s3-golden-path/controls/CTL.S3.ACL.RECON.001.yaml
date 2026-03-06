@@ -1,0 +1,34 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACL.RECON.001
+name: No Public ACL Readability
+description: >
+  S3 bucket ACLs should not be readable by unauthenticated users.
+  READ_ACP permission enables attackers to enumerate ACL grants,
+  discover which principals have access, and find escalation paths.
+domain: exposure
+exposure:
+  type: acl_read
+  principal_scope: public
+severity: high
+scope_tags: [aws, s3]
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket grants ACL read access (READ_ACP) to public users.
+    An attacker can call GetBucketAcl to discover which principals
+    have access and identify escalation paths.
+  action: >
+    Remove READ_ACP grants from the bucket ACL and remove policy
+    statements granting s3:GetBucketAcl or s3:GetObjectAcl to public
+    principals. Enable S3 Public Access Block with BlockPublicAcls
+    set to true.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "public_acl_readable": false
+        }
+      }
+    }
+unsafe_predicate_alias: s3.acl_readable_by_public
