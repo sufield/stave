@@ -41,9 +41,9 @@ func (o *options) resolveFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
 
 func (o *options) buildFilter() (asset.FilterOptions, error) {
 	filter := asset.FilterOptions{
-		ChangeTypes:   make([]asset.ChangeType, 0, len(o.ChangeTypes)),
-		AssetTypes: make([]string, 0, len(o.AssetTypes)),
-		AssetID:       strings.TrimSpace(o.AssetID),
+		ChangeTypes: make([]asset.ChangeType, 0, len(o.ChangeTypes)),
+		AssetTypes:  make([]string, 0, len(o.AssetTypes)),
+		AssetID:     strings.TrimSpace(o.AssetID),
 	}
 	for _, raw := range o.ChangeTypes {
 		ct := strings.ToLower(strings.TrimSpace(raw))

@@ -46,10 +46,10 @@ type upcomingFilter struct {
 
 // UpcomingFilterCriteria holds filter rules for upcoming action items.
 type UpcomingFilterCriteria struct {
-	ControlIDs    []kernel.ControlID
-	AssetTypes    []kernel.AssetType
-	Statuses      []string
-	DueWithin     *time.Duration
+	ControlIDs []kernel.ControlID
+	AssetTypes []kernel.AssetType
+	Statuses   []string
+	DueWithin  *time.Duration
 }
 
 // UpcomingComputeOptions holds configuration for computing upcoming items.

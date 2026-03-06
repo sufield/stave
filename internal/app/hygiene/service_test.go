@@ -103,8 +103,8 @@ func TestApplyUpcomingFilter_NormalizationAndDueWithin(t *testing.T) {
 
 	filtered := applyUpcomingFilter(items, RiskOptions{
 		AssetTypes: []kernel.AssetType{kernel.TypeStorageBucket},
-		Statuses:      []risk.Status{risk.Upcoming},
-		DueWithin:     &dueSoon,
+		Statuses:   []risk.Status{risk.Upcoming},
+		DueWithin:  &dueSoon,
 	})
 
 	if len(filtered) != 1 {
