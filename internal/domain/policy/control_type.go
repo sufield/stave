@@ -21,6 +21,7 @@ const (
 	TypeOwnershipRequired                 // 7
 	TypeVisibilityRequired                // 8
 	TypePrefixExposure                    // 9
+	TypeK8sRbacSecurity                   // 10
 )
 
 var controlTypeNames = map[ControlType]string{
@@ -33,6 +34,7 @@ var controlTypeNames = map[ControlType]string{
 	TypeOwnershipRequired:     "ownership_required",
 	TypeVisibilityRequired:    "visibility_required",
 	TypePrefixExposure:        "prefix_exposure",
+	TypeK8sRbacSecurity:       "k8s_rbac_security",
 }
 
 var controlTypeByName = map[string]ControlType{
@@ -45,6 +47,7 @@ var controlTypeByName = map[string]ControlType{
 	"ownership_required":     TypeOwnershipRequired,
 	"visibility_required":    TypeVisibilityRequired,
 	"prefix_exposure":        TypePrefixExposure,
+	"k8s_rbac_security":      TypeK8sRbacSecurity,
 }
 
 // String provides the wire-format name.
@@ -54,7 +57,7 @@ func (t ControlType) String() string {
 
 // IsValid reports whether t is a recognized canonical control type.
 func (t ControlType) IsValid() bool {
-	return t >= TypeUnsafeState && t <= TypePrefixExposure
+	return t >= TypeUnsafeState && t <= TypeK8sRbacSecurity
 }
 
 // ParseControlType converts a string to a ControlType value.

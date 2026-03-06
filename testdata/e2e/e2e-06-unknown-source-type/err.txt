@@ -1,1 +1,0 @@
-Error: snapshot[0] missing generated_by.source_type (use --allow-unknown-input to skip)

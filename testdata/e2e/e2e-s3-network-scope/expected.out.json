@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "b7f60ff81e9ce3b37407c36d88017b34ec65df1ef638a1573707c93e9056ca7a"
       },
       "overall": "e45b5cea8973ddccdd96295416ed0127713d864362d2817692d1ab60a3d15be4"
-    }
+    },
+    "pack_hash": "2e1995fb41f04b370179709b1e150168e47bf9f749f6ac0ae2deb90f36aa57cc"
   },
   "summary": {
     "resources_evaluated": 4,
@@ -24,7 +25,7 @@
     {
       "control_id": "CTL.S3.NETWORK.001",
       "control_name": "Public-Principal Policies Must Have Network Conditions",
-      "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This invariant detects policies where wildcard principals are used without network restrictions.\n",
+      "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.\n",
       "asset_id": "public-no-condition",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -36,12 +37,16 @@
         "misconfigurations": [
           {
             "property": "storage.policy.effective_network_scope",
-            "actual_value": "public",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "public"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -51,7 +56,7 @@
     {
       "control_id": "CTL.S3.NETWORK.001",
       "control_name": "Public-Principal Policies Must Have Network Conditions",
-      "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This invariant detects policies where wildcard principals are used without network restrictions.\n",
+      "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.\n",
       "asset_id": "securetransport-only",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -63,12 +68,16 @@
         "misconfigurations": [
           {
             "property": "storage.policy.effective_network_scope",
-            "actual_value": "public",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "public"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -77,14 +86,16 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-network-scope/invariants",
+      "controls": "testdata/e2e/e2e-s3-network-scope/controls",
       "observations": "testdata/e2e/e2e-s3-network-scope/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

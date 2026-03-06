@@ -1,1 +1,1 @@
-evaluate --profile mvp1-s3 --input $CASE_DIR/observations.json --include-all --now 2026-01-11T00:00:00Z
+apply --profile mvp1-s3 --input $CASE_DIR/observations.json --include-all --now 2026-01-11T00:00:00Z

@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2019-03-09T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2019-03-09T00:00:00Z.json": "c22dd5e64c84520c6f6d0861005f8f0fe019552a429f291f09c7df8c2951b577"
       },
       "overall": "1a09c9ef1c915f3cfbbab87f91c3758b4da0cf8b112cdb1d99e7acb9eafa9526"
-    }
+    },
+    "pack_hash": "94d929856f0be843071e52d987dad995a16b206b18a92ab46d0b14832f4981b2"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -36,25 +37,29 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-8f59ca6031026094",
+        "id": "fix-704d1ec2b98e826c",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -103,37 +108,41 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.public_list_intended",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "missing",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.public_list_intended",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "true"
           },
           {
             "property": "storage.visibility.public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-d42d19c6d0a7d626",
+        "id": "fix-fd70d9d0edd4ae28",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -168,15 +177,62 @@
       }
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "zomato-chat-images",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-9e662abfc80c951f",
+        "target": {
+          "asset_id": "zomato-chat-images",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.LIST.002"
+      ],
+      "finding_count": 2
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-zomato-507097/invariants",
+      "controls": "testdata/e2e/e2e-h1-zomato-507097/controls",
       "observations": "testdata/e2e/e2e-h1-zomato-507097/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

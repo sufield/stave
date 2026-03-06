@@ -1,7 +1,12 @@
 {
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T00:00:00Z.json": "30977e1c41dada6d7f609ca71eb30bb2307a52fc323da5882c3fac7d2eedada5",
@@ -9,23 +14,25 @@
       },
       "overall": "a2742225a36e576b0ab2bf49d46401f2f9524218d4d3b0d55e674a1adbe4811c"
     },
-    "max_unsafe": "168h0m0s",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "snapshots": 2,
-    "tool_version": "0.0.1"
+    "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
   },
-  "schema_version": "out.v0.1",
-  "skipped": [
-    {
-      "control_id": "CTL.ID.KUBE.001",
-      "control_name": "Cluster-Admin Binding Detected",
-      "reason": "type not evaluatable: k8s_rbac_security"
-    }
-  ],
   "summary": {
+    "resources_evaluated": 2,
     "attack_surface": 0,
-    "resources_evaluated": 0,
     "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-20-identity-clean/controls",
+      "observations": "testdata/e2e/e2e-20-identity-clean/observations"
+    },
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

@@ -104,15 +104,33 @@ ci: tidy check build
 golden: build
 	@echo "Updating golden files..."
 	@for case in testdata/e2e/e2e-*; do \
-		./stave evaluate \
-			--controls "$$case/controls" \
-			--observations "$$case/observations" \
-			--max-unsafe 168h \
-			--now 2026-01-11T00:00:00Z \
-			> "$$case/output.json" 2> "$$case/err.txt" || true; \
+		if [ -f "$$case/command.txt" ]; then \
+			cmd_content="$$(tr '\n' ' ' < "$$case/command.txt" | sed "s|\$$CASE_DIR|$$case|g")"; \
+			./stave $$cmd_content > "$$case/output.json" 2> "$$case/err.txt" || true; \
+		else \
+			args_extra=""; \
+			if [ -f "$$case/args.txt" ]; then \
+				args_extra="$$(tr '\n' ' ' < "$$case/args.txt" | sed "s|\$$CASE_DIR|$$case|g")"; \
+			fi; \
+			./stave apply \
+				--controls "$$case/controls" \
+				--observations "$$case/observations" \
+				--max-unsafe 168h \
+				--now 2026-01-11T00:00:00Z \
+				$$args_extra \
+				> "$$case/output.json" 2> "$$case/err.txt" || true; \
+		fi; \
 		if [ -f "$$case/output.json" ] && jq -e '.summary' "$$case/output.json" > /dev/null 2>&1; then \
 			jq -S '.summary' "$$case/output.json" > "$$case/expected.summary.json"; \
 			jq '.findings | length' "$$case/output.json" | tr -d '\n' > "$$case/expected.findings.count"; \
+			if [ -f "$$case/expected.out.json" ]; then \
+				jq -S 'del(.extensions)' "$$case/output.json" > /tmp/stave-golden-new.json; \
+				jq -S 'del(.extensions)' "$$case/expected.out.json" > /tmp/stave-golden-old.json; \
+				if ! diff -q /tmp/stave-golden-old.json /tmp/stave-golden-new.json > /dev/null 2>&1; then \
+					cp "$$case/output.json" "$$case/expected.out.json"; \
+					echo "  Updated: $$case/expected.out.json"; \
+				fi; \
+			fi; \
 		fi; \
 	done
 	@echo "Golden files updated"
@@ -121,15 +139,15 @@ golden: build
 e2e: build
 	./scripts/e2e.sh
 
-## determinism: Verify evaluate --profile mvp1-s3 output is deterministic (run twice, diff)
+## determinism: Verify apply --profile mvp1-s3 output is deterministic (run twice, diff)
 determinism: build
-	@echo "Determinism check: running evaluate --profile mvp1-s3 twice on golden-path fixture..."
-	@./$(BINARY) evaluate --profile mvp1-s3 \
+	@echo "Determinism check: running apply --profile mvp1-s3 twice on golden-path fixture..."
+	@./$(BINARY) apply --profile mvp1-s3 \
 		--input testdata/e2e/e2e-s3-golden-path/observations.json \
 		--include-all \
 		--now 2026-01-11T00:00:00Z \
 		> /tmp/stave-determinism-run1.json 2>/dev/null || true
-	@./$(BINARY) evaluate --profile mvp1-s3 \
+	@./$(BINARY) apply --profile mvp1-s3 \
 		--input testdata/e2e/e2e-s3-golden-path/observations.json \
 		--include-all \
 		--now 2026-01-11T00:00:00Z \

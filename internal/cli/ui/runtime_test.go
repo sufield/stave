@@ -73,16 +73,20 @@ func TestRuntimeBeginProgress_QuietOrNoTTY(t *testing.T) {
 }
 
 func TestRuntimePrintNextSteps(t *testing.T) {
-	var stdout bytes.Buffer
-	rt := NewRuntime(&stdout, &bytes.Buffer{})
+	var stdout, stderr bytes.Buffer
+	rt := NewRuntime(&stdout, &stderr)
 	rt.PrintNextSteps("Do A", "Do B")
 
-	out := stdout.String()
+	// Next steps must go to stderr so that machine-readable stdout (JSON) is not corrupted.
+	if stdout.Len() != 0 {
+		t.Fatalf("PrintNextSteps must not write to stdout, got: %q", stdout.String())
+	}
+	out := stderr.String()
 	if !strings.Contains(out, "Next steps:") {
-		t.Fatalf("missing header: %q", out)
+		t.Fatalf("missing header in stderr: %q", out)
 	}
 	if !strings.Contains(out, "1. Do A") || !strings.Contains(out, "2. Do B") {
-		t.Fatalf("missing steps: %q", out)
+		t.Fatalf("missing steps in stderr: %q", out)
 	}
 }
 

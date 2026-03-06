@@ -1,7 +1,12 @@
 {
-  "findings": [],
+  "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T00:00:00Z.json": "89cb987e7bd09ecc1bfac62052d53ef33205144ca8c4305f7ef15a67cb28eb02",
@@ -9,28 +14,32 @@
       },
       "overall": "d35bff4a013bfa09258f9af8651598c978b191c539ce9724283b08a26ed9ba71"
     },
-    "max_unsafe": "168h0m0s",
-    "now": "2026-01-11T00:00:00Z",
-    "offline": true,
-    "snapshots": 2,
-    "tool_version": "0.0.1"
+    "pack_hash": "d947d36c17b8076b35fa252cf155e5696670e376a7eee714dffbbb79a999ab84"
   },
-  "schema_version": "out.v0.1",
-  "skipped": [
+  "summary": {
+    "resources_evaluated": 2,
+    "attack_surface": 1,
+    "violations": 0
+  },
+  "findings": [],
+  "skipped_resources": [
     {
-      "control_id": "CTL.ID.KUBE.001",
-      "control_name": "Cluster-Admin Binding Detected",
-      "reason": "type not evaluatable: k8s_rbac_security"
-    },
-    {
-      "control_id": "CTL.ID.KUBE.003",
-      "control_name": "Binding to system:unauthenticated",
-      "reason": "type not evaluatable: k8s_rbac_security"
+      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "matched_pattern": "k8s:ClusterRoleBinding/admin-binding",
+      "reason": "Pre-approved cluster admin binding for break-glass access"
     }
   ],
-  "summary": {
-    "attack_surface": 0,
-    "resources_evaluated": 0,
-    "violations": 0
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-22-ignore/controls",
+      "observations": "testdata/e2e/e2e-22-ignore/observations"
+    },
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

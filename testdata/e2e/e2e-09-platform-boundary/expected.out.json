@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "a2e64325e8666b66c46786b82fd2a09ce3b94e58b698826783a5152ddbb01927"
       },
       "overall": "8ab9597cd94ddd7397ae1a775bb7870b261e77559ff547cd7ea8efa24bcc9114"
-    }
+    },
+    "pack_hash": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f"
   },
   "summary": {
     "resources_evaluated": 0,
@@ -29,14 +30,16 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-09-platform-boundary/invariants",
+      "controls": "testdata/e2e/e2e-09-platform-boundary/controls",
       "observations": "testdata/e2e/e2e-09-platform-boundary/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

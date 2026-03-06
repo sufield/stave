@@ -16,7 +16,10 @@
         "third_party_shared": true,
         "vendor_allowed": false
       },
-      "source": { "file": "data/config.tf", "line": 10 }
+      "source": {
+        "file": "data/config.tf",
+        "line": 10
+      }
     },
     {
       "id": "res:data:customer:pii-shared-approved",
@@ -27,7 +30,10 @@
         "third_party_shared": true,
         "vendor_allowed": true
       },
-      "source": { "file": "data/config.tf", "line": 25 }
+      "source": {
+        "file": "data/config.tf",
+        "line": 25
+      }
     },
     {
       "id": "res:data:customer:public-shared",
@@ -38,7 +44,10 @@
         "third_party_shared": true,
         "vendor_allowed": false
       },
-      "source": { "file": "data/config.tf", "line": 40 }
+      "source": {
+        "file": "data/config.tf",
+        "line": 40
+      }
     }
   ]
 }

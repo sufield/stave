@@ -5,8 +5,9 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "0s",
-    "snapshots": 2
+    "max_unsafe": "0h",
+    "snapshots": 2,
+    "pack_hash": "853b2485a07396a55f0ef421159807db391eab7282c1d4d3e83059506c0dcb67"
   },
   "summary": {
     "resources_evaluated": 2,
@@ -29,18 +30,28 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "pci_dss_v3.2.1": "1.3.6",
+        "soc2": "CC6.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.\n",
@@ -62,13 +73,30 @@
         "threshold_hours": 0,
         "misconfigurations": [
           {
+            "property": "storage.encryption.algorithm",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.encryption.kms_key_id",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": ""
+          },
+          {
             "property": "storage.tags.data-classification",
-            "actual_value": "phi",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "phi"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "PHI bucket is not using SSE-KMS with a customer-managed key. The organization lacks control over key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -90,19 +118,42 @@
         "threshold_hours": 0,
         "misconfigurations": [
           {
+            "property": "storage.encryption.algorithm",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "phi",
-            "operator": "eq",
-            "unsafe_value": "phi"
+            "actual_value": "[SANITIZED]",
+            "operator": "present",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.\n",
@@ -113,7 +164,7 @@
     {
       "control_id": "CTL.S3.GOVERNANCE.001",
       "control_name": "Data Classification Tag Required",
-      "control_description": "S3 buckets must have a data-classification tag. Without this tag, tag-conditional invariants for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate \u2014 the bucket silently passes all sensitivity-gated checks regardless of actual content.\n",
+      "control_description": "S3 buckets must have a data-classification tag. Without this tag, tag-conditional invariants for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate — the bucket silently passes all sensitivity-gated checks regardless of actual content.\n",
       "asset_id": "private-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -125,12 +176,23 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Bucket is missing the data-classification tag. Without this tag, sensitivity-gated invariants cannot evaluate and the bucket silently passes all data-protection checks.\n",
@@ -153,17 +215,65 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "pci_dss_v3.2.1": "1.2.1",
+        "soc2": "CC6.1"
+      },
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.\n",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.\n",
         "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-990c069758119150",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -181,29 +291,84 @@
         "misconfigurations": [
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "phi",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "phi"
           },
           {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "pii"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "confidential"
+          },
+          {
             "property": "storage.visibility.public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "critical",
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "A bucket containing sensitive data (PHI, PII, or confidential) has public read or list access. This data is accessible to anyone on the internet.\n",
         "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window.\n",
         "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-a7c1b92fc4fd3b56",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -221,7 +386,7 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_read_via_policy",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
@@ -231,10 +396,53 @@
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "critical",
+      "exposure": {
+        "type": "public_read_via_policy",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Bucket policy grants public read (Principal \\\"*\\\" with read action).\n",
         "action": "Remove or constrain the public policy statement. Use restrictive principals or conditions and keep Public Access Block enabled.\n",
         "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read_via_policy\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-1f7cb52a37fba422",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -252,7 +460,7 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list_via_policy",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
@@ -262,10 +470,53 @@
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "critical",
+      "exposure": {
+        "type": "public_list_via_policy",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Bucket policy grants public listing (Principal \\\"*\\\" with list action).\n",
         "action": "Remove or constrain policy statements allowing s3:ListBucket to anonymous principals.\n",
         "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_list_via_policy\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-9348058b446900e1",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -283,17 +534,60 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "public_list",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Bucket allows anonymous listing of objects. Public listing exposes all object keys, enabling targeted data exfiltration.\n",
         "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block.\n",
         "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_list\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-db589850848ca47e",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -311,23 +605,78 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
+            "property": "storage.tags.public_list_intended",
+            "actual_value": "[SANITIZED]",
+            "operator": "missing",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.tags.public_list_intended",
+            "actual_value": "[SANITIZED]",
+            "operator": "ne",
+            "unsafe_value": "true"
+          },
+          {
             "property": "storage.visibility.public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "public_list",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.\n",
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.\n",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"visibility\": {\n      \"public_list\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-27f454c296aeb43f",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -343,22 +692,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "backups/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "backups/"
           }
         ],
         "why_now": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-3c8fd5636f52b3f6",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -374,22 +767,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "internal/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "internal/"
           }
         ],
         "why_now": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-3c8fd5636f52b3f6",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -405,22 +842,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "invoices/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
         ],
         "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-3c8fd5636f52b3f6",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -436,22 +917,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "secrets/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "secrets/"
           }
         ],
         "why_now": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-3c8fd5636f52b3f6",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -467,22 +992,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "backups/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "backups/"
           }
         ],
         "why_now": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-41c50153690d4e0c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -498,22 +1067,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "internal/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "internal/"
           }
         ],
         "why_now": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-41c50153690d4e0c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -529,22 +1142,66 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "invoices/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
         ],
         "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-41c50153690d4e0c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
     },
     {
@@ -560,23 +1217,159 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "secrets/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "secrets/"
           }
         ],
         "why_now": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
+      "control_severity": "high",
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
-        "description": "Invariant violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-41c50153690d4e0c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
       }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "private-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-569d532697e581e6",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.PREFIX.001"
+      ],
+      "finding_count": 4
+    },
+    {
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-788fb07096311631",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.002",
+        "CTL.S3.PUBLIC.007",
+        "CTL.S3.PUBLIC.008",
+        "CTL.S3.PUBLIC.LIST.001",
+        "CTL.S3.PUBLIC.LIST.002",
+        "CTL.S3.PUBLIC.PREFIX.001"
+      ],
+      "finding_count": 10
     }
   ]
 }

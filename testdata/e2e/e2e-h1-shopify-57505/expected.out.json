@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "5d8e9173a58299cfe70224db26e96c7de27cb1e996d3fcb5671ef3d099ab52df"
       },
       "overall": "98b264d6fef3205d8f3abb2be0b2644208c13f8a305ce04e08b3eb24e8626f28"
-    }
+    },
+    "pack_hash": "98500d635e344fcc1511c568a8a681d2924a253f0e5a771d01f1d227b88764e4"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -36,37 +37,41 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.public_list_intended",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "missing",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.public_list_intended",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "true"
           },
           {
             "property": "storage.visibility.public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-7ad47d3c7088885b",
+        "id": "fix-8604b9649932ce8c",
         "target": {
           "asset_id": "shopify-public-assets",
           "asset_type": "aws_s3_bucket"
@@ -101,15 +106,61 @@
       }
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "shopify-public-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-00d12bb85e1510be",
+        "target": {
+          "asset_id": "shopify-public-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.LIST.002"
+      ],
+      "finding_count": 1
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-57505/invariants",
+      "controls": "testdata/e2e/e2e-h1-shopify-57505/controls",
       "observations": "testdata/e2e/e2e-h1-shopify-57505/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

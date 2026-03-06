@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "a6e82927eada05cb4123b3ae96bca695e3ffeb7df4a21b774d8aa76d3d72f2d8"
       },
       "overall": "af2af268e4f2dbaa04afad2efe3ee26c7a185375a10f5ad0803637a9e9446573"
-    }
+    },
+    "pack_hash": "45f34f72f0576f50ad06dfe17f45df33aa1e752683cc8a1ba0f995006b91d26d"
   },
   "summary": {
     "resources_evaluated": 2,
@@ -36,24 +37,28 @@
         "misconfigurations": [
           {
             "property": "s3_upload.content_type_restricted",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "s3_upload.operation",
-            "actual_value": "write",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "write"
           },
           {
             "property": "type",
-            "actual_value": "s3_upload_policy",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "s3_upload_policy"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Signed upload policy does not restrict content types. An attacker can upload arbitrary content types including image/svg+xml or text/html, enabling stored XSS.\n",
@@ -63,14 +68,16 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-upload-content-type/invariants",
+      "controls": "testdata/e2e/e2e-s3-upload-content-type/controls",
       "observations": "testdata/e2e/e2e-s3-upload-content-type/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

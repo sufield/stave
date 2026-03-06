@@ -228,6 +228,7 @@ var EvaluatableTypes = []ControlType{
 	TypeUnsafeDuration,
 	TypeUnsafeRecurrence,
 	TypePrefixExposure,
+	TypeK8sRbacSecurity,
 }
 
 // IsEvaluatable reports whether the evaluator can process this control type.

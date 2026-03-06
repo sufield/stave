@@ -1,5 +1,5 @@
 {
-  "attack_surface": 0,
-  "resources_evaluated": 0,
+  "attack_surface": 2,
+  "resources_evaluated": 3,
   "violations": 0
 }

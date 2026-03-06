@@ -10,6 +10,8 @@ import (
 const (
 	sourceTypeTerraformPlanJSON = "terraform.plan_json"
 	sourceTypeAWSS3Snapshot     = "aws-s3-snapshot"
+	sourceTypeKubernetesRBAC    = "kubernetes.rbac"
+	sourceTypeCloudInventory    = "cloud.inventory"
 
 	terraformPlanMinVersion = "1.5.0"
 	terraformPlanFormat     = "terraform show -json"
@@ -78,6 +80,14 @@ func newRegistry() *registry {
 		{
 			Type:        sourceTypeAWSS3Snapshot,
 			Description: "S3 snapshot JSON observations",
+		},
+		{
+			Type:        sourceTypeKubernetesRBAC,
+			Description: "Kubernetes RBAC observations",
+		},
+		{
+			Type:        sourceTypeCloudInventory,
+			Description: "Generic cloud inventory observations",
 		},
 	}
 

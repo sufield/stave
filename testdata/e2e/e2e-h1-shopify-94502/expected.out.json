@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2015-10-26T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2015-10-26T00:00:00Z.json": "2ee981cc9379b40512c227c2756491845fa2de7fdcb982bdd8dd07f30d32d9bf"
       },
       "overall": "f20a38ac3d2cc70fcf3df41d6abfe45e0dddd1fbaebee9627225b88259aa5175"
-    }
+    },
+    "pack_hash": "3a43d33d6946a4821fb859b9790af47b5e39df446d519796faf7ed7af579facf"
   },
   "summary": {
     "resources_evaluated": 3,
@@ -36,18 +37,22 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -69,18 +74,22 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -102,18 +111,22 @@
         "misconfigurations": [
           {
             "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -135,36 +148,40 @@
         "misconfigurations": [
           {
             "property": "storage.encryption.algorithm",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "aws:kms"
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "present",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "public"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "non-sensitive"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -186,36 +203,40 @@
         "misconfigurations": [
           {
             "property": "storage.encryption.algorithm",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "aws:kms"
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "present",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "public"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "non-sensitive"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -237,36 +258,40 @@
         "misconfigurations": [
           {
             "property": "storage.encryption.algorithm",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "aws:kms"
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "present",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "public"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "non-sensitive"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -288,25 +313,29 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-5118be202e4147ad",
+        "id": "fix-bbb8fb610094e8b4",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -355,25 +384,29 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-244aad0d0bb7fad9",
+        "id": "fix-a9adeaefad1eb6e9",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -422,25 +455,29 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-be5775a956ac5123",
+        "id": "fix-208c99a7323dbdeb",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -489,19 +526,23 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_write",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-8b3ec84a56c71e5d",
+        "id": "fix-38b4bc7d0e891914",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -550,7 +591,7 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_read_via_acl",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
@@ -560,12 +601,16 @@
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-bdae5224f6af630d",
+        "id": "fix-42d3435d00dd9ac6",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -614,7 +659,7 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_read_via_acl",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
@@ -624,12 +669,16 @@
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-7059f839cb6c218f",
+        "id": "fix-5de57717d7b74f8f",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -678,7 +727,7 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_read_via_acl",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
@@ -688,12 +737,16 @@
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-a5825408ce9af61b",
+        "id": "fix-fcb6eb7cde85b4a7",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -728,15 +781,149 @@
       }
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-50e46ff7302693a3",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    },
+    {
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-21c47bfe83a0a3df",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    },
+    {
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-5c04df9780458c25",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.003",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 3
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-94502/invariants",
+      "controls": "testdata/e2e/e2e-h1-shopify-94502/controls",
       "observations": "testdata/e2e/e2e-h1-shopify-94502/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

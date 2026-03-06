@@ -119,13 +119,15 @@ func (r *Runtime) BeginProgress(label string) func() {
 	}
 }
 
-// PrintNextSteps writes a formatted "Next steps:" block to out.
+// PrintNextSteps writes a formatted "Next steps:" block to stderr.
+// Writing to stderr ensures that machine-readable output on stdout (e.g. JSON)
+// is not polluted with human-readable guidance.
 func (r *Runtime) PrintNextSteps(steps ...string) {
 	if r == nil || r.Quiet || len(steps) == 0 {
 		return
 	}
 
-	out := r.stdout()
+	out := r.stderr()
 	_, _ = fmt.Fprintln(out)
 	_, _ = fmt.Fprintln(out, "Next steps:")
 	for i, step := range steps {

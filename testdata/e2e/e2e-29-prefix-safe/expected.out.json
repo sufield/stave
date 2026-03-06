@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,23 +13,62 @@
         "2026-01-11T00:00:00Z.json": "c1fb052cd8af8c8cedac95db8352b4e89cf3364774d88cec5409a32f3b0460d6"
       },
       "overall": "b15b0764c5e2d1e6b9b78e8ca20bb83e906b8c2b562de5595cb370bf25c476e5"
-    }
+    },
+    "pack_hash": "3e4adb4aed85eb64d5f3b59514f45ff9f82f3cd39fc81e38a7c04a9032062038"
   },
   "summary": {
     "resources_evaluated": 1,
     "attack_surface": 1,
-    "violations": 0
+    "violations": 1
   },
-  "findings": [],
+  "findings": [
+    {
+      "control_id": "CTL.EXP.VISIBILITY.003",
+      "control_name": "Public Read Allowed Only for Approved Prefixes",
+      "control_description": "Public read access must be limited to explicitly approved prefixes. All other prefixes are private by default.\n",
+      "asset_id": "res:aws:s3:bucket:example-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "unsafe_duration_hours": 0,
+        "threshold_hours": 0,
+        "misconfigurations": [
+          {
+            "property": "exposure_source",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "missing_evidence"
+          },
+          {
+            "property": "protected_prefix",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "invoices/"
+          }
+        ],
+        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Control violation detected.",
+        "action": "Review the unsafe configuration and remediate."
+      }
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-29-prefix-safe/invariants",
+      "controls": "testdata/e2e/e2e-29-prefix-safe/controls",
       "observations": "testdata/e2e/e2e-29-prefix-safe/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

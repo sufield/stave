@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "6bb6c778da60c38dff650303b91d47e81179a5b642ca9d513d44b8d5bd675528"
       },
       "overall": "acb2a9555673ed55508dafcd6a36719f5d597f1987d906b8a5692b01cd36dcdb"
-    }
+    },
+    "pack_hash": "7b70102872bd7757639698e298525ef22ee7279ba48ce95de838d147f1dc0080"
   },
   "summary": {
     "resources_evaluated": 2,
@@ -36,24 +37,28 @@
         "misconfigurations": [
           {
             "property": "s3_upload.allowed_key_mode",
-            "actual_value": "prefix",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "prefix"
           },
           {
             "property": "s3_upload.operation",
-            "actual_value": "write",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "write"
           },
           {
             "property": "type",
-            "actual_value": "s3_upload_policy",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "s3_upload_policy"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -62,14 +67,16 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-93691/invariants",
+      "controls": "testdata/e2e/e2e-h1-shopify-93691/controls",
       "observations": "testdata/e2e/e2e-h1-shopify-93691/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

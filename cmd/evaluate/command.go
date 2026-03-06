@@ -33,7 +33,26 @@ func init() {
 	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to resource ignore list YAML file")
 	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
 	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
+
+	// Profile mode flags (--profile mvp1-s3)
+	ApplyCmd.Flags().StringVar(&applyFlags.evalProfile, "profile", "", "Evaluation profile (supported: mvp1-s3)")
+	ApplyCmd.Flags().StringVar(&applyFlags.profileInputFile, "input", "", "Input observations bundle (required with --profile mvp1-s3)")
+	ApplyCmd.Flags().BoolVar(&applyFlags.profileIncludeAll, "include-all", false, "Include all resources when using a profile")
+	ApplyCmd.Flags().StringVar(&applyFlags.profileScopeFile, "scope", "", "Scope YAML file for profile-based evaluation")
+	ApplyCmd.Flags().StringArrayVar(&applyFlags.profileBucketAllowlist, "bucket-allowlist", nil, "Allowlisted bucket names for profile-based evaluation")
+
+	// Advanced evaluation flags
+	ApplyCmd.Flags().BoolVar(&applyFlags.evaluateDryRun, "dry-run", false, "Print the evaluation plan without running")
+	ApplyCmd.Flags().BoolVar(&applyFlags.evaluateExplain, "explain", false, "Print evaluation plan summary to stderr before running")
+	ApplyCmd.Flags().StringVar(&applyFlags.evaluateTemplateStr, "template", "", "Go template string for custom output formatting")
+	ApplyCmd.Flags().StringVar(&applyFlags.evalMinSeverity, "min-severity", "", "Minimum finding severity to include (low, medium, high, critical)")
+	ApplyCmd.Flags().StringVar(&applyFlags.evalControlID, "control-id", "", "Run only the specified control ID")
+	ApplyCmd.Flags().StringVar(&applyFlags.evalCompliance, "compliance", "", "Filter findings by compliance framework")
+	ApplyCmd.Flags().StringArrayVar(&applyFlags.evalExcludeControlIDs, "exclude-controls", nil, "Control IDs to exclude from evaluation")
+
 	_ = ApplyCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
+	_ = ApplyCmd.RegisterFlagCompletionFunc("profile", cmdutil.CompleteFixed("mvp1-s3"))
+	_ = ApplyCmd.RegisterFlagCompletionFunc("min-severity", cmdutil.CompleteFixed("low", "medium", "high", "critical"))
 }
 
 var (

@@ -18,7 +18,8 @@
         "justification_required",
         "ownership_required",
         "visibility_required",
-        "prefix_exposure"
+        "prefix_exposure",
+        "k8s_rbac_security"
       ]
     },
     "predicateRule": {
@@ -133,7 +134,9 @@
       "properties": {
         "dsl_version": {
           "type": "string",
-          "enum": ["ctrl.v1"],
+          "enum": [
+            "ctrl.v1"
+          ],
           "title": "DSL Version",
           "description": "DSL version identifier."
         },
@@ -220,7 +223,10 @@
           "additionalProperties": false,
           "title": "Exposure Classification",
           "description": "Classifies who can reach the resource and how.",
-          "required": ["type", "principal_scope"],
+          "required": [
+            "type",
+            "principal_scope"
+          ],
           "properties": {
             "type": {
               "type": "string",

@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2023-01-21T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2023-01-21T00:00:00Z.json": "a35a6ad1357da6b7b289da840a36280ea6d2f68d0c63ba5af2937ac35fb0f12f"
       },
       "overall": "9302d2754f02cf42d2c7e24dfe3bc9055999522e4230308c6d749d9c410e8d72"
-    }
+    },
+    "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -22,14 +23,16 @@
   },
   "findings": [],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-brave-1835133/invariants",
+      "controls": "testdata/e2e/e2e-h1-brave-1835133/controls",
       "observations": "testdata/e2e/e2e-h1-brave-1835133/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

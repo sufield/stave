@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "fe423fff40e7c527dd1f4f9badf3ab57f29b21351f22534ec28e518017244f72"
       },
       "overall": "b1d6b4545786cdbb0485d4d76a7b409778fe91f793ddddd9eb12cc75bfada46f"
-    }
+    },
+    "pack_hash": "3e4adb4aed85eb64d5f3b59514f45ff9f82f3cd39fc81e38a7c04a9032062038"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -34,34 +35,40 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "policy:AllowPublicInvoices",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
-            "unsafe_value": "policy:AllowPublicInvoices"
+            "unsafe_value": "missing_evidence"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "invoices/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "invoices/"
           }
         ],
-        "why_now": "Protected prefix \"invoices/\" is publicly readable via policy:AllowPublicInvoices."
+        "why_now": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
-        "description": "Invariant violation detected.",
+        "description": "Control violation detected.",
         "action": "Review the unsafe configuration and remediate."
       }
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-31-prefix-unsafe-explicit/invariants",
+      "controls": "testdata/e2e/e2e-31-prefix-unsafe-explicit/controls",
       "observations": "testdata/e2e/e2e-31-prefix-unsafe-explicit/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

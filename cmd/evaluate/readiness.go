@@ -61,6 +61,12 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Profile mode manages its own controls and observations; skip the directory-based
+	// readiness gate so that --profile mvp1-s3 does not require --controls/--observations.
+	if applyFlags.evalProfile != "" {
+		return runEvaluate(cmd, args)
+	}
+
 	report, err := assessReadiness(cmd, readinessInput{
 		ControlsDir:     applyFlags.controlsDir,
 		ObservationsDir: applyFlags.observationsDir,

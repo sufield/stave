@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2017-02-09T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2017-02-09T00:00:00Z.json": "39554fa3950271b2c40dce4a9d8a2139a2d0f128f6e6edfeb45d66e22cf8476a"
       },
       "overall": "6456e73974301093f56e48d32af3318fce7c9534aaac4c0f87833003fdc5811c"
-    }
+    },
+    "pack_hash": "2c3e3588e28da436e5052caf84f629ff4f9eb044d66fbe9c83e9facf975fda1e"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -36,25 +37,29 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_list",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.visibility.public_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-02-01T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-6530a8fe85d73f68",
+        "id": "fix-7c935a3e57694ac6",
         "target": {
           "asset_id": "mapbox-private-objects",
           "asset_type": "aws_s3_bucket"
@@ -89,15 +94,61 @@
       }
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "mapbox-private-objects",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-240a8907277ea6e7",
+        "target": {
+          "asset_id": "mapbox-private-objects",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "finding_count": 1
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-mapbox-202725/invariants",
+      "controls": "testdata/e2e/e2e-h1-mapbox-202725/controls",
       "observations": "testdata/e2e/e2e-h1-mapbox-202725/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

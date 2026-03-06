@@ -5,15 +5,16 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "2f612065b88990b01c2608ed607d10ed2b956161dbd7e22b690e24ba3b2f12d1",
-        "2026-01-11T00:00:00Z.json": "114574aa0de1bd3a3d46b39a293beabf23e561e646a0de7de679f6d54fb431ce"
+        "2026-01-01T00:00:00Z.json": "9589edef40920cb44e9e97adcba4247b6612862427859bedff95d3cfa8aaf4f1",
+        "2026-01-11T00:00:00Z.json": "752a7470fd5ebfcdbca91ffc231bc8d31a0e28ebad96a3173376311d311657be"
       },
-      "overall": "fda2021cccb23706a40b71631a2ca651ecd429f2c01f999bf6726eb9f032b3bd"
-    }
+      "overall": "313de4bfd3d4d2fa603020a7eb0a7a959c84851bbb76a51cc8949d50647e5eea"
+    },
+    "pack_hash": "6a5cf52efaa5bdc83ec3eb9d5011d4278835db68a4eda55c464859b38337ec46"
   },
   "summary": {
     "resources_evaluated": 0,
@@ -29,14 +30,16 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-08-vendor-boundary/invariants",
+      "controls": "testdata/e2e/e2e-08-vendor-boundary/controls",
       "observations": "testdata/e2e/e2e-08-vendor-boundary/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }

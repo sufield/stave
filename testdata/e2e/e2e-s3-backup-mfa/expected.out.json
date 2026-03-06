@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "d8805eddcb0a5bf688abf8d24b1c6d3f15185092f033ae0a7b6d78169a9388ba"
       },
       "overall": "cc5c1a68f3a22035a2976dc66c542f576ebfdf4217069572616b0930aea25355"
-    }
+    },
+    "pack_hash": "e742e9c359fd8d9aa11a347372fe23bdefe8b4100696775b422e6ebfbf511265"
   },
   "summary": {
     "resources_evaluated": 3,
@@ -36,18 +37,22 @@
         "misconfigurations": [
           {
             "property": "storage.tags.backup",
-            "actual_value": "true",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "true"
           },
           {
             "property": "storage.versioning.mfa_delete_enabled",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": false
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -56,14 +61,16 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-backup-mfa/invariants",
+      "controls": "testdata/e2e/e2e-s3-backup-mfa/controls",
       "observations": "testdata/e2e/e2e-s3-backup-mfa/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/runner/work/stave/stave",
+      "head_commit": "e70f8a63782207776657d5b0e42cd47acf3084de",
+      "dirty": false
+    }
   }
 }
