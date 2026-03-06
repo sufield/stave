@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/branch/main/graph/badge.svg)](https://codecov.io/gh/sufield/stave)
 
-A configuration safety evaluator that detects resources remaining unsafe for too long, using only local config snapshots without cloud credentials.
+A configuration safety evaluator that detects cloud resources remaining unsafe for too long, using only local config snapshots without using any cloud credentials.
 
 Design philosophy: [docs/design-philosophy.md](docs/design-philosophy.md)
 Quick onboarding: [docs/time-to-first-finding.md](docs/time-to-first-finding.md)

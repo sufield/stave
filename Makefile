@@ -220,7 +220,7 @@ SYNC_EXCLUDES = \
 	--exclude='.git/' \
 	--exclude='dev/' \
 	--exclude='.tmp/' \
-	--exclude='stave'
+	--exclude='/stave'
 
 ## sync-public-dry: Preview sync to public repo (no changes)
 sync-public-dry:
