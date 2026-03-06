@@ -50,10 +50,10 @@ func TestBuildRemediationGroups(t *testing.T) {
 	)
 
 	tests := []struct {
-		name                string
-		findings            []remediation.Finding
-		wantNil             bool
-		wantGroupCount      int
+		name              string
+		findings          []remediation.Finding
+		wantNil           bool
+		wantGroupCount    int
 		wantControlCounts []int
 	}{
 		{
@@ -73,7 +73,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 			findings: []remediation.Finding{
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 			},
-			wantGroupCount:      1,
+			wantGroupCount:    1,
 			wantControlCounts: []int{1},
 		},
 		{
@@ -82,7 +82,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 				makeFinding("CTL.S3.PUBLIC.002", "bucket-a", sharedActions),
 			},
-			wantGroupCount:      1,
+			wantGroupCount:    1,
 			wantControlCounts: []int{2},
 		},
 		{
@@ -91,7 +91,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 				makeFinding("CTL.S3.ENCRYPT.001", "bucket-a", differentActions),
 			},
-			wantGroupCount:      2,
+			wantGroupCount:    2,
 			wantControlCounts: []int{1, 1},
 		},
 		{
@@ -100,7 +100,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-b", sharedActions),
 			},
-			wantGroupCount:      2,
+			wantGroupCount:    2,
 			wantControlCounts: []int{1, 1},
 		},
 		{
@@ -109,7 +109,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-z", sharedActions),
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 			},
-			wantGroupCount:      2,
+			wantGroupCount:    2,
 			wantControlCounts: []int{1, 1},
 		},
 		{
@@ -118,7 +118,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.002", "bucket-a", sharedActions),
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 			},
-			wantGroupCount:      1,
+			wantGroupCount:    1,
 			wantControlCounts: []int{2},
 		},
 		{
@@ -128,7 +128,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.CONTROLS.001", "bucket-a", nil),
 				makeFinding("CTL.S3.PUBLIC.002", "bucket-a", sharedActions),
 			},
-			wantGroupCount:      1,
+			wantGroupCount:    1,
 			wantControlCounts: []int{2},
 		},
 	}

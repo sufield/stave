@@ -99,10 +99,10 @@ func gatherUpcomingOptions(cmd *cobra.Command) (upcomingRunOptions, error) {
 		return upcomingRunOptions{}, err
 	}
 	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
-		ControlIDs:    toControlIDs(upcomingFlags.controlIDs),
-		AssetTypes:    toAssetTypes(upcomingFlags.resourceTypes),
-		Statuses:      upcomingFlags.statuses,
-		DueWithin:     dueWithinDur,
+		ControlIDs: toControlIDs(upcomingFlags.controlIDs),
+		AssetTypes: toAssetTypes(upcomingFlags.resourceTypes),
+		Statuses:   upcomingFlags.statuses,
+		DueWithin:  dueWithinDur,
 	})
 	if err != nil {
 		return upcomingRunOptions{}, err

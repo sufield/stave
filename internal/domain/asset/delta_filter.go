@@ -4,9 +4,9 @@ import "strings"
 
 // FilterOptions narrows an ObservationDelta by change/resource criteria.
 type FilterOptions struct {
-	ChangeTypes   []ChangeType
-	AssetTypes    []string
-	AssetID       string
+	ChangeTypes []ChangeType
+	AssetTypes  []string
+	AssetID     string
 }
 
 // ApplyFilter returns a new ObservationDelta containing only matching changes.

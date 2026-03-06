@@ -47,7 +47,7 @@ jobs:
           }
 
           check_coverage ./internal/app/... 25 coverage-app.out
-          check_coverage ./internal/predicate/... 40 coverage-predicate.out
+          check_coverage ./internal/domain/predicate/... 40 coverage-predicate.out
           check_coverage ./internal/domain/... 70 coverage-domain.out
 
       - name: Upload coverage to Codecov

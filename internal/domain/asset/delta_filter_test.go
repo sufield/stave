@@ -12,9 +12,9 @@ func TestObservationDeltaApplyFilter(t *testing.T) {
 	}
 
 	filtered := delta.ApplyFilter(FilterOptions{
-		ChangeTypes:   []ChangeType{ChangeModified, ChangeRemoved},
-		AssetTypes:    []string{"res:aws:s3:bucket"},
-		AssetID:       "bucket",
+		ChangeTypes: []ChangeType{ChangeModified, ChangeRemoved},
+		AssetTypes:  []string{"res:aws:s3:bucket"},
+		AssetID:     "bucket",
 	})
 
 	if len(filtered.Changes) != 1 {

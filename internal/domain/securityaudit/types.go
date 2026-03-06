@@ -150,7 +150,7 @@ const (
 	CheckPrivilegeNoSudo    = "RB.PRIVILEGE.NO_SUDO"
 	CheckIAMS3MinPerms      = "RB.IAM.S3.MINPERMS"
 	CheckCredentialStorage  = "DP.CREDENTIAL.STORAGE" // #nosec G101 -- check ID, not a credential
-	CheckSanitizationPolicy    = "DP.SANITIZATION.POLICY"
+	CheckSanitizationPolicy = "DP.SANITIZATION.POLICY"
 	CheckTelemetryDecl      = "DP.TELEMETRY.DISCLOSURE"
 	CheckPrivacyMode        = "DP.PRIVACY.MODE"
 	CheckBuildHardening     = "IC.BUILD.HARDENING"
