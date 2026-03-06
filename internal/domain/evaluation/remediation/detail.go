@@ -27,7 +27,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 
 	detail.Control = buildControlSummary(ctl, violation)
 
-	detail.Resource = evaluation.FindingResourceSummary{
+	detail.Asset = evaluation.FindingResourceSummary{
 		ID:         violation.AssetID,
 		Type:       string(violation.AssetType),
 		Vendor:     string(violation.AssetVendor),

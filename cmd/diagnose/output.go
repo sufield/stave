@@ -85,7 +85,7 @@ func writeDiagnoseJSON(cmd *cobra.Command, w io.Writer, report *diagnosis.Report
 func writeFindingDetailJSON(w io.Writer, detail *evaluation.FindingDetail) error {
 	type jsonFindingDetail struct {
 		Control         evaluation.FindingControlSummary  `json:"control"`
-		Resource        evaluation.FindingResourceSummary `json:"resource"`
+		Asset           evaluation.FindingResourceSummary `json:"asset"`
 		Evidence        evaluation.Evidence               `json:"evidence"`
 		Trace           json.RawMessage                   `json:"trace,omitempty"`
 		Remediation     *policy.RemediationSpec           `json:"remediation,omitempty"`
@@ -94,7 +94,7 @@ func writeFindingDetailJSON(w io.Writer, detail *evaluation.FindingDetail) error
 	}
 	out := jsonFindingDetail{
 		Control:         detail.Control,
-		Resource:        detail.Resource,
+		Asset:           detail.Asset,
 		Evidence:        detail.Evidence,
 		Remediation:     detail.Remediation,
 		RemediationPlan: detail.RemediationPlan,

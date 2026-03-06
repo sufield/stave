@@ -54,7 +54,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 		findings            []remediation.Finding
 		wantNil             bool
 		wantGroupCount      int
-		wantInvariantCounts []int // contributing controls per group
+		wantControlCounts []int
 	}{
 		{
 			name:     "no findings",
@@ -74,7 +74,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 			},
 			wantGroupCount:      1,
-			wantInvariantCounts: []int{1},
+			wantControlCounts: []int{1},
 		},
 		{
 			name: "two findings same resource same actions",
@@ -83,7 +83,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.002", "bucket-a", sharedActions),
 			},
 			wantGroupCount:      1,
-			wantInvariantCounts: []int{2},
+			wantControlCounts: []int{2},
 		},
 		{
 			name: "two findings same resource different actions",
@@ -92,7 +92,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.ENCRYPT.001", "bucket-a", differentActions),
 			},
 			wantGroupCount:      2,
-			wantInvariantCounts: []int{1, 1},
+			wantControlCounts: []int{1, 1},
 		},
 		{
 			name: "two findings different resources same actions",
@@ -101,7 +101,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-b", sharedActions),
 			},
 			wantGroupCount:      2,
-			wantInvariantCounts: []int{1, 1},
+			wantControlCounts: []int{1, 1},
 		},
 		{
 			name: "deterministic ordering by asset_id",
@@ -110,7 +110,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 			},
 			wantGroupCount:      2,
-			wantInvariantCounts: []int{1, 1},
+			wantControlCounts: []int{1, 1},
 		},
 		{
 			name: "contributing controls sorted lexicographically",
@@ -119,7 +119,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.001", "bucket-a", sharedActions),
 			},
 			wantGroupCount:      1,
-			wantInvariantCounts: []int{2},
+			wantControlCounts: []int{2},
 		},
 		{
 			name: "mixed fix plan and no fix plan",
@@ -129,7 +129,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				makeFinding("CTL.S3.PUBLIC.002", "bucket-a", sharedActions),
 			},
 			wantGroupCount:      1,
-			wantInvariantCounts: []int{2},
+			wantControlCounts: []int{2},
 		},
 	}
 
@@ -148,7 +148,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 				t.Fatalf("expected %d groups, got %d", tt.wantGroupCount, len(groups))
 			}
 
-			for i, wantCount := range tt.wantInvariantCounts {
+			for i, wantCount := range tt.wantControlCounts {
 				if len(groups[i].ContributingControls) != wantCount {
 					t.Errorf("group[%d]: expected %d contributing controls, got %d",
 						i, wantCount, len(groups[i].ContributingControls))

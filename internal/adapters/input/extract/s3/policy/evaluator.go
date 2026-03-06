@@ -7,11 +7,6 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 )
 
-// Type aliases so existing in-package references continue to compile.
-type SecurityScore = risk.SecurityScore
-type StmtPerm = risk.StmtPerm
-type Report = risk.Report
-
 // Re-export score constants.
 const (
 	ScoreSafe         = risk.ScoreSafe

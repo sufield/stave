@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "c9f7dd0e6894826325b46a3c1699968dd13aa2df976086dac0fa47cbb721cdf0"
       },
       "overall": "d8c98cdf3ccb9f0e399de5515329385e30096a87e72af642e666e068f78660ab"
-    }
+    },
+    "pack_hash": "406c5623be24de2c5cf4e7942ca898186e604ae98ac546f5a5456b72683ba76e"
   },
   "summary": {
     "resources_evaluated": 3,
@@ -24,7 +25,7 @@
     {
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
-      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration \u2014 the grantee can read, write, and delete objects and modify the ACL itself.\n",
+      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
       "asset_id": "fullcontrol-auth-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -36,18 +37,22 @@
         "misconfigurations": [
           {
             "property": "storage.acl.has_full_control_authenticated",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.acl.has_full_control_public",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.\n",
@@ -58,7 +63,7 @@
     {
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
-      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration \u2014 the grantee can read, write, and delete objects and modify the ACL itself.\n",
+      "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
       "asset_id": "fullcontrol-public-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -70,18 +75,22 @@
         "misconfigurations": [
           {
             "property": "storage.acl.has_full_control_authenticated",
-            "actual_value": false,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
             "property": "storage.acl.has_full_control_public",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.\n",
@@ -91,14 +100,21 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-acl-fullcontrol/invariants",
+      "controls": "testdata/e2e/e2e-s3-acl-fullcontrol/controls",
       "observations": "testdata/e2e/e2e-s3-acl-fullcontrol/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-s3-acl-fullcontrol/controls --observations testdata/e2e/e2e-s3-acl-fullcontrol/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

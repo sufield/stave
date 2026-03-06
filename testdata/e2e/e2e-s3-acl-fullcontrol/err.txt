@@ -1,0 +1,4 @@
+Running: evaluate controls against observations...
+Done:    evaluate controls against observations (4ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-s3-acl-fullcontrol/controls --observations testdata/e2e/e2e-s3-acl-fullcontrol/observations

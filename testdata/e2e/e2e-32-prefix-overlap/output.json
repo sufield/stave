@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "5a27c14109a35a819f230e0acc8365418ed2d8106d69e17e778f562ce4904826"
       },
       "overall": "cb52f3564f942d0cabdcf3156efdf7960e5bfa26e2012897749b7735efa7797e"
-    }
+    },
+    "pack_hash": "3e4adb4aed85eb64d5f3b59514f45ff9f82f3cd39fc81e38a7c04a9032062038"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -34,40 +35,51 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "config_overlap",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "config_overlap"
           },
           {
             "property": "overlap_with",
-            "actual_value": "data/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "data/"
           },
           {
             "property": "protected_prefix",
-            "actual_value": "data/secrets/",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "data/secrets/"
           }
         ],
-        "why_now": "Protected prefix \"data/secrets/\" is publicly readable via config_overlap."
+        "why_now": "Protected prefix \"data/secrets/\" overlaps with allowed prefix \"data/\" (config_overlap)."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
-        "description": "Invariant violation detected.",
+        "description": "Control violation detected.",
         "action": "Review the unsafe configuration and remediate."
       }
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-32-prefix-overlap/invariants",
+      "controls": "testdata/e2e/e2e-32-prefix-overlap/controls",
       "observations": "testdata/e2e/e2e-32-prefix-overlap/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-32-prefix-overlap/controls --observations testdata/e2e/e2e-32-prefix-overlap/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

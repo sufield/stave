@@ -1,0 +1,4 @@
+Running: evaluate controls against observations...
+Done:    evaluate controls against observations (4ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-31-prefix-unsafe-explicit/controls --observations testdata/e2e/e2e-31-prefix-unsafe-explicit/observations

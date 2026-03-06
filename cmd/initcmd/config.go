@@ -155,7 +155,7 @@ registries: []
 `)
 }
 
-const templateInvariantSample = `# ── Stave Control (` + string(kernel.SchemaControl) + `) ──────────────────────────────────────
+const templateControlSample = `# ── Stave Control (` + string(kernel.SchemaControl) + `) ──────────────────────────────────────
 #
 # A control declares a condition that should NEVER be true in
 # production. When the condition matches, Stave reports a finding.
@@ -349,7 +349,7 @@ const templateStaveConfigSample = `# ── Stave Project Configuration ──�
 #     expires: "2026-06-01"
 `
 
-const templateInvariantCanonical = `
+const templateControlCanonical = `
 dsl_version: ` + string(kernel.SchemaControl) + `
 id: CTL.S3.PUBLIC.901
 name: PHI buckets must not be public

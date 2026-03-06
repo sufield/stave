@@ -5,7 +5,7 @@ import "strings"
 // FilterOptions narrows an ObservationDelta by change/resource criteria.
 type FilterOptions struct {
 	ChangeTypes   []ChangeType
-	ResourceTypes []string
+	AssetTypes    []string
 	AssetID       string
 }
 
@@ -28,7 +28,7 @@ func filterResourceDiffs(changes []ResourceDiff, opt FilterOptions) []ResourceDi
 	}
 
 	changeTypes := buildChangeTypeSet(opt.ChangeTypes)
-	resourceTypes := buildResourceTypeSet(opt.ResourceTypes)
+	resourceTypes := buildAssetTypeSet(opt.AssetTypes)
 	assetID := strings.TrimSpace(opt.AssetID)
 
 	out := make([]ResourceDiff, 0, len(changes))
@@ -57,7 +57,7 @@ func buildChangeTypeSet(types []ChangeType) map[ChangeType]struct{} {
 	return m
 }
 
-func buildResourceTypeSet(types []string) map[string]struct{} {
+func buildAssetTypeSet(types []string) map[string]struct{} {
 	m := make(map[string]struct{}, len(types))
 	for _, rt := range types {
 		if clean := strings.TrimSpace(rt); clean != "" {

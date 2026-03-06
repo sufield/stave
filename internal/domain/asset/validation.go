@@ -192,7 +192,7 @@ func (s Snapshots) checkStructural() (issues []diag.Issue) {
 		for _, r := range snap.Resources {
 			assetID := r.ID.String()
 			if _, exists := seen[assetID]; exists {
-				issues = append(issues, diag.New(diag.CodeDuplicateResourceID).
+				issues = append(issues, diag.New(diag.CodeDuplicateAssetID).
 					Warning().
 					Action("Ensure each resource has a unique ID within a snapshot").
 					WithMap(map[string]string{

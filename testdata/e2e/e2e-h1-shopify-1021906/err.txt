@@ -1,0 +1,4 @@
+Running: evaluate controls against observations...
+Done:    evaluate controls against observations (4ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-h1-shopify-1021906/controls --observations testdata/e2e/e2e-h1-shopify-1021906/observations

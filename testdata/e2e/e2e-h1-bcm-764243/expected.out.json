@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2019-12-25T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2019-12-25T00:00:00Z.json": "3c6cc2d0f6d70dcb062714c7a4a4c7c8c4afce3fa35cbbe748844f97daf3d488"
       },
       "overall": "a46ba4993cb2155be311ab156cdf785f36c7e4044c29ba407480243d26bee435"
-    }
+    },
+    "pack_hash": "7b70102872bd7757639698e298525ef22ee7279ba48ce95de838d147f1dc0080"
   },
   "summary": {
     "resources_evaluated": 2,
@@ -36,24 +37,28 @@
         "misconfigurations": [
           {
             "property": "s3_upload.allowed_key_mode",
-            "actual_value": "prefix",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "prefix"
           },
           {
             "property": "s3_upload.operation",
-            "actual_value": "write",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "write"
           },
           {
             "property": "type",
-            "actual_value": "s3_upload_policy",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "s3_upload_policy"
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2019-12-15T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -62,14 +67,21 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-bcm-764243/invariants",
+      "controls": "testdata/e2e/e2e-h1-bcm-764243/controls",
       "observations": "testdata/e2e/e2e-h1-bcm-764243/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-bcm-764243/controls --observations testdata/e2e/e2e-h1-bcm-764243/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

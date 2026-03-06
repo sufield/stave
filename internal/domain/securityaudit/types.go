@@ -150,7 +150,7 @@ const (
 	CheckPrivilegeNoSudo    = "RB.PRIVILEGE.NO_SUDO"
 	CheckIAMS3MinPerms      = "RB.IAM.S3.MINPERMS"
 	CheckCredentialStorage  = "DP.CREDENTIAL.STORAGE" // #nosec G101 -- check ID, not a credential
-	CheckRedactionPolicy    = "DP.REDACTION.POLICY"
+	CheckSanitizationPolicy    = "DP.SANITIZATION.POLICY"
 	CheckTelemetryDecl      = "DP.TELEMETRY.DISCLOSURE"
 	CheckPrivacyMode        = "DP.PRIVACY.MODE"
 	CheckBuildHardening     = "IC.BUILD.HARDENING"
@@ -173,7 +173,7 @@ func AllCheckIDs() []string {
 		CheckPrivilegeNoSudo,
 		CheckIAMS3MinPerms,
 		CheckCredentialStorage,
-		CheckRedactionPolicy,
+		CheckSanitizationPolicy,
 		CheckTelemetryDecl,
 		CheckPrivacyMode,
 		CheckBuildHardening,

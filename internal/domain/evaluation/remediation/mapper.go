@@ -89,8 +89,8 @@ func (f Finding) Sanitized(r kernel.Sanitizer) Finding {
 
 	if f.Evidence.SourceEvidence != nil {
 		se := *f.Evidence.SourceEvidence
-		se.PolicyPublicStatements = redactStrings(se.PolicyPublicStatements, r)
-		se.ACLPublicGrantees = redactStrings(se.ACLPublicGrantees, r)
+		se.PolicyPublicStatements = sanitizeStrings(se.PolicyPublicStatements, r)
+		se.ACLPublicGrantees = sanitizeStrings(se.ACLPublicGrantees, r)
 		out.Evidence.SourceEvidence = &se
 	}
 
@@ -103,8 +103,8 @@ func (f Finding) Sanitized(r kernel.Sanitizer) Finding {
 	return out
 }
 
-// redactStrings replaces every element with "[SANITIZED]".
-func redactStrings(lines []string, r kernel.Sanitizer) []string {
+// sanitizeStrings replaces every element using the provided sanitizer.
+func sanitizeStrings(lines []string, r kernel.Sanitizer) []string {
 	if len(lines) == 0 {
 		return lines
 	}

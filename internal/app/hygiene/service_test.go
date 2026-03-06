@@ -102,7 +102,7 @@ func TestApplyUpcomingFilter_NormalizationAndDueWithin(t *testing.T) {
 	}
 
 	filtered := applyUpcomingFilter(items, RiskOptions{
-		ResourceTypes: []kernel.AssetType{kernel.TypeStorageBucket},
+		AssetTypes: []kernel.AssetType{kernel.TypeStorageBucket},
 		Statuses:      []risk.Status{risk.Upcoming},
 		DueWithin:     &dueSoon,
 	})
@@ -193,7 +193,7 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		Now:              base.Add(1 * time.Hour),
 		DueSoonThreshold: 90 * time.Minute,
 		Statuses:         []risk.Status{risk.Upcoming},
-		ResourceTypes:    []kernel.AssetType{kernel.TypeStorageBucket},
+		AssetTypes:       []kernel.AssetType{kernel.TypeStorageBucket},
 	}
 
 	summary := computeUpcomingSummary(controls, snapshots, opts)

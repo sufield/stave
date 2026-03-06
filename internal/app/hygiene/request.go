@@ -26,7 +26,7 @@ type Request struct {
 	KeepMin         int
 	NowTime         string
 	ControlIDs      []kernel.ControlID
-	ResourceTypes   []kernel.AssetType
+	AssetTypes      []kernel.AssetType
 	Statuses        []risk.Status
 	NowFunc         func() time.Time // nil → time.Now().UTC()
 }

@@ -140,7 +140,7 @@ var GenerateCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 }
 
-var GenerateInvariantCmd = &cobra.Command{
+var GenerateControlCmd = &cobra.Command{
 	Use:           "control <name>",
 	Short:         "Generate a canonical control template",
 	Long:          "Generate control creates a ctrl.v1 YAML template in controls/." + metadata.OfflineHelpSuffix,
@@ -161,8 +161,8 @@ var GenerateObservationCmd = &cobra.Command{
 }
 
 func init() {
-	GenerateInvariantCmd.Flags().StringVar(&generateOut, "out", "", "Output file path (default: controls/<derived-id>.yaml)")
+	GenerateControlCmd.Flags().StringVar(&generateOut, "out", "", "Output file path (default: controls/<derived-id>.yaml)")
 	GenerateObservationCmd.Flags().StringVar(&generateOut, "out", "", "Output file path (default: observations/<name>.json)")
-	GenerateCmd.AddCommand(GenerateInvariantCmd)
+	GenerateCmd.AddCommand(GenerateControlCmd)
 	GenerateCmd.AddCommand(GenerateObservationCmd)
 }

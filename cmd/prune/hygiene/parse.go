@@ -17,7 +17,7 @@ func toControlIDs(raw []string) []kernel.ControlID {
 	return out
 }
 
-func toResourceTypes(raw []string) []kernel.AssetType {
+func toAssetTypes(raw []string) []kernel.AssetType {
 	out := make([]kernel.AssetType, 0, len(raw))
 	for _, s := range raw {
 		if rt := kernel.NewAssetType(s); rt != "" {

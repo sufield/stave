@@ -79,7 +79,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*EvaluateDeps, error) {
 		return nil, f.wrapError(err)
 	}
 
-	warnIfGitDirty(res.gitMeta, "evaluate")
+	warnIfGitDirty(res.gitMeta, "apply")
 
 	return &EvaluateDeps{Runner: built.Runner, Config: built.Config}, nil
 }

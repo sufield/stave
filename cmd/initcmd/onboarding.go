@@ -428,7 +428,7 @@ func runGenerateControl(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("control name cannot be empty")
 	}
 	id := controlIDFromName(name)
-	content := strings.ReplaceAll(strings.TrimLeft(templateInvariantCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
+	content := strings.ReplaceAll(strings.TrimLeft(templateControlCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
 	out := strings.TrimSpace(generateOut)
 	if out == "" {
 		out = filepath.Join("controls", id+".yaml")

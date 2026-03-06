@@ -109,11 +109,11 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 	}
 
 	// Resource summary
-	if detail.Resource.ID != "res:aws:s3:bucket:test-bucket" {
-		t.Errorf("resource ID = %q, want test-bucket", detail.Resource.ID)
+	if detail.Asset.ID != "res:aws:s3:bucket:test-bucket" {
+		t.Errorf("resource ID = %q, want test-bucket", detail.Asset.ID)
 	}
-	if detail.Resource.Vendor != "aws" {
-		t.Errorf("vendor = %q, want aws", detail.Resource.Vendor)
+	if detail.Asset.Vendor != "aws" {
+		t.Errorf("vendor = %q, want aws", detail.Asset.Vendor)
 	}
 
 	// Evidence
