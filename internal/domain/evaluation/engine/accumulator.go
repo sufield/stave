@@ -9,16 +9,16 @@ import (
 // assetIDSet tracks a set of asset IDs without the ambiguity of map[string]bool.
 type assetIDSet map[asset.ID]struct{}
 
-func newAssetIDSet() assetIDSet        { return assetIDSet{} }
+func newAssetIDSet() assetIDSet           { return assetIDSet{} }
 func (s assetIDSet) add(id asset.ID)      { s[id] = struct{}{} }
 func (s assetIDSet) has(id asset.ID) bool { _, ok := s[id]; return ok }
 func (s assetIDSet) len() int             { return len(s) }
 
 // evaluationAccumulator collects findings, rows, and skip info during evaluation.
 type evaluationAccumulator struct {
-	findings            []evaluation.Finding
-	rows                []evaluation.Row
-	skipped             []evaluation.SkippedControl
+	findings         []evaluation.Finding
+	rows             []evaluation.Row
+	skipped          []evaluation.SkippedControl
 	skippedAssets    []asset.SkippedAsset
 	seenAssets       assetIDSet
 	unsafeAssets     assetIDSet

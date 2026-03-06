@@ -23,7 +23,7 @@ var (
 	traceControlID   string
 	traceControlsDir string
 	traceObservation string
-	traceAssetID  string
+	traceAssetID     string
 	traceFormat      string
 	traceQuiet       bool
 )

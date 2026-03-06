@@ -38,10 +38,10 @@ type upcomingOutput struct {
 }
 
 type upcomingFilter struct {
-	controlIDs    map[kernel.ControlID]struct{}
+	controlIDs map[kernel.ControlID]struct{}
 	assetTypes map[kernel.AssetType]struct{}
-	statuses      map[string]struct{}
-	dueWithin     *time.Duration
+	statuses   map[string]struct{}
+	dueWithin  *time.Duration
 }
 
 // UpcomingFilterCriteria holds filter rules for upcoming action items.

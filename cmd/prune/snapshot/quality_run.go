@@ -73,14 +73,14 @@ func prepareQualityInput(cmd *cobra.Command) (qualityInput, error) {
 		return qualityInput{}, err
 	}
 	return qualityInput{
-		observationsDir:   qualityFlags.observationsDir,
-		minSnapshots:      qualityFlags.minSnapshots,
-		maxStaleness:      maxStaleness,
-		maxGap:            maxGap,
-		requiredAssets: qualityFlags.required,
-		now:               now,
-		format:            format,
-		strict:            qualityFlags.strict,
+		observationsDir: qualityFlags.observationsDir,
+		minSnapshots:    qualityFlags.minSnapshots,
+		maxStaleness:    maxStaleness,
+		maxGap:          maxGap,
+		requiredAssets:  qualityFlags.required,
+		now:             now,
+		format:          format,
+		strict:          qualityFlags.strict,
 	}, nil
 }
 

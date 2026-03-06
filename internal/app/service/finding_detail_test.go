@@ -52,11 +52,11 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 
 	snap := asset.Snapshot{
 		CapturedAt: lastSeen,
-		Assets:  []asset.Asset{resource},
+		Assets:     []asset.Asset{resource},
 	}
 	earlierSnap := asset.Snapshot{
 		CapturedAt: firstUnsafe,
-		Assets:  []asset.Asset{resource},
+		Assets:     []asset.Asset{resource},
 	}
 
 	violation := evaluation.Finding{

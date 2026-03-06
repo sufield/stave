@@ -167,8 +167,8 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	result := &appservice.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{}},
 		Summary: appservice.ValidationSummary{
-			ControlsLoaded:             2,
-			SnapshotsLoaded:            3,
+			ControlsLoaded:          2,
+			SnapshotsLoaded:         3,
 			AssetObservationsLoaded: 10,
 		},
 	}

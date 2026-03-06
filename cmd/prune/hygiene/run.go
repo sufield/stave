@@ -31,7 +31,7 @@ type hygieneFlagsType struct {
 	now             string
 	format          string
 	controlIDs      []string
-	assetTypes   []string
+	assetTypes      []string
 	statuses        []string
 	dueWithin       string
 }

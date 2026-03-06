@@ -15,7 +15,7 @@ import (
 // validationCtx caches cross-snapshot metadata computed in a single O(N) pass.
 // Methods that consume it avoid re-traversing snapshots for time bounds or identity maps.
 type validationCtx struct {
-	timeline       *snapshotTimeline
+	timeline    *snapshotTimeline
 	assetCounts map[ID]assetOccurrence
 	assetTypes  map[ID]assetTypeSet // asset_id -> set of types
 }
@@ -30,7 +30,7 @@ func (s Snapshots) analyze() *validationCtx {
 	}
 
 	ctx := &validationCtx{
-		timeline:       newSnapshotTimeline(s[0].CapturedAt),
+		timeline:    newSnapshotTimeline(s[0].CapturedAt),
 		assetCounts: make(map[ID]assetOccurrence),
 		assetTypes:  make(map[ID]assetTypeSet),
 	}

@@ -27,8 +27,8 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 2,
-			AttackSurface:      0,
-			Violations:         0,
+			AttackSurface:   0,
+			Violations:      0,
 		},
 	}
 
@@ -59,8 +59,8 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 3,
-			AttackSurface:      1,
-			Violations:         2,
+			AttackSurface:   1,
+			Violations:      2,
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -146,8 +146,8 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 2,
-			AttackSurface:      2,
-			Violations:         2,
+			AttackSurface:   2,
+			Violations:      2,
 		},
 		Findings: []evaluation.Finding{
 			{

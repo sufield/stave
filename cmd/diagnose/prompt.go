@@ -25,7 +25,7 @@ import (
 
 var (
 	promptEvalFile    string
-	promptAssetID  string
+	promptAssetID     string
 	promptControlsDir string
 	promptObsDir      string
 	promptFormat      string
@@ -158,8 +158,8 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 
 	// 3. Build, render, and emit output.
 	builder := &promptBuilder{
-		assetID:           opts.AssetID,
-		controlsByID:      ctlByID,
+		assetID:        opts.AssetID,
+		controlsByID:   ctlByID,
 		assetPropsJSON: assetPropsJSON,
 	}
 	data := builder.build(matched)
@@ -285,9 +285,9 @@ type promptFindingData struct {
 
 // promptData holds all data for the prompt rendering.
 type promptData struct {
-	FindingCount       int
-	AssetID            string
-	Findings           []promptFindingData
+	FindingCount    int
+	AssetID         string
+	Findings        []promptFindingData
 	AssetProperties string
 }
 
@@ -300,8 +300,8 @@ type promptJSONOutput struct {
 
 // promptBuilder coordinates assembly of LLM-ready prompt data.
 type promptBuilder struct {
-	assetID           string
-	controlsByID      map[string]*policy.ControlDefinition
+	assetID        string
+	controlsByID   map[string]*policy.ControlDefinition
 	assetPropsJSON string
 }
 
@@ -335,9 +335,9 @@ func (b *promptBuilder) build(matched []evaluation.Finding) promptData {
 	}
 
 	return promptData{
-		FindingCount:       len(findings),
-		AssetID:            b.assetID,
-		Findings:           findings,
+		FindingCount:    len(findings),
+		AssetID:         b.assetID,
+		Findings:        findings,
 		AssetProperties: b.assetPropsJSON,
 	}
 }

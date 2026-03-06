@@ -89,7 +89,7 @@ func TestScrubSnapshot_Identities(t *testing.T) {
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
-		Assets:     []asset.Asset{},
+		Assets:        []asset.Asset{},
 		Identities: []asset.CloudIdentity{
 			{
 				ID:     "ident:1",
@@ -146,7 +146,7 @@ func TestScrubSnapshot_PreservesTimestamp(t *testing.T) {
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    ts,
-		Assets:     []asset.Asset{},
+		Assets:        []asset.Asset{},
 	}
 
 	scrubbed := r.ScrubSnapshot(snap)

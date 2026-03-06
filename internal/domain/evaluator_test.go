@@ -1066,7 +1066,7 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Assets:  []asset.Asset{
+			Assets:     []asset.Asset{
 				// bucket is ABSENT
 			},
 		},
@@ -1188,7 +1188,7 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-02T00:00:00Z"),
-			Assets:  []asset.Asset{
+			Assets:     []asset.Asset{
 				// bucket is ABSENT
 			},
 		},

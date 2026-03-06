@@ -115,8 +115,8 @@ func (row *Row) MarkInconclusive(reason string) {
 // Summary provides aggregate statistics.
 type Summary struct {
 	AssetsEvaluated int `json:"assets_evaluated"`
-	AttackSurface      int `json:"attack_surface"`
-	Violations         int `json:"violations"`
+	AttackSurface   int `json:"attack_surface"`
+	Violations      int `json:"violations"`
 }
 
 // SkippedControl represents a control that was skipped during evaluation.

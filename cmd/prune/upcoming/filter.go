@@ -11,10 +11,10 @@ import (
 
 func newUpcomingFilter(criteria UpcomingFilterCriteria) (upcomingFilter, error) {
 	filter := upcomingFilter{
-		controlIDs:    map[kernel.ControlID]struct{}{},
+		controlIDs: map[kernel.ControlID]struct{}{},
 		assetTypes: map[kernel.AssetType]struct{}{},
-		statuses:      map[string]struct{}{},
-		dueWithin:     criteria.DueWithin,
+		statuses:   map[string]struct{}{},
+		dueWithin:  criteria.DueWithin,
 	}
 	for _, id := range criteria.ControlIDs {
 		if id == "" {

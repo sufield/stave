@@ -55,10 +55,10 @@ type coverageEdge struct {
 
 // coverageResult holds the complete coverage graph data.
 type coverageResult struct {
-	Controls           []string       `json:"controls"`
-	Assets             []string       `json:"assets"`
-	Edges              []coverageEdge `json:"edges"`
-	UncoveredAssets    []string       `json:"uncovered_assets"`
+	Controls        []string       `json:"controls"`
+	Assets          []string       `json:"assets"`
+	Edges           []coverageEdge `json:"edges"`
+	UncoveredAssets []string       `json:"uncovered_assets"`
 }
 
 func runCoverage(cmd *cobra.Command, opts *options) error {
@@ -170,9 +170,9 @@ func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot) cov
 	controlIDs := coverageControlIDs(controls)
 	edges, covered := coverageEdges(controls, assetMap, assetIDs, latest.Identities)
 	return coverageResult{
-		Controls:           controlIDs,
-		Assets:             assetIDs,
-		Edges:              edges,
+		Controls:        controlIDs,
+		Assets:          assetIDs,
+		Edges:           edges,
 		UncoveredAssets: uncoveredAssets(assetIDs, covered),
 	}
 }

@@ -148,8 +148,8 @@ type InputHashesDTO struct {
 // SummaryDTO mirrors evaluation.Summary.
 type SummaryDTO struct {
 	AssetsEvaluated int `json:"assets_evaluated"`
-	AttackSurface      int `json:"attack_surface"`
-	Violations         int `json:"violations"`
+	AttackSurface   int `json:"attack_surface"`
+	Violations      int `json:"violations"`
 }
 
 // RemediationGroupDTO mirrors remediation.Group.

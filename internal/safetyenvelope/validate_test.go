@@ -22,8 +22,8 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 	}
 	summary := evaluation.Summary{
 		AssetsEvaluated: 1,
-		AttackSurface:      1,
-		Violations:         1,
+		AttackSurface:   1,
+		Violations:      1,
 	}
 	findings := []remediation.Finding{
 		{

@@ -13,7 +13,7 @@ import (
 // assetTimePoint pairs a capture timestamp with the asset state at that time.
 type assetTimePoint struct {
 	capturedAt time.Time
-	observed asset.Asset
+	observed   asset.Asset
 }
 
 // streakResult holds the outcome of analyzing a single asset's timeline

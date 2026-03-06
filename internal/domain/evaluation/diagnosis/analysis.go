@@ -14,7 +14,7 @@ const (
 	signalThresholdExceedsObserved     = "Threshold exceeds observed unsafe duration"
 	signalNoPredicateMatchesAny        = "No resources matched any unsafe_predicate"
 	signalMatchesUnderThreshold        = "Matches exist but under threshold"
-	signalAssetsResetBeforeMax          = "Assets became safe before exceeding threshold"
+	signalAssetsResetBeforeMax         = "Assets became safe before exceeding threshold"
 	signalInsufficientSnapshots        = "Insufficient snapshots for duration tracking"
 	signalTimeSpanShorterThanThreshold = "Time span shorter than threshold"
 	signalNowBeforeLatestSnapshot      = "Evaluation time before latest snapshot"
@@ -22,22 +22,22 @@ const (
 )
 
 type controlStat struct {
-	maxStreak          time.Duration
+	maxStreak       time.Duration
 	matchedAssetIDs map[string]struct{}
 }
 
 // session holds precomputed control stats for a diagnostic run,
 // avoiding redundant recomputation across diagnoseNoViolations and diagnoseEmptyFindings.
 type session struct {
-	input          Input
-	stats          map[kernel.ControlID]controlStat
+	input       Input
+	stats       map[kernel.ControlID]controlStat
 	totalAssets int
 }
 
 func newSession(input Input, totalAssets int) *session {
 	return &session{
-		input:          input,
-		stats:          computeStats(input),
+		input:       input,
+		stats:       computeStats(input),
 		totalAssets: totalAssets,
 	}
 }

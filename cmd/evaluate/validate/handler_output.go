@@ -60,7 +60,7 @@ type JSONValidationReport struct {
 type JSONValidationSummary struct {
 	ControlsChecked             int `json:"controls_checked"`
 	SnapshotsChecked            int `json:"snapshots_checked"`
-	AssetObservationsChecked int `json:"asset_observations_checked"`
+	AssetObservationsChecked    int `json:"asset_observations_checked"`
 	IdentityObservationsChecked int `json:"identity_observations_checked"`
 }
 
@@ -264,7 +264,7 @@ func buildJSONValidationReport(result *appservice.ValidationResult, opts *option
 		Summary: JSONValidationSummary{
 			ControlsChecked:             result.Summary.ControlsLoaded,
 			SnapshotsChecked:            result.Summary.SnapshotsLoaded,
-			AssetObservationsChecked: result.Summary.AssetObservationsLoaded,
+			AssetObservationsChecked:    result.Summary.AssetObservationsLoaded,
 			IdentityObservationsChecked: result.Summary.IdentityObservationsLoaded,
 		},
 	}

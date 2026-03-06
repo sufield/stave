@@ -51,12 +51,12 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime,
-			Assets:     resources,
+			Assets:        resources,
 		},
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime.Add(10 * 24 * time.Hour), // 10 days later
-			Assets:     resources,
+			Assets:        resources,
 		},
 	}
 
@@ -121,12 +121,12 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime,
-			Assets:     resources,
+			Assets:        resources,
 		},
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime.Add(10 * 24 * time.Hour),
-			Assets:     resources,
+			Assets:        resources,
 		},
 	}
 
@@ -194,7 +194,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	snapshot := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    baseTime,
-		Assets:     resources,
+		Assets:        resources,
 	}
 
 	// Verify we can create timelines for 1000 assets

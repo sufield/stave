@@ -47,8 +47,8 @@ func makeTestResult() evaluation.Result {
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 1,
-			Violations:         1,
-			AttackSurface:      1,
+			Violations:      1,
+			AttackSurface:   1,
 		},
 		Findings: []evaluation.Finding{
 			{

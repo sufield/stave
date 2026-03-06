@@ -20,7 +20,7 @@ type ValidationInput struct {
 type ValidationSummary struct {
 	ControlsLoaded             int
 	SnapshotsLoaded            int
-	AssetObservationsLoaded int
+	AssetObservationsLoaded    int
 	IdentityObservationsLoaded int
 }
 
