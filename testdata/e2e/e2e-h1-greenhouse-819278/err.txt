@@ -2,3 +2,8 @@ Running: evaluate controls against observations...
 Done:    evaluate controls against observations (4ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-greenhouse-819278/controls --observations testdata/e2e/e2e-h1-greenhouse-819278/observations
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-greenhouse-819278/controls --observations testdata/e2e/e2e-h1-greenhouse-819278/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

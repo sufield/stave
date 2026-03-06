@@ -152,8 +152,3 @@
     }
   }
 }
-
-Next steps:
-  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-shopify-1021906/controls --observations testdata/e2e/e2e-h1-shopify-1021906/observations`
-  2. View a summary: `stave apply --format text`
-  3. Export findings for S3: `stave apply --format json > findings.json`

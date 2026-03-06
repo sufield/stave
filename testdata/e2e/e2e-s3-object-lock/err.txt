@@ -1,4 +1,9 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (5ms)
+Done:    evaluate controls against observations (4ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-object-lock/controls --observations testdata/e2e/e2e-s3-object-lock/observations
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-s3-object-lock/controls --observations testdata/e2e/e2e-s3-object-lock/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`
