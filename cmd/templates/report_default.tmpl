@@ -23,14 +23,14 @@ Findings by severity:
 {{end}}
 
 Findings (TSV):
-INV_ID	RESOURCE_ID	TYPE	VENDOR	SEVERITY	DURATION_H	THRESHOLD_H	FIRST_UNSAFE	LAST_UNSAFE
+CONTROL_ID	RESOURCE_ID	TYPE	VENDOR	SEVERITY	DURATION_H	THRESHOLD_H	FIRST_UNSAFE	LAST_UNSAFE
 {{range .Findings}}
-{{ .InvariantID }}	{{ .ResourceID }}	{{ .ResourceType }}	{{ .Vendor }}	{{ .Severity }}	{{ .DurationH }}	{{ .ThresholdH }}	{{ .FirstUnsafe }}	{{ .LastUnsafe }}
+{{ .ControlID }}	{{ .ResourceID }}	{{ .ResourceType }}	{{ .Vendor }}	{{ .Severity }}	{{ .DurationH }}	{{ .ThresholdH }}	{{ .FirstUnsafe }}	{{ .LastUnsafe }}
 {{end}}
 
 Remediations:
 {{range .Remediations}}
-- {{ .InvariantID }} / {{ .ResourceID }}
+- {{ .ControlID }} / {{ .ResourceID }}
   description: {{ .Description }}
   action: {{ .Action }}
   example: {{ .Example }}

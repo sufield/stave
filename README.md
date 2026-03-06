@@ -904,13 +904,13 @@ Use `--max-unsafe` to set the default threshold for all controls:
 
 ```bash
 # 7-day threshold (default is 168h)
-stave apply --controls ./inv --observations ./obs --max-unsafe 7d
+stave apply --controls ./controls --observations ./obs --max-unsafe 7d
 
 # 72-hour threshold (stricter)
-stave apply --controls ./inv --observations ./obs --max-unsafe 72h
+stave apply --controls ./controls --observations ./obs --max-unsafe 72h
 
 # 30-day threshold (more lenient)
-stave apply --controls ./inv --observations ./obs --max-unsafe 30d
+stave apply --controls ./controls --observations ./obs --max-unsafe 30d
 ```
 
 **Supported duration formats:**
@@ -1057,7 +1057,7 @@ Use exit codes for CI/CD integration:
 
 ```bash
 # Simple pass/fail check
-if stave apply --quiet --controls ./inv --observations ./obs; then
+if stave apply --quiet --controls ./controls --observations ./obs; then
   echo "All resources are safe"
 else
   echo "Violations found (exit code: $?)"
@@ -1065,7 +1065,7 @@ else
 fi
 
 # Detailed exit code handling
-stave apply --controls ./inv --observations ./obs
+stave apply --controls ./controls --observations ./obs
 case $? in
   0) echo "Clean - control checks passed" ;;
   2) echo "Input validation needs attention - check your files" ;;
@@ -1080,15 +1080,15 @@ Use `--quiet` to suppress output and rely only on exit codes:
 
 ```bash
 # Validate inputs in quiet mode
-stave validate --quiet --controls ./inv --observations ./obs && echo "Valid"
+stave validate --quiet --controls ./controls --observations ./obs && echo "Valid"
 
 # Check for violations with terminal summary output
-if stave apply --quiet --controls ./inv --observations ./obs; then
+if stave apply --quiet --controls ./controls --observations ./obs; then
   echo "Safe"
 fi
 
 # Diagnose in quiet mode
-stave diagnose --quiet --controls ./inv --observations ./obs
+stave diagnose --quiet --controls ./controls --observations ./obs
 ```
 
 ### Output Formats
@@ -1097,14 +1097,14 @@ All commands support `--format` for output control:
 
 ```bash
 # Human-readable text output
-stave apply --controls ./inv --observations ./obs --format text
+stave apply --controls ./controls --observations ./obs --format text
 
 # JSON output (default for evaluate)
-stave apply --controls ./inv --observations ./obs --format json
+stave apply --controls ./controls --observations ./obs --format json
 
 # JSON output for validate/diagnose
-stave validate --controls ./inv --observations ./obs --format json
-stave diagnose --controls ./inv --observations ./obs --format json
+stave validate --controls ./controls --observations ./obs --format json
+stave diagnose --controls ./controls --observations ./obs --format json
 ```
 
 ### Parsing JSON Output
@@ -1113,19 +1113,19 @@ Use `jq` to extract specific information:
 
 ```bash
 # Count violations
-stave apply --controls ./inv --observations ./obs | jq '.summary.violations'
+stave apply --controls ./controls --observations ./obs | jq '.summary.violations'
 
 # Extract asset IDs with violations
-stave apply --controls ./inv --observations ./obs | jq -r '.findings[].asset_id'
+stave apply --controls ./controls --observations ./obs | jq -r '.findings[].asset_id'
 
 # Get control IDs that were violated
-stave apply --controls ./inv --observations ./obs | jq -r '.findings[].control_id' | sort -u
+stave apply --controls ./controls --observations ./obs | jq -r '.findings[].control_id' | sort -u
 
 # Check validation errors
-stave validate --controls ./inv --observations ./obs --format json | jq '.errors'
+stave validate --controls ./controls --observations ./obs --format json | jq '.errors'
 
 # Conditional processing based on violation count
-violations=$(stave apply --controls ./inv --observations ./obs | jq '.summary.violations')
+violations=$(stave apply --controls ./controls --observations ./obs | jq '.summary.violations')
 if [ "$violations" -gt 0 ]; then
   echo "Found $violations violations"
 fi
@@ -1137,10 +1137,10 @@ Use `--strict` to treat warnings as errors:
 
 ```bash
 # Fail CI on any warnings
-stave validate --strict --controls ./inv --observations ./obs
+stave validate --strict --controls ./controls --observations ./obs
 
 # Combined with quiet mode
-stave validate --strict --quiet --controls ./inv --observations ./obs && echo "Valid (all checks passed)"
+stave validate --strict --quiet --controls ./controls --observations ./obs && echo "Valid (all checks passed)"
 ```
 
 ### Deterministic Runs
@@ -1154,12 +1154,12 @@ snapshots — with snapshots, `now` is derived from the last snapshot's
 ```bash
 # Deterministic: fixed time → identical output across runs
 stave apply \
-  --controls ./inv \
+  --controls ./controls \
   --observations ./obs \
   --now 2026-01-15T00:00:00Z
 
 # Snapshot testing (byte-identical comparison)
-stave apply --controls ./inv --observations ./obs --now 2026-01-15T00:00:00Z > output.json
+stave apply --controls ./controls --observations ./obs --now 2026-01-15T00:00:00Z > output.json
 diff output.json expected.json
 ```
 
@@ -1178,22 +1178,22 @@ Stave separates stdout (results) from stderr (errors):
 
 ```bash
 # Pipe JSON to jq
-stave apply --controls ./inv --observations ./obs | jq '.findings[]'
+stave apply --controls ./controls --observations ./obs | jq '.findings[]'
 
 # Read observation from stdin (pipeline composition)
-cat snapshot.json | stave apply --controls ./inv --observations -
+cat snapshot.json | stave apply --controls ./controls --observations -
 
 # Combine with extractors in a pipeline
-some-extractor | stave apply --controls ./inv --observations -
+some-extractor | stave apply --controls ./controls --observations -
 
 # Redirect errors to a file
-stave apply --controls ./inv --observations ./obs 2>errors.log
+stave apply --controls ./controls --observations ./obs 2>errors.log
 
 # Discard errors
-stave apply --controls ./inv --observations ./obs 2>/dev/null
+stave apply --controls ./controls --observations ./obs 2>/dev/null
 
 # Save output and check errors separately
-stave apply --controls ./inv --observations ./obs >results.json 2>errors.log
+stave apply --controls ./controls --observations ./obs >results.json 2>errors.log
 ```
 
 **Stdin Support:** Use `-` as the observations path to read a single snapshot from stdin. This enables pipeline composition with extraction tools.
@@ -1204,16 +1204,16 @@ Use `-v` flags for troubleshooting:
 
 ```bash
 # Verbose mode (INFO level logs to stderr)
-stave apply --controls ./inv --observations ./obs -v
+stave apply --controls ./controls --observations ./obs -v
 
 # Debug mode (DEBUG level)
-stave apply --controls ./inv --observations ./obs -vv
+stave apply --controls ./controls --observations ./obs -vv
 
 # Write logs to file
-stave apply --controls ./inv --observations ./obs --log-file run.log
+stave apply --controls ./controls --observations ./obs --log-file run.log
 
 # JSON-formatted logs
-stave apply --controls ./inv --observations ./obs --log-format json -v
+stave apply --controls ./controls --observations ./obs --log-format json -v
 ```
 
 ## Development

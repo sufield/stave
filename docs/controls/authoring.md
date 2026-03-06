@@ -219,7 +219,7 @@ Control YAML is converted to JSON internally before schema validation runs.
 |-------|-------|-----|
 | `additionalProperties 'foo' not allowed` | Extra field in YAML/JSON | Remove the field or check for typos |
 | `missing properties: 'unsafe_predicate'` | Required field absent | Add the missing field |
-| `'inv.v0.2' is not valid ... const 'ctrl.v1'` | Wrong DSL version string | Use `dsl_version: ctrl.v1` |
+| `'ctrl.v0.2' is not valid ... const 'ctrl.v1'` | Wrong DSL version string | Use `dsl_version: ctrl.v1` |
 | `'CTL.s3.public.001' does not match pattern` | ID has lowercase letters | Use uppercase: `CTL.S3.PUBLIC.001` |
 | `'foo' is not valid ... enum` | Invalid `op`, `domain`, or `severity` | Check allowed values in the schema |
 

@@ -7,7 +7,7 @@ import (
 )
 
 // EpisodeHistory stores completed unsafe episodes.
-// INVARIANT: only closed episodes are archived.
+// CONTRACT: only closed episodes are archived.
 type EpisodeHistory struct {
 	episodes []Episode
 }
@@ -21,7 +21,7 @@ func (h *EpisodeHistory) Record(e Episode) {
 	h.episodes = append(h.episodes, e)
 
 	if last := h.episodes[len(h.episodes)-1]; last.IsOpen() {
-		panic("invariant violated: EpisodeHistory must only contain closed episodes")
+		panic("contract violated: EpisodeHistory must only contain closed episodes")
 	}
 }
 

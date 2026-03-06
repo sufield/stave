@@ -1,6 +1,6 @@
 WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-s3-golden-path/controls/). This run may not reflect committed state.
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (38ms)
+Done:    evaluate controls against observations (33ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-golden-path/controls --observations testdata/e2e/e2e-s3-golden-path/observations
 

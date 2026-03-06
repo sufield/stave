@@ -1,7 +1,7 @@
 Running: evaluate controls against observations...
 warning: snapshot[0] has no generated_by.source_type, proceeding anyway
 warning: snapshot[1] has no generated_by.source_type, proceeding anyway
-Done:    evaluate controls against observations (10ms)
+Done:    evaluate controls against observations (12ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-tendermint-1397826/controls --observations testdata/e2e/e2e-h1-tendermint-1397826/observations
 

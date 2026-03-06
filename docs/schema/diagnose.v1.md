@@ -48,7 +48,7 @@ Each diagnostic explains one likely cause for unexpected evaluation outcomes.
 |---|---|---|---|
 | `total_snapshots` | integer | Yes | Number of loaded snapshots |
 | `total_resources` | integer | Yes | Number of resources observed |
-| `total_invariants` | integer | Yes | Number of controls loaded |
+| `total_controls` | integer | Yes | Number of controls loaded |
 | `time_span` | integer | Yes | Observation span (nanoseconds duration) |
 | `min_captured_at` | string (RFC3339) | Yes | Earliest snapshot time |
 | `max_captured_at` | string (RFC3339) | Yes | Latest snapshot time |

@@ -158,7 +158,7 @@ To add new controls:
 1. Create a YAML file in the appropriate pack directory
 2. Use DSL version `ctrl.v1`
 3. Define clear `unsafe_predicate` conditions
-4. Add tests in `internal/domain/invariant_test.go`
+4. Add tests in `internal/domain/control_test.go`
 
 Example control:
 

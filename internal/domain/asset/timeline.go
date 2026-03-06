@@ -11,7 +11,7 @@ import (
 // It records when the resource first became unsafe, when it was last seen unsafe,
 // and maintains a history of completed episodes for recurrence detection.
 //
-// INVARIANT: historical episodes are archived as closed entries in history.
+// CONTRACT: historical episodes are archived as closed entries in history.
 type Timeline struct {
 	ID    ID
 	asset Asset
@@ -45,7 +45,7 @@ func (rt *Timeline) SetAsset(resource Asset) {
 		rt.ID = resource.ID
 	}
 	rt.asset = resource
-	rt.checkInvariants()
+	rt.checkContracts()
 }
 
 // Stats returns continuity metrics for this timeline.
@@ -70,7 +70,7 @@ func (rt *Timeline) RecordObservation(t time.Time, isUnsafe bool) {
 	} else {
 		rt.handleSafe(t)
 	}
-	rt.checkInvariants()
+	rt.checkContracts()
 }
 
 // CurrentlySafe reports whether the resource is in a safe state.
@@ -163,9 +163,9 @@ func (rt *Timeline) UnsafeDuration(now time.Time) time.Duration {
 	return now.Sub(rt.activeEpisode.StartAt())
 }
 
-func (rt *Timeline) checkInvariants() {
+func (rt *Timeline) checkContracts() {
 	if rt.ID.IsEmpty() {
-		panic("invariant violated: Timeline.ID must be non-empty")
+		panic("contract violated: Timeline.ID must be non-empty")
 	}
 }
 
@@ -175,7 +175,7 @@ func (rt *Timeline) verifyHistoryOrdering() {
 	episodes := rt.history.episodes
 	for i := 1; i < len(episodes); i++ {
 		if episodes[i].StartAt().Before(episodes[i-1].StartAt()) {
-			panic("invariant violated: Timeline history episodes are not chronologically ordered")
+			panic("contract violated: Timeline history episodes are not chronologically ordered")
 		}
 	}
 }

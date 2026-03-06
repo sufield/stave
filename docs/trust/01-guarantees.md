@@ -24,13 +24,13 @@ Stave makes zero network connections at runtime. It does not import `net/http`, 
 ```bash
 # Linux: strace shows zero network syscalls
 strace -f -e trace=network ./stave apply \
-  --controls ./inv --observations ./obs 2>&1 \
+  --controls ./controls --observations ./obs 2>&1 \
   | grep -E 'socket|connect|sendto|recvfrom'
 # Expected: no output
 
 # Any OS: container with no network
 docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.26 \
-  ./stave apply --controls ./inv --observations ./obs
+  ./stave apply --controls ./controls --observations ./obs
 ```
 
 The `--require-offline` flag is an operational convenience that refuses to run if proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`) are set. It is not a security boundary — Stave is architecturally offline regardless.

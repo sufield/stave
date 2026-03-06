@@ -88,7 +88,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		Metadata:          cfg.Metadata,
 	})
 
-	// Write output: use explicit pipeline when available, else legacy writer.
+	// Write output: use explicit pipeline when available, else fallback writer.
 	if err := e.writeOutput(ctx, cfg.Output, result); err != nil {
 		return "", fmt.Errorf("failed to write findings: %w", err)
 	}

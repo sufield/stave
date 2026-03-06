@@ -4,9 +4,9 @@
 
 | File | Responsibilities | Suggested Split | Target |
 |------|-----------------|-----------------|--------|
-| `catalog.go` | Type constants, valid domains/categories, evaluatable types | `invariant_types.go`, `control_id_taxonomy.go`, `evaluator_capabilities.go` | STEP 2 |
+| `catalog.go` | Type constants, valid domains/categories, evaluatable types | `control_types.go`, `control_id_taxonomy.go`, `evaluator_capabilities.go` | STEP 2 |
 | `control_id.go` | ID validation | Rename `validate` → `validateControlIDFormat` | STEP 3 |
-| `invariant_definition.go` | Definition struct + validation | Fix Action message | STEP 3 |
+| `control_definition.go` | Definition struct + validation | Fix Action message | STEP 3 |
 | `predicate_ops.go` | 14 operators mixed together | `operators_catalog.go`, `operators_compare.go`, `operators_strings.go`, `operators_collections.go` | STEP 4 |
 | `diagnostics.go` | Types + runner + analysis + helpers (~530 lines) | `diagnostics_types.go`, `diagnostics_runner.go`, `diagnostics_analysis.go`, `diagnostics_predicate_helpers.go` | STEP 5 |
 | `evaluator_findings.go` | Finding creation + S3 vendor evidence | Extract `evidence_s3.go` | STEP 6 |
@@ -39,8 +39,8 @@
 | `ignore.go` | Ignore rules |
 | `ports.go` | Port interfaces |
 | `doc.go` | Package doc |
-| `invariant_store.go` | Store logic |
-| `invariant_params.go` | Params type |
+| `control_store.go` | Store logic |
+| `control_params.go` | Params type |
 | `evaluator_prefix_exposure.go` | Prefix exposure logic |
 
 ## Lowest-Risk Refactors (STEPs 2-6)

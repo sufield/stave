@@ -2,7 +2,7 @@ WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-20-id
 Running: evaluate controls against observations...
 warning: snapshot[0] has unsupported source_type "kubernetes.rbac", proceeding anyway
 warning: snapshot[1] has unsupported source_type "kubernetes.rbac", proceeding anyway
-Done:    evaluate controls against observations (8ms)
+Done:    evaluate controls against observations (15ms)
 Evaluation complete. No violations found.
 
 Need help? Run 'stave bug-report' to create a diagnostic bundle.

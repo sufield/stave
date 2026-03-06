@@ -14,7 +14,7 @@ Stave is a single static binary with no plugins, no network, and no persistent s
 ```mermaid
 flowchart TD
     obs["Observations (JSON)"] --> sv["Schema Validation\n<i>Reject malformed input early</i>"]
-    inv["Controls (YAML)"] --> sv
+    ctl["Controls (YAML)"] --> sv
     sv --> tb["Timeline Builder\n<i>Sort snapshots, build per-resource\ntimelines of safe/unsafe states</i>"]
     tb --> ev["Evaluator\n<i>Match predicates, compute durations,\napply thresholds, emit findings</i>"]
     ev --> ow["Output Writer\n<i>JSON or text to stdout / --out file</i>"]
@@ -82,7 +82,7 @@ stave/
 ```mermaid
 flowchart LR
     snap["Snapshot Files\n(untrusted input)"]
-    inv["Control Files\n(trusted input)"]
+    ctl["Control Files\n(trusted input)"]
 
     subgraph machine ["User Machine"]
         subgraph stave ["Stave Binary"]
@@ -92,7 +92,7 @@ flowchart LR
     end
 
     snap --> sv
-    inv --> ev
+    ctl --> ev
     sv --> ev
 
     stave --> out1["stdout\n(findings JSON)"]

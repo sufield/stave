@@ -1,5 +1,6 @@
+WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-h1-shopify-94087/controls/CTL.S3.GOVERNANCE.001.yaml). This run may not reflect committed state.
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (51ms)
+Done:    evaluate controls against observations (58ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-shopify-94087/controls --observations testdata/e2e/e2e-h1-shopify-94087/observations
 

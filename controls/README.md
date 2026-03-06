@@ -153,7 +153,7 @@ domain: <exposure|identity|storage|platforms|third_party>
 scope_tags:
   - relevant_tag_1
   - relevant_tag_2
-type: <invariant_type>
+type: <control_type>
 params:
   key: value
 unsafe_predicate:

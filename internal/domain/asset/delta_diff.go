@@ -60,7 +60,7 @@ func DiffResources(prev, curr Asset) []PropertyChange {
 	return changes
 }
 
-// INVARIANT: Property paths are dot-separated breadcrumbs (e.g., "properties.cpu.cores").
+// CONTRACT: Property paths are dot-separated breadcrumbs (e.g., "properties.cpu.cores").
 // diffDeep recursively compares two values and returns property changes.
 func diffDeep(path string, from, to any) []PropertyChange {
 	// PRECONDITION: If types differ at the same path, record as a change and stop recursion.

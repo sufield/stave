@@ -4,7 +4,7 @@ import "time"
 
 // ObservationStats tracks continuity metrics for resource observations.
 // It is agnostic to whether a resource is safe or unsafe.
-// INVARIANT: coverageSpan is always derived from (lastSeenAt - firstSeenAt).
+// CONTRACT: coverageSpan is always derived from (lastSeenAt - firstSeenAt).
 type ObservationStats struct {
 	firstSeenAt      time.Time
 	lastSeenAt       time.Time
@@ -50,7 +50,7 @@ func (s *ObservationStats) MaxGap() time.Duration {
 }
 
 // RecordObservation updates continuity metrics with a new observation time.
-// INVARIANT: out-of-order timestamps are ignored.
+// CONTRACT: out-of-order timestamps are ignored.
 func (s *ObservationStats) RecordObservation(t time.Time) {
 	if t.IsZero() {
 		panic("precondition failed: RecordObservation requires non-zero time")
@@ -73,14 +73,14 @@ func (s *ObservationStats) RecordObservation(t time.Time) {
 	s.coverageSpan = s.lastSeenAt.Sub(s.firstSeenAt)
 	s.prevSeenAt = t
 
-	s.checkInvariants()
+	s.checkContracts()
 }
 
-func (s *ObservationStats) checkInvariants() {
+func (s *ObservationStats) checkContracts() {
 	if s.observationCount < 0 {
-		panic("invariant violated: ObservationStats.observationCount must be >= 0")
+		panic("contract violated: ObservationStats.observationCount must be >= 0")
 	}
 	if s.observationCount > 0 && s.firstSeenAt.After(s.lastSeenAt) {
-		panic("invariant violated: ObservationStats.firstSeenAt must be <= lastSeenAt when count > 0")
+		panic("contract violated: ObservationStats.firstSeenAt must be <= lastSeenAt when count > 0")
 	}
 }

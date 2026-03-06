@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (21ms)
+Done:    evaluate controls against observations (17ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-unikrn-254200/controls --observations testdata/e2e/e2e-h1-unikrn-254200/observations
 

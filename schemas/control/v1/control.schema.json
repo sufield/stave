@@ -3,7 +3,7 @@
   "$id": "urn:stave:schema:control:v1",
   "title": "Stave Control Contract v1",
   "description": "Contract schema for ctrl.v1 controls (safety rules). Each control defines an unsafe condition that Stave evaluates against observation snapshots.",
-  "$ref": "#/$defs/canonicalInvariant",
+  "$ref": "#/$defs/canonicalControl",
   "$defs": {
     "controlType": {
       "type": "string",
@@ -106,7 +106,7 @@
         }
       }
     },
-    "canonicalInvariant": {
+    "canonicalControl": {
       "type": "object",
       "additionalProperties": false,
       "title": "Canonical Control",

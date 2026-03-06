@@ -47,7 +47,7 @@ Replace real values with placeholders:
 Or use Stave's built-in sanitization:
 
 ```bash
-stave apply --controls ./inv --observations ./obs --sanitize > sanitized-output.json
+stave apply --controls ./controls --observations ./obs --sanitize > sanitized-output.json
 stave ingest --profile mvp1-s3 --input ./snapshot --out obs.json --scrub
 ```
 
@@ -93,7 +93,7 @@ Use `|| rc=$?` instead of `set -e` when expecting non-zero exit codes:
 
 ```bash
 rc=0
-$STAVE_BIN apply --controls ./inv --observations ./obs --now "$NOW" || rc=$?
+$STAVE_BIN apply --controls ./controls --observations ./obs --now "$NOW" || rc=$?
 echo "Exit code: $rc"
 ```
 

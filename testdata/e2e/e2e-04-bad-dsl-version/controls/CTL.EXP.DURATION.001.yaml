@@ -1,4 +1,4 @@
-dsl_version: inv.v99.0
+dsl_version: ctrl.v99.0
 id: CTL.EXP.DURATION.001
 name: Unsafe Exposure Duration Bound
 description: Bad DSL version
