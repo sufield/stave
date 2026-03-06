@@ -34,11 +34,10 @@ jobs:
           go-version: '1.26.0'
           check-latest: true
           cache: true
-      - uses: golangci/golangci-lint-action@9fae48acfc02a90574d7c304a1758ef9895495fa # v7
-        with:
-          version: v2.8.0
-          args: --timeout=5m
-          only-new-issues: true
+      - name: Install golangci-lint from source
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout=5m
 
   vuln:
     name: Vulnerability check
@@ -114,6 +113,8 @@ jobs:
           go-version: '1.26.0'
           check-latest: true
           cache: true
+      - name: Authenticate to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
       - name: Check links in docs and top-level markdown
         run: |
           docker run --rm \
