@@ -1978,7 +1978,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
 
       - name: Build Stave
         run: make build

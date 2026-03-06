@@ -6,7 +6,7 @@ Thank you for considering contributing to Stave. This document explains how to s
 
 ### Prerequisites
 
-- Go 1.26.0 or later
+- Go 1.26.1 or later
 - golangci-lint (optional, for linting)
 - Make (for convenience targets)
 

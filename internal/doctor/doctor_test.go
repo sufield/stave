@@ -201,7 +201,7 @@ func TestCheckWritableDir_Failure(t *testing.T) {
 func TestCoreChecksAndBinaryChecks(t *testing.T) {
 	version := checkVersionInfo(Context{
 		StaveVersion: "v1.2.3",
-		GoVersion:    "go1.26.0",
+		GoVersion:    "go1.26.1",
 		Goos:         "darwin",
 		Goarch:       "arm64",
 		BinaryPath:   "/usr/local/bin/stave",

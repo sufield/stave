@@ -1220,7 +1220,7 @@ stave apply --controls ./inv --observations ./obs --log-format json -v
 
 ### Prerequisites
 
-- Go 1.26.0+
+- Go 1.26.1+
 - golangci-lint v2.8.0 (for linting — `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0`)
 
 ### Build and Test
