@@ -93,7 +93,7 @@ func TestValidationCodesUnique(t *testing.T) {
 		diag.CodeControlNeverMatches,
 		diag.CodeNoSnapshots,
 		diag.CodeSingleSnapshot,
-		diag.CodeDuplicateResourceID,
+		diag.CodeDuplicateAssetID,
 		diag.CodeSnapshotsUnsorted,
 		diag.CodeDuplicateTimestamp,
 		diag.CodeSpanLessThanMaxUnsafe,

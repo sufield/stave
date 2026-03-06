@@ -46,7 +46,7 @@ func findingFromCredentialStorage(in policyInspectionSnapshot, err error) securi
 func findingFromRedaction(in policyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
-			ID:             securityaudit.CheckRedactionPolicy,
+			ID:             securityaudit.CheckSanitizationPolicy,
 			Pillar:         securityaudit.PillarPrivacy,
 			Status:         securityaudit.StatusWarn,
 			Severity:       securityaudit.SeverityMedium,
@@ -58,7 +58,7 @@ func findingFromRedaction(in policyInspectionSnapshot, err error) securityaudit.
 	}
 	if !in.Operational.RedactionPolicyOK {
 		return securityaudit.Finding{
-			ID:             securityaudit.CheckRedactionPolicy,
+			ID:             securityaudit.CheckSanitizationPolicy,
 			Pillar:         securityaudit.PillarPrivacy,
 			Status:         securityaudit.StatusFail,
 			Severity:       securityaudit.SeverityMedium,
@@ -69,7 +69,7 @@ func findingFromRedaction(in policyInspectionSnapshot, err error) securityaudit.
 		}
 	}
 	return securityaudit.Finding{
-		ID:             securityaudit.CheckRedactionPolicy,
+		ID:             securityaudit.CheckSanitizationPolicy,
 		Pillar:         securityaudit.PillarPrivacy,
 		Status:         securityaudit.StatusPass,
 		Severity:       securityaudit.SeverityMedium,

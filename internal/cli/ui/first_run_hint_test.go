@@ -13,7 +13,7 @@ func TestShouldSkipFirstRunHint(t *testing.T) {
 		{args: []string{"completion"}, skip: true},
 		{args: []string{"--version"}, skip: true},
 		{args: []string{"version"}, skip: true},
-		{args: []string{"evaluate", "--controls", "./ctl"}, skip: false},
+		{args: []string{"apply", "--controls", "./ctl"}, skip: false},
 		{args: nil, skip: false},
 	}
 

@@ -23,12 +23,12 @@ const (
 	CodeControlNeverMatches   = "CONTROL_NEVER_MATCHES"
 	CodeNoSnapshots           = "NO_SNAPSHOTS"
 	CodeSingleSnapshot        = "SINGLE_SNAPSHOT"
-	CodeDuplicateResourceID   = "DUPLICATE_RESOURCE_ID"
+	CodeDuplicateAssetID      = "DUPLICATE_ASSET_ID"
 	CodeSnapshotsUnsorted     = "SNAPSHOTS_UNSORTED"
 	CodeDuplicateTimestamp    = "DUPLICATE_TIMESTAMP"
 	CodeSpanLessThanMaxUnsafe = "SPAN_LESS_THAN_MAX_UNSAFE"
-	CodeAssetIDReusedTypes    = "RESOURCE_ID_REUSED_TYPES"
-	CodeAssetSingleAppearance = "RESOURCE_SINGLE_APPEARANCE"
+	CodeAssetIDReusedTypes    = "ASSET_ID_REUSED_TYPES"
+	CodeAssetSingleAppearance = "ASSET_SINGLE_APPEARANCE"
 	CodeAmbiguousTags         = "AMBIGUOUS_TAGS"
 
 	// Contract/schema validation.

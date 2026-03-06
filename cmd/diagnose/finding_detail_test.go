@@ -52,7 +52,7 @@ func TestRunDiagnoseFindingDetail_ValidationShortCircuit(t *testing.T) {
 func TestWriteFindingDetailJSON_IncludesTrace(t *testing.T) {
 	detail := &evaluation.FindingDetail{
 		Control:  evaluation.FindingControlSummary{ID: "CTL.TEST.A.001", Name: "A"},
-		Resource: evaluation.FindingResourceSummary{ID: "res-1", Type: "storage_bucket"},
+		Asset:    evaluation.FindingResourceSummary{ID: "res-1", Type: "storage_bucket"},
 		Evidence: evaluation.Evidence{},
 		Trace: &evaluation.FindingTrace{
 			Raw: &trace.TraceResult{

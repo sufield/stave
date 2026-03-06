@@ -244,7 +244,7 @@ func scaffoldBaseFiles(opts scaffoldOptions) map[string]string {
 		"observations/2026-01-11T00:00:00Z.json": normalizeTemplate(templateObservation),
 		"observations/2026-01-18T00:00:00Z.json": strings.ReplaceAll(normalizeTemplate(templateObservation), "2026-01-11T00:00:00Z", "2026-01-18T00:00:00Z"),
 		"snapshots/raw/observation.sample.json":  normalizeTemplate(templateObservationSample),
-		"controls/control.sample.yaml":           normalizeTemplate(templateInvariantSample),
+		"controls/control.sample.yaml":           normalizeTemplate(templateControlSample),
 		"stave.sample.yaml":                      normalizeTemplate(templateStaveConfigSample),
 		"output/.gitkeep":                        "",
 	}

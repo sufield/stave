@@ -85,7 +85,7 @@ type RemediationAction struct {
 // predicate evaluation trace, remediation guidance, and next steps.
 type FindingDetail struct {
 	Control         FindingControlSummary   `json:"control"`
-	Resource        FindingResourceSummary  `json:"resource"`
+	Asset           FindingResourceSummary  `json:"asset"`
 	Evidence        Evidence                `json:"evidence"`
 	Trace           *FindingTrace           `json:"trace,omitempty"`
 	Remediation     *policy.RemediationSpec `json:"remediation,omitempty"`

@@ -267,7 +267,7 @@ func runContextShow(cmd *cobra.Command, _ []string) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(out)
 	}
-	_, err = fmt.Fprintf(cmd.OutOrStdout(), "Context: %s (%s)\nStore: %s\nProject root: %s\nConfig: %s\nInvariants default: %s\nObservations default: %s\n",
+	_, err = fmt.Fprintf(cmd.OutOrStdout(), "Context: %s (%s)\nStore: %s\nProject root: %s\nConfig: %s\nControls default: %s\nObservations default: %s\n",
 		out.Name,
 		out.SelectedBy,
 		out.StoreFile,

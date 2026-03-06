@@ -1000,11 +1000,11 @@ Stave outputs JSON with findings:
   },
   "findings": [
     {
-      "invariant_id": "CTL.EXP.DURATION.001",
-      "invariant_name": "Unsafe Duration Bound",
-      "resource_id": "res:aws:s3:bucket:public-bucket",
-      "resource_type": "storage_bucket",
-      "resource_vendor": "aws",
+      "control_id": "CTL.EXP.DURATION.001",
+      "control_name": "Unsafe Duration Bound",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
       "source": {"file": "infra/main.tf", "line": 42},
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
@@ -1115,11 +1115,11 @@ Use `jq` to extract specific information:
 # Count violations
 stave apply --controls ./inv --observations ./obs | jq '.summary.violations'
 
-# Extract resource IDs with violations
-stave apply --controls ./inv --observations ./obs | jq -r '.findings[].resource_id'
+# Extract asset IDs with violations
+stave apply --controls ./inv --observations ./obs | jq -r '.findings[].asset_id'
 
 # Get control IDs that were violated
-stave apply --controls ./inv --observations ./obs | jq -r '.findings[].invariant_id' | sort -u
+stave apply --controls ./inv --observations ./obs | jq -r '.findings[].control_id' | sort -u
 
 # Check validation errors
 stave validate --controls ./inv --observations ./obs --format json | jq '.errors'

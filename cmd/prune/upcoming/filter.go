@@ -22,7 +22,7 @@ func newUpcomingFilter(criteria UpcomingFilterCriteria) (upcomingFilter, error) 
 		}
 		filter.controlIDs[id] = struct{}{}
 	}
-	for _, rt := range criteria.ResourceTypes {
+	for _, rt := range criteria.AssetTypes {
 		if rt == "" {
 			continue
 		}

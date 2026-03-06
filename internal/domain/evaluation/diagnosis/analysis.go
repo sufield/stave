@@ -76,7 +76,7 @@ func (s *session) diagnoseNoViolations() []Entry {
 			Evidence: fmt.Sprintf("Max unsafe streak: %s (control %s); threshold: %s",
 				timeutil.FormatDuration(maxStreak), ctlID, timeutil.FormatDuration(s.input.MaxUnsafe)),
 			Action:  fmt.Sprintf("Lower --max-unsafe to %s or shorter", timeutil.FormatDuration(maxStreak)),
-			Command: fmt.Sprintf("stave evaluate --max-unsafe %s", timeutil.FormatDuration(maxStreak)),
+			Command: fmt.Sprintf("stave apply --max-unsafe %s", timeutil.FormatDuration(maxStreak)),
 		})
 	}
 
@@ -112,7 +112,7 @@ func (s *session) diagnoseEmptyFindings() []Entry {
 			Evidence: fmt.Sprintf("%d unique resources matched; max streak %s; threshold %s",
 				matchedCount, timeutil.FormatDuration(maxStreak), timeutil.FormatDuration(s.input.MaxUnsafe)),
 			Action:  "Lower --max-unsafe or collect snapshots over longer time span",
-			Command: fmt.Sprintf("stave evaluate --max-unsafe %s", timeutil.FormatDuration(maxStreak)),
+			Command: fmt.Sprintf("stave apply --max-unsafe %s", timeutil.FormatDuration(maxStreak)),
 		})
 	}
 

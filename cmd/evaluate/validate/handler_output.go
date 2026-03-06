@@ -340,7 +340,7 @@ func PackConfigIssues() []diag.Issue {
 		if name == "" || knownSet[name] {
 			continue
 		}
-		issues = append(issues, diag.New("UNKNOWN_INVARIANT_PACK").
+		issues = append(issues, diag.New("UNKNOWN_CONTROL_PACK").
 			Error().
 			Action(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
 			With("pack", name).

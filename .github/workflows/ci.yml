@@ -103,6 +103,29 @@ jobs:
       - name: Build and run E2E tests
         run: make build && scripts/e2e.sh
 
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - name: Authenticate to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+      - name: Check links in docs and top-level markdown
+        run: |
+          docker run --rm \
+            -v "$PWD":/repo \
+            ghcr.io/lycheeverse/lychee:v0.20.1 \
+            --config /repo/.lychee.toml \
+            /repo/README.md \
+            /repo/SECURITY.md \
+            /repo/CONTRIBUTING.md \
+            /repo/docs
+
   security-audit:
     name: Security audit smoke
     runs-on: ubuntu-latest

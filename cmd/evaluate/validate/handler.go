@@ -15,7 +15,6 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
-// runValidate is kept for compatibility with existing tests and callers.
 func runValidate(cmd *cobra.Command, _ []string) error {
 	return runValidateWithOptions(cmd, ui.NewRuntime(nil, nil), validateOpts)
 }

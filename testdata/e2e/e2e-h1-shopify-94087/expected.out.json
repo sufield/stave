@@ -5,20 +5,21 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2015-10-23T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2015-10-15T00:00:00Z.json": "8b627788dbb1bf1d626f16163d87058e42618f454675373b5be481427f66ef54",
-        "2015-10-23T00:00:00Z.json": "6a1ff6e41fa7cffc6d14245dcecbd37890df4d4ea76bd3ddd917a76e2e9cf470"
+        "2015-10-15T00:00:00Z.json": "60b48c51521b40b82269dfd8bd60c7a382c3926b342cbd8ccd4889c19a56336c",
+        "2015-10-23T00:00:00Z.json": "2854645ac5b34563047df240ca507f88ed686b36ac8c54ba3ce2b8af62c05a6c"
       },
-      "overall": "ac566f7ff196f26e1a6f80e130090adb802f17c07c7be33ce2d60021749d326c"
-    }
+      "overall": "4fb8db2caac96318fe49b1fc39b39f56ea61918185e7ff45adb3f157ff5c179e"
+    },
+    "pack_hash": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025"
   },
   "summary": {
     "resources_evaluated": 1,
     "attack_surface": 1,
-    "violations": 2
+    "violations": 1
   },
   "findings": [
     {
@@ -36,108 +37,40 @@
         "misconfigurations": [
           {
             "property": "storage.encryption.algorithm",
-            "actual_value": null,
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "aws:kms"
           },
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "merchant_pii",
+            "actual_value": "[SANITIZED]",
             "operator": "present",
             "unsafe_value": true
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "merchant_pii",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "public"
           },
           {
             "property": "storage.tags.data-classification",
-            "actual_value": "merchant_pii",
+            "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "non-sensitive"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-15T00:00:00Z."
       },
-      "remediation": {
-        "description": "Resource has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
-      }
-    },
-    {
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
-      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
-      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
-      "asset_id": "shopify-merchant-assets",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-15T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-23T00:00:00Z",
-        "unsafe_duration_hours": 192,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "identities",
-            "actual_value": null,
-            "operator": "any_match",
-            "unsafe_value": {
-              "all": [
-                {
-                  "field": "type",
-                  "op": "eq",
-                  "value": "app_signer"
-                },
-                {
-                  "field": "id",
-                  "op": "contains",
-                  "value": "appsigner:s3:"
-                },
-                {
-                  "any": [
-                    {
-                      "field": "purpose",
-                      "op": "contains",
-                      "value": "allow_traversal=true"
-                    },
-                    {
-                      "field": "purpose",
-                      "op": "contains",
-                      "value": "enforce_prefix=false"
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.tenant_mode",
-            "actual_value": "shared",
-            "operator": "eq",
-            "unsafe_value": "shared"
-          },
-          {
-            "property": "storage.tags.tenant_prefix",
-            "actual_value": "shops/{shop_id}/",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-15T00:00:00Z."
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -146,14 +79,21 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-94087/invariants",
+      "controls": "testdata/e2e/e2e-h1-shopify-94087/controls",
       "observations": "testdata/e2e/e2e-h1-shopify-94087/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-shopify-94087/controls --observations testdata/e2e/e2e-h1-shopify-94087/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2015-11-23T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2015-11-23T00:00:00Z.json": "524bc16a3a874bd81eb4e58c9e97099fc6f96eced5fee96c66319a4cbfe9e8c0"
       },
       "overall": "34d5c52192070b7372b2f46607933bbf7ddfe36598344242b692747bbd0e866e"
-    }
+    },
+    "pack_hash": "d2b35cd40cec32a8718ca0f93ff93d9e6b67eced18e3388436a53e8cee4e6b11"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -36,7 +37,7 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.public_write_via_acl",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
@@ -46,12 +47,16 @@
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-cd3c5aabf53a870b",
+        "id": "fix-1100fc54caa50a69",
         "target": {
           "asset_id": "shopify-internal-assets",
           "asset_type": "aws_s3_bucket"
@@ -100,12 +105,16 @@
         "misconfigurations": [
           {
             "property": "storage.visibility.authenticated_users_read",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -113,15 +122,66 @@
       }
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-75b9a5ff19cca679",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACL.WRITE.001"
+      ],
+      "finding_count": 1
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-98819/invariants",
+      "controls": "testdata/e2e/e2e-h1-shopify-98819/controls",
       "observations": "testdata/e2e/e2e-h1-shopify-98819/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-shopify-98819/controls --observations testdata/e2e/e2e-h1-shopify-98819/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

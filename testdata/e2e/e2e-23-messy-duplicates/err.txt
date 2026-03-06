@@ -1,0 +1,22 @@
+Plan Summary
+------------
+Ready: false
+Controls: testdata/e2e/e2e-23-messy-duplicates/controls
+Observations: testdata/e2e/e2e-23-messy-duplicates/observations
+Checked: 0 controls, 0 snapshots, 0 resource observations
+
+Issues:
+  [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest
+    Fix: install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  [FAIL] SCHEMA_VIOLATION: Fix control to match DSL schema
+    Fix: Fix control to match DSL schema
+  [FAIL] SCHEMA_VIOLATION: Fix control to match DSL schema
+    Fix: Fix control to match DSL schema
+  [FAIL] SCHEMA_VIOLATION: Fix control to match DSL schema
+    Fix: Fix control to match DSL schema
+  [FAIL] SCHEMA_VIOLATION: Set /type to one of the allowed values.
+    Fix: Set /type to one of the allowed values.
+  [FAIL] OBSERVATION_LOAD_FAILED: Check that the observations directory exists and contains valid JSON files
+    Fix: Check that the observations directory exists and contains valid JSON files
+
+Next: stave plan

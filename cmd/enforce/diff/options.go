@@ -15,7 +15,7 @@ type options struct {
 	ObservationsDir string
 	Format          string
 	ChangeTypes     []string
-	ResourceTypes   []string
+	AssetTypes      []string
 	AssetID         string
 }
 
@@ -27,7 +27,7 @@ func (o *options) bindFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory")
 	cmd.Flags().StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	cmd.Flags().StringSliceVar(&o.ChangeTypes, "change-type", nil, "Filter change types: added, removed, modified")
-	cmd.Flags().StringSliceVar(&o.ResourceTypes, "resource-type", nil, "Filter resource type values")
+	cmd.Flags().StringSliceVar(&o.AssetTypes, "asset-type", nil, "Filter asset type values")
 	cmd.Flags().StringVar(&o.AssetID, "asset-id", "", "Filter by resource ID substring")
 }
 
@@ -42,7 +42,7 @@ func (o *options) resolveFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
 func (o *options) buildFilter() (asset.FilterOptions, error) {
 	filter := asset.FilterOptions{
 		ChangeTypes:   make([]asset.ChangeType, 0, len(o.ChangeTypes)),
-		ResourceTypes: make([]string, 0, len(o.ResourceTypes)),
+		AssetTypes: make([]string, 0, len(o.AssetTypes)),
 		AssetID:       strings.TrimSpace(o.AssetID),
 	}
 	for _, raw := range o.ChangeTypes {
@@ -57,17 +57,17 @@ func (o *options) buildFilter() (asset.FilterOptions, error) {
 			return asset.FilterOptions{}, fmt.Errorf("invalid --change-type %q (use: added, removed, modified)", raw)
 		}
 	}
-	for _, raw := range o.ResourceTypes {
+	for _, raw := range o.AssetTypes {
 		rt := strings.TrimSpace(raw)
 		if rt == "" {
 			continue
 		}
-		filter.ResourceTypes = append(filter.ResourceTypes, rt)
+		filter.AssetTypes = append(filter.AssetTypes, rt)
 	}
 	return filter, nil
 }
 
 // kept for local tests
 func newDiffFilter(changeTypes, resourceTypes []string, assetID string) (asset.FilterOptions, error) {
-	return (&options{ChangeTypes: changeTypes, ResourceTypes: resourceTypes, AssetID: assetID}).buildFilter()
+	return (&options{ChangeTypes: changeTypes, AssetTypes: resourceTypes, AssetID: assetID}).buildFilter()
 }

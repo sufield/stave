@@ -21,7 +21,7 @@ type RiskOptions struct {
 	ToolVersion      string
 	// Optional filters for upcoming metrics (empty = no filter).
 	ControlIDs      []kernel.ControlID
-	ResourceTypes   []kernel.AssetType
+	AssetTypes      []kernel.AssetType
 	Statuses        []risk.Status
 	DueWithin       *time.Duration
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
@@ -127,7 +127,7 @@ func applyUpcomingFilter(items []upcomingItem, opts RiskOptions) []upcomingItem 
 func compileUpcomingFilter(opts RiskOptions) UpcomingFilter {
 	return UpcomingFilter{
 		controlIDs:    fp.ToSet(opts.ControlIDs),
-		resourceTypes: fp.ToSet(opts.ResourceTypes),
+		resourceTypes: fp.ToSet(opts.AssetTypes),
 		statuses:      fp.ToSet(opts.Statuses),
 		dueWithin:     derefDuration(opts.DueWithin),
 	}

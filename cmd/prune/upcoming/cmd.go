@@ -37,7 +37,7 @@ func init() {
 	Cmd.Flags().StringVar(&upcomingFlags.dueSoon, "due-soon", "24h", "Threshold for 'due soon' reminders (e.g., 4h, 1d)")
 	Cmd.Flags().StringVarP(&upcomingFlags.format, "format", "f", "text", "Output format: text or json")
 	Cmd.Flags().StringSliceVar(&upcomingFlags.controlIDs, "control-id", nil, "Filter to one or more control IDs")
-	Cmd.Flags().StringSliceVar(&upcomingFlags.resourceTypes, "resource-type", nil, "Filter to one or more resource types")
+	Cmd.Flags().StringSliceVar(&upcomingFlags.resourceTypes, "asset-type", nil, "Filter to one or more asset types")
 	Cmd.Flags().StringSliceVar(&upcomingFlags.statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
 	Cmd.Flags().StringVar(&upcomingFlags.dueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
 	_ = Cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))

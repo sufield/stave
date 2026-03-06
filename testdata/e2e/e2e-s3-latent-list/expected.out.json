@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-11T00:00:00Z.json": "a91da694c092df3ff5754747fbe9a13ae455f04c7b5df352df0754b77c22bc34"
       },
       "overall": "74dd07064eae25e2f18982784fa5dab48da2cc98d5a625d591574557de15928b"
-    }
+    },
+    "pack_hash": "d30d220b21d9587323f30d5cdea680eb7f9d9204b4bf2d5cd92666876d72d614"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -24,7 +25,7 @@
     {
       "control_id": "CTL.S3.PUBLIC.006",
       "control_name": "No Latent Public Bucket Listing",
-      "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability \u2014 one configuration change away from exposing all object keys.\n",
+      "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability — one configuration change away from exposing all object keys.\n",
       "asset_id": "latent-listable-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -36,25 +37,29 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.visibility.latent_public_list",
-            "actual_value": true,
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           }
         ],
         "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
       "remediation": {
         "description": "Resource is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
-        "id": "fix-ff071c4395d6c6a5",
+        "id": "fix-8a5bd24f81bfedd2",
         "target": {
           "asset_id": "latent-listable-bucket",
           "asset_type": "aws_s3_bucket"
@@ -89,15 +94,66 @@
       }
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "latent-listable-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-175f2b2e8866e873",
+        "target": {
+          "asset_id": "latent-listable-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.006"
+      ],
+      "finding_count": 1
+    }
+  ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-latent-list/invariants",
+      "controls": "testdata/e2e/e2e-s3-latent-list/controls",
       "observations": "testdata/e2e/e2e-s3-latent-list/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-s3-latent-list/controls --observations testdata/e2e/e2e-s3-latent-list/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

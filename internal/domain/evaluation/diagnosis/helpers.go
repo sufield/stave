@@ -31,7 +31,7 @@ func checkTimeSpan(input Input) *Entry {
 			Evidence: fmt.Sprintf("Snapshots span %s; threshold is %s",
 				timeutil.FormatDuration(span), timeutil.FormatDuration(input.MaxUnsafe)),
 			Action:  "Collect snapshots over a longer period, or reduce --max-unsafe",
-			Command: fmt.Sprintf("stave evaluate --max-unsafe %s", timeutil.FormatDuration(span)),
+			Command: fmt.Sprintf("stave apply --max-unsafe %s", timeutil.FormatDuration(span)),
 		}
 	}
 
@@ -49,7 +49,7 @@ func buildNowSkewEntry(now, maxCapturedAt time.Time) *Entry {
 		Evidence: fmt.Sprintf("--now=%s but latest captured_at=%s",
 			now.Format(time.RFC3339), maxCapturedAt.Format(time.RFC3339)),
 		Action:  "Set --now to a time after or equal to latest snapshot",
-		Command: fmt.Sprintf("stave evaluate --now %s", maxCapturedAt.Format(time.RFC3339)),
+		Command: fmt.Sprintf("stave apply --now %s", maxCapturedAt.Format(time.RFC3339)),
 	}
 }
 

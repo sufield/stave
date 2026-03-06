@@ -42,7 +42,7 @@ func init() {
 	Cmd.Flags().StringVar(&hygieneFlags.now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	Cmd.Flags().StringVarP(&hygieneFlags.format, "format", "f", "text", "Output format: text or json")
 	Cmd.Flags().StringSliceVar(&hygieneFlags.controlIDs, "control-id", nil, "Filter upcoming metrics to one or more control IDs")
-	Cmd.Flags().StringSliceVar(&hygieneFlags.resourceTypes, "resource-type", nil, "Filter upcoming metrics to one or more resource types")
+	Cmd.Flags().StringSliceVar(&hygieneFlags.resourceTypes, "asset-type", nil, "Filter upcoming metrics to one or more asset types")
 	Cmd.Flags().StringSliceVar(&hygieneFlags.statuses, "status", nil, "Filter upcoming metrics by status: OVERDUE, DUE_NOW, UPCOMING")
 	Cmd.Flags().StringVar(&hygieneFlags.dueWithin, "due-within", "", "Filter upcoming metrics to items due within duration from --now (e.g., 24h, 3d)")
 	_ = Cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))

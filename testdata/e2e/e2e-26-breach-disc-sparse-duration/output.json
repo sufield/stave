@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2026-01-02T06:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2026-01-02T06:00:00Z.json": "2d8a0f8b8f7594bf8e8079de97058a6f95e0e974b7f71a55dc6dd19f2c41c466"
       },
       "overall": "c8f104e8cbd847d31275bbefb257ac82aff776bd476108df48ba7af65e1c5005"
-    }
+    },
+    "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
   "summary": {
     "resources_evaluated": 1,
@@ -22,14 +23,16 @@
   },
   "findings": [],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-26-breach-disc-sparse-duration/invariants",
+      "controls": "testdata/e2e/e2e-26-breach-disc-sparse-duration/controls",
       "observations": "testdata/e2e/e2e-26-breach-disc-sparse-duration/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }

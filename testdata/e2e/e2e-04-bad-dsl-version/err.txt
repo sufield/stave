@@ -1,1 +1,14 @@
-Error: failed to load invariants: failed to load invariant testdataINV.EXP.DURATION.001.yaml: schema validation failed for testdataINV.EXP.DURATION.001.yaml
+Plan Summary
+------------
+Ready: false
+Controls: testdata/e2e/e2e-04-bad-dsl-version/controls
+Observations: testdata/e2e/e2e-04-bad-dsl-version/observations
+Checked: 0 controls, 0 snapshots, 0 resource observations
+
+Issues:
+  [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest
+    Fix: install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  [FAIL] UNSUPPORTED_SCHEMA_VERSION: Fix control to match DSL schema
+    Fix: Fix control to match DSL schema
+
+Next: stave plan

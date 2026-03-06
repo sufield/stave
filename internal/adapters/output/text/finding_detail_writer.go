@@ -30,7 +30,7 @@ func WriteFindingDetail(w io.Writer, detail *evaluation.FindingDetail) error {
 }
 
 func writeFindingDetailHeader(d *drawer, detail *evaluation.FindingDetail) {
-	d.f("Diagnosis for Violation: %s on %s\n", detail.Control.ID, detail.Resource.ID)
+	d.f("Diagnosis for Violation: %s on %s\n", detail.Control.ID, detail.Asset.ID)
 	d.f("%s\n", strings.Repeat("-", sectionWidth))
 }
 
@@ -70,14 +70,14 @@ func writeControlSection(d *drawer, detail *evaluation.FindingDetail) {
 }
 
 func writeResourceSection(d *drawer, detail *evaluation.FindingDetail) {
-	d.f("\nAsset: %s (Type: %s", detail.Resource.ID, detail.Resource.Type)
-	if detail.Resource.Vendor != "" {
-		d.f(", Vendor: %s", detail.Resource.Vendor)
+	d.f("\nAsset: %s (Type: %s", detail.Asset.ID, detail.Asset.Type)
+	if detail.Asset.Vendor != "" {
+		d.f(", Vendor: %s", detail.Asset.Vendor)
 	}
 	d.ln(")")
 
-	if !detail.Resource.ObservedAt.IsZero() {
-		d.f("  Observed at: %s\n", detail.Resource.ObservedAt.Format(time.RFC3339))
+	if !detail.Asset.ObservedAt.IsZero() {
+		d.f("  Observed at: %s\n", detail.Asset.ObservedAt.Format(time.RFC3339))
 	}
 }
 

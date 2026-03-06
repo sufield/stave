@@ -5,7 +5,7 @@
     "tool_version": "0.0.1",
     "offline": true,
     "now": "2017-08-02T00:00:00Z",
-    "max_unsafe": "168h0m0s",
+    "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
@@ -13,7 +13,8 @@
         "2017-08-02T00:00:00Z.json": "29e332b09afae0ca7efc4502ea8aebe3b164cd3911a4258dcdbe1c73130e7fc4"
       },
       "overall": "35d7c03e3df521c70ae637a240ba3166ecf98d00624d22bfbd61ff3039b1ff93"
-    }
+    },
+    "pack_hash": "def6400c2f0b9c2afbed859ea0b67a5cf78186d7702c4006ff479e66d91bd864"
   },
   "summary": {
     "resources_evaluated": 2,
@@ -36,24 +37,28 @@
         "misconfigurations": [
           {
             "property": "storage.kind",
-            "actual_value": "bucket",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
           },
           {
             "property": "storage.tags.tenant_mode",
-            "actual_value": "shared",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "shared"
           },
           {
             "property": "storage.tags.tenant_prefix",
-            "actual_value": "users/{user_id}/{date}/",
+            "actual_value": "[SANITIZED]",
             "operator": "missing",
             "unsafe_value": false
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -75,24 +80,28 @@
         "misconfigurations": [
           {
             "property": "s3_upload.allowed_key_mode",
-            "actual_value": "prefix",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "prefix"
           },
           {
             "property": "s3_upload.operation",
-            "actual_value": "write",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "write"
           },
           {
             "property": "type",
-            "actual_value": "s3_upload_policy",
+            "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "s3_upload_policy"
           }
         ],
         "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
       },
       "remediation": {
         "description": "Resource has unsafe state configuration.",
@@ -101,14 +110,21 @@
     }
   ],
   "extensions": {
+    "selected_controls_source": "dir",
     "context_name": "stave",
-    "git_dirty": false,
-    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
-    "git_repo_root": "/home/zepho/work/bizacademy",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-unikrn-254200/invariants",
+      "controls": "testdata/e2e/e2e-h1-unikrn-254200/controls",
       "observations": "testdata/e2e/e2e-h1-unikrn-254200/observations"
     },
-    "selected_controls_source": "dir"
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "dirty": false
+    }
   }
 }
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-h1-unikrn-254200/controls --observations testdata/e2e/e2e-h1-unikrn-254200/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings for S3: `stave apply --format json > findings.json`

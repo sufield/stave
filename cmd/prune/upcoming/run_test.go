@@ -153,7 +153,7 @@ func TestApplyUpcomingFilter(t *testing.T) {
 	dueWithin := 24 * time.Hour
 	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
 		ControlIDs:    []kernel.ControlID{"CTL.TEST.A.001"},
-		ResourceTypes: []kernel.AssetType{"res:aws:s3:bucket"},
+		AssetTypes:    []kernel.AssetType{"res:aws:s3:bucket"},
 		Statuses:      []string{"OVERDUE", "UPCOMING"},
 		DueWithin:     &dueWithin,
 	})

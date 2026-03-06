@@ -143,7 +143,7 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 3.5
       rationale: Sensitive authentication data must be protected from exposure.
-  DP.REDACTION.POLICY:
+  DP.SANITIZATION.POLICY:
     - framework: nist_800_53
       control_id: MP-6
       rationale: Redaction controls support media/data sanitization requirements.

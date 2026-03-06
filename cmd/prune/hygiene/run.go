@@ -87,7 +87,7 @@ func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
 		KeepMin:         hygieneFlags.keepMin,
 		NowTime:         hygieneFlags.now,
 		ControlIDs:      toControlIDs(hygieneFlags.controlIDs),
-		ResourceTypes:   toResourceTypes(hygieneFlags.resourceTypes),
+		AssetTypes:      toAssetTypes(hygieneFlags.resourceTypes),
 		Statuses:        toStatuses(hygieneFlags.statuses),
 	}
 	parsed, err := req.Parse()
@@ -118,7 +118,7 @@ func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
 			DueSoonThreshold: parsed.DueSoon,
 			ToolVersion:      staveversion.Version,
 			ControlIDs:       req.ControlIDs,
-			ResourceTypes:    req.ResourceTypes,
+			AssetTypes:       req.AssetTypes,
 			Statuses:         req.Statuses,
 			DueWithin:        parsed.DueWithin,
 			PredicateParser:  ctlyaml.YAMLPredicateParser,
@@ -166,7 +166,7 @@ func buildHygieneOutputs(execCtx hygieneExecution) (string, hygieneapp.Output, e
 		DueSoonThreshold: timeutil.FormatDuration(execCtx.dueSoonDur),
 		Filters: map[string]any{
 			"control_ids":    req.ControlIDs,
-			"resource_types": req.ResourceTypes,
+			"asset_types":    req.AssetTypes,
 			"statuses":       req.Statuses,
 			"due_within":     execCtx.filtersDueWithin,
 		},

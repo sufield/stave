@@ -104,7 +104,7 @@ func (r *Sanitizer) ScrubMap(props map[string]any, cfg ScrubConfig) map[string]a
 			continue
 		}
 		if _, ok := cfg.SanitizedKeys[k]; ok {
-			out[k] = r.redactValue(v)
+			out[k] = r.sanitizeValue(v)
 			continue
 		}
 		if nested, ok := v.(map[string]any); ok {
@@ -116,7 +116,7 @@ func (r *Sanitizer) ScrubMap(props map[string]any, cfg ScrubConfig) map[string]a
 	return out
 }
 
-func (r *Sanitizer) redactValue(v any) string {
+func (r *Sanitizer) sanitizeValue(v any) string {
 	s, ok := v.(string)
 	if !ok {
 		return "[SANITIZED]"

@@ -1,1 +1,14 @@
-Error: failed to load observations: failed to load snapshot testdata2026-01-11T00:00:00Z.json: schema validation failed for testdata2026-01-11T00:00:00Z.json
+Plan Summary
+------------
+Ready: false
+Controls: testdata/e2e/e2e-05-bad-schema-version/controls
+Observations: testdata/e2e/e2e-05-bad-schema-version/observations
+Checked: 0 controls, 0 snapshots, 0 resource observations
+
+Issues:
+  [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest
+    Fix: install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  [FAIL] UNSUPPORTED_SCHEMA_VERSION: Fix observation to match schema
+    Fix: Fix observation to match schema
+
+Next: stave plan
