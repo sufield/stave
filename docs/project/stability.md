@@ -49,7 +49,7 @@ Stave pins all dependencies to exact versions. The source of truth is the Go mod
 
 | Dependency | Version | Role |
 |------------|---------|------|
-| Go | 1.26.0 | Build toolchain |
+| Go | 1.26.1 | Build toolchain |
 | Cobra | v1.10.2 | CLI framework |
 | pflag | v1.0.10 | Flag parsing |
 | yaml.v3 | v3.0.1 | Control YAML parsing |

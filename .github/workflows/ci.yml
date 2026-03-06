@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
           check-latest: true
           cache: true
       - name: Sync schemas and run tests
@@ -35,7 +35,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
           check-latest: true
           cache: true
       - name: Install golangci-lint from source
@@ -52,12 +52,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
           check-latest: true
           cache: true
       - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1
         with:
-          go-version-input: '1.26.0'
+          go-version-input: '1.26.1'
 
   license:
     name: License compliance
@@ -68,7 +68,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
           check-latest: true
           cache: true
       - name: Install go-licenses
@@ -106,7 +106,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
           check-latest: true
           cache: true
       - name: Build and run E2E tests
@@ -121,7 +121,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.0'
+          go-version: '1.26.1'
           check-latest: true
           cache: true
       - name: Run security-audit (json, fail-on NONE)
