@@ -1,0 +1,5 @@
+Tip: run `stave init` to scaffold a starter project.
+Running: evaluate controls against observations...
+Done:    evaluate controls against observations (4ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations
