@@ -73,11 +73,11 @@ func TestRuntimeBeginProgress_QuietOrNoTTY(t *testing.T) {
 }
 
 func TestRuntimePrintNextSteps(t *testing.T) {
-	var stdout bytes.Buffer
-	rt := NewRuntime(&stdout, &bytes.Buffer{})
+	var stderr bytes.Buffer
+	rt := NewRuntime(&bytes.Buffer{}, &stderr)
 	rt.PrintNextSteps("Do A", "Do B")
 
-	out := stdout.String()
+	out := stderr.String()
 	if !strings.Contains(out, "Next steps:") {
 		t.Fatalf("missing header: %q", out)
 	}

@@ -56,13 +56,6 @@ func (r *Runtime) stderr() io.Writer {
 	return r.Stderr
 }
 
-func (r *Runtime) stdout() io.Writer {
-	if r == nil || r.Stdout == nil {
-		return os.Stdout
-	}
-	return r.Stdout
-}
-
 func (r *Runtime) isTerminal(w io.Writer) bool {
 	if r != nil && r.IsTTY != nil {
 		return *r.IsTTY
@@ -119,13 +112,14 @@ func (r *Runtime) BeginProgress(label string) func() {
 	}
 }
 
-// PrintNextSteps writes a formatted "Next steps:" block to out.
+// PrintNextSteps writes a formatted "Next steps:" block to stderr.
+// Hints are always written to stderr so they never contaminate JSON stdout.
 func (r *Runtime) PrintNextSteps(steps ...string) {
 	if r == nil || r.Quiet || len(steps) == 0 {
 		return
 	}
 
-	out := r.stdout()
+	out := r.stderr()
 	_, _ = fmt.Fprintln(out)
 	_, _ = fmt.Fprintln(out, "Next steps:")
 	for i, step := range steps {
