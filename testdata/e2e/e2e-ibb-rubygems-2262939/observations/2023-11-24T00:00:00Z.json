@@ -1,0 +1,56 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2023-11-24T00:00:00Z",
+  "resources": [
+    {
+      "id": "rubygems-org-distribution",
+      "type": "aws_cloudfront_distribution",
+      "vendor": "aws",
+      "properties": {
+        "cdn": {
+          "kind": "distribution",
+          "id": "rubygems-org-distribution",
+          "domain_name": "d111111abcdef8.cloudfront.net",
+          "aliases": ["rubygems.org"],
+          "enabled": true,
+          "origins_has_dangling_s3": true,
+          "origins": [
+            {
+              "origin_id": "index-rubygems-org",
+              "origin_type": "s3",
+              "domain_name": "index.rubygems.org",
+              "s3_bucket_name": "index.rubygems.org",
+              "s3_bucket_exists": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "index.rubygems.org",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "id": "aws:s3:::index.rubygems.org",
+          "name": "index.rubygems.org",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "tags": {
+            "report": "2262939",
+            "case": "dangling_origin"
+          }
+        }
+      }
+    }
+  ]
+}

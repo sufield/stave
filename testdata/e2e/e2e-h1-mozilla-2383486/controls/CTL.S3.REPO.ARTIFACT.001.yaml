@@ -1,0 +1,25 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPO.ARTIFACT.001
+name: Public Buckets Must Not Expose VCS Artifacts
+description: >
+  Buckets that serve public content must not expose version control artifacts
+  such as .git/ or .svn/. Presence of these paths enables repo reconstruction
+  and can leak secrets.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - any:
+        - field: properties.storage.visibility.public_read
+          op: eq
+          value: true
+        - field: properties.storage.visibility.public_list
+          op: eq
+          value: true
+    - field: properties.storage.content.exposed_repo_artifacts
+      op: eq
+      value: true

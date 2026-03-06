@@ -1,0 +1,69 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2022-06-23T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2022-06-15T00:00:00Z.json": "7b23ca22712b24058110272cc4baea8b4022af601504f2c242b6c8af56d46d43",
+        "2022-06-23T00:00:00Z.json": "626bda9795e7bcd31b6fe8628f5224d1b771231e4c3fe0917fad072eaa4948b7"
+      },
+      "overall": "d626146e7dfc661998ea6fa30c4919984faff27609b327c5208deb5da30a59cc"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
+      "asset_id": "uberflip-widget-vspcode-ref",
+      "asset_type": "s3_bucket_reference",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2022-06-15T00:00:00Z",
+        "last_seen_unsafe_at": "2022-06-23T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "s3_ref.bucket_exists",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "s3_ref.bucket_owned",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2022-06-15T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-hackerone-1598347/invariants",
+      "observations": "testdata/e2e/e2e-h1-hackerone-1598347/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

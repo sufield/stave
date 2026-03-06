@@ -1,0 +1,103 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "612c32fb79a52d06e0953b4b29d8cdb726a4aefb543150b5160fb31fa62cb4a6",
+        "2026-01-11T00:00:00Z.json": "b3260872e9a44995d20deaebdb38c7faff0b443edbc6ed5886edb7d14b889564"
+      },
+      "overall": "6e9ab71dc54fa68373b96eb843f3fb52914f15caf4b5fae89fb0e829f5c4f385"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Buckets",
+      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
+      "asset_id": "grnhse-marketing-site-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.visibility.public_list",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.visibility.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource is publicly exposed beyond threshold.",
+        "action": "Remove public access, confirm via new snapshot."
+      },
+      "fix_plan": {
+        "id": "fix-d7c19b35d8178eec",
+        "target": {
+          "asset_id": "grnhse-marketing-site-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-greenhouse-819278/invariants",
+      "observations": "testdata/e2e/e2e-h1-greenhouse-819278/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

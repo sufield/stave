@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOCK.003
+name: PHI Object Lock Retention Must Meet Minimum Period
+description: >
+  S3 buckets tagged with data-classification=phi that have Object
+  Lock enabled must have a default retention period of at least
+  2190 days (6 years) to meet HIPAA minimum retention requirements.
+  Shorter retention periods risk premature expiration of WORM
+  protection, allowing deletion or modification of PHI data before
+  the regulatory retention period has elapsed.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.tags.data-classification
+      op: eq
+      value: "phi"
+    - field: properties.storage.object_lock.enabled
+      op: eq
+      value: true
+    - field: properties.storage.object_lock.retention_days
+      op: lt
+      value: 2190

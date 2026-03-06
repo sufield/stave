@@ -1,0 +1,43 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2019-02-23T00:00:00Z",
+  "resources": [
+    {
+      "id": "slack-ios-test-builds",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "id": "aws:s3:::slack-ios-test-builds",
+          "name": "slack-ios-test-builds",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": false,
+            "public_list_via_policy": true,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "tags": {
+            "report": "404822",
+            "bucket-purpose": "build-artifacts",
+            "artifact-type": "ios_test_build"
+          }
+        }
+      }
+    }
+  ]
+}

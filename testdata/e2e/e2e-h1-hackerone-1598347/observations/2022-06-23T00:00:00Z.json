@@ -1,0 +1,19 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2022-06-23T00:00:00Z",
+  "resources": [
+    {
+      "id": "uberflip-widget-vspcode-ref",
+      "type": "s3_bucket_reference",
+      "vendor": "aws",
+      "properties": {
+        "s3_ref": {
+          "endpoint": "www.hackerone.com",
+          "bucket": "vspcode",
+          "bucket_exists": false,
+          "bucket_owned": false
+        }
+      }
+    }
+  ]
+}

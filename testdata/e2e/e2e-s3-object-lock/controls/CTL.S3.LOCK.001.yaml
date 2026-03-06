@@ -1,0 +1,19 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOCK.001
+name: Compliance-Tagged Buckets Must Have Object Lock Enabled
+description: >
+  S3 buckets tagged with compliance=true must have S3 Object Lock enabled.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.tags.compliance
+      op: eq
+      value: "true"
+    - field: properties.storage.object_lock.enabled
+      op: eq
+      value: false

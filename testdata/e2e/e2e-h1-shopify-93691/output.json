@@ -1,0 +1,75 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "9d4fccdf02ea1c1ddf3c8d63fd4ea2e31ede01f703860425d37346a3bbce102b",
+        "2026-01-11T00:00:00Z.json": "6bb6c778da60c38dff650303b91d47e81179a5b642ca9d513d44b8d5bd675528"
+      },
+      "overall": "acb2a9555673ed55508dafcd6a36719f5d597f1987d906b8a5692b01cd36dcdb"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 2,
+    "attack_surface": 1,
+    "violations": 1
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
+      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
+      "asset_id": "upload-policy-files-prefix",
+      "asset_type": "s3_upload_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "s3_upload.allowed_key_mode",
+            "actual_value": "prefix",
+            "operator": "eq",
+            "unsafe_value": "prefix"
+          },
+          {
+            "property": "s3_upload.operation",
+            "actual_value": "write",
+            "operator": "eq",
+            "unsafe_value": "write"
+          },
+          {
+            "property": "type",
+            "actual_value": "s3_upload_policy",
+            "operator": "eq",
+            "unsafe_value": "s3_upload_policy"
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-shopify-93691/invariants",
+      "observations": "testdata/e2e/e2e-h1-shopify-93691/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

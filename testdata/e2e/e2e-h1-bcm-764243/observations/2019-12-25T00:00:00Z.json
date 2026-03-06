@@ -1,0 +1,41 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-synthetic",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2019-12-25T00:00:00Z",
+  "resources": [
+    {
+      "id": "bcm-hk",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "bcm-hk",
+          "visibility": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false
+          }
+        }
+      }
+    },
+    {
+      "id": "upload-api-bcm-hk",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "bcm-hk",
+          "operation": "write",
+          "allowed_key_mode": "prefix",
+          "allowed_prefix": ""
+        }
+      }
+    }
+  ]
+}

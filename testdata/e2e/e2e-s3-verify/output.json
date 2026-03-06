@@ -1,0 +1,29 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "verification",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "before_snapshots": 2,
+    "after_snapshots": 2
+  },
+  "summary": {
+    "before_violations": 1,
+    "after_violations": 0,
+    "resolved": 1,
+    "remaining": 0,
+    "introduced": 0
+  },
+  "resolved": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public Read via Bucket Policy",
+      "asset_id": "patient-records-bucket",
+      "asset_type": "aws_s3_bucket"
+    }
+  ],
+  "remaining": [],
+  "introduced": []
+}

@@ -1,0 +1,58 @@
+name: Coverage
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+
+      - name: Generate coverage
+        run: |
+          make sync-schemas
+          go test ./... -covermode=atomic -coverprofile=coverage.out
+
+      - name: Enforce core package coverage policy
+        run: |
+          set -euo pipefail
+
+          check_coverage() {
+            local pkg="$1"
+            local min="$2"
+            local out="$3"
+
+            go test "$pkg" -covermode=atomic -coverprofile="$out"
+            local got
+            got="$(go tool cover -func="$out" | awk '/^total:/ {gsub("%","",$3); print $3}')"
+
+            echo "$pkg coverage: ${got}% (minimum: ${min}%)"
+            awk -v got="$got" -v min="$min" 'BEGIN { exit (got+0 < min+0) ? 1 : 0 }' || {
+              echo "::error::$pkg coverage ${got}% is below minimum ${min}%"
+              exit 1
+            }
+          }
+
+          check_coverage ./internal/app 25 coverage-app.out
+          check_coverage ./internal/predicate 40 coverage-predicate.out
+          check_coverage ./internal/domain 70 coverage-domain.out
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        with:
+          files: coverage.out
+          flags: unit
+          fail_ci_if_error: true

@@ -1,0 +1,19 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2016-03-18T00:00:00Z",
+  "resources": [
+    {
+      "id": "bime-a2-cname-ref",
+      "type": "s3_bucket_reference",
+      "vendor": "aws",
+      "properties": {
+        "s3_ref": {
+          "endpoint": "a2.bime.io",
+          "bucket": "bimeio",
+          "bucket_exists": false,
+          "bucket_owned": false
+        }
+      }
+    }
+  ]
+}

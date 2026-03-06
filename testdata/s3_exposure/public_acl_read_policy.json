@@ -1,0 +1,21 @@
+{
+  "buckets": [
+    {
+      "name": "acl-readable-bucket",
+      "exists": true,
+      "external_reference": false,
+      "website": { "enabled": false },
+      "policy": {
+        "statements": [
+          {
+            "effect": "Allow",
+            "principal": "*",
+            "actions": ["s3:GetBucketAcl"],
+            "resources": ["arn:aws:s3:::acl-readable-bucket"]
+          }
+        ]
+      },
+      "acl": { "grants": [] }
+    }
+  ]
+}

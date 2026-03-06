@@ -1,0 +1,20 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LIFECYCLE.001
+name: Retention-Tagged Buckets Must Have Lifecycle Rules
+description: >
+  S3 buckets tagged with data-retention must have at least one
+  enabled lifecycle rule configured.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.tags.data-retention
+      op: present
+      value: true
+    - field: properties.storage.lifecycle.rules_configured
+      op: eq
+      value: false

@@ -1,0 +1,71 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "public-acl-writable-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "public-acl-writable-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_write": false,
+            "public_acl_writable": true,
+            "authenticated_users_acl_writable": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false
+          }
+        }
+      }
+    },
+    {
+      "id": "auth-acl-writable-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "auth-acl-writable-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_write": false,
+            "public_acl_writable": false,
+            "authenticated_users_acl_writable": true
+          },
+          "controls": {
+            "public_access_fully_blocked": false
+          }
+        }
+      }
+    },
+    {
+      "id": "safe-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "safe-bucket",
+          "visibility": {
+            "public_read": false,
+            "public_write": false,
+            "public_acl_writable": false,
+            "authenticated_users_acl_writable": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true
+          }
+        }
+      }
+    }
+  ]
+}

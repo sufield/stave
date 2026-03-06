@@ -1,0 +1,150 @@
+name: CI  # (optional) make workflow name readable
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read  # apply once at workflow level
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - name: Sync schemas and run tests
+        run: make sync-schemas && go test -v -race ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - uses: golangci/golangci-lint-action@9fae48acfc02a90574d7c304a1758ef9895495fa # v7
+        with:
+          version: v2.8.0
+          args: --timeout=5m
+          only-new-issues: true
+
+  vuln:
+    name: Vulnerability check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1
+        with:
+          go-version-input: '1.26.0'
+
+  license:
+    name: License compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses@v1.6.0
+      - name: Check licenses
+        run: |
+          go-licenses report ./cmd/stave --template=csv > licenses.csv 2>licenses-warnings.txt || true
+          # Fail on forbidden licenses (GPL, AGPL, SSPL, LGPL)
+          if grep -iE '(GPL|AGPL|SSPL|LGPL)' licenses.csv; then
+            echo "::error::Forbidden license detected in dependencies"
+            cat licenses.csv
+            exit 1
+          fi
+          # Fail on unknown licenses (empty license column)
+          if go-licenses check ./cmd/stave \
+            --allowed_licenses=Apache-2.0,MIT,BSD-2-Clause,BSD-3-Clause,ISC 2>check-warnings.txt; then
+            echo "All dependency licenses are allowed"
+          else
+            echo "::error::Unknown or disallowed license detected"
+            cat check-warnings.txt
+            exit 1
+          fi
+      - name: Upload license report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: license-report
+          path: licenses.csv
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - name: Build and run E2E tests
+        run: make build && scripts/e2e.sh
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - name: Check links in docs and top-level markdown
+        run: |
+          docker run --rm \
+            -v "$PWD":/repo \
+            ghcr.io/lycheeverse/lychee:v0.20.1 \
+            --config /repo/.lychee.toml \
+            /repo/README.md \
+            /repo/SECURITY.md \
+            /repo/CONTRIBUTING.md \
+            /repo/docs
+
+  security-audit:
+    name: Security audit smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.0'
+          check-latest: true
+          cache: true
+      - name: Run security-audit (json, fail-on NONE)
+        run: |
+          mkdir -p .artifacts/security-audit
+          go run ./cmd/stave security-audit \
+            --format json \
+            --fail-on NONE \
+            --out-dir ./.artifacts/security-audit \
+            --out ./.artifacts/security-audit/security-report.json
+      - name: Upload security-audit artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: security-audit-artifacts
+          path: .artifacts/security-audit

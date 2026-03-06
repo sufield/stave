@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LIFECYCLE.001
+name: Retention-Tagged Buckets Must Have Lifecycle Rules
+description: >
+  S3 buckets tagged with data-retention must have at least one
+  enabled lifecycle rule configured. HIPAA requires defined data
+  retention policies for protected health information (PHI),
+  audit logs, and billing records. Without lifecycle rules, data
+  persists indefinitely, increasing exposure surface and
+  violating retention policy requirements.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket tagged with data-retention has no lifecycle rules configured.
+    Data persists indefinitely, violating retention policy requirements.
+  action: >
+    Add S3 lifecycle rules to manage object expiration and transitions.
+    Configure rules matching the retention period specified in the
+    data-retention tag. Use lifecycle transitions to move data to cheaper
+    storage classes before expiration.
+  example: |
+    {
+      "storage": {
+        "tags": {
+          "data-retention": "7-years"
+        },
+        "lifecycle": {
+          "rules_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.tags.data-retention
+      op: present
+      value: true
+    - field: properties.storage.lifecycle.rules_configured
+      op: eq
+      value: false

@@ -1,0 +1,77 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.mfa_enabled",
+          "type": "aws_s3_bucket",
+          "name": "mfa_enabled",
+          "values": {
+            "bucket": "mfa-enabled-bucket",
+            "arn": "arn:aws:s3:::mfa-enabled-bucket",
+            "tags": {
+              "DataDomain": "health",
+              "backup": "true"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_versioning.mfa_enabled_ver",
+          "type": "aws_s3_bucket_versioning",
+          "name": "mfa_enabled_ver",
+          "values": {
+            "bucket": "mfa-enabled-bucket",
+            "versioning_configuration": [
+              {
+                "status": "Enabled",
+                "mfa_delete": "Enabled"
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.mfa_disabled",
+          "type": "aws_s3_bucket",
+          "name": "mfa_disabled",
+          "values": {
+            "bucket": "mfa-disabled-bucket",
+            "arn": "arn:aws:s3:::mfa-disabled-bucket",
+            "tags": {
+              "DataDomain": "health",
+              "backup": "true"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_versioning.mfa_disabled_ver",
+          "type": "aws_s3_bucket_versioning",
+          "name": "mfa_disabled_ver",
+          "values": {
+            "bucket": "mfa-disabled-bucket",
+            "versioning_configuration": [
+              {
+                "status": "Enabled",
+                "mfa_delete": "Disabled"
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.no_versioning",
+          "type": "aws_s3_bucket",
+          "name": "no_versioning",
+          "values": {
+            "bucket": "no-versioning-bucket",
+            "arn": "arn:aws:s3:::no-versioning-bucket",
+            "tags": {
+              "DataDomain": "health"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": []
+}

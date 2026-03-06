@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AUTH.READ.001
+name: No Authenticated-Users Read Access
+description: >
+  S3 buckets must not grant read access to all authenticated AWS users.
+  AuthenticatedUsers scope means any AWS account can read objects,
+  which is nearly as dangerous as fully public access.
+domain: exposure
+exposure:
+  type: authenticated_read
+  principal_scope: authenticated
+severity: high
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket grants read access to the AuthenticatedUsers group. Any AWS
+    account holder worldwide can read objects, which is nearly as
+    dangerous as fully public access.
+  action: >
+    Remove the ACL grant to AuthenticatedUsers. Replace with specific
+    IAM principals or use bucket policy with explicit account IDs.
+    Enable S3 Public Access Block with IgnorePublicAcls set to true.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "authenticated_users_read": false
+        }
+      }
+    }
+unsafe_predicate_alias: s3.authenticated_users_read

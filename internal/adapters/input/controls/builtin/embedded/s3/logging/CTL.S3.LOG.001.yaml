@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOG.001
+name: Access Logging Required
+description: >
+  S3 buckets must have server access logging enabled for audit trail
+  and visibility into data access patterns.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v1.4.0: "2.1.3"
+  pci_dss_v3.2.1: "10.2.1"
+  soc2: "CC7.2"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket does not have server access logging enabled. There is no
+    audit trail for data access patterns.
+  action: >
+    Enable S3 server access logging and specify a target bucket for
+    log delivery. Ensure the target bucket has appropriate access
+    controls and is in the same region.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "logging": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.logging.enabled
+      op: eq
+      value: false

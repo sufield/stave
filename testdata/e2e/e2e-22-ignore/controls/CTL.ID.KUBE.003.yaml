@@ -1,0 +1,14 @@
+dsl_version: ctrl.v1
+id: CTL.ID.KUBE.003
+name: Binding to system:unauthenticated
+description: |
+  Bindings that grant permissions to system:unauthenticated allow anonymous access.
+  Applies to: k8s.clusterrolebinding, k8s.rolebinding resources
+type: k8s_rbac_security
+severity: critical
+params: {}
+unsafe_predicate:
+  any:
+    - field: "properties.binds_to_system_unauthenticated"
+      op: "eq"
+      value: true

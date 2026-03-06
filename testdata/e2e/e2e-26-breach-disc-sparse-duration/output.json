@@ -1,0 +1,35 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-02T06:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "b70b02c1e33e863d207b1a083bdb550f64763ce0df4476fd9306e69cbdf9a3bc",
+        "2026-01-02T06:00:00Z.json": "2d8a0f8b8f7594bf8e8079de97058a6f95e0e974b7f71a55dc6dd19f2c41c466"
+      },
+      "overall": "c8f104e8cbd847d31275bbefb257ac82aff776bd476108df48ba7af65e1c5005"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-26-breach-disc-sparse-duration/invariants",
+      "observations": "testdata/e2e/e2e-26-breach-disc-sparse-duration/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

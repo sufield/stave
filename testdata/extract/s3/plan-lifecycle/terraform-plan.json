@@ -1,0 +1,146 @@
+{
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.single_expiration",
+          "type": "aws_s3_bucket",
+          "name": "single_expiration",
+          "values": { "bucket": "single-expiration-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket_lifecycle_configuration.single_expiration",
+          "type": "aws_s3_bucket_lifecycle_configuration",
+          "name": "single_expiration",
+          "values": {
+            "bucket": "single-expiration-bucket",
+            "rule": [
+              {
+                "id": "expire-old",
+                "status": "Enabled",
+                "expiration": [{ "days": 365 }],
+                "filter": [{ "prefix": "logs/" }]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.disabled_rule",
+          "type": "aws_s3_bucket",
+          "name": "disabled_rule",
+          "values": { "bucket": "disabled-rule-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket_lifecycle_configuration.disabled_rule",
+          "type": "aws_s3_bucket_lifecycle_configuration",
+          "name": "disabled_rule",
+          "values": {
+            "bucket": "disabled-rule-bucket",
+            "rule": [
+              {
+                "id": "disabled",
+                "status": "Disabled",
+                "expiration": [{ "days": 30 }]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.mixed_rules",
+          "type": "aws_s3_bucket",
+          "name": "mixed_rules",
+          "values": { "bucket": "mixed-rules-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket_lifecycle_configuration.mixed_rules",
+          "type": "aws_s3_bucket_lifecycle_configuration",
+          "name": "mixed_rules",
+          "values": {
+            "bucket": "mixed-rules-bucket",
+            "rule": [
+              {
+                "id": "enabled-expire",
+                "status": "Enabled",
+                "expiration": [{ "days": 2190 }]
+              },
+              {
+                "id": "disabled-expire",
+                "status": "Disabled",
+                "expiration": [{ "days": 7 }]
+              },
+              {
+                "id": "enabled-short-expire",
+                "status": "Enabled",
+                "expiration": [{ "days": 90 }]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.transition_only",
+          "type": "aws_s3_bucket",
+          "name": "transition_only",
+          "values": { "bucket": "transition-only-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket_lifecycle_configuration.transition_only",
+          "type": "aws_s3_bucket_lifecycle_configuration",
+          "name": "transition_only",
+          "values": {
+            "bucket": "transition-only-bucket",
+            "rule": [
+              {
+                "id": "to-glacier",
+                "status": "Enabled",
+                "transition": [{ "days": 90, "storage_class": "GLACIER" }]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.noncurrent_version",
+          "type": "aws_s3_bucket",
+          "name": "noncurrent_version",
+          "values": { "bucket": "noncurrent-version-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket_lifecycle_configuration.noncurrent_version",
+          "type": "aws_s3_bucket_lifecycle_configuration",
+          "name": "noncurrent_version",
+          "values": {
+            "bucket": "noncurrent-version-bucket",
+            "rule": [
+              {
+                "id": "noncurrent-expire",
+                "status": "Enabled",
+                "noncurrent_version_expiration": [{ "noncurrent_days": 90 }]
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket.no_lifecycle",
+          "type": "aws_s3_bucket",
+          "name": "no_lifecycle",
+          "values": { "bucket": "no-lifecycle-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket.empty_rules",
+          "type": "aws_s3_bucket",
+          "name": "empty_rules",
+          "values": { "bucket": "empty-rules-bucket" }
+        },
+        {
+          "address": "aws_s3_bucket_lifecycle_configuration.empty_rules",
+          "type": "aws_s3_bucket_lifecycle_configuration",
+          "name": "empty_rules",
+          "values": {
+            "bucket": "empty-rules-bucket",
+            "rule": []
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": []
+}

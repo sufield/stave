@@ -1,0 +1,35 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AUTH.WRITE.001
+name: No Authenticated-Users Write Access
+description: >
+  S3 buckets must not grant write or delete access to all
+  authenticated AWS users. AuthenticatedUsers scope means any
+  AWS account holder worldwide can upload, overwrite, or delete
+  objects — enabling data injection, ransomware, and supply
+  chain poisoning.
+domain: exposure
+scope_tags: [aws, s3]
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket grants write access to the AuthenticatedUsers group.
+    Any AWS account holder worldwide can upload or overwrite objects.
+  action: >
+    Remove the ACL grant or policy statement granting write access
+    to AuthenticatedUsers. Replace with specific IAM principals or
+    use bucket policy with explicit account IDs. Enable S3 Public
+    Access Block with BlockPublicAcls and IgnorePublicAcls set to true.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "authenticated_users_write": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.authenticated_users_write
+      op: eq
+      value: true

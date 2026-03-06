@@ -1,0 +1,303 @@
+package diagnosis
+
+import (
+	"testing"
+	"time"
+
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/timeutil"
+)
+
+// TestRun_NoViolations_ThresholdMismatch tests that diagnostics correctly identify
+// when the maximum unsafe threshold exceeds the observed unsafe duration for resources
+// that remain unsafe throughout the observation period.
+func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
+	// Setup: resources are unsafe for 48h but threshold is 168h
+	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	snapshots := []asset.Snapshot{
+		{
+			CapturedAt: baseTime,
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+			},
+		},
+		{
+			CapturedAt: baseTime.Add(48 * time.Hour),
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+			},
+		},
+	}
+
+	controls := []policy.ControlDefinition{
+		{
+			ID:   "CTL.EXP.DURATION.001",
+			Name: "Test",
+			UnsafePredicate: policy.UnsafePredicate{
+				Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: true}},
+			},
+		},
+	}
+
+	input := NewInput(Params{
+		Snapshots: snapshots,
+		Controls:  controls,
+		Findings:  []evaluation.Finding{}, // No violations
+		MaxUnsafe: 168 * time.Hour,
+		Now:       baseTime.Add(48 * time.Hour),
+	})
+
+	report := Run(input)
+
+	// Should detect threshold mismatch
+	if len(report.Entries) == 0 {
+		t.Error("expected diagnostics for threshold mismatch")
+	}
+
+	found := false
+	for _, d := range report.Entries {
+		if d.Signal == "Threshold exceeds observed unsafe duration" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected threshold mismatch diagnostic")
+	}
+}
+
+// TestRun_NoViolations_TimeSpanTooShort tests that diagnostics detect when
+// the observation time span is shorter than the configured maximum unsafe threshold,
+// making it impossible to fully evaluate the control.
+func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
+	// Setup: time span is only 24h but threshold is 168h
+	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	snapshots := []asset.Snapshot{
+		{
+			CapturedAt: baseTime,
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+			},
+		},
+		{
+			CapturedAt: baseTime.Add(24 * time.Hour),
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+			},
+		},
+	}
+
+	controls := []policy.ControlDefinition{
+		{
+			ID:   "CTL.EXP.DURATION.001",
+			Name: "Test",
+			UnsafePredicate: policy.UnsafePredicate{
+				Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: true}},
+			},
+		},
+	}
+
+	input := NewInput(Params{
+		Snapshots: snapshots,
+		Controls:  controls,
+		Findings:  []evaluation.Finding{},
+		MaxUnsafe: 168 * time.Hour,
+		Now:       baseTime.Add(24 * time.Hour),
+	})
+
+	report := Run(input)
+
+	found := false
+	for _, d := range report.Entries {
+		if d.Signal == "Time span shorter than threshold" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected time span diagnostic")
+	}
+}
+
+// TestRun_NoViolations_PredicateMismatch tests that diagnostics identify
+// when no resources match the unsafe predicate criteria, indicating the control
+// may not be applicable to the current resource set.
+func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
+	// Setup: no resources match the predicate
+	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	snapshots := []asset.Snapshot{
+		{
+			CapturedAt: baseTime,
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": false}},
+			},
+		},
+		{
+			CapturedAt: baseTime.Add(200 * time.Hour),
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": false}},
+			},
+		},
+	}
+
+	controls := []policy.ControlDefinition{
+		{
+			ID:   "CTL.EXP.DURATION.001",
+			Name: "Test",
+			UnsafePredicate: policy.UnsafePredicate{
+				Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: true}},
+			},
+		},
+	}
+
+	input := NewInput(Params{
+		Snapshots: snapshots,
+		Controls:  controls,
+		Findings:  []evaluation.Finding{},
+		MaxUnsafe: 168 * time.Hour,
+		Now:       baseTime.Add(200 * time.Hour),
+	})
+
+	report := Run(input)
+
+	found := false
+	for _, d := range report.Entries {
+		if d.Case == ExpectedNone && d.Signal != "" {
+			if d.Signal == "No resources matched unsafe_predicate for CTL.EXP.DURATION.001" {
+				found = true
+				break
+			}
+		}
+	}
+	if !found {
+		t.Error("expected predicate mismatch diagnostic")
+	}
+}
+
+// TestRun_UnexpectedViolations_NowSkew tests that diagnostics detect
+// when the evaluation time (--now) is set before the latest snapshot timestamp,
+// which could lead to incomplete or incorrect analysis.
+func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
+	// Setup: --now is before latest snapshot
+	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	latestSnapshot := baseTime.Add(200 * time.Hour)
+
+	snapshots := []asset.Snapshot{
+		{CapturedAt: baseTime, Resources: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
+		{CapturedAt: latestSnapshot, Resources: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
+	}
+
+	findings := []evaluation.Finding{
+		{
+			AssetID: "res:1",
+			Evidence: evaluation.Evidence{
+				FirstUnsafeAt:       baseTime,
+				LastSeenUnsafeAt:    latestSnapshot,
+				UnsafeDurationHours: 200,
+				ThresholdHours:      168,
+			},
+		},
+	}
+
+	input := NewInput(Params{
+		Snapshots: snapshots,
+		Controls:  []policy.ControlDefinition{{ID: "CTL.TEST"}},
+		Findings:  findings,
+		MaxUnsafe: 168 * time.Hour,
+		Now:       baseTime.Add(100 * time.Hour), // Before latest snapshot
+	})
+
+	report := Run(input)
+
+	found := false
+	for _, d := range report.Entries {
+		if d.Signal == "Evaluation time before latest snapshot" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected now skew diagnostic")
+	}
+}
+
+// TestRun_Summary tests that the diagnostic report summary correctly
+// aggregates counts of snapshots, resources, controls, and calculates the
+// total observation time span.
+func TestRun_Summary(t *testing.T) {
+	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	snapshots := []asset.Snapshot{
+		{
+			CapturedAt: baseTime,
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket},
+				{ID: "res:2", Type: kernel.TypeStorageBucket},
+			},
+		},
+		{
+			CapturedAt: baseTime.Add(240 * time.Hour),
+			Resources: []asset.Asset{
+				{ID: "res:1", Type: kernel.TypeStorageBucket},
+				{ID: "res:2", Type: kernel.TypeStorageBucket},
+			},
+		},
+	}
+
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.1", Name: "Test1"},
+		{ID: "CTL.2", Name: "Test2"},
+	}
+
+	input := NewInput(Params{
+		Snapshots: snapshots,
+		Controls:  controls,
+		Findings:  []evaluation.Finding{},
+		MaxUnsafe: 168 * time.Hour,
+		Now:       baseTime.Add(240 * time.Hour),
+	})
+
+	report := Run(input)
+
+	if report.Summary.TotalSnapshots != 2 {
+		t.Errorf("expected 2 snapshots, got %d", report.Summary.TotalSnapshots)
+	}
+	if report.Summary.TotalResources != 2 {
+		t.Errorf("expected 2 resources, got %d", report.Summary.TotalResources)
+	}
+	if report.Summary.TotalControls != 2 {
+		t.Errorf("expected 2 controls, got %d", report.Summary.TotalControls)
+	}
+	if report.Summary.TimeSpan != kernel.Duration(240*time.Hour) {
+		t.Errorf("expected 240h time span, got %v", report.Summary.TimeSpan)
+	}
+}
+
+// TestFormatDuration tests the formatDuration helper function that converts
+// time.Duration values to human-readable strings, preferring days for
+// durations evenly divisible by 24 hours, otherwise using hours.
+func TestFormatDuration(t *testing.T) {
+	tests := []struct {
+		duration time.Duration
+		expected string
+	}{
+		{24 * time.Hour, "1d"},
+		{48 * time.Hour, "2d"},
+		{168 * time.Hour, "7d"},
+		{12 * time.Hour, "12h"},
+		{36 * time.Hour, "36h"}, // Not evenly divisible by 24
+	}
+
+	for _, tt := range tests {
+		result := timeutil.FormatDuration(tt.duration)
+		if result != tt.expected {
+			t.Errorf("timeutil.FormatDuration(%v) = %s, want %s", tt.duration, result, tt.expected)
+		}
+	}
+}

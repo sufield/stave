@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.S3.CONTROLS.001
+name: Public Access Block Must Be Enabled
+description: >
+  S3 buckets must have the public access block fully enabled.
+  When disabled, the bucket has no safety net against accidental
+  public exposure from policy or ACL changes. This detects the
+  enabling condition for public access, not the exposure itself.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Public Access Block is not fully enabled. The bucket has no safety net
+    against accidental public exposure from policy or ACL changes.
+  action: >
+    Enable all four Public Access Block settings on the bucket:
+    BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "controls": {
+          "public_access_fully_blocked": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.controls.public_access_fully_blocked
+      op: eq
+      value: false

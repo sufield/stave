@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.TP.VENDOR.001
+name: Third-Party Vendor Data Boundaries
+description: |
+  Sensitive data shared with third-party vendors must have explicit boundary approval.
+  Required properties (set by customer extractor):
+  - data_classification: string ("PII", "PHI", etc.)
+  - third_party_shared: bool (true if data is shared with vendor)
+  - vendor_allowed: bool (true if vendor is on approved list)
+  Violation occurs when sensitive data is shared without vendor approval.
+type: authorization_boundary
+params: {}
+unsafe_predicate:
+  all:
+    - field: "properties.data_classification"
+      op: "in"
+      value: ["PII", "PHI"]
+    - field: "properties.third_party_shared"
+      op: "eq"
+      value: true
+    - any:
+        - field: "properties.vendor_allowed"
+          op: "missing"
+          value: true
+        - field: "properties.vendor_allowed"
+          op: "eq"
+          value: false

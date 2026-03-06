@@ -1,0 +1,17 @@
+name: "DISC Private Test - Zero Violations Expected"
+description: |
+  This test verifies that private resources with PII do not trigger any violations.
+
+  Scenario:
+    - Bucket is private (public=false)
+    - Bucket contains PII (contains_pii=true)
+    - Bucket is encrypted (encryption=AES256)
+
+  Expected outcome: Zero violations
+
+  This proves:
+  - CTL.EXP.STATE.001 requires BOTH public=true AND contains_pii=true
+  - CTL.EXP.DURATION.001 requires public=true
+  - CTL.EXP.RECURRENCE.001 requires multiple observations with public=true
+
+expected_findings: 0

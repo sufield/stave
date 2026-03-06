@@ -1,0 +1,4 @@
+version: ignore.v0.1
+resources:
+  - pattern: "k8s:ClusterRoleBinding/system-*"
+    reason: "System-managed cluster admin bindings"

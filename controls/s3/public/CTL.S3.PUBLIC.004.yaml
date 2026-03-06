@@ -1,0 +1,38 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.004
+name: No Public Read via ACL
+description: S3 bucket ACLs must not grant read access to AllUsers or AuthenticatedUsers
+  for PHI data.
+domain: storage
+exposure:
+  type: acl_public_read
+  principal_scope: public
+severity: medium
+scope_tags:
+- aws
+- s3
+version: ctrl.v1
+type: unsafe_duration
+params:
+  max_unsafe_duration: 0h
+remediation:
+  description: >
+    Bucket ACL grants read access to AllUsers or AuthenticatedUsers.
+    Any anonymous or authenticated AWS user can read objects.
+  action: >
+    Replace the bucket ACL with "BucketOwnerFullControl" or remove the
+    public read grant. Enable S3 Public Access Block with IgnorePublicAcls
+    set to true to override ACL-based public access.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "public_read_via_acl": false
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+  - field: properties.storage.visibility.public_read_via_acl
+    op: eq
+    value: true

@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "id": "CTL.S3.PUBLIC.ACL.WRITE.001",
+      "bucket": "acl-writable-bucket",
+      "exposure_type": "public_acl_write",
+      "principal_scope": "public",
+      "actions": [
+        "s3:PutBucketAcl"
+      ],
+      "evidence_path": [
+        "bucket.policy.statements[0].effect",
+        "bucket.policy.statements[0].principal",
+        "bucket.policy.statements[0].actions"
+      ]
+    }
+  ]
+}

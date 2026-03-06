@@ -1,0 +1,205 @@
+package policy
+
+import (
+	"regexp"
+	"strings"
+)
+
+type policyActionMask uint8
+
+const (
+	policyActionRead policyActionMask = 1 << iota
+	policyActionList
+	policyActionWrite
+	policyActionDelete
+	policyActionACLRead
+	policyActionACLWrite
+
+	policyActionAll = policyActionRead |
+		policyActionList |
+		policyActionWrite |
+		policyActionDelete |
+		policyActionACLRead |
+		policyActionACLWrite
+)
+
+type networkScope string
+
+var (
+	// AWS Account IDs are exactly 12 digits.
+	reAccountID = regexp.MustCompile(`^\d{12}$`)
+)
+
+func (s networkScope) rank() int {
+	switch string(s) {
+	case policyScopeVPCRestricted:
+		return 3
+	case policyScopeIPRestricted:
+		return 2
+	case policyScopeOrgRestricted:
+		return 1
+	default:
+		return 0 // public
+	}
+}
+
+func (s networkScope) weakerThan(other networkScope) bool {
+	return s.rank() < other.rank()
+}
+
+var policyActionRegistry = map[string]policyActionMask{
+	policyWildcard:   policyActionAll,
+	policyS3Wildcard: policyActionAll,
+
+	policyActionGetObject:          policyActionRead,
+	policyActionListBucket:         policyActionList,
+	policyActionListBucketVersions: policyActionList,
+	policyActionPutObject:          policyActionWrite,
+	policyActionPutObjectACL:       policyActionWrite | policyActionACLWrite,
+	policyActionPutBucketPolicy:    policyActionWrite,
+	policyActionDeleteObject:       policyActionDelete,
+	policyActionDeleteBucket:       policyActionDelete,
+	policyActionPutBucketACL:       policyActionACLWrite,
+	policyActionGetBucketACL:       policyActionACLRead,
+	policyActionGetObjectACL:       policyActionACLRead,
+}
+
+func (m policyActionMask) has(flag policyActionMask) bool {
+	return m&flag != 0
+}
+
+func (s Statement) ResolveActions() (policyActionMask, bool) {
+	return resolveActionMask([]string(s.Action))
+}
+
+func resolveActionMask(actions []string) (policyActionMask, bool) {
+	var (
+		mask            policyActionMask
+		hasFullWildcard bool
+	)
+
+	for _, action := range actions {
+		action = strings.ToLower(action)
+		actionMask, isFullWildcard := classifyPolicyAction(action)
+		mask |= actionMask
+		hasFullWildcard = hasFullWildcard || isFullWildcard
+
+		if mask == policyActionAll && hasFullWildcard {
+			break
+		}
+	}
+	return mask, hasFullWildcard
+}
+
+func classifyPolicyAction(action string) (policyActionMask, bool) {
+	if mask, ok := policyActionRegistry[action]; ok {
+		isFullWildcard := action == policyWildcard || action == policyS3Wildcard
+		return mask, isFullWildcard
+	}
+
+	switch {
+	case strings.HasPrefix(action, policyActionPrefixGet):
+		return policyActionRead, false
+	case strings.HasPrefix(action, policyActionPrefixList):
+		return policyActionList, false
+	default:
+		return 0, false
+	}
+}
+
+func hasWildcardResource(resources []string) bool {
+	for _, res := range resources {
+		if res == policyWildcard || res == policyS3GlobalResource {
+			return true
+		}
+	}
+	return false
+}
+
+// isAccountIDOnly identifies whether the principal is a specific AWS account ID.
+func isAccountIDOnly(principal string) bool {
+	return reAccountID.MatchString(principal)
+}
+
+// isWriteAction returns true if the given IAM action grants write or delete access.
+func isWriteAction(action string) bool {
+	action = strings.ToLower(action)
+	switch action {
+	case policyWildcard, policyS3Wildcard,
+		policyActionPutObject, policyActionDeleteObject,
+		policyActionPutBucketPolicy, policyActionDeleteBucket,
+		policyActionPutObjectACL, policyActionPutBucketACL:
+		return true
+	}
+	return strings.HasPrefix(action, policyActionPrefixPut) ||
+		strings.HasPrefix(action, policyActionPrefixDelete)
+}
+
+// extractPrincipalARNs extracts string ARNs from a Principal field, excluding "*".
+func extractPrincipalARNs(principal any) []string {
+	switch p := principal.(type) {
+	case string:
+		if p != "" && p != policyWildcard {
+			return []string{p}
+		}
+		return nil
+	case map[string]any:
+		awsVal, ok := p[policyPrincipalAWS]
+		if !ok {
+			return nil
+		}
+		switch aws := awsVal.(type) {
+		case string:
+			if aws != "" && aws != policyWildcard {
+				return []string{aws}
+			}
+			return nil
+		case []any:
+			arns := make([]string, 0, len(aws))
+			for _, item := range aws {
+				if arn, ok := item.(string); ok && arn != policyWildcard {
+					arns = append(arns, arn)
+				}
+			}
+			if len(arns) == 0 {
+				return nil
+			}
+			return arns
+		}
+	}
+	return nil
+}
+
+// conditionScope returns the most restrictive scope label for a single statement.
+// Precedence: vpc > ip > org.
+func conditionScope(ca ConditionAnalysis) networkScope {
+	if ca.HasVPCCondition {
+		return networkScope(policyScopeVPCRestricted)
+	}
+	if ca.HasIPCondition {
+		return networkScope(policyScopeIPRestricted)
+	}
+	if ca.HasOrgCondition {
+		return networkScope(policyScopeOrgRestricted)
+	}
+	return networkScope(policyScopePublic)
+}
+
+// NormalizeStringOrSlice converts a string or []string to []string.
+func NormalizeStringOrSlice(v any) []string {
+	switch val := v.(type) {
+	case string:
+		return []string{val}
+	case []any:
+		result := make([]string, 0, len(val))
+		for _, item := range val {
+			if s, ok := item.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
+	case []string:
+		return val
+	}
+	return nil
+}

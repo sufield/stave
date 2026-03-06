@@ -1,0 +1,32 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.6.3"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:aws:s3:bucket:public-no-owner",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": { "public": true },
+      "source": { "file": "infra/main.tf", "line": 42 }
+    },
+    {
+      "id": "res:aws:s3:bucket:public-with-owner",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": { "public": true, "owner": "team-security" },
+      "source": { "file": "infra/main.tf", "line": 58 }
+    },
+    {
+      "id": "res:aws:s3:bucket:private-no-owner",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": { "public": false },
+      "source": { "file": "infra/main.tf", "line": 74 }
+    }
+  ]
+}

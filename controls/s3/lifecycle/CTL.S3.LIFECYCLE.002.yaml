@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LIFECYCLE.002
+name: PHI Buckets Must Not Expire Data Before Minimum Retention
+description: >
+  S3 buckets tagged with data-classification=phi must not have
+  lifecycle expiration rules that delete data before the minimum
+  HIPAA retention period. HIPAA requires medical records to be
+  retained for a minimum of 6 years (2190 days). This control
+  detects PHI buckets with expiration rules set below this
+  threshold, which could result in premature deletion of
+  protected health information.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    PHI bucket has a lifecycle expiration rule that deletes data before
+    the HIPAA minimum retention period of 6 years (2190 days).
+  action: >
+    Increase the lifecycle expiration period to at least 2190 days.
+    If the current rule is for storage class transition, ensure the
+    expiration rule is separate and meets the minimum retention period.
+  example: |
+    {
+      "storage": {
+        "tags": {
+          "data-classification": "phi"
+        },
+        "lifecycle": {
+          "has_expiration": true,
+          "min_expiration_days": 2190
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.tags.data-classification
+      op: eq
+      value: "phi"
+    - field: properties.storage.lifecycle.has_expiration
+      op: eq
+      value: true
+    - field: properties.storage.lifecycle.min_expiration_days
+      op: lt
+      value: 2190

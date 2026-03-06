@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-02T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:aws:s3:bucket:example-public-bucket",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "example-public-bucket",
+          "visibility": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false
+          }
+        }
+      }
+    }
+  ]
+}

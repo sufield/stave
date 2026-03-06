@@ -1,0 +1,1 @@
+enforce --in $CASE_DIR/evaluation.json --out $CASE_DIR/outdir --mode pab

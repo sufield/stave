@@ -1,0 +1,50 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.9.8"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "exposed-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "exposed-bucket",
+          "visibility": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": true,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          }
+        },
+        "vendor": {
+          "aws": {
+            "s3": {
+              "arn": "arn:aws:s3:::exposed-bucket",
+              "policy_public_statements": ["AllowPublicRead"],
+              "acl_public_grantees": ["http://acs.amazonaws.com/groups/global/AllUsers"]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

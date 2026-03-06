@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.S3.VERSION.002
+name: Backup Buckets Must Have MFA Delete Enabled
+description: >
+  S3 buckets tagged with backup=true must have MFA delete enabled.
+  MFA delete requires multi-factor authentication to permanently
+  delete object versions, protecting against ransomware attacks
+  and accidental mass deletion of backup data. Without MFA delete,
+  any principal with s3:DeleteObject permission can permanently
+  destroy backup versions.
+domain: exposure
+severity: medium
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Backup bucket does not have MFA delete enabled. Any principal with
+    s3:DeleteObject permission can permanently destroy backup versions.
+  action: >
+    Enable MFA delete on the bucket using aws s3api put-bucket-versioning
+    with the MFA flag. This requires the root account credentials and an
+    MFA device. Only the root account can enable or disable MFA delete.
+  example: |
+    {
+      "storage": {
+        "tags": {
+          "backup": "true"
+        },
+        "versioning": {
+          "mfa_delete_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.tags.backup
+      op: eq
+      value: "true"
+    - field: properties.storage.versioning.mfa_delete_enabled
+      op: eq
+      value: false

@@ -1,0 +1,19 @@
+dsl_version: ctrl.v1
+id: CTL.S3.BUCKET.TAKEOVER.001
+name: Referenced S3 Buckets Must Exist And Be Owned
+description: >
+  Any externally referenced S3 bucket must exist and be owned. Dangling
+  references (missing or unowned buckets) enable bucket takeover and
+  attacker-controlled content delivery.
+domain: exposure
+scope_tags: [aws, s3]
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  any:
+    - field: properties.s3_ref.bucket_exists
+      op: eq
+      value: false
+    - field: properties.s3_ref.bucket_owned
+      op: eq
+      value: false

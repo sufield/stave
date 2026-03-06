@@ -1,0 +1,16 @@
+dsl_version: ctrl.v1
+id: CTL.TEST.DEFAULT.002
+name: CLI Default Threshold
+description: Tests that CLI --max-unsafe applies when control has no override.
+domain: storage
+scope_tags:
+- aws
+- s3
+version: ctrl.v1
+type: unsafe_duration
+params: {}
+unsafe_predicate:
+  any:
+  - field: properties.storage.visibility.public_read
+    op: eq
+    value: true

@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.002
+name: Transport Encryption Required
+description: >
+  S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false.
+  Without this, data transfers occur in plaintext.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "2.1.2"
+  pci_dss_v3.2.1: "4.1"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket does not enforce HTTPS for data transfers. Requests over
+    plain HTTP transmit data in cleartext.
+  action: >
+    Add a bucket policy statement that denies all actions when
+    aws:SecureTransport is false. This forces all API calls to use HTTPS.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "in_transit_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.in_transit_enforced
+      op: eq
+      value: false

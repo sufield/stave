@@ -1,0 +1,22 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESS.001
+name: No Unauthorized Cross-Account Access
+description: >
+  S3 bucket policies must not grant access to external AWS accounts.
+  In MVP 1.0, any cross-account access is flagged — org-boundary
+  allowlist filtering (allowed_accounts) is not yet implemented.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params:
+  allowed_accounts: []
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_external_access
+      op: eq
+      value: true

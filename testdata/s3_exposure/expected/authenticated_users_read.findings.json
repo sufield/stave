@@ -1,0 +1,16 @@
+{
+  "findings": [
+    {
+      "id": "CTL.S3.GLOBAL.AUTHENTICATED.READ.001",
+      "bucket": "auth-read-bucket",
+      "exposure_type": "authenticated_read",
+      "principal_scope": "authenticated",
+      "actions": ["s3:GetObject"],
+      "evidence_path": [
+        "bucket.policy.statements[0].effect",
+        "bucket.policy.statements[0].principal",
+        "bucket.policy.statements[0].actions"
+      ]
+    }
+  ]
+}

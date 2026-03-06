@@ -1,0 +1,147 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "4408d12820468ad641a87cc4acf54804afb85ec280b66da2ef4e182c1ae01af0",
+        "2026-01-11T00:00:00Z.json": "1ef67d845887a1dc7c91ced6cf6e3a816698427535a46afc9bf015db9b606cdc"
+      },
+      "overall": "8740bf2c66ddb19c8f1e3f26099870a1001d917722496f988cdaec89a37cf413"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 5,
+    "attack_surface": 3,
+    "violations": 3
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.LOCK.001",
+      "control_name": "Compliance-Tagged Buckets Must Have Object Lock Enabled",
+      "control_description": "S3 buckets tagged with compliance=true must have S3 Object Lock enabled.\n",
+      "asset_id": "compliance-no-lock",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.object_lock.enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.tags.compliance",
+            "actual_value": "true",
+            "operator": "eq",
+            "unsafe_value": "true"
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    },
+    {
+      "control_id": "CTL.S3.LOCK.002",
+      "control_name": "PHI Buckets Must Use COMPLIANCE Mode Object Lock",
+      "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must use COMPLIANCE mode, not GOVERNANCE mode.\n",
+      "asset_id": "phi-governance-lock",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.object_lock.enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.object_lock.mode",
+            "actual_value": "GOVERNANCE",
+            "operator": "ne",
+            "unsafe_value": "COMPLIANCE"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    },
+    {
+      "control_id": "CTL.S3.LOCK.003",
+      "control_name": "PHI Object Lock Retention Must Meet Minimum Period",
+      "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must have a default retention period of at least 2190 days (6 years).\n",
+      "asset_id": "phi-short-retention",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.object_lock.enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.object_lock.retention_days",
+            "actual_value": 365,
+            "operator": "lt",
+            "unsafe_value": 2190
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource has unsafe state configuration.",
+        "action": "Review and correct the state configuration, verify in new snapshot."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-object-lock/invariants",
+      "observations": "testdata/e2e/e2e-s3-object-lock/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

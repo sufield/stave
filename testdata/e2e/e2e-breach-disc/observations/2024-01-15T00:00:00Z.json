@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "cloud.inventory",
+    "tool": "prc-entropy-fixture",
+    "tool_version": "0.1.0"
+  },
+  "captured_at": "2024-01-15T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:aws:s3:bucket:customer-data",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "public": true,
+        "contains_pii": true,
+        "encryption": "none",
+        "breach_type": "DISC"
+      },
+      "source": { "file": "infra/storage.tf", "line": 15 }
+    }
+  ]
+}

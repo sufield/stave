@@ -1,0 +1,81 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - gocritic
+    - gosec
+    - govet
+    - ineffassign
+    - nestif
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    gocritic:
+      disable-all: true
+      enabled-checks:
+        - nestingReduce
+        - initClause
+    govet:
+      enable:
+        - shadow
+    nestif:
+      min-complexity: 25
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+        - name: exported
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: var-naming
+          disabled: true
+        - name: receiver-naming
+          disabled: true
+    errcheck:
+      exclude-functions:
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Printf
+        - (io.Closer).Close
+        - (*os.File).Close
+        - os.Remove
+        - os.RemoveAll
+  exclusions:
+    generated: strict
+    paths:
+      - (^|/)testdata($|/)
+      - (^|/)fixtures($|/)
+      - (^|/)examples($|/)
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+      - path: _test\.go
+        linters:
+          - cyclop
+          - gocognit
+          - funlen
+          - dupl
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+output:
+  formats:
+    text:
+      path: stdout
+      colors: true

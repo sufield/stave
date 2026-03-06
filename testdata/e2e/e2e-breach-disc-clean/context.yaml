@@ -1,0 +1,13 @@
+name: "DISC Clean Test - No Violation Expected"
+description: |
+  This test verifies that resources which are public but do NOT contain PII
+  do not trigger CTL.EXP.STATE.001 (Sensitive Data Public Exposure).
+
+  Scenario:
+    - Bucket is public (public=true)
+    - Bucket does NOT contain PII (contains_pii=false)
+
+  Expected outcome: No violations (proves no false positives)
+
+  This is a negative test case required by MVP verification.
+expected_findings: 0

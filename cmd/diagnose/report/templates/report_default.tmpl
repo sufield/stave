@@ -1,0 +1,37 @@
+# Stave Evaluation Report
+
+Run:
+- time: {{ .Metadata.EvaluationTime }}
+- max_unsafe: {{ .Metadata.MaxUnsafe }}
+- snapshots: {{ .Metadata.Snapshots }}
+- offline: {{ .Metadata.Offline }}
+- context: {{ .Metadata.ContextName }}
+- git_repo_root: {{ .Metadata.GitRepoRoot }}
+- git_head_commit: {{ .Metadata.GitHeadCommit }}
+- git_dirty: {{ .Metadata.GitDirty }}
+- git_paths_dirty: {{ .Metadata.GitPathsDirty }}
+
+Summary:
+- resources_evaluated: {{ .Summary.ResourcesEvaluated }}
+- attack_surface: {{ .Summary.AttackSurface }}
+- violations: {{ .Summary.Violations }}
+- skipped: {{ .Summary.Skipped }}
+
+Findings by severity:
+{{range .SeverityGroups}}
+- {{ .Severity }}: {{ .Count }}
+{{end}}
+
+Findings (TSV):
+CTL_ID	ASSET_ID	TYPE	VENDOR	SEVERITY	DURATION_H	THRESHOLD_H	FIRST_UNSAFE	LAST_UNSAFE
+{{range .Findings}}
+{{ .ControlID }}	{{ .AssetID }}	{{ .AssetType }}	{{ .Vendor }}	{{ .Severity }}	{{ .DurationH }}	{{ .ThresholdH }}	{{ .FirstUnsafe }}	{{ .LastUnsafe }}
+{{end}}
+
+Remediations:
+{{range .Remediations}}
+- {{ .ControlID }} / {{ .AssetID }}
+  description: {{ .Description }}
+  action: {{ .Action }}
+  example: {{ .Example }}
+{{end}}

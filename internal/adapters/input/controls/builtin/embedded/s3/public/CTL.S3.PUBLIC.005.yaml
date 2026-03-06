@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.005
+name: No Latent Public Read Exposure
+description: S3 buckets must not have latent public read exposure where a public mechanism
+  (policy or ACL) is masked only by Public Access Block. Removing PAB would immediately
+  expose the bucket.
+domain: storage
+exposure:
+  type: latent_public_read
+  principal_scope: public
+severity: medium
+scope_tags:
+- aws
+- s3
+version: ctrl.v1
+type: unsafe_state
+remediation:
+  description: >
+    Bucket has a policy or ACL granting public read, currently masked only
+    by Public Access Block. Removing PAB would immediately expose the bucket.
+  action: >
+    Remove the underlying public-granting policy statement or ACL entry
+    so the bucket does not depend solely on PAB for protection. Then verify
+    PAB remains enabled as defense-in-depth.
+  example: |
+    {
+      "storage": {
+        "visibility": {
+          "latent_public_read": false
+        }
+      }
+    }
+unsafe_predicate_alias: s3.latent_public_read

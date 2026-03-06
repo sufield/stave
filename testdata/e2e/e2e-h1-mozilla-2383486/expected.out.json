@@ -1,0 +1,35 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2024-03-01T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2024-02-21T00:00:00Z.json": "49aab280c0380ff69308823b47f8c79c47863ff35b674ec3c604cbcc40ef3d61",
+        "2024-03-01T00:00:00Z.json": "161e422cff970e645cecddf4c63a509942c4b8d86446d3b54e224bf238374ea5"
+      },
+      "overall": "37d39859f2b77d7b648e357e0167f5715308aeb72a9f58820ecb0f408908054e"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-mozilla-2383486/invariants",
+      "observations": "testdata/e2e/e2e-h1-mozilla-2383486/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

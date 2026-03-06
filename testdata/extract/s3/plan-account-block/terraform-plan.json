@@ -1,0 +1,44 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.public_bucket",
+          "type": "aws_s3_bucket",
+          "name": "public_bucket",
+          "values": {
+            "bucket": "acme-public-bucket",
+            "arn": "arn:aws:s3:::acme-public-bucket",
+            "tags": {
+              "DataDomain": "health",
+              "containsPHI": "true"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_policy.public_policy",
+          "type": "aws_s3_bucket_policy",
+          "name": "public_policy",
+          "values": {
+            "bucket": "acme-public-bucket",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadAccess\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::acme-public-bucket/*\"]}]}"
+          }
+        },
+        {
+          "address": "aws_s3_account_public_access_block.account_block",
+          "type": "aws_s3_account_public_access_block",
+          "name": "account_block",
+          "values": {
+            "block_public_acls": true,
+            "ignore_public_acls": true,
+            "block_public_policy": true,
+            "restrict_public_buckets": true
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": []
+}

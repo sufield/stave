@@ -1,0 +1,42 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "2f612065b88990b01c2608ed607d10ed2b956161dbd7e22b690e24ba3b2f12d1",
+        "2026-01-11T00:00:00Z.json": "114574aa0de1bd3a3d46b39a293beabf23e561e646a0de7de679f6d54fb431ce"
+      },
+      "overall": "fda2021cccb23706a40b71631a2ca651ecd429f2c01f999bf6726eb9f032b3bd"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 0,
+    "attack_surface": 0,
+    "violations": 0
+  },
+  "findings": [],
+  "skipped": [
+    {
+      "control_id": "CTL.TP.VENDOR.001",
+      "control_name": "Third-Party Vendor Data Boundaries",
+      "reason": "type not evaluatable: authorization_boundary"
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-08-vendor-boundary/invariants",
+      "observations": "testdata/e2e/e2e-08-vendor-boundary/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

@@ -1,0 +1,20 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.002
+name: Transport Encryption Required
+description: >
+  S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false.
+  Without this, data transfers occur in plaintext.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.in_transit_enforced
+      op: eq
+      value: false

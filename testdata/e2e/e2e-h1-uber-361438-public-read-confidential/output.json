@@ -1,0 +1,188 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.1",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "max_unsafe": "168h0m0s",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T00:00:00Z.json": "6af00c9e024c7e9f33ea7521bb141ecd047a2c9dc49ea109c0a8c366d994686d",
+        "2026-01-11T00:00:00Z.json": "ba247187a0920d38f53c14065b896367abecd33095414de617a7b40bbdba9331"
+      },
+      "overall": "2f7275d8b1a2c25907b59f06890ceeb78e9d38838d073e52f4ff3e1dc19c26c8"
+    }
+  },
+  "summary": {
+    "resources_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 2
+  },
+  "findings": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Buckets",
+      "control_description": "S3 buckets must not allow public read or list access. Detects buckets with public access via bucket policies, ACLs, or missing public access block settings.\n",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.visibility.public_list",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.visibility.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource is publicly exposed beyond threshold.",
+        "action": "Remove public access, confirm via new snapshot."
+      },
+      "fix_plan": {
+        "id": "fix-d312df6d2c650d26",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.002",
+      "control_name": "No Public S3 Buckets With Sensitive Data",
+      "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "confidential",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "confidential",
+            "operator": "eq",
+            "unsafe_value": "pii"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "confidential",
+            "operator": "eq",
+            "unsafe_value": "confidential"
+          },
+          {
+            "property": "storage.visibility.public_list",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.visibility.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "remediation": {
+        "description": "Resource is publicly exposed beyond threshold.",
+        "action": "Remove public access, confirm via new snapshot."
+      },
+      "fix_plan": {
+        "id": "fix-77951479c7ae6bf1",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm bucket ownership and change window approval.",
+          "Ensure public access is not intentionally required for this resource."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.block_public_policy",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.ignore_public_acls",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "properties.storage.controls.restrict_public_buckets",
+            "value": true
+          }
+        ],
+        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+      }
+    }
+  ],
+  "extensions": {
+    "context_name": "stave",
+    "git_dirty": false,
+    "git_head_commit": "5508a6d55abe0592707eb39a292db45e300e17ea",
+    "git_repo_root": "/home/zepho/work/bizacademy",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-h1-uber-361438-public-read-confidential/invariants",
+      "observations": "testdata/e2e/e2e-h1-uber-361438-public-read-confidential/observations"
+    },
+    "selected_controls_source": "dir"
+  }
+}

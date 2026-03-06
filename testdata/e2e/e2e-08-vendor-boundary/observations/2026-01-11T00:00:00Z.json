@@ -1,0 +1,44 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.6.3"
+  },
+  "captured_at": "2026-01-11T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:data:customer:pii-shared-unapproved",
+      "type": "data_store",
+      "vendor": "internal",
+      "properties": {
+        "data_classification": "PII",
+        "third_party_shared": true,
+        "vendor_allowed": false
+      },
+      "source": { "file": "data/config.tf", "line": 10 }
+    },
+    {
+      "id": "res:data:customer:pii-shared-approved",
+      "type": "data_store",
+      "vendor": "internal",
+      "properties": {
+        "data_classification": "PII",
+        "third_party_shared": true,
+        "vendor_allowed": true
+      },
+      "source": { "file": "data/config.tf", "line": 25 }
+    },
+    {
+      "id": "res:data:customer:public-shared",
+      "type": "data_store",
+      "vendor": "internal",
+      "properties": {
+        "data_classification": "PUBLIC",
+        "third_party_shared": true,
+        "vendor_allowed": false
+      },
+      "source": { "file": "data/config.tf", "line": 40 }
+    }
+  ]
+}

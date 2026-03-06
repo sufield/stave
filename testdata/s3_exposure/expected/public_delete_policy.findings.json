@@ -1,0 +1,18 @@
+{
+  "findings": [
+    {
+      "id": "CTL.S3.PUBLIC.DELETE.001",
+      "bucket": "deletable-bucket",
+      "exposure_type": "public_delete",
+      "principal_scope": "public",
+      "actions": [
+        "s3:DeleteObject"
+      ],
+      "evidence_path": [
+        "bucket.policy.statements[0].effect",
+        "bucket.policy.statements[0].principal",
+        "bucket.policy.statements[0].actions"
+      ]
+    }
+  ]
+}

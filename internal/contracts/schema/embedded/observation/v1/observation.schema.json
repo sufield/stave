@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stave:schema:observation:v1",
+  "title": "Stave Observation Contract v1",
+  "description": "Contract schema for Stave observation snapshots. Each snapshot captures the configuration state of infrastructure resources at a single point in time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "captured_at",
+    "resources"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "obs.v1",
+        "obs.v0.1"
+      ],
+      "title": "Schema Version",
+      "description": "Schema version identifier. Accepted values allow forward-compatible ingestion of obs.v0.1 documents."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Capture Timestamp",
+      "description": "UTC timestamp in RFC 3339 format indicating when the observation data was captured."
+    },
+    "generated_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Generator Metadata",
+      "description": "Metadata about the tool and provider that generated this observation.",
+      "properties": {
+        "source_type": {
+          "type": "string",
+          "title": "Source Type",
+          "description": "Source type identifier indicating the extraction method (e.g., terraform.plan_json, aws.config_api)."
+        },
+        "tool": {
+          "type": "string",
+          "title": "Tool Name",
+          "description": "Name of the tool that produced this observation (e.g., stave-extract, custom-script)."
+        },
+        "tool_version": {
+          "type": "string",
+          "title": "Tool Version",
+          "description": "Semantic version of the extraction tool."
+        },
+        "provider": {
+          "type": "string",
+          "title": "Provider Name",
+          "description": "Cloud or infrastructure provider name (e.g., aws, gcp, azure)."
+        },
+        "provider_version": {
+          "type": "string",
+          "title": "Provider Version",
+          "description": "Version of the provider plugin or API used during extraction."
+        }
+      }
+    },
+    "resources": {
+      "type": "array",
+      "title": "Resources",
+      "description": "List of infrastructure resources captured in this observation snapshot.",
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "identities": {
+      "type": "array",
+      "title": "Identities",
+      "description": "List of IAM identities captured in this observation snapshot.",
+      "items": {
+        "$ref": "#/$defs/identity"
+      }
+    }
+  },
+  "$defs": {
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Source Reference",
+      "description": "Reference to the source file and line from which this element was extracted.",
+      "properties": {
+        "file": {
+          "type": "string",
+          "title": "Source File Path",
+          "description": "Path to the source file (e.g., Terraform config, API response cache)."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "title": "Source Line Number",
+          "description": "Line number in the source file where this element is defined."
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Observed Resource",
+      "description": "A single infrastructure resource and its configuration properties.",
+      "required": [
+        "id",
+        "type",
+        "vendor",
+        "properties"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Resource ID",
+          "description": "Unique identifier for this resource (e.g., ARN, resource name, or synthetic ID)."
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+          "title": "Resource Type",
+          "description": "Resource type indicating the kind of infrastructure (e.g., storage_bucket, iam_role, k8s.clusterrolebinding). Lowercase letters, digits, '_', '.', and '-' only."
+        },
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Resource Vendor",
+          "description": "Cloud vendor or platform that provides this resource (e.g., aws, gcp, azure)."
+        },
+        "properties": {
+          "type": "object",
+          "title": "Configuration Properties",
+          "description": "Resource configuration properties evaluated by control predicates. Intentionally flexible (any JSON object) to support diverse resource types without per-type schemas. Future versions may introduce typed sub-schemas keyed by resource type."
+        },
+        "source": {
+          "$ref": "#/$defs/sourceRef",
+          "title": "Source Reference",
+          "description": "Optional reference to the source file and line for traceability."
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Observed Identity",
+      "description": "An IAM identity (user, role, service account) and its evaluated properties.",
+      "required": [
+        "id",
+        "type",
+        "vendor",
+        "properties"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Identity ID",
+          "description": "Unique identifier for this identity (e.g., ARN, email, principal ID)."
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+          "title": "Identity Type",
+          "description": "Identity type indicating the kind of principal (e.g., iam_role, service_account, user). Lowercase letters, digits, '_', '.', and '-' only."
+        },
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Identity Vendor",
+          "description": "Cloud vendor or platform that manages this identity (e.g., aws, gcp, azure)."
+        },
+        "properties": {
+          "type": "object",
+          "title": "Identity Properties",
+          "description": "Identity attributes evaluated by control predicates. Intentionally flexible (any JSON object)."
+        },
+        "source": {
+          "$ref": "#/$defs/sourceRef",
+          "title": "Source Reference",
+          "description": "Optional reference to the source file and line for traceability."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+dsl_version: ctrl.v1
+id: CTL.EXP.OWNERSHIP.001
+name: Public Exposure Requires Owner
+description: A publicly exposed resource must have an owner. Missing ownership on public resources indicates unaccountable exposure.
+type: ownership_required
+params: {}
+unsafe_predicate:
+  all:
+    - field: "properties.public"
+      op: "eq"
+      value: true
+    - field: "properties.owner"
+      op: "missing"
+      value: true

@@ -1,0 +1,24 @@
+dsl_version: ctrl.v1
+id: CTL.TP.PLATFORM.001
+name: Third-Party Platform Boundaries
+description: |
+  Third-party platform integrations must have explicitly declared boundaries.
+  Required properties (set by customer extractor):
+  - integration_enabled: bool (true if integration is active)
+  - boundary_declared: bool (true if boundary is explicitly approved/declared)
+  - third_party_platform: string (optional, e.g., "google_analytics", "segment")
+  Violation occurs when integration is enabled without declared boundary.
+type: authorization_boundary
+params: {}
+unsafe_predicate:
+  all:
+    - field: "properties.integration_enabled"
+      op: "eq"
+      value: true
+    - any:
+        - field: "properties.boundary_declared"
+          op: "missing"
+          value: true
+        - field: "properties.boundary_declared"
+          op: "eq"
+          value: false

@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.ID.AUTHZ.001
+name: Least-Privilege Subject Access
+description: |
+  Enforces row/subject-level access boundaries for sensitive data.
+  Required properties for access_event resources:
+  - event_id (string): unique event identifier
+  - actor (string): user/service principal performing the action
+  - action (string): read, write, export
+  - resource_type (string): record, document, claim, etc.
+  - resource_id (string): identifier of the resource
+  - subject_id (string): whose data is being accessed
+  - actor_subject_id (string, optional): if actor is a human with own subject id
+  - allowed_subjects (list of strings, optional): subjects the actor may access
+  Violation occurs when:
+  - actor_subject_id is set AND actor_subject_id != subject_id (accessing someone else's data)
+  - OR action == "export" AND resource_type is sensitive AND subject_id not in allowed_subjects
+type: authorization_boundary
+params: {}
+unsafe_predicate:
+  any:
+    # Rule 1: Human actor accessing data belonging to a different subject
+    - all:
+        - field: "properties.actor_subject_id"
+          op: "present"
+          value: true
+        - field: "properties.actor_subject_id"
+          op: "neq_field"
+          value: "properties.subject_id"
+    # Rule 2: Export of sensitive resource without allowlist approval
+    - all:
+        - field: "properties.action"
+          op: "eq"
+          value: "export"
+        - field: "properties.resource_type"
+          op: "in"
+          value: ["record", "document", "claim"]
+        - field: "properties.subject_id"
+          op: "not_in_field"
+          value: "properties.allowed_subjects"

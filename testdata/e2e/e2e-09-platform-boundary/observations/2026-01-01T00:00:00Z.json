@@ -1,0 +1,43 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "terraform",
+    "tool_version": "1.6.3"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "res:integration:analytics:undeclared",
+      "type": "platform_integration",
+      "vendor": "google",
+      "properties": {
+        "third_party_platform": "google_analytics",
+        "integration_enabled": true,
+        "boundary_declared": false
+      },
+      "source": { "file": "integrations/analytics.tf", "line": 10 }
+    },
+    {
+      "id": "res:integration:segment:declared",
+      "type": "platform_integration",
+      "vendor": "segment",
+      "properties": {
+        "third_party_platform": "segment",
+        "integration_enabled": true,
+        "boundary_declared": true
+      },
+      "source": { "file": "integrations/segment.tf", "line": 15 }
+    },
+    {
+      "id": "res:integration:slack:disabled",
+      "type": "platform_integration",
+      "vendor": "slack",
+      "properties": {
+        "third_party_platform": "slack",
+        "integration_enabled": false
+      },
+      "source": { "file": "integrations/slack.tf", "line": 20 }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.LIST.002
+name: Anonymous S3 Listing Must Be Explicitly Intended
+description: >
+  Anonymous bucket listing increases exposure surface even when objects are
+  public by design. Listing must be explicitly intended via tag.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.visibility.public_list
+      op: eq
+      value: true
+    - any:
+        - field: properties.storage.tags.public_list_intended
+          op: missing
+          value: true
+        - field: properties.storage.tags.public_list_intended
+          op: ne
+          value: "true"

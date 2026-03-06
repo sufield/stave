@@ -1,0 +1,40 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "terraform.plan_json",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "captured_at": "2026-01-01T00:00:00Z",
+  "resources": [
+    {
+      "id": "upload-policy-unrestricted-content",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "user-uploads",
+          "operation": "write",
+          "allowed_key_mode": "exact",
+          "content_type_restricted": false
+        }
+      }
+    },
+    {
+      "id": "upload-policy-restricted-content",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "avatar-uploads",
+          "operation": "write",
+          "allowed_key_mode": "exact",
+          "content_type_restricted": true,
+          "allowed_content_types": ["image/jpeg", "image/png"]
+        }
+      }
+    }
+  ]
+}

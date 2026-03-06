@@ -1,0 +1,20 @@
+{
+  "buckets": [
+    {
+      "name": "acl-read-bucket",
+      "exists": true,
+      "external_reference": false,
+      "website": { "enabled": false },
+      "policy": { "statements": [] },
+      "acl": {
+        "grants": [
+          {
+            "grantee": "AllUsers",
+            "permission": "READ",
+            "scope": "object"
+          }
+        ]
+      }
+    }
+  ]
+}

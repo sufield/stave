@@ -1,0 +1,19 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2021-11-15T00:00:00Z",
+  "resources": [
+    {
+      "id": "tendermint-packages-ref",
+      "type": "s3_bucket_reference",
+      "vendor": "aws",
+      "properties": {
+        "s3_ref": {
+          "endpoint": "tendermint-packages.s3-website-us-west-1.amazonaws.com",
+          "bucket": "tendermint-packages",
+          "bucket_exists": false,
+          "bucket_owned": false
+        }
+      }
+    }
+  ]
+}

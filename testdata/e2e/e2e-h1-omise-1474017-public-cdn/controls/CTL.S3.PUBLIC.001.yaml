@@ -1,0 +1,21 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public S3 Buckets
+description: >
+  S3 buckets must not allow public read or list access.
+  Detects buckets with public access via bucket policies,
+  ACLs, or missing public access block settings.
+domain: exposure
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  any:
+    - field: properties.storage.visibility.public_read
+      op: eq
+      value: true
+    - field: properties.storage.visibility.public_list
+      op: eq
+      value: true

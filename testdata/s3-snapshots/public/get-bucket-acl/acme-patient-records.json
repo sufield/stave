@@ -1,0 +1,16 @@
+{
+  "Owner": {
+    "DisplayName": "acme-healthcare",
+    "ID": "abc123def456"
+  },
+  "Grants": [
+    {
+      "Grantee": {
+        "Type": "CanonicalUser",
+        "ID": "abc123def456",
+        "DisplayName": "acme-healthcare"
+      },
+      "Permission": "FULL_CONTROL"
+    }
+  ]
+}

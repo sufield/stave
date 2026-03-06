@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.001
+name: Encryption at Rest Required
+description: >
+  S3 buckets must have server-side encryption enabled.
+  Unencrypted storage is the top audit finding in regulated industries.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v1.4.0: "2.1.1"
+  pci_dss_v3.2.1: "3.4"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket does not have server-side encryption enabled. Objects are
+    stored unencrypted at rest.
+  action: >
+    Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS.
+    Use aws s3api put-bucket-encryption to set the default encryption
+    configuration. For sensitive data, use SSE-KMS with a customer-managed key.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
