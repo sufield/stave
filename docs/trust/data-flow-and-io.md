@@ -32,7 +32,7 @@ Stave is stateless. Every command reads from files or stdin, writes to stdout/st
 ```mermaid
 flowchart LR
     obs["--observations dir\n(JSON snapshots)"] --> eval["stave apply"]
-    inv["--controls dir\n(YAML definitions)"] --> eval
+    ctl["--controls dir\n(YAML definitions)"] --> eval
     eval --> stdout["stdout\n(JSON / text)"]
     eval --> out["--out file\n(evaluation.json)"]
 ```
@@ -41,7 +41,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    inv["--controls dir\n(YAML definitions)"] --> val["stave validate"]
+    ctl["--controls dir\n(YAML definitions)"] --> val["stave validate"]
     obs["--observations dir /\n--in file / stdin"] --> val
     val --> stdout["stdout\n(text / JSON)"]
 ```

@@ -171,7 +171,7 @@
     {
       "control_id": "CTL.S3.GOVERNANCE.001",
       "control_name": "Data Classification Tag Required",
-      "control_description": "S3 buckets must have a data-classification tag. Without this tag, tag-conditional invariants for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate — the bucket silently passes all sensitivity-gated checks regardless of actual content.\n",
+      "control_description": "S3 buckets must have a data-classification tag. Without this tag, tag-conditional controls for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate — the bucket silently passes all sensitivity-gated checks regardless of actual content.\n",
       "asset_id": "private-bucket",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
@@ -202,7 +202,7 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket is missing the data-classification tag. Without this tag, sensitivity-gated invariants cannot evaluate and the bucket silently passes all data-protection checks.\n",
+        "description": "Bucket is missing the data-classification tag. Without this tag, sensitivity-gated controls cannot evaluate and the bucket silently passes all data-protection checks.\n",
         "action": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets.\n",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"internal\"\n    }\n  }\n}\n"
       }

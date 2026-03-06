@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `stave report` severity breakdown section (findings by severity table)
 - `stave report` compliance summary section (framework → findings count + controls)
 - SEVERITY column in report TSV output
-- `invariant_severity` and `invariant_compliance` fields in evaluation findings output
+- `control_severity` and `control_compliance` fields in evaluation findings output
 
 ### Changed
 - **Breaking:** Removed `--out` flag from `evaluate`, `check`, `verify`, `ci diff`,
@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--template` flag on evaluate, diagnose, and validate for custom output formatting
 - Command alias system (`stave alias set|list|delete`) with user config storage
 - JSON and text output formats
-- Observation schema (obs.v0.1) and control DSL (inv.v0.1)
+- Observation schema (obs.v0.1) and control DSL (ctrl.v1)
 - Terraform plan extraction for S3 resources
 - Golden-file E2E test framework with 95+ test cases
 - OpenSSF Scorecard, signed releases, SLSA provenance, SBOM

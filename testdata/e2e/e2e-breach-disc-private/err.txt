@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (6ms)
+Done:    evaluate controls against observations (8ms)
 [ERR] Command failed (INTERNAL_ERROR)
 Description: evaluation runner: snapshot[0] has unsupported source_type "cloud.inventory" (use --allow-unknown-input to skip)
 Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input

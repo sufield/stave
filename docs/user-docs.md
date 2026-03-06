@@ -87,7 +87,7 @@ stave validate                    # same inference
 stave diagnose                    # same inference
 
 # Explicit flags always win:
-stave apply --controls ./custom-inv   # no inference for controls
+stave apply --controls ./custom-controls   # no inference for controls
 
 # Using STAVE_PROJECT_ROOT:
 STAVE_PROJECT_ROOT=/path/to/project stave apply
@@ -579,7 +579,7 @@ Checked: 2 controls, 2 snapshots, 3 resources
     }
   ],
   "summary": {
-    "invariants_checked": 2,
+    "controls_checked": 2,
     "snapshots_checked": 2,
     "resources_checked": 3
   }
@@ -590,12 +590,12 @@ Checked: 2 controls, 2 snapshots, 3 resources
 
 | Code | Signal | Meaning |
 |------|--------|---------|
-| `INVARIANT_MISSING_ID` | error | Control missing required `id` field |
-| `INVARIANT_MISSING_NAME` | error | Control missing required `name` field |
+| `CONTROL_MISSING_ID` | error | Control missing required `id` field |
+| `CONTROL_MISSING_NAME` | error | Control missing required `name` field |
 | `NOW_BEFORE_SNAPSHOTS` | error | `--now` must be at or after the latest snapshot |
 | `SINGLE_SNAPSHOT` | warning | Only 1 snapshot (need 2+ for duration tracking) |
 | `SPAN_LESS_THAN_MAX_UNSAFE` | warning | Snapshot span shorter than threshold |
-| `INVARIANT_NEVER_MATCHES` | warning | No resources match unsafe_predicate |
+| `CONTROL_NEVER_MATCHES` | warning | No resources match unsafe_predicate |
 
 ### apply
 

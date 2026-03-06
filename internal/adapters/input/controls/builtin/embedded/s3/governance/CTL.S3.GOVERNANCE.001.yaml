@@ -3,7 +3,7 @@ id: CTL.S3.GOVERNANCE.001
 name: Data Classification Tag Required
 description: >
   S3 buckets must have a data-classification tag. Without this tag,
-  tag-conditional invariants for PHI, PII, confidential data, backup
+  tag-conditional controls for PHI, PII, confidential data, backup
   integrity, and compliance retention cannot evaluate — the bucket
   silently passes all sensitivity-gated checks regardless of actual
   content.
@@ -17,7 +17,7 @@ params: {}
 remediation:
   description: >
     Bucket is missing the data-classification tag. Without this tag,
-    sensitivity-gated invariants cannot evaluate and the bucket silently
+    sensitivity-gated controls cannot evaluate and the bucket silently
     passes all data-protection checks.
   action: >
     Add a data-classification tag to the bucket with an appropriate value

@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (18ms)
+Done:    evaluate controls against observations (77ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-lifecycle/controls --observations testdata/e2e/e2e-s3-lifecycle/observations
 

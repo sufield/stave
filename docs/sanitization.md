@@ -16,10 +16,10 @@ Stave provides two complementary privacy controls for safe sharing.
 Use it on commands that emit findings, diagnostics, or coverage graphs:
 
 ```bash
-stave apply --controls ./inv --observations ./obs --sanitize
-stave apply --profile mvp1-s3 --input observations.json --sanitize
-stave diagnose --controls ./inv --observations ./obs --sanitize
-stave graph coverage --controls ./inv --observations ./obs --sanitize
+stave apply --controls ./controls --observations ./obs --sanitize
+stave apply --controls ./controls --observations ./obs --sanitize --now 2026-01-15T00:00:00Z
+stave diagnose --controls ./controls --observations ./obs --sanitize
+stave graph coverage --controls ./controls --observations ./obs --sanitize
 ```
 
 What stays visible:

@@ -46,7 +46,7 @@ type ObservationDeltaSummary struct {
 	total    int
 }
 
-// INVARIANT: Summary total must always equal the sum of Added, Removed, and Modified.
+// CONTRACT: Summary total must always equal the sum of Added, Removed, and Modified.
 // Increment updates summary counters for a single change type.
 func (s *ObservationDeltaSummary) Increment(changeType ChangeType) {
 	switch changeType {
@@ -168,7 +168,7 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 	}
 
 	if !delta.Summary.matchesChangeCount(len(delta.Changes)) {
-		panic("structural invariant violation: summary total mismatch")
+		panic("structural contract violation: summary total mismatch")
 	}
 
 	return delta

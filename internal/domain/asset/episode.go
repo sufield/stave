@@ -11,7 +11,7 @@ import (
 // Episode represents a contiguous period where a resource remained unsafe.
 // An episode starts when a resource transitions from safe to unsafe and ends
 // when it transitions back to safe. Episodes are used for recurrence detection.
-// INVARIANT: for closed episodes, endAt is never before startAt.
+// CONTRACT: for closed episodes, endAt is never before startAt.
 type Episode struct {
 	startAt time.Time
 	endAt   time.Time

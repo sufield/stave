@@ -79,7 +79,7 @@ You can independently verify that Stave makes zero network syscalls:
 
 ```bash
 strace -f -e trace=network ./stave apply \
-  --controls ./inv --observations ./obs 2>&1 | grep -E 'socket|connect|sendto|recvfrom|getaddrinfo'
+  --controls ./controls --observations ./obs 2>&1 | grep -E 'socket|connect|sendto|recvfrom|getaddrinfo'
 # Expected: no output (zero network syscalls)
 ```
 
@@ -88,7 +88,7 @@ strace -f -e trace=network ./stave apply \
 ```bash
 # dtruss requires root; run in a test environment
 sudo dtruss -f ./stave apply \
-  --controls ./inv --observations ./obs 2>&1 | grep -iE 'socket|connect'
+  --controls ./controls --observations ./obs 2>&1 | grep -iE 'socket|connect'
 # Note: macOS dtruss output is noisier; filter for socket/connect only
 ```
 
@@ -96,7 +96,7 @@ sudo dtruss -f ./stave apply \
 
 ```bash
 docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.26 \
-  ./stave apply --controls ./inv --observations ./obs
+  ./stave apply --controls ./controls --observations ./obs
 # If this succeeds, the binary works with zero network access
 ```
 
@@ -192,14 +192,14 @@ Use `--path-mode=full` to include absolute paths in errors and logs.
 
 ```bash
 # Sanitize identifiers and use basename-only paths
-stave apply --controls ./inv --observations ./obs --sanitize
+stave apply --controls ./controls --observations ./obs --sanitize
 
 # Full sanitization with scrubbed observations
 stave ingest --profile mvp1-s3 --input ./snapshot --out obs.json --scrub
 stave apply --profile mvp1-s3 --input obs.json --sanitize > report.json
 
 # Diagnostics in JSON with sanitization
-stave diagnose --controls ./inv --observations ./obs --format json --sanitize
+stave diagnose --controls ./controls --observations ./obs --format json --sanitize
 ```
 
 ### Panic Output

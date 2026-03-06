@@ -23,7 +23,7 @@ run_case() {
   local name
   name="$(basename "$case_dir")"
 
-  local inv="$case_dir/controls"
+  local ctl="$case_dir/controls"
   local obs="$case_dir/observations"
   local now="2026-01-11T00:00:00Z"
 
@@ -53,7 +53,7 @@ run_case() {
     fi
 
     "$BIN" apply \
-      --controls "$inv" \
+      --controls "$ctl" \
       --observations "$obs" \
       --max-unsafe 168h \
       --now "$now" \
@@ -112,10 +112,10 @@ actual:   $act_hashes"
   fi
 
   if [[ -f "$case_dir/expected.source_evidence.json" ]]; then
-    # Build actual source_evidence map keyed by invariant_id from findings
+    # Build actual source_evidence map keyed by control_id from findings
     local exp_se act_se
     exp_se="$(jq -S '.' "$case_dir/expected.source_evidence.json")"
-    act_se="$(jq -S '[.findings[] | select(.evidence.source_evidence != null) | {(.invariant_id): .evidence.source_evidence}] | add // {}' "$out")"
+    act_se="$(jq -S '[.findings[] | select(.evidence.source_evidence != null) | {(.control_id): .evidence.source_evidence}] | add // {}' "$out")"
     [[ "$act_se" == "$exp_se" ]] || fail "$name source_evidence mismatch
 expected: $exp_se
 actual:   $act_se"
