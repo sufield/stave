@@ -1,7 +1,7 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2024-03-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "mofo-infographics",
       "type": "aws_s3_bucket",

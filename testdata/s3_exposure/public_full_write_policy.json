@@ -11,7 +11,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:PutObject", "s3:GetObject"],
-            "resources": [
+            "assets": [
               "arn:aws:s3:::public-full-write-bucket",
               "arn:aws:s3:::public-full-write-bucket/*"
             ]

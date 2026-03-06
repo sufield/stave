@@ -155,7 +155,7 @@ func (r *s3Runner) extractSnapshots(ctx context.Context, cfg s3RunConfig) ([]ass
 }
 
 func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots []asset.Snapshot) error {
-	if len(snapshots) == 0 || len(snapshots[0].Resources) == 0 {
+	if len(snapshots) == 0 || len(snapshots[0].Assets) == 0 {
 		return r.handleEmptySnapshot(cmd, cfg)
 	}
 
@@ -169,8 +169,8 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 	}
 
 	if !cmdutil.QuietEnabled(cmd) {
-		fmt.Fprintf(cmd.OutOrStdout(), "Extracted %d bucket(s) to %s\n", len(snapshots[0].Resources), cfg.outFile)
-		printIngestCoverage(cmd.OutOrStdout(), snapshots[len(snapshots)-1].Resources)
+		fmt.Fprintf(cmd.OutOrStdout(), "Extracted %d bucket(s) to %s\n", len(snapshots[0].Assets), cfg.outFile)
+		printIngestCoverage(cmd.OutOrStdout(), snapshots[len(snapshots)-1].Assets)
 	}
 	return nil
 }

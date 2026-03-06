@@ -6,7 +6,7 @@
 - Deterministic findings and reports
 
 ## Out of scope
-- Non-S3 resources or platforms
+- Non-S3 assets or platforms
 - Application-specific logic (CMS, e-commerce, etc.)
 - Other AWS services
 - Continuous monitoring or agents

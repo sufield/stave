@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "49f0337cdcafc0bd1c8c79f31a2b6ed9a8f672a34a525aa1ba84486331a64698",
-        "2026-01-11T00:00:00Z.json": "00e37723a87420b77508191883d79269da3c16a57b1a10f351cddf3cb092980c"
+        "2026-01-01T00:00:00Z.json": "30d1dab9fbf1f6f97d61dad92a4fa78a3350d82e3873e29eddd54c42e555c028",
+        "2026-01-11T00:00:00Z.json": "5e9bbcaf47e6bc5f4338cec95d6bdd5becd6c406f17306f5cabd46efa356136f"
       },
-      "overall": "78376132da119d8bfeb6bf766610d4c2fb7081d36f610b106a4e4833958b279f"
+      "overall": "50bdf892f91a22d04837c0568c1ca196b30281f93f9011177ab7f7ffbbdc038c"
     },
     "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 1,
     "violations": 1
   },
@@ -42,7 +42,7 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "posture_drift": {
@@ -64,11 +64,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-24-messy-sparse/controls/CTL.ID.KUBE.001.yaml"
-      ]
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "dirty": false
     }
   }
 }

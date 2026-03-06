@@ -23,7 +23,7 @@ func writeTestObservation(t *testing.T, path string, capturedAt time.Time) {
     "tool": "test"
   },
   "captured_at": %q,
-  "resources": [
+  "assets": [
     {
       "id": "aws:s3:::test-bucket",
       "type": "aws_s3_bucket",

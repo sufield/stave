@@ -24,7 +24,7 @@ type Sanitizer struct {
 // New creates a new Sanitizer with default scrub configs.
 func New() *Sanitizer {
 	return &Sanitizer{
-		resourceScrub: DefaultResourceScrub,
+		resourceScrub: DefaultAssetScrub,
 		identityScrub: DefaultIdentityScrub,
 	}
 }
@@ -33,7 +33,7 @@ func New() *Sanitizer {
 func NewNoOp() *Sanitizer {
 	return &Sanitizer{
 		noOp:          true,
-		resourceScrub: DefaultResourceScrub,
+		resourceScrub: DefaultAssetScrub,
 		identityScrub: DefaultIdentityScrub,
 	}
 }
@@ -55,7 +55,7 @@ func (r *Sanitizer) ID(id string) string {
 	return string(asset.ID(id).Sanitize(r.token))
 }
 
-// Asset sanitizes a resource identifier.
+// Asset sanitizes an asset identifier.
 // Delegates to AssetID.Sanitize (Tell, Don't Ask).
 func (r *Sanitizer) Asset(id asset.ID) asset.ID {
 	if !r.enabled() {
@@ -94,7 +94,7 @@ func (r *Sanitizer) Bucket(name string) string {
 	return "SANITIZED_" + r.token(name)
 }
 
-// Verification sanitizes a resource ID in a verification entry.
+// Verification sanitizes an asset ID in a verification entry.
 func (r *Sanitizer) Verification(assetID asset.ID) asset.ID {
 	return r.Asset(assetID)
 }

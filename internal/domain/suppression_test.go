@@ -116,7 +116,7 @@ func TestSuppressionConfig_NoMatch(t *testing.T) {
 		t.Error("different control_id should not match")
 	}
 
-	// Different resource
+	// Different asset
 	rule = cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::other-bucket"), now)
 	if rule != nil {
 		t.Error("different asset_id should not match")

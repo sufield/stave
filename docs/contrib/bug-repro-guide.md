@@ -12,7 +12,7 @@ A good bug report includes a minimal reproduction that any contributor can run. 
 ## Principles
 
 1. **Deterministic** — use `--now` to fix the evaluation timestamp. Never rely on wall-clock time.
-2. **Minimal** — include only the fields and resources needed to trigger the bug. Remove everything else.
+2. **Minimal** — include only the fields and assets needed to trigger the bug. Remove everything else.
 3. **Sanitized** — replace real bucket names, ARNs, account IDs, and tags with placeholders. Use `--sanitize` or manually substitute.
 4. **Self-contained** — the reproduction should run with only the Stave binary and the files you provide. No cloud credentials, no external dependencies.
 5. **No network** — Stave is offline. Your repro should work in an air-gapped environment.
@@ -59,7 +59,7 @@ Create a minimal `obs.v0.1` observation:
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [{
+  "assets": [{
     "id": "res:aws:s3:bucket:SANITIZED_01",
     "type": "storage_bucket",
     "vendor": "aws",

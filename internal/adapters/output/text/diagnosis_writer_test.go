@@ -15,7 +15,7 @@ func plainLabel(_, message string) string { return message }
 func TestWriteDiagnosisReport_NoDiagnoses(t *testing.T) {
 	report := &diagnosis.Report{}
 	report.Summary.TotalSnapshots = 2
-	report.Summary.TotalResources = 1
+	report.Summary.TotalAssets = 1
 	report.Summary.TotalControls = 1
 	report.Summary.TimeSpan = kernel.Duration(time.Hour)
 	report.Summary.MaxUnsafeThreshold = kernel.Duration(30 * time.Minute)

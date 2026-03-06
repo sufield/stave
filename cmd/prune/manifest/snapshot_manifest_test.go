@@ -21,7 +21,7 @@ func TestCollectObservationHashes_FiltersNonObservationAndManifestArtifacts(t *t
 	validObs := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": []
+  "assets": []
 }`
 	nonObsJSON := `{"summary":{"violations":1}}`
 	manifestJSON := `{"files":{"a.json":"abc"},"overall":"def"}`

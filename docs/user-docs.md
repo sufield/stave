@@ -1,6 +1,6 @@
 # Stave User Documentation
 
-Stave detects infrastructure resources that have remained unsafe for too long, using only configuration snapshots — no cloud credentials required.
+Stave detects infrastructure assets that have remained unsafe for too long, using only configuration snapshots — no cloud credentials required.
 
 ## MVP Operating Assumption
 
@@ -130,8 +130,8 @@ Use this table when you know your goal but want the fastest path to the right co
 | Search docs without leaving terminal | `stave docs search "snapshot upcoming"` | [`README.md`](../README.md) |
 | Open the best-matching docs page path + summary | `stave docs open "snapshot upcoming"` | [`README.md`](../README.md) |
 | Resume from where you stopped | `stave status` then `stave status` | [`README.md`](../README.md) |
-| Visualize which controls cover which resources | `stave graph coverage --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
-| Debug why a specific control matched or didn't match a resource | `stave trace --control CTL.S3.PUBLIC.001 --observation obs/snap.json --asset-id my-bucket` | [`README.md`](../README.md) |
+| Visualize which controls cover which assets | `stave graph coverage --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
+| Debug why a specific control matched or didn't match an asset | `stave trace --control CTL.S3.PUBLIC.001 --observation obs/snap.json --asset-id my-bucket` | [`README.md`](../README.md) |
 | Generate a human-readable report from evaluation output | `stave report --in output/evaluation.json` | [`README.md`](../README.md) |
 | Produce an auditor-ready self-audit bundle | `stave security-audit --format markdown --out ./audit/security-report.md --out-dir ./audit/security-bundle` | [`README.md`](../README.md) |
 | Extract specific fields from evaluation output | `stave apply --template '{{.Summary.Violations}} violations'` | [`README.md`](../README.md) |
@@ -207,7 +207,7 @@ Stave provides these commands:
 | `validate` | Input correctness | Before evaluation, verify inputs are sound |
 | `apply` | Enforcement | Detect violations, produce findings |
 | `diagnose` | Explanation | Understand unexpected results |
-| `trace` | Predicate debugging | Step-by-step PASS/FAIL trace of a single control against a single resource |
+| `trace` | Predicate debugging | Step-by-step PASS/FAIL trace of a single control against a single asset |
 | `security-audit` | Tool self-audit | Generate enterprise-ready security evidence bundle and gate by severity |
 | `doctor` | Environment readiness | Check prerequisites before first run |
 | `init` | Project scaffolding | Create project structure with `--profile`, `--dir`, `--capture-cadence` |
@@ -221,11 +221,11 @@ For snapshot operations, use the lifecycle command set:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `snapshot upcoming` | Chronological next actions | Generate due-now/due-soon/overdue items from current unsafe resources |
+| `snapshot upcoming` | Chronological next actions | Generate due-now/due-soon/overdue items from current unsafe assets |
 | `snapshot prune` | Retention enforcement | Remove stale snapshots so `observations/` remains bounded |
 | `snapshot archive` | Audit-preserving retention | Move stale snapshots to archive directory instead of deleting |
 | `snapshot diff` | Snapshot drift comparison | Focus remediation on what changed between latest two snapshots |
-| `snapshot quality` | Snapshot quality gate | Warn/fail on sparse, stale, or missing-key-resource snapshots |
+| `snapshot quality` | Snapshot quality gate | Warn/fail on sparse, stale, or missing-key-asset snapshots |
 | `snapshot hygiene` | Weekly lifecycle report | Generate markdown with snapshot totals, retention posture, violations, upcoming items, and trend vs last week |
 | `ci baseline save/check` | Fail-on-new CI policy | Preserve accepted findings and fail only on newly introduced findings |
 | `ci gate` | CI policy enforcement | Apply configurable fail modes (`any`, `new`, `overdue`) |
@@ -236,7 +236,7 @@ For snapshot operations, use the lifecycle command set:
 | `context use/show` | Context defaults | Set/show named project defaults for controls/observations/config paths |
 | `fmt` | Deterministic formatting | Canonicalize control YAML and observation JSON files |
 | `generate` | Starter artifact generation | Create minimal control or observation templates quickly |
-| `graph coverage` | Coverage visualization | Show which controls cover which resources (DOT or JSON output) |
+| `graph coverage` | Coverage visualization | Show which controls cover which assets (DOT or JSON output) |
 | `report` | Evaluation report | Generate plain-text markdown report from evaluation output, with TSV findings for unix pipes |
 | `alias ...` | Command aliases | `alias set|list|delete` for user-defined command shortcuts |
 | `enforce` | Remediation artifacts | Generate PAB/SCP templates from evaluation output |
@@ -262,7 +262,7 @@ validate → plan → apply → diagnose
 1. **validate** - Run first to catch input errors early (malformed YAML, missing fields, timestamp issues)
 2. **apply** - Run to detect safety violations and produce findings
 3. **diagnose** - Run when evaluation output differs from what you expected from your controls, snapshots, or prior runs
-4. **trace** - Run for clause-level detail on why a specific control matched or didn't match a single resource
+4. **trace** - Run for clause-level detail on why a specific control matched or didn't match a single asset
 
 ## Snapshot Lifecycle Workflow
 
@@ -378,7 +378,7 @@ stave snapshot archive --observations ./observations --archive-dir ./observation
 stave snapshot diff --observations ./observations --format json --out output/diff.json
 
 # Diff filters for focused triage
-stave snapshot diff --observations ./observations --change-type modified --resource-type res:aws:s3:bucket --asset-id prod-
+stave snapshot diff --observations ./observations --change-type modified --asset-type res:aws:s3:bucket --asset-id prod-
 
 # Quality gate before evaluation
 stave snapshot quality --observations ./observations --strict
@@ -518,7 +518,7 @@ stave validate [flags]
 | Category | Checks |
 |----------|--------|
 | Controls | Schema validation, required fields (id, name, description), ID format |
-| Observations | Schema validation, timestamps, resource IDs |
+| Observations | Schema validation, timestamps, asset IDs |
 | Time sanity | Snapshots sorted, unique timestamps, --now >= latest snapshot |
 | Consistency | Predicate references valid params, duration feasibility |
 
@@ -562,7 +562,7 @@ WARNING: RESOURCE_SINGLE_APPEARANCE
   Fix: Duration tracking requires resource to appear in multiple snapshots
 
 ---
-Checked: 2 controls, 2 snapshots, 3 resources
+Checked: 2 controls, 2 snapshots, 3 assets
 ```
 
 **Output Format (JSON):**
@@ -595,7 +595,7 @@ Checked: 2 controls, 2 snapshots, 3 resources
 | `NOW_BEFORE_SNAPSHOTS` | error | `--now` must be at or after the latest snapshot |
 | `SINGLE_SNAPSHOT` | warning | Only 1 snapshot (need 2+ for duration tracking) |
 | `SPAN_LESS_THAN_MAX_UNSAFE` | warning | Snapshot span shorter than threshold |
-| `CONTROL_NEVER_MATCHES` | warning | No resources match unsafe_predicate |
+| `CONTROL_NEVER_MATCHES` | warning | No assets match unsafe_predicate |
 
 ### apply
 
@@ -892,19 +892,19 @@ Command:  stave apply --max-unsafe 48h
 |--------|---------|--------|
 | Threshold exceeds observed unsafe duration | Resources are unsafe but not long enough | Lower `--max-unsafe` |
 | Time span shorter than threshold | Snapshot coverage window is shorter than the configured threshold | Collect more snapshots |
-| No resources matched unsafe_predicate | Predicate doesn't match any resources | Check extractor or predicate |
+| No assets matched unsafe_predicate | Predicate doesn't match any assets | Check extractor or predicate |
 | Evaluation time before latest snapshot | `--now` is set incorrectly | Fix `--now` timestamp |
 | Streak reset detected | Resource became safe briefly | Expected behavior |
 
 ### graph coverage
 
-Shows which controls cover which resources by testing each control's `unsafe_predicate` against resources from the latest observation snapshot.
+Shows which controls cover which assets by testing each control's `unsafe_predicate` against assets from the latest observation snapshot.
 
 ```bash
 stave graph coverage [flags]
 ```
 
-**Purpose:** Visualize policy coverage — find uncovered resources, see control scope, and understand protection density.
+**Purpose:** Visualize policy coverage — find uncovered assets, see control scope, and understand protection density.
 
 **Flags:**
 
@@ -914,7 +914,7 @@ stave graph coverage [flags]
 | `--observations` | `observations` | Path to observation snapshots directory |
 | `--format` | `dot` | Output format: `dot` or `json` |
 | `--allow-unknown-input` | `false` | Allow observations with unknown source types |
-| `--sanitize` | `false` | Sanitize resource identifiers (global flag) |
+| `--sanitize` | `false` | Sanitize asset identifiers (global flag) |
 
 **Examples:**
 
@@ -928,21 +928,21 @@ stave graph coverage --controls ./controls --observations ./obs | dot -Tpng > co
 # JSON output for scripting
 stave graph coverage --controls ./controls --observations ./obs --format json | jq .
 
-# Sanitize resource identifiers for sharing
+# Sanitize asset identifiers for sharing
 stave graph coverage --controls ./controls --observations ./obs --sanitize
 ```
 
 **DOT output** includes:
 - Control nodes (lightblue) in a cluster
-- Resource nodes in a cluster (uncovered resources highlighted in lightyellow)
-- Directed edges from controls to matching resources
+- Resource nodes in a cluster (uncovered assets highlighted in lightyellow)
+- Directed edges from controls to matching assets
 
 **JSON output** structure:
 
 ```json
 {
   "controls": ["CTL.S3.PUBLIC.001", "..."],
-  "resources": ["res:aws:s3:bucket:prod-data", "..."],
+  "assets": ["res:aws:s3:bucket:prod-data", "..."],
   "edges": [
     {"control_id": "CTL.S3.PUBLIC.001", "resource_id": "res:aws:s3:bucket:prod-data"}
   ],
@@ -1424,7 +1424,7 @@ stave lint controls/s3/CTL.S3.PUBLIC.001.yaml
 
 ### trace
 
-Step-by-step PASS/FAIL trace of a single control against a single resource. Use for debugging why a control matches or doesn't match.
+Step-by-step PASS/FAIL trace of a single control against a single asset. Use for debugging why a control matches or doesn't match.
 
 ```bash
 stave trace [flags]
@@ -1711,7 +1711,7 @@ Fields resolve by struct field name or JSON tag name.
 ```bash
 # Count violations
 stave apply --controls ./controls --observations ./obs \
-  --template '{{.Summary.Violations}} violations, {{.Summary.ResourcesEvaluated}} resources'
+  --template '{{.Summary.Violations}} violations, {{.Summary.AssetsEvaluated}} assets'
 
 # CSV of violated control + resource
 stave apply --controls ./controls --observations ./obs \
@@ -1751,7 +1751,7 @@ Observations capture the state of your infrastructure at a point in time.
     "provider_version": "5.31.0"
   },
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "res:aws:s3:bucket:my-bucket",
       "type": "storage_bucket",
@@ -1775,8 +1775,8 @@ Observations capture the state of your infrastructure at a point in time.
 |-------|-------------|
 | `schema_version` | Must be `obs.v0.1` |
 | `captured_at` | RFC3339 timestamp of when snapshot was taken |
-| `resources[].id` | Unique resource identifier |
-| `resources[].type` | Resource type (e.g., `storage_bucket`) |
+| `assets[].id` | Unique asset identifier |
+| `assets[].type` | Asset type (e.g., `storage_bucket`) |
 | `generated_by.source_type` | Required unless `--allow-unknown-input` is set |
 
 **Optional Fields:**
@@ -1792,7 +1792,7 @@ Observations capture the state of your infrastructure at a point in time.
 
 ### Control Definitions
 
-Controls define safety rules that resources must satisfy.
+Controls define safety rules that assets must satisfy.
 
 **Location:** `controls/s3/` directory (or custom path via `--controls`)
 
@@ -1802,7 +1802,7 @@ Controls define safety rules that resources must satisfy.
 dsl_version: ctrl.v1
 id: CTL.EXP.DURATION.001
 name: Unsafe Duration Bound
-description: A resource must not remain unsafe beyond the configured time window.
+description: An asset must not remain unsafe beyond the configured time window.
 type: unsafe_duration
 params:
   max_unsafe_duration: "168h"
@@ -1824,7 +1824,7 @@ unsafe_predicate:
 
 **Predicate Rules:**
 
-Each rule in `unsafe_predicate.any` checks a resource property:
+Each rule in `unsafe_predicate.any` checks an asset property:
 
 ```yaml
 unsafe_predicate:
@@ -1876,7 +1876,7 @@ Use dot notation to access nested properties:
     {
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Duration Bound",
-      "control_description": "A resource must not remain unsafe beyond the configured time window.",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
       "resource_id": "res:aws:s3:bucket:public-bucket",
       "resource_type": "storage_bucket",
       "resource_vendor": "aws",
@@ -1912,7 +1912,7 @@ Use dot notation to access nested properties:
 - `violations`: Resources exceeding threshold
 
 **findings[]:** Violation details
-- `evidence.first_unsafe_at`: When resource first became unsafe
+- `evidence.first_unsafe_at`: When asset first became unsafe
 - `evidence.last_seen_unsafe_at`: Most recent unsafe observation
 - `evidence.unsafe_duration_hours`: How long resource has been unsafe
 - `evidence.threshold_hours`: Configured maximum
@@ -1921,22 +1921,22 @@ Use dot notation to access nested properties:
 
 ### Unsafe Duration Tracking
 
-Stave tracks how long each resource has been continuously unsafe:
+Stave tracks how long each asset has been continuously unsafe:
 
 1. **Load snapshots** ordered by `captured_at`
-2. **Build timeline** for each resource across snapshots
+2. **Build timeline** for each asset across snapshots
 3. **Track unsafe windows**:
    - When resource matches `unsafe_predicate` → start/continue window
-   - When resource becomes safe → reset window
+   - When asset becomes safe → reset window
 4. **Report violations** where `unsafe_duration > max_unsafe`
 
 ### Window Reset Behavior
 
-If a resource becomes safe and then unsafe again, the timer resets:
+If an asset becomes safe and then unsafe again, the timer resets:
 
 ```
 Snapshot 1 (Jan 1):  public=true   → unsafe window starts
-Snapshot 2 (Jan 10): public=false  → window RESETS (resource is safe)
+Snapshot 2 (Jan 10): public=false  → window RESETS (asset is safe)
 Snapshot 3 (Jan 11): public=true   → NEW unsafe window starts (only 1 day)
 ```
 
@@ -2034,14 +2034,14 @@ echo "Generated: $OUTPUT"
 
 ### Unexpected violations
 
-1. Check if resource was briefly safe (resets the window)
+1. Check if asset was briefly safe (resets the window)
 2. Verify `--now` time if using deterministic mode
 3. Review `evidence.first_unsafe_at` in output
 
 ### Empty findings array
 
 This is normal when:
-- No resources match the `unsafe_predicate`
+- No assets match the `unsafe_predicate`
 - Matching resources haven't exceeded `max_unsafe`
 - Resources became safe before the threshold
 
@@ -2191,7 +2191,7 @@ stave apply --profile mvp1-s3 --input observations.json
 
 ### Terraform Resource Types Supported
 
-The S3 extractor handles these Terraform resource types:
+The S3 extractor handles these Terraform asset types:
 
 | Terraform Resource Type | Fields Extracted |
 |------------------------|-----------------|
@@ -2274,7 +2274,7 @@ If `protected_prefixes` is left empty, the control reports a violation with conf
 1. If `protected_prefixes` is empty, the control reports a `not_configured` violation with example configuration.
 2. If any protected prefix overlaps with an allowed prefix, a `config_overlap` violation is reported immediately.
 3. For each protected prefix, the evaluator checks:
-   - **Bucket policies**: Does any `Allow` statement grant `s3:GetObject` to `Principal: "*"` for a resource ARN that covers this prefix?
+   - **Bucket policies**: Does any `Allow` statement grant `s3:GetObject` to `Principal: "*"` for an asset ARN that covers this prefix?
    - **Public access block**: Does `BlockPublicPolicy` negate policy-based exposure?
    - **ACL grants**: Do any grants to `AllUsers` or `AuthenticatedUsers` allow `READ` or `FULL_CONTROL`?
    - **Missing evidence**: If no policy or ACL data exists, the prefix is treated as exposed (fail-closed).

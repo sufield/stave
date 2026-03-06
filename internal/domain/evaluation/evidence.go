@@ -27,11 +27,11 @@ func (rc RootCause) String() string {
 //   - Duration controls: FirstUnsafeAt, LastSeenUnsafeAt, UnsafeDurationHours, ThresholdHours
 //   - Recurrence controls: EpisodeCount, WindowDays, RecurrenceLimit, FirstEpisodeAt, LastEpisodeAt
 type Evidence struct {
-	// FirstUnsafeAt is when the resource first entered the unsafe state (duration controls).
+	// FirstUnsafeAt is when the asset first entered the unsafe state (duration controls).
 	FirstUnsafeAt time.Time `json:"first_unsafe_at,omitzero"`
-	// LastSeenUnsafeAt is when the resource was last observed in an unsafe state.
+	// LastSeenUnsafeAt is when the asset was last observed in an unsafe state.
 	LastSeenUnsafeAt time.Time `json:"last_seen_unsafe_at,omitzero"`
-	// UnsafeDurationHours is how long the resource has been continuously unsafe.
+	// UnsafeDurationHours is how long the asset has been continuously unsafe.
 	UnsafeDurationHours float64 `json:"unsafe_duration_hours"`
 	// ThresholdHours is the configured maximum allowed unsafe duration.
 	ThresholdHours float64 `json:"threshold_hours"`
@@ -58,7 +58,7 @@ type Evidence struct {
 
 	// SourceEvidence contains pointers to the specific policy statements or ACL
 	// entries that caused the violation. Only populated when vendor evidence is
-	// available in the resource properties.
+	// available in the asset properties.
 	SourceEvidence *SourceEvidence `json:"source_evidence,omitempty"`
 
 	// WhyNow explains why this violation is being reported at this time.
@@ -102,7 +102,7 @@ type PostureDrift struct {
 }
 
 // ComputePostureDrift derives posture drift from an asset.Timeline.
-// Returns nil when the resource is not currently unsafe.
+// Returns nil when the asset is not currently unsafe.
 func ComputePostureDrift(timeline *asset.Timeline) *PostureDrift {
 	if timeline.CurrentlySafe() {
 		return nil

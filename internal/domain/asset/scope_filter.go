@@ -8,7 +8,7 @@ import (
 
 // AssetPredicate decides whether a single asset is in scope.
 type AssetPredicate interface {
-	IsInScope(resource Asset) bool
+	IsInScope(a Asset) bool
 }
 
 // scopeFilter is the private implementation of AssetPredicate.
@@ -19,7 +19,7 @@ type scopeFilter struct {
 	requiredKeys map[string]struct{}            // keys where any non-empty value matches
 }
 
-// UniversalFilter is a null-object predicate that admits all resources.
+// UniversalFilter is a null-object predicate that admits all assets.
 var UniversalFilter AssetPredicate = &scopeFilter{includeAll: true}
 
 var _ AssetPredicate = (*scopeFilter)(nil)
@@ -113,17 +113,17 @@ func hasNoScopeConstraints(allowlist []string, tagSpecs map[string][]string) boo
 	return len(allowlist) == 0 && len(tagSpecs) == 0
 }
 
-// IsInScope checks if a resource is in the healthcare scope.
-func (f *scopeFilter) IsInScope(resource Asset) bool {
+// IsInScope checks if an asset is in the healthcare scope.
+func (f *scopeFilter) IsInScope(a Asset) bool {
 	if f.isUniversal() {
 		return true
 	}
 
 	if f.hasAllowlist() {
-		return f.isAllowedByIdentity(resource)
+		return f.isAllowedByIdentity(a)
 	}
 
-	return f.satisfiesTagRequirements(resource)
+	return f.satisfiesTagRequirements(a)
 }
 
 func (f *scopeFilter) isUniversal() bool {
@@ -138,8 +138,8 @@ func (f *scopeFilter) isConstraintFree() bool {
 	return len(f.allowlist) == 0 && len(f.requiredTags) == 0 && len(f.requiredKeys) == 0
 }
 
-func (f *scopeFilter) isAllowedByIdentity(resource Asset) bool {
-	for _, identity := range resource.Identities() {
+func (f *scopeFilter) isAllowedByIdentity(a Asset) bool {
+	for _, identity := range a.Identities() {
 		if _, ok := f.allowlist[identity]; ok {
 			return true
 		}
@@ -147,15 +147,15 @@ func (f *scopeFilter) isAllowedByIdentity(resource Asset) bool {
 	return false
 }
 
-func (f *scopeFilter) satisfiesTagRequirements(resource Asset) bool {
+func (f *scopeFilter) satisfiesTagRequirements(a Asset) bool {
 	for key, allowedValues := range f.requiredTags {
-		if resource.HasTagMatch(key, allowedValues) {
+		if a.HasTagMatch(key, allowedValues) {
 			return true
 		}
 	}
 
 	for key := range f.requiredKeys {
-		if resource.HasTagMatch(key, nil) {
+		if a.HasTagMatch(key, nil) {
 			return true
 		}
 	}
@@ -182,19 +182,19 @@ func FilterSnapshots(predicate AssetPredicate, snapshots []Snapshot) []Snapshot 
 	return result
 }
 
-// FilteredBy returns a snapshot with resources retained by the given predicate.
-// The second return value reports whether any resources remain after filtering.
+// FilteredBy returns a snapshot with assets retained by the given predicate.
+// The second return value reports whether any assets remain after filtering.
 func (s Snapshot) FilteredBy(filter AssetPredicate) (Snapshot, bool) {
 	if filter == nil {
-		return s, len(s.Resources) > 0
+		return s, len(s.Assets) > 0
 	}
 
-	kept := fp.Filter(s.Resources, filter.IsInScope)
+	kept := fp.Filter(s.Assets, filter.IsInScope)
 	if len(kept) == 0 {
 		return Snapshot{}, false
 	}
 
-	s.Resources = kept
+	s.Assets = kept
 	return s, true
 }
 

@@ -6,7 +6,7 @@
     "tool_version": "1.9.8"
   },
   "captured_at": "2026-01-11T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "compliance-no-lock",
       "type": "aws_s3_bucket",

@@ -24,7 +24,7 @@ func TestObservationLoader_RejectsMissingSchemaVersion(t *testing.T) {
 	dir := t.TempDir()
 	content := `{
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": []
+  "assets": []
 }`
 	if err := os.WriteFile(filepath.Join(dir, "test.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -53,7 +53,7 @@ func TestObservationLoader_RejectsUnsupportedSchemaVersion(t *testing.T) {
 	content := `{
   "schema_version": "obs.v99.0",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": []
+  "assets": []
 }`
 	if err := os.WriteFile(filepath.Join(dir, "test.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -79,7 +79,7 @@ func TestObservationLoader_AcceptsSupportedSchemaVersion(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {"id": "res-1", "type": "test", "vendor": "aws", "properties": {}}
   ]
 }`
@@ -107,7 +107,7 @@ func TestObservationLoader_RejectsZeroCapturedAt(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "0001-01-01T00:00:00Z",
-  "resources": []
+  "assets": []
 }`
 	if err := os.WriteFile(filepath.Join(dir, "test.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -127,7 +127,7 @@ func TestObservationLoader_LoadSnapshotFromReader_RejectsZeroCapturedAt(t *testi
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "0001-01-01T00:00:00Z",
-  "resources": []
+  "assets": []
 }`
 
 	loader := NewObservationLoader()
@@ -141,13 +141,13 @@ func TestObservationLoader_LoadSnapshotFromReader_RejectsZeroCapturedAt(t *testi
 }
 
 // TestObservationLoader_RejectsMissingResourceVendor tests that schema validation
-// catches missing required fields in resources.
+// catches missing required fields in assets.
 func TestObservationLoader_RejectsMissingResourceVendor(t *testing.T) {
 	dir := t.TempDir()
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {"id": "res-1", "type": "test", "properties": {}}
   ]
 }`
@@ -174,7 +174,7 @@ func TestObservationLoader_RejectsMissingIdentityProperties(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [],
+  "assets": [],
   "identities": [
     {"id": "id-1", "type": "iam_role", "vendor": "aws"}
   ]
@@ -200,7 +200,7 @@ func TestObservationLoader_RejectsTopLevelIdentityFields(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [],
+  "assets": [],
   "identities": [
     {
       "id": "id-1",
@@ -230,7 +230,7 @@ func TestObservationLoader_RejectsWhitespaceVendor(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {"id": "res-1", "type": "storage_bucket", "vendor": "   ", "properties": {}}
   ]
 }`
@@ -253,7 +253,7 @@ func TestObservationLoader_IntegrityManifest_Success(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {"id": "res-1", "type": "storage_bucket", "vendor": "aws", "properties": {}}
   ]
 }`
@@ -293,7 +293,7 @@ func TestObservationLoader_IntegrityManifest_HashMismatch(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {"id": "res-1", "type": "storage_bucket", "vendor": "aws", "properties": {}}
   ]
 }`
@@ -335,7 +335,7 @@ func TestObservationLoader_SignedIntegrityManifest_Success(t *testing.T) {
 	content := `{
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {"id": "res-1", "type": "storage_bucket", "vendor": "aws", "properties": {}}
   ]
 }`

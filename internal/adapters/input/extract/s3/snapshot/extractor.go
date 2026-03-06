@@ -63,8 +63,8 @@ func (e *SnapshotExtractor) ExtractFromSnapshotWithTime(ctx context.Context, sna
 			continue
 		}
 
-		resource := e.observationToAsset(obs)
-		resources = append(resources, resource)
+		a := e.observationToAsset(obs)
+		resources = append(resources, a)
 	}
 
 	sort.Slice(resources, func(i, j int) bool {
@@ -102,7 +102,7 @@ func (e *SnapshotExtractor) wrapSnapshots(resources []asset.Asset, now time.Time
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: pastTime,
-		Resources:  resources,
+		Assets:     resources,
 	}
 	snapshot2 := asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
@@ -111,7 +111,7 @@ func (e *SnapshotExtractor) wrapSnapshots(resources []asset.Asset, now time.Time
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: now,
-		Resources:  resources,
+		Assets:     resources,
 	}
 	return []asset.Snapshot{snapshot1, snapshot2}
 }

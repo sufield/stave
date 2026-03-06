@@ -20,7 +20,7 @@ type ValidationInput struct {
 type ValidationSummary struct {
 	ControlsLoaded             int
 	SnapshotsLoaded            int
-	ResourceObservationsLoaded int
+	AssetObservationsLoaded int
 	IdentityObservationsLoaded int
 }
 
@@ -57,7 +57,7 @@ func ValidateLoaded(input ValidationInput) ValidationResult {
 		SnapshotsLoaded: len(input.Snapshots),
 	}
 	for _, snap := range input.Snapshots {
-		summary.ResourceObservationsLoaded += len(snap.Resources)
+		summary.AssetObservationsLoaded += len(snap.Assets)
 		summary.IdentityObservationsLoaded += len(snap.Identities)
 	}
 

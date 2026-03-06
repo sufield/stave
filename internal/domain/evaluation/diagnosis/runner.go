@@ -6,7 +6,7 @@ func Run(input Input) Report {
 	report := Report{Summary: summary}
 
 	if len(input.Findings) == 0 {
-		s := newSession(input, summary.TotalResources)
+		s := newSession(input, summary.TotalAssets)
 		report.Entries = append(report.Entries, s.diagnoseNoViolations()...)
 		report.Entries = append(report.Entries, s.diagnoseEmptyFindings()...)
 	} else {

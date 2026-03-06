@@ -16,9 +16,9 @@ func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 	if !snapshot.HasTimestamp() {
 		return fmt.Errorf("captured_at must be a non-zero RFC3339 timestamp")
 	}
-	for i := range snapshot.Resources {
-		if err := normalizeTypeAndVendor(&snapshot.Resources[i].Type, &snapshot.Resources[i].Vendor, "resources", i); err != nil {
-			return fmt.Errorf("normalize snapshot resources: %w", err)
+	for i := range snapshot.Assets {
+		if err := normalizeTypeAndVendor(&snapshot.Assets[i].Type, &snapshot.Assets[i].Vendor, "assets", i); err != nil {
+			return fmt.Errorf("normalize snapshot assets: %w", err)
 		}
 	}
 	for i := range snapshot.Identities {

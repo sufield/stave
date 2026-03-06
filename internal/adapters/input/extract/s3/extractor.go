@@ -58,7 +58,7 @@ func (e *Extractor) ExtractWithTime(ctx context.Context, data []byte, now time.T
 		return nil, fmt.Errorf("parse terraform plan: %w", err)
 	}
 
-	// Collect all S3-related resources in a single mutable state container.
+	// Collect all S3-related assets in a single mutable state container.
 	state := s3terraform.NewState()
 	if err := e.collectFromRootModule(ctx, plan.PlannedValues.RootModule.Resources, state); err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (e *Extractor) buildResourceSlices(state *s3terraform.State) []asset.Asset 
 		if e.ScopeConfig != nil && !e.ScopeConfig.IsHealthBucket(bucket.Tags, bucket.Name) {
 			continue
 		}
-		resources = append(resources, s3resource.BuildBucketResource(bucket, accountPAB))
+		resources = append(resources, s3resource.BuildBucketAsset(bucket, accountPAB))
 	}
 	return resources
 }
@@ -252,7 +252,7 @@ func (e *Extractor) wrapSnapshots(resources []asset.Asset, now time.Time) []asse
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: pastTime,
-		Resources:  resources,
+		Assets:     resources,
 	}
 
 	snapshot2 := asset.Snapshot{
@@ -262,7 +262,7 @@ func (e *Extractor) wrapSnapshots(resources []asset.Asset, now time.Time) []asse
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: now,
-		Resources:  resources,
+		Assets:     resources,
 	}
 
 	return []asset.Snapshot{snapshot1, snapshot2}

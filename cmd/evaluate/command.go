@@ -30,7 +30,7 @@ func init() {
 	ApplyCmd.Flags().BoolVar(&applyFlags.allowUnknownInput, "allow-unknown-input", cmdutil.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
 	ApplyCmd.Flags().StringVarP(&applyFlags.outputFormat, "format", "f", "json", "Output format: json, text, or sarif")
 	ApplyCmd.Flags().BoolVar(&applyFlags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
-	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to resource ignore list YAML file")
+	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
 	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
 	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
 	_ = ApplyCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))

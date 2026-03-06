@@ -33,7 +33,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
 					Type:   kernel.TypeStorageContainer,
@@ -63,7 +63,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
 					Type:   kernel.TypeStorageContainer,
@@ -105,8 +105,8 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 	if result.Summary.AttackSurface != 1 {
 		t.Errorf("Expected 1 currently unsafe, got %d", result.Summary.AttackSurface)
 	}
-	if result.Summary.ResourcesEvaluated != 2 {
-		t.Errorf("Expected 2 resources evaluated, got %d", result.Summary.ResourcesEvaluated)
+	if result.Summary.AssetsEvaluated != 2 {
+		t.Errorf("Expected 2 resources evaluated, got %d", result.Summary.AssetsEvaluated)
 	}
 
 	if len(result.Findings) != 1 {
@@ -150,7 +150,7 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "upload-policy-exact",
 					Type:   kernel.TypeUploadPolicy,
@@ -169,7 +169,7 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "upload-policy-exact",
 					Type:   kernel.TypeUploadPolicy,
@@ -221,7 +221,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
 					Type:   kernel.TypeStorageContainer,
@@ -238,7 +238,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
 					Type:   kernel.TypeStorageContainer,

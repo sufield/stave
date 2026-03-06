@@ -60,7 +60,7 @@ type JSONValidationReport struct {
 type JSONValidationSummary struct {
 	ControlsChecked             int `json:"controls_checked"`
 	SnapshotsChecked            int `json:"snapshots_checked"`
-	ResourceObservationsChecked int `json:"resource_observations_checked"`
+	AssetObservationsChecked int `json:"asset_observations_checked"`
 	IdentityObservationsChecked int `json:"identity_observations_checked"`
 }
 
@@ -198,10 +198,10 @@ func writeValidationSummary(w io.Writer, summary appservice.ValidationSummary) e
 	if _, err := fmt.Fprintln(w, "---"); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Checked: %d controls, %d snapshots, %d resource observations",
+	if _, err := fmt.Fprintf(w, "Checked: %d controls, %d snapshots, %d asset observations",
 		summary.ControlsLoaded,
 		summary.SnapshotsLoaded,
-		summary.ResourceObservationsLoaded); err != nil {
+		summary.AssetObservationsLoaded); err != nil {
 		return err
 	}
 	if summary.IdentityObservationsLoaded > 0 {
@@ -264,7 +264,7 @@ func buildJSONValidationReport(result *appservice.ValidationResult, opts *option
 		Summary: JSONValidationSummary{
 			ControlsChecked:             result.Summary.ControlsLoaded,
 			SnapshotsChecked:            result.Summary.SnapshotsLoaded,
-			ResourceObservationsChecked: result.Summary.ResourceObservationsLoaded,
+			AssetObservationsChecked: result.Summary.AssetObservationsLoaded,
 			IdentityObservationsChecked: result.Summary.IdentityObservationsLoaded,
 		},
 	}

@@ -16,7 +16,7 @@ Each control evaluates observation snapshots (JSON files in `obs.v0.1` format) t
 
 1. **Extraction** — The S3 extractor (`internal/adapters/input/extract/s3/`) parses raw AWS configuration data (Terraform plan JSON, API responses) and produces canonical observation fields under `properties.storage.*`. Policy analysis functions in `policy.go` compute boolean flags like `has_external_access`, `has_external_write`, `public_access_fully_blocked`, etc.
 
-2. **Evaluation** — The evaluator matches each resource against the control's `unsafe_predicate`. For `unsafe_state` controls, the predicate is a set of field/op/value conditions combined with `all` (AND) or `any` (OR) logic. A finding fires when every condition in an `all` block is true.
+2. **Evaluation** — The evaluator matches each asset against the control's `unsafe_predicate`. For `unsafe_state` controls, the predicate is a set of field/op/value conditions combined with `all` (AND) or `any` (OR) logic. A finding fires when every condition in an `all` block is true.
 
 ### Detection patterns by control category:
 

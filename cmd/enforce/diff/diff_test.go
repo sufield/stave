@@ -13,7 +13,7 @@ func TestComputeObservationDelta_DetectsAddedRemovedModified(t *testing.T) {
 
 	prev := asset.Snapshot{
 		CapturedAt: t1,
-		Resources: []asset.Asset{
+		Assets: []asset.Asset{
 			{
 				ID:     "res-a",
 				Type:   "bucket",
@@ -38,7 +38,7 @@ func TestComputeObservationDelta_DetectsAddedRemovedModified(t *testing.T) {
 
 	curr := asset.Snapshot{
 		CapturedAt: t2,
-		Resources: []asset.Asset{
+		Assets: []asset.Asset{
 			{
 				ID:     "res-a",
 				Type:   "bucket",
@@ -93,7 +93,7 @@ func TestNewDiffFilter_InvalidChangeType(t *testing.T) {
 }
 
 func TestApplyDiffFilter(t *testing.T) {
-	changes := []asset.ResourceDiff{
+	changes := []asset.AssetDiff{
 		{AssetID: "bucket-a", ChangeType: asset.ChangeAdded, ToType: "res:aws:s3:bucket"},
 		{AssetID: "bucket-b", ChangeType: asset.ChangeModified, FromType: "res:aws:s3:bucket", ToType: "res:aws:s3:bucket"},
 		{AssetID: "queue-a", ChangeType: asset.ChangeRemoved, FromType: "res:aws:sqs:queue"},

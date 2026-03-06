@@ -30,7 +30,7 @@ func TestAssessSnapshotQuality_StaleAndMissingRequired(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: time.Date(2026, 2, 18, 0, 0, 0, 0, time.UTC),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1"},
 			},
 		},
@@ -61,8 +61,8 @@ func TestAssessSnapshotQuality_StaleAndMissingRequired(t *testing.T) {
 func TestAssessSnapshotQuality_WarningStrictMode(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	snapshots := []asset.Snapshot{
-		{CapturedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), Resources: []asset.Asset{{ID: "res:1"}}},
-		{CapturedAt: time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC), Resources: []asset.Asset{{ID: "res:1"}}},
+		{CapturedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), Assets: []asset.Asset{{ID: "res:1"}}},
+		{CapturedAt: time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC), Assets: []asset.Asset{{ID: "res:1"}}},
 	}
 
 	reportWarn := assessQuality(qualityParams{

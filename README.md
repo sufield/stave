@@ -4,46 +4,26 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/branch/main/graph/badge.svg)](https://codecov.io/gh/sufield/stave)
 
-A configuration safety evaluator that detects cloud resources remaining unsafe for too long, using only local config snapshots without using any cloud credentials.
+A configuration safety evaluator that detects cloud assets remaining unsafe for too long, using only local config snapshots without using any cloud credentials.
 
 Design philosophy: [docs/design-philosophy.md](docs/design-philosophy.md)
 Quick onboarding: [docs/time-to-first-finding.md](docs/time-to-first-finding.md)
-
-## Go Report Card
-
-Stave is tracked on Go Report Card as module `github.com/sufield/stave`.
-
-- Badge: `https://goreportcard.com/badge/github.com/sufield/stave`
-- Report: `https://goreportcard.com/report/github.com/sufield/stave`
-
-Go Report Card is run by their hosted service.
-To refresh, visit the report URL above.
-
-CI enforces equivalent local quality gates in `.github/workflows/go-quality.yml`:
-
-- `go test ./...`
-- `go vet ./...`
-- `gofmt` check (fails on unformatted files)
-- `staticcheck ./...`
-
-Small differences can still happen because the hosted service may lag in indexing
-or evaluate module discovery slightly differently.
 
 ## Problem
 
 Infrastructure misconfigurations often go undetected until a breach occurs. Traditional security tools require cloud credentials and runtime access, creating additional attack surface. Stave solves this by:
 
 - Analyzing configuration snapshots locally, without cloud API access
-- Tracking how long resources remain in unsafe states over time
+- Tracking how long assets remain in unsafe states over time
 - Detecting repeated patterns of unsafe configurations (recurrence)
 - Enforcing safety controls before deployment
 
-## MVP Operating Assumption
+## MVP Assumption
 
 For MVP, Stave assumes teams are capturing snapshots from **production**
 environments to remediate **critical issues** quickly.
 
-This assumption drives lifecycle behavior:
+This drives lifecycle behavior:
 
 - Snapshot schedules prioritize near-term remediation (`stave snapshot upcoming`)
 - Retention defaults favor current risk over long history (`stave snapshot prune`)
@@ -55,20 +35,20 @@ This assumption drives lifecycle behavior:
 
 | Term | Definition |
 |------|------------|
-| **Snapshot** | A point-in-time observation of infrastructure resources, captured as JSON |
+| **Snapshot** | A point-in-time observation of infrastructure assets, captured as JSON |
 | **Resource** | A single infrastructure component (e.g., S3 bucket, IAM role) with properties |
-| **Control** | A safety rule that resources must satisfy (defined in YAML) |
-| **Unsafe Predicate** | Conditions that mark a resource as unsafe (e.g., `public: true`) |
+| **Control** | A safety rule that assets must satisfy (defined in YAML) |
+| **Unsafe Predicate** | Conditions that mark an asset as unsafe (e.g., `public: true`) |
 | **Violation Event** | A detected violation with evidence and remediation guidance (serialized under the `findings` output field) |
-| **Episode** | A contiguous period where a resource remained unsafe |
-| **Max Unsafe Duration** | Maximum time a resource may remain unsafe before violation |
+| **Episode** | A contiguous period where an asset remained unsafe |
+| **Max Unsafe Duration** | Maximum time an asset may remain unsafe before violation |
 | **Recurrence** | Repeated unsafe episodes within a time window |
 
 ## Download
 
 Pre-built signed binaries are available from [GitHub Releases](https://github.com/sufield/stave/releases).
 
-Platform-native install paths (publish when ready):
+Platform-native install paths:
 
 ```bash
 # macOS (Homebrew tap)
@@ -226,7 +206,7 @@ Stave provides these commands:
 | `explain` | Control field requirements | Show what fields a control needs from observations |
 | `lint` | Control quality checks | Validate control design quality rules |
 | `diagnose` | Explanation | Understand unexpected results |
-| `trace` | Predicate debugging | Step-by-step PASS/FAIL trace of a single control against a single resource |
+| `trace` | Predicate debugging | Step-by-step PASS/FAIL trace of a single control against a single asset |
 | `snapshot ...` | Snapshot lifecycle | `snapshot upcoming|diff|prune|archive|quality|hygiene` |
 | `ci ...` | CI policy + baseline + fix verification loop | `ci baseline ...`, `ci gate`, `ci fix-loop` |
 | `config ...` | Project config management | `config show|get|set` for effective values and updates |
@@ -310,7 +290,7 @@ stave context use prod --controls ./controls --observations ./observations --con
 # 5) Explain unexpected outcomes
 stave diagnose --controls ./controls --observations ./observations --previous-output output/evaluation.json
 
-# 5a) Trace a single control against a single resource for clause-level detail
+# 5a) Trace a single control against a single asset for clause-level detail
 stave trace --control CTL.S3.PUBLIC.001 --observation observations/2026-01-15T00:00:00Z.json --asset-id my-bucket
 
 # 6) Continue where you left off
@@ -363,7 +343,7 @@ stave snapshot prune --observations ./observations --dry-run --format json
 stave snapshot diff --observations ./observations --format json --out output/diff.json
 
 # Focus drift triage on specific change/resource slices
-stave snapshot diff --observations ./observations --change-type modified --resource-type res:aws:s3:bucket --asset-id prod-
+stave snapshot diff --observations ./observations --change-type modified --asset-type res:aws:s3:bucket --asset-id prod-
 
 # Save and enforce a baseline (fail only on newly introduced findings)
 stave ci baseline save --in output/evaluation.json --out output/baseline.json
@@ -426,7 +406,7 @@ cli_defaults:
 ```
 
 `stave init` also scaffolds `cli.yaml` with commented keys
-so teams can uncomment it per project shell.
+so you can uncomment it per project shell.
 
 Resolution precedence for defaults:
 1. Explicit flags
@@ -763,7 +743,7 @@ Place snapshot files in the observations directory. Each file represents a point
     "tool_version": "1.6.3"
   },
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "res:aws:s3:bucket:my-bucket",
       "type": "storage_bucket",
@@ -785,24 +765,12 @@ The `generated_by` field is validated by default. Use `--allow-unknown-input` to
 
 ### Supported Source Types
 
-Stave validates the `generated_by.source_type` field against a built-in allowlist. **Supported** types have shipped controls and extractors. **Preview** types are accepted by the engine but have no shipped control packs. Use `--allow-unknown-input` for custom types not in this list.
+Stave validates the `generated_by.source_type` field against a built-in allowlist. Use `--allow-unknown-input` for custom types not in this list.
 
-| Source Type | Status | Description |
-|-------------|--------|-------------|
-| `terraform.plan_json` | Supported | Terraform plan JSON output (`terraform show -json`) |
-| `kubernetes.manifest` | Preview | Kubernetes YAML manifest files |
-| `kubernetes.rbac` | Preview | Kubernetes RBAC configuration files |
-| `gitlab` | Preview | GitLab CI configuration files |
-| `keycloak` | Preview | Keycloak realm export JSON files |
-| `oidc` | Preview | Generic OIDC/SSO configuration files |
-| `secrets` | Preview | Secret detection in configuration files |
-| `jenkins` | Preview | Jenkins pipeline files |
-| `wordpress` | Preview | WordPress installation files |
-| `drupal` | Preview | Drupal installation files |
-| `joomla` | Preview | Joomla installation files |
-| `woocommerce` | Preview | WooCommerce installation files |
-| `shopware` | Preview | Shopware 6 installation files |
-| `saleor` | Preview | Saleor headless commerce installation files |
+| Source Type | Description |
+|-------------|-------------|
+| `terraform.plan_json` | Terraform plan JSON output (`terraform show -json`, >= v1.5.0) |
+| `aws-s3-snapshot` | S3 snapshot JSON observations (via `stave ingest`) |
 
 Run `stave capabilities` to see the current allowlist.
 
@@ -814,7 +782,7 @@ Controls define safety rules. Stave includes a core pack and supports custom pac
 dsl_version: ctrl.v1
 id: CTL.EXP.DURATION.001
 name: Unsafe Duration Bound
-description: A resource must not remain unsafe beyond the configured time window.
+description: An asset must not remain unsafe beyond the configured time window.
 type: unsafe_duration
 unsafe_predicate:
   any:
@@ -926,7 +894,7 @@ Set `params.max_unsafe_duration` in an control YAML to override the CLI default 
 dsl_version: ctrl.v1
 id: CTL.CUSTOM.PII.001
 name: PII Exposure Duration
-description: PII resources must not remain public beyond 24 hours.
+description: PII assets must not remain public beyond 24 hours.
 type: unsafe_duration
 params:
   max_unsafe_duration: "24h"  # Overrides CLI --max-unsafe
@@ -1058,7 +1026,7 @@ Use exit codes for CI/CD integration:
 ```bash
 # Simple pass/fail check
 if stave apply --quiet --controls ./controls --observations ./obs; then
-  echo "All resources are safe"
+  echo "All assets are safe"
 else
   echo "Violations found (exit code: $?)"
   exit 1
@@ -1259,15 +1227,41 @@ pre-commit run --all-files
 
 ```
 stave/
-├── cmd/stave/           # CLI entry point
-│   └── cmd/             # Cobra commands
+├── cmd/
+│   ├── stave/              # CLI entry point (main.go)
+│   ├── evaluate/           # apply, validate, verify commands
+│   ├── enforce/            # enforce, diff, fix, graph, gate commands
+│   ├── diagnose/           # diagnose command + trace, report
+│   ├── ingest/             # ingest command (AWS → observation)
+│   ├── initcmd/            # init, config, context, env commands
+│   ├── prune/              # archive, cleanup, hygiene, snapshot commands
+│   ├── fixtures/           # demo, quickstart scaffolding
+│   ├── cmdutil/            # shared CLI helpers
+│   └── templates/          # report templates
 ├── internal/
-│   ├── domain/          # Core business logic (evaluator, predicates)
-│   ├── app/             # Use case orchestration
-│   └── adapters/        # Input/output adapters
-│       ├── input/       # YAML/JSON loaders
-│       └── out/         # JSON writer
-└── controls/          # Control definition packs
+│   ├── domain/             # Core domain logic
+│   │   ├── asset/          # Asset, Snapshot, Timeline, Episode
+│   │   ├── evaluation/     # Result, Finding, Remediation, Diagnosis
+│   │   ├── policy/         # ControlDefinition, Predicate, Exemption
+│   │   ├── kernel/         # Shared value objects (ControlID, AssetType)
+│   │   └── predicate/      # Predicate evaluation engine
+│   ├── app/                # Use-case orchestration
+│   │   ├── eval/           # Evaluation workflow
+│   │   ├── diagnose/       # Diagnosis workflow
+│   │   ├── ingest/         # Ingestion workflow
+│   │   ├── capabilities/   # Source-type registry
+│   │   └── service/        # Cross-cutting services
+│   ├── adapters/           # I/O adapters
+│   │   ├── input/          # YAML/JSON loaders, built-in controls
+│   │   └── output/         # JSON/SARIF writers, sanitization
+│   ├── trace/              # Predicate trace engine
+│   ├── sanitize/           # Output sanitization
+│   ├── compliance/         # Compliance framework mappings
+│   └── platform/           # Filesystem, crypto, logging utilities
+├── controls/s3/            # S3 control pack (43 YAML files)
+├── schemas/                # JSON Schema source of truth
+├── examples/               # Example observations + controls
+└── testdata/               # Unit + e2e test fixtures
 ```
 
 ## Supply-Chain Security
@@ -1292,15 +1286,15 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [docs/trust/02-relea
 The following applies to `unsafe_duration` and `unsafe_recurrence` control types:
 
 1. Load snapshots from `--observations` directory, sorted by `captured_at`
-2. For each control, build per-resource timelines tracking unsafe periods
-3. When a resource transitions safe-to-unsafe, start an episode
-4. When a resource transitions unsafe-to-safe, close the episode
+2. For each control, build per-asset timelines tracking unsafe periods
+3. When an asset transitions safe-to-unsafe, start an episode
+4. When an asset transitions unsafe-to-safe, close the episode
 5. For `unsafe_duration` controls: emit finding if `unsafe_duration > max_unsafe`
 6. For `unsafe_recurrence` controls: emit finding if `episode_count >= recurrence_limit` within window
 
 ### Unsafe Streak Reset
 
-When a resource becomes safe and later becomes unsafe again, the duration window resets:
+When an asset becomes safe and later becomes unsafe again, the duration window resets:
 
 ```
 Unsafe (Jan 1) → Safe (Jan 5) → Unsafe (Jan 10)
@@ -1382,7 +1376,7 @@ stave apply --profile mvp1-s3 --input observations.json
 
 ## S3 Terraform Plan Extraction
 
-The `ingest --profile mvp1-s3` command converts AWS S3 snapshots into Stave observations. The S3 extractor handles these Terraform resource types:
+The `ingest --profile mvp1-s3` command converts AWS S3 snapshots into Stave observations. The S3 extractor handles these Terraform asset types:
 
 | Terraform Resource Type | Fields Extracted |
 |------------------------|-----------------|
@@ -1471,8 +1465,8 @@ unsafe_predicate:
 
 ## Documentation
 
-- [System Controls as Code](docs/system-controls-as-code.md) — What Stave proves, formal model, and alternatives positioning
-- [Authoring Controls](docs/authoring-controls.md) — Create custom controls by editing YAML definitions, with no Stave core changes required
+- [System Invariants as Code](docs/system-controls-as-code.md) — What Stave proves, formal model, and alternatives positioning
+- [Authoring Invariants](docs/authoring-controls.md) — Create custom controls by editing YAML definitions, with no Stave core changes required
 - [Observation Contract](docs/observation-contract.md) — Stable `obs.v0.1` contract and field dictionary
 - [Contracts](docs/contracts.md) — Contract-first schemas for controls, observations, and findings
 - `docs/schema/out.v0.1.md` — Evaluation output contract reference (`out.v0.1`)
@@ -1483,7 +1477,7 @@ unsafe_predicate:
 - `docs/e2e.md` — End-to-end test framework
 - `docs/control-spec.md` — Control and observation schema specification
 
-### System Controls as Code
+### System Invariants as Code
 
 Stave treats safety checks as controls over observed system state, alongside static lint rules, with snapshot-time context.
 It focuses on deterministic, offline proofs from local snapshots.
@@ -1493,9 +1487,9 @@ How it differs from common alternatives:
 - tfsec/Checkov: IaC scanners; Stave evaluates normalized observed state snapshots.
 - CSPM: credentialed continuous cloud monitoring; Stave is offline and local-file driven.
 
-### Authoring controls
+### Authoring Invariants
 
-You can author new controls by editing YAML, without modifying the code for Stave.
+You can author new invariants by editing YAML, without modifying the code for Stave.
 Start with boundary-first rules, validate, evaluate, fix, and re-run:
 - Guide: `docs/authoring-controls.md`
 

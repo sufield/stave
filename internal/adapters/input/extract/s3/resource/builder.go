@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// BuildBucketResource converts a bucket model into a normalized asset.Asset.
-func BuildBucketResource(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAccessBlock) asset.Asset {
+// BuildBucketAsset converts a bucket model into a normalized asset.Asset.
+func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAccessBlock) asset.Asset {
 	analysis := bucket.Analyze()
 	effectivePAB := computeEffectivePAB(accountPAB, bucket.PublicAccessBlock)
 

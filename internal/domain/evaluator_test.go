@@ -24,7 +24,7 @@ func mustParseTime(s string) time.Time {
 }
 
 // TestEvaluator_UnsafeDurationViolation tests that violations are detected
-// when resources remain unsafe longer than the configured threshold.
+// when assets remain unsafe longer than the configured threshold.
 func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 	ctl := policy.ControlDefinition{
 		ID:          "CTL.EXP.DURATION.001",
@@ -43,7 +43,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
 					Type:       kernel.TypeStorageBucket,
@@ -54,7 +54,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
 					Type:       kernel.TypeStorageBucket,
@@ -65,7 +65,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
 					Type:       kernel.TypeStorageBucket,
@@ -120,7 +120,7 @@ func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
 					Properties: map[string]any{"public": true},
@@ -142,7 +142,7 @@ func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
 }
 
 // TestEvaluator_SafeInLatestSnapshot tests that no violations are reported
-// when a resource that was previously unsafe becomes safe in the latest snapshot.
+// when an asset that was previously unsafe becomes safe in the latest snapshot.
 func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 	ctl := policy.ControlDefinition{
 		ID:   "CTL.EXP.DURATION.001",
@@ -159,7 +159,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "bucket",
 					Properties: map[string]any{"public": true}, // unsafe
@@ -168,7 +168,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "bucket",
 					Properties: map[string]any{"public": false}, // now safe
@@ -194,7 +194,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 }
 
 // TestEvaluator_UnsafeStreakReset tests that unsafe duration tracking resets
-// when a resource transitions from unsafe to safe and back to unsafe again.
+// when an asset transitions from unsafe to safe and back to unsafe again.
 func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 	ctl := policy.ControlDefinition{
 		ID:   "CTL.EXP.DURATION.001",
@@ -212,19 +212,19 @@ func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}}, // safe
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}}, // unsafe again
 			},
 		},
@@ -283,7 +283,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
 					Type:       kernel.TypeStorageBucket,
@@ -294,7 +294,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-03T00:00:00Z"), // 2 days later
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
 					Type:       kernel.TypeStorageBucket,
@@ -358,13 +358,13 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"), // 9 days later
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -407,13 +407,13 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -475,13 +475,13 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -521,7 +521,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 	}
 }
 
-// TestEvaluator_AbsenceDoesNotCloseepisode tests that a resource missing from a
+// TestEvaluator_AbsenceDoesNotCloseepisode tests that an asset missing from a
 // snapshot does NOT close an open episode. Absence means "no new evidence", not "safe".
 func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 	controls := []policy.ControlDefinition{
@@ -545,20 +545,20 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-02T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				// bucket is MISSING from this snapshot
 				{ID: "other-resource", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-03T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -607,31 +607,31 @@ func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}}, // episode 1 start
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-08T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}}, // episode 1 end
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-15T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}}, // episode 2 start
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-22T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}}, // episode 2 end
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-29T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}}, // episode 3 start (OPEN)
 			},
 		},
@@ -680,13 +680,13 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
@@ -723,13 +723,13 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-02T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
@@ -768,31 +768,31 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-08T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-15T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-22T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-29T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": true}},
 				},
 			},
@@ -836,35 +836,35 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 		// asset.Episode 1: Jan 1 - unsafe
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 1 continues: Jan 5 - still unsafe (5 days total)
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 1 ends: Jan 6 - safe
 		{
 			CapturedAt: mustParseTime("2026-01-06T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// asset.Episode 2 starts: Jan 10 - unsafe again
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 2: Jan 11 - still unsafe (1 day in current episode)
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -907,28 +907,28 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 		// asset.Episode 1: Jan 1 - unsafe
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 1 ends: Jan 2 - safe
 		{
 			CapturedAt: mustParseTime("2026-01-02T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// asset.Episode 2 starts: Jan 10 - unsafe again
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 2: Jan 13 - still unsafe (3 days = 72h in current episode)
 		{
 			CapturedAt: mustParseTime("2026-01-13T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -973,25 +973,25 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-02T00:00:00Z"), // 1 day gap
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"), // 8 day gap (largest)
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-12T00:00:00Z"), // 2 day gap
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -1042,7 +1042,7 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 }
 
 // TestTimeline_CoverageWithAbsence tests that coverage metrics are not updated
-// when a resource is absent from a snapshot.
+// when an asset is absent from a snapshot.
 func TestTimeline_CoverageWithAbsence(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
@@ -1060,19 +1060,19 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Resources:  []asset.Asset{
+			Assets:  []asset.Asset{
 				// bucket is ABSENT
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -1124,13 +1124,13 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-03T00:00:00Z"), // 48h gap > 12h
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -1160,7 +1160,7 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 	}
 }
 
-// TestEvaluator_MissingResourceInconclusive tests that a resource that disappears
+// TestEvaluator_MissingResourceInconclusive tests that an asset that disappears
 // mid-episode results in INCONCLUSIVE (not PASS).
 func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 	controls := []policy.ControlDefinition{
@@ -1182,19 +1182,19 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-02T00:00:00Z"),
-			Resources:  []asset.Asset{
+			Assets:  []asset.Asset{
 				// bucket is ABSENT
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-03T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -1239,19 +1239,19 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -1274,7 +1274,7 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 }
 
 // TestEvaluator_AdequateCoveragePass tests that stable adequate coverage with safe
-// resource results in PASS.
+// asset results in PASS.
 func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 	controls := []policy.ControlDefinition{
 		{
@@ -1291,41 +1291,41 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 		},
 	}
 
-	// Adequate coverage (gaps <= 12h) with safe resource spanning 48h+
+	// Adequate coverage (gaps <= 12h) with safe asset spanning 48h+
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-01T10:00:00Z"), // 10h gap
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-01T20:00:00Z"), // 10h gap
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-02T06:00:00Z"), // 10h gap
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-02T16:00:00Z"), // 10h gap
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-03T02:00:00Z"), // 10h gap, total 50h span
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
@@ -1336,7 +1336,7 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	// Should be PASS (adequate coverage with gaps <= 12h, safe resource)
+	// Should be PASS (adequate coverage with gaps <= 12h, safe asset)
 	if len(result.Rows) != 1 {
 		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
 	}
@@ -1373,37 +1373,37 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-01T10:00:00Z"), // 10h gap
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-01T20:00:00Z"), // 10h gap
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-02T06:00:00Z"), // 10h gap
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-02T16:00:00Z"), // 10h gap
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-03T02:00:00Z"), // 10h gap, Total 50h span > 48h
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
@@ -1456,19 +1456,19 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-01T10:00:00Z"), // 10h gap
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-02T00:00:00Z"), // Total 24h span
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
@@ -1524,37 +1524,37 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		snapshots := []asset.Snapshot{
 			{
 				CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-01T10:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-01T20:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-02T06:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-02T16:00:00Z"),
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
 			{
 				CapturedAt: mustParseTime("2026-01-03T02:00:00Z"), // 50h span > 48h
-				Resources: []asset.Asset{
+				Assets: []asset.Asset{
 					{ID: "bucket", Properties: map[string]any{"public": false}},
 				},
 			},
@@ -1606,49 +1606,49 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 		// asset.Episode 1 start
 		{
 			CapturedAt: mustParseTime("2026-01-15T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 1 end
 		{
 			CapturedAt: mustParseTime("2026-01-20T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// asset.Episode 2 start
 		{
 			CapturedAt: mustParseTime("2026-02-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 2 end
 		{
 			CapturedAt: mustParseTime("2026-02-15T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// Safe period
 		{
 			CapturedAt: mustParseTime("2026-02-25T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// asset.Episode 3 start (still open at end-of-input)
 		{
 			CapturedAt: mustParseTime("2026-03-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		// asset.Episode 3 still open
 		{
 			CapturedAt: mustParseTime("2026-03-15T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
@@ -1705,39 +1705,39 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 		// asset.Episode 1 (outside window)
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// Long safe period
 		{
 			CapturedAt: mustParseTime("2026-02-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-03-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
 		// asset.Episode 2 (open, in window)
 		{
 			CapturedAt: mustParseTime("2026-04-01T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: mustParseTime("2026-04-10T00:00:00Z"),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},

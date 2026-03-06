@@ -3,7 +3,7 @@ Plan Summary
 Ready: false
 Controls: testdata/e2e/e2e-05-bad-schema-version/controls
 Observations: testdata/e2e/e2e-05-bad-schema-version/observations
-Checked: 0 controls, 0 snapshots, 0 resource observations
+Checked: 0 controls, 0 snapshots, 0 asset observations
 
 Issues:
   [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest

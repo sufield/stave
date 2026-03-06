@@ -2,7 +2,7 @@
   "schema_version": "obs.v0.1",
   "generated_by": { "source_type": "aws-s3-snapshot", "tool": "stave-e2e" },
   "captured_at": "2026-01-10T23:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "test-public-bucket",
       "type": "aws_s3_bucket",

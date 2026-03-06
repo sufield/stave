@@ -14,14 +14,14 @@ func TestComputeObservationDelta_DetectsChanges(t *testing.T) {
 
 	prev := asset.Snapshot{
 		CapturedAt: t1,
-		Resources: []asset.Asset{
+		Assets: []asset.Asset{
 			{ID: "res-a", Type: "bucket", Properties: map[string]any{"public": false}},
 			{ID: "res-b", Type: "bucket", Properties: map[string]any{"public": true}},
 		},
 	}
 	curr := asset.Snapshot{
 		CapturedAt: t2,
-		Resources: []asset.Asset{
+		Assets: []asset.Asset{
 			{ID: "res-a", Type: "bucket", Properties: map[string]any{"public": true}},
 			{ID: "res-c", Type: "bucket", Properties: map[string]any{"public": false}},
 		},
@@ -60,7 +60,7 @@ func TestDiffResources_DetectsPropertyChanges(t *testing.T) {
 		},
 	}
 
-	changes := asset.DiffResources(prev, curr)
+	changes := asset.DiffAssets(prev, curr)
 	if len(changes) != 2 {
 		t.Fatalf("expected 2 property changes, got %d", len(changes))
 	}
@@ -97,7 +97,7 @@ func TestLatestTwoSnapshots_InsufficientSnapshots(t *testing.T) {
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
-	changes := []asset.ResourceDiff{
+	changes := []asset.AssetDiff{
 		{ChangeType: asset.ChangeAdded},
 		{ChangeType: asset.ChangeAdded},
 		{ChangeType: asset.ChangeRemoved},

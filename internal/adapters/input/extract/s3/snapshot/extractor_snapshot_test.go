@@ -46,11 +46,11 @@ func TestSnapshotExtractor_PublicBucket(t *testing.T) {
 	}
 
 	snapshot := snapshots[1] // Use current snapshot
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	if resource.ID != "acme-patient-records" {
 		t.Errorf("expected bucket name 'acme-patient-records', got %q", resource.ID)
 	}
@@ -100,11 +100,11 @@ func TestSnapshotExtractor_PrivateBucket(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 
 	// Check public access block fully blocks
 	if fullyBlocked, ok := resource.Properties["public_access_fully_blocked"].(bool); !ok || !fullyBlocked {
@@ -134,7 +134,7 @@ func TestSnapshotExtractor_MissingPolicy(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 
 	// Check missing inputs
 	missing, ok := resource.Properties["missing_inputs"].([]string)
@@ -178,17 +178,17 @@ func TestSnapshotExtractor_Determinism(t *testing.T) {
 		t.Fatalf("second extraction failed: %v", err)
 	}
 
-	// Compare resource IDs
+	// Compare asset IDs
 	if len(snapshots1) != len(snapshots2) {
 		t.Fatalf("snapshot counts differ: %d vs %d", len(snapshots1), len(snapshots2))
 	}
 
 	for i := range snapshots1 {
-		if len(snapshots1[i].Resources) != len(snapshots2[i].Resources) {
+		if len(snapshots1[i].Assets) != len(snapshots2[i].Assets) {
 			t.Fatalf("resource counts differ in snapshot %d", i)
 		}
-		for j := range snapshots1[i].Resources {
-			if snapshots1[i].Resources[j].ID != snapshots2[i].Resources[j].ID {
+		for j := range snapshots1[i].Assets {
+			if snapshots1[i].Assets[j].ID != snapshots2[i].Assets[j].ID {
 				t.Errorf("resource IDs differ at snapshot %d, resource %d", i, j)
 			}
 		}
@@ -246,8 +246,8 @@ func TestSnapshotExtractor_HealthScopeFilter(t *testing.T) {
 	}
 
 	// Should include health-tagged bucket
-	if len(snapshots[0].Resources) != 1 {
-		t.Fatalf("expected 1 resource with health scope, got %d", len(snapshots[0].Resources))
+	if len(snapshots[0].Assets) != 1 {
+		t.Fatalf("expected 1 resource with health scope, got %d", len(snapshots[0].Assets))
 	}
 }
 
@@ -264,7 +264,7 @@ func TestSnapshotExtractor_IncludeAll(t *testing.T) {
 	}
 
 	// Should include all buckets when IncludeAll is true
-	if len(snapshots[0].Resources) == 0 {
+	if len(snapshots[0].Assets) == 0 {
 		t.Error("expected at least 1 resource with include-all")
 	}
 }

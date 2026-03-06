@@ -12,22 +12,22 @@ import (
 )
 
 // TestRun_NoViolations_ThresholdMismatch tests that diagnostics correctly identify
-// when the maximum unsafe threshold exceeds the observed unsafe duration for resources
+// when the maximum unsafe threshold exceeds the observed unsafe duration for assets
 // that remain unsafe throughout the observation period.
 func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
-	// Setup: resources are unsafe for 48h but threshold is 168h
+	// Setup: assets are unsafe for 48h but threshold is 168h
 	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: baseTime,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(48 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
 			},
 		},
@@ -80,13 +80,13 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: baseTime,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(24 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
 			},
 		},
@@ -125,22 +125,22 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 }
 
 // TestRun_NoViolations_PredicateMismatch tests that diagnostics identify
-// when no resources match the unsafe predicate criteria, indicating the control
-// may not be applicable to the current resource set.
+// when no assets match the unsafe predicate criteria, indicating the control
+// may not be applicable to the current asset set.
 func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
-	// Setup: no resources match the predicate
+	// Setup: no assets match the predicate
 	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: baseTime,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(200 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": false}},
 			},
 		},
@@ -189,8 +189,8 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 	latestSnapshot := baseTime.Add(200 * time.Hour)
 
 	snapshots := []asset.Snapshot{
-		{CapturedAt: baseTime, Resources: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
-		{CapturedAt: latestSnapshot, Resources: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
+		{CapturedAt: baseTime, Assets: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
+		{CapturedAt: latestSnapshot, Assets: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
 	}
 
 	findings := []evaluation.Finding{
@@ -228,7 +228,7 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 }
 
 // TestRun_Summary tests that the diagnostic report summary correctly
-// aggregates counts of snapshots, resources, controls, and calculates the
+// aggregates counts of snapshots, assets, controls, and calculates the
 // total observation time span.
 func TestRun_Summary(t *testing.T) {
 	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -236,14 +236,14 @@ func TestRun_Summary(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: baseTime,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket},
 				{ID: "res:2", Type: kernel.TypeStorageBucket},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(240 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "res:1", Type: kernel.TypeStorageBucket},
 				{ID: "res:2", Type: kernel.TypeStorageBucket},
 			},
@@ -268,8 +268,8 @@ func TestRun_Summary(t *testing.T) {
 	if report.Summary.TotalSnapshots != 2 {
 		t.Errorf("expected 2 snapshots, got %d", report.Summary.TotalSnapshots)
 	}
-	if report.Summary.TotalResources != 2 {
-		t.Errorf("expected 2 resources, got %d", report.Summary.TotalResources)
+	if report.Summary.TotalAssets != 2 {
+		t.Errorf("expected 2 resources, got %d", report.Summary.TotalAssets)
 	}
 	if report.Summary.TotalControls != 2 {
 		t.Errorf("expected 2 controls, got %d", report.Summary.TotalControls)

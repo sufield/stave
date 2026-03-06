@@ -33,7 +33,7 @@ func (p s3PublicPlanner) Plan(f Finding) *evaluation.RemediationPlan {
 		},
 		Preconditions: []string{
 			"Confirm bucket ownership and change window approval.",
-			"Ensure public access is not intentionally required for this resource.",
+			"Ensure public access is not intentionally required for this asset.",
 		},
 		Actions:        actions,
 		ExpectedEffect: "Prevents public access by blocking policy and ACL based exposure paths.",

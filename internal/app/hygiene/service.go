@@ -106,7 +106,7 @@ type upcomingItem struct {
 
 type UpcomingFilter struct {
 	controlIDs    map[kernel.ControlID]struct{}
-	resourceTypes map[kernel.AssetType]struct{}
+	assetTypes map[kernel.AssetType]struct{}
 	statuses      map[risk.Status]struct{}
 	dueWithin     time.Duration
 }
@@ -127,14 +127,14 @@ func applyUpcomingFilter(items []upcomingItem, opts RiskOptions) []upcomingItem 
 func compileUpcomingFilter(opts RiskOptions) UpcomingFilter {
 	return UpcomingFilter{
 		controlIDs:    fp.ToSet(opts.ControlIDs),
-		resourceTypes: fp.ToSet(opts.AssetTypes),
+		assetTypes: fp.ToSet(opts.AssetTypes),
 		statuses:      fp.ToSet(opts.Statuses),
 		dueWithin:     derefDuration(opts.DueWithin),
 	}
 }
 
 func (f UpcomingFilter) enabled() bool {
-	return len(f.controlIDs) > 0 || len(f.resourceTypes) > 0 || len(f.statuses) > 0 || f.dueWithin > 0
+	return len(f.controlIDs) > 0 || len(f.assetTypes) > 0 || len(f.statuses) > 0 || f.dueWithin > 0
 }
 
 func (f UpcomingFilter) matchControl(id kernel.ControlID) bool {
@@ -146,10 +146,10 @@ func (f UpcomingFilter) matchControl(id kernel.ControlID) bool {
 }
 
 func (f UpcomingFilter) matchResourceType(rt kernel.AssetType) bool {
-	if len(f.resourceTypes) == 0 {
+	if len(f.assetTypes) == 0 {
 		return true
 	}
-	_, ok := f.resourceTypes[rt]
+	_, ok := f.assetTypes[rt]
 	return ok
 }
 

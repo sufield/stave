@@ -144,7 +144,7 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 
 func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 	exemption := &policy.ExemptionConfig{
-		Resources: []policy.ExemptionRule{
+		Assets: []policy.ExemptionRule{
 			{Pattern: "res-*", Reason: "test"},
 		},
 	}
@@ -163,7 +163,7 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildDependencies() error = %v", err)
 	}
-	if out.Config.ExemptionConfig == nil || len(out.Config.ExemptionConfig.Resources) != 1 {
+	if out.Config.ExemptionConfig == nil || len(out.Config.ExemptionConfig.Assets) != 1 {
 		t.Fatalf("expected exemption config to be passed through, got %#v", out.Config.ExemptionConfig)
 	}
 }

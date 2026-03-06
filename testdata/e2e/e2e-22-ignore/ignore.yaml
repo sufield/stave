@@ -1,4 +1,4 @@
 version: ignore.v0.1
-resources:
+assets:
   - pattern: "k8s:ClusterRoleBinding/admin-binding"
     reason: "Pre-approved cluster admin binding for break-glass access"

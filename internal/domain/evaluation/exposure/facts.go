@@ -106,7 +106,7 @@ func (facts Facts) CheckExposure(prefix string) Result {
 		}
 	}
 
-	// Rule 2: ACLs can expose the entire resource.
+	// Rule 2: ACLs can expose the entire asset.
 	if facts.ACLAllowsPublicRead() {
 		return Result{Exposed: true, Source: NewSource(SourceACL, "")}
 	}

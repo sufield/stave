@@ -34,7 +34,7 @@ type IDSanitizer interface {
 	ID(string) string
 }
 
-// Sanitized returns a copy with resource identifiers replaced by deterministic tokens.
+// Sanitized returns a copy with asset identifiers replaced by deterministic tokens.
 func (d Entry) Sanitized(r IDSanitizer) Entry {
 	out := d
 	if d.AssetID != "" {
@@ -49,7 +49,7 @@ func (d Entry) Sanitized(r IDSanitizer) Entry {
 // Summary contains aggregate metrics about the diagnostic input.
 type Summary struct {
 	TotalSnapshots     int             `json:"total_snapshots"`
-	TotalResources     int             `json:"total_resources"`
+	TotalAssets        int             `json:"total_assets"`
 	TotalControls      int             `json:"total_controls"`
 	TimeSpan           kernel.Duration `json:"time_span"`
 	MinCapturedAt      time.Time       `json:"min_captured_at"`
@@ -66,7 +66,7 @@ type Report struct {
 	Summary Summary `json:"summary"`
 }
 
-// Sanitized returns a deep copy with resource identifiers replaced by
+// Sanitized returns a deep copy with asset identifiers replaced by
 // deterministic tokens.
 func (dr *Report) Sanitized(r IDSanitizer) *Report {
 	if dr == nil {
@@ -149,7 +149,7 @@ func (i *Input) buildSummary() Summary {
 
 	s.MinCapturedAt, s.MaxCapturedAt = i.calculateTemporalBounds()
 	s.TimeSpan = kernel.Duration(s.MaxCapturedAt.Sub(s.MinCapturedAt))
-	s.TotalResources = i.countUniqueResources()
+	s.TotalAssets = i.countUniqueAssets()
 
 	// Evaluation result overlay.
 	if i.Result != nil {
@@ -179,17 +179,17 @@ func (i *Input) calculateTemporalBounds() (time.Time, time.Time) {
 	return earliest, latest
 }
 
-func (i *Input) countUniqueResources() int {
+func (i *Input) countUniqueAssets() int {
 	if i == nil || len(i.Snapshots) == 0 {
 		return 0
 	}
 
 	// Presize to reduce map growth churn for larger snapshot sets.
-	uniqueResources := make(map[string]struct{}, len(i.Snapshots))
+	uniqueAssets := make(map[string]struct{}, len(i.Snapshots))
 	for _, snap := range i.Snapshots {
-		for _, r := range snap.Resources {
-			uniqueResources[string(r.ID)] = struct{}{}
+		for _, r := range snap.Assets {
+			uniqueAssets[string(r.ID)] = struct{}{}
 		}
 	}
-	return len(uniqueResources)
+	return len(uniqueAssets)
 }

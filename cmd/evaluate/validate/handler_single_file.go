@@ -107,7 +107,7 @@ func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time
 			Summary: validation.ReadinessValidationSummary{
 				ControlsLoaded:             valResult.Summary.ControlsLoaded,
 				SnapshotsLoaded:            valResult.Summary.SnapshotsLoaded,
-				ResourceObservationsLoaded: valResult.Summary.ResourceObservationsLoaded,
+				AssetObservationsLoaded: valResult.Summary.AssetObservationsLoaded,
 			},
 		}, nil
 	}

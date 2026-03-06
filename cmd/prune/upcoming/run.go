@@ -17,7 +17,7 @@ type upcomingFlagsType struct {
 	controlsDir, observationsDir string
 	maxUnsafe, now, dueSoon      string
 	format, dueWithin            string
-	controlIDs, resourceTypes    []string
+	controlIDs, assetTypes    []string
 	statuses                     []string
 }
 
@@ -100,7 +100,7 @@ func gatherUpcomingOptions(cmd *cobra.Command) (upcomingRunOptions, error) {
 	}
 	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
 		ControlIDs: toControlIDs(upcomingFlags.controlIDs),
-		AssetTypes: toAssetTypes(upcomingFlags.resourceTypes),
+		AssetTypes: toAssetTypes(upcomingFlags.assetTypes),
 		Statuses:   upcomingFlags.statuses,
 		DueWithin:  dueWithinDur,
 	})

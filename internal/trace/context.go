@@ -10,7 +10,7 @@ type ruleContext struct {
 	Value          any // raw from control
 	ValueFromParam string
 	CompareValue   any // after value_from_param resolution
-	FieldValue     any // actual resource value
+	FieldValue     any // actual asset value
 	FieldExists    bool
 	EvalCtx        policy.EvalContext // needed by field-ref and any-match tracers
 }

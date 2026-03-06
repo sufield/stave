@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2017-07-25T00:00:00Z.json": "44309a792acb8bfdcc9b166aa44242e141c15cee627c2e148c17a0e73cabbcd7",
-        "2017-08-02T00:00:00Z.json": "29e332b09afae0ca7efc4502ea8aebe3b164cd3911a4258dcdbe1c73130e7fc4"
+        "2017-07-25T00:00:00Z.json": "3e7da2081342bec6ce37ccedd7891c0a6faf6f000f9b71732bc0fea62bbc9805",
+        "2017-08-02T00:00:00Z.json": "15b4ff4782cd6d1fd7a48395f0d2019c1c77516b66aa5bbeab5d091f250cb3c1"
       },
-      "overall": "35d7c03e3df521c70ae637a240ba3166ecf98d00624d22bfbd61ff3039b1ff93"
+      "overall": "03afdda8c3143f88eba5868235aaf42df8cc831f35df7a0d8872d9e4091bda24"
     },
     "pack_hash": "def6400c2f0b9c2afbed859ea0b67a5cf78186d7702c4006ff479e66d91bd864"
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 2,
     "violations": 2
   },
@@ -54,14 +54,14 @@
             "unsafe_value": false
           }
         ],
-        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
+        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     },
@@ -97,14 +97,14 @@
             "unsafe_value": "s3_upload_policy"
           }
         ],
-        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
+        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     }
@@ -118,7 +118,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

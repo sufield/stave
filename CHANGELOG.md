@@ -52,6 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command alias system (`stave alias set|list|delete`) with user config storage
 - JSON and text output formats
 - Observation schema (obs.v0.1) and control DSL (ctrl.v1)
-- Terraform plan extraction for S3 resources
+- Terraform plan extraction for S3 assets
 - Golden-file E2E test framework with 95+ test cases
 - OpenSSF Scorecard, signed releases, SLSA provenance, SBOM

@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "a1bc5ba472d65ab26fe7440374828b0fec5fefdd50df2a544505d6800bf6f9fa",
-        "2026-01-11T00:00:00Z.json": "36986421584d91348c6ff36ef089cf7565172f94230bd479bf638618ab65c16c"
+        "2026-01-01T00:00:00Z.json": "f623d93b5997e11f1adc4b572bb030e47b9ac991cbc2a9bcd974bed54b429b8b",
+        "2026-01-11T00:00:00Z.json": "14cbe38f2583b3a5b273b489e8084c6f7a1a813fdcabceecaebc6536c3399cd3"
       },
-      "overall": "c38d5ce3587bc9fba7d167566f843b91046e3abc5df7774d7f627b5bb04cb2d7"
+      "overall": "d354ba80d358d6b1807a133c9e455cf3170544857373a52e0bb44845ede076f9"
     },
     "pack_hash": "bd2e76a3b45e32eebbb773c360e0e715d8956ec7de54e8a5038edcc09dcb8f27"
   },
   "summary": {
-    "resources_evaluated": 1,
+    "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 2
   },
@@ -48,14 +48,14 @@
             "unsafe_value": "bucket"
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     },
@@ -85,14 +85,14 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource is publicly exposed beyond threshold.",
+        "description": "Asset is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
@@ -103,7 +103,7 @@
         },
         "preconditions": [
           "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this resource."
+          "Ensure public access is not intentionally required for this asset."
         ],
         "actions": [
           {
@@ -143,7 +143,7 @@
         },
         "preconditions": [
           "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this resource."
+          "Ensure public access is not intentionally required for this asset."
         ],
         "actions": [
           {
@@ -184,7 +184,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

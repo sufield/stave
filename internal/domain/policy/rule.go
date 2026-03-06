@@ -32,9 +32,9 @@ type complexOperatorEval struct {
 	compareValue any
 }
 
-// Matches checks if a single predicate rule matches the resource without params.
+// Matches checks if a single predicate rule matches the asset without params.
 func (pr *PredicateRule) Matches(r asset.Asset) bool {
-	ctx := NewResourceEvalContext(r, nil)
+	ctx := NewAssetEvalContext(r, nil)
 	return pr.MatchesWithContext(ctx)
 }
 

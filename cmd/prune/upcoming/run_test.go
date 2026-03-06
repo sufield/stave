@@ -18,7 +18,7 @@ func TestComputeUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: t1,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID: "bucket-a",
 					Properties: map[string]any{
@@ -29,7 +29,7 @@ func TestComputeUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T
 		},
 		{
 			CapturedAt: t2,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID: "bucket-a",
 					Properties: map[string]any{

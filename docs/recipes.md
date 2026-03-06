@@ -23,7 +23,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 
    Exit 0 means inputs are well-formed. Exit 2 means fix your inputs before continuing.
 
-2. **Evaluate** — detect resources that have been unsafe too long:
+2. **Evaluate** — detect assets that have been unsafe too long:
 
    ```bash
    stave apply \
@@ -127,7 +127,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 
 ## 4. Coverage Visualization
 
-**When to use:** You want to see which controls apply to which resources and find coverage gaps before running a full evaluation.
+**When to use:** You want to see which controls apply to which assets and find coverage gaps before running a full evaluation.
 
 1. **Generate DOT graph** — pipe to graphviz for rendering:
 
@@ -188,7 +188,7 @@ stave apply \
 | jq '.findings | group_by(.severity) | map({severity: .[0].severity, count: length})'
 ```
 
-**Extract resource IDs with unsafe durations over 24h:**
+**Extract asset IDs with unsafe durations over 24h:**
 
 ```bash
 stave apply \
@@ -249,7 +249,7 @@ stave apply \
   --observations observations/ \
   --max-unsafe 168h \
   --now 2026-02-22T00:00:00Z \
-  --template '{{.Summary.Violations}} violations across {{.Summary.ResourcesEvaluated}} resources'
+  --template '{{.Summary.Violations}} violations across {{.Summary.AssetsEvaluated}} assets'
 ```
 
 **CSV export of findings:**

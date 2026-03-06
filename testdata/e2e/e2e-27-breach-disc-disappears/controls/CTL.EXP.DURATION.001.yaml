@@ -1,7 +1,7 @@
 dsl_version: ctrl.v1
 id: CTL.EXP.DURATION.001
 name: Unsafe Exposure Duration Bound
-description: A resource must not remain unsafe beyond the configured time window.
+description: An asset must not remain unsafe beyond the configured time window.
 type: unsafe_duration
 params:
   max_unsafe_duration: "1h"

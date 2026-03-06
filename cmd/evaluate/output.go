@@ -59,10 +59,10 @@ func writeReadinessSummary(w io.Writer, report validation.ReadinessReport) error
 	if _, err := fmt.Fprintf(w, "Observations: %s\n", report.ObservationsDir); err != nil {
 		return err
 	}
-	_, err := fmt.Fprintf(w, "Checked: %d controls, %d snapshots, %d resource observations\n",
+	_, err := fmt.Fprintf(w, "Checked: %d controls, %d snapshots, %d asset observations\n",
 		report.Summary.ControlsChecked,
 		report.Summary.SnapshotsChecked,
-		report.Summary.ResourceObservationsChecked,
+		report.Summary.AssetObservationsChecked,
 	)
 	return err
 }

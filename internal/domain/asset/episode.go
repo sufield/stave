@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// Episode represents a contiguous period where a resource remained unsafe.
-// An episode starts when a resource transitions from safe to unsafe and ends
+// Episode represents a contiguous period where an asset remained unsafe.
+// An episode starts when an asset transitions from safe to unsafe and ends
 // when it transitions back to safe. Episodes are used for recurrence detection.
 // CONTRACT: for closed episodes, endAt is never before startAt.
 type Episode struct {

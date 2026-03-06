@@ -25,11 +25,11 @@ Purpose: Visualize policy coverage — find uncovered assets, see control
 scope, and understand protection density on high-value assets.
 
 Uses the same matching logic as apply: for each control, tests its
-unsafe_predicate against each resource from the latest observation snapshot.
+unsafe_predicate against each asset from the latest observation snapshot.
 
 Output Formats:
   --format dot    DOT graph (default) — pipe to graphviz for rendering
-  --format json   Machine-readable JSON with edges and uncovered resources
+  --format json   Machine-readable JSON with edges and uncovered assets
 
 Examples:
   # Output DOT graph to stdout
@@ -41,7 +41,7 @@ Examples:
   # JSON output with jq
   stave graph coverage --controls ./controls --observations ./obs --format json | jq .
 
-  # Sanitize resource identifiers
+  # Sanitize asset identifiers
   stave graph coverage --controls ./controls --observations ./obs --sanitize` + metadata.OfflineHelpSuffix,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return runCoverage(cmd, opts) },

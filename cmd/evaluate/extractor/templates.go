@@ -62,7 +62,7 @@ type Observation struct {
 	SchemaVersion string    ` + "`json:\"schema_version\"`" + `
 	CapturedAt    time.Time ` + "`json:\"captured_at\"`" + `
 	GeneratedBy   Generated ` + "`json:\"generated_by\"`" + `
-	Resources     []Resource ` + "`json:\"resources\"`" + `
+	Assets     []Asset ` + "`json:\"assets\"`" + `
 }
 
 // Generated describes the tool that produced this observation.
@@ -72,8 +72,8 @@ type Generated struct {
 	SourceType string ` + "`json:\"source_type\"`" + `
 }
 
-// Resource represents a single observed resource.
-type Resource struct {
+// Asset represents a single observed asset.
+type Asset struct {
 	ID         string         ` + "`json:\"id\"`" + `
 	Type       string         ` + "`json:\"type\"`" + `
 	Properties map[string]any ` + "`json:\"properties\"`" + `
@@ -101,9 +101,9 @@ func Transform(inputPath string) (*Observation, error) {
 			Version:    "0.1.0",
 			SourceType: "` + name + `",
 		},
-		Resources: []Resource{
+		Assets: []Asset{
 			{
-				ID:   "example-resource",
+				ID:   "example-asset",
 				Type: "example",
 				Properties: map[string]any{
 					"placeholder": true,
@@ -180,8 +180,8 @@ func TestTransform(t *testing.T) {
 	if obs.GeneratedBy.SourceType != "` + name + `" {
 		t.Errorf("SourceType = %q, want ` + name + `", obs.GeneratedBy.SourceType)
 	}
-	if len(obs.Resources) == 0 {
-		t.Error("expected at least one resource")
+	if len(obs.Assets) == 0 {
+		t.Error("expected at least one asset")
 	}
 }
 `)

@@ -31,7 +31,7 @@ type hygieneFlagsType struct {
 	now             string
 	format          string
 	controlIDs      []string
-	resourceTypes   []string
+	assetTypes   []string
 	statuses        []string
 	dueWithin       string
 }
@@ -87,7 +87,7 @@ func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
 		KeepMin:         hygieneFlags.keepMin,
 		NowTime:         hygieneFlags.now,
 		ControlIDs:      toControlIDs(hygieneFlags.controlIDs),
-		AssetTypes:      toAssetTypes(hygieneFlags.resourceTypes),
+		AssetTypes:      toAssetTypes(hygieneFlags.assetTypes),
 		Statuses:        toStatuses(hygieneFlags.statuses),
 	}
 	parsed, err := req.Parse()

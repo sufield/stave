@@ -56,7 +56,7 @@ func TestResolveNow_Invalid(t *testing.T) {
 	}
 }
 
-// Mock implementations for testing LoadedResources.Load.
+// Mock implementations for testing LoadedAssets.Load.
 
 type mockObsRepo struct {
 	snapshots []asset.Snapshot
@@ -81,7 +81,7 @@ func TestLoadedResourcesLoad_Success(t *testing.T) {
 	ctl := policy.ControlDefinition{ID: "TEST.001"}
 	obs := &mockObsRepo{snapshots: []asset.Snapshot{snap}}
 	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{ctl}}
-	res := cmdutil.LoadedResources{
+	res := cmdutil.LoadedAssets{
 		ObsRepo:     obs,
 		ControlRepo: ctlR,
 	}
@@ -100,7 +100,7 @@ func TestLoadedResourcesLoad_Success(t *testing.T) {
 func TestLoadedResourcesLoad_ObsError(t *testing.T) {
 	obs := &mockObsRepo{err: errors.New("obs boom")}
 	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{{ID: "T"}}}
-	res := cmdutil.LoadedResources{
+	res := cmdutil.LoadedAssets{
 		ObsRepo:     obs,
 		ControlRepo: ctlR,
 	}
@@ -117,7 +117,7 @@ func TestLoadedResourcesLoad_ObsError(t *testing.T) {
 func TestLoadedResourcesLoad_InvError(t *testing.T) {
 	obs := &mockObsRepo{snapshots: []asset.Snapshot{{}}}
 	ctlR := &mockCtlRepo{err: errors.New("ctl boom")}
-	res := cmdutil.LoadedResources{
+	res := cmdutil.LoadedAssets{
 		ObsRepo:     obs,
 		ControlRepo: ctlR,
 	}

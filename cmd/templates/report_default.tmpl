@@ -12,7 +12,7 @@ Run:
 - git_paths_dirty: {{ .Metadata.GitPathsDirty }}
 
 Summary:
-- resources_evaluated: {{ .Summary.ResourcesEvaluated }}
+- assets_evaluated: {{ .Summary.AssetsEvaluated }}
 - attack_surface: {{ .Summary.AttackSurface }}
 - violations: {{ .Summary.Violations }}
 - skipped: {{ .Summary.Skipped }}
@@ -23,14 +23,14 @@ Findings by severity:
 {{end}}
 
 Findings (TSV):
-CONTROL_ID	RESOURCE_ID	TYPE	VENDOR	SEVERITY	DURATION_H	THRESHOLD_H	FIRST_UNSAFE	LAST_UNSAFE
+CTL_ID	ASSET_ID	TYPE	VENDOR	SEVERITY	DURATION_H	THRESHOLD_H	FIRST_UNSAFE	LAST_UNSAFE
 {{range .Findings}}
-{{ .ControlID }}	{{ .ResourceID }}	{{ .ResourceType }}	{{ .Vendor }}	{{ .Severity }}	{{ .DurationH }}	{{ .ThresholdH }}	{{ .FirstUnsafe }}	{{ .LastUnsafe }}
+{{ .ControlID }}	{{ .AssetID }}	{{ .AssetType }}	{{ .Vendor }}	{{ .Severity }}	{{ .DurationH }}	{{ .ThresholdH }}	{{ .FirstUnsafe }}	{{ .LastUnsafe }}
 {{end}}
 
 Remediations:
 {{range .Remediations}}
-- {{ .ControlID }} / {{ .ResourceID }}
+- {{ .ControlID }} / {{ .AssetID }}
   description: {{ .Description }}
   action: {{ .Action }}
   example: {{ .Example }}

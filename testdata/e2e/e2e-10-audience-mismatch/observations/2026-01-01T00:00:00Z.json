@@ -6,7 +6,7 @@
     "tool_version": "1.0.0"
   },
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "dispatch:email:001-mismatch",
       "type": "dispatch_event",

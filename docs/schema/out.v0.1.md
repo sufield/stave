@@ -97,9 +97,9 @@ Fields are populated depending on the control type.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `first_unsafe_at` | string (RFC 3339) | When the resource first entered the unsafe state |
-| `last_seen_unsafe_at` | string (RFC 3339) | When the resource was last observed unsafe |
-| `unsafe_duration_hours` | number | Hours the resource has been continuously unsafe |
+| `first_unsafe_at` | string (RFC 3339) | When the asset first entered the unsafe state |
+| `last_seen_unsafe_at` | string (RFC 3339) | When the asset was last observed unsafe |
+| `unsafe_duration_hours` | number | Hours the asset has been continuously unsafe |
 | `threshold_hours` | number | Maximum allowed unsafe duration (from `--max-unsafe` or per-control param) |
 
 **Recurrence controls:**
@@ -231,7 +231,7 @@ When `--explain-all` is enabled, each row represents one `(control, resource)` e
     {
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Exposure Duration Bound",
-      "control_description": "A resource must not remain unsafe beyond the configured time window.",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
       "resource_id": "res:aws:s3:bucket:public-bucket",
       "resource_type": "storage_bucket",
       "resource_vendor": "aws",

@@ -11,7 +11,7 @@
             "effect": "Allow",
             "principal": "AWS:AuthenticatedUsers",
             "actions": ["s3:GetObject"],
-            "resources": ["arn:aws:s3:::auth-read-bucket/*"]
+            "assets": ["arn:aws:s3:::auth-read-bucket/*"]
           }
         ]
       },

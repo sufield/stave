@@ -4,7 +4,7 @@ import "testing"
 
 func TestObservationDeltaApplyFilter(t *testing.T) {
 	delta := ObservationDelta{
-		Changes: []ResourceDiff{
+		Changes: []AssetDiff{
 			{AssetID: "bucket-a", ChangeType: ChangeAdded, ToType: "res:aws:s3:bucket"},
 			{AssetID: "bucket-b", ChangeType: ChangeModified, FromType: "res:aws:s3:bucket", ToType: "res:aws:s3:bucket"},
 			{AssetID: "queue-a", ChangeType: ChangeRemoved, FromType: "res:aws:sqs:queue"},

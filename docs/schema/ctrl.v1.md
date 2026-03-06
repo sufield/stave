@@ -9,7 +9,7 @@ description: "Reference for the ctrl.v1 control definition schema."
 
 Schema ID: `urn:stave:schema:control:v0.1`
 
-A control defines a safety rule that infrastructure resources must satisfy. Controls are written in YAML and evaluated against observation snapshots.
+A control defines a safety rule that infrastructure assets must satisfy. Controls are written in YAML and evaluated against observation snapshots.
 
 ## Top-Level Structure
 
@@ -47,9 +47,9 @@ remediation:
 | `severity` | enum | No | `critical`, `high`, `medium`, `low`, `info` |
 | `compliance` | object | No | Compliance framework mappings (framework name → control ID) |
 | `params` | object | No | Configurable parameters |
-| `unsafe_predicate` | [predicate](#predicate) | Conditionally | Conditions that make a resource unsafe |
+| `unsafe_predicate` | [predicate](#predicate) | Conditionally | Conditions that make an asset unsafe |
 | `unsafe_predicate_alias` | string | Conditionally | Built-in semantic alias expanded during load (for example `s3.is_public_readable`) |
-| `scope` | object | No | Scope rules to limit which resources are evaluated |
+| `scope` | object | No | Scope rules to limit which assets are evaluated |
 | `scope.exclude` | [predicate](#predicate) | No | Resources matching this predicate are excluded |
 | `remediation` | [remediation](#remediation) | No | Remediation guidance |
 
@@ -144,7 +144,7 @@ The DSL supports 15 operators:
 | Type | Behavior |
 |------|----------|
 | `unsafe_state` | Violation when predicate matches in any snapshot |
-| `unsafe_duration` | Violation when resource is unsafe longer than `--max-unsafe` threshold |
+| `unsafe_duration` | Violation when asset is unsafe longer than `--max-unsafe` threshold |
 | `unsafe_recurrence` | Violation when episode count exceeds limit within window |
 | `prefix_exposure` | Violation when protected prefixes are publicly readable |
 

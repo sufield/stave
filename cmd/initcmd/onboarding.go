@@ -199,7 +199,7 @@ func detectSnapshotFormat(path string) (string, bool) {
 	}
 
 	if _, ok := top["captured_at"]; ok {
-		if _, ok := top["resources"]; ok {
+		if _, ok := top["assets"]; ok {
 			return "observation snapshot (obs.v0.1)", true
 		}
 	}
@@ -442,7 +442,7 @@ func runGenerateObservation(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("observation name cannot be empty")
 	}
 	slug := sanitizeSlug(name)
-	content := strings.ReplaceAll(strings.TrimLeft(templateObservation, "\n"), "aws:s3:::example-phi-bucket", "resource:"+slug)
+	content := strings.ReplaceAll(strings.TrimLeft(templateObservation, "\n"), "aws:s3:::example-phi-bucket", "asset:"+slug)
 	out := strings.TrimSpace(generateOut)
 	if out == "" {
 		out = filepath.Join("observations", slug+".json")

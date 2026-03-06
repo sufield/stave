@@ -168,7 +168,7 @@ Replaces infrastructure identifiers with deterministic tokens in findings, diagn
 | `Evidence.Misconfigurations[].ActualValue` | `[SANITIZED]` |
 | `SourceEvidence.PolicyPublicStatements` | `[SANITIZED]` |
 | `SourceEvidence.ACLPublicGrantees` | `[SANITIZED]` |
-| `Diagnostic.Evidence` resource IDs | `SANITIZED_<8hex>` |
+| `Diagnostic.Evidence` asset IDs | `SANITIZED_<8hex>` |
 | `CounterfactualReport.IncidentID` | `[SANITIZED]` |
 | `InputHashes` file keys | Basename only |
 | Validation evidence directory/file paths | `[SANITIZED]` |

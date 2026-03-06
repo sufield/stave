@@ -8,11 +8,11 @@ import (
 )
 
 // BuildFindingDetail composes violation evidence, predicate trace, and
-// remediation into a single FindingDetail for the requested control+resource pair.
+// remediation into a single FindingDetail for the requested control+asset pair.
 func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailRequest) (*evaluation.FindingDetail, error) {
 	violation := r.FindFinding(req.ControlID, req.AssetID)
 	if violation == nil {
-		return nil, fmt.Errorf("no finding for control %q resource %q", req.ControlID, req.AssetID)
+		return nil, fmt.Errorf("no finding for control %q asset %q", req.ControlID, req.AssetID)
 	}
 
 	// The finding knows its own control — resolve it through the provider.
@@ -27,7 +27,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 
 	detail.Control = buildControlSummary(ctl, violation)
 
-	detail.Asset = evaluation.FindingResourceSummary{
+	detail.Asset = evaluation.FindingAssetSummary{
 		ID:         violation.AssetID,
 		Type:       string(violation.AssetType),
 		Vendor:     string(violation.AssetVendor),

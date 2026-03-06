@@ -14,7 +14,7 @@ const (
 	signalThresholdExceedsObserved     = "Threshold exceeds observed unsafe duration"
 	signalNoPredicateMatchesAny        = "No resources matched any unsafe_predicate"
 	signalMatchesUnderThreshold        = "Matches exist but under threshold"
-	signalResourcesResetBeforeMax      = "Resources became safe before exceeding threshold"
+	signalAssetsResetBeforeMax          = "Assets became safe before exceeding threshold"
 	signalInsufficientSnapshots        = "Insufficient snapshots for duration tracking"
 	signalTimeSpanShorterThanThreshold = "Time span shorter than threshold"
 	signalNowBeforeLatestSnapshot      = "Evaluation time before latest snapshot"
@@ -23,7 +23,7 @@ const (
 
 type controlStat struct {
 	maxStreak          time.Duration
-	matchedResourceIDs map[string]struct{}
+	matchedAssetIDs map[string]struct{}
 }
 
 // session holds precomputed control stats for a diagnostic run,
@@ -31,14 +31,14 @@ type controlStat struct {
 type session struct {
 	input          Input
 	stats          map[kernel.ControlID]controlStat
-	totalResources int
+	totalAssets int
 }
 
-func newSession(input Input, totalResources int) *session {
+func newSession(input Input, totalAssets int) *session {
 	return &session{
 		input:          input,
 		stats:          computeStats(input),
-		totalResources: totalResources,
+		totalAssets: totalAssets,
 	}
 }
 
@@ -57,7 +57,7 @@ func (s *session) globalMaxStreak() (time.Duration, string) {
 func (s *session) countUniqueMatches() int {
 	unique := make(map[string]struct{})
 	for _, stat := range s.stats {
-		for id := range stat.matchedResourceIDs {
+		for id := range stat.matchedAssetIDs {
 			unique[id] = struct{}{}
 		}
 	}
@@ -98,7 +98,7 @@ func (s *session) diagnoseEmptyFindings() []Entry {
 		entries = append(entries, Entry{
 			Case:     EmptyFindings,
 			Signal:   signalNoPredicateMatchesAny,
-			Evidence: fmt.Sprintf("0/%d unique resources matched predicates across %d controls", s.totalResources, len(s.input.Controls)),
+			Evidence: fmt.Sprintf("0/%d unique resources matched predicates across %d controls", s.totalAssets, len(s.input.Controls)),
 			Action:   "Verify extractor writes expected properties, or adjust predicate field paths",
 		})
 		return entries
@@ -119,9 +119,9 @@ func (s *session) diagnoseEmptyFindings() []Entry {
 	if detectAnyReset(s.input) {
 		entries = append(entries, Entry{
 			Case:     EmptyFindings,
-			Signal:   signalResourcesResetBeforeMax,
+			Signal:   signalAssetsResetBeforeMax,
 			Evidence: "Unsafe streaks were reset when resources became safe",
-			Action:   "This is expected behavior; unsafe window resets when resource becomes safe",
+			Action:   "This is expected behavior; unsafe window resets when asset becomes safe",
 		})
 	}
 
@@ -133,12 +133,12 @@ func (s *session) checkPerControlMatches() []Entry {
 
 	for _, ctl := range s.input.Controls {
 		stat, ok := s.stats[ctl.ID]
-		if ok && len(stat.matchedResourceIDs) == 0 && s.totalResources > 0 {
+		if ok && len(stat.matchedAssetIDs) == 0 && s.totalAssets > 0 {
 			entries = append(entries, Entry{
 				Case:   ExpectedNone,
 				Signal: fmt.Sprintf("No resources matched unsafe_predicate for %s", ctl.ID),
 				Evidence: fmt.Sprintf("0/%d unique resources matched %s",
-					s.totalResources, extractFieldPath(ctl.UnsafePredicate)),
+					s.totalAssets, extractFieldPath(ctl.UnsafePredicate)),
 				Action: "Verify extractor writes expected properties, or adjust predicate field path",
 			})
 		}
@@ -165,7 +165,7 @@ func diagnoseViolationEvidence(input Input, maxCapturedAt time.Time) []Entry {
 	return entries
 }
 
-// computeMaxUnsafeStreakPerControl finds the longest unsafe streak per (resource, control).
+// computeMaxUnsafeStreakPerControl finds the longest unsafe streak per (asset, control).
 func computeMaxUnsafeStreakPerControl(input Input) (time.Duration, string) {
 	s := newSession(input, 0)
 	return s.globalMaxStreak()
@@ -179,29 +179,29 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
 	finalizationTime := resolveFinalizationTime(input.Now, snapshots[len(snapshots)-1].CapturedAt)
 
-	// Build per-resource timelines from sorted snapshots in a single pass.
-	history := make(map[string][]resourceTimePoint)
+	// Build per-asset timelines from sorted snapshots in a single pass.
+	history := make(map[string][]assetTimePoint)
 	for _, snap := range snapshots {
-		for _, r := range snap.Resources {
+		for _, r := range snap.Assets {
 			assetID := r.ID.String()
-			history[assetID] = append(history[assetID], resourceTimePoint{snap.CapturedAt, r})
+			history[assetID] = append(history[assetID], assetTimePoint{snap.CapturedAt, r})
 		}
 	}
 
-	// For each control, walk each resource's timeline to find the longest unsafe streak.
+	// For each control, walk each asset's timeline to find the longest unsafe streak.
 	stats := make(map[kernel.ControlID]controlStat, len(input.Controls))
 	for _, ctl := range input.Controls {
-		stat := controlStat{matchedResourceIDs: make(map[string]struct{})}
+		stat := controlStat{matchedAssetIDs: make(map[string]struct{})}
 
 		for resID, points := range history {
-			sr := analyzeResourceStreak(resourceStreakRequest{
+			sr := analyzeAssetStreak(assetStreakRequest{
 				Points:    points,
 				Predicate: ctl.UnsafePredicate,
 				Params:    ctl.Params,
 				EndTime:   finalizationTime,
 			})
 			if sr.matched {
-				stat.matchedResourceIDs[resID] = struct{}{}
+				stat.matchedAssetIDs[resID] = struct{}{}
 			}
 			stat.maxStreak = max(stat.maxStreak, sr.maxStreak)
 		}

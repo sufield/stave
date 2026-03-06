@@ -73,7 +73,7 @@ func getFieldValueWithParts(ctx EvalContext, parts []string) (any, bool) {
 		return v, ok
 	}
 
-	// Handle properties.* fields (for resources)
+	// Handle properties.* fields (for assets)
 	if parts[0] == fieldNamespaceProperties {
 		parts = parts[1:]
 	}

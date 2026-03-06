@@ -1,5 +1,5 @@
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (14ms)
+Done:    evaluate controls against observations (8ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-32-prefix-overlap/controls --observations testdata/e2e/e2e-32-prefix-overlap/observations
 

@@ -28,7 +28,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "my-bucket",
 					Type:   kernel.TypeStorageBucket,
@@ -58,7 +58,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    laterTime,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID:     "my-bucket",
 					Type:   kernel.TypeStorageBucket,
@@ -138,7 +138,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 }
 
 // TestEvaluateOutput_ByteIdentical_MultipleControls tests determinism with
-// multiple controls and resources to stress map iteration ordering.
+// multiple controls and assets to stress map iteration ordering.
 func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 	baseTime := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
 	laterTime := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
@@ -156,8 +156,8 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 	}
 
 	snapshots := []asset.Snapshot{
-		{SchemaVersion: "obs.v0.1", CapturedAt: baseTime, Resources: resources},
-		{SchemaVersion: "obs.v0.1", CapturedAt: laterTime, Resources: resources},
+		{SchemaVersion: "obs.v0.1", CapturedAt: baseTime, Assets: resources},
+		{SchemaVersion: "obs.v0.1", CapturedAt: laterTime, Assets: resources},
 	}
 
 	ctlZ := policy.ControlDefinition{

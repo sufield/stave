@@ -102,12 +102,12 @@ func TestEvaluateRunExecute(t *testing.T) {
 		{
 			GeneratedBy: &asset.GeneratedBy{SourceType: "terraform.plan_json"},
 			CapturedAt:  now.Add(-2 * time.Hour),
-			Resources:   []asset.Asset{resource},
+			Assets:   []asset.Asset{resource},
 		},
 		{
 			GeneratedBy: &asset.GeneratedBy{SourceType: "terraform.plan_json"},
 			CapturedAt:  now.Add(-1 * time.Hour),
-			Resources:   []asset.Asset{resource},
+			Assets:   []asset.Asset{resource},
 		},
 	}
 

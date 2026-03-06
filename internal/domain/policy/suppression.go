@@ -1,6 +1,6 @@
 // suppression.go provides finding-level suppression functionality.
-// Unlike exemptions (which skip entire resources), suppressions silence
-// specific control+resource pairs with an audit trail and expiry date.
+// Unlike exemptions (which skip entire assets), suppressions silence
+// specific control+asset pairs with an audit trail and expiry date.
 // Suppressed findings are still evaluated but partitioned into a separate
 // output array - nothing is silently dropped.
 package policy
@@ -88,7 +88,7 @@ type SuppressedFinding struct {
 	Expires   string           `json:"expires,omitempty"`
 }
 
-// ShouldSuppress checks if a specific control+resource pair should be suppressed.
+// ShouldSuppress checks if a specific control+asset pair should be suppressed.
 // Returns the matched rule when suppression applies; otherwise nil.
 func (c *SuppressionConfig) ShouldSuppress(controlID kernel.ControlID, assetID asset.ID, now time.Time) *SuppressionRule {
 	if c == nil {

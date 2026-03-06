@@ -29,17 +29,17 @@ func WriteText(w io.Writer, tr *TraceResult) error {
 }
 
 func (tw *TextWriter) render(tr *TraceResult) {
-	tw.printf("Tracing %s against resource %s\n", string(tr.ControlID), tr.AssetID.String())
-	tw.printf("\nResource Properties:\n")
+	tw.printf("Tracing %s against asset %s\n", string(tr.ControlID), tr.AssetID.String())
+	tw.printf("\nAsset Properties:\n")
 	tw.renderProperties(tr.Properties, "properties")
 	tw.printf("\n")
 	tw.renderGroup(tr.Root)
 	tw.printf("\n")
 	if tr.FinalResult {
-		tw.printf("Final Result: PREDICATE MATCHED (resource is unsafe per this control)\n")
+		tw.printf("Final Result: PREDICATE MATCHED (asset is unsafe per this control)\n")
 		return
 	}
-	tw.printf("Final Result: PREDICATE DID NOT MATCH (resource is safe per this control)\n")
+	tw.printf("Final Result: PREDICATE DID NOT MATCH (asset is safe per this control)\n")
 }
 
 func (tw *TextWriter) renderProperties(props map[string]any, prefix string) {

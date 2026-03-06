@@ -10,7 +10,7 @@ func scaffoldGitignore() string {
 snapshots/raw/*
 !snapshots/raw/*.sample.*
 
-# Normalized observations often contain resource identifiers
+# Normalized observations often contain asset identifiers
 observations/*.json
 
 # Evaluation/diagnostic output artifacts
@@ -176,7 +176,7 @@ const templateControlSample = `# ── Stave Control (` + string(kernel.SchemaC
 #   protected health information (PHI).
 # type: unsafe_state
 #
-# ── Predicate (when is the resource unsafe?) ───────────────────────
+# ── Predicate (when is the asset unsafe?) ───────────────────────
 #
 # unsafe_predicate:
 #   all:                              # AND — every condition must hold
@@ -235,7 +235,7 @@ const templateObservationSample = `# ── Stave Observation (` + string(kernel
     "tool": "stave-template"
   },
   "captured_at": "2026-01-11T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "aws:s3:::example-phi-bucket",
       "type": "aws_s3_bucket",
@@ -273,7 +273,7 @@ const templateStaveConfigSample = `# ── Stave Project Configuration ──�
 #
 # ── Unsafe duration threshold ──────────────────────────────────────
 #
-# How long a resource can remain in an unsafe state before Stave
+# How long an asset can remain in an unsafe state before Stave
 # reports a finding. Accepts Go duration strings: 24h, 168h, 720h.
 #
 # max_unsafe: 168h
@@ -380,7 +380,7 @@ const templateObservation = `
     "tool": "stave-template"
   },
   "captured_at": "2026-01-11T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "aws:s3:::example-phi-bucket",
       "type": "aws_s3_bucket",

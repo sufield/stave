@@ -1,5 +1,5 @@
 // Package trace walks an control's unsafe_predicate clause by clause
-// against a single resource and captures a detailed evaluation tree.
+// against a single asset and captures a detailed evaluation tree.
 package trace
 
 import (
@@ -74,7 +74,7 @@ type ClauseNode struct {
 	Op             string
 	Value          any // raw from control
 	ResolvedValue  any // after value_from_param resolution
-	FieldValue     any // actual resource value
+	FieldValue     any // actual asset value
 	ValueFromParam string
 	FieldExists    bool
 	Result         bool

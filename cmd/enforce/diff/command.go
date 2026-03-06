@@ -13,8 +13,8 @@ func NewCmd() *cobra.Command {
 		Use:   "diff",
 		Short: "Compare the latest two observation snapshots",
 		Long: `Diff compares the latest two snapshots in the observations directory and
-reports resource-level changes (added, removed, modified) including property-level
-differences for modified resources.
+reports asset-level changes (added, removed, modified) including property-level
+differences for modified assets.
 
 Examples:
   # Human-readable summary

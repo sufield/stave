@@ -5,7 +5,7 @@
 - **Program**: Shopify
 - **HackerOne Report**: 94502
 - **Pattern**: Multi-bucket public read/list; one bucket public write; remediation disables listing
-- **Modeled resources**: 3 synthetic buckets
+- **Modeled assets**: 3 synthetic buckets
 - **Timeline**: 2015-10-18 unsafe; 2015-10-26 listing disabled (read + write persist)
 
 ## Buckets

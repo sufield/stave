@@ -50,7 +50,7 @@ Duration-based controls (`unsafe_duration`) need at least two observation snapsh
 
 ### Threshold comparison is strict
 
-The `unsafe_duration` threshold comparison uses strict greater-than (`>`). A resource that has been unsafe for exactly the `--max-unsafe` duration does not trigger a violation — it must exceed the threshold.
+The `unsafe_duration` threshold comparison uses strict greater-than (`>`). An asset that has been unsafe for exactly the `--max-unsafe` duration does not trigger a violation — it must exceed the threshold.
 
 ### Missing fields and predicate semantics
 

@@ -52,11 +52,11 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 
 	snap := asset.Snapshot{
 		CapturedAt: lastSeen,
-		Resources:  []asset.Asset{resource},
+		Assets:  []asset.Asset{resource},
 	}
 	earlierSnap := asset.Snapshot{
 		CapturedAt: firstUnsafe,
-		Resources:  []asset.Asset{resource},
+		Assets:  []asset.Asset{resource},
 	}
 
 	violation := evaluation.Finding{
@@ -108,7 +108,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		t.Errorf("type = %q, want unsafe_state", detail.Control.Type)
 	}
 
-	// Resource summary
+	// Asset summary
 	if detail.Asset.ID != "res:aws:s3:bucket:test-bucket" {
 		t.Errorf("resource ID = %q, want test-bucket", detail.Asset.ID)
 	}

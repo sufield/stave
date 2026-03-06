@@ -80,9 +80,9 @@
           "type": "object",
           "title": "Evaluation Summary",
           "description": "Aggregate counts summarizing the evaluation results.",
-          "required": ["resources_evaluated", "attack_surface", "violations"],
+          "required": ["assets_evaluated", "attack_surface", "violations"],
           "properties": {
-            "resources_evaluated": {
+            "assets_evaluated": {
               "type": "integer",
               "minimum": 0,
               "title": "Assets Evaluated Count",
@@ -234,7 +234,7 @@
             "additionalProperties": true
           }
         },
-        "skipped_resources": {
+        "skipped_assets": {
           "type": "array",
           "title": "Skipped Assets",
           "description": "Assets that were excluded from evaluation (e.g., by scope exclusion rules).",

@@ -150,7 +150,7 @@ func TestQuickstartInvalidObservationSnapshotFallsBackToDemo(t *testing.T) {
 	}
 
 	// Looks like an observation snapshot but fails schema validation (missing vendor).
-	invalid := []byte(`{"schema_version":"obs.v0.1","captured_at":"2026-01-15T00:00:00Z","resources":[{"id":"r1","type":"storage_bucket","properties":{}}],"identities":[]}`)
+	invalid := []byte(`{"schema_version":"obs.v0.1","captured_at":"2026-01-15T00:00:00Z","assets":[{"id":"r1","type":"storage_bucket","properties":{}}],"identities":[]}`)
 	if err := os.WriteFile(filepath.Join(tmp, "snapshot.json"), invalid, 0o644); err != nil {
 		t.Fatalf("write invalid snapshot: %v", err)
 	}

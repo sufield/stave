@@ -121,7 +121,7 @@ func printDemoSummary(out io.Writer, snapshot asset.Snapshot, findings []remedia
 }
 
 func demoEvidenceLine(snapshot asset.Snapshot, assetID string) string {
-	for _, r := range snapshot.Resources {
+	for _, r := range snapshot.Assets {
 		if r.ID.String() != assetID {
 			continue
 		}

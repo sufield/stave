@@ -11,7 +11,7 @@ import (
 )
 
 // EvaluatePrefixExposureForRow evaluates a prefix_exposure control for a
-// single resource. It checks whether any protected prefixes are publicly
+// single asset. It checks whether any protected prefixes are publicly
 // readable using normalized storage.prefix_exposure facts prepared by input
 // adapters.
 func EvaluatePrefixExposureForRow(
@@ -90,8 +90,8 @@ func prefixExposureFindings(
 	timeline *asset.Timeline,
 	protected policy.PrefixSet,
 ) (evaluation.Row, []evaluation.Finding) {
-	resource := timeline.Asset()
-	facts := exposure.FactsFromStorage(resource.Properties)
+	a := timeline.Asset()
+	facts := exposure.FactsFromStorage(a.Properties)
 
 	findings := make([]evaluation.Finding, 0)
 	for _, prefix := range protected.Paths() {

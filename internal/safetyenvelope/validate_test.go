@@ -21,7 +21,7 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 		Snapshots:   1,
 	}
 	summary := evaluation.Summary{
-		ResourcesEvaluated: 1,
+		AssetsEvaluated: 1,
 		AttackSurface:      1,
 		Violations:         1,
 	}

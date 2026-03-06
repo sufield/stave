@@ -25,7 +25,7 @@ import (
 
 var (
 	promptEvalFile    string
-	promptResourceID  string
+	promptAssetID  string
 	promptControlsDir string
 	promptObsDir      string
 	promptFormat      string
@@ -71,7 +71,7 @@ Examples:
     --asset-id my-bucket \
     --controls ./controls/s3
 
-  # Include resource properties from observations
+  # Include asset properties from observations
   stave prompt from-finding \
     --evaluation-file evaluation.json \
     --asset-id my-bucket \
@@ -98,7 +98,7 @@ Examples:
 
 func init() {
 	promptFromFindingCmd.Flags().StringVar(&promptEvalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
-	promptFromFindingCmd.Flags().StringVar(&promptResourceID, "asset-id", "", "Resource ID to filter findings (required)")
+	promptFromFindingCmd.Flags().StringVar(&promptAssetID, "asset-id", "", "Asset ID to filter findings (required)")
 	promptFromFindingCmd.Flags().StringVarP(&promptControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	promptFromFindingCmd.Flags().StringVarP(&promptObsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	promptFromFindingCmd.Flags().StringVarP(&promptFormat, "format", "f", "text", "Output format: text or json")
@@ -126,7 +126,7 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// 1. Load evaluation output and narrow to resource findings.
+	// 1. Load evaluation output and narrow to asset findings.
 	evalResult, err := evaljson.NewLoader().LoadFromFile(opts.EvalFile)
 	if err != nil {
 		return fmt.Errorf("load evaluation file: %w", err)
@@ -134,7 +134,7 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 
 	matched := filterFindings(evalResult.Findings, opts.AssetID)
 	if len(matched) == 0 {
-		return fmt.Errorf("no findings for resource %q in %s", opts.AssetID, opts.EvalFile)
+		return fmt.Errorf("no findings for asset %q in %s", opts.AssetID, opts.EvalFile)
 	}
 
 	// 2. Load enrichment sources (controls + optional observations).
@@ -148,9 +148,9 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resourcePropsJSON := ""
+	assetPropsJSON := ""
 	if opts.ObservationsDir != "" {
-		resourcePropsJSON, err = loadResourceProperties(ctx, opts.ObservationsDir, opts.AssetID)
+		assetPropsJSON, err = loadAssetProperties(ctx, opts.ObservationsDir, opts.AssetID)
 		if err != nil {
 			return err
 		}
@@ -160,7 +160,7 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 	builder := &promptBuilder{
 		assetID:           opts.AssetID,
 		controlsByID:      ctlByID,
-		resourcePropsJSON: resourcePropsJSON,
+		assetPropsJSON: assetPropsJSON,
 	}
 	data := builder.build(matched)
 	rendered := renderPrompt(data)
@@ -175,7 +175,7 @@ func gatherPromptFromFindingOptions(cmd *cobra.Command) (promptRunOptions, error
 
 	opts := promptRunOptions{
 		EvalFile:        fsutil.CleanUserPath(promptEvalFile),
-		AssetID:         strings.TrimSpace(promptResourceID),
+		AssetID:         strings.TrimSpace(promptAssetID),
 		ControlsDir:     fsutil.CleanUserPath(promptControlsDir),
 		ObservationsDir: fsutil.CleanUserPath(promptObsDir),
 		Format:          format,
@@ -288,7 +288,7 @@ type promptData struct {
 	FindingCount       int
 	AssetID            string
 	Findings           []promptFindingData
-	ResourceProperties string
+	AssetProperties string
 }
 
 // promptJSONOutput is the structured JSON output.
@@ -302,7 +302,7 @@ type promptJSONOutput struct {
 type promptBuilder struct {
 	assetID           string
 	controlsByID      map[string]*policy.ControlDefinition
-	resourcePropsJSON string
+	assetPropsJSON string
 }
 
 func (b *promptBuilder) build(matched []evaluation.Finding) promptData {
@@ -338,7 +338,7 @@ func (b *promptBuilder) build(matched []evaluation.Finding) promptData {
 		FindingCount:       len(findings),
 		AssetID:            b.assetID,
 		Findings:           findings,
-		ResourceProperties: b.resourcePropsJSON,
+		AssetProperties: b.assetPropsJSON,
 	}
 }
 
@@ -363,9 +363,9 @@ func (b *promptBuilder) marshalControl(ctl *policy.ControlDefinition) string {
 	return strings.TrimSpace(string(yamlBytes))
 }
 
-// loadResourceProperties loads the latest observation snapshot and extracts
-// properties for the given resource ID as indented JSON.
-func loadResourceProperties(ctx context.Context, obsDir, assetID string) (string, error) {
+// loadAssetProperties loads the latest observation snapshot and extracts
+// properties for the given asset ID as indented JSON.
+func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, error) {
 	obsLoader, err := cmdutil.NewObservationRepository()
 	if err != nil {
 		return "", fmt.Errorf("create observation loader: %w", err)
@@ -386,11 +386,11 @@ func loadResourceProperties(ctx context.Context, obsDir, assetID string) (string
 		}
 	}
 
-	for _, r := range latest.Resources {
+	for _, r := range latest.Assets {
 		if r.ID.String() == assetID {
 			propsJSON, err := json.MarshalIndent(r.Properties, "", "  ")
 			if err != nil {
-				return "", fmt.Errorf("marshal resource properties: %w", err)
+				return "", fmt.Errorf("marshal asset properties: %w", err)
 			}
 			return string(propsJSON), nil
 		}
@@ -467,7 +467,7 @@ func renderPrompt(data promptData) string {
 
 	fmt.Fprintf(&b, "# Stave Finding Analysis\n\n")
 	fmt.Fprintf(&b, "I am using **Stave**, an offline configuration safety evaluator, to detect infrastructure misconfigurations. ")
-	fmt.Fprintf(&b, "Stave found **%d finding(s)** for resource `%s` that I need help analyzing and correcting.\n", data.FindingCount, data.AssetID)
+	fmt.Fprintf(&b, "Stave found **%d finding(s)** for asset `%s` that I need help analyzing and correcting.\n", data.FindingCount, data.AssetID)
 
 	for _, f := range data.Findings {
 		fmt.Fprintf(&b, "\n---\n\n")
@@ -477,8 +477,8 @@ func renderPrompt(data promptData) string {
 		fmt.Fprintf(&b, "| Control | %s |\n", f.ControlID)
 		fmt.Fprintf(&b, "| Name | %s |\n", f.ControlName)
 		fmt.Fprintf(&b, "| Description | %s |\n", strings.TrimSpace(f.Description))
-		fmt.Fprintf(&b, "| Resource | %s |\n", f.AssetID)
-		fmt.Fprintf(&b, "| Resource Type | %s |\n", f.AssetType)
+		fmt.Fprintf(&b, "| Asset | %s |\n", f.AssetID)
+		fmt.Fprintf(&b, "| Asset Type | %s |\n", f.AssetType)
 
 		fmt.Fprintf(&b, "\n### Evidence\n\n%s\n", f.Evidence)
 
@@ -499,13 +499,13 @@ func renderPrompt(data promptData) string {
 		}
 	}
 
-	if data.ResourceProperties != "" {
-		fmt.Fprintf(&b, "\n## Resource Properties (Latest Snapshot)\n\n```json\n%s\n```\n", data.ResourceProperties)
+	if data.AssetProperties != "" {
+		fmt.Fprintf(&b, "\n## Asset Properties (Latest Snapshot)\n\n```json\n%s\n```\n", data.AssetProperties)
 	}
 
 	fmt.Fprintf(&b, "\n## What I Need\n\n")
 	fmt.Fprintf(&b, "Based on the findings above, please provide:\n\n")
-	fmt.Fprintf(&b, "1. **Root cause analysis** — Why is this resource in an unsafe state?\n")
+	fmt.Fprintf(&b, "1. **Root cause analysis** — Why is this asset in an unsafe state?\n")
 	fmt.Fprintf(&b, "2. **Corrective changes** — Specific, actionable changes to address each finding.\n")
 	fmt.Fprintf(&b, "3. **Verification** — How to confirm the fix is applied correctly.\n")
 	fmt.Fprintf(&b, "4. **Prevention** — What controls or automation would prevent recurrence?\n")

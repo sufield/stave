@@ -28,8 +28,8 @@ type Finding struct {
 	ControlRemediation *policy.RemediationSpec  `json:"-"`
 }
 
-// Less defines the natural ordering of findings: by control ID, then resource ID,
-// then WhyNow, then control name, then resource type.
+// Less defines the natural ordering of findings: by control ID, then asset ID,
+// then WhyNow, then control name, then asset type.
 func (f Finding) Less(other Finding) bool {
 	if f.ControlID != other.ControlID {
 		return f.ControlID < other.ControlID
@@ -81,11 +81,11 @@ type RemediationAction struct {
 }
 
 // FindingDetail aggregates all context needed to understand and remediate
-// a single violation: control metadata, resource context, evidence,
+// a single violation: control metadata, asset context, evidence,
 // predicate evaluation trace, remediation guidance, and next steps.
 type FindingDetail struct {
 	Control         FindingControlSummary   `json:"control"`
-	Asset           FindingResourceSummary  `json:"asset"`
+	Asset           FindingAssetSummary  `json:"asset"`
 	Evidence        Evidence                `json:"evidence"`
 	Trace           *FindingTrace           `json:"trace,omitempty"`
 	Remediation     *policy.RemediationSpec `json:"remediation,omitempty"`
@@ -107,8 +107,8 @@ type FindingControlSummary struct {
 	Exposure    *policy.Exposure         `json:"exposure,omitempty"`
 }
 
-// FindingResourceSummary holds resource metadata for the diagnosed finding.
-type FindingResourceSummary struct {
+// FindingAssetSummary holds asset metadata for the diagnosed finding.
+type FindingAssetSummary struct {
 	ID         asset.ID  `json:"id"`
 	Type       string    `json:"type"`
 	Vendor     string    `json:"vendor,omitempty"`

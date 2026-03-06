@@ -11,7 +11,7 @@ var Quality = &cobra.Command{
 	Use:   "quality",
 	Short: "Check snapshot quality before evaluation",
 	Long: `Quality checks the observation timeline for operational readiness before evaluation.
-It can warn or fail on sparse timelines, stale snapshots, and missing key resources.
+It can warn or fail on sparse timelines, stale snapshots, and missing key assets.
 
 Examples:
   # Human-readable quality check
@@ -22,8 +22,8 @@ Examples:
 
   # Require key resources to exist in latest snapshot
   stave snapshot quality --observations ./observations \
-    --require-resource res:aws:s3:bucket:prod-audit \
-    --require-resource res:aws:s3:bucket:prod-logs` + metadata.OfflineHelpSuffix,
+    --require-asset res:aws:s3:bucket:prod-audit \
+    --require-asset res:aws:s3:bucket:prod-logs` + metadata.OfflineHelpSuffix,
 	Args:          cobra.NoArgs,
 	RunE:          runQuality,
 	SilenceUsage:  true,
@@ -35,7 +35,7 @@ func init() {
 	Quality.Flags().IntVar(&qualityFlags.minSnapshots, "min-snapshots", 2, "Minimum expected number of snapshots")
 	Quality.Flags().StringVar(&qualityFlags.maxStaleness, "max-staleness", "48h", "Maximum allowed age for latest snapshot (e.g., 24h, 2d)")
 	Quality.Flags().StringVar(&qualityFlags.maxGap, "max-gap", "7d", "Maximum allowed gap between adjacent snapshots (e.g., 48h, 7d)")
-	Quality.Flags().StringSliceVar(&qualityFlags.required, "require-resource", nil, "Resource ID required in latest snapshot (repeatable)")
+	Quality.Flags().StringSliceVar(&qualityFlags.required, "require-asset", nil, "Asset ID required in latest snapshot (repeatable)")
 	Quality.Flags().StringVar(&qualityFlags.now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	Quality.Flags().StringVarP(&qualityFlags.format, "format", "f", "text", "Output format: text or json")
 	Quality.Flags().BoolVar(&qualityFlags.strict, "strict", false, "Treat warnings as gate failures")

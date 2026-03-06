@@ -31,7 +31,7 @@ func ValidStatus(s Status) bool {
 	return ok
 }
 
-// Item captures one control/resource due threshold candidate.
+// Item captures one control/asset due threshold candidate.
 type Item struct {
 	DueAt          time.Time
 	Status         Status
@@ -74,7 +74,7 @@ type state struct {
 }
 
 // ComputeItems returns deterministic upcoming threshold items for
-// currently-unsafe resources across evaluatable controls.
+// currently-unsafe assets across evaluatable controls.
 func ComputeItems(req Request) Items {
 	if len(req.Snapshots) == 0 || len(req.Controls) == 0 {
 		return nil
@@ -108,11 +108,11 @@ func isRiskControl(ctl policy.ControlDefinition) bool {
 func computeStates(ctl policy.ControlDefinition, snapshots []asset.Snapshot, predicateParser func(any) (*policy.UnsafePredicate, error)) map[asset.ID]*state {
 	states := make(map[asset.ID]*state)
 	for _, snap := range snapshots {
-		for _, resource := range snap.Resources {
-			st := ensureState(states, resource.ID, resource.Type)
-			ctx := policy.NewResourceEvalContextWithIdentities(resource, policy.ControlParams(ctl.Params), snap.Identities)
+		for _, a := range snap.Assets {
+			st := ensureState(states, a.ID, a.Type)
+			ctx := policy.NewAssetEvalContextWithIdentities(a, policy.ControlParams(ctl.Params), snap.Identities)
 			ctx.PredicateParser = predicateParser
-			updateState(st, ctl.UnsafePredicate.EvaluateWithContext(ctx), snap.CapturedAt, resource.Type)
+			updateState(st, ctl.UnsafePredicate.EvaluateWithContext(ctx), snap.CapturedAt, a.Type)
 		}
 	}
 	return states

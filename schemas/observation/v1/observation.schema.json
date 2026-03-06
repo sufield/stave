@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:stave:schema:observation:v1",
   "title": "Stave Observation Contract v1",
-  "description": "Contract schema for Stave observation snapshots. Each snapshot captures the configuration state of infrastructure resources at a single point in time.",
+  "description": "Contract schema for Stave observation snapshots. Each snapshot captures the configuration state of infrastructure assets at a single point in time.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
     "captured_at",
-    "resources"
+    "assets"
   ],
   "properties": {
     "schema_version": {
@@ -59,12 +59,12 @@
         }
       }
     },
-    "resources": {
+    "assets": {
       "type": "array",
-      "title": "Resources",
-      "description": "List of infrastructure resources captured in this observation snapshot.",
+      "title": "Assets",
+      "description": "List of infrastructure assets captured in this observation snapshot.",
       "items": {
-        "$ref": "#/$defs/resource"
+        "$ref": "#/$defs/asset"
       }
     },
     "identities": {
@@ -96,11 +96,11 @@
         }
       }
     },
-    "resource": {
+    "asset": {
       "type": "object",
       "additionalProperties": false,
-      "title": "Observed Resource",
-      "description": "A single infrastructure resource and its configuration properties.",
+      "title": "Observed Asset",
+      "description": "A single infrastructure asset and its configuration properties.",
       "required": [
         "id",
         "type",
@@ -111,26 +111,26 @@
         "id": {
           "type": "string",
           "minLength": 1,
-          "title": "Resource ID",
-          "description": "Unique identifier for this resource (e.g., ARN, resource name, or synthetic ID)."
+          "title": "Asset ID",
+          "description": "Unique identifier for this asset (e.g., ARN, asset name, or synthetic ID)."
         },
         "type": {
           "type": "string",
           "minLength": 1,
           "pattern": "^[a-z0-9][a-z0-9_.-]*$",
-          "title": "Resource Type",
-          "description": "Resource type indicating the kind of infrastructure (e.g., storage_bucket, iam_role, k8s.clusterrolebinding). Lowercase letters, digits, '_', '.', and '-' only."
+          "title": "Asset Type",
+          "description": "Asset type indicating the kind of infrastructure (e.g., storage_bucket, iam_role, k8s.clusterrolebinding). Lowercase letters, digits, '_', '.', and '-' only."
         },
         "vendor": {
           "type": "string",
           "minLength": 1,
-          "title": "Resource Vendor",
-          "description": "Cloud vendor or platform that provides this resource (e.g., aws, gcp, azure)."
+          "title": "Asset Vendor",
+          "description": "Cloud vendor or platform that provides this asset (e.g., aws, gcp, azure)."
         },
         "properties": {
           "type": "object",
           "title": "Configuration Properties",
-          "description": "Resource configuration properties evaluated by control predicates. Intentionally flexible (any JSON object) to support diverse resource types without per-type schemas. Future versions may introduce typed sub-schemas keyed by resource type."
+          "description": "Asset configuration properties evaluated by control predicates. Intentionally flexible (any JSON object) to support diverse asset types without per-type schemas. Future versions may introduce typed sub-schemas keyed by asset type."
         },
         "source": {
           "$ref": "#/$defs/sourceRef",

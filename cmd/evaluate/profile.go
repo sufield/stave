@@ -160,7 +160,7 @@ func filterProfileSnapshots(snapshots []asset.Snapshot, scopeFilter asset.AssetP
 		return nil, nil
 	}
 	filteredSnapshots := asset.FilterSnapshots(scopeFilter, snapshots)
-	if len(filteredSnapshots) == 0 || len(filteredSnapshots[0].Resources) == 0 {
+	if len(filteredSnapshots) == 0 || len(filteredSnapshots[0].Assets) == 0 {
 		if !quiet {
 			fmt.Fprintln(os.Stderr, "No S3 buckets matching health scope found in observations")
 		}
@@ -192,7 +192,7 @@ func loadProfileControls(inputFile string) (string, []policy.ControlDefinition, 
 func countCannotProveSafe(snapshots []asset.Snapshot) int {
 	cannotProveSafeCount := 0
 	for _, snap := range snapshots {
-		for _, res := range snap.Resources {
+		for _, res := range snap.Assets {
 			if provable, ok := res.Properties["safety_provable"].(bool); ok && !provable {
 				cannotProveSafeCount++
 			}

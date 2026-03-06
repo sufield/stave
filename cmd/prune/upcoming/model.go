@@ -39,7 +39,7 @@ type upcomingOutput struct {
 
 type upcomingFilter struct {
 	controlIDs    map[kernel.ControlID]struct{}
-	resourceTypes map[kernel.AssetType]struct{}
+	assetTypes map[kernel.AssetType]struct{}
 	statuses      map[string]struct{}
 	dueWithin     *time.Duration
 }

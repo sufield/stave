@@ -6,24 +6,24 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// Snapshot represents a point-in-time observation of infrastructure resources.
-// Each snapshot captures the state of resources at a specific moment,
+// Snapshot represents a point-in-time observation of infrastructure assets.
+// Each snapshot captures the state of assets at a specific moment,
 // identified by CapturedAt. Stave processes multiple snapshots to track
-// how resource states change over time.
+// how asset states change over time.
 type Snapshot struct {
 	SchemaVersion kernel.Schema   `json:"schema_version"`
 	GeneratedBy   *GeneratedBy    `json:"generated_by,omitempty"`
 	CapturedAt    time.Time       `json:"captured_at"`
-	Resources     []Asset         `json:"resources"`
+	Assets        []Asset         `json:"assets"`
 	Identities    []CloudIdentity `json:"identities,omitempty"`
 }
 
-// FindResource returns the resource with the given ID, or nil if not present.
-func (s *Snapshot) FindResource(id string) *Asset {
+// FindAsset returns the asset with the given ID, or nil if not present.
+func (s *Snapshot) FindAsset(id string) *Asset {
 	assetID := ID(id)
-	for i := range s.Resources {
-		if s.Resources[i].ID == assetID {
-			return &s.Resources[i]
+	for i := range s.Assets {
+		if s.Assets[i].ID == assetID {
+			return &s.Assets[i]
 		}
 	}
 	return nil

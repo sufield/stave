@@ -4,7 +4,7 @@ import (
 	"slices"
 )
 
-// TagSet is a value object for resource tags used by scope matching.
+// TagSet is a value object for asset tags used by scope matching.
 type TagSet struct {
 	normalized map[string]string
 	conflicts  []string

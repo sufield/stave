@@ -51,12 +51,12 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime,
-			Resources:     resources,
+			Assets:     resources,
 		},
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime.Add(10 * 24 * time.Hour), // 10 days later
-			Resources:     resources,
+			Assets:     resources,
 		},
 	}
 
@@ -90,10 +90,10 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 }
 
 // TestEvaluationPerformanceGuardrail is a non-flaky test that ensures evaluation
-// of 100 resources completes within a reasonable time threshold.
+// of 100 assets completes within a reasonable time threshold.
 // This is not a strict benchmark but a guardrail against performance regressions.
 func TestEvaluationPerformanceGuardrail(t *testing.T) {
-	// Create 100 resources similar to a real S3 inventory snapshot
+	// Create 100 assets similar to a real S3 inventory snapshot
 	resources := make([]asset.Asset, 100)
 	for i := range 100 {
 		resources[i] = asset.Asset{
@@ -121,12 +121,12 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime,
-			Resources:     resources,
+			Assets:     resources,
 		},
 		{
 			SchemaVersion: "obs.v0.1",
 			CapturedAt:    baseTime.Add(10 * 24 * time.Hour),
-			Resources:     resources,
+			Assets:     resources,
 		},
 	}
 
@@ -158,7 +158,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 	})
 	elapsed := time.Since(start)
 
-	// Performance guardrail: evaluation of 100 resources should complete in under 1 second
+	// Performance guardrail: evaluation of 100 assets should complete in under 1 second
 	// This is a very loose bound to avoid flakiness while still catching major regressions
 	maxAllowed := 1 * time.Second
 	if elapsed > maxAllowed {
@@ -174,7 +174,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	// This test uses in-memory data to avoid file system dependencies
 	// The actual loading/parsing is tested via e2e tests.
 
-	// Create 1000 resources to simulate a large S3 inventory.
+	// Create 1000 assets to simulate a large S3 inventory.
 	resources := make([]asset.Asset, 1000)
 	for i := range 1000 {
 		resources[i] = asset.Asset{
@@ -194,10 +194,10 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	snapshot := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    baseTime,
-		Resources:     resources,
+		Assets:     resources,
 	}
 
-	// Verify we can create timelines for 1000 resources
+	// Verify we can create timelines for 1000 assets
 	ctl := policy.ControlDefinition{
 		DSLVersion:  "ctrl.v1",
 		ID:          "CTL.TEST.001",
@@ -226,11 +226,11 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	elapsed := time.Since(start)
 
 	// Verify results
-	if result.Summary.ResourcesEvaluated != 1000 {
-		t.Errorf("Expected 1000 resources evaluated, got %d", result.Summary.ResourcesEvaluated)
+	if result.Summary.AssetsEvaluated != 1000 {
+		t.Errorf("Expected 1000 resources evaluated, got %d", result.Summary.AssetsEvaluated)
 	}
 
-	// Performance guardrail: 1000 resources should complete in under 5 seconds
+	// Performance guardrail: 1000 assets should complete in under 5 seconds
 	maxAllowed := 5 * time.Second
 	if elapsed > maxAllowed {
 		t.Errorf("Large snapshot evaluation took %v, exceeds guardrail of %v", elapsed, maxAllowed)
