@@ -31,10 +31,10 @@ type ReadinessIssue struct {
 }
 
 type ReadinessSummary struct {
-	Errors                      int `json:"errors"`
-	Warnings                    int `json:"warnings"`
-	ControlsChecked             int `json:"controls_checked"`
-	SnapshotsChecked            int `json:"snapshots_checked"`
+	Errors                   int `json:"errors"`
+	Warnings                 int `json:"warnings"`
+	ControlsChecked          int `json:"controls_checked"`
+	SnapshotsChecked         int `json:"snapshots_checked"`
 	AssetObservationsChecked int `json:"asset_observations_checked"`
 }
 
@@ -72,8 +72,8 @@ func (r *ReadinessReport) RecordIssue(issue ReadinessIssue) {
 }
 
 type ReadinessValidationSummary struct {
-	ControlsLoaded             int
-	SnapshotsLoaded            int
+	ControlsLoaded          int
+	SnapshotsLoaded         int
 	AssetObservationsLoaded int
 }
 

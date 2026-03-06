@@ -38,9 +38,9 @@ type reportJSONRun struct {
 
 type reportJSONSummary struct {
 	AssetsEvaluated int `json:"assets_evaluated"`
-	AttackSurface      int `json:"attack_surface"`
-	Violations         int `json:"violations"`
-	Skipped            int `json:"skipped"`
+	AttackSurface   int `json:"attack_surface"`
+	Violations      int `json:"violations"`
+	Skipped         int `json:"skipped"`
 }
 
 type reportJSONFinding struct {
@@ -106,9 +106,9 @@ func newReportJSONOutput(eval safetyenvelope.Evaluation, toolVersion string) rep
 		},
 		Summary: reportJSONSummary{
 			AssetsEvaluated: eval.Summary.AssetsEvaluated,
-			AttackSurface:      eval.Summary.AttackSurface,
-			Violations:         eval.Summary.Violations,
-			Skipped:            len(eval.Skipped),
+			AttackSurface:   eval.Summary.AttackSurface,
+			Violations:      eval.Summary.Violations,
+			Skipped:         len(eval.Skipped),
 		},
 		FindingsBySeverity: make(map[string]int),
 		Findings:           make([]reportJSONFinding, 0, len(eval.Findings)),

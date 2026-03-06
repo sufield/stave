@@ -104,7 +104,7 @@ type ObservationDelta struct {
 	FromCaptured  time.Time               `json:"from_captured_at"`
 	ToCaptured    time.Time               `json:"to_captured_at"`
 	Summary       ObservationDeltaSummary `json:"summary"`
-	Changes       []AssetDiff          `json:"changes"`
+	Changes       []AssetDiff             `json:"changes"`
 }
 
 // LatestTwoSnapshots returns the two most recent snapshots by CapturedAt.

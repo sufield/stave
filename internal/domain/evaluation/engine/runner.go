@@ -155,8 +155,8 @@ func (e *Runner) sortAndBuildResult(acc *evaluationAccumulator, now time.Time, s
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: acc.seenAssets.len(),
-			AttackSurface:      acc.unsafeAssets.len(),
-			Violations:         len(regularFindings),
+			AttackSurface:   acc.unsafeAssets.len(),
+			Violations:      len(regularFindings),
 		},
 		Findings:           regularFindings,
 		SuppressedFindings: suppressedFindings,

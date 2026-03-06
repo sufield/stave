@@ -17,7 +17,7 @@ type upcomingFlagsType struct {
 	controlsDir, observationsDir string
 	maxUnsafe, now, dueSoon      string
 	format, dueWithin            string
-	controlIDs, assetTypes    []string
+	controlIDs, assetTypes       []string
 	statuses                     []string
 }
 

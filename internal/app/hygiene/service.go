@@ -105,10 +105,10 @@ type upcomingItem struct {
 }
 
 type UpcomingFilter struct {
-	controlIDs    map[kernel.ControlID]struct{}
+	controlIDs map[kernel.ControlID]struct{}
 	assetTypes map[kernel.AssetType]struct{}
-	statuses      map[risk.Status]struct{}
-	dueWithin     time.Duration
+	statuses   map[risk.Status]struct{}
+	dueWithin  time.Duration
 }
 
 func applyUpcomingFilter(items []upcomingItem, opts RiskOptions) []upcomingItem {
@@ -126,10 +126,10 @@ func applyUpcomingFilter(items []upcomingItem, opts RiskOptions) []upcomingItem 
 
 func compileUpcomingFilter(opts RiskOptions) UpcomingFilter {
 	return UpcomingFilter{
-		controlIDs:    fp.ToSet(opts.ControlIDs),
+		controlIDs: fp.ToSet(opts.ControlIDs),
 		assetTypes: fp.ToSet(opts.AssetTypes),
-		statuses:      fp.ToSet(opts.Statuses),
-		dueWithin:     derefDuration(opts.DueWithin),
+		statuses:   fp.ToSet(opts.Statuses),
+		dueWithin:  derefDuration(opts.DueWithin),
 	}
 }
 

@@ -54,12 +54,12 @@ type qualityAssessor struct {
 }
 
 type qualityInput struct {
-	observationsDir   string
-	minSnapshots      int
-	maxStaleness      time.Duration
-	maxGap            time.Duration
-	requiredAssets []string
-	now               time.Time
-	format            ui.OutputFormat
-	strict            bool
+	observationsDir string
+	minSnapshots    int
+	maxStaleness    time.Duration
+	maxGap          time.Duration
+	requiredAssets  []string
+	now             time.Time
+	format          ui.OutputFormat
+	strict          bool
 }
