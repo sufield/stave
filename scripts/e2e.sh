@@ -52,7 +52,7 @@ run_case() {
       extra=($args_content)
     fi
 
-    "$BIN" evaluate \
+    "$BIN" apply \
       --controls "$inv" \
       --observations "$obs" \
       --max-unsafe 168h \
