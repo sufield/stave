@@ -10,13 +10,13 @@ import (
 
 // --- Streak primitives ---
 
-// resourceTimePoint pairs a capture timestamp with the resource state at that time.
-type resourceTimePoint struct {
+// assetTimePoint pairs a capture timestamp with the asset state at that time.
+type assetTimePoint struct {
 	capturedAt time.Time
-	resource   asset.Asset
+	observed asset.Asset
 }
 
-// streakResult holds the outcome of analyzing a single resource's timeline
+// streakResult holds the outcome of analyzing a single asset's timeline
 // against a single control's unsafe predicate.
 type streakResult struct {
 	matched   bool
@@ -30,8 +30,8 @@ type streakTracker struct {
 	active bool
 }
 
-type resourceStreakRequest struct {
-	Points    []resourceTimePoint
+type assetStreakRequest struct {
+	Points    []assetTimePoint
 	Predicate policy.UnsafePredicate
 	Params    policy.ControlParams
 	EndTime   time.Time
@@ -56,15 +56,15 @@ func (t *streakTracker) endStreak(at time.Time) time.Duration {
 	return d
 }
 
-// analyzeResourceStreak walks a resource's chronological timeline to find the
+// analyzeAssetStreak walks an asset's chronological timeline to find the
 // longest contiguous unsafe period (streak). A streak starts when the predicate
 // first matches and ends when it stops matching or at endTime if still unsafe.
-func analyzeResourceStreak(req resourceStreakRequest) streakResult {
+func analyzeAssetStreak(req assetStreakRequest) streakResult {
 	var result streakResult
 	var streak streakTracker
 
 	for _, pt := range req.Points {
-		if req.Predicate.Evaluate(pt.resource, req.Params) {
+		if req.Predicate.Evaluate(pt.observed, req.Params) {
 			result.matched = true
 			streak.markUnsafe(pt.capturedAt)
 		} else {
@@ -78,32 +78,32 @@ func analyzeResourceStreak(req resourceStreakRequest) streakResult {
 
 // --- Streak reset detection ---
 
-// resourceResetState tracks the three-state machine for reset detection:
+// assetResetState tracks the three-state machine for reset detection:
 // never-unsafe -> currently-unsafe -> was-unsafe-now-safe -> currently-unsafe-again (reset).
-type resourceResetState struct {
+type assetResetState struct {
 	wasEverUnsafe bool
 	currentlySafe bool
 	lastSafeAt    time.Time
 }
 
-func newResetState(isUnsafe bool, t time.Time) resourceResetState {
-	return resourceResetState{
+func newResetState(isUnsafe bool, t time.Time) assetResetState {
+	return assetResetState{
 		wasEverUnsafe: isUnsafe,
 		currentlySafe: !isUnsafe,
 		lastSafeAt:    t,
 	}
 }
 
-// streakReset returns true when a resource transitions back to unsafe after
+// streakReset returns true when an asset transitions back to unsafe after
 // a period of safety: unsafe -> safe -> unsafe. This means the violation clock
 // was reset by the safe interval.
-func (s resourceResetState) streakReset(isUnsafe bool) bool {
+func (s assetResetState) streakReset(isUnsafe bool) bool {
 	return isUnsafe && s.currentlySafe && s.wasEverUnsafe
 }
 
 // observe processes the next observation. Returns true if a streak reset occurred
 // (unsafe -> safe -> unsafe transition).
-func (s *resourceResetState) observe(isUnsafe bool, t time.Time) bool {
+func (s *assetResetState) observe(isUnsafe bool, t time.Time) bool {
 	reset := s.streakReset(isUnsafe)
 	s.currentlySafe = !isUnsafe
 	if isUnsafe {
@@ -113,16 +113,16 @@ func (s *resourceResetState) observe(isUnsafe bool, t time.Time) bool {
 	return reset
 }
 
-// resetEvent records a detected streak reset for a single resource.
+// resetEvent records a detected streak reset for a single asset.
 type resetEvent struct {
 	assetID string
 	safeAt  time.Time
 }
 
-func collectResourceIDs(snapshots []asset.Snapshot) map[string]struct{} {
+func collectAssetIDs(snapshots []asset.Snapshot) map[string]struct{} {
 	ids := make(map[string]struct{})
 	for _, snap := range snapshots {
-		for _, r := range snap.Resources {
+		for _, r := range snap.Assets {
 			ids[r.ID.String()] = struct{}{}
 		}
 	}
@@ -130,13 +130,13 @@ func collectResourceIDs(snapshots []asset.Snapshot) map[string]struct{} {
 }
 
 // findResets walks sorted snapshots and returns all streak resets found.
-// Only resources present in scope are examined.
+// Only assets present in scope are examined.
 func findResets(snapshots []asset.Snapshot, unsafeIdx unsafeIndex, scope map[string]struct{}) []resetEvent {
-	states := make(map[string]resourceResetState, len(scope))
+	states := make(map[string]assetResetState, len(scope))
 	var resets []resetEvent
 
 	for snapIdx, snap := range snapshots {
-		for _, r := range snap.Resources {
+		for _, r := range snap.Assets {
 			assetID := r.ID.String()
 			if _, inScope := scope[assetID]; !inScope {
 				continue
@@ -169,14 +169,14 @@ func resetEntry(e resetEvent) Entry {
 		Case:    ViolationEvidence,
 		Signal:  "Streak reset detected",
 		AssetID: asset.ID(e.assetID),
-		Evidence: fmt.Sprintf("resource=%s became safe at %s then unsafe again",
+		Evidence: fmt.Sprintf("asset=%s became safe at %s then unsafe again",
 			e.assetID, e.safeAt.Format(time.RFC3339)),
 		Action: "Current violation reflects time since last reset, not total unsafe time",
 	}
 }
 
-// detectStreakResets finds resources that became safe between unsafe periods.
-// Only examines resources with existing findings.
+// detectStreakResets finds assets that became safe between unsafe periods.
+// Only examines assets with existing findings.
 func detectStreakResets(input Input) []Entry {
 	if len(input.Snapshots) < 2 {
 		return nil
@@ -199,9 +199,9 @@ func detectStreakResets(input Input) []Entry {
 	return entries
 }
 
-// detectAnyReset checks if any resource had a reset during the observation period.
-// Examines all resources (not filtered by findings) because this is called when
-// no findings exist to explain why resources didn't exceed the threshold.
+// detectAnyReset checks if any asset had a reset during the observation period.
+// Examines all assets (not filtered by findings) because this is called when
+// no findings exist to explain why assets didn't exceed the threshold.
 func detectAnyReset(input Input) bool {
 	if len(input.Snapshots) < 2 {
 		return false
@@ -210,6 +210,6 @@ func detectAnyReset(input Input) bool {
 	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
 	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
 
-	allResourceIDs := collectResourceIDs(snapshots)
-	return len(findResets(snapshots, unsafeIdx, allResourceIDs)) > 0
+	allAssetIDs := collectAssetIDs(snapshots)
+	return len(findResets(snapshots, unsafeIdx, allAssetIDs)) > 0
 }

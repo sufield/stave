@@ -14,7 +14,7 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
-		Resources: []asset.Asset{
+		Assets: []asset.Asset{
 			{
 				ID:     "my-phi-bucket",
 				Type:   kernel.TypeStorageBucket,
@@ -38,12 +38,12 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 
 	scrubbed := r.ScrubSnapshot(snap)
 
-	if len(scrubbed.Resources) != 1 {
-		t.Fatalf("Expected 1 resource, got %d", len(scrubbed.Resources))
+	if len(scrubbed.Assets) != 1 {
+		t.Fatalf("Expected 1 resource, got %d", len(scrubbed.Assets))
 	}
-	res := scrubbed.Resources[0]
+	res := scrubbed.Assets[0]
 
-	// Resource ID should be sanitized
+	// Asset ID should be sanitized
 	if res.ID == "my-phi-bucket" {
 		t.Error("Resource ID not sanitized")
 	}
@@ -89,7 +89,7 @@ func TestScrubSnapshot_Identities(t *testing.T) {
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
-		Resources:     []asset.Asset{},
+		Assets:     []asset.Asset{},
 		Identities: []asset.CloudIdentity{
 			{
 				ID:     "ident:1",
@@ -146,7 +146,7 @@ func TestScrubSnapshot_PreservesTimestamp(t *testing.T) {
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    ts,
-		Resources:     []asset.Asset{},
+		Assets:     []asset.Asset{},
 	}
 
 	scrubbed := r.ScrubSnapshot(snap)

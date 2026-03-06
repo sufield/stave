@@ -16,11 +16,11 @@ type FindingContext struct {
 // identity, and posture drift. Callers set Evidence before returning.
 func baseFinding(ctl *policy.ControlDefinition, timeline *asset.Timeline) evaluation.Finding {
 	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
-	resource := timeline.Asset()
+	a := timeline.Asset()
 	f.AssetID = timeline.ID
-	f.AssetType = resource.Type
-	f.AssetVendor = resource.Vendor
-	f.Source = resource.Source
+	f.AssetType = a.Type
+	f.AssetVendor = a.Vendor
+	f.Source = a.Source
 	f.PostureDrift = evaluation.ComputePostureDrift(timeline)
 	return f
 }

@@ -6,7 +6,7 @@
     "tool_version": "1.0.0"
   },
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "grnhse-marketing-site-assets",
       "type": "aws_s3_bucket",

@@ -19,13 +19,13 @@ func TestComputeUpcomingItems_DeterministicOrder(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: base,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				testUnsafeResource(true),
 			},
 		},
 		{
 			CapturedAt: base.Add(1 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				testUnsafeResource(true),
 			},
 		},
@@ -59,9 +59,9 @@ func TestComputeUpcomingItems_ResetsOnSafeTransition(t *testing.T) {
 		testControl("CTL.A", "2h"),
 	}
 	snapshots := []asset.Snapshot{
-		{CapturedAt: base, Resources: []asset.Asset{testUnsafeResource(true)}},
-		{CapturedAt: base.Add(1 * time.Hour), Resources: []asset.Asset{testUnsafeResource(false)}},
-		{CapturedAt: base.Add(2 * time.Hour), Resources: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(false)}},
+		{CapturedAt: base.Add(2 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
 	items := computeUpcomingItems(controls, snapshots, RiskOptions{GlobalMaxUnsafe: 6 * time.Hour, Now: base.Add(2 * time.Hour)})
@@ -118,8 +118,8 @@ func TestApplyUpcomingFilter_NormalizationAndDueWithin(t *testing.T) {
 func TestComputeUpcomingItems_UsesFallbackThresholdRules(t *testing.T) {
 	base := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	snapshots := []asset.Snapshot{
-		{CapturedAt: base, Resources: []asset.Asset{testUnsafeResource(true)}},
-		{CapturedAt: base.Add(1 * time.Hour), Resources: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
 	invalid := []policy.ControlDefinition{testControl("CTL.A", "not-a-duration")}
@@ -148,8 +148,8 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 		testControl("CTL.A", ""),
 	}
 	snapshots := []asset.Snapshot{
-		{CapturedAt: base, Resources: []asset.Asset{testUnsafeResource(true)}},
-		{CapturedAt: base.Add(1 * time.Hour), Resources: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
 	svc := NewService()
@@ -185,8 +185,8 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		testControl("CTL.A", "2h"),
 	}
 	snapshots := []asset.Snapshot{
-		{CapturedAt: base, Resources: []asset.Asset{testUnsafeResource(true)}},
-		{CapturedAt: base.Add(1 * time.Hour), Resources: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 	opts := RiskOptions{
 		GlobalMaxUnsafe:  4 * time.Hour,

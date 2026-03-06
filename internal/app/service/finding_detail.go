@@ -53,18 +53,18 @@ func buildFindingTrace(
 		return nil
 	}
 
-	resource, snapshot := findResourceInSnapshots(assetID, snapshots, lastSeenUnsafeAt)
-	if resource == nil || snapshot == nil {
+	found, snapshot := findAssetInSnapshots(assetID, snapshots, lastSeenUnsafeAt)
+	if found == nil || snapshot == nil {
 		return nil
 	}
 
-	ctx := policy.NewResourceEvalContextWithIdentities(*resource, policy.ControlParams(ctl.Params), snapshot.Identities)
+	ctx := policy.NewAssetEvalContextWithIdentities(*found, policy.ControlParams(ctl.Params), snapshot.Identities)
 	ctx.PredicateParser = predicateParser
 	root := trace.TracePredicate(ctl.UnsafePredicate, ctx)
 	tr := &trace.TraceResult{
 		ControlID:   ctl.ID,
-		AssetID:     resource.ID,
-		Properties:  resource.Properties,
+		AssetID:     found.ID,
+		Properties:  found.Properties,
 		Params:      ctl.Params,
 		Root:        root,
 		FinalResult: root.Result,
@@ -75,9 +75,9 @@ func buildFindingTrace(
 	}
 }
 
-// findResourceInSnapshots locates a resource in the loaded snapshots,
+// findAssetInSnapshots locates an asset in the loaded snapshots,
 // preferring the snapshot closest to targetTime. Returns nil if not found.
-func findResourceInSnapshots(
+func findAssetInSnapshots(
 	assetID asset.ID,
 	snapshots []asset.Snapshot,
 	targetTime time.Time,
@@ -99,18 +99,18 @@ func findResourceInSnapshots(
 			if !sorted[i].CapturedAt.Equal(targetTime) {
 				continue
 			}
-			resource := sorted[i].FindResource(assetID.String())
-			if resource != nil {
-				return resource, &sorted[i]
+			found := sorted[i].FindAsset(assetID.String())
+			if found != nil {
+				return found, &sorted[i]
 			}
 		}
 	}
 
 	// Fall back: search all snapshots.
 	for i := range sorted {
-		resource := sorted[i].FindResource(assetID.String())
-		if resource != nil {
-			return resource, &sorted[i]
+		found := sorted[i].FindAsset(assetID.String())
+		if found != nil {
+			return found, &sorted[i]
 		}
 	}
 

@@ -50,7 +50,7 @@ func (a *qualityAssessor) assess() qualityReport {
 	a.checkCount()
 	a.checkStaleness()
 	a.checkGap()
-	a.checkRequiredResources()
+	a.checkRequiredAssets()
 	return report.finalize()
 }
 
@@ -120,13 +120,13 @@ func (a *qualityAssessor) checkGap() {
 	)
 }
 
-func (a *qualityAssessor) checkRequiredResources() {
+func (a *qualityAssessor) checkRequiredAssets() {
 	params := a.params
 	if len(params.RequiredResources) == 0 {
 		return
 	}
 
-	missing := findMissingRequiredResources(a.sorted[len(a.sorted)-1], params.RequiredResources)
+	missing := findMissingRequiredAssets(a.sorted[len(a.sorted)-1], params.RequiredResources)
 	if len(missing) == 0 {
 		return
 	}
@@ -186,14 +186,14 @@ func calculateMaxGap(sorted []asset.Snapshot) time.Duration {
 	return maxObservedGap
 }
 
-func findMissingRequiredResources(latest asset.Snapshot, requiredResources []string) []string {
-	latestIDs := make(map[string]struct{}, len(latest.Resources))
-	for _, r := range latest.Resources {
+func findMissingRequiredAssets(latest asset.Snapshot, requiredAssets []string) []string {
+	latestIDs := make(map[string]struct{}, len(latest.Assets))
+	for _, r := range latest.Assets {
 		latestIDs[r.ID.String()] = struct{}{}
 	}
 
-	missing := make([]string, 0, len(requiredResources))
-	for _, id := range requiredResources {
+	missing := make([]string, 0, len(requiredAssets))
+	for _, id := range requiredAssets {
 		id = strings.TrimSpace(id)
 		if id == "" {
 			continue

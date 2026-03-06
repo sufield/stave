@@ -1,7 +1,7 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2023-12-05T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "rubygems-org-distribution",
       "type": "aws_cloudfront_distribution",

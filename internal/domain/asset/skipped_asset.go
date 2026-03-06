@@ -5,7 +5,7 @@ type IDSanitizer interface {
 	ID(string) string
 }
 
-// SkippedAsset represents a resource that was skipped due to exemption rules.
+// SkippedAsset represents an asset that was skipped due to exemption rules.
 type SkippedAsset struct {
 	ID      ID     `json:"asset_id"`
 	Pattern string `json:"matched_pattern"`

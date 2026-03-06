@@ -11,7 +11,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:GetObject"],
-            "resources": ["arn:aws:s3:::website-bucket/*"]
+            "assets": ["arn:aws:s3:::website-bucket/*"]
           }
         ]
       },

@@ -62,7 +62,7 @@
           "description": "Summary of the evaluation context used during diagnosis.",
           "required": [
             "total_snapshots",
-            "total_resources",
+            "total_assets",
             "total_controls",
             "time_span",
             "min_captured_at",
@@ -79,11 +79,11 @@
               "title": "Total Snapshot Count",
               "description": "Total number of observation snapshots analyzed."
             },
-            "total_resources": {
+            "total_assets": {
               "type": "integer",
               "minimum": 0,
-              "title": "Total Resource Count",
-              "description": "Total number of unique resources across all snapshots."
+              "title": "Total Asset Count",
+              "description": "Total number of unique assets across all snapshots."
             },
             "total_controls": {
               "type": "integer",
@@ -129,7 +129,7 @@
               "type": "integer",
               "minimum": 0,
               "title": "Currently Unsafe Count",
-              "description": "Number of resources currently in an unsafe state."
+              "description": "Number of assets currently in an unsafe state."
             }
           },
           "additionalProperties": true

@@ -14,7 +14,7 @@ This document describes the assets Stave protects, the threats it faces, and how
 | Asset | Sensitivity | Where |
 |-------|-------------|-------|
 | Observation snapshots | May contain infrastructure details, bucket names, ARNs, tags | User filesystem (input) |
-| Evaluation findings | Reveals which resources are unsafe and why | stdout or `--out` file |
+| Evaluation findings | Reveals which assets are unsafe and why | stdout or `--out` file |
 | Stave binary | Must be authentic and untampered | User filesystem / release download |
 | Control definitions | Define what "unsafe" means; tampering changes evaluation semantics | User filesystem or shipped pack |
 
@@ -62,7 +62,7 @@ The release pipeline builds, signs, and publishes artifacts.
 | Attack Vector | Control |
 |---------------|---------|
 | Schema injection (extra fields) | `additionalProperties: false` rejects unknown fields |
-| Path traversal via resource IDs | Bucket name validation; `filepath.Clean` on all paths |
+| Path traversal vian asset IDs | Bucket name validation; `filepath.Clean` on all paths |
 | Path traversal via control registry | Registry validates relative paths stay within root |
 | Oversized input (DoS) | Go's JSON/YAML parsers have bounded memory; no unbounded buffering |
 | Malformed timestamps | RFC 3339 parsing rejects invalid dates |

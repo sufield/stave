@@ -89,7 +89,7 @@ func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Result) {
 		result.Run.Snapshots)
 	d.ln("Summary")
 	d.ln("-------")
-	d.f("  Resources evaluated: %d\n", result.Summary.ResourcesEvaluated)
+	d.f("  Assets evaluated:    %d\n", result.Summary.AssetsEvaluated)
 	d.f("  Attack surface:      %d\n", result.Summary.AttackSurface)
 	d.f("  Violations:          %d\n\n", result.Summary.Violations)
 }

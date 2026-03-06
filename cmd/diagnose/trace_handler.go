@@ -23,7 +23,7 @@ var (
 	traceControlID   string
 	traceControlsDir string
 	traceObservation string
-	traceResourceID  string
+	traceAssetID  string
 	traceFormat      string
 	traceQuiet       bool
 )
@@ -56,7 +56,7 @@ func init() {
 	TraceCmd.Flags().StringVar(&traceControlID, "control", "", "Control ID to trace (required)")
 	TraceCmd.Flags().StringVarP(&traceControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	TraceCmd.Flags().StringVar(&traceObservation, "observation", "", "Path to single observation JSON file (required)")
-	TraceCmd.Flags().StringVar(&traceResourceID, "asset-id", "", "Asset ID to trace against (required)")
+	TraceCmd.Flags().StringVar(&traceAssetID, "asset-id", "", "Asset ID to trace against (required)")
 	TraceCmd.Flags().StringVarP(&traceFormat, "format", "f", "text", "Output format: text or json")
 	TraceCmd.Flags().BoolVar(&traceQuiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
@@ -86,12 +86,12 @@ func runTrace(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	assetID := strings.TrimSpace(traceResourceID)
-	resource, err := findTraceResource(snapshot, assetID, observationPath)
+	assetID := strings.TrimSpace(traceAssetID)
+	found, err := findTraceAsset(snapshot, assetID, observationPath)
 	if err != nil {
 		return err
 	}
-	result := buildTraceResult(control, resource, snapshot)
+	result := buildTraceResult(control, found, snapshot)
 
 	// Render
 	w := cmd.OutOrStdout()
@@ -148,28 +148,28 @@ func loadTraceSnapshot(observationPath string) (*asset.Snapshot, error) {
 	return &snapshot, nil
 }
 
-func findTraceResource(snapshot *asset.Snapshot, assetID, observationPath string) (*asset.Asset, error) {
-	for i := range snapshot.Resources {
-		if snapshot.Resources[i].ID.String() == assetID {
-			return &snapshot.Resources[i], nil
+func findTraceAsset(snapshot *asset.Snapshot, assetID, observationPath string) (*asset.Asset, error) {
+	for i := range snapshot.Assets {
+		if snapshot.Assets[i].ID.String() == assetID {
+			return &snapshot.Assets[i], nil
 		}
 	}
-	available := make([]string, 0, len(snapshot.Resources))
-	for _, r := range snapshot.Resources {
+	available := make([]string, 0, len(snapshot.Assets))
+	for _, r := range snapshot.Assets {
 		available = append(available, r.ID.String())
 	}
-	return nil, fmt.Errorf("resource %q not found in %s\nAvailable resources: %s",
+	return nil, fmt.Errorf("asset %q not found in %s\nAvailable assets: %s",
 		assetID, observationPath, strings.Join(available, ", "))
 }
 
-func buildTraceResult(ctl *policy.ControlDefinition, resource *asset.Asset, snapshot *asset.Snapshot) *trace.TraceResult {
-	ctx := policy.NewResourceEvalContextWithIdentities(*resource, policy.ControlParams(ctl.Params), snapshot.Identities)
+func buildTraceResult(ctl *policy.ControlDefinition, a *asset.Asset, snapshot *asset.Snapshot) *trace.TraceResult {
+	ctx := policy.NewAssetEvalContextWithIdentities(*a, policy.ControlParams(ctl.Params), snapshot.Identities)
 	ctx.PredicateParser = ctlyaml.YAMLPredicateParser
 	root := trace.TracePredicate(ctl.UnsafePredicate, ctx)
 	return &trace.TraceResult{
 		ControlID:   kernel.ControlID(ctl.ID),
-		AssetID:     resource.ID,
-		Properties:  resource.Properties,
+		AssetID:     a.ID,
+		Properties:  a.Properties,
 		Params:      ctl.Params,
 		Root:        root,
 		FinalResult: root.Result,

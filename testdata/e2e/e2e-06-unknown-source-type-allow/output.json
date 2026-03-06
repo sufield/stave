@@ -9,14 +9,14 @@
     "snapshots": 1,
     "input_hashes": {
       "files": {
-        "2026-01-11T00:00:00Z.json": "6d12d672f27a84f844ad346efa9337d9def0838f348ef861d20ce617f97d78b8"
+        "2026-01-11T00:00:00Z.json": "1c4d63dc0e7ab304afb93cb46952784fc89ccec79dd65d824b4b6bce7c2d0a93"
       },
-      "overall": "62fadc4f66fdb17d6c4d183746f21224e03ff8bd7e5019e3631b27a00ee03e0f"
+      "overall": "e67907b35dfa87e692d9ed7dba09227ed5b29ab8fbd437bdc456accad9d6e88f"
     },
     "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
   "summary": {
-    "resources_evaluated": 0,
+    "assets_evaluated": 0,
     "attack_surface": 0,
     "violations": 0
   },
@@ -30,8 +30,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
-      "dirty": false
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-06-unknown-source-type-allow/controls/CTL.EXP.DURATION.001.yaml"
+      ]
     }
   }
 }

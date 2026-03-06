@@ -68,14 +68,14 @@ func buildTopFindingEntries(findings []evaluation.Finding, limit int) []Entry {
 			Case:    ViolationEvidence,
 			Signal:  signalContinuousUnsafeStreak,
 			AssetID: f.AssetID,
-			Evidence: fmt.Sprintf("resource=%s control=%s first_unsafe=%s last_unsafe=%s duration=%.1fh threshold=%.1fh",
+			Evidence: fmt.Sprintf("asset=%s control=%s first_unsafe=%s last_unsafe=%s duration=%.1fh threshold=%.1fh",
 				f.AssetID,
 				f.ControlID,
 				formatOptionalRFC3339(f.Evidence.FirstUnsafeAt),
 				formatOptionalRFC3339(f.Evidence.LastSeenUnsafeAt),
 				f.Evidence.UnsafeDurationHours,
 				f.Evidence.ThresholdHours),
-			Action: "If resource was safe briefly, ensure a snapshot captured that safe state",
+			Action: "If asset was safe briefly, ensure a snapshot captured that safe state",
 		})
 	}
 

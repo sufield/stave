@@ -11,7 +11,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:GetObject"],
-            "resources": ["arn:aws:s3:::public-read-bucket/*"]
+            "assets": ["arn:aws:s3:::public-read-bucket/*"]
           }
         ]
       },
@@ -44,7 +44,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:PutObject"],
-            "resources": ["arn:aws:s3:::public-write-bucket/*"]
+            "assets": ["arn:aws:s3:::public-write-bucket/*"]
           }
         ]
       },
@@ -61,7 +61,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:PutObject", "s3:GetObject"],
-            "resources": [
+            "assets": [
               "arn:aws:s3:::public-full-write-bucket",
               "arn:aws:s3:::public-full-write-bucket/*"
             ]
@@ -81,7 +81,7 @@
             "effect": "Allow",
             "principal": "AWS:AuthenticatedUsers",
             "actions": ["s3:GetObject"],
-            "resources": ["arn:aws:s3:::auth-users-bucket/*"]
+            "assets": ["arn:aws:s3:::auth-users-bucket/*"]
           }
         ]
       },
@@ -114,7 +114,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:GetObject"],
-            "resources": ["arn:aws:s3:::website-bucket/*"]
+            "assets": ["arn:aws:s3:::website-bucket/*"]
           }
         ]
       },
@@ -131,7 +131,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:GetBucketAcl"],
-            "resources": ["arn:aws:s3:::acl-readable-bucket"]
+            "assets": ["arn:aws:s3:::acl-readable-bucket"]
           }
         ]
       },
@@ -148,7 +148,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:PutBucketAcl"],
-            "resources": ["arn:aws:s3:::acl-writable-bucket"]
+            "assets": ["arn:aws:s3:::acl-writable-bucket"]
           }
         ]
       },
@@ -165,7 +165,7 @@
             "effect": "Allow",
             "principal": "*",
             "actions": ["s3:DeleteObject"],
-            "resources": ["arn:aws:s3:::deletable-bucket/*"]
+            "assets": ["arn:aws:s3:::deletable-bucket/*"]
           }
         ]
       },

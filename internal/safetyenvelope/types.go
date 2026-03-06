@@ -45,7 +45,7 @@ type Evaluation struct {
 	SuppressedFindings []evaluation.SuppressedFinding `json:"suppressed_findings,omitempty"`
 	RemediationGroups  []remediation.Group            `json:"remediation_groups,omitempty"`
 	Skipped            []evaluation.SkippedControl    `json:"skipped,omitempty"`
-	SkippedAssets      []asset.SkippedAsset           `json:"skipped_resources,omitempty"`
+	SkippedAssets      []asset.SkippedAsset           `json:"skipped_assets,omitempty"`
 	Extensions         *evaluation.Extensions         `json:"extensions,omitempty"`
 }
 

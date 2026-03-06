@@ -19,7 +19,7 @@ import (
 )
 
 // maxInputFileBytes is the hardcoded safety limit for input files (256 MB).
-// Any file or stream larger than this is rejected to prevent resource exhaustion.
+// Any file or stream larger than this is rejected to prevent asset exhaustion.
 const maxInputFileBytes int64 = 256 << 20
 
 var (

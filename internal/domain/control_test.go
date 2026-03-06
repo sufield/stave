@@ -153,7 +153,7 @@ func TestIdentityBlastRadiusPredicate(t *testing.T) {
 			},
 			// Too many systems
 			{Field: "identity.scope.distinct_systems", Op: "gt", ValueFromParam: "max_systems"},
-			// Too many resource groups
+			// Too many asset groups
 			{Field: "identity.scope.distinct_resource_groups", Op: "gt", ValueFromParam: "max_resource_groups"},
 		},
 	}
@@ -1120,7 +1120,7 @@ func TestNotSubsetOfFieldAgainstParams(t *testing.T) {
 			"allowed_accounts": []any{"111122223333", "444455556666"},
 		}
 
-		ctx := policy.NewResourceEvalContext(resource, params)
+		ctx := policy.NewAssetEvalContext(resource, params)
 		if got := rule.MatchesWithContext(ctx); got {
 			t.Error("expected false when all external accounts are in params.allowed_accounts")
 		}
@@ -1141,7 +1141,7 @@ func TestNotSubsetOfFieldAgainstParams(t *testing.T) {
 			"allowed_accounts": []any{"111122223333"},
 		}
 
-		ctx := policy.NewResourceEvalContext(resource, params)
+		ctx := policy.NewAssetEvalContext(resource, params)
 		if got := rule.MatchesWithContext(ctx); !got {
 			t.Error("expected true when any external account is not in params.allowed_accounts")
 		}

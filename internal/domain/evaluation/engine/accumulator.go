@@ -6,35 +6,35 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// resourceIDSet tracks a set of resource IDs without the ambiguity of map[string]bool.
-type resourceIDSet map[asset.ID]struct{}
+// assetIDSet tracks a set of asset IDs without the ambiguity of map[string]bool.
+type assetIDSet map[asset.ID]struct{}
 
-func newResourceIDSet() resourceIDSet        { return resourceIDSet{} }
-func (s resourceIDSet) add(id asset.ID)      { s[id] = struct{}{} }
-func (s resourceIDSet) has(id asset.ID) bool { _, ok := s[id]; return ok }
-func (s resourceIDSet) len() int             { return len(s) }
+func newAssetIDSet() assetIDSet        { return assetIDSet{} }
+func (s assetIDSet) add(id asset.ID)      { s[id] = struct{}{} }
+func (s assetIDSet) has(id asset.ID) bool { _, ok := s[id]; return ok }
+func (s assetIDSet) len() int             { return len(s) }
 
 // evaluationAccumulator collects findings, rows, and skip info during evaluation.
 type evaluationAccumulator struct {
 	findings            []evaluation.Finding
 	rows                []evaluation.Row
 	skipped             []evaluation.SkippedControl
-	skippedResources    []asset.SkippedAsset
-	seenResources       resourceIDSet
-	unsafeResources     resourceIDSet
-	exemptedResourceIDs resourceIDSet
+	skippedAssets    []asset.SkippedAsset
+	seenAssets       assetIDSet
+	unsafeAssets     assetIDSet
+	exemptedAssetIDs assetIDSet
 }
 
 func newEvaluationAccumulator() *evaluationAccumulator {
 	return &evaluationAccumulator{
-		seenResources:       newResourceIDSet(),
-		unsafeResources:     newResourceIDSet(),
-		exemptedResourceIDs: newResourceIDSet(),
+		seenAssets:       newAssetIDSet(),
+		unsafeAssets:     newAssetIDSet(),
+		exemptedAssetIDs: newAssetIDSet(),
 	}
 }
 
 func (acc *evaluationAccumulator) isNewExemption(assetID asset.ID) bool {
-	return !acc.exemptedResourceIDs.has(assetID)
+	return !acc.exemptedAssetIDs.has(assetID)
 }
 
 func (acc *evaluationAccumulator) addSkippedControl(
@@ -49,7 +49,7 @@ func (acc *evaluationAccumulator) addSkippedControl(
 }
 
 func (acc *evaluationAccumulator) addSkippedAsset(assetID asset.ID, pattern, reason string) {
-	acc.skippedResources = append(acc.skippedResources, asset.SkippedAsset{
+	acc.skippedAssets = append(acc.skippedAssets, asset.SkippedAsset{
 		ID:      assetID,
 		Pattern: pattern,
 		Reason:  reason,

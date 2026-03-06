@@ -9,7 +9,7 @@
 
 ## Modeling
 
-The vulnerability is modeled as a resource of type `s3_upload_policy` with:
+The vulnerability is modeled as an asset of type `s3_upload_policy` with:
 - `allowed_key_mode: "prefix"` — upload policy permits writes to any key under `files/`
 - `allowed_prefix: "files/"` — the overly broad prefix scope
 

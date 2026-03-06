@@ -42,7 +42,7 @@ func runQuality(cmd *cobra.Command, _ []string) error {
 		MinSnapshots:      runInput.minSnapshots,
 		MaxStaleness:      runInput.maxStaleness,
 		MaxGap:            runInput.maxGap,
-		RequiredResources: runInput.requiredResources,
+		RequiredResources: runInput.requiredAssets,
 		Strict:            runInput.strict,
 	})
 
@@ -77,7 +77,7 @@ func prepareQualityInput(cmd *cobra.Command) (qualityInput, error) {
 		minSnapshots:      qualityFlags.minSnapshots,
 		maxStaleness:      maxStaleness,
 		maxGap:            maxGap,
-		requiredResources: qualityFlags.required,
+		requiredAssets: qualityFlags.required,
 		now:               now,
 		format:            format,
 		strict:            qualityFlags.strict,

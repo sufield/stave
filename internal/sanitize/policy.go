@@ -27,7 +27,7 @@ func ParsePathMode(s string) PathMode {
 // It is constructed once from CLI flags and threaded through commands,
 // writers, error formatting, and the panic handler.
 type OutputSanitizationPolicy struct {
-	// SanitizeIDs enables deterministic sanitization of resource identifiers,
+	// SanitizeIDs enables deterministic sanitization of asset identifiers,
 	// matched property values, and source evidence in findings output.
 	SanitizeIDs bool
 

@@ -55,6 +55,6 @@ cd stave
 ## Duration Semantics
 
 - Duration is calculated from the first snapshot where the predicate matches to the last consecutive match.
-- When a resource transitions from unsafe to safe, the episode closes and the streak resets.
+- When an asset transitions from unsafe to safe, the episode closes and the streak resets.
 - The threshold comparison is strict: duration must **exceed** `--max-unsafe`, not merely equal it.
 - Use `--now` for deterministic output. Stave caps `--now` to the last snapshot's `captured_at`.

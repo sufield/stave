@@ -58,7 +58,7 @@ type qualityInput struct {
 	minSnapshots      int
 	maxStaleness      time.Duration
 	maxGap            time.Duration
-	requiredResources []string
+	requiredAssets []string
 	now               time.Time
 	format            ui.OutputFormat
 	strict            bool

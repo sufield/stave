@@ -35,14 +35,14 @@ func TestSnapshotsCheckIdentityConsistency_DeterministicOrdering(t *testing.T) {
 	snaps := Snapshots{
 		{
 			CapturedAt: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
-			Resources: []Asset{
+			Assets: []Asset{
 				{ID: "b", Type: kernel.TypeStorageBucket},
 				{ID: "a", Type: kernel.TypeStorageBucket},
 			},
 		},
 		{
 			CapturedAt: time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-			Resources: []Asset{
+			Assets: []Asset{
 				{ID: "b", Type: kernel.TypeIAMRole},
 				{ID: "c", Type: kernel.TypeStorageBucket},
 			},

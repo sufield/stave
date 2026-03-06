@@ -6,7 +6,7 @@
     "tool_version": "1.0.0"
   },
   "captured_at": "2015-10-26T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "shopify-owned-1",
       "type": "aws_s3_bucket",

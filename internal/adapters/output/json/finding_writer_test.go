@@ -34,7 +34,7 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 			},
 		},
 		Summary: evaluation.Summary{
-			ResourcesEvaluated: 1,
+			AssetsEvaluated: 1,
 			AttackSurface:      1,
 			Violations:         1,
 		},
@@ -113,7 +113,7 @@ func TestWriteFindings_WithoutEnvelope(t *testing.T) {
 			Snapshots:   0,
 		},
 		Summary: evaluation.Summary{
-			ResourcesEvaluated: 0,
+			AssetsEvaluated: 0,
 			AttackSurface:      0,
 			Violations:         0,
 		},

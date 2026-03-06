@@ -25,13 +25,13 @@
       "type": "object",
       "additionalProperties": false,
       "title": "Predicate Rule",
-      "description": "A single predicate rule that tests a resource field, or a nested logical group of rules.",
+      "description": "A single predicate rule that tests an asset field, or a nested logical group of rules.",
       "properties": {
         "field": {
           "type": "string",
           "minLength": 1,
           "title": "Field Path",
-          "description": "Dot-separated field path to evaluate on the resource (e.g., properties.public, properties.acl.grants)."
+          "description": "Dot-separated field path to evaluate on the asset (e.g., properties.public, properties.acl.grants)."
         },
         "op": {
           "type": "string",
@@ -207,7 +207,7 @@
         "unsafe_predicate": {
           "$ref": "#/$defs/predicate",
           "title": "Unsafe Predicate",
-          "description": "Predicate that defines when a resource is considered unsafe. When this predicate matches, a finding is generated."
+          "description": "Predicate that defines when an asset is considered unsafe. When this predicate matches, a finding is generated."
         },
         "unsafe_predicate_alias": {
           "type": "string",
@@ -219,7 +219,7 @@
           "type": "object",
           "additionalProperties": false,
           "title": "Exposure Classification",
-          "description": "Classifies who can reach the resource and how.",
+          "description": "Classifies who can reach the asset and how.",
           "required": ["type", "principal_scope"],
           "properties": {
             "type": {
@@ -261,7 +261,7 @@
             "example": {
               "type": "string",
               "title": "Remediation Example",
-              "description": "Optional example showing the remediation action applied to a real resource."
+              "description": "Optional example showing the remediation action applied to a real asset."
             }
           }
         }

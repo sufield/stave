@@ -49,7 +49,7 @@ cat > repro/observations.sanitized.json <<'JSON'
   "schema_version": "obs.v0.1",
   "kind": "observations",
   "captured_at": "2026-02-18T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "res:aws:s3:bucket:SANITIZED_01",
       "type": "storage_bucket",

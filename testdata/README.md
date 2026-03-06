@@ -4,7 +4,7 @@ This directory contains test fixtures for Stave's unit and E2E tests.
 
 ## Synthetic Data Disclaimer
 
-All AWS account IDs, ARNs, bucket names, and resource identifiers in these fixtures are **synthetic placeholders**. They do not correspond to real AWS accounts or infrastructure.
+All AWS account IDs, ARNs, bucket names, and asset identifiers in these fixtures are **synthetic placeholders**. They do not correspond to real AWS accounts or infrastructure.
 
 Common synthetic values used:
 

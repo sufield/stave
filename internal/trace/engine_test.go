@@ -185,8 +185,8 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 	out := buf.String()
 
 	checks := []string{
-		"Tracing CTL.TEST.001 against resource res:test",
-		"Resource Properties:",
+		"Tracing CTL.TEST.001 against asset res:test",
+		"Asset Properties:",
 		"properties.flag: true",
 		"Predicate: any",
 		"... (short-circuited)",

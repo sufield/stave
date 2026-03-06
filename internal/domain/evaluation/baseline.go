@@ -99,7 +99,7 @@ func CompareBaseline(base, current []BaselineEntry) BaselineComparisonResult {
 	return BaselineComparisonResult{New: newEntries, Resolved: resolved}
 }
 
-// SortBaselineEntries sorts entries by control ID then resource ID.
+// SortBaselineEntries sorts entries by control ID then asset ID.
 func SortBaselineEntries(entries []BaselineEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		if entries[i].ControlID != entries[j].ControlID {

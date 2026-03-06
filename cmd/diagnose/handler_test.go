@@ -180,7 +180,7 @@ func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 		},
 		Summary: diagnosis.Summary{
 			TotalSnapshots:     1,
-			TotalResources:     1,
+			TotalAssets:     1,
 			TotalControls:      1,
 			TimeSpan:           kernel.Duration(time.Hour),
 			MinCapturedAt:      time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -265,7 +265,7 @@ func TestWriteDiagnoseReport_Branches(t *testing.T) {
 		Entries: []diagnosis.Entry{},
 		Summary: diagnosis.Summary{
 			TotalSnapshots:     1,
-			TotalResources:     1,
+			TotalAssets:     1,
 			TotalControls:      1,
 			TimeSpan:           kernel.Duration(time.Hour),
 			MinCapturedAt:      time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),

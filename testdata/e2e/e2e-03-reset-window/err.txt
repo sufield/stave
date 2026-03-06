@@ -1,5 +1,6 @@
+WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-03-reset-window/controls/CTL.EXP.DURATION.001.yaml). This run may not reflect committed state.
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (18ms)
+Done:    evaluate controls against observations (8ms)
 Evaluation complete. No violations found.
 
 Need help? Run 'stave bug-report' to create a diagnostic bundle.

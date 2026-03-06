@@ -1,6 +1,6 @@
 package cmd
 
-const rootLongHelp = `Stave detects infrastructure resources that have remained unsafe for too long,
+const rootLongHelp = `Stave detects infrastructure assets that have remained unsafe for too long,
 using only configuration snapshots-no cloud credentials required.
 Output is deterministic when --now is set (required for reproducible CI/CD runs).
 

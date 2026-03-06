@@ -63,8 +63,8 @@ func ResolveFormatValue(cmd *cobra.Command, raw string) (ui.OutputFormat, error)
 	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
 }
 
-// LoadedResources holds concurrently loaded observations and controls.
-type LoadedResources struct {
+// LoadedAssets holds concurrently loaded observations and controls.
+type LoadedAssets struct {
 	Snapshots   []asset.Snapshot
 	Controls    []policy.ControlDefinition
 	ObsRepo     appcontracts.ObservationRepository
@@ -72,7 +72,7 @@ type LoadedResources struct {
 }
 
 // Load concurrently fetches observations and controls using configured repositories.
-func (r *LoadedResources) Load(ctx context.Context, obsDir, ctlDir string) error {
+func (r *LoadedAssets) Load(ctx context.Context, obsDir, ctlDir string) error {
 	if r.ObsRepo == nil {
 		return fmt.Errorf("observation repository is required")
 	}
@@ -186,22 +186,22 @@ func NewFindingWriter(format string, jsonMode bool, sanitizer *sanitize.Sanitize
 }
 
 // LoadObsAndInv creates loaders and loads both concurrently.
-func LoadObsAndInv(ctx context.Context, obsDir, ctlDir string) (LoadedResources, error) {
+func LoadObsAndInv(ctx context.Context, obsDir, ctlDir string) (LoadedAssets, error) {
 	obsRepo, err := NewObservationRepository()
 	if err != nil {
-		return LoadedResources{}, fmt.Errorf("create observation loader: %w", err)
+		return LoadedAssets{}, fmt.Errorf("create observation loader: %w", err)
 	}
 	ctlRepo, err := NewControlRepository()
 	if err != nil {
-		return LoadedResources{}, fmt.Errorf("create control loader: %w", err)
+		return LoadedAssets{}, fmt.Errorf("create control loader: %w", err)
 	}
 
-	res := LoadedResources{
+	res := LoadedAssets{
 		ObsRepo:     obsRepo,
 		ControlRepo: ctlRepo,
 	}
 	if err := res.Load(ctx, obsDir, ctlDir); err != nil {
-		return LoadedResources{}, err
+		return LoadedAssets{}, err
 	}
 	return res, nil
 }

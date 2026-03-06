@@ -61,7 +61,7 @@ const (
 
 // ClassifySafetyStatus derives a SafetyStatus from violation count and
 // upcoming risk items. UNSAFE if any violations exist; BORDERLINE if
-// resources are approaching or at their unsafe threshold; SAFE otherwise.
+// assets are approaching or at their unsafe threshold; SAFE otherwise.
 func ClassifySafetyStatus(violations int, upcomingRisks risk.Items) SafetyStatus {
 	if violations > 0 {
 		return SafetyStatusUnsafe
@@ -72,23 +72,23 @@ func ClassifySafetyStatus(violations int, upcomingRisks risk.Items) SafetyStatus
 	return SafetyStatusSafe
 }
 
-// Decision represents the outcome of evaluating an control against a resource.
+// Decision represents the outcome of evaluating an control against an asset.
 type Decision string
 
 const (
 	// DecisionViolation indicates the control was violated.
 	DecisionViolation Decision = "VIOLATION"
-	// DecisionPass indicates the resource complies with the control.
+	// DecisionPass indicates the asset complies with the control.
 	DecisionPass Decision = "PASS"
 	// DecisionInconclusive indicates insufficient data to determine compliance.
 	DecisionInconclusive Decision = "INCONCLUSIVE"
-	// DecisionNotApplicable indicates the control does not apply to this resource.
+	// DecisionNotApplicable indicates the control does not apply to this asset.
 	DecisionNotApplicable Decision = "NOT_APPLICABLE"
-	// DecisionSkipped indicates the resource was skipped (e.g., due to ignore rules).
+	// DecisionSkipped indicates the asset was skipped (e.g., due to ignore rules).
 	DecisionSkipped Decision = "SKIPPED"
 )
 
-// Row represents the evaluation outcome for a single (control, resource) pair.
+// Row represents the evaluation outcome for a single (control, asset) pair.
 // Every evaluated pair gets exactly one row with an explicit decision.
 type Row struct {
 	ControlID   kernel.ControlID `json:"control_id"`
@@ -114,7 +114,7 @@ func (row *Row) MarkInconclusive(reason string) {
 
 // Summary provides aggregate statistics.
 type Summary struct {
-	ResourcesEvaluated int `json:"resources_evaluated"`
+	AssetsEvaluated int `json:"assets_evaluated"`
 	AttackSurface      int `json:"attack_surface"`
 	Violations         int `json:"violations"`
 }
@@ -133,13 +133,13 @@ type Result struct {
 	Findings           []Finding            `json:"findings"`
 	SuppressedFindings []SuppressedFinding  `json:"suppressed_findings,omitempty"`
 	Skipped            []SkippedControl     `json:"skipped,omitempty"`
-	SkippedAssets      []asset.SkippedAsset `json:"skipped_resources,omitempty"`
+	SkippedAssets      []asset.SkippedAsset `json:"skipped_assets,omitempty"`
 	Metadata           Metadata             `json:"-"`
 	// Rows contains per-pair evaluation decisions (populated when --explain-all is enabled)
 	Rows []Row `json:"rows,omitempty"`
 }
 
-// FindFinding returns the finding matching the given control and resource IDs, or nil.
+// FindFinding returns the finding matching the given control and asset IDs, or nil.
 func (r Result) FindFinding(controlID kernel.ControlID, assetID asset.ID) *Finding {
 	for i := range r.Findings {
 		if r.Findings[i].ControlID == controlID && r.Findings[i].AssetID == assetID {

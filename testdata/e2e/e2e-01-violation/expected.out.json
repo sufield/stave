@@ -9,16 +9,16 @@
     "snapshots": 3,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "26770e3c47b1ea03df64ecffa9b89c81418026b174b9b83e42b57a2f4f9b7e06",
-        "2026-01-10T00:00:00Z.json": "cce8bb1c667d0b089b1dc1eac270cabd35316cccb52d52075b453ca515ff79bb",
-        "2026-01-11T00:00:00Z.json": "9218f381dd380bd4b894fc27bde8cbb18d35f228edecca4a0e3b9ed6f144b92a"
+        "2026-01-01T00:00:00Z.json": "76ef8db29d339317943f5618c18c9a21a4ec8e2db06705f9fdf8685a5fb2dbaa",
+        "2026-01-10T00:00:00Z.json": "18c978c80587bd68e7b67d9885bb419ee277d25a0648adb3db0a8390287758c5",
+        "2026-01-11T00:00:00Z.json": "400e13d047fd27e0f0799d872fa7d98d6a83352468013077b04c3322cd04d795"
       },
-      "overall": "8761e974ffa2ea302c38f88cca851001b03ed709e8fb51040addd9210a4d8e39"
+      "overall": "4e3e2e1e4ffbd529317d87bc20de4c9ffa99decfa402efc690a18469ed764e66"
     },
     "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 1,
     "violations": 1
   },
@@ -26,7 +26,7 @@
     {
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Exposure Duration Bound",
-      "control_description": "A resource must not remain unsafe beyond the configured time window.",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
       "asset_id": "res:aws:s3:bucket:public-bucket",
       "asset_type": "storage_bucket",
       "asset_vendor": "aws",
@@ -47,7 +47,7 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -68,7 +68,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

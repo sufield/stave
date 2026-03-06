@@ -6,7 +6,7 @@ import "github.com/sufield/stave/internal/domain/kernel"
 // Keys are framework identifiers (e.g. "hipaa", "pci_dss"), values are control IDs.
 type ComplianceMapping map[string]string
 
-// Exposure classifies who can reach a resource and how.
+// Exposure classifies who can reach an asset and how.
 // Not all findings involve exposure - only controls that detect
 // accessibility violations carry exposure metadata.
 type Exposure struct {

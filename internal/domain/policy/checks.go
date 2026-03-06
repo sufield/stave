@@ -32,7 +32,7 @@ func addMissingParamReference(param string, params ControlParams, missingSet map
 	missingSet[param] = struct{}{}
 }
 
-// CheckControlEffectiveness checks if controls match any resources.
+// CheckControlEffectiveness checks if controls match any assets.
 func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot) []diag.Issue {
 	var issues []diag.Issue
 
@@ -51,8 +51,8 @@ func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.S
 
 func controlMatchesAnyAsset(ctl ControlDefinition, snapshots []asset.Snapshot) bool {
 	for _, snap := range snapshots {
-		for _, resource := range snap.Resources {
-			if ctl.UnsafePredicate.Evaluate(resource, ctl.Params) {
+		for _, a := range snap.Assets {
+			if ctl.UnsafePredicate.Evaluate(a, ctl.Params) {
 				return true
 			}
 		}

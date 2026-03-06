@@ -1,5 +1,6 @@
+WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-06-unknown-source-type/controls/CTL.EXP.DURATION.001.yaml). This run may not reflect committed state.
 Running: evaluate controls against observations...
-Done:    evaluate controls against observations (5ms)
+Done:    evaluate controls against observations (2ms)
 [ERR] Command failed (INTERNAL_ERROR)
 Description: evaluation runner: snapshot[0] missing generated_by.source_type (use --allow-unknown-input to skip)
 Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input

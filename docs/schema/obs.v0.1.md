@@ -9,7 +9,7 @@ description: "Reference for the obs.v0.1 observation snapshot schema."
 
 Schema ID: `urn:stave:schema:observation:v0.1`
 
-An observation is a point-in-time snapshot of infrastructure resources. Each JSON file represents one capture timestamp. Stave requires **at least two snapshots** (two points in time) for duration-based controls to calculate unsafe periods.
+An observation is a point-in-time snapshot of infrastructure assets. Each JSON file represents one capture timestamp. Stave requires **at least two snapshots** (two points in time) for duration-based controls to calculate unsafe periods.
 
 ## Top-Level Structure
 
@@ -18,7 +18,7 @@ An observation is a point-in-time snapshot of infrastructure resources. Each JSO
   "schema_version": "obs.v0.1",
   "generated_by": { ... },
   "captured_at": "2026-01-15T00:00:00Z",
-  "resources": [ ... ],
+  "assets": [ ... ],
   "identities": [ ... ]
 }
 ```
@@ -28,7 +28,7 @@ An observation is a point-in-time snapshot of infrastructure resources. Each JSO
 | `schema_version` | string | Yes | Must be `"obs.v0.1"` |
 | `generated_by` | object | No | Tool that generated this observation |
 | `captured_at` | string (date-time) | Yes | RFC 3339 timestamp of capture |
-| `resources` | array of [resource](#resource) | Yes | Infrastructure resources |
+| `assets` | array of [resource](#resource) | Yes | Infrastructure resources |
 | `identities` | array of [identity](#identity) | No | IAM identities |
 
 The schema uses `additionalProperties: false` at every level. Extra fields cause validation failure.
@@ -73,7 +73,7 @@ Each resource represents a single infrastructure component.
 | `properties` | object | Yes | Resource properties for predicate evaluation |
 | `source` | [source_ref](#source-reference) | No | Source file reference |
 
-The `properties` object is free-form — its structure depends on the resource type. Control predicates reference fields within `properties` using dot-notation paths (e.g., `properties.storage.visibility.public_read`).
+The `properties` object is free-form — its structure depends on the asset type. Control predicates reference fields within `properties` using dot-notation paths (e.g., `properties.storage.visibility.public_read`).
 
 ## Identity
 
@@ -134,10 +134,10 @@ Validation also runs automatically at the start of `stave apply`, so inputs are 
 | Constraint | Detail |
 |------------|--------|
 | `additionalProperties: false` | Extra fields are rejected at every level. A `"snapshots"` wrapper array, for example, causes immediate failure. |
-| Required fields | `schema_version`, `captured_at`, `resources` |
+| Required fields | `schema_version`, `captured_at`, `assets` |
 | `const` version | `schema_version` must be exactly `"obs.v0.1"` |
 | Timestamp format | `captured_at` must be RFC 3339 (`date-time`) |
-| Resource required fields | Each resource must have `id`, `type`, `vendor`, `properties` |
+| Resource required fields | Each asset must have `id`, `type`, `vendor`, `properties` |
 | String minimums | `id`, `type`, `vendor` must be non-empty (`minLength: 1`) |
 | Identity required fields | `id`, `type`, `vendor`, `grants` (with `has_wildcard`), `scope` (with `distinct_systems`, `distinct_resource_groups`) |
 | Integer minimums | `scope.distinct_systems` and `scope.distinct_resource_groups` must be >= 0; `source.line` must be >= 1 |

@@ -10,15 +10,15 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// ChangeType is the domain type for resource change classification.
+// ChangeType is the domain type for asset change classification.
 type ChangeType string
 
 const (
-	// ChangeAdded indicates a resource appears in the newer snapshot only.
+	// ChangeAdded indicates an asset appears in the newer snapshot only.
 	ChangeAdded ChangeType = "added"
-	// ChangeRemoved indicates a resource appears in the older snapshot only.
+	// ChangeRemoved indicates an asset appears in the older snapshot only.
 	ChangeRemoved ChangeType = "removed"
-	// ChangeModified indicates a resource exists in both snapshots but changed.
+	// ChangeModified indicates an asset exists in both snapshots but changed.
 	ChangeModified ChangeType = "modified"
 )
 
@@ -29,8 +29,8 @@ type PropertyChange struct {
 	To   any    `json:"to,omitempty"`
 }
 
-// ResourceDiff represents the changes detected for a single resource.
-type ResourceDiff struct {
+// AssetDiff represents the changes detected for a single asset.
+type AssetDiff struct {
 	AssetID         ID               `json:"asset_id"`
 	ChangeType      ChangeType       `json:"change_type"` // added|removed|modified
 	FromType        string           `json:"from_type,omitempty"`
@@ -104,7 +104,7 @@ type ObservationDelta struct {
 	FromCaptured  time.Time               `json:"from_captured_at"`
 	ToCaptured    time.Time               `json:"to_captured_at"`
 	Summary       ObservationDeltaSummary `json:"summary"`
-	Changes       []ResourceDiff          `json:"changes"`
+	Changes       []AssetDiff          `json:"changes"`
 }
 
 // LatestTwoSnapshots returns the two most recent snapshots by CapturedAt.
@@ -133,25 +133,25 @@ func LatestTwoSnapshots(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err
 
 // ComputeObservationDelta compares two snapshots and returns an ObservationDelta.
 func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
-	prevByID := resourceMap(prev.Resources)
-	currByID := resourceMap(curr.Resources)
-	// O(N+M): Single pass to identify added, removed, and persisting resource IDs.
-	ids := uniqueSortedResourceKeys(prevByID, currByID)
+	prevByID := assetMap(prev.Assets)
+	currByID := assetMap(curr.Assets)
+	// O(N+M): Single pass to identify added, removed, and persisting asset IDs.
+	ids := uniqueSortedAssetKeys(prevByID, currByID)
 
 	delta := ObservationDelta{
 		SchemaVersion: kernel.SchemaDiff,
 		Kind:          "observation_delta",
 		FromCaptured:  prev.CapturedAt.UTC(),
 		ToCaptured:    curr.CapturedAt.UTC(),
-		Changes:       make([]ResourceDiff, 0),
+		Changes:       make([]AssetDiff, 0),
 	}
 
 	for _, id := range ids {
 		pr, hasPrev := prevByID[id]
 		cr, hasCurr := currByID[id]
 
-		// TELL: Let the resource identify its own property-level differences.
-		diff := diffResource(resourceDiffInput{
+		// TELL: Let the asset identify its own property-level differences.
+		diff := diffAsset(assetDiffInput{
 			ID:      id,
 			Prev:    pr,
 			HasPrev: hasPrev,
@@ -174,8 +174,8 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 	return delta
 }
 
-// SummarizeDeltaChanges computes summary counts from a list of resource diffs.
-func SummarizeDeltaChanges(changes []ResourceDiff) ObservationDeltaSummary {
+// SummarizeDeltaChanges computes summary counts from a list of asset diffs.
+func SummarizeDeltaChanges(changes []AssetDiff) ObservationDeltaSummary {
 	s := ObservationDeltaSummary{}
 	for _, change := range changes {
 		s.Increment(change.ChangeType)

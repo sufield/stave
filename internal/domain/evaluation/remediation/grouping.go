@@ -15,7 +15,7 @@ import (
 )
 
 // Group clusters findings that share the same fix plan actions on
-// the same resource.
+// the same asset.
 type Group struct {
 	AssetID              asset.ID                   `json:"asset_id"`
 	AssetType            kernel.AssetType           `json:"asset_type"`

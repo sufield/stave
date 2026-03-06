@@ -28,7 +28,7 @@ type EvaluateDeps struct {
 	Config appeval.EvaluateConfig
 }
 
-// Close releases resources held by EvaluateDeps.
+// Close releases assets held by EvaluateDeps.
 func (d *EvaluateDeps) Close() {}
 
 // Factory encapsulates the construction of EvaluateDeps.
@@ -42,7 +42,7 @@ func NewFactory(cmd *cobra.Command, params evaluateParams) *Factory {
 	return &Factory{cmd: cmd, params: params}
 }
 
-// resourceStack groups the intermediate resources created during dependency assembly.
+// resourceStack groups the intermediate assets created during dependency assembly.
 type resourceStack struct {
 	marshaler    appcontracts.FindingMarshaler
 	enrichFn     appcontracts.EnrichFunc
@@ -84,7 +84,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*EvaluateDeps, error) {
 	return &EvaluateDeps{Runner: built.Runner, Config: built.Config}, nil
 }
 
-// assembleResources creates the intermediate resources needed for dependency building.
+// assembleResources creates the intermediate assets needed for dependency building.
 func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack, error) {
 	writer, err := cmdutil.NewFindingWriter(applyFlags.outputFormat, cmdutil.IsJSONMode(f.cmd), cmdutil.GetSanitizer(f.cmd))
 	if err != nil {
@@ -147,7 +147,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 	return loader, nil
 }
 
-// mapToBuildInput converts the plan and resources into the input struct for BuildDependencies.
+// mapToBuildInput converts the plan and assets into the input struct for BuildDependencies.
 func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStack) appeval.BuildDependenciesInput {
 	var output io.Writer = os.Stdout
 	if applyFlags.quietMode {

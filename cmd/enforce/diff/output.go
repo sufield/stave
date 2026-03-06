@@ -37,7 +37,7 @@ func writeText(w io.Writer, out asset.ObservationDelta) error {
 		return err
 	}
 	if len(out.Changes) == 0 {
-		_, err := fmt.Fprintln(w, "No resource changes detected.")
+		_, err := fmt.Fprintln(w, "No asset changes detected.")
 		return err
 	}
 	for _, c := range out.Changes {

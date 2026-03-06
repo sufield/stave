@@ -71,7 +71,7 @@ unsafe_predicate:
 		t.Fatalf("control summary=%+v", ctlResult.Summary)
 	}
 
-	obsData := []byte(`{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","resources":[]}`)
+	obsData := []byte(`{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","assets":[]}`)
 	obsResult, err := svc.Validate(appvalidation.AutoRequest{Data: obsData})
 	if err != nil {
 		t.Fatalf("observation validate error: %v", err)

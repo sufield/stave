@@ -91,7 +91,7 @@ func init() {
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.Template, "template", "", "Go text/template string for custom output formatting")
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.AssetID, "asset-id", "", "Resource ID for single-finding detail mode (requires --control-id)")
+	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
 	_ = DiagnoseCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 	_ = DiagnoseCmd.RegisterFlagCompletionFunc("case", cmdutil.CompleteFixed(
 		string(diagnosis.ExpectedNone),

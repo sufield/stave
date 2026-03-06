@@ -36,7 +36,7 @@ func writeDiagnosisSummary(w io.Writer, report *diagnosis.Report) error {
 	if _, err := fmt.Fprintf(w, "  Snapshots:        %d\n", report.Summary.TotalSnapshots); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "  Resources:        %d\n", report.Summary.TotalResources); err != nil {
+	if _, err := fmt.Fprintf(w, "  Assets:           %d\n", report.Summary.TotalAssets); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(w, "  Controls:         %d\n", report.Summary.TotalControls); err != nil {

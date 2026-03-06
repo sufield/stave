@@ -6,7 +6,7 @@
     "tool_version": "1.9.8"
   },
   "captured_at": "2026-01-10T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "res:aws:s3:bucket:example-bucket",
       "type": "storage_bucket",
@@ -21,7 +21,7 @@
               "effect": "Allow",
               "principal": "*",
               "actions": ["s3:GetObject"],
-              "resources": ["arn:aws:s3:::example-bucket/invoices/*"]
+              "assets": ["arn:aws:s3:::example-bucket/invoices/*"]
             }
           ],
           "public_access_block": {

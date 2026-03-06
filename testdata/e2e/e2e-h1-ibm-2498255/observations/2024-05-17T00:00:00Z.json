@@ -1,7 +1,7 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2024-05-17T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "apptio-endpoint-ref-1",
       "type": "s3_bucket_reference",

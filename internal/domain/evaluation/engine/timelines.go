@@ -6,10 +6,10 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// BuildTimelinesPerControl constructs timelines for each resource, per control.
+// BuildTimelinesPerControl constructs timelines for each asset, per control.
 //
 // MVP 1.0 Semantics:
-// - Absence of a resource in a snapshot does NOT imply safe (no new evidence)
+// - Absence of an asset in a snapshot does NOT imply safe (no new evidence)
 // - Episodes only contain completed episodes (true -> false transitions)
 // - Open episodes remain represented by timeline open-state timestamps
 func BuildTimelinesPerControl(
@@ -29,8 +29,8 @@ func BuildTimelinesPerControl(
 		}
 
 		// NOTE: We intentionally do NOT close episodes when:
-		// 1. Resource disappears from latest snapshot (absence != safe)
-		// 2. Resource is still unsafe at end of input (open episodes stay open)
+		// 1. Asset disappears from latest snapshot (absence != safe)
+		// 2. Asset is still unsafe at end of input (open episodes stay open)
 		//
 		// Episodes array only contains COMPLETED episodes (true -> false).
 		// Open episode state is tracked on timeline state fields.
@@ -51,38 +51,38 @@ func recordSnapshotForControl(
 	snapshot asset.Snapshot,
 	predicateParser func(any) (*policy.UnsafePredicate, error),
 ) {
-	for _, resource := range snapshot.Resources {
-		timeline := getOrCreateTimeline(timelines, resource)
-		isUnsafe := isAssetUnsafeForControl(ctl, resource, snapshot, predicateParser)
+	for _, a := range snapshot.Assets {
+		timeline := getOrCreateTimeline(timelines, a)
+		isUnsafe := isAssetUnsafeForControl(ctl, a, snapshot, predicateParser)
 
 		timeline.RecordObservation(snapshot.CapturedAt, isUnsafe)
-		// Always keep the latest observed resource materialized on the timeline.
-		timeline.SetAsset(resource)
+		// Always keep the latest observed asset materialized on the timeline.
+		timeline.SetAsset(a)
 	}
 }
 
 func getOrCreateTimeline(
 	timelines map[string]*asset.Timeline,
-	resource asset.Asset,
+	a asset.Asset,
 ) *asset.Timeline {
-	assetID := resource.ID.String()
+	assetID := a.ID.String()
 	timeline, exists := timelines[assetID]
 	if exists {
 		return timeline
 	}
 
-	timeline = asset.NewTimeline(resource)
+	timeline = asset.NewTimeline(a)
 	timelines[assetID] = timeline
 	return timeline
 }
 
 func isAssetUnsafeForControl(
 	ctl policy.ControlDefinition,
-	resource asset.Asset,
+	a asset.Asset,
 	snapshot asset.Snapshot,
 	predicateParser func(any) (*policy.UnsafePredicate, error),
 ) bool {
-	ctx := policy.NewResourceEvalContextWithIdentities(resource, ctl.Params, snapshot.Identities)
+	ctx := policy.NewAssetEvalContextWithIdentities(a, ctl.Params, snapshot.Identities)
 	ctx.PredicateParser = predicateParser
 	return ctl.UnsafePredicate.EvaluateWithContext(ctx)
 }

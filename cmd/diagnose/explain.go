@@ -220,9 +220,9 @@ func buildMinimalObservation(fields []string, rules []explainRule) map[string]an
 			"tool":        "stave-explain",
 		},
 		"captured_at": "2026-01-18T00:00:00Z",
-		"resources": []map[string]any{
+		"assets": []map[string]any{
 			{
-				"id":         "example-resource",
+				"id":         "example-asset",
 				"type":       "aws_s3_bucket",
 				"vendor":     "aws",
 				"properties": props,

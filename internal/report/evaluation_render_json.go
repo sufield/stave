@@ -37,7 +37,7 @@ type reportJSONRun struct {
 }
 
 type reportJSONSummary struct {
-	ResourcesEvaluated int `json:"resources_evaluated"`
+	AssetsEvaluated int `json:"assets_evaluated"`
 	AttackSurface      int `json:"attack_surface"`
 	Violations         int `json:"violations"`
 	Skipped            int `json:"skipped"`
@@ -105,7 +105,7 @@ func newReportJSONOutput(eval safetyenvelope.Evaluation, toolVersion string) rep
 			Offline:        eval.Run.Offline,
 		},
 		Summary: reportJSONSummary{
-			ResourcesEvaluated: eval.Summary.ResourcesEvaluated,
+			AssetsEvaluated: eval.Summary.AssetsEvaluated,
 			AttackSurface:      eval.Summary.AttackSurface,
 			Violations:         eval.Summary.Violations,
 			Skipped:            len(eval.Skipped),

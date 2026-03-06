@@ -13,13 +13,13 @@ const s3ARNPrefix = "arn:aws:s3:::"
 // AssetID is a bucket identifier that can be bucket name or S3 ARN.
 type AssetID string
 
-// Normalize converts a resource id into canonical bucket-name form.
+// Normalize converts an asset id into canonical bucket-name form.
 func (r AssetID) Normalize() string {
 	s := strings.ToLower(strings.TrimSpace(string(r)))
 	return strings.TrimPrefix(s, s3ARNPrefix)
 }
 
-// Equals compares two resource ids after normalization.
+// Equals compares two asset ids after normalization.
 func (r AssetID) Equals(other string) bool {
 	return r.Normalize() == AssetID(other).Normalize()
 }

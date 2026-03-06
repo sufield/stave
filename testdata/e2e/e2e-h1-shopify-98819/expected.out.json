@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2015-11-15T00:00:00Z.json": "36b9771e11d8cfa0976af9571424587a484899177d83835523bdca53702a9176",
-        "2015-11-23T00:00:00Z.json": "524bc16a3a874bd81eb4e58c9e97099fc6f96eced5fee96c66319a4cbfe9e8c0"
+        "2015-11-15T00:00:00Z.json": "986bbbefb9af8be4cfd470dc790ce52c78f8772d89fbe9790cfc1fd5a7192c47",
+        "2015-11-23T00:00:00Z.json": "53cb0e088e3b4c4fc72782e5a68ea8b2df5c23b9dc976e8403b702a310c7a637"
       },
-      "overall": "34d5c52192070b7372b2f46607933bbf7ddfe36598344242b692747bbd0e866e"
+      "overall": "d79178e200a0b7ab50a7b8013ade1c10cea256bcd1d50c729aef7ecefefb0695"
     },
     "pack_hash": "d2b35cd40cec32a8718ca0f93ff93d9e6b67eced18e3388436a53e8cee4e6b11"
   },
   "summary": {
-    "resources_evaluated": 1,
+    "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 2
   },
@@ -45,14 +45,14 @@
         "root_causes": [
           "acl"
         ],
-        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
+        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource is publicly exposed beyond threshold.",
+        "description": "Asset is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
@@ -63,7 +63,7 @@
         },
         "preconditions": [
           "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this resource."
+          "Ensure public access is not intentionally required for this asset."
         ],
         "actions": [
           {
@@ -110,14 +110,14 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
+        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     }
@@ -134,7 +134,7 @@
         },
         "preconditions": [
           "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this resource."
+          "Ensure public access is not intentionally required for this asset."
         ],
         "actions": [
           {
@@ -175,7 +175,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

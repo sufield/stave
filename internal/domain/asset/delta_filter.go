@@ -2,7 +2,7 @@ package asset
 
 import "strings"
 
-// FilterOptions narrows an ObservationDelta by change/resource criteria.
+// FilterOptions narrows an ObservationDelta by change/asset criteria.
 type FilterOptions struct {
 	ChangeTypes []ChangeType
 	AssetTypes  []string
@@ -11,7 +11,7 @@ type FilterOptions struct {
 
 // ApplyFilter returns a new ObservationDelta containing only matching changes.
 func (d ObservationDelta) ApplyFilter(opt FilterOptions) ObservationDelta {
-	filtered := filterResourceDiffs(d.Changes, opt)
+	filtered := filterAssetDiffs(d.Changes, opt)
 	return ObservationDelta{
 		SchemaVersion: d.SchemaVersion,
 		Kind:          d.Kind,
@@ -22,21 +22,21 @@ func (d ObservationDelta) ApplyFilter(opt FilterOptions) ObservationDelta {
 	}
 }
 
-func filterResourceDiffs(changes []ResourceDiff, opt FilterOptions) []ResourceDiff {
+func filterAssetDiffs(changes []AssetDiff, opt FilterOptions) []AssetDiff {
 	if len(changes) == 0 {
 		return nil
 	}
 
 	changeTypes := buildChangeTypeSet(opt.ChangeTypes)
-	resourceTypes := buildAssetTypeSet(opt.AssetTypes)
+	assetTypes := buildAssetTypeSet(opt.AssetTypes)
 	assetID := strings.TrimSpace(opt.AssetID)
 
-	out := make([]ResourceDiff, 0, len(changes))
+	out := make([]AssetDiff, 0, len(changes))
 	for _, change := range changes {
 		if !matchesChangeType(change.ChangeType, changeTypes) {
 			continue
 		}
-		if !matchesResourceType(change, resourceTypes) {
+		if !matchesAssetType(change, assetTypes) {
 			continue
 		}
 		if !matchesID(change, assetID) {
@@ -75,22 +75,22 @@ func matchesChangeType(ct ChangeType, filter map[ChangeType]struct{}) bool {
 	return ok
 }
 
-func matchesResourceType(change ResourceDiff, filter map[string]struct{}) bool {
+func matchesAssetType(change AssetDiff, filter map[string]struct{}) bool {
 	if len(filter) == 0 {
 		return true
 	}
-	_, ok := filter[effectiveResourceType(change)]
+	_, ok := filter[effectiveAssetType(change)]
 	return ok
 }
 
-func matchesID(change ResourceDiff, substr string) bool {
+func matchesID(change AssetDiff, substr string) bool {
 	if substr == "" {
 		return true
 	}
 	return strings.Contains(change.AssetID.String(), substr)
 }
 
-func effectiveResourceType(change ResourceDiff) string {
+func effectiveAssetType(change AssetDiff) string {
 	if change.ToType != "" {
 		return change.ToType
 	}

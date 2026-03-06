@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "4408d12820468ad641a87cc4acf54804afb85ec280b66da2ef4e182c1ae01af0",
-        "2026-01-11T00:00:00Z.json": "1ef67d845887a1dc7c91ced6cf6e3a816698427535a46afc9bf015db9b606cdc"
+        "2026-01-01T00:00:00Z.json": "ba73aa180a2d046bc6e9d3692367ae8c4af69ba9f4d51cf36ad37b124301129e",
+        "2026-01-11T00:00:00Z.json": "d43310972a310f72bf459e40a275a6c0276b72c1266fe9add2d734062349c6c0"
       },
-      "overall": "8740bf2c66ddb19c8f1e3f26099870a1001d917722496f988cdaec89a37cf413"
+      "overall": "e8653a0b889506031712aed05b3de11be331eadc23035fbe6840783190c33bd5"
     },
     "pack_hash": "bb1a3dd9d2a4e80c9ff93dbbfa862ff5382902bc79e149dc41cf32fdb7df51e4"
   },
   "summary": {
-    "resources_evaluated": 5,
+    "assets_evaluated": 5,
     "attack_surface": 3,
     "violations": 3
   },
@@ -48,14 +48,14 @@
             "unsafe_value": "true"
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     },
@@ -91,14 +91,14 @@
             "unsafe_value": "phi"
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     },
@@ -134,14 +134,14 @@
             "unsafe_value": "phi"
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource has unsafe state configuration.",
+        "description": "Asset has unsafe state configuration.",
         "action": "Review and correct the state configuration, verify in new snapshot."
       }
     }
@@ -155,7 +155,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

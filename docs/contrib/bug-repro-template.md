@@ -40,7 +40,7 @@ cat > obs/2026-02-17T00:00:00Z.json <<'JSON'
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-02-17T00:00:00Z",
-  "resources": [{
+  "assets": [{
     "id": "res:aws:s3:bucket:SANITIZED_01",
     "type": "storage_bucket",
     "vendor": "aws",
@@ -61,7 +61,7 @@ cat > obs/2026-02-18T00:00:00Z.json <<'JSON'
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-02-18T00:00:00Z",
-  "resources": [{
+  "assets": [{
     "id": "res:aws:s3:bucket:SANITIZED_01",
     "type": "storage_bucket",
     "vendor": "aws",
@@ -130,7 +130,7 @@ cat > repro/observations.sanitized.json <<'JSON'
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-02-18T00:00:00Z",
-  "resources": [{
+  "assets": [{
     "id": "res:aws:s3:bucket:SANITIZED_01",
     "type": "storage_bucket",
     "vendor": "aws",

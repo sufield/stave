@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "30977e1c41dada6d7f609ca71eb30bb2307a52fc323da5882c3fac7d2eedada5",
-        "2026-01-11T00:00:00Z.json": "f8f9e4f43fc35b60c404022ebd8b3efe159dff87965000294a2391353584111f"
+        "2026-01-01T00:00:00Z.json": "46366f7a1582f27c45043ee13ae186a1a6a88eb9ef38d687017235c925e79273",
+        "2026-01-11T00:00:00Z.json": "c30401323d29429b821574e6c96c144e764b2b1c58a503cd8d119dd0b8343708"
       },
-      "overall": "a2742225a36e576b0ab2bf49d46401f2f9524218d4d3b0d55e674a1adbe4811c"
+      "overall": "35c618b1dc8c00fe7157e62e2b17ffbbe559889a525b2a787c13d7533b0cd376"
     },
     "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 0,
     "violations": 0
   },
@@ -31,11 +31,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-20-identity-clean/controls/CTL.ID.KUBE.001.yaml"
-      ]
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "dirty": false
     }
   }
 }

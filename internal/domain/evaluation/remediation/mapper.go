@@ -35,12 +35,12 @@ func (m *Mapper) MapFinding(f evaluation.Finding) policy.RemediationSpec {
 	switch f.ControlID.Classify() {
 	case kernel.ClassS3Public:
 		return policy.RemediationSpec{
-			Description: "Resource is publicly exposed beyond threshold.",
+			Description: "Asset is publicly exposed beyond threshold.",
 			Action:      "Remove public access, confirm via new snapshot.",
 		}
 	case kernel.ClassS3General:
 		return policy.RemediationSpec{
-			Description: "Resource has unsafe state configuration.",
+			Description: "Asset has unsafe state configuration.",
 			Action:      "Review and correct the state configuration, verify in new snapshot.",
 		}
 	default:

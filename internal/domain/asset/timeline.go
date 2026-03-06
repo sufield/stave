@@ -7,8 +7,8 @@ import (
 	"github.com/sufield/stave/internal/dbc"
 )
 
-// Timeline tracks the unsafe status of a resource across snapshots.
-// It records when the resource first became unsafe, when it was last seen unsafe,
+// Timeline tracks the unsafe status of an asset across snapshots.
+// It records when the asset first became unsafe, when it was last seen unsafe,
 // and maintains a history of completed episodes for recurrence detection.
 //
 // CONTRACT: historical episodes are archived as closed entries in history.
@@ -23,14 +23,14 @@ type Timeline struct {
 	stats   ObservationStats
 }
 
-// NewTimeline constructs an empty timeline for a resource.
-func NewTimeline(resource Asset) *Timeline {
-	if resource.ID.IsEmpty() {
+// NewTimeline constructs an empty timeline for an asset.
+func NewTimeline(a Asset) *Timeline {
+	if a.ID.IsEmpty() {
 		panic("precondition failed: NewTimeline requires non-empty asset ID")
 	}
 	return &Timeline{
-		ID:    resource.ID,
-		asset: resource,
+		ID:    a.ID,
+		asset: a,
 	}
 }
 
@@ -40,11 +40,11 @@ func (rt *Timeline) Asset() Asset {
 }
 
 // SetAsset updates the latest observed asset state for this timeline.
-func (rt *Timeline) SetAsset(resource Asset) {
+func (rt *Timeline) SetAsset(a Asset) {
 	if rt.ID.IsEmpty() {
-		rt.ID = resource.ID
+		rt.ID = a.ID
 	}
-	rt.asset = resource
+	rt.asset = a
 	rt.checkContracts()
 }
 
@@ -73,12 +73,12 @@ func (rt *Timeline) RecordObservation(t time.Time, isUnsafe bool) {
 	rt.checkContracts()
 }
 
-// CurrentlySafe reports whether the resource is in a safe state.
+// CurrentlySafe reports whether the asset is in a safe state.
 func (rt *Timeline) CurrentlySafe() bool {
 	return rt.activeEpisode == nil
 }
 
-// CurrentlyUnsafe reports whether the resource is in an unsafe state.
+// CurrentlyUnsafe reports whether the asset is in an unsafe state.
 func (rt *Timeline) CurrentlyUnsafe() bool {
 	return rt.activeEpisode != nil
 }
@@ -91,7 +91,7 @@ func (rt *Timeline) FirstUnsafeAt() time.Time {
 	return rt.activeEpisode.StartAt()
 }
 
-// LastSeenUnsafeAt returns the most recent timestamp where the resource was observed unsafe.
+// LastSeenUnsafeAt returns the most recent timestamp where the asset was observed unsafe.
 func (rt *Timeline) LastSeenUnsafeAt() time.Time {
 	return rt.lastSeenUnsafeAt
 }
@@ -145,7 +145,7 @@ func (rt *Timeline) resetUnsafeState() {
 	rt.lastSeenUnsafeAt = time.Time{}
 }
 
-// HasOpenEpisode reports whether the resource is currently in an unsafe episode
+// HasOpenEpisode reports whether the asset is currently in an unsafe episode
 // with a recorded start time.
 func (rt *Timeline) HasOpenEpisode() bool {
 	return rt.activeEpisode != nil && rt.activeEpisode.IsOpen()
@@ -183,11 +183,11 @@ func (rt *Timeline) verifyHistoryOrdering() {
 // FormatUnsafeSummary builds a user-facing explanation for the current unsafe state.
 func (rt *Timeline) FormatUnsafeSummary(threshold time.Duration, now time.Time) string {
 	if !rt.HasOpenEpisode() {
-		return "Resource is currently in an unsafe state."
+		return "Asset is currently in an unsafe state."
 	}
 
 	return fmt.Sprintf(
-		"Resource has been unsafe for %d hours (threshold: %d hours). Unsafe since %s.",
+		"Asset has been unsafe for %d hours (threshold: %d hours). Unsafe since %s.",
 		int(rt.UnsafeDuration(now).Hours()),
 		int(threshold.Hours()),
 		rt.FirstUnsafeAt().Format(time.RFC3339),

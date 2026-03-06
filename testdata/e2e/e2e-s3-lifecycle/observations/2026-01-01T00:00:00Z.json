@@ -6,7 +6,7 @@
     "tool_version": "1.9.8"
   },
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "retention-no-rules",
       "type": "aws_s3_bucket",

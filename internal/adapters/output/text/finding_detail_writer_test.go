@@ -25,7 +25,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 			Type:        "unsafe_state",
 			Compliance:  policy.ComplianceMapping{"cis_aws_v1.4.0": "2.1.5"},
 		},
-		Asset: evaluation.FindingResourceSummary{
+		Asset: evaluation.FindingAssetSummary{
 			ID:         "res:aws:s3:bucket:test-bucket",
 			Type:       "aws:s3:bucket",
 			Vendor:     "aws",
@@ -95,7 +95,7 @@ func TestWriteFindingDetail_WithTrace(t *testing.T) {
 			ID:   "CTL.TEST.001",
 			Name: "Test Control",
 		},
-		Asset: evaluation.FindingResourceSummary{
+		Asset: evaluation.FindingAssetSummary{
 			ID:   "res:test",
 			Type: "test:type",
 		},
@@ -153,7 +153,7 @@ func TestWriteFindingDetail_MinimalFields(t *testing.T) {
 			ID:   "CTL.TEST.001",
 			Name: "Minimal",
 		},
-		Asset: evaluation.FindingResourceSummary{
+		Asset: evaluation.FindingAssetSummary{
 			ID:   "res:test",
 			Type: "test:type",
 		},

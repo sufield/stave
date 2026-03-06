@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "612c32fb79a52d06e0953b4b29d8cdb726a4aefb543150b5160fb31fa62cb4a6",
-        "2026-01-11T00:00:00Z.json": "b3260872e9a44995d20deaebdb38c7faff0b443edbc6ed5886edb7d14b889564"
+        "2026-01-01T00:00:00Z.json": "e580da3fd480012ed9fa260eec11afdd8ee1622d8208d2122b4f18697d9d1d5a",
+        "2026-01-11T00:00:00Z.json": "fbb95ffb22a68f2a3716ca3bcabc29afa6bf86e1b3841c36a88d16931e36604d"
       },
-      "overall": "6e9ab71dc54fa68373b96eb843f3fb52914f15caf4b5fae89fb0e829f5c4f385"
+      "overall": "4097ccd2e6cc73619b339d6a4bdeb4d5e40bbc5f96b830c9d2bdcbb6efebba06"
     },
     "pack_hash": "2c3e3588e28da436e5052caf84f629ff4f9eb044d66fbe9c83e9facf975fda1e"
   },
   "summary": {
-    "resources_evaluated": 1,
+    "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 1
   },
@@ -48,14 +48,14 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource is publicly exposed beyond threshold.",
+        "description": "Asset is publicly exposed beyond threshold.",
         "action": "Remove public access, confirm via new snapshot."
       },
       "fix_plan": {
@@ -66,7 +66,7 @@
         },
         "preconditions": [
           "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this resource."
+          "Ensure public access is not intentionally required for this asset."
         ],
         "actions": [
           {
@@ -106,7 +106,7 @@
         },
         "preconditions": [
           "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this resource."
+          "Ensure public access is not intentionally required for this asset."
         ],
         "actions": [
           {
@@ -147,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

@@ -8,10 +8,10 @@ type ScrubConfig struct {
 	SanitizedKeys map[string]struct{}
 }
 
-// DefaultResourceScrub is the default scrub config for resource properties.
+// DefaultAssetScrub is the default scrub config for asset properties.
 // Sensitive keys (tags, policy, ACL) are removed; identifying keys (bucket_name,
 // arn) are replaced with deterministic tokens.
-var DefaultResourceScrub = ScrubConfig{
+var DefaultAssetScrub = ScrubConfig{
 	RemovedKeys: map[string]struct{}{
 		"tags":                     {},
 		"policy":                   {},
@@ -36,7 +36,7 @@ var DefaultIdentityScrub = ScrubConfig{
 
 // ScrubSnapshot returns a copy of the snapshot with sensitive properties removed.
 // Retains boolean fields needed for evaluation, removes raw policy/ACL/tag data.
-// Resource IDs, identity owner/purpose fields are also sanitized.
+// Asset IDs, identity owner/purpose fields are also sanitized.
 func (r *Sanitizer) ScrubSnapshot(s asset.Snapshot) asset.Snapshot {
 	if !r.enabled() {
 		return s
@@ -47,9 +47,9 @@ func (r *Sanitizer) ScrubSnapshot(s asset.Snapshot) asset.Snapshot {
 		CapturedAt:    s.CapturedAt,
 	}
 
-	out.Resources = make([]asset.Asset, len(s.Resources))
-	for i, res := range s.Resources {
-		out.Resources[i] = r.scrubResource(res)
+	out.Assets = make([]asset.Asset, len(s.Assets))
+	for i, res := range s.Assets {
+		out.Assets[i] = r.scrubAsset(res)
 	}
 
 	if len(s.Identities) > 0 {
@@ -62,7 +62,7 @@ func (r *Sanitizer) ScrubSnapshot(s asset.Snapshot) asset.Snapshot {
 	return out
 }
 
-func (r *Sanitizer) scrubResource(res asset.Asset) asset.Asset {
+func (r *Sanitizer) scrubAsset(res asset.Asset) asset.Asset {
 	return asset.Asset{
 		ID:         r.Asset(res.ID),
 		Type:       res.Type,

@@ -6,7 +6,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// SourceRef points to the source file and line where the resource is defined.
+// SourceRef points to the source file and line where the asset is defined.
 type SourceRef struct {
 	File string `json:"file"`
 	Line int    `json:"line"`
@@ -31,7 +31,7 @@ func (r Asset) Map() map[string]any {
 
 // CloudIdentity represents an IAM identity such as a user, role, or service account.
 // Identity attributes are stored in a flexible properties map so predicate evaluation
-// can use a unified model across both resources and identities.
+// can use a unified model across both assets and identities.
 type CloudIdentity struct {
 	ID         ID               `json:"id"`
 	Type       kernel.AssetType `json:"type"` // e.g., "iam_role", "service_account"

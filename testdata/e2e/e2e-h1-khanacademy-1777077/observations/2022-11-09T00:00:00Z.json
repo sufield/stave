@@ -1,7 +1,7 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2022-11-09T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "learn2-khanacademy-cname-ref",
       "type": "s3_bucket_reference",

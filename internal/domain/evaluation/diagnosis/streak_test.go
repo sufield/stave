@@ -23,13 +23,13 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: base,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "r1", Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: base.Add(2 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "r1", Properties: map[string]any{"public": true}},
 			},
 		},

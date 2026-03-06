@@ -12,7 +12,7 @@ import (
 func newUpcomingFilter(criteria UpcomingFilterCriteria) (upcomingFilter, error) {
 	filter := upcomingFilter{
 		controlIDs:    map[kernel.ControlID]struct{}{},
-		resourceTypes: map[kernel.AssetType]struct{}{},
+		assetTypes: map[kernel.AssetType]struct{}{},
 		statuses:      map[string]struct{}{},
 		dueWithin:     criteria.DueWithin,
 	}
@@ -26,7 +26,7 @@ func newUpcomingFilter(criteria UpcomingFilterCriteria) (upcomingFilter, error) 
 		if rt == "" {
 			continue
 		}
-		filter.resourceTypes[rt] = struct{}{}
+		filter.assetTypes[rt] = struct{}{}
 	}
 	for _, st := range criteria.Statuses {
 		normalized := strings.ToUpper(strings.TrimSpace(st))
@@ -70,10 +70,10 @@ func matchesUpcomingControl(item upcomingItem, filter upcomingFilter) bool {
 }
 
 func matchesUpcomingResourceType(item upcomingItem, filter upcomingFilter) bool {
-	if len(filter.resourceTypes) == 0 {
+	if len(filter.assetTypes) == 0 {
 		return true
 	}
-	_, ok := filter.resourceTypes[kernel.AssetType(item.AssetType)]
+	_, ok := filter.assetTypes[kernel.AssetType(item.AssetType)]
 	return ok
 }
 

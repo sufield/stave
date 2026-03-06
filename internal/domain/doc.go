@@ -1,7 +1,7 @@
 // Package domain contains the core business logic for Stave's safety evaluation.
 //
 // This package defines the domain model and evaluation algorithms for detecting
-// resources that remain in unsafe states for too long. It is independent of
+// assets that remain in unsafe states for too long. It is independent of
 // external concerns like file formats or CLI interfaces.
 //
 // # Navigation Guide
@@ -13,7 +13,7 @@
 //   - `evaluator_*`: timeline processing and finding generation
 //   - `validation_*`: validation orchestration, issue schema/codes, and validation rules
 //   - diagnostics models: diagnostic input/output and case types
-//   - entity/value files: snapshots/resources/identities/evidence/findings and small value objects
+//   - entity/value files: snapshots/assets/identities/evidence/findings and small value objects
 //
 // Start points by task:
 //
@@ -30,11 +30,11 @@
 //
 // Main domain types:
 //
-//   - [Snapshot]: A point-in-time observation of infrastructure resources
-//   - [Resource]: A single infrastructure component with properties
+//   - [Snapshot]: A point-in-time observation of infrastructure assets
+//   - [Asset]: A single infrastructure component with properties
 //   - [CloudIdentity]: An IAM identity for tenant isolation checks
 //   - [ControlDefinition]: A safety rule loaded from YAML
-//   - [UnsafePredicate]: Conditions that mark a resource as unsafe
+//   - [UnsafePredicate]: Conditions that mark an asset as unsafe
 //   - [Finding]: A detected violation with evidence
 //   - Evaluation engine (internal/domain/evaluation): The main evaluation runtime
 //   - [diagnosis.Report]: Analysis of evaluation inputs and results for troubleshooting
@@ -44,9 +44,9 @@
 // The evaluation engine processes snapshots to detect violations:
 //
 //  1. Snapshots are sorted by captured_at timestamp
-//  2. For each control, resource timelines are built tracking unsafe periods
-//  3. When a resource transitions safe→unsafe, an episode starts
-//  4. When a resource transitions unsafe→safe, the episode closes
+//  2. For each control, asset timelines are built tracking unsafe periods
+//  3. When an asset transitions safe→unsafe, an episode starts
+//  4. When an asset transitions unsafe→safe, the episode closes
 //  5. Duration violations are emitted when unsafe_duration exceeds threshold
 //  6. Recurrence violations are emitted when episode_count exceeds limit within window
 //
@@ -57,7 +57,7 @@
 //
 //   - Threshold mismatches between configuration and actual durations
 //   - Time span issues when snapshots don't cover enough history
-//   - Predicate matching problems when no resources match unsafe conditions
+//   - Predicate matching problems when no assets match unsafe conditions
 //   - Clock skew issues when evaluation time differs from snapshot times
 //
 // # Predicate Evaluation
@@ -88,7 +88,7 @@
 //
 // Stave supports multiple control types with different violation detection:
 //
-//   - Duration controls: Detect resources unsafe longer than threshold
+//   - Duration controls: Detect assets unsafe longer than threshold
 //   - Recurrence controls: Detect frequent safety violations within time windows
 //   - Per-control params override global defaults (e.g., max_unsafe_duration)
 //

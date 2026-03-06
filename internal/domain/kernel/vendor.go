@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Vendor represents the cloud vendor that owns a resource (e.g., "aws").
+// Vendor represents the cloud vendor that owns an asset (e.g., "aws").
 type Vendor string
 
 const (

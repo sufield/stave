@@ -8,7 +8,7 @@
         "tool": "stave"
       },
       "captured_at": "2026-01-14T00:00:00Z",
-      "resources": [
+      "assets": [
         {
           "id": "s3://demo-public-bucket",
           "type": "aws_s3_bucket",
@@ -42,7 +42,7 @@
         "tool": "stave"
       },
       "captured_at": "2026-01-15T00:00:00Z",
-      "resources": [
+      "assets": [
         {
           "id": "s3://demo-public-bucket",
           "type": "aws_s3_bucket",

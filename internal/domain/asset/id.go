@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-// ID is a domain-safe identifier for assets (resources and identities).
+// ID is a domain-safe identifier for assets (assets and identities).
 type ID string
 
 // String returns the raw identifier value.
@@ -50,7 +50,7 @@ func ParseID(raw string) (ID, error) {
 	return ID(raw), nil
 }
 
-// UnmarshalJSON validates resource identifiers at ingest time.
+// UnmarshalJSON validates asset identifiers at ingest time.
 func (id *ID) UnmarshalJSON(data []byte) error {
 	var raw string
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -68,16 +68,16 @@ func (id *ID) UnmarshalJSON(data []byte) error {
 func validateID(raw string) error {
 	for _, r := range raw {
 		if unicode.IsControl(r) {
-			return fmt.Errorf("resource id %q contains control characters", raw)
+			return fmt.Errorf("asset id %q contains control characters", raw)
 		}
 	}
 
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
-		return fmt.Errorf("resource id must not be empty")
+		return fmt.Errorf("asset id must not be empty")
 	}
 	if trimmed != raw {
-		return fmt.Errorf("resource id %q must not have leading or trailing whitespace", raw)
+		return fmt.Errorf("asset id %q must not have leading or trailing whitespace", raw)
 	}
 	return nil
 }

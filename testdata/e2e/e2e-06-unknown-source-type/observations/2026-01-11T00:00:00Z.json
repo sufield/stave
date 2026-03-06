@@ -2,5 +2,5 @@
   "schema_version": "obs.v0.1",
   "generated_by": { "tool": "terraform", "tool_version": "1.6.3" },
   "captured_at": "2026-01-11T00:00:00Z",
-  "resources": []
+  "assets": []
 }

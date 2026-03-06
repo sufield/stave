@@ -62,7 +62,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 
 	snapshots := []asset.Snapshot{
 		{
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{
 					ID: "r1",
 					Properties: map[string]any{

@@ -28,7 +28,7 @@ func (o *options) bindFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	cmd.Flags().StringSliceVar(&o.ChangeTypes, "change-type", nil, "Filter change types: added, removed, modified")
 	cmd.Flags().StringSliceVar(&o.AssetTypes, "asset-type", nil, "Filter asset type values")
-	cmd.Flags().StringVar(&o.AssetID, "asset-id", "", "Filter by resource ID substring")
+	cmd.Flags().StringVar(&o.AssetID, "asset-id", "", "Filter by asset ID substring")
 }
 
 func (o *options) normalize() {
@@ -68,6 +68,6 @@ func (o *options) buildFilter() (asset.FilterOptions, error) {
 }
 
 // kept for local tests
-func newDiffFilter(changeTypes, resourceTypes []string, assetID string) (asset.FilterOptions, error) {
-	return (&options{ChangeTypes: changeTypes, AssetTypes: resourceTypes, AssetID: assetID}).buildFilter()
+func newDiffFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
+	return (&options{ChangeTypes: changeTypes, AssetTypes: assetTypes, AssetID: assetID}).buildFilter()
 }

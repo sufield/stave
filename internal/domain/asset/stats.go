@@ -2,8 +2,8 @@ package asset
 
 import "time"
 
-// ObservationStats tracks continuity metrics for resource observations.
-// It is agnostic to whether a resource is safe or unsafe.
+// ObservationStats tracks continuity metrics for asset observations.
+// It is agnostic to whether an asset is safe or unsafe.
 // CONTRACT: coverageSpan is always derived from (lastSeenAt - firstSeenAt).
 type ObservationStats struct {
 	firstSeenAt      time.Time

@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/internal/pkg/fp"
 )
 
-type resourceDiffInput struct {
+type assetDiffInput struct {
 	ID      string
 	Prev    Asset
 	HasPrev bool
@@ -15,27 +15,27 @@ type resourceDiffInput struct {
 	HasCurr bool
 }
 
-func diffResource(in resourceDiffInput) *ResourceDiff {
+func diffAsset(in assetDiffInput) *AssetDiff {
 	switch {
 	case !in.HasPrev && in.HasCurr:
-		return &ResourceDiff{
+		return &AssetDiff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeAdded,
 			ToType:     in.Curr.Type.String(),
 		}
 	case in.HasPrev && !in.HasCurr:
-		return &ResourceDiff{
+		return &AssetDiff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeRemoved,
 			FromType:   in.Prev.Type.String(),
 		}
 	default:
-		// TELL: Let the resource identify its own property-level differences.
-		propChanges := DiffResources(in.Prev, in.Curr)
+		// TELL: Let the asset identify its own property-level differences.
+		propChanges := DiffAssets(in.Prev, in.Curr)
 		if len(propChanges) == 0 {
 			return nil
 		}
-		return &ResourceDiff{
+		return &AssetDiff{
 			AssetID:         ID(in.ID),
 			ChangeType:      ChangeModified,
 			FromType:        in.Prev.Type.String(),
@@ -45,8 +45,8 @@ func diffResource(in resourceDiffInput) *ResourceDiff {
 	}
 }
 
-// DiffResources compares two resources and returns property-level changes.
-func DiffResources(prev, curr Asset) []PropertyChange {
+// DiffAssets compares two assets and returns property-level changes.
+func DiffAssets(prev, curr Asset) []PropertyChange {
 	changes := make([]PropertyChange, 0)
 	if prev.Type != curr.Type {
 		changes = append(changes, PropertyChange{Path: "_meta.type", From: prev.Type.String(), To: curr.Type.String()})
@@ -93,11 +93,11 @@ func appendPropertyPath(base, segment string) string {
 	return base + "." + segment
 }
 
-func resourceMap(resources []Asset) map[string]Asset {
+func assetMap(resources []Asset) map[string]Asset {
 	return fp.ToMap(resources, func(r Asset) string { return r.ID.String() })
 }
 
-func uniqueSortedResourceKeys(a, b map[string]Asset) []string {
+func uniqueSortedAssetKeys(a, b map[string]Asset) []string {
 	keySet := make(map[string]struct{}, len(a)+len(b))
 	for k := range a {
 		keySet[k] = struct{}{}

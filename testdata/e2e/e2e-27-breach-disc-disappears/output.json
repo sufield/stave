@@ -9,16 +9,16 @@
     "snapshots": 3,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "577ba60919a5853b968abe6f1f7f9243dbacc88e2cee5fd608bb61bf9eb21f07",
-        "2026-01-01T01:00:00Z.json": "e93ea32e17adf79b70a9e4c0a609a5d31eb7fa9c5edb9573214832c297e1f8ed",
-        "2026-01-01T02:00:00Z.json": "71aa591b8ce452eed0f2253baa3a4daa59ee352e556320fdbe526c8d5c3a7fea"
+        "2026-01-01T00:00:00Z.json": "6691ce93e48d33408a83c03c4f410e3790f6130c6f16cb346403052e9017158d",
+        "2026-01-01T01:00:00Z.json": "6fcd57b9722751159caa6e901d60716267b864675b22760a5ea225c7919862b0",
+        "2026-01-01T02:00:00Z.json": "ee88e5a78f857ca319a748b608d18f4bccb88f3627b1d4b6c789413003517bdd"
       },
-      "overall": "b00b6286598318664592241d1b7feae20506bc3037387b4890c0dc57686cbed9"
+      "overall": "8d4ec2a38e41ff9452af493cf768ddd8a6ceb7fce44348638359cfbf200b1475"
     },
     "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
   "summary": {
-    "resources_evaluated": 1,
+    "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 1
   },
@@ -26,7 +26,7 @@
     {
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Exposure Duration Bound",
-      "control_description": "A resource must not remain unsafe beyond the configured time window.",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
       "asset_id": "res:aws:s3:bucket:disappearing-bucket",
       "asset_type": "storage_bucket",
       "asset_vendor": "aws",
@@ -47,7 +47,7 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 2 hours (threshold: 1 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 2 hours (threshold: 1 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -68,8 +68,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
-      "dirty": false
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-27-breach-disc-disappears/controls/CTL.EXP.DURATION.001.yaml"
+      ]
     }
   }
 }

@@ -183,7 +183,7 @@ func fromInputHashes(h *evaluation.InputHashes) *InputHashesDTO {
 
 func fromSummary(s evaluation.Summary) SummaryDTO {
 	return SummaryDTO{
-		ResourcesEvaluated: s.ResourcesEvaluated,
+		AssetsEvaluated: s.AssetsEvaluated,
 		AttackSurface:      s.AttackSurface,
 		Violations:         s.Violations,
 	}

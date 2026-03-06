@@ -1,7 +1,7 @@
 dsl_version: ctrl.v1
 id: CTL.EXP.RECURRENCE.001
 name: Unsafe Exposure Recurrence Limit
-description: A resource must not have too many unsafe episodes within a rolling window.
+description: An asset must not have too many unsafe episodes within a rolling window.
 type: unsafe_recurrence
 params:
   recurrence_limit: 2

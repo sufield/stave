@@ -147,7 +147,7 @@ type InputHashesDTO struct {
 
 // SummaryDTO mirrors evaluation.Summary.
 type SummaryDTO struct {
-	ResourcesEvaluated int `json:"resources_evaluated"`
+	AssetsEvaluated int `json:"assets_evaluated"`
 	AttackSurface      int `json:"attack_surface"`
 	Violations         int `json:"violations"`
 }
@@ -204,6 +204,6 @@ type ResultDTO struct {
 	SuppressedFindings []SuppressedFindingDTO `json:"suppressed_findings,omitempty"`
 	RemediationGroups  []RemediationGroupDTO  `json:"remediation_groups,omitempty"`
 	Skipped            []SkippedControlDTO    `json:"skipped,omitempty"`
-	SkippedAssets      []SkippedAssetDTO      `json:"skipped_resources,omitempty"`
+	SkippedAssets      []SkippedAssetDTO      `json:"skipped_assets,omitempty"`
 	Extensions         *ExtensionsDTO         `json:"extensions,omitempty"`
 }

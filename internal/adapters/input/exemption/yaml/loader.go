@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// LoadExemptionConfig loads a resource exemption configuration from a YAML file.
+// LoadExemptionConfig loads an asset exemption configuration from a YAML file.
 func LoadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {

@@ -169,7 +169,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 		Summary: appservice.ValidationSummary{
 			ControlsLoaded:             2,
 			SnapshotsLoaded:            3,
-			ResourceObservationsLoaded: 10,
+			AssetObservationsLoaded: 10,
 		},
 	}
 

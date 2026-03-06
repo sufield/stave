@@ -5,7 +5,7 @@
     "tool": "stave-extract-k8s-rbac"
   },
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "k8s:ClusterRoleBinding/system-admin-binding",
       "type": "k8s.clusterrolebinding",

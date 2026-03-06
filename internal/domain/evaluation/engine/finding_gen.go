@@ -24,8 +24,8 @@ func CreateDurationFinding(
 	now time.Time,
 ) evaluation.Finding {
 	duration := timeline.UnsafeDuration(now)
-	resource := timeline.Asset()
-	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, resource.Properties)
+	a := timeline.Asset()
+	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, a.Properties)
 	rootCauses := DeriveRootCauses(misconfigs)
 
 	f := baseFinding(ctl, timeline)
@@ -36,7 +36,7 @@ func CreateDurationFinding(
 		ThresholdHours:      maxUnsafe.Hours(),
 		Misconfigurations:   misconfigs,
 		RootCauses:          rootCauses,
-		SourceEvidence:      ExtractSourceEvidence(resource, rootCauses),
+		SourceEvidence:      ExtractSourceEvidence(a, rootCauses),
 		WhyNow:              timeline.FormatUnsafeSummary(maxUnsafe, now),
 	}
 	return f
@@ -66,15 +66,15 @@ func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCau
 	return causes
 }
 
-// ExtractSourceEvidence extracts source evidence from canonical resource
+// ExtractSourceEvidence extracts source evidence from canonical asset
 // properties. The domain relies only on canonical fields and does not read
 // vendor-specific property paths.
-func ExtractSourceEvidence(resource asset.Asset, rootCauses []evaluation.RootCause) *evaluation.SourceEvidence {
+func ExtractSourceEvidence(a asset.Asset, rootCauses []evaluation.RootCause) *evaluation.SourceEvidence {
 	if len(rootCauses) == 0 {
 		return nil
 	}
 
-	props := maps.ParseMap(resource.Properties)
+	props := maps.ParseMap(a.Properties)
 	evidence := &evaluation.SourceEvidence{}
 
 	for _, cause := range rootCauses {

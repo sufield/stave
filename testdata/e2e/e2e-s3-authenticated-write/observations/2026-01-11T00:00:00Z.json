@@ -6,7 +6,7 @@
     "tool_version": "1.0.0"
   },
   "captured_at": "2026-01-11T00:00:00Z",
-  "resources": [
+  "assets": [
     {
       "id": "auth-write-bucket",
       "type": "aws_s3_bucket",

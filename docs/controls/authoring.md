@@ -172,7 +172,7 @@ unsafe_predicate:
 | Type | When to use |
 |------|------------|
 | `unsafe_state` | Violation when predicate matches in any snapshot. Most common. |
-| `unsafe_duration` | Violation when resource is unsafe longer than `--max-unsafe`. |
+| `unsafe_duration` | Violation when asset is unsafe longer than `--max-unsafe`. |
 | `prefix_exposure` | Violation when protected prefixes are publicly readable. |
 | `unsafe_recurrence` | Violation when episode count exceeds limit within window. |
 
@@ -203,7 +203,7 @@ Control YAML is converted to JSON internally before schema validation runs.
 | Constraint | Control (`ctrl.v1`) | Observation (`obs.v0.1`) |
 |------------|----------------------|------------------------|
 | `additionalProperties: false` | Yes — extra fields cause rejection | Yes — no `"snapshots"` wrapper, no unknown fields |
-| Required fields | `dsl_version`, `id`, `name`, `description`, `unsafe_predicate` | `schema_version`, `captured_at`, `resources` |
+| Required fields | `dsl_version`, `id`, `name`, `description`, `unsafe_predicate` | `schema_version`, `captured_at`, `assets` |
 | `const` version | `dsl_version` must be `"ctrl.v1"` | `schema_version` must be `"obs.v0.1"` |
 | ID pattern | Must match `^CTL\.[A-Z0-9]+\.[A-Z0-9]+(\.[A-Z0-9]+)*\.[0-9]+$` | — |
 | `enum` values | `domain`: exposure, identity, storage, platforms, third_party | — |
@@ -211,7 +211,7 @@ Control YAML is converted to JSON internally before schema validation runs.
 | | `op`: 15 allowed operators (eq, ne, gt, lt, ...) | — |
 | Timestamp format | — | `captured_at` must be RFC 3339 (`date-time`) |
 | String minimums | `id`, `name`, `description` must be non-empty (minLength: 1) | Resource `id`, `type`, `vendor` must be non-empty |
-| Nested structure | `unsafe_predicate` must contain `any` or `all` arrays | `resources` items require `id`, `type`, `vendor`, `properties` |
+| Nested structure | `unsafe_predicate` must contain `any` or `all` arrays | `assets` items require `id`, `type`, `vendor`, `properties` |
 
 ### Common validation errors
 
@@ -263,7 +263,7 @@ Write two observation snapshots with the condition your control should detect:
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-01-01T00:00:00Z",
-  "resources": [{
+  "assets": [{
     "id": "res:aws:s3:bucket:test-bucket",
     "type": "storage_bucket",
     "vendor": "aws",

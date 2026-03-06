@@ -86,7 +86,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	}
 	req.Report.Summary.ControlsChecked = val.Summary.ControlsLoaded
 	req.Report.Summary.SnapshotsChecked = val.Summary.SnapshotsLoaded
-	req.Report.Summary.ResourceObservationsChecked = val.Summary.ResourceObservationsLoaded
+	req.Report.Summary.AssetObservationsChecked = val.Summary.AssetObservationsLoaded
 
 	for _, issue := range readinessDiagnostics(val).Issues {
 		req.Report.RecordIssue(validation.ReadinessIssue{

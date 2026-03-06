@@ -82,13 +82,13 @@ func TestScopeFilter_FilterSnapshots(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "out", Properties: map[string]any{"storage": map[string]any{"tags": map[string]any{"containsPHI": "false"}}}},
 			},
 		},
 		{
 			CapturedAt: time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				{ID: "in", Properties: map[string]any{"storage": map[string]any{"tags": map[string]any{"containsPHI": "true"}}}},
 				{ID: "out", Properties: map[string]any{"storage": map[string]any{"tags": map[string]any{"containsPHI": "false"}}}},
 			},
@@ -99,11 +99,11 @@ func TestScopeFilter_FilterSnapshots(t *testing.T) {
 	if len(got) != 1 {
 		t.Fatalf("filtered snapshot count = %d, want 1", len(got))
 	}
-	if len(got[0].Resources) != 1 {
-		t.Fatalf("filtered resource count = %d, want 1", len(got[0].Resources))
+	if len(got[0].Assets) != 1 {
+		t.Fatalf("filtered resource count = %d, want 1", len(got[0].Assets))
 	}
-	if got[0].Resources[0].ID != "in" {
-		t.Fatalf("filtered resource ID = %q, want in", got[0].Resources[0].ID)
+	if got[0].Assets[0].ID != "in" {
+		t.Fatalf("filtered resource ID = %q, want in", got[0].Assets[0].ID)
 	}
 }
 
@@ -171,7 +171,7 @@ func TestNewScopeFilter_EdgeCases(t *testing.T) {
 				t.Fatal("NewScopeFilter() returned nil")
 			}
 
-			// Behavior-based universal check: universal filters admit any resource.
+			// Behavior-based universal check: universal filters admit any asset.
 			unknown := asset.Asset{ID: "resource-not-in-allowlist-or-tags"}
 			isUniversalBehavior := got.IsInScope(unknown)
 			if isUniversalBehavior != tt.wantUniversal {
@@ -179,7 +179,7 @@ func TestNewScopeFilter_EdgeCases(t *testing.T) {
 			}
 
 			if !tt.wantUniversal {
-				// Ensure constrained filter still admits a valid in-scope resource.
+				// Ensure constrained filter still admits a valid in-scope asset.
 				inScope := asset.Asset{
 					ID: "resource-with-matching-tags",
 					Properties: map[string]any{

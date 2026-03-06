@@ -65,18 +65,18 @@ func writeFixLoopReport(cmd *cobra.Command, execCtx fixLoopExecution, report *fi
 
 func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safetyenvelope.Evaluation {
 	findings := remediation.NewMapper().EnrichFindings(result)
-	skippedResources := result.SkippedAssets
+	skippedAssets := result.SkippedAssets
 	run := result.Run
 	sanitizer := cmdutil.GetSanitizer(cmd)
 	findings = output.SanitizeFindings(sanitizer, findings)
-	skippedResources = output.SanitizeSkippedAssets(sanitizer, skippedResources)
+	skippedAssets = output.SanitizeSkippedAssets(sanitizer, skippedAssets)
 	run.InputHashes = output.SanitizeInputHashKeys(sanitizer, run.InputHashes)
 	return safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
 		Run:                run,
 		Summary:            result.Summary,
 		Findings:           findings,
 		Skipped:            result.Skipped,
-		SkippedAssets:      skippedResources,
+		SkippedAssets:      skippedAssets,
 		SuppressedFindings: result.SuppressedFindings,
 	})
 }

@@ -16,23 +16,23 @@ import (
 // Methods that consume it avoid re-traversing snapshots for time bounds or identity maps.
 type validationCtx struct {
 	timeline       *snapshotTimeline
-	resourceCounts map[ID]resourceOccurrence
-	resourceTypes  map[ID]resourceTypeSet // asset_id -> set of types
+	assetCounts map[ID]assetOccurrence
+	assetTypes  map[ID]assetTypeSet // asset_id -> set of types
 }
 
 // analyze builds the validation context in a single pass over all snapshots.
 func (s Snapshots) analyze() *validationCtx {
 	if s.IsEmpty() {
 		return &validationCtx{
-			resourceCounts: make(map[ID]resourceOccurrence),
-			resourceTypes:  make(map[ID]resourceTypeSet),
+			assetCounts: make(map[ID]assetOccurrence),
+			assetTypes:  make(map[ID]assetTypeSet),
 		}
 	}
 
 	ctx := &validationCtx{
 		timeline:       newSnapshotTimeline(s[0].CapturedAt),
-		resourceCounts: make(map[ID]resourceOccurrence),
-		resourceTypes:  make(map[ID]resourceTypeSet),
+		assetCounts: make(map[ID]assetOccurrence),
+		assetTypes:  make(map[ID]assetTypeSet),
 	}
 
 	timeCounts := make(map[time.Time]int, len(s))
@@ -42,16 +42,16 @@ func (s Snapshots) analyze() *validationCtx {
 		timeCounts[snap.CapturedAt]++
 
 		seenInSnap := make(map[ID]struct{})
-		for _, r := range snap.Resources {
+		for _, r := range snap.Assets {
 			assetID := ID(r.ID)
 			if _, ok := seenInSnap[assetID]; !ok {
-				ctx.resourceCounts[assetID]++
+				ctx.assetCounts[assetID]++
 				seenInSnap[assetID] = struct{}{}
 			}
-			types := ctx.resourceTypes[assetID]
+			types := ctx.assetTypes[assetID]
 			if types == nil {
-				types = make(resourceTypeSet)
-				ctx.resourceTypes[assetID] = types
+				types = make(assetTypeSet)
+				ctx.assetTypes[assetID] = types
 			}
 			types.add(r.Type)
 		}
@@ -63,23 +63,23 @@ func (s Snapshots) analyze() *validationCtx {
 
 // --- validation helper types ---
 
-type resourceOccurrence int
+type assetOccurrence int
 
-func (o resourceOccurrence) IsTransient() bool {
+func (o assetOccurrence) IsTransient() bool {
 	return o == 1
 }
 
-type resourceTypeSet map[kernel.AssetType]struct{}
+type assetTypeSet map[kernel.AssetType]struct{}
 
-func (s resourceTypeSet) add(resourceType kernel.AssetType) {
+func (s assetTypeSet) add(resourceType kernel.AssetType) {
 	s[resourceType] = struct{}{}
 }
 
-func (s resourceTypeSet) IsInconsistent() bool {
+func (s assetTypeSet) IsInconsistent() bool {
 	return len(s) > 1
 }
 
-func (s resourceTypeSet) List() []string {
+func (s assetTypeSet) List() []string {
 	out := make([]string, 0, len(s))
 	for t := range s {
 		out = append(out, string(t))
@@ -189,12 +189,12 @@ func (s Snapshots) checkStructural() (issues []diag.Issue) {
 
 	for _, snap := range s {
 		seen := make(map[string]struct{})
-		for _, r := range snap.Resources {
+		for _, r := range snap.Assets {
 			assetID := r.ID.String()
 			if _, exists := seen[assetID]; exists {
 				issues = append(issues, diag.New(diag.CodeDuplicateAssetID).
 					Warning().
-					Action("Ensure each resource has a unique ID within a snapshot").
+					Action("Ensure each asset has a unique ID within a snapshot").
 					WithMap(map[string]string{
 						"asset_id":    assetID,
 						"snapshot_at": snap.CapturedAt.Format(time.RFC3339),
@@ -208,10 +208,10 @@ func (s Snapshots) checkStructural() (issues []diag.Issue) {
 	return
 }
 
-// checkTagSanity validates case-insensitive key conflicts in resource tags.
+// checkTagSanity validates case-insensitive key conflicts in asset tags.
 func (s Snapshots) checkTagSanity() (issues []diag.Issue) {
 	for _, snap := range s {
-		for _, r := range snap.Resources {
+		for _, r := range snap.Assets {
 			tags := r.Tags()
 			if !tags.HasConflicts() {
 				continue
@@ -277,10 +277,10 @@ func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTim
 	return issue
 }
 
-// checkIdentityConsistency validates resource identity across snapshots.
+// checkIdentityConsistency validates asset identity across snapshots.
 func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.Issue) {
-	reusedTypeIDs := make([]ID, 0, len(ctx.resourceTypes))
-	for id, types := range ctx.resourceTypes {
+	reusedTypeIDs := make([]ID, 0, len(ctx.assetTypes))
+	for id, types := range ctx.assetTypes {
 		if types.IsInconsistent() {
 			reusedTypeIDs = append(reusedTypeIDs, id)
 		}
@@ -289,10 +289,10 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.I
 		return strings.Compare(a.String(), b.String())
 	})
 	for _, id := range reusedTypeIDs {
-		types := ctx.resourceTypes[id]
+		types := ctx.assetTypes[id]
 		issues = append(issues, diag.New(diag.CodeAssetIDReusedTypes).
 			Warning().
-			Action("Use unique resource IDs for different resource types").
+			Action("Use unique asset IDs for different asset types").
 			WithMap(map[string]string{
 				"asset_id": id.String(),
 				"types":    strings.Join(types.List(), ", "),
@@ -301,8 +301,8 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.I
 	}
 
 	if s.IsMultiSnapshot() {
-		singleAppearanceIDs := make([]ID, 0, len(ctx.resourceCounts))
-		for id, count := range ctx.resourceCounts {
+		singleAppearanceIDs := make([]ID, 0, len(ctx.assetCounts))
+		for id, count := range ctx.assetCounts {
 			if count.IsTransient() {
 				singleAppearanceIDs = append(singleAppearanceIDs, id)
 			}
@@ -313,7 +313,7 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.I
 		for _, id := range singleAppearanceIDs {
 			issues = append(issues, diag.New(diag.CodeAssetSingleAppearance).
 				Warning().
-				Action("Duration tracking requires resource to appear in multiple snapshots").
+				Action("Duration tracking requires asset to appear in multiple snapshots").
 				WithMap(map[string]string{
 					"asset_id": id.String(),
 				}).

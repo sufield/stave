@@ -9,15 +9,15 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-10T23:00:00Z.json": "f821c43ae202f00ab9a84c47d07549b4689819fcdba51c3f05282359440ed08c",
-        "2026-01-11T00:00:00Z.json": "0a5b8f9b41c1a15eb34e47ef112124c649851dff77ea6b6e29a7d4b55a5bb044"
+        "2026-01-10T23:00:00Z.json": "c8096ac8c8b80696539b2f200f4f5ca8c7d23569052fdb7cb044d6873d0ce402",
+        "2026-01-11T00:00:00Z.json": "550230bc3ca7653c9622b4c2d8071cadbf701302875d3ba05da49befeca2d560"
       },
-      "overall": "dae35a4fbab9e065e18ff86db75b34d761850591fc0d00dfb66500682e2b6e91"
+      "overall": "ddc533ed0d71c81965883c388753ccab9642a2fbc6d491a7e95b3dbcfdf4094b"
     },
     "pack_hash": "cdbb17ac7321c439f566401dfd8cf24c69959caf103ff76a5cf56eb2a67ef022"
   },
   "summary": {
-    "resources_evaluated": 1,
+    "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 1
   },
@@ -42,7 +42,7 @@
             "unsafe_value": true
           }
         ],
-        "why_now": "Resource has been unsafe for 1 hours (threshold: 0 hours). Unsafe since 2026-01-10T23:00:00Z."
+        "why_now": "Asset has been unsafe for 1 hours (threshold: 0 hours). Unsafe since 2026-01-10T23:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -63,7 +63,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bf53f3b6c2203e9b043f298a05098c77c4101c79",
+      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
       "dirty": false
     }
   }

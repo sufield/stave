@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
-// getStorageMap extracts the "storage" sub-map from a resource's Properties.
+// getStorageMap extracts the "storage" sub-map from an asset's Properties.
 func getStorageMap(t *testing.T, resource asset.Asset) map[string]any {
 	t.Helper()
 	storage, ok := resource.Properties["storage"].(map[string]any)
@@ -61,7 +61,7 @@ func assertIntField(t *testing.T, m map[string]any, key string, want int) {
 }
 
 // extractResources runs ExtractFromFile, asserts 2 snapshots and the expected
-// resource count in the current (second) snapshot, and returns resources keyed by ID.
+// asset count in the current (second) snapshot, and returns assets keyed by ID.
 func extractResources(t *testing.T, fixturePath string, scope *ScopeConfig, wantResources int) map[string]asset.Asset {
 	t.Helper()
 	extractor := NewExtractor(scope)
@@ -76,18 +76,18 @@ func extractResources(t *testing.T, fixturePath string, scope *ScopeConfig, want
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != wantResources {
-		t.Fatalf("expected %d resources, got %d", wantResources, len(snapshot.Resources))
+	if len(snapshot.Assets) != wantResources {
+		t.Fatalf("expected %d resources, got %d", wantResources, len(snapshot.Assets))
 	}
 
-	byID := make(map[string]asset.Asset, len(snapshot.Resources))
-	for _, r := range snapshot.Resources {
+	byID := make(map[string]asset.Asset, len(snapshot.Assets))
+	for _, r := range snapshot.Assets {
 		byID[string(r.ID)] = r
 	}
 	return byID
 }
 
-// resourceCase pairs a resource ID with a validation function for table-driven subtests.
+// resourceCase pairs an asset ID with a validation function for table-driven subtests.
 type resourceCase struct {
 	id       string
 	validate func(t *testing.T, resource asset.Asset)
@@ -106,11 +106,11 @@ func TestExtractPublicBucket(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource (health-tagged), got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource (health-tagged), got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	if resource.ID != "acme-phi-data-bucket" {
 		t.Errorf("expected bucket name 'acme-phi-data-bucket', got %q", resource.ID)
 	}
@@ -142,11 +142,11 @@ func TestExtractPrivateBucket(t *testing.T) {
 
 	// Use the second (current) snapshot for property validation
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 
 	// Check canonical storage model
 	storage := getStorageMap(t, resource)
@@ -195,11 +195,11 @@ func TestExtractHealthScopeFilter(t *testing.T) {
 	// Use the second (current) snapshot for property validation
 	snapshot := snapshots[1]
 	// Should only include the health-tagged bucket, not the marketing bucket
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource (health scope filtered), got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource (health scope filtered), got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	if resource.ID != "acme-patient-records" {
 		t.Errorf("expected health-tagged bucket 'acme-patient-records', got %q", resource.ID)
 	}
@@ -218,11 +218,11 @@ func TestExtractAccountPublicAccessBlock(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	if resource.ID != "acme-public-bucket" {
 		t.Errorf("expected bucket name 'acme-public-bucket', got %q", resource.ID)
 	}
@@ -466,11 +466,11 @@ func TestExtractACLOnlyPublicRead(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	if resource.ID != "acme-acl-public-bucket" {
 		t.Errorf("expected bucket 'acme-acl-public-bucket', got %q", resource.ID)
 	}
@@ -501,11 +501,11 @@ func TestExtractPartialPAB(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	storage := getStorageMap(t, resource)
 	controls := getSubMap(t, storage, "controls")
 
@@ -540,11 +540,11 @@ func TestExtractLatentPublicList(t *testing.T) {
 	}
 
 	snapshot := snapshots[1]
-	if len(snapshot.Resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(snapshot.Assets))
 	}
 
-	resource := snapshot.Resources[0]
+	resource := snapshot.Assets[0]
 	if resource.ID != "latent-listable-bucket" {
 		t.Errorf("expected bucket name 'latent-listable-bucket', got %q", resource.ID)
 	}
@@ -585,7 +585,7 @@ func TestExtractIncludeAllScope(t *testing.T) {
 	// Use the second (current) snapshot for property validation
 	snapshot := snapshots[1]
 	// Should include both buckets when IncludeAll is true
-	if len(snapshot.Resources) != 2 {
-		t.Fatalf("expected 2 resources (include all), got %d", len(snapshot.Resources))
+	if len(snapshot.Assets) != 2 {
+		t.Fatalf("expected 2 resources (include all), got %d", len(snapshot.Assets))
 	}
 }

@@ -1,8 +1,7 @@
-WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-24-messy-sparse/controls/CTL.ID.KUBE.001.yaml). This run may not reflect committed state.
 Running: evaluate controls against observations...
 warning: snapshot[0] has unsupported source_type "kubernetes.rbac", proceeding anyway
 warning: snapshot[1] has unsupported source_type "kubernetes.rbac", proceeding anyway
-Done:    evaluate controls against observations (17ms)
+Done:    evaluate controls against observations (13ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-24-messy-sparse/controls --observations testdata/e2e/e2e-24-messy-sparse/observations
 

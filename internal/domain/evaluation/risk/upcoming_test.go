@@ -18,13 +18,13 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{
 			CapturedAt: base,
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				testUnsafeResource(true),
 			},
 		},
 		{
 			CapturedAt: base.Add(1 * time.Hour),
-			Resources: []asset.Asset{
+			Assets: []asset.Asset{
 				testUnsafeResource(true),
 			},
 		},
@@ -63,9 +63,9 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 		testControl("CTL.A", "2h"),
 	}
 	snapshots := []asset.Snapshot{
-		{CapturedAt: base, Resources: []asset.Asset{testUnsafeResource(true)}},
-		{CapturedAt: base.Add(1 * time.Hour), Resources: []asset.Asset{testUnsafeResource(false)}},
-		{CapturedAt: base.Add(2 * time.Hour), Resources: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(false)}},
+		{CapturedAt: base.Add(2 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
 	items := ComputeItems(Request{
@@ -90,8 +90,8 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 	base := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	snapshots := []asset.Snapshot{
-		{CapturedAt: base, Resources: []asset.Asset{testUnsafeResource(true)}},
-		{CapturedAt: base.Add(1 * time.Hour), Resources: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
+		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
 	invalid := []policy.ControlDefinition{testControl("CTL.A", "not-a-duration")}

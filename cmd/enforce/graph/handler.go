@@ -47,7 +47,7 @@ func (o *options) bindFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&o.AllowUnknown, "allow-unknown-input", o.AllowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
 }
 
-// coverageEdge represents a single control→resource coverage relationship.
+// coverageEdge represents a single control→asset coverage relationship.
 type coverageEdge struct {
 	ControlID string `json:"control_id"`
 	AssetID   string `json:"asset_id"`
@@ -56,9 +56,9 @@ type coverageEdge struct {
 // coverageResult holds the complete coverage graph data.
 type coverageResult struct {
 	Controls           []string       `json:"controls"`
-	Resources          []string       `json:"resources"`
+	Assets             []string       `json:"assets"`
 	Edges              []coverageEdge `json:"edges"`
-	UncoveredResources []string       `json:"uncovered_resources"`
+	UncoveredAssets    []string       `json:"uncovered_assets"`
 }
 
 func runCoverage(cmd *cobra.Command, opts *options) error {
@@ -166,28 +166,28 @@ func latestSnapshot(snapshots []asset.Snapshot) asset.Snapshot {
 }
 
 func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot) coverageResult {
-	resourceMap, resourceIDs := coverageResources(latest.Resources)
+	assetMap, assetIDs := coverageAssets(latest.Assets)
 	controlIDs := coverageControlIDs(controls)
-	edges, covered := coverageEdges(controls, resourceMap, resourceIDs, latest.Identities)
+	edges, covered := coverageEdges(controls, assetMap, assetIDs, latest.Identities)
 	return coverageResult{
 		Controls:           controlIDs,
-		Resources:          resourceIDs,
+		Assets:             assetIDs,
 		Edges:              edges,
-		UncoveredResources: coverageUncovered(resourceIDs, covered),
+		UncoveredAssets: uncoveredAssets(assetIDs, covered),
 	}
 }
 
-func coverageResources(resources []asset.Asset) (map[string]asset.Asset, []string) {
-	resourceMap := make(map[string]asset.Asset, len(resources))
-	for _, resource := range resources {
-		resourceMap[resource.ID.String()] = resource
+func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
+	assetMap := make(map[string]asset.Asset, len(assets))
+	for _, a := range assets {
+		assetMap[a.ID.String()] = a
 	}
-	resourceIDs := make([]string, 0, len(resourceMap))
-	for id := range resourceMap {
-		resourceIDs = append(resourceIDs, id)
+	assetIDs := make([]string, 0, len(assetMap))
+	for id := range assetMap {
+		assetIDs = append(assetIDs, id)
 	}
-	slices.Sort(resourceIDs)
-	return resourceMap, resourceIDs
+	slices.Sort(assetIDs)
+	return assetMap, assetIDs
 }
 
 func coverageControlIDs(controls []policy.ControlDefinition) []string {
@@ -200,31 +200,31 @@ func coverageControlIDs(controls []policy.ControlDefinition) []string {
 
 func coverageEdges(
 	controls []policy.ControlDefinition,
-	resourceMap map[string]asset.Asset,
-	resourceIDs []string,
+	assetMap map[string]asset.Asset,
+	assetIDs []string,
 	identities []asset.CloudIdentity,
 ) ([]coverageEdge, map[string]bool) {
 	edges := make([]coverageEdge, 0)
-	coveredResources := make(map[string]bool, len(resourceIDs))
+	coveredAssets := make(map[string]bool, len(assetIDs))
 	for i := range controls {
 		ctl := &controls[i]
-		for _, rid := range resourceIDs {
-			evalCtx := policy.NewResourceEvalContextWithIdentities(resourceMap[rid], policy.ControlParams(ctl.Params), identities)
+		for _, rid := range assetIDs {
+			evalCtx := policy.NewAssetEvalContextWithIdentities(assetMap[rid], policy.ControlParams(ctl.Params), identities)
 			evalCtx.PredicateParser = ctlyaml.YAMLPredicateParser
 			if !ctl.UnsafePredicate.EvaluateWithContext(evalCtx) {
 				continue
 			}
 			edges = append(edges, coverageEdge{ControlID: ctl.ID.String(), AssetID: rid})
-			coveredResources[rid] = true
+			coveredAssets[rid] = true
 		}
 	}
-	return edges, coveredResources
+	return edges, coveredAssets
 }
 
-func coverageUncovered(resourceIDs []string, coveredResources map[string]bool) []string {
+func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string {
 	uncovered := make([]string, 0)
-	for _, rid := range resourceIDs {
-		if !coveredResources[rid] {
+	for _, rid := range assetIDs {
+		if !coveredAssets[rid] {
 			uncovered = append(uncovered, rid)
 		}
 	}
@@ -244,7 +244,7 @@ func writeResult(w io.Writer, format string, result coverageResult, sanitizer as
 
 func writeDOT(w io.Writer, result coverageResult, sanitizer assetSanitizer) error {
 	uncoveredSet := make(map[string]bool)
-	for _, r := range result.UncoveredResources {
+	for _, r := range result.UncoveredAssets {
 		uncoveredSet[r] = true
 	}
 
@@ -264,10 +264,10 @@ func writeDOT(w io.Writer, result coverageResult, sanitizer assetSanitizer) erro
 	fmt.Fprintln(w, "  }")
 	fmt.Fprintln(w)
 
-	// Resources cluster
-	fmt.Fprintln(w, "  subgraph cluster_resources {")
-	fmt.Fprintln(w, `    label="Resources";`)
-	for _, rid := range result.Resources {
+	// Assets cluster
+	fmt.Fprintln(w, "  subgraph cluster_assets {")
+	fmt.Fprintln(w, `    label="Assets";`)
+	for _, rid := range result.Assets {
 		displayID := string(sanitizer.Asset(asset.ID(rid)))
 		if uncoveredSet[rid] {
 			fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightyellow];\n", dotQuote(displayID))
@@ -280,8 +280,8 @@ func writeDOT(w io.Writer, result coverageResult, sanitizer assetSanitizer) erro
 
 	// Edges
 	for _, edge := range result.Edges {
-		resourceDisplay := string(sanitizer.Asset(asset.ID(edge.AssetID)))
-		fmt.Fprintf(w, "  %s -> %s;\n", dotQuote(edge.ControlID), dotQuote(resourceDisplay))
+		assetDisplay := string(sanitizer.Asset(asset.ID(edge.AssetID)))
+		fmt.Fprintf(w, "  %s -> %s;\n", dotQuote(edge.ControlID), dotQuote(assetDisplay))
 	}
 
 	fmt.Fprintln(w, "}")
@@ -296,21 +296,21 @@ func dotQuote(s string) string {
 }
 
 func writeJSON(w io.Writer, result coverageResult, sanitizer assetSanitizer) error {
-	for i, rid := range result.Resources {
-		result.Resources[i] = string(sanitizer.Asset(asset.ID(rid)))
+	for i, rid := range result.Assets {
+		result.Assets[i] = string(sanitizer.Asset(asset.ID(rid)))
 	}
 	for i, edge := range result.Edges {
 		result.Edges[i].AssetID = string(sanitizer.Asset(asset.ID(edge.AssetID)))
 	}
-	for i, rid := range result.UncoveredResources {
-		result.UncoveredResources[i] = string(sanitizer.Asset(asset.ID(rid)))
+	for i, rid := range result.UncoveredAssets {
+		result.UncoveredAssets[i] = string(sanitizer.Asset(asset.ID(rid)))
 	}
 
 	if result.Edges == nil {
 		result.Edges = []coverageEdge{}
 	}
-	if result.UncoveredResources == nil {
-		result.UncoveredResources = []string{}
+	if result.UncoveredAssets == nil {
+		result.UncoveredAssets = []string{}
 	}
 
 	enc := json.NewEncoder(w)

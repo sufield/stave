@@ -10,7 +10,7 @@ import (
 // AssetType represents the type of an infrastructure asset (e.g., "aws_s3_bucket").
 type AssetType string
 
-var resourceTypePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]*$`)
+var assetTypePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]*$`)
 
 const (
 	// TypeS3Bucket represents an AWS S3 bucket.
@@ -35,7 +35,7 @@ func (rt AssetType) String() string {
 	return string(rt)
 }
 
-// Domain extracts the top-level resource family (for example: "aws_s3" from "aws_s3_bucket").
+// Domain extracts the top-level asset family (for example: "aws_s3" from "aws_s3_bucket").
 func (rt AssetType) Domain() string {
 	parts := strings.Split(rt.String(), "_")
 	if len(parts) < 2 {
@@ -49,13 +49,13 @@ func NewAssetType(raw string) AssetType {
 	return AssetType(strings.ToLower(strings.TrimSpace(raw)))
 }
 
-// Validate checks whether the resource type satisfies domain naming rules.
+// Validate checks whether the asset type satisfies domain naming rules.
 func (rt AssetType) Validate() error {
 	if rt == "" {
-		return fmt.Errorf("resource type must be non-empty")
+		return fmt.Errorf("asset type must be non-empty")
 	}
-	if !resourceTypePattern.MatchString(rt.String()) {
-		return fmt.Errorf("invalid resource type %q: use lowercase alphanumerics with _, ., or -", rt.String())
+	if !assetTypePattern.MatchString(rt.String()) {
+		return fmt.Errorf("invalid asset type %q: use lowercase alphanumerics with _, ., or -", rt.String())
 	}
 	return nil
 }
@@ -69,12 +69,12 @@ func ParseAssetType(s string) (AssetType, error) {
 	return t, nil
 }
 
-// MarshalJSON writes the resource type as its normalized string form.
+// MarshalJSON writes the asset type as its normalized string form.
 func (rt AssetType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rt.String())
 }
 
-// UnmarshalJSON parses and validates resource type values from JSON payloads.
+// UnmarshalJSON parses and validates asset type values from JSON payloads.
 func (rt *AssetType) UnmarshalJSON(b []byte) error {
 	var raw string
 	if err := json.Unmarshal(b, &raw); err != nil {

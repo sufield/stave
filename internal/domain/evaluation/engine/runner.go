@@ -81,7 +81,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) evaluation.Result {
 	return e.sortAndBuildResult(acc, now, len(snapshots))
 }
 
-// evaluateControlAcrossTimelines evaluates a single control across all resource timelines.
+// evaluateControlAcrossTimelines evaluates a single control across all asset timelines.
 func (e *Runner) evaluateControlAcrossTimelines(
 	ctl *policy.ControlDefinition,
 	timelines map[string]*asset.Timeline,
@@ -91,10 +91,10 @@ func (e *Runner) evaluateControlAcrossTimelines(
 	strategy := e.strategyFor(ctl)
 
 	for assetID, timeline := range timelines {
-		// Check if resource is exempted.
+		// Check if asset is exempted.
 		if rule := e.Exemptions.ShouldExempt(assetID); rule != nil {
 			if acc.isNewExemption(asset.ID(assetID)) {
-				acc.exemptedResourceIDs.add(asset.ID(assetID))
+				acc.exemptedAssetIDs.add(asset.ID(assetID))
 				acc.addSkippedAsset(asset.ID(assetID), rule.Pattern, rule.Reason)
 			}
 			// Add SKIPPED row.
@@ -110,11 +110,11 @@ func (e *Runner) evaluateControlAcrossTimelines(
 			continue
 		}
 
-		// Track resources that were actually evaluated (not exempted).
-		acc.seenResources.add(asset.ID(assetID))
+		// Track assets that were actually evaluated (not exempted).
+		acc.seenAssets.add(asset.ID(assetID))
 
 		if timeline.CurrentlyUnsafe() {
-			acc.unsafeResources.add(asset.ID(assetID))
+			acc.unsafeAssets.add(asset.ID(assetID))
 		}
 
 		row, findings := strategy.Evaluate(timeline, now)
@@ -128,9 +128,9 @@ func (e *Runner) sortAndBuildResult(acc *evaluationAccumulator, now time.Time, s
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
 
-	// Sort skipped resources for deterministic output.
-	sort.Slice(acc.skippedResources, func(i, j int) bool {
-		return acc.skippedResources[i].ID < acc.skippedResources[j].ID
+	// Sort skipped assets for deterministic output.
+	sort.Slice(acc.skippedAssets, func(i, j int) bool {
+		return acc.skippedAssets[i].ID < acc.skippedAssets[j].ID
 	})
 
 	// Sort rows for deterministic output (by control_id, then asset_id).
@@ -154,14 +154,14 @@ func (e *Runner) sortAndBuildResult(acc *evaluationAccumulator, now time.Time, s
 			PackHash:    computePackHash(e.Controls),
 		},
 		Summary: evaluation.Summary{
-			ResourcesEvaluated: acc.seenResources.len(),
-			AttackSurface:      acc.unsafeResources.len(),
+			AssetsEvaluated: acc.seenAssets.len(),
+			AttackSurface:      acc.unsafeAssets.len(),
 			Violations:         len(regularFindings),
 		},
 		Findings:           regularFindings,
 		SuppressedFindings: suppressedFindings,
 		Skipped:            acc.skipped,
-		SkippedAssets:      acc.skippedResources,
+		SkippedAssets:      acc.skippedAssets,
 		Rows:               acc.rows,
 	}
 }
