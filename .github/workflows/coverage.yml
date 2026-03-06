@@ -35,7 +35,7 @@ jobs:
             local min="$2"
             local out="$3"
 
-            go test "$pkg" -covermode=atomic -coverprofile="$out"
+            go test "$pkg" -covermode=atomic -coverpkg="$pkg" -coverprofile="$out"
             local got
             got="$(go tool cover -func="$out" | awk '/^total:/ {gsub("%","",$3); print $3}')"
 
@@ -46,9 +46,9 @@ jobs:
             }
           }
 
-          check_coverage ./internal/app 25 coverage-app.out
-          check_coverage ./internal/predicate 40 coverage-predicate.out
-          check_coverage ./internal/domain 70 coverage-domain.out
+          check_coverage ./internal/app/... 25 coverage-app.out
+          check_coverage ./internal/predicate/... 40 coverage-predicate.out
+          check_coverage ./internal/domain/... 70 coverage-domain.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
