@@ -10,6 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/apply"
+	"github.com/sufield/stave/cmd/apply/extractor"
+	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	"github.com/sufield/stave/cmd/bugreport"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/diagnose"
@@ -17,10 +21,6 @@ import (
 	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/apply"
-	"github.com/sufield/stave/cmd/apply/extractor"
-	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
-	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	"github.com/sufield/stave/cmd/ingest"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"

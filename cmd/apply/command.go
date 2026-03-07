@@ -8,16 +8,16 @@ import (
 
 // applyFlagsType groups all CLI flags for the apply command.
 type applyFlagsType struct {
-	controlsDir, observationsDir, maxUnsafe, nowTime    string
-	allowUnknownInput, quietMode, applyDryRun          bool
-	applyExplain, profileIncludeAll                    bool
-	outputFormat, ignoreFile, applyProfile             string
-	profileInputFile, profileScopeFile                 string
-	profileBucketAllowlist, applyExcludeControlIDs     []string
-	applyTemplateStr, applyMinSeverity                 string
-	applyControlID, applyCompliance                    string
-	applyControlsFlagSet                               bool
-	applyIntegrityManifest, applyIntegrityPublicKey    string
+	controlsDir, observationsDir, maxUnsafe, nowTime string
+	allowUnknownInput, quietMode, applyDryRun        bool
+	applyExplain, profileIncludeAll                  bool
+	outputFormat, ignoreFile, applyProfile           string
+	profileInputFile, profileScopeFile               string
+	profileBucketAllowlist, applyExcludeControlIDs   []string
+	applyTemplateStr, applyMinSeverity               string
+	applyControlID, applyCompliance                  string
+	applyControlsFlagSet                             bool
+	applyIntegrityManifest, applyIntegrityPublicKey  string
 }
 
 var applyFlags applyFlagsType
