@@ -18,6 +18,56 @@ Cloud infrastructure misconfigurations often go undetected until a breach occurs
 - Detecting repeated patterns of unsafe configurations (recurrence)
 - Enforcing safety controls before deployment
 
+## Built-in Controls
+
+Stave ships with 43 S3 controls that detect misconfigurations out of the box.
+
+| # | Control | Description |
+|---|---------|-------------|
+| 1 | CTL.S3.PUBLIC.001 | Public read access via policy or ACL |
+| 2 | CTL.S3.PUBLIC.002 | Public access on buckets with sensitive data (PHI, PII, confidential) |
+| 3 | CTL.S3.PUBLIC.003 | Public write or delete access |
+| 4 | CTL.S3.PUBLIC.004 | ACL grants read to AllUsers/AuthenticatedUsers for PHI data |
+| 5 | CTL.S3.PUBLIC.005 | Latent public read masked only by Public Access Block |
+| 6 | CTL.S3.PUBLIC.006 | Latent public listing masked only by Public Access Block |
+| 7 | CTL.S3.PUBLIC.007 | Bucket policy grants public read |
+| 8 | CTL.S3.PUBLIC.008 | Bucket policy grants anonymous object listing |
+| 9 | CTL.S3.PUBLIC.LIST.001 | Anonymous listing of objects |
+| 10 | CTL.S3.PUBLIC.LIST.002 | Anonymous listing on intentionally public buckets without explicit tag |
+| 11 | CTL.S3.PUBLIC.PREFIX.001 | Protected prefixes publicly readable |
+| 12 | CTL.S3.WEBSITE.PUBLIC.001 | Static website hosting combined with public read |
+| 13 | CTL.S3.ACL.WRITE.001 | ACL grants write to AllUsers or AuthenticatedUsers |
+| 14 | CTL.S3.ACL.ESCALATION.001 | ACL writable by AllUsers/AuthenticatedUsers (WRITE_ACP escalation) |
+| 15 | CTL.S3.ACL.FULLCONTROL.001 | ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers |
+| 16 | CTL.S3.ACL.RECON.001 | ACL readable by unauthenticated users (READ_ACP recon) |
+| 17 | CTL.S3.ACCESS.001 | Bucket policy grants access to external AWS accounts |
+| 18 | CTL.S3.ACCESS.002 | Bucket policy uses wildcard actions (s3:* or *) |
+| 19 | CTL.S3.ACCESS.003 | Write or delete permissions granted to external accounts |
+| 20 | CTL.S3.AUTH.READ.001 | Read access granted to all authenticated AWS users |
+| 21 | CTL.S3.AUTH.WRITE.001 | Write or delete access granted to all authenticated AWS users |
+| 22 | CTL.S3.ENCRYPT.001 | Server-side encryption not enabled |
+| 23 | CTL.S3.ENCRYPT.002 | HTTPS not enforced (missing deny on SecureTransport=false) |
+| 24 | CTL.S3.ENCRYPT.003 | PHI buckets not using SSE-KMS with customer-managed key |
+| 25 | CTL.S3.ENCRYPT.004 | Non-public classified data not using SSE-KMS |
+| 26 | CTL.S3.VERSION.001 | Versioning not enabled |
+| 27 | CTL.S3.VERSION.002 | Backup buckets without MFA delete |
+| 28 | CTL.S3.LOCK.001 | Compliance-tagged buckets without Object Lock |
+| 29 | CTL.S3.LOCK.002 | PHI buckets with Object Lock not in COMPLIANCE mode |
+| 30 | CTL.S3.LOCK.003 | PHI Object Lock retention below 6-year HIPAA minimum |
+| 31 | CTL.S3.LOG.001 | Server access logging not enabled |
+| 32 | CTL.S3.LIFECYCLE.001 | Data-retention buckets without lifecycle rules |
+| 33 | CTL.S3.LIFECYCLE.002 | PHI lifecycle expiration below HIPAA retention minimum |
+| 34 | CTL.S3.NETWORK.001 | Wildcard principal without network-scoping conditions |
+| 35 | CTL.S3.CONTROLS.001 | Public access block not fully enabled |
+| 36 | CTL.S3.INCOMPLETE.001 | Safety cannot be proven due to missing policy or ACL data |
+| 37 | CTL.S3.GOVERNANCE.001 | Missing data-classification tag |
+| 38 | CTL.S3.WRITE.SCOPE.001 | Signed upload allows prefix-wide writes instead of exact key |
+| 39 | CTL.S3.WRITE.CONTENT.001 | Signed upload allows unrestricted content types |
+| 40 | CTL.S3.TENANT.ISOLATION.001 | Prefix-based tenant isolation not enforced by app-signer |
+| 41 | CTL.S3.BUCKET.TAKEOVER.001 | Externally referenced bucket is missing or unowned |
+| 42 | CTL.S3.DANGLING.ORIGIN.001 | CloudFront origin references non-existent S3 bucket |
+| 43 | CTL.S3.REPO.ARTIFACT.001 | Public bucket exposes version control artifacts (.git/, .svn/) |
+
 ## MVP Assumption
 
 For MVP, Stave assumes teams are capturing snapshots from **production**
