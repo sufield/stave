@@ -1,4 +1,4 @@
-.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry
+.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz
 
 # Binary name
 BINARY=stave
@@ -201,6 +201,14 @@ imports-check:
 	if [ -n "$$bad" ]; then \
 		echo "goimports would reformat:"; echo "$$bad"; exit 1; \
 	fi
+
+## fuzz: Run Go native fuzz tests (30s per target)
+fuzz: sync-schemas sync-controls
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/input/extract/s3/policy/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/input/observations/json/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/contracts/validator/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/predicate/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/kernel/
 
 ## help: Show this help
 help:

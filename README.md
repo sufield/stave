@@ -4,14 +4,14 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/branch/main/graph/badge.svg)](https://codecov.io/gh/sufield/stave)
 
-A configuration safety evaluator that detects cloud assets remaining unsafe for too long, using only local config snapshots without using any cloud credentials.
+A configuration analysis CLI tool that detects insecure configurations in your cloud environment using only local configuration snapshots — no cloud credentials required.
 
-Design philosophy: [docs/design-philosophy.md](docs/design-philosophy.md)
-Quick onboarding: [docs/time-to-first-finding.md](docs/time-to-first-finding.md)
+- Design philosophy: [docs/design-philosophy.md](docs/design-philosophy.md)
+- Quick onboarding: [docs/time-to-first-finding.md](docs/time-to-first-finding.md)
 
 ## Problem
 
-Infrastructure misconfigurations often go undetected until a breach occurs. Traditional security tools require cloud credentials and runtime access, creating additional attack surface. Stave solves this by:
+Cloud infrastructure misconfigurations often go undetected until a breach occurs. Traditional security tools require cloud credentials and runtime access, creating additional attack surface. Stave solves this by:
 
 - Analyzing configuration snapshots locally, without cloud API access
 - Tracking how long assets remain in unsafe states over time
@@ -1477,7 +1477,7 @@ unsafe_predicate:
 - `docs/e2e.md` — End-to-end test framework
 - `docs/control-spec.md` — Control and observation schema specification
 
-### System Invariants as Code
+### System Invariant as Code
 
 Stave treats safety checks as controls over observed system state, alongside static lint rules, with snapshot-time context.
 It focuses on deterministic, offline proofs from local snapshots.
