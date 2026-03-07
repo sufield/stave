@@ -43,7 +43,7 @@ func runHygiene(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	markdown, jsonOut, err := buildHygieneOutputs(execCtx)
+	reportReq, jsonOut, err := buildHygieneOutputs(execCtx)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func runHygiene(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if !cmdutil.QuietEnabled(cmd) {
-		if err := writeHygieneOutput(format, markdown, jsonOut, cmd.OutOrStdout()); err != nil {
+		if err := writeHygieneOutput(format, reportReq, jsonOut, cmd.OutOrStdout()); err != nil {
 			return err
 		}
 	}
@@ -126,23 +126,23 @@ func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
 	}, nil
 }
 
-func buildHygieneOutputs(execCtx hygieneExecution) (string, hygieneapp.Output, error) {
+func buildHygieneOutputs(execCtx hygieneExecution) (hygieneapp.ReportRequest, hygieneapp.Output, error) {
 	ctx := execCtx.ctx
 	req := execCtx.req
 	loaded, err := cmdutil.LoadObsAndInv(ctx, req.ObservationsDir, req.ControlsDir)
 	if err != nil {
-		return "", hygieneapp.Output{}, err
+		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	activeSnapshots := loaded.Snapshots
 	controls := loaded.Controls
 
 	archiveSnapshots, err := loadSnapshotsIfDirExists(ctx, loaded.ObsRepo, req.ArchiveDir)
 	if err != nil {
-		return "", hygieneapp.Output{}, err
+		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	files, err := listObservationSnapshotFiles(req.ObservationsDir)
 	if err != nil {
-		return "", hygieneapp.Output{}, err
+		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	snapshotStats := buildHygieneSnapshotStats(execCtx, activeSnapshots, archiveSnapshots, files)
 	currentRisk, trend := computeHygieneRiskTrend(execCtx, controls, activeSnapshots)
@@ -158,7 +158,6 @@ func buildHygieneOutputs(execCtx hygieneExecution) (string, hygieneapp.Output, e
 		Risks:     currentRisk,
 		Trends:    trend,
 	}
-	markdown := reportReq.RenderMarkdown()
 	jsonOut := hygieneapp.Output{
 		GeneratedAt:      execCtx.now,
 		LookbackStart:    execCtx.previousNow,
@@ -174,7 +173,7 @@ func buildHygieneOutputs(execCtx hygieneExecution) (string, hygieneapp.Output, e
 		RiskStats:     currentRisk,
 		Trend:         trend,
 	}
-	return markdown, jsonOut, nil
+	return reportReq, jsonOut, nil
 }
 
 func buildHygieneSnapshotStats(

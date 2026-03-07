@@ -46,7 +46,7 @@ func runQuality(cmd *cobra.Command, _ []string) error {
 		Strict:            runInput.strict,
 	})
 
-	if err := writeQualityOutput(runInput.format, report, cmdutil.QuietEnabled(cmd)); err != nil {
+	if err := writeQualityOutput(cmd.OutOrStdout(), runInput.format, report, cmdutil.QuietEnabled(cmd)); err != nil {
 		return err
 	}
 	if !report.Pass {

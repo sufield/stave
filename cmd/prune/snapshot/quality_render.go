@@ -2,28 +2,28 @@ package snapshot
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func writeQualityOutput(format ui.OutputFormat, report qualityReport, quiet bool) error {
+func writeQualityOutput(w io.Writer, format ui.OutputFormat, report qualityReport, quiet bool) error {
 	if format.IsJSON() {
-		if err := writeJSON(os.Stdout, report); err != nil {
+		if err := writeJSON(w, report); err != nil {
 			return fmt.Errorf("write quality report: %w", err)
 		}
 		return nil
 	}
 	if !quiet {
-		renderQualityText(report)
+		renderQualityText(w, report)
 	}
 	return nil
 }
 
-func renderQualityText(report qualityReport) {
-	out := os.Stdout
+func renderQualityText(w io.Writer, report qualityReport) {
+	out := w
 	summary := report.Summary
 	status := "PASS"
 	if !report.Pass {

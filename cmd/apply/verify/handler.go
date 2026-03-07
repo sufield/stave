@@ -2,13 +2,13 @@ package verify
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -200,11 +200,5 @@ func toEntries(findings []evaluation.Finding) []safetyenvelope.VerificationEntry
 }
 
 func writeVerificationJSON(w io.Writer, result safetyenvelope.Verification) error {
-	if err := safetyenvelope.ValidateVerification(result); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(result)
+	return outjson.WriteVerification(w, result)
 }

@@ -45,6 +45,9 @@ func runUpcoming(cmd *cobra.Command, _ []string) error {
 		Now:             opts.Now,
 	})
 	items = applyUpcomingFilter(items, opts.Now, opts.Filter)
+	if san := cmdutil.GetSanitizer(cmd); san != nil {
+		items = sanitizeUpcomingItems(san, items)
+	}
 	summary := summarizeUpcoming(items, opts.DueSoon)
 	report := renderUpcomingMarkdown(items, summary, UpcomingRenderOptions{
 		Now:              opts.Now,

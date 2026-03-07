@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -65,20 +66,7 @@ func writeDiagnoseReport(cmd *cobra.Command, out io.Writer, format ui.OutputForm
 // writeDiagnoseJSON outputs diagnostic report as JSON.
 // If global JSON mode is set, wraps output in {"ok": true, "data": ...}.
 func writeDiagnoseJSON(cmd *cobra.Command, w io.Writer, report *diagnosis.Report) error {
-	jsonOutput := safetyenvelope.NewDiagnose(report)
-	if err := safetyenvelope.ValidateDiagnose(jsonOutput); err != nil {
-		return err
-	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-
-	if cmdutil.IsJSONMode(cmd) {
-		// ok is true if no diagnostics found
-		envelope := safetyenvelope.JSONEnvelope[safetyenvelope.Diagnose]{OK: len(jsonOutput.Report.Entries) == 0, Data: jsonOutput}
-		return enc.Encode(envelope)
-	}
-	return enc.Encode(jsonOutput)
+	return outjson.WriteDiagnosis(w, report, cmdutil.IsJSONMode(cmd))
 }
 
 // writeFindingDetailJSON outputs a FindingDetail as JSON.

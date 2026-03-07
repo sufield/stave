@@ -2,7 +2,6 @@ package snapshot
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -111,13 +110,14 @@ func writePlanOutput(cmd *cobra.Command, plan planOutput) error {
 	if cmdutil.QuietEnabled(cmd) {
 		return nil
 	}
+	w := cmd.OutOrStdout()
 	if format.IsJSON() {
-		if err := writeJSON(os.Stdout, plan); err != nil {
+		if err := writeJSON(w, plan); err != nil {
 			return fmt.Errorf("write plan output: %w", err)
 		}
 		return nil
 	}
-	if err := pruner.RenderSnapshotPlanText(os.Stdout, plan); err != nil {
+	if err := pruner.RenderSnapshotPlanText(w, plan); err != nil {
 		return fmt.Errorf("write plan output: %w", err)
 	}
 	return nil

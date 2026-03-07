@@ -9,7 +9,7 @@ description: "Reference for Stave evaluation output contract out.v0.1."
 
 This page documents the evaluation output contract used by Stave. Every `apply` and `apply --profile aws-s3` command produces JSON conforming to this structure.
 
-The output contract is defined by Go struct types in `internal/domain/evaluation/` and `internal/adapters/output/dto/types.go`, with runtime validation against embedded JSON Schema (`schemas/out.v0.1.schema.json`) before emission. The schema version constant is `SchemaOutput` in `internal/domain/kernel/schema.go`.
+The output contract is defined by Go struct types in `internal/domain/evaluation/` and `internal/adapters/output/dto/types.go`, with runtime validation against embedded JSON Schema (`schemas/output/v0.1/output.schema.json`) before emission. The schema version constant is `SchemaOutput` in `internal/domain/kernel/schema.go`.
 
 ## Top-Level Structure
 

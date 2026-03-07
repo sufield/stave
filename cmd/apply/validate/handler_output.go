@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/diag"
@@ -282,16 +282,7 @@ func buildJSONValidationReport(result *appservice.ValidationResult, opts *option
 // If global JSON mode is set, wraps output in {"ok": true, "data": ...}.
 func writeValidationJSON(cmd *cobra.Command, w io.Writer, result *appservice.ValidationResult, opts *options) error {
 	report := buildJSONValidationReport(result, opts)
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-
-	// Use envelope wrapper when global JSON mode is set
-	if cmdutil.IsJSONMode(cmd) {
-		envelope := ValidationEnvelope{OK: result.Valid(), Data: report}
-		return enc.Encode(envelope)
-	}
-	return enc.Encode(report)
+	return outjson.WriteValidation(w, report, cmdutil.IsJSONMode(cmd), result.Valid())
 }
 
 // plural returns "s" for plural forms when count is not 1.
