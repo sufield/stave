@@ -14,7 +14,7 @@ import (
 )
 
 // globalFlagsType groups all persistent CLI flags into a single struct,
-// following the same pattern as applyFlagsType in cmd/evaluate/command.go.
+// following the same pattern as applyFlagsType in cmd/apply/command.go.
 type globalFlagsType struct {
 	OutputMode      string // "json" or "text"
 	Quiet           bool   // suppress non-essential output

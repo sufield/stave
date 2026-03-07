@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"fmt"
@@ -22,23 +22,23 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
-// EvaluateDeps holds wired dependencies for the apply (evaluate) command.
-type EvaluateDeps struct {
+// ApplyDeps holds wired dependencies for the apply command.
+type ApplyDeps struct {
 	Runner appeval.EvaluateRunner
 	Config appeval.EvaluateConfig
 }
 
-// Close releases assets held by EvaluateDeps.
-func (d *EvaluateDeps) Close() {}
+// Close releases assets held by ApplyDeps.
+func (d *ApplyDeps) Close() {}
 
-// Factory encapsulates the construction of EvaluateDeps.
+// Factory encapsulates the construction of ApplyDeps.
 type Factory struct {
 	cmd    *cobra.Command
-	params evaluateParams
+	params applyParams
 }
 
-// NewFactory creates a Factory for building evaluate dependencies.
-func NewFactory(cmd *cobra.Command, params evaluateParams) *Factory {
+// NewFactory creates a Factory for building apply dependencies.
+func NewFactory(cmd *cobra.Command, params applyParams) *Factory {
 	return &Factory{cmd: cmd, params: params}
 }
 
@@ -53,7 +53,7 @@ type resourceStack struct {
 }
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
-func (f *Factory) BuildWithNewPlan() (*EvaluateDeps, error) {
+func (f *Factory) BuildWithNewPlan() (*ApplyDeps, error) {
 	plan, err := appeval.NewPlan(buildEvaluatorOptions())
 	if err != nil {
 		return nil, err
@@ -61,8 +61,8 @@ func (f *Factory) BuildWithNewPlan() (*EvaluateDeps, error) {
 	return f.Build(plan)
 }
 
-// Build constructs EvaluateDeps from a pre-existing evaluation plan.
-func (f *Factory) Build(plan *appeval.EvaluationPlan) (*EvaluateDeps, error) {
+// Build constructs ApplyDeps from a pre-existing evaluation plan.
+func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	if plan == nil {
 		return nil, fmt.Errorf("evaluation plan is required")
 	}
@@ -81,7 +81,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*EvaluateDeps, error) {
 
 	warnIfGitDirty(res.gitMeta, "apply")
 
-	return &EvaluateDeps{Runner: built.Runner, Config: built.Config}, nil
+	return &ApplyDeps{Runner: built.Runner, Config: built.Config}, nil
 }
 
 // assembleResources creates the intermediate assets needed for dependency building.
@@ -141,7 +141,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	if err := appeval.ConfigureIntegrityCheck(loader, applyFlags.evaluateIntegrityManifest, applyFlags.evaluateIntegrityPublicKey); err != nil {
+	if err := appeval.ConfigureIntegrityCheck(loader, applyFlags.applyIntegrityManifest, applyFlags.applyIntegrityPublicKey); err != nil {
 		return nil, err
 	}
 	return loader, nil
@@ -185,7 +185,7 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 		Suppressions:        f.toSuppressions(projCfg.Suppressions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     toControlIDs(projCfg.ExcludeControls),
-		ControlsFlagSet:     applyFlags.evaluateControlsFlagSet,
+		ControlsFlagSet:     applyFlags.applyControlsFlagSet,
 		BuiltinLoader:       ctlbuiltin.LoadAll,
 	}
 }
@@ -193,10 +193,10 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 // buildFilter constructs the control filter from CLI flags.
 func (f *Factory) buildFilter() appeval.ControlFilter {
 	return appeval.ControlFilter{
-		MinSeverity:      policy.ParseSeverity(applyFlags.evalMinSeverity),
-		ControlID:        kernel.ControlID(applyFlags.evalControlID),
-		ExcludeControlID: toControlIDs(applyFlags.evalExcludeControlIDs),
-		Compliance:       applyFlags.evalCompliance,
+		MinSeverity:      policy.ParseSeverity(applyFlags.applyMinSeverity),
+		ControlID:        kernel.ControlID(applyFlags.applyControlID),
+		ExcludeControlID: toControlIDs(applyFlags.applyExcludeControlIDs),
+		Compliance:       applyFlags.applyCompliance,
 	}
 }
 

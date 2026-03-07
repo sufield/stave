@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	evalvalidate "github.com/sufield/stave/cmd/evaluate/validate"
+	evalvalidate "github.com/sufield/stave/cmd/apply/validate"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/validation"
@@ -62,9 +62,9 @@ func runApply(cmd *cobra.Command, args []string) error {
 	}
 
 	// Profile mode bypasses standard readiness checks — it uses its own
-	// input validation inside runEvaluateProfileWithOptions.
-	if applyFlags.evalProfile != "" {
-		return runEvaluate(cmd, args)
+	// input validation inside runApplyCoreProfileWithOptions.
+	if applyFlags.applyProfile != "" {
+		return runApplyCore(cmd, args)
 	}
 
 	report, err := assessReadiness(cmd, readinessInput{
@@ -83,7 +83,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 		}
 		return ui.WithNextCommand(fmt.Errorf("%w: readiness checks failed; apply not executed", ui.ErrValidationFailed), "stave plan")
 	}
-	return runEvaluate(cmd, args)
+	return runApplyCore(cmd, args)
 }
 
 func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {

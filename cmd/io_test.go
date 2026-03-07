@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/evaluate"
-	evalvalidate "github.com/sufield/stave/cmd/evaluate/validate"
+	"github.com/sufield/stave/cmd/apply"
+	evalvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/ingest"
 )
 
@@ -88,7 +88,7 @@ func TestNoOsCreateInOutputFiles(t *testing.T) {
 	}{
 		{"ingest", "ingest.go"},
 		{"enforce", "enforce.go"},
-		{"evaluate", "handler.go"},
+		{"apply", "handler.go"},
 	}
 
 	for _, c := range checks {
@@ -114,7 +114,7 @@ func TestNoWorldReadableDirs(t *testing.T) {
 	}{
 		{"ingest", "ingest.go"},
 		{"enforce", "enforce.go"},
-		{"evaluate", "handler.go"},
+		{"apply", "handler.go"},
 	}
 
 	for _, c := range checks {
@@ -165,8 +165,8 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		shorthand string
 		flags     interface{ ShorthandLookup(name string) *pflag.Flag }
 	}{
-		{name: "apply controls", shorthand: "i", flags: evaluate.ApplyCmd.Flags()},
-		{name: "apply observations", shorthand: "o", flags: evaluate.ApplyCmd.Flags()},
+		{name: "apply controls", shorthand: "i", flags: apply.ApplyCmd.Flags()},
+		{name: "apply observations", shorthand: "o", flags: apply.ApplyCmd.Flags()},
 		{name: "validate controls", shorthand: "i", flags: evalvalidate.ValidateCmd.Flags()},
 		{name: "validate observations", shorthand: "o", flags: evalvalidate.ValidateCmd.Flags()},
 		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.DiagnoseCmd.Flags()},

@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"path/filepath"
@@ -11,8 +11,8 @@ import (
 	"github.com/sufield/stave/internal/testutil"
 )
 
-// saveEvaluateFlags captures current flag values and returns a restore function.
-func saveEvaluateFlags() func() {
+// saveApplyFlags captures current flag values and returns a restore function.
+func saveApplyFlags() func() {
 	saved := applyFlags
 	return func() {
 		applyFlags = saved
@@ -25,11 +25,11 @@ func testdataDir(t *testing.T, name string) string {
 	return testutil.E2EDir(t, name)
 }
 
-func TestValidateEvaluateFlags(t *testing.T) {
+func TestValidateApplyFlags(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 
 	t.Run("valid flags with defaults", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		applyFlags.controlsDir = filepath.Join(fixture, "controls")
@@ -37,7 +37,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 		applyFlags.maxUnsafe = "168h"
 		applyFlags.nowTime = ""
 
-		params, err := validateEvaluateFlags(ApplyCmd)
+		params, err := validateApplyFlags(ApplyCmd)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -54,7 +54,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 	})
 
 	t.Run("valid flags with --now", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		applyFlags.controlsDir = filepath.Join(fixture, "controls")
@@ -62,7 +62,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 		applyFlags.maxUnsafe = "7d"
 		applyFlags.nowTime = "2026-01-15T00:00:00Z"
 
-		params, err := validateEvaluateFlags(ApplyCmd)
+		params, err := validateApplyFlags(ApplyCmd)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -80,7 +80,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 	})
 
 	t.Run("stdin mode", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		applyFlags.controlsDir = filepath.Join(fixture, "controls")
@@ -88,7 +88,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 		applyFlags.maxUnsafe = "168h"
 		applyFlags.nowTime = ""
 
-		params, err := validateEvaluateFlags(ApplyCmd)
+		params, err := validateApplyFlags(ApplyCmd)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -142,11 +142,11 @@ func TestValidateEvaluateFlags(t *testing.T) {
 	}
 	for _, tc := range errorCases {
 		t.Run(tc.name, func(t *testing.T) {
-			restore := saveEvaluateFlags()
+			restore := saveApplyFlags()
 			defer restore()
 			applyFlags.nowTime = ""
 			tc.setup()
-			_, err := validateEvaluateFlags(ApplyCmd)
+			_, err := validateApplyFlags(ApplyCmd)
 			if err == nil {
 				t.Fatalf("expected error containing %q", tc.wantContain)
 			}
@@ -157,7 +157,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 	}
 
 	t.Run("controls path is a file", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		files, _ := filepath.Glob(filepath.Join(fixture, "controls", "*.yaml"))
@@ -169,7 +169,7 @@ func TestValidateEvaluateFlags(t *testing.T) {
 		applyFlags.maxUnsafe = "168h"
 		applyFlags.nowTime = ""
 
-		_, err := validateEvaluateFlags(ApplyCmd)
+		_, err := validateApplyFlags(ApplyCmd)
 		if err == nil {
 			t.Fatal("expected error when controls is a file")
 		}
@@ -179,12 +179,12 @@ func TestValidateEvaluateFlags(t *testing.T) {
 	})
 }
 
-func TestBuildEvaluateDeps(t *testing.T) {
+func TestBuildApplyDeps(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 	dummyCmd := &cobra.Command{Use: "test"}
 
 	t.Run("json format produces deps", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		applyFlags.controlsDir = filepath.Join(fixture, "controls")
@@ -193,7 +193,7 @@ func TestBuildEvaluateDeps(t *testing.T) {
 		applyFlags.outputFormat = "json"
 		applyFlags.quietMode = false
 
-		params := evaluateParams{
+		params := applyParams{
 			maxDuration: 168 * time.Hour,
 			clock:       clockadp.RealClock{},
 			source:      appeval.ObservationSource(applyFlags.observationsDir),
@@ -217,7 +217,7 @@ func TestBuildEvaluateDeps(t *testing.T) {
 	})
 
 	t.Run("text format produces deps", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		applyFlags.controlsDir = filepath.Join(fixture, "controls")
@@ -226,7 +226,7 @@ func TestBuildEvaluateDeps(t *testing.T) {
 		applyFlags.outputFormat = "text"
 		applyFlags.quietMode = false
 
-		params := evaluateParams{
+		params := applyParams{
 			maxDuration: 24 * time.Hour,
 			clock:       clockadp.FixedClock{Time: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
 			source:      appeval.ObservationSource(applyFlags.observationsDir),
@@ -244,7 +244,7 @@ func TestBuildEvaluateDeps(t *testing.T) {
 	})
 
 	t.Run("invalid output format", func(t *testing.T) {
-		restore := saveEvaluateFlags()
+		restore := saveApplyFlags()
 		defer restore()
 
 		applyFlags.controlsDir = filepath.Join(fixture, "controls")
@@ -252,7 +252,7 @@ func TestBuildEvaluateDeps(t *testing.T) {
 
 		applyFlags.outputFormat = "csv"
 
-		params := evaluateParams{
+		params := applyParams{
 			maxDuration: 168 * time.Hour,
 			clock:       clockadp.RealClock{},
 			source:      appeval.ObservationSource(applyFlags.observationsDir),
@@ -269,9 +269,9 @@ func TestBuildEvaluateDeps(t *testing.T) {
 
 }
 
-func TestEvaluateDepsClose(t *testing.T) {
+func TestApplyDepsClose(t *testing.T) {
 	t.Run("close is safe", func(t *testing.T) {
-		deps := &EvaluateDeps{}
+		deps := &ApplyDeps{}
 		deps.Close() // should not panic
 	})
 }

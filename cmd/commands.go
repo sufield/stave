@@ -17,10 +17,10 @@ import (
 	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/evaluate"
-	"github.com/sufield/stave/cmd/evaluate/extractor"
-	evalvalidate "github.com/sufield/stave/cmd/evaluate/validate"
-	evalverify "github.com/sufield/stave/cmd/evaluate/verify"
+	"github.com/sufield/stave/cmd/apply"
+	"github.com/sufield/stave/cmd/apply/extractor"
+	evalvalidate "github.com/sufield/stave/cmd/apply/validate"
+	evalverify "github.com/sufield/stave/cmd/apply/verify"
 	"github.com/sufield/stave/cmd/ingest"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
@@ -176,8 +176,8 @@ func WireCommands(root *cobra.Command) {
 
 	// Core evaluation
 	root.AddCommand(evalvalidate.ValidateCmd)
-	root.AddCommand(evaluate.PlanCmd)
-	root.AddCommand(evaluate.ApplyCmd)
+	root.AddCommand(apply.PlanCmd)
+	root.AddCommand(apply.ApplyCmd)
 	root.AddCommand(evalverify.VerifyCmd)
 	root.AddCommand(extractor.ExtractorCmd)
 	root.AddCommand(diagnose.DiagnoseCmd)

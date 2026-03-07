@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"go/parser"
@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-// TestEvaluateCommandsDoNotImportExtractors ensures that evaluation commands
+// TestApplyCommandsDoNotImportExtractors ensures that evaluation commands
 // do not import extractor packages, maintaining the contract boundary.
 //
 // This is a guardrail to prevent regressions where evaluation becomes
 // coupled to specific extractors.
-func TestEvaluateCommandsDoNotImportExtractors(t *testing.T) {
+func TestApplyCommandsDoNotImportExtractors(t *testing.T) {
 	// Get the directory of this test file
 	cmdDir, err := os.Getwd()
 	if err != nil {
@@ -22,7 +22,7 @@ func TestEvaluateCommandsDoNotImportExtractors(t *testing.T) {
 	}
 
 	// Command package files that should NOT import extractor packages.
-	evaluateFiles := []string{
+	applyFiles := []string{
 		"command.go",
 		"handler.go",
 		"options.go",
@@ -39,7 +39,7 @@ func TestEvaluateCommandsDoNotImportExtractors(t *testing.T) {
 
 	fset := token.NewFileSet()
 
-	for _, filename := range evaluateFiles {
+	for _, filename := range applyFiles {
 		filepath := filepath.Join(cmdDir, filename)
 
 		// Skip if file doesn't exist
@@ -69,7 +69,7 @@ func TestEvaluateCommandsDoNotImportExtractors(t *testing.T) {
 }
 
 // TestApplyPhasedContract verifies that apply help references the plan phase.
-func TestEvaluateProfileS3Contract(t *testing.T) {
+func TestApplyProfileS3Contract(t *testing.T) {
 	helpText := ApplyCmd.Long
 	if !strings.Contains(helpText, "stave plan") {
 		t.Error("apply help text should reference stave plan")
