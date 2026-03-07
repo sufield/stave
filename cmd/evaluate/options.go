@@ -176,9 +176,9 @@ func validateEvaluateFlags(cmd *cobra.Command) (evaluateParams, error) {
 	}).Validate()
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "invalid --max-unsafe") {
-			return evaluateParams{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
+			return evaluateParams{}, &ui.InputError{Err: ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)}
 		}
-		return evaluateParams{}, err
+		return evaluateParams{}, &ui.InputError{Err: err}
 	}
 
 	if err := checkDirsExist(parsed.Source); err != nil {

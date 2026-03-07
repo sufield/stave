@@ -28,43 +28,45 @@ stave/
 │   └── cmd/                Cobra command definitions
 │       ├── root.go         Global flags, --require-offline, --sanitize, --force
 │       ├── evaluate/       apply command tree (handler, options, deps)
+│       ├── diagnose/       diagnose command tree (artifacts, docs, report)
+│       ├── enforce/        CI commands (baseline, cidiff, diff, fix, gate, graph)
 │       ├── ingest/         ingest command + profile dispatch
-│       ├── validate.go     validate command
-│       ├── diagnose.go     diagnose command
-│       ├── verify.go       verify command
-│       ├── hygiene.go      snapshot hygiene weekly report command
-│       ├── fix_loop.go     ci fix-loop remediation lifecycle command
-│       ├── capabilities.go capabilities command
+│       ├── initcmd/        init command (alias, config, context, env)
+│       ├── prune/          snapshot lifecycle (archive, cleanup, hygiene, manifest)
+│       ├── bugreport/      bug-report command
+│       ├── fixtures/       demo command + fixture data
 │       └── cmdutil/        Shared CLI utilities
 │
 ├── internal/
 │   ├── domain/             Core business logic (no I/O)
-│   │   ├── evaluator*.go   Evaluation engine
-│   │   ├── episode.go      Episode tracking (safe→unsafe transitions)
-│   │   ├── duration.go     Duration calculation
-│   │   ├── diagnostics*.go Diagnose engine
-│   │   └── confidence.go   Finding confidence scoring
-│   │
-│   ├── predicate/          Predicate operators (15 ops)
+│   │   ├── evaluation/     Evaluation engine (engine, exposure, risk, remediation)
+│   │   ├── diag/           Diagnose engine
+│   │   ├── predicate/      Predicate operators (15 ops)
+│   │   ├── asset/          Asset model
+│   │   ├── kernel/         Core domain types
+│   │   ├── policy/         Policy types
+│   │   ├── ports/          Port interfaces
+│   │   └── validation/     Domain validation rules
 │   │
 │   ├── app/                Use-case orchestration
-│   │   ├── evaluate.go     Wire inputs → evaluator → output
-│   │   ├── validate.go     Wire inputs → schema checks
-│   │   ├── diagnose.go     Wire inputs → diagnostics
-│   │   └── capabilities.go Capabilities query
+│   │   ├── eval/           Wire inputs → evaluator → output
+│   │   ├── validation/     Wire inputs → schema checks
+│   │   ├── diagnose/       Wire inputs → diagnostics
+│   │   ├── capabilities/   Capabilities query
+│   │   ├── service/        Shared app services
+│   │   └── ...             (ingest, hygiene, workflow, etc.)
 │   │
 │   ├── adapters/
 │   │   ├── input/          File loaders (JSON observations, YAML controls)
 │   │   └── output/         JSON/text output writers
 │   │
-│   ├── schema/             Schema validation (obs.v0.1, ctrl.v1 via JSON Schema)
-│   ├── sanitize/             --sanitize implementation
-│   ├── clierr/             Structured CLI error types
-│   ├── cliio/              CLI I/O utilities
+│   ├── contracts/          Schema validation (obs.v0.1, ctrl.v1 via JSON Schema)
+│   ├── cli/                CLI error types and UI utilities
+│   ├── sanitize/           --sanitize implementation
 │   └── platform/           Platform-specific code (logging, fsutil)
 │
-├── schemas/       Schema source of truth (JSON Schema files)
-├── controls/s3/          S3 control packs (41 YAML files)
+├── schemas/                Schema source of truth (JSON Schema files)
+├── controls/s3/            S3 control packs (43 YAML files)
 └── examples/               Example observations
 ```
 
@@ -119,14 +121,14 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 
 | Command | Entry Point | App Layer | Domain Layer |
 |---------|-------------|-----------|--------------|
-| `apply` | `cmd/evaluate/` | `app/evaluate.go` | `domain/evaluator*.go` |
-| `validate` | `cmd/evaluate/validate/` | `app/validate.go` | `schema/` |
-| `diagnose` | `cmd/diagnose/` | `app/diagnose.go` | `domain/diagnostics*.go` |
-| `ingest` | `cmd/ingest/` | — | Adapter-level extraction |
+| `apply` | `cmd/evaluate/` | `app/eval/` | `domain/evaluation/` |
+| `validate` | `cmd/evaluate/validate/` | `app/validation/` | `contracts/` |
+| `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `domain/diag/` |
+| `ingest` | `cmd/ingest/` | `app/ingest/` | Adapter-level extraction |
 | `verify` | `cmd/evaluate/verify/` | — | Before/after comparison |
-| `snapshot hygiene` | `cmd/prune/hygiene/` | — | Weekly lifecycle report |
+| `snapshot hygiene` | `cmd/prune/hygiene/` | `app/hygiene/` | Weekly lifecycle report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
-| `capabilities` | `cmd/commands.go` | `app/capabilities.go` | — |
+| `capabilities` | `cmd/commands.go` | `app/capabilities/` | — |
 | `graph coverage` | `cmd/enforce/graph/` | — | Predicate matching |
 
 ## Schema Lifecycle

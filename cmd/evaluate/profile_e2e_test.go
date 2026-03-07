@@ -45,7 +45,7 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	}
 }
 
-// TestEvaluateProfileE2E runs e2e golden file tests for evaluate --profile aws-s3.
+// TestEvaluateProfileE2E runs e2e golden file tests for apply --profile aws-s3.
 func TestEvaluateProfileE2E(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	projectRoot := filepath.Join(filepath.Dir(filename), "..", "..")

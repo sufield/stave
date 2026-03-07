@@ -69,7 +69,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 		ControlsFlagSet: cmdutil.ControlsFlagChanged(cmd),
 	})
 	if err != nil {
-		return ui.EvaluateErrorWithHint(err)
+		return &ui.InputError{Err: ui.EvaluateErrorWithHint(err)}
 	}
 	if !report.Ready {
 		if ui.ShouldEmitOutput(applyFlags.quietMode, cmdutil.QuietEnabled(cmd)) {
