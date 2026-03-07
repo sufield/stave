@@ -72,7 +72,7 @@ The engine defines 9 control types. 4 are evaluatable; S3 controls use 3.
 | `authorization_boundary` | Identity boundary controls |
 | `audience_boundary` | Audience verification |
 | `justification_required` | Business justification for public access |
-| `ownership_required` | Owner assignment for public resources |
+| `ownership_required` | Owner assignment for public assets |
 | `visibility_required` | Exposure status must be known |
 
 Controls using non-evaluatable types appear in the `skipped` section of

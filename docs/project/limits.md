@@ -42,7 +42,7 @@ Stave is an offline configuration safety evaluator. This page defines what it do
 
 ### Snapshot sensitivity
 
-Terraform plan/state exports and AWS CLI snapshots may contain embedded credentials or sensitive values in rare cases. Stave treats all resource properties as opaque data and does not detect or filter secrets within snapshots. Use `--sanitize` and `ingest --profile mvp1-s3 --scrub` when sharing outputs.
+Terraform plan/state exports and AWS CLI snapshots may contain embedded credentials or sensitive values in rare cases. Stave treats all asset properties as opaque data and does not detect or filter secrets within snapshots. Use `--sanitize` and `ingest --profile mvp1-s3 --scrub` when sharing outputs.
 
 ### Duration requires two snapshots
 

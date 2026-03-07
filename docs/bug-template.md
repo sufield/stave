@@ -100,7 +100,7 @@ type Output struct {
 	} `json:"summary"`
 	Findings []struct {
 		ControlID string `json:"control_id"`
-		ResourceID  string `json:"resource_id"`
+		AssetID  string `json:"asset_id"`
 	} `json:"findings"`
 }
 
@@ -165,7 +165,7 @@ func TestRepro(t *testing.T) {
 		t.Fatalf("stdout was not valid JSON: %v\nstderr:\n%s\nstdout:\n%s", err, stderr.String(), stdout.String())
 	}
 
-	// 2) Assert a minimal control/resource pair appears (edit for your bug)
+	// 2) Assert a minimal control/asset pair appears (edit for your bug)
 	if len(out.Findings) == 0 {
 		t.Fatalf("expected at least 1 finding\nstderr:\n%s\nstdout:\n%s", stderr.String(), stdout.String())
 	}
@@ -173,7 +173,7 @@ func TestRepro(t *testing.T) {
 	found := false
 	for _, f := range out.Findings {
 		if strings.TrimSpace(f.ControlID) == expectedControl &&
-			strings.TrimSpace(f.ResourceID) == expectedResource {
+			strings.TrimSpace(f.AssetID) == expectedResource {
 			found = true
 			break
 		}
@@ -181,7 +181,7 @@ func TestRepro(t *testing.T) {
 
 	if !found {
 		t.Fatalf(
-			"expected finding not present\nwant control_id=%q resource_id=%q\ngot findings=%v\nstderr:\n%s\nstdout:\n%s",
+			"expected finding not present\nwant control_id=%q asset_id=%q\ngot findings=%v\nstderr:\n%s\nstdout:\n%s",
 			expectedControl, expectedResource, out.Findings, stderr.String(), stdout.String(),
 		)
 	}

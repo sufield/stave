@@ -139,7 +139,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
    | dot -Tpng > coverage.png
    ```
 
-   Uncovered resources are highlighted in yellow. Control nodes appear in blue.
+   Uncovered assets are highlighted in yellow. Control nodes appear in blue.
 
 2. **JSON output** — for programmatic analysis:
 
@@ -148,10 +148,10 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
      --controls controls/s3 \
      --observations observations/ \
      --format json \
-   | jq '.uncovered_resources'
+   | jq '.uncovered_assets'
    ```
 
-3. **Sanitized output** — for sharing without exposing resource names:
+3. **Sanitized output** — for sharing without exposing asset names:
 
    ```bash
    stave graph coverage \
@@ -196,7 +196,7 @@ stave apply \
   --observations observations/ \
   --max-unsafe 168h \
   --now 2026-02-22T00:00:00Z \
-| jq '[.findings[] | select(.unsafe_duration_hours > 24) | {resource: .resource_id, hours: .unsafe_duration_hours}]'
+| jq '[.findings[] | select(.unsafe_duration_hours > 24) | {asset: .asset_id, hours: .unsafe_duration_hours}]'
 ```
 
 ---
@@ -260,7 +260,7 @@ stave apply \
   --observations observations/ \
   --max-unsafe 168h \
   --now 2026-02-22T00:00:00Z \
-  --template '{{range .Violations}}{{.ControlID}},{{.ResourceID}}{{"\n"}}{{end}}'
+  --template '{{range .Violations}}{{.ControlID}},{{.AssetID}}{{"\n"}}{{end}}'
 ```
 
 **Diagnose summary:**

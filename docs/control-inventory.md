@@ -33,7 +33,7 @@ Each control evaluates observation snapshots (JSON files in `obs.v0.1` format) t
 ### ACCESS.003 — detailed detection flow:
 
 ```
-Snapshot JSON → resources[].properties.storage.access.has_external_write
+Snapshot JSON → assets[].properties.storage.access.has_external_write
                                     ↑
                         Computed by AnalyzeCrossAccountAccess() in policy.go:
 

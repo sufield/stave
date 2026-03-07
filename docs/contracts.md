@@ -14,7 +14,7 @@ Control contract `v1` uses one canonical runtime shape:
 - optional `remediation` (`description`, `action`, `example`)
 
 Finding contract `v1` includes:
-- control + resource + evidence + `remediation` (required)
+- control + asset + evidence + `remediation` (required)
 - optional `fix_plan` (deterministic machine-readable actions)
 
 ## Schema Layout

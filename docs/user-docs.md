@@ -153,7 +153,7 @@ stave apply --controls ./controls --observations ./observations --format json > 
 # Diagnose unexpected outcomes from the same artifacts
 stave diagnose --controls ./controls --observations ./observations --previous-output output/evaluation.json
 
-# Trace a single control against a specific resource
+# Trace a single control against a specific asset
 stave trace --control CTL.S3.PUBLIC.001 --observation observations/2026-01-15T00:00:00Z.json --asset-id my-bucket
 
 # Continue from last successful workflow step
@@ -557,9 +557,9 @@ WARNING: SPAN_LESS_THAN_MAX_UNSAFE
   max_unsafe=168h0m0s
   Fix: Add older snapshots or reduce --max-unsafe
 
-WARNING: RESOURCE_SINGLE_APPEARANCE
-  resource_id=res-123
-  Fix: Duration tracking requires resource to appear in multiple snapshots
+WARNING: ASSET_SINGLE_APPEARANCE
+  asset_id=res-123
+  Fix: Duration tracking requires asset to appear in multiple snapshots
 
 ---
 Checked: 2 controls, 2 snapshots, 3 assets
@@ -944,9 +944,9 @@ stave graph coverage --controls ./controls --observations ./obs --sanitize
   "controls": ["CTL.S3.PUBLIC.001", "..."],
   "assets": ["res:aws:s3:bucket:prod-data", "..."],
   "edges": [
-    {"control_id": "CTL.S3.PUBLIC.001", "resource_id": "res:aws:s3:bucket:prod-data"}
+    {"control_id": "CTL.S3.PUBLIC.001", "asset_id": "res:aws:s3:bucket:prod-data"}
   ],
-  "uncovered_resources": ["res:aws:s3:bucket:staging-logs"]
+  "uncovered_assets": ["res:aws:s3:bucket:staging-logs"]
 }
 ```
 
@@ -1713,9 +1713,9 @@ Fields resolve by struct field name or JSON tag name.
 stave apply --controls ./controls --observations ./obs \
   --template '{{.Summary.Violations}} violations, {{.Summary.AssetsEvaluated}} assets'
 
-# CSV of violated control + resource
+# CSV of violated control + asset
 stave apply --controls ./controls --observations ./obs \
-  --template '{{range .Violations}}{{.ControlID}},{{.ResourceID}}{{"\n"}}{{end}}'
+  --template '{{range .Violations}}{{.ControlID}},{{.AssetID}}{{"\n"}}{{end}}'
 
 # Diagnose summary line
 stave diagnose --controls ./controls --observations ./obs \
@@ -1785,10 +1785,10 @@ Observations capture the state of your infrastructure at a point in time.
 |-------|-------------|
 | `generated_by.tool` | Tool that generated the snapshot |
 | `generated_by.tool_version` | Version of the tool |
-| `resources[].vendor` | Cloud provider (e.g., `aws`, `gcp`) |
-| `resources[].properties` | Resource configuration properties |
-| `resources[].source.file` | Source file path |
-| `resources[].source.line` | Line number in source file |
+| `assets[].vendor` | Cloud provider (e.g., `aws`, `gcp`) |
+| `assets[].properties` | Asset configuration properties |
+| `assets[].source.file` | Source file path |
+| `assets[].source.line` | Line number in source file |
 
 ### Control Definitions
 
@@ -1868,7 +1868,7 @@ Use dot notation to access nested properties:
     "snapshots": 3
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 1,
     "violations": 1
   },
@@ -1877,9 +1877,9 @@ Use dot notation to access nested properties:
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Duration Bound",
       "control_description": "An asset must not remain unsafe beyond the configured time window.",
-      "resource_id": "res:aws:s3:bucket:public-bucket",
-      "resource_type": "storage_bucket",
-      "resource_vendor": "aws",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
       "source": {
         "file": "infra/main.tf",
         "line": 42
@@ -1907,14 +1907,14 @@ Use dot notation to access nested properties:
 - `snapshots`: Number of snapshots processed
 
 **summary:** Aggregate statistics
-- `resources_evaluated`: Total unique resources seen
+- `assets_evaluated`: Total unique assets seen
 - `attack_surface`: Resources unsafe in latest snapshot
 - `violations`: Resources exceeding threshold
 
 **findings[]:** Violation details
 - `evidence.first_unsafe_at`: When asset first became unsafe
 - `evidence.last_seen_unsafe_at`: Most recent unsafe observation
-- `evidence.unsafe_duration_hours`: How long resource has been unsafe
+- `evidence.unsafe_duration_hours`: How long asset has been unsafe
 - `evidence.threshold_hours`: Configured maximum
 
 ## How It Works
@@ -1926,7 +1926,7 @@ Stave tracks how long each asset has been continuously unsafe:
 1. **Load snapshots** ordered by `captured_at`
 2. **Build timeline** for each asset across snapshots
 3. **Track unsafe windows**:
-   - When resource matches `unsafe_predicate` → start/continue window
+   - When asset matches `unsafe_predicate` → start/continue window
    - When asset becomes safe → reset window
 4. **Report violations** where `unsafe_duration > max_unsafe`
 
@@ -2030,7 +2030,7 @@ echo "Generated: $OUTPUT"
 
 1. Check `--max-unsafe` threshold—is it longer than the actual unsafe duration?
 2. Verify `captured_at` timestamps span enough time
-3. Confirm `unsafe_predicate` matches your resource properties
+3. Confirm `unsafe_predicate` matches your asset properties
 
 ### Unexpected violations
 
@@ -2042,7 +2042,7 @@ echo "Generated: $OUTPUT"
 
 This is normal when:
 - No assets match the `unsafe_predicate`
-- Matching resources haven't exceeded `max_unsafe`
+- Matching assets haven't exceeded `max_unsafe`
 - Resources became safe before the threshold
 
 ## S3 Healthcare Profile (MVP 1.0)
@@ -2287,7 +2287,7 @@ A bucket with a public policy granting `s3:GetObject` on `arn:aws:s3:::my-bucket
 ```json
 {
   "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-  "resource_id": "res:aws:s3:bucket:my-bucket",
+  "asset_id": "res:aws:s3:bucket:my-bucket",
   "evidence": {
     "misconfigurations": [
       {"property": "exposure_source", "actual_value": "policy:PublicRead", "operator": "eq", "unsafe_value": "policy:PublicRead"},

@@ -28,7 +28,7 @@ An observation is a point-in-time snapshot of infrastructure assets. Each JSON f
 | `schema_version` | string | Yes | Must be `"obs.v0.1"` |
 | `generated_by` | object | No | Tool that generated this observation |
 | `captured_at` | string (date-time) | Yes | RFC 3339 timestamp of capture |
-| `assets` | array of [resource](#resource) | Yes | Infrastructure resources |
+| `assets` | array of [asset](#asset) | Yes | Infrastructure assets |
 | `identities` | array of [identity](#identity) | No | IAM identities |
 
 The schema uses `additionalProperties: false` at every level. Extra fields cause validation failure.
@@ -47,9 +47,9 @@ The `source_type` field is validated against a built-in allowlist by default. Us
 
 Run `stave capabilities` to see the current allowlist.
 
-## Resource
+## Asset
 
-Each resource represents a single infrastructure component.
+Each asset represents a single infrastructure component.
 
 ```json
 {
@@ -67,10 +67,10 @@ Each resource represents a single infrastructure component.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `id` | string | Yes | Unique resource identifier (min 1 char) |
-| `type` | string | Yes | Resource type (e.g., `storage_bucket`, `iam_role`) |
+| `id` | string | Yes | Unique asset identifier (min 1 char) |
+| `type` | string | Yes | Asset type (e.g., `storage_bucket`, `iam_role`) |
 | `vendor` | string | Yes | Cloud vendor (e.g., `aws`, `gcp`, `azure`) |
-| `properties` | object | Yes | Resource properties for predicate evaluation |
+| `properties` | object | Yes | Asset properties for predicate evaluation |
 | `source` | [source_ref](#source-reference) | No | Source file reference |
 
 The `properties` object is free-form — its structure depends on the asset type. Control predicates reference fields within `properties` using dot-notation paths (e.g., `properties.storage.visibility.public_read`).
@@ -137,7 +137,7 @@ Validation also runs automatically at the start of `stave apply`, so inputs are 
 | Required fields | `schema_version`, `captured_at`, `assets` |
 | `const` version | `schema_version` must be exactly `"obs.v0.1"` |
 | Timestamp format | `captured_at` must be RFC 3339 (`date-time`) |
-| Resource required fields | Each asset must have `id`, `type`, `vendor`, `properties` |
+| Asset required fields | Each asset must have `id`, `type`, `vendor`, `properties` |
 | String minimums | `id`, `type`, `vendor` must be non-empty (`minLength: 1`) |
 | Identity required fields | `id`, `type`, `vendor`, `grants` (with `has_wildcard`), `scope` (with `distinct_systems`, `distinct_resource_groups`) |
 | Integer minimums | `scope.distinct_systems` and `scope.distinct_resource_groups` must be >= 0; `source.line` must be >= 1 |

@@ -47,7 +47,7 @@ Each diagnostic explains one likely cause for unexpected evaluation outcomes.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `total_snapshots` | integer | Yes | Number of loaded snapshots |
-| `total_resources` | integer | Yes | Number of resources observed |
+| `total_assets` | integer | Yes | Number of assets observed |
 | `total_controls` | integer | Yes | Number of controls loaded |
 | `time_span` | integer | Yes | Observation span (nanoseconds duration) |
 | `min_captured_at` | string (RFC3339) | Yes | Earliest snapshot time |
@@ -55,7 +55,7 @@ Each diagnostic explains one likely cause for unexpected evaluation outcomes.
 | `evaluation_time` | string (RFC3339) | Yes | Effective evaluation time (`--now` or runtime clock) |
 | `max_unsafe_threshold` | integer | Yes | Max unsafe threshold (nanoseconds duration) |
 | `violations_found` | integer | Yes | Violations count in evaluated result |
-| `attack_surface` | integer | Yes | Attack surface resources count |
+| `attack_surface` | integer | Yes | Attack surface assets count |
 
 ## Minimal Example
 
@@ -66,7 +66,7 @@ Each diagnostic explains one likely cause for unexpected evaluation outcomes.
     "diagnostics": [],
     "summary": {
       "total_snapshots": 2,
-      "total_resources": 5,
+      "total_assets": 5,
       "total_controls": 12,
       "time_span": 86400000000000,
       "min_captured_at": "2026-01-10T00:00:00Z",
