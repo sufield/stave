@@ -32,7 +32,7 @@ func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Rea
 }
 
 // StdinObservationLoader wraps an ObservationLoader to read from stdin.
-// It implements contracts.ObservationRepository for use with the evaluate command.
+// It implements contracts.ObservationRepository for use with the apply command.
 type StdinObservationLoader struct {
 	loader *ObservationLoader
 	reader io.Reader

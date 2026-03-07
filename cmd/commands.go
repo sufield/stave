@@ -124,14 +124,14 @@ var versionCmd = &cobra.Command{
 var snapshotCmd = &cobra.Command{
 	Use:   "snapshot",
 	Short: "Snapshot lifecycle commands",
-	Long:  "Grouped snapshot lifecycle commands: upcoming, diff, prune, archive, quality, hygiene." + OfflineHelpSuffix,
+	Long:  "Grouped snapshot lifecycle commands: cleanup, archive, upcoming, quality, plan, hygiene, diff, manifest." + OfflineHelpSuffix,
 	Args:  cobra.NoArgs,
 }
 
 var ciCmd = &cobra.Command{
 	Use:   "ci",
 	Short: "CI/CD policy and baseline commands",
-	Long:  "Grouped CI/CD commands: baseline, gate, fix-loop." + OfflineHelpSuffix,
+	Long:  "Grouped CI/CD commands: baseline, gate, fix-loop, diff." + OfflineHelpSuffix,
 	Args:  cobra.NoArgs,
 }
 
@@ -194,7 +194,7 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(ciCmd)
 
 	// Data & Artifacts
-	root.AddCommand(ingest.ExtractCmd)
+	root.AddCommand(ingest.IngestCmd)
 	root.AddCommand(artifacts.ControlsCmd)
 	root.AddCommand(artifacts.PacksCmd)
 	root.AddCommand(enforce.EnforceCmd)

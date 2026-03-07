@@ -563,7 +563,7 @@ stave diagnose --controls ./controls --observations ./observations --previous-ou
 The MVP golden path for S3 public exposure assessment:
 
 ```
-ingest --profile mvp1-s3 → evaluate --profile mvp1-s3 → verify
+ingest --profile mvp1-s3 → apply --profile mvp1-s3 → verify
 ```
 
 ```bash
@@ -1048,7 +1048,7 @@ Stave outputs JSON with findings:
     "snapshots": 3
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 1,
     "violations": 1
   },
@@ -1153,7 +1153,7 @@ All commands support `--format` for output control:
 # Human-readable text output
 stave apply --controls ./controls --observations ./obs --format text
 
-# JSON output (default for evaluate)
+# JSON output (default for apply)
 stave apply --controls ./controls --observations ./obs --format json
 
 # JSON output for validate/diagnose

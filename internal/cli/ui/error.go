@@ -59,6 +59,14 @@ const (
 	ExitInterrupted = 130 // Interrupted by SIGINT
 )
 
+// InputError wraps an error that should exit with ExitInputError (2).
+// Unlike sentinel errors, InputError is not suppressed by writeCommandError,
+// so the error message (including flag suggestions) is still printed.
+type InputError struct{ Err error }
+
+func (e *InputError) Error() string { return e.Err.Error() }
+func (e *InputError) Unwrap() error { return e.Err }
+
 // Sentinel errors for exit code mapping.
 var (
 	ErrViolationsFound       = errors.New("violations found")
@@ -94,6 +102,10 @@ func ExitCode(err error) int {
 	case errors.Is(err, ErrInternal):
 		return ExitInternal
 	default:
+		var inputErr *InputError
+		if errors.As(err, &inputErr) {
+			return ExitInputError
+		}
 		// Unrecognized errors are unexpected → exit 4 (internal error).
 		return ExitInternal
 	}

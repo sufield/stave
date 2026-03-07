@@ -120,7 +120,7 @@ Write clear commit messages:
 Add SARIF output format support
 
 - Implement SARIF 2.1.0 writer in adapters/output/sarif
-- Add --format flag to evaluate command
+- Add --format flag to apply command
 - Update documentation with SARIF examples
 ```
 
