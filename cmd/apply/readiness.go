@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	evalvalidate "github.com/sufield/stave/cmd/apply/validate"
+	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/validation"
@@ -125,5 +125,5 @@ func readinessHasEnabledPacks() bool {
 }
 
 func buildReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ReadinessValidationResult, error) {
-	return evalvalidate.NewReadinessValidateFn(cmd, ctlDir, obsDir)
+	return applyvalidate.NewReadinessValidateFn(cmd, ctlDir, obsDir)
 }

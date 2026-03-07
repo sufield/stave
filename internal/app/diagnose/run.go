@@ -20,8 +20,8 @@ import (
 type Config struct {
 	ControlsDir     string
 	ObservationsDir string
-	OutputFile      string    // Optional: path to existing evaluate output JSON.
-	OutputReader    io.Reader // Optional: reader for evaluate output JSON (e.g. stdin).
+	OutputFile      string    // Optional: path to existing apply output JSON.
+	OutputReader    io.Reader // Optional: reader for apply output JSON (e.g. stdin).
 	MaxUnsafe       time.Duration
 	Clock           ports.Clock
 	PredicateParser func(any) (*policy.UnsafePredicate, error)

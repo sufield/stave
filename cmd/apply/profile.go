@@ -87,7 +87,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 
 	progress := ui.NewRuntime(nil, nil)
 	progress.Quiet = opts.quiet
-	done := progress.BeginProgress("evaluate profile observations")
+	done := progress.BeginProgress("apply profile observations")
 	defer done()
 
 	result := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{

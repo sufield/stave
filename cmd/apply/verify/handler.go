@@ -35,14 +35,14 @@ func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 		return err
 	}
 
-	beforeDone := rt.BeginProgress("evaluate before observations")
+	beforeDone := rt.BeginProgress("apply before observations")
 	beforeEval, err := runVerifyEvaluation(execCtx, controls, execCtx.beforeDir)
 	beforeDone()
 	if err != nil {
 		return fmt.Errorf("before evaluation: %w", err)
 	}
 
-	afterDone := rt.BeginProgress("evaluate after observations")
+	afterDone := rt.BeginProgress("apply after observations")
 	afterEval, err := runVerifyEvaluation(execCtx, controls, execCtx.afterDir)
 	afterDone()
 	if err != nil {
