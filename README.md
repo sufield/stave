@@ -68,6 +68,40 @@ Stave ships with 43 S3 controls that detect misconfigurations out of the box.
 | 42 | CTL.S3.DANGLING.ORIGIN.001 | CloudFront origin references non-existent S3 bucket |
 | 43 | CTL.S3.REPO.ARTIFACT.001 | Public bucket exposes version control artifacts (.git/, .svn/) |
 
+## How It Works
+
+Capture configuration snapshots from your cloud provider using standard CLI tools, then run Stave locally to evaluate them against safety controls.
+
+```mermaid
+flowchart LR
+    A["Cloud Infrastructure
+    (AWS)"] -->|"aws cli + jq"| B
+
+    subgraph Input
+        B["Snapshots
+        (JSON)"]
+        E["Controls
+        (YAML)"]
+    end
+
+    subgraph Evaluate
+        C["Stave CLI"]
+    end
+
+    subgraph Output
+        D["Findings
+        (JSON)"]
+    end
+
+    B --> C
+    E --> C
+    C --> D
+```
+
+1. **Capture** — Use `aws cli + jq` (or any tool) to export resource configurations as JSON snapshots.
+2. **Evaluate** — Stave reads snapshots and evaluates them against built-in or custom YAML controls, tracking unsafe duration across snapshots.
+3. **Act** — Review the findings JSON to identify violations, unsafe durations, and recurrence patterns.
+
 ## MVP Assumption
 
 For MVP, Stave assumes teams are capturing snapshots from **production**
