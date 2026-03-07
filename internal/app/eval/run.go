@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
@@ -18,10 +17,10 @@ type RunInput struct {
 	Config EvaluateConfig
 }
 
-func Run(ctx context.Context, in RunInput) (appworkflow.EvaluateResult, error) {
+func Run(ctx context.Context, in RunInput) (evaluation.SafetyStatus, error) {
 	status, err := in.Runner.Execute(ctx, in.Config)
 	if err != nil {
-		return appworkflow.EvaluateResult{}, fmt.Errorf("evaluation runner: %w", err)
+		return "", fmt.Errorf("evaluation runner: %w", err)
 	}
-	return appworkflow.BuildEvaluateResult(status, in.Config.ControlsDir, in.Config.ObservationsDir), nil
+	return status, nil
 }

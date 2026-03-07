@@ -10,88 +10,50 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/adapters/output/dto"
 	"github.com/sufield/stave/internal/envvar"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-// FindingEnricher enriches raw evaluation findings with remediation guidance.
-type FindingEnricher interface {
-	EnrichFindings(evaluation.Result) []remediation.Finding
-}
-
-// FindingWriter writes findings as JSON.
+// FindingWriter marshals findings as JSON.
 type FindingWriter struct {
 	Indent           bool
 	UseEnvelope      bool // When true, wrap output in {"ok": true, "data": ...}
 	ValidateContract bool // When true, validate findings against the contract schema
-	enricher         FindingEnricher
-	sanitizer        kernel.Sanitizer // nil = no sanitization
 }
 
-var _ appcontracts.FindingWriter = (*FindingWriter)(nil)
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
-// NewFindingWriter creates a new JSON finding writer.
+// NewFindingWriter creates a new JSON finding marshaler.
 // The validation decision (STAVE_DEV_VALIDATE_FINDINGS / STAVE_DEBUG) is
 // captured at construction time so MarshalFindings remains pure.
-func NewFindingWriter(indent bool, enricher FindingEnricher, sanitizer kernel.Sanitizer) *FindingWriter {
-	if enricher == nil {
-		panic("precondition failed: NewFindingWriter requires non-nil enricher")
-	}
+func NewFindingWriter(indent bool) *FindingWriter {
 	return &FindingWriter{
 		Indent:           indent,
 		UseEnvelope:      false,
 		ValidateContract: shouldValidateFindingContract(),
-		enricher:         enricher,
-		sanitizer:        sanitizer,
 	}
 }
 
-// NewFindingWriterWithEnvelope creates a writer that wraps output in ok/data envelope.
-func NewFindingWriterWithEnvelope(indent bool, enricher FindingEnricher, sanitizer kernel.Sanitizer) *FindingWriter {
-	if enricher == nil {
-		panic("precondition failed: NewFindingWriterWithEnvelope requires non-nil enricher")
-	}
+// NewFindingWriterWithEnvelope creates a marshaler that wraps output in ok/data envelope.
+func NewFindingWriterWithEnvelope(indent bool) *FindingWriter {
 	return &FindingWriter{
 		Indent:           indent,
 		UseEnvelope:      true,
 		ValidateContract: shouldValidateFindingContract(),
-		enricher:         enricher,
-		sanitizer:        sanitizer,
 	}
-}
-
-// WriteFindings writes the evaluation result as JSON.
-// It enriches findings with remediations before encoding.
-// If UseEnvelope is true, wraps output in {"ok": true, "data": ...}.
-// If a sanitizer is configured, infrastructure identifiers are sanitized.
-func (w *FindingWriter) WriteFindings(out io.Writer, result evaluation.Result) error {
-	enriched := output.Enrich(w.enricher, w.sanitizer, result)
-	return w.writeEnriched(out, enriched)
-}
-
-// writeEnriched marshals and writes a pre-enriched result.
-func (w *FindingWriter) writeEnriched(out io.Writer, enriched appcontracts.EnrichedResult) error {
-	data, err := w.MarshalFindings(enriched)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(data)
-	return err
 }
 
 // MarshalFindings transforms enriched findings into JSON bytes without performing I/O.
 func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
-	envelope := buildEvaluationEnvelopeFromEnriched(enriched)
+	envelope := appworkflow.BuildSafetyEnvelopeFromEnriched(enriched)
 	if err := validateEvaluationEnvelope(envelope, w.ValidateContract); err != nil {
 		return nil, err
 	}
@@ -102,28 +64,6 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-// buildEvaluationEnvelopeFromEnriched assembles the evaluation envelope from
-// a fully-sanitized EnrichedResult. Sanitization of findings, skipped assets,
-// and input hashes is handled upstream in the enrich phase.
-func buildEvaluationEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) safetyenvelope.Evaluation {
-	findings := enriched.Findings
-	if findings == nil {
-		findings = []remediation.Finding{}
-	}
-
-	out := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
-		Run:                enriched.Run,
-		Summary:            enriched.Result.Summary,
-		Findings:           findings,
-		Skipped:            enriched.Result.Skipped,
-		SkippedAssets:      enriched.SkippedAssets,
-		SuppressedFindings: enriched.Result.SuppressedFindings,
-	})
-	out.Extensions = enriched.Result.Metadata.ToExtensions()
-	out.RemediationGroups = remediation.BuildGroups(findings)
-	return out
 }
 
 // validateEvaluationEnvelope performs schema and optional contract validation.

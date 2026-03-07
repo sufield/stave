@@ -94,7 +94,7 @@ func TestComputeUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T
 
 func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	out := renderUpcomingMarkdown(nil, upcomingSummary{}, UpcomingRenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
+	out := renderUpcomingMarkdown(nil, UpcomingSummary{}, UpcomingRenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
 	if !strings.Contains(out, "No upcoming snapshot action items.") {
 		t.Fatalf("expected no-items message, got: %s", out)
 	}
@@ -102,7 +102,7 @@ func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 
 func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
-	items := []upcomingItem{
+	items := []UpcomingItem{
 		{Status: "OVERDUE", Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
 		{Status: "DUE_NOW", Remaining: 0, DueAt: now},
 		{Status: "UPCOMING", Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},
@@ -130,7 +130,7 @@ func TestNewUpcomingFilter_InvalidStatus(t *testing.T) {
 
 func TestApplyUpcomingFilter(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
-	items := []upcomingItem{
+	items := []UpcomingItem{
 		{
 			DueAt:     now.Add(2 * time.Hour),
 			Status:    "UPCOMING",

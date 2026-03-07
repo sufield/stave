@@ -1,7 +1,6 @@
 package sanitize_test
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 	"time"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 
+	output "github.com/sufield/stave/internal/adapters/output"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -95,33 +95,37 @@ func assertNoSensitive(t *testing.T, label, output string) {
 // --- JSON FindingWriter tests ---
 
 func TestJSONWriter_WriteFindings_NoRedact(t *testing.T) {
-	w := outjson.NewFindingWriter(true, remediation.NewMapper(), nil)
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, makeTestResult()); err != nil {
+	w := outjson.NewFindingWriter(true)
+	enricher := remediation.NewMapper()
+	enriched := output.Enrich(enricher, nil, makeTestResult())
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatal(err)
 	}
-	output := buf.String()
+	out := string(data)
 	// Without sanitization, sensitive values should appear
-	if !strings.Contains(output, "my-phi-bucket") {
+	if !strings.Contains(out, "my-phi-bucket") {
 		t.Error("expected bucket name in unredacted output")
 	}
 }
 
 func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New()
-	w := outjson.NewFindingWriter(true, remediation.NewMapper(), r)
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, makeTestResult()); err != nil {
+	w := outjson.NewFindingWriter(true)
+	enricher := remediation.NewMapper()
+	enriched := output.Enrich(enricher, r, makeTestResult())
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatal(err)
 	}
-	output := buf.String()
-	assertNoSensitive(t, "JSON WriteFindings --sanitize", output)
+	out := string(data)
+	assertNoSensitive(t, "JSON WriteFindings --sanitize", out)
 	// Should contain SANITIZED tokens
-	if !strings.Contains(output, "SANITIZED_") {
+	if !strings.Contains(out, "SANITIZED_") {
 		t.Error("expected SANITIZED_ tokens in output")
 	}
 	// Structure should remain valid JSON
-	if !strings.Contains(output, `"schema_version"`) {
+	if !strings.Contains(out, `"schema_version"`) {
 		t.Error("JSON structure missing schema_version")
 	}
 }
@@ -130,14 +134,16 @@ func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 
 func TestTextWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New()
-	w := outtext.NewFindingWriter(remediation.NewMapper(), r)
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, makeTestResult()); err != nil {
+	w := outtext.NewFindingWriter()
+	enricher := remediation.NewMapper()
+	enriched := output.Enrich(enricher, r, makeTestResult())
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatal(err)
 	}
-	output := buf.String()
-	assertNoSensitive(t, "Text WriteFindings --sanitize", output)
-	if !strings.Contains(output, "SANITIZED_") {
+	out := string(data)
+	assertNoSensitive(t, "Text WriteFindings --sanitize", out)
+	if !strings.Contains(out, "SANITIZED_") {
 		t.Error("expected SANITIZED_ tokens in output")
 	}
 }

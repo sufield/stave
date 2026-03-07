@@ -70,12 +70,6 @@ type ValidationEnvelope struct {
 	Data JSONValidationReport `json:"data"`
 }
 
-// outputAndExit writes the result and returns appropriate error for exit code.
-// Returns write errors if output fails, otherwise returns validation status.
-func outputAndExit(cmd *cobra.Command, w io.Writer, result *appservice.ValidationResult, jsonOutput bool) error {
-	return outputAndExitWithOptions(cmd, w, result, jsonOutput, validateOpts)
-}
-
 func outputAndExitWithOptions(cmd *cobra.Command, w io.Writer, result *appservice.ValidationResult, jsonOutput bool, opts *options) error {
 	if opts.Template != "" {
 		return outputTemplateAndExit(w, result, opts)
@@ -125,12 +119,6 @@ func diagnosticsOf(result *appservice.ValidationResult) *diag.Result {
 		return diag.NewResult()
 	}
 	return result.Diagnostics
-}
-
-// writeValidationText outputs human-readable validation results.
-// Returns an error if writing to the output fails.
-func writeValidationText(w io.Writer, result *appservice.ValidationResult) error {
-	return writeValidationTextWithOptions(w, result, validateOpts)
 }
 
 func writeValidationTextWithOptions(w io.Writer, result *appservice.ValidationResult, opts *options) error {
@@ -291,11 +279,6 @@ func plural(n int) string {
 		return ""
 	}
 	return "s"
-}
-
-// validateOutput returns the appropriate output writer based on quiet mode.
-func validateOutput() io.Writer {
-	return validateOutputWithOptions(validateOpts)
 }
 
 func validateOutputWithOptions(opts *options) io.Writer {

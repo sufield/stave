@@ -4,10 +4,8 @@ package text
 
 import (
 	"bytes"
-	"io"
 	"strings"
 
-	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -15,40 +13,14 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// FindingEnricher enriches raw evaluation findings with remediation guidance.
-type FindingEnricher interface {
-	EnrichFindings(evaluation.Result) []remediation.Finding
-}
+// FindingWriter marshals findings as human-readable text.
+type FindingWriter struct{}
 
-// FindingWriter writes findings as human-readable text.
-type FindingWriter struct {
-	enricher  FindingEnricher
-	sanitizer kernel.Sanitizer // nil = no sanitization
-}
-
-var _ appcontracts.FindingWriter = (*FindingWriter)(nil)
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
 // NewFindingWriter creates a new text finding writer.
-func NewFindingWriter(enricher FindingEnricher, sanitizer kernel.Sanitizer) *FindingWriter {
-	if enricher == nil {
-		panic("precondition failed: NewFindingWriter requires non-nil enricher")
-	}
-	return &FindingWriter{
-		enricher:  enricher,
-		sanitizer: sanitizer,
-	}
-}
-
-// WriteFindings writes the evaluation result as human-readable text.
-func (w *FindingWriter) WriteFindings(out io.Writer, result evaluation.Result) error {
-	enriched := output.Enrich(w.enricher, w.sanitizer, result)
-	data, err := w.MarshalFindings(enriched)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(data)
-	return err
+func NewFindingWriter() *FindingWriter {
+	return &FindingWriter{}
 }
 
 // MarshalFindings transforms enriched findings into human-readable text bytes

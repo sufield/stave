@@ -5,29 +5,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 
-	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// FindingEnricher enriches raw evaluation findings with remediation guidance.
-type FindingEnricher interface {
-	EnrichFindings(evaluation.Result) []remediation.Finding
-}
-
 // Option configures a FindingWriter.
 type Option func(*FindingWriter)
 
-// FindingWriter writes findings as SARIF v2.1.0 JSON.
+// FindingWriter marshals findings as SARIF v2.1.0 JSON.
 type FindingWriter struct {
-	enricher  FindingEnricher
-	sanitizer kernel.Sanitizer
-	toolName  string
+	toolName string
 }
 
 type sarifReport struct {
@@ -99,34 +89,17 @@ type sarifMessage struct {
 	Text string `json:"text"`
 }
 
-var _ appcontracts.FindingWriter = (*FindingWriter)(nil)
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
-// NewFindingWriter creates a new SARIF finding writer.
-func NewFindingWriter(enricher FindingEnricher, sanitizer kernel.Sanitizer, opts ...Option) (*FindingWriter, error) {
-	if enricher == nil {
-		return nil, fmt.Errorf("enricher is required for sarif writer")
-	}
+// NewFindingWriter creates a new SARIF finding marshaler.
+func NewFindingWriter(opts ...Option) *FindingWriter {
 	w := &FindingWriter{
-		enricher:  enricher,
-		sanitizer: sanitizer,
-		toolName:  "stave",
+		toolName: "stave",
 	}
 	for _, opt := range opts {
 		opt(w)
 	}
-	return w, nil
-}
-
-// WriteFindings writes the evaluation result as SARIF v2.1.0 JSON.
-func (w *FindingWriter) WriteFindings(out io.Writer, result evaluation.Result) error {
-	enriched := output.Enrich(w.enricher, w.sanitizer, result)
-	data, err := w.MarshalFindings(enriched)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(data)
-	return err
+	return w
 }
 
 // MarshalFindings transforms enriched findings into SARIF v2.1.0 JSON bytes

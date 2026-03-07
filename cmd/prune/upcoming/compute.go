@@ -13,7 +13,7 @@ func computeUpcomingItems(
 	snapshots []asset.Snapshot,
 	controls []policy.ControlDefinition,
 	opts UpcomingComputeOptions,
-) []upcomingItem {
+) []UpcomingItem {
 	domainItems := risk.ComputeItems(risk.Request{
 		Controls:        controls,
 		Snapshots:       snapshots,
@@ -21,9 +21,9 @@ func computeUpcomingItems(
 		Now:             opts.Now,
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
-	items := make([]upcomingItem, 0, len(domainItems))
+	items := make([]UpcomingItem, 0, len(domainItems))
 	for _, d := range domainItems {
-		items = append(items, upcomingItem{
+		items = append(items, UpcomingItem{
 			DueAt:          d.DueAt,
 			Status:         string(d.Status),
 			ControlID:      string(d.ControlID),
@@ -38,8 +38,8 @@ func computeUpcomingItems(
 	return items
 }
 
-func summarizeUpcoming(items []upcomingItem, dueSoonThreshold time.Duration) upcomingSummary {
-	var s upcomingSummary
+func summarizeUpcoming(items []UpcomingItem, dueSoonThreshold time.Duration) UpcomingSummary {
+	var s UpcomingSummary
 	s.Total = len(items)
 	for _, item := range items {
 		switch item.Status {

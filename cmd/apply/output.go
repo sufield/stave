@@ -8,13 +8,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/validation"
 )
 
-func handleApplyResult(cmd *cobra.Command, result workflow.EvaluateResult) error {
+func handleApplyResult(cmd *cobra.Command, result EvaluateResult) error {
 	globalQuiet := cmdutil.QuietEnabled(cmd)
 	if result.SafetyStatus != evaluation.SafetyStatusSafe {
 		if ui.ShouldEmitOutput(applyFlags.quietMode, globalQuiet) {
@@ -31,7 +30,7 @@ func handleApplyResult(cmd *cobra.Command, result workflow.EvaluateResult) error
 	return nil
 }
 
-func outputResults(cmd *cobra.Command, results workflow.EvaluateResult, _ ui.OutputFormat) error {
+func outputResults(cmd *cobra.Command, results EvaluateResult, _ ui.OutputFormat) error {
 	return handleApplyResult(cmd, results)
 }
 

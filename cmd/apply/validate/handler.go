@@ -27,14 +27,15 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 	if rt == nil {
 		rt = ui.NewRuntime(nil, nil)
 	}
-	if err := prepareValidateCommand(cmd, opts); err != nil {
+	format, err := prepareValidateCommand(cmd, opts)
+	if err != nil {
 		return err
 	}
 
 	rt.Quiet = opts.QuietMode || cmdutil.QuietEnabled(cmd)
 	out := validateOutputWithOptions(opts)
 	if opts.InFile != "" {
-		return runValidateSingleFileWithOptions(cmd, out, opts)
+		return runValidateSingleFileWithOptions(cmd, out, opts, format)
 	}
 	if err := ensureValidateModeFlags(opts); err != nil {
 		return err
@@ -43,18 +44,18 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 	params := parseValidateParams(opts)
 	if len(params.issues) > 0 {
 		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
-		return outputAndExitWithOptions(cmd, out, result, validateIsJSONOutput(), opts)
+		return outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
 	}
 
 	done := rt.BeginProgress("validate artifacts")
-	result, err := executeValidateRun(cmd, params, opts)
+	result, runErr := executeValidateRun(cmd, params, opts)
 	done()
-	if err != nil {
-		return err
+	if runErr != nil {
+		return runErr
 	}
 	result.Diagnostics.AddAll(PackConfigIssues())
 
-	return outputValidateResult(cmd, out, result, opts)
+	return outputValidateResult(cmd, out, result, format, opts)
 }
 
 func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
@@ -79,8 +80,8 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 	return validateRun.Execute(context.Background(), cfg)
 }
 
-func outputValidateResult(cmd *cobra.Command, out io.Writer, result *appservice.ValidationResult, opts *options) error {
-	exitErr := outputAndExitWithOptions(cmd, out, result, validateIsJSONOutput(), opts)
+func outputValidateResult(cmd *cobra.Command, out io.Writer, result *appservice.ValidationResult, format ui.OutputFormat, opts *options) error {
+	exitErr := outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
 	if exitErr == nil && !opts.QuietMode && !cmdutil.QuietEnabled(cmd) {
 		fmt.Fprintf(os.Stderr, "Hint:\n  stave apply --controls %s --observations %s\n",
 			opts.ControlsDir, opts.ObservationsDir)

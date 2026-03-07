@@ -19,10 +19,11 @@ import (
 
 // runValidateSingleFile validates a single file (--in mode).
 func runValidateSingleFile(cmd *cobra.Command, out io.Writer) error {
-	return runValidateSingleFileWithOptions(cmd, out, validateOpts)
+	format, _ := ui.ParseOutputFormat(validateOpts.Format)
+	return runValidateSingleFileWithOptions(cmd, out, validateOpts, format)
 }
 
-func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *options) error {
+func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *options, format ui.OutputFormat) error {
 	data, sourceName, err := ui.ReadInput(os.Stdin, opts.InFile)
 	if err != nil {
 		return fmt.Errorf("cannot read --in: %s: %w", sourceName, err)
@@ -57,7 +58,7 @@ func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *o
 		return fmt.Errorf("validate %s: %w", sourceName, err)
 	}
 
-	return outputAndExitWithOptions(cmd, out, result, validateIsJSONOutput(), opts)
+	return outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
 }
 
 func normalizeValidateKind(raw string) (string, error) {

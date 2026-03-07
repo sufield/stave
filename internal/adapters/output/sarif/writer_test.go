@@ -1,32 +1,21 @@
 package sarif
 
 import (
-	"bytes"
 	"encoding/json"
 	"testing"
 	"time"
 
+	output "github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/domain/asset"
-
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-func TestNewFindingWriter_NilEnricher(t *testing.T) {
-	_, err := NewFindingWriter(nil, nil)
-	if err == nil {
-		t.Fatal("expected error for nil enricher")
-	}
-}
-
 func TestWriteFindings_EmptyFindings(t *testing.T) {
-	w, err := NewFindingWriter(remediation.NewMapper(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var buf bytes.Buffer
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			ToolVersion: "0.1.0",
@@ -36,12 +25,14 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 		},
 	}
 
-	if err := w.WriteFindings(&buf, result); err != nil {
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	var sarif map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &sarif); err != nil {
+	if err := json.Unmarshal(data, &sarif); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
 
@@ -62,11 +53,8 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 }
 
 func TestWriteFindings_SARIFStructure(t *testing.T) {
-	w, err := NewFindingWriter(remediation.NewMapper(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var buf bytes.Buffer
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
 
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	firstUnsafe := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
@@ -102,12 +90,14 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 		},
 	}
 
-	if err := w.WriteFindings(&buf, result); err != nil {
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	var sarif map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &sarif); err != nil {
+	if err := json.Unmarshal(data, &sarif); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
 
@@ -164,11 +154,8 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 }
 
 func TestWriteFindings_RuleDeduplication(t *testing.T) {
-	w, err := NewFindingWriter(remediation.NewMapper(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var buf bytes.Buffer
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
@@ -205,12 +192,14 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 		},
 	}
 
-	if err := w.WriteFindings(&buf, result); err != nil {
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	var sarif map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &sarif); err != nil {
+	if err := json.Unmarshal(data, &sarif); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
 
@@ -245,11 +234,8 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 }
 
 func TestWriteFindings_LogicalLocation(t *testing.T) {
-	w, err := NewFindingWriter(remediation.NewMapper(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var buf bytes.Buffer
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
@@ -271,12 +257,14 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 		},
 	}
 
-	if err := w.WriteFindings(&buf, result); err != nil {
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	var sarif map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &sarif); err != nil {
+	if err := json.Unmarshal(data, &sarif); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
 

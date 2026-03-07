@@ -1,9 +1,9 @@
 package apply
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/validation"
@@ -39,21 +40,12 @@ func runPlan(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !readinessPlanQuiet && !cmdutil.QuietEnabled(cmd) {
-		if format.IsJSON() {
-			enc := json.NewEncoder(cmd.OutOrStdout())
-			enc.SetIndent("", "  ")
-			if err := enc.Encode(report); err != nil {
-				return err
-			}
-		} else if err := writeReadinessText(cmd.OutOrStdout(), report); err != nil {
+		if err := writeReadinessReport(cmd.OutOrStdout(), report, format); err != nil {
 			return err
 		}
 	}
 
-	if !report.Ready {
-		return ui.ErrValidationFailed
-	}
-	return nil
+	return readinessExitError(report)
 }
 
 func runApply(cmd *cobra.Command, args []string) error {
@@ -115,6 +107,22 @@ func resolveReadinessDirs(cmd *cobra.Command, in readinessInput) (string, string
 	ctlDir = inferControlsDir(cmd, ctlDir)
 	obsDir = inferObservationsDir(cmd, obsDir)
 	return ctlDir, obsDir
+}
+
+// writeReadinessReport writes the readiness report in the requested format.
+func writeReadinessReport(w io.Writer, report validation.ReadinessReport, format ui.OutputFormat) error {
+	if format.IsJSON() {
+		return jsonout.WriteReadinessJSON(w, report)
+	}
+	return writeReadinessText(w, report)
+}
+
+// readinessExitError returns an error if the readiness report indicates failure.
+func readinessExitError(report validation.ReadinessReport) error {
+	if !report.Ready {
+		return ui.ErrValidationFailed
+	}
+	return nil
 }
 
 func readinessHasEnabledPacks() bool {

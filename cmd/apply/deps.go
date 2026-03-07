@@ -86,13 +86,9 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 
 // assembleResources creates the intermediate assets needed for dependency building.
 func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack, error) {
-	writer, err := cmdutil.NewFindingWriter(applyFlags.outputFormat, cmdutil.IsJSONMode(f.cmd), cmdutil.GetSanitizer(f.cmd))
+	marshaler, err := cmdutil.NewFindingWriter(applyFlags.outputFormat, cmdutil.IsJSONMode(f.cmd))
 	if err != nil {
 		return resourceStack{}, err
-	}
-	marshaler, ok := writer.(appcontracts.FindingMarshaler)
-	if !ok {
-		return resourceStack{}, fmt.Errorf("finding writer does not implement FindingMarshaler")
 	}
 	obsLoader, err := f.buildObservationLoader(f.params.source)
 	if err != nil {

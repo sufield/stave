@@ -10,13 +10,15 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 
+	output "github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
 func TestFindingWriter_NoViolations(t *testing.T) {
-	w := NewFindingWriter(remediation.NewMapper(), nil)
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			ToolVersion: "test",
@@ -32,10 +34,14 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 		},
 	}
 
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, result); err != nil {
-		t.Fatalf("WriteFindings() error = %v", err)
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
+		t.Fatalf("MarshalFindings() error = %v", err)
 	}
+
+	var buf bytes.Buffer
+	buf.Write(data)
 
 	out := buf.String()
 	if !strings.Contains(out, "No violations found.") {
@@ -47,7 +53,9 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 }
 
 func TestFindingWriter_ViolationsWithSections(t *testing.T) {
-	w := NewFindingWriter(remediation.NewMapper(), sanitize.New())
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
+	sanitizer := sanitize.New()
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
@@ -103,11 +111,12 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		},
 	}
 
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, result); err != nil {
-		t.Fatalf("WriteFindings() error = %v", err)
+	enriched := output.Enrich(enricher, sanitizer, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
+		t.Fatalf("MarshalFindings() error = %v", err)
 	}
-	out := buf.String()
+	out := string(data)
 
 	contains := []string{
 		"Evaluation Results",
@@ -133,7 +142,8 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 }
 
 func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
-	w := NewFindingWriter(remediation.NewMapper(), nil)
+	w := NewFindingWriter()
+	enricher := remediation.NewMapper()
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 
 	result := evaluation.Result{
@@ -185,12 +195,13 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 		},
 	}
 
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, result); err != nil {
-		t.Fatalf("WriteFindings() error = %v", err)
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
+		t.Fatalf("MarshalFindings() error = %v", err)
 	}
 
-	out := buf.String()
+	out := string(data)
 	for _, want := range []string{"By domain:", "- aws_s3: 1", "- unknown: 1"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("missing %q in output:\n%s", want, out)
