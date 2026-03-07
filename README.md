@@ -102,6 +102,8 @@ flowchart LR
 2. **Evaluate** — Stave reads snapshots and evaluates them against built-in or custom YAML controls, tracking unsafe duration across snapshots.
 3. **Act** — Review the findings JSON to identify violations, unsafe durations, and recurrence patterns.
 
+Snapshots must conform to the observation contract: [docs/observation-contract.md](docs/observation-contract.md)
+
 ## MVP Assumption
 
 For MVP, Stave assumes teams are capturing snapshots from **production**

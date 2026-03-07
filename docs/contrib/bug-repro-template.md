@@ -173,7 +173,7 @@ type Output struct {
 	} `json:"summary"`
 	Findings []struct {
 		ControlID string `json:"control_id"`
-		ResourceID  string `json:"resource_id"`
+		AssetID  string `json:"asset_id"`
 	} `json:"findings"`
 }
 
@@ -217,7 +217,7 @@ func TestRepro(t *testing.T) {
 	found := false
 	for _, f := range out.Findings {
 		if strings.TrimSpace(f.ControlID) == expectedControl &&
-			strings.TrimSpace(f.ResourceID) == expectedResource {
+			strings.TrimSpace(f.AssetID) == expectedResource {
 			found = true
 			break
 		}

@@ -107,8 +107,8 @@ Stave provides two mechanisms for controlling sensitive data in output:
 
 | Field | Sanitized form |
 |-------|--------------|
-| `Finding.ResourceID` | `SANITIZED_<8hex>` |
-| ARNs in `ResourceID` | `arn:aws:s3:::SANITIZED_<8hex>` (structure preserved) |
+| `Finding.AssetID` | `SANITIZED_<8hex>` |
+| ARNs in `AssetID` | `arn:aws:s3:::SANITIZED_<8hex>` (structure preserved) |
 | `Finding.Source.File` | Basename only (directory stripped) |
 | `Evidence.Misconfigurations[].ActualValue` | `[SANITIZED]` |
 

@@ -34,7 +34,7 @@ The output contract is defined by Go struct types in `internal/domain/` and `int
 | `summary` | [summary](#summary) | Yes | Aggregate counts |
 | `findings` | array of [finding](#finding) | Yes | Detected violations (empty array when none) |
 | `skipped` | array of [skipped_control](#skipped_control) | No | Controls that could not be evaluated |
-| `skipped_resources` | array of [skipped_resource](#skipped_resource) | No | Resources exempted by ignore rules |
+| `skipped_resources` | array of [skipped_resource](#skipped_resource) | No | Assets exempted by ignore rules |
 | `extensions` | object | No | Extension metadata (for example selected control source and resolved pack IDs) |
 
 ## `run`
@@ -59,22 +59,22 @@ The output contract is defined by Go struct types in `internal/domain/` and `int
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `resources_evaluated` | integer | Number of resources evaluated |
-| `attack_surface` | integer | Number of resources currently in an unsafe state |
+| `assets_evaluated` | integer | Number of assets evaluated |
+| `attack_surface` | integer | Number of assets currently in an unsafe state |
 | `violations` | integer | Number of findings (violations) |
 
 ## `finding`
 
-Each finding represents a single control violation for a specific resource.
+Each finding represents a single control violation for a specific asset.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `control_id` | string | Yes | ID of the violated control (e.g., `"CTL.S3.PUBLIC.001"`) |
 | `control_name` | string | Yes | Human-readable control name |
 | `control_description` | string | Yes | What the control checks |
-| `resource_id` | string | Yes | ID of the violating resource |
-| `resource_type` | string | Yes | Resource type (e.g., `"storage_bucket"`) |
-| `resource_vendor` | string | Yes | Cloud vendor (e.g., `"aws"`) |
+| `asset_id` | string | Yes | ID of the violating asset |
+| `asset_type` | string | Yes | Asset type (e.g., `"storage_bucket"`) |
+| `asset_vendor` | string | Yes | Cloud vendor (e.g., `"aws"`) |
 | `source` | [source_ref](#source_ref) | No | Source file reference from the observation |
 | `evidence` | [evidence](#evidence) | Yes | Proof of the violation |
 | `control_severity` | string | No | Severity level of the violated control (`critical`, `high`, `medium`, `low`, `info`) |
@@ -141,7 +141,7 @@ Fields are populated depending on the control type.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `id` | string | Yes | Stable fix-plan identifier |
-| `target` | object | Yes | Resource target (`resource_id`, `resource_type`) |
+| `target` | object | Yes | Asset target (`asset_id`, `asset_type`) |
 | `preconditions` | array of strings | No | Conditions to verify before applying actions |
 | `actions` | array | Yes | Deterministic action list |
 | `actions[].action_type` | enum | Yes | `set`, `add`, `remove` |
@@ -161,18 +161,18 @@ Fields are populated depending on the control type.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `resource_id` | string | ID of the skipped resource |
+| `asset_id` | string | ID of the skipped asset |
 | `matched_pattern` | string | Ignore pattern that matched |
 | `reason` | string | Exemption reason |
 
 ## `rows[]` (optional, `--explain-all`)
 
-When `--explain-all` is enabled, each row represents one `(control, resource)` evaluation decision.
+When `--explain-all` is enabled, each row represents one `(control, asset)` evaluation decision.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `control_id` | string | Control ID |
-| `resource_id` | string | Resource ID |
+| `asset_id` | string | Asset ID |
 | `decision` | enum | `VIOLATION`, `PASS`, `INCONCLUSIVE`, `NOT_APPLICABLE`, `SKIPPED` |
 | `confidence` | enum | `high`, `medium`, `low`, `inconclusive` |
 | `evidence` | [evidence](#evidence) | Evidence (present for violations) |
@@ -193,7 +193,7 @@ When `--explain-all` is enabled, each row represents one `(control, resource)` e
     "snapshots": 2
   },
   "summary": {
-    "resources_evaluated": 1,
+    "assets_evaluated": 1,
     "attack_surface": 0,
     "violations": 0
   },
@@ -223,7 +223,7 @@ When `--explain-all` is enabled, each row represents one `(control, resource)` e
     }
   },
   "summary": {
-    "resources_evaluated": 2,
+    "assets_evaluated": 2,
     "attack_surface": 1,
     "violations": 1
   },
@@ -232,9 +232,9 @@ When `--explain-all` is enabled, each row represents one `(control, resource)` e
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Exposure Duration Bound",
       "control_description": "An asset must not remain unsafe beyond the configured time window.",
-      "resource_id": "res:aws:s3:bucket:public-bucket",
-      "resource_type": "storage_bucket",
-      "resource_vendor": "aws",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
       "source": { "file": "infra/main.tf", "line": 42 },
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
@@ -244,7 +244,7 @@ When `--explain-all` is enabled, each row represents one `(control, resource)` e
         "misconfigurations": [
           { "property": "public", "actual_value": true, "operator": "eq", "unsafe_value": true }
         ],
-        "why_now": "Resource has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance": {

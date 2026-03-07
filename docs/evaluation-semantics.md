@@ -31,7 +31,7 @@ Observation snapshots are evaluated in ascending `captured_at` order.
 
 ## Decision Model
 
-Each evaluated `(control, resource)` pair yields one decision row when explain-all output is enabled.
+Each evaluated `(control, asset)` pair yields one decision row when explain-all output is enabled.
 
 Decision values:
 
@@ -41,7 +41,7 @@ Decision values:
 - `NOT_APPLICABLE`
 - `SKIPPED`
 
-The output summary aggregates violations and resource-level totals.
+The output summary aggregates violations and asset-level totals.
 
 ## Predicate Matching Rules
 

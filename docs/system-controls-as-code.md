@@ -31,8 +31,8 @@ Stave focuses on deterministic, offline proofs over local snapshots.
 Let:
 
 - `S_t` be an observation snapshot at time `t`
-- `I` be a control predicate over resource properties
-- `U(r, t) = 1` when resource `r` is unsafe in snapshot `S_t` under `I`
+- `I` be a control predicate over asset properties
+- `U(r, t) = 1` when asset `r` is unsafe in snapshot `S_t` under `I`
 
 For `unsafe_state`, a violation exists if `U(r, t_now) = 1`.
 

@@ -120,7 +120,7 @@ Ask for engineering help when:
 
 - The observation does not contain the field you need.
 - You need reasoning not expressible with current operators.
-- You need cross-resource joins beyond current snapshot model.
+- You need cross-asset joins beyond current snapshot model.
 - You need a new extractor/source type.
 
 See also:
