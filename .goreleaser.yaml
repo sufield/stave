@@ -33,11 +33,13 @@ builds:
 
 archives:
   - id: default
-    format: tar.gz
+    formats:
+      - tar.gz
     name_template: "stave_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
 
 checksum:
   name_template: "SHA256SUMS"
@@ -63,58 +65,37 @@ release:
     name: stave
   prerelease: auto
 
-dockers:
-  - id: amd64
-    goos: linux
-    goarch: amd64
-    image_templates:
-      - "ghcr.io/sufield/stave:v{{ .Version }}-amd64"
+dockers_v2:
+  - id: stave
+    images:
+      - "ghcr.io/sufield/stave"
+    tags:
+      - "v{{ .Version }}"
+      - latest
     dockerfile: build/docker/Dockerfile.release
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.title=stave"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.source=https://github.com/sufield/stave"
-  - id: arm64
-    goos: linux
-    goarch: arm64
-    image_templates:
-      - "ghcr.io/sufield/stave:v{{ .Version }}-arm64"
-    dockerfile: build/docker/Dockerfile.release
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.title=stave"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-      - "--label=org.opencontainers.image.source=https://github.com/sufield/stave"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      "org.opencontainers.image.title": "stave"
+      "org.opencontainers.image.version": "{{ .Version }}"
+      "org.opencontainers.image.source": "https://github.com/sufield/stave"
 
-docker_manifests:
-  - name_template: "ghcr.io/sufield/stave:v{{ .Version }}"
-    image_templates:
-      - "ghcr.io/sufield/stave:v{{ .Version }}-amd64"
-      - "ghcr.io/sufield/stave:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/sufield/stave:latest"
-    image_templates:
-      - "ghcr.io/sufield/stave:v{{ .Version }}-amd64"
-      - "ghcr.io/sufield/stave:v{{ .Version }}-arm64"
-
-brews:
+homebrew_casks:
   - name: stave
+    binaries:
+      - stave
     repository:
       owner: sufield
       name: homebrew-tap
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    directory: Formula
     homepage: "https://github.com/sufield/stave"
     description: "Configuration safety evaluation CLI"
-    license: "Apache-2.0"
-    test: |
-      system "#{bin}/stave", "--version"
 
 nfpms:
   - id: default
     package_name: stave
+    maintainer: "sufield <sufield@users.noreply.github.com>"
     vendor: sufield
     homepage: "https://github.com/sufield/stave"
     description: "Configuration safety evaluation CLI"
