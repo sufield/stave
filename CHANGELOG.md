@@ -12,17 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Severity levels populated on all 43 S3 controls (10 critical, 20 high, 11 medium, 2 low)
 - Compliance metadata (`compliance` field) on control definitions — maps framework names to control IDs
 - Compliance mappings on 8 key controls (CIS AWS v1.4.0, PCI DSS v3.2.1, SOC 2)
-- `--min-severity` flag on `evaluate` — filter controls by minimum severity level
-- `--control-id` flag on `evaluate` — run a single specific control
-- `--exclude-control-id` flag on `evaluate` — exclude specific controls (repeatable)
-- `--compliance` flag on `evaluate` — run only controls with a mapping for the given framework
+- `--min-severity` flag on `apply` — filter controls by minimum severity level
+- `--control-id` flag on `apply` — run a single specific control
+- `--exclude-control-id` flag on `apply` — exclude specific controls (repeatable)
+- `--compliance` flag on `apply` — run only controls with a mapping for the given framework
 - `stave report` severity breakdown section (findings by severity table)
 - `stave report` compliance summary section (framework → findings count + controls)
 - SEVERITY column in report TSV output
 - `control_severity` and `control_compliance` fields in evaluation findings output
 
 ### Changed
-- **Breaking:** Removed `--out` flag from `evaluate`, `check`, `verify`, `ci diff`,
+- **Breaking:** Removed `--out` flag from `apply`, `check`, `verify`, `ci diff`,
   `ci baseline check`, `report`, `ci gate`, `snapshot diff`, `snapshot upcoming`,
   and `snapshot hygiene`. Use shell redirection (`> file`) instead. Commands that
   create files (`generate`, `ingest`, `ci baseline save`, `enforce`, `ci fix-loop`)
@@ -47,8 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Core evaluation engine with duration tracking and recurrence detection
 - 40 S3 controls covering public exposure, ACL, encryption, versioning, access logging, lifecycle, object lock, tenant isolation, and write scope
-- CLI commands: validate, evaluate, diagnose, ingest --profile aws-s3, evaluate --profile aws-s3, verify, enforce, report, counterfactual, capabilities, alias, trace
-- `--template` flag on evaluate, diagnose, and validate for custom output formatting
+- CLI commands: validate, apply, diagnose, ingest --profile aws-s3, apply --profile aws-s3, verify, enforce, report, counterfactual, capabilities, alias, trace
+- `--template` flag on apply, diagnose, and validate for custom output formatting
 - Command alias system (`stave alias set|list|delete`) with user config storage
 - JSON and text output formats
 - Observation schema (obs.v0.1) and control DSL (ctrl.v1)

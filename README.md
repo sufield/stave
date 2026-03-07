@@ -570,7 +570,7 @@ ingest --profile aws-s3 → apply --profile aws-s3 → verify
 # 1. Extract observations from offline AWS snapshot
 stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json --include-all
 
-# 2. Evaluate against S3 controls (exit 3 = violations found)
+# 2. Apply controls against S3 observations (exit 3 = violations found)
 stave apply --profile aws-s3 --input observations.json --include-all > evaluation.json
 
 # 3. Compare before/after snapshots to verify remediation
@@ -1097,9 +1097,10 @@ Stave follows Unix CLI conventions for scripting and automation.
 
 ### Exit Codes
 
-| Code | evaluate | validate | diagnose |
+| Code | apply | validate | diagnose |
 |------|----------|----------|----------|
 | 0 | No violations | All inputs valid | No diagnostics |
+| 1 | Security-audit gating failure | N/A | N/A |
 | 2 | Input error | Errors or warnings | Input error |
 | 3 | Violations found | N/A | Diagnostics found |
 | 4 | Internal error | Internal error | Internal error |
@@ -1443,7 +1444,7 @@ These controls enforce encryption, versioning, lifecycle, object lock, and loggi
 **With Terraform plan JSON (most common):**
 
 ```bash
-# Point evaluate at your observations and the S3 control directory
+# Point apply at your observations and the S3 control directory
 stave apply \
   --controls controls/s3 \
   --observations ./observations \

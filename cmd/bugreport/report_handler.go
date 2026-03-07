@@ -12,6 +12,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	supportapp "github.com/sufield/stave/internal/app/support"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -39,7 +40,7 @@ func runReport(cmd *cobra.Command, _ []string) error {
 
 func prepareOutputFile(cmd *cobra.Command) (supportapp.PreparedOutput, error) {
 	if tailLines < 0 {
-		return supportapp.PreparedOutput{}, fmt.Errorf("invalid --tail-lines %d: must be >= 0", tailLines)
+		return supportapp.PreparedOutput{}, &ui.InputError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", tailLines)}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {

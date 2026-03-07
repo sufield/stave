@@ -40,11 +40,11 @@ func runSecurityAudit(cmd *cobra.Command, _ []string) error {
 	}
 	severityFilter, err := securityaudit.ParseSeverityList(securityAuditFlags.severity)
 	if err != nil {
-		return fmt.Errorf("invalid --severity: %w", err)
+		return &ui.InputError{Err: fmt.Errorf("invalid --severity: %w", err)}
 	}
 	failOn, err := securityaudit.ParseFailOnSeverity(securityAuditFlags.failOn)
 	if err != nil {
-		return fmt.Errorf("invalid --fail-on: %w", err)
+		return &ui.InputError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
 	}
 
 	cwd, err := os.Getwd()
@@ -150,9 +150,9 @@ func parseSecurityAuditFormat(raw string) (string, error) {
 	default:
 		valid := []string{"json", "markdown", "sarif"}
 		if suggestion := ui.ClosestToken(normalized, valid); suggestion != "" {
-			return "", fmt.Errorf("invalid --format %q (use json, markdown, or sarif)\nDid you mean %q?", raw, suggestion)
+			return "", &ui.InputError{Err: fmt.Errorf("invalid --format %q (use json, markdown, or sarif)\nDid you mean %q?", raw, suggestion)}
 		}
-		return "", fmt.Errorf("invalid --format %q (use json, markdown, or sarif)", raw)
+		return "", &ui.InputError{Err: fmt.Errorf("invalid --format %q (use json, markdown, or sarif)", raw)}
 	}
 }
 

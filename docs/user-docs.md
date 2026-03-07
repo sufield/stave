@@ -229,7 +229,7 @@ For snapshot operations, use the lifecycle command set:
 | `snapshot hygiene` | Weekly lifecycle report | Generate markdown with snapshot totals, retention posture, violations, upcoming items, and trend vs last week |
 | `ci baseline save/check` | Fail-on-new CI policy | Preserve accepted findings and fail only on newly introduced findings |
 | `ci gate` | CI policy enforcement | Apply configurable fail modes (`any`, `new`, `overdue`) |
-| `ci fix-loop` | Fix verification loop | Evaluate before/after snapshots, verify changes, and generate remediation report |
+| `ci fix-loop` | Fix verification loop | Apply before/after snapshots, verify changes, and generate remediation report |
 | `config show` | Effective config inspection | Show resolved defaults and value sources (env/project/user/default) |
 | `config explain` | Config resolution trace | Print effective values and where each value came from |
 | `config get/set` | Config key management | Read or update `stave.yaml` keys from terminal and CI scripts |

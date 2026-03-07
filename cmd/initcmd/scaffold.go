@@ -81,13 +81,13 @@ func runInit(_ *cobra.Command, _ []string) error {
 func validateScaffoldInputs(rawDir, profile, cadence string) (string, error) {
 	dir := fsutil.CleanUserPath(rawDir)
 	if dir == "" {
-		return "", fmt.Errorf("--dir cannot be empty")
+		return "", &ui.InputError{Err: fmt.Errorf("--dir cannot be empty")}
 	}
 	if profile != "" && profile != profileAWSS3 {
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3)", profile)
+		return "", &ui.InputError{Err: fmt.Errorf("unsupported --profile %q (supported: aws-s3)", profile)}
 	}
 	if cadence != cadenceDaily && cadence != cadenceHourly {
-		return "", fmt.Errorf("unsupported --capture-cadence %q (supported: daily, hourly)", cadence)
+		return "", &ui.InputError{Err: fmt.Errorf("unsupported --capture-cadence %q (supported: daily, hourly)", cadence)}
 	}
 	return dir, nil
 }

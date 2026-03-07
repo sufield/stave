@@ -125,7 +125,7 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 | `ingest` | `cmd/ingest/` | — | Adapter-level extraction |
 | `verify` | `cmd/evaluate/verify/` | — | Before/after comparison |
 | `snapshot hygiene` | `cmd/prune/hygiene/` | — | Weekly lifecycle report |
-| `ci fix-loop` | `cmd/enforce/fix/` | — | Evaluate before/after + verification |
+| `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
 | `capabilities` | `cmd/commands.go` | `app/capabilities.go` | — |
 | `graph coverage` | `cmd/enforce/graph/` | — | Predicate matching |
 
