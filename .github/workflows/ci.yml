@@ -24,7 +24,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Sync schemas and run tests
-        run: make sync-schemas && go test -v -race ./...
+        run: make sync-schemas sync-controls && go test -v -race ./...
 
   lint:
     name: Lint
