@@ -22,7 +22,7 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
-// EvaluateDeps holds wired dependencies for the apply command.
+// EvaluateDeps holds wired dependencies for the apply (evaluate) command.
 type EvaluateDeps struct {
 	Runner appeval.EvaluateRunner
 	Config appeval.EvaluateConfig

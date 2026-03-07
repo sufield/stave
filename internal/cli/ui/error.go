@@ -107,8 +107,9 @@ func ExitCode(err error) int {
 		if errors.As(err, &inputErr) {
 			return ExitInputError
 		}
-		// Unrecognized errors are unexpected → exit 4 (internal error).
-		return ExitInternal
+		// Unrecognized errors default to exit 2 (input error).
+		// True internal errors are caught by the panic handler or ErrInternal.
+		return ExitInputError
 	}
 }
 
