@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func attachRunID(inputsHash, controlsHash string) {
 	cmdutil.AttachRunID(inputsHash, controlsHash)
 }
 
-func resolveEvaluateContextName(projectRoot string) string {
+func resolveApplyContextName(projectRoot string) string {
 	if sc, err := cmdutil.ResolveSelectedGlobalContext(); err == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
 		return strings.TrimSpace(sc.Name)
 	}

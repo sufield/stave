@@ -121,11 +121,11 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 
 | Command | Entry Point | App Layer | Domain Layer |
 |---------|-------------|-----------|--------------|
-| `apply` | `cmd/evaluate/` | `app/eval/` | `domain/evaluation/` |
-| `validate` | `cmd/evaluate/validate/` | `app/validation/` | `contracts/` |
+| `apply` | `cmd/apply/` | `app/eval/` | `domain/evaluation/` |
+| `validate` | `cmd/apply/validate/` | `app/validation/` | `contracts/` |
 | `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `domain/diag/` |
 | `ingest` | `cmd/ingest/` | `app/ingest/` | Adapter-level extraction |
-| `verify` | `cmd/evaluate/verify/` | — | Before/after comparison |
+| `verify` | `cmd/apply/verify/` | — | Before/after comparison |
 | `snapshot hygiene` | `cmd/prune/hygiene/` | `app/hygiene/` | Weekly lifecycle report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
 | `capabilities` | `cmd/commands.go` | `app/capabilities/` | — |

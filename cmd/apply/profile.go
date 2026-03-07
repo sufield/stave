@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"context"
@@ -21,26 +21,26 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
-// EvalProfile represents a validated evaluation profile.
-type EvalProfile string
+// ApplyProfile represents a validated evaluation profile.
+type ApplyProfile string
 
 const (
-	// EvalProfileAWSS3 selects the AWS S3 evaluation profile.
-	EvalProfileAWSS3 EvalProfile = "aws-s3"
+	// ApplyProfileAWSS3 selects the AWS S3 evaluation profile.
+	ApplyProfileAWSS3 ApplyProfile = "aws-s3"
 )
 
-// ParseEvalProfile validates and returns an EvalProfile value.
-func ParseEvalProfile(s string) (EvalProfile, error) {
-	switch EvalProfile(s) {
-	case EvalProfileAWSS3:
-		return EvalProfileAWSS3, nil
+// ParseApplyProfile validates and returns an ApplyProfile value.
+func ParseApplyProfile(s string) (ApplyProfile, error) {
+	switch ApplyProfile(s) {
+	case ApplyProfileAWSS3:
+		return ApplyProfileAWSS3, nil
 	default:
 		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3)", s)
 	}
 }
 
-// evaluateProfileOptions holds profile-compatible options for evaluation.
-type evaluateProfileOptions struct {
+// applyProfileOptions holds profile-compatible options for evaluation.
+type applyProfileOptions struct {
 	inputFile       string
 	scopeFile       string
 	bucketAllowlist []string
@@ -56,18 +56,18 @@ type ObservationBundle struct {
 	Snapshots     []asset.Snapshot `json:"snapshots"`
 }
 
-func runEvaluateProfileWithOptions(cmd *cobra.Command, opts evaluateProfileOptions) error {
+func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) error {
 	// Reserved for future profile-specific scope-file support.
 	_ = opts.scopeFile
 
-	if err := validateEvaluateProfileInput(opts.inputFile); err != nil {
+	if err := validateApplyProfileInput(opts.inputFile); err != nil {
 		return err
 	}
-	clock, err := resolveEvaluateProfileClock(opts.nowTime)
+	clock, err := resolveApplyProfileClock(opts.nowTime)
 	if err != nil {
 		return err
 	}
-	scopeFilter := resolveEvaluateProfileScopeFilter(opts)
+	scopeFilter := resolveApplyProfileScopeFilter(opts)
 	snapshots, err := loadProfileSnapshots(opts.inputFile)
 	if err != nil {
 		return err
@@ -116,21 +116,21 @@ func runEvaluateProfileWithOptions(cmd *cobra.Command, opts evaluateProfileOptio
 		return fmt.Errorf("write findings: %w", err)
 	}
 
-	return finalizeEvaluateProfileRun(len(result.Findings), cannotProveSafeCount, opts.quiet, ctlDir, opts.inputFile)
+	return finalizeApplyProfileRun(len(result.Findings), cannotProveSafeCount, opts.quiet, ctlDir, opts.inputFile)
 }
 
-func validateEvaluateProfileInput(inputFile string) error {
+func validateApplyProfileInput(inputFile string) error {
 	if _, err := os.Stat(inputFile); err != nil {
 		return fmt.Errorf("--input not accessible: %s: %w", inputFile, err)
 	}
 	return nil
 }
 
-func resolveEvaluateProfileClock(nowTime string) (ports.Clock, error) {
+func resolveApplyProfileClock(nowTime string) (ports.Clock, error) {
 	return cmdutil.ResolveClock(nowTime)
 }
 
-func resolveEvaluateProfileScopeFilter(opts evaluateProfileOptions) asset.AssetPredicate {
+func resolveApplyProfileScopeFilter(opts applyProfileOptions) asset.AssetPredicate {
 	if opts.includeAll {
 		return asset.UniversalFilter
 	}
@@ -201,7 +201,7 @@ func countCannotProveSafe(snapshots []asset.Snapshot) int {
 	return cannotProveSafeCount
 }
 
-func finalizeEvaluateProfileRun(
+func finalizeApplyProfileRun(
 	findingsCount int,
 	cannotProveSafeCount int,
 	quiet bool,

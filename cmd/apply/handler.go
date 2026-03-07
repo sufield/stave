@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"context"
@@ -14,9 +14,9 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-// runEvaluate is the handler for the apply command.
+// runApplyCore is the core handler for the apply command.
 // It validates flags, builds dependencies, and runs the evaluation.
-func runEvaluate(cmd *cobra.Command, _ []string) error {
+func runApplyCore(cmd *cobra.Command, _ []string) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
@@ -31,9 +31,9 @@ func runEvaluate(cmd *cobra.Command, _ []string) error {
 
 	switch opts.mode {
 	case runModeProfile:
-		return runEvaluateProfileWithOptions(cmd, opts.profile)
+		return runApplyProfileWithOptions(cmd, opts.profile)
 	case runModeTemplate:
-		return runEvaluateWithTemplateParams(cmd, opts.params)
+		return runApplyWithTemplateParams(cmd, opts.params)
 	}
 
 	plan, err := appeval.NewPlan(opts.evaluatorInput)
@@ -51,7 +51,7 @@ func runEvaluate(cmd *cobra.Command, _ []string) error {
 		return enc.Encode(plan)
 	}
 
-	results, err := executeEvaluate(cmd, cmd.Context(), opts, plan)
+	results, err := executeApply(cmd, cmd.Context(), opts, plan)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(err)
 	}
@@ -80,7 +80,7 @@ func runStrictIntegrityCheck(cmd *cobra.Command) error {
 	return nil
 }
 
-func executeEvaluate(
+func executeApply(
 	cmd *cobra.Command,
 	ctx context.Context,
 	opts runOptions,

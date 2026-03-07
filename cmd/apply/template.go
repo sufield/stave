@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
-func runEvaluateWithTemplateParams(_ *cobra.Command, params evaluateParams) error {
+func runApplyWithTemplateParams(_ *cobra.Command, params applyParams) error {
 	attachTemplateRunID()
 	obsLoader, ctlLoader, err := buildTemplateRepositories(params)
 	if err != nil {
@@ -25,12 +25,12 @@ func runEvaluateWithTemplateParams(_ *cobra.Command, params evaluateParams) erro
 	if err != nil {
 		return ui.EvaluateErrorWithHint(err)
 	}
-	result := evaluateTemplateArtifacts(params, artifacts)
+	result := applyTemplateArtifacts(params, artifacts)
 	evalEnvelope := buildTemplateEvaluation(result)
-	if err := ui.ExecuteTemplate(os.Stdout, applyFlags.evaluateTemplateStr, evalEnvelope); err != nil {
+	if err := ui.ExecuteTemplate(os.Stdout, applyFlags.applyTemplateStr, evalEnvelope); err != nil {
 		return err
 	}
-	return evaluateViolationsExit(result)
+	return applyViolationsExit(result)
 }
 
 func attachTemplateRunID() {
@@ -43,7 +43,7 @@ func attachTemplateRunID() {
 	attachRunID(observationsHash, controlsHash.String())
 }
 
-func buildTemplateRepositories(params evaluateParams) (appcontracts.ObservationRepository, appcontracts.ControlRepository, error) {
+func buildTemplateRepositories(params applyParams) (appcontracts.ObservationRepository, appcontracts.ControlRepository, error) {
 	obsLoader, err := buildObservationLoader(params.source)
 	if err != nil {
 		return nil, nil, err
@@ -70,7 +70,7 @@ func loadTemplateArtifacts(obsLoader appcontracts.ObservationRepository, ctlLoad
 	return artifacts, nil
 }
 
-func evaluateTemplateArtifacts(params evaluateParams, artifacts appeval.IntentEvaluationResult) evaluation.Result {
+func applyTemplateArtifacts(params applyParams, artifacts appeval.IntentEvaluationResult) evaluation.Result {
 	return appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:    artifacts.Controls,
 		Snapshots:   artifacts.Snapshots,
@@ -84,6 +84,6 @@ func buildTemplateEvaluation(result evaluation.Result) safetyenvelope.Evaluation
 	return appworkflow.BuildEvaluationEnvelope(result)
 }
 
-func evaluateViolationsExit(result evaluation.Result) error {
+func applyViolationsExit(result evaluation.Result) error {
 	return ui.SafetyExitError(string(result.SafetyStatus()))
 }

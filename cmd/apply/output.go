@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/internal/domain/validation"
 )
 
-func handleEvaluateResult(cmd *cobra.Command, result workflow.EvaluateResult) error {
+func handleApplyResult(cmd *cobra.Command, result workflow.EvaluateResult) error {
 	globalQuiet := cmdutil.QuietEnabled(cmd)
 	if result.SafetyStatus != evaluation.SafetyStatusSafe {
 		if ui.ShouldEmitOutput(applyFlags.quietMode, globalQuiet) {
@@ -32,7 +32,7 @@ func handleEvaluateResult(cmd *cobra.Command, result workflow.EvaluateResult) er
 }
 
 func outputResults(cmd *cobra.Command, results workflow.EvaluateResult, _ ui.OutputFormat) error {
-	return handleEvaluateResult(cmd, results)
+	return handleApplyResult(cmd, results)
 }
 
 func writeReadinessText(w io.Writer, report validation.ReadinessReport) error {

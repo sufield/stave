@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"github.com/spf13/cobra"
@@ -8,16 +8,16 @@ import (
 
 // applyFlagsType groups all CLI flags for the apply command.
 type applyFlagsType struct {
-	controlsDir, observationsDir, maxUnsafe, nowTime      string
-	allowUnknownInput, quietMode, evaluateDryRun          bool
-	evaluateExplain, profileIncludeAll                    bool
-	outputFormat, ignoreFile, evalProfile                 string
-	profileInputFile, profileScopeFile                    string
-	profileBucketAllowlist, evalExcludeControlIDs         []string
-	evaluateTemplateStr, evalMinSeverity                  string
-	evalControlID, evalCompliance                         string
-	evaluateControlsFlagSet                               bool
-	evaluateIntegrityManifest, evaluateIntegrityPublicKey string
+	controlsDir, observationsDir, maxUnsafe, nowTime    string
+	allowUnknownInput, quietMode, applyDryRun          bool
+	applyExplain, profileIncludeAll                    bool
+	outputFormat, ignoreFile, applyProfile             string
+	profileInputFile, profileScopeFile                 string
+	profileBucketAllowlist, applyExcludeControlIDs     []string
+	applyTemplateStr, applyMinSeverity                 string
+	applyControlID, applyCompliance                    string
+	applyControlsFlagSet                               bool
+	applyIntegrityManifest, applyIntegrityPublicKey    string
 }
 
 var applyFlags applyFlagsType
@@ -31,9 +31,9 @@ func init() {
 	ApplyCmd.Flags().StringVarP(&applyFlags.outputFormat, "format", "f", "json", "Output format: json, text, or sarif")
 	ApplyCmd.Flags().BoolVar(&applyFlags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
-	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
-	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
-	ApplyCmd.Flags().StringVarP(&applyFlags.evalProfile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")
+	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
+	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
+	ApplyCmd.Flags().StringVarP(&applyFlags.applyProfile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")
 	ApplyCmd.Flags().StringVar(&applyFlags.profileInputFile, "input", "", "Path to observations bundle file (required with --profile)")
 	ApplyCmd.Flags().StringVar(&applyFlags.profileScopeFile, "scope", "", "Path to health scope config YAML file")
 	ApplyCmd.Flags().StringSliceVar(&applyFlags.profileBucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include (can specify multiple)")

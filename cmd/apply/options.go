@@ -1,4 +1,4 @@
-package evaluate
+package apply
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// evaluateParams holds validated and parsed flag values for the apply (evaluate) command.
-type evaluateParams struct {
+// applyParams holds validated and parsed flag values for the apply (evaluate) command.
+type applyParams struct {
 	maxDuration time.Duration
 	clock       ports.Clock
 	source      appeval.ObservationSource
@@ -31,28 +31,28 @@ const (
 
 type runOptions struct {
 	mode           runMode
-	params         evaluateParams
+	params         applyParams
 	format         ui.OutputFormat
 	dryRun         bool
 	explain        bool
-	profile        evaluateProfileOptions
+	profile        applyProfileOptions
 	evaluatorInput appeval.Options
 }
 
 func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
-	if applyFlags.evalProfile != "" {
-		profile, err := ParseEvalProfile(applyFlags.evalProfile)
+	if applyFlags.applyProfile != "" {
+		profile, err := ParseApplyProfile(applyFlags.applyProfile)
 		if err != nil {
 			return runOptions{}, err
 		}
 		switch profile {
-		case EvalProfileAWSS3:
+		case ApplyProfileAWSS3:
 			if applyFlags.profileInputFile == "" {
 				return runOptions{}, fmt.Errorf("--input is required when using --profile aws-s3")
 			}
 			return runOptions{
 				mode: runModeProfile,
-				profile: evaluateProfileOptions{
+				profile: applyProfileOptions{
 					inputFile:       applyFlags.profileInputFile,
 					scopeFile:       applyFlags.profileScopeFile,
 					bucketAllowlist: applyFlags.profileBucketAllowlist,
@@ -65,7 +65,7 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 		}
 	}
 
-	params, err := validateEvaluateFlags(cmd)
+	params, err := validateApplyFlags(cmd)
 	if err != nil {
 		return runOptions{}, err
 	}
@@ -74,7 +74,7 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 		return runOptions{}, err
 	}
 	mode := runModeStandard
-	if applyFlags.evaluateTemplateStr != "" {
+	if applyFlags.applyTemplateStr != "" {
 		mode = runModeTemplate
 	}
 
@@ -82,8 +82,8 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 		mode:           mode,
 		params:         params,
 		format:         format,
-		dryRun:         applyFlags.evaluateDryRun,
-		explain:        applyFlags.evaluateExplain,
+		dryRun:         applyFlags.applyDryRun,
+		explain:        applyFlags.applyExplain,
 		evaluatorInput: buildEvaluatorOptions(),
 	}, nil
 }
@@ -93,7 +93,7 @@ func buildEvaluatorOptions() appeval.Options {
 	_, cfgPath, _ := findProjectConfigWithPath()
 	_, userPath, _ := findUserConfigWithPath()
 	return appeval.Options{
-		ContextName:        resolveEvaluateContextName(root),
+		ContextName:        resolveApplyContextName(root),
 		ProjectRoot:        root,
 		ControlsDir:        applyFlags.controlsDir,
 		ConfigPath:         cfgPath,
@@ -101,10 +101,10 @@ func buildEvaluatorOptions() appeval.Options {
 		MaxUnsafe:          applyFlags.maxUnsafe,
 		NowTime:            applyFlags.nowTime,
 		ObservationsSource: appeval.ObservationSource(applyFlags.observationsDir),
-		IntegrityManifest:  applyFlags.evaluateIntegrityManifest,
-		IntegrityPublicKey: applyFlags.evaluateIntegrityPublicKey,
-		Explain:            applyFlags.evaluateExplain,
-		DryRun:             applyFlags.evaluateDryRun,
+		IntegrityManifest:  applyFlags.applyIntegrityManifest,
+		IntegrityPublicKey: applyFlags.applyIntegrityPublicKey,
+		Explain:            applyFlags.applyExplain,
+		DryRun:             applyFlags.applyDryRun,
 		Format:             applyFlags.outputFormat,
 	}
 }
@@ -140,7 +140,7 @@ func checkDirsExist(source appeval.ObservationSource) error {
 }
 
 func shouldUseConfiguredPacks() bool {
-	if applyFlags.evaluateControlsFlagSet {
+	if applyFlags.applyControlsFlagSet {
 		return false
 	}
 	cfg, ok := findProjectConfig()
@@ -150,17 +150,17 @@ func shouldUseConfiguredPacks() bool {
 	return len(cfg.EnabledControlPacks) > 0
 }
 
-// validateEvaluateFlags validates command-line flags and returns parsed parameters.
+// validateApplyFlags validates command-line flags and returns parsed parameters.
 // It checks directory existence, parses duration and time flags, and loads the
 // evaluation context. Returns an error for any invalid or inaccessible input.
-func validateEvaluateFlags(cmd *cobra.Command) (evaluateParams, error) {
+func validateApplyFlags(cmd *cobra.Command) (applyParams, error) {
 	resetInferAttempts()
-	applyFlags.evaluateControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
+	applyFlags.applyControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
 
 	applyFlags.controlsDir = fsutil.CleanUserPath(applyFlags.controlsDir)
 	applyFlags.observationsDir = fsutil.CleanUserPath(applyFlags.observationsDir)
-	applyFlags.evaluateIntegrityManifest = fsutil.CleanUserPath(applyFlags.evaluateIntegrityManifest)
-	applyFlags.evaluateIntegrityPublicKey = fsutil.CleanUserPath(applyFlags.evaluateIntegrityPublicKey)
+	applyFlags.applyIntegrityManifest = fsutil.CleanUserPath(applyFlags.applyIntegrityManifest)
+	applyFlags.applyIntegrityPublicKey = fsutil.CleanUserPath(applyFlags.applyIntegrityPublicKey)
 
 	applyFlags.controlsDir = inferControlsDir(cmd, applyFlags.controlsDir)
 	if applyFlags.observationsDir != "-" {
@@ -171,18 +171,18 @@ func validateEvaluateFlags(cmd *cobra.Command) (evaluateParams, error) {
 		MaxUnsafe:          applyFlags.maxUnsafe,
 		NowTime:            applyFlags.nowTime,
 		ObservationsSource: appeval.ObservationSource(applyFlags.observationsDir),
-		IntegrityManifest:  applyFlags.evaluateIntegrityManifest,
-		IntegrityPublicKey: applyFlags.evaluateIntegrityPublicKey,
+		IntegrityManifest:  applyFlags.applyIntegrityManifest,
+		IntegrityPublicKey: applyFlags.applyIntegrityPublicKey,
 	}).Validate()
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "invalid --max-unsafe") {
-			return evaluateParams{}, &ui.InputError{Err: ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)}
+			return applyParams{}, &ui.InputError{Err: ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)}
 		}
-		return evaluateParams{}, &ui.InputError{Err: err}
+		return applyParams{}, &ui.InputError{Err: err}
 	}
 
 	if err := checkDirsExist(parsed.Source); err != nil {
-		return evaluateParams{}, err
+		return applyParams{}, err
 	}
 
 	var clock ports.Clock = ports.RealClock{}
@@ -190,7 +190,7 @@ func validateEvaluateFlags(cmd *cobra.Command) (evaluateParams, error) {
 		clock = ports.FixedClock{Time: parsed.Now}
 	}
 
-	return evaluateParams{
+	return applyParams{
 		maxDuration: parsed.MaxDuration,
 		clock:       clock,
 		source:      parsed.Source,
