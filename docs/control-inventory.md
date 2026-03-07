@@ -1,8 +1,8 @@
 # Stave CLI — S3 Controls: Implementation Spec
 
 > Consolidated from two independent analyses:
-> - **Analysis A:** Pattern extraction from ~32 project prompts (conversation history)
-> - **Analysis B:** Empirical inventory from running stave against 36 project snapshots
+> - **Analysis A:** Pattern extraction from diverse S3 usage patterns
+> - **Analysis B:** Empirical inventory from running stave against S3 bucket snapshots
 >
 > **Status:** All 5 controls identified below are now **implemented and shipped**.
 > ACCESS.003 required an extractor code change (new `has_external_write` computed
@@ -55,8 +55,8 @@ Control predicate: storage.kind == "bucket" AND has_external_write == true
 
 **Priority:** P0 — highest impact, simplest implementation
 
-**Both analyses agree:** This is the #1 gap. Every bare bucket across all 36
-projects has `public_access_fully_blocked: false`. No control catches the
+**Both analyses agree:** This is the #1 gap. Every bare bucket across all
+tested configurations has `public_access_fully_blocked: false`. No control catches the
 *enabling condition* for public exposure — only the *result* (PUBLIC.001
 fires after the bucket is already public). This control catches buckets
 that are one policy change away from becoming public.
@@ -64,11 +64,9 @@ that are one policy change away from becoming public.
 **Observation field:** `properties.storage.controls.public_access_fully_blocked`
 — already exists in the canonical model, already populated by the extractor.
 
-**Real-world trigger:** TinaCMS intentionally disables PAB. Discourse's
-official setup guide disables 2 of 4 controls. Strapi requires disabled PAB
-because `@strapi/provider-upload-aws-s3` uses `s3:PutObjectAcl`. Immich
-homelabs disable PAB during FUSE mount debugging and forget to re-enable.
-Ghost's community storage adapter doesn't set PAB.
+**Real-world trigger:** Applications that disable PAB for ACL-based uploads,
+FUSE mount debugging, or because their storage adapter doesn't configure PAB.
+Some setup guides explicitly tell administrators to disable 2 of 4 PAB controls.
 
 **Why it matters beyond PUBLIC.001:** A bucket with PAB disabled and no
 public policy/ACL today will NOT trigger PUBLIC.001. But any future
@@ -101,13 +99,12 @@ unsafe_predicate:
       value: false
 ```
 
-**Expected results across 36 projects:**
-- Every bare bucket (36 total) triggers — PAB is disabled by default
+**Expected results:**
+- Every bare bucket triggers — PAB is disabled by default
   in all test fixtures
 - Every mid-tier and enterprise bucket passes — PAB enabled
-- TinaCMS bare bucket triggers with the INTENTIONAL public access
-  pattern, making it the strongest finding (PAB disabled + public ACL +
-  public policy simultaneously)
+- Buckets with intentional public access patterns are the strongest
+  findings (PAB disabled + public ACL + public policy simultaneously)
 
 **Effort:** ~30 minutes. Pure YAML, no code changes. Field already exists.
 
@@ -127,11 +124,10 @@ the bucket stores PHI, PII, or confidential data.
 **Observation field:** `properties.storage.tags` — already exists. Requires
 a predicate operator that can check for tag key absence.
 
-**Real-world trigger:** Every single project in both analyses deploys S3
-buckets without data classification tags by default. Paperless-ngx stores
-scanned tax returns, Immich stores face-recognition embeddings, KeyDB
-stores session tokens — none tagged. The tag-conditional control subsystem
-is inert against every real-world deployment in the test suite.
+**Real-world trigger:** Buckets storing sensitive data (document archives,
+media backups, session stores) are deployed without classification tags
+by default. The tag-conditional control subsystem is inert against every
+real-world deployment in the test suite.
 
 **Implementation note:** This requires checking that a tag key DOES NOT
 EXIST. The predicate DSL needs one of:
@@ -169,7 +165,7 @@ unsafe_predicate:
       value: true
 ```
 
-**Expected results across 36 projects:**
+**Expected results:**
 - Every bare bucket triggers (none are tagged)
 - Mid-tier buckets: depends on fixture — most are tagged
   `data-classification: internal` or `confidential`
@@ -195,11 +191,10 @@ customer-managed keys for confidential data.
 **Observation fields:** `properties.storage.encryption.algorithm` and
 `properties.storage.tags.data-classification` — both already exist.
 
-**Real-world trigger:** ClickHouse analytics buckets tagged `confidential`
-with user emails, IP addresses, financial transactions. Airflow log buckets
-tagged `internal` containing pipeline credentials in XCom. Sentry debug
-symbols tagged `internal` containing complete application source code.
-All using AES256 instead of KMS.
+**Real-world trigger:** Analytics buckets tagged `confidential` containing
+user data and financial transactions. Pipeline log buckets tagged `internal`
+containing credentials. Debug symbol storage tagged `internal` containing
+application source code. All using AES256 instead of KMS.
 
 ```yaml
 dsl_version: ctrl.v1
@@ -229,7 +224,7 @@ unsafe_predicate:
       value: "aws:kms"
 ```
 
-**Expected results across 36 projects:**
+**Expected results:**
 - Bare buckets: only triggers if tagged (most aren't — GOVERNANCE.001
   catches the missing tag). The ones that ARE tagged `confidential` with
   no encryption will trigger ENCRYPT.001 first (no encryption at all),
@@ -282,12 +277,11 @@ public listing, but PAB is currently blocking it. If PAB is ever disabled
 is the second-order risk: CONTROLS.001 catches PAB-off, PUBLIC.006 catches
 "PAB-off would expose listing."
 
-**Real-world trigger:** Mastodon buckets where public object read is
-intentional but bucket listing must be denied — if PAB is removed AND
-a ListBucket policy exists, all object keys become enumerable. Gitea
-with mixed public/private packages where listing reveals private package
-names. ClickHouse shared datasets where listing exposes private dataset
-keys mixed in the same bucket.
+**Real-world trigger:** Buckets with intentionally public objects where
+listing must remain private — if PAB is removed AND a ListBucket policy
+exists, all object keys become enumerable. Mixed public/private content
+buckets where listing reveals private names. Shared dataset buckets where
+listing exposes private dataset keys mixed in the same bucket.
 
 ```yaml
 dsl_version: ctrl.v1
@@ -399,11 +393,11 @@ pipeline works in two stages:
    the finding to fire.
 
 **Real-world verification results:**
-- TinaCMS `agency-cms-media`: ACCESS.001 + ACCESS.003 both fire
+- Media bucket with freelancer write access: ACCESS.001 + ACCESS.003 both fire
   (freelancer has `s3:PutObject` + `s3:GetObject` + `s3:ListBucket`)
-- golang-migrate `shared-migrations-repo`: ACCESS.001 + ACCESS.003 both fire
+- Shared migrations bucket: ACCESS.001 + ACCESS.003 both fire
   (DBA contractor has `s3:GetObject` + `s3:PutObject` + `s3:ListBucket`)
-- Airflow `company-airflow-data`: ACCESS.001 fires but ACCESS.003 does NOT
+- Analytics data bucket with read-only vendor: ACCESS.001 fires but ACCESS.003 does NOT
   (analytics vendor has only `s3:GetObject` + `s3:ListBucket` — read-only)
 - Enterprise-secure buckets: neither ACCESS.001 nor ACCESS.003 fires
   (no external account access at all)
@@ -420,11 +414,11 @@ pipeline works in two stages:
 | 4 | PUBLIC.006 | Latent Public List | P1 | **Shipped** | YAML only |
 | 5 | ACCESS.003 | External Write Access | P2 | **Shipped** | Extractor change: `policy.go` + `extractor.go` + tests |
 
-All 5 controls are implemented and verified against the 36-project
-snapshot test suite. ACCESS.003 required adding `has_external_write` as
-a computed boolean in the S3 policy analysis pipeline (`policy.go`),
-exposing it in the canonical model (`extractor.go`), and updating
-snapshot observation files to include the new field.
+All 5 controls are implemented and verified against the snapshot test
+suite. ACCESS.003 required adding `has_external_write` as a computed
+boolean in the S3 policy analysis pipeline (`policy.go`), exposing it
+in the canonical model (`extractor.go`), and updating snapshot
+observation files to include the new field.
 
 ---
 
@@ -437,7 +431,7 @@ implementable with the current observation schema and predicate DSL:
 |-----|-------------|
 | Event notification detection | Requires extracting `aws_s3_bucket_notification` — new Terraform resource |
 | Explicit delete denial (DENY policies) | Requires policy DENY effect analysis — current extractor only surfaces ALLOW effects for access computation |
-| ACL legacy re-enablement | Observable (TinaCMS triggers it) but no distinct canonical field for "ACLs are actively used" vs "ACLs are disabled" |
+| ACL legacy re-enablement | Observable but no distinct canonical field for "ACLs are actively used" vs "ACLs are disabled" |
 | Mixed data sensitivity in single bucket | Not detectable from bucket configuration — requires application architecture knowledge |
 | CORS misconfiguration | Not captured in current observation schema |
 | Cross-account write vs. admin actions | Partially addressed by ACCESS.003 above; full action-level parsing (distinguishing `s3:PutBucketPolicy` from `s3:PutObject`) requires deeper policy decomposition |
@@ -450,53 +444,14 @@ These belong in a future roadmap, not the current implementation cycle.
 
 # S3 Control Inventory & Gap Analysis
 
-## 36 Open-Source Projects Analyzed
+## S3 Usage Patterns Analyzed
 
-Each project uses S3 in a distinct way. All share the same 3-bucket test fixture pattern: a bare bucket (no hardening), a mid-tier bucket (AES256 + cross-account access), and an enterprise-secure bucket (SSE-KMS, versioning+MFA, logging, deny policies).
-
-| # | Project | S3 Role | s3/ | all | Warns |
-|---|---------|---------|-----|-----|-------|
-| 1 | Strapi | CMS media uploads | 7 | 7 | 25 |
-| 2 | Immich | Photo/video backup storage | 8 | 8 | 25 |
-| 3 | Mastodon | Federated media attachments | 9 | 13 | 24 |
-| 4 | Rclone | Cloud sync target | 10 | 12 | 25 |
-| 5 | Terraform | Remote state backend | 8 | 8 | 25 |
-| 6 | Gitea | Git LFS / repo objects | 9 | 12 | 25 |
-| 7 | Discourse | Forum uploads / backups | 9 | 10 | 25 |
-| 8 | Spark | Data lake parquet files | 8 | 8 | 25 |
-| 9 | Sentry | Error attachments / debug symbols | 9 | 11 | 25 |
-| 10 | Airflow | DAG storage / logs | 9 | 9 | 25 |
-| 11 | ClickHouse | Analytics cold storage | 9 | 12 | 25 |
-| 12 | Nextcloud | Personal cloud storage | 9 | 9 | 25 |
-| 13 | Restic | Encrypted backup repository | 11 | 11 | 25 |
-| 14 | Loki | Log chunk storage | 9 | 9 | 25 |
-| 15 | Harbor | Container image layers | 9 | 9 | 25 |
-| 16 | Paperless | Document archive | 9 | 9 | 25 |
-| 17 | GitLab | CI artifacts / LFS | 9 | 9 | 25 |
-| 18 | MLflow | ML model artifacts | 9 | 9 | 25 |
-| 19 | DVC | ML dataset versioning | 9 | 9 | 25 |
-| 20 | Thanos | Prometheus metrics long-term | 9 | 9 | 25 |
-| 21 | KeyDB | RDB/AOF snapshot persistence | 9 | 9 | 25 |
-| 22 | Dagster | Pipeline asset storage | 9 | 9 | 25 |
-| 23 | Litestream | SQLite WAL replication | 9 | 9 | 25 |
-| 24 | JuiceFS | Distributed filesystem backend | 9 | 9 | 25 |
-| 25 | Velero | Kubernetes cluster backups | 9 | 9 | 25 |
-| 26 | Presto | Query result staging | 9 | 9 | 25 |
-| 27 | s3fs | FUSE-mounted filesystem | 9 | 9 | 25 |
-| 28 | Directus | Headless CMS assets | 9 | 9 | 25 |
-| 29 | Ghost | Blog media + themes | 9 | 11 | 25 |
-| 30 | Payload | CMS uploads / media | 9 | 9 | 25 |
-| 31 | Iceberg | Table format metadata + data | 9 | 9 | 25 |
-| 32 | Serverless | Deployment artifacts | 9 | 9 | 25 |
-| 33 | golang-migrate | Database migration SQL files | 9 | 9 | 25 |
-| 34 | Open SaaS | SaaS template user uploads | 9 | 9 | 25 |
-| 35 | SiYuan | Personal knowledge sync | 9 | 9 | 25 |
-| 36 | TinaCMS | CMS media (PUBLIC buckets) | 11 | 15 | 24 |
+Controls were validated against diverse S3 usage patterns covering media storage, backups, analytics, state management, and public content delivery. All test configurations share the same 3-bucket fixture pattern: a bare bucket (no hardening), a mid-tier bucket (AES256 + cross-account access), and an enterprise-secure bucket (SSE-KMS, versioning+MFA, logging, deny policies).
 
 **Key observations:**
-- **30 of 36 projects** produce the standard pattern: s3/=9, all=9, 25 warnings
-- **6 outliers** have elevated violation counts due to public access flags or additional exposure vectors
-- **TinaCMS** is the most violated (15 findings) — it's the only project with intentionally public buckets (PAB disabled, AllUsers READ ACL)
+- The majority of configurations produce the standard pattern: s3/=9, all=9, 25 warnings
+- A small number of outliers have elevated violation counts due to public access flags or additional exposure vectors
+- Configurations with intentionally public buckets (PAB disabled, AllUsers READ ACL) produce the highest finding counts
 
 ---
 
@@ -553,7 +508,7 @@ There are **28 YAML files** across 3 directories. Two IDs are duplicated with di
 
 ## Previously Missing Controls — Now Implemented
 
-Based on the 36 projects, these security patterns were identified as gaps.
+Based on diverse S3 usage patterns, these security patterns were identified as gaps.
 **All 5 are now implemented** (see Directory 2 above):
 
 ### 1. Public Access Block (PAB) Enforcement — **IMPLEMENTED as CONTROLS.001**
@@ -567,13 +522,13 @@ value: false   # → violation
 This catches the *enabling condition* — a bucket one policy change away from
 becoming public — rather than detecting public buckets after the fact.
 
-**Affected projects:** All 36 (every bare bucket has PAB=false), but especially TinaCMS where PAB is intentionally disabled.
+**Affected configurations:** All bare buckets (every one has PAB=false), especially those where PAB is intentionally disabled for ACL-based uploads.
 
 ### 2. Cross-Account Write vs. Read Distinction — **IMPLEMENTED as ACCESS.003**
 
 ACCESS.001 fires on `has_external_access == true` but treats all external access equally. ACCESS.003 now distinguishes:
-- **Read-only external** (analytics partner in Airflow) — ACCESS.001 fires, ACCESS.003 does NOT
-- **Write external** (DBA contractor in golang-migrate with PutObject, freelancer in TinaCMS with PutObject+DeleteObject) — both ACCESS.001 and ACCESS.003 fire
+- **Read-only external** (analytics partner with read-only access) — ACCESS.001 fires, ACCESS.003 does NOT
+- **Write external** (contractor with PutObject, freelancer with PutObject+DeleteObject) — both ACCESS.001 and ACCESS.003 fire
 
 Implementation: Added `has_external_write` computed boolean to the S3 policy
 analysis pipeline. The extractor checks actions on external-principal Allow
@@ -603,21 +558,21 @@ preventing directory listing.
 
 ### 6. ACL Legacy Re-enablement — LOW
 
-TinaCMS re-enables ACLs (AWS legacy feature) to grant AllUsers READ. No control detects "ACLs are actively being used" vs "ACLs are disabled (modern default)." The `public_read_via_acl` flag in the observation catches the public case, but a bucket could have ACL grants to specific accounts without triggering any control.
+Some applications re-enable ACLs (AWS legacy feature) to grant AllUsers READ. No control detects "ACLs are actively being used" vs "ACLs are disabled (modern default)." The `public_read_via_acl` flag in the observation catches the public case, but a bucket could have ACL grants to specific accounts without triggering any control.
 
 ### 7. Patterns That Can't Be Expressed as Bucket-Level Controls
 
 These were documented across projects but **cannot be implemented** with the current observation schema (they'd require new observation types or enrichment):
 
-| Pattern | Projects | Why Not Expressible |
-|---------|----------|-------------------|
-| Template propagation risk | Open SaaS | Security flaws in templates multiply — this is a supply chain property, not a bucket property |
-| Executable content in S3 | golang-migrate | SQL migration files ARE executable code — bucket metadata doesn't describe object content types |
-| Optional E2E encryption bypass | SiYuan | Client-side encryption is an app-layer concern outside bucket configuration |
-| Filename intelligence | golang-migrate, s3fs | Object key patterns reveal database schemas — requires object-level scanning |
-| Documentation-driven insecurity | Open SaaS | "Leave all settings as default" in docs — requires content analysis |
-| CORS misconfiguration | Open SaaS, TinaCMS | Not captured in current observation schema |
-| Presigned URL patterns | Multiple | Runtime behavior, not bucket configuration |
+| Pattern | Why Not Expressible |
+|---------|-------------------|
+| Template propagation risk | Security flaws in templates multiply — this is a supply chain property, not a bucket property |
+| Executable content in S3 | SQL migration files ARE executable code — bucket metadata doesn't describe object content types |
+| Optional E2E encryption bypass | Client-side encryption is an app-layer concern outside bucket configuration |
+| Filename intelligence | Object key patterns reveal database schemas — requires object-level scanning |
+| Documentation-driven insecurity | "Leave all settings as default" in docs — requires content analysis |
+| CORS misconfiguration | Not captured in current observation schema |
+| Presigned URL patterns | Runtime behavior, not bucket configuration |
 
 ---
 
@@ -665,11 +620,10 @@ All 5 recommended controls are now implemented:
 
 ---
 
-# Stave CLI — Controls Surfaced by Open-Source Project Analysis
+# Stave CLI — Controls Surfaced by S3 Usage Pattern Analysis
 
-> Based on analysis of ~32 prompts covering 95 test buckets across the top-25
-> OSS projects plus additional projects (KeyDB, Ghost, Directus, Serverless
-> Framework, etc.)
+> Based on analysis of diverse S3 usage patterns covering media storage,
+> backups, analytics, state management, and public content delivery.
 >
 > **Status:** All controls from this analysis that are expressible with the
 > current DSL and observation schema have been implemented.
@@ -725,7 +679,7 @@ All 5 recommended controls are now implemented:
 
 ---
 
-## Additional Control Patterns Surfaced by the 40-Project Analysis
+## Additional Control Patterns Surfaced by S3 Usage Analysis
 
 These are patterns that appeared repeatedly across real-world OSS
 deployments. Items 1-5 overlap with the 5 implemented controls above.
@@ -735,7 +689,7 @@ Items 6-8 remain as future candidates.
 
 ### 1. CTL.S3.PAB.BUCKET.001 — All Four Bucket-Level Public Access Block Controls Enabled
 
-**Pattern source:** Discourse (split PAB: `block_public_acls=false`,
+**Pattern source:** Configurations with split PAB (`block_public_acls=false`,
 `ignore_public_acls=false`, but `block_public_policy=true`,
 `restrict_public_buckets=true`). First snapshot with partially-enabled PAB.
 
@@ -746,9 +700,9 @@ today (because no public policy/ACL exists yet) but have PAB partially
 disabled — meaning a future misconfiguration won't be caught by the
 safety net.
 
-**Why it matters:** Discourse's official setup guide tells admins to
-disable 2 of 4 controls. The bucket isn't public NOW, but the safety net
-has a hole. This is a LATENT vulnerability, not an active exposure.
+**Why it matters:** Some application setup guides tell admins to disable
+2 of 4 controls. The bucket isn't public NOW, but the safety net has a
+hole. This is a LATENT vulnerability, not an active exposure.
 
 ```yaml
 id: CTL.S3.PAB.BUCKET.001
@@ -770,8 +724,8 @@ unsafe_predicate:
       value: false
 ```
 
-**Projects that would trigger:** Discourse (bucket 1), Strapi, Immich
-(homelab bucket from FUSE debugging), Ghost (adapter default).
+**Configurations that would trigger:** Buckets with partial PAB (e.g., ACL
+controls disabled for upload adapters, FUSE mount debugging leftovers).
 
 **Severity:** Medium — latent risk, not active exposure.
 
@@ -789,14 +743,11 @@ contains PHI, PII, or confidential data.
 tag. The entire tag-conditional control subsystem is inert against
 untagged buckets.
 
-**Why it matters:** Every single project in the analysis uses S3 buckets
-without data classification tags by default. Strapi, Immich, Mastodon,
-Discourse, Terraform, Gitea, ClickHouse, Spark, Sentry, Airflow, Loki,
-Harbor, Restic, Thanos, Paperless-ngx, KeyDB, MLflow, Dagster, Velero,
-Ghost, Directus, Serverless — NONE of them set classification tags out
-of the box. This means CTL.S3.PUBLIC.002 (no public PHI buckets) would
-never fire on a Paperless-ngx bucket storing scanned tax returns because
-nobody tagged it `data-classification=phi`.
+**Why it matters:** S3 buckets across all tested usage patterns are deployed
+without data classification tags by default. No application sets classification
+tags out of the box. This means CTL.S3.PUBLIC.002 (no public PHI buckets)
+would never fire on a document archive bucket storing scanned tax returns
+because nobody tagged it `data-classification=phi`.
 
 ```yaml
 id: CTL.S3.TAG.001
@@ -812,8 +763,8 @@ unsafe_predicate:
       value: true
 ```
 
-**Projects that would trigger:** All 95 test buckets except the
-"hardened" variants.
+**Configurations that would trigger:** All bare and mid-tier test buckets
+except the "hardened" variants.
 
 **Severity:** High — this is a meta-control that gates the
 effectiveness of every tag-conditional check.
@@ -825,23 +776,23 @@ already be covered if `exists` was added in healthcare prompt #5.
 
 ### 3. CTL.S3.DENY_DELETE.001 — Explicit Delete Denial for Non-Admin Principals
 
-**Pattern source:** Rclone (anti-ransomware deny-delete policy), Restic
-(ransomware can "manipulate forget into deleting all legitimate
-snapshots"), Thanos (compactor deletion as normal operation), Loki
-(compactor destroys forensic evidence).
+**Pattern source:** Cloud sync tools with anti-ransomware deny-delete policies,
+backup tools where ransomware can manipulate snapshot deletion, and
+monitoring systems where compactor deletion is a normal operation that
+destroys forensic evidence.
 
 **Gap:** No control checks for explicit DENY statements on
 `s3:DeleteObject`. Multiple projects showed that backup/archival buckets
 need a positive deny — not just "no one has delete permissions" but
 "delete is explicitly blocked for non-admin principals."
 
-**Why it matters:** Rclone's anti-ransomware pattern is the model: the
-backup user can PUT objects but the policy DENYs `s3:DeleteObject` for
-everyone except the admin role. Without this, a compromised credential
-(from the machine being backed up — the exact scenario backups protect
-against) can wipe all backup data. Thanos and Loki make it worse because
-their compactors MUST delete objects for normal operation, meaning the
-service account has legitimate delete permissions that can be abused.
+**Why it matters:** The anti-ransomware pattern is the model: the backup
+user can PUT objects but the policy DENYs `s3:DeleteObject` for everyone
+except the admin role. Without this, a compromised credential (from the
+machine being backed up — the exact scenario backups protect against)
+can wipe all backup data. Monitoring compactors make it worse because
+they MUST delete objects for normal operation, meaning the service account
+has legitimate delete permissions that can be abused.
 
 ```yaml
 id: CTL.S3.DENY_DELETE.001
@@ -863,9 +814,9 @@ unsafe_predicate:
 whether the bucket policy contains a DENY effect on `s3:DeleteObject` or
 `s3:DeleteObjectVersion`.
 
-**Projects that would trigger:** Rclone (bucket 1 — correctly has deny,
-so it would PASS), Restic, Immich backups, Velero, Litestream, Terraform
-state, any backup-tagged bucket without the deny.
+**Configurations that would trigger:** Backup and disaster-recovery tagged
+buckets without an explicit delete deny policy. Buckets with anti-ransomware
+deny-delete policies would correctly PASS.
 
 **Severity:** High for backup/DR buckets — this is the ransomware
 protection control.
@@ -874,10 +825,10 @@ protection control.
 
 ### 4. CTL.S3.LISTING.001 — Public Listing More Dangerous Than Public Read
 
-**Pattern source:** Mastodon (intentionally public-read objects but
-listing MUST be denied), ClickHouse (public datasets where ListBucket to
-`*` exposes ALL dataset names including private ones), Gitea (mixed
-public/private packages in one bucket).
+**Pattern source:** Buckets with intentionally public-read objects where
+listing MUST be denied, shared dataset buckets where ListBucket to `*`
+exposes all dataset names including private ones, and mixed public/private
+content in one bucket.
 
 **Gap:** `CTL.S3.PUBLIC.001` treats `public_read` and `public_list` as
 equivalent dangers via `any`. But in practice, public listing is
@@ -887,12 +838,12 @@ reveals bucket structure, naming conventions, and potentially sensitive
 metadata (object keys often contain user IDs, dates, internal project
 names).
 
-**Why it matters:** Mastodon's media objects are INTENTIONALLY publicly
-readable (federated social media requires it). But `s3:ListBucket` to
-`*` would let anyone enumerate ALL media URLs — including suspended
-users' content that should be inaccessible. The Gitea case is worse:
-listing exposes private package NAMES even if the packages themselves
-can't be downloaded.
+**Why it matters:** Some media objects are INTENTIONALLY publicly readable
+(federated social media requires it). But `s3:ListBucket` to `*` would
+let anyone enumerate ALL media URLs — including suspended users' content
+that should be inaccessible. Mixed public/private package buckets are
+worse: listing exposes private package NAMES even if the packages
+themselves can't be downloaded.
 
 **This is already partially covered by PUBLIC.001's `public_list` check.**
 The gap is that PUBLIC.001 fires the same severity for `public_list` as
@@ -920,24 +871,25 @@ unsafe_predicate:
 
 ### 5. CTL.S3.EVENT.001 — Event Notification for High-Impact Buckets
 
-**Pattern source:** Harbor (silent layer replacement), Serverless
-Framework (code zip tampering = code execution), Terraform (state
-tampering = infrastructure manipulation), Apache Iceberg (metadata
-tampering = query redirection).
+**Pattern source:** Container registry buckets (silent layer replacement),
+deployment artifact buckets (code zip tampering = code execution),
+infrastructure state buckets (state tampering = infrastructure
+manipulation), and table format metadata buckets (metadata tampering =
+query redirection).
 
 **Gap:** No control checks for S3 event notification configuration.
-Four projects showed patterns where S3 object modifications have
-extreme downstream impact — code execution (Serverless), supply chain
-poisoning (Harbor), infrastructure manipulation (Terraform state), or
-query engine hijacking (Iceberg metadata). Real-time detection of
+Multiple usage patterns showed that S3 object modifications can have
+extreme downstream impact — code execution (deployment artifacts),
+supply chain poisoning (container images), infrastructure manipulation
+(state files), or query engine hijacking (table metadata). Real-time
+detection of
 tampering via `s3:ObjectCreated:*` / `s3:ObjectRemoved:*` events to
 SNS/SQS/Lambda is the first line of defense.
 
 **Why it matters:** Versioning preserves history for forensics, but
 event notifications provide REAL-TIME alerting. Without them, a tampered
-Serverless deployment zip executes in production before anyone notices.
-Harbor image layer replacement propagates to every `docker pull` before
-detection.
+deployment zip executes in production before anyone notices. Container
+image layer replacement propagates to every pull before detection.
 
 **New extraction required:** `aws_s3_bucket_notification` Terraform
 resource. Canonical fields:
@@ -958,9 +910,9 @@ unsafe_predicate:
       value: false
 ```
 
-**Projects that would trigger:** Serverless deployment buckets, Harbor
-registries, Terraform state buckets, Iceberg metadata buckets — IF
-tagged appropriately.
+**Configurations that would trigger:** Deployment artifact buckets,
+container registry buckets, infrastructure state buckets, and table
+format metadata buckets — IF tagged appropriately.
 
 **Severity:** Medium — defense-in-depth, not a primary control.
 
@@ -970,10 +922,9 @@ tagged appropriately.
 
 ### 6. CTL.S3.POLICY.PRINCIPAL_STAR.001 — Deny-Only for Wildcard Principal Policies
 
-**Pattern source:** Mastodon, ClickHouse, Spark, and multiple projects
-where `Principal: "*"` appears in bucket policies. Some are intentional
-(Mastodon public media), some accidental (Spark cross-account share
-that should be scoped).
+**Pattern source:** Multiple S3 usage patterns where `Principal: "*"`
+appears in bucket policies. Some are intentional (public media delivery),
+some accidental (cross-account shares that should be scoped).
 
 **Gap:** `CTL.S3.NETWORK.001` (designed, not shipped) checks that
 wildcard-principal policies have network conditions (IP/VPC). But
@@ -982,11 +933,10 @@ in DENY statements, never in ALLOW statements, unless accompanied by
 conditions. This is AWS's own best practice.
 
 **Why it matters:** The policy condition analysis (CTL.S3.NETWORK.001)
-handles the "Principal: * WITH conditions" case. But many projects have
-`Principal: "*"` in ALLOW statements with NO conditions at all — Strapi,
-Discourse, Sentry, Mastodon. A simple "Principal: * only in Deny
-effects" control catches the most dangerous pattern without needing
-the complex condition key analysis.
+handles the "Principal: * WITH conditions" case. But many configurations
+have `Principal: "*"` in ALLOW statements with NO conditions at all. A
+simple "Principal: * only in Deny effects" control catches the most
+dangerous pattern without needing the complex condition key analysis.
 
 **New canonical field required:**
 `properties.storage.policy.has_allow_star_principal` — boolean indicating
@@ -1009,9 +959,9 @@ even for `s3:PutObject` to `*` or `s3:DeleteObject` to `*`, which
 PUBLIC.001/003 might miss if the action isn't mapped to the
 `public_read`/`public_write` computation.
 
-**Projects that would trigger:** Mastodon, ClickHouse (shared datasets),
-Spark (shared analytics), Strapi, Discourse (backups with public policy
-remnants), Sentry.
+**Configurations that would trigger:** Shared dataset buckets, shared
+analytics buckets, media upload buckets, and backup buckets with public
+policy remnants.
 
 **Severity:** High — wildcard principal in Allow is the root cause of
 most public bucket incidents.
@@ -1020,9 +970,9 @@ most public bucket incidents.
 
 ### 7. CTL.S3.STALE_POLICY.001 — Detect Over-Broad IAM Actions
 
-**Pattern source:** Airflow (`AmazonS3FullAccess` managed policy), Spark
-(cross-account `s3:*`), Rclone (`s3:*` for write access), Gitea
-(wildcard action for data bucket), Loki (wildcard for chunk management).
+**Pattern source:** Pipeline tools using `AmazonS3FullAccess` managed policy,
+cross-account shares with `s3:*`, sync tools with `s3:*` for write access,
+and data buckets with wildcard actions for content management.
 
 **Gap:** `CTL.S3.ACCESS.002` detects `s3:*` wildcard actions. But the
 analysis revealed a spectrum of over-broad permissions that aren't
@@ -1032,12 +982,11 @@ analysis revealed a spectrum of over-broad permissions that aren't
 - `s3:Get*` + `s3:List*` (full read access when only specific paths
   needed)
 
-**Why it matters:** Airflow's official EKS deployment guide recommends
-the `AmazonS3FullAccess` managed policy, which grants `s3:*` on ALL
-buckets in the account, not just the logging bucket. But even a
-"scoped" policy using `s3:Put*` is dangerous because it includes
-`s3:PutBucketPolicy` — the ability to change the bucket's own access
-policy.
+**Why it matters:** Some official deployment guides recommend the
+`AmazonS3FullAccess` managed policy, which grants `s3:*` on ALL buckets
+in the account, not just the target bucket. But even a "scoped" policy
+using `s3:Put*` is dangerous because it includes `s3:PutBucketPolicy` —
+the ability to change the bucket's own access policy.
 
 **Enhancement to ACCESS.002:** Rather than a new control, extend the
 canonical field to detect DANGEROUS action patterns beyond just `s3:*`:
@@ -1058,8 +1007,8 @@ unsafe_predicate:
   value: true
 ```
 
-**Projects that would trigger:** Airflow, Spark, Rclone, Gitea, Loki,
-Dagster, most projects with broadly-scoped IAM.
+**Configurations that would trigger:** Pipeline tools, analytics engines,
+sync tools, and data buckets with broadly-scoped IAM policies.
 
 **Severity:** High — `s3:PutBucketPolicy` is privilege escalation.
 
@@ -1070,21 +1019,20 @@ analysis, not just checking for `s3:*`.
 
 ### 8. CTL.S3.MIXED_SENSITIVITY.001 — Mixed Data Classification in Single Bucket
 
-**Pattern source:** Gitea (6 data types in one bucket — source code,
-binaries, ML models, documents, user data, attachments), ClickHouse
-(public datasets mixed with private data), Directus (multi-tenant user
-content), Loki (multi-tenant logs), Harbor (public + private images).
+**Pattern source:** Buckets containing multiple data types (source code,
+binaries, ML models, documents, user data, attachments), public datasets
+mixed with private data, multi-tenant user content, multi-tenant logs,
+and mixed public/private container images.
 
 **Gap:** No control detects when a single bucket contains data of
 mixed sensitivity levels. This is architecturally distinct from
 tag-conditional checks — it's about the ABSENCE of data segregation.
 
-**Why it matters:** Gitea's single `gitea-data` bucket containing
-proprietary source code alongside public avatars means a single
-misconfiguration exposes everything at the highest sensitivity level.
-Directus storing all tenants' uploads (patient records, financial
-documents, employee files) in one bucket means tenant isolation depends
-entirely on application logic, not S3 access controls.
+**Why it matters:** A single data bucket containing proprietary source code
+alongside public avatars means a single misconfiguration exposes everything
+at the highest sensitivity level. Storing all tenants' uploads (patient
+records, financial documents, employee files) in one bucket means tenant
+isolation depends entirely on application logic, not S3 access controls.
 
 **Implementation challenge:** This is hard to detect from a Terraform
 snapshot alone — you can't see WHAT DATA is in a bucket from its config.
@@ -1103,7 +1051,7 @@ alone.
 
 ---
 
-## Summary: Priority-Ranked Controls (from 40-project analysis)
+## Summary: Priority-Ranked Controls
 
 | Priority | ID | Name | Status | Notes |
 |----------|----|------|--------|-------|
@@ -1125,15 +1073,15 @@ alone.
 These patterns appeared across multiple projects but can't be detected
 from S3 bucket configuration alone:
 
-| Pattern | Projects | Why Not Detectable |
-|---------|----------|-------------------|
-| Credentials in SQL/URL/config | ClickHouse, Loki, Airflow | Application config, not S3 config |
-| RBAC bypass via direct S3 access | Directus, Gitea | Requires comparing app-level vs S3-level controls |
-| EXIF/metadata leakage | Immich, Directus | Object content, not bucket config |
-| Deployment bucket sprawl | Serverless Framework | Requires counting buckets per pattern |
-| Cleanup gap (orphaned objects) | Sentry, Serverless | Object lifecycle, not bucket config |
-| Cross-environment aggregation | Thanos | Requires understanding env topology |
-| Multi-tenant path isolation | Loki, Directus | Requires understanding tenant model |
+| Pattern | Why Not Detectable |
+|---------|-------------------|
+| Credentials in SQL/URL/config | Application config, not S3 config |
+| RBAC bypass via direct S3 access | Requires comparing app-level vs S3-level controls |
+| EXIF/metadata leakage | Object content, not bucket config |
+| Deployment bucket sprawl | Requires counting buckets per pattern |
+| Cleanup gap (orphaned objects) | Object lifecycle, not bucket config |
+| Cross-environment aggregation | Requires understanding env topology |
+| Multi-tenant path isolation | Requires understanding tenant model |
 
 ---
 
