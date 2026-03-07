@@ -185,7 +185,7 @@ func TestRepro(t *testing.T) {
 	expectedResource := envOr("EXPECTED_RESOURCE_ID", "res:aws:s3:bucket:SANITIZED_01")
 
 	cmd := exec.Command(stave,
-		"apply", "--profile", "mvp1-s3",
+		"apply", "--profile", "aws-s3",
 		"--input", "repro/observations.sanitized.json",
 		"--include-all",
 		"--now", now,
@@ -262,4 +262,4 @@ STAVE_BIN="$STAVE_BIN" NOW="$NOW" \
 1. **Edit the observation JSON** — keep only fields needed to reproduce your bug.
 2. **Edit the assertions** — change `EXPECTED_EXIT`, `EXPECTED_CONTROL_ID`, `EXPECTED_RESOURCE_ID`.
 3. **Add a second snapshot** if your bug involves duration or recurrence.
-4. **Change the command** if using `apply` (generic) instead of `apply --profile mvp1-s3` (S3 healthcare profile).
+4. **Change the command** if using `apply` (generic) instead of `apply --profile aws-s3` (S3 healthcare profile).

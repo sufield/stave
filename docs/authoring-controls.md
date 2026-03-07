@@ -89,7 +89,7 @@ remediation:
 1. Extract
 
 ```bash
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out ./observations.json --now 2026-01-11T00:00:00Z
+stave ingest --profile aws-s3 --input ./aws-snapshot --out ./observations.json --now 2026-01-11T00:00:00Z
 ```
 
 2. Validate

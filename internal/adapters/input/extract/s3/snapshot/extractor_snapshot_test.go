@@ -220,7 +220,7 @@ func TestSnapshotExtractor_Determinism_ByteIdentical(t *testing.T) {
 	}
 
 	if !bytes.Equal(outputs[0], outputs[1]) {
-		t.Errorf("ingest --profile mvp1-s3 output is NOT byte-identical across two runs:\n--- run 0 (first 500) ---\n%s\n--- run 1 (first 500) ---\n%s",
+		t.Errorf("ingest --profile aws-s3 output is NOT byte-identical across two runs:\n--- run 0 (first 500) ---\n%s\n--- run 1 (first 500) ---\n%s",
 			truncateBytes(outputs[0], 500), truncateBytes(outputs[1], 500))
 	}
 }

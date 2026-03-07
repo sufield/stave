@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Core evaluation engine with duration tracking and recurrence detection
 - 40 S3 controls covering public exposure, ACL, encryption, versioning, access logging, lifecycle, object lock, tenant isolation, and write scope
-- CLI commands: validate, evaluate, diagnose, ingest --profile mvp1-s3, evaluate --profile mvp1-s3, verify, enforce, report, counterfactual, capabilities, alias, trace
+- CLI commands: validate, evaluate, diagnose, ingest --profile aws-s3, evaluate --profile aws-s3, verify, enforce, report, counterfactual, capabilities, alias, trace
 - `--template` flag on evaluate, diagnose, and validate for custom output formatting
 - Command alias system (`stave alias set|list|delete`) with user config storage
 - JSON and text output formats

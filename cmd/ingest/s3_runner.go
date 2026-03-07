@@ -219,7 +219,7 @@ func printIngestCoverage(w io.Writer, resources []asset.Asset) {
 		return
 	}
 
-	if optionalIngestInputCount("mvp1-s3") == 0 {
+	if optionalIngestInputCount("aws-s3") == 0 {
 		return
 	}
 

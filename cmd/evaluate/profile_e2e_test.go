@@ -45,7 +45,7 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	}
 }
 
-// TestEvaluateProfileE2E runs e2e golden file tests for evaluate --profile mvp1-s3.
+// TestEvaluateProfileE2E runs e2e golden file tests for evaluate --profile aws-s3.
 func TestEvaluateProfileE2E(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	projectRoot := filepath.Join(filepath.Dir(filename), "..", "..")
@@ -63,8 +63,8 @@ func TestEvaluateProfileE2E(t *testing.T) {
 		wantExit int
 		wantViol int
 	}{
-		{"obs-public", "mvp1-s3-obs-public", 3, 5},
-		{"obs-private", "mvp1-s3-obs-private", 0, 0},
+		{"obs-public", "aws-s3-obs-public", 3, 5},
+		{"obs-private", "aws-s3-obs-private", 0, 0},
 	}
 
 	for _, tc := range testCases {
@@ -79,7 +79,7 @@ func TestEvaluateProfileE2E(t *testing.T) {
 
 			cmd := exec.Command(binPath,
 				"apply",
-				"--profile", "mvp1-s3",
+				"--profile", "aws-s3",
 				"--input", inputFile,
 				"--now", "2026-01-15T00:00:00Z")
 			cmd.Dir = projectRoot

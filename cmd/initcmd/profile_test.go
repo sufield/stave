@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestInitProfileMVP1S3AddsProfileStructure(t *testing.T) {
+func TestInitProfileAWSS3AddsProfileStructure(t *testing.T) {
 	oldForce := globalForce
 	oldProfile := initProfile
 	oldWithGHA := initWithGitHubActions
@@ -29,13 +29,13 @@ func TestInitProfileMVP1S3AddsProfileStructure(t *testing.T) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"init", "--dir", projectDir, "--profile", "mvp1-s3"})
+	root.SetArgs([]string{"init", "--dir", projectDir, "--profile", "aws-s3"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("init command failed: %v", err)
 	}
 
 	if _, err := os.Stat(filepath.Join(projectDir, "snapshots/raw/aws-s3/README.md")); err != nil {
-		t.Fatalf("expected mvp1-s3 profile README: %v", err)
+		t.Fatalf("expected aws-s3 profile README: %v", err)
 	}
 	readme, err := os.ReadFile(filepath.Join(projectDir, "README.md"))
 	if err != nil {

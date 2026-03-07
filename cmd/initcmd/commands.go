@@ -24,9 +24,9 @@ Examples:
   # 1. Create a minimal project scaffold in the current directory.
   stave init
 
-  # 2. Create an S3-focused project with the mvp1-s3 profile.
+  # 2. Create an S3-focused project with the aws-s3 profile.
   #    This adds S3-specific controls and snapshot directories.
-  stave init --profile mvp1-s3
+  stave init --profile aws-s3
 
   # 3. Typical developer flow: create project dir, cd, then init.
   mkdir -p ~/projects/my-s3
@@ -34,7 +34,7 @@ Examples:
   stave init --with-github-actions
 
   # 4. Optional automation flow: scaffold another directory from current shell.
-  stave init --dir ./my-s3 --profile mvp1-s3 --capture-cadence hourly --force` + metadata.OfflineHelpSuffix,
+  stave init --dir ./my-s3 --profile aws-s3 --capture-cadence hourly --force` + metadata.OfflineHelpSuffix,
 	Args:          cobra.NoArgs,
 	RunE:          runInit,
 	SilenceUsage:  true,
@@ -43,7 +43,7 @@ Examples:
 
 func init() {
 	InitCmd.Flags().StringVarP(&initDir, "dir", "d", ".", "Directory where scaffold is created")
-	InitCmd.Flags().StringVarP(&initProfile, "profile", "p", "", "Optional scaffold profile (supported: mvp1-s3)")
+	InitCmd.Flags().StringVarP(&initProfile, "profile", "p", "", "Optional scaffold profile (supported: aws-s3)")
 	InitCmd.Flags().BoolVar(&initDryRun, "dry-run", false, "Preview scaffold without creating files")
 	InitCmd.Flags().BoolVar(&initWithGitHubActions, "with-github-actions", false, "Create a starter GitHub Actions workflow")
 	InitCmd.Flags().StringVar(&initCaptureCadence, "capture-cadence", "daily", "Snapshot capture cadence template for scaffolded docs/workflows: daily or hourly")

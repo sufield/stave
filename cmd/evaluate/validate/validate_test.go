@@ -344,7 +344,7 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	if !strings.Contains(out, "Suggested next commands:") {
 		t.Fatalf("expected fix hints section, got: %s", out)
 	}
-	if !strings.Contains(out, "stave ingest --profile mvp1-s3") {
+	if !strings.Contains(out, "stave ingest --profile aws-s3") {
 		t.Fatalf("expected ingest hint, got: %s", out)
 	}
 }

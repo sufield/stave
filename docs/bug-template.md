@@ -130,7 +130,7 @@ func TestRepro(t *testing.T) {
 	// Keep flags minimal and deterministic.
 	// Add/remove flags only as needed to reproduce the bug.
 	cmd := exec.Command(stave,
-		"apply", "--profile", "mvp1-s3",
+		"apply", "--profile", "aws-s3",
 		"--input", input,
 		"--include-all",
 		"--now", now,

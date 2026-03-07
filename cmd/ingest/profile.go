@@ -9,17 +9,17 @@ import (
 type ingestProfile string
 
 const (
-	// ingestProfileMVP1S3 selects the MVP 1.0 S3 extraction profile.
-	ingestProfileMVP1S3 ingestProfile = "mvp1-s3"
+	// ingestProfileAWSS3 selects the AWS S3 extraction profile.
+	ingestProfileAWSS3 ingestProfile = "aws-s3"
 )
 
 // parseIngestProfile validates and returns an ingestProfile value.
 func parseIngestProfile(s string) (ingestProfile, error) {
 	switch ingestProfile(s) {
-	case ingestProfileMVP1S3:
-		return ingestProfileMVP1S3, nil
+	case ingestProfileAWSS3:
+		return ingestProfileAWSS3, nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: mvp1-s3)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3)", s)
 	}
 }
 
@@ -40,7 +40,7 @@ type IngestProfileInput struct {
 // ingestProfiles is the static registry of available ingest profiles.
 var ingestProfiles = []IngestProfileInfo{
 	{
-		Name:        "mvp1-s3",
+		Name:        "aws-s3",
 		Description: "Extract S3 bucket observations from AWS CLI JSON snapshots",
 		Inputs: []IngestProfileInput{
 			{Path: "list-buckets.json", Required: true, Description: "aws s3api list-buckets"},
