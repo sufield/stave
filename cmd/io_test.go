@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/apply"
-	evalvalidate "github.com/sufield/stave/cmd/apply/validate"
+	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/ingest"
 )
 
@@ -153,7 +153,7 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	f := evalvalidate.ValidateCmd.Flags().Lookup("in")
+	f := applyvalidate.ValidateCmd.Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
@@ -167,8 +167,8 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 	}{
 		{name: "apply controls", shorthand: "i", flags: apply.ApplyCmd.Flags()},
 		{name: "apply observations", shorthand: "o", flags: apply.ApplyCmd.Flags()},
-		{name: "validate controls", shorthand: "i", flags: evalvalidate.ValidateCmd.Flags()},
-		{name: "validate observations", shorthand: "o", flags: evalvalidate.ValidateCmd.Flags()},
+		{name: "validate controls", shorthand: "i", flags: applyvalidate.ValidateCmd.Flags()},
+		{name: "validate observations", shorthand: "o", flags: applyvalidate.ValidateCmd.Flags()},
 		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.DiagnoseCmd.Flags()},
 	}
 

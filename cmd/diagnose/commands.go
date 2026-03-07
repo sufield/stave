@@ -19,7 +19,7 @@ Purpose: Understand why evaluation produced (or didn't produce) certain findings
 Inputs:
   --controls      Directory containing YAML control definitions
   --observations    Directory containing JSON observation snapshots
-  --previous-output Optional path to existing evaluate output JSON
+  --previous-output Optional path to existing apply output JSON
 
 Outputs:
   stdout            Diagnostic report (text or JSON with --format json)
@@ -49,7 +49,7 @@ Examples:
   # Automation/CI mode (exit code only)
   stave diagnose --controls ./controls --observations ./obs --quiet
 
-  # Troubleshooting an existing evaluate output
+  # Troubleshooting an existing apply output
   stave diagnose --previous-output previous-run.json --controls ./controls --observations ./obs
 
   # JSON output for scripting
@@ -82,7 +82,7 @@ Examples:
 func init() {
 	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
 	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
-	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.PreviousOutput, "previous-output", "p", "", "Path to existing evaluate output JSON (optional; if omitted, runs evaluate internally)")
+	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.MaxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.Format, "format", "f", "text", "Output format: text or json")

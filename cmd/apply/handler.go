@@ -94,7 +94,7 @@ func executeApply(
 
 	progress := ui.NewRuntime(nil, nil)
 	progress.Quiet = applyFlags.quietMode
-	done := progress.BeginProgress("evaluate controls against observations")
+	done := progress.BeginProgress("apply controls against observations")
 	defer done()
 
 	return appeval.Run(ctx, appeval.RunInput{

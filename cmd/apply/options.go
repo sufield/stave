@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// applyParams holds validated and parsed flag values for the apply (evaluate) command.
+// applyParams holds validated and parsed flag values for the apply command.
 type applyParams struct {
 	maxDuration time.Duration
 	clock       ports.Clock
