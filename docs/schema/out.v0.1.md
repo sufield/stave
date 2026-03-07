@@ -9,7 +9,7 @@ description: "Reference for Stave evaluation output contract out.v0.1."
 
 This page documents the evaluation output contract used by Stave. Every `apply` and `apply --profile aws-s3` command produces JSON conforming to this structure.
 
-The output contract is defined by Go struct types in `internal/domain/` and `internal/adapters/output/json/writer.go`, with runtime validation against embedded JSON Schema (`schemas/out.v0.1.schema.json`) before emission. The schema version constant is `OutputSchemaVersion = "out.v0.1"`.
+The output contract is defined by Go struct types in `internal/domain/evaluation/` and `internal/adapters/output/dto/types.go`, with runtime validation against embedded JSON Schema (`schemas/out.v0.1.schema.json`) before emission. The schema version constant is `SchemaOutput` in `internal/domain/kernel/schema.go`.
 
 ## Top-Level Structure
 
@@ -265,14 +265,13 @@ When `--explain-all` is enabled, each row represents one `(control, asset)` eval
 
 This reference is derived from the runtime output implementation:
 
-- [`internal/adapters/output/json/writer.go`](../../internal/adapters/output/json/writer.go) — `OutputResult` struct and `OutputSchemaVersion` constant
-- [`internal/domain/evaluation_result.go`](../../internal/domain/evaluation_result.go) — `EvaluationResult`, `SkippedControl`
-- [`internal/domain/evaluation_run_info.go`](../../internal/domain/evaluation_run_info.go) — `RunInfo`, `InputHashes`
-- [`internal/domain/evaluation_summary.go`](../../internal/domain/evaluation_summary.go) — `Summary`
+- [`internal/adapters/output/dto/types.go`](../../internal/adapters/output/dto/types.go) — `ResultDTO`, output DTO structs
+- [`internal/domain/kernel/schema.go`](../../internal/domain/kernel/schema.go) — `SchemaOutput` constant
+- [`internal/domain/evaluation/result.go`](../../internal/domain/evaluation/result.go) — `SkippedControl`, `Summary`, `Decision`, `ConfidenceLevel`
+- [`internal/domain/evaluation/run_info.go`](../../internal/domain/evaluation/run_info.go) — `RunInfo`, `InputHashes`
 - [`internal/domain/evaluation/finding.go`](../../internal/domain/evaluation/finding.go) — `Finding`, `FindingDetail`
-- [`internal/domain/evidence.go`](../../internal/domain/evidence.go) — `Evidence`, `SourceEvidence`
-- [`internal/domain/misconfiguration.go`](../../internal/domain/misconfiguration.go) — `Misconfiguration`
-- [`internal/domain/evaluation_decision.go`](../../internal/domain/evaluation_decision.go) — `Decision`, `EvaluationRow`
-- [`internal/domain/confidence.go`](../../internal/domain/confidence.go) — `ConfidenceLevel`
-- [`internal/domain/exemption.go`](../../internal/domain/exemption.go) — `SkippedResource`
+- [`internal/domain/evaluation/evidence.go`](../../internal/domain/evaluation/evidence.go) — `Evidence`, `SourceEvidence`
+- [`internal/domain/policy/misconfiguration.go`](../../internal/domain/policy/misconfiguration.go) — `Misconfiguration`
+- [`internal/domain/policy/exemption.go`](../../internal/domain/policy/exemption.go) — `SkippedResource`
+- [`internal/adapters/output/dto/types.go`](../../internal/adapters/output/dto/types.go) — `SkippedAssetDTO`
 - [`testdata/e2e/**/output.json`](../../testdata/e2e/) — Real output instances

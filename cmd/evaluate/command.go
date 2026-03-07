@@ -33,6 +33,11 @@ func init() {
 	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
 	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
 	ApplyCmd.Flags().StringVar(&applyFlags.evaluateIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
+	ApplyCmd.Flags().StringVarP(&applyFlags.evalProfile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")
+	ApplyCmd.Flags().StringVar(&applyFlags.profileInputFile, "input", "", "Path to observations bundle file (required with --profile)")
+	ApplyCmd.Flags().StringVar(&applyFlags.profileScopeFile, "scope", "", "Path to health scope config YAML file")
+	ApplyCmd.Flags().StringSliceVar(&applyFlags.profileBucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include (can specify multiple)")
+	ApplyCmd.Flags().BoolVar(&applyFlags.profileIncludeAll, "include-all", false, "Disable health scope filtering (extract all buckets)")
 	_ = ApplyCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
 }
 
@@ -107,6 +112,9 @@ Examples:
 
   # Step 2: Execute control engine
   stave apply --controls ./controls --observations ./observations --format json
+
+  # Profile mode: evaluate a bundled observations file against built-in controls
+  stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z
 
 If readiness checks fail, apply exits early with concrete next steps.` + metadata.OfflineHelpSuffix,
 	Args:          cobra.NoArgs,

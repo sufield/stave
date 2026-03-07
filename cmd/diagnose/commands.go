@@ -89,7 +89,7 @@ func init() {
 	DiagnoseCmd.Flags().BoolVar(&diagnoseOpts.Quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	DiagnoseCmd.Flags().StringSliceVar(&diagnoseOpts.Cases, "case", nil, "Filter to one or more diagnostic case values")
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.Template, "template", "", "Go text/template string for custom output formatting")
+	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
 	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
 	_ = DiagnoseCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))

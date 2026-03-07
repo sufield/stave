@@ -61,6 +61,12 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Profile mode bypasses standard readiness checks — it uses its own
+	// input validation inside runEvaluateProfileWithOptions.
+	if applyFlags.evalProfile != "" {
+		return runEvaluate(cmd, args)
+	}
+
 	report, err := assessReadiness(cmd, readinessInput{
 		ControlsDir:     applyFlags.controlsDir,
 		ObservationsDir: applyFlags.observationsDir,

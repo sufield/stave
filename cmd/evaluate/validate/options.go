@@ -64,7 +64,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	flags.StringVar(&o.InFile, "in", "", "Path to single input file (use - for stdin). Detection: leading '{'/'[' => observation JSON; otherwise control YAML")
 	flags.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version for --kind mode (defaults by kind)")
 	flags.StringVar(&o.Kind, "kind", "", "Contract kind for --in mode: control|observation|finding")
-	flags.StringVar(&o.Template, "template", "", "Go text/template string for custom output formatting")
+	flags.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
 }
 
 func prepareValidateCommand(cmd *cobra.Command, opts *options) error {

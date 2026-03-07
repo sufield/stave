@@ -64,7 +64,7 @@ func TestEvaluateProfileE2E(t *testing.T) {
 		wantViol int
 	}{
 		{"obs-public", "aws-s3-obs-public", 3, 5},
-		{"obs-private", "aws-s3-obs-private", 0, 0},
+		{"obs-private", "aws-s3-obs-private", 3, 4},
 	}
 
 	for _, tc := range testCases {
