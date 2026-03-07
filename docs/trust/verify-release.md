@@ -31,10 +31,8 @@ You need at minimum:
 - `SHA256SUMS.sigstore.json`
 
 Optional but recommended:
-- `stave_<version>_<os>_<arch>.tar.gz.sigstore.json` (or `.zip.sigstore.json`)
 - `sbom.spdx.json`
 - `sbom.spdx.json.sigstore.json`
-- `provenance.json`
 
 ### 2. Verify checksums (offline)
 
@@ -56,17 +54,6 @@ cosign verify-blob \
 
 Replace `$VERSION` with the actual tag (e.g., `v1.0.0`). Success means the checksums file was signed by the Stave release workflow.
 
-### 3a. Verify binary signature (offline, optional)
-
-```bash
-ARTIFACT=stave_${VERSION}_linux_amd64.tar.gz
-cosign verify-blob \
-  --bundle ${ARTIFACT}.sigstore.json \
-  --certificate-identity "https://github.com/sufield/stave/.github/workflows/release.yml@refs/tags/$VERSION" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  ${ARTIFACT}
-```
-
 ### 4. Verify SBOM signature (offline, optional)
 
 ```bash
@@ -85,6 +72,15 @@ gh attestation verify stave_${VERSION}_linux_amd64.tar.gz \
 ```
 
 This proves the binary was built by the official CI workflow. Requires GitHub connectivity.
+
+### 6. Verify Docker image (online, optional)
+
+```bash
+docker pull ghcr.io/sufield/stave:$VERSION
+docker run --rm ghcr.io/sufield/stave:$VERSION --version
+```
+
+The Docker image uses a `scratch` base image containing only the static Stave binary.
 
 ## If Verification Fails
 
