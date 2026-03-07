@@ -100,9 +100,9 @@ func TestExitCode(t *testing.T) {
 			expected: 3,
 		},
 		{
-			name:     "unknown error returns 4 (internal)",
+			name:     "unknown error returns 2 (input error)",
 			err:      errors.New("some other error"),
-			expected: 4,
+			expected: 2,
 		},
 	}
 
