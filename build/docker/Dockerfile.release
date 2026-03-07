@@ -1,3 +1,4 @@
 FROM scratch
-COPY stave /usr/local/bin/stave
+ARG TARGETPLATFORM
+COPY ${TARGETPLATFORM}/stave /usr/local/bin/stave
 ENTRYPOINT ["stave"]
