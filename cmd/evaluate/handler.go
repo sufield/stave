@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-// runEvaluate executes the evaluate command.
+// runEvaluate executes the apply command.
 // It validates flags, builds dependencies, and runs the evaluation.
 func runEvaluate(cmd *cobra.Command, _ []string) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {

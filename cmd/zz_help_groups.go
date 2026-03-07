@@ -51,6 +51,8 @@ func init() {
 	assignRootCommandGroup("alias", groupUtilities)
 	assignRootCommandGroup("prompt", groupUtilities)
 	assignRootCommandGroup("fix", groupUtilities)
+	assignRootCommandGroup("env", groupUtilities)
+	assignRootCommandGroup("schemas", groupUtilities)
 
 	RootCmd.SetCompletionCommandGroupID(groupUtilities)
 	RootCmd.SetHelpCommandGroupID(groupUtilities)

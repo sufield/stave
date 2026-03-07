@@ -27,10 +27,8 @@ stave/
 ├── cmd/stave/              Entry point (main.go)
 │   └── cmd/                Cobra command definitions
 │       ├── root.go         Global flags, --require-offline, --sanitize, --force
-│       ├── evaluate.go     apply command
-│       ├── evaluate_profile.go  profile evaluation helpers used by apply --profile
-│       ├── extract.go      extract command + profile dispatch
-│       ├── extract_profile_s3.go   mvp1-s3 extraction implementation
+│       ├── evaluate/       apply command tree (handler, options, deps)
+│       ├── ingest/         ingest command + profile dispatch
 │       ├── validate.go     validate command
 │       ├── diagnose.go     diagnose command
 │       ├── verify.go       verify command
@@ -121,16 +119,15 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 
 | Command | Entry Point | App Layer | Domain Layer |
 |---------|-------------|-----------|--------------|
-| `apply` | `cmd/evaluate.go` | `app/evaluate.go` | `domain/evaluator*.go` |
-| `apply --profile mvp1-s3` | `cmd/evaluate.go` + `cmd/evaluate_profile.go` | `app/evaluate.go` | `domain/evaluator*.go` |
-| `validate` | `cmd/validate.go` | `app/validate.go` | `schema/` |
-| `diagnose` | `cmd/diagnose.go` | `app/diagnose.go` | `domain/diagnostics*.go` |
-| `ingest --profile mvp1-s3` | `cmd/extract.go` + `cmd/extract_profile_s3.go` | — | Adapter-level extraction |
-| `verify` | `cmd/verify.go` | — | Before/after comparison |
-| `snapshot hygiene` | `cmd/hygiene.go` | — | Weekly lifecycle markdown report |
-| `ci fix-loop` | `cmd/fix_loop.go` | — | Evaluate before/after + verification report |
-| `capabilities` | `cmd/capabilities.go` | `app/capabilities.go` | — |
-| `graph coverage` | `cmd/graph.go` | — | Predicate matching via `domain/predicate.go` |
+| `apply` | `cmd/evaluate/` | `app/evaluate.go` | `domain/evaluator*.go` |
+| `validate` | `cmd/evaluate/validate/` | `app/validate.go` | `schema/` |
+| `diagnose` | `cmd/diagnose/` | `app/diagnose.go` | `domain/diagnostics*.go` |
+| `ingest` | `cmd/ingest/` | — | Adapter-level extraction |
+| `verify` | `cmd/evaluate/verify/` | — | Before/after comparison |
+| `snapshot hygiene` | `cmd/prune/hygiene/` | — | Weekly lifecycle report |
+| `ci fix-loop` | `cmd/enforce/fix/` | — | Evaluate before/after + verification |
+| `capabilities` | `cmd/commands.go` | `app/capabilities.go` | — |
+| `graph coverage` | `cmd/enforce/graph/` | — | Predicate matching |
 
 ## Schema Lifecycle
 

@@ -136,7 +136,7 @@ func TestNoWorldReadableDirs(t *testing.T) {
 func TestExtractS3FlagRegistered(t *testing.T) {
 	flags := []string{"force", "dry-run"}
 	for _, name := range flags {
-		f := ingest.ExtractCmd.Flags().Lookup(name)
+		f := ingest.IngestCmd.Flags().Lookup(name)
 		if f == nil {
 			t.Errorf("extract missing --%s flag", name)
 		}
