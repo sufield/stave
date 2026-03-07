@@ -1,4 +1,4 @@
-# CLI Style Guide (MVP)
+# CLI Style Guide
 
 This guide keeps Stave CLI output consistent, readable, and automation-friendly.
 

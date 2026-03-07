@@ -1,3 +1,5 @@
+status : complete
+
 # Homebrew Tap Setup
 
 GoReleaser pushes a Homebrew formula to `sufield/homebrew-tap` on each release. This requires a one-time setup.

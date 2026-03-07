@@ -67,4 +67,3 @@ For S3 public exposure evaluation, these keys are the stability surface:
 
 Do not hand-author production observations.
 Generate observations via extractor commands and treat manual JSON edits as test-only.
-

@@ -118,11 +118,3 @@ The hardcoded catalog in `catalog.go` lists control entries for validation and
 documentation. After the MVP 1.0 cleanup, remaining entries are all in the
 `EXP` (exposure) and `META` domains. The catalog does not drive evaluation — S3
 controls are loaded from YAML files on disk.
-
-## Decision log
-
-| Date | Decision |
-|------|----------|
-| 2026-02-18 | Removed counterfactual evaluator, enforcement (PAB/SCP), markdown reports, YAML observation loader, non-S3 control definitions, scope exclusions. Reason: features that never activate during S3 evaluation. |
-| 2026-02-18 | Retained unused operators, identity fields, recurrence/prefix-exposure evaluation, parameter substitution. Reason: general-purpose engine capabilities that enable future domains. Under review for MVP 1.0+ promotion or removal. |
-| 2026-02-19 | Promoted `prefix_exposure` from candidate to active. Shipped `CTL.S3.PUBLIC.PREFIX.001` — first production control using this evaluator type. |

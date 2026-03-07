@@ -19,14 +19,14 @@ Typical offline flow:
 2. Run `stave validate`, `stave apply`, `stave apply --profile aws-s3`, or `stave diagnose`.
 3. Consume local JSON/text output.
 
-## What Is In Scope for Air-Gapped Use
+## What is In Scope for Air-Gapped Use
 
 - Running the released `stave` binary
 - Validating observations/controls
 - Evaluating findings from local snapshots
 - Diagnosing previous output with local inputs
 
-## What Is Not Offline
+## What is Not Offline
 
 These activities are outside runtime execution and may require network:
 
