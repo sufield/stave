@@ -265,7 +265,7 @@ Next: run `stave demo --fixture known-good` to compare safe output.
 stave status
 
 # 2) Set up a project
-stave init --profile mvp1-s3
+stave init --profile aws-s3
 cd my-project
 
 # 3) Validate, then evaluate
@@ -302,7 +302,7 @@ Stave provides these commands:
 | `controls ...` | Control management | `controls list\|explain\|aliases\|alias-explain` for control discovery |
 | `packs ...` | Pack management | `packs list\|show` for control pack discovery |
 | `docs ...` | Documentation workflow | `docs search` and `docs open` for terminal-first docs lookup |
-| `ingest --profile mvp1-s3` | S3 observation generation | Convert AWS S3 snapshots to observations |
+| `ingest --profile aws-s3` | S3 observation generation | Convert AWS S3 snapshots to observations |
 | `enforce` | Remediation artifacts | Generate remediation templates (PAB/SCP) from evaluation output |
 | `fix` | Remediation guidance | Show remediation guidance for a specific finding |
 | `verify` | Before/after comparison | Verify a fix resolved violations |
@@ -563,15 +563,15 @@ stave diagnose --controls ./controls --observations ./observations --previous-ou
 The MVP golden path for S3 public exposure assessment:
 
 ```
-ingest --profile mvp1-s3 → apply --profile mvp1-s3 → verify
+ingest --profile aws-s3 → apply --profile aws-s3 → verify
 ```
 
 ```bash
 # 1. Extract observations from offline AWS snapshot
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json --include-all
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json --include-all
 
 # 2. Evaluate against S3 controls (exit 3 = violations found)
-stave apply --profile mvp1-s3 --input observations.json --include-all > evaluation.json
+stave apply --profile aws-s3 --input observations.json --include-all > evaluation.json
 
 # 3. Compare before/after snapshots to verify remediation
 stave verify --before ./obs-before --after ./obs-after --controls ./controls/s3 \
@@ -726,12 +726,12 @@ stave diagnose --controls controls/s3 --observations observations/ --format json
 stave diagnose --controls controls/s3 --observations observations/ --case expected_violations_none
 ```
 
-### ingest --profile mvp1-s3
+### ingest --profile aws-s3
 
 Extracts S3 bucket observations from an offline AWS CLI snapshot directory. No AWS API calls — fully offline. Deterministic when `--now` is set.
 
 ```bash
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 ```
 
 **Flags:**
@@ -758,21 +758,21 @@ aws-snapshot/
 **Examples:**
 ```bash
 # Extract with default health scope (tag-based: DataDomain=health, containsPHI=true)
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 
 # Extract specific buckets
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out obs.json --bucket-allowlist my-phi-bucket
+stave ingest --profile aws-s3 --input ./aws-snapshot --out obs.json --bucket-allowlist my-phi-bucket
 
 # Extract all buckets (no filtering)
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out obs.json --include-all
+stave ingest --profile aws-s3 --input ./aws-snapshot --out obs.json --include-all
 ```
 
-### apply --profile mvp1-s3
+### apply --profile aws-s3
 
 Evaluates S3 observations against the healthcare (PHI) control profile. Uses the built-in S3 controls from `controls/storage/object_storage/s3/`.
 
 ```bash
-stave apply --profile mvp1-s3 --input observations.json
+stave apply --profile aws-s3 --input observations.json
 ```
 
 **Flags:**
@@ -797,13 +797,13 @@ stave apply --profile mvp1-s3 --input observations.json
 **Examples:**
 ```bash
 # Evaluate with default health scope
-stave apply --profile mvp1-s3 --input observations.json
+stave apply --profile aws-s3 --input observations.json
 
 # Evaluate all buckets
-stave apply --profile mvp1-s3 --input observations.json --include-all
+stave apply --profile aws-s3 --input observations.json --include-all
 
 # Deterministic evaluation
-stave apply --profile mvp1-s3 --input observations.json --now 2026-01-15T00:00:00Z
+stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z
 ```
 
 ### capabilities
@@ -1221,7 +1221,7 @@ diff output.json expected.json
 - The evaluator caps `now` to the last snapshot's `captured_at` timestamp
   (evaluation time is capped at the latest snapshot in your data)
 - If `--now` is earlier than the last snapshot, the provided value is used as-is
-- Extract commands (`ingest --profile mvp1-s3`) use `--now` for the `captured_at` field in output
+- Extract commands (`ingest --profile aws-s3`) use `--now` for the `captured_at` field in output
 
 See [docs/evaluation-semantics.md](docs/evaluation-semantics.md) for the full
 determinism model.
@@ -1454,15 +1454,15 @@ stave apply \
 
 ```bash
 # Step 1: Extract from AWS CLI snapshots
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 
 # Step 2: Evaluate against PHI controls
-stave apply --profile mvp1-s3 --input observations.json
+stave apply --profile aws-s3 --input observations.json
 ```
 
 ## S3 Terraform Plan Extraction
 
-The `ingest --profile mvp1-s3` command converts AWS S3 snapshots into Stave observations. The S3 extractor handles these Terraform asset types:
+The `ingest --profile aws-s3` command converts AWS S3 snapshots into Stave observations. The S3 extractor handles these Terraform asset types:
 
 | Terraform Resource Type | Fields Extracted |
 |------------------------|-----------------|

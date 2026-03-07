@@ -5,13 +5,13 @@ This is the supported S3 MVP workflow for the current CLI surface.
 ## Golden Path
 
 ```text
-ingest --profile mvp1-s3 -> apply --profile mvp1-s3 -> verify
+ingest --profile aws-s3 -> apply --profile aws-s3 -> verify
 ```
 
 ## 1) Extract observations from an offline AWS snapshot
 
 ```bash
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json --include-all
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json --include-all
 ```
 
 Input:
@@ -23,7 +23,7 @@ Output:
 ## 2) Evaluate observations against the S3 control pack
 
 ```bash
-stave apply --profile mvp1-s3 --input observations.json --include-all --now 2026-01-15T00:00:00Z > evaluation.json
+stave apply --profile aws-s3 --input observations.json --include-all --now 2026-01-15T00:00:00Z > evaluation.json
 ```
 
 Input:

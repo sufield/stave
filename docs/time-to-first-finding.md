@@ -129,7 +129,7 @@ This prints a summary of your project state (controls, snapshots, observations, 
 # 1) Create a new project with built-in S3 pack enabled
 mkdir -p ./stave-first-finding
 cd ./stave-first-finding
-stave init --profile mvp1-s3
+stave init --profile aws-s3
 
 # 2) Confirm readiness
 stave plan

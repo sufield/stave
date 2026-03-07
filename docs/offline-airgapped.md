@@ -16,7 +16,7 @@ The runtime CLI (`stave`) operates on local inputs and does not require cloud cr
 Typical offline flow:
 
 1. Prepare local observation and control files.
-2. Run `stave validate`, `stave apply`, `stave apply --profile mvp1-s3`, or `stave diagnose`.
+2. Run `stave validate`, `stave apply`, `stave apply --profile aws-s3`, or `stave diagnose`.
 3. Consume local JSON/text output.
 
 ## What Is In Scope for Air-Gapped Use
@@ -39,7 +39,7 @@ These activities are outside runtime execution and may require network:
 
 - Treat observation and output files as sensitive.
 - Use `--sanitize` for shared outputs.
-- Use `ingest --profile mvp1-s3 --scrub` before sharing extracted observations.
+- Use `ingest --profile aws-s3 --scrub` before sharing extracted observations.
 - Prefer deterministic runs in CI with `--now`.
 
 ## Related Docs

@@ -2,7 +2,7 @@
 title: "Sanitization and Scrubbing"
 sidebar_label: "Sanitization"
 sidebar_position: 7
-description: "How to share Stave outputs safely using --sanitize and ingest --profile mvp1-s3 --scrub."
+description: "How to share Stave outputs safely using --sanitize and ingest --profile aws-s3 --scrub."
 ---
 
 # Sanitization and Scrubbing
@@ -28,12 +28,12 @@ What stays visible:
 - counts, durations, timestamps
 - schema versions and summary totals
 
-## `ingest --profile mvp1-s3 --scrub` (Input Scrubbing)
+## `ingest --profile aws-s3 --scrub` (Input Scrubbing)
 
-`ingest --profile mvp1-s3 --scrub` removes or sanitizes sensitive fields in extracted observations before sharing.
+`ingest --profile aws-s3 --scrub` removes or sanitizes sensitive fields in extracted observations before sharing.
 
 ```bash
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.scrubbed.json --scrub
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.scrubbed.json --scrub
 ```
 
 Use this when you need to share observation files themselves.
@@ -41,9 +41,9 @@ Use this when you need to share observation files themselves.
 ## Recommended Sharing Workflow
 
 1. Create scrubbed observations:
-   `stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.scrubbed.json --scrub`
+   `stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.scrubbed.json --scrub`
 2. Evaluate with sanitization:
-   `stave apply --profile mvp1-s3 --input observations.scrubbed.json --sanitize > evaluation.sanitized.json`
+   `stave apply --profile aws-s3 --input observations.scrubbed.json --sanitize > evaluation.sanitized.json`
 3. Share only scrubbed observations and sanitized output.
 
 ## Path Rendering

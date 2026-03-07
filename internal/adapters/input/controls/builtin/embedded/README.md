@@ -5,12 +5,12 @@ This directory contains control definitions organized by domain.
 ## MVP 1.0 S3 Canonical Controls
 
 The canonical S3 control set lives in **`s3/`** and its subdirectories. This is
-the directory tree loaded by `stave apply --profile mvp1-s3` and the recommended `--controls`
+the directory tree loaded by `stave apply --profile aws-s3` and the recommended `--controls`
 path for S3 evaluation with `stave apply`.
 
 ```bash
-# Using apply --profile mvp1-s3 (loads s3/ automatically, recursively)
-stave apply --profile mvp1-s3 --input observations.json
+# Using apply --profile aws-s3 (loads s3/ automatically, recursively)
+stave apply --profile aws-s3 --input observations.json
 
 # Using apply with explicit path
 stave apply --controls controls/s3 --observations ./obs

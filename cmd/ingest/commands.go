@@ -74,22 +74,22 @@ Output file safety:
 
 Examples:
   # Convert with profile (recommended)
-  stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+  stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 
   # Convert with default health scope (tag-based)
-  stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+  stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 
   # Convert specific buckets
-  stave ingest --profile mvp1-s3 --input ./aws-snapshot --out obs.json --bucket-allowlist my-phi-bucket
+  stave ingest --profile aws-s3 --input ./aws-snapshot --out obs.json --bucket-allowlist my-phi-bucket
 
   # Convert all buckets (no filtering)
-  stave ingest --profile mvp1-s3 --input ./aws-snapshot --out obs.json --include-all
+  stave ingest --profile aws-s3 --input ./aws-snapshot --out obs.json --include-all
 
   # Preview output path without writing
-  stave ingest --profile mvp1-s3 --input ./aws-snapshot --dry-run
+  stave ingest --profile aws-s3 --input ./aws-snapshot --dry-run
 
   # Overwrite existing output file
-  stave ingest --profile mvp1-s3 --input ./aws-snapshot --force
+  stave ingest --profile aws-s3 --input ./aws-snapshot --force
 
 Next step: run control checks with stave apply.
 See docs/s3-assessment.md for the complete S3 assessment workflow.` + metadata.OfflineHelpSuffix,
@@ -102,7 +102,7 @@ See docs/s3-assessment.md for the complete S3 assessment workflow.` + metadata.O
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&opts.Profile, "profile", "p", "", "Extraction profile (e.g. mvp1-s3)")
+	f.StringVarP(&opts.Profile, "profile", "p", "", "Extraction profile (e.g. aws-s3)")
 	f.StringVar(&opts.InputDir, "input", "", "Path to AWS snapshot directory (required)")
 	f.StringVar(&opts.OutFile, "out", opts.OutFile, "Path to output observations file")
 	f.StringVar(&opts.ScopeFile, "scope", "", "Path to health scope config YAML file")
@@ -125,7 +125,7 @@ func (ic *ingestCommand) runIngest(cmd *cobra.Command) error {
 		return nil
 	}
 	if strings.TrimSpace(ic.opts.Profile) == "" {
-		return fmt.Errorf("--profile is required (supported: mvp1-s3)")
+		return fmt.Errorf("--profile is required (supported: aws-s3)")
 	}
 	if strings.TrimSpace(ic.opts.InputDir) == "" {
 		return fmt.Errorf("--input is required")
@@ -135,8 +135,8 @@ func (ic *ingestCommand) runIngest(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	if profile != ingestProfileMVP1S3 {
-		return fmt.Errorf("unsupported --profile %q (supported: mvp1-s3)", ic.opts.Profile)
+	if profile != ingestProfileAWSS3 {
+		return fmt.Errorf("unsupported --profile %q (supported: aws-s3)", ic.opts.Profile)
 	}
 
 	runner := newS3Runner(ic.runtime, ic.opts)

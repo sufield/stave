@@ -23,9 +23,9 @@ output/*
 }
 
 func scaffoldReadme(opts scaffoldOptions) string {
-	obsConvertCmd := "stave ingest --profile mvp1-s3 --input ./snapshots/raw/snapshot.json --out ./observations"
-	if opts.Profile == profileMVP1S3 {
-		obsConvertCmd = "stave ingest --profile mvp1-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
+	obsConvertCmd := "stave ingest --profile aws-s3 --input ./snapshots/raw/snapshot.json --out ./observations"
+	if opts.Profile == profileAWSS3 {
+		obsConvertCmd = "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
 	}
 	snapshotNameExample := snapshotFilenameExample(opts.CaptureCadence)
 	return scaffoldReadmeIntro(opts) +

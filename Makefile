@@ -127,15 +127,15 @@ golden: build
 e2e: build
 	./scripts/e2e.sh
 
-## determinism: Verify apply --profile mvp1-s3 output is deterministic (run twice, diff)
+## determinism: Verify apply --profile aws-s3 output is deterministic (run twice, diff)
 determinism: build
-	@echo "Determinism check: running apply --profile mvp1-s3 twice on golden-path fixture..."
-	@./$(BINARY) apply --profile mvp1-s3 \
+	@echo "Determinism check: running apply --profile aws-s3 twice on golden-path fixture..."
+	@./$(BINARY) apply --profile aws-s3 \
 		--input testdata/e2e/e2e-s3-golden-path/observations.json \
 		--include-all \
 		--now 2026-01-11T00:00:00Z \
 		> /tmp/stave-determinism-run1.json 2>/dev/null || true
-	@./$(BINARY) apply --profile mvp1-s3 \
+	@./$(BINARY) apply --profile aws-s3 \
 		--input testdata/e2e/e2e-s3-golden-path/observations.json \
 		--include-all \
 		--now 2026-01-11T00:00:00Z \

@@ -115,7 +115,7 @@ Use this table when you know your goal but want the fastest path to the right co
 | Get my first finding in 60 seconds | `stave demo` then `cat stave-report.json` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | Evaluate my own snapshots instantly | `stave quickstart` then `cat stave-report.json` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | See where I am and what to do next | `stave status` | [`README.md`](../README.md) |
-| Start a new project with sane defaults | `stave init --profile mvp1-s3` | [`README.md`](../README.md) |
+| Start a new project with sane defaults | `stave init --profile aws-s3` | [`README.md`](../README.md) |
 | Validate controls and observations before evaluating | `stave validate --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
 | Evaluate current risk status | `stave apply --controls ./controls --observations ./observations --format json > output/evaluation.json` | [`README.md`](../README.md) |
 | See what snapshot actions are due next | `stave snapshot upcoming --controls ./controls --observations ./observations --out output/upcoming.md` | [`README.md`](../README.md) |
@@ -1259,7 +1259,7 @@ stave init [flags]
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--profile` | (none) | Project profile (e.g., `mvp1-s3`) |
+| `--profile` | (none) | Project profile (e.g., `aws-s3`) |
 | `--dir` | `.` | Target directory |
 | `--dry-run` | `false` | Preview without creating files |
 | `--with-github-actions` | `false` | Include GitHub Actions workflow |
@@ -1275,8 +1275,8 @@ stave init [flags]
 **Examples:**
 
 ```bash
-stave init --profile mvp1-s3 --dir my-project
-stave init --profile mvp1-s3 --with-github-actions
+stave init --profile aws-s3 --dir my-project
+stave init --profile aws-s3 --with-github-actions
 stave init --dry-run
 ```
 
@@ -2071,18 +2071,18 @@ For evaluating existing AWS infrastructure directly from snapshots:
 
 ```bash
 # Step 1: Extract observations from offline AWS CLI exports
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 
 # Step 2: Evaluate against PHI controls
-stave apply --profile mvp1-s3 --input observations.json
+stave apply --profile aws-s3 --input observations.json
 ```
 
-### ingest --profile mvp1-s3
+### ingest --profile aws-s3
 
 Reads offline AWS CLI JSON exports and produces a normalized observations file.
 
 ```bash
-stave ingest --profile mvp1-s3 --input ./aws-snapshot --out observations.json
+stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
 ```
 
 **Input directory structure:**
@@ -2108,12 +2108,12 @@ aws-snapshot/
 
 **Health scope filtering (default):** Only buckets tagged `DataDomain=health` or `containsPHI=true` are extracted. Use `--include-all` to extract all buckets, or `--bucket-allowlist` for explicit selection.
 
-### apply --profile mvp1-s3
+### apply --profile aws-s3
 
 Evaluates S3 observations against the built-in PHI control profile (`controls/storage/object_storage/s3/`).
 
 ```bash
-stave apply --profile mvp1-s3 --input observations.json
+stave apply --profile aws-s3 --input observations.json
 ```
 
 **Flags:**

@@ -70,7 +70,7 @@ func hintGenerateControl(_ diag.Issue, ctx hintContext) string {
 }
 
 func hintIngestObservations(_ diag.Issue, _ hintContext) string {
-	return "stave ingest --profile mvp1-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
+	return "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
 }
 
 func hintDiagnoseObservations(_ diag.Issue, ctx hintContext) string {

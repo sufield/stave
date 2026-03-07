@@ -14,13 +14,13 @@ func TestIngestProfilesRegistryNotEmpty(t *testing.T) {
 	}
 }
 
-func TestIngestProfilesRegistryHasMVP1S3(t *testing.T) {
+func TestIngestProfilesRegistryHasAWSS3(t *testing.T) {
 	found := false
 	for _, p := range ingestProfiles {
-		if p.Name == "mvp1-s3" {
+		if p.Name == "aws-s3" {
 			found = true
 			if len(p.Inputs) == 0 {
-				t.Error("mvp1-s3 profile has no inputs")
+				t.Error("aws-s3 profile has no inputs")
 			}
 			// Verify list-buckets.json is required
 			for _, inp := range p.Inputs {
@@ -31,7 +31,7 @@ func TestIngestProfilesRegistryHasMVP1S3(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Fatal("mvp1-s3 profile not found in registry")
+		t.Fatal("aws-s3 profile not found in registry")
 	}
 }
 
@@ -41,7 +41,7 @@ func TestPrintIngestProfiles(t *testing.T) {
 	out := buf.String()
 
 	for _, want := range []string{
-		"mvp1-s3",
+		"aws-s3",
 		"list-buckets.json",
 		"(required)",
 		"(optional)",

@@ -24,7 +24,7 @@ var initWithGitHubActions bool
 var initCaptureCadence string
 
 const (
-	profileMVP1S3 = "mvp1-s3"
+	profileAWSS3 = "aws-s3"
 
 	cadenceDaily  = "daily"
 	cadenceHourly = "hourly"
@@ -83,8 +83,8 @@ func validateScaffoldInputs(rawDir, profile, cadence string) (string, error) {
 	if dir == "" {
 		return "", fmt.Errorf("--dir cannot be empty")
 	}
-	if profile != "" && profile != profileMVP1S3 {
-		return "", fmt.Errorf("unsupported --profile %q (supported: mvp1-s3)", profile)
+	if profile != "" && profile != profileAWSS3 {
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3)", profile)
 	}
 	if cadence != cadenceDaily && cadence != cadenceHourly {
 		return "", fmt.Errorf("unsupported --capture-cadence %q (supported: daily, hourly)", cadence)
@@ -207,7 +207,7 @@ func scaffoldDirectories(opts scaffoldOptions) []string {
 		"observations",
 		"output",
 	}
-	if opts.Profile == profileMVP1S3 {
+	if opts.Profile == profileAWSS3 {
 		dirs = append(dirs, "snapshots/raw/aws-s3")
 	}
 	if opts.WithGitHubActions {
@@ -251,13 +251,13 @@ func scaffoldBaseFiles(opts scaffoldOptions) map[string]string {
 }
 
 func addProfileScaffoldFiles(files map[string]string, profile string) {
-	if profile != profileMVP1S3 {
+	if profile != profileAWSS3 {
 		return
 	}
-	files["snapshots/raw/aws-s3/README.md"] = normalizeTemplate(`# AWS S3 Snapshot Input (mvp1-s3)
+	files["snapshots/raw/aws-s3/README.md"] = normalizeTemplate(`# AWS S3 Snapshot Input (aws-s3)
 
 Expected input for:
-stave ingest --profile mvp1-s3 --input ./snapshots/raw/aws-s3 --out ./observations
+stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations
 
 Include files such as:
 - list-buckets.json

@@ -55,7 +55,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 1. **Ingest** — convert the raw AWS snapshot into a normalized observations file:
 
    ```bash
-   stave ingest --profile mvp1-s3 \
+   stave ingest --profile aws-s3 \
      --input ./aws-snapshot/ \
      --out ./observations/snap-2026-02-22.json
    ```
@@ -89,7 +89,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 1. **Capture before-state observations** (pre-remediation):
 
    ```bash
-   stave ingest --profile mvp1-s3 \
+   stave ingest --profile aws-s3 \
      --input ./aws-before/ \
      --out ./obs-before/snap.json
    ```
@@ -99,7 +99,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 3. **Capture after-state observations** (post-remediation):
 
    ```bash
-   stave ingest --profile mvp1-s3 \
+   stave ingest --profile aws-s3 \
      --input ./aws-after/ \
      --out ./obs-after/snap.json
    ```

@@ -12,7 +12,7 @@ func TestEvaluateErrorWithHint_MissingObservations(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "Next: stave ingest --profile mvp1-s3") {
+	if !strings.Contains(err.Error(), "Next: stave ingest --profile aws-s3") {
 		t.Fatalf("expected ingest hint, got: %v", err)
 	}
 	if !strings.Contains(err.Error(), "More info: run 'stave docs search") {

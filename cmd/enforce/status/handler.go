@@ -102,13 +102,13 @@ func (s ProjectState) RecommendNext() string {
 	obsDir := filepath.Join(s.Root, "observations")
 
 	if raw.Count > 0 && (obs.Count == 0 || s.isRawNewerThanObs()) {
-		return fmt.Sprintf("stave ingest --profile mvp1-s3 --input %s --out %s", rawDir, obsDir)
+		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
 	}
 	if ctl.Count == 0 {
 		return fmt.Sprintf("stave generate control --id CTL.S3.PUBLIC.901 --out %s", filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml"))
 	}
 	if obs.Count == 0 {
-		return fmt.Sprintf("stave ingest --profile mvp1-s3 --input %s --out %s", rawDir, obsDir)
+		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
 	}
 	if s.needsReevaluation() {
 		return fmt.Sprintf("stave validate --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",

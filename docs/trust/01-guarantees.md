@@ -121,7 +121,7 @@ What is preserved: control IDs, names, rule IDs, counts, durations, timestamps, 
 | `base` (default) | Absolute paths replaced with basenames |
 | `full` | Paths shown as-is |
 
-**`ingest --profile mvp1-s3 --scrub`** removes sensitive fields (tags, raw policies, ACL grants) from observations before sharing.
+**`ingest --profile aws-s3 --scrub`** removes sensitive fields (tags, raw policies, ACL grants) from observations before sharing.
 
 ## 7. Supply-Chain Integrity
 

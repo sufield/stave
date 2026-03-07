@@ -46,9 +46,9 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 			return runOptions{}, err
 		}
 		switch profile {
-		case EvalProfileMVP1S3:
+		case EvalProfileAWSS3:
 			if applyFlags.profileInputFile == "" {
-				return runOptions{}, fmt.Errorf("--input is required when using --profile mvp1-s3")
+				return runOptions{}, fmt.Errorf("--input is required when using --profile aws-s3")
 			}
 			return runOptions{
 				mode: runModeProfile,

@@ -45,7 +45,7 @@ var hintRegistry = []hintRule{
 		patterns: []string{"--controls not accessible"},
 		hint: RemediationHint{
 			Reason:      "Control directory is missing or unreadable.",
-			NextCommand: "stave init --profile mvp1-s3",
+			NextCommand: "stave init --profile aws-s3",
 			SearchQuery: "init controls directory not accessible",
 		},
 	},
@@ -54,7 +54,7 @@ var hintRegistry = []hintRule{
 		patterns: []string{"--observations not accessible"},
 		hint: RemediationHint{
 			Reason:      "Observation snapshots are missing or unreadable.",
-			NextCommand: "stave ingest --profile mvp1-s3 --input ./snapshots/raw/aws-s3 --out ./observations",
+			NextCommand: "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations",
 			SearchQuery: "ingest observations directory not accessible",
 		},
 	},
@@ -81,7 +81,7 @@ var hintRegistry = []hintRule{
 		patterns: []string{"no snapshots in"},
 		hint: RemediationHint{
 			Reason:      "No observation snapshots found for evaluation.",
-			NextCommand: "stave ingest --profile mvp1-s3 --input ./snapshots/raw/aws-s3 --out ./observations",
+			NextCommand: "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations",
 			SearchQuery: "ingest no snapshots",
 		},
 	},

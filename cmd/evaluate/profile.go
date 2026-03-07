@@ -25,17 +25,17 @@ import (
 type EvalProfile string
 
 const (
-	// EvalProfileMVP1S3 selects the MVP 1.0 S3 evaluation profile.
-	EvalProfileMVP1S3 EvalProfile = "mvp1-s3"
+	// EvalProfileAWSS3 selects the AWS S3 evaluation profile.
+	EvalProfileAWSS3 EvalProfile = "aws-s3"
 )
 
 // ParseEvalProfile validates and returns an EvalProfile value.
 func ParseEvalProfile(s string) (EvalProfile, error) {
 	switch EvalProfile(s) {
-	case EvalProfileMVP1S3:
-		return EvalProfileMVP1S3, nil
+	case EvalProfileAWSS3:
+		return EvalProfileAWSS3, nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: mvp1-s3)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3)", s)
 	}
 }
 
