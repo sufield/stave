@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	output "github.com/sufield/stave/internal/adapters/output"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -16,7 +17,9 @@ import (
 )
 
 func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
-	w := NewFindingWriterWithEnvelope(true, remediation.NewMapper(), sanitize.New())
+	w := NewFindingWriterWithEnvelope(true)
+	enricher := remediation.NewMapper()
+	sanitizer := sanitize.New()
 
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 	result := evaluation.Result{
@@ -51,10 +54,14 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 		},
 	}
 
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, result); err != nil {
-		t.Fatalf("WriteFindings() error = %v", err)
+	enriched := output.Enrich(enricher, sanitizer, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
+		t.Fatalf("MarshalFindings() error = %v", err)
 	}
+
+	var buf bytes.Buffer
+	buf.Write(data)
 
 	var payload map[string]any
 	if err := stdjson.Unmarshal(buf.Bytes(), &payload); err != nil {
@@ -65,17 +72,17 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 		t.Fatalf("envelope ok = %v, want true", payload["ok"])
 	}
 
-	data, ok := payload["data"].(map[string]any)
+	d, ok := payload["data"].(map[string]any)
 	if !ok {
 		t.Fatalf("data type = %T, want map[string]any", payload["data"])
 	}
-	if data["kind"] != "evaluation" {
-		t.Fatalf("kind = %v, want evaluation", data["kind"])
+	if d["kind"] != "evaluation" {
+		t.Fatalf("kind = %v, want evaluation", d["kind"])
 	}
 
-	run, ok := data["run"].(map[string]any)
+	run, ok := d["run"].(map[string]any)
 	if !ok {
-		t.Fatalf("run type = %T, want map[string]any", data["run"])
+		t.Fatalf("run type = %T, want map[string]any", d["run"])
 	}
 	inputHashes, ok := run["input_hashes"].(map[string]any)
 	if !ok {
@@ -92,9 +99,9 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 		t.Fatalf("expected full path key to be sanitized, got keys: %#v", files)
 	}
 
-	findings, ok := data["findings"].([]any)
+	findings, ok := d["findings"].([]any)
 	if !ok || len(findings) != 1 {
-		t.Fatalf("findings shape = %T len=%d", data["findings"], len(findings))
+		t.Fatalf("findings shape = %T len=%d", d["findings"], len(findings))
 	}
 	f0 := findings[0].(map[string]any)
 	if f0["asset_id"] == "secret-bucket" {
@@ -103,7 +110,8 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 }
 
 func TestWriteFindings_WithoutEnvelope(t *testing.T) {
-	w := NewFindingWriter(false, remediation.NewMapper(), nil)
+	w := NewFindingWriter(false)
+	enricher := remediation.NewMapper()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			ToolVersion: "test",
@@ -120,11 +128,12 @@ func TestWriteFindings_WithoutEnvelope(t *testing.T) {
 		Findings: nil,
 	}
 
-	var buf bytes.Buffer
-	if err := w.WriteFindings(&buf, result); err != nil {
-		t.Fatalf("WriteFindings() error = %v", err)
+	enriched := output.Enrich(enricher, nil, result)
+	data, err := w.MarshalFindings(enriched)
+	if err != nil {
+		t.Fatalf("MarshalFindings() error = %v", err)
 	}
-	out := buf.String()
+	out := string(data)
 
 	if strings.Contains(out, `"ok":`) {
 		t.Fatalf("unexpected envelope in output: %s", out)

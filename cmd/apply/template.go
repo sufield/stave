@@ -5,17 +5,19 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/version"
 )
 
-func runApplyWithTemplateParams(_ *cobra.Command, params applyParams) error {
+func runApplyWithTemplateParams(cmd *cobra.Command, params applyParams) error {
 	attachTemplateRunID()
 	obsLoader, ctlLoader, err := buildTemplateRepositories(params)
 	if err != nil {
@@ -26,7 +28,21 @@ func runApplyWithTemplateParams(_ *cobra.Command, params applyParams) error {
 		return ui.EvaluateErrorWithHint(err)
 	}
 	result := applyTemplateArtifacts(params, artifacts)
-	evalEnvelope := buildTemplateEvaluation(result)
+
+	enricher := remediation.NewMapper()
+	san := cmdutil.GetSanitizer(cmd)
+	enrichFn := func(r evaluation.Result) appcontracts.EnrichedResult {
+		return output.Enrich(enricher, san, r)
+	}
+
+	data := &appeval.PipelineData{Result: result}
+	if pipeErr := appeval.NewPipeline(context.Background(), data).
+		Then(appeval.EnrichStep(enrichFn)).
+		Error(); pipeErr != nil {
+		return ui.EvaluateErrorWithHint(pipeErr)
+	}
+
+	evalEnvelope := appworkflow.BuildSafetyEnvelopeFromEnriched(data.Enriched)
 	if err := ui.ExecuteTemplate(os.Stdout, applyFlags.applyTemplateStr, evalEnvelope); err != nil {
 		return err
 	}
@@ -78,10 +94,6 @@ func applyTemplateArtifacts(params applyParams, artifacts appeval.IntentEvaluati
 		Clock:       params.clock,
 		ToolVersion: version.Version,
 	})
-}
-
-func buildTemplateEvaluation(result evaluation.Result) safetyenvelope.Evaluation {
-	return appworkflow.BuildEvaluationEnvelope(result)
 }
 
 func applyViolationsExit(result evaluation.Result) error {

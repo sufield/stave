@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -85,10 +84,10 @@ func executeApply(
 	ctx context.Context,
 	opts runOptions,
 	plan *appeval.EvaluationPlan,
-) (appworkflow.EvaluateResult, error) {
+) (EvaluateResult, error) {
 	deps, err := NewFactory(cmd, opts.params).Build(plan)
 	if err != nil {
-		return appworkflow.EvaluateResult{}, err
+		return EvaluateResult{}, err
 	}
 	defer deps.Close()
 
@@ -97,8 +96,12 @@ func executeApply(
 	done := progress.BeginProgress("apply controls against observations")
 	defer done()
 
-	return appeval.Run(ctx, appeval.RunInput{
+	status, err := appeval.Run(ctx, appeval.RunInput{
 		Runner: deps.Runner,
 		Config: deps.Config,
 	})
+	if err != nil {
+		return EvaluateResult{}, err
+	}
+	return BuildEvaluateResult(status, deps.Config.ControlsDir, deps.Config.ObservationsDir), nil
 }

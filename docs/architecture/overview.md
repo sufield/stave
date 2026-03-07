@@ -27,7 +27,7 @@ stave/
 ├── cmd/stave/              Entry point (main.go)
 │   └── cmd/                Cobra command definitions
 │       ├── root.go         Global flags, --require-offline, --sanitize, --force
-│       ├── evaluate/       apply command tree (handler, options, deps)
+│       ├── apply/          apply command tree (handler, options, deps)
 │       ├── diagnose/       diagnose command tree (artifacts, docs, report)
 │       ├── enforce/        CI commands (baseline, cidiff, diff, fix, gate, graph)
 │       ├── ingest/         ingest command + profile dispatch
@@ -73,7 +73,7 @@ stave/
 ### Layer Rules
 
 - **`domain/`** contains pure business logic with no file I/O, no CLI dependencies, and no external packages beyond the standard library.
-- **`app/`** orchestrates use cases by wiring domain logic to adapters. It handles the flow: load inputs → validate → evaluate → format output.
+- **`app/`** orchestrates use cases by wiring domain logic to adapters. It handles the flow: load inputs → validate → apply → format output.
 - **`adapters/`** handle all I/O: reading files, parsing formats, writing output.
 - **`cmd/`** handles only CLI concerns: flag parsing, exit codes, error formatting.
 

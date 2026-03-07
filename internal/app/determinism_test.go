@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 
+	output "github.com/sufield/stave/internal/adapters/output"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -104,6 +105,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 
 	clock := clockadp.FixedClock{Time: laterTime}
 	maxUnsafe := 0 * time.Hour
+	enricher := remediation.NewMapper()
 
 	// Run evaluation and serialize to JSON — twice
 	var outputs [2][]byte
@@ -123,16 +125,19 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 			},
 		}
 
-		writer := outjson.NewFindingWriter(true, remediation.NewMapper(), nil) // indent=true, no sanitization
-		var buf bytes.Buffer
-		if err := writer.WriteFindings(&buf, result); err != nil {
-			t.Fatalf("run %d: WriteFindings failed: %v", i, err)
+		writer := outjson.NewFindingWriter(true) // indent=true
+		enriched := output.Enrich(enricher, nil, result)
+		data, err := writer.MarshalFindings(enriched)
+		if err != nil {
+			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)
 		}
+		var buf bytes.Buffer
+		buf.Write(data)
 		outputs[i] = buf.Bytes()
 	}
 
 	if !bytes.Equal(outputs[0], outputs[1]) {
-		t.Errorf("evaluate output is NOT byte-identical across two runs:\n--- run 0 ---\n%s\n--- run 1 ---\n%s",
+		t.Errorf("apply output is NOT byte-identical across two runs:\n--- run 0 ---\n%s\n--- run 1 ---\n%s",
 			outputs[0], outputs[1])
 	}
 }
@@ -180,6 +185,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	clock := clockadp.FixedClock{Time: laterTime}
 	maxUnsafe := 0 * time.Hour
+	enricher := remediation.NewMapper()
 
 	var outputs [10][]byte
 	for i := range 10 {
@@ -191,11 +197,14 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		})
 		result.Run.ToolVersion = "test-v1"
 
-		writer := outjson.NewFindingWriter(true, remediation.NewMapper(), nil)
-		var buf bytes.Buffer
-		if err := writer.WriteFindings(&buf, result); err != nil {
-			t.Fatalf("run %d: WriteFindings failed: %v", i, err)
+		writer := outjson.NewFindingWriter(true)
+		enriched := output.Enrich(enricher, nil, result)
+		data, err := writer.MarshalFindings(enriched)
+		if err != nil {
+			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)
 		}
+		var buf bytes.Buffer
+		buf.Write(data)
 		outputs[i] = buf.Bytes()
 	}
 

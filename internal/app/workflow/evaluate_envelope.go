@@ -1,22 +1,28 @@
 package workflow
 
 import (
-	"github.com/sufield/stave/internal/domain/evaluation"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-// BuildEvaluationEnvelope constructs a safety envelope from an evaluation result.
-// It handles finding enrichment (remediation mapping) and envelope normalization.
-func BuildEvaluationEnvelope(result evaluation.Result) safetyenvelope.Evaluation {
-	mapper := remediation.NewMapper()
-	enriched := mapper.EnrichFindings(result)
-	return safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
-		Run:                result.Run,
-		Summary:            result.Summary,
-		Findings:           enriched,
-		Skipped:            result.Skipped,
-		SkippedAssets:      result.SkippedAssets,
-		SuppressedFindings: result.SuppressedFindings,
+// BuildSafetyEnvelopeFromEnriched assembles a safety envelope from a
+// pipeline-produced EnrichedResult.
+func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) safetyenvelope.Evaluation {
+	findings := enriched.Findings
+	if findings == nil {
+		findings = []remediation.Finding{}
+	}
+
+	out := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
+		Run:                enriched.Run,
+		Summary:            enriched.Result.Summary,
+		Findings:           findings,
+		Skipped:            enriched.Result.Skipped,
+		SkippedAssets:      enriched.SkippedAssets,
+		SuppressedFindings: enriched.Result.SuppressedFindings,
 	})
+	out.Extensions = enriched.Result.Metadata.ToExtensions()
+	out.RemediationGroups = remediation.BuildGroups(findings)
+	return out
 }

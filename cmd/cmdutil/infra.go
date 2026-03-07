@@ -22,10 +22,8 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 // ResolveNow parses a --now flag value. Returns wall clock UTC when raw is empty.
@@ -120,7 +118,7 @@ type Composition struct {
 	NewStdinObservationRepo  func(r io.Reader) (appcontracts.ObservationRepository, error)
 	NewControlRepository     func() (appcontracts.ControlRepository, error)
 	NewSnapshotObservation   func() (SnapshotObservationRepository, error)
-	NewFindingWriter         func(format string, jsonMode bool, sanitizer *sanitize.Sanitizer) (appcontracts.FindingWriter, error)
+	NewFindingWriter         func(format string, jsonMode bool) (appcontracts.FindingMarshaler, error)
 }
 
 // DefaultComposition is the standard adapter wiring.
@@ -140,21 +138,20 @@ var DefaultComposition = Composition{
 	NewFindingWriter: defaultNewFindingWriter,
 }
 
-// defaultNewFindingWriter creates a finding writer for the given output format.
-func defaultNewFindingWriter(format string, jsonMode bool, sanitizer *sanitize.Sanitizer) (appcontracts.FindingWriter, error) {
+// defaultNewFindingWriter creates a finding marshaler for the given output format.
+func defaultNewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
 	const indented = true
-	enricher := remediation.NewMapper()
 
 	switch strings.ToLower(strings.TrimSpace(format)) {
 	case "text":
-		return outtext.NewFindingWriter(enricher, sanitizer), nil
+		return outtext.NewFindingWriter(), nil
 	case "json":
 		if jsonMode {
-			return outjson.NewFindingWriterWithEnvelope(indented, enricher, sanitizer), nil
+			return outjson.NewFindingWriterWithEnvelope(indented), nil
 		}
-		return outjson.NewFindingWriter(indented, enricher, sanitizer), nil
+		return outjson.NewFindingWriter(indented), nil
 	case "sarif":
-		return outsarif.NewFindingWriter(enricher, sanitizer)
+		return outsarif.NewFindingWriter(), nil
 	default:
 		return nil, fmt.Errorf("invalid --format %q (use text, json, or sarif)", format)
 	}
@@ -180,9 +177,9 @@ func NewSnapshotObservationRepository() (SnapshotObservationRepository, error) {
 	return DefaultComposition.NewSnapshotObservation()
 }
 
-// NewFindingWriter creates a finding writer for the given output format.
-func NewFindingWriter(format string, jsonMode bool, sanitizer *sanitize.Sanitizer) (appcontracts.FindingWriter, error) {
-	return DefaultComposition.NewFindingWriter(format, jsonMode, sanitizer)
+// NewFindingWriter creates a finding marshaler for the given output format.
+func NewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+	return DefaultComposition.NewFindingWriter(format, jsonMode)
 }
 
 // LoadObsAndInv creates loaders and loads both concurrently.

@@ -27,11 +27,6 @@ type ControlRepository interface {
 	LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 }
 
-// FindingWriter outputs findings in a specific format.
-type FindingWriter interface {
-	WriteFindings(w io.Writer, result evaluation.Result) error
-}
-
 // EnrichedResult holds evaluation output together with enriched findings
 // and fully-sanitized metadata. Boundary type between the "enrich" and
 // "marshal" pipeline steps. Marshalers should read SkippedAssets and Run

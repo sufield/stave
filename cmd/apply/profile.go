@@ -11,9 +11,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/output"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
@@ -106,14 +111,28 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return formatErr
 	}
 
-	writer, writerErr := cmdutil.NewFindingWriter(format.String(), cmdutil.IsJSONMode(cmd), cmdutil.GetSanitizer(cmd))
+	marshaler, writerErr := cmdutil.NewFindingWriter(format.String(), cmdutil.IsJSONMode(cmd))
 	if writerErr != nil {
 		return writerErr
 	}
 
-	output := profileOutput(opts.quiet)
-	if err := writer.WriteFindings(output, result); err != nil {
-		return fmt.Errorf("write findings: %w", err)
+	enricher := remediation.NewMapper()
+	san := cmdutil.GetSanitizer(cmd)
+	enrichFn := func(r evaluation.Result) appcontracts.EnrichedResult {
+		return output.Enrich(enricher, san, r)
+	}
+
+	pipeOut := profileOutput(opts.quiet)
+	pipeErr := appeval.NewPipeline(context.Background(), &appeval.PipelineData{
+		Result: result,
+		Output: pipeOut,
+	}).
+		Then(appeval.EnrichStep(enrichFn)).
+		Then(appeval.MarshalStep(marshaler)).
+		Then(appeval.WriteStep()).
+		Error()
+	if pipeErr != nil {
+		return fmt.Errorf("write findings: %w", pipeErr)
 	}
 
 	return finalizeApplyProfileRun(len(result.Findings), cannotProveSafeCount, opts.quiet, ctlDir, opts.inputFile)

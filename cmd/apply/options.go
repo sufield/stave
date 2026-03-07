@@ -151,9 +151,30 @@ func shouldUseConfiguredPacks() bool {
 }
 
 // validateApplyFlags validates command-line flags and returns parsed parameters.
-// It checks directory existence, parses duration and time flags, and loads the
-// evaluation context. Returns an error for any invalid or inaccessible input.
+// It normalizes paths, validates domain constraints, and checks directory
+// existence. Returns an error for any invalid or inaccessible input.
 func validateApplyFlags(cmd *cobra.Command) (applyParams, error) {
+	normalizeApplyFlags(cmd)
+
+	parsed, err := validateApplyDomain()
+	if err != nil {
+		return applyParams{}, err
+	}
+
+	if err := checkDirsExist(parsed.Source); err != nil {
+		return applyParams{}, err
+	}
+
+	return applyParams{
+		maxDuration: parsed.MaxDuration,
+		clock:       newClock(parsed.Now),
+		source:      parsed.Source,
+	}, nil
+}
+
+// normalizeApplyFlags cleans user-supplied paths and applies project-root
+// inference for controls and observations directories.
+func normalizeApplyFlags(cmd *cobra.Command) {
 	resetInferAttempts()
 	applyFlags.applyControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
 
@@ -166,7 +187,11 @@ func validateApplyFlags(cmd *cobra.Command) (applyParams, error) {
 	if applyFlags.observationsDir != "-" {
 		applyFlags.observationsDir = inferObservationsDir(cmd, applyFlags.observationsDir)
 	}
+}
 
+// validateApplyDomain validates parsed flag values against domain constraints
+// (duration format, time format, integrity key pairing).
+func validateApplyDomain() (appeval.ParsedOptions, error) {
 	parsed, err := (appeval.Options{
 		MaxUnsafe:          applyFlags.maxUnsafe,
 		NowTime:            applyFlags.nowTime,
@@ -176,23 +201,17 @@ func validateApplyFlags(cmd *cobra.Command) (applyParams, error) {
 	}).Validate()
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "invalid --max-unsafe") {
-			return applyParams{}, &ui.InputError{Err: ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)}
+			return appeval.ParsedOptions{}, &ui.InputError{Err: ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)}
 		}
-		return applyParams{}, &ui.InputError{Err: err}
+		return appeval.ParsedOptions{}, &ui.InputError{Err: err}
 	}
+	return parsed, nil
+}
 
-	if err := checkDirsExist(parsed.Source); err != nil {
-		return applyParams{}, err
+// newClock returns a FixedClock if now is non-zero, otherwise a RealClock.
+func newClock(now time.Time) ports.Clock {
+	if !now.IsZero() {
+		return ports.FixedClock{Time: now}
 	}
-
-	var clock ports.Clock = ports.RealClock{}
-	if !parsed.Now.IsZero() {
-		clock = ports.FixedClock{Time: parsed.Now}
-	}
-
-	return applyParams{
-		maxDuration: parsed.MaxDuration,
-		clock:       clock,
-		source:      parsed.Source,
-	}, nil
+	return ports.RealClock{}
 }

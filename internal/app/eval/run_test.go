@@ -3,7 +3,6 @@ package eval
 import (
 	"context"
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -24,8 +23,6 @@ func TestRun(t *testing.T) {
 		status     evaluation.SafetyStatus
 		config     EvaluateConfig
 		wantStatus evaluation.SafetyStatus
-		wantHint   bool
-		wantSteps  int
 	}{
 		{
 			name:   "clean run",
@@ -37,8 +34,6 @@ func TestRun(t *testing.T) {
 				},
 			},
 			wantStatus: evaluation.SafetyStatusSafe,
-			wantHint:   false,
-			wantSteps:  0,
 		},
 		{
 			name:   "violations found",
@@ -50,8 +45,6 @@ func TestRun(t *testing.T) {
 				},
 			},
 			wantStatus: evaluation.SafetyStatusUnsafe,
-			wantHint:   true,
-			wantSteps:  3,
 		},
 	}
 
@@ -59,7 +52,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			runner := &runMockRunner{returnStatus: tt.status}
 
-			res, err := Run(context.Background(), RunInput{
+			status, err := Run(context.Background(), RunInput{
 				Runner: runner,
 				Config: tt.config,
 			})
@@ -67,26 +60,8 @@ func TestRun(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if res.SafetyStatus != tt.wantStatus {
-				t.Errorf("expected status=%v, got %v", tt.wantStatus, res.SafetyStatus)
-			}
-
-			if tt.wantHint {
-				if res.DiagnoseHint == "" {
-					t.Error("expected a diagnose hint but got empty string")
-				}
-				if !strings.Contains(res.DiagnoseHint, tt.config.ControlsDir) {
-					t.Errorf("hint missing controls dir: %s", res.DiagnoseHint)
-				}
-			} else if res.DiagnoseHint != "" {
-				t.Errorf("expected no hint for clean run, got: %s", res.DiagnoseHint)
-			}
-
-			if len(res.NextSteps) != tt.wantSteps {
-				t.Errorf("expected %d next steps, got %d", tt.wantSteps, len(res.NextSteps))
-			}
-			if res.NextSteps == nil {
-				t.Error("expected NextSteps to be initialized (non-nil)")
+			if status != tt.wantStatus {
+				t.Errorf("expected status=%v, got %v", tt.wantStatus, status)
 			}
 		})
 	}

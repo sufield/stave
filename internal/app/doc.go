@@ -14,7 +14,7 @@
 //   - [capabilities]: Capability registry advertising supported observation
 //     schemas, control DSL versions, source types, and control packs.
 //   - [contracts]: Dependency-injection interfaces (ObservationRepository,
-//     ControlRepository, FindingWriter, FindingMarshaler).
+//     ControlRepository, FindingMarshaler).
 //   - [ingest]: Snapshot ingestion and persistence for S3 observations.
 //
 // # Version Support

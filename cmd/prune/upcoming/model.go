@@ -7,7 +7,8 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-type upcomingItem struct {
+// UpcomingItem represents a single upcoming snapshot action item.
+type UpcomingItem struct {
 	DueAt          time.Time
 	Status         string
 	ControlID      string
@@ -19,7 +20,8 @@ type upcomingItem struct {
 	Remaining      time.Duration
 }
 
-type upcomingSummary struct {
+// UpcomingSummary holds aggregate counts for upcoming items by status.
+type UpcomingSummary struct {
 	Overdue int
 	DueNow  int
 	DueSoon int
@@ -27,14 +29,15 @@ type upcomingSummary struct {
 	Total   int
 }
 
-type upcomingOutput struct {
-	GeneratedAt  time.Time       `json:"generated_at"`
-	ControlsDir  string          `json:"controls_dir"`
-	Observations string          `json:"observations_dir"`
-	MaxUnsafe    string          `json:"max_unsafe"`
-	DueSoon      string          `json:"due_soon"`
-	Summary      upcomingSummary `json:"summary"`
-	Items        []upcomingItem  `json:"items"`
+// UpcomingOutput is the JSON-serializable output for the upcoming command.
+type UpcomingOutput struct {
+	GeneratedAt  time.Time        `json:"generated_at"`
+	ControlsDir  string           `json:"controls_dir"`
+	Observations string           `json:"observations_dir"`
+	MaxUnsafe    string           `json:"max_unsafe"`
+	DueSoon      string           `json:"due_soon"`
+	Summary      UpcomingSummary  `json:"summary"`
+	Items        []UpcomingItem   `json:"items"`
 }
 
 type upcomingFilter struct {

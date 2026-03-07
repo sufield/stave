@@ -130,7 +130,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	validateOpts.QuietMode = false
 	validateOpts.InFile = ""
 
-	// Capture stdout because runValidate writes through validateOutput()/os.Stdout.
+	// Capture stdout because runValidate writes through validateOutputWithOptions(validateOpts)/os.Stdout.
 	oldStdout := os.Stdout
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -174,7 +174,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExit(&cobra.Command{Use: "test"}, &buf, result, false)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
 
 	if err != nil {
 		t.Errorf("expected nil error for clean validation, got %v", err)
@@ -201,7 +201,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExit(&cobra.Command{Use: "test"}, &buf, result, false)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
 
 	if err == nil {
 		t.Error("expected error for validation with errors")
@@ -233,7 +233,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExit(&cobra.Command{Use: "test"}, &buf, result, false)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
 
 	if err == nil {
 		t.Error("expected error for validation with warnings")
@@ -266,7 +266,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExit(&cobra.Command{Use: "test"}, &buf, result, false)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
 
 	if err == nil {
 		t.Error("expected error for validation with errors")
@@ -296,7 +296,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExit(&cobra.Command{Use: "test"}, &buf, result, true)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, validateOpts)
 
 	// Check JSON output contains expected fields
 	output := buf.String()
@@ -337,7 +337,7 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := writeValidationText(&buf, result); err != nil {
+	if err := writeValidationTextWithOptions(&buf, result, validateOpts); err != nil {
 		t.Fatalf("writeValidationText failed: %v", err)
 	}
 	out := buf.String()
@@ -366,7 +366,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	_ = outputAndExit(&cobra.Command{Use: "test"}, &buf, result, true)
+	_ = outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, validateOpts)
 	out := buf.String()
 	if !strings.Contains(out, `"fix_hints"`) {
 		t.Fatalf("expected fix_hints in json output, got: %s", out)
@@ -402,7 +402,7 @@ func TestDiagnoseHelpText(t *testing.T) {
 func TestQuietModeOutputs(t *testing.T) {
 	// Test validateOutput with quiet mode
 	validateOpts.QuietMode = true
-	out := validateOutput()
+	out := validateOutputWithOptions(validateOpts)
 	if _, ok := out.(interface{ Name() string }); ok {
 		t.Error("quiet mode should return io.Discard, not stdout")
 	}

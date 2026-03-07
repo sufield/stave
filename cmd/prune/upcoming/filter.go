@@ -41,11 +41,11 @@ func newUpcomingFilter(criteria UpcomingFilterCriteria) (upcomingFilter, error) 
 	return filter, nil
 }
 
-func applyUpcomingFilter(items []upcomingItem, now time.Time, filter upcomingFilter) []upcomingItem {
+func applyUpcomingFilter(items []UpcomingItem, now time.Time, filter upcomingFilter) []UpcomingItem {
 	if len(items) == 0 {
 		return nil
 	}
-	out := make([]upcomingItem, 0, len(items))
+	out := make([]UpcomingItem, 0, len(items))
 	for _, item := range items {
 		if includeUpcomingItem(item, now, filter) {
 			out = append(out, item)
@@ -54,14 +54,14 @@ func applyUpcomingFilter(items []upcomingItem, now time.Time, filter upcomingFil
 	return out
 }
 
-func includeUpcomingItem(item upcomingItem, now time.Time, filter upcomingFilter) bool {
+func includeUpcomingItem(item UpcomingItem, now time.Time, filter upcomingFilter) bool {
 	return matchesUpcomingControl(item, filter) &&
 		matchesUpcomingResourceType(item, filter) &&
 		matchesUpcomingStatus(item, filter) &&
 		matchesUpcomingDueWindow(item, now, filter)
 }
 
-func matchesUpcomingControl(item upcomingItem, filter upcomingFilter) bool {
+func matchesUpcomingControl(item UpcomingItem, filter upcomingFilter) bool {
 	if len(filter.controlIDs) == 0 {
 		return true
 	}
@@ -69,7 +69,7 @@ func matchesUpcomingControl(item upcomingItem, filter upcomingFilter) bool {
 	return ok
 }
 
-func matchesUpcomingResourceType(item upcomingItem, filter upcomingFilter) bool {
+func matchesUpcomingResourceType(item UpcomingItem, filter upcomingFilter) bool {
 	if len(filter.assetTypes) == 0 {
 		return true
 	}
@@ -77,7 +77,7 @@ func matchesUpcomingResourceType(item upcomingItem, filter upcomingFilter) bool 
 	return ok
 }
 
-func matchesUpcomingStatus(item upcomingItem, filter upcomingFilter) bool {
+func matchesUpcomingStatus(item UpcomingItem, filter upcomingFilter) bool {
 	if len(filter.statuses) == 0 {
 		return true
 	}
@@ -85,7 +85,7 @@ func matchesUpcomingStatus(item upcomingItem, filter upcomingFilter) bool {
 	return ok
 }
 
-func matchesUpcomingDueWindow(item upcomingItem, now time.Time, filter upcomingFilter) bool {
+func matchesUpcomingDueWindow(item UpcomingItem, now time.Time, filter upcomingFilter) bool {
 	if filter.dueWithin == nil {
 		return true
 	}
