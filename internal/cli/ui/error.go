@@ -81,8 +81,9 @@ var (
 // ExitCode returns the appropriate exit code for an error.
 // Exit code contract:
 //   - 0: Success, no issues
+//   - 1: Security-audit gating failure
 //   - 2: Invalid input, schema validation failure
-//   - 3: Violations found (evaluate) or diagnostics found (diagnose)
+//   - 3: Violations found (apply) or diagnostics found (diagnose)
 //   - 4: Unexpected internal error
 //   - 130: Interrupted by SIGINT
 func ExitCode(err error) int {

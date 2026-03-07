@@ -39,6 +39,7 @@ Sharing:
 
 Exit Codes:
   0   Success, no issues
+  1   Security-audit gating failure
   2   Invalid input or validation failure
   3   Violations found (apply) or diagnostics found (diagnose)
   4   Unexpected internal error

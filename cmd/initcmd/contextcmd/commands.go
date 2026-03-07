@@ -182,7 +182,7 @@ func writeContextListItem(w io.Writer, item contextListItem) error {
 func runContextCreate(cmd *cobra.Command, args []string) error {
 	name := contexts.NormalizeName(args[0])
 	if name == "" {
-		return fmt.Errorf("context name cannot be empty")
+		return &ui.InputError{Err: fmt.Errorf("context name cannot be empty")}
 	}
 	rootAbs, err := filepath.Abs(strings.TrimSpace(contextCreateDir))
 	if err != nil {
@@ -190,7 +190,7 @@ func runContextCreate(cmd *cobra.Command, args []string) error {
 	}
 	fi, err := os.Stat(rootAbs)
 	if err != nil || !fi.IsDir() {
-		return fmt.Errorf("--dir must point to an existing directory: %s", rootAbs)
+		return &ui.InputError{Err: fmt.Errorf("--dir must point to an existing directory: %s", rootAbs)}
 	}
 
 	st, _, err := contexts.Load()
@@ -221,7 +221,7 @@ func runContextUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if _, ok := st.Contexts[name]; !ok {
-		return fmt.Errorf("context %q not found (available: %s)", name, strings.Join(st.Names(), ", "))
+		return &ui.InputError{Err: fmt.Errorf("context %q not found (available: %s)", name, strings.Join(st.Names(), ", "))}
 	}
 	st.Active = name
 	err = st.Save()
@@ -242,7 +242,7 @@ func runContextShow(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if !ok || ctx == nil {
-		return fmt.Errorf("no context selected; use `stave context create <name> --dir <path>` then `stave context use <name>`")
+		return &ui.InputError{Err: fmt.Errorf("no context selected; use `stave context create <name> --dir <path>` then `stave context use <name>`")}
 	}
 	selectedBy := "active"
 	if strings.TrimSpace(os.Getenv("STAVE_CONTEXT")) != "" {
@@ -286,7 +286,7 @@ func runContextDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if _, ok := st.Contexts[name]; !ok {
-		return fmt.Errorf("context %q not found", name)
+		return &ui.InputError{Err: fmt.Errorf("context %q not found", name)}
 	}
 	delete(st.Contexts, name)
 	if strings.TrimSpace(st.Active) == name {

@@ -28,9 +28,9 @@ func NewFixLoopCmd() *cobra.Command {
 	fixLoopAllowUnknown = cmdutil.ResolveAllowUnknownInputDefault()
 	cmd := &cobra.Command{
 		Use:   "fix-loop",
-		Short: "Run evaluate-before/evaluate-after/verify in one command",
+		Short: "Run apply-before/apply-after/verify in one command",
 		Long: `Fix-loop executes the remediation verification lifecycle in one run:
-evaluate before state, evaluate after state, compare findings, and emit a
+apply before state, apply after state, compare findings, and emit a
 remediation report suitable for CI/CD.
 
 Input:

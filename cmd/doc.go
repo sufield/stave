@@ -10,11 +10,12 @@
 //
 // Data & Artifacts: ingest, controls, packs, enforce, extractor, graph, report
 //
-// Utilities & Help: docs, bug-report, capabilities, config, alias, prompt, fix
+// Utilities & Help: docs, bug-report, capabilities, config, alias, prompt, fix, version, env, schemas
 //
 // # Exit Codes
 //
 //   - 0: Success
+//   - 1: Security-audit gating failure
 //   - 2: Input error (invalid flags, parse failure)
 //   - 3: Violations detected (apply command)
 //   - 4: Internal error

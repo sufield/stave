@@ -28,12 +28,13 @@ Exit codes are part of the public API and will not change within a major version
 | Code | Meaning | Stable? |
 |------|---------|---------|
 | 0 | Success / no violations | Yes |
+| 1 | Security-audit gating failure | Yes |
 | 2 | Input or validation error | Yes |
 | 3 | Violations detected | Yes |
 | 4 | Internal error | Yes |
 | 130 | Interrupted (SIGINT) | Yes |
 
-There is no exit code 1 for violations. Exit code 3 means violations.
+Exit code 1 is reserved for security-audit gating, not for violations. Exit code 3 means violations.
 
 ## CLI Flag Stability
 
