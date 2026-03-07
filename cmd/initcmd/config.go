@@ -212,23 +212,7 @@ const templateControlSample = `# ── Stave Control (` + string(kernel.SchemaC
 # params: {}
 `
 
-const templateObservationSample = `# ── Stave Observation (` + string(kernel.SchemaObservation) + `) ────────────────────────────────────
-#
-# An observation is a point-in-time snapshot of your cloud resources.
-# Stave evaluates observations against controls to find violations.
-#
-# File naming convention: YYYY-MM-DDTHH:MM:SSZ.json
-#   e.g. snapshots/raw/2026-01-11T00:00:00Z.json
-#
-# You need at least 2 observation files (two points in time) for
-# Stave to calculate unsafe duration windows.
-#
-# Remove all lines starting with # before use — JSON does not
-# support comments.
-#
-# Reference: https://stavecli.dev/docs/getting-started/quick-start
-#
-{
+const templateObservationSample = `{
   "schema_version": "` + string(kernel.SchemaObservation) + `",
   "generated_by": {
     "source_type": "aws-s3-snapshot",
