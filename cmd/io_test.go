@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/spf13/pflag"
-	"github.com/sufield/stave/cmd/diagnose"
-	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	"github.com/sufield/stave/cmd/diagnose"
+	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/ingest"
 )
 

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	"github.com/sufield/stave/cmd/cmdutil"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
