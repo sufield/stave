@@ -1,55 +1,24 @@
 // Package app provides the application layer that orchestrates use cases.
 //
-// This package connects domain logic with adapters, coordinating the evaluation
-// workflow without containing business rules itself. It implements the
-// "use case" layer in hexagonal architecture.
+// This package is a namespace for app-layer subpackages; the root contains
+// only integration and architecture tests. See the subpackages for all
+// application logic:
 //
-// # Main Components
-//
-//   - [diagnose.Run]: Orchestrates the diagnose command workflow
-//   - [diagnose.Config]: Configuration for a diagnose run
-//   - [validation.Run]: Orchestrates validate command artifact checks
-//   - [Capabilities]: Describes supported formats and control packs
-//
-// # Evaluation Workflow
-//
-// The `eval.EvaluateRun.Execute` method:
-//
-//  1. Loads control definitions from YAML files
-//  2. Loads observation snapshots from JSON files
-//  3. Validates schema and DSL versions
-//  4. Runs evaluation through app services over domain logic
-//  5. Writes findings to the configured output
-//
-// # Diagnosis Workflow
-//
-// The [DiagnoseRun.Execute] method:
-//
-//  1. Loads control definitions and observation snapshots
-//  2. Either loads existing evaluation results or runs evaluation internally
-//  3. Analyzes inputs and results for common issues
-//  4. Returns a diagnostic report with findings and recommendations
+//   - [eval]: Evaluation use-case orchestration (load controls/snapshots,
+//     run domain engine, write findings).
+//   - [diagnose]: Diagnosis use-case orchestration (analyze inputs/results
+//     for common issues).
+//   - [validation]: Validate-command orchestration (schema and DSL checks).
+//   - [service]: Cross-cutting services — evaluation, readiness, validation,
+//     and finding-detail enrichment (traces, exposure, remediation).
+//   - [capabilities]: Capability registry advertising supported observation
+//     schemas, control DSL versions, source types, and control packs.
+//   - [contracts]: Dependency-injection interfaces (ObservationRepository,
+//     ControlRepository, FindingWriter, FindingMarshaler).
+//   - [ingest]: Snapshot ingestion and persistence for S3 observations.
 //
 // # Version Support
 //
-// The package tracks supported versions for:
-//
-//   - Observation schema versions (e.g., "obs.v0.1")
-//   - Control DSL versions (e.g., "ctrl.v1")
-//   - Input source types (e.g., "terraform.plan_json")
-//
-// Use [IsSourceTypeSupported] to check compatibility for source_type fields.
-//
-// # Capabilities Discovery
-//
-// Use [GetCapabilities] to retrieve the complete set of supported formats,
-// versions, and available control packs for this version of Stave.
-//
-// # Construction
-//
-// Use constructors in subpackages:
-//
-//   - `eval.NewEvaluateRun(...)`
-//   - `diagnose.NewRun(...)`
-//   - `validation.NewRun(...)`
+// The package tracks supported versions for observation schemas (e.g., "obs.v0.1"),
+// control DSL versions (e.g., "ctrl.v1"), and input source types.
 package app
