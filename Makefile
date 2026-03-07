@@ -1,4 +1,4 @@
-.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz
+.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz
 
 # Binary name
 BINARY=stave
@@ -169,6 +169,14 @@ reproduce-release: sync-schemas
 	@echo ""
 	@echo "Note: Release archives (tar.gz/zip) include metadata that may"
 	@echo "differ across builds. Compare binary checksums, not archive checksums."
+
+## release-local: Build a local snapshot release with GoReleaser (no publish)
+release-local:
+	goreleaser release --snapshot --clean
+
+## release-check: Validate GoReleaser configuration
+release-check:
+	goreleaser check
 
 ## gofixer: Run full Go modernization workflow from gofixer.md
 gofixer:

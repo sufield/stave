@@ -20,17 +20,19 @@ Checksum and signature verification can be performed offline after downloading a
 
 ## How Releases Are Built
 
-Every tagged release (`v*`) triggers an automated GitHub Actions workflow that:
+Every tagged release (`v*`) triggers an automated GitHub Actions workflow powered by [GoReleaser](https://goreleaser.com/) that:
 
-1. **Runs the full test suite** before building any binaries.  
+1. **Validates the VERSION file** matches the git tag before building.
 2. **Cross-compiles** for five targets: `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, `windows/amd64`.
-3. **Uses deterministic build flags** to ensure reproducibility:  
-   - `CGO_ENABLED=0` — pure Go, no C dependencies  
-   - `-trimpath` — removes local filesystem paths from the binary  
-   - `-buildid=` — removes the build ID for reproducibility  
-   - `-ldflags "-s -w"` — strips debug symbols and DWARF information  
-4. **Injects the version** at build time via  
-   `-X github.com/sufield/stave/internal/version.Version=${VERSION}`.
+3. **Uses deterministic build flags** to ensure reproducibility:
+   - `CGO_ENABLED=0` — pure Go, no C dependencies
+   - `-trimpath` — removes local filesystem paths from the binary
+   - `-buildid=` — removes the build ID for reproducibility
+   - `-ldflags "-s -w"` — strips debug symbols and DWARF information
+4. **Injects build metadata** at build time via ldflags (version, commit, date, built-by).
+5. **Builds Docker images** for linux/amd64 and linux/arm64, published as multi-arch manifests to `ghcr.io/sufield/stave`.
+6. **Updates the Homebrew formula** in `sufield/homebrew-tap`.
+7. **Builds Linux packages** (deb, rpm, apk).
 
 No matrix build is needed — Go cross-compiles natively from a single runner.
 
@@ -44,13 +46,23 @@ Each GitHub Release includes:
 |----------|-------------|
 | `stave_<version>_<os>_<arch>.tar.gz` | Compressed binary for Linux and macOS targets |
 | `stave_<version>_windows_amd64.zip` | Compressed binary for Windows |
-| `SHA256SUMS` | SHA-256 checksums for all archives |
-| `stave_<version>_<os>_<arch>.tar.gz.sigstore.json` / `...zip.sigstore.json` | Sigstore cosign bundles signing each archive directly |
+| `stave_<version>_<os>_<arch>.deb` / `.rpm` / `.apk` | Linux packages (Debian, RPM, Alpine) |
+| `SHA256SUMS` | SHA-256 checksums for all archives and packages |
 | `SHA256SUMS.sigstore.json` | Sigstore cosign bundle signing the checksums |
 | `sbom.spdx.json` | SPDX SBOM for the Stave source and its dependencies |
 | `sbom.spdx.json.sigstore.json` | Sigstore cosign bundle signing the SBOM independently |
-| `provenance.json` | Build metadata (repo, workflow, SHA, run ID, ref, version) |
 | Build provenance attestation | GitHub-native SLSA provenance (attached to each release artifact) |
+
+### Installation Methods
+
+| Method | Command |
+|--------|---------|
+| Homebrew | `brew tap sufield/tap && brew install stave` |
+| Docker | `docker pull ghcr.io/sufield/stave:v<version>` |
+| Debian/Ubuntu | `sudo dpkg -i stave_<version>_linux_amd64.deb` |
+| RPM (Fedora/RHEL) | `sudo rpm -i stave_<version>_linux_amd64.rpm` |
+| Alpine | `sudo apk add --allow-untrusted stave_<version>_linux_amd64.apk` |
+| Binary | Download archive from GitHub Releases |
 
 ---
 
@@ -396,10 +408,11 @@ SBOM inspection is recommended for dependency review and compliance auditing.
 
 ## CI Quality Gates
 
-Every pull request must pass five checks before merging:
+Every pull request must pass six checks before merging:
 
 1. **Test** — `go test -v -race ./...`
 2. **Lint** — `golangci-lint` v2.8.0 with gosec, errcheck, govet, staticcheck
 3. **Vulnerability check** — `govulncheck` against the Go vulnerability database
 4. **License compliance** — `go-licenses check` with allowlist (Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC). Fails on GPL, AGPL, SSPL, LGPL, or unknown licenses. Run locally: `go-licenses check ./cmd/stave --allowed_licenses=Apache-2.0,MIT,BSD-2-Clause,BSD-3-Clause,ISC`
 5. **E2E** — Full end-to-end test suite (`scripts/e2e.sh`)
+6. **Release config** — `goreleaser check` validates the release configuration

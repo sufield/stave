@@ -1,0 +1,3 @@
+FROM scratch
+COPY stave /usr/local/bin/stave
+ENTRYPOINT ["stave"]

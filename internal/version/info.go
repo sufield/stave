@@ -8,6 +8,7 @@ var (
 	Prerelease = ""
 	Commit     = ""
 	Date       = ""
+	BuiltBy    = ""
 )
 
 func init() {
