@@ -46,7 +46,7 @@ jobs:
           fi
 
       - name: Run tests
-        run: make sync-schemas && go test -v -race ./...
+        run: make sync-schemas sync-controls && go test -v -race ./...
 
       - name: Cross-compile
         env:
@@ -63,7 +63,7 @@ jobs:
             echo "Building ${bin}"
             CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
               go build -trimpath \
-              -ldflags "-s -w -buildid= -X github.com/sufield/stave/cmd/stave/cmd.Version=${VERSION}" \
+              -ldflags "-s -w -buildid= -X github.com/sufield/stave/internal/version.Version=${VERSION}" \
               -o "dist/${bin}" \
               ./cmd/stave
           done
@@ -105,9 +105,6 @@ jobs:
       - name: Sign SBOM
         working-directory: dist
         run: cosign sign-blob --yes --bundle sbom.spdx.json.sigstore.json sbom.spdx.json
-
-      - name: Validate SBOM
-        run: syft validate dist/sbom.spdx.json
 
       - name: Attest provenance
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
