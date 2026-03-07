@@ -31,13 +31,13 @@ type UpcomingSummary struct {
 
 // UpcomingOutput is the JSON-serializable output for the upcoming command.
 type UpcomingOutput struct {
-	GeneratedAt  time.Time        `json:"generated_at"`
-	ControlsDir  string           `json:"controls_dir"`
-	Observations string           `json:"observations_dir"`
-	MaxUnsafe    string           `json:"max_unsafe"`
-	DueSoon      string           `json:"due_soon"`
-	Summary      UpcomingSummary  `json:"summary"`
-	Items        []UpcomingItem   `json:"items"`
+	GeneratedAt  time.Time       `json:"generated_at"`
+	ControlsDir  string          `json:"controls_dir"`
+	Observations string          `json:"observations_dir"`
+	MaxUnsafe    string          `json:"max_unsafe"`
+	DueSoon      string          `json:"due_soon"`
+	Summary      UpcomingSummary `json:"summary"`
+	Items        []UpcomingItem  `json:"items"`
 }
 
 type upcomingFilter struct {

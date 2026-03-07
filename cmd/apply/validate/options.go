@@ -192,4 +192,3 @@ func ensureValidateModeFlags(opts *options) error {
 	}
 	return nil
 }
-

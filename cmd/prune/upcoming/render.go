@@ -43,10 +43,6 @@ func renderUpcomingMarkdown(items []UpcomingItem, summary UpcomingSummary, opts 
 	})
 }
 
-func formatRemaining(d time.Duration) string {
-	return textout.FormatRemaining(d)
-}
-
 func toAdapterItems(items []UpcomingItem) []textout.UpcomingItem {
 	out := make([]textout.UpcomingItem, len(items))
 	for i, item := range items {
