@@ -10,7 +10,7 @@
 ## Concepts
 
 - [Design Philosophy](design-philosophy.md) — Why Stave works the way it does
-- [System Controls as Code](system-controls-as-code.md) — Controls-based safety evaluation
+- [System Controls as Code](system-invariant-as-code.md) — Controls-based safety evaluation
 - [Evaluation Semantics](evaluation-semantics.md) — How findings are produced
 - [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](observation-contract.md) — Observation data requirements
@@ -48,13 +48,10 @@
 
 - [Release Security](trust/02-release-security.md) — How releases are built and signed
 - [Verify a Release](trust/verify-release.md) — Step-by-step verification guide
-- [Homebrew Tap Setup](homebrew-tap-setup.md) — Homebrew distribution setup
-
 ## Project
 
 - [Stability and Versioning](project/stability.md)
 - [Scope and Limits](project/limits.md)
-- [Docs-as-Code](project/docs-as-code.md)
 
 ## Testing
 
