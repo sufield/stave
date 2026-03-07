@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -53,7 +54,7 @@ func filterSnapshotsBefore(snapshots []asset.Snapshot, cutoff time.Time) []asset
 	return filtered
 }
 
-func writeHygieneOutput(format ui.OutputFormat, report string, jsonOut hygieneapp.Output, w io.Writer) error {
+func writeHygieneOutput(format ui.OutputFormat, report hygieneapp.ReportRequest, jsonOut hygieneapp.Output, w io.Writer) error {
 	if format.IsJSON() {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
@@ -62,7 +63,7 @@ func writeHygieneOutput(format ui.OutputFormat, report string, jsonOut hygieneap
 		}
 		return nil
 	}
-	if _, err := io.WriteString(w, report); err != nil {
+	if err := outtext.WriteHygieneReport(w, report); err != nil {
 		return fmt.Errorf("write report: %w", err)
 	}
 	return nil

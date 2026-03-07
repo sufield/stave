@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/domain/asset"
 )
@@ -56,7 +57,11 @@ func TestRenderMarkdown(t *testing.T) {
 			{Name: "Current violations", Current: 4, Previous: 6},
 		},
 	}
-	out := reportReq.RenderMarkdown()
+	var b strings.Builder
+	if err := outtext.WriteHygieneReport(&b, reportReq); err != nil {
+		t.Fatalf("WriteHygieneReport: %v", err)
+	}
+	out := b.String()
 
 	contains := []string{
 		"# Snapshot Hygiene Report",
