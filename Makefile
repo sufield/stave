@@ -243,7 +243,9 @@ SYNC_EXCLUDES = \
 	--exclude='dev/' \
 	--exclude='.tmp/' \
 	--exclude='/stave' \
-	--exclude='.lychee.toml'
+	--exclude='.lychee.toml' \
+	--exclude='dist/' \
+	--exclude='dist-local/'
 
 ## sync-public-dry: Preview sync to public repo (no changes)
 sync-public-dry:
