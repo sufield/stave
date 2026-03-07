@@ -1,0 +1,211 @@
+{
+  "schema_version": "obs.v0.1",
+  "snapshots": [
+    {
+      "schema_version": "obs.v0.1",
+      "generated_by": {
+        "source_type": "aws-s3-snapshot",
+        "tool": "stave",
+        "tool_version": "0.1.0"
+      },
+      "captured_at": "2026-01-10T00:00:00Z",
+      "assets": [
+        {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws",
+          "properties": {
+            "storage": {
+              "kind": "bucket",
+              "name": "private-test-bucket",
+              "visibility": {
+                "public_read": false,
+                "public_list": false,
+                "public_write": false,
+                "public_read_via_policy": false,
+                "public_read_via_acl": false,
+                "public_list_via_policy": false,
+                "authenticated_users_read": false,
+                "authenticated_users_write": false,
+                "public_acl_writable": false,
+                "authenticated_users_acl_writable": false,
+                "public_acl_readable": false,
+                "authenticated_users_acl_readable": false,
+                "latent_public_read": false,
+                "latent_public_list": false
+              },
+              "acl": {
+                "has_full_control_public": false,
+                "has_full_control_authenticated": false
+              },
+              "controls": {
+                "public_access_fully_blocked": true,
+                "account_public_access_fully_blocked": true,
+                "public_access_block": {
+                  "block_public_acls": true,
+                  "ignore_public_acls": true,
+                  "block_public_policy": true,
+                  "restrict_public_buckets": true
+                }
+              },
+              "encryption": {
+                "at_rest_enabled": true,
+                "algorithm": "aws:kms",
+                "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/test-key",
+                "in_transit_enforced": true
+              },
+              "versioning": {
+                "enabled": true,
+                "mfa_delete_enabled": true
+              },
+              "logging": {
+                "enabled": true,
+                "target_bucket": "logging-bucket",
+                "target_prefix": "private-test/"
+              },
+              "access": {
+                "external_accounts": [],
+                "external_account_ids": [],
+                "has_external_access": false,
+                "has_external_write": false,
+                "has_wildcard_policy": false
+              },
+              "policy": {
+                "has_ip_condition": true,
+                "has_vpc_condition": true,
+                "effective_network_scope": "vpc"
+              },
+              "lifecycle": {
+                "rules_configured": true,
+                "rule_count": 1,
+                "has_expiration": true,
+                "has_transition": true,
+                "min_expiration_days": 2555,
+                "has_noncurrent_version_expiration": true
+              },
+              "object_lock": {
+                "enabled": true,
+                "mode": "COMPLIANCE",
+                "retention_days": 2555
+              },
+              "prefix_exposure": {
+                "has_policy_evidence": false,
+                "has_acl_evidence": false,
+                "policy_public_read_scopes": [],
+                "policy_source_by_scope": {},
+                "policy_public_read_blocked": true,
+                "acl_public_read_all": false,
+                "acl_public_read_blocked": true
+              },
+              "website": null,
+              "tags": {"containsPHI": "true", "data-classification": "phi", "compliance": "hipaa"}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "schema_version": "obs.v0.1",
+      "generated_by": {
+        "source_type": "aws-s3-snapshot",
+        "tool": "stave",
+        "tool_version": "0.1.0"
+      },
+      "captured_at": "2026-01-14T00:00:00Z",
+      "assets": [
+        {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws",
+          "properties": {
+            "storage": {
+              "kind": "bucket",
+              "name": "private-test-bucket",
+              "visibility": {
+                "public_read": false,
+                "public_list": false,
+                "public_write": false,
+                "public_read_via_policy": false,
+                "public_read_via_acl": false,
+                "public_list_via_policy": false,
+                "authenticated_users_read": false,
+                "authenticated_users_write": false,
+                "public_acl_writable": false,
+                "authenticated_users_acl_writable": false,
+                "public_acl_readable": false,
+                "authenticated_users_acl_readable": false,
+                "latent_public_read": false,
+                "latent_public_list": false
+              },
+              "acl": {
+                "has_full_control_public": false,
+                "has_full_control_authenticated": false
+              },
+              "controls": {
+                "public_access_fully_blocked": true,
+                "account_public_access_fully_blocked": true,
+                "public_access_block": {
+                  "block_public_acls": true,
+                  "ignore_public_acls": true,
+                  "block_public_policy": true,
+                  "restrict_public_buckets": true
+                }
+              },
+              "encryption": {
+                "at_rest_enabled": true,
+                "algorithm": "aws:kms",
+                "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/test-key",
+                "in_transit_enforced": true
+              },
+              "versioning": {
+                "enabled": true,
+                "mfa_delete_enabled": true
+              },
+              "logging": {
+                "enabled": true,
+                "target_bucket": "logging-bucket",
+                "target_prefix": "private-test/"
+              },
+              "access": {
+                "external_accounts": [],
+                "external_account_ids": [],
+                "has_external_access": false,
+                "has_external_write": false,
+                "has_wildcard_policy": false
+              },
+              "policy": {
+                "has_ip_condition": true,
+                "has_vpc_condition": true,
+                "effective_network_scope": "vpc"
+              },
+              "lifecycle": {
+                "rules_configured": true,
+                "rule_count": 1,
+                "has_expiration": true,
+                "has_transition": true,
+                "min_expiration_days": 2555,
+                "has_noncurrent_version_expiration": true
+              },
+              "object_lock": {
+                "enabled": true,
+                "mode": "COMPLIANCE",
+                "retention_days": 2555
+              },
+              "prefix_exposure": {
+                "has_policy_evidence": false,
+                "has_acl_evidence": false,
+                "policy_public_read_scopes": [],
+                "policy_source_by_scope": {},
+                "policy_public_read_blocked": true,
+                "acl_public_read_all": false,
+                "acl_public_read_blocked": true
+              },
+              "website": null,
+              "tags": {"containsPHI": "true", "data-classification": "phi", "compliance": "hipaa"}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

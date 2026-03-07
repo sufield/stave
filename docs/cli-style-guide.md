@@ -9,7 +9,7 @@ This guide keeps Stave CLI output consistent, readable, and automation-friendly.
 3. Preserve script-safe behavior:
    - machine output on stdout
    - messaging/errors on stderr
-4. Use stable exit codes from `internal/clierr`.
+4. Use stable exit codes from `internal/cli/ui`.
 5. Never require prompts for normal operation.
 6. Reserve `-v/--verbose` for verbosity and use `--version` for version display.
 7. Use lowercase, concise descriptions for commands/flags and avoid trailing periods.
