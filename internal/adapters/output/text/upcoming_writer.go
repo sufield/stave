@@ -2,7 +2,6 @@ package text
 
 import (
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -35,12 +34,6 @@ type UpcomingSummary struct {
 type UpcomingRenderOptions struct {
 	Now              time.Time
 	DueSoonThreshold time.Duration
-}
-
-// WriteUpcomingMarkdown writes a full upcoming report as Markdown.
-func WriteUpcomingMarkdown(w io.Writer, items []UpcomingItem, summary UpcomingSummary, opts UpcomingRenderOptions) error {
-	_, err := io.WriteString(w, RenderUpcomingMarkdown(items, summary, opts))
-	return err
 }
 
 // RenderUpcomingMarkdown renders a full upcoming report as a Markdown string.
