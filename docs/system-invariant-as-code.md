@@ -1,17 +1,15 @@
 ---
-title: "System Controls as Code"
-sidebar_label: "System Controls as Code"
+title: "System Invariant as Code"
+sidebar_label: "System Invariant as Code"
 sidebar_position: 2
-description: "What system controls as code means in Stave, and how it differs from OPA, IaC scanners, and CSPM tools."
+description: "What system invariant as code means in Stave, and how it differs from OPA, IaC scanners, and CSPM tools."
 ---
 
-# System Controls as Code
-
-Date introduced: 2026-02
+# System Invariant as Code
 
 ## Definition
 
-System Controls as Code means you define a small set of safety truths that must always hold for your system, then evaluate snapshots against those truths.
+System Invariant as Code means you define a small set of safety truths that must always hold for your system, then evaluate snapshots against those truths.
 
 In Stave, a control is a YAML rule (for example: "PHI buckets are never public").
 A finding is produced only when observed system state violates that rule.

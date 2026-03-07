@@ -7,7 +7,7 @@ description: "Deterministic evaluation behavior, predicate matching rules, and o
 
 # Evaluation Semantics
 
-This page defines how Stave evaluates controls over observations and how results are produced.
+This covers how Stave evaluates controls over observations and how results are produced.
 
 ## Determinism Model
 

@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stave CLI | Configuration Safety, Simplified</title>
+  <meta name="description" content="Stave CLI helps teams validate, evaluate, and diagnose infrastructure configuration risk from offline snapshots.">
+  <style>
+    :root {
+      --bg-a: #061523;
+      --bg-b: #0d2235;
+      --panel: #102a41;
+      --panel-2: #15344e;
+      --line: #28506d;
+      --text: #eff7ff;
+      --muted: #a5c2d6;
+      --accent: #2dd4bf;
+      --accent-2: #f59e0b;
+      --ok: #22c55e;
+      --warn: #fb7185;
+      --shadow: 0 24px 64px rgba(4, 12, 21, 0.45);
+      --radius: 18px;
+      --max: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI Variable", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 540px at -8% -20%, rgba(45, 212, 191, 0.18), transparent 70%),
+        radial-gradient(900px 460px at 110% -10%, rgba(245, 158, 11, 0.16), transparent 68%),
+        linear-gradient(170deg, var(--bg-a), var(--bg-b));
+      min-height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    .bg-shape {
+      position: fixed;
+      z-index: -1;
+      border-radius: 999px;
+      filter: blur(64px);
+      opacity: 0.28;
+      pointer-events: none;
+    }
+
+    .shape-1 {
+      width: 300px;
+      height: 300px;
+      background: var(--accent);
+      left: -90px;
+      top: 180px;
+    }
+
+    .shape-2 {
+      width: 240px;
+      height: 240px;
+      background: var(--accent-2);
+      right: -80px;
+      top: 520px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .wrap {
+      width: min(var(--max), calc(100% - 2.4rem));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+      background: rgba(6, 21, 35, 0.72);
+      border-bottom: 1px solid rgba(160, 194, 214, 0.16);
+    }
+
+    .topbar-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(140deg, var(--accent), #36a6ff);
+      display: grid;
+      place-items: center;
+      color: #06202d;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 12px 26px rgba(25, 162, 192, 0.35);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .nav a {
+      padding: 0.45rem 0.6rem;
+      border-radius: 8px;
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      border-radius: 999px;
+      padding: 0.72rem 1.08rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, var(--accent), #31c2ff);
+      color: #062635;
+      box-shadow: 0 14px 30px rgba(31, 165, 205, 0.38);
+    }
+
+    .btn-secondary {
+      border-color: rgba(160, 194, 214, 0.3);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: center;
+      padding: 4.2rem 0 3.4rem;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: rise-in 0.74s ease forwards;
+    }
+
+    .hero .fade-in:nth-child(1) { animation-delay: 0.04s; }
+    .hero .fade-in:nth-child(2) { animation-delay: 0.12s; }
+    .hero .fade-in:nth-child(3) { animation-delay: 0.2s; }
+    .hero .fade-in:nth-child(4) { animation-delay: 0.28s; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(160, 194, 214, 0.32);
+      border-radius: 999px;
+      padding: 0.32rem 0.7rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+    }
+
+    .hero h1 {
+      margin: 0.9rem 0 0.7rem;
+      font-size: clamp(2rem, 4.6vw, 3.7rem);
+      line-height: 1.07;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      margin: 0 0 1.4rem;
+      color: var(--muted);
+      line-height: 1.72;
+      max-width: 58ch;
+      font-size: 1.02rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1.3rem;
+    }
+
+    .signal-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .signal {
+      border: 1px solid rgba(160, 194, 214, 0.28);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 999px;
+      padding: 0.36rem 0.72rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(16, 42, 65, 0.95), rgba(12, 31, 49, 0.95));
+      border: 1px solid rgba(160, 194, 214, 0.2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .terminal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 0.95rem;
+      border-bottom: 1px solid rgba(160, 194, 214, 0.2);
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .lights {
+      display: inline-flex;
+      gap: 0.35rem;
+    }
+
+    .lights span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      display: block;
+    }
+
+    .terminal-body {
+      padding: 1rem;
+      font-family: "Courier New", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.58;
+      color: #d9efff;
+    }
+
+    .line-mono {
+      white-space: pre-wrap;
+      margin: 0.16rem 0;
+    }
+
+    .line-mono .prompt {
+      color: var(--accent);
+    }
+
+    .line-mono .ok {
+      color: var(--ok);
+    }
+
+    .line-mono .warn {
+      color: var(--warn);
+    }
+
+    .mini {
+      margin-top: 0.8rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-top: 1px solid rgba(160, 194, 214, 0.16);
+      padding: 0.9rem 1rem;
+      font-family: "Courier New", "SFMono-Regular", Consolas, monospace;
+      color: #c6e7ff;
+      font-size: 0.83rem;
+      line-height: 1.52;
+    }
+
+    section {
+      padding: 1.6rem 0;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.2rem);
+      letter-spacing: -0.01em;
+    }
+
+    .section-sub {
+      margin: 0.74rem 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 74ch;
+    }
+
+    .features {
+      margin-top: 1.35rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.95rem;
+    }
+
+    .feature {
+      background: linear-gradient(180deg, rgba(21, 52, 78, 0.82), rgba(14, 38, 58, 0.82));
+      border: 1px solid rgba(160, 194, 214, 0.2);
+      border-radius: 14px;
+      padding: 1rem;
+      transform: translateY(10px);
+      opacity: 0;
+      transition: transform 0.26s ease, border-color 0.26s ease, background 0.26s ease;
+    }
+
+    .feature h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+
+    .feature:hover {
+      border-color: rgba(45, 212, 191, 0.6);
+      transform: translateY(-2px);
+      background: linear-gradient(180deg, rgba(22, 57, 85, 0.9), rgba(14, 42, 63, 0.9));
+    }
+
+    .feature.revealed {
+      animation: rise-in 0.52s ease forwards;
+    }
+
+    .workflow-grid {
+      margin-top: 1.2rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .step {
+      border: 1px solid rgba(160, 194, 214, 0.18);
+      border-radius: 14px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .step b {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #d7edff;
+      font-size: 0.98rem;
+    }
+
+    .step code {
+      display: block;
+      margin-top: 0.5rem;
+      color: #a7f3d0;
+      font-size: 0.83rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .install {
+      margin-top: 1.2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+    }
+
+    .install-card {
+      border: 1px solid rgba(160, 194, 214, 0.2);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1rem;
+    }
+
+    .install-card h4 {
+      margin: 0 0 0.6rem;
+      font-size: 0.98rem;
+    }
+
+    .install-card pre {
+      margin: 0;
+      padding: 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(160, 194, 214, 0.16);
+      background: rgba(7, 19, 31, 0.6);
+      color: #c7e8ff;
+      overflow: auto;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .cta-band {
+      margin: 2.1rem 0 1.8rem;
+      padding: 1.2rem;
+      border-radius: 18px;
+      border: 1px solid rgba(160, 194, 214, 0.22);
+      background:
+        radial-gradient(480px 200px at 15% 0%, rgba(45, 212, 191, 0.24), transparent 70%),
+        radial-gradient(460px 220px at 100% 100%, rgba(245, 158, 11, 0.18), transparent 75%),
+        rgba(10, 30, 47, 0.86);
+      box-shadow: var(--shadow);
+    }
+
+    .cta-band h3 {
+      margin: 0 0 0.5rem;
+      font-size: clamp(1.4rem, 2.6vw, 2rem);
+    }
+
+    .cta-band p {
+      margin: 0 0 0.9rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    footer {
+      border-top: 1px solid rgba(160, 194, 214, 0.18);
+      padding: 1.2rem 0 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    footer .links {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.55rem;
+    }
+
+    @keyframes rise-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+      .install {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner {
+        min-height: 62px;
+      }
+      .nav {
+        display: none;
+      }
+      .features {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        padding-top: 3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-shape shape-1" aria-hidden="true"></div>
+  <div class="bg-shape shape-2" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">S</span>
+        <span>Stave CLI</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#install">Install</a>
+        <a href="#docs">Docs</a>
+      </nav>
+      <a class="btn btn-primary" href="#install">Get started</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section>
+      <div class="wrap hero">
+        <div>
+          <span class="eyebrow fade-in">Offline Security CLI</span>
+          <h1 class="fade-in">Configuration safety, simplified.</h1>
+          <p class="fade-in">
+            Stave helps you validate, plan, apply, and diagnose infrastructure risk from snapshots.
+            No cloud credentials, no remote calls, and deterministic outputs for repeatable CI runs.
+          </p>
+          <div class="hero-actions fade-in">
+            <a class="btn btn-primary" href="#quickstart">Run quickstart</a>
+            <a class="btn btn-secondary" href="#docs">Read documentation</a>
+          </div>
+          <div class="signal-row fade-in">
+            <span class="signal">Offline by design</span>
+            <span class="signal">Deterministic with --now</span>
+            <span class="signal">JSON + text outputs</span>
+          </div>
+        </div>
+        <div class="panel fade-in">
+          <div class="terminal-head">
+            <span>stave-demo.sh</span>
+            <span class="lights" aria-hidden="true"><span></span><span></span><span></span></span>
+          </div>
+          <div class="terminal-body">
+            <p class="line-mono"><span class="prompt">$</span> stave validate --controls ./controls --observations ./obs</p>
+            <p class="line-mono"><span class="ok">OK</span> input schemas valid (ctrl.v1, obs.v0.1)</p>
+            <p class="line-mono"><span class="prompt">$</span> stave plan --controls ./controls --observations ./obs</p>
+            <p class="line-mono"><span class="ok">READY</span> prerequisites passed</p>
+            <p class="line-mono"><span class="prompt">$</span> stave apply --controls ./controls --observations ./obs --max-unsafe 7d</p>
+            <p class="line-mono"><span class="warn">UNSAFE</span> 3 violations, 2 controls affected</p>
+          </div>
+          <div class="mini">
+            { "schema_version": "out.v0.1", "summary": { "violations": 3, "assets_evaluated": 41 } }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <h2 class="section-title">Everything you need to enforce configuration safety with confidence</h2>
+        <p class="section-sub">
+          Stave ships with a full workflow for checks before, during, and after evaluation, from offline input validation
+          to remediation verification and diagnostics.
+        </p>
+        <div class="features">
+          <article class="feature"><h3>Fast and Automated</h3><p>Run the full loop with focused commands that fit local runs and CI pipelines.</p></article>
+          <article class="feature"><h3>Offline by Design</h3><p>Works on local files only. No network dependencies and no cloud credentials required.</p></article>
+          <article class="feature"><h3>Deterministic Runs</h3><p>Pin time with <code>--now</code> to make outputs reproducible across environments.</p></article>
+          <article class="feature"><h3>Policy as Code</h3><p>Control definitions are versioned YAML and validated against explicit schemas.</p></article>
+          <article class="feature"><h3>Readable Diagnostics</h3><p>Use <code>diagnose</code>, <code>trace</code>, and <code>explain</code> to understand why a finding exists.</p></article>
+          <article class="feature"><h3>Multiple Output Modes</h3><p>Emit JSON for automation or text summaries for operators and security reviews.</p></article>
+          <article class="feature"><h3>Snapshot Lifecycle</h3><p>Plan, quality-check, archive, and prune snapshots with built-in lifecycle commands.</p></article>
+          <article class="feature"><h3>Verification Workflow</h3><p>Compare before and after states to prove remediations reduced risk.</p></article>
+          <article class="feature"><h3>CI Policy Gates</h3><p>Enforce fail-on-new and gate checks in pull requests and release pipelines.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="wrap">
+        <h2 class="section-title">A clear operational workflow</h2>
+        <p class="section-sub">Move from input checks to evaluated findings and targeted remediation without guesswork.</p>
+        <div class="workflow-grid">
+          <article class="step">
+            <b>1. Validate and plan</b>
+            Catch schema and readiness issues before running the evaluator.
+            <code>stave validate --controls ./controls --observations ./obs
+stave plan --controls ./controls --observations ./obs</code>
+          </article>
+          <article class="step">
+            <b>2. Apply controls</b>
+            Evaluate snapshots and produce machine-readable findings.
+            <code>stave apply --controls ./controls --observations ./obs \
+  --max-unsafe 7d --format json > evaluation.json</code>
+          </article>
+          <article class="step">
+            <b>3. Diagnose and verify</b>
+            Explain findings, track fixes, and verify remediation impact.
+            <code>stave diagnose --previous-output evaluation.json
+stave verify --before ./obs-before --after ./obs-after</code>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="wrap">
+        <h2 class="section-title">Install and run</h2>
+        <p class="section-sub">Choose your preferred setup path. The page is fully static and self-contained for easy sharing.</p>
+        <div class="install">
+          <article class="install-card">
+            <h4>Install with Go</h4>
+            <pre><code>go install github.com/sufield/stave/cmd/stave@latest
+stave version</code></pre>
+          </article>
+          <article class="install-card" id="quickstart">
+            <h4>Quickstart from source</h4>
+            <pre><code>git clone https://github.com/sufield/stave.git
+cd stave
+make build
+./stave quickstart</code></pre>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap cta-band">
+        <h3>Start your first safety loop in under a minute</h3>
+        <p>
+          Validate inputs, run plan checks, apply controls, and diagnose findings in one consistent CLI workflow.
+          Keep it offline, deterministic, and easy to automate.
+        </p>
+        <a class="btn btn-primary" href="#quickstart">Get started with Stave</a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="docs">
+    <div class="wrap">
+      <div>Stave CLI landing page</div>
+      <div class="links">
+        <a href="README.md">README</a>
+        <a href="docs/user-docs.md">User docs</a>
+        <a href="docs/architecture/overview.md">Architecture</a>
+        <a href="CONTRIBUTING.md">Contributing</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var items = document.querySelectorAll(".feature");
+      if (!("IntersectionObserver" in window)) {
+        items.forEach(function (el) { el.classList.add("revealed"); });
+        return;
+      }
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var idx = Array.prototype.indexOf.call(items, entry.target);
+          entry.target.style.animationDelay = String(Math.min(idx * 0.06, 0.42)) + "s";
+          entry.target.classList.add("revealed");
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.2 });
+      items.forEach(function (item) { observer.observe(item); });
+    })();
+  </script>
+</body>
+</html>

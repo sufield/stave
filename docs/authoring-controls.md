@@ -1,11 +1,11 @@
 ---
-title: "Authoring Controls"
-sidebar_label: "Authoring Controls"
+title: "Authoring Invariants"
+sidebar_label: "Authoring Invariants"
 sidebar_position: 3
-description: "Customer-facing guide for creating controls without changing Go code."
+description: "Customer-facing guide for creating invariants without changing Go code."
 ---
 
-# Create Your Own Control
+# Create Your Own Custom Invariant
 
 This guide is for security engineers who want to add custom checks without editing Go code.
 
