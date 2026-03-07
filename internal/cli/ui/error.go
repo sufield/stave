@@ -171,6 +171,12 @@ func SafetyExitError(status string) error {
 	}
 }
 
+// IsInputError returns true if the error wraps an InputError.
+func IsInputError(err error) bool {
+	var inputErr *InputError
+	return errors.As(err, &inputErr)
+}
+
 // IsSentinel returns true if the error has explicit exit-code mapping.
 // These errors produce specific exit codes rather than the default exit 2.
 func IsSentinel(err error) bool {

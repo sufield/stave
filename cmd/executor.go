@@ -218,6 +218,11 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 			WithTitle("Input validation failed").
 			WithAction(suggested + "Run `stave validate` with the same inputs to get actionable fix hints.").
 			WithURL(docsRef)
+	case ui.IsInputError(err):
+		return ui.NewErrorInfo(ui.CodeInvalidInput, message).
+			WithTitle("Input validation failed").
+			WithAction(suggested + "Check the command arguments and rerun with -v or -vv for additional context.").
+			WithURL(docsRef)
 	default:
 		return ui.NewErrorInfo(ui.CodeInternalError, message).
 			WithTitle("Command failed").
