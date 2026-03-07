@@ -1,11 +1,11 @@
 ---
-title: "Authoring Controls"
+title: "Authoring Invariants"
 sidebar_label: "Authoring"
 sidebar_position: 1
-description: "How to write, test, and review custom Stave control definitions."
+description: "How to write, test, and review custom Stave invariant definitions."
 ---
 
-# Authoring Controls
+# Authoring Invariants
 
 This guide explains how to write new control definitions for Stave.
 
@@ -32,7 +32,7 @@ controls/s3/
 └── misc/                # Controls and completeness (CONTROLS, INCOMPLETE)
 ```
 
-Place new controls in the appropriate category directory. Create a new directory if no existing category fits.
+Place new invariants in the appropriate category directory. Create a new directory if no existing category fits.
 
 ## ID Convention
 
@@ -93,7 +93,7 @@ remediation:
 | `list_empty` | List is empty or nil | `{field: properties.audience, op: list_empty, value: true}` |
 | `not_subset_of_field` | List has elements not in another | `{field: properties.scopes, op: not_subset_of_field, value: properties.allowed_scopes}` |
 
-**Semantic notes:**
+**Notes:**
 - Missing fields do **not** match `eq false`. Only explicitly set `false` triggers `eq false`.
 - Missing fields **do** match `ne "value"`. Absence counts as "not equal."
 
