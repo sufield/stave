@@ -180,6 +180,11 @@ func validateMaxUnsafeDuration(ctl *ControlDefinition) []diag.Issue {
 		}
 	}
 
+	// If Prepare() already validated this parameter successfully, skip re-parse.
+	if ctl.Prepared.Ready && ctl.Prepared.HasMaxUnsafeDuration {
+		return nil
+	}
+
 	_, err := kernel.ParseDuration(raw)
 	if err == nil {
 		return nil

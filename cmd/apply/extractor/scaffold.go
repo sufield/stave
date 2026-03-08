@@ -13,9 +13,6 @@ import (
 )
 
 func runScaffold(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
-	}
 	if opts == nil {
 		opts = defaultOptions()
 	}
