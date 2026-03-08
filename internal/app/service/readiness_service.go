@@ -115,7 +115,7 @@ func readinessIssueStatus(issue diag.Issue) validation.PrereqStatus {
 }
 
 func parseReadinessInputs(maxUnsafeStr, nowStr string) (time.Duration, time.Time, error) {
-	dur, err := timeutil.ParseDurationFlag(strings.TrimSpace(maxUnsafeStr), "max-unsafe")
+	dur, err := timeutil.ParseDuration(strings.TrimSpace(maxUnsafeStr))
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("%w: %s", ErrInvalidMaxUnsafe, err)
 	}
@@ -125,7 +125,7 @@ func parseReadinessInputs(maxUnsafeStr, nowStr string) (time.Duration, time.Time
 		return dur, time.Time{}, nil
 	}
 
-	now, err := timeutil.ParseRFC3339(nowStr, "--now")
+	now, err := timeutil.ParseTimestamp(nowStr)
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("%w: %v", ErrInvalidNow, err)
 	}

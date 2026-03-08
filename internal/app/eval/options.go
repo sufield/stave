@@ -58,10 +58,10 @@ func (o Options) Validate() (ParsedOptions, error) {
 	if err := o.validateIntegrityFlags(); err != nil {
 		return ParsedOptions{}, err
 	}
-	if err := validateFilePath(o.IntegrityManifest, "--integrity-manifest"); err != nil {
+	if err := validateFilePath(o.IntegrityManifest, "integrity-manifest"); err != nil {
 		return ParsedOptions{}, err
 	}
-	if err := validateFilePath(o.IntegrityPublicKey, "--integrity-public-key"); err != nil {
+	if err := validateFilePath(o.IntegrityPublicKey, "integrity-public-key"); err != nil {
 		return ParsedOptions{}, err
 	}
 
@@ -100,10 +100,10 @@ func (o Options) normalize() Options {
 
 func (o Options) validateIntegrityFlags() error {
 	if o.IntegrityPublicKey != "" && o.IntegrityManifest == "" {
-		return fmt.Errorf("--integrity-public-key requires --integrity-manifest")
+		return fmt.Errorf("integrity-public-key requires integrity-manifest")
 	}
 	if o.ObservationsSource.IsStdin() && o.IntegrityManifest != "" {
-		return fmt.Errorf("--integrity-manifest cannot be used with --observations - (stdin mode)")
+		return fmt.Errorf("integrity-manifest cannot be used with observations - (stdin mode)")
 	}
 	return nil
 }
@@ -131,7 +131,11 @@ func validateFilePath(path, flag string) error {
 }
 
 func (o Options) parseMaxUnsafeDuration() (time.Duration, error) {
-	return timeutil.ParseDurationFlag(o.MaxUnsafe, "--max-unsafe")
+	d, err := timeutil.ParseDuration(o.MaxUnsafe)
+	if err != nil {
+		return 0, fmt.Errorf("invalid max-unsafe: %w", err)
+	}
+	return d, nil
 }
 
 // parseNowTime parses the --now flag into a time.Time. A zero value means
@@ -140,7 +144,7 @@ func (o Options) parseNowTime() (time.Time, error) {
 	if o.NowTime == "" {
 		return time.Time{}, nil
 	}
-	return timeutil.ParseRFC3339(o.NowTime, "--now")
+	return timeutil.ParseTimestamp(o.NowTime)
 }
 
 func (o Options) resolveContextName() string {

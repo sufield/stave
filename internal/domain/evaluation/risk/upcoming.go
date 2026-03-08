@@ -43,7 +43,7 @@ func ValidateStatuses(statuses []string) ([]Status, error) {
 			continue
 		}
 		if !ValidStatus(normalized) {
-			return nil, fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", raw)
+			return nil, fmt.Errorf("invalid status %q (use: OVERDUE, DUE_NOW, UPCOMING)", raw)
 		}
 		out = append(out, normalized)
 	}

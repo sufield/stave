@@ -78,6 +78,53 @@ func RenderSCP(targets []BucketTarget) (string, error) {
 	return string(out) + "\n", nil
 }
 
+// FindingRef is a minimal representation of an evaluation finding used for
+// target extraction. It avoids coupling this package to domain types.
+type FindingRef struct {
+	ControlID string
+	AssetID   string
+}
+
+// ExtractBucketTargets filters findings to S3 public-exposure controls,
+// deduplicates by asset ID, and returns sorted bucket targets.
+func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
+	seen := make(map[string]struct{})
+	targets := make([]BucketTarget, 0)
+	for _, f := range findings {
+		if !strings.HasPrefix(f.ControlID, "CTL.S3.PUBLIC.") {
+			continue
+		}
+		assetID := strings.TrimSpace(f.AssetID)
+		if assetID == "" {
+			continue
+		}
+		if _, ok := seen[assetID]; ok {
+			continue
+		}
+		seen[assetID] = struct{}{}
+		targets = append(targets, BucketTarget{
+			AssetID:    assetID,
+			BucketName: extractBucketName(assetID),
+		})
+	}
+	SortTargets(targets)
+	return targets
+}
+
+func extractBucketName(assetID string) string {
+	s := strings.TrimSpace(assetID)
+	s = strings.TrimPrefix(s, "arn:aws:s3:::")
+	s = strings.TrimPrefix(s, "aws:s3:::")
+	s = strings.TrimPrefix(s, "s3://")
+	if i := strings.IndexByte(s, '/'); i >= 0 {
+		s = s[:i]
+	}
+	if s == "" {
+		return assetID
+	}
+	return s
+}
+
 func terraformResourceName(bucket string) string {
 	if bucket == "" {
 		return "bucket"

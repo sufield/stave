@@ -2,7 +2,6 @@ package apply
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -19,7 +19,6 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -54,12 +53,6 @@ type applyProfileOptions struct {
 	quiet           bool
 }
 
-// ObservationBundle represents a profile input observations bundle.
-type ObservationBundle struct {
-	SchemaVersion kernel.Schema    `json:"schema_version"`
-	Snapshots     []asset.Snapshot `json:"snapshots"`
-}
-
 func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) error {
 	if err := validateApplyProfileInput(opts.inputFile); err != nil {
 		return err
@@ -69,7 +62,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return err
 	}
 	scopeFilter := resolveApplyProfileScopeFilter(opts)
-	snapshots, err := loadProfileSnapshots(opts.inputFile)
+	snapshots, err := obsjson.LoadBundle(opts.inputFile)
 	if err != nil {
 		return err
 	}
@@ -100,7 +93,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
 
-	cannotProveSafeCount := countCannotProveSafe(filteredSnapshots)
+	cannotProveSafeCount := asset.CountUnprovablySafe(filteredSnapshots)
 
 	format, formatErr := ui.ParseOutputFormat(opts.outputFormat)
 	if formatErr != nil {
@@ -155,18 +148,6 @@ func resolveApplyProfileScopeFilter(opts applyProfileOptions) asset.AssetPredica
 	return asset.DefaultHealthcareScopeFilter()
 }
 
-func loadProfileSnapshots(inputFile string) ([]asset.Snapshot, error) {
-	obsData, err := fsutil.ReadFileLimited(inputFile)
-	if err != nil {
-		return nil, fmt.Errorf("read observations file: %w", err)
-	}
-	var obsFile ObservationBundle
-	if err := json.Unmarshal(obsData, &obsFile); err != nil {
-		return nil, fmt.Errorf("parse observations JSON: %w", err)
-	}
-	return obsFile.Snapshots, nil
-}
-
 func filterProfileSnapshots(stderr io.Writer, snapshots []asset.Snapshot, scopeFilter asset.AssetPredicate, quiet bool) ([]asset.Snapshot, error) {
 	if len(snapshots) == 0 {
 		if !quiet {
@@ -198,18 +179,6 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 		return "", nil, fmt.Errorf("no S3 controls found in %s", ctlDir)
 	}
 	return ctlDir, controls, nil
-}
-
-func countCannotProveSafe(snapshots []asset.Snapshot) int {
-	cannotProveSafeCount := 0
-	for _, snap := range snapshots {
-		for _, res := range snap.Assets {
-			if provable, ok := res.Properties["safety_provable"].(bool); ok && !provable {
-				cannotProveSafeCount++
-			}
-		}
-	}
-	return cannotProveSafeCount
 }
 
 func finalizeApplyProfileRun(

@@ -96,8 +96,8 @@ func TestRequestParseErrors(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected error")
 		}
-		if !strings.Contains(err.Error(), "invalid --keep-min") {
-			t.Fatalf("error = %q, want to contain %q", err.Error(), "invalid --keep-min")
+		if !strings.Contains(err.Error(), "invalid keep-min") {
+			t.Fatalf("error = %q, want to contain %q", err.Error(), "invalid keep-min")
 		}
 	})
 
@@ -114,8 +114,8 @@ func TestRequestParseErrors(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected error")
 		}
-		if !strings.Contains(err.Error(), "invalid --status") {
-			t.Fatalf("error = %q, want to contain %q", err.Error(), "invalid --status")
+		if !strings.Contains(err.Error(), "invalid status") {
+			t.Fatalf("error = %q, want to contain %q", err.Error(), "invalid status")
 		}
 	})
 
@@ -132,8 +132,8 @@ func TestRequestParseErrors(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected error")
 		}
-		if !strings.Contains(err.Error(), "invalid --now") {
-			t.Fatalf("error = %q, want to contain %q", err.Error(), "invalid --now")
+		if !strings.Contains(err.Error(), "invalid timestamp") {
+			t.Fatalf("error = %q, want to contain %q", err.Error(), "invalid timestamp")
 		}
 	})
 }

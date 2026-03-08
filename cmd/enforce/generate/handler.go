@@ -98,7 +98,14 @@ func buildPlan(req runRequest) (plan, error) {
 	if err != nil {
 		return plan{}, err
 	}
-	targets := extractTargets(in)
+	refs := make([]outenforce.FindingRef, len(in.Findings))
+	for i, f := range in.Findings {
+		refs[i] = outenforce.FindingRef{
+			ControlID: string(f.ControlID),
+			AssetID:   string(f.AssetID),
+		}
+	}
+	targets := outenforce.ExtractBucketTargets(refs)
 	outPath, rendered, err := buildOutput(req.mode, req.outDir, targets)
 	if err != nil {
 		return plan{}, err
@@ -158,44 +165,6 @@ func writeResult(w io.Writer, res result) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(res)
-}
-
-func extractTargets(in input) []outenforce.BucketTarget {
-	seen := make(map[string]struct{})
-	targets := make([]outenforce.BucketTarget, 0)
-	for _, f := range in.Findings {
-		if !strings.HasPrefix(string(f.ControlID), "CTL.S3.PUBLIC.") {
-			continue
-		}
-		assetID := strings.TrimSpace(string(f.AssetID))
-		if assetID == "" {
-			continue
-		}
-		if _, ok := seen[assetID]; ok {
-			continue
-		}
-		seen[assetID] = struct{}{}
-		targets = append(targets, outenforce.BucketTarget{
-			AssetID:    assetID,
-			BucketName: extractBucketName(assetID),
-		})
-	}
-	outenforce.SortTargets(targets)
-	return targets
-}
-
-func extractBucketName(assetID string) string {
-	s := strings.TrimSpace(assetID)
-	s = strings.TrimPrefix(s, "arn:aws:s3:::")
-	s = strings.TrimPrefix(s, "aws:s3:::")
-	s = strings.TrimPrefix(s, "s3://")
-	if i := strings.IndexByte(s, '/'); i >= 0 {
-		s = s[:i]
-	}
-	if s == "" {
-		return assetID
-	}
-	return s
 }
 
 func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (string, string, error) {
