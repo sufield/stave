@@ -48,13 +48,15 @@ type SecurityAuditRunner struct {
 // NewSecurityAuditRunner wires default dependencies.
 // The govulncheckRunner is injected from the adapter layer so that
 // the app layer never imports os/exec directly.
-func NewSecurityAuditRunner(govulncheckRunner GovulncheckRunner) *SecurityAuditRunner {
+// The signatureVerifier is optional — if nil, signature files are reported
+// as found but not cryptographically verified.
+func NewSecurityAuditRunner(govulncheckRunner GovulncheckRunner, signatureVerifier SignatureVerifier) *SecurityAuditRunner {
 	return &SecurityAuditRunner{
 		diagnostics: defaultDiagnosticsService{},
 		buildInfo:   defaultBuildInfoProvider{},
 		sbom:        defaultSBOMGenerator{},
 		vulns:       defaultVulnEvidenceProvider{runGovulncheck: govulncheckRunner},
-		binary:      defaultBinaryInspector{},
+		binary:      defaultBinaryInspector{signatureVerifier: signatureVerifier},
 		policy:      defaultPolicyInspector{},
 		crosswalk:   defaultCrosswalkResolver{},
 	}
@@ -156,16 +158,16 @@ func buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) security
 		})
 	}
 
-	appendArtifact("build_info.json", ev.buildInfo.RawJSON)
+	appendArtifact(securityaudit.ArtifactBuildInfo, ev.buildInfo.RawJSON)
 	appendArtifact(ev.sbom.FileName, ev.sbom.RawJSON)
-	appendArtifact("vuln_report.json", ev.vuln.RawJSON)
-	appendArtifact("binary_checksums.json", ev.binary.ChecksumJSON)
+	appendArtifact(securityaudit.ArtifactVulnReport, ev.vuln.RawJSON)
+	appendArtifact(securityaudit.ArtifactBinaryChecksums, ev.binary.ChecksumJSON)
 	if ev.binary.SignatureJSON != nil {
-		appendArtifact("signature_verification.json", ev.binary.SignatureJSON)
+		appendArtifact(securityaudit.ArtifactSignatureVerify, ev.binary.SignatureJSON)
 	}
-	appendArtifact("network_egress_declaration.json", ev.policy.Network.NetworkDeclJSON)
-	appendArtifact("filesystem_access_declaration.json", ev.policy.Filesystem.FilesystemDeclJSON)
-	appendArtifact("control_crosswalk_resolution.json", ev.crosswalk.ResolutionJSON)
+	appendArtifact(securityaudit.ArtifactNetworkEgress, ev.policy.Network.NetworkDeclJSON)
+	appendArtifact(securityaudit.ArtifactFilesystemAccess, ev.policy.Filesystem.FilesystemDeclJSON)
+	appendArtifact(securityaudit.ArtifactControlCrosswalk, ev.crosswalk.ResolutionJSON)
 
 	sort.Slice(manifest.Files, func(i, j int) bool {
 		return manifest.Files[i].Path < manifest.Files[j].Path
@@ -187,18 +189,9 @@ func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, 
 		Findings: findings,
 	}
 
-	controlSet := map[string]securityaudit.ControlRef{}
 	for i := range report.Findings {
 		refs := ev.crosswalk.ByCheck[report.Findings[i].ID]
 		report.Findings[i].ControlRefs = slices.Clone(refs)
-		for _, ref := range refs {
-			key := ref.Framework + "|" + ref.ControlID + "|" + ref.Rationale
-			controlSet[key] = ref
-		}
-	}
-	report.Controls = make([]securityaudit.ControlRef, 0, len(controlSet))
-	for _, ref := range controlSet {
-		report.Controls = append(report.Controls, ref)
 	}
 
 	report.EvidenceIndex = make([]securityaudit.EvidenceRef, 0, len(artifacts.Files))

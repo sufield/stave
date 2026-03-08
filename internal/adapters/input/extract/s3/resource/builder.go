@@ -16,10 +16,10 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 
 	visibility := s3exposure.BuildVisibilityResult(
 		analysis.HasPolicy,
-		toExposurePolicyAnalysis(analysis.Policy),
+		ToExposurePolicyAnalysis(analysis.Policy),
 		analysis.HasACL,
-		toExposureACLAnalysis(analysis.ACL),
-		toExposurePublicAccessBlock(effectivePAB),
+		ToExposureACLAnalysis(analysis.ACL),
+		ToExposurePublicAccessBlock(effectivePAB),
 	)
 
 	storageModel := s3storage.BuildModel(s3storage.BuildModelInput{
@@ -70,7 +70,8 @@ func mergePublicAccessBlock(effective *s3storage.PublicAccessBlock, candidate *s
 	effective.RestrictPublicBuckets = effective.RestrictPublicBuckets || candidate.RestrictPublicBuckets
 }
 
-func toExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysis {
+// ToExposurePolicyAnalysis maps an S3 policy analysis to the exposure domain type.
+func ToExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysis {
 	return s3exposure.PolicyAnalysis{
 		AllowsPublicRead:            policy.AllowsPublicRead,
 		AllowsPublicList:            policy.AllowsPublicList,
@@ -85,7 +86,8 @@ func toExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysi
 	}
 }
 
-func toExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
+// ToExposureACLAnalysis maps an S3 ACL analysis to the exposure domain type.
+func ToExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
 	return s3exposure.ACLAnalysis{
 		AllowsPublicRead:            acl.AllowsPublicRead,
 		AllowsPublicWrite:           acl.AllowsPublicWrite,
@@ -100,7 +102,8 @@ func toExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
 	}
 }
 
-func toExposurePublicAccessBlock(pab s3storage.PublicAccessBlock) s3exposure.PublicAccessBlock {
+// ToExposurePublicAccessBlock maps an S3 public access block to the exposure domain type.
+func ToExposurePublicAccessBlock(pab s3storage.PublicAccessBlock) s3exposure.PublicAccessBlock {
 	return s3exposure.PublicAccessBlock{
 		BlockPublicAcls:       pab.BlockPublicAcls,
 		IgnorePublicAcls:      pab.IgnorePublicAcls,

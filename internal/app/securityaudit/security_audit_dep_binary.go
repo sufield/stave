@@ -8,13 +8,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type defaultBinaryInspector struct{}
+type defaultBinaryInspector struct {
+	signatureVerifier SignatureVerifier
+}
 
-func (defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error) {
+// SignatureVerifier validates a cryptographic signature over data.
+// This is a narrow interface satisfied by crypto.Ed25519Verifier.
+type SignatureVerifier interface {
+	Verify(data []byte, sig kernel.Signature) error
+}
+
+func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error) {
 	path := strings.TrimSpace(req.BinaryPath)
 	if path == "" {
 		return binaryInspectionSnapshot{}, fmt.Errorf("binary path is required")
@@ -45,7 +54,7 @@ func (defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildI
 	var signatureJSON []byte
 
 	if signatureAttempt {
-		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir)
+		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir, d.signatureVerifier)
 		signaturePayload := map[string]any{
 			"release_bundle_dir": strings.TrimSpace(req.ReleaseBundleDir),
 			"verified":           signatureVerified,
@@ -73,7 +82,7 @@ func (defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildI
 	}, nil
 }
 
-func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string) (bool, string) {
+func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string, verifier SignatureVerifier) (bool, string) {
 	sumsPath := filepath.Join(releaseBundleDir, "SHA256SUMS")
 	raw, err := fsutil.ReadFileLimited(sumsPath)
 	if err != nil {
@@ -107,15 +116,26 @@ func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDi
 		return false, "checksum mismatch between running binary and release bundle"
 	}
 
-	sigstorePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sigstore.json")
 	signaturePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sig")
-	if _, sigErr := os.Stat(sigstorePath); sigErr == nil {
-		return true, "checksum matched and sigstore bundle present"
+	sigBytes, sigErr := fsutil.ReadFileLimited(signaturePath)
+	if sigErr != nil {
+		// Also check for sigstore bundle (not currently verifiable).
+		sigstorePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sigstore.json")
+		if _, statErr := os.Stat(sigstorePath); statErr == nil {
+			return false, "checksum matched; sigstore bundle found but cryptographic verification of sigstore format is not yet supported"
+		}
+		return false, "checksum matched but no signature artifact found"
 	}
-	if _, sigErr := os.Stat(signaturePath); sigErr == nil {
-		return true, "checksum matched and detached signature file present"
+
+	if verifier == nil {
+		return false, "checksum matched; signature file found but no signing public key configured for verification"
 	}
-	return false, "checksum matched but no signature artifact found"
+
+	sig := kernel.Signature(strings.TrimSpace(string(sigBytes)))
+	if verifyErr := verifier.Verify(raw, sig); verifyErr != nil {
+		return false, fmt.Sprintf("checksum matched but signature verification failed: %v", verifyErr)
+	}
+	return true, "checksum matched and signature cryptographically verified"
 }
 
 func evaluateBuildHardening(buildInfo buildInfoSnapshot) (securityaudit.Status, string) {

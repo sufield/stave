@@ -53,9 +53,9 @@ func (e *SnapshotExtractor) observationToAsset(obs S3Observation) asset.Asset {
 	aclAnalysis, aclMissing := applyACLObservation(obs, &props)
 	effectivePAB := applyPABObservation(obs, &props)
 	effective := s3exposure.ResolveEffectiveVisibility(
-		toExposurePolicyAnalysis(policyAnalysis),
-		toExposureACLAnalysis(aclAnalysis),
-		toExposurePublicAccessBlock(effectivePAB),
+		s3resource.ToExposurePolicyAnalysis(policyAnalysis),
+		s3resource.ToExposureACLAnalysis(aclAnalysis),
+		s3resource.ToExposurePublicAccessBlock(effectivePAB),
 	)
 	props.Public = effective.IsPublic() || (hasPolicy && policyAnalysis.HasWildcardActions)
 	props.SafetyProvable = !policyMissing && !aclMissing
@@ -126,7 +126,7 @@ func applyPABObservation(obs S3Observation, props *snapshotResourceProperties) s
 		BlockPublicPolicy:     obs.PublicAccessBlock.BlockPublicPolicy,
 		RestrictPublicBuckets: obs.PublicAccessBlock.RestrictPublicBuckets,
 	}
-	allBlocked := toExposurePublicAccessBlock(effectivePAB).IsFullyBlocked()
+	allBlocked := s3resource.ToExposurePublicAccessBlock(effectivePAB).IsFullyBlocked()
 	props.PublicAccessFullyBlocked = &allBlocked
 	return effectivePAB
 }
@@ -212,45 +212,6 @@ func addSnapshotPABFields(out map[string]any, props snapshotResourceProperties) 
 	}
 	if props.PublicAccessBlockStatus != "" {
 		out["public_access_block_status"] = props.PublicAccessBlockStatus
-	}
-}
-
-func toExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysis {
-	return s3exposure.PolicyAnalysis{
-		AllowsPublicRead:            policy.AllowsPublicRead,
-		AllowsPublicList:            policy.AllowsPublicList,
-		AllowsPublicWrite:           policy.AllowsPublicWrite,
-		AllowsPublicACLRead:         policy.AllowsPublicACLRead,
-		AllowsPublicACLWrite:        policy.AllowsPublicACLWrite,
-		AllowsAuthenticatedRead:     policy.AllowsAuthenticatedRead,
-		AllowsAuthenticatedList:     policy.AllowsAuthenticatedList,
-		AllowsAuthenticatedWrite:    policy.AllowsAuthenticatedWrite,
-		AllowsAuthenticatedACLRead:  policy.AllowsAuthenticatedACLRead,
-		AllowsAuthenticatedACLWrite: policy.AllowsAuthenticatedACLWrite,
-	}
-}
-
-func toExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
-	return s3exposure.ACLAnalysis{
-		AllowsPublicRead:            acl.AllowsPublicRead,
-		AllowsPublicWrite:           acl.AllowsPublicWrite,
-		AllowsPublicACLRead:         acl.AllowsPublicACLRead,
-		AllowsPublicACLWrite:        acl.AllowsPublicACLWrite,
-		AllowsAuthenticatedRead:     acl.AllowsAuthenticatedRead,
-		AllowsAuthenticatedWrite:    acl.AllowsAuthenticatedWrite,
-		AllowsAuthenticatedACLRead:  acl.AllowsAuthenticatedACLRead,
-		AllowsAuthenticatedACLWrite: acl.AllowsAuthenticatedACLWrite,
-		HasFullControlPublic:        acl.HasFullControlPublic,
-		HasFullControlAuthenticated: acl.HasFullControlAuthenticated,
-	}
-}
-
-func toExposurePublicAccessBlock(pab s3storage.PublicAccessBlock) s3exposure.PublicAccessBlock {
-	return s3exposure.PublicAccessBlock{
-		BlockPublicAcls:       pab.BlockPublicAcls,
-		IgnorePublicAcls:      pab.IgnorePublicAcls,
-		BlockPublicPolicy:     pab.BlockPublicPolicy,
-		RestrictPublicBuckets: pab.RestrictPublicBuckets,
 	}
 }
 

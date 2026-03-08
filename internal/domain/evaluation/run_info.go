@@ -20,13 +20,8 @@ type InputHashes struct {
 	Overall kernel.Digest `json:"overall"`
 }
 
-// PathSanitizer shortens file paths for output.
-type PathSanitizer interface {
-	Path(string) string
-}
-
 // Sanitized returns a copy with file path keys shortened to basenames.
-func (h *InputHashes) Sanitized(r PathSanitizer) *InputHashes {
+func (h *InputHashes) Sanitized(r kernel.PathSanitizer) *InputHashes {
 	if h == nil {
 		return nil
 	}

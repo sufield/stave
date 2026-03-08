@@ -89,6 +89,24 @@ Stave follows standard Go conventions:
 
 CLI output and command UX conventions are documented in `docs/cli-style-guide.md`.
 
+### CLI Command Conventions
+
+New commands must use the `NewCmd()` factory pattern:
+
+```go
+func NewCmd() *cobra.Command {
+    cmd := &cobra.Command{
+        Use:   "mycommand",
+        Short: "...",
+        RunE:  run,
+    }
+    cmd.Flags().StringVar(&opts.Flag, "flag", "default", "help text")
+    return cmd
+}
+```
+
+Do not use package-level `var Cmd = &cobra.Command{...}` with `init()` for new commands. Existing commands that use this pattern should not be retrofitted unless they are being substantially modified for other reasons.
+
 ### Package Organization
 
 ```

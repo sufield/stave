@@ -29,13 +29,8 @@ type Entry struct {
 	AssetID  asset.ID `json:"asset_id,omitempty"`
 }
 
-// IDSanitizer replaces identifiers with deterministic tokens.
-type IDSanitizer interface {
-	ID(string) string
-}
-
 // Sanitized returns a copy with asset identifiers replaced by deterministic tokens.
-func (d Entry) Sanitized(r IDSanitizer) Entry {
+func (d Entry) Sanitized(r kernel.IDSanitizer) Entry {
 	out := d
 	if d.AssetID != "" {
 		raw := string(d.AssetID)
@@ -68,7 +63,7 @@ type Report struct {
 
 // Sanitized returns a deep copy with asset identifiers replaced by
 // deterministic tokens.
-func (dr *Report) Sanitized(r IDSanitizer) *Report {
+func (dr *Report) Sanitized(r kernel.IDSanitizer) *Report {
 	if dr == nil {
 		return nil
 	}
