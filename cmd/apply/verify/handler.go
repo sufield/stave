@@ -26,7 +26,7 @@ type verificationSanitizer interface {
 }
 
 func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	execCtx, err := opts.prepareExecution(cmd.Context())
+	execCtx, err := opts.prepareExecution(cmdutil.CommandContext(cmd))
 	if err != nil {
 		return err
 	}

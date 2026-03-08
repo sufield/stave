@@ -12,6 +12,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/doctor"
+	"github.com/sufield/stave/internal/pkg/sensitive"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 )
@@ -132,10 +133,7 @@ func isSensitiveEnvKey(key string) bool {
 	if k == "aws_access_key_id" || k == "aws_secret_access_key" || k == "aws_session_token" {
 		return true
 	}
-	sensitive := []string{
-		"secret", "token", "password", "private", "credential", "auth", "api_key", "access_key",
-	}
-	for _, part := range sensitive {
+	for _, part := range sensitive.SubstringKeywords {
 		if strings.Contains(k, part) {
 			return true
 		}

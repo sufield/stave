@@ -43,24 +43,6 @@ func NewPlan(opts Options) (*EvaluationPlan, error) {
 	return plan, nil
 }
 
-// Summary returns a human-readable summary of the resolved plan for logging.
-func (p *EvaluationPlan) Summary() string {
-	if p == nil {
-		return ""
-	}
-	return fmt.Sprintf(
-		"Resolution: context_name=%s controls=%s observations=%s project_config=%s project_config_hash=%s user_config=%s lockfile=%s lockfile_hash=%s",
-		p.ContextName,
-		p.ControlsPath,
-		emptyDash(p.ObservationsPath),
-		emptyDash(p.ConfigPath),
-		emptyDash(string(p.ConfigHash)),
-		emptyDash(p.UserConfigPath),
-		emptyDash(p.LockFile),
-		emptyDash(string(p.LockHash)),
-	)
-}
-
 func populatePlanConfigPaths(plan *EvaluationPlan, opts Options) {
 	if cfgPath, ok := opts.FindConfigPath(); ok {
 		plan.ConfigPath = cfgPath
@@ -114,12 +96,4 @@ func populatePlanLockHash(plan *EvaluationPlan, projectRoot string) error {
 	}
 	plan.LockHash = h
 	return nil
-}
-
-// emptyDash keeps summary output readable for optional fields.
-func emptyDash(s string) string {
-	if strings.TrimSpace(s) == "" {
-		return "-"
-	}
-	return s
 }

@@ -1,13 +1,13 @@
 package pruner
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
@@ -168,7 +168,5 @@ func toCleanupFiles(in []SnapshotFile) []CleanupFile {
 }
 
 func writeJSON(w io.Writer, v any) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(v)
+	return jsonutil.WriteIndented(w, v)
 }

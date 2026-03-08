@@ -1,11 +1,11 @@
 package snapshot
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pruner"
 )
 
@@ -16,9 +16,7 @@ type RetentionTiersMap = cmdutil.RetentionTiersMap
 type TierMappingRule = cmdutil.TierMappingRule
 
 func writeJSON(w io.Writer, v any) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(v)
+	return jsonutil.WriteIndented(w, v)
 }
 
 func listObservationSnapshotFilesRecursive(observationsDir string, excludeDirs []string) ([]snapshotFile, error) {

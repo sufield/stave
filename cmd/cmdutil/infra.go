@@ -26,6 +26,17 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 )
 
+// CommandContext returns cmd.Context() with a fallback to context.Background().
+func CommandContext(cmd *cobra.Command) context.Context {
+	if cmd == nil {
+		return context.Background()
+	}
+	if ctx := cmd.Context(); ctx != nil {
+		return ctx
+	}
+	return context.Background()
+}
+
 // ResolveNow parses a --now flag value. Returns wall clock UTC when raw is empty.
 func ResolveNow(raw string) (time.Time, error) {
 	if raw == "" {

@@ -135,11 +135,7 @@ func buildDocsSearchRequest(cmd *cobra.Command, args []string) (docsSearchReques
 }
 
 func resolveDocsSearchFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	formatRaw := strings.TrimSpace(docsSearchFormat)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	return cmdutil.ResolveFormatValue(cmd, docsSearchFormat)
 }
 
 func writeDocsSearchJSON(w io.Writer, out docsSearchOutput) error {

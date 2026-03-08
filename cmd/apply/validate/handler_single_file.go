@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -92,7 +91,7 @@ func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time
 			return validation.ReadinessValidationResult{}, err
 		}
 		validateRun := appvalidation.NewRun(obsLoader, ctlLoader)
-		valResult, err := validateRun.Execute(context.Background(), appvalidation.Config{
+		valResult, err := validateRun.Execute(cmdutil.CommandContext(cmd), appvalidation.Config{
 			ControlsDir:     ctlDir,
 			ObservationsDir: obsDir,
 			MaxUnsafe:       maxUnsafeDur,

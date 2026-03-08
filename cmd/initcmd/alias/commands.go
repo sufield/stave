@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -122,11 +121,7 @@ type aliasEntry struct {
 func runAliasList(cmd *cobra.Command, _ []string) error {
 	aliases := cmdutil.LoadUserAliases()
 
-	formatRaw := strings.TrimSpace(aliasFormat)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	format, err := cmdutil.ResolveFormatValue(cmd, aliasFormat)
 	if err != nil {
 		return err
 	}

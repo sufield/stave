@@ -76,13 +76,14 @@ func runTrace(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	ctx := cmdutil.CommandContext(cmd)
 	ctlDir := fsutil.CleanUserPath(strings.TrimSpace(traceControlsDir))
-	control, err := loadTraceControl(ctlDir, strings.TrimSpace(traceControlID))
+	control, err := loadTraceControl(ctx, ctlDir, strings.TrimSpace(traceControlID))
 	if err != nil {
 		return err
 	}
 	observationPath := fsutil.CleanUserPath(strings.TrimSpace(traceObservation))
-	snapshot, err := loadTraceSnapshot(observationPath)
+	snapshot, err := loadTraceSnapshot(ctx, observationPath)
 	if err != nil {
 		return err
 	}
@@ -102,19 +103,15 @@ func runTrace(cmd *cobra.Command, _ []string) error {
 }
 
 func resolveTraceOutputFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	formatRaw := strings.TrimSpace(traceFormat)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	return cmdutil.ResolveFormatValue(cmd, traceFormat)
 }
 
-func loadTraceControl(controlsDir, controlID string) (*policy.ControlDefinition, error) {
+func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*policy.ControlDefinition, error) {
 	loader, err := cmdutil.NewControlRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := loader.LoadControls(context.Background(), controlsDir)
+	controls, err := loader.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}
@@ -129,7 +126,7 @@ func loadTraceControl(controlsDir, controlID string) (*policy.ControlDefinition,
 	)
 }
 
-func loadTraceSnapshot(observationPath string) (*asset.Snapshot, error) {
+func loadTraceSnapshot(ctx context.Context, observationPath string) (*asset.Snapshot, error) {
 	obsLoader, err := cmdutil.NewSnapshotObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
@@ -141,7 +138,7 @@ func loadTraceSnapshot(observationPath string) (*asset.Snapshot, error) {
 	}
 	defer f.Close()
 
-	snapshot, err := obsLoader.LoadSnapshotFromReader(context.Background(), f, observationPath)
+	snapshot, err := obsLoader.LoadSnapshotFromReader(ctx, f, observationPath)
 	if err != nil {
 		return nil, fmt.Errorf("load observation: %w", err)
 	}

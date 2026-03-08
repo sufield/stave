@@ -138,10 +138,7 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 	}
 
 	// 2. Load enrichment sources (controls + optional observations).
-	ctx := cmd.Context()
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := cmdutil.CommandContext(cmd)
 
 	ctlByID, err := loadControlsMap(ctx, opts.ControlsDir)
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -81,11 +80,7 @@ func runReport(cmd *cobra.Command, _ []string) error {
 
 	cmdutil.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
 
-	formatRaw := strings.TrimSpace(reportFormat)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	format, err := cmdutil.ResolveFormatValue(cmd, reportFormat)
 	if err != nil {
 		return err
 	}

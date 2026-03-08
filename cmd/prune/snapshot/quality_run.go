@@ -3,7 +3,6 @@ package snapshot
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -31,7 +30,7 @@ func runQuality(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	snapshots, err := loadQualitySnapshots(runInput.observationsDir)
+	snapshots, err := loadQualitySnapshots(cmdutil.CommandContext(cmd), runInput.observationsDir)
 	if err != nil {
 		return err
 	}
@@ -114,19 +113,15 @@ func resolveQualityNow() (time.Time, error) {
 }
 
 func resolveQualityFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	formatRaw := strings.ToLower(strings.TrimSpace(qualityFlags.format))
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	return ui.ParseOutputFormat(formatRaw)
+	return cmdutil.ResolveFormatValue(cmd, qualityFlags.format)
 }
 
-func loadQualitySnapshots(observationsDir string) ([]asset.Snapshot, error) {
+func loadQualitySnapshots(ctx context.Context, observationsDir string) ([]asset.Snapshot, error) {
 	loader, err := cmdutil.NewObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	result, err := loader.LoadSnapshots(context.Background(), observationsDir)
+	result, err := loader.LoadSnapshots(ctx, observationsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load observations: %w", err)
 	}
