@@ -2,7 +2,6 @@ package validate
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -107,10 +106,10 @@ func validateValidateDirs(opts *options) error {
 	if opts.InFile != "" {
 		return nil
 	}
-	if err := validateDirExists("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
+	if err := validateDirWithInference("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
 		return err
 	}
-	return validateDirExists("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible)
+	return validateDirWithInference("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible)
 }
 
 // logVerboseContext prints context details to stderr when verbose mode is enabled.
@@ -131,17 +130,12 @@ func logVerboseContext(cmd *cobra.Command, opts *options) {
 	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "context=%s project_config=%s controls=%s observations=%s\n", ctxName, cmdutil.EmptyDash(cfgPath), opts.ControlsDir, opts.ObservationsDir)
 }
 
-func validateDirExists(flag, path, inferKey string, hint error) error {
-	fi, err := os.Stat(path)
-	if err != nil {
-		baseErr := ui.DirectoryAccessError(flag, path, err, hint)
+func validateDirWithInference(flag, path, inferKey string, hint error) error {
+	if err := cmdutil.ValidateDir(flag, path, hint); err != nil {
 		if detail := cmdutil.ExplainInferenceFailure(inferKey); detail != "" {
-			return fmt.Errorf("%w\n%s", baseErr, detail)
+			return fmt.Errorf("%w\n%s", err, detail)
 		}
-		return baseErr
-	}
-	if !fi.IsDir() {
-		return fmt.Errorf("%s must be a directory: %s", flag, path)
+		return err
 	}
 	return nil
 }

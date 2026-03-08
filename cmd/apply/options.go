@@ -2,7 +2,6 @@ package apply
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -106,25 +105,19 @@ func buildEvaluatorOptions() appeval.Options {
 func checkDirsExist(source appeval.ObservationSource) error {
 	usePackMode := shouldUseConfiguredPacks()
 	if !usePackMode {
-		if fi, err := os.Stat(applyFlags.controlsDir); err != nil {
-			baseErr := ui.DirectoryAccessError("--controls", applyFlags.controlsDir, err, ui.ErrHintControlsNotAccessible)
+		if err := cmdutil.ValidateDir("--controls", applyFlags.controlsDir, ui.ErrHintControlsNotAccessible); err != nil {
 			if detail := explainInferenceFailure("controls"); detail != "" {
-				return fmt.Errorf("%w\n%s", baseErr, detail)
+				return fmt.Errorf("%w\n%s", err, detail)
 			}
-			return baseErr
-		} else if !fi.IsDir() {
-			return fmt.Errorf("--controls must be a directory: %s", applyFlags.controlsDir)
+			return err
 		}
 	}
 	if !source.IsStdin() {
-		if fi, err := os.Stat(applyFlags.observationsDir); err != nil {
-			baseErr := ui.DirectoryAccessError("--observations", applyFlags.observationsDir, err, ui.ErrHintObservationsNotAccessible)
+		if err := cmdutil.ValidateDir("--observations", applyFlags.observationsDir, ui.ErrHintObservationsNotAccessible); err != nil {
 			if detail := explainInferenceFailure("observations"); detail != "" {
-				return fmt.Errorf("%w\n%s", baseErr, detail)
+				return fmt.Errorf("%w\n%s", err, detail)
 			}
-			return baseErr
-		} else if !fi.IsDir() {
-			return fmt.Errorf("--observations must be a directory: %s", applyFlags.observationsDir)
+			return err
 		}
 	}
 	return nil

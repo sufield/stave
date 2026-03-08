@@ -2,8 +2,6 @@ package verify
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -99,12 +97,8 @@ func validateVerifyDirs(dirs verifyDirs) error {
 		{"--after", dirs.after, nil},
 		{"--controls", dirs.controls, ui.ErrHintControlsNotAccessible},
 	} {
-		fi, err := os.Stat(dir.path)
-		if err != nil {
-			return ui.DirectoryAccessError(dir.flag, dir.path, err, dir.hint)
-		}
-		if !fi.IsDir() {
-			return fmt.Errorf("%s must be a directory: %s", dir.flag, dir.path)
+		if err := cmdutil.ValidateDir(dir.flag, dir.path, dir.hint); err != nil {
+			return err
 		}
 	}
 	return nil
