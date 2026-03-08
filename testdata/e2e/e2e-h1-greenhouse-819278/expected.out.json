@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.1",
+    "tool_version": "0.0.2",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
@@ -12,7 +12,7 @@
         "2026-01-01T000000Z.json": "e580da3fd480012ed9fa260eec11afdd8ee1622d8208d2122b4f18697d9d1d5a",
         "2026-01-11T000000Z.json": "fbb95ffb22a68f2a3716ca3bcabc29afa6bf86e1b3841c36a88d16931e36604d"
       },
-      "overall": "4097ccd2e6cc73619b339d6a4bdeb4d5e40bbc5f96b830c9d2bdcbb6efebba06"
+      "overall": "7b06465e29fcd50fd8dc0b9d4ba45c6562032ffcbe1ab50a0ab831f7b66bd6b9"
     },
     "pack_hash": "2c3e3588e28da436e5052caf84f629ff4f9eb044d66fbe9c83e9facf975fda1e"
   },

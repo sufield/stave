@@ -1,0 +1,16 @@
+Plan Summary
+------------
+Ready: false
+Controls: testdata/e2e/aws-s3-obs-private/controls
+Observations: testdata/e2e/aws-s3-obs-private/observations
+Checked: 0 controls, 0 snapshots, 0 asset observations
+
+Issues:
+  [WARN] aws-cli: aws not found; cannot collect real S3 snapshots for ingest
+    Fix: install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  [FAIL] CONTROL_LOAD_FAILED: Check that the controls directory exists and contains valid YAML files
+    Fix: Check that the controls directory exists and contains valid YAML files
+  [FAIL] OBSERVATION_LOAD_FAILED: Check that the observations directory exists and contains valid JSON files
+    Fix: Check that the observations directory exists and contains valid JSON files
+
+Next: stave plan

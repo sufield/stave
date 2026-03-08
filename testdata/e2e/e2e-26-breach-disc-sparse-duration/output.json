@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.1",
+    "tool_version": "0.0.2",
     "offline": true,
     "now": "2026-01-02T06:00:00Z",
     "max_unsafe": "7d",
@@ -12,7 +12,7 @@
         "2026-01-01T000000Z.json": "7f2c0ea3d3598a4c522426e02c6db1022c885a68498df983a0f57b5c4a7736c4",
         "2026-01-02T060000Z.json": "4709d510c8f6942a694e9e77a515234b178f349f2975624368aa87a734e2c1cb"
       },
-      "overall": "37b3392fa8945e0bdaccf2252d0a879a3de6abb709ba4d95520d10b27b82e049"
+      "overall": "f55ac09decbd64d661de83f3fae319442da86aaf6f79a897c19d6999e2ccc105"
     },
     "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
@@ -31,11 +31,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-26-breach-disc-sparse-duration/controls/CTL.EXP.DURATION.001.yaml"
-      ]
+      "head_commit": "b18ebb465a6d4503a3047c0d76d8f72254800ca7",
+      "dirty": false
     }
   }
 }

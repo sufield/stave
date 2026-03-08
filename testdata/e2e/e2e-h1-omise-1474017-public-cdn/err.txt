@@ -1,5 +1,5 @@
-Running: evaluate controls against observations...
-Done:    evaluate controls against observations (8ms)
+Running: apply controls against observations...
+Done:    apply controls against observations (6ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-omise-1474017-public-cdn/controls --observations testdata/e2e/e2e-h1-omise-1474017-public-cdn/observations
 

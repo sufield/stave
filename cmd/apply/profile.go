@@ -85,7 +85,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return nil
 	}
 
-	ctlDir, controls, err := loadProfileControls(opts.inputFile)
+	ctlDir, controls, err := loadProfileControls(cmd.Context(), opts.inputFile)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func filterProfileSnapshots(snapshots []asset.Snapshot, scopeFilter asset.AssetP
 	return filteredSnapshots, nil
 }
 
-func loadProfileControls(inputFile string) (string, []policy.ControlDefinition, error) {
+func loadProfileControls(ctx context.Context, inputFile string) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 	inputsHash, _ := fsutil.HashFile(inputFile)
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
@@ -198,7 +198,7 @@ func loadProfileControls(inputFile string) (string, []policy.ControlDefinition, 
 	if err != nil {
 		return "", nil, fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := ctlLoader.LoadControls(context.Background(), ctlDir)
+	controls, err := ctlLoader.LoadControls(ctx, ctlDir)
 	if err != nil {
 		return "", nil, fmt.Errorf("load S3 controls from %s: %w", ctlDir, err)
 	}
