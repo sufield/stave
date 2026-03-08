@@ -182,11 +182,7 @@ func parseSecurityAuditFormat(raw string) (string, error) {
 	case "json", "markdown", "sarif":
 		return normalized, nil
 	default:
-		valid := []string{"json", "markdown", "sarif"}
-		if suggestion := ui.ClosestToken(normalized, valid); suggestion != "" {
-			return "", &ui.InputError{Err: fmt.Errorf("invalid --format %q (use json, markdown, or sarif)\nDid you mean %q?", raw, suggestion)}
-		}
-		return "", &ui.InputError{Err: fmt.Errorf("invalid --format %q (use json, markdown, or sarif)", raw)}
+		return "", &ui.InputError{Err: ui.EnumError("--format", raw, []string{"json", "markdown", "sarif"})}
 	}
 }
 

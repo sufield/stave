@@ -2,9 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/sufield/stave/internal/pkg/suggest"
 )
 
 // OutputFormat represents a validated output format for command output.
@@ -21,13 +18,13 @@ const (
 
 // ParseOutputFormat validates and returns an OutputFormat value.
 func ParseOutputFormat(s string) (OutputFormat, error) {
-	normalized := OutputFormat(normalizeToken(s))
+	normalized := OutputFormat(NormalizeToken(s))
 	switch normalized {
 	case OutputFormatJSON, OutputFormatText, OutputFormatSARIF:
 		return normalized, nil
 	default:
 		valid := []string{string(OutputFormatText), string(OutputFormatJSON), string(OutputFormatSARIF)}
-		if suggestion := closestToken(normalizeToken(s), valid); suggestion != "" {
+		if suggestion := ClosestToken(NormalizeToken(s), valid); suggestion != "" {
 			return "", fmt.Errorf("invalid --format %q (use text, json, or sarif)\nDid you mean %q?", s, suggestion)
 		}
 		return "", fmt.Errorf("invalid --format %q (use text, json, or sarif)", s)
@@ -42,12 +39,4 @@ func (f OutputFormat) String() string {
 // IsJSON returns true if the format is JSON.
 func (f OutputFormat) IsJSON() bool {
 	return f == OutputFormatJSON
-}
-
-func normalizeToken(value string) string {
-	return strings.ToLower(strings.TrimSpace(value))
-}
-
-func closestToken(input string, valid []string) string {
-	return suggest.Closest(input, valid)
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/validation"
-	"github.com/sufield/stave/internal/pkg/suggest"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
@@ -61,7 +60,7 @@ func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *o
 }
 
 func normalizeValidateKind(raw string) (string, error) {
-	normalized := strings.ToLower(strings.TrimSpace(raw))
+	normalized := ui.NormalizeToken(raw)
 	switch normalized {
 	case "control", "controls":
 		return "control", nil
@@ -71,11 +70,7 @@ func normalizeValidateKind(raw string) (string, error) {
 		return "finding", nil
 	}
 
-	validKinds := []string{"control", "observation", "finding"}
-	if suggestion := suggest.Closest(normalized, validKinds); suggestion != "" {
-		return "", fmt.Errorf("invalid --kind %q (use control, observation, or finding)\nDid you mean %q?", raw, suggestion)
-	}
-	return "", fmt.Errorf("invalid --kind %q (use control, observation, or finding)", raw)
+	return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
 }
 
 // NewReadinessValidateFn creates a validation function for readiness assessment.

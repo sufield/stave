@@ -94,7 +94,7 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	if err != nil {
 		return resourceStack{}, err
 	}
-	ctlLoader, err := newControlRepository()
+	ctlLoader, err := cmdutil.NewControlRepository()
 	if err != nil {
 		return resourceStack{}, fmt.Errorf("create control loader: %w", err)
 	}
@@ -103,8 +103,8 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 		return resourceStack{}, err
 	}
 
-	_, cfgPath, _ := findProjectConfigWithPath()
-	gitMeta := collectGitAudit(plan.ProjectRoot, []string{applyFlags.controlsDir, cfgPath})
+	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
+	gitMeta := cmdutil.CollectGitAudit(plan.ProjectRoot, []string{applyFlags.controlsDir, cfgPath})
 
 	enricher := remediation.NewMapper()
 	san := cmdutil.GetSanitizer(f.cmd)
@@ -126,9 +126,9 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 // selecting stdin or file mode and applying integrity checks if configured.
 func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
 	if source.IsStdin() {
-		return newStdinObservationRepository(os.Stdin)
+		return cmdutil.NewStdinObservationRepository(os.Stdin)
 	}
-	loader, err := newObservationRepository()
+	loader, err := cmdutil.NewObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
@@ -168,14 +168,14 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 
 // buildProjectConfig assembles project configuration input from the project config file.
 func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
-	projCfg, ok := findProjectConfig()
+	projCfg, ok := cmdutil.FindProjectConfig()
 	if !ok {
 		return appeval.ProjectConfigInput{}
 	}
 	return appeval.ProjectConfigInput{
 		Suppressions:        f.toSuppressions(projCfg.Suppressions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
-		ExcludeControls:     toControlIDs(projCfg.ExcludeControls),
+		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
 		ControlsFlagSet:     applyFlags.applyControlsFlagSet,
 		BuiltinLoader:       ctlbuiltin.LoadAll,
 	}

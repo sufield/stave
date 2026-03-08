@@ -68,13 +68,9 @@ type verifyOutcome struct {
 }
 
 func loadVerifyControls(ctx context.Context, controlsDir string) ([]policy.ControlDefinition, error) {
-	ctlLoader, err := cmdutil.NewControlRepository()
+	controls, err := cmdutil.LoadControls(ctx, controlsDir)
 	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-	controls, err := ctlLoader.LoadControls(ctx, controlsDir)
-	if err != nil {
-		return nil, fmt.Errorf("load controls: %w", err)
+		return nil, err
 	}
 	if len(controls) == 0 {
 		return nil, fmt.Errorf("no controls in %s", controlsDir)

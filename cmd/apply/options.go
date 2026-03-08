@@ -82,9 +82,9 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 }
 
 func buildEvaluatorOptions() appeval.Options {
-	root := rootForContextName()
-	_, cfgPath, _ := findProjectConfigWithPath()
-	_, userPath, _ := findUserConfigWithPath()
+	root := cmdutil.RootForContextName()
+	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
+	_, userPath, _ := cmdutil.FindUserConfigWithPath()
 	return appeval.Options{
 		ContextName:        resolveApplyContextName(root),
 		ProjectRoot:        root,
@@ -106,7 +106,7 @@ func checkDirsExist(source appeval.ObservationSource) error {
 	usePackMode := shouldUseConfiguredPacks()
 	if !usePackMode {
 		if err := cmdutil.ValidateDir("--controls", applyFlags.controlsDir, ui.ErrHintControlsNotAccessible); err != nil {
-			if detail := explainInferenceFailure("controls"); detail != "" {
+			if detail := cmdutil.ExplainInferenceFailure("controls"); detail != "" {
 				return fmt.Errorf("%w\n%s", err, detail)
 			}
 			return err
@@ -114,7 +114,7 @@ func checkDirsExist(source appeval.ObservationSource) error {
 	}
 	if !source.IsStdin() {
 		if err := cmdutil.ValidateDir("--observations", applyFlags.observationsDir, ui.ErrHintObservationsNotAccessible); err != nil {
-			if detail := explainInferenceFailure("observations"); detail != "" {
+			if detail := cmdutil.ExplainInferenceFailure("observations"); detail != "" {
 				return fmt.Errorf("%w\n%s", err, detail)
 			}
 			return err
@@ -127,7 +127,7 @@ func shouldUseConfiguredPacks() bool {
 	if applyFlags.applyControlsFlagSet {
 		return false
 	}
-	cfg, ok := findProjectConfig()
+	cfg, ok := cmdutil.FindProjectConfig()
 	if !ok {
 		return false
 	}
@@ -159,7 +159,7 @@ func validateApplyFlags(cmd *cobra.Command) (applyParams, error) {
 // normalizeApplyFlags cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
 func normalizeApplyFlags(cmd *cobra.Command) {
-	resetInferAttempts()
+	cmdutil.ResetInferAttempts()
 	applyFlags.applyControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
 
 	applyFlags.controlsDir = fsutil.CleanUserPath(applyFlags.controlsDir)
@@ -167,9 +167,9 @@ func normalizeApplyFlags(cmd *cobra.Command) {
 	applyFlags.applyIntegrityManifest = fsutil.CleanUserPath(applyFlags.applyIntegrityManifest)
 	applyFlags.applyIntegrityPublicKey = fsutil.CleanUserPath(applyFlags.applyIntegrityPublicKey)
 
-	applyFlags.controlsDir = inferControlsDir(cmd, applyFlags.controlsDir)
+	applyFlags.controlsDir = cmdutil.InferControlsDir(cmd, applyFlags.controlsDir)
 	if applyFlags.observationsDir != "-" {
-		applyFlags.observationsDir = inferObservationsDir(cmd, applyFlags.observationsDir)
+		applyFlags.observationsDir = cmdutil.InferObservationsDir(cmd, applyFlags.observationsDir)
 	}
 }
 
