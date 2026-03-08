@@ -12,7 +12,7 @@ type applyFlagsType struct {
 	allowUnknownInput                                bool
 	profileIncludeAll                                bool
 	outputFormat, ignoreFile, applyProfile           string
-	profileInputFile, profileScopeFile               string
+	profileInputFile                                 string
 	profileBucketAllowlist                           []string
 	applyControlsFlagSet                             bool
 	applyIntegrityManifest, applyIntegrityPublicKey  string
@@ -32,7 +32,6 @@ func init() {
 	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
 	ApplyCmd.Flags().StringVarP(&applyFlags.applyProfile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")
 	ApplyCmd.Flags().StringVar(&applyFlags.profileInputFile, "input", "", "Path to observations bundle file (required with --profile)")
-	ApplyCmd.Flags().StringVar(&applyFlags.profileScopeFile, "scope", "", "Path to health scope config YAML file")
 	ApplyCmd.Flags().StringSliceVar(&applyFlags.profileBucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include (can specify multiple)")
 	ApplyCmd.Flags().BoolVar(&applyFlags.profileIncludeAll, "include-all", false, "Disable health scope filtering (extract all buckets)")
 	_ = ApplyCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
