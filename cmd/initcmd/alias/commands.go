@@ -132,22 +132,23 @@ func runAliasList(cmd *cobra.Command, _ []string) error {
 	}
 	sort.Strings(names)
 
+	out := cmd.OutOrStdout()
 	if format.IsJSON() {
 		entries := make([]aliasEntry, 0, len(names))
 		for _, name := range names {
 			entries = append(entries, aliasEntry{Name: name, Command: aliases[name]})
 		}
-		enc := json.NewEncoder(os.Stdout)
+		enc := json.NewEncoder(out)
 		enc.SetIndent("", "  ")
 		return enc.Encode(entries)
 	}
 
 	if len(names) == 0 {
-		fmt.Fprintln(os.Stdout, "No aliases defined.")
+		fmt.Fprintln(out, "No aliases defined.")
 		return nil
 	}
 	for _, name := range names {
-		fmt.Fprintf(os.Stdout, "%s -> %s\n", name, aliases[name])
+		fmt.Fprintf(out, "%s -> %s\n", name, aliases[name])
 	}
 	return nil
 }

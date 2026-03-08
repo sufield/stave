@@ -129,6 +129,7 @@ func finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath st
 
 func markFirstRunHintSeenIfNeeded(show bool, markerPath string) {
 	if show && markerPath != "" {
+		// Best-effort: failure to persist the marker is harmless; the hint just shows again.
 		_ = state.MarkFirstRunSeen(markerPath)
 	}
 }
@@ -151,6 +152,7 @@ func persistSessionStateIfApplicable(args []string) string {
 	if detectErr != nil {
 		return ""
 	}
+	// Best-effort: session state is advisory; failure doesn't affect the command result.
 	_ = cmdutil.SaveSessionState(projectRoot, args)
 	return projectRoot
 }
@@ -235,6 +237,7 @@ func writeErrorInfo(errInfo *ui.ErrorInfo) {
 	if errInfo == nil {
 		return
 	}
+	// Best-effort: if we can't display the error, there's nothing else to try.
 	if IsJSONMode() {
 		_ = ui.WriteErrorJSON(os.Stderr, errInfo)
 	} else {

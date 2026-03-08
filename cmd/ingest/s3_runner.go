@@ -41,7 +41,7 @@ func (r *s3Runner) run(cmd *cobra.Command) error {
 		return err
 	}
 
-	snapshots, err := r.extractSnapshots(context.Background(), cfg)
+	snapshots, err := r.extractSnapshots(cmd.Context(), cfg)
 	if err != nil {
 		return err
 	}
