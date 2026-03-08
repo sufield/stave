@@ -88,38 +88,36 @@ func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDi
 	if err != nil {
 		return false, fmt.Sprintf("cannot read SHA256SUMS: %v", err)
 	}
-	lines := strings.Split(string(raw), "\n")
-	base := filepath.Base(binaryPath)
 
-	hashMatch := false
-	entryFound := false
-	for _, line := range lines {
+	if msg, ok := matchChecksumEntry(raw, filepath.Base(binaryPath), expectedHash); !ok {
+		return false, msg
+	}
+
+	return verifyChecksumSignature(raw, releaseBundleDir, verifier)
+}
+
+// matchChecksumEntry searches SHA256SUMS lines for the binary and verifies its hash.
+func matchChecksumEntry(raw []byte, binaryName, expectedHash string) (string, bool) {
+	for line := range strings.SplitSeq(string(raw), "\n") {
 		fields := strings.Fields(strings.TrimSpace(line))
 		if len(fields) < 2 {
 			continue
 		}
-		hashValue := strings.TrimSpace(fields[0])
 		name := strings.TrimPrefix(strings.TrimSpace(fields[1]), "*")
-		if name == base {
-			entryFound = true
-			if strings.EqualFold(hashValue, expectedHash) {
-				hashMatch = true
-				break
+		if name == binaryName {
+			if strings.EqualFold(strings.TrimSpace(fields[0]), expectedHash) {
+				return "", true
 			}
+			return "checksum mismatch between running binary and release bundle", false
 		}
 	}
+	return fmt.Sprintf("binary %s not found in SHA256SUMS", binaryName), false
+}
 
-	if !entryFound {
-		return false, fmt.Sprintf("binary %s not found in SHA256SUMS", base)
-	}
-	if !hashMatch {
-		return false, "checksum mismatch between running binary and release bundle"
-	}
-
-	signaturePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sig")
-	sigBytes, sigErr := fsutil.ReadFileLimited(signaturePath)
+// verifyChecksumSignature validates the SHA256SUMS signature file.
+func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier SignatureVerifier) (bool, string) {
+	sigBytes, sigErr := fsutil.ReadFileLimited(filepath.Join(releaseBundleDir, "SHA256SUMS.sig"))
 	if sigErr != nil {
-		// Also check for sigstore bundle (not currently verifiable).
 		sigstorePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sigstore.json")
 		if _, statErr := os.Stat(sigstorePath); statErr == nil {
 			return false, "checksum matched; sigstore bundle found but cryptographic verification of sigstore format is not yet supported"
@@ -132,7 +130,7 @@ func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDi
 	}
 
 	sig := kernel.Signature(strings.TrimSpace(string(sigBytes)))
-	if verifyErr := verifier.Verify(raw, sig); verifyErr != nil {
+	if verifyErr := verifier.Verify(sumsData, sig); verifyErr != nil {
 		return false, fmt.Sprintf("checksum matched but signature verification failed: %v", verifyErr)
 	}
 	return true, "checksum matched and signature cryptographically verified"
