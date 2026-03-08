@@ -32,9 +32,6 @@ type s3RunConfig struct {
 }
 
 func newS3Runner(rt *ui.Runtime, opts *Options) *s3Runner {
-	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
-	}
 	return &s3Runner{runtime: rt, opts: opts}
 }
 

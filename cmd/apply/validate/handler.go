@@ -23,9 +23,6 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 	if opts == nil {
 		opts = defaultOptions()
 	}
-	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
-	}
 	format, err := prepareValidateCommand(cmd, opts)
 	if err != nil {
 		return err
