@@ -9,40 +9,54 @@ import (
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
-// ResolveMaxUnsafeWithSource returns max-unsafe and its source.
-func ResolveMaxUnsafeWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
-	if v := strings.TrimSpace(os.Getenv(envvar.MaxUnsafe.Name)); v != "" {
-		return ResolvedConfigValue{Value: v, Source: "env:" + envvar.MaxUnsafe.Name}
+// resolveConfigCascade implements the env → project config → user config → default
+// resolution pattern shared by multiple config keys.
+func resolveConfigCascade(
+	env envvar.Entry,
+	configKey string,
+	projectField func(*ProjectConfig) string,
+	userField func(*UserConfig) string,
+	defaultValue string,
+	normalize func(string) string,
+	cfg *ProjectConfig,
+	cfgPath string,
+) ResolvedConfigValue {
+	if v := strings.TrimSpace(os.Getenv(env.Name)); v != "" {
+		return ResolvedConfigValue{Value: normalize(v), Source: "env:" + env.Name}
 	}
 	if cfg != nil {
-		if v := strings.TrimSpace(cfg.MaxUnsafe); v != "" {
-			return ResolvedConfigValue{Value: v, Source: cfgPath + ":max_unsafe"}
+		if v := strings.TrimSpace(projectField(cfg)); v != "" {
+			return ResolvedConfigValue{Value: normalize(v), Source: cfgPath + ":" + configKey}
 		}
 	}
 	if userCfg, userPath, ok := FindUserConfigWithPath(); ok {
-		if v := strings.TrimSpace(userCfg.MaxUnsafe); v != "" {
-			return ResolvedConfigValue{Value: v, Source: userPath + ":max_unsafe"}
+		if v := strings.TrimSpace(userField(userCfg)); v != "" {
+			return ResolvedConfigValue{Value: normalize(v), Source: userPath + ":" + configKey}
 		}
 	}
-	return ResolvedConfigValue{Value: DefaultMaxUnsafeDuration, Source: "default"}
+	return ResolvedConfigValue{Value: defaultValue, Source: "default"}
+}
+
+func passthrough(v string) string { return v }
+
+// ResolveMaxUnsafeWithSource returns max-unsafe and its source.
+func ResolveMaxUnsafeWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
+	return resolveConfigCascade(
+		envvar.MaxUnsafe, "max_unsafe",
+		func(c *ProjectConfig) string { return c.MaxUnsafe },
+		func(c *UserConfig) string { return c.MaxUnsafe },
+		DefaultMaxUnsafeDuration, passthrough, cfg, cfgPath,
+	)
 }
 
 // ResolveRetentionTierWithSource returns the retention tier and its source.
 func ResolveRetentionTierWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
-	if v := strings.TrimSpace(os.Getenv(envvar.RetentionTier.Name)); v != "" {
-		return ResolvedConfigValue{Value: NormalizeRetentionTier(v), Source: "env:" + envvar.RetentionTier.Name}
-	}
-	if cfg != nil {
-		if v := strings.TrimSpace(cfg.RetentionTier); v != "" {
-			return ResolvedConfigValue{Value: NormalizeRetentionTier(v), Source: cfgPath + ":default_retention_tier"}
-		}
-	}
-	if userCfg, userPath, ok := FindUserConfigWithPath(); ok {
-		if v := strings.TrimSpace(userCfg.RetentionTier); v != "" {
-			return ResolvedConfigValue{Value: NormalizeRetentionTier(v), Source: userPath + ":default_retention_tier"}
-		}
-	}
-	return ResolvedConfigValue{Value: DefaultRetentionTier, Source: "default"}
+	return resolveConfigCascade(
+		envvar.RetentionTier, "default_retention_tier",
+		func(c *ProjectConfig) string { return c.RetentionTier },
+		func(c *UserConfig) string { return c.RetentionTier },
+		DefaultRetentionTier, NormalizeRetentionTier, cfg, cfgPath,
+	)
 }
 
 // ResolveSnapshotRetentionWithSource returns retention value and source for a tier.
@@ -89,20 +103,12 @@ func resolveRetentionFromUser() (ResolvedConfigValue, bool) {
 
 // ResolveCIFailurePolicyWithSource returns CI failure policy and source.
 func ResolveCIFailurePolicyWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
-	if v := strings.TrimSpace(os.Getenv(envvar.CIFailurePolicy.Name)); v != "" {
-		return ResolvedConfigValue{Value: v, Source: "env:" + envvar.CIFailurePolicy.Name}
-	}
-	if cfg != nil {
-		if v := strings.TrimSpace(cfg.CIFailurePolicy); v != "" {
-			return ResolvedConfigValue{Value: v, Source: cfgPath + ":ci_failure_policy"}
-		}
-	}
-	if userCfg, userPath, ok := FindUserConfigWithPath(); ok {
-		if v := strings.TrimSpace(userCfg.CIFailurePolicy); v != "" {
-			return ResolvedConfigValue{Value: v, Source: userPath + ":ci_failure_policy"}
-		}
-	}
-	return ResolvedConfigValue{Value: DefaultCIFailurePolicy, Source: "default"}
+	return resolveConfigCascade(
+		envvar.CIFailurePolicy, "ci_failure_policy",
+		func(c *ProjectConfig) string { return c.CIFailurePolicy },
+		func(c *UserConfig) string { return c.CIFailurePolicy },
+		DefaultCIFailurePolicy, passthrough, cfg, cfgPath,
+	)
 }
 
 // ResolveCLIOutputWithSource returns output mode and source.

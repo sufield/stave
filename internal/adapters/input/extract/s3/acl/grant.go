@@ -8,9 +8,6 @@ const (
 	permReadACL     = "READ_ACP"
 	permWriteACL    = "WRITE_ACP"
 	permFullControl = "FULL_CONTROL"
-
-	scopeObject = "object"
-	scopeBucket = "bucket"
 )
 
 // Grant represents a single ACL grant from adapters or fixtures.
@@ -30,10 +27,6 @@ func (g Grant) normalizedGrantee() string {
 
 func (g Grant) normalizedPermission() string {
 	return strings.ToUpper(strings.TrimSpace(g.Permission))
-}
-
-func (g Grant) normalizedScope() string {
-	return strings.ToLower(strings.TrimSpace(g.Scope))
 }
 
 // IsAllUsers reports whether the grant targets the global AllUsers principal.
@@ -64,26 +57,6 @@ func (g Grant) HasFullControl() bool {
 // Permissions returns ACL analysis bits for this grant.
 func (g Grant) Permissions() Permission {
 	return aclPermissionByString[g.normalizedPermission()]
-}
-
-// ExposurePermissions returns exposure-analysis bits for this grant.
-func (g Grant) ExposurePermissions() accessPermissionMask {
-	switch {
-	case g.HasFullControl():
-		return accessPermAll
-	case g.normalizedPermission() == permRead && g.normalizedScope() == scopeObject:
-		return accessPermRead
-	case g.normalizedPermission() == permRead && g.normalizedScope() == scopeBucket:
-		return accessPermList
-	case g.normalizedPermission() == permWrite:
-		return accessPermWrite
-	case g.normalizedPermission() == permReadACL:
-		return accessPermACLRead
-	case g.normalizedPermission() == permWriteACL:
-		return accessPermACLWrite
-	default:
-		return 0
-	}
 }
 
 // PublicGrantees returns public grantee identifiers in encounter order.
