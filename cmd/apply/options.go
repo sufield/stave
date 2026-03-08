@@ -51,7 +51,6 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 				mode: runModeProfile,
 				profile: applyProfileOptions{
 					inputFile:       applyFlags.profileInputFile,
-					scopeFile:       applyFlags.profileScopeFile,
 					bucketAllowlist: applyFlags.profileBucketAllowlist,
 					includeAll:      applyFlags.profileIncludeAll,
 					outputFormat:    applyFlags.outputFormat,

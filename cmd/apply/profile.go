@@ -47,7 +47,6 @@ func ParseApplyProfile(s string) (ApplyProfile, error) {
 // applyProfileOptions holds profile-compatible options for evaluation.
 type applyProfileOptions struct {
 	inputFile       string
-	scopeFile       string
 	bucketAllowlist []string
 	includeAll      bool
 	outputFormat    string
@@ -62,9 +61,6 @@ type ObservationBundle struct {
 }
 
 func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) error {
-	// Reserved for future profile-specific scope-file support.
-	_ = opts.scopeFile
-
 	if err := validateApplyProfileInput(opts.inputFile); err != nil {
 		return err
 	}
