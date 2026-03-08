@@ -43,6 +43,13 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if cmdutil.QuietEnabled(cmd) {
+		if hasFail {
+			return fmt.Errorf("doctor found required issues")
+		}
+		return nil
+	}
+
 	// 3. Presentation: Render results to the user
 	if format.IsJSON() {
 		return json.NewEncoder(cmd.OutOrStdout()).Encode(struct {

@@ -13,7 +13,7 @@ type applyFlagsType struct {
 	profileIncludeAll                                bool
 	outputFormat, ignoreFile, applyProfile           string
 	profileInputFile, profileScopeFile               string
-	profileBucketAllowlist, applyExcludeControlIDs   []string
+	profileBucketAllowlist                           []string
 	applyControlsFlagSet                             bool
 	applyIntegrityManifest, applyIntegrityPublicKey  string
 }

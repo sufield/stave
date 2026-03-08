@@ -97,17 +97,6 @@ func loadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
 	return cfg, nil
 }
 
-// warnIfGitDirty prints a warning if git is dirty and quiet mode is not enabled.
-func warnIfGitDirty(cmd *cobra.Command, git *evaluation.GitInfo, label string) {
-	if git == nil || !git.Dirty {
-		return
-	}
-	if cmdutil.QuietEnabled(cmd) {
-		return
-	}
-	_, _ = fmt.Fprintf(os.Stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n", label, strings.Join(git.DirtyList, ", "))
-}
-
 // toControlIDs converts a string slice to kernel.ControlID slice.
 func toControlIDs(raw []string) []kernel.ControlID {
 	out := make([]kernel.ControlID, 0, len(raw))

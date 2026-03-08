@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -85,7 +86,8 @@ func runQuickstart(cmd *cobra.Command, _ []string) error {
 	}); err != nil {
 		return onboardingCommandError(err, "stave quickstart --report ./stave-report.json")
 	}
-	return writeQuickstartSummary(out, sourceLabel, findings, latest, reportPath)
+	san := cmdutil.GetSanitizer(cmd)
+	return writeQuickstartSummary(out, san, sourceLabel, findings, latest, reportPath)
 }
 
 func loadDetectedQuickstartSnapshots(cwd string, detected []detectedSnapshot) ([]asset.Snapshot, string) {
@@ -314,7 +316,7 @@ func runDemo(cmd *cobra.Command, _ []string) error {
 		return onboardingCommandError(err, "stave demo --report ./stave-report.json")
 	}
 
-	return printDemoSummary(cmd.OutOrStdout(), lastSnap, findings, reportPath)
+	return printDemoSummary(cmd.OutOrStdout(), cmdutil.GetSanitizer(cmd), lastSnap, findings, reportPath)
 }
 
 func loadDemoSnapshots(name string) ([]asset.Snapshot, error) {
