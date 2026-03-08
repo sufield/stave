@@ -32,18 +32,22 @@ func dumpBundle(out io.Writer, errOut io.Writer, path string, maxSize int64) err
 
 	for _, f := range entries {
 		if strings.Contains(f.Name, "..") {
-			fmt.Fprintf(errOut, "warning: skipping suspicious entry %q\n", f.Name)
+			_, _ = fmt.Fprintf(errOut, "warning: skipping suspicious entry %q\n", f.Name)
 			continue
 		}
 		if f.UncompressedSize64 > uint64(maxSize) {
-			fmt.Fprintf(errOut, "warning: skipping %s (%d bytes exceeds %dMB limit)\n", f.Name, f.UncompressedSize64, maxSize>>20)
+			_, _ = fmt.Fprintf(errOut, "warning: skipping %s (%d bytes exceeds %dMB limit)\n", f.Name, f.UncompressedSize64, maxSize>>20)
 			continue
 		}
-		fmt.Fprintf(out, "=== %s ===\n", f.Name)
+		if _, err := fmt.Fprintf(out, "=== %s ===\n", f.Name); err != nil {
+			return fmt.Errorf("%s: %w", f.Name, err)
+		}
 		if err := copyZipEntry(out, f, maxSize); err != nil {
 			return fmt.Errorf("%s: %w", f.Name, err)
 		}
-		fmt.Fprintln(out)
+		if _, err := fmt.Fprintln(out); err != nil {
+			return fmt.Errorf("%s: %w", f.Name, err)
+		}
 	}
 	return nil
 }

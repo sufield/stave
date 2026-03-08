@@ -1,7 +1,6 @@
 package bugreport
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ type securityAuditFlagsType struct {
 	format, out, outDir        string
 	severity, sbom, vulnSource string
 	failOn, releaseBundleDir   string
+	nowTime                    string
 	frameworks                 []string
 	liveVulnCheck, privacyMode bool
 }
@@ -71,7 +71,10 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("resolve executable path: %w", err)
 	}
-	now := time.Now().UTC()
+	now, err := c.resolveNow()
+	if err != nil {
+		return err
+	}
 	bundleDir := c.resolveOutDir(now)
 
 	opts := fileWriteOpts{
@@ -80,7 +83,7 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 	}
 
 	runner := appsa.NewSecurityAuditRunner(govulncheck.Run)
-	report, artifacts, err := runner.Run(context.Background(), appsa.SecurityAuditRequest{
+	report, artifacts, err := runner.Run(cmd.Context(), appsa.SecurityAuditRequest{
 		Now:                  now,
 		ToolVersion:          staveversion.Version,
 		Cwd:                  cwd,
@@ -105,13 +108,15 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	mainOutPath, err := writeSecurityAuditBundle(opts, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath)
+	mainOutPath, err := writeSecurityAuditBundle(opts, now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath)
 	if err != nil {
 		return err
 	}
 
 	if !cmdutil.QuietEnabled(cmd) {
-		printSecurityAuditSummary(cmd.OutOrStdout(), mainOutPath, bundleDir, report.Summary)
+		if err := printSecurityAuditSummary(cmd.OutOrStdout(), mainOutPath, bundleDir, report.Summary); err != nil {
+			return err
+		}
 	}
 
 	if report.Summary.Gated {
@@ -120,7 +125,7 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func writeSecurityAuditBundle(opts fileWriteOpts, bundleDir, mainName string, mainData []byte, report securityaudit.Report, artifacts securityaudit.ArtifactManifest, resolveOutPath func(string) string) (string, error) {
+func writeSecurityAuditBundle(opts fileWriteOpts, now time.Time, bundleDir, mainName string, mainData []byte, report securityaudit.Report, artifacts securityaudit.ArtifactManifest, resolveOutPath func(string) string) (string, error) {
 	if err := fsutil.SafeMkdirAll(bundleDir, fsutil.WriteOptions{
 		Perm:         0o700,
 		AllowSymlink: opts.allowSymlink,
@@ -152,18 +157,23 @@ func writeSecurityAuditBundle(opts fileWriteOpts, bundleDir, mainName string, ma
 	}
 
 	runManifestPath := filepath.Join(bundleDir, "run_manifest.json")
-	if err := writeRunManifest(opts, runManifestPath, bundleDir, mainName, written, report); err != nil {
+	if err := writeRunManifest(opts, runManifestPath, now, bundleDir, mainName, written, report); err != nil {
 		return "", err
 	}
 
 	return mainOutPath, nil
 }
 
-func printSecurityAuditSummary(w io.Writer, mainOutPath, bundleDir string, summary securityaudit.Summary) {
-	fmt.Fprintf(w, "security-audit report: %s\n", mainOutPath)
-	fmt.Fprintf(w, "security-audit bundle: %s\n", bundleDir)
-	fmt.Fprintf(w, "summary: total=%d pass=%d warn=%d fail=%d gated=%t threshold=%s\n",
+func printSecurityAuditSummary(w io.Writer, mainOutPath, bundleDir string, summary securityaudit.Summary) error {
+	if _, err := fmt.Fprintf(w, "security-audit report: %s\n", mainOutPath); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "security-audit bundle: %s\n", bundleDir); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintf(w, "summary: total=%d pass=%d warn=%d fail=%d gated=%t threshold=%s\n",
 		summary.Total, summary.Pass, summary.Warn, summary.Fail, summary.Gated, summary.FailOn)
+	return err
 }
 
 func parseSecurityAuditFormat(raw string) (string, error) {
@@ -194,6 +204,17 @@ func renderSecurityAuditReport(format string, report securityaudit.Report) ([]by
 	default:
 		return nil, "", fmt.Errorf("unsupported report format %q", format)
 	}
+}
+
+func (c *securityAuditCmd) resolveNow() (time.Time, error) {
+	if strings.TrimSpace(c.flags.nowTime) == "" {
+		return time.Now().UTC(), nil
+	}
+	t, err := time.Parse(time.RFC3339, c.flags.nowTime)
+	if err != nil {
+		return time.Time{}, &ui.InputError{Err: fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", c.flags.nowTime)}
+	}
+	return t.UTC(), nil
 }
 
 func (c *securityAuditCmd) resolveOutDir(now time.Time) string {
@@ -237,7 +258,21 @@ type manifestFile struct {
 	SizeBytes int64  `json:"size_bytes"`
 }
 
-func writeRunManifest(opts fileWriteOpts, path string, bundleDir string, mainReport string, written []writtenFile, report securityaudit.Report) error {
+type runManifest struct {
+	SchemaVersion     string         `json:"schema_version"`
+	GeneratedAt       string         `json:"generated_at"`
+	MainReport        string         `json:"main_report"`
+	BundleDir         string         `json:"bundle_dir"`
+	ToolVersion       string         `json:"tool_version"`
+	FailOn            string         `json:"fail_on"`
+	Gated             bool           `json:"gated"`
+	GatedFindings     int            `json:"gated_findings"`
+	Files             []manifestFile `json:"files"`
+	EvidenceFreshness string         `json:"evidence_freshness"`
+	VulnSourceUsed    string         `json:"vuln_source_used"`
+}
+
+func writeRunManifest(opts fileWriteOpts, path string, now time.Time, bundleDir string, mainReport string, written []writtenFile, report securityaudit.Report) error {
 	files := make([]manifestFile, 0, len(written))
 	for _, w := range written {
 		files = append(files, manifestFile{
@@ -250,20 +285,20 @@ func writeRunManifest(opts fileWriteOpts, path string, bundleDir string, mainRep
 		return files[i].Path < files[j].Path
 	})
 
-	runManifest := map[string]any{
-		"schema_version":     string(kernel.SchemaSecurityAuditRunManifest),
-		"generated_at":       time.Now().UTC().Format(time.RFC3339),
-		"main_report":        mainReport,
-		"bundle_dir":         bundleDir,
-		"tool_version":       report.ToolVersion,
-		"fail_on":            report.Summary.FailOn,
-		"gated":              report.Summary.Gated,
-		"gated_findings":     report.Summary.GatedFindingCount,
-		"files":              files,
-		"evidence_freshness": report.Summary.EvidenceFreshness,
-		"vuln_source_used":   report.Summary.VulnSourceUsed,
+	manifest := runManifest{
+		SchemaVersion:     string(kernel.SchemaSecurityAuditRunManifest),
+		GeneratedAt:       now.Format(time.RFC3339),
+		MainReport:        mainReport,
+		BundleDir:         bundleDir,
+		ToolVersion:       report.ToolVersion,
+		FailOn:            string(report.Summary.FailOn),
+		Gated:             report.Summary.Gated,
+		GatedFindings:     report.Summary.GatedFindingCount,
+		Files:             files,
+		EvidenceFreshness: report.Summary.EvidenceFreshness,
+		VulnSourceUsed:    report.Summary.VulnSourceUsed,
 	}
-	data, err := json.MarshalIndent(runManifest, "", "  ")
+	data, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal run manifest: %w", err)
 	}

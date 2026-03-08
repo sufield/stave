@@ -123,7 +123,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 	}
 
 	pipeOut := profileOutput(opts.quiet)
-	pipeErr := appeval.NewPipeline(context.Background(), &appeval.PipelineData{
+	pipeErr := appeval.NewPipeline(cmd.Context(), &appeval.PipelineData{
 		Result: result,
 		Output: pipeOut,
 	}).

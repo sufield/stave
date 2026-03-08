@@ -79,7 +79,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return nil, f.wrapError(err)
 	}
 
-	warnIfGitDirty(f.cmd, res.gitMeta, "apply")
+	cmdutil.WarnIfGitDirty(f.cmd, res.gitMeta, "apply")
 
 	return &ApplyDeps{Runner: built.Runner, Config: built.Config}, nil
 }
@@ -145,7 +145,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 
 // mapToBuildInput converts the plan and assets into the input struct for BuildDependencies.
 func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStack) appeval.BuildDependenciesInput {
-	var output io.Writer = os.Stdout
+	var output io.Writer = f.cmd.OutOrStdout()
 	if cmdutil.QuietEnabled(f.cmd) {
 		output = io.Discard
 	}
@@ -159,7 +159,7 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 		MaxUnsafe:         f.params.maxDuration,
 		Clock:             f.params.clock,
 		Output:            output,
-		Stderr:            os.Stderr,
+		Stderr:            f.cmd.ErrOrStderr(),
 		AllowUnknownInput: applyFlags.allowUnknownInput,
 		ToolVersion:       version.Version,
 		ExemptionConfig:   res.exemptionCfg,
@@ -188,9 +188,7 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 
 // buildFilter constructs the control filter from CLI flags.
 func (f *Factory) buildFilter() appeval.ControlFilter {
-	return appeval.ControlFilter{
-		ExcludeControlID: toControlIDs(applyFlags.applyExcludeControlIDs),
-	}
+	return appeval.ControlFilter{}
 }
 
 // wrapError enriches known dependency errors with user-facing hints.

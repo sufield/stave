@@ -114,4 +114,5 @@ func init() {
 	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.releaseBundleDir, "release-bundle-dir", "", "Directory with release verification artifacts (SHA256SUMS and signatures)")
 	SecurityAuditCmd.Flags().BoolVar(&securityAudit.flags.privacyMode, "privacy-mode", false, "Enable strict privacy assertions")
 	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.failOn, "fail-on", "HIGH", "Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.nowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 }

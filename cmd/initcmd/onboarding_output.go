@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 const demoFixHint = "enable account/bucket Block Public Access + deny public principals"
@@ -24,6 +25,7 @@ Example (Terraform):
 
 func writeQuickstartSummary(
 	out io.Writer,
+	san kernel.Sanitizer,
 	sourceLabel string,
 	findings []remediation.Finding,
 	latest asset.Snapshot,
@@ -34,7 +36,7 @@ func writeQuickstartSummary(
 	}
 	top := findings[0]
 	evidence := demoEvidenceLine(latest, string(top.AssetID))
-	return writeQuickstartTopFindingSummary(out, sourceLabel, reportPath, top, evidence)
+	return writeQuickstartTopFindingSummary(out, san, sourceLabel, reportPath, top, evidence)
 }
 
 func writeQuickstartNoFindingSummary(out io.Writer, sourceLabel, reportPath string) error {
@@ -59,6 +61,7 @@ func writeQuickstartNoFindingSummary(out io.Writer, sourceLabel, reportPath stri
 
 func writeQuickstartTopFindingSummary(
 	out io.Writer,
+	san kernel.Sanitizer,
 	sourceLabel string,
 	reportPath string,
 	top remediation.Finding,
@@ -70,7 +73,7 @@ func writeQuickstartTopFindingSummary(
 	if _, err := fmt.Fprintf(out, "Top finding: %s\n", top.ControlID); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(out, "Asset: %s\n", top.AssetID); err != nil {
+	if _, err := fmt.Fprintf(out, "Asset: %s\n", san.ID(string(top.AssetID))); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(out, "Fix: %s (%s)\n", "enable account/bucket Block Public Access + deny public principals", evidence); err != nil {
@@ -86,7 +89,7 @@ func writeQuickstartTopFindingSummary(
 	return err
 }
 
-func printDemoSummary(out io.Writer, snapshot asset.Snapshot, findings []remediation.Finding, reportPath string) error {
+func printDemoSummary(out io.Writer, san kernel.Sanitizer, snapshot asset.Snapshot, findings []remediation.Finding, reportPath string) error {
 	if len(findings) == 0 {
 		if _, err := fmt.Fprintln(out, "Found 0 violations."); err != nil {
 			return err
@@ -102,7 +105,7 @@ func printDemoSummary(out io.Writer, snapshot asset.Snapshot, findings []remedia
 	if _, err := fmt.Fprintf(out, "Found 1 violation: %s\n", top.ControlID); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(out, "Asset: %s\n", top.AssetID); err != nil {
+	if _, err := fmt.Fprintf(out, "Asset: %s\n", san.ID(string(top.AssetID))); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(out, "Evidence: %s\n", evidence); err != nil {
