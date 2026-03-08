@@ -35,9 +35,6 @@ func DefaultPolicy() AirgapPolicy {
 			`"crypto/tls"`,
 		},
 		AllowedImportByFile: map[string]map[string]bool{
-			"cmd/report_output.go": {
-				`"text/template"`: true,
-			},
 			"internal/adapters/gitinfo/repo.go": {
 				`"os/exec"`: true,
 			},

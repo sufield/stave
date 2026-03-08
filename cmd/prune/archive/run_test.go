@@ -5,6 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	"github.com/sufield/stave/internal/pruner"
 )
 
 func TestPlanPruneForArchive_RespectsKeepMin(t *testing.T) {
@@ -16,7 +19,7 @@ func TestPlanPruneForArchive_RespectsKeepMin(t *testing.T) {
 		{Name: "d.json", CapturedAt: now.AddDate(0, 0, -5)},
 	}
 
-	moves := planPrune(files, PruningCriteria{Now: now, OlderThan: 30 * 24 * time.Hour, KeepMin: 2})
+	moves := pruneshared.PlanPrune(files, pruner.Criteria{Now: now, OlderThan: 30 * 24 * time.Hour, KeepMin: 2})
 	if len(moves) != 2 {
 		t.Fatalf("expected 2 archive moves, got %d", len(moves))
 	}

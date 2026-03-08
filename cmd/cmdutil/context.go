@@ -11,6 +11,7 @@ import (
 
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/pathinfer"
+	"github.com/sufield/stave/internal/platform/fsutil"
 
 	"github.com/spf13/cobra"
 )
@@ -264,7 +265,7 @@ func SaveSessionState(projectRoot string, argv []string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0o600)
+	return fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts())
 }
 
 // LoadSessionState reads session state from disk.

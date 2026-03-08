@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -103,11 +104,11 @@ func buildArchiveExecutionPlan(cmd *cobra.Command) (archiveExecutionPlan, error)
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}
-	allFiles, err := listObservationSnapshotFiles(in.obsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(in.obsDir)
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}
-	candidateFiles := planPrune(allFiles, PruningCriteria{Now: in.now, OlderThan: in.olderThan, KeepMin: in.keepMin})
+	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.now, OlderThan: in.olderThan, KeepMin: in.keepMin})
 	out := pruner.BuildArchiveOutput(ArchiveReportInput{
 		Now:             in.now,
 		Mode:            in.mode,
@@ -147,11 +148,11 @@ func resolveArchiveInput(cmd *cobra.Command) (archiveResolvedInput, error) {
 	if archiveOpts.KeepMin < 0 {
 		return archiveResolvedInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", archiveOpts.KeepMin)
 	}
-	tier, err := validateRetentionTier(archiveOpts.RetentionTier)
+	tier, err := pruneshared.ValidateRetentionTier(archiveOpts.RetentionTier)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	olderThan, err := resolveCleanupOlderThan(cmd, archiveOpts.OlderThan, tier)
+	olderThan, err := pruneshared.ResolveOlderThan(cmd, archiveOpts.OlderThan, tier)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}

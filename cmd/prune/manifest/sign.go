@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func runSnapshotManifestSign(cmd *cobra.Command, _ []string) error {
@@ -22,7 +23,7 @@ func runSnapshotManifestSign(cmd *cobra.Command, _ []string) error {
 	out := filepath.Clean(snapshotManifestOutPath)
 	privateKeyPath := filepath.Clean(snapshotManifestPrivateKeyPath)
 
-	manifestData, err := os.ReadFile(in)
+	manifestData, err := fsutil.ReadFileLimited(in)
 	if err != nil {
 		return fmt.Errorf("read manifest %q: %w", in, err)
 	}

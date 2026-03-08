@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
@@ -45,35 +45,19 @@ func attachRunID(inputsHash, controlsHash string) {
 
 func configKeyCompletions() []string {
 	baseKeys := cmdutil.ConfigKeyService.TopLevelKeys()
-	keys := make([]string, 0, len(baseKeys)+16)
-	keys = append(keys, baseKeys...)
-
-	tierSet := map[string]struct{}{}
-	tierSet[cmdutil.DefaultRetentionTier] = struct{}{}
+	tiers := []string{cmdutil.DefaultRetentionTier}
 
 	if cfg, ok := cmdutil.FindProjectConfig(); ok {
 		if t := cmdutil.NormalizeRetentionTier(cfg.RetentionTier); t != "" {
-			tierSet[t] = struct{}{}
+			tiers = append(tiers, t)
 		}
 		for tier := range cfg.RetentionTiers {
 			t := cmdutil.NormalizeRetentionTier(tier)
 			if t != "" {
-				tierSet[t] = struct{}{}
+				tiers = append(tiers, t)
 			}
 		}
 	}
 
-	tiers := make([]string, 0, len(tierSet))
-	for tier := range tierSet {
-		tiers = append(tiers, tier)
-	}
-	sort.Strings(tiers)
-	for _, tier := range tiers {
-		keys = append(keys, "snapshot_retention_tiers."+tier)
-		keys = append(keys, "snapshot_retention_tiers."+tier+".older_than")
-		keys = append(keys, "snapshot_retention_tiers."+tier+".keep_min")
-	}
-
-	sort.Strings(keys)
-	return keys
+	return configservice.BuildKeyCompletions(baseKeys, tiers)
 }
