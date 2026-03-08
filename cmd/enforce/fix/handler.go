@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 type fixFlagsType struct {
@@ -43,7 +43,7 @@ func loadFixFindings(inputPath string) ([]remediation.Finding, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read --input: %w", err)
 	}
-	findings, err := parseFindings(data)
+	findings, err := evaljson.ParseFindings(data)
 	if err != nil {
 		return nil, fmt.Errorf("parse evaluation: %w", err)
 	}
@@ -119,32 +119,4 @@ func writeFixResult(w io.Writer, selected remediation.Finding) error {
 
 func fixFindingKey(f remediation.Finding) string {
 	return fmt.Sprintf("%s@%s", f.ControlID, f.AssetID)
-}
-
-func parseFindings(raw []byte) ([]remediation.Finding, error) {
-	var env safetyenvelope.Evaluation
-	if err := json.Unmarshal(raw, &env); err == nil && len(env.Findings) > 0 {
-		return env.Findings, nil
-	}
-
-	var wrapped struct {
-		OK   bool                      `json:"ok"`
-		Data safetyenvelope.Evaluation `json:"data"`
-	}
-	if err := json.Unmarshal(raw, &wrapped); err == nil && len(wrapped.Data.Findings) > 0 {
-		return wrapped.Data.Findings, nil
-	}
-
-	var direct struct {
-		Findings []remediation.Finding `json:"findings"`
-	}
-	if err := json.Unmarshal(raw, &direct); err == nil {
-		return direct.Findings, nil
-	}
-
-	var probe any
-	if err := json.Unmarshal(raw, &probe); err != nil {
-		return nil, err
-	}
-	return nil, fmt.Errorf("input JSON does not contain evaluation findings")
 }
