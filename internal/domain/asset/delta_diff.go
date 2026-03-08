@@ -71,7 +71,7 @@ func diffDeep(path string, from, to any) []PropertyChange {
 	fromMap, fromIsMap := from.(map[string]any)
 	toMap, toIsMap := to.(map[string]any)
 	if fromIsMap && toIsMap {
-		keys := uniqueSortedAnyKeys(fromMap, toMap)
+		keys := uniqueSortedKeys(fromMap, toMap)
 
 		changes := make([]PropertyChange, 0)
 		for _, k := range keys {
@@ -97,24 +97,7 @@ func assetMap(resources []Asset) map[string]Asset {
 	return fp.ToMap(resources, func(r Asset) string { return r.ID.String() })
 }
 
-func uniqueSortedAssetKeys(a, b map[string]Asset) []string {
-	keySet := make(map[string]struct{}, len(a)+len(b))
-	for k := range a {
-		keySet[k] = struct{}{}
-	}
-	for k := range b {
-		keySet[k] = struct{}{}
-	}
-
-	keys := make([]string, 0, len(keySet))
-	for k := range keySet {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func uniqueSortedAnyKeys(a, b map[string]any) []string {
+func uniqueSortedKeys[V any](a, b map[string]V) []string {
 	keySet := make(map[string]struct{}, len(a)+len(b))
 	for k := range a {
 		keySet[k] = struct{}{}

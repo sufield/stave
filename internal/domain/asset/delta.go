@@ -136,7 +136,7 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 	prevByID := assetMap(prev.Assets)
 	currByID := assetMap(curr.Assets)
 	// O(N+M): Single pass to identify added, removed, and persisting asset IDs.
-	ids := uniqueSortedAssetKeys(prevByID, currByID)
+	ids := uniqueSortedKeys(prevByID, currByID)
 
 	delta := ObservationDelta{
 		SchemaVersion: kernel.SchemaDiff,
