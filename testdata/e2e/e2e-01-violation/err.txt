@@ -1,6 +1,5 @@
-WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-01-violation/controls/CTL.EXP.DURATION.001.yaml). This run may not reflect committed state.
-Running: evaluate controls against observations...
-Done:    evaluate controls against observations (9ms)
+Running: apply controls against observations...
+Done:    apply controls against observations (5ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations
 

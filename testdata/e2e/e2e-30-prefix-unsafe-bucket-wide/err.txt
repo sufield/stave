@@ -1,5 +1,5 @@
-Running: evaluate controls against observations...
-Done:    evaluate controls against observations (11ms)
+Running: apply controls against observations...
+Done:    apply controls against observations (5ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-30-prefix-unsafe-bucket-wide/controls --observations testdata/e2e/e2e-30-prefix-unsafe-bucket-wide/observations
 

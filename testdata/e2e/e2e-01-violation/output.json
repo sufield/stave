@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.1",
+    "tool_version": "0.0.2",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
@@ -13,7 +13,7 @@
         "2026-01-10T000000Z.json": "18c978c80587bd68e7b67d9885bb419ee277d25a0648adb3db0a8390287758c5",
         "2026-01-11T000000Z.json": "400e13d047fd27e0f0799d872fa7d98d6a83352468013077b04c3322cd04d795"
       },
-      "overall": "4e3e2e1e4ffbd529317d87bc20de4c9ffa99decfa402efc690a18469ed764e66"
+      "overall": "d62a518a42a1c1ca8ec8702ef29257aa08b2143da9c13e00e84cde068ea09406"
     },
     "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
   },
@@ -68,11 +68,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-01-violation/controls/CTL.EXP.DURATION.001.yaml"
-      ]
+      "head_commit": "b18ebb465a6d4503a3047c0d76d8f72254800ca7",
+      "dirty": false
     }
   }
 }

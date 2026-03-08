@@ -1,6 +1,5 @@
-WARN: Uncommitted changes detected in apply inputs (stave/testdata/e2e/e2e-28-breach-disc-incomplete-window/controls/CTL.EXP.RECURRENCE.001.yaml). This run may not reflect committed state.
-Running: evaluate controls against observations...
-Done:    evaluate controls against observations (12ms)
+Running: apply controls against observations...
+Done:    apply controls against observations (6ms)
 Evaluation complete. No violations found.
 
 Need help? Run 'stave bug-report' to create a diagnostic bundle.

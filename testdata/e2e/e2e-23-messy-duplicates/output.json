@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.1",
+    "tool_version": "0.0.2",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
@@ -12,7 +12,7 @@
         "2026-01-01T000000Z.json": "2150bd50514a6299531650491f0757691d6c03c9674e3e50d792f0a4885293b3",
         "2026-01-11T000000Z.json": "74379a5493bdc36e2df866282b030d980615e4826c6ff6af7aca81a0be186ffa"
       },
-      "overall": "1f602a18b063d1670e99365ba1c3be9e437fbfd8cf823f1bc6fbe30a3020de1a"
+      "overall": "980cb82d556a7717e92e2285ef62baca393517923b1909f4d01c3637c1d830d8"
     },
     "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
   },
@@ -64,7 +64,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "head_commit": "b18ebb465a6d4503a3047c0d76d8f72254800ca7",
       "dirty": false
     }
   }
