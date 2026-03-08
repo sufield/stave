@@ -7,6 +7,7 @@ type AirgapPolicy struct {
 	BannedRuntimeImports    []string
 	AllowedImportByFile     map[string]map[string]bool
 	BannedCredentialEnvVars []string
+	RequiredS3IAMActions    []string
 }
 
 // DefaultPolicy returns an AirgapPolicy populated with all air-gap restriction
@@ -53,6 +54,13 @@ func DefaultPolicy() AirgapPolicy {
 			"AZURE_CLIENT_ID",
 			"AZURE_CLIENT_SECRET",
 			"AZURE_TENANT_ID",
+		},
+		RequiredS3IAMActions: []string{
+			"s3:GetBucketAcl",
+			"s3:GetBucketPolicy",
+			"s3:GetBucketPublicAccessBlock",
+			"s3:GetBucketTagging",
+			"s3:ListAllMyBuckets",
 		},
 	}
 }

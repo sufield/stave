@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/domain/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -129,16 +130,16 @@ func countGovulncheckFindings(raw []byte) (int, error) {
 
 func localVulnEvidenceCandidates(req SecurityAuditRequest) []string {
 	return compactPaths(
-		filepath.Join(req.OutDir, "vuln_report.json"),
-		filepath.Join(req.Cwd, ".stave", "cache", "vuln_report.json"),
-		filepath.Join(req.Cwd, "vuln_report.json"),
+		filepath.Join(req.OutDir, securityaudit.ArtifactVulnReport),
+		filepath.Join(req.Cwd, ".stave", "cache", securityaudit.ArtifactVulnReport),
+		filepath.Join(req.Cwd, securityaudit.ArtifactVulnReport),
 	)
 }
 
 func ciVulnEvidenceCandidates(req SecurityAuditRequest) []string {
 	return compactPaths(
-		filepath.Join(req.Cwd, "artifacts", "vuln_report.json"),
-		filepath.Join(req.Cwd, "security", "vuln_report.json"),
+		filepath.Join(req.Cwd, "artifacts", securityaudit.ArtifactVulnReport),
+		filepath.Join(req.Cwd, "security", securityaudit.ArtifactVulnReport),
 		filepath.Join(req.Cwd, "govulncheck.json"),
 	)
 }

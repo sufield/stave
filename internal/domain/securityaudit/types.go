@@ -138,6 +138,19 @@ func AtOrAbove(sev, threshold Severity) bool {
 	return SeverityRank(sev) >= SeverityRank(threshold)
 }
 
+// Artifact filenames used in the security-audit bundle.
+const (
+	ArtifactBuildInfo        = "build_info.json"
+	ArtifactSBOMSPDX         = "sbom.spdx.json"
+	ArtifactSBOMCycloneDX    = "sbom.cdx.json"
+	ArtifactVulnReport       = "vuln_report.json"
+	ArtifactBinaryChecksums  = "binary_checksums.json"
+	ArtifactSignatureVerify  = "signature_verification.json"
+	ArtifactNetworkEgress    = "network_egress_declaration.json"
+	ArtifactFilesystemAccess = "filesystem_access_declaration.json"
+	ArtifactControlCrosswalk = "control_crosswalk_resolution.json"
+)
+
 const (
 	CheckBuildInfoPresent   = "SC.BUILDINFO.PRESENT"
 	CheckSBOMGenerated      = "SC.SBOM.GENERATED"

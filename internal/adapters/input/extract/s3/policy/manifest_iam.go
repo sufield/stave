@@ -1,6 +1,10 @@
 package policy
 
-import "sort"
+import (
+	"slices"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // IAMManifestEntry is one extractor operation to IAM action mapping.
 type IAMManifestEntry struct {
@@ -18,15 +22,7 @@ var S3IngestIAMManifest = []IAMManifestEntry{
 }
 
 // MinimumS3IngestIAMActions returns the normalized action allow-list.
+// The canonical source of truth is kernel.DefaultPolicy().RequiredS3IAMActions.
 func MinimumS3IngestIAMActions() []string {
-	set := make(map[string]bool, len(S3IngestIAMManifest))
-	for _, entry := range S3IngestIAMManifest {
-		set[entry.Action] = true
-	}
-	out := make([]string, 0, len(set))
-	for action := range set {
-		out = append(out, action)
-	}
-	sort.Strings(out)
-	return out
+	return slices.Clone(kernel.DefaultPolicy().RequiredS3IAMActions)
 }

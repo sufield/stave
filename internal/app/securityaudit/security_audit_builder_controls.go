@@ -129,21 +129,21 @@ func findingFromCrosswalkMissing(in crosswalkSnapshot) securityaudit.Finding {
 func mapEvidenceRefs(checkID string) []string {
 	switch checkID {
 	case securityaudit.CheckBuildInfoPresent:
-		return []string{"build_info.json"}
+		return []string{securityaudit.ArtifactBuildInfo}
 	case securityaudit.CheckSBOMGenerated:
-		return []string{"sbom.spdx.json", "sbom.cdx.json"}
+		return []string{securityaudit.ArtifactSBOMSPDX, securityaudit.ArtifactSBOMCycloneDX}
 	case securityaudit.CheckVulnResults:
-		return []string{"vuln_report.json"}
+		return []string{securityaudit.ArtifactVulnReport}
 	case securityaudit.CheckBinarySHA256:
-		return []string{"binary_checksums.json"}
+		return []string{securityaudit.ArtifactBinaryChecksums}
 	case securityaudit.CheckSignatureVerified:
-		return []string{"signature_verification.json", "binary_checksums.json"}
+		return []string{securityaudit.ArtifactSignatureVerify, securityaudit.ArtifactBinaryChecksums}
 	case securityaudit.CheckRuntimeNetworkNone, securityaudit.CheckOfflineEnforcement:
-		return []string{"network_egress_declaration.json"}
+		return []string{securityaudit.ArtifactNetworkEgress}
 	case securityaudit.CheckFSAccessDisclosure:
-		return []string{"filesystem_access_declaration.json"}
+		return []string{securityaudit.ArtifactFilesystemAccess}
 	case securityaudit.CheckControlMapping, securityaudit.CheckControlMapMissing:
-		return []string{"control_crosswalk_resolution.json"}
+		return []string{securityaudit.ArtifactControlCrosswalk}
 	default:
 		return nil
 	}

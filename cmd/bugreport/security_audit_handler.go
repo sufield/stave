@@ -82,7 +82,7 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 		allowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
 	}
 
-	runner := appsa.NewSecurityAuditRunner(govulncheck.Run)
+	runner := appsa.NewSecurityAuditRunner(govulncheck.Run, nil)
 	report, artifacts, err := runner.Run(cmd.Context(), appsa.SecurityAuditRequest{
 		Now:                  now,
 		ToolVersion:          staveversion.Version,

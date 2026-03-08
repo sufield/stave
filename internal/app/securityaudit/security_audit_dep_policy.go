@@ -3,7 +3,7 @@ package securityaudit
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -26,11 +26,8 @@ func (defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditReques
 
 	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root)
 	credentialViolations, credErr := inspectForCredentialEnvRefs(root)
-	if inspectErr != nil {
-		return policyInspectionSnapshot{}, inspectErr
-	}
-	if credErr != nil {
-		return policyInspectionSnapshot{}, credErr
+	if inspectErr != nil || credErr != nil {
+		return policyInspectionSnapshot{}, errors.Join(inspectErr, credErr)
 	}
 
 	proxyVars := setProxyVars()
@@ -71,10 +68,7 @@ func (defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditReques
 		runningPrivileged = os.Geteuid() == 0
 	}
 
-	iamActions, iamErr := loadIAMActionsFromManifestSource(root)
-	if iamErr != nil {
-		return policyInspectionSnapshot{}, iamErr
-	}
+	iamActions := slices.Clone(kernel.DefaultPolicy().RequiredS3IAMActions)
 
 	return policyInspectionSnapshot{
 		Network: networkInspection{
@@ -100,43 +94,6 @@ func (defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditReques
 		ProxyVarsSet: proxyVars,
 		IAMActions:   iamActions,
 	}, nil
-}
-
-func loadIAMActionsFromManifestSource(root string) ([]string, error) {
-	path := filepath.Join(root, "internal", "adapters", "input", "extract", "s3", "policy", "manifest_iam.go")
-	raw, err := fsutil.ReadFileLimited(path)
-	if err != nil {
-		return nil, fmt.Errorf("read S3 IAM manifest source: %w", err)
-	}
-	lines := strings.Split(string(raw), "\n")
-	set := map[string]bool{}
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		const marker = `Action: "`
-		_, after, ok := strings.Cut(line, marker)
-		if !ok {
-			continue
-		}
-		rest := after
-		before, _, ok := strings.Cut(rest, `"`)
-		if !ok {
-			continue
-		}
-		action := strings.TrimSpace(before)
-		if action == "" {
-			continue
-		}
-		set[action] = true
-	}
-	if len(set) == 0 {
-		return nil, fmt.Errorf("no IAM actions parsed from %s", path)
-	}
-	actions := make([]string, 0, len(set))
-	for action := range set {
-		actions = append(actions, action)
-	}
-	sort.Strings(actions)
-	return actions, nil
 }
 
 func setProxyVars() []string {

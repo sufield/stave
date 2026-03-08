@@ -8,3 +8,15 @@ type Sanitizer interface {
 	Path(p string) string
 	Value(v string) string
 }
+
+// IDSanitizer is the narrow interface for replacing identifiers with
+// deterministic tokens. Any Sanitizer implementation satisfies this.
+type IDSanitizer interface {
+	ID(string) string
+}
+
+// PathSanitizer is the narrow interface for shortening file paths in output.
+// Any Sanitizer implementation satisfies this.
+type PathSanitizer interface {
+	Path(string) string
+}
