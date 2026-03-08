@@ -25,7 +25,7 @@ Stave is stateless. Every command reads from files or stdin, writes to stdout/st
 | `capabilities` | (none) | stdout (JSON) | stdout only |
 | `graph coverage` | `--controls` dir, `--observations` dir | stdout (DOT/JSON) | stdout only |
 
-### Visual: Core Command Data Flows
+### Command Data Flows
 
 **apply**
 
