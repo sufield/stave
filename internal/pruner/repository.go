@@ -22,7 +22,8 @@ func loadSnapshotCapturedAt(loader SnapshotObservationLoader, path, name string)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("open %s: %w", path, err)
 	}
-	snapshot, loadErr := loader.LoadSnapshotFromReader(context.Background(), f, name)
+	// TODO: thread context from callers instead of using context.TODO.
+	snapshot, loadErr := loader.LoadSnapshotFromReader(context.TODO(), f, name)
 	_ = f.Close()
 	if loadErr != nil {
 		return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)

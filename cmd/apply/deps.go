@@ -163,6 +163,7 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 		Filters:           f.buildFilter(),
 		ControlsDir:       applyFlags.controlsDir,
 		PredicateParser:   ctlyaml.YAMLPredicateParser,
+		Context:           f.cmd.Context(),
 	}
 }
 

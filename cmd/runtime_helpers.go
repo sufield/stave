@@ -24,6 +24,8 @@ func expandAliasIfMatch() {
 	if !ok {
 		return
 	}
+	// Note: strings.Fields splits on whitespace without respecting shell quoting.
+	// Alias values with quoted arguments containing spaces won't tokenize correctly.
 	tokens := strings.Fields(expanded)
 	newArgs := append(tokens, os.Args[2:]...)
 	RootCmd.SetArgs(newArgs)

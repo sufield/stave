@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -17,30 +16,30 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-func diagnoseOutput(quiet bool) io.Writer {
+func diagnoseOutput(cmd *cobra.Command, quiet bool) io.Writer {
 	if quiet {
 		return io.Discard
 	}
-	return os.Stdout
+	return cmd.OutOrStdout()
 }
 
 func renderDiagnoseOutput(cmd *cobra.Command, opts diagnoseOptions, report *diagnosis.Report) error {
 	if opts.Template != "" {
-		return renderDiagnoseTemplate(opts, report)
+		return renderDiagnoseTemplate(cmd, opts, report)
 	}
 	format, err := ui.ParseOutputFormat(opts.Format)
 	if err != nil {
 		return err
 	}
-	out := diagnoseOutput(opts.Quiet)
+	out := diagnoseOutput(cmd, opts.Quiet)
 	if err := writeDiagnoseReport(cmd, out, format, report); err != nil {
 		return err
 	}
 	return diagnoseDiagnosisExit(report)
 }
 
-func renderDiagnoseTemplate(opts diagnoseOptions, report *diagnosis.Report) error {
-	out := diagnoseOutput(opts.Quiet)
+func renderDiagnoseTemplate(cmd *cobra.Command, opts diagnoseOptions, report *diagnosis.Report) error {
+	out := diagnoseOutput(cmd, opts.Quiet)
 	if err := ui.ExecuteTemplate(out, opts.Template, safetyenvelope.NewDiagnose(report)); err != nil {
 		return err
 	}

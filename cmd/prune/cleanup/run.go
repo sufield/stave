@@ -3,7 +3,6 @@ package cleanup
 import (
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -77,7 +76,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 			}, nil
 		},
 		Render: func(_ appeval.CleanupPlan) error {
-			return renderDeletePlan(plan, os.Stdout)
+			return renderDeletePlan(plan, cmd.OutOrStdout())
 		},
 		Apply: func(_ appeval.CleanupPlan) error {
 			deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
@@ -87,7 +86,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 				return err
 			}
 			if !cmdutil.QuietEnabled(cmd) && !plan.format.IsJSON() {
-				fmt.Fprintf(os.Stdout, "Deleted %d snapshot(s).\n", deletion.Deleted)
+				fmt.Fprintf(cmd.OutOrStdout(), "Deleted %d snapshot(s).\n", deletion.Deleted)
 			}
 			return nil
 		},

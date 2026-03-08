@@ -77,12 +77,15 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	}
 
 	evalStub := evalResultRepoStub{}
-	run := appdiagnose.NewRun(
+	run, newErr := appdiagnose.NewRun(
 		evalObservationRepoStub{snapshots: snapshots},
 		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
 		evalStub,
 		evalStub,
 	)
+	if newErr != nil {
+		t.Fatal(newErr)
+	}
 
 	t.Run("uses output reader when provided", func(t *testing.T) {
 		reader := bytes.NewBufferString(`{"findings":[]}`)
@@ -124,12 +127,15 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 func TestDiagnoseExecute_EvaluationResultRepoErrors(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	errStub := evalResultRepoStub{err: errors.New("bad output")}
-	run := appdiagnose.NewRun(
+	run, newErr := appdiagnose.NewRun(
 		evalObservationRepoStub{snapshots: []asset.Snapshot{{CapturedAt: now}}},
 		evalControlRepoStub{controls: []policy.ControlDefinition{{ID: "CTL.TEST.001"}}},
 		errStub,
 		errStub,
 	)
+	if newErr != nil {
+		t.Fatal(newErr)
+	}
 
 	_, err := run.Execute(context.Background(), appdiagnose.Config{
 		ControlsDir:     "ctl",

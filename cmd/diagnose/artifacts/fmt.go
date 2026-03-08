@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -53,13 +54,12 @@ func runFmt(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return writeFmtSummary(changed, checked, fmtCheck)
+	return writeFmtSummary(cmd.OutOrStdout(), changed, checked, fmtCheck)
 }
 
 func formatFile(path string) ([]byte, bool, error) {
 	ext := strings.ToLower(filepath.Ext(path))
-	// #nosec G304 -- path is either explicit CLI target or discovered via collectFormatTargets walk.
-	data, err := os.ReadFile(path)
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, false, err
 	}
@@ -128,8 +128,7 @@ func applyFormattingToTargets(cmd *cobra.Command, files []string, checkOnly bool
 			continue
 		}
 		checked++
-		// #nosec G304 -- path is either explicit CLI target or discovered via collectFormatTargets walk.
-		orig, err := os.ReadFile(path)
+		orig, err := fsutil.ReadFileLimited(path)
 		if err != nil {
 			return 0, 0, fmt.Errorf("read %s: %w", path, err)
 		}
@@ -149,15 +148,15 @@ func applyFormattingToTargets(cmd *cobra.Command, files []string, checkOnly bool
 	return changed, checked, nil
 }
 
-func writeFmtSummary(changed, checked int, checkOnly bool) error {
+func writeFmtSummary(w io.Writer, changed, checked int, checkOnly bool) error {
 	if checkOnly {
 		if changed > 0 {
 			return fmt.Errorf("%d/%d file(s) require formatting", changed, checked)
 		}
-		fmt.Fprintf(os.Stdout, "All %d file(s) already formatted.\n", checked)
+		fmt.Fprintf(w, "All %d file(s) already formatted.\n", checked)
 		return nil
 	}
-	fmt.Fprintf(os.Stdout, "Formatted %d/%d file(s).\n", changed, checked)
+	fmt.Fprintf(w, "Formatted %d/%d file(s).\n", changed, checked)
 	return nil
 }
 

@@ -3,7 +3,6 @@ package archive
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -85,14 +84,14 @@ func runArchive(cmd *cobra.Command, _ []string) error {
 			}, nil
 		},
 		Render: func(_ appeval.CleanupPlan) error {
-			return renderArchiveExecutionPlan(plan, os.Stdout)
+			return renderArchiveExecutionPlan(plan, cmd.OutOrStdout())
 		},
 		Apply: func(_ appeval.CleanupPlan) error {
 			if err := applyArchiveExecutionPlan(plan); err != nil {
 				return err
 			}
 			if !cmdutil.QuietEnabled(cmd) && !plan.format.IsJSON() {
-				fmt.Fprintf(os.Stdout, "Archived %d snapshot(s) to %s.\n", len(plan.candidateFiles), plan.archiveDir)
+				fmt.Fprintf(cmd.OutOrStdout(), "Archived %d snapshot(s) to %s.\n", len(plan.candidateFiles), plan.archiveDir)
 			}
 			return nil
 		},

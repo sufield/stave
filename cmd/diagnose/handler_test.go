@@ -168,7 +168,8 @@ func TestBuildDiagnoseConfigAndOutputHelpers(t *testing.T) {
 		t.Fatalf("file config mismatch: %#v", cfg)
 	}
 
-	if diagnoseOutput(true) != io.Discard {
+	testCmd := &cobra.Command{}
+	if diagnoseOutput(testCmd, true) != io.Discard {
 		t.Fatal("diagnoseOutput(true) should return io.Discard")
 	}
 }

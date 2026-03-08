@@ -139,7 +139,7 @@ func runDiagnoseFindingDetail(req diagnoseFindingDetailRequest) error {
 		return fmtErr
 	}
 
-	out := diagnoseOutput(req.quiet)
+	out := diagnoseOutput(req.cmd, req.quiet)
 	if format.IsJSON() || cmdutil.IsJSONMode(req.cmd) {
 		return writeFindingDetailJSON(out, detail)
 	}

@@ -46,19 +46,19 @@ func NewRun(
 	ctlRepo appcontracts.ControlRepository,
 	fileLoader appcontracts.FileResultLoader,
 	readerLoader appcontracts.ReaderResultLoader,
-) *Run {
+) (*Run, error) {
 	if obsRepo == nil {
-		panic("precondition failed: NewRun requires non-nil ObservationRepository")
+		return nil, fmt.Errorf("NewRun requires non-nil ObservationRepository")
 	}
 	if ctlRepo == nil {
-		panic("precondition failed: NewRun requires non-nil ControlRepository")
+		return nil, fmt.Errorf("NewRun requires non-nil ControlRepository")
 	}
 	return &Run{
 		ObservationRepo:    obsRepo,
 		ControlRepo:        ctlRepo,
 		FileResultLoader:   fileLoader,
 		ReaderResultLoader: readerLoader,
-	}
+	}, nil
 }
 
 // Execute runs diagnostics and returns the report.

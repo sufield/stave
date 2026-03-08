@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -63,8 +62,7 @@ func runSnapshotManifestSign(cmd *cobra.Command, _ []string) error {
 }
 
 func loadPrivateKey(path string) (ed25519.PrivateKey, error) {
-	// #nosec G304 -- path comes from explicit CLI flag to local private key file.
-	data, err := os.ReadFile(path)
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, err
 	}

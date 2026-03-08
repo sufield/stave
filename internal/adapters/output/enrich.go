@@ -35,6 +35,7 @@ func Enrich(enricher FindingEnricher, sanitizer kernel.Sanitizer, result evaluat
 
 // PrepareFindings enriches findings from the result and optionally sanitizes them.
 // If sanitizer is nil, sanitization is skipped.
+// Panics if enricher is nil — this is a programming invariant, not a user error.
 func PrepareFindings(enricher FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) []remediation.Finding {
 	if enricher == nil {
 		panic("precondition failed: PrepareFindings requires non-nil enricher")

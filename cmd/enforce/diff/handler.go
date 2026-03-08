@@ -29,7 +29,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
 	rt.Quiet = cmdutil.QuietEnabled(cmd)
 	stop := rt.BeginProgress("Computing observation delta")
-	out, err := compute(opts.ObservationsDir, filter)
+	out, err := compute(cmd.Context(), opts.ObservationsDir, filter)
 	stop()
 	if err != nil {
 		return err
@@ -38,8 +38,8 @@ func run(cmd *cobra.Command, opts *options) error {
 	return writeOutput(cmd, cmd.OutOrStdout(), format, out)
 }
 
-func compute(observationsDir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
-	snapshots, err := cmdutil.LoadSnapshots(context.Background(), observationsDir)
+func compute(ctx context.Context, observationsDir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
+	snapshots, err := cmdutil.LoadSnapshots(ctx, observationsDir)
 	if err != nil {
 		return asset.ObservationDelta{}, err
 	}

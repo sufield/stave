@@ -39,6 +39,7 @@ type BuildDependenciesInput struct {
 	Filters         ControlFilter
 	ControlsDir     string
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	Context         context.Context
 }
 
 // BuildDependenciesOutput is the assembled runner + config pair.
@@ -55,12 +56,17 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 		return BuildDependenciesOutput{}, err
 	}
 
-	resolved, err := ResolveProjectConfig(context.Background(), in.ProjectConfig)
+	ctx := in.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	resolved, err := ResolveProjectConfig(ctx, in.ProjectConfig)
 	if err != nil {
 		return BuildDependenciesOutput{}, err
 	}
 
-	preloaded, err := resolvePreloadedControls(in, resolved)
+	preloaded, err := resolvePreloadedControls(ctx, in, resolved)
 	if err != nil {
 		return BuildDependenciesOutput{}, err
 	}
@@ -92,7 +98,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	}, nil
 }
 
-func resolvePreloadedControls(in BuildDependenciesInput, resolved ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
+func resolvePreloadedControls(ctx context.Context, in BuildDependenciesInput, resolved ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
 	preloaded := resolved.PreloadedControls
 	if !in.Filters.Enabled() {
 		return preloaded, nil
@@ -102,7 +108,7 @@ func resolvePreloadedControls(in BuildDependenciesInput, resolved ResolvedProjec
 		if dir == "" {
 			dir = in.Plan.ControlsPath
 		}
-		loaded, err := in.ControlLoader.LoadControls(context.Background(), dir)
+		loaded, err := in.ControlLoader.LoadControls(ctx, dir)
 		if err != nil {
 			return nil, fmt.Errorf("load controls for filtering: %w", err)
 		}

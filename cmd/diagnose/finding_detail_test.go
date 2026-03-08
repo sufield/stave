@@ -133,12 +133,15 @@ func TestRunDiagnoseFindingDetail_SuccessJSON(t *testing.T) {
 	}
 
 	evalStub := diagnoseEvalRepoStub{result: result}
-	run := appdiagnose.NewRun(
+	run, err := appdiagnose.NewRun(
 		diagnoseObsRepoStub{snapshots: snapshots},
 		diagnoseInvRepoStub{controls: controls},
 		evalStub,
 		evalStub,
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cmd := &cobra.Command{Use: "test"}
 	cmd.Flags().String("format", "text", "")

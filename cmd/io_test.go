@@ -81,22 +81,19 @@ func TestWriteFilePermissions0o600(t *testing.T) {
 // TestNoOsCreateInOutputFiles verifies that output files use os.OpenFile
 // with explicit permissions instead of os.Create (which defaults to 0666).
 func TestNoOsCreateInOutputFiles(t *testing.T) {
-	// Source files have moved to sub-packages. Check each sub-package directory.
 	checks := []struct {
 		dir  string
 		file string
 	}{
-		{"ingest", "ingest.go"},
-		{"enforce", "enforce.go"},
 		{"apply", "handler.go"},
+		{"ingest", "s3_runner.go"},
 	}
 
 	for _, c := range checks {
 		path := filepath.Join(".", c.dir, c.file)
 		data, err := os.ReadFile(path)
 		if err != nil {
-			t.Logf("skipping %s/%s: %v", c.dir, c.file, err)
-			continue
+			t.Fatalf("guardrail target moved: %s/%s: %v", c.dir, c.file, err)
 		}
 
 		content := string(data)
@@ -112,17 +109,15 @@ func TestNoWorldReadableDirs(t *testing.T) {
 		dir  string
 		file string
 	}{
-		{"ingest", "ingest.go"},
-		{"enforce", "enforce.go"},
 		{"apply", "handler.go"},
+		{"ingest", "s3_runner.go"},
 	}
 
 	for _, c := range checks {
 		path := filepath.Join(".", c.dir, c.file)
 		data, err := os.ReadFile(path)
 		if err != nil {
-			t.Logf("skipping %s/%s: %v", c.dir, c.file, err)
-			continue
+			t.Fatalf("guardrail target moved: %s/%s: %v", c.dir, c.file, err)
 		}
 
 		content := string(data)

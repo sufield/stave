@@ -40,7 +40,7 @@ type scaffoldOptions struct {
 	CaptureCadence    string
 }
 
-func runInit(_ *cobra.Command, _ []string) error {
+func runInit(cmd *cobra.Command, _ []string) error {
 	result, err := projectapp.RunInit(projectapp.InitRequest{
 		Dir:               initFlags.dir,
 		Profile:           initFlags.profile,
@@ -72,7 +72,7 @@ func runInit(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	printScaffoldSummary(scaffoldSummaryRequest{
+	printScaffoldSummary(cmd.OutOrStdout(), scaffoldSummaryRequest{
 		BaseDir: result.BaseDir,
 		Dirs:    result.Dirs,
 		Created: result.Created,
@@ -287,41 +287,41 @@ type scaffoldSummaryRequest struct {
 	DryRun  bool
 }
 
-func printScaffoldSummary(req scaffoldSummaryRequest) {
+func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest) {
 	absBaseDir, err := filepath.Abs(req.BaseDir)
 	if err != nil {
 		absBaseDir = req.BaseDir
 	}
 	if req.DryRun {
-		fmt.Printf("Dry run: scaffold would be created in %s\n", absBaseDir)
+		fmt.Fprintf(w, "Dry run: scaffold would be created in %s\n", absBaseDir)
 	} else {
-		fmt.Printf("Initialized empty Stave project in %s\n", absBaseDir)
+		fmt.Fprintf(w, "Initialized empty Stave project in %s\n", absBaseDir)
 	}
-	fmt.Println("")
+	fmt.Fprintln(w)
 	if req.DryRun {
-		fmt.Println("Planned structure:")
+		fmt.Fprintln(w, "Planned structure:")
 	} else {
-		fmt.Println("Created structure:")
+		fmt.Fprintln(w, "Created structure:")
 	}
-	printCreatedTree(req.Dirs, req.Created)
+	printCreatedTree(w, req.Dirs, req.Created)
 	if !req.DryRun {
-		fmt.Println("")
-		fmt.Printf("Project manifest: %s\n", projectConfigFile)
-		fmt.Println("Template reference: stave.sample.yaml")
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "Project manifest: %s\n", projectConfigFile)
+		fmt.Fprintln(w, "Template reference: stave.sample.yaml")
 	}
 	if len(req.Skipped) > 0 {
-		fmt.Println("")
-		fmt.Println("Skipped existing files (use --force to overwrite):")
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Skipped existing files (use --force to overwrite):")
 		for _, rel := range req.Skipped {
-			fmt.Printf("  - %s\n", rel)
+			fmt.Fprintf(w, "  - %s\n", rel)
 		}
 	}
 	if req.DryRun {
-		fmt.Println("")
-		fmt.Println("No files were written (dry-run).")
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "No files were written (dry-run).")
 	}
 
-	rt := ui.NewRuntime(os.Stdout, os.Stderr)
+	rt := ui.NewRuntime(w, os.Stderr)
 	rt.Quiet = globalQuiet
 	rt.PrintNextSteps(
 		"Run `stave doctor` to verify your local environment.",
@@ -337,7 +337,7 @@ type summaryTreeNode struct {
 	isFile   bool
 }
 
-func printCreatedTree(dirs, files []string) {
+func printCreatedTree(w io.Writer, dirs, files []string) {
 	root := &summaryTreeNode{children: make(map[string]*summaryTreeNode)}
 	for _, dir := range dirs {
 		addTreePath(root, dir, true)
@@ -345,7 +345,7 @@ func printCreatedTree(dirs, files []string) {
 	for _, file := range files {
 		addTreePath(root, file, false)
 	}
-	printTreeChildren(root, "  ")
+	printTreeChildren(w, root, "  ")
 }
 
 func addTreePath(root *summaryTreeNode, rel string, isDir bool) {
@@ -375,7 +375,7 @@ func addTreePath(root *summaryTreeNode, rel string, isDir bool) {
 	}
 }
 
-func printTreeChildren(node *summaryTreeNode, prefix string) {
+func printTreeChildren(w io.Writer, node *summaryTreeNode, prefix string) {
 	if len(node.children) == 0 {
 		return
 	}
@@ -397,8 +397,8 @@ func printTreeChildren(node *summaryTreeNode, prefix string) {
 		if child.isDir || len(child.children) > 0 {
 			label += "/"
 		}
-		fmt.Printf("%s%s%s\n", prefix, connector, label)
-		printTreeChildren(child, nextPrefix)
+		fmt.Fprintf(w, "%s%s%s\n", prefix, connector, label)
+		printTreeChildren(w, child, nextPrefix)
 	}
 }
 
