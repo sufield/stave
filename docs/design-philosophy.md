@@ -24,7 +24,7 @@ Because these are open files and versioned contracts, teams can:
 - Store, diff, and audit artifacts in any repository or data platform
 - Change cloud vendors or scanners without rewriting Stave core logic
 
-## What This Means In Practice
+## What This Means in Practice
 
 - Stave does not require a proprietary agent or hosted control plane.
 - Stave does not require a vendor-specific policy language to start.

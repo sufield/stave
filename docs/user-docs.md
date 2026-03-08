@@ -4,8 +4,7 @@ Stave detects infrastructure assets that have remained unsafe for too long, usin
 
 ## MVP Operating Assumption
 
-For MVP, Stave assumes you are capturing snapshots from **production**
-environments to fix **critical issues**.
+For MVP, Stave assumes you are capturing snapshots from **production** environments to fix **critical issues**.
 
 Design implications:
 
@@ -106,7 +105,7 @@ stave context use prod --controls ./controls --observations ./observations --con
 - Inference failures include what was missing, what was searched, candidates, and exact fix flags
 - Inference is deterministic, offline, and non-interactive
 
-## Intent Map (Terminal-First)
+## Intent Map
 
 Use this table when you know your goal but want the fastest path to the right command and docs.
 
@@ -160,7 +159,7 @@ stave trace --control CTL.S3.PUBLIC.001 --observation observations/2026-01-15T00
 stave status
 ```
 
-### Restart And Resume (Long Workflows)
+### Restart And Resume for Long Workflows
 
 When you come back later, restart from the last stable artifact instead of redoing all steps.
 
@@ -431,7 +430,7 @@ You can set project default in `stave.yaml` and override per-run via:
 - config: `ci_failure_policy: fail_on_new_violation`
 - env override: `STAVE_CI_FAILURE_POLICY=fail_on_overdue_upcoming`
 
-## Command Composition (Unix Pipelines)
+## Command Composition
 
 Stave commands produce structured output (JSON to stdout) and accept structured input (via `--in`, `--previous-output`, or `-` for stdin). This lets you chain commands with Unix pipes.
 
@@ -442,7 +441,7 @@ Stave commands produce structured output (JSON to stdout) and accept structured 
 - `stave validate --in -` — validate from stdin
 - `stave diagnose --previous-output -` — read prior apply output from stdin
 
-### File-Mediated Pipelines (CI Pattern)
+### File-Mediated Pipelines for CI
 
 The default CI pattern saves intermediate results to files:
 
