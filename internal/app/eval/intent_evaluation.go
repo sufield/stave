@@ -77,14 +77,14 @@ func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluati
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		controls, ctlErr = loadControls(ctx, i.ControlRepo, cfg.ControlsDir)
+		controls, ctlErr = appcontracts.LoadControls(ctx, i.ControlRepo, cfg.ControlsDir)
 		if ctlErr == nil && cfg.RequireControls && len(controls) == 0 {
 			ctlErr = fmt.Errorf("no controls in %s (expected .yaml files with dsl_version: ctrl.v1)", cfg.ControlsDir)
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		loadResult, obsErr = loadSnapshots(ctx, i.ObservationRepo, cfg.ObservationsDir)
+		loadResult, obsErr = appcontracts.LoadSnapshots(ctx, i.ObservationRepo, cfg.ObservationsDir)
 		if obsErr == nil && !cfg.OptionalSnapshots && len(loadResult.Snapshots) == 0 {
 			obsErr = fmt.Errorf("no snapshots in %s (expected .json files with schema_version: obs.v0.1)", cfg.ObservationsDir)
 		}
@@ -101,26 +101,6 @@ func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluati
 		Hashes:         loadResult.Hashes,
 		ObservationErr: obsErr,
 	}
-}
-
-// loadControls loads control definitions from the given directory and
-// returns an error if loading fails.
-func loadControls(ctx context.Context, repo appcontracts.ControlRepository, dir string) ([]policy.ControlDefinition, error) {
-	controls, err := repo.LoadControls(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load controls: %w", err)
-	}
-	return controls, nil
-}
-
-// loadSnapshots loads observation snapshots from the given directory and
-// returns an error if loading fails.
-func loadSnapshots(ctx context.Context, repo appcontracts.ObservationRepository, dir string) (appcontracts.LoadResult, error) {
-	result, err := repo.LoadSnapshots(ctx, dir)
-	if err != nil {
-		return appcontracts.LoadResult{}, fmt.Errorf("failed to load observations: %w", err)
-	}
-	return result, nil
 }
 
 type sourceTypeVerdict int

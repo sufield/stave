@@ -2,6 +2,7 @@ package contracts
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/sufield/stave/internal/domain/asset"
@@ -25,6 +26,26 @@ type ObservationRepository interface {
 // ControlRepository loads control definitions from storage.
 type ControlRepository interface {
 	LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
+}
+
+// LoadControls loads control definitions through the given repository,
+// wrapping any error with a standard message.
+func LoadControls(ctx context.Context, repo ControlRepository, dir string) ([]policy.ControlDefinition, error) {
+	controls, err := repo.LoadControls(ctx, dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load controls: %w", err)
+	}
+	return controls, nil
+}
+
+// LoadSnapshots loads observation snapshots through the given repository,
+// wrapping any error with a standard message.
+func LoadSnapshots(ctx context.Context, repo ObservationRepository, dir string) (LoadResult, error) {
+	result, err := repo.LoadSnapshots(ctx, dir)
+	if err != nil {
+		return LoadResult{}, fmt.Errorf("failed to load observations: %w", err)
+	}
+	return result, nil
 }
 
 // EnrichedResult holds evaluation output together with enriched findings

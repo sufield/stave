@@ -3,14 +3,11 @@ package validation
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	service "github.com/sufield/stave/internal/app/service"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/policy"
 )
 
 // Config holds configuration for the validate use case.
@@ -43,8 +40,9 @@ func NewRun(
 // Execute loads data and runs domain validation.
 // App layer handles file I/O; domain handles validation logic.
 func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResult, error) {
-	controls, ctlErr := loadControls(ctx, v.ControlRepo, cfg.ControlsDir)
-	snapshots, obsErr := loadSnapshots(ctx, v.ObservationRepo, cfg.ObservationsDir)
+	controls, ctlErr := appcontracts.LoadControls(ctx, v.ControlRepo, cfg.ControlsDir)
+	obsResult, obsErr := appcontracts.LoadSnapshots(ctx, v.ObservationRepo, cfg.ObservationsDir)
+	snapshots := obsResult.Snapshots
 
 	loadErrors := diag.NewResult()
 	loadErrors.Merge(cfg.diagnoseLoad(ctlErr, diag.CodeControlLoadFailed,
@@ -85,28 +83,4 @@ func (c Config) diagnoseLoad(err error, code string, action string, path string)
 	}
 	result.Add(builder.WithSensitive("error", err.Error()).Build())
 	return result
-}
-
-func loadControls(
-	ctx context.Context,
-	repo appcontracts.ControlRepository,
-	dir string,
-) ([]policy.ControlDefinition, error) {
-	controls, err := repo.LoadControls(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load controls: %w", err)
-	}
-	return controls, nil
-}
-
-func loadSnapshots(
-	ctx context.Context,
-	repo appcontracts.ObservationRepository,
-	dir string,
-) ([]asset.Snapshot, error) {
-	result, err := repo.LoadSnapshots(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load observations: %w", err)
-	}
-	return result.Snapshots, nil
 }

@@ -14,12 +14,8 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/sanitize"
 )
-
-// assetSanitizer sanitizes asset identifiers in output.
-type assetSanitizer interface {
-	Asset(asset.ID) asset.ID
-}
 
 type options struct {
 	ControlsDir     string
@@ -183,7 +179,7 @@ func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string 
 	return uncovered
 }
 
-func writeResult(w io.Writer, format string, result coverageResult, sanitizer assetSanitizer) error {
+func writeResult(w io.Writer, format string, result coverageResult, sanitizer *sanitize.Sanitizer) error {
 	switch format {
 	case "dot":
 		return writeDOT(w, result, sanitizer)
@@ -194,7 +190,7 @@ func writeResult(w io.Writer, format string, result coverageResult, sanitizer as
 	}
 }
 
-func writeDOT(w io.Writer, result coverageResult, sanitizer assetSanitizer) error {
+func writeDOT(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer) error {
 	uncoveredSet := make(map[string]bool)
 	for _, r := range result.UncoveredAssets {
 		uncoveredSet[r] = true
@@ -247,7 +243,7 @@ func dotQuote(s string) string {
 	return `"` + escaped + `"`
 }
 
-func writeJSON(w io.Writer, result coverageResult, sanitizer assetSanitizer) error {
+func writeJSON(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer) error {
 	for i, rid := range result.Assets {
 		result.Assets[i] = string(sanitizer.Asset(asset.ID(rid)))
 	}

@@ -23,7 +23,7 @@ func TestConfigKeyCompletions_IncludeServiceTopLevelKeys(t *testing.T) {
 	temp := t.TempDir()
 	chdirForConfigTest(t, temp)
 
-	keys := configKeyCompletions()
+	keys := cmdutil.ConfigKeyCompletions()
 	seen := make(map[string]struct{}, len(keys))
 	for _, key := range keys {
 		if _, exists := seen[key]; exists {
