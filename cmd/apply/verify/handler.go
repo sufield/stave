@@ -12,12 +12,12 @@ import (
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/sanitize"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 

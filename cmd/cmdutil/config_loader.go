@@ -39,8 +39,7 @@ func FindProjectConfig() (*ProjectConfig, bool) {
 // FindProjectConfigWithPath returns the config, its path, and whether found.
 func FindProjectConfigWithPath() (*ProjectConfig, string, bool) {
 	if path, ok := ResolveContextConfigFilePath(""); ok {
-		// #nosec G304 -- path is resolved from local project context config discovery.
-		data, err := os.ReadFile(path)
+		data, err := fsutil.ReadFileLimited(path)
 		if err == nil {
 			var cfg ProjectConfig
 			if err := yaml.Unmarshal(data, &cfg); err == nil {
@@ -53,8 +52,7 @@ func FindProjectConfigWithPath() (*ProjectConfig, string, bool) {
 	if !ok {
 		return nil, "", false
 	}
-	// #nosec G304 -- path is resolved by walking parent directories for the project config file.
-	data, err := os.ReadFile(path)
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, "", false
 	}
@@ -89,8 +87,7 @@ func FindUserConfigWithPath() (*UserConfig, string, bool) {
 	if !ok {
 		return nil, "", false
 	}
-	// #nosec G304 -- path is resolved from local user config location or explicit env override.
-	data, err := os.ReadFile(path)
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, "", false
 	}

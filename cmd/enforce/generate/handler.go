@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	outenforce "github.com/sufield/stave/internal/adapters/output/enforcement"
-	projectapp "github.com/sufield/stave/internal/app/project"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -47,62 +46,22 @@ type plan struct {
 
 func run(cmd *cobra.Command, opts *options) error {
 	out := cmd.OutOrStdout()
-	return projectapp.RunEnforce(projectapp.EnforceDeps{
-		ResolveRequest: func() (projectapp.EnforceRunRequest, error) {
-			req, err := resolveRunRequest(opts)
-			if err != nil {
-				return projectapp.EnforceRunRequest{}, err
-			}
-			return projectapp.EnforceRunRequest{
-				InputPath: req.inputPath,
-				OutDir:    req.outDir,
-				Mode:      string(req.mode),
-				DryRun:    req.dryRun,
-			}, nil
-		},
-		BuildPlan: func(req projectapp.EnforceRunRequest) (projectapp.EnforcePlan, error) {
-			p, err := buildPlan(runRequest{
-				inputPath: req.InputPath,
-				outDir:    req.OutDir,
-				mode:      Mode(req.Mode),
-				dryRun:    req.DryRun,
-			})
-			if err != nil {
-				return projectapp.EnforcePlan{}, err
-			}
-			return projectapp.EnforcePlan{
-				Result: projectapp.EnforceResult{
-					SchemaVersion: p.result.SchemaVersion.String(),
-					Kind:          p.result.Kind,
-					Mode:          p.result.Mode,
-					OutputFile:    p.result.OutputFile,
-					Targets:       p.result.Targets,
-				},
-				Rendered: p.rendered,
-			}, nil
-		},
-		WriteDryRun: func(res projectapp.EnforceResult) error {
-			return writeDryRun(out, result{
-				SchemaVersion: kernel.Schema(res.SchemaVersion),
-				Kind:          res.Kind,
-				Mode:          res.Mode,
-				OutputFile:    res.OutputFile,
-				Targets:       res.Targets,
-			})
-		},
-		WriteOutput: func(outPath, rendered string) error {
-			return writeOutputFile(cmd, outPath, rendered)
-		},
-		WriteResult: func(res projectapp.EnforceResult) error {
-			return writeResult(out, result{
-				SchemaVersion: kernel.Schema(res.SchemaVersion),
-				Kind:          res.Kind,
-				Mode:          res.Mode,
-				OutputFile:    res.OutputFile,
-				Targets:       res.Targets,
-			})
-		},
-	})
+
+	req, err := resolveRunRequest(opts)
+	if err != nil {
+		return fmt.Errorf("resolve request: %w", err)
+	}
+	p, err := buildPlan(req)
+	if err != nil {
+		return fmt.Errorf("build plan: %w", err)
+	}
+	if req.dryRun {
+		return writeDryRun(out, p.result)
+	}
+	if err := writeOutputFile(cmd, p.result.OutputFile, p.rendered); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return writeResult(out, p.result)
 }
 
 func resolveRunRequest(opts *options) (runRequest, error) {

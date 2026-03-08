@@ -1,8 +1,6 @@
 package upcoming
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
@@ -10,23 +8,15 @@ import (
 )
 
 func newUpcomingFilter(criteria UpcomingFilterCriteria) (risk.FilterCriteria, error) {
-	// Validate statuses before building filter.
-	statuses := make(map[risk.Status]struct{}, len(criteria.Statuses))
-	for _, st := range criteria.Statuses {
-		normalized := risk.Status(strings.ToUpper(strings.TrimSpace(st)))
-		if normalized == "" {
-			continue
-		}
-		if !risk.ValidStatus(normalized) {
-			return risk.FilterCriteria{}, fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", st)
-		}
-		statuses[normalized] = struct{}{}
+	validated, err := risk.ValidateStatuses(criteria.Statuses)
+	if err != nil {
+		return risk.FilterCriteria{}, err
 	}
 	var maxRemaining = derefDuration(criteria.DueWithin)
 	return risk.FilterCriteria{
 		ControlIDs:   fp.ToSet(criteria.ControlIDs),
 		AssetTypes:   fp.ToSet(criteria.AssetTypes),
-		Statuses:     statuses,
+		Statuses:     fp.ToSet(validated),
 		MaxRemaining: maxRemaining,
 	}, nil
 }

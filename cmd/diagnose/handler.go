@@ -13,7 +13,6 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/adapters/output"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
-	supportapp "github.com/sufield/stave/internal/app/support"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/domain/ports"
 )
@@ -89,17 +88,11 @@ func prepareDiagnoseExecution(cmd *cobra.Command) (diagnoseExecution, error) {
 }
 
 func executeDiagnoseReport(execCtx diagnoseExecution) (*diagnosis.Report, error) {
-	report, err := supportapp.ExecuteDiagnoseReport(supportapp.DiagnoseReportRequest{
-		Context: execCtx.ctx,
-		Run:     execCtx.diagnoseRun,
-		Config:  execCtx.baseCfg,
-		Sanitize: func(r *diagnosis.Report) *diagnosis.Report {
-			return output.SanitizeReport(cmdutil.GetSanitizer(execCtx.cmd), r)
-		},
-	})
+	report, err := execCtx.diagnoseRun.Execute(execCtx.ctx, execCtx.baseCfg)
 	if err != nil {
 		return nil, err
 	}
+	report = output.SanitizeReport(cmdutil.GetSanitizer(execCtx.cmd), report)
 	return filterDiagnosisReport(report, execCtx.opts.Cases, execCtx.opts.SignalContains), nil
 }
 
