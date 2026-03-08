@@ -50,12 +50,9 @@ func TestRunInspect_SkipsLargeFiles(t *testing.T) {
 	})
 
 	var stdout, stderr bytes.Buffer
-	cmd := &cobra.Command{}
-	cmd.SetOut(&stdout)
-	cmd.SetErr(&stderr)
 
 	// Use a limit of 100 bytes so big.txt (200 bytes) gets skipped.
-	if err := dumpBundle(cmd, zipPath, int64(100)); err != nil {
+	if err := dumpBundle(&stdout, &stderr, zipPath, int64(100)); err != nil {
 		t.Fatalf("inspect failed: %v", err)
 	}
 

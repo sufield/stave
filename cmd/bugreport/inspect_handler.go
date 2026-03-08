@@ -4,8 +4,8 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"math"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -13,10 +13,10 @@ import (
 const inspectMaxFileSize int64 = 10 << 20 // 10 MB
 
 func runInspect(cmd *cobra.Command, args []string) error {
-	return dumpBundle(cmd, args[0], inspectMaxFileSize)
+	return dumpBundle(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], inspectMaxFileSize)
 }
 
-func dumpBundle(cmd *cobra.Command, path string, maxSize int64) error {
+func dumpBundle(out io.Writer, errOut io.Writer, path string, maxSize int64) error {
 	zr, err := zip.OpenReader(path)
 	if err != nil {
 		return fmt.Errorf("open bundle: %w", err)
@@ -30,18 +30,20 @@ func dumpBundle(cmd *cobra.Command, path string, maxSize int64) error {
 		return entries[i].Name < entries[j].Name
 	})
 
-	w := cmd.OutOrStdout()
 	for _, f := range entries {
-		entrySize := int64(min(f.UncompressedSize64, uint64(math.MaxInt64))) //nolint:gosec // clamped to MaxInt64
-		if entrySize > maxSize {
-			fmt.Fprintf(cmd.ErrOrStderr(), "warning: skipping %s (%d bytes exceeds %dMB limit)\n", f.Name, f.UncompressedSize64, maxSize>>20)
+		if strings.Contains(f.Name, "..") {
+			fmt.Fprintf(errOut, "warning: skipping suspicious entry %q\n", f.Name)
 			continue
 		}
-		fmt.Fprintf(w, "=== %s ===\n", f.Name)
-		if err := copyZipEntry(w, f, maxSize); err != nil {
+		if f.UncompressedSize64 > uint64(maxSize) {
+			fmt.Fprintf(errOut, "warning: skipping %s (%d bytes exceeds %dMB limit)\n", f.Name, f.UncompressedSize64, maxSize>>20)
+			continue
+		}
+		fmt.Fprintf(out, "=== %s ===\n", f.Name)
+		if err := copyZipEntry(out, f, maxSize); err != nil {
 			return fmt.Errorf("%s: %w", f.Name, err)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(out)
 	}
 	return nil
 }
