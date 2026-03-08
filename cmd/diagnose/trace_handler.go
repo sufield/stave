@@ -40,11 +40,11 @@ understand exactly why a control did or did not match.
 
 Examples:
   stave trace --control CTL.S3.PUBLIC.001 \
-    --observation observations/2026-01-11T00:00:00Z.json \
+    --observation observations/2026-01-11T000000Z.json \
     --asset-id res:aws:s3:bucket:public-bucket
 
   stave trace --control CTL.S3.ENCRYPT.001 \
-    --observation observations/2026-01-11T00:00:00Z.json \
+    --observation observations/2026-01-11T000000Z.json \
     --asset-id res:aws:s3:bucket:public-bucket \
     --format json` + metadata.OfflineHelpSuffix,
 	RunE:          runTrace,

@@ -116,9 +116,9 @@ Observations are stored as flat JSON files — one file per timestamp. Do **not*
 
 ```
 observations/
-├── 2026-01-01T00:00:00Z.json
-├── 2026-01-02T00:00:00Z.json
-└── 2026-01-03T00:00:00Z.json
+├── 2026-01-01T000000Z.json
+├── 2026-01-02T000000Z.json
+└── 2026-01-03T000000Z.json
 ```
 
 File naming is not enforced by schema, but using the `captured_at` timestamp as the filename is the convention used in examples and tests.
@@ -146,7 +146,7 @@ Validation also runs automatically at the start of `stave apply`, so inputs are 
 
 ```bash
 # Validate a single observation file
-stave validate --in observations/2026-01-01T00:00:00Z.json
+stave validate --in observations/2026-01-01T000000Z.json
 
 # Validate all observations in a directory
 stave validate --observations observations/

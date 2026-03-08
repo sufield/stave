@@ -215,9 +215,9 @@ When `--explain-all` is enabled, each row represents one `(control, asset)` eval
     "snapshots": 3,
     "input_hashes": {
       "files": {
-        "2026-01-01T00:00:00Z.json": "26770e3c...",
-        "2026-01-10T00:00:00Z.json": "cce8bb1c...",
-        "2026-01-11T00:00:00Z.json": "9218f381..."
+        "2026-01-01T000000Z.json": "26770e3c...",
+        "2026-01-10T000000Z.json": "cce8bb1c...",
+        "2026-01-11T000000Z.json": "9218f381..."
       },
       "overall": "8761e974..."
     }

@@ -11,8 +11,8 @@ A bucket named `example-public-bucket` has `public_read: true` in both snapshots
 ```
 public-bucket/
 ├── observations/
-│   ├── 2026-01-01T00:00:00Z.json   # Snapshot 1: public_read=true
-│   └── 2026-01-02T00:00:00Z.json   # Snapshot 2: public_read=true
+│   ├── 2026-01-01T000000Z.json   # Snapshot 1: public_read=true
+│   └── 2026-01-02T000000Z.json   # Snapshot 2: public_read=true
 ├── controls/
 │   └── CTL.S3.PUBLIC.001.yaml       # No Public S3 Buckets
 └── README.md

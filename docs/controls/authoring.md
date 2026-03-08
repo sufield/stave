@@ -233,7 +233,7 @@ stave validate --in controls/s3/example/CTL.S3.EXAMPLE.001.yaml
 stave validate --controls controls/s3/
 
 # Validate a single observation
-stave validate --in observations/2026-01-01T00:00:00Z.json
+stave validate --in observations/2026-01-01T000000Z.json
 
 # Validate all observations in a directory
 stave validate --observations observations/

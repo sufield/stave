@@ -19,9 +19,9 @@ With `--max-unsafe 12h`, the 216-hour (9-day) continuous unsafe period exceeds t
 ```
 duration/
 ├── observations/
-│   ├── 2026-01-01T00:00:00Z.json   # public_read=true
-│   ├── 2026-01-05T00:00:00Z.json   # public_read=true (still unsafe)
-│   └── 2026-01-10T00:00:00Z.json   # public_read=true (still unsafe)
+│   ├── 2026-01-01T000000Z.json   # public_read=true
+│   ├── 2026-01-05T000000Z.json   # public_read=true (still unsafe)
+│   └── 2026-01-10T000000Z.json   # public_read=true (still unsafe)
 ├── controls/
 │   └── CTL.S3.PUBLIC.DURATION.001.yaml
 └── README.md

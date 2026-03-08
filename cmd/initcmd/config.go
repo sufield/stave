@@ -110,7 +110,7 @@ func scaffoldReadmeTimeline(opts scaffoldOptions, snapshotNameExample string) st
 ## Timeline snapshots
 
 Store multiple observation files in ` + "`observations/`" + ` using timestamp filenames
-(example: ` + "`2026-01-11T00:00:00Z.json`" + `, ` + "`2026-01-18T00:00:00Z.json`" + `) to evaluate
+(example: ` + "`2026-01-11T000000Z.json`" + `, ` + "`2026-01-18T000000Z.json`" + `) to evaluate
 unsafe duration windows and compare remediation over time.
 
 Default cadence template:
@@ -305,7 +305,7 @@ const templateStaveConfigSample = `# ── Stave Project Configuration ──�
 #
 # Naming pattern for observation files under observations/.
 #
-# snapshot_filename_template: YYYY-MM-DDT00:00:00Z.json
+# snapshot_filename_template: YYYY-MM-DDT000000Z.json
 #
 # ── Control packs ──────────────────────────────────────────────────
 #

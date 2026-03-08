@@ -11,8 +11,8 @@ A bucket named `example-no-pab` has `public_access_fully_blocked: false` in both
 ```
 missing-pab/
 ├── observations/
-│   ├── 2026-01-01T00:00:00Z.json   # Snapshot 1: PAB disabled
-│   └── 2026-01-02T00:00:00Z.json   # Snapshot 2: PAB still disabled
+│   ├── 2026-01-01T000000Z.json   # Snapshot 1: PAB disabled
+│   └── 2026-01-02T000000Z.json   # Snapshot 2: PAB still disabled
 ├── controls/
 │   └── CTL.S3.CONTROLS.001.yaml     # Public Access Block Must Be Enabled
 └── README.md

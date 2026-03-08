@@ -161,7 +161,7 @@ func TestInitWithHourlyCaptureCadence(t *testing.T) {
 	if !strings.Contains(config, "capture_cadence: hourly") {
 		t.Fatalf("expected hourly cadence in config, got: %s", config)
 	}
-	if !strings.Contains(config, "snapshot_filename_template: YYYY-MM-DDTHH:00:00Z.json") {
+	if !strings.Contains(config, "snapshot_filename_template: YYYY-MM-DDTHH0000Z.json") {
 		t.Fatalf("expected hourly naming template in config, got: %s", config)
 	}
 

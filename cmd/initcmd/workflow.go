@@ -107,16 +107,16 @@ func scaffoldGitHubActionsEvaluation() string {
 
 func snapshotFilenameTemplate(cadence string) string {
 	if cadence == cadenceHourly {
-		return "YYYY-MM-DDTHH:00:00Z.json"
+		return "YYYY-MM-DDTHH0000Z.json"
 	}
-	return "YYYY-MM-DDT00:00:00Z.json"
+	return "YYYY-MM-DDT000000Z.json"
 }
 
 func snapshotFilenameExample(cadence string) string {
 	if cadence == cadenceHourly {
-		return "2026-01-18T14:00:00Z.json"
+		return "2026-01-18T140000Z.json"
 	}
-	return "2026-01-18T00:00:00Z.json"
+	return "2026-01-18T000000Z.json"
 }
 
 func workflowScheduleBlock(cadence string) string {
