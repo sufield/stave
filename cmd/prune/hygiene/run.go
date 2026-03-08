@@ -2,13 +2,12 @@ package hygiene
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -98,10 +97,7 @@ func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
 	if err != nil {
 		return hygieneExecution{}, err
 	}
-	ctx := cmd.Context()
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := cmdutil.CommandContext(cmd)
 	return hygieneExecution{
 		ctx:              ctx,
 		req:              req,
@@ -213,22 +209,13 @@ func computeHygieneRiskTrend(
 }
 
 func resolveHygieneRetention(cmd *cobra.Command, rawTier, rawOlderThan string) (string, time.Duration, error) {
-	tier := cmdutil.NormalizeRetentionTier(rawTier)
-	if tier == "" {
-		return "", 0, fmt.Errorf("--retention-tier cannot be empty")
-	}
-	if !cmdutil.HasConfiguredRetentionTier(tier) {
-		if cfg, ok := cmdutil.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
-			return "", 0, fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(cmdutil.SortedRetentionTierNames(cfg.RetentionTiers), ", "))
-		}
-	}
-	olderThan := rawOlderThan
-	if !cmd.Flags().Changed("older-than") {
-		olderThan = cmdutil.ResolveSnapshotRetentionForTier(tier)
-	}
-	retentionDur, err := timeutil.ParseDuration(olderThan)
+	tier, err := pruneshared.ValidateRetentionTier(rawTier)
 	if err != nil {
-		return "", 0, fmt.Errorf("invalid --older-than %q (use format: 14d, 720h, or 1d12h)", olderThan)
+		return "", 0, err
+	}
+	retentionDur, err := pruneshared.ResolveOlderThan(cmd, rawOlderThan, tier)
+	if err != nil {
+		return "", 0, err
 	}
 	return tier, retentionDur, nil
 }

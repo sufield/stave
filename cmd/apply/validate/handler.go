@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -77,10 +76,7 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
 	}
 
-	ctx := context.Background()
-	if cmd != nil {
-		ctx = cmd.Context()
-	}
+	ctx := cmdutil.CommandContext(cmd)
 	return validateRun.Execute(ctx, cfg)
 }
 

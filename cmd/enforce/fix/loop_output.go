@@ -71,12 +71,9 @@ func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safet
 }
 
 func writeOutputJSONFile(cmd *cobra.Command, path string, value any) error {
-	opts := fsutil.DefaultWriteOpts()
-	opts.Overwrite = cmdutil.ForceEnabled(cmd)
-	opts.AllowSymlink = cmdutil.AllowSymlinkOutEnabled(cmd)
-	f, err := fsutil.SafeCreateFile(path, opts)
+	f, err := cmdutil.CreateOutputFile(cmd, path)
 	if err != nil {
-		return fmt.Errorf("cannot create %s: %w", path, err)
+		return err
 	}
 	defer f.Close()
 	if err := shared.WriteJSON(f, value); err != nil {

@@ -159,18 +159,6 @@ func (e *ErrorInfo) WithEvidence(key, value string) *ErrorInfo {
 	return e
 }
 
-// SafetyExitError maps a safety status string to the appropriate sentinel error.
-// Returns nil for "SAFE", ErrViolationsFound for "UNSAFE" or "BORDERLINE".
-// The status values correspond to evaluation.SafetyStatus constants.
-func SafetyExitError(status string) error {
-	switch status {
-	case "UNSAFE", "BORDERLINE":
-		return ErrViolationsFound
-	default:
-		return nil
-	}
-}
-
 // IsInputError returns true if the error wraps an InputError.
 func IsInputError(err error) bool {
 	var inputErr *InputError

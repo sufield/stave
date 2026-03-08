@@ -47,15 +47,9 @@ func prepareOutputFile(cmd *cobra.Command) (supportapp.PreparedOutput, error) {
 		return supportapp.PreparedOutput{}, fmt.Errorf("resolve current directory: %w", err)
 	}
 	outPath := fsutil.CleanUserPath(resolveOutPath(cwd, reportOut))
-	if dirErr := ensureBundleDir(cmd, outPath); dirErr != nil {
-		return supportapp.PreparedOutput{}, dirErr
-	}
-	opts := fsutil.DefaultWriteOpts()
-	opts.Overwrite = cmdutil.ForceEnabled(cmd)
-	opts.AllowSymlink = cmdutil.AllowSymlinkOutEnabled(cmd)
-	zipFile, err := fsutil.SafeCreateFile(outPath, opts)
+	zipFile, err := cmdutil.CreateOutputFile(cmd, outPath)
 	if err != nil {
-		return supportapp.PreparedOutput{}, fmt.Errorf("create bundle: %w", err)
+		return supportapp.PreparedOutput{}, err
 	}
 	return supportapp.PreparedOutput{Cwd: cwd, OutPath: outPath, File: zipFile}, nil
 }
@@ -89,17 +83,6 @@ func writeSummary(cmd *cobra.Command, outPath string) error {
 	}
 	_, err := fmt.Fprintf(w, "\nTo view bundle contents:\n  stave bug-report inspect %s\n", outPath)
 	return err
-}
-
-func ensureBundleDir(cmd *cobra.Command, outPath string) error {
-	dir := filepath.Dir(outPath)
-	if strings.TrimSpace(dir) == "" || dir == "." {
-		return nil
-	}
-	if err := fsutil.SafeMkdirAll(dir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)}); err != nil {
-		return fmt.Errorf("create bundle directory: %w", err)
-	}
-	return nil
 }
 
 func resolveOutPath(cwd, rawOut string) string {

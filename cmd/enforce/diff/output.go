@@ -1,7 +1,6 @@
 package diff
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 func writeOutput(cmd *cobra.Command, w io.Writer, format ui.OutputFormat, out asset.ObservationDelta) error {
@@ -23,9 +23,7 @@ func writeOutput(cmd *cobra.Command, w io.Writer, format ui.OutputFormat, out as
 }
 
 func writeJSON(w io.Writer, out asset.ObservationDelta) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(out)
+	return jsonutil.WriteIndented(w, out)
 }
 
 func writeText(w io.Writer, out asset.ObservationDelta) error {

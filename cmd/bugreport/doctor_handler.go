@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/doctor"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -33,12 +31,7 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 	})
 
 	// 2. Format Selection: Resolve text vs json
-	formatRaw := strings.TrimSpace(doctorFormat)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-
-	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	format, err := cmdutil.ResolveFormatValue(cmd, doctorFormat)
 	if err != nil {
 		return err
 	}

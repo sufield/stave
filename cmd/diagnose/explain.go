@@ -73,7 +73,7 @@ func RunExplain(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("control id cannot be empty")
 	}
 	controlPath := strings.TrimSpace(explainControlsDir)
-	control, err := loadExplainControl(id, controlPath)
+	control, err := loadExplainControl(cmdutil.CommandContext(cmd), id, controlPath)
 	if err != nil {
 		return err
 	}
@@ -85,12 +85,12 @@ func RunExplain(cmd *cobra.Command, args []string) error {
 	return writeExplainOutput(cmd.OutOrStdout(), format, out)
 }
 
-func loadExplainControl(id, controlsDir string) (policy.ControlDefinition, error) {
+func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
 	loader, err := cmdutil.NewControlRepository()
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := loader.LoadControls(context.Background(), controlsDir)
+	controls, err := loader.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("load controls: %w", err)
 	}

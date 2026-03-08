@@ -71,9 +71,9 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("resolve executable path: %w", err)
 	}
-	now, err := c.resolveNow()
+	now, err := cmdutil.ResolveNow(c.flags.nowTime)
 	if err != nil {
-		return err
+		return &ui.InputError{Err: err}
 	}
 	bundleDir := c.resolveOutDir(now)
 
@@ -204,17 +204,6 @@ func renderSecurityAuditReport(format string, report securityaudit.Report) ([]by
 	default:
 		return nil, "", fmt.Errorf("unsupported report format %q", format)
 	}
-}
-
-func (c *securityAuditCmd) resolveNow() (time.Time, error) {
-	if strings.TrimSpace(c.flags.nowTime) == "" {
-		return time.Now().UTC(), nil
-	}
-	t, err := time.Parse(time.RFC3339, c.flags.nowTime)
-	if err != nil {
-		return time.Time{}, &ui.InputError{Err: fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", c.flags.nowTime)}
-	}
-	return t.UTC(), nil
 }
 
 func (c *securityAuditCmd) resolveOutDir(now time.Time) string {

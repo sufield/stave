@@ -62,7 +62,7 @@ func (r *s3Runner) prepareRun(cmd *cobra.Command) (s3RunConfig, error) {
 	outFile := fsutil.CleanUserPath(r.opts.OutFile)
 	outDir := fsutil.CleanUserPath(r.opts.OutDir)
 
-	now, parseErr := resolveNow(r.opts.Now)
+	now, parseErr := cmdutil.ResolveNow(r.opts.Now)
 	if parseErr != nil {
 		return s3RunConfig{}, parseErr
 	}
@@ -95,10 +95,6 @@ func (r *s3Runner) prepareRun(cmd *cobra.Command) (s3RunConfig, error) {
 		outFile:     outFile,
 		scopeConfig: scopeConfig,
 	}, nil
-}
-
-func resolveNow(raw string) (time.Time, error) {
-	return cmdutil.ResolveNow(raw)
 }
 
 func ensureOutputWritable(path string, overwrite, dryRun bool) error {

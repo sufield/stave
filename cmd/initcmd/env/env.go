@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/envvar"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -59,11 +57,7 @@ type envListEntry struct {
 func runEnvList(cmd *cobra.Command, _ []string) error {
 	vars := envvar.All()
 
-	formatRaw := strings.TrimSpace(envListFormat)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	format, err := cmdutil.ResolveFormatValue(cmd, envListFormat)
 	if err != nil {
 		return err
 	}

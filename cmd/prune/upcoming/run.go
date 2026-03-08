@@ -1,7 +1,6 @@
 package upcoming
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -29,10 +28,7 @@ func runUpcoming(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ctx := cmd.Context()
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := cmdutil.CommandContext(cmd)
 	loaded, err := cmdutil.LoadObsAndInv(ctx, opts.ObservationsDir, opts.ControlsDir)
 	if err != nil {
 		return err

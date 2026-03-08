@@ -4,29 +4,18 @@ import (
 	"path/filepath"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/sufield/stave/internal/pkg/sensitive"
 )
 
 // SanitizedValue is the placeholder for sensitive values.
 const SanitizedValue = "[SANITIZED]"
 
-// sensitiveKeys provides O(1) exact match for normalized key names.
-// Includes both canonical (underscore) and collapsed (no separator) forms.
-var sensitiveKeys = map[string]struct{}{
-	"token": {}, "secret": {}, "password": {}, "key": {},
-	"credential": {}, "auth": {}, "bearer": {},
-	"api_key": {}, "apikey": {},
-	"access_token": {}, "accesstoken": {},
-	"refresh_token": {}, "refreshtoken": {},
-	"private_key": {}, "privatekey": {},
-	"signing_key": {}, "signingkey": {},
-}
+// sensitiveKeys is an alias for the shared exact-match set.
+var sensitiveKeys = sensitive.ExactKeys
 
-// sensitiveSubstrings are partial-match needles for compound names
-// (e.g. "authorization" contains "auth"). "key" is excluded to avoid
-// false positives like "monkey".
-var sensitiveSubstrings = []string{
-	"token", "secret", "password", "credential", "auth", "bearer",
-}
+// sensitiveSubstrings is an alias for the shared substring set.
+var sensitiveSubstrings = sensitive.SubstringKeywords
 
 // isSensitiveKey reports whether a key name suggests sensitive data.
 // Uses a tiered approach: exact match -> token match -> substring match.

@@ -184,16 +184,9 @@ func writeDryRun(w io.Writer, res result) error {
 }
 
 func writeOutputFile(cmd *cobra.Command, outPath, rendered string) error {
-	parent := filepath.Dir(outPath)
-	if err := fsutil.SafeMkdirAll(parent, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)}); err != nil {
-		return fmt.Errorf("create output directory: %w", err)
-	}
-	opts := fsutil.DefaultWriteOpts()
-	opts.Overwrite = cmdutil.ForceEnabled(cmd)
-	opts.AllowSymlink = cmdutil.AllowSymlinkOutEnabled(cmd)
-	file, err := fsutil.SafeCreateFile(outPath, opts)
+	file, err := cmdutil.CreateOutputFile(cmd, outPath)
 	if err != nil {
-		return fmt.Errorf("create output file: %w", err)
+		return err
 	}
 	defer file.Close()
 	if _, err := file.WriteString(rendered); err != nil {
