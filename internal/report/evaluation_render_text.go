@@ -30,10 +30,10 @@ type reportSeverityGroup struct {
 
 type reportTemplateData struct {
 	Metadata       reportTemplateMetadata    `json:"metadata"`
-	Summary        reportJSONSummary         `json:"summary"`
-	Findings       []reportJSONFinding       `json:"findings"`
+	Summary        reportSummary             `json:"summary"`
+	Findings       []reportFinding           `json:"findings"`
 	SeverityGroups []reportSeverityGroup     `json:"severity_groups"`
-	Remediations   []reportJSONRemediation   `json:"remediations"`
+	Remediations   []reportRemediation       `json:"remediations"`
 	RunRaw         safetyenvelope.Evaluation `json:"run_raw"`
 }
 
@@ -72,7 +72,7 @@ func RenderText(
 }
 
 func buildReportTemplateData(eval safetyenvelope.Evaluation, toolVersion string) reportTemplateData {
-	j := buildReportJSON(eval, toolVersion)
+	j := buildReportViewModel(eval, toolVersion)
 	ctxName := ""
 	gitRepoRoot := ""
 	gitHeadCommit := ""
@@ -110,7 +110,7 @@ func buildReportTemplateData(eval safetyenvelope.Evaluation, toolVersion string)
 	return d
 }
 
-func tplGroupBySeverity(findings []reportJSONFinding) []reportSeverityGroup {
+func tplGroupBySeverity(findings []reportFinding) []reportSeverityGroup {
 	counts := map[string]int{}
 	for _, f := range findings {
 		counts[normalizedSeverity(f.Severity)]++
