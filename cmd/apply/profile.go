@@ -77,7 +77,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 	if err != nil {
 		return err
 	}
-	filteredSnapshots, err := filterProfileSnapshots(snapshots, scopeFilter, opts.quiet)
+	filteredSnapshots, err := filterProfileSnapshots(cmd.ErrOrStderr(), snapshots, scopeFilter, opts.quiet)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return output.Enrich(enricher, san, r)
 	}
 
-	pipeOut := profileOutput(opts.quiet)
+	pipeOut := profileOutput(cmd.OutOrStdout(), opts.quiet)
 	pipeErr := appeval.NewPipeline(cmd.Context(), &appeval.PipelineData{
 		Result: result,
 		Output: pipeOut,
@@ -135,7 +135,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return fmt.Errorf("write findings: %w", pipeErr)
 	}
 
-	return finalizeApplyProfileRun(len(result.Findings), cannotProveSafeCount, opts.quiet, ctlDir, opts.inputFile)
+	return finalizeApplyProfileRun(cmd.ErrOrStderr(), len(result.Findings), cannotProveSafeCount, opts.quiet, ctlDir, opts.inputFile)
 }
 
 func validateApplyProfileInput(inputFile string) error {
@@ -171,17 +171,17 @@ func loadProfileSnapshots(inputFile string) ([]asset.Snapshot, error) {
 	return obsFile.Snapshots, nil
 }
 
-func filterProfileSnapshots(snapshots []asset.Snapshot, scopeFilter asset.AssetPredicate, quiet bool) ([]asset.Snapshot, error) {
+func filterProfileSnapshots(stderr io.Writer, snapshots []asset.Snapshot, scopeFilter asset.AssetPredicate, quiet bool) ([]asset.Snapshot, error) {
 	if len(snapshots) == 0 {
 		if !quiet {
-			fmt.Fprintln(os.Stderr, "No snapshots in observations file")
+			fmt.Fprintln(stderr, "No snapshots in observations file")
 		}
 		return nil, nil
 	}
 	filteredSnapshots := asset.FilterSnapshots(scopeFilter, snapshots)
 	if len(filteredSnapshots) == 0 || len(filteredSnapshots[0].Assets) == 0 {
 		if !quiet {
-			fmt.Fprintln(os.Stderr, "No S3 buckets matching health scope found in observations")
+			fmt.Fprintln(stderr, "No S3 buckets matching health scope found in observations")
 		}
 		return nil, nil
 	}
@@ -221,6 +221,7 @@ func countCannotProveSafe(snapshots []asset.Snapshot) int {
 }
 
 func finalizeApplyProfileRun(
+	stderr io.Writer,
 	findingsCount int,
 	cannotProveSafeCount int,
 	quiet bool,
@@ -228,25 +229,25 @@ func finalizeApplyProfileRun(
 	inputFile string,
 ) error {
 	if cannotProveSafeCount > 0 && !quiet {
-		fmt.Fprintf(os.Stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", cannotProveSafeCount)
+		fmt.Fprintf(stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", cannotProveSafeCount)
 	}
 	if findingsCount > 0 {
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Hint:\n  stave diagnose --controls %s --observations %s\n", ctlDir, inputFile)
+			fmt.Fprintf(stderr, "Hint:\n  stave diagnose --controls %s --observations %s\n", ctlDir, inputFile)
 		}
 		return ui.ErrViolationsFound
 	}
 	if !quiet {
-		fmt.Fprintln(os.Stderr, "Evaluation complete. No violations found.")
+		fmt.Fprintln(stderr, "Evaluation complete. No violations found.")
 	}
 	return nil
 }
 
-func profileOutput(quiet bool) io.Writer {
+func profileOutput(stdout io.Writer, quiet bool) io.Writer {
 	if quiet {
 		return io.Discard
 	}
-	return os.Stdout
+	return stdout
 }
 
 func getControlsBaseDir() string {

@@ -81,7 +81,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return err
 	}
-	result, err := executePolicy(runInput)
+	result, err := executePolicy(cmd.Context(), runInput)
 	if err != nil {
 		return err
 	}
@@ -146,14 +146,14 @@ func prepareRunInput(opts *options) (runInput, error) {
 	return out, nil
 }
 
-func executePolicy(input runInput) (gateResult, error) {
+func executePolicy(ctx context.Context, input runInput) (gateResult, error) {
 	switch input.policy {
 	case gatePolicyAny:
 		return runPolicyAny(input.now, input.inPath)
 	case gatePolicyNew:
 		return runPolicyNew(input.now, input.inPath, input.baselinePath)
 	case gatePolicyOverdue:
-		return runPolicyOverdue(input.now, input.controlsDir, input.observationsDir, input.maxUnsafe)
+		return runPolicyOverdue(ctx, input.now, input.controlsDir, input.observationsDir, input.maxUnsafe)
 	default:
 		return gateResult{}, fmt.Errorf("unsupported --policy %q", input.policy)
 	}
@@ -241,8 +241,8 @@ func sanitizeGateResult(s kernel.Sanitizer, r gateResult) gateResult {
 	return r
 }
 
-func runPolicyOverdue(now time.Time, controlsDir, observationsDir string, maxUnsafe time.Duration) (gateResult, error) {
-	loaded, err := cmdutil.LoadObsAndInv(context.Background(), observationsDir, controlsDir)
+func runPolicyOverdue(ctx context.Context, now time.Time, controlsDir, observationsDir string, maxUnsafe time.Duration) (gateResult, error) {
+	loaded, err := cmdutil.LoadObsAndInv(ctx, observationsDir, controlsDir)
 	if err != nil {
 		return gateResult{}, err
 	}

@@ -29,7 +29,7 @@ func handleApplyResult(cmd *cobra.Command, result EvaluateResult) error {
 	return nil
 }
 
-func outputResults(cmd *cobra.Command, results EvaluateResult, _ ui.OutputFormat) error {
+func outputResults(cmd *cobra.Command, results EvaluateResult) error {
 	return handleApplyResult(cmd, results)
 }
 

@@ -77,13 +77,21 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
 	}
 
-	return validateRun.Execute(context.Background(), cfg)
+	ctx := context.Background()
+	if cmd != nil {
+		ctx = cmd.Context()
+	}
+	return validateRun.Execute(ctx, cfg)
 }
 
 func outputValidateResult(cmd *cobra.Command, out io.Writer, result *appservice.ValidationResult, format ui.OutputFormat, opts *options) error {
 	exitErr := outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
 	if exitErr == nil && !opts.QuietMode && !cmdutil.QuietEnabled(cmd) {
-		fmt.Fprintf(os.Stderr, "Hint:\n  stave apply --controls %s --observations %s\n",
+		stderr := io.Writer(os.Stderr)
+		if cmd != nil {
+			stderr = cmd.ErrOrStderr()
+		}
+		fmt.Fprintf(stderr, "Hint:\n  stave apply --controls %s --observations %s\n",
 			opts.ControlsDir, opts.ObservationsDir)
 	}
 	return exitErr

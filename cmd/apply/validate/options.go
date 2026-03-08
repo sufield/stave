@@ -128,7 +128,7 @@ func logVerboseContext(cmd *cobra.Command, opts *options) {
 		ctxName = "none"
 	}
 	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	_, _ = fmt.Fprintf(os.Stderr, "context=%s project_config=%s controls=%s observations=%s\n", ctxName, cmdutil.EmptyDash(cfgPath), opts.ControlsDir, opts.ObservationsDir)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "context=%s project_config=%s controls=%s observations=%s\n", ctxName, cmdutil.EmptyDash(cfgPath), opts.ControlsDir, opts.ObservationsDir)
 }
 
 func validateDirExists(flag, path, inferKey string, hint error) error {

@@ -1,7 +1,7 @@
 Running: apply controls against observations...
 warning: snapshot[0] has no generated_by.source_type, proceeding anyway
 warning: snapshot[1] has no generated_by.source_type, proceeding anyway
-Done:    apply controls against observations (5ms)
+Done:    apply controls against observations (16ms)
 Evaluation complete. No violations found.
 
 Need help? Run 'stave bug-report' to create a diagnostic bundle.

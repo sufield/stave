@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -153,7 +154,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	observationsDir := filepath.Join(fixture, "observations")
 
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
-	result, err := runPolicyOverdue(now, controlsDir, observationsDir, 500*time.Hour)
+	result, err := runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 500*time.Hour)
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
@@ -161,7 +162,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 		t.Fatalf("expected pass at high threshold before overdue, got fail with reason: %s", result.Reason)
 	}
 
-	result, err = runPolicyOverdue(now, controlsDir, observationsDir, 24*time.Hour)
+	result, err = runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 24*time.Hour)
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
