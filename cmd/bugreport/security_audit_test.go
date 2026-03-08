@@ -19,23 +19,23 @@ func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
 	restore := preserveSecurityAuditGlobals()
 	defer restore()
 
-	securityAuditFlags.format = "json"
-	securityAuditFlags.out = outPath
-	securityAuditFlags.outDir = outDir
-	securityAuditFlags.severity = "CRITICAL,HIGH,MEDIUM,LOW"
-	securityAuditFlags.sbom = "spdx"
-	securityAuditFlags.frameworks = nil
-	securityAuditFlags.vulnSource = "hybrid"
-	securityAuditFlags.liveVulnCheck = false
-	securityAuditFlags.releaseBundleDir = ""
-	securityAuditFlags.privacyMode = false
-	securityAuditFlags.failOn = "NONE"
+	securityAudit.flags.format = "json"
+	securityAudit.flags.out = outPath
+	securityAudit.flags.outDir = outDir
+	securityAudit.flags.severity = "CRITICAL,HIGH,MEDIUM,LOW"
+	securityAudit.flags.sbom = "spdx"
+	securityAudit.flags.frameworks = nil
+	securityAudit.flags.vulnSource = "hybrid"
+	securityAudit.flags.liveVulnCheck = false
+	securityAudit.flags.releaseBundleDir = ""
+	securityAudit.flags.privacyMode = false
+	securityAudit.flags.failOn = "NONE"
 
 	root := newTestRootCmd()
 	cmd := &cobra.Command{}
 	root.AddCommand(cmd)
-	if err := runSecurityAudit(cmd, nil); err != nil {
-		t.Fatalf("runSecurityAudit returned error: %v", err)
+	if err := securityAudit.run(cmd, nil); err != nil {
+		t.Fatalf("securityAudit.run returned error: %v", err)
 	}
 
 	required := []string{
@@ -61,22 +61,22 @@ func TestRunSecurityAudit_FailOnHighReturnsSentinel(t *testing.T) {
 	restore := preserveSecurityAuditGlobals()
 	defer restore()
 
-	securityAuditFlags.format = "json"
-	securityAuditFlags.out = filepath.Join(tmp, "security-report.json")
-	securityAuditFlags.outDir = filepath.Join(tmp, "bundle")
-	securityAuditFlags.severity = "CRITICAL,HIGH,MEDIUM,LOW"
-	securityAuditFlags.sbom = "spdx"
-	securityAuditFlags.frameworks = nil
-	securityAuditFlags.vulnSource = "hybrid"
-	securityAuditFlags.liveVulnCheck = false
-	securityAuditFlags.releaseBundleDir = ""
-	securityAuditFlags.privacyMode = false
-	securityAuditFlags.failOn = "HIGH"
+	securityAudit.flags.format = "json"
+	securityAudit.flags.out = filepath.Join(tmp, "security-report.json")
+	securityAudit.flags.outDir = filepath.Join(tmp, "bundle")
+	securityAudit.flags.severity = "CRITICAL,HIGH,MEDIUM,LOW"
+	securityAudit.flags.sbom = "spdx"
+	securityAudit.flags.frameworks = nil
+	securityAudit.flags.vulnSource = "hybrid"
+	securityAudit.flags.liveVulnCheck = false
+	securityAudit.flags.releaseBundleDir = ""
+	securityAudit.flags.privacyMode = false
+	securityAudit.flags.failOn = "HIGH"
 
 	root := newTestRootCmd()
 	cmd := &cobra.Command{}
 	root.AddCommand(cmd)
-	err := runSecurityAudit(cmd, nil)
+	err := securityAudit.run(cmd, nil)
 	if !errors.Is(err, ui.ErrSecurityAuditFindings) {
 		t.Fatalf("expected ErrSecurityAuditFindings, got %v", err)
 	}
@@ -98,10 +98,10 @@ func TestParseSecurityAuditFormat(t *testing.T) {
 }
 
 func preserveSecurityAuditGlobals() func() {
-	saved := securityAuditFlags
-	saved.frameworks = append([]string(nil), securityAuditFlags.frameworks...)
+	saved := securityAudit.flags
+	saved.frameworks = append([]string(nil), securityAudit.flags.frameworks...)
 	return func() {
-		securityAuditFlags = saved
+		securityAudit.flags = saved
 	}
 }
 
