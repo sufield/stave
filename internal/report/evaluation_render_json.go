@@ -12,15 +12,15 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-type reportJSONOutput struct {
+type reportOutput struct {
 	GeneratedAt        string                           `json:"generated_at"`
 	ToolVersion        string                           `json:"tool_version"`
-	Run                reportJSONRun                    `json:"run"`
-	Summary            reportJSONSummary                `json:"summary"`
+	Run                reportRun                        `json:"run"`
+	Summary            reportSummary                    `json:"summary"`
 	FindingsBySeverity map[string]int                   `json:"findings_by_severity"`
 	ComplianceSummary  map[string]reportComplianceEntry `json:"compliance_summary,omitempty"`
-	Findings           []reportJSONFinding              `json:"findings"`
-	Remediations       []reportJSONRemediation          `json:"remediations"`
+	Findings           []reportFinding                  `json:"findings"`
+	Remediations       []reportRemediation              `json:"remediations"`
 }
 
 type reportComplianceEntry struct {
@@ -29,21 +29,21 @@ type reportComplianceEntry struct {
 	Controls           []string       `json:"controls"`
 }
 
-type reportJSONRun struct {
+type reportRun struct {
 	EvaluationTime string `json:"evaluation_time"`
 	MaxUnsafe      string `json:"max_unsafe"`
 	Snapshots      int    `json:"snapshots"`
 	Offline        bool   `json:"offline"`
 }
 
-type reportJSONSummary struct {
+type reportSummary struct {
 	AssetsEvaluated int `json:"assets_evaluated"`
 	AttackSurface   int `json:"attack_surface"`
 	Violations      int `json:"violations"`
 	Skipped         int `json:"skipped"`
 }
 
-type reportJSONFinding struct {
+type reportFinding struct {
 	ControlID   string            `json:"control_id"`
 	AssetID     string            `json:"asset_id"`
 	AssetType   string            `json:"asset_type"`
@@ -56,7 +56,7 @@ type reportJSONFinding struct {
 	LastUnsafe  string            `json:"last_unsafe,omitempty"`
 }
 
-type reportJSONRemediation struct {
+type reportRemediation struct {
 	ControlID   string `json:"control_id"`
 	AssetID     string `json:"asset_id"`
 	Description string `json:"description"`
@@ -64,9 +64,9 @@ type reportJSONRemediation struct {
 	Example     string `json:"example,omitempty"`
 }
 
-// RenderJSON writes report JSON to w unless quiet is true.
+// RenderJSON serialises the evaluation as JSON and writes it to w unless quiet is true.
 func RenderJSON(eval safetyenvelope.Evaluation, toolVersion string, w io.Writer, quiet bool) error {
-	data := buildReportJSON(eval, toolVersion)
+	data := buildReportViewModel(eval, toolVersion)
 	output, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal report JSON: %w", err)
@@ -81,8 +81,8 @@ func RenderJSON(eval safetyenvelope.Evaluation, toolVersion string, w io.Writer,
 	return nil
 }
 
-func buildReportJSON(eval safetyenvelope.Evaluation, toolVersion string) reportJSONOutput {
-	out := newReportJSONOutput(eval, toolVersion)
+func buildReportViewModel(eval safetyenvelope.Evaluation, toolVersion string) reportOutput {
+	out := newReportOutput(eval, toolVersion)
 	complianceData := make(map[string]*reportComplianceEntry)
 	for _, finding := range eval.Findings {
 		appendReportFinding(&out, complianceData, finding)
@@ -93,43 +93,43 @@ func buildReportJSON(eval safetyenvelope.Evaluation, toolVersion string) reportJ
 	return out
 }
 
-func newReportJSONOutput(eval safetyenvelope.Evaluation, toolVersion string) reportJSONOutput {
+func newReportOutput(eval safetyenvelope.Evaluation, toolVersion string) reportOutput {
 	generated := eval.Run.Now.UTC()
-	return reportJSONOutput{
+	return reportOutput{
 		GeneratedAt: generated.Format(time.RFC3339),
 		ToolVersion: toolVersion,
-		Run: reportJSONRun{
+		Run: reportRun{
 			EvaluationTime: eval.Run.Now.Format(time.RFC3339),
 			MaxUnsafe:      eval.Run.MaxUnsafe.String(),
 			Snapshots:      eval.Run.Snapshots,
 			Offline:        eval.Run.Offline,
 		},
-		Summary: reportJSONSummary{
+		Summary: reportSummary{
 			AssetsEvaluated: eval.Summary.AssetsEvaluated,
 			AttackSurface:   eval.Summary.AttackSurface,
 			Violations:      eval.Summary.Violations,
 			Skipped:         len(eval.Skipped),
 		},
 		FindingsBySeverity: make(map[string]int),
-		Findings:           make([]reportJSONFinding, 0, len(eval.Findings)),
-		Remediations:       make([]reportJSONRemediation, 0, len(eval.Findings)),
+		Findings:           make([]reportFinding, 0, len(eval.Findings)),
+		Remediations:       make([]reportRemediation, 0, len(eval.Findings)),
 	}
 }
 
 func appendReportFinding(
-	out *reportJSONOutput,
+	out *reportOutput,
 	complianceData map[string]*reportComplianceEntry,
 	finding remediation.Finding,
 ) {
-	out.Findings = append(out.Findings, toReportJSONFinding(finding))
-	out.Remediations = append(out.Remediations, toReportJSONRemediation(finding))
+	out.Findings = append(out.Findings, toReportFinding(finding))
+	out.Remediations = append(out.Remediations, toReportRemediation(finding))
 	sev := normalizedSeverity(finding.ControlSeverity.String())
 	out.FindingsBySeverity[sev]++
 	updateComplianceData(complianceData, finding.ControlCompliance, sev)
 }
 
-func toReportJSONFinding(finding remediation.Finding) reportJSONFinding {
-	out := reportJSONFinding{
+func toReportFinding(finding remediation.Finding) reportFinding {
+	out := reportFinding{
 		ControlID:  string(finding.ControlID),
 		AssetID:    string(finding.AssetID),
 		AssetType:  string(finding.AssetType),
@@ -148,8 +148,8 @@ func toReportJSONFinding(finding remediation.Finding) reportJSONFinding {
 	return out
 }
 
-func toReportJSONRemediation(finding remediation.Finding) reportJSONRemediation {
-	return reportJSONRemediation{
+func toReportRemediation(finding remediation.Finding) reportRemediation {
+	return reportRemediation{
 		ControlID:   string(finding.ControlID),
 		AssetID:     string(finding.AssetID),
 		Description: finding.RemediationSpec.Description,
@@ -179,7 +179,7 @@ func ensureComplianceEntry(complianceData map[string]*reportComplianceEntry, fra
 	return entry
 }
 
-func finalizeReportComplianceSummary(out *reportJSONOutput, complianceData map[string]*reportComplianceEntry) {
+func finalizeReportComplianceSummary(out *reportOutput, complianceData map[string]*reportComplianceEntry) {
 	if len(complianceData) == 0 {
 		return
 	}
@@ -216,10 +216,10 @@ func normalizedSeverity(s string) string {
 	return v
 }
 
-func sortReportFindings(in []reportJSONFinding) []reportJSONFinding {
-	out := make([]reportJSONFinding, len(in))
+func sortReportFindings(in []reportFinding) []reportFinding {
+	out := make([]reportFinding, len(in))
 	copy(out, in)
-	slices.SortFunc(out, func(a, b reportJSONFinding) int {
+	slices.SortFunc(out, func(a, b reportFinding) int {
 		if ra, rb := severityRank(a.Severity), severityRank(b.Severity); ra != rb {
 			return ra - rb
 		}
