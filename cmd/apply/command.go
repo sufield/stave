@@ -9,13 +9,11 @@ import (
 // applyFlagsType groups all CLI flags for the apply command.
 type applyFlagsType struct {
 	controlsDir, observationsDir, maxUnsafe, nowTime string
-	allowUnknownInput, quietMode, applyDryRun        bool
-	applyExplain, profileIncludeAll                  bool
+	allowUnknownInput                                bool
+	profileIncludeAll                                bool
 	outputFormat, ignoreFile, applyProfile           string
 	profileInputFile, profileScopeFile               string
 	profileBucketAllowlist, applyExcludeControlIDs   []string
-	applyTemplateStr, applyMinSeverity               string
-	applyControlID, applyCompliance                  string
 	applyControlsFlagSet                             bool
 	applyIntegrityManifest, applyIntegrityPublicKey  string
 }
@@ -29,7 +27,6 @@ func init() {
 	ApplyCmd.Flags().StringVar(&applyFlags.nowTime, "now", "", "Override current time (RFC3339 format). Required for deterministic output")
 	ApplyCmd.Flags().BoolVar(&applyFlags.allowUnknownInput, "allow-unknown-input", cmdutil.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
 	ApplyCmd.Flags().StringVarP(&applyFlags.outputFormat, "format", "f", "json", "Output format: json, text, or sarif")
-	ApplyCmd.Flags().BoolVar(&applyFlags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
 	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
 	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
@@ -47,7 +44,6 @@ var (
 	readinessPlanMaxUnsafe       string
 	readinessPlanNowTime         string
 	readinessPlanFormat          string
-	readinessPlanQuiet           bool
 )
 
 type readinessInput struct {
@@ -129,6 +125,5 @@ func init() {
 	PlanCmd.Flags().StringVar(&readinessPlanMaxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	PlanCmd.Flags().StringVar(&readinessPlanNowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	PlanCmd.Flags().StringVarP(&readinessPlanFormat, "format", "f", "text", "Output format: text or json")
-	PlanCmd.Flags().BoolVar(&readinessPlanQuiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	_ = PlanCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 }

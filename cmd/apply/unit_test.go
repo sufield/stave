@@ -191,7 +191,6 @@ func TestBuildApplyDeps(t *testing.T) {
 		applyFlags.observationsDir = filepath.Join(fixture, "observations")
 
 		applyFlags.outputFormat = "json"
-		applyFlags.quietMode = false
 
 		params := applyParams{
 			maxDuration: 168 * time.Hour,
@@ -224,7 +223,6 @@ func TestBuildApplyDeps(t *testing.T) {
 		applyFlags.observationsDir = filepath.Join(fixture, "observations")
 
 		applyFlags.outputFormat = "text"
-		applyFlags.quietMode = false
 
 		params := applyParams{
 			maxDuration: 24 * time.Hour,

@@ -3,13 +3,13 @@ package fix
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/adapters/output"
+	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -57,28 +57,17 @@ func writeFixLoopReport(cmd *cobra.Command, execCtx fixLoopExecution, report *fi
 			return err
 		}
 	}
-	if err := shared.WriteJSON(os.Stdout, report); err != nil {
+	if err := shared.WriteJSON(cmd.OutOrStdout(), report); err != nil {
 		return fmt.Errorf("write remediation report: %w", err)
 	}
 	return nil
 }
 
 func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safetyenvelope.Evaluation {
-	findings := remediation.NewMapper().EnrichFindings(result)
-	skippedAssets := result.SkippedAssets
-	run := result.Run
+	enricher := remediation.NewMapper()
 	sanitizer := cmdutil.GetSanitizer(cmd)
-	findings = output.SanitizeFindings(sanitizer, findings)
-	skippedAssets = output.SanitizeSkippedAssets(sanitizer, skippedAssets)
-	run.InputHashes = output.SanitizeInputHashKeys(sanitizer, run.InputHashes)
-	return safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
-		Run:                run,
-		Summary:            result.Summary,
-		Findings:           findings,
-		Skipped:            result.Skipped,
-		SkippedAssets:      skippedAssets,
-		SuppressedFindings: result.SuppressedFindings,
-	})
+	enriched := output.Enrich(enricher, sanitizer, result)
+	return appworkflow.BuildSafetyEnvelopeFromEnriched(enriched)
 }
 
 func writeOutputJSONFile(cmd *cobra.Command, path string, value any) error {

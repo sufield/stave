@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/enforce/shared"
+	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -40,6 +41,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		return err
 	}
 	entries := remediation.BaselineEntriesFromFindings(eval.Findings)
+	entries = output.SanitizeBaselineEntries(cmdutil.GetSanitizer(cmd), entries)
 
 	out := evaluation.Baseline{
 		SchemaVersion:    kernel.SchemaBaseline,
@@ -80,6 +82,7 @@ func runCheck(cmd *cobra.Command, opts *checkOptions) error {
 		return err
 	}
 	current := remediation.BaselineEntriesFromFindings(eval.Findings)
+	current = output.SanitizeBaselineEntries(cmdutil.GetSanitizer(cmd), current)
 
 	base, err := shared.LoadBaselineFile(baselinePath, baselineKind)
 	if err != nil {

@@ -2,7 +2,6 @@ package apply
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -13,8 +12,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-// runApplyCore is the core handler for the apply command.
-// It validates flags, builds dependencies, and runs the evaluation.
+// runApplyCore gathers validated options, then dispatches by mode.
 func runApplyCore(cmd *cobra.Command, _ []string) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
@@ -24,31 +22,22 @@ func runApplyCore(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return ui.EvaluateErrorWithHint(err)
 	}
-	if strictErr := runStrictIntegrityCheck(cmd); strictErr != nil {
-		return ui.EvaluateErrorWithHint(strictErr)
-	}
 
 	switch opts.mode {
 	case runModeProfile:
 		return runApplyProfileWithOptions(cmd, opts.profile)
-	case runModeTemplate:
-		return runApplyWithTemplateParams(cmd, opts.params)
+	default:
+		return runStandardApply(cmd, opts)
 	}
+}
 
+// runStandardApply executes the standard plan → evaluate → output pipeline.
+func runStandardApply(cmd *cobra.Command, opts runOptions) error {
 	plan, err := appeval.NewPlan(opts.evaluatorInput)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
 	attachRunIDFromPlan(plan)
-
-	if opts.explain {
-		fmt.Fprintln(cmd.ErrOrStderr(), plan.Summary())
-	}
-	if opts.dryRun {
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(plan)
-	}
 
 	results, err := executeApply(cmd, cmd.Context(), opts, plan)
 	if err != nil {
@@ -60,7 +49,7 @@ func runApplyCore(cmd *cobra.Command, _ []string) error {
 
 func runStrictIntegrityCheck(cmd *cobra.Command) error {
 	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-	rt.Quiet = applyFlags.quietMode
+	rt.Quiet = cmdutil.QuietEnabled(cmd)
 	rt.Strict = cmdutil.StrictEnabled(cmd)
 	if !rt.Strict {
 		return nil
@@ -92,7 +81,7 @@ func executeApply(
 	defer deps.Close()
 
 	progress := ui.NewRuntime(nil, nil)
-	progress.Quiet = applyFlags.quietMode
+	progress.Quiet = cmdutil.QuietEnabled(cmd)
 	done := progress.BeginProgress("apply controls against observations")
 	defer done()
 

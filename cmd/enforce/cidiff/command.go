@@ -20,7 +20,7 @@ Example:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new` + metadata.OfflineHelpSuffix,
 		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd.OutOrStdout(), opts) },
+		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, opts) },
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
