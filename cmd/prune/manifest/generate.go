@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func runSnapshotManifestGenerate(cmd *cobra.Command, _ []string) error {
@@ -67,8 +68,7 @@ func collectObservationHashes(dir string) (map[evaluation.FilePath]kernel.Digest
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())
-		// #nosec G304 -- path is constructed from entries returned by os.ReadDir on the selected observations directory.
-		data, readErr := os.ReadFile(path)
+		data, readErr := fsutil.ReadFileLimited(path)
 		if readErr != nil {
 			return nil, 0, fmt.Errorf("read observation %q: %w", path, readErr)
 		}

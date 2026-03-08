@@ -98,14 +98,10 @@ func (r *Request) Parse() (ParsedRequest, error) {
 }
 
 func validateStatuses(statuses []risk.Status) error {
-	for _, st := range statuses {
-		normalized := risk.Status(strings.ToUpper(strings.TrimSpace(string(st))))
-		if normalized == "" {
-			continue
-		}
-		if !risk.ValidStatus(normalized) {
-			return fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", st)
-		}
+	raw := make([]string, len(statuses))
+	for i, s := range statuses {
+		raw[i] = string(s)
 	}
-	return nil
+	_, err := risk.ValidateStatuses(raw)
+	return err
 }

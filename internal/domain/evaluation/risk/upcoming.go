@@ -1,7 +1,9 @@
 package risk
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
@@ -29,6 +31,23 @@ var validStatuses = map[Status]struct{}{
 func ValidStatus(s Status) bool {
 	_, ok := validStatuses[s]
 	return ok
+}
+
+// ValidateStatuses normalises and validates a slice of status strings.
+// Empty strings are skipped. Returns an error on the first invalid value.
+func ValidateStatuses(statuses []string) ([]Status, error) {
+	out := make([]Status, 0, len(statuses))
+	for _, raw := range statuses {
+		normalized := Status(strings.ToUpper(strings.TrimSpace(raw)))
+		if normalized == "" {
+			continue
+		}
+		if !ValidStatus(normalized) {
+			return nil, fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", raw)
+		}
+		out = append(out, normalized)
+	}
+	return out, nil
 }
 
 // Item captures one control/asset due threshold candidate.

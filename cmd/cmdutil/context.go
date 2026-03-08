@@ -271,8 +271,7 @@ func SaveSessionState(projectRoot string, argv []string) error {
 // LoadSessionState reads session state from disk.
 func LoadSessionState(projectRoot string) (*SessionState, error) {
 	path := filepath.Join(projectRoot, SessionFileRel)
-	// #nosec G304 -- path is derived from validated project root plus fixed session filename.
-	data, err := os.ReadFile(path)
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil

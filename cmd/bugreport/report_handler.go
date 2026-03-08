@@ -3,6 +3,7 @@ package bugreport
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	supportapp "github.com/sufield/stave/internal/app/support"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -23,35 +23,43 @@ var (
 	includeConfig bool
 )
 
-func runReport(cmd *cobra.Command, _ []string) error {
-	_, err := supportapp.RunBugReport(supportapp.BugReportDeps{
-		PrepareOutput: func() (supportapp.PreparedOutput, error) {
-			return prepareOutputFile(cmd)
-		},
-		PopulateBundle: func(zw *zip.Writer, cwd string) error {
-			return populateBundle(cmd, zw, cwd)
-		},
-		WriteSummary: func(outPath string) error {
-			return writeSummary(cmd, outPath)
-		},
-	})
-	return err
+type preparedOutput struct {
+	cwd     string
+	outPath string
+	file    io.WriteCloser
 }
 
-func prepareOutputFile(cmd *cobra.Command) (supportapp.PreparedOutput, error) {
+func runReport(cmd *cobra.Command, _ []string) error {
+	prepared, err := prepareOutputFile(cmd)
+	if err != nil {
+		return err
+	}
+	defer prepared.file.Close()
+
+	zw := zip.NewWriter(prepared.file)
+	if err := populateBundle(cmd, zw, prepared.cwd); err != nil {
+		return err
+	}
+	if err := zw.Close(); err != nil {
+		return fmt.Errorf("finalize bundle: %w", err)
+	}
+	return writeSummary(cmd, prepared.outPath)
+}
+
+func prepareOutputFile(cmd *cobra.Command) (preparedOutput, error) {
 	if tailLines < 0 {
-		return supportapp.PreparedOutput{}, &ui.InputError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", tailLines)}
+		return preparedOutput{}, &ui.InputError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", tailLines)}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
-		return supportapp.PreparedOutput{}, fmt.Errorf("resolve current directory: %w", err)
+		return preparedOutput{}, fmt.Errorf("resolve current directory: %w", err)
 	}
 	outPath := fsutil.CleanUserPath(resolveOutPath(cwd, reportOut))
 	zipFile, err := cmdutil.CreateOutputFile(cmd, outPath)
 	if err != nil {
-		return supportapp.PreparedOutput{}, err
+		return preparedOutput{}, err
 	}
-	return supportapp.PreparedOutput{Cwd: cwd, OutPath: outPath, File: zipFile}, nil
+	return preparedOutput{cwd: cwd, outPath: outPath, file: zipFile}, nil
 }
 
 func populateBundle(cmd *cobra.Command, zw *zip.Writer, cwd string) error {
