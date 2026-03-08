@@ -2,18 +2,16 @@ package report
 
 import (
 	_ "embed"
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	reportrender "github.com/sufield/stave/internal/report"
-	"github.com/sufield/stave/internal/safetyenvelope"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -68,14 +66,9 @@ func runReport(cmd *cobra.Command, _ []string) error {
 	reportInputFile = fsutil.CleanUserPath(reportInputFile)
 	reportTemplateFile = fsutil.CleanUserPath(reportTemplateFile)
 
-	data, err := fsutil.ReadFileLimited(reportInputFile)
+	eval, err := shared.LoadEvaluationEnvelope(reportInputFile)
 	if err != nil {
-		return fmt.Errorf("read --in: %w", err)
-	}
-
-	var eval safetyenvelope.Evaluation
-	if unmarshalErr := json.Unmarshal(data, &eval); unmarshalErr != nil {
-		return fmt.Errorf("parse evaluation JSON: %w", unmarshalErr)
+		return err
 	}
 
 	cmdutil.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
@@ -87,10 +80,10 @@ func runReport(cmd *cobra.Command, _ []string) error {
 
 	quiet := cmdutil.QuietEnabled(cmd)
 	if format.IsJSON() {
-		return reportrender.RenderJSON(eval, staveversion.Version, cmd.OutOrStdout(), quiet)
+		return reportrender.RenderJSON(*eval, staveversion.Version, cmd.OutOrStdout(), quiet)
 	}
 	return reportrender.RenderText(
-		eval,
+		*eval,
 		staveversion.Version,
 		defaultReportTemplate,
 		reportTemplateFile,

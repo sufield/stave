@@ -15,6 +15,21 @@ type SnapshotObservationLoader interface {
 	LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error)
 }
 
+// loadSnapshotCapturedAt opens a snapshot file and returns its CapturedAt timestamp.
+func loadSnapshotCapturedAt(loader SnapshotObservationLoader, path, name string) (time.Time, error) {
+	// #nosec G304 -- path is discovered from directory entries.
+	f, err := os.Open(path)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("open %s: %w", path, err)
+	}
+	snapshot, loadErr := loader.LoadSnapshotFromReader(context.Background(), f, name)
+	_ = f.Close()
+	if loadErr != nil {
+		return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)
+	}
+	return snapshot.CapturedAt.UTC(), nil
+}
+
 // ListSnapshotFilesFlatWithLoader lists snapshot files directly under observationsDir
 // and resolves captured_at via the provided loader.
 func ListSnapshotFilesFlatWithLoader(observationsDir string, loader SnapshotObservationLoader) ([]SnapshotFile, error) {
@@ -22,17 +37,7 @@ func ListSnapshotFilesFlatWithLoader(observationsDir string, loader SnapshotObse
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
 	return ListSnapshotFilesFlat(observationsDir, func(path, name string) (time.Time, error) {
-		// #nosec G304 -- path is discovered from directory entries under observationsDir.
-		f, openErr := os.Open(path)
-		if openErr != nil {
-			return time.Time{}, fmt.Errorf("open %s: %w", path, openErr)
-		}
-		snapshot, loadErr := loader.LoadSnapshotFromReader(context.Background(), f, name)
-		_ = f.Close()
-		if loadErr != nil {
-			return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)
-		}
-		return snapshot.CapturedAt.UTC(), nil
+		return loadSnapshotCapturedAt(loader, path, name)
 	})
 }
 
@@ -47,16 +52,6 @@ func ListSnapshotFilesRecursiveWithLoader(
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
 	return ListSnapshotFilesRecursive(observationsDir, excludeDirs, func(path, name string) (time.Time, error) {
-		// #nosec G304 -- path is discovered via recursive walk rooted at observationsDir.
-		f, openErr := os.Open(path)
-		if openErr != nil {
-			return time.Time{}, fmt.Errorf("open %s: %w", path, openErr)
-		}
-		snapshot, loadErr := loader.LoadSnapshotFromReader(context.Background(), f, name)
-		_ = f.Close()
-		if loadErr != nil {
-			return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)
-		}
-		return snapshot.CapturedAt.UTC(), nil
+		return loadSnapshotCapturedAt(loader, path, name)
 	})
 }

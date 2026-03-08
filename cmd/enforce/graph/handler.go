@@ -107,26 +107,14 @@ func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
-	snapshots, err := loadSnapshots(ctx, input.observationsDir)
+	snapshots, err := cmdutil.LoadSnapshots(ctx, input.observationsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
+	if len(snapshots) == 0 {
+		return nil, asset.Snapshot{}, fmt.Errorf("no observation snapshots found in %s", input.observationsDir)
+	}
 	return controls, asset.LatestSnapshot(snapshots), nil
-}
-
-func loadSnapshots(ctx context.Context, observationsDir string) ([]asset.Snapshot, error) {
-	obsLoader, err := cmdutil.NewObservationRepository()
-	if err != nil {
-		return nil, fmt.Errorf("create observation loader: %w", err)
-	}
-	result, err := obsLoader.LoadSnapshots(ctx, observationsDir)
-	if err != nil {
-		return nil, fmt.Errorf("load observations: %w", err)
-	}
-	if len(result.Snapshots) == 0 {
-		return nil, fmt.Errorf("no observation snapshots found in %s", observationsDir)
-	}
-	return result.Snapshots, nil
 }
 
 func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot) coverageResult {

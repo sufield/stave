@@ -360,15 +360,10 @@ func (b *promptBuilder) marshalControl(ctl *policy.ControlDefinition) string {
 // loadAssetProperties loads the latest observation snapshot and extracts
 // properties for the given asset ID as indented JSON.
 func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, error) {
-	obsLoader, err := cmdutil.NewObservationRepository()
+	snapshots, err := cmdutil.LoadSnapshots(ctx, obsDir)
 	if err != nil {
-		return "", fmt.Errorf("create observation loader: %w", err)
+		return "", err
 	}
-	obsResult, err := obsLoader.LoadSnapshots(ctx, obsDir)
-	if err != nil {
-		return "", fmt.Errorf("load observations: %w", err)
-	}
-	snapshots := obsResult.Snapshots
 	if len(snapshots) == 0 {
 		return "", nil
 	}
