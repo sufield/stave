@@ -36,7 +36,7 @@ For S3 public exposure evaluation, these keys are the stability surface:
 - `assets[].properties.storage.access.*`
 - `assets[].properties.storage.object_lock.*`
 
-## Field dictionary (customer-relevant)
+## Field dictionary
 
 | Field | Meaning | derived_from | Type | Example |
 |---|---|---|---|---|

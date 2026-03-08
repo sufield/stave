@@ -333,7 +333,7 @@ stave alias delete ev
    cat controls/s3/CTL.S3.PUBLIC.001.yaml | stave validate --in -
    ```
 
-4. **File-mediated pipeline (CI pattern):**
+4. **File-mediated pipeline for CI:**
 
    ```bash
    # Step 1: Evaluate and save

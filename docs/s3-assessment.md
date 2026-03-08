@@ -58,4 +58,3 @@ Output:
 - Offline by design: reads local files only.
 - Deterministic in CI: always set `--now`.
 - For troubleshooting unexpected results, run `stave diagnose`.
-

@@ -2,7 +2,7 @@
 
 This guide keeps Stave CLI output consistent, readable, and automation-friendly.
 
-## Core rules
+## Rules
 
 1. Prefer explicit flags over ambiguous positional arguments.
 2. Keep command/flag names in kebab-case.

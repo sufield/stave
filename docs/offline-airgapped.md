@@ -9,7 +9,7 @@ description: "What runs offline in Stave, what still needs network access, and r
 
 Stave runtime commands are designed for offline execution against local files.
 
-## Runtime Behavior (Offline)
+## Runtime Behavior is Offline
 
 The runtime CLI (`stave`) operates on local inputs and does not require cloud credentials or network access.
 
@@ -19,7 +19,7 @@ Typical offline flow:
 2. Run `stave validate`, `stave apply`, `stave apply --profile aws-s3`, or `stave diagnose`.
 3. Consume local JSON/text output.
 
-## What is In Scope for Air-Gapped Use
+## What is in Scope for Air-Gapped Use
 
 - Running the released `stave` binary
 - Validating observations/controls

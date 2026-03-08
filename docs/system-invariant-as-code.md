@@ -14,17 +14,17 @@ System Invariant as Code means you define a small set of safety truths that must
 In Stave, a control is a YAML rule (for example: "PHI buckets are never public").
 A finding is produced only when observed system state violates that rule.
 
-## What problem this solves
+## The Problem
 
 Many teams have policy checks, scanners, and cloud dashboards, but still struggle to answer:
 
-- "Did this unsafe condition persist long enough to matter?"
-- "Can we prove the same result from the same snapshot every time?"
-- "Can we run this in air-gapped review environments with no cloud credentials?"
+- Did this unsafe condition persist long enough to matter?
+- Can we prove the same result from the same snapshot every time?
+- Can we run this in air-gapped review environments with no cloud credentials?
 
 Stave focuses on deterministic, offline proofs over local snapshots.
 
-## Formal Model (small)
+## Formal Model
 
 Let:
 
@@ -94,7 +94,7 @@ If either property is true in a snapshot, Stave emits a finding.
 - It does not execute plugins or untrusted code.
 - It does not replace all policy engines or CSPM platforms.
 
-## Developer Workflow (Practical)
+## Developer Workflow
 
 This workflow is for contributors and product engineers using Stave without changing Stave internals.
 
