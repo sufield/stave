@@ -82,7 +82,7 @@ var SecurityAuditCmd = &cobra.Command{
 	Long: `Security-audit generates auditor-ready artifacts for supply-chain, runtime,
 privacy, and internal security controls.
 
-It produces deterministic evidence bundles by default and supports JSON, markdown,
+It produces deterministic evidence bundles when --now is set and supports JSON, markdown,
 and SARIF output formats.
 
 Examples:

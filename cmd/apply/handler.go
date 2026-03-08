@@ -44,7 +44,7 @@ func runStandardApply(cmd *cobra.Command, opts runOptions) error {
 		return ui.EvaluateErrorWithHint(err)
 	}
 
-	return outputResults(cmd, results, opts.format)
+	return outputResults(cmd, results)
 }
 
 func runStrictIntegrityCheck(cmd *cobra.Command) error {

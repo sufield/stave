@@ -66,7 +66,7 @@ func runCoverage(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return err
 	}
-	controls, latestSnapshot, err := loadArtifacts(input)
+	controls, latestSnapshot, err := loadArtifacts(cmd.Context(), input)
 	if err != nil {
 		return err
 	}
@@ -115,8 +115,7 @@ func validateFormat(format string) error {
 	}
 }
 
-func loadArtifacts(input input) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	ctx := context.Background()
+func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition, asset.Snapshot, error) {
 	controls, err := loadControls(ctx, input.controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
