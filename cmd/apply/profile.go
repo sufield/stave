@@ -190,7 +190,7 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
 	attachRunID(inputsHash.String(), controlsHash.String())
 
-	ctlLoader, err := newControlRepository()
+	ctlLoader, err := cmdutil.NewControlRepository()
 	if err != nil {
 		return "", nil, fmt.Errorf("create control loader: %w", err)
 	}

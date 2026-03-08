@@ -85,8 +85,8 @@ func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
 		RetentionTier:   hygieneFlags.retentionTier,
 		KeepMin:         hygieneFlags.keepMin,
 		NowTime:         hygieneFlags.now,
-		ControlIDs:      toControlIDs(hygieneFlags.controlIDs),
-		AssetTypes:      toAssetTypes(hygieneFlags.assetTypes),
+		ControlIDs:      cmdutil.ToControlIDs(hygieneFlags.controlIDs),
+		AssetTypes:      cmdutil.ToAssetTypes(hygieneFlags.assetTypes),
 		Statuses:        toStatuses(hygieneFlags.statuses),
 	}
 	parsed, err := req.Parse()

@@ -2,18 +2,13 @@ package apply
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	exemptionyaml "github.com/sufield/stave/internal/adapters/input/exemption/yaml"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
@@ -42,50 +37,6 @@ func resolveApplyContextName(projectRoot string) string {
 	return base
 }
 
-func findProjectConfig() (*cmdutil.ProjectConfig, bool) {
-	return cmdutil.FindProjectConfig()
-}
-
-func findProjectConfigWithPath() (*cmdutil.ProjectConfig, string, bool) {
-	return cmdutil.FindProjectConfigWithPath()
-}
-
-func findUserConfigWithPath() (*cmdutil.UserConfig, string, bool) {
-	return cmdutil.FindUserConfigWithPath()
-}
-
-func collectGitAudit(baseDir string, watchPaths []string) *evaluation.GitInfo {
-	return cmdutil.CollectGitAudit(baseDir, watchPaths)
-}
-
-func newObservationRepository() (appcontracts.ObservationRepository, error) {
-	return cmdutil.NewObservationRepository()
-}
-
-func newStdinObservationRepository(r io.Reader) (appcontracts.ObservationRepository, error) {
-	return cmdutil.NewStdinObservationRepository(r)
-}
-
-func newControlRepository() (appcontracts.ControlRepository, error) {
-	return cmdutil.NewControlRepository()
-}
-
-func rootForContextName() string { return cmdutil.RootForContextName() }
-
-func inferControlsDir(cmd *cobra.Command, current string) string {
-	return cmdutil.InferControlsDir(cmd, current)
-}
-
-func inferObservationsDir(cmd *cobra.Command, current string) string {
-	return cmdutil.InferObservationsDir(cmd, current)
-}
-
-func resetInferAttempts() { cmdutil.ResetInferAttempts() }
-
-func explainInferenceFailure(name string) string {
-	return cmdutil.ExplainInferenceFailure(name)
-}
-
 func loadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, nil
@@ -95,15 +46,4 @@ func loadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
 		return nil, fmt.Errorf("failed to load ignore file: %w", err)
 	}
 	return cfg, nil
-}
-
-// toControlIDs converts a string slice to kernel.ControlID slice.
-func toControlIDs(raw []string) []kernel.ControlID {
-	out := make([]kernel.ControlID, 0, len(raw))
-	for _, s := range raw {
-		if trimmed := strings.TrimSpace(s); trimmed != "" {
-			out = append(out, kernel.ControlID(trimmed))
-		}
-	}
-	return out
 }

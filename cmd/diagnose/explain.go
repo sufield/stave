@@ -86,18 +86,12 @@ func RunExplain(cmd *cobra.Command, args []string) error {
 }
 
 func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
-	loader, err := cmdutil.NewControlRepository()
+	controls, err := cmdutil.LoadControls(ctx, controlsDir)
 	if err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("create control loader: %w", err)
+		return policy.ControlDefinition{}, err
 	}
-	controls, err := loader.LoadControls(ctx, controlsDir)
-	if err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("load controls: %w", err)
-	}
-	for _, ctl := range controls {
-		if ctl.ID.String() == id {
-			return ctl, nil
-		}
+	if ctl := cmdutil.FindControlByID(controls, id); ctl != nil {
+		return *ctl, nil
 	}
 	return policy.ControlDefinition{}, ui.WithNextCommand(
 		fmt.Errorf("control %q not found in %s", id, controlsDir),

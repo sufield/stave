@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
@@ -189,13 +190,9 @@ func gatherPromptFromFindingOptions(cmd *cobra.Command) (promptRunOptions, error
 }
 
 func loadControlsMap(ctx context.Context, dir string) (map[string]*policy.ControlDefinition, error) {
-	ctlLoader, err := cmdutil.NewControlRepository()
+	controls, err := cmdutil.LoadControls(ctx, dir)
 	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-	controls, err := ctlLoader.LoadControls(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("load controls: %w", err)
+		return nil, err
 	}
 
 	ctlByID := make(map[string]*policy.ControlDefinition, len(controls))
@@ -376,12 +373,7 @@ func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, e
 		return "", nil
 	}
 
-	latest := snapshots[0]
-	for _, s := range snapshots[1:] {
-		if s.CapturedAt.After(latest.CapturedAt) {
-			latest = s
-		}
-	}
+	latest := asset.LatestSnapshot(snapshots)
 
 	for _, r := range latest.Assets {
 		if r.ID.String() == assetID {

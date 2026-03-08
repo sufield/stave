@@ -103,7 +103,7 @@ func validateFormat(format string) error {
 }
 
 func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	controls, err := loadControls(ctx, input.controlsDir)
+	controls, err := cmdutil.LoadControls(ctx, input.controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
@@ -111,19 +111,7 @@ func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
-	return controls, latestSnapshot(snapshots), nil
-}
-
-func loadControls(ctx context.Context, controlsDir string) ([]policy.ControlDefinition, error) {
-	ctlLoader, err := cmdutil.NewControlRepository()
-	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-	controls, err := ctlLoader.LoadControls(ctx, controlsDir)
-	if err != nil {
-		return nil, fmt.Errorf("load controls: %w", err)
-	}
-	return controls, nil
+	return controls, asset.LatestSnapshot(snapshots), nil
 }
 
 func loadSnapshots(ctx context.Context, observationsDir string) ([]asset.Snapshot, error) {
@@ -139,16 +127,6 @@ func loadSnapshots(ctx context.Context, observationsDir string) ([]asset.Snapsho
 		return nil, fmt.Errorf("no observation snapshots found in %s", observationsDir)
 	}
 	return result.Snapshots, nil
-}
-
-func latestSnapshot(snapshots []asset.Snapshot) asset.Snapshot {
-	latest := snapshots[0]
-	for _, snapshot := range snapshots[1:] {
-		if snapshot.CapturedAt.After(latest.CapturedAt) {
-			latest = snapshot
-		}
-	}
-	return latest
 }
 
 func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot) coverageResult {

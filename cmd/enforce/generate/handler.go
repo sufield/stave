@@ -272,11 +272,7 @@ func ParseMode(s string) (Mode, error) {
 	case ModePAB, ModeSCP:
 		return normalized, nil
 	default:
-		valid := []string{string(ModePAB), string(ModeSCP)}
-		if suggestion := ui.ClosestToken(ui.NormalizeToken(s), valid); suggestion != "" {
-			return "", fmt.Errorf("invalid --mode %q (use pab or scp)\nDid you mean %q?", s, suggestion)
-		}
-		return "", fmt.Errorf("invalid --mode %q (use pab or scp)", s)
+		return "", ui.EnumError("--mode", s, []string{string(ModePAB), string(ModeSCP)})
 	}
 }
 

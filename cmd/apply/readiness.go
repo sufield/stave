@@ -79,7 +79,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 }
 
 func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {
-	resetInferAttempts()
+	cmdutil.ResetInferAttempts()
 	ctlDir, obsDir := resolveReadinessDirs(cmd, in)
 
 	report, err := service.AssessReadiness(validation.ReadinessInput{
@@ -104,8 +104,8 @@ func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.Readines
 func resolveReadinessDirs(cmd *cobra.Command, in readinessInput) (string, string) {
 	ctlDir := fsutil.CleanUserPath(in.ControlsDir)
 	obsDir := fsutil.CleanUserPath(in.ObservationsDir)
-	ctlDir = inferControlsDir(cmd, ctlDir)
-	obsDir = inferObservationsDir(cmd, obsDir)
+	ctlDir = cmdutil.InferControlsDir(cmd, ctlDir)
+	obsDir = cmdutil.InferObservationsDir(cmd, obsDir)
 	return ctlDir, obsDir
 }
 
@@ -126,7 +126,7 @@ func readinessExitError(report validation.ReadinessReport) error {
 }
 
 func readinessHasEnabledPacks() bool {
-	if cfg, ok := findProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
+	if cfg, ok := cmdutil.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
 		return true
 	}
 	return false

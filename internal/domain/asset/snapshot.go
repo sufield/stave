@@ -43,6 +43,18 @@ type GeneratedBy struct {
 	ProviderVersion string `json:"provider_version,omitempty"`
 }
 
+// LatestSnapshot returns the snapshot with the most recent CapturedAt.
+// Panics if snapshots is empty.
+func LatestSnapshot(snapshots []Snapshot) Snapshot {
+	latest := snapshots[0]
+	for _, s := range snapshots[1:] {
+		if s.CapturedAt.After(latest.CapturedAt) {
+			latest = s
+		}
+	}
+	return latest
+}
+
 // Snapshots is an ordered collection of observation snapshots.
 type Snapshots []Snapshot
 

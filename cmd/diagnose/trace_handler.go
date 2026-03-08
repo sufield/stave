@@ -107,18 +107,12 @@ func resolveTraceOutputFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
 }
 
 func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*policy.ControlDefinition, error) {
-	loader, err := cmdutil.NewControlRepository()
+	controls, err := cmdutil.LoadControls(ctx, controlsDir)
 	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
+		return nil, err
 	}
-	controls, err := loader.LoadControls(ctx, controlsDir)
-	if err != nil {
-		return nil, fmt.Errorf("load controls: %w", err)
-	}
-	for i := range controls {
-		if controls[i].ID.String() == controlID {
-			return &controls[i], nil
-		}
+	if ctl := cmdutil.FindControlByID(controls, controlID); ctl != nil {
+		return ctl, nil
 	}
 	return nil, ui.WithNextCommand(
 		fmt.Errorf("control %q not found in %s", controlID, controlsDir),
