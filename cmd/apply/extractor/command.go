@@ -2,6 +2,7 @@ package extractor
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,9 @@ func (o *options) normalize() {
 func (o *options) validate() error {
 	if strings.TrimSpace(o.Name) == "" {
 		return fmt.Errorf("--name cannot be empty")
+	}
+	if strings.ContainsAny(o.Name, `/\`) || o.Name != filepath.Base(o.Name) || o.Name == ".." || o.Name == "." {
+		return fmt.Errorf("--name must be a plain identifier, not a path (got %q)", o.Name)
 	}
 	return nil
 }

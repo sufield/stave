@@ -37,7 +37,7 @@ func runStandardApply(cmd *cobra.Command, opts runOptions) error {
 	if err != nil {
 		return ui.EvaluateErrorWithHint(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
-	attachRunIDFromPlan(plan)
+	cmdutil.AttachRunIDFromPlan(plan)
 
 	results, err := executeApply(cmd, cmd.Context(), opts, plan)
 	if err != nil {

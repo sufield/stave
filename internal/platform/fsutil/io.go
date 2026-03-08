@@ -142,7 +142,7 @@ func IsSymlink(path string) (bool, error) {
 // Returns an open file handle. Caller must close it.
 func SafeCreateFile(path string, opts WriteOptions) (*os.File, error) {
 	if !opts.AllowSymlink {
-		if err := checkSymlinkSafety(path); err != nil {
+		if err := CheckSymlinkSafety(path); err != nil {
 			return nil, err
 		}
 	}
@@ -191,7 +191,7 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 // It refuses if the final directory path is a symlink (unless AllowSymlink).
 func SafeMkdirAll(path string, opts WriteOptions) error {
 	if !opts.AllowSymlink {
-		if err := checkSymlinkSafety(path); err != nil {
+		if err := CheckSymlinkSafety(path); err != nil {
 			return err
 		}
 	}
@@ -202,7 +202,7 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 // with post-open handle verification. Used for log files which are append-only.
 func SafeOpenAppend(path string, opts WriteOptions) (*os.File, error) {
 	if !opts.AllowSymlink {
-		if err := checkSymlinkSafety(path); err != nil {
+		if err := CheckSymlinkSafety(path); err != nil {
 			return nil, err
 		}
 	}
@@ -229,7 +229,7 @@ const maxParentWalk = 16
 // checkSymlinkSafety checks the target and its first existing ancestor for symlinks.
 // Callers that obtain a file handle should also use verifyHandle for TOCTOU-safe
 // confirmation.
-func checkSymlinkSafety(path string) error {
+func CheckSymlinkSafety(path string) error {
 	cur := filepath.Clean(path)
 
 	for range maxParentWalk {

@@ -1,28 +1,24 @@
 package cmdutil
 
-import (
-	"os"
-	"strings"
+// defaults.go provides simple default-value accessors that delegate to the
+// source-tracked resolvers in config_resolution.go. This eliminates the
+// duplicated env→project→user→default resolution chains that previously
+// existed in both files.
 
-	"github.com/sufield/stave/internal/envvar"
-)
+// projectConfigPtrAndPath returns a pointer to the project config and its
+// path, or (nil, "") if no project config is found.
+func projectConfigPtrAndPath() (*ProjectConfig, string) {
+	cfg, path, ok := FindProjectConfigWithPath()
+	if !ok {
+		return nil, ""
+	}
+	return cfg, path
+}
 
 // ResolveMaxUnsafeDefault returns the max-unsafe default from env/config/built-in.
 func ResolveMaxUnsafeDefault() string {
-	if v := strings.TrimSpace(os.Getenv(envvar.MaxUnsafe.Name)); v != "" {
-		return v
-	}
-	if cfg, ok := FindProjectConfig(); ok {
-		if v := strings.TrimSpace(cfg.MaxUnsafe); v != "" {
-			return v
-		}
-	}
-	if cfg, ok := FindUserConfig(); ok {
-		if v := strings.TrimSpace(cfg.MaxUnsafe); v != "" {
-			return v
-		}
-	}
-	return DefaultMaxUnsafeDuration
+	cfg, path := projectConfigPtrAndPath()
+	return ResolveMaxUnsafeWithSource(cfg, path).Value
 }
 
 // ResolveSnapshotRetentionDefault returns snapshot retention default.
@@ -32,61 +28,14 @@ func ResolveSnapshotRetentionDefault() string {
 
 // ResolveSnapshotRetentionForTier returns retention for a specific tier.
 func ResolveSnapshotRetentionForTier(tier string) string {
-	if v := strings.TrimSpace(os.Getenv(envvar.SnapshotRetention.Name)); v != "" {
-		return v
-	}
-	if v, ok := resolveRetentionFromProjectConfig(tier); ok {
-		return v
-	}
-	if v, ok := resolveRetentionFromUserConfig(); ok {
-		return v
-	}
-	return DefaultSnapshotRetention
-}
-
-func resolveRetentionFromProjectConfig(tier string) (string, bool) {
-	cfg, ok := FindProjectConfig()
-	if !ok {
-		return "", false
-	}
-	if tc, exists := cfg.RetentionTiers[NormalizeRetentionTier(tier)]; exists {
-		if v := strings.TrimSpace(tc.OlderThan); v != "" {
-			return v, true
-		}
-	}
-	if v := strings.TrimSpace(cfg.SnapshotRetention); v != "" {
-		return v, true
-	}
-	return "", false
-}
-
-func resolveRetentionFromUserConfig() (string, bool) {
-	cfg, ok := FindUserConfig()
-	if !ok {
-		return "", false
-	}
-	if v := strings.TrimSpace(cfg.SnapshotRetention); v != "" {
-		return v, true
-	}
-	return "", false
+	cfg, path := projectConfigPtrAndPath()
+	return ResolveSnapshotRetentionWithSource(cfg, path, tier).Value
 }
 
 // ResolveRetentionTierDefault returns the default retention tier.
 func ResolveRetentionTierDefault() string {
-	if v := strings.TrimSpace(os.Getenv(envvar.RetentionTier.Name)); v != "" {
-		return NormalizeRetentionTier(v)
-	}
-	if cfg, ok := FindProjectConfig(); ok {
-		if v := strings.TrimSpace(cfg.RetentionTier); v != "" {
-			return NormalizeRetentionTier(v)
-		}
-	}
-	if cfg, ok := FindUserConfig(); ok {
-		if v := strings.TrimSpace(cfg.RetentionTier); v != "" {
-			return NormalizeRetentionTier(v)
-		}
-	}
-	return DefaultRetentionTier
+	cfg, path := projectConfigPtrAndPath()
+	return ResolveRetentionTierWithSource(cfg, path).Value
 }
 
 // HasConfiguredRetentionTier returns true if the project config has a tier defined.
@@ -101,64 +50,31 @@ func HasConfiguredRetentionTier(tier string) bool {
 
 // ResolveCIFailurePolicyDefault returns the CI failure policy default.
 func ResolveCIFailurePolicyDefault() string {
-	if v := strings.TrimSpace(os.Getenv(envvar.CIFailurePolicy.Name)); v != "" {
-		return v
-	}
-	if cfg, ok := FindProjectConfig(); ok {
-		if v := strings.TrimSpace(cfg.CIFailurePolicy); v != "" {
-			return v
-		}
-	}
-	if cfg, ok := FindUserConfig(); ok {
-		if v := strings.TrimSpace(cfg.CIFailurePolicy); v != "" {
-			return v
-		}
-	}
-	return DefaultCIFailurePolicy
+	cfg, path := projectConfigPtrAndPath()
+	return ResolveCIFailurePolicyWithSource(cfg, path).Value
 }
 
 // ResolveOutputModeDefault returns the output mode default.
 func ResolveOutputModeDefault() string {
-	if cfg, ok := FindUserConfig(); ok {
-		v := strings.ToLower(strings.TrimSpace(cfg.CLIDefaults.Output))
-		if v == "json" || v == "text" {
-			return v
-		}
-	}
-	return "text"
+	return ResolveCLIOutputWithSource().Value
 }
 
 // ResolveQuietDefault returns the quiet default.
 func ResolveQuietDefault() bool {
-	if cfg, ok := FindUserConfig(); ok && cfg.CLIDefaults.Quiet != nil {
-		return *cfg.CLIDefaults.Quiet
-	}
-	return false
+	return ResolveCLIQuietWithSource().Value == "true"
 }
 
 // ResolveSanitizeDefault returns the sanitize default.
 func ResolveSanitizeDefault() bool {
-	if cfg, ok := FindUserConfig(); ok && cfg.CLIDefaults.Sanitize != nil {
-		return *cfg.CLIDefaults.Sanitize
-	}
-	return false
+	return ResolveCLISanitizeWithSource().Value == "true"
 }
 
 // ResolvePathModeDefault returns the path-mode default.
 func ResolvePathModeDefault() string {
-	if cfg, ok := FindUserConfig(); ok {
-		v := strings.ToLower(strings.TrimSpace(cfg.CLIDefaults.PathMode))
-		if v == "base" || v == "full" {
-			return v
-		}
-	}
-	return "base"
+	return ResolveCLIPathModeWithSource().Value
 }
 
 // ResolveAllowUnknownInputDefault returns the allow-unknown-input default.
 func ResolveAllowUnknownInputDefault() bool {
-	if cfg, ok := FindUserConfig(); ok && cfg.CLIDefaults.AllowUnknownInput != nil {
-		return *cfg.CLIDefaults.AllowUnknownInput
-	}
-	return false
+	return ResolveCLIAllowUnknownInputWithSource().Value == "true"
 }

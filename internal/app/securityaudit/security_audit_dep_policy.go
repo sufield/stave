@@ -58,7 +58,7 @@ func (defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditReques
 	networkJSON, _ := json.MarshalIndent(networkDecl, "", "  ")
 	filesystemJSON, _ := json.MarshalIndent(filesystemDecl, "", "  ")
 
-	redactionPath := filepath.Join(root, "internal", "sanitize", "sanitizer.go")
+	redactionPath := filepath.Join(root, "internal", "sanitize")
 	_, redactionErr := os.Stat(redactionPath)
 	loggingPath := filepath.Join(root, "internal", "platform", "logging")
 	_, loggingErr := os.Stat(loggingPath)

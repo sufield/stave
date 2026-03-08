@@ -24,6 +24,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
 // CommandContext returns cmd.Context() with a fallback to context.Background().
@@ -42,11 +43,7 @@ func ResolveNow(raw string) (time.Time, error) {
 	if raw == "" {
 		return time.Now().UTC(), nil
 	}
-	t, err := time.Parse(time.RFC3339, raw)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid --now %q: expected RFC3339 timestamp", raw)
-	}
-	return t.UTC(), nil
+	return timeutil.ParseRFC3339(raw, "--now")
 }
 
 // ResolveClock parses a --now flag value into a Clock. Returns RealClock when raw is empty.
@@ -54,9 +51,9 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	if raw == "" {
 		return ports.RealClock{}, nil
 	}
-	t, err := time.Parse(time.RFC3339, raw)
+	t, err := timeutil.ParseRFC3339(raw, "--now")
 	if err != nil {
-		return nil, fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", raw)
+		return nil, err
 	}
 	return ports.FixedClock{Time: t}, nil
 }

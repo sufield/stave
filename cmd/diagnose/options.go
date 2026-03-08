@@ -3,7 +3,6 @@ package diagnose
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -53,25 +52,10 @@ func (o diagnoseOptions) normalizePaths(cmd *cobra.Command) diagnoseOptions {
 }
 
 func (o diagnoseOptions) validateDirs() error {
-	if fi, statErr := os.Stat(o.ControlsDir); statErr != nil {
-		baseErr := ui.DirectoryAccessError("--controls", o.ControlsDir, statErr, ui.ErrHintControlsNotAccessible)
-		if detail := cmdutil.ExplainInferenceFailure("controls"); detail != "" {
-			return fmt.Errorf("%w\n%s", baseErr, detail)
-		}
-		return baseErr
-	} else if !fi.IsDir() {
-		return fmt.Errorf("--controls must be a directory: %s", o.ControlsDir)
+	if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
+		return err
 	}
-	if fi, statErr := os.Stat(o.ObservationsDir); statErr != nil {
-		baseErr := ui.DirectoryAccessError("--observations", o.ObservationsDir, statErr, ui.ErrHintObservationsNotAccessible)
-		if detail := cmdutil.ExplainInferenceFailure("observations"); detail != "" {
-			return fmt.Errorf("%w\n%s", baseErr, detail)
-		}
-		return baseErr
-	} else if !fi.IsDir() {
-		return fmt.Errorf("--observations must be a directory: %s", o.ObservationsDir)
-	}
-	return nil
+	return cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible)
 }
 
 func (o diagnoseOptions) parseMaxUnsafe() (time.Duration, error) {

@@ -188,15 +188,11 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 	inputsHash, _ := fsutil.HashFile(inputFile)
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
-	attachRunID(inputsHash.String(), controlsHash.String())
+	cmdutil.AttachRunID(inputsHash.String(), controlsHash.String())
 
-	ctlLoader, err := cmdutil.NewControlRepository()
+	controls, err := cmdutil.LoadControls(ctx, ctlDir)
 	if err != nil {
-		return "", nil, fmt.Errorf("create control loader: %w", err)
-	}
-	controls, err := ctlLoader.LoadControls(ctx, ctlDir)
-	if err != nil {
-		return "", nil, fmt.Errorf("load S3 controls from %s: %w", ctlDir, err)
+		return "", nil, err
 	}
 	if len(controls) == 0 {
 		return "", nil, fmt.Errorf("no S3 controls found in %s", ctlDir)

@@ -125,9 +125,9 @@ func parseReadinessInputs(maxUnsafeStr, nowStr string) (time.Duration, time.Time
 		return dur, time.Time{}, nil
 	}
 
-	now, err := time.Parse(time.RFC3339, nowStr)
+	now, err := timeutil.ParseRFC3339(nowStr, "--now")
 	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("%w: %q (expected RFC3339 format)", ErrInvalidNow, nowStr)
+		return 0, time.Time{}, fmt.Errorf("%w: %v", ErrInvalidNow, err)
 	}
 
 	return dur, now, nil

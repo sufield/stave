@@ -83,11 +83,10 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	if strings.TrimSpace(r.NowTime) == "" {
 		now = nowFn()
 	} else {
-		now, err = time.Parse(time.RFC3339, r.NowTime)
+		now, err = timeutil.ParseRFC3339(r.NowTime, "--now")
 		if err != nil {
-			return ParsedRequest{}, fmt.Errorf("invalid --now %q: expected RFC3339 timestamp", r.NowTime)
+			return ParsedRequest{}, err
 		}
-		now = now.UTC()
 	}
 	return ParsedRequest{
 		MaxUnsafe: maxUnsafe,
@@ -100,10 +99,11 @@ func (r *Request) Parse() (ParsedRequest, error) {
 
 func validateStatuses(statuses []risk.Status) error {
 	for _, st := range statuses {
-		if st == "" {
+		normalized := risk.Status(strings.ToUpper(strings.TrimSpace(string(st))))
+		if normalized == "" {
 			continue
 		}
-		if !risk.ValidStatus(st) {
+		if !risk.ValidStatus(normalized) {
 			return fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", st)
 		}
 	}

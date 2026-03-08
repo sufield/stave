@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
-func TestComputeUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T) {
+func TestComputeAndMapUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T) {
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
@@ -70,7 +72,13 @@ func TestComputeUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T
 
 	controls := []policy.ControlDefinition{ctl24h, ctl48h}
 
-	items := computeUpcomingItems(snapshots, controls, UpcomingComputeOptions{GlobalMaxUnsafe: 168 * time.Hour, Now: now})
+	riskItems := risk.ComputeItems(risk.Request{
+		Controls:        controls,
+		Snapshots:       snapshots,
+		GlobalMaxUnsafe: 168 * time.Hour,
+		Now:             now,
+	})
+	items := mapRiskItems(riskItems)
 	if len(items) != 2 {
 		t.Fatalf("expected 2 upcoming items, got %d", len(items))
 	}
@@ -128,26 +136,29 @@ func TestNewUpcomingFilter_InvalidStatus(t *testing.T) {
 	}
 }
 
-func TestApplyUpcomingFilter(t *testing.T) {
+func TestRiskItemsFilter(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
-	items := []UpcomingItem{
+	riskItems := risk.Items{
 		{
 			DueAt:     now.Add(2 * time.Hour),
-			Status:    "UPCOMING",
+			Status:    risk.Upcoming,
 			ControlID: "CTL.TEST.A.001",
 			AssetType: "res:aws:s3:bucket",
+			Remaining: 2 * time.Hour,
 		},
 		{
 			DueAt:     now.Add(72 * time.Hour),
-			Status:    "UPCOMING",
+			Status:    risk.Upcoming,
 			ControlID: "CTL.TEST.B.001",
 			AssetType: "res:aws:s3:bucket",
+			Remaining: 72 * time.Hour,
 		},
 		{
 			DueAt:     now.Add(-1 * time.Hour),
-			Status:    "OVERDUE",
+			Status:    risk.Overdue,
 			ControlID: "CTL.TEST.A.001",
 			AssetType: "res:aws:s3:bucket",
+			Remaining: -1 * time.Hour,
 		},
 	}
 	dueWithin := 24 * time.Hour
@@ -160,16 +171,62 @@ func TestApplyUpcomingFilter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new filter: %v", err)
 	}
-	filtered := applyUpcomingFilter(items, now, filter)
-	if len(filtered) != 2 {
-		t.Fatalf("expected 2 filtered items, got %d", len(filtered))
+	filtered := riskItems.Filter(filter)
+	items := mapRiskItems(filtered)
+	if len(items) != 2 {
+		t.Fatalf("expected 2 filtered items, got %d", len(items))
 	}
-	for _, item := range filtered {
+	for _, item := range items {
 		if item.ControlID != "CTL.TEST.A.001" {
 			t.Fatalf("unexpected control in filtered results: %+v", item)
 		}
-		if item.DueAt.Sub(now) > dueWithin {
-			t.Fatalf("item outside due-within filter: %+v", item)
-		}
+	}
+}
+
+func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
+	dueWithin := 12 * time.Hour
+	criteria, err := newUpcomingFilter(UpcomingFilterCriteria{
+		ControlIDs: []kernel.ControlID{"CTL.A"},
+		AssetTypes: []kernel.AssetType{kernel.TypeStorageBucket},
+		Statuses:   []string{"OVERDUE"},
+		DueWithin:  &dueWithin,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(criteria.ControlIDs) != 1 {
+		t.Fatalf("expected 1 control ID, got %d", len(criteria.ControlIDs))
+	}
+	if _, ok := criteria.ControlIDs["CTL.A"]; !ok {
+		t.Fatal("expected CTL.A in control IDs")
+	}
+	if len(criteria.Statuses) != 1 {
+		t.Fatalf("expected 1 status, got %d", len(criteria.Statuses))
+	}
+	if _, ok := criteria.Statuses[risk.Overdue]; !ok {
+		t.Fatal("expected OVERDUE in statuses")
+	}
+	if criteria.MaxRemaining != dueWithin {
+		t.Fatalf("expected MaxRemaining=%v, got %v", dueWithin, criteria.MaxRemaining)
+	}
+}
+
+func TestRiskFilterCriteria_EmptyPassesAll(t *testing.T) {
+	items := risk.Items{
+		{Status: risk.Overdue, ControlID: "CTL.A"},
+		{Status: risk.Upcoming, ControlID: "CTL.B"},
+	}
+	criteria := risk.FilterCriteria{}
+	filtered := items.Filter(criteria)
+	if len(filtered) != 2 {
+		t.Fatalf("empty filter should pass all items, got %d", len(filtered))
+	}
+}
+
+func TestRiskFilterCriteria_ViaFpToSet(t *testing.T) {
+	controlIDs := []kernel.ControlID{"CTL.A", "CTL.B"}
+	set := fp.ToSet(controlIDs)
+	if len(set) != 2 {
+		t.Fatalf("expected set of 2, got %d", len(set))
 	}
 }

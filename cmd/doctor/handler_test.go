@@ -1,4 +1,4 @@
-package bugreport
+package doctor
 
 import (
 	"errors"

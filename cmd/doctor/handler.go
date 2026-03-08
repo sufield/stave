@@ -1,4 +1,4 @@
-package bugreport
+package doctor
 
 import (
 	"encoding/json"
@@ -12,8 +12,6 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-var doctorFormat string
-
 func runDoctor(cmd *cobra.Command, _ []string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -22,15 +20,12 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 
 	binaryPath, _ := os.Executable()
 
-	// 1. Logic: Call the internal service.
-	// Internal defaults (LookPathFn, GetenvFn, etc.) are handled by diagnostics.Run.
 	checks, hasFail := doctor.Run(doctor.Context{
 		Cwd:          cwd,
 		BinaryPath:   binaryPath,
 		StaveVersion: staveversion.Version,
 	})
 
-	// 2. Format Selection: Resolve text vs json
 	format, err := cmdutil.ResolveFormatValue(cmd, doctorFormat)
 	if err != nil {
 		return err
@@ -43,7 +38,6 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// 3. Presentation: Render results to the user
 	if format.IsJSON() {
 		return json.NewEncoder(cmd.OutOrStdout()).Encode(struct {
 			Ready  bool           `json:"ready"`

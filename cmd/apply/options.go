@@ -105,18 +105,12 @@ func buildEvaluatorOptions() appeval.Options {
 func checkDirsExist(source appeval.ObservationSource) error {
 	usePackMode := shouldUseConfiguredPacks()
 	if !usePackMode {
-		if err := cmdutil.ValidateDir("--controls", applyFlags.controlsDir, ui.ErrHintControlsNotAccessible); err != nil {
-			if detail := cmdutil.ExplainInferenceFailure("controls"); detail != "" {
-				return fmt.Errorf("%w\n%s", err, detail)
-			}
+		if err := cmdutil.ValidateDirWithInference("--controls", applyFlags.controlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
 			return err
 		}
 	}
 	if !source.IsStdin() {
-		if err := cmdutil.ValidateDir("--observations", applyFlags.observationsDir, ui.ErrHintObservationsNotAccessible); err != nil {
-			if detail := cmdutil.ExplainInferenceFailure("observations"); detail != "" {
-				return fmt.Errorf("%w\n%s", err, detail)
-			}
+		if err := cmdutil.ValidateDirWithInference("--observations", applyFlags.observationsDir, "observations", ui.ErrHintObservationsNotAccessible); err != nil {
 			return err
 		}
 	}

@@ -52,7 +52,13 @@ func ApplyArchive(in ArchiveInput) (ArchiveResult, error) {
 }
 
 // MoveSnapshotFile attempts a fast rename and falls back to copy+remove.
+// Overwrite and symlink policies are enforced on all code paths, including
+// the rename fast path.
 func MoveSnapshotFile(src, dst string, opts MoveOptions) error {
+	if err := checkMoveDestination(dst, opts); err != nil {
+		return err
+	}
+
 	// Fast path for same-filesystem moves.
 	if err := os.Rename(src, dst); err == nil {
 		return nil
@@ -81,4 +87,19 @@ func MoveSnapshotFile(src, dst string, opts MoveOptions) error {
 		return err
 	}
 	return os.Remove(src)
+}
+
+// checkMoveDestination enforces overwrite and symlink policy before a move.
+func checkMoveDestination(dst string, opts MoveOptions) error {
+	if !opts.AllowSymlink {
+		if err := fsutil.CheckSymlinkSafety(dst); err != nil {
+			return err
+		}
+	}
+	if !opts.Overwrite {
+		if _, err := os.Lstat(dst); err == nil {
+			return fmt.Errorf("%w: %s (use --force to overwrite)", fsutil.ErrFileExists, dst)
+		}
+	}
+	return nil
 }

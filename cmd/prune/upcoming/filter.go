@@ -6,88 +6,34 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
-func newUpcomingFilter(criteria UpcomingFilterCriteria) (upcomingFilter, error) {
-	filter := upcomingFilter{
-		controlIDs: map[kernel.ControlID]struct{}{},
-		assetTypes: map[kernel.AssetType]struct{}{},
-		statuses:   map[string]struct{}{},
-		dueWithin:  criteria.DueWithin,
-	}
-	for _, id := range criteria.ControlIDs {
-		if id == "" {
-			continue
-		}
-		filter.controlIDs[id] = struct{}{}
-	}
-	for _, rt := range criteria.AssetTypes {
-		if rt == "" {
-			continue
-		}
-		filter.assetTypes[rt] = struct{}{}
-	}
+func newUpcomingFilter(criteria UpcomingFilterCriteria) (risk.FilterCriteria, error) {
+	// Validate statuses before building filter.
+	statuses := make(map[risk.Status]struct{}, len(criteria.Statuses))
 	for _, st := range criteria.Statuses {
-		normalized := strings.ToUpper(strings.TrimSpace(st))
+		normalized := risk.Status(strings.ToUpper(strings.TrimSpace(st)))
 		if normalized == "" {
 			continue
 		}
-		if !risk.ValidStatus(risk.Status(normalized)) {
-			return upcomingFilter{}, fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", st)
+		if !risk.ValidStatus(normalized) {
+			return risk.FilterCriteria{}, fmt.Errorf("invalid --status %q (use: OVERDUE, DUE_NOW, UPCOMING)", st)
 		}
-		filter.statuses[normalized] = struct{}{}
+		statuses[normalized] = struct{}{}
 	}
-	return filter, nil
+	var maxRemaining = derefDuration(criteria.DueWithin)
+	return risk.FilterCriteria{
+		ControlIDs:   fp.ToSet(criteria.ControlIDs),
+		AssetTypes:   fp.ToSet(criteria.AssetTypes),
+		Statuses:     statuses,
+		MaxRemaining: maxRemaining,
+	}, nil
 }
 
-func applyUpcomingFilter(items []UpcomingItem, now time.Time, filter upcomingFilter) []UpcomingItem {
-	if len(items) == 0 {
-		return nil
+func derefDuration(d *time.Duration) time.Duration {
+	if d == nil {
+		return 0
 	}
-	out := make([]UpcomingItem, 0, len(items))
-	for _, item := range items {
-		if includeUpcomingItem(item, now, filter) {
-			out = append(out, item)
-		}
-	}
-	return out
-}
-
-func includeUpcomingItem(item UpcomingItem, now time.Time, filter upcomingFilter) bool {
-	return matchesUpcomingControl(item, filter) &&
-		matchesUpcomingResourceType(item, filter) &&
-		matchesUpcomingStatus(item, filter) &&
-		matchesUpcomingDueWindow(item, now, filter)
-}
-
-func matchesUpcomingControl(item UpcomingItem, filter upcomingFilter) bool {
-	if len(filter.controlIDs) == 0 {
-		return true
-	}
-	_, ok := filter.controlIDs[kernel.ControlID(item.ControlID)]
-	return ok
-}
-
-func matchesUpcomingResourceType(item UpcomingItem, filter upcomingFilter) bool {
-	if len(filter.assetTypes) == 0 {
-		return true
-	}
-	_, ok := filter.assetTypes[kernel.AssetType(item.AssetType)]
-	return ok
-}
-
-func matchesUpcomingStatus(item UpcomingItem, filter upcomingFilter) bool {
-	if len(filter.statuses) == 0 {
-		return true
-	}
-	_, ok := filter.statuses[item.Status]
-	return ok
-}
-
-func matchesUpcomingDueWindow(item UpcomingItem, now time.Time, filter upcomingFilter) bool {
-	if filter.dueWithin == nil {
-		return true
-	}
-	return item.DueAt.Sub(now) <= *filter.dueWithin
+	return *d
 }

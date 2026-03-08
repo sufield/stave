@@ -140,11 +140,7 @@ func (o Options) parseNowTime() (time.Time, error) {
 	if o.NowTime == "" {
 		return time.Time{}, nil
 	}
-	t, err := time.Parse(time.RFC3339, o.NowTime)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", o.NowTime)
-	}
-	return t, nil
+	return timeutil.ParseRFC3339(o.NowTime, "--now")
 }
 
 func (o Options) resolveContextName() string {

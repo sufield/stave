@@ -3,27 +3,13 @@ package upcoming
 import (
 	"time"
 
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/policy"
 )
 
-func computeUpcomingItems(
-	snapshots []asset.Snapshot,
-	controls []policy.ControlDefinition,
-	opts UpcomingComputeOptions,
-) []UpcomingItem {
-	domainItems := risk.ComputeItems(risk.Request{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: opts.GlobalMaxUnsafe,
-		Now:             opts.Now,
-		PredicateParser: ctlyaml.YAMLPredicateParser,
-	})
-	items := make([]UpcomingItem, 0, len(domainItems))
-	for _, d := range domainItems {
-		items = append(items, UpcomingItem{
+func mapRiskItems(items risk.Items) []UpcomingItem {
+	out := make([]UpcomingItem, 0, len(items))
+	for _, d := range items {
+		out = append(out, UpcomingItem{
 			DueAt:          d.DueAt,
 			Status:         string(d.Status),
 			ControlID:      string(d.ControlID),
@@ -35,7 +21,7 @@ func computeUpcomingItems(
 			Remaining:      d.Remaining,
 		})
 	}
-	return items
+	return out
 }
 
 func summarizeUpcoming(items []UpcomingItem, dueSoonThreshold time.Duration) UpcomingSummary {

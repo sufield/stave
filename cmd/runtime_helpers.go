@@ -6,7 +6,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
@@ -31,33 +30,11 @@ func expandAliasIfMatch() {
 }
 
 func attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
-	if plan == nil {
-		return
-	}
-	attachRunID(plan.ObservationsHash.String(), plan.ControlsHash.String())
-}
-
-func attachRunID(inputsHash, controlsHash string) {
 	logging.SetDefaultLogger(globalLogger)
-	cmdutil.AttachRunID(inputsHash, controlsHash)
+	cmdutil.AttachRunIDFromPlan(plan)
 	globalLogger = logging.DefaultLogger()
 }
 
 func configKeyCompletions() []string {
-	baseKeys := cmdutil.ConfigKeyService.TopLevelKeys()
-	tiers := []string{cmdutil.DefaultRetentionTier}
-
-	if cfg, ok := cmdutil.FindProjectConfig(); ok {
-		if t := cmdutil.NormalizeRetentionTier(cfg.RetentionTier); t != "" {
-			tiers = append(tiers, t)
-		}
-		for tier := range cfg.RetentionTiers {
-			t := cmdutil.NormalizeRetentionTier(tier)
-			if t != "" {
-				tiers = append(tiers, t)
-			}
-		}
-	}
-
-	return configservice.BuildKeyCompletions(baseKeys, tiers)
+	return cmdutil.ConfigKeyCompletions()
 }

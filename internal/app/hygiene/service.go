@@ -83,111 +83,20 @@ func computeUpcomingSummary(
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
 ) risk.Summary {
-	items := computeUpcomingItems(controls, snapshots, opts)
-	items = applyUpcomingFilter(items, opts)
-	riskItems := make(risk.Items, len(items))
-	for i, item := range items {
-		riskItems[i] = risk.Item{
-			Status:    item.Status,
-			Remaining: item.Remaining,
-		}
-	}
-	return riskItems.Summarize(opts.DueSoonThreshold)
-}
-
-type upcomingItem struct {
-	DueAt     time.Time
-	Status    risk.Status
-	Remaining time.Duration
-	ControlID kernel.ControlID
-	AssetType kernel.AssetType
-}
-
-type UpcomingFilter struct {
-	controlIDs map[kernel.ControlID]struct{}
-	assetTypes map[kernel.AssetType]struct{}
-	statuses   map[risk.Status]struct{}
-	dueWithin  time.Duration
-}
-
-func applyUpcomingFilter(items []upcomingItem, opts RiskOptions) []upcomingItem {
-	f := compileUpcomingFilter(opts)
-	if !f.enabled() {
-		return items
-	}
-	return fp.Filter(items, func(item upcomingItem) bool {
-		return f.matchControl(item.ControlID) &&
-			f.matchResourceType(item.AssetType) &&
-			f.matchStatus(item.Status) &&
-			f.matchDueWithin(item.Remaining)
-	})
-}
-
-func compileUpcomingFilter(opts RiskOptions) UpcomingFilter {
-	return UpcomingFilter{
-		controlIDs: fp.ToSet(opts.ControlIDs),
-		assetTypes: fp.ToSet(opts.AssetTypes),
-		statuses:   fp.ToSet(opts.Statuses),
-		dueWithin:  derefDuration(opts.DueWithin),
-	}
-}
-
-func (f UpcomingFilter) enabled() bool {
-	return len(f.controlIDs) > 0 || len(f.assetTypes) > 0 || len(f.statuses) > 0 || f.dueWithin > 0
-}
-
-func (f UpcomingFilter) matchControl(id kernel.ControlID) bool {
-	if len(f.controlIDs) == 0 {
-		return true
-	}
-	_, ok := f.controlIDs[id]
-	return ok
-}
-
-func (f UpcomingFilter) matchResourceType(rt kernel.AssetType) bool {
-	if len(f.assetTypes) == 0 {
-		return true
-	}
-	_, ok := f.assetTypes[rt]
-	return ok
-}
-
-func (f UpcomingFilter) matchStatus(status risk.Status) bool {
-	if len(f.statuses) == 0 {
-		return true
-	}
-	_, ok := f.statuses[status]
-	return ok
-}
-
-func (f UpcomingFilter) matchDueWithin(remaining time.Duration) bool {
-	if f.dueWithin == 0 {
-		return true
-	}
-	return remaining <= f.dueWithin
-}
-
-func computeUpcomingItems(
-	controls []policy.ControlDefinition,
-	snapshots []asset.Snapshot,
-	opts RiskOptions,
-) []upcomingItem {
-	domainItems := risk.ComputeItems(risk.Request{
+	items := risk.ComputeItems(risk.Request{
 		Controls:        controls,
 		Snapshots:       snapshots,
 		GlobalMaxUnsafe: opts.GlobalMaxUnsafe,
 		Now:             opts.Now,
 		PredicateParser: opts.PredicateParser,
 	})
-	return fp.Map(domainItems, func(item risk.Item) upcomingItem {
-		return upcomingItem{
-			DueAt:     item.DueAt,
-			Status:    item.Status,
-			Remaining: item.Remaining,
-			ControlID: item.ControlID,
-			AssetType: item.AssetType,
-		}
+	items = items.Filter(risk.FilterCriteria{
+		ControlIDs:   fp.ToSet(opts.ControlIDs),
+		AssetTypes:   fp.ToSet(opts.AssetTypes),
+		Statuses:     fp.ToSet(opts.Statuses),
+		MaxRemaining: derefDuration(opts.DueWithin),
 	})
+	return items.Summarize(opts.DueSoonThreshold)
 }
 
 func derefDuration(d *time.Duration) time.Duration {

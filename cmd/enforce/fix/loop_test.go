@@ -14,31 +14,9 @@ import (
 )
 
 func saveFixLoopFlags() func() {
-	saved := struct {
-		beforeDir    string
-		afterDir     string
-		controlsDir  string
-		maxUnsafe    string
-		now          string
-		allowUnknown bool
-		outDir       string
-	}{
-		beforeDir:    fixLoopBeforeDir,
-		afterDir:     fixLoopAfterDir,
-		controlsDir:  fixLoopControlsDir,
-		maxUnsafe:    fixLoopMaxUnsafe,
-		now:          fixLoopNow,
-		allowUnknown: fixLoopAllowUnknown,
-		outDir:       fixLoopOutDir,
-	}
+	saved := fixLoopFlags
 	return func() {
-		fixLoopBeforeDir = saved.beforeDir
-		fixLoopAfterDir = saved.afterDir
-		fixLoopControlsDir = saved.controlsDir
-		fixLoopMaxUnsafe = saved.maxUnsafe
-		fixLoopNow = saved.now
-		fixLoopAllowUnknown = saved.allowUnknown
-		fixLoopOutDir = saved.outDir
+		fixLoopFlags = saved
 	}
 }
 
@@ -79,13 +57,13 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	fixture := testdataDir(t, "e2e-s3-verify")
 	outDir := t.TempDir()
 
-	fixLoopBeforeDir = filepath.Join(fixture, "before")
-	fixLoopAfterDir = filepath.Join(fixture, "after")
-	fixLoopControlsDir = filepath.Join(fixture, "controls")
-	fixLoopMaxUnsafe = "168h"
-	fixLoopNow = "2026-01-11T00:00:00Z"
-	fixLoopOutDir = outDir
-	fixLoopAllowUnknown = false
+	fixLoopFlags.beforeDir = filepath.Join(fixture, "before")
+	fixLoopFlags.afterDir = filepath.Join(fixture, "after")
+	fixLoopFlags.controlsDir = filepath.Join(fixture, "controls")
+	fixLoopFlags.maxUnsafe = "168h"
+	fixLoopFlags.now = "2026-01-11T00:00:00Z"
+	fixLoopFlags.outDir = outDir
+	fixLoopFlags.allowUnknown = false
 
 	cmd := &cobra.Command{}
 	cmd.SetContext(context.Background())
