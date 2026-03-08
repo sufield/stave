@@ -39,19 +39,15 @@ func run(cmd *cobra.Command, opts *options) error {
 }
 
 func compute(observationsDir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
-	loader, err := cmdutil.NewObservationRepository()
+	snapshots, err := cmdutil.LoadSnapshots(context.Background(), observationsDir)
 	if err != nil {
-		return asset.ObservationDelta{}, fmt.Errorf("create observation loader: %w", err)
+		return asset.ObservationDelta{}, err
 	}
-	result, err := loader.LoadSnapshots(context.Background(), observationsDir)
-	if err != nil {
-		return asset.ObservationDelta{}, fmt.Errorf("load observations: %w", err)
-	}
-	if len(result.Snapshots) < 2 {
+	if len(snapshots) < 2 {
 		return asset.ObservationDelta{}, fmt.Errorf("need at least 2 snapshots in %s for diff", observationsDir)
 	}
 
-	prev, curr, err := asset.LatestTwoSnapshots(result.Snapshots)
+	prev, curr, err := asset.LatestTwoSnapshots(snapshots)
 	if err != nil {
 		return asset.ObservationDelta{}, fmt.Errorf("select latest snapshots: %w", err)
 	}

@@ -1,7 +1,6 @@
 package snapshot
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -30,7 +28,7 @@ func runQuality(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	snapshots, err := loadQualitySnapshots(cmdutil.CommandContext(cmd), runInput.observationsDir)
+	snapshots, err := cmdutil.LoadSnapshots(cmdutil.CommandContext(cmd), runInput.observationsDir)
 	if err != nil {
 		return err
 	}
@@ -114,16 +112,4 @@ func resolveQualityNow() (time.Time, error) {
 
 func resolveQualityFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
 	return cmdutil.ResolveFormatValue(cmd, qualityFlags.format)
-}
-
-func loadQualitySnapshots(ctx context.Context, observationsDir string) ([]asset.Snapshot, error) {
-	loader, err := cmdutil.NewObservationRepository()
-	if err != nil {
-		return nil, fmt.Errorf("create observation loader: %w", err)
-	}
-	result, err := loader.LoadSnapshots(ctx, observationsDir)
-	if err != nil {
-		return nil, fmt.Errorf("load observations: %w", err)
-	}
-	return result.Snapshots, nil
 }

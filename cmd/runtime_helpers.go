@@ -7,7 +7,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/platform/identity"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
@@ -39,13 +38,9 @@ func attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
 }
 
 func attachRunID(inputsHash, controlsHash string) {
-	runID := identity.ComputeRunID(
-		GetVersion(),
-		strings.TrimSpace(inputsHash),
-		strings.TrimSpace(controlsHash),
-	)
-	globalLogger = logging.WithRunID(globalLogger, runID)
 	logging.SetDefaultLogger(globalLogger)
+	cmdutil.AttachRunID(inputsHash, controlsHash)
+	globalLogger = logging.DefaultLogger()
 }
 
 func configKeyCompletions() []string {
