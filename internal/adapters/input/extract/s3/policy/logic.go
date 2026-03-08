@@ -137,37 +137,34 @@ func isWriteAction(action string) bool {
 
 // extractPrincipalARNs extracts string ARNs from a Principal field, excluding "*".
 func extractPrincipalARNs(principal any) []string {
+	var raw any
 	switch p := principal.(type) {
 	case string:
-		if p != "" && p != policyWildcard {
-			return []string{p}
-		}
-		return nil
+		raw = p
 	case map[string]any:
-		awsVal, ok := p[policyPrincipalAWS]
+		var ok bool
+		raw, ok = p[policyPrincipalAWS]
 		if !ok {
 			return nil
 		}
-		switch aws := awsVal.(type) {
-		case string:
-			if aws != "" && aws != policyWildcard {
-				return []string{aws}
-			}
-			return nil
-		case []any:
-			arns := make([]string, 0, len(aws))
-			for _, item := range aws {
-				if arn, ok := item.(string); ok && arn != policyWildcard {
-					arns = append(arns, arn)
-				}
-			}
-			if len(arns) == 0 {
-				return nil
-			}
-			return arns
+	default:
+		return nil
+	}
+	return filterConcreteARNs(NormalizeStringOrSlice(raw))
+}
+
+// filterConcreteARNs removes empty strings and wildcards from ARN lists.
+func filterConcreteARNs(arns []string) []string {
+	out := make([]string, 0, len(arns))
+	for _, arn := range arns {
+		if arn != "" && arn != policyWildcard {
+			out = append(out, arn)
 		}
 	}
-	return nil
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 // conditionScope returns the most restrictive scope label for a single statement.
