@@ -122,11 +122,6 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	}, nil
 }
 
-// buildObservationLoader is a package-level convenience for callers outside Factory.
-func buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
-	return (&Factory{}).buildObservationLoader(source)
-}
-
 // buildObservationLoader creates and configures the observation repository,
 // selecting stdin or file mode and applying integrity checks if configured.
 func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
@@ -145,7 +140,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 
 // mapToBuildInput converts the plan and assets into the input struct for BuildDependencies.
 func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStack) appeval.BuildDependenciesInput {
-	var output io.Writer = f.cmd.OutOrStdout()
+	output := f.cmd.OutOrStdout()
 	if cmdutil.QuietEnabled(f.cmd) {
 		output = io.Discard
 	}

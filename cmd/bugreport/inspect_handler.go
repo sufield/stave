@@ -30,6 +30,10 @@ func dumpBundle(out io.Writer, errOut io.Writer, path string, maxSize int64) err
 		return entries[i].Name < entries[j].Name
 	})
 
+	if maxSize < 0 {
+		return fmt.Errorf("maxSize cannot be negative")
+	}
+
 	for _, f := range entries {
 		if strings.Contains(f.Name, "..") {
 			_, _ = fmt.Fprintf(errOut, "warning: skipping suspicious entry %q\n", f.Name)
