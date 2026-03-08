@@ -20,6 +20,7 @@ import (
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
+	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/ingest"
 	"github.com/sufield/stave/cmd/initcmd"
@@ -29,6 +30,7 @@ import (
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/prune/manifest"
+	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -172,7 +174,7 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(initcmd.QuickstartCmd)
 	root.AddCommand(initcmd.DemoCmd)
 	root.AddCommand(initcmd.GenerateCmd)
-	root.AddCommand(bugreport.DoctorCmd)
+	root.AddCommand(doctor.Cmd)
 
 	// Core evaluation
 	root.AddCommand(applyvalidate.ValidateCmd)
@@ -189,7 +191,7 @@ func WireCommands(root *cobra.Command) {
 	// Workflow & CI
 	root.AddCommand(enforce.StatusCmd)
 	root.AddCommand(contextcmd.ContextCmd)
-	root.AddCommand(bugreport.SecurityAuditCmd)
+	root.AddCommand(securityaudit.Cmd)
 	root.AddCommand(snapshotCmd)
 	root.AddCommand(ciCmd)
 

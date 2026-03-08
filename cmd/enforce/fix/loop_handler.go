@@ -20,15 +20,17 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
-var (
-	fixLoopBeforeDir    string
-	fixLoopAfterDir     string
-	fixLoopControlsDir  string
-	fixLoopMaxUnsafe    string
-	fixLoopNow          string
-	fixLoopAllowUnknown bool
-	fixLoopOutDir       string
-)
+type fixLoopFlagsType struct {
+	beforeDir    string
+	afterDir     string
+	controlsDir  string
+	maxUnsafe    string
+	now          string
+	allowUnknown bool
+	outDir       string
+}
+
+var fixLoopFlags fixLoopFlagsType
 
 type fixLoopObservationSummary struct {
 	Directory  string `json:"directory"`
@@ -111,35 +113,35 @@ type fixLoopEvaluation struct {
 }
 
 func prepareFixLoopExecution(cmd *cobra.Command) (fixLoopExecution, error) {
-	fixLoopBeforeDir = fsutil.CleanUserPath(fixLoopBeforeDir)
-	fixLoopAfterDir = fsutil.CleanUserPath(fixLoopAfterDir)
-	fixLoopControlsDir = fsutil.CleanUserPath(fixLoopControlsDir)
-	fixLoopOutDir = fsutil.CleanUserPath(fixLoopOutDir)
+	fixLoopFlags.beforeDir = fsutil.CleanUserPath(fixLoopFlags.beforeDir)
+	fixLoopFlags.afterDir = fsutil.CleanUserPath(fixLoopFlags.afterDir)
+	fixLoopFlags.controlsDir = fsutil.CleanUserPath(fixLoopFlags.controlsDir)
+	fixLoopFlags.outDir = fsutil.CleanUserPath(fixLoopFlags.outDir)
 	if err := validateFixLoopDirs(); err != nil {
 		return fixLoopExecution{}, err
 	}
-	maxDuration, err := timeutil.ParseDurationFlag(fixLoopMaxUnsafe, "--max-unsafe")
+	maxDuration, err := timeutil.ParseDurationFlag(fixLoopFlags.maxUnsafe, "--max-unsafe")
 	if err != nil {
 		return fixLoopExecution{}, err
 	}
-	clock, err := cmdutil.ResolveClock(fixLoopNow)
+	clock, err := cmdutil.ResolveClock(fixLoopFlags.now)
 	if err != nil {
 		return fixLoopExecution{}, err
 	}
 	return fixLoopExecution{
 		ctx:          cmd.Context(),
-		beforeDir:    fixLoopBeforeDir,
-		afterDir:     fixLoopAfterDir,
-		controlsDir:  fixLoopControlsDir,
-		outDir:       fixLoopOutDir,
+		beforeDir:    fixLoopFlags.beforeDir,
+		afterDir:     fixLoopFlags.afterDir,
+		controlsDir:  fixLoopFlags.controlsDir,
+		outDir:       fixLoopFlags.outDir,
 		maxUnsafe:    maxDuration,
 		clock:        clock,
-		allowUnknown: fixLoopAllowUnknown,
+		allowUnknown: fixLoopFlags.allowUnknown,
 	}, nil
 }
 
 func validateFixLoopDirs() error {
-	for _, dir := range []struct{ flag, path string }{{"--before", fixLoopBeforeDir}, {"--after", fixLoopAfterDir}, {"--controls", fixLoopControlsDir}} {
+	for _, dir := range []struct{ flag, path string }{{"--before", fixLoopFlags.beforeDir}, {"--after", fixLoopFlags.afterDir}, {"--controls", fixLoopFlags.controlsDir}} {
 		if err := cmdutil.ValidateDir(dir.flag, dir.path, nil); err != nil {
 			return err
 		}
@@ -148,13 +150,9 @@ func validateFixLoopDirs() error {
 }
 
 func loadFixLoopControls(execCtx fixLoopExecution) ([]policy.ControlDefinition, error) {
-	ctlLoader, err := cmdutil.NewControlRepository()
+	controls, err := cmdutil.LoadControls(execCtx.ctx, execCtx.controlsDir)
 	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-	controls, err := ctlLoader.LoadControls(execCtx.ctx, execCtx.controlsDir)
-	if err != nil {
-		return nil, fmt.Errorf("load controls: %w", err)
+		return nil, err
 	}
 	if len(controls) == 0 {
 		return nil, fmt.Errorf("no controls in %s", execCtx.controlsDir)
@@ -253,8 +251,8 @@ func buildFixLoopReport(
 		Pass:          pass,
 		Reason:        reason,
 		MaxUnsafe:     maxUnsafe.String(),
-		Before:        fixLoopObservationSummary{Directory: fixLoopBeforeDir, Snapshots: run.BeforeSnapshots, Violations: summary.BeforeViolations},
-		After:         fixLoopObservationSummary{Directory: fixLoopAfterDir, Snapshots: run.AfterSnapshots, Violations: summary.AfterViolations},
+		Before:        fixLoopObservationSummary{Directory: fixLoopFlags.beforeDir, Snapshots: run.BeforeSnapshots, Violations: summary.BeforeViolations},
+		After:         fixLoopObservationSummary{Directory: fixLoopFlags.afterDir, Snapshots: run.AfterSnapshots, Violations: summary.AfterViolations},
 		Verification:  summary,
 		Artifacts:     artifacts,
 	}

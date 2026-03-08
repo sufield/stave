@@ -123,6 +123,38 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 	}
 }
 
+func TestFilter_ByControlAndStatus(t *testing.T) {
+	items := Items{
+		{ControlID: "CTL.A", AssetType: kernel.TypeStorageBucket, Status: Overdue, Remaining: -1 * time.Hour},
+		{ControlID: "CTL.B", AssetType: kernel.TypeIAMRole, Status: Upcoming, Remaining: 4 * time.Hour},
+		{ControlID: "CTL.C", AssetType: kernel.TypeStorageBucket, Status: Upcoming, Remaining: 1 * time.Hour},
+	}
+
+	filtered := items.Filter(FilterCriteria{
+		AssetTypes:   map[kernel.AssetType]struct{}{kernel.TypeStorageBucket: {}},
+		Statuses:     map[Status]struct{}{Upcoming: {}},
+		MaxRemaining: 2 * time.Hour,
+	})
+
+	if len(filtered) != 1 {
+		t.Fatalf("filtered len = %d, want 1", len(filtered))
+	}
+	if filtered[0].ControlID != "CTL.C" {
+		t.Fatalf("filtered control ID = %s, want CTL.C", filtered[0].ControlID)
+	}
+}
+
+func TestFilter_EmptyPassesAll(t *testing.T) {
+	items := Items{
+		{ControlID: "CTL.A", Status: Overdue},
+		{ControlID: "CTL.B", Status: Upcoming},
+	}
+	filtered := items.Filter(FilterCriteria{})
+	if len(filtered) != 2 {
+		t.Fatalf("empty filter should pass all items, got %d", len(filtered))
+	}
+}
+
 func testControl(id string, threshold string) policy.ControlDefinition {
 	params := policy.ControlParams{}
 	if threshold != "" {

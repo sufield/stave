@@ -1,4 +1,4 @@
-package bugreport
+package securityaudit
 
 import (
 	"encoding/json"
@@ -18,13 +18,13 @@ import (
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/securityaudit"
+	domainsecurityaudit "github.com/sufield/stave/internal/domain/securityaudit"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-type securityAuditFlagsType struct {
+type auditFlagsType struct {
 	format, out, outDir        string
 	severity, sbom, vulnSource string
 	failOn, releaseBundleDir   string
@@ -33,8 +33,8 @@ type securityAuditFlagsType struct {
 	liveVulnCheck, privacyMode bool
 }
 
-type securityAuditCmd struct {
-	flags securityAuditFlagsType
+type auditCmd struct {
+	flags auditFlagsType
 }
 
 type fileWriteOpts struct {
@@ -47,18 +47,18 @@ type writtenFile struct {
 	content []byte
 }
 
-var securityAudit = &securityAuditCmd{}
+var audit = &auditCmd{}
 
-func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
-	format, err := parseSecurityAuditFormat(c.flags.format)
+func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
+	format, err := parseFormat(c.flags.format)
 	if err != nil {
 		return err
 	}
-	severityFilter, err := securityaudit.ParseSeverityList(c.flags.severity)
+	severityFilter, err := domainsecurityaudit.ParseSeverityList(c.flags.severity)
 	if err != nil {
 		return &ui.InputError{Err: fmt.Errorf("invalid --severity: %w", err)}
 	}
-	failOn, err := securityaudit.ParseFailOnSeverity(c.flags.failOn)
+	failOn, err := domainsecurityaudit.ParseFailOnSeverity(c.flags.failOn)
 	if err != nil {
 		return &ui.InputError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
 	}
@@ -103,18 +103,18 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("run security audit: %w", err)
 	}
 
-	mainData, mainName, err := renderSecurityAuditReport(format, report)
+	mainData, mainName, err := renderReport(format, report)
 	if err != nil {
 		return err
 	}
 
-	mainOutPath, err := writeSecurityAuditBundle(opts, now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath)
+	mainOutPath, err := writeBundle(opts, now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath)
 	if err != nil {
 		return err
 	}
 
 	if !cmdutil.QuietEnabled(cmd) {
-		if err := printSecurityAuditSummary(cmd.OutOrStdout(), mainOutPath, bundleDir, report.Summary); err != nil {
+		if err := printSummary(cmd.OutOrStdout(), mainOutPath, bundleDir, report.Summary); err != nil {
 			return err
 		}
 	}
@@ -125,7 +125,7 @@ func (c *securityAuditCmd) run(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func writeSecurityAuditBundle(opts fileWriteOpts, now time.Time, bundleDir, mainName string, mainData []byte, report securityaudit.Report, artifacts securityaudit.ArtifactManifest, resolveOutPath func(string) string) (string, error) {
+func writeBundle(opts fileWriteOpts, now time.Time, bundleDir, mainName string, mainData []byte, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, resolveOutPath func(string) string) (string, error) {
 	if err := fsutil.SafeMkdirAll(bundleDir, fsutil.WriteOptions{
 		Perm:         0o700,
 		AllowSymlink: opts.allowSymlink,
@@ -164,7 +164,7 @@ func writeSecurityAuditBundle(opts fileWriteOpts, now time.Time, bundleDir, main
 	return mainOutPath, nil
 }
 
-func printSecurityAuditSummary(w io.Writer, mainOutPath, bundleDir string, summary securityaudit.Summary) error {
+func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecurityaudit.Summary) error {
 	if _, err := fmt.Fprintf(w, "security-audit report: %s\n", mainOutPath); err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func printSecurityAuditSummary(w io.Writer, mainOutPath, bundleDir string, summa
 	return err
 }
 
-func parseSecurityAuditFormat(raw string) (string, error) {
+func parseFormat(raw string) (string, error) {
 	normalized := ui.NormalizeToken(raw)
 	switch normalized {
 	case "json", "markdown", "sarif":
@@ -186,7 +186,7 @@ func parseSecurityAuditFormat(raw string) (string, error) {
 	}
 }
 
-func renderSecurityAuditReport(format string, report securityaudit.Report) ([]byte, string, error) {
+func renderReport(format string, report domainsecurityaudit.Report) ([]byte, string, error) {
 	switch format {
 	case "json":
 		data, err := securityout.MarshalJSONReport(report)
@@ -202,7 +202,7 @@ func renderSecurityAuditReport(format string, report securityaudit.Report) ([]by
 	}
 }
 
-func (c *securityAuditCmd) resolveOutDir(now time.Time) string {
+func (c *auditCmd) resolveOutDir(now time.Time) string {
 	outDir := fsutil.CleanUserPath(c.flags.outDir)
 	if strings.TrimSpace(outDir) != "" {
 		return outDir
@@ -210,7 +210,7 @@ func (c *securityAuditCmd) resolveOutDir(now time.Time) string {
 	return fmt.Sprintf("security-audit-%s", now.UTC().Format("20060102T150405Z"))
 }
 
-func (c *securityAuditCmd) resolveOutPath(defaultPath string) string {
+func (c *auditCmd) resolveOutPath(defaultPath string) string {
 	outPath := fsutil.CleanUserPath(c.flags.out)
 	if strings.TrimSpace(outPath) == "" {
 		return defaultPath
@@ -257,7 +257,7 @@ type runManifest struct {
 	VulnSourceUsed    string         `json:"vuln_source_used"`
 }
 
-func writeRunManifest(opts fileWriteOpts, path string, now time.Time, bundleDir string, mainReport string, written []writtenFile, report securityaudit.Report) error {
+func writeRunManifest(opts fileWriteOpts, path string, now time.Time, bundleDir string, mainReport string, written []writtenFile, report domainsecurityaudit.Report) error {
 	files := make([]manifestFile, 0, len(written))
 	for _, w := range written {
 		files = append(files, manifestFile{

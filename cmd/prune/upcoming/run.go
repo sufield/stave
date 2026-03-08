@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -36,11 +38,15 @@ func runUpcoming(cmd *cobra.Command, _ []string) error {
 	snapshots := loaded.Snapshots
 	controls := loaded.Controls
 
-	items := computeUpcomingItems(snapshots, controls, UpcomingComputeOptions{
+	riskItems := risk.ComputeItems(risk.Request{
+		Controls:        controls,
+		Snapshots:       snapshots,
 		GlobalMaxUnsafe: opts.MaxUnsafe,
 		Now:             opts.Now,
+		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
-	items = applyUpcomingFilter(items, opts.Now, opts.Filter)
+	riskItems = riskItems.Filter(opts.Filter)
+	items := mapRiskItems(riskItems)
 	if san := cmdutil.GetSanitizer(cmd); san != nil {
 		items = sanitizeUpcomingItems(san, items)
 	}
@@ -65,13 +71,13 @@ func gatherUpcomingOptions(cmd *cobra.Command) (upcomingRunOptions, error) {
 		DueSoonRaw:      strings.TrimSpace(upcomingFlags.dueSoon),
 	}
 
-	maxUnsafeDur, err := timeutil.ParseDuration(opts.MaxUnsafeRaw)
+	maxUnsafeDur, err := timeutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
 	if err != nil {
-		return upcomingRunOptions{}, fmt.Errorf("invalid --max-unsafe %q (use format: 168h, 7d, or 1d12h)", upcomingFlags.maxUnsafe)
+		return upcomingRunOptions{}, err
 	}
-	dueSoonDur, err := timeutil.ParseDuration(opts.DueSoonRaw)
+	dueSoonDur, err := timeutil.ParseDurationFlag(opts.DueSoonRaw, "--due-soon")
 	if err != nil {
-		return upcomingRunOptions{}, fmt.Errorf("invalid --due-soon %q (use format: 24h, 1d, or 1d12h)", upcomingFlags.dueSoon)
+		return upcomingRunOptions{}, err
 	}
 	if dueSoonDur < 0 {
 		return upcomingRunOptions{}, fmt.Errorf("invalid --due-soon %q: must be >= 0", upcomingFlags.dueSoon)
@@ -79,9 +85,9 @@ func gatherUpcomingOptions(cmd *cobra.Command) (upcomingRunOptions, error) {
 
 	var dueWithinDur *time.Duration
 	if strings.TrimSpace(upcomingFlags.dueWithin) != "" {
-		parsedDueWithin, parseErr := timeutil.ParseDuration(upcomingFlags.dueWithin)
+		parsedDueWithin, parseErr := timeutil.ParseDurationFlag(upcomingFlags.dueWithin, "--due-within")
 		if parseErr != nil {
-			return upcomingRunOptions{}, fmt.Errorf("invalid --due-within %q (use format: 24h, 1d, or 1d12h)", upcomingFlags.dueWithin)
+			return upcomingRunOptions{}, parseErr
 		}
 		if parsedDueWithin < 0 {
 			return upcomingRunOptions{}, fmt.Errorf("invalid --due-within %q: must be >= 0", upcomingFlags.dueWithin)

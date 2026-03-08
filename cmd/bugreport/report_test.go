@@ -13,6 +13,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func newTestRootCmd() *cobra.Command {
+	root := &cobra.Command{}
+	root.PersistentFlags().String("log-file", "", "")
+	root.PersistentFlags().Bool("quiet", true, "")
+	root.PersistentFlags().Bool("force", true, "")
+	root.PersistentFlags().Bool("allow-symlink-output", false, "")
+	return root
+}
+
 func TestCollectBugReportEnv_RedactsSensitive(t *testing.T) {
 	t.Setenv("AWS_REGION", "us-east-1")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "super-secret")

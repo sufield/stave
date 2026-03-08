@@ -13,13 +13,15 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-var (
-	fixInputPath  string
-	fixFindingRef string
-)
+type fixFlagsType struct {
+	inputPath  string
+	findingRef string
+}
+
+var fixFlags fixFlagsType
 
 func runFix(cmd *cobra.Command, _ []string) error {
-	inputPath := fsutil.CleanUserPath(fixInputPath)
+	inputPath := fsutil.CleanUserPath(fixFlags.inputPath)
 	findings, err := loadFixFindings(inputPath)
 	if err != nil {
 		return err
@@ -52,7 +54,7 @@ func loadFixFindings(inputPath string) ([]remediation.Finding, error) {
 }
 
 func normalizedFixFindingRef() (string, error) {
-	needle := strings.TrimSpace(fixFindingRef)
+	needle := strings.TrimSpace(fixFlags.findingRef)
 	if needle == "" {
 		return "", fmt.Errorf("--finding cannot be empty")
 	}

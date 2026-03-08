@@ -17,15 +17,15 @@ for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffi
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	cmd.Flags().StringVar(&fixInputPath, "input", "", "Path to evaluation JSON (required)")
-	cmd.Flags().StringVar(&fixFindingRef, "finding", "", "Finding selector: <control_id>@<asset_id> (required)")
+	cmd.Flags().StringVar(&fixFlags.inputPath, "input", "", "Path to evaluation JSON (required)")
+	cmd.Flags().StringVar(&fixFlags.findingRef, "finding", "", "Finding selector: <control_id>@<asset_id> (required)")
 	_ = cmd.MarkFlagRequired("input")
 	_ = cmd.MarkFlagRequired("finding")
 	return cmd
 }
 
 func NewFixLoopCmd() *cobra.Command {
-	fixLoopAllowUnknown = cmdutil.ResolveAllowUnknownInputDefault()
+	fixLoopFlags.allowUnknown = cmdutil.ResolveAllowUnknownInputDefault()
 	cmd := &cobra.Command{
 		Use:   "fix-loop",
 		Short: "Run apply-before/apply-after/verify in one command",
@@ -65,13 +65,13 @@ Examples:
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&fixLoopBeforeDir, "before", "b", "", "Path to before-remediation observations (required)")
-	cmd.Flags().StringVarP(&fixLoopAfterDir, "after", "a", "", "Path to after-remediation observations (required)")
-	cmd.Flags().StringVarP(&fixLoopControlsDir, "controls", "i", "controls", "Path to control definitions directory")
-	cmd.Flags().StringVar(&fixLoopMaxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	cmd.Flags().StringVar(&fixLoopNow, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	cmd.Flags().BoolVar(&fixLoopAllowUnknown, "allow-unknown-input", fixLoopAllowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
-	cmd.Flags().StringVar(&fixLoopOutDir, "out", "", "Write remediation artifacts to this directory")
+	cmd.Flags().StringVarP(&fixLoopFlags.beforeDir, "before", "b", "", "Path to before-remediation observations (required)")
+	cmd.Flags().StringVarP(&fixLoopFlags.afterDir, "after", "a", "", "Path to after-remediation observations (required)")
+	cmd.Flags().StringVarP(&fixLoopFlags.controlsDir, "controls", "i", "controls", "Path to control definitions directory")
+	cmd.Flags().StringVar(&fixLoopFlags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	cmd.Flags().StringVar(&fixLoopFlags.now, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	cmd.Flags().BoolVar(&fixLoopFlags.allowUnknown, "allow-unknown-input", fixLoopFlags.allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
+	cmd.Flags().StringVar(&fixLoopFlags.outDir, "out", "", "Write remediation artifacts to this directory")
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")
 	return cmd

@@ -1,12 +1,10 @@
 package initcmd
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -15,22 +13,11 @@ import (
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/version"
 )
 
-// ---------------------------------------------------------------------------
-// Bridge declarations: type aliases and delegating functions so the rest of
-// this file can keep using the original (unexported) names while the canonical
-// definitions live in cmdutil.
-// ---------------------------------------------------------------------------
-
-type RetentionTiersMap = cmdutil.RetentionTiersMap
-type TierMappingRule = cmdutil.TierMappingRule
-
-// Constant aliases.
+// Constant aliases — shorthand for scaffold templates and tests.
 const (
 	defaultMaxUnsafeDuration = cmdutil.DefaultMaxUnsafeDuration
 	defaultSnapshotRetention = cmdutil.DefaultSnapshotRetention
@@ -91,25 +78,6 @@ func GetRootCmd() *cobra.Command {
 // GetVersion returns the CLI version string.
 func GetVersion() string { return version.Version }
 
-// resolveNow parses a --now flag value. Returns wall clock UTC when raw is empty.
-func resolveNow(raw string) (time.Time, error) {
-	return cmdutil.ResolveNow(raw)
-}
-
-// snapshotObservationRepository combines ObservationRepository with single-reader loading.
-type snapshotObservationRepository interface {
-	appcontracts.ObservationRepository
-	LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error)
-}
-
-func newSnapshotObservationRepository() (snapshotObservationRepository, error) {
-	repo, err := cmdutil.NewSnapshotObservationRepository()
-	if err != nil {
-		return nil, err
-	}
-	return repo, nil
-}
-
 // evalOutput returns os.Stdout or io.Discard based on quiet mode.
 func evalOutput() io.Writer {
 	if globalQuiet {
@@ -117,19 +85,6 @@ func evalOutput() io.Writer {
 	}
 	return os.Stdout
 }
-
-// Delegating functions — forward to cmdutil equivalents.
-
-func resolveTierForPath(relPath string, rules []TierMappingRule, defaultTier string) string {
-	return cmdutil.ResolveTierForPath(relPath, rules, defaultTier)
-}
-func matchGlobPattern(pattern, relPath string) (bool, error) {
-	return cmdutil.MatchGlobPattern(pattern, relPath)
-}
-
-// ---------------------------------------------------------------------------
-// End bridge declarations
-// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Utility helpers shared across init sub-files.

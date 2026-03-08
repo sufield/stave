@@ -299,3 +299,24 @@ func (staveConfigResolver) CIFailurePolicy(cfg *configservice.Config, cfgPath st
 
 // ConfigKeyService is the shared config service instance.
 var ConfigKeyService = configservice.New(ProjectConfigFile, staveConfigValidator{}, staveConfigResolver{}, staveKeepMinResolver{})
+
+// ConfigKeyCompletions returns config key completions including retention tier
+// variants from the project config. Previously duplicated in cmd/ and
+// cmd/initcmd/config/.
+func ConfigKeyCompletions() []string {
+	baseKeys := ConfigKeyService.TopLevelKeys()
+	tiers := []string{DefaultRetentionTier}
+
+	if cfg, ok := FindProjectConfig(); ok {
+		if t := NormalizeRetentionTier(cfg.RetentionTier); t != "" {
+			tiers = append(tiers, t)
+		}
+		for tier := range cfg.RetentionTiers {
+			if t := NormalizeRetentionTier(tier); t != "" {
+				tiers = append(tiers, t)
+			}
+		}
+	}
+
+	return configservice.BuildKeyCompletions(baseKeys, tiers)
+}

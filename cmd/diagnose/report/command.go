@@ -15,11 +15,13 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-var (
-	reportInputFile    string
-	reportFormat       string
-	reportTemplateFile string
-)
+type reportFlagsType struct {
+	inputFile    string
+	format       string
+	templateFile string
+}
+
+var reportFlags reportFlagsType
 
 //go:embed templates/report_default.tmpl
 var defaultReportTemplate string
@@ -52,9 +54,9 @@ Supported template syntax:
 }
 
 func init() {
-	ReportCmd.Flags().StringVarP(&reportInputFile, "in", "i", "", "Path to evaluation JSON file (required)")
-	ReportCmd.Flags().StringVarP(&reportFormat, "format", "f", "text", "Output format: text or json")
-	ReportCmd.Flags().StringVar(&reportTemplateFile, "template-file", "", "Path to custom Go template for text report output")
+	ReportCmd.Flags().StringVarP(&reportFlags.inputFile, "in", "i", "", "Path to evaluation JSON file (required)")
+	ReportCmd.Flags().StringVarP(&reportFlags.format, "format", "f", "text", "Output format: text or json")
+	ReportCmd.Flags().StringVar(&reportFlags.templateFile, "template-file", "", "Path to custom Go template for text report output")
 	_ = ReportCmd.MarkFlagRequired("in")
 	_ = ReportCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 }
@@ -63,17 +65,17 @@ func runReport(cmd *cobra.Command, _ []string) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
-	reportInputFile = fsutil.CleanUserPath(reportInputFile)
-	reportTemplateFile = fsutil.CleanUserPath(reportTemplateFile)
+	reportFlags.inputFile = fsutil.CleanUserPath(reportFlags.inputFile)
+	reportFlags.templateFile = fsutil.CleanUserPath(reportFlags.templateFile)
 
-	eval, err := shared.LoadEvaluationEnvelope(reportInputFile)
+	eval, err := shared.LoadEvaluationEnvelope(reportFlags.inputFile)
 	if err != nil {
 		return err
 	}
 
 	cmdutil.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
 
-	format, err := cmdutil.ResolveFormatValue(cmd, reportFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, reportFlags.format)
 	if err != nil {
 		return err
 	}
@@ -86,7 +88,7 @@ func runReport(cmd *cobra.Command, _ []string) error {
 		*eval,
 		staveversion.Version,
 		defaultReportTemplate,
-		reportTemplateFile,
+		reportFlags.templateFile,
 		cmd.OutOrStdout(),
 		quiet,
 	)

@@ -2,7 +2,6 @@ package baseline
 
 import (
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -51,14 +50,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		Findings:         entries,
 	}
 
-	mkErr := fsutil.SafeMkdirAll(filepath.Dir(outPath), fsutil.WriteOptions{Perm: 0o700, AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)})
-	if mkErr != nil {
-		return fmt.Errorf("create output directory: %w", mkErr)
-	}
-	writeOpts := fsutil.DefaultWriteOpts()
-	writeOpts.Overwrite = cmdutil.ForceEnabled(cmd)
-	writeOpts.AllowSymlink = cmdutil.AllowSymlinkOutEnabled(cmd)
-	f, err := fsutil.SafeCreateFile(outPath, writeOpts)
+	f, err := cmdutil.CreateOutputFile(cmd, outPath)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", outPath, err)
 	}

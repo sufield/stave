@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
@@ -40,25 +41,12 @@ type UpcomingOutput struct {
 	Items        []UpcomingItem  `json:"items"`
 }
 
-type upcomingFilter struct {
-	controlIDs map[kernel.ControlID]struct{}
-	assetTypes map[kernel.AssetType]struct{}
-	statuses   map[string]struct{}
-	dueWithin  *time.Duration
-}
-
 // UpcomingFilterCriteria holds filter rules for upcoming action items.
 type UpcomingFilterCriteria struct {
 	ControlIDs []kernel.ControlID
 	AssetTypes []kernel.AssetType
 	Statuses   []string
 	DueWithin  *time.Duration
-}
-
-// UpcomingComputeOptions holds configuration for computing upcoming items.
-type UpcomingComputeOptions struct {
-	GlobalMaxUnsafe time.Duration
-	Now             time.Time
 }
 
 // UpcomingRenderOptions holds configuration for rendering upcoming markdown.
@@ -76,5 +64,5 @@ type upcomingRunOptions struct {
 	DueSoonRaw      string
 	Now             time.Time
 	Format          ui.OutputFormat
-	Filter          upcomingFilter
+	Filter          risk.FilterCriteria
 }

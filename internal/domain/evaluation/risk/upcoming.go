@@ -66,6 +66,55 @@ type Summary struct {
 	Total   int
 }
 
+// FilterCriteria specifies which items to include.
+// Empty/nil maps and zero MaxRemaining mean no restriction on that dimension.
+type FilterCriteria struct {
+	ControlIDs   map[kernel.ControlID]struct{}
+	AssetTypes   map[kernel.AssetType]struct{}
+	Statuses     map[Status]struct{}
+	MaxRemaining time.Duration // 0 means no limit
+}
+
+// Filter returns items matching all non-empty criteria.
+func (items Items) Filter(c FilterCriteria) Items {
+	if !c.active() {
+		return items
+	}
+	out := make(Items, 0, len(items))
+	for _, item := range items {
+		if c.matches(item) {
+			out = append(out, item)
+		}
+	}
+	return out
+}
+
+func (c FilterCriteria) active() bool {
+	return len(c.ControlIDs) > 0 || len(c.AssetTypes) > 0 || len(c.Statuses) > 0 || c.MaxRemaining > 0
+}
+
+func (c FilterCriteria) matches(item Item) bool {
+	if len(c.ControlIDs) > 0 {
+		if _, ok := c.ControlIDs[item.ControlID]; !ok {
+			return false
+		}
+	}
+	if len(c.AssetTypes) > 0 {
+		if _, ok := c.AssetTypes[item.AssetType]; !ok {
+			return false
+		}
+	}
+	if len(c.Statuses) > 0 {
+		if _, ok := c.Statuses[item.Status]; !ok {
+			return false
+		}
+	}
+	if c.MaxRemaining > 0 && item.Remaining > c.MaxRemaining {
+		return false
+	}
+	return true
+}
+
 // Summarize buckets items by urgency. Items with Remaining within
 // dueSoonThreshold are counted as DueSoon; others are Later.
 func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {

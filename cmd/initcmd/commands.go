@@ -42,17 +42,19 @@ Examples:
 }
 
 func init() {
-	InitCmd.Flags().StringVarP(&initDir, "dir", "d", ".", "Directory where scaffold is created")
-	InitCmd.Flags().StringVarP(&initProfile, "profile", "p", "", "Optional scaffold profile (supported: aws-s3)")
-	InitCmd.Flags().BoolVar(&initDryRun, "dry-run", false, "Preview scaffold without creating files")
-	InitCmd.Flags().BoolVar(&initWithGitHubActions, "with-github-actions", false, "Create a starter GitHub Actions workflow")
-	InitCmd.Flags().StringVar(&initCaptureCadence, "capture-cadence", "daily", "Snapshot capture cadence template for scaffolded docs/workflows: daily or hourly")
+	InitCmd.Flags().StringVarP(&initFlags.dir, "dir", "d", ".", "Directory where scaffold is created")
+	InitCmd.Flags().StringVarP(&initFlags.profile, "profile", "p", "", "Optional scaffold profile (supported: aws-s3)")
+	InitCmd.Flags().BoolVar(&initFlags.dryRun, "dry-run", false, "Preview scaffold without creating files")
+	InitCmd.Flags().BoolVar(&initFlags.withGitHubActions, "with-github-actions", false, "Create a starter GitHub Actions workflow")
+	InitCmd.Flags().StringVar(&initFlags.captureCadence, "capture-cadence", "daily", "Snapshot capture cadence template for scaffolded docs/workflows: daily or hourly")
 }
 
-var (
-	quickstartReportPath string
-	quickstartNowTime    string
-)
+type quickstartFlagsType struct {
+	reportPath string
+	nowTime    string
+}
+
+var quickstartFlags quickstartFlagsType
 
 var QuickstartCmd = &cobra.Command{
 	Use:   "quickstart",
@@ -78,15 +80,17 @@ Examples:
 }
 
 func init() {
-	QuickstartCmd.Flags().StringVar(&quickstartReportPath, "report", "stave-report.json", "Report artifact path")
-	QuickstartCmd.Flags().StringVar(&quickstartNowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
+	QuickstartCmd.Flags().StringVar(&quickstartFlags.reportPath, "report", "stave-report.json", "Report artifact path")
+	QuickstartCmd.Flags().StringVar(&quickstartFlags.nowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
 }
 
-var (
-	demoFixtureName string
-	demoReportPath  string
-	demoNowTime     string
-)
+type demoFlagsType struct {
+	fixtureName string
+	reportPath  string
+	nowTime     string
+}
+
+var demoFlags demoFlagsType
 
 type demoReportRequest struct {
 	Path        string
@@ -124,14 +128,16 @@ Examples:
 }
 
 func init() {
-	DemoCmd.Flags().StringVar(&demoFixtureName, "fixture", demoFixtureKnownBad, "Fixture to run: known-bad or known-good")
-	DemoCmd.Flags().StringVar(&demoReportPath, "report", "./stave-report.json", "Report artifact path")
-	DemoCmd.Flags().StringVar(&demoNowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
+	DemoCmd.Flags().StringVar(&demoFlags.fixtureName, "fixture", demoFixtureKnownBad, "Fixture to run: known-bad or known-good")
+	DemoCmd.Flags().StringVar(&demoFlags.reportPath, "report", "./stave-report.json", "Report artifact path")
+	DemoCmd.Flags().StringVar(&demoFlags.nowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
 }
 
-var (
-	generateOut string
-)
+type generateFlagsType struct {
+	out string
+}
+
+var generateFlags generateFlagsType
 
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
@@ -161,8 +167,8 @@ var GenerateObservationCmd = &cobra.Command{
 }
 
 func init() {
-	GenerateControlCmd.Flags().StringVar(&generateOut, "out", "", "Output file path (default: controls/<derived-id>.yaml)")
-	GenerateObservationCmd.Flags().StringVar(&generateOut, "out", "", "Output file path (default: observations/<name>.json)")
+	GenerateControlCmd.Flags().StringVar(&generateFlags.out, "out", "", "Output file path (default: controls/<derived-id>.yaml)")
+	GenerateObservationCmd.Flags().StringVar(&generateFlags.out, "out", "", "Output file path (default: observations/<name>.json)")
 	GenerateCmd.AddCommand(GenerateControlCmd)
 	GenerateCmd.AddCommand(GenerateObservationCmd)
 }

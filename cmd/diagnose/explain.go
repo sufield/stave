@@ -17,8 +17,12 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-var explainControlsDir string
-var explainFormat string
+type explainFlagsType struct {
+	controlsDir string
+	format      string
+}
+
+var explainFlags explainFlagsType
 
 type explainRule struct {
 	Path    string `json:"path"`
@@ -57,13 +61,13 @@ Examples:
 }
 
 func init() {
-	ExplainCmd.Flags().StringVar(&explainControlsDir, "controls", "controls/s3", "Path to control definitions directory")
-	ExplainCmd.Flags().StringVarP(&explainFormat, "format", "f", "text", "Output format: text or json")
+	ExplainCmd.Flags().StringVar(&explainFlags.controlsDir, "controls", "controls/s3", "Path to control definitions directory")
+	ExplainCmd.Flags().StringVarP(&explainFlags.format, "format", "f", "text", "Output format: text or json")
 }
 
 // SetExplainControlsDir allows sub-packages to override the controls
 // directory before calling RunExplain.
-func SetExplainControlsDir(dir string) { explainControlsDir = dir }
+func SetExplainControlsDir(dir string) { explainFlags.controlsDir = dir }
 
 // RunExplain implements the explain logic shared between the top-level
 // explain command and the controls explain sub-command.
@@ -72,13 +76,13 @@ func RunExplain(cmd *cobra.Command, args []string) error {
 	if id == "" {
 		return fmt.Errorf("control id cannot be empty")
 	}
-	controlPath := strings.TrimSpace(explainControlsDir)
+	controlPath := strings.TrimSpace(explainFlags.controlsDir)
 	control, err := loadExplainControl(cmdutil.CommandContext(cmd), id, controlPath)
 	if err != nil {
 		return err
 	}
 	out := buildExplainOutput(control)
-	format, err := cmdutil.ResolveFormatValue(cmd, explainFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, explainFlags.format)
 	if err != nil {
 		return err
 	}
@@ -86,17 +90,12 @@ func RunExplain(cmd *cobra.Command, args []string) error {
 }
 
 func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
-	controls, err := cmdutil.LoadControls(ctx, controlsDir)
+	ctl, err := cmdutil.LoadControlByID(ctx, controlsDir, id)
 	if err != nil {
-		return policy.ControlDefinition{}, err
+		return policy.ControlDefinition{}, ui.WithNextCommand(err,
+			fmt.Sprintf("stave validate --controls %s", controlsDir))
 	}
-	if ctl := cmdutil.FindControlByID(controls, id); ctl != nil {
-		return *ctl, nil
-	}
-	return policy.ControlDefinition{}, ui.WithNextCommand(
-		fmt.Errorf("control %q not found in %s", id, controlsDir),
-		fmt.Sprintf("stave validate --controls %s", controlsDir),
-	)
+	return *ctl, nil
 }
 
 func buildExplainOutput(ctl policy.ControlDefinition) explainOutput {

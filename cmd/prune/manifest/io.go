@@ -3,9 +3,15 @@ package manifest
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	if err := fsutil.CheckSymlinkSafety(path); err != nil {
+		return err
+	}
+
 	dir := filepath.Dir(path)
 	base := filepath.Base(path)
 
@@ -34,6 +40,6 @@ func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
-	// #nosec G703 -- destination path is a local CLI output path; tmpPath is created in same directory.
+	// #nosec G703 -- destination path is a local CLI output path; symlink safety checked above.
 	return os.Rename(tmpPath, path)
 }

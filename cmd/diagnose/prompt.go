@@ -24,14 +24,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	promptEvalFile    string
-	promptAssetID     string
-	promptControlsDir string
-	promptObsDir      string
-	promptFormat      string
-	promptQuietMode   bool
-)
+type promptFlagsType struct {
+	evalFile    string
+	assetID     string
+	controlsDir string
+	obsDir      string
+	format      string
+	quietMode   bool
+}
+
+var promptFlags promptFlagsType
 
 var PromptCmd = &cobra.Command{
 	Use:   "prompt",
@@ -98,12 +100,12 @@ Examples:
 }
 
 func init() {
-	promptFromFindingCmd.Flags().StringVar(&promptEvalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
-	promptFromFindingCmd.Flags().StringVar(&promptAssetID, "asset-id", "", "Asset ID to filter findings (required)")
-	promptFromFindingCmd.Flags().StringVarP(&promptControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	promptFromFindingCmd.Flags().StringVarP(&promptObsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
-	promptFromFindingCmd.Flags().StringVarP(&promptFormat, "format", "f", "text", "Output format: text or json")
-	promptFromFindingCmd.Flags().BoolVar(&promptQuietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	promptFromFindingCmd.Flags().StringVar(&promptFlags.evalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
+	promptFromFindingCmd.Flags().StringVar(&promptFlags.assetID, "asset-id", "", "Asset ID to filter findings (required)")
+	promptFromFindingCmd.Flags().StringVarP(&promptFlags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	promptFromFindingCmd.Flags().StringVarP(&promptFlags.obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
+	promptFromFindingCmd.Flags().StringVarP(&promptFlags.format, "format", "f", "text", "Output format: text or json")
+	promptFromFindingCmd.Flags().BoolVar(&promptFlags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = promptFromFindingCmd.MarkFlagRequired("evaluation-file")
 	_ = promptFromFindingCmd.MarkFlagRequired("asset-id")
@@ -166,18 +168,18 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 }
 
 func gatherPromptFromFindingOptions(cmd *cobra.Command) (promptRunOptions, error) {
-	format, err := cmdutil.ResolveFormatValue(cmd, promptFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, promptFlags.format)
 	if err != nil {
 		return promptRunOptions{}, err
 	}
 
 	opts := promptRunOptions{
-		EvalFile:        fsutil.CleanUserPath(promptEvalFile),
-		AssetID:         strings.TrimSpace(promptAssetID),
-		ControlsDir:     fsutil.CleanUserPath(promptControlsDir),
-		ObservationsDir: fsutil.CleanUserPath(promptObsDir),
+		EvalFile:        fsutil.CleanUserPath(promptFlags.evalFile),
+		AssetID:         strings.TrimSpace(promptFlags.assetID),
+		ControlsDir:     fsutil.CleanUserPath(promptFlags.controlsDir),
+		ObservationsDir: fsutil.CleanUserPath(promptFlags.obsDir),
 		Format:          format,
-		Quiet:           promptQuietMode || cmdutil.QuietEnabled(cmd),
+		Quiet:           promptFlags.quietMode || cmdutil.QuietEnabled(cmd),
 	}
 
 	if opts.EvalFile == "" {

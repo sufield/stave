@@ -11,27 +11,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/configservice"
 )
 
-// configKeyCompletions returns config key completions for shell completion.
 func configKeyCompletions() []string {
-	baseKeys := cmdutil.ConfigKeyService.TopLevelKeys()
-	tiers := []string{cmdutil.DefaultRetentionTier}
-
-	if cfg, ok := cmdutil.FindProjectConfig(); ok {
-		if t := cmdutil.NormalizeRetentionTier(cfg.RetentionTier); t != "" {
-			tiers = append(tiers, t)
-		}
-		for tier := range cfg.RetentionTiers {
-			t := cmdutil.NormalizeRetentionTier(tier)
-			if t != "" {
-				tiers = append(tiers, t)
-			}
-		}
-	}
-
-	return configservice.BuildKeyCompletions(baseKeys, tiers)
+	return cmdutil.ConfigKeyCompletions()
 }
 
 func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.Editor[cmdutil.ProjectConfig] {

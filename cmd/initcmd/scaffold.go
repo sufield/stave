@@ -17,11 +17,15 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var initDir string
-var initProfile string
-var initDryRun bool
-var initWithGitHubActions bool
-var initCaptureCadence string
+type initFlagsType struct {
+	dir               string
+	profile           string
+	dryRun            bool
+	withGitHubActions bool
+	captureCadence    string
+}
+
+var initFlags initFlagsType
 
 const (
 	profileAWSS3 = "aws-s3"
@@ -38,11 +42,11 @@ type scaffoldOptions struct {
 
 func runInit(_ *cobra.Command, _ []string) error {
 	result, err := projectapp.RunInit(projectapp.InitRequest{
-		Dir:               initDir,
-		Profile:           initProfile,
-		DryRun:            initDryRun,
-		WithGitHubActions: initWithGitHubActions,
-		CaptureCadence:    initCaptureCadence,
+		Dir:               initFlags.dir,
+		Profile:           initFlags.profile,
+		DryRun:            initFlags.dryRun,
+		WithGitHubActions: initFlags.withGitHubActions,
+		CaptureCadence:    initFlags.captureCadence,
 		Force:             globalForce,
 	}, projectapp.InitDeps{
 		ValidateInputs: validateScaffoldInputs,

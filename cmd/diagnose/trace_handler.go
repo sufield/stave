@@ -19,14 +19,16 @@ import (
 	"github.com/sufield/stave/internal/trace"
 )
 
-var (
-	traceControlID   string
-	traceControlsDir string
-	traceObservation string
-	traceAssetID     string
-	traceFormat      string
-	traceQuiet       bool
-)
+type traceFlagsType struct {
+	controlID   string
+	controlsDir string
+	observation string
+	assetID     string
+	format      string
+	quiet       bool
+}
+
+var traceFlags traceFlagsType
 
 var TraceCmd = &cobra.Command{
 	Use:   "trace",
@@ -53,12 +55,12 @@ Examples:
 }
 
 func init() {
-	TraceCmd.Flags().StringVar(&traceControlID, "control", "", "Control ID to trace (required)")
-	TraceCmd.Flags().StringVarP(&traceControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	TraceCmd.Flags().StringVar(&traceObservation, "observation", "", "Path to single observation JSON file (required)")
-	TraceCmd.Flags().StringVar(&traceAssetID, "asset-id", "", "Asset ID to trace against (required)")
-	TraceCmd.Flags().StringVarP(&traceFormat, "format", "f", "text", "Output format: text or json")
-	TraceCmd.Flags().BoolVar(&traceQuiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	TraceCmd.Flags().StringVar(&traceFlags.controlID, "control", "", "Control ID to trace (required)")
+	TraceCmd.Flags().StringVarP(&traceFlags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	TraceCmd.Flags().StringVar(&traceFlags.observation, "observation", "", "Path to single observation JSON file (required)")
+	TraceCmd.Flags().StringVar(&traceFlags.assetID, "asset-id", "", "Asset ID to trace against (required)")
+	TraceCmd.Flags().StringVarP(&traceFlags.format, "format", "f", "text", "Output format: text or json")
+	TraceCmd.Flags().BoolVar(&traceFlags.quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = TraceCmd.MarkFlagRequired("control")
 	_ = TraceCmd.MarkFlagRequired("observation")
@@ -68,7 +70,7 @@ func init() {
 }
 
 func runTrace(cmd *cobra.Command, _ []string) error {
-	if traceQuiet {
+	if traceFlags.quiet {
 		return nil
 	}
 	format, err := resolveTraceOutputFormat(cmd)
@@ -77,17 +79,17 @@ func runTrace(cmd *cobra.Command, _ []string) error {
 	}
 
 	ctx := cmdutil.CommandContext(cmd)
-	ctlDir := fsutil.CleanUserPath(strings.TrimSpace(traceControlsDir))
-	control, err := loadTraceControl(ctx, ctlDir, strings.TrimSpace(traceControlID))
+	ctlDir := fsutil.CleanUserPath(strings.TrimSpace(traceFlags.controlsDir))
+	control, err := loadTraceControl(ctx, ctlDir, strings.TrimSpace(traceFlags.controlID))
 	if err != nil {
 		return err
 	}
-	observationPath := fsutil.CleanUserPath(strings.TrimSpace(traceObservation))
+	observationPath := fsutil.CleanUserPath(strings.TrimSpace(traceFlags.observation))
 	snapshot, err := loadTraceSnapshot(ctx, observationPath)
 	if err != nil {
 		return err
 	}
-	assetID := strings.TrimSpace(traceAssetID)
+	assetID := strings.TrimSpace(traceFlags.assetID)
 	found, err := findTraceAsset(snapshot, assetID, observationPath)
 	if err != nil {
 		return err
@@ -103,21 +105,16 @@ func runTrace(cmd *cobra.Command, _ []string) error {
 }
 
 func resolveTraceOutputFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return cmdutil.ResolveFormatValue(cmd, traceFormat)
+	return cmdutil.ResolveFormatValue(cmd, traceFlags.format)
 }
 
 func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*policy.ControlDefinition, error) {
-	controls, err := cmdutil.LoadControls(ctx, controlsDir)
+	ctl, err := cmdutil.LoadControlByID(ctx, controlsDir, controlID)
 	if err != nil {
-		return nil, err
+		return nil, ui.WithNextCommand(err,
+			fmt.Sprintf("stave explain --controls %s <control-id>", controlsDir))
 	}
-	if ctl := cmdutil.FindControlByID(controls, controlID); ctl != nil {
-		return ctl, nil
-	}
-	return nil, ui.WithNextCommand(
-		fmt.Errorf("control %q not found in %s", controlID, controlsDir),
-		fmt.Sprintf("stave explain --controls %s <control-id>", controlsDir),
-	)
+	return ctl, nil
 }
 
 func loadTraceSnapshot(ctx context.Context, observationPath string) (*asset.Snapshot, error) {

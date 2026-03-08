@@ -10,18 +10,18 @@ import (
 
 func TestInitProfileAWSS3AddsProfileStructure(t *testing.T) {
 	oldForce := globalForce
-	oldProfile := initProfile
-	oldWithGHA := initWithGitHubActions
-	oldCaptureCadence := initCaptureCadence
+	oldProfile := initFlags.profile
+	oldWithGHA := initFlags.withGitHubActions
+	oldCaptureCadence := initFlags.captureCadence
 	globalForce = false
-	initProfile = ""
-	initWithGitHubActions = false
-	initCaptureCadence = "daily"
+	initFlags.profile = ""
+	initFlags.withGitHubActions = false
+	initFlags.captureCadence = "daily"
 	defer func() {
 		globalForce = oldForce
-		initProfile = oldProfile
-		initWithGitHubActions = oldWithGHA
-		initCaptureCadence = oldCaptureCadence
+		initFlags.profile = oldProfile
+		initFlags.withGitHubActions = oldWithGHA
+		initFlags.captureCadence = oldCaptureCadence
 	}()
 
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
@@ -48,18 +48,18 @@ func TestInitProfileAWSS3AddsProfileStructure(t *testing.T) {
 
 func TestInitWithGitHubActionsCreatesWorkflow(t *testing.T) {
 	oldForce := globalForce
-	oldProfile := initProfile
-	oldWithGHA := initWithGitHubActions
-	oldCaptureCadence := initCaptureCadence
+	oldProfile := initFlags.profile
+	oldWithGHA := initFlags.withGitHubActions
+	oldCaptureCadence := initFlags.captureCadence
 	globalForce = false
-	initProfile = ""
-	initWithGitHubActions = false
-	initCaptureCadence = "daily"
+	initFlags.profile = ""
+	initFlags.withGitHubActions = false
+	initFlags.captureCadence = "daily"
 	defer func() {
 		globalForce = oldForce
-		initProfile = oldProfile
-		initWithGitHubActions = oldWithGHA
-		initCaptureCadence = oldCaptureCadence
+		initFlags.profile = oldProfile
+		initFlags.withGitHubActions = oldWithGHA
+		initFlags.captureCadence = oldCaptureCadence
 	}()
 
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
@@ -100,16 +100,16 @@ func TestInitWithGitHubActionsCreatesWorkflow(t *testing.T) {
 }
 
 func TestInitRejectsUnsupportedProfile(t *testing.T) {
-	oldProfile := initProfile
-	oldWithGHA := initWithGitHubActions
-	oldCaptureCadence := initCaptureCadence
-	initProfile = ""
-	initWithGitHubActions = false
-	initCaptureCadence = "daily"
+	oldProfile := initFlags.profile
+	oldWithGHA := initFlags.withGitHubActions
+	oldCaptureCadence := initFlags.captureCadence
+	initFlags.profile = ""
+	initFlags.withGitHubActions = false
+	initFlags.captureCadence = "daily"
 	defer func() {
-		initProfile = oldProfile
-		initWithGitHubActions = oldWithGHA
-		initCaptureCadence = oldCaptureCadence
+		initFlags.profile = oldProfile
+		initFlags.withGitHubActions = oldWithGHA
+		initFlags.captureCadence = oldCaptureCadence
 	}()
 
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
@@ -129,18 +129,18 @@ func TestInitRejectsUnsupportedProfile(t *testing.T) {
 
 func TestInitWithHourlyCaptureCadence(t *testing.T) {
 	oldForce := globalForce
-	oldProfile := initProfile
-	oldWithGHA := initWithGitHubActions
-	oldCaptureCadence := initCaptureCadence
+	oldProfile := initFlags.profile
+	oldWithGHA := initFlags.withGitHubActions
+	oldCaptureCadence := initFlags.captureCadence
 	globalForce = false
-	initProfile = ""
-	initWithGitHubActions = false
-	initCaptureCadence = "daily"
+	initFlags.profile = ""
+	initFlags.withGitHubActions = false
+	initFlags.captureCadence = "daily"
 	defer func() {
 		globalForce = oldForce
-		initProfile = oldProfile
-		initWithGitHubActions = oldWithGHA
-		initCaptureCadence = oldCaptureCadence
+		initFlags.profile = oldProfile
+		initFlags.withGitHubActions = oldWithGHA
+		initFlags.captureCadence = oldCaptureCadence
 	}()
 
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
@@ -179,16 +179,16 @@ func TestInitWithHourlyCaptureCadence(t *testing.T) {
 }
 
 func TestInitRejectsUnsupportedCaptureCadence(t *testing.T) {
-	oldProfile := initProfile
-	oldWithGHA := initWithGitHubActions
-	oldCaptureCadence := initCaptureCadence
-	initProfile = ""
-	initWithGitHubActions = false
-	initCaptureCadence = "daily"
+	oldProfile := initFlags.profile
+	oldWithGHA := initFlags.withGitHubActions
+	oldCaptureCadence := initFlags.captureCadence
+	initFlags.profile = ""
+	initFlags.withGitHubActions = false
+	initFlags.captureCadence = "daily"
 	defer func() {
-		initProfile = oldProfile
-		initWithGitHubActions = oldWithGHA
-		initCaptureCadence = oldCaptureCadence
+		initFlags.profile = oldProfile
+		initFlags.withGitHubActions = oldWithGHA
+		initFlags.captureCadence = oldCaptureCadence
 	}()
 
 	projectDir := filepath.Join(t.TempDir(), "stave-project")

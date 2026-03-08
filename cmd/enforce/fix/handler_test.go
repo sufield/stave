@@ -44,8 +44,8 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 	cmd := NewFixCmd()
-	fixInputPath = in
-	fixFindingRef = "CTL.S3.PUBLIC.001@bucket-a"
+	fixFlags.inputPath = in
+	fixFlags.findingRef = "CTL.S3.PUBLIC.001@bucket-a"
 	cmd.SetOut(buf)
 	if err := runFix(cmd, nil); err != nil {
 		t.Fatalf("runFix error: %v", err)
@@ -73,8 +73,8 @@ func TestRunFix_MissingFinding(t *testing.T) {
 	}
 
 	cmd := NewFixCmd()
-	fixInputPath = in
-	fixFindingRef = "CTL.S3.PUBLIC.001@missing"
+	fixFlags.inputPath = in
+	fixFlags.findingRef = "CTL.S3.PUBLIC.001@missing"
 	cmd.SetOut(&bytes.Buffer{})
 	err := runFix(cmd, nil)
 	if err == nil {

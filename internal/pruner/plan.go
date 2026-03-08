@@ -74,7 +74,7 @@ func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool
 	}); err != nil {
 		return fmt.Errorf("archive create parent for %s: %w", entry.RelPath, err)
 	}
-	if err := os.Rename(src, dst); err != nil {
+	if err := MoveSnapshotFile(src, dst, MoveOptions{AllowSymlink: allowSymlink}); err != nil {
 		return fmt.Errorf("archive %s: %w", entry.RelPath, err)
 	}
 	return nil

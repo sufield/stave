@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -158,8 +157,7 @@ func resolveAbsPathForRel(files []docsFile, rel string) string {
 }
 
 func summarizeDocAtMatch(absPath string, line int) string {
-	// #nosec G304 -- absPath comes from collectDocsFiles and resolveAbsPathForRel within selected docs roots.
-	data, err := os.ReadFile(absPath)
+	data, err := fsutil.ReadFileLimited(absPath)
 	if err != nil {
 		return ""
 	}
