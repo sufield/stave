@@ -66,7 +66,7 @@ Supported keys:
   snapshot_retention_tiers.<tier>` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-			return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+			return cmdutil.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cc.runConfigGet(cmd, args[0])
@@ -94,7 +94,7 @@ Supported keys:
 		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+				return cmdutil.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
 				return []string{cmdutil.GatePolicyAny, cmdutil.GatePolicyNew, cmdutil.GatePolicyOverdue}, cobra.ShellCompDirectiveNoFileComp
@@ -121,7 +121,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+				return cmdutil.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		},

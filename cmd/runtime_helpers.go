@@ -34,7 +34,3 @@ func attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
 	cmdutil.AttachRunIDFromPlan(plan)
 	globalLogger = logging.DefaultLogger()
 }
-
-func configKeyCompletions() []string {
-	return cmdutil.ConfigKeyCompletions()
-}

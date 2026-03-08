@@ -21,11 +21,6 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-// verificationSanitizer sanitizes asset identifiers in verification output.
-type verificationSanitizer interface {
-	Verification(asset.ID) asset.ID
-}
-
 func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	execCtx, err := opts.prepareExecution(cmdutil.CommandContext(cmd))
 	if err != nil {
@@ -131,7 +126,7 @@ func buildVerificationOutcome(cmd *cobra.Command, execCtx verifyExecution, befor
 	}
 }
 
-func redactVerificationEntries(sanitizer verificationSanitizer, entries []safetyenvelope.VerificationEntry) []safetyenvelope.VerificationEntry {
+func redactVerificationEntries(sanitizer *sanitize.Sanitizer, entries []safetyenvelope.VerificationEntry) []safetyenvelope.VerificationEntry {
 	out := make([]safetyenvelope.VerificationEntry, len(entries))
 	for i, e := range entries {
 		out[i] = e

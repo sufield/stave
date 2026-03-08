@@ -13,10 +13,6 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func configKeyCompletions() []string {
-	return cmdutil.ConfigKeyCompletions()
-}
-
 func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.Editor[cmdutil.ProjectConfig] {
 	var stderr io.Writer = os.Stderr
 	if cc.rt != nil && cc.rt.Stderr != nil {

@@ -121,15 +121,16 @@ func (d *Run) loadArtifacts(
 	controlsDir string,
 	observationsDir string,
 ) (artifacts, error) {
-	controls, err := loadControls(ctx, d.ControlRepo, controlsDir)
+	controls, err := appcontracts.LoadControls(ctx, d.ControlRepo, controlsDir)
 	if err != nil {
 		return artifacts{}, fmt.Errorf("load controls: %w", err)
 	}
 
-	snapshots, err := loadSnapshots(ctx, d.ObservationRepo, observationsDir)
+	obsResult, err := appcontracts.LoadSnapshots(ctx, d.ObservationRepo, observationsDir)
 	if err != nil {
 		return artifacts{}, fmt.Errorf("load observations: %w", err)
 	}
+	snapshots := obsResult.Snapshots
 
 	return artifacts{
 		controls:  controls,
@@ -162,28 +163,4 @@ func (d *Run) resolveResult(
 		PredicateParser: cfg.PredicateParser,
 	})
 	return &result, nil
-}
-
-func loadControls(
-	ctx context.Context,
-	repo appcontracts.ControlRepository,
-	dir string,
-) ([]policy.ControlDefinition, error) {
-	controls, err := repo.LoadControls(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load controls: %w", err)
-	}
-	return controls, nil
-}
-
-func loadSnapshots(
-	ctx context.Context,
-	repo appcontracts.ObservationRepository,
-	dir string,
-) ([]asset.Snapshot, error) {
-	result, err := repo.LoadSnapshots(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load observations: %w", err)
-	}
-	return result.Snapshots, nil
 }

@@ -62,7 +62,7 @@ func testEnrichFn(result evaluation.Result) appcontracts.EnrichedResult {
 
 func TestLoadControls(t *testing.T) {
 	t.Run("repo error", func(t *testing.T) {
-		_, err := loadControls(context.Background(), evalControlRepoStub{err: errors.New("boom")}, "ctl")
+		_, err := appcontracts.LoadControls(context.Background(), evalControlRepoStub{err: errors.New("boom")}, "ctl")
 		if err == nil || !strings.Contains(err.Error(), "failed to load controls") {
 			t.Fatalf("unexpected err: %v", err)
 		}
@@ -71,7 +71,7 @@ func TestLoadControls(t *testing.T) {
 
 func TestLoadSnapshots(t *testing.T) {
 	t.Run("repo error", func(t *testing.T) {
-		_, err := loadSnapshots(context.Background(), evalObservationRepoStub{err: errors.New("boom")}, "obs")
+		_, err := appcontracts.LoadSnapshots(context.Background(), evalObservationRepoStub{err: errors.New("boom")}, "obs")
 		if err == nil || !strings.Contains(err.Error(), "failed to load observations") {
 			t.Fatalf("unexpected err: %v", err)
 		}
