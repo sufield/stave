@@ -10,8 +10,6 @@ import (
 	"github.com/sufield/stave/cmd/enforce/shared"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -138,9 +136,9 @@ func prepareRunInput(opts *options) (runInput, error) {
 	if policy != gatePolicyOverdue {
 		return out, nil
 	}
-	maxUnsafeDur, parseErr := timeutil.ParseDuration(opts.MaxUnsafe)
+	maxUnsafeDur, parseErr := timeutil.ParseDurationFlag(opts.MaxUnsafe, "--max-unsafe")
 	if parseErr != nil {
-		return runInput{}, fmt.Errorf("invalid --max-unsafe %q (use format: 168h, 7d, or 1d12h)", opts.MaxUnsafe)
+		return runInput{}, parseErr
 	}
 	out.maxUnsafe = maxUnsafeDur
 	return out, nil
@@ -209,10 +207,9 @@ func runPolicyNew(now time.Time, evaluationPath, baselinePath string) (gateResul
 	if err != nil {
 		return gateResult{}, err
 	}
-	current := remediation.BaselineEntriesFromFindings(eval.Findings)
-	comparison := evaluation.CompareBaseline(base.Findings, current)
-	pass := !comparison.HasNewFindings()
-	reason := fmt.Sprintf("new findings=%d", len(comparison.New))
+	bc := shared.CompareBaseline(base.Findings, eval.Findings)
+	pass := !bc.Comparison.HasNewFindings()
+	reason := fmt.Sprintf("new findings=%d", len(bc.Comparison.New))
 	if pass {
 		reason = "no new findings compared to baseline"
 	}
@@ -225,8 +222,8 @@ func runPolicyNew(now time.Time, evaluationPath, baselinePath string) (gateResul
 		Reason:            reason,
 		EvaluationPath:    evaluationPath,
 		BaselinePath:      baselinePath,
-		CurrentViolations: len(current),
-		NewViolations:     len(comparison.New),
+		CurrentViolations: len(bc.Current),
+		NewViolations:     len(bc.Comparison.New),
 	}, nil
 }
 

@@ -201,12 +201,12 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}
 
-	manual := summarizeUpcoming([]upcomingItem{
+	manual := risk.Items{
 		{Status: risk.Overdue, Remaining: -time.Hour},
 		{Status: risk.DueNow, Remaining: 0},
 		{Status: risk.Upcoming, Remaining: 30 * time.Minute},
 		{Status: risk.Upcoming, Remaining: 4 * time.Hour},
-	}, time.Hour)
+	}.Summarize(time.Hour)
 	if manual.Overdue != 1 || manual.DueNow != 1 || manual.DueSoon != 1 || manual.Later != 1 || manual.Total != 4 {
 		t.Fatalf("unexpected manual summary: %+v", manual)
 	}

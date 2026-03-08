@@ -78,22 +78,21 @@ func (s *Service) ComputeRisk(
 	}
 }
 
-type upcomingSummary struct {
-	Overdue int
-	DueNow  int
-	DueSoon int
-	Later   int
-	Total   int
-}
-
 func computeUpcomingSummary(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
-) upcomingSummary {
+) risk.Summary {
 	items := computeUpcomingItems(controls, snapshots, opts)
 	items = applyUpcomingFilter(items, opts)
-	return summarizeUpcoming(items, opts.DueSoonThreshold)
+	riskItems := make(risk.Items, len(items))
+	for i, item := range items {
+		riskItems[i] = risk.Item{
+			Status:    item.Status,
+			Remaining: item.Remaining,
+		}
+	}
+	return riskItems.Summarize(opts.DueSoonThreshold)
 }
 
 type upcomingItem struct {
@@ -196,24 +195,4 @@ func derefDuration(d *time.Duration) time.Duration {
 		return 0
 	}
 	return *d
-}
-
-func summarizeUpcoming(items []upcomingItem, dueSoonThreshold time.Duration) upcomingSummary {
-	var s upcomingSummary
-	s.Total = len(items)
-	for _, item := range items {
-		switch item.Status {
-		case risk.Overdue:
-			s.Overdue++
-		case risk.DueNow:
-			s.DueNow++
-		default:
-			if item.Remaining > 0 && item.Remaining <= dueSoonThreshold {
-				s.DueSoon++
-			} else {
-				s.Later++
-			}
-		}
-	}
-	return s
 }

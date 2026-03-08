@@ -57,6 +57,37 @@ func (items Items) HasAnyRisk() bool {
 	return len(items) > 0
 }
 
+// Summary holds aggregate counts of risk items bucketed by urgency.
+type Summary struct {
+	Overdue int
+	DueNow  int
+	DueSoon int
+	Later   int
+	Total   int
+}
+
+// Summarize buckets items by urgency. Items with Remaining within
+// dueSoonThreshold are counted as DueSoon; others are Later.
+func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {
+	var s Summary
+	s.Total = len(items)
+	for _, item := range items {
+		switch item.Status {
+		case Overdue:
+			s.Overdue++
+		case DueNow:
+			s.DueNow++
+		default:
+			if item.Remaining > 0 && item.Remaining <= dueSoonThreshold {
+				s.DueSoon++
+			} else {
+				s.Later++
+			}
+		}
+	}
+	return s
+}
+
 // Request provides the inputs required to compute upcoming risk items.
 type Request struct {
 	Controls        []policy.ControlDefinition

@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/enforce/shared"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -96,9 +97,9 @@ func runVerifyEvaluation(execCtx verifyExecution, controls []policy.ControlDefin
 func buildVerificationOutcome(cmd *cobra.Command, execCtx verifyExecution, before, after verifyEvaluation) verifyOutcome {
 	diff := evaluation.CompareVerificationFindings(before.result.Findings, after.result.Findings)
 	sanitizer := cmdutil.GetSanitizer(cmd)
-	resolved := redactVerificationEntries(sanitizer, toEntries(diff.Resolved))
-	remaining := redactVerificationEntries(sanitizer, toEntries(diff.Remaining))
-	introduced := redactVerificationEntries(sanitizer, toEntries(diff.Introduced))
+	resolved := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Resolved))
+	remaining := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Remaining))
+	introduced := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Introduced))
 
 	result := safetyenvelope.Verification{
 		SchemaVersion: kernel.SchemaOutput,
@@ -176,23 +177,6 @@ func runEvaluation(req runEvaluationRequest) (*evaluation.Result, int, error) {
 		ToolVersion:       staveversion.Version,
 		ObservationLoader: loader,
 	})
-}
-
-func toEntry(f evaluation.Finding) safetyenvelope.VerificationEntry {
-	return safetyenvelope.VerificationEntry{
-		ControlID:   f.ControlID,
-		ControlName: f.ControlName,
-		AssetID:     f.AssetID,
-		AssetType:   f.AssetType,
-	}
-}
-
-func toEntries(findings []evaluation.Finding) []safetyenvelope.VerificationEntry {
-	entries := make([]safetyenvelope.VerificationEntry, 0, len(findings))
-	for _, f := range findings {
-		entries = append(entries, toEntry(f))
-	}
-	return entries
 }
 
 func writeVerificationJSON(w io.Writer, result safetyenvelope.Verification) error {

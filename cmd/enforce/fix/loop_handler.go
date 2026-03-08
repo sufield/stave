@@ -3,11 +3,11 @@ package fix
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/enforce/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -140,12 +140,8 @@ func prepareFixLoopExecution(cmd *cobra.Command) (fixLoopExecution, error) {
 
 func validateFixLoopDirs() error {
 	for _, dir := range []struct{ flag, path string }{{"--before", fixLoopBeforeDir}, {"--after", fixLoopAfterDir}, {"--controls", fixLoopControlsDir}} {
-		fi, err := os.Stat(dir.path)
-		if err != nil {
-			return ui.DirectoryAccessError(dir.flag, dir.path, err, nil)
-		}
-		if !fi.IsDir() {
-			return fmt.Errorf("%s must be a directory: %s", dir.flag, dir.path)
+		if err := cmdutil.ValidateDir(dir.flag, dir.path, nil); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -206,9 +202,9 @@ func buildFixLoopVerification(
 	afterResult := afterEval.result
 	now := execCtx.clock.Now()
 	diff := evaluation.CompareVerificationFindings(beforeResult.Findings, afterResult.Findings)
-	resolved := findingsToEntries(diff.Resolved)
-	remaining := findingsToEntries(diff.Remaining)
-	introduced := findingsToEntries(diff.Introduced)
+	resolved := shared.FindingsToVerificationEntries(diff.Resolved)
+	remaining := shared.FindingsToVerificationEntries(diff.Remaining)
+	introduced := shared.FindingsToVerificationEntries(diff.Introduced)
 	verification := safetyenvelope.Verification{
 		SchemaVersion: kernel.SchemaOutput,
 		Kind:          safetyenvelope.KindVerification,
@@ -262,17 +258,4 @@ func buildFixLoopReport(
 		Verification:  summary,
 		Artifacts:     artifacts,
 	}
-}
-
-func findingsToEntries(findings []evaluation.Finding) []safetyenvelope.VerificationEntry {
-	entries := make([]safetyenvelope.VerificationEntry, 0, len(findings))
-	for _, f := range findings {
-		entries = append(entries, safetyenvelope.VerificationEntry{
-			ControlID:   f.ControlID,
-			ControlName: f.ControlName,
-			AssetID:     f.AssetID,
-			AssetType:   f.AssetType,
-		})
-	}
-	return entries
 }

@@ -9,8 +9,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
 
@@ -97,11 +99,11 @@ func buildDeletePlan(cmd *cobra.Command) (deletePlan, error) {
 	if err != nil {
 		return deletePlan{}, err
 	}
-	allFiles, err := listObservationSnapshotFiles(in.obsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(in.obsDir)
 	if err != nil {
 		return deletePlan{}, err
 	}
-	candidateFiles := planPrune(allFiles, PruningCriteria{Now: in.now, OlderThan: in.olderThan, KeepMin: in.keepMin})
+	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.now, OlderThan: in.olderThan, KeepMin: in.keepMin})
 	out := pruner.BuildPruneOutput(deleteReportInput{
 		Now:             in.now,
 		Mode:            in.mode,
@@ -130,18 +132,18 @@ func buildDeletePlan(cmd *cobra.Command) (deletePlan, error) {
 }
 
 func resolveDeleteInput(cmd *cobra.Command) (deleteRunInput, error) {
-	obsDir := cleanUserPath(deleteOpts.ObservationsDir)
+	obsDir := fsutil.CleanUserPath(deleteOpts.ObservationsDir)
 	if obsDir == "" {
 		return deleteRunInput{}, fmt.Errorf("--observations cannot be empty")
 	}
 	if deleteOpts.KeepMin < 0 {
 		return deleteRunInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", deleteOpts.KeepMin)
 	}
-	tier, err := validateRetentionTier(deleteOpts.RetentionTier)
+	tier, err := pruneshared.ValidateRetentionTier(deleteOpts.RetentionTier)
 	if err != nil {
 		return deleteRunInput{}, err
 	}
-	olderThan, err := resolveCleanupOlderThan(cmd, deleteOpts.OlderThan, tier)
+	olderThan, err := pruneshared.ResolveOlderThan(cmd, deleteOpts.OlderThan, tier)
 	if err != nil {
 		return deleteRunInput{}, err
 	}

@@ -1,7 +1,6 @@
 package fix
 
 import (
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -43,7 +42,7 @@ func writeFixLoopArtifacts(
 	artifacts.AfterEvaluation = afterPath
 
 	verifyPath := filepath.Join(execCtx.outDir, "verification.json")
-	if err := writeVerificationJSONFile(cmd, verifyPath, verification); err != nil {
+	if err := writeOutputJSONFile(cmd, verifyPath, verification); err != nil {
 		return fixLoopArtifacts{}, err
 	}
 	artifacts.Verification = verifyPath
@@ -77,26 +76,6 @@ func writeOutputJSONFile(cmd *cobra.Command, path string, value any) error {
 	}
 	defer f.Close()
 	if err := shared.WriteJSON(f, value); err != nil {
-		return fmt.Errorf("write %s: %w", path, err)
-	}
-	return nil
-}
-
-func writeVerificationJSONFile(cmd *cobra.Command, path string, result safetyenvelope.Verification) error {
-	opts := fsutil.DefaultWriteOpts()
-	opts.Overwrite = cmdutil.ForceEnabled(cmd)
-	opts.AllowSymlink = cmdutil.AllowSymlinkOutEnabled(cmd)
-	f, err := fsutil.SafeCreateFile(path, opts)
-	if err != nil {
-		return fmt.Errorf("cannot create %s: %w", path, err)
-	}
-	defer f.Close()
-	if err := safetyenvelope.ValidateVerification(result); err != nil {
-		return fmt.Errorf("write %s: %w", path, err)
-	}
-	enc := json.NewEncoder(f)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(result); err != nil {
 		return fmt.Errorf("write %s: %w", path, err)
 	}
 	return nil

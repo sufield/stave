@@ -39,21 +39,20 @@ func computeUpcomingItems(
 }
 
 func summarizeUpcoming(items []UpcomingItem, dueSoonThreshold time.Duration) UpcomingSummary {
-	var s UpcomingSummary
-	s.Total = len(items)
-	for _, item := range items {
-		switch item.Status {
-		case "OVERDUE":
-			s.Overdue++
-		case "DUE_NOW":
-			s.DueNow++
-		default:
-			if item.Remaining > 0 && item.Remaining <= dueSoonThreshold {
-				s.DueSoon++
-			} else {
-				s.Later++
-			}
+	// Convert to risk.Items for canonical summarization.
+	riskItems := make(risk.Items, len(items))
+	for i, item := range items {
+		riskItems[i] = risk.Item{
+			Status:    risk.Status(item.Status),
+			Remaining: item.Remaining,
 		}
 	}
-	return s
+	s := riskItems.Summarize(dueSoonThreshold)
+	return UpcomingSummary{
+		Overdue: s.Overdue,
+		DueNow:  s.DueNow,
+		DueSoon: s.DueSoon,
+		Later:   s.Later,
+		Total:   s.Total,
+	}
 }
