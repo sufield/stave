@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -83,27 +81,16 @@ type input struct {
 func prepareInput(opts *options) (input, error) {
 	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
 	observationsDir := fsutil.CleanUserPath(opts.ObservationsDir)
-	if err := ensureDir("--controls", controlsDir); err != nil {
+	if err := cmdutil.ValidateDir("--controls", controlsDir, nil); err != nil {
 		return input{}, err
 	}
-	if err := ensureDir("--observations", observationsDir); err != nil {
+	if err := cmdutil.ValidateDir("--observations", observationsDir, nil); err != nil {
 		return input{}, err
 	}
 	if err := validateFormat(opts.Format); err != nil {
 		return input{}, err
 	}
 	return input{controlsDir: controlsDir, observationsDir: observationsDir, format: opts.Format}, nil
-}
-
-func ensureDir(flagName, path string) error {
-	fi, err := os.Stat(path)
-	if err != nil {
-		return ui.DirectoryAccessError(flagName, path, err, nil)
-	}
-	if !fi.IsDir() {
-		return fmt.Errorf("%s must be a directory: %s", flagName, path)
-	}
-	return nil
 }
 
 func validateFormat(format string) error {
