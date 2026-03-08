@@ -90,28 +90,28 @@ Examples:
   stave security-audit --format markdown --out ./audit/security-report.md
   stave security-audit --format sarif --out-dir ./audit --fail-on CRITICAL` + metadata.OfflineHelpSuffix,
 	Args:          cobra.NoArgs,
-	RunE:          runSecurityAudit,
+	RunE:          securityAudit.run,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }
 
 func init() {
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.format, "format", "json", "Report format: json, markdown, or sarif")
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.out, "out", "", "Main report output file path (default: <out-dir>/security-report.<ext>)")
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.outDir, "out-dir", "", "Artifact bundle output directory (default: ./security-audit-<timestamp>)")
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.severity, "severity", "CRITICAL,HIGH", "Comma-separated severities to include: CRITICAL,HIGH,MEDIUM,LOW")
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.sbom, "sbom", "spdx", "SBOM format: spdx or cyclonedx")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.format, "format", "json", "Report format: json, markdown, or sarif")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.out, "out", "", "Main report output file path (default: <out-dir>/security-report.<ext>)")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.outDir, "out-dir", "", "Artifact bundle output directory (default: ./security-audit-<timestamp>)")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.severity, "severity", "CRITICAL,HIGH", "Comma-separated severities to include: CRITICAL,HIGH,MEDIUM,LOW")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.sbom, "sbom", "spdx", "SBOM format: spdx or cyclonedx")
 	SecurityAuditCmd.Flags().StringSliceVar(
-		&securityAuditFlags.frameworks,
+		&securityAudit.flags.frameworks,
 		"compliance-framework",
 		nil,
 		"Compliance frameworks (repeatable): "+strings.Join(
 			compliance.FrameworkStrings(compliance.SupportedFrameworks()), ", ",
 		),
 	)
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.vulnSource, "vuln-source", "hybrid", "Vulnerability evidence source: hybrid, local, or ci")
-	SecurityAuditCmd.Flags().BoolVar(&securityAuditFlags.liveVulnCheck, "live-vuln-check", false, "Run local govulncheck live check (opt-in)")
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.releaseBundleDir, "release-bundle-dir", "", "Directory with release verification artifacts (SHA256SUMS and signatures)")
-	SecurityAuditCmd.Flags().BoolVar(&securityAuditFlags.privacyMode, "privacy-mode", false, "Enable strict privacy assertions")
-	SecurityAuditCmd.Flags().StringVar(&securityAuditFlags.failOn, "fail-on", "HIGH", "Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.vulnSource, "vuln-source", "hybrid", "Vulnerability evidence source: hybrid, local, or ci")
+	SecurityAuditCmd.Flags().BoolVar(&securityAudit.flags.liveVulnCheck, "live-vuln-check", false, "Run local govulncheck live check (opt-in)")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.releaseBundleDir, "release-bundle-dir", "", "Directory with release verification artifacts (SHA256SUMS and signatures)")
+	SecurityAuditCmd.Flags().BoolVar(&securityAudit.flags.privacyMode, "privacy-mode", false, "Enable strict privacy assertions")
+	SecurityAuditCmd.Flags().StringVar(&securityAudit.flags.failOn, "fail-on", "HIGH", "Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE")
 }

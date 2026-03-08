@@ -1,7 +1,6 @@
 package bugreport
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -176,14 +175,23 @@ func tailBytesByLine(data []byte, maxLines int) []byte {
 	if maxLines <= 0 || len(data) == 0 {
 		return nil
 	}
-	lines := bytes.Split(data, []byte{'\n'})
-	if len(lines) > 0 && len(lines[len(lines)-1]) == 0 {
-		lines = lines[:len(lines)-1]
+	// Trim trailing newline so it doesn't count as an extra empty line.
+	trimmed := data
+	if trimmed[len(trimmed)-1] == '\n' {
+		trimmed = trimmed[:len(trimmed)-1]
 	}
-	if len(lines) <= maxLines {
-		return data
+	// Scan backward counting newlines.
+	count := 0
+	i := len(trimmed) - 1
+	for i >= 0 {
+		if trimmed[i] == '\n' {
+			count++
+			if count == maxLines {
+				return trimmed[i+1:]
+			}
+		}
+		i--
 	}
-	start := len(lines) - maxLines
-	out := bytes.Join(lines[start:], []byte{'\n'})
-	return out
+	// Fewer lines than maxLines — return original data.
+	return data
 }
