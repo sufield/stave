@@ -17,6 +17,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -333,17 +334,14 @@ func loadDemoSnapshots(name string) ([]asset.Snapshot, error) {
 		return nil, fmt.Errorf("unsupported --fixture %q (use: %s, %s)", name, demoFixtureKnownBad, demoFixtureKnownGood)
 	}
 
-	var bundle struct {
-		SchemaVersion kernel.Schema    `json:"schema_version"`
-		Snapshots     []asset.Snapshot `json:"snapshots"`
-	}
-	if err := json.Unmarshal(b, &bundle); err != nil {
+	snapshots, err := obsjson.ParseBundle(b)
+	if err != nil {
 		return nil, fmt.Errorf("parse embedded fixture %q: %w", name, err)
 	}
-	if len(bundle.Snapshots) == 0 {
+	if len(snapshots) == 0 {
 		return nil, fmt.Errorf("embedded fixture %q has no snapshots", name)
 	}
-	return bundle.Snapshots, nil
+	return snapshots, nil
 }
 
 func loadDemoControls() ([]policy.ControlDefinition, error) {

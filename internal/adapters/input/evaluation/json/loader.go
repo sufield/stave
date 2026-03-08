@@ -7,7 +7,9 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // Loader reads evaluation result artifacts from JSON.
@@ -36,6 +38,36 @@ func (l *Loader) LoadFromFile(path string) (*evaluation.Result, error) {
 	}
 
 	return &result, nil
+}
+
+// ParseFindings extracts remediation findings from JSON data, trying multiple
+// envelope formats: safety envelope, wrapped envelope, bare findings array.
+func ParseFindings(raw []byte) ([]remediation.Finding, error) {
+	var env safetyenvelope.Evaluation
+	if err := json.Unmarshal(raw, &env); err == nil && len(env.Findings) > 0 {
+		return env.Findings, nil
+	}
+
+	var wrapped struct {
+		OK   bool                      `json:"ok"`
+		Data safetyenvelope.Evaluation `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &wrapped); err == nil && len(wrapped.Data.Findings) > 0 {
+		return wrapped.Data.Findings, nil
+	}
+
+	var direct struct {
+		Findings []remediation.Finding `json:"findings"`
+	}
+	if err := json.Unmarshal(raw, &direct); err == nil {
+		return direct.Findings, nil
+	}
+
+	var probe any
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		return nil, err
+	}
+	return nil, fmt.Errorf("input JSON does not contain evaluation findings")
 }
 
 // LoadFromReader loads an evaluation result from an io.Reader.
