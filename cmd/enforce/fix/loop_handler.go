@@ -57,7 +57,7 @@ type fixLoopReport struct {
 }
 
 func runFixLoop(cmd *cobra.Command, _ []string) error {
-	execCtx, err := prepareFixLoopExecution()
+	execCtx, err := prepareFixLoopExecution(cmd)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ type fixLoopEvaluation struct {
 	envelope  safetyenvelope.Evaluation
 }
 
-func prepareFixLoopExecution() (fixLoopExecution, error) {
+func prepareFixLoopExecution(cmd *cobra.Command) (fixLoopExecution, error) {
 	fixLoopBeforeDir = fsutil.CleanUserPath(fixLoopBeforeDir)
 	fixLoopAfterDir = fsutil.CleanUserPath(fixLoopAfterDir)
 	fixLoopControlsDir = fsutil.CleanUserPath(fixLoopControlsDir)
@@ -127,7 +127,7 @@ func prepareFixLoopExecution() (fixLoopExecution, error) {
 		return fixLoopExecution{}, err
 	}
 	return fixLoopExecution{
-		ctx:          context.Background(),
+		ctx:          cmd.Context(),
 		beforeDir:    fixLoopBeforeDir,
 		afterDir:     fixLoopAfterDir,
 		controlsDir:  fixLoopControlsDir,

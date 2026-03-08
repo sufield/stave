@@ -1,12 +1,15 @@
 package fix
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -84,7 +87,10 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	fixLoopOutDir = outDir
 	fixLoopAllowUnknown = false
 
-	if err := runFixLoop(nil, nil); err != nil {
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+	cmd.SetOut(&bytes.Buffer{})
+	if err := runFixLoop(cmd, nil); err != nil {
 		t.Fatalf("runFixLoop returned error: %v", err)
 	}
 

@@ -39,7 +39,7 @@ func runPlan(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if !readinessPlanQuiet && !cmdutil.QuietEnabled(cmd) {
+	if !cmdutil.QuietEnabled(cmd) {
 		if err := writeReadinessReport(cmd.OutOrStdout(), report, format); err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return &ui.InputError{Err: ui.EvaluateErrorWithHint(err)}
 	}
 	if !report.Ready {
-		if ui.ShouldEmitOutput(applyFlags.quietMode, cmdutil.QuietEnabled(cmd)) {
+		if !cmdutil.QuietEnabled(cmd) {
 			_ = writeReadinessText(os.Stderr, report)
 		}
 		return ui.WithNextCommand(fmt.Errorf("%w: readiness checks failed; apply not executed", ui.ErrValidationFailed), "stave plan")

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 )
@@ -33,6 +34,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return err
 	}
+	out = output.SanitizeObservationDelta(cmdutil.GetSanitizer(cmd), out)
 	return writeOutput(cmd, cmd.OutOrStdout(), format, out)
 }
 

@@ -98,11 +98,11 @@ func loadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
 }
 
 // warnIfGitDirty prints a warning if git is dirty and quiet mode is not enabled.
-func warnIfGitDirty(git *evaluation.GitInfo, label string) {
+func warnIfGitDirty(cmd *cobra.Command, git *evaluation.GitInfo, label string) {
 	if git == nil || !git.Dirty {
 		return
 	}
-	if applyFlags.quietMode {
+	if cmdutil.QuietEnabled(cmd) {
 		return
 	}
 	_, _ = fmt.Fprintf(os.Stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n", label, strings.Join(git.DirtyList, ", "))

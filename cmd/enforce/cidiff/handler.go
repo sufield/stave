@@ -2,10 +2,12 @@ package cidiff
 
 import (
 	"fmt"
-	"io"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/enforce/shared"
+	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -39,7 +41,7 @@ type result struct {
 	Resolved           []evaluation.BaselineEntry `json:"resolved"`
 }
 
-func run(w io.Writer, opts *options) error {
+func run(cmd *cobra.Command, opts *options) error {
 	currentPath := fsutil.CleanUserPath(opts.CurrentPath)
 	baselinePath := fsutil.CleanUserPath(opts.BaselinePath)
 
@@ -55,13 +57,17 @@ func run(w io.Writer, opts *options) error {
 	}
 	baselineEntries := remediation.BaselineEntriesFromFindings(baselineEval.Findings)
 
+	sanitizer := cmdutil.GetSanitizer(cmd)
+	currentEntries = output.SanitizeBaselineEntries(sanitizer, currentEntries)
+	baselineEntries = output.SanitizeBaselineEntries(sanitizer, baselineEntries)
+
 	comparison := evaluation.CompareBaseline(baselineEntries, currentEntries)
 	res := result{
 		SchemaVersion:      kernel.SchemaCIDiff,
 		Kind:               kind,
 		ComparedAt:         time.Now().UTC(),
-		CurrentEvaluation:  currentPath,
-		BaselineEvaluation: baselinePath,
+		CurrentEvaluation:  sanitizePath(sanitizer, currentPath),
+		BaselineEvaluation: sanitizePath(sanitizer, baselinePath),
 		Summary: summary{
 			BaselineFindings: len(baselineEntries),
 			CurrentFindings:  len(currentEntries),
@@ -79,7 +85,7 @@ func run(w io.Writer, opts *options) error {
 		res.Resolved = []evaluation.BaselineEntry{}
 	}
 
-	if err := shared.WriteJSON(w, res); err != nil {
+	if err := shared.WriteJSON(cmd.OutOrStdout(), res); err != nil {
 		return fmt.Errorf("write diff output: %w", err)
 	}
 
@@ -87,4 +93,11 @@ func run(w io.Writer, opts *options) error {
 		return ui.ErrViolationsFound
 	}
 	return nil
+}
+
+func sanitizePath(s kernel.Sanitizer, p string) string {
+	if s == nil {
+		return p
+	}
+	return s.Path(p)
 }

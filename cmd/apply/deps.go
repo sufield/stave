@@ -79,7 +79,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return nil, f.wrapError(err)
 	}
 
-	warnIfGitDirty(res.gitMeta, "apply")
+	warnIfGitDirty(f.cmd, res.gitMeta, "apply")
 
 	return &ApplyDeps{Runner: built.Runner, Config: built.Config}, nil
 }
@@ -146,7 +146,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 // mapToBuildInput converts the plan and assets into the input struct for BuildDependencies.
 func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStack) appeval.BuildDependenciesInput {
 	var output io.Writer = os.Stdout
-	if applyFlags.quietMode {
+	if cmdutil.QuietEnabled(f.cmd) {
 		output = io.Discard
 	}
 
@@ -189,10 +189,7 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 // buildFilter constructs the control filter from CLI flags.
 func (f *Factory) buildFilter() appeval.ControlFilter {
 	return appeval.ControlFilter{
-		MinSeverity:      policy.ParseSeverity(applyFlags.applyMinSeverity),
-		ControlID:        kernel.ControlID(applyFlags.applyControlID),
 		ExcludeControlID: toControlIDs(applyFlags.applyExcludeControlIDs),
-		Compliance:       applyFlags.applyCompliance,
 	}
 }
 

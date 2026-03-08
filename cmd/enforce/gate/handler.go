@@ -86,6 +86,8 @@ func run(cmd *cobra.Command, opts *options) error {
 		return err
 	}
 
+	result = sanitizeGateResult(cmdutil.GetSanitizer(cmd), result)
+
 	format, err := cmdutil.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return err
@@ -226,6 +228,17 @@ func runPolicyNew(now time.Time, evaluationPath, baselinePath string) (gateResul
 		CurrentViolations: len(current),
 		NewViolations:     len(comparison.New),
 	}, nil
+}
+
+func sanitizeGateResult(s kernel.Sanitizer, r gateResult) gateResult {
+	if s == nil {
+		return r
+	}
+	r.EvaluationPath = s.Path(r.EvaluationPath)
+	r.BaselinePath = s.Path(r.BaselinePath)
+	r.ControlsPath = s.Path(r.ControlsPath)
+	r.ObservationsPath = s.Path(r.ObservationsPath)
+	return r
 }
 
 func runPolicyOverdue(now time.Time, controlsDir, observationsDir string, maxUnsafe time.Duration) (gateResult, error) {

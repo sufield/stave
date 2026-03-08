@@ -26,15 +26,12 @@ type runMode string
 const (
 	runModeStandard runMode = "standard"
 	runModeProfile  runMode = "profile"
-	runModeTemplate runMode = "template"
 )
 
 type runOptions struct {
 	mode           runMode
 	params         applyParams
 	format         ui.OutputFormat
-	dryRun         bool
-	explain        bool
 	profile        applyProfileOptions
 	evaluatorInput appeval.Options
 }
@@ -59,10 +56,14 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 					includeAll:      applyFlags.profileIncludeAll,
 					outputFormat:    applyFlags.outputFormat,
 					nowTime:         applyFlags.nowTime,
-					quiet:           applyFlags.quietMode,
+					quiet:           cmdutil.QuietEnabled(cmd),
 				},
 			}, nil
 		}
+	}
+
+	if strictErr := runStrictIntegrityCheck(cmd); strictErr != nil {
+		return runOptions{}, strictErr
 	}
 
 	params, err := validateApplyFlags(cmd)
@@ -73,17 +74,11 @@ func gatherRunOptions(cmd *cobra.Command) (runOptions, error) {
 	if err != nil {
 		return runOptions{}, err
 	}
-	mode := runModeStandard
-	if applyFlags.applyTemplateStr != "" {
-		mode = runModeTemplate
-	}
 
 	return runOptions{
-		mode:           mode,
+		mode:           runModeStandard,
 		params:         params,
 		format:         format,
-		dryRun:         applyFlags.applyDryRun,
-		explain:        applyFlags.applyExplain,
 		evaluatorInput: buildEvaluatorOptions(),
 	}, nil
 }
@@ -103,9 +98,6 @@ func buildEvaluatorOptions() appeval.Options {
 		ObservationsSource: appeval.ObservationSource(applyFlags.observationsDir),
 		IntegrityManifest:  applyFlags.applyIntegrityManifest,
 		IntegrityPublicKey: applyFlags.applyIntegrityPublicKey,
-		Explain:            applyFlags.applyExplain,
-		DryRun:             applyFlags.applyDryRun,
-		Format:             applyFlags.outputFormat,
 	}
 }
 

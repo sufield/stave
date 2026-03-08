@@ -39,9 +39,6 @@ type Options struct {
 	ObservationsSource ObservationSource
 	IntegrityManifest  string
 	IntegrityPublicKey string
-	Explain            bool
-	DryRun             bool
-	Format             string
 }
 
 // ParsedOptions holds validated, parsed values ready for use.
@@ -98,7 +95,6 @@ func (o Options) normalize() Options {
 	o.NowTime = strings.TrimSpace(o.NowTime)
 	o.IntegrityManifest = strings.TrimSpace(o.IntegrityManifest)
 	o.IntegrityPublicKey = strings.TrimSpace(o.IntegrityPublicKey)
-	o.Format = strings.TrimSpace(o.Format)
 	return o
 }
 
