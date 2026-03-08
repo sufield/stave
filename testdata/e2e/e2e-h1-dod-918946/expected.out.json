@@ -9,8 +9,8 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2020-07-01T00:00:00Z.json": "1a7d045ca1e01e2266d27da3bb175f622a0329f6b55a8ce019a802ce2f55ffc2",
-        "2020-07-09T00:00:00Z.json": "7c1763969fe4fc4693c7be96a65d9aaa6c99427aad360a524ab2dc4f63f104ae"
+        "2020-07-01T000000Z.json": "1a7d045ca1e01e2266d27da3bb175f622a0329f6b55a8ce019a802ce2f55ffc2",
+        "2020-07-09T000000Z.json": "7c1763969fe4fc4693c7be96a65d9aaa6c99427aad360a524ab2dc4f63f104ae"
       },
       "overall": "21d2eb1f917473341bb3584e72951b61af19ae1fff2e65e81811b9d269f7f59e"
     },

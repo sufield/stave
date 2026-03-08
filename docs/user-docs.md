@@ -153,7 +153,7 @@ stave apply --controls ./controls --observations ./observations --format json > 
 stave diagnose --controls ./controls --observations ./observations --previous-output output/evaluation.json
 
 # Trace a single control against a specific asset
-stave trace --control CTL.S3.PUBLIC.001 --observation observations/2026-01-15T00:00:00Z.json --asset-id my-bucket
+stave trace --control CTL.S3.PUBLIC.001 --observation observations/2026-01-15T000000Z.json --asset-id my-bucket
 
 # Continue from last successful workflow step
 stave status
@@ -278,7 +278,7 @@ snapshot_retention_tiers:
   non_critical: 14d
 ci_failure_policy: fail_on_any_violation
 capture_cadence: daily
-snapshot_filename_template: YYYY-MM-DDT00:00:00Z.json
+snapshot_filename_template: YYYY-MM-DDT000000Z.json
 ```
 
 Optional user-level CLI defaults:
@@ -543,7 +543,7 @@ stave validate \
 stave validate --format json
 
 # Validate a single file
-stave validate --in ./observations/2026-01-11T00:00:00Z.json
+stave validate --in ./observations/2026-01-11T000000Z.json
 ```
 
 **Output Format (text):**
@@ -673,7 +673,7 @@ stave apply \
 ```json
 {
   "files": {
-    "2026-01-01T00:00:00Z.json": "<sha256-hex>"
+    "2026-01-01T000000Z.json": "<sha256-hex>"
   },
   "overall": "<sha256-hex>"
 }
@@ -1444,12 +1444,12 @@ stave trace [flags]
 ```bash
 stave trace \
   --control CTL.S3.PUBLIC.001 \
-  --observation observations/2026-01-15T00:00:00Z.json \
+  --observation observations/2026-01-15T000000Z.json \
   --asset-id my-bucket
 
 stave trace \
   --control CTL.S3.PUBLIC.001 \
-  --observation observations/2026-01-15T00:00:00Z.json \
+  --observation observations/2026-01-15T000000Z.json \
   --asset-id my-bucket \
   --format json
 ```
@@ -1734,8 +1734,8 @@ Observations capture the state of your infrastructure at a point in time.
 **Location:** `examples/observations/` directory (or custom path via `--observations`)
 
 **File naming:** Use RFC3339 timestamps for deterministic ordering:
-- `2026-01-01T00:00:00Z.json`
-- `2026-01-15T12:30:00Z.json`
+- `2026-01-01T000000Z.json`
+- `2026-01-15T123000Z.json`
 
 **Schema:**
 
@@ -2013,7 +2013,7 @@ echo "Generated: $OUTPUT"
 
 1. **Use deterministic timestamps** for CI: Always pass `--now` in automated pipelines for reproducible results.
 
-2. **Name snapshots with timestamps**: Use RFC3339 format (`2026-01-01T00:00:00Z.json`) for automatic ordering.
+2. **Name snapshots with timestamps**: Use RFC3339 format (`2026-01-01T000000Z.json`) for automatic ordering.
 
 3. **Keep multiple snapshots**: Stave needs historical data to calculate durations. Keep at least 2-3 weeks of snapshots.
 

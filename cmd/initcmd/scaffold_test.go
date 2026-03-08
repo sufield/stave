@@ -85,7 +85,7 @@ func TestInitCreatesScaffold(t *testing.T) {
 	if !strings.Contains(string(configData), "capture_cadence: daily") {
 		t.Fatalf("expected %s to include capture_cadence %q, got %q", projectConfigFile, "daily", string(configData))
 	}
-	if !strings.Contains(string(configData), "snapshot_filename_template: YYYY-MM-DDT00:00:00Z.json") {
+	if !strings.Contains(string(configData), "snapshot_filename_template: YYYY-MM-DDT000000Z.json") {
 		t.Fatalf("expected %s to include daily naming template, got %q", projectConfigFile, string(configData))
 	}
 	lockPath := filepath.Join(projectDir, "stave.lock")

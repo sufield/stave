@@ -36,7 +36,7 @@ echo
 
 # ── Minimal observation (edit for your bug) ────────────────────────
 mkdir -p obs
-cat > obs/2026-02-17T00:00:00Z.json <<'JSON'
+cat > obs/2026-02-17T000000Z.json <<'JSON'
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-02-17T00:00:00Z",
@@ -57,7 +57,7 @@ cat > obs/2026-02-17T00:00:00Z.json <<'JSON'
 }
 JSON
 
-cat > obs/2026-02-18T00:00:00Z.json <<'JSON'
+cat > obs/2026-02-18T000000Z.json <<'JSON'
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-02-18T00:00:00Z",
