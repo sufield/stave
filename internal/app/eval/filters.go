@@ -23,7 +23,7 @@ func (f ControlFilter) Enabled() bool {
 // FilterControls returns only the controls that match the filter criteria.
 func FilterControls(invs []policy.ControlDefinition, f ControlFilter) ([]policy.ControlDefinition, error) {
 	if f.MinSeverity != policy.SeverityNone && !f.MinSeverity.IsValid() {
-		return nil, fmt.Errorf("invalid --min-severity %s (use: critical, high, medium, low, info)", f.MinSeverity)
+		return nil, fmt.Errorf("invalid min-severity %s (use: critical, high, medium, low, info)", f.MinSeverity)
 	}
 
 	excluded := make(map[kernel.ControlID]struct{}, len(f.ExcludeControlID))

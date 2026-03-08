@@ -131,7 +131,7 @@ func TestNewUpcomingFilter_InvalidStatus(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid status error")
 	}
-	if !strings.Contains(err.Error(), "invalid --status") {
+	if !strings.Contains(err.Error(), "invalid status") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

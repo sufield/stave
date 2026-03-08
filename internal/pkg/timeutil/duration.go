@@ -35,6 +35,15 @@ func ParseRFC3339(raw, flag string) (time.Time, error) {
 	return t.UTC(), nil
 }
 
+// ParseTimestamp parses an RFC3339 timestamp and returns it in UTC.
+func ParseTimestamp(raw string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, raw)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid timestamp %q (use RFC3339: 2026-01-15T00:00:00Z)", raw)
+	}
+	return t.UTC(), nil
+}
+
 // ParseDurationFlag parses a duration flag value and wraps parse errors with
 // a user-facing message that includes the flag name and accepted formats.
 func ParseDurationFlag(val, flag string) (time.Duration, error) {

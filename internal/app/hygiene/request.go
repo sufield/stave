@@ -43,34 +43,34 @@ type ParsedRequest struct {
 // Parse validates and converts raw request fields into typed values used by
 // hygiene orchestration code.
 func (r *Request) Parse() (ParsedRequest, error) {
-	maxUnsafe, err := timeutil.ParseDurationFlag(r.MaxUnsafe, "--max-unsafe")
+	maxUnsafe, err := timeutil.ParseDuration(r.MaxUnsafe)
 	if err != nil {
-		return ParsedRequest{}, err
+		return ParsedRequest{}, fmt.Errorf("invalid max-unsafe: %w", err)
 	}
-	dueSoon, err := timeutil.ParseDurationFlag(r.DueSoon, "--due-soon")
+	dueSoon, err := timeutil.ParseDuration(r.DueSoon)
 	if err != nil {
-		return ParsedRequest{}, err
+		return ParsedRequest{}, fmt.Errorf("invalid due-soon: %w", err)
 	}
-	lookback, err := timeutil.ParseDurationFlag(r.Lookback, "--lookback")
+	lookback, err := timeutil.ParseDuration(r.Lookback)
 	if err != nil {
-		return ParsedRequest{}, err
+		return ParsedRequest{}, fmt.Errorf("invalid lookback: %w", err)
 	}
 	if lookback <= 0 {
-		return ParsedRequest{}, fmt.Errorf("invalid --lookback %q: must be > 0", r.Lookback)
+		return ParsedRequest{}, fmt.Errorf("invalid lookback %q: must be > 0", r.Lookback)
 	}
 	var dueWithin *time.Duration
 	if strings.TrimSpace(r.DueWithin) != "" {
-		dw, dwErr := timeutil.ParseDurationFlag(r.DueWithin, "--due-within")
+		dw, dwErr := timeutil.ParseDuration(r.DueWithin)
 		if dwErr != nil {
-			return ParsedRequest{}, dwErr
+			return ParsedRequest{}, fmt.Errorf("invalid due-within: %w", dwErr)
 		}
 		if dw < 0 {
-			return ParsedRequest{}, fmt.Errorf("invalid --due-within %q: must be >= 0", r.DueWithin)
+			return ParsedRequest{}, fmt.Errorf("invalid due-within %q: must be >= 0", r.DueWithin)
 		}
 		dueWithin = &dw
 	}
 	if r.KeepMin < 0 {
-		return ParsedRequest{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", r.KeepMin)
+		return ParsedRequest{}, fmt.Errorf("invalid keep-min %d: must be >= 0", r.KeepMin)
 	}
 	if err = validateStatuses(r.Statuses); err != nil {
 		return ParsedRequest{}, err
@@ -83,7 +83,7 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	if strings.TrimSpace(r.NowTime) == "" {
 		now = nowFn()
 	} else {
-		now, err = timeutil.ParseRFC3339(r.NowTime, "--now")
+		now, err = timeutil.ParseTimestamp(r.NowTime)
 		if err != nil {
 			return ParsedRequest{}, err
 		}

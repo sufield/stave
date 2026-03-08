@@ -127,7 +127,7 @@ func TestValidateApplyFlags(t *testing.T) {
 				applyFlags.observationsDir = filepath.Join(fixture, "observations")
 				applyFlags.maxUnsafe = "not-a-duration"
 			},
-			wantContain: "invalid --max-unsafe",
+			wantContain: "invalid max-unsafe",
 		},
 		{
 			name: "invalid --now format",
@@ -137,7 +137,7 @@ func TestValidateApplyFlags(t *testing.T) {
 				applyFlags.maxUnsafe = "168h"
 				applyFlags.nowTime = "not-a-time"
 			},
-			wantContain: "invalid --now",
+			wantContain: "invalid timestamp",
 		},
 	}
 	for _, tc := range errorCases {
