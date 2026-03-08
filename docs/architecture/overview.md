@@ -13,11 +13,11 @@ Stave is a single static binary with no plugins, no network, and no persistent s
 
 ```mermaid
 flowchart TD
-    obs["Observations (JSON)"] --> sv["Schema Validation\n<i>Reject malformed input early</i>"]
+    obs["Observations (JSON)"] --> sv["Schema Validation<br/><i>Reject malformed input early</i>"]
     ctl["Controls (YAML)"] --> sv
-    sv --> tb["Timeline Builder\n<i>Sort snapshots, build per-asset\ntimelines of safe/unsafe states</i>"]
-    tb --> ev["Evaluator\n<i>Match predicates, compute durations,\napply thresholds, emit findings</i>"]
-    ev --> ow["Output Writer\n<i>JSON or text to stdout / --out file</i>"]
+    sv --> tb["Timeline Builder<br/><i>Sort snapshots, build per-asset<br/>timelines of safe/unsafe states</i>"]
+    tb --> ev["Evaluator<br/><i>Match predicates, compute durations,<br/>apply thresholds, emit findings</i>"]
+    ev --> ow["Output Writer<br/><i>JSON or text to stdout / --out file</i>"]
 ```
 
 ## Package Map
@@ -27,47 +27,62 @@ stave/
 ├── cmd/stave/              Entry point (main.go)
 │   └── cmd/                Cobra command definitions
 │       ├── root.go         Global flags, --require-offline, --sanitize, --force
-│       ├── apply/          apply command tree (handler, options, deps)
+│       ├── apply/          apply command tree (handler, options, deps, validate, verify)
 │       ├── diagnose/       diagnose command tree (artifacts, docs, report)
 │       ├── enforce/        CI commands (baseline, cidiff, diff, fix, gate, graph)
 │       ├── ingest/         ingest command + profile dispatch
 │       ├── initcmd/        init command (alias, config, context, env)
-│       ├── prune/          snapshot lifecycle (archive, cleanup, hygiene, manifest)
-│       ├── bugreport/      bug-report command
+│       ├── prune/          snapshot lifecycle (archive, cleanup, hygiene, upcoming)
+│       ├── bugreport/      bug-report command + doctor checks
 │       ├── fixtures/       demo command + fixture data
+│       ├── templates/      Go template helpers
 │       └── cmdutil/        Shared CLI utilities
 │
 ├── internal/
 │   ├── domain/             Core business logic (no I/O)
-│   │   ├── evaluation/     Evaluation engine (engine, exposure, risk, remediation)
+│   │   ├── evaluation/     Evaluation engine (engine, exposure, diagnosis, risk, remediation)
 │   │   ├── diag/           Diagnose engine
 │   │   ├── predicate/      Predicate operators (15 ops)
 │   │   ├── asset/          Asset model
 │   │   ├── kernel/         Core domain types
 │   │   ├── policy/         Policy types
 │   │   ├── ports/          Port interfaces
+│   │   ├── securityaudit/  Security audit report types
 │   │   └── validation/     Domain validation rules
 │   │
 │   ├── app/                Use-case orchestration
-│   │   ├── eval/           Wire inputs → evaluator → output
+│   │   ├── eval/           Wire inputs → evaluator → output (pipeline)
 │   │   ├── validation/     Wire inputs → schema checks
 │   │   ├── diagnose/       Wire inputs → diagnostics
 │   │   ├── capabilities/   Capabilities query
-│   │   ├── service/        Shared app services
-│   │   └── ...             (ingest, hygiene, workflow, etc.)
+│   │   ├── contracts/      Port interfaces (FindingMarshaler, EnrichFunc)
+│   │   ├── service/        Shared app services (evaluation, readiness)
+│   │   ├── workflow/       Envelope assembly
+│   │   ├── ingest/         Snapshot ingestion
+│   │   ├── hygiene/        Snapshot lifecycle reporting
+│   │   ├── project/        Project init and enforcement runners
+│   │   ├── securityaudit/  Security audit builders
+│   │   └── support/        Bug report and diagnose runners
 │   │
 │   ├── adapters/
-│   │   ├── input/          File loaders (JSON observations, YAML controls)
-│   │   └── output/         JSON/text output writers
+│   │   ├── input/          File loaders (JSON observations, YAML controls, S3 extractors)
+│   │   ├── output/         JSON/text/SARIF output marshalers
+│   │   ├── gitinfo/        Git repository metadata
+│   │   └── govulncheck/    Vulnerability checking
 │   │
 │   ├── contracts/          Schema validation (obs.v0.1, ctrl.v1 via JSON Schema)
-│   ├── cli/                CLI error types and UI utilities
+│   ├── cli/                CLI error types, config, and UI utilities
 │   ├── sanitize/           --sanitize implementation
-│   └── platform/           Platform-specific code (logging, fsutil)
+│   ├── safetyenvelope/     Output envelope types and validation
+│   ├── integrity/          Manifest integrity verification
+│   ├── compliance/         Compliance mapping
+│   ├── config/             Configuration loading
+│   ├── builtin/            Embedded control packs and predicates
+│   └── platform/           Platform utilities (crypto, fsutil, logging, state)
 │
 ├── schemas/                Schema source of truth (JSON Schema files)
 ├── controls/s3/            S3 control packs (43 YAML files)
-└── examples/               Example observations
+└── examples/               Example observations and controls
 ```
 
 ### Layer Rules
@@ -81,13 +96,13 @@ stave/
 
 ```mermaid
 flowchart LR
-    snap["Snapshot Files\n(untrusted input)"]
-    ctl["Control Files\n(trusted input)"]
+    snap["Snapshot Files<br/>(untrusted input)"]
+    ctl["Control Files<br/>(trusted input)"]
 
     subgraph machine ["User Machine"]
         subgraph stave ["Stave Binary"]
-            sv["Schema Validation\n(reject bad input)"]
-            ev["Evaluator\n(closed DSL only)"]
+            sv["Schema Validation<br/>(reject bad input)"]
+            ev["Evaluator<br/>(closed DSL only)"]
         end
     end
 
@@ -95,9 +110,9 @@ flowchart LR
     ctl --> ev
     sv --> ev
 
-    stave --> out1["stdout\n(findings JSON)"]
-    stave --> out2["stderr\n(errors, logs)"]
-    stave --> out3["--out file\n(0600)"]
+    stave --> out1["stdout<br/>(findings JSON)"]
+    stave --> out2["stderr<br/>(errors, logs)"]
+    stave --> out3["--out file<br/>(0600)"]
 
     style stave fill:none,stroke:#333
     style machine fill:none,stroke:#999
