@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 const firstRunHintMarkerRel = "stave/.first_run_seen"
@@ -30,10 +31,8 @@ func MarkFirstRunSeen(path string) error {
 	if _, err := os.Stat(path); err == nil {
 		return nil
 	}
-	// #nosec G301 -- marker directory is local CLI config state, not an externally served path.
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700}); err != nil {
 		return err
 	}
-	// #nosec G306 -- marker file is local CLI state, not an externally served path.
-	return os.WriteFile(path, []byte("seen\n"), 0o600)
+	return fsutil.SafeWriteFile(path, []byte("seen\n"), fsutil.WriteOptions{Perm: 0o600})
 }

@@ -203,7 +203,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 ## Status
 
-**v0.0.1 (MVP)**
+**v0.0.2**
 
 - AWS S3 only
 - Configuration snapshots only
