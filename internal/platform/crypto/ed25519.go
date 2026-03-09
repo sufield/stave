@@ -22,20 +22,12 @@ var (
 	ErrInvalidSignature = errors.New("cryptographic signature invalid: manifest has been tampered with")
 )
 
-// Verifier validates signatures over input data.
-type Verifier interface {
-	Verify(data []byte, sig kernel.Signature) error
-}
-
 // Ed25519Verifier verifies Ed25519 signatures.
 type Ed25519Verifier struct {
 	PublicKey ed25519.PublicKey
 }
 
-var (
-	_ Verifier       = (*Ed25519Verifier)(nil)
-	_ ports.Verifier = (*Ed25519Verifier)(nil)
-)
+var _ ports.Verifier = (*Ed25519Verifier)(nil)
 
 // Verify validates an Ed25519 signature over data.
 func (v *Ed25519Verifier) Verify(data []byte, sig kernel.Signature) error {

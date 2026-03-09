@@ -60,12 +60,13 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 	if strings.TrimSpace(reportPath) == "" {
 		return onboardingCommandError(fmt.Errorf("--report cannot be empty"), "stave quickstart --report ./stave-report.json")
 	}
-	controls, err := loadDemoControls()
+	ctx := compose.CommandContext(cmd)
+	controls, err := loadDemoControls(ctx)
 	if err != nil {
 		return onboardingCommandError(err, "stave quickstart --help")
 	}
 
-	snapshots, sourceLabel := loadDetectedQuickstartSnapshots(cwd, detected)
+	snapshots, sourceLabel := loadDetectedQuickstartSnapshots(ctx, cwd, detected)
 
 	if len(snapshots) == 0 {
 		snapshots, err = loadDemoSnapshots(demoFixtureKnownBad)
@@ -104,13 +105,13 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 	return writeQuickstartSummary(out, san, sourceLabel, findings, latest, reportPath)
 }
 
-func loadDetectedQuickstartSnapshots(cwd string, detected []detectedSnapshot) ([]asset.Snapshot, string) {
+func loadDetectedQuickstartSnapshots(ctx context.Context, cwd string, detected []detectedSnapshot) ([]asset.Snapshot, string) {
 	for _, d := range detected {
 		if !strings.Contains(d.Format, "observation snapshot") {
 			continue
 		}
 		filePath := filepath.Join(cwd, filepath.FromSlash(d.Path))
-		snapshots, err := loadQuickstartSnapshotsFromFile(filePath)
+		snapshots, err := loadQuickstartSnapshotsFromFile(ctx, filePath)
 		if err != nil || len(snapshots) == 0 {
 			continue
 		}
@@ -234,7 +235,7 @@ func detectSnapshotFormat(path string) (string, bool) {
 	return "generic JSON snapshot", true
 }
 
-func loadQuickstartSnapshotsFromFile(path string) ([]asset.Snapshot, error) {
+func loadQuickstartSnapshotsFromFile(ctx context.Context, path string) ([]asset.Snapshot, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, err
@@ -246,7 +247,7 @@ func loadQuickstartSnapshotsFromFile(path string) ([]asset.Snapshot, error) {
 	}
 
 	// First try strict single-snapshot loading (schema + semantic validation).
-	if single, err := loader.LoadSnapshotFromReader(context.Background(), bytes.NewReader(data), path); err == nil {
+	if single, err := loader.LoadSnapshotFromReader(ctx, bytes.NewReader(data), path); err == nil {
 		return []asset.Snapshot{single}, nil
 	}
 
@@ -263,7 +264,7 @@ func loadQuickstartSnapshotsFromFile(path string) ([]asset.Snapshot, error) {
 	}
 	snapshots := make([]asset.Snapshot, 0, len(bundle.Snapshots))
 	for i, raw := range bundle.Snapshots {
-		snap, loadErr := loader.LoadSnapshotFromReader(context.Background(), bytes.NewReader(raw), fmt.Sprintf("%s.snapshots[%d]", path, i))
+		snap, loadErr := loader.LoadSnapshotFromReader(ctx, bytes.NewReader(raw), fmt.Sprintf("%s.snapshots[%d]", path, i))
 		if loadErr != nil {
 			return nil, loadErr
 		}
@@ -290,7 +291,7 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 		return onboardingCommandError(err, "stave demo --help")
 	}
 
-	controls, err := loadDemoControls()
+	controls, err := loadDemoControls(compose.CommandContext(cmd))
 	if err != nil {
 		return onboardingCommandError(err, "stave demo --help")
 	}
@@ -358,8 +359,8 @@ func loadDemoSnapshots(name string) ([]asset.Snapshot, error) {
 	return snapshots, nil
 }
 
-func loadDemoControls() ([]policy.ControlDefinition, error) {
-	all, err := builtin.LoadAll(context.Background())
+func loadDemoControls(ctx context.Context) ([]policy.ControlDefinition, error) {
+	all, err := builtin.LoadAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load built-in controls: %w", err)
 	}

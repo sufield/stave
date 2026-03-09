@@ -9,16 +9,13 @@ import (
 )
 
 func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
-	orig := AllChecks
-	defer func() { AllChecks = orig }()
-
-	AllChecks = []CheckFunc{
+	reg := NewRegistry(
 		func(Context) Check { return Check{Name: "ok", Status: StatusPass} },
 		func(Context) Check { return Check{} }, // skipped
 		func(Context) Check { return Check{Name: "bad", Status: StatusFail} },
-	}
+	)
 
-	checks, hasFail := Run(Context{})
+	checks, hasFail := RunWithRegistry(Context{}, reg)
 	if !hasFail {
 		t.Fatal("expected hasFail=true")
 	}

@@ -8,16 +8,11 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// FindingEnricher enriches raw evaluation findings with remediation guidance.
-type FindingEnricher interface {
-	EnrichFindings(evaluation.Result) []remediation.Finding
-}
-
 // Enrich enriches findings from the result and returns a fully-sanitized
 // EnrichedResult suitable for passing to a FindingMarshaler. All metadata
 // that needs sanitization (findings, skipped assets, input hashes) is
 // handled here so marshalers receive clean data.
-func Enrich(enricher FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) appcontracts.EnrichedResult {
+func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) appcontracts.EnrichedResult {
 	findings := PrepareFindings(enricher, sanitizer, result)
 	skippedAssets := result.SkippedAssets
 	run := result.Run
@@ -36,7 +31,7 @@ func Enrich(enricher FindingEnricher, sanitizer kernel.Sanitizer, result evaluat
 // PrepareFindings enriches findings from the result and optionally sanitizes them.
 // If sanitizer is nil, sanitization is skipped.
 // Panics if enricher is nil — this is a programming invariant, not a user error.
-func PrepareFindings(enricher FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) []remediation.Finding {
+func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) []remediation.Finding {
 	if enricher == nil {
 		panic("precondition failed: PrepareFindings requires non-nil enricher")
 	}

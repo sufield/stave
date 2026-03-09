@@ -1,9 +1,7 @@
 package doctor
 
-var AllChecks = defaultChecks()
-
 func Run(ctx Context) ([]Check, bool) {
-	return RunWithRegistry(ctx, NewRegistry(AllChecks...))
+	return RunWithRegistry(ctx, NewRegistry(defaultChecks()...))
 }
 
 func defaultChecks() []CheckFunc {

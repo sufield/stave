@@ -12,6 +12,7 @@ import (
 
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
@@ -50,7 +51,7 @@ type SecurityAuditRunner struct {
 // the app layer never imports os/exec directly.
 // The signatureVerifier is optional — if nil, signature files are reported
 // as found but not cryptographically verified.
-func NewSecurityAuditRunner(govulncheckRunner GovulncheckRunner, signatureVerifier SignatureVerifier) *SecurityAuditRunner {
+func NewSecurityAuditRunner(govulncheckRunner GovulncheckRunner, signatureVerifier ports.Verifier) *SecurityAuditRunner {
 	return &SecurityAuditRunner{
 		diagnostics: defaultDiagnosticsService{},
 		buildInfo:   defaultBuildInfoProvider{},

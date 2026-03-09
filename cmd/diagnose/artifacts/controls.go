@@ -152,7 +152,7 @@ func runControlsList(cmd *cobra.Command, flags *controlsListFlagsType) error {
 	if flags.listPacks {
 		return runControlsListPacks(cmd, flags.listFormat)
 	}
-	controls, err := loadControlsForList(flags)
+	controls, err := loadControlsForList(compose.CommandContext(cmd), flags)
 	if err != nil {
 		return err
 	}
@@ -163,9 +163,9 @@ func runControlsList(cmd *cobra.Command, flags *controlsListFlagsType) error {
 	return writeControlRows(cmd.OutOrStdout(), rows, flags.listFormat, flags.listCols, !flags.listNoHdr)
 }
 
-func loadControlsForList(flags *controlsListFlagsType) ([]policy.ControlDefinition, error) {
+func loadControlsForList(ctx context.Context, flags *controlsListFlagsType) ([]policy.ControlDefinition, error) {
 	if flags.listBuiltIn {
-		controls, err := builtin.LoadAll(context.Background())
+		controls, err := builtin.LoadAll(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("load built-in controls: %w", err)
 		}
@@ -176,7 +176,7 @@ func loadControlsForList(flags *controlsListFlagsType) ([]policy.ControlDefiniti
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := loader.LoadControls(context.Background(), strings.TrimSpace(flags.listDir))
+	controls, err := loader.LoadControls(ctx, strings.TrimSpace(flags.listDir))
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}

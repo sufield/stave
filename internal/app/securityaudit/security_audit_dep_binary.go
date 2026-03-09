@@ -9,18 +9,13 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type defaultBinaryInspector struct {
-	signatureVerifier SignatureVerifier
-}
-
-// SignatureVerifier validates a cryptographic signature over data.
-// This is a narrow interface satisfied by crypto.Ed25519Verifier.
-type SignatureVerifier interface {
-	Verify(data []byte, sig kernel.Signature) error
+	signatureVerifier ports.Verifier
 }
 
 func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error) {
@@ -82,7 +77,7 @@ func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buil
 	}, nil
 }
 
-func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string, verifier SignatureVerifier) (bool, string) {
+func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string, verifier ports.Verifier) (bool, string) {
 	sumsPath := filepath.Join(releaseBundleDir, "SHA256SUMS")
 	raw, err := fsutil.ReadFileLimited(sumsPath)
 	if err != nil {
@@ -115,7 +110,7 @@ func matchChecksumEntry(raw []byte, binaryName, expectedHash string) (string, bo
 }
 
 // verifyChecksumSignature validates the SHA256SUMS signature file.
-func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier SignatureVerifier) (bool, string) {
+func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier ports.Verifier) (bool, string) {
 	sigBytes, sigErr := fsutil.ReadFileLimited(filepath.Join(releaseBundleDir, "SHA256SUMS.sig"))
 	if sigErr != nil {
 		sigstorePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sigstore.json")
