@@ -47,8 +47,6 @@ type writtenFile struct {
 	content []byte
 }
 
-var audit = &auditCmd{}
-
 func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	format, err := parseFormat(c.flags.format)
 	if err != nil {

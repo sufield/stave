@@ -190,7 +190,7 @@ func WireCommands(root *cobra.Command) {
 	// Workflow & CI
 	root.AddCommand(enforce.StatusCmd)
 	root.AddCommand(contextcmd.ContextCmd)
-	root.AddCommand(securityaudit.Cmd)
+	root.AddCommand(securityaudit.NewCmd())
 	root.AddCommand(snapshotCmd)
 	root.AddCommand(ciCmd)
 
