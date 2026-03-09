@@ -16,25 +16,22 @@ func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
 	outPath := filepath.Join(tmp, "security-report.json")
 	outDir := filepath.Join(tmp, "bundle")
 
-	restore := preserveAuditGlobals()
-	defer restore()
-
-	audit.flags.format = "json"
-	audit.flags.out = outPath
-	audit.flags.outDir = outDir
-	audit.flags.severity = "CRITICAL,HIGH,MEDIUM,LOW"
-	audit.flags.sbom = "spdx"
-	audit.flags.frameworks = nil
-	audit.flags.vulnSource = "hybrid"
-	audit.flags.liveVulnCheck = false
-	audit.flags.releaseBundleDir = ""
-	audit.flags.privacyMode = false
-	audit.flags.failOn = "NONE"
+	c := &auditCmd{
+		flags: auditFlagsType{
+			format:     "json",
+			out:        outPath,
+			outDir:     outDir,
+			severity:   "CRITICAL,HIGH,MEDIUM,LOW",
+			sbom:       "spdx",
+			vulnSource: "hybrid",
+			failOn:     "NONE",
+		},
+	}
 
 	root := newTestRootCmd()
 	cmd := &cobra.Command{}
 	root.AddCommand(cmd)
-	if err := audit.run(cmd, nil); err != nil {
+	if err := c.run(cmd, nil); err != nil {
 		t.Fatalf("audit.run returned error: %v", err)
 	}
 
@@ -58,25 +55,22 @@ func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
 func TestRunSecurityAudit_FailOnHighReturnsSentinel(t *testing.T) {
 	tmp := t.TempDir()
 
-	restore := preserveAuditGlobals()
-	defer restore()
-
-	audit.flags.format = "json"
-	audit.flags.out = filepath.Join(tmp, "security-report.json")
-	audit.flags.outDir = filepath.Join(tmp, "bundle")
-	audit.flags.severity = "CRITICAL,HIGH,MEDIUM,LOW"
-	audit.flags.sbom = "spdx"
-	audit.flags.frameworks = nil
-	audit.flags.vulnSource = "hybrid"
-	audit.flags.liveVulnCheck = false
-	audit.flags.releaseBundleDir = ""
-	audit.flags.privacyMode = false
-	audit.flags.failOn = "HIGH"
+	c := &auditCmd{
+		flags: auditFlagsType{
+			format:     "json",
+			out:        filepath.Join(tmp, "security-report.json"),
+			outDir:     filepath.Join(tmp, "bundle"),
+			severity:   "CRITICAL,HIGH,MEDIUM,LOW",
+			sbom:       "spdx",
+			vulnSource: "hybrid",
+			failOn:     "HIGH",
+		},
+	}
 
 	root := newTestRootCmd()
 	cmd := &cobra.Command{}
 	root.AddCommand(cmd)
-	err := audit.run(cmd, nil)
+	err := c.run(cmd, nil)
 	if !errors.Is(err, ui.ErrSecurityAuditFindings) {
 		t.Fatalf("expected ErrSecurityAuditFindings, got %v", err)
 	}
@@ -94,14 +88,6 @@ func TestParseFormat(t *testing.T) {
 	}
 	if _, err := parseFormat("bogus"); err == nil {
 		t.Fatal("expected invalid format error")
-	}
-}
-
-func preserveAuditGlobals() func() {
-	saved := audit.flags
-	saved.frameworks = append([]string(nil), audit.flags.frameworks...)
-	return func() {
-		audit.flags = saved
 	}
 }
 
