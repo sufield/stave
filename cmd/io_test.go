@@ -131,7 +131,7 @@ func TestNoWorldReadableDirs(t *testing.T) {
 func TestExtractS3FlagRegistered(t *testing.T) {
 	flags := []string{"force", "dry-run"}
 	for _, name := range flags {
-		f := ingest.IngestCmd.Flags().Lookup(name)
+		f := ingest.NewIngestCmd(nil).Flags().Lookup(name)
 		if f == nil {
 			t.Errorf("extract missing --%s flag", name)
 		}
@@ -140,7 +140,7 @@ func TestExtractS3FlagRegistered(t *testing.T) {
 
 // TestEnforceFlagRegistered verifies --dry-run flag exists on enforce.
 func TestEnforceFlagRegistered(t *testing.T) {
-	f := enforce.EnforceCmd.Flags().Lookup("dry-run")
+	f := enforce.NewEnforceCmd().Flags().Lookup("dry-run")
 	if f == nil {
 		t.Error("enforce missing --dry-run flag")
 	}
@@ -148,7 +148,7 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	f := applyvalidate.ValidateCmd.Flags().Lookup("in")
+	f := applyvalidate.NewCmd(nil).Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
@@ -156,6 +156,7 @@ func TestValidateInFlagRegistered(t *testing.T) {
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
 	applyCmd := apply.NewApplyCmd()
+	validateCmd := applyvalidate.NewCmd(nil)
 	cases := []struct {
 		name      string
 		shorthand string
@@ -163,8 +164,8 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 	}{
 		{name: "apply controls", shorthand: "i", flags: applyCmd.Flags()},
 		{name: "apply observations", shorthand: "o", flags: applyCmd.Flags()},
-		{name: "validate controls", shorthand: "i", flags: applyvalidate.ValidateCmd.Flags()},
-		{name: "validate observations", shorthand: "o", flags: applyvalidate.ValidateCmd.Flags()},
+		{name: "validate controls", shorthand: "i", flags: validateCmd.Flags()},
+		{name: "validate observations", shorthand: "o", flags: validateCmd.Flags()},
 		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd().Flags()},
 	}
 

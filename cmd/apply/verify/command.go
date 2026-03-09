@@ -6,9 +6,6 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// VerifyCmd is the package-level command for existing callers.
-var VerifyCmd = NewCmd(ui.NewRuntime(nil, nil))
-
 // NewCmd builds the verify command.
 func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {

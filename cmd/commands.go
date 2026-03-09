@@ -157,11 +157,11 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(doctor.NewCmd())
 
 	// Core evaluation
-	root.AddCommand(applyvalidate.ValidateCmd)
+	root.AddCommand(applyvalidate.NewCmd(nil))
 	root.AddCommand(apply.NewPlanCmd())
 	root.AddCommand(apply.NewApplyCmd())
-	root.AddCommand(applyverify.VerifyCmd)
-	root.AddCommand(extractor.ExtractorCmd)
+	root.AddCommand(applyverify.NewCmd(nil))
+	root.AddCommand(extractor.NewCmd(nil))
 	root.AddCommand(diagnose.NewDiagnoseCmd())
 	root.AddCommand(diagnose.NewExplainCmd())
 	root.AddCommand(diagnose.NewTraceCmd())
@@ -169,7 +169,7 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(artifacts.NewFmtCmd())
 
 	// Workflow & CI
-	root.AddCommand(enforce.StatusCmd)
+	root.AddCommand(enforce.NewStatusCmd())
 	root.AddCommand(contextcmd.NewContextCmd())
 	root.AddCommand(securityaudit.NewCmd())
 
@@ -192,11 +192,11 @@ func WireCommands(root *cobra.Command) {
 	wireCISubtree(ciCmd)
 
 	// Data & Artifacts
-	root.AddCommand(ingest.IngestCmd)
+	root.AddCommand(ingest.NewIngestCmd(nil))
 	root.AddCommand(artifacts.NewControlsCmd())
 	root.AddCommand(artifacts.NewPacksCmd())
-	root.AddCommand(enforce.EnforceCmd)
-	root.AddCommand(enforce.GraphCmd)
+	root.AddCommand(enforce.NewEnforceCmd())
+	root.AddCommand(enforce.NewGraphCmd())
 	root.AddCommand(diagreport.NewReportCmd())
 
 	// Utilities
@@ -214,11 +214,11 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(initalias.NewAliasCmd())
 	root.AddCommand(initenv.NewEnvCmd())
 	root.AddCommand(diagnose.NewPromptCmd())
-	root.AddCommand(enforce.FixCmd)
+	root.AddCommand(enforce.NewFixCmd())
 }
 
 func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
-	snapshotCmd.AddCommand(enforce.DiffCmd)
+	snapshotCmd.AddCommand(enforce.NewDiffCmd())
 	for _, subCmd := range prune.Commands() {
 		snapshotCmd.AddCommand(subCmd)
 	}
@@ -226,10 +226,10 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
 }
 
 func wireCISubtree(ciCmd *cobra.Command) {
-	ciCmd.AddCommand(enforce.BaselineCmd)
-	ciCmd.AddCommand(enforce.GateCmd)
-	ciCmd.AddCommand(enforce.FixLoopCmd)
-	ciCmd.AddCommand(enforce.CiDiffCmd)
+	ciCmd.AddCommand(enforce.NewBaselineCmd())
+	ciCmd.AddCommand(enforce.NewGateCmd())
+	ciCmd.AddCommand(enforce.NewFixLoopCmd())
+	ciCmd.AddCommand(enforce.NewCiDiffCmd())
 }
 
 func wireDocsSubtree(docsCmd *cobra.Command) {

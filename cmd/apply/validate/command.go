@@ -6,9 +6,6 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// ValidateCmd is the package-level validate command for existing callers.
-var ValidateCmd = NewCmd(ui.NewRuntime(nil, nil))
-
 // NewCmd builds the validate command.
 func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {

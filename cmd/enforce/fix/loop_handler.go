@@ -30,8 +30,6 @@ type fixLoopFlagsType struct {
 	outDir       string
 }
 
-var fixLoopFlags fixLoopFlagsType
-
 type fixLoopObservationSummary struct {
 	Directory  string `json:"directory"`
 	Snapshots  int    `json:"snapshots"`
@@ -58,8 +56,8 @@ type fixLoopReport struct {
 	Artifacts     fixLoopArtifacts                   `json:"artifacts"`
 }
 
-func runFixLoop(cmd *cobra.Command, _ []string) error {
-	execCtx, err := prepareFixLoopExecution(cmd)
+func runFixLoop(cmd *cobra.Command, flags *fixLoopFlagsType) error {
+	execCtx, err := prepareFixLoopExecution(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -85,7 +83,7 @@ func runFixLoop(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	report := buildFixLoopReport(verification, execCtx.maxUnsafe, artifacts)
+	report := buildFixLoopReport(verification, execCtx.maxUnsafe, execCtx.beforeDir, execCtx.afterDir, artifacts)
 	if err := writeFixLoopReport(cmd, execCtx, &report); err != nil {
 		return err
 	}
@@ -112,36 +110,36 @@ type fixLoopEvaluation struct {
 	envelope  safetyenvelope.Evaluation
 }
 
-func prepareFixLoopExecution(cmd *cobra.Command) (fixLoopExecution, error) {
-	fixLoopFlags.beforeDir = fsutil.CleanUserPath(fixLoopFlags.beforeDir)
-	fixLoopFlags.afterDir = fsutil.CleanUserPath(fixLoopFlags.afterDir)
-	fixLoopFlags.controlsDir = fsutil.CleanUserPath(fixLoopFlags.controlsDir)
-	fixLoopFlags.outDir = fsutil.CleanUserPath(fixLoopFlags.outDir)
-	if err := validateFixLoopDirs(); err != nil {
+func prepareFixLoopExecution(cmd *cobra.Command, flags *fixLoopFlagsType) (fixLoopExecution, error) {
+	flags.beforeDir = fsutil.CleanUserPath(flags.beforeDir)
+	flags.afterDir = fsutil.CleanUserPath(flags.afterDir)
+	flags.controlsDir = fsutil.CleanUserPath(flags.controlsDir)
+	flags.outDir = fsutil.CleanUserPath(flags.outDir)
+	if err := validateFixLoopDirs(flags); err != nil {
 		return fixLoopExecution{}, err
 	}
-	maxDuration, err := timeutil.ParseDurationFlag(fixLoopFlags.maxUnsafe, "--max-unsafe")
+	maxDuration, err := timeutil.ParseDurationFlag(flags.maxUnsafe, "--max-unsafe")
 	if err != nil {
 		return fixLoopExecution{}, err
 	}
-	clock, err := cmdutil.ResolveClock(fixLoopFlags.now)
+	clock, err := cmdutil.ResolveClock(flags.now)
 	if err != nil {
 		return fixLoopExecution{}, err
 	}
 	return fixLoopExecution{
 		ctx:          cmd.Context(),
-		beforeDir:    fixLoopFlags.beforeDir,
-		afterDir:     fixLoopFlags.afterDir,
-		controlsDir:  fixLoopFlags.controlsDir,
-		outDir:       fixLoopFlags.outDir,
+		beforeDir:    flags.beforeDir,
+		afterDir:     flags.afterDir,
+		controlsDir:  flags.controlsDir,
+		outDir:       flags.outDir,
 		maxUnsafe:    maxDuration,
 		clock:        clock,
-		allowUnknown: fixLoopFlags.allowUnknown,
+		allowUnknown: flags.allowUnknown,
 	}, nil
 }
 
-func validateFixLoopDirs() error {
-	for _, dir := range []struct{ flag, path string }{{"--before", fixLoopFlags.beforeDir}, {"--after", fixLoopFlags.afterDir}, {"--controls", fixLoopFlags.controlsDir}} {
+func validateFixLoopDirs(flags *fixLoopFlagsType) error {
+	for _, dir := range []struct{ flag, path string }{{"--before", flags.beforeDir}, {"--after", flags.afterDir}, {"--controls", flags.controlsDir}} {
 		if err := cmdutil.ValidateDir(dir.flag, dir.path, nil); err != nil {
 			return err
 		}
@@ -235,6 +233,7 @@ func buildFixLoopVerification(
 func buildFixLoopReport(
 	verification safetyenvelope.Verification,
 	maxUnsafe time.Duration,
+	beforeDir, afterDir string,
 	artifacts fixLoopArtifacts,
 ) fixLoopReport {
 	summary := verification.Summary
@@ -251,8 +250,8 @@ func buildFixLoopReport(
 		Pass:          pass,
 		Reason:        reason,
 		MaxUnsafe:     maxUnsafe.String(),
-		Before:        fixLoopObservationSummary{Directory: fixLoopFlags.beforeDir, Snapshots: run.BeforeSnapshots, Violations: summary.BeforeViolations},
-		After:         fixLoopObservationSummary{Directory: fixLoopFlags.afterDir, Snapshots: run.AfterSnapshots, Violations: summary.AfterViolations},
+		Before:        fixLoopObservationSummary{Directory: beforeDir, Snapshots: run.BeforeSnapshots, Violations: summary.BeforeViolations},
+		After:         fixLoopObservationSummary{Directory: afterDir, Snapshots: run.AfterSnapshots, Violations: summary.AfterViolations},
 		Verification:  summary,
 		Artifacts:     artifacts,
 	}

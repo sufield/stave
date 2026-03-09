@@ -30,9 +30,6 @@ type ingestCommand struct {
 	opts    *Options
 }
 
-// IngestCmd is the package-level command for existing callers.
-var IngestCmd = NewIngestCmd(ui.NewRuntime(nil, nil))
-
 // NewIngestCmd builds the ingest command tree.
 func NewIngestCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
