@@ -13,13 +13,6 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-func saveFixLoopFlags() func() {
-	saved := fixLoopFlags
-	return func() {
-		fixLoopFlags = saved
-	}
-}
-
 func TestBuildFixLoopReport(t *testing.T) {
 	report := buildFixLoopReport(
 		safetyenvelope.Verification{
@@ -37,6 +30,7 @@ func TestBuildFixLoopReport(t *testing.T) {
 			},
 		},
 		7*24*time.Hour,
+		"./before", "./after",
 		fixLoopArtifacts{},
 	)
 	if report.Pass {
@@ -51,24 +45,23 @@ func TestBuildFixLoopReport(t *testing.T) {
 }
 
 func TestRunFixLoopWritesArtifacts(t *testing.T) {
-	restore := saveFixLoopFlags()
-	defer restore()
-
 	fixture := testdataDir(t, "e2e-s3-verify")
 	outDir := t.TempDir()
 
-	fixLoopFlags.beforeDir = filepath.Join(fixture, "before")
-	fixLoopFlags.afterDir = filepath.Join(fixture, "after")
-	fixLoopFlags.controlsDir = filepath.Join(fixture, "controls")
-	fixLoopFlags.maxUnsafe = "168h"
-	fixLoopFlags.now = "2026-01-11T00:00:00Z"
-	fixLoopFlags.outDir = outDir
-	fixLoopFlags.allowUnknown = false
+	flags := &fixLoopFlagsType{
+		beforeDir:    filepath.Join(fixture, "before"),
+		afterDir:     filepath.Join(fixture, "after"),
+		controlsDir:  filepath.Join(fixture, "controls"),
+		maxUnsafe:    "168h",
+		now:          "2026-01-11T00:00:00Z",
+		outDir:       outDir,
+		allowUnknown: false,
+	}
 
 	cmd := &cobra.Command{}
 	cmd.SetContext(context.Background())
 	cmd.SetOut(&bytes.Buffer{})
-	if err := runFixLoop(cmd, nil); err != nil {
+	if err := runFixLoop(cmd, flags); err != nil {
 		t.Fatalf("runFixLoop returned error: %v", err)
 	}
 

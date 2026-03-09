@@ -378,7 +378,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 
 // TestValidateHelpText verifies validate command help contains required sections.
 func TestValidateHelpText(t *testing.T) {
-	help := ValidateCmd.Long
+	help := NewCmd(nil).Long
 	required := []string{"Purpose:", "Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {

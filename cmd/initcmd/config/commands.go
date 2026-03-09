@@ -17,9 +17,6 @@ type configCommand struct {
 	opts *ConfigOptions
 }
 
-// ConfigCmd keeps a package-level command for existing callers.
-var ConfigCmd = NewConfigCmd(ui.NewRuntime(nil, nil))
-
 // NewConfigCmd builds the config command tree with runtime-aware behavior.
 func NewConfigCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {

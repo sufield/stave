@@ -7,25 +7,31 @@ import (
 )
 
 func NewFixCmd() *cobra.Command {
+	var flags fixFlagsType
+
 	cmd := &cobra.Command{
 		Use:   "fix",
 		Short: "Show machine-readable fix plan for a finding",
 		Long: `Fix reads an evaluation artifact and prints deterministic remediation guidance
 for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffix,
-		Args:          cobra.NoArgs,
-		RunE:          runFix,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runFix(cmd, &flags)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	cmd.Flags().StringVar(&fixFlags.inputPath, "input", "", "Path to evaluation JSON (required)")
-	cmd.Flags().StringVar(&fixFlags.findingRef, "finding", "", "Finding selector: <control_id>@<asset_id> (required)")
+	cmd.Flags().StringVar(&flags.inputPath, "input", "", "Path to evaluation JSON (required)")
+	cmd.Flags().StringVar(&flags.findingRef, "finding", "", "Finding selector: <control_id>@<asset_id> (required)")
 	_ = cmd.MarkFlagRequired("input")
 	_ = cmd.MarkFlagRequired("finding")
 	return cmd
 }
 
 func NewFixLoopCmd() *cobra.Command {
-	fixLoopFlags.allowUnknown = cmdutil.ResolveAllowUnknownInputDefault()
+	var flags fixLoopFlagsType
+	flags.allowUnknown = cmdutil.ResolveAllowUnknownInputDefault()
+
 	cmd := &cobra.Command{
 		Use:   "fix-loop",
 		Short: "Run apply-before/apply-after/verify in one command",
@@ -59,19 +65,21 @@ Examples:
 
     Sample output:
       { "before_violations": 5, "after_violations": 2, "resolved": 3, "remaining": 2, "introduced": 0 }` + metadata.OfflineHelpSuffix,
-		Args:          cobra.NoArgs,
-		RunE:          runFixLoop,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runFixLoop(cmd, &flags)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&fixLoopFlags.beforeDir, "before", "b", "", "Path to before-remediation observations (required)")
-	cmd.Flags().StringVarP(&fixLoopFlags.afterDir, "after", "a", "", "Path to after-remediation observations (required)")
-	cmd.Flags().StringVarP(&fixLoopFlags.controlsDir, "controls", "i", "controls", "Path to control definitions directory")
-	cmd.Flags().StringVar(&fixLoopFlags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	cmd.Flags().StringVar(&fixLoopFlags.now, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	cmd.Flags().BoolVar(&fixLoopFlags.allowUnknown, "allow-unknown-input", fixLoopFlags.allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
-	cmd.Flags().StringVar(&fixLoopFlags.outDir, "out", "", "Write remediation artifacts to this directory")
+	cmd.Flags().StringVarP(&flags.beforeDir, "before", "b", "", "Path to before-remediation observations (required)")
+	cmd.Flags().StringVarP(&flags.afterDir, "after", "a", "", "Path to after-remediation observations (required)")
+	cmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls", "Path to control definitions directory")
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	cmd.Flags().StringVar(&flags.now, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	cmd.Flags().BoolVar(&flags.allowUnknown, "allow-unknown-input", flags.allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
+	cmd.Flags().StringVar(&flags.outDir, "out", "", "Write remediation artifacts to this directory")
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")
 	return cmd

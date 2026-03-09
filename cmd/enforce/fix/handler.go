@@ -18,17 +18,15 @@ type fixFlagsType struct {
 	findingRef string
 }
 
-var fixFlags fixFlagsType
-
-func runFix(cmd *cobra.Command, _ []string) error {
-	inputPath := fsutil.CleanUserPath(fixFlags.inputPath)
+func runFix(cmd *cobra.Command, flags *fixFlagsType) error {
+	inputPath := fsutil.CleanUserPath(flags.inputPath)
 	findings, err := loadFixFindings(inputPath)
 	if err != nil {
 		return err
 	}
-	needle, err := normalizedFixFindingRef()
-	if err != nil {
-		return err
+	needle := strings.TrimSpace(flags.findingRef)
+	if needle == "" {
+		return fmt.Errorf("--finding cannot be empty")
 	}
 	selected, err := selectFixFinding(findings, needle)
 	if err != nil {
@@ -51,14 +49,6 @@ func loadFixFindings(inputPath string) ([]remediation.Finding, error) {
 		return nil, fmt.Errorf("no findings in %s", inputPath)
 	}
 	return findings, nil
-}
-
-func normalizedFixFindingRef() (string, error) {
-	needle := strings.TrimSpace(fixFlags.findingRef)
-	if needle == "" {
-		return "", fmt.Errorf("--finding cannot be empty")
-	}
-	return needle, nil
 }
 
 func selectFixFinding(findings []remediation.Finding, needle string) (remediation.Finding, error) {

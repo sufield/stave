@@ -11,13 +11,6 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var (
-	// ExtractorCmd is the extractor parent command.
-	ExtractorCmd *cobra.Command
-	// ExtractorNewCmd is the extractor new subcommand.
-	ExtractorNewCmd *cobra.Command
-)
-
 type options struct {
 	Name string
 	Dir  string
@@ -49,10 +42,6 @@ func (o *options) validate() error {
 	return nil
 }
 
-func init() {
-	ExtractorCmd = NewCmd(ui.NewRuntime(nil, nil))
-}
-
 // NewCmd builds the extractor command tree.
 func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
@@ -69,8 +58,6 @@ func NewCmd(rt *ui.Runtime) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 	cmd.AddCommand(newCmd)
-
-	ExtractorNewCmd = newCmd
 	return cmd
 }
 
