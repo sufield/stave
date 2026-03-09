@@ -12,7 +12,7 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-func runDoctor(cmd *cobra.Command, _ []string) error {
+func runDoctor(cmd *cobra.Command, format string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("resolve current directory: %w", err)
@@ -26,7 +26,7 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 		StaveVersion: staveversion.Version,
 	})
 
-	format, err := cmdutil.ResolveFormatValue(cmd, doctorFormat)
+	resolvedFormat, err := cmdutil.ResolveFormatValue(cmd, format)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	if format.IsJSON() {
+	if resolvedFormat.IsJSON() {
 		return json.NewEncoder(cmd.OutOrStdout()).Encode(struct {
 			Ready  bool           `json:"ready"`
 			Checks []doctor.Check `json:"checks"`

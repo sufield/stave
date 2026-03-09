@@ -17,11 +17,11 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var (
-	reportOut     string
+type reportFlags struct {
+	out           string
 	tailLines     int
 	includeConfig bool
-)
+}
 
 type preparedOutput struct {
 	cwd     string
@@ -29,15 +29,15 @@ type preparedOutput struct {
 	file    io.WriteCloser
 }
 
-func runReport(cmd *cobra.Command, _ []string) error {
-	prepared, err := prepareOutputFile(cmd)
+func runReport(cmd *cobra.Command, flags *reportFlags) error {
+	prepared, err := prepareOutputFile(cmd, flags)
 	if err != nil {
 		return err
 	}
 	defer prepared.file.Close()
 
 	zw := zip.NewWriter(prepared.file)
-	if err := populateBundle(cmd, zw, prepared.cwd); err != nil {
+	if err := populateBundle(cmd, zw, prepared.cwd, flags); err != nil {
 		return err
 	}
 	if err := zw.Close(); err != nil {
@@ -46,15 +46,15 @@ func runReport(cmd *cobra.Command, _ []string) error {
 	return writeSummary(cmd, prepared.outPath)
 }
 
-func prepareOutputFile(cmd *cobra.Command) (preparedOutput, error) {
-	if tailLines < 0 {
-		return preparedOutput{}, &ui.InputError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", tailLines)}
+func prepareOutputFile(cmd *cobra.Command, flags *reportFlags) (preparedOutput, error) {
+	if flags.tailLines < 0 {
+		return preparedOutput{}, &ui.InputError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", flags.tailLines)}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
 		return preparedOutput{}, fmt.Errorf("resolve current directory: %w", err)
 	}
-	outPath := fsutil.CleanUserPath(resolveOutPath(cwd, reportOut))
+	outPath := fsutil.CleanUserPath(resolveOutPath(cwd, flags.out))
 	zipFile, err := cmdutil.CreateOutputFile(cmd, outPath)
 	if err != nil {
 		return preparedOutput{}, err
@@ -62,17 +62,17 @@ func prepareOutputFile(cmd *cobra.Command) (preparedOutput, error) {
 	return preparedOutput{cwd: cwd, outPath: outPath, file: zipFile}, nil
 }
 
-func populateBundle(cmd *cobra.Command, zw *zip.Writer, cwd string) error {
+func populateBundle(cmd *cobra.Command, zw *zip.Writer, cwd string, flags *reportFlags) error {
 	bundle := newBundleWriter(zw)
 	if err := addCoreArtifacts(bundle, cwd); err != nil {
 		return err
 	}
-	if includeConfig {
+	if flags.includeConfig {
 		if err := addConfigArtifact(bundle); err != nil {
 			return err
 		}
 	}
-	if err := addLogArtifact(cmd, bundle, cwd); err != nil {
+	if err := addLogArtifact(cmd, bundle, cwd, flags.tailLines); err != nil {
 		return err
 	}
 	return addManifest(bundle)

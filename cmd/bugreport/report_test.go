@@ -82,20 +82,12 @@ func TestRunBugReport_CreatesBundle(t *testing.T) {
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret-from-env")
 	t.Setenv("AWS_REGION", "us-west-2")
 
-	// Save and restore package-level vars used by runReport.
-	oldOut := reportOut
-	oldTail := tailLines
-	oldCfg := includeConfig
-	t.Cleanup(func() {
-		reportOut = oldOut
-		tailLines = oldTail
-		includeConfig = oldCfg
-	})
-
 	bundlePath := filepath.Join(tmpDir, "diag.zip")
-	reportOut = bundlePath
-	tailLines = 2
-	includeConfig = true
+	flags := &reportFlags{
+		out:           bundlePath,
+		tailLines:     2,
+		includeConfig: true,
+	}
 
 	// Build a root command with the persistent flags that cmdutil helpers read.
 	root := newTestRootCmd()
@@ -103,7 +95,7 @@ func TestRunBugReport_CreatesBundle(t *testing.T) {
 	root.AddCommand(cmd)
 	cmd.SetOut(io.Discard)
 
-	require(runReport(cmd, nil))
+	require(runReport(cmd, flags))
 
 	zr, err := zip.OpenReader(bundlePath)
 	if err != nil {

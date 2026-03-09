@@ -14,7 +14,7 @@ func TestSchemasTextOutput(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.SetOut(&buf)
 
-	if err := runSchemas(cmd, nil); err != nil {
+	if err := runSchemas(cmd, "text"); err != nil {
 		t.Fatalf("runSchemas error: %v", err)
 	}
 
@@ -41,16 +41,14 @@ func TestSchemasTextOutput(t *testing.T) {
 }
 
 func TestSchemasJSONOutput(t *testing.T) {
-	schemasFormat = "json"
-	t.Cleanup(func() { schemasFormat = "text" })
-
 	var buf bytes.Buffer
 	cmd := &cobra.Command{}
 	cmd.SetOut(&buf)
-	cmd.Flags().StringVar(&schemasFormat, "format", "json", "")
+	var format string
+	cmd.Flags().StringVar(&format, "format", "json", "")
 	_ = cmd.Flags().Set("format", "json")
 
-	if err := runSchemas(cmd, nil); err != nil {
+	if err := runSchemas(cmd, "json"); err != nil {
 		t.Fatalf("runSchemas error: %v", err)
 	}
 
