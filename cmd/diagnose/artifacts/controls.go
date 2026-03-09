@@ -378,6 +378,5 @@ func writeControlListCSV(w io.Writer, rows []controlListRow, columns []string, s
 
 func runControlsExplain(cmd *cobra.Command, args []string) error {
 	// Reuse existing explain implementation, but scoped under controls command.
-	diagnose.SetExplainControlsDir(controlsListFlags.explainDir)
-	return diagnose.RunExplain(cmd, args)
+	return diagnose.RunExplain(cmd, args, controlsListFlags.explainDir, "text")
 }

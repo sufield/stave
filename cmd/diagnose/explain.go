@@ -22,8 +22,6 @@ type explainFlagsType struct {
 	format      string
 }
 
-var explainFlags explainFlagsType
-
 type explainRule struct {
 	Path    string `json:"path"`
 	Op      string `json:"op"`
@@ -42,10 +40,14 @@ type explainOutput struct {
 	MinimalObservation any           `json:"minimal_observation"`
 }
 
-var ExplainCmd = &cobra.Command{
-	Use:   "explain <control-id>",
-	Short: "Explain how a control evaluates and which fields it needs",
-	Long: `Explain loads a single control and prints:
+// NewExplainCmd constructs the explain command with closure-scoped flags.
+func NewExplainCmd() *cobra.Command {
+	var flags explainFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "explain <control-id>",
+		Short: "Explain how a control evaluates and which fields it needs",
+		Long: `Explain loads a single control and prints:
   - matched field paths used by predicates
   - operator/value expectations
   - a minimal obs.v0.1 snippet you can start from
@@ -54,39 +56,38 @@ Examples:
   stave explain CTL.S3.PUBLIC.001
   stave explain CTL.S3.PUBLIC.001 --controls ./controls
   stave explain CTL.S3.PUBLIC.001 --format json` + metadata.OfflineHelpSuffix,
-	Args:          cobra.ExactArgs(1),
-	RunE:          RunExplain,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
+		Args:          cobra.ExactArgs(1),
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return RunExplain(cmd, args, flags.controlsDir, flags.format)
+		},
+	}
 
-func init() {
-	ExplainCmd.Flags().StringVar(&explainFlags.controlsDir, "controls", "controls/s3", "Path to control definitions directory")
-	ExplainCmd.Flags().StringVarP(&explainFlags.format, "format", "f", "text", "Output format: text or json")
-}
+	cmd.Flags().StringVar(&flags.controlsDir, "controls", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
 
-// SetExplainControlsDir allows sub-packages to override the controls
-// directory before calling RunExplain.
-func SetExplainControlsDir(dir string) { explainFlags.controlsDir = dir }
+	return cmd
+}
 
 // RunExplain implements the explain logic shared between the top-level
 // explain command and the controls explain sub-command.
-func RunExplain(cmd *cobra.Command, args []string) error {
+func RunExplain(cmd *cobra.Command, args []string, controlsDir, format string) error {
 	id := strings.TrimSpace(args[0])
 	if id == "" {
 		return fmt.Errorf("control id cannot be empty")
 	}
-	controlPath := strings.TrimSpace(explainFlags.controlsDir)
+	controlPath := strings.TrimSpace(controlsDir)
 	control, err := loadExplainControl(cmdutil.CommandContext(cmd), id, controlPath)
 	if err != nil {
 		return err
 	}
 	out := buildExplainOutput(control)
-	format, err := cmdutil.ResolveFormatValue(cmd, explainFlags.format)
+	resolvedFormat, err := cmdutil.ResolveFormatValue(cmd, format)
 	if err != nil {
 		return err
 	}
-	return writeExplainOutput(cmd.OutOrStdout(), format, out)
+	return writeExplainOutput(cmd.OutOrStdout(), resolvedFormat, out)
 }
 
 func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {

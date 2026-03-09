@@ -19,10 +19,6 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var (
-	diagnoseOpts diagnoseOptions
-)
-
 type diagnoseOptions struct {
 	ControlsDir     string
 	ObservationsDir string

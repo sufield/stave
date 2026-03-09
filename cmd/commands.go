@@ -167,7 +167,6 @@ func WireMetaCommands(root *cobra.Command) {
 func WireCommands(root *cobra.Command) {
 	// Wire sub-package RootCmd references for tests that exercise the full command tree.
 	initalias.SetRootCmd(root)
-	diagnose.RootCmd = root
 
 	// Getting started
 	root.AddCommand(initcmd.InitCmd)
@@ -182,9 +181,9 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(apply.NewApplyCmd())
 	root.AddCommand(applyverify.VerifyCmd)
 	root.AddCommand(extractor.ExtractorCmd)
-	root.AddCommand(diagnose.DiagnoseCmd)
-	root.AddCommand(diagnose.ExplainCmd)
-	root.AddCommand(diagnose.TraceCmd)
+	root.AddCommand(diagnose.NewDiagnoseCmd())
+	root.AddCommand(diagnose.NewExplainCmd())
+	root.AddCommand(diagnose.NewTraceCmd())
 	root.AddCommand(artifacts.LintCmd)
 	root.AddCommand(artifacts.FmtCmd)
 
@@ -209,7 +208,7 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(initconfig.NewConfigCmd(ui.NewRuntime(nil, nil)))
 	root.AddCommand(initalias.AliasCmd)
 	root.AddCommand(initenv.EnvCmd)
-	root.AddCommand(diagnose.PromptCmd)
+	root.AddCommand(diagnose.NewPromptCmd())
 	root.AddCommand(enforce.FixCmd)
 
 	wireSnapshotSubtree()

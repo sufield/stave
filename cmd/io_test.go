@@ -165,7 +165,7 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		{name: "apply observations", shorthand: "o", flags: applyCmd.Flags()},
 		{name: "validate controls", shorthand: "i", flags: applyvalidate.ValidateCmd.Flags()},
 		{name: "validate observations", shorthand: "o", flags: applyvalidate.ValidateCmd.Flags()},
-		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.DiagnoseCmd.Flags()},
+		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd().Flags()},
 	}
 
 	for _, tc := range cases {

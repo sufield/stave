@@ -28,12 +28,14 @@ type traceFlagsType struct {
 	quiet       bool
 }
 
-var traceFlags traceFlagsType
+// NewTraceCmd constructs the trace command with closure-scoped flags.
+func NewTraceCmd() *cobra.Command {
+	var flags traceFlagsType
 
-var TraceCmd = &cobra.Command{
-	Use:   "trace",
-	Short: "Trace predicate evaluation for a single control against a single asset",
-	Long: `Trace walks a control's unsafe_predicate clause by clause against a
+	cmd := &cobra.Command{
+		Use:   "trace",
+		Short: "Trace predicate evaluation for a single control against a single asset",
+		Long: `Trace walks a control's unsafe_predicate clause by clause against a
 single asset and prints a detailed evaluation log — field value,
 operator, comparison value, and PASS/FAIL — for every clause.
 
@@ -49,47 +51,50 @@ Examples:
     --observation observations/2026-01-11T000000Z.json \
     --asset-id res:aws:s3:bucket:public-bucket \
     --format json` + metadata.OfflineHelpSuffix,
-	RunE:          runTrace,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runTrace(cmd, &flags)
+		},
+	}
+
+	cmd.Flags().StringVar(&flags.controlID, "control", "", "Control ID to trace (required)")
+	cmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVar(&flags.observation, "observation", "", "Path to single observation JSON file (required)")
+	cmd.Flags().StringVar(&flags.assetID, "asset-id", "", "Asset ID to trace against (required)")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
+	cmd.Flags().BoolVar(&flags.quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+
+	_ = cmd.MarkFlagRequired("control")
+	_ = cmd.MarkFlagRequired("observation")
+	_ = cmd.MarkFlagRequired("asset-id")
+
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+
+	return cmd
 }
 
-func init() {
-	TraceCmd.Flags().StringVar(&traceFlags.controlID, "control", "", "Control ID to trace (required)")
-	TraceCmd.Flags().StringVarP(&traceFlags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	TraceCmd.Flags().StringVar(&traceFlags.observation, "observation", "", "Path to single observation JSON file (required)")
-	TraceCmd.Flags().StringVar(&traceFlags.assetID, "asset-id", "", "Asset ID to trace against (required)")
-	TraceCmd.Flags().StringVarP(&traceFlags.format, "format", "f", "text", "Output format: text or json")
-	TraceCmd.Flags().BoolVar(&traceFlags.quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
-
-	_ = TraceCmd.MarkFlagRequired("control")
-	_ = TraceCmd.MarkFlagRequired("observation")
-	_ = TraceCmd.MarkFlagRequired("asset-id")
-
-	_ = TraceCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-}
-
-func runTrace(cmd *cobra.Command, _ []string) error {
-	if traceFlags.quiet {
+func runTrace(cmd *cobra.Command, flags *traceFlagsType) error {
+	if flags.quiet {
 		return nil
 	}
-	format, err := resolveTraceOutputFormat(cmd)
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
 
 	ctx := cmdutil.CommandContext(cmd)
-	ctlDir := fsutil.CleanUserPath(strings.TrimSpace(traceFlags.controlsDir))
-	control, err := loadTraceControl(ctx, ctlDir, strings.TrimSpace(traceFlags.controlID))
+	ctlDir := fsutil.CleanUserPath(strings.TrimSpace(flags.controlsDir))
+	control, err := loadTraceControl(ctx, ctlDir, strings.TrimSpace(flags.controlID))
 	if err != nil {
 		return err
 	}
-	observationPath := fsutil.CleanUserPath(strings.TrimSpace(traceFlags.observation))
+	observationPath := fsutil.CleanUserPath(strings.TrimSpace(flags.observation))
 	snapshot, err := loadTraceSnapshot(ctx, observationPath)
 	if err != nil {
 		return err
 	}
-	assetID := strings.TrimSpace(traceFlags.assetID)
+	assetID := strings.TrimSpace(flags.assetID)
 	found, err := findTraceAsset(snapshot, assetID, observationPath)
 	if err != nil {
 		return err
@@ -102,10 +107,6 @@ func runTrace(cmd *cobra.Command, _ []string) error {
 		return trace.WriteJSON(w, result)
 	}
 	return trace.WriteText(w, result)
-}
-
-func resolveTraceOutputFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return cmdutil.ResolveFormatValue(cmd, traceFlags.format)
 }
 
 func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*policy.ControlDefinition, error) {

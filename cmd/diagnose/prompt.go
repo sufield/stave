@@ -33,19 +33,21 @@ type promptFlagsType struct {
 	quietMode   bool
 }
 
-var promptFlags promptFlagsType
+// NewPromptCmd constructs the prompt command group with closure-scoped flags.
+func NewPromptCmd() *cobra.Command {
+	var flags promptFlagsType
 
-var PromptCmd = &cobra.Command{
-	Use:   "prompt",
-	Short: "Generate LLM prompts from evaluation results",
-	Long:  "Grouped prompt generation commands: from-finding." + metadata.OfflineHelpSuffix,
-	Args:  cobra.NoArgs,
-}
+	promptCmd := &cobra.Command{
+		Use:   "prompt",
+		Short: "Generate LLM prompts from evaluation results",
+		Long:  "Grouped prompt generation commands: from-finding." + metadata.OfflineHelpSuffix,
+		Args:  cobra.NoArgs,
+	}
 
-var promptFromFindingCmd = &cobra.Command{
-	Use:   "from-finding",
-	Short: "Generate an LLM prompt from evaluation findings for a specific asset",
-	Long: `From-finding reads evaluation output, loads control definitions and
+	fromFindingCmd := &cobra.Command{
+		Use:   "from-finding",
+		Short: "Generate an LLM prompt from evaluation findings for a specific asset",
+		Long: `From-finding reads evaluation output, loads control definitions and
 (optionally) observation snapshots, and generates a rich Markdown prompt ready
 for pasting into an AI assistant.
 
@@ -93,25 +95,28 @@ Examples:
     --evaluation-file evaluation.json \
     --asset-id my-bucket \
     --controls ./controls/s3 | pbcopy` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runPromptFromFinding,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
+		Args:          cobra.NoArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runPromptFromFinding(cmd, &flags)
+		},
+	}
 
-func init() {
-	promptFromFindingCmd.Flags().StringVar(&promptFlags.evalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
-	promptFromFindingCmd.Flags().StringVar(&promptFlags.assetID, "asset-id", "", "Asset ID to filter findings (required)")
-	promptFromFindingCmd.Flags().StringVarP(&promptFlags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	promptFromFindingCmd.Flags().StringVarP(&promptFlags.obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
-	promptFromFindingCmd.Flags().StringVarP(&promptFlags.format, "format", "f", "text", "Output format: text or json")
-	promptFromFindingCmd.Flags().BoolVar(&promptFlags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	fromFindingCmd.Flags().StringVar(&flags.evalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
+	fromFindingCmd.Flags().StringVar(&flags.assetID, "asset-id", "", "Asset ID to filter findings (required)")
+	fromFindingCmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	fromFindingCmd.Flags().StringVarP(&flags.obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
+	fromFindingCmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
+	fromFindingCmd.Flags().BoolVar(&flags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
-	_ = promptFromFindingCmd.MarkFlagRequired("evaluation-file")
-	_ = promptFromFindingCmd.MarkFlagRequired("asset-id")
-	_ = promptFromFindingCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = fromFindingCmd.MarkFlagRequired("evaluation-file")
+	_ = fromFindingCmd.MarkFlagRequired("asset-id")
+	_ = fromFindingCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
-	PromptCmd.AddCommand(promptFromFindingCmd)
+	promptCmd.AddCommand(fromFindingCmd)
+
+	return promptCmd
 }
 
 type promptRunOptions struct {
@@ -123,8 +128,8 @@ type promptRunOptions struct {
 	Quiet           bool
 }
 
-func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
-	opts, err := gatherPromptFromFindingOptions(cmd)
+func runPromptFromFinding(cmd *cobra.Command, flags *promptFlagsType) error {
+	opts, err := gatherPromptFromFindingOptions(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -167,19 +172,19 @@ func runPromptFromFinding(cmd *cobra.Command, _ []string) error {
 	return writePromptOutput(opts, cmd.OutOrStdout(), rendered, data)
 }
 
-func gatherPromptFromFindingOptions(cmd *cobra.Command) (promptRunOptions, error) {
-	format, err := cmdutil.ResolveFormatValue(cmd, promptFlags.format)
+func gatherPromptFromFindingOptions(cmd *cobra.Command, flags *promptFlagsType) (promptRunOptions, error) {
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return promptRunOptions{}, err
 	}
 
 	opts := promptRunOptions{
-		EvalFile:        fsutil.CleanUserPath(promptFlags.evalFile),
-		AssetID:         strings.TrimSpace(promptFlags.assetID),
-		ControlsDir:     fsutil.CleanUserPath(promptFlags.controlsDir),
-		ObservationsDir: fsutil.CleanUserPath(promptFlags.obsDir),
+		EvalFile:        fsutil.CleanUserPath(flags.evalFile),
+		AssetID:         strings.TrimSpace(flags.assetID),
+		ControlsDir:     fsutil.CleanUserPath(flags.controlsDir),
+		ObservationsDir: fsutil.CleanUserPath(flags.obsDir),
 		Format:          format,
-		Quiet:           promptFlags.quietMode || cmdutil.QuietEnabled(cmd),
+		Quiet:           flags.quietMode || cmdutil.QuietEnabled(cmd),
 	}
 
 	if opts.EvalFile == "" {
