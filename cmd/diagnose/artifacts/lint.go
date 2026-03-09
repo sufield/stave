@@ -36,10 +36,12 @@ type lintDiagnostic struct {
 	Severity lintSeverity
 }
 
-var LintCmd = &cobra.Command{
-	Use:   "lint <path>",
-	Short: "Lint control files for design quality",
-	Long: `Lint checks control design quality rules independent of schema validity.
+// NewLintCmd constructs the lint command.
+func NewLintCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "lint <path>",
+		Short: "Lint control files for design quality",
+		Long: `Lint checks control design quality rules independent of schema validity.
 It is deterministic, offline, and file-based.
 
 Rules:
@@ -47,10 +49,11 @@ Rules:
   - Required metadata (name/description/remediation)
   - Determinism key constraints
   - Stable ordering hints for list-like sections` + metadata.OfflineHelpSuffix,
-	Args:          cobra.ExactArgs(1),
-	RunE:          runLint,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
+		RunE:          runLint,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 }
 
 func lintPathNode(node *yaml.Node, key string) (*yaml.Node, *yaml.Node) {

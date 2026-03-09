@@ -64,14 +64,14 @@ func GetRootCmd() *cobra.Command {
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
 	root.PersistentFlags().Bool("require-offline", false, "Require offline execution")
-	root.AddCommand(InitCmd)
-	root.AddCommand(QuickstartCmd)
-	root.AddCommand(DemoCmd)
-	root.AddCommand(GenerateCmd)
+	root.AddCommand(NewInitCmd())
+	root.AddCommand(NewQuickstartCmd())
+	root.AddCommand(NewDemoCmd())
+	root.AddCommand(NewGenerateCmd())
 	root.AddCommand(initconfig.NewConfigCmd(ui.NewRuntime(nil, nil)))
-	root.AddCommand(contextcmd.ContextCmd)
-	root.AddCommand(initenv.EnvCmd)
-	root.AddCommand(initalias.AliasCmd)
+	root.AddCommand(contextcmd.NewContextCmd())
+	root.AddCommand(initenv.NewEnvCmd())
+	root.AddCommand(initalias.NewAliasCmd())
 	return root
 }
 

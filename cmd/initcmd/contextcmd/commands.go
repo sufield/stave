@@ -16,55 +16,95 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-var (
-	contextFormat           string
-	contextCreateDir        string
-	contextCreateConfigFile string
-	contextCreateControls   string
-	contextCreateObserv     string
-)
-
-var ContextCmd = &cobra.Command{
-	Use:   "context",
-	Short: "Named project context commands",
-	Long: `Context manages named project pointers. Context only affects default path
+// NewContextCmd constructs the context command tree with closure-scoped flags.
+func NewContextCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "context",
+		Short: "Named project context commands",
+		Long: `Context manages named project pointers. Context only affects default path
 resolution and never changes evaluation semantics.` + metadata.OfflineHelpSuffix,
-	Args: cobra.NoArgs,
+		Args: cobra.NoArgs,
+	}
+
+	cmd.AddCommand(newContextListCmd())
+	cmd.AddCommand(newContextCreateCmd())
+	cmd.AddCommand(newContextUseCmd())
+	cmd.AddCommand(newContextShowCmd())
+	cmd.AddCommand(newContextDeleteCmd())
+
+	return cmd
 }
 
-var ContextListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List available contexts",
-	Args:  cobra.NoArgs,
-	RunE:  runContextList,
+func newContextListCmd() *cobra.Command {
+	var format string
+
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List available contexts",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runContextList(cmd, format)
+		},
+	}
+
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+
+	return cmd
 }
 
-var ContextCreateCmd = &cobra.Command{
-	Use:   "create <name>",
-	Short: "Create or update a named context",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runContextCreate,
+func newContextCreateCmd() *cobra.Command {
+	var dir, configFile, controls, observations string
+
+	cmd := &cobra.Command{
+		Use:   "create <name>",
+		Short: "Create or update a named context",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runContextCreate(cmd, args, dir, configFile, controls, observations)
+		},
+	}
+
+	cmd.Flags().StringVarP(&dir, "dir", "d", ".", "Project root directory for this context")
+	cmd.Flags().StringVar(&configFile, "config", "stave.yaml", "Project config path (absolute or relative to --dir)")
+	cmd.Flags().StringVar(&controls, "controls", "", "Default controls directory for this context")
+	cmd.Flags().StringVar(&observations, "observations", "", "Default observations directory for this context")
+
+	return cmd
 }
 
-var ContextUseCmd = &cobra.Command{
-	Use:   "use <name>",
-	Short: "Set active context",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runContextUse,
+func newContextUseCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "use <name>",
+		Short: "Set active context",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runContextUse,
+	}
 }
 
-var ContextShowCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show selected context",
-	Args:  cobra.NoArgs,
-	RunE:  runContextShow,
+func newContextShowCmd() *cobra.Command {
+	var format string
+
+	cmd := &cobra.Command{
+		Use:   "show",
+		Short: "Show selected context",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runContextShow(cmd, format)
+		},
+	}
+
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+
+	return cmd
 }
 
-var ContextDeleteCmd = &cobra.Command{
-	Use:   "delete <name>",
-	Short: "Delete a context",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runContextDelete,
+func newContextDeleteCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "delete <name>",
+		Short: "Delete a context",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runContextDelete,
+	}
 }
 
 type contextListItem struct {
@@ -86,29 +126,13 @@ type contextShowOutput struct {
 	ObserveDir    string `json:"observations_dir,omitempty"`
 }
 
-func init() {
-	ContextCreateCmd.Flags().StringVarP(&contextCreateDir, "dir", "d", ".", "Project root directory for this context")
-	ContextCreateCmd.Flags().StringVar(&contextCreateConfigFile, "config", "stave.yaml", "Project config path (absolute or relative to --dir)")
-	ContextCreateCmd.Flags().StringVar(&contextCreateControls, "controls", "", "Default controls directory for this context")
-	ContextCreateCmd.Flags().StringVar(&contextCreateObserv, "observations", "", "Default observations directory for this context")
-
-	ContextShowCmd.Flags().StringVarP(&contextFormat, "format", "f", "text", "Output format: text or json")
-	ContextListCmd.Flags().StringVarP(&contextFormat, "format", "f", "text", "Output format: text or json")
-
-	ContextCmd.AddCommand(ContextListCmd)
-	ContextCmd.AddCommand(ContextCreateCmd)
-	ContextCmd.AddCommand(ContextUseCmd)
-	ContextCmd.AddCommand(ContextShowCmd)
-	ContextCmd.AddCommand(ContextDeleteCmd)
-}
-
-func runContextList(cmd *cobra.Command, _ []string) error {
+func runContextList(cmd *cobra.Command, rawFormat string) error {
 	st, _, err := contexts.Load()
 	if err != nil {
 		return err
 	}
 	items := contextListItemsFromState(st)
-	format, err := cmdutil.ResolveFormatValue(cmd, contextFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}
@@ -179,12 +203,12 @@ func writeContextListItem(w io.Writer, item contextListItem) error {
 	return nil
 }
 
-func runContextCreate(cmd *cobra.Command, args []string) error {
+func runContextCreate(cmd *cobra.Command, args []string, dir, configFile, controls, observations string) error {
 	name := contexts.NormalizeName(args[0])
 	if name == "" {
 		return &ui.InputError{Err: fmt.Errorf("context name cannot be empty")}
 	}
-	rootAbs, err := filepath.Abs(strings.TrimSpace(contextCreateDir))
+	rootAbs, err := filepath.Abs(strings.TrimSpace(dir))
 	if err != nil {
 		return fmt.Errorf("resolve --dir: %w", err)
 	}
@@ -198,9 +222,9 @@ func runContextCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	ctx := contexts.Context{ProjectRoot: rootAbs}
-	ctx.ProjectConfig = strings.TrimSpace(contextCreateConfigFile)
-	ctx.Defaults.ControlsDir = strings.TrimSpace(contextCreateControls)
-	ctx.Defaults.ObservationsDir = strings.TrimSpace(contextCreateObserv)
+	ctx.ProjectConfig = strings.TrimSpace(configFile)
+	ctx.Defaults.ControlsDir = strings.TrimSpace(controls)
+	ctx.Defaults.ObservationsDir = strings.TrimSpace(observations)
 
 	st.Contexts[name] = ctx
 	if strings.TrimSpace(st.Active) == "" {
@@ -232,7 +256,7 @@ func runContextUse(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func runContextShow(cmd *cobra.Command, _ []string) error {
+func runContextShow(cmd *cobra.Command, rawFormat string) error {
 	st, path, err := contexts.Load()
 	if err != nil {
 		return err
@@ -258,7 +282,7 @@ func runContextShow(cmd *cobra.Command, _ []string) error {
 		ObserveDir:    strings.TrimSpace(ctx.Defaults.ObservationsDir),
 	}
 
-	format, err := ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(contextFormat)))
+	format, err := ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(rawFormat)))
 	if err != nil {
 		return err
 	}

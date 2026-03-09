@@ -19,13 +19,13 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var (
-	docsSearchRoot          string
-	docsSearchPaths         []string
-	docsSearchShow          int
-	docsSearchFormat        string
-	docsSearchCaseSensitive bool
-)
+type docsSearchFlagsType struct {
+	root          string
+	paths         []string
+	show          int
+	format        string
+	caseSensitive bool
+}
 
 type docsFile struct {
 	Abs string
@@ -49,41 +49,49 @@ type docsSearchOutput struct {
 type docsSearchRequest struct {
 	query         string
 	root          string
+	paths         []string
 	show          int
 	format        ui.OutputFormat
 	caseSensitive bool
 }
 
-var DocsSearchCmd = &cobra.Command{
-	Use:   "search <query>",
-	Short: "Search local Stave documentation from the terminal",
-	Long: `Search inspects local documentation files and returns ranked keyword matches.
+// NewDocsSearchCmd constructs the docs search command with closure-scoped flags.
+func NewDocsSearchCmd() *cobra.Command {
+	var flags docsSearchFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "search <query>",
+		Short: "Search local Stave documentation from the terminal",
+		Long: `Search inspects local documentation files and returns ranked keyword matches.
 It is offline-only and deterministic, so it can run in CI and air-gapped workflows.
 
 Examples:
   stave docs search "snapshot upcoming"
   stave docs search "fail on new violation" --format json
   stave docs search "I want to" --docs-root . --path docs --path README.md` + metadata.OfflineHelpSuffix,
-	Args:          cobra.MinimumNArgs(1),
-	RunE:          runDocsSearch,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runDocsSearch(cmd, args, &flags)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.Flags().StringVar(&flags.root, "docs-root", ".", "Directory to search from")
+	cmd.Flags().StringSliceVar(&flags.paths, "path", []string{"README.md", "docs", "docs-content/cli-reference"}, "File or directory to include (repeatable)")
+	cmd.Flags().IntVar(&flags.show, "show", 10, "Maximum number of results to print")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
+	cmd.Flags().BoolVar(&flags.caseSensitive, "case-sensitive", false, "Use case-sensitive matching")
+
+	return cmd
 }
 
-func init() {
-	DocsSearchCmd.Flags().StringVar(&docsSearchRoot, "docs-root", ".", "Directory to search from")
-	DocsSearchCmd.Flags().StringSliceVar(&docsSearchPaths, "path", []string{"README.md", "docs", "docs-content/cli-reference"}, "File or directory to include (repeatable)")
-	DocsSearchCmd.Flags().IntVar(&docsSearchShow, "show", 10, "Maximum number of results to print")
-	DocsSearchCmd.Flags().StringVarP(&docsSearchFormat, "format", "f", "text", "Output format: text or json")
-	DocsSearchCmd.Flags().BoolVar(&docsSearchCaseSensitive, "case-sensitive", false, "Use case-sensitive matching")
-}
-
-func runDocsSearch(cmd *cobra.Command, args []string) error {
-	req, err := buildDocsSearchRequest(cmd, args)
+func runDocsSearch(cmd *cobra.Command, args []string, flags *docsSearchFlagsType) error {
+	req, err := buildDocsSearchRequest(cmd, args, flags)
 	if err != nil {
 		return err
 	}
-	files, err := collectDocsFiles(req.root, docsSearchPaths)
+	files, err := collectDocsFiles(req.root, req.paths)
 	if err != nil {
 		return err
 	}
@@ -113,29 +121,26 @@ func runDocsSearch(cmd *cobra.Command, args []string) error {
 	return writeDocsSearchText(cmd.OutOrStdout(), req.query, totalMatches, hits)
 }
 
-func buildDocsSearchRequest(cmd *cobra.Command, args []string) (docsSearchRequest, error) {
-	if docsSearchShow < 1 {
-		return docsSearchRequest{}, fmt.Errorf("invalid --show %d: must be >= 1", docsSearchShow)
+func buildDocsSearchRequest(cmd *cobra.Command, args []string, flags *docsSearchFlagsType) (docsSearchRequest, error) {
+	if flags.show < 1 {
+		return docsSearchRequest{}, fmt.Errorf("invalid --show %d: must be >= 1", flags.show)
 	}
 	query := strings.TrimSpace(strings.Join(args, " "))
 	if query == "" {
 		return docsSearchRequest{}, fmt.Errorf("query cannot be empty")
 	}
-	format, err := resolveDocsSearchFormat(cmd)
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return docsSearchRequest{}, err
 	}
 	return docsSearchRequest{
 		query:         query,
-		root:          fsutil.CleanUserPath(docsSearchRoot),
-		show:          docsSearchShow,
+		root:          fsutil.CleanUserPath(flags.root),
+		paths:         flags.paths,
+		show:          flags.show,
 		format:        format,
-		caseSensitive: docsSearchCaseSensitive,
+		caseSensitive: flags.caseSensitive,
 	}, nil
-}
-
-func resolveDocsSearchFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return cmdutil.ResolveFormatValue(cmd, docsSearchFormat)
 }
 
 func writeDocsSearchJSON(w io.Writer, out docsSearchOutput) error {

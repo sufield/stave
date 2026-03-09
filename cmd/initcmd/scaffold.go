@@ -25,8 +25,6 @@ type initFlagsType struct {
 	captureCadence    string
 }
 
-var initFlags initFlagsType
-
 const (
 	profileAWSS3 = "aws-s3"
 
@@ -40,13 +38,13 @@ type scaffoldOptions struct {
 	CaptureCadence    string
 }
 
-func runInit(cmd *cobra.Command, _ []string) error {
+func runInit(cmd *cobra.Command, flags *initFlagsType) error {
 	result, err := projectapp.RunInit(projectapp.InitRequest{
-		Dir:               initFlags.dir,
-		Profile:           initFlags.profile,
-		DryRun:            initFlags.dryRun,
-		WithGitHubActions: initFlags.withGitHubActions,
-		CaptureCadence:    initFlags.captureCadence,
+		Dir:               flags.dir,
+		Profile:           flags.profile,
+		DryRun:            flags.dryRun,
+		WithGitHubActions: flags.withGitHubActions,
+		CaptureCadence:    flags.captureCadence,
 		Force:             globalForce,
 	}, projectapp.InitDeps{
 		ValidateInputs: validateScaffoldInputs,

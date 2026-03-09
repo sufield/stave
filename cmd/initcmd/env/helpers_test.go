@@ -21,6 +21,6 @@ func getTestRootCmd() *cobra.Command {
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
 	root.PersistentFlags().Bool("require-offline", false, "Require offline execution")
-	root.AddCommand(EnvCmd)
+	root.AddCommand(NewEnvCmd())
 	return root
 }

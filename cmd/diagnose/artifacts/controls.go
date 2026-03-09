@@ -22,12 +22,9 @@ import (
 )
 
 type controlsListFlagsType struct {
-	listDir, explainDir               string
-	listCols, listSort, listFormat    string
-	listNoHdr, listBuiltIn, listPacks bool
+	listDir, listCols, listSort, listFormat string
+	listNoHdr, listBuiltIn, listPacks       bool
 }
-
-var controlsListFlags controlsListFlagsType
 
 type controlListRow struct {
 	ID       string `json:"id"`
@@ -37,113 +34,137 @@ type controlListRow struct {
 	Domain   string `json:"domain,omitempty"`
 }
 
-var ControlsCmd = &cobra.Command{
-	Use:     "controls",
-	Aliases: []string{"controls"},
-	Short:   "Work with control definitions",
-	Long: `Controls groups commands for discovering and understanding control
+// NewControlsCmd constructs the controls command tree with closure-scoped flags.
+func NewControlsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "controls",
+		Aliases: []string{"controls"},
+		Short:   "Work with control definitions",
+		Long: `Controls groups commands for discovering and understanding control
 definitions used by Stave.
 
 Examples:
   stave controls list --controls ./controls
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls` + metadata.OfflineHelpSuffix,
-	Args: cobra.NoArgs,
+		Args: cobra.NoArgs,
+	}
+
+	cmd.AddCommand(newControlsListCmd())
+	cmd.AddCommand(newControlsExplainCmd())
+	cmd.AddCommand(newControlsAliasesCmd())
+	cmd.AddCommand(newControlsAliasExplainCmd())
+
+	return cmd
 }
 
-var controlsListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List control IDs and names",
-	Long: `List loads controls from a directory and prints concise metadata.
+func newControlsListCmd() *cobra.Command {
+	var flags controlsListFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List control IDs and names",
+		Long: `List loads controls from a directory and prints concise metadata.
 
 Examples:
   stave controls list --controls ./controls
   stave controls list --controls ./controls --format json
   stave controls list --controls ./controls --format csv --columns id,name` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runControlsList,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runControlsList(cmd, &flags)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.Flags().StringVarP(&flags.listDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&flags.listCols, "columns", "c", "id,name,type", "Comma-separated columns: id,name,type,severity,domain")
+	cmd.Flags().StringVarP(&flags.listSort, "sort", "s", "id", "Sort column: id,name,type,severity,domain")
+	cmd.Flags().StringVarP(&flags.listFormat, "format", "f", "text", "Output format: text, json, csv")
+	cmd.Flags().BoolVar(&flags.listNoHdr, "no-headers", false, "Hide headers for table/csv output")
+	cmd.Flags().BoolVar(&flags.listBuiltIn, "built-in", false, "List built-in embedded controls instead of filesystem")
+	cmd.Flags().BoolVar(&flags.listPacks, "packs", false, "List built-in control packs instead of controls")
+
+	return cmd
 }
 
-var controlsExplainCmd = &cobra.Command{
-	Use:   "explain <control-id>",
-	Short: "Explain a specific control",
-	Long: `Explain loads one control and prints matched fields, rule expectations,
+func newControlsExplainCmd() *cobra.Command {
+	var controlsDir string
+
+	cmd := &cobra.Command{
+		Use:   "explain <control-id>",
+		Short: "Explain a specific control",
+		Long: `Explain loads one control and prints matched fields, rule expectations,
 and a minimal observation snippet.
 
 Examples:
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls --format json` + metadata.OfflineHelpSuffix,
-	Args:          cobra.ExactArgs(1),
-	RunE:          runControlsExplain,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
-
-var controlsAliasesCmd = &cobra.Command{
-	Use:   "aliases",
-	Short: "List built-in semantic predicate aliases",
-	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		names := predicates.ListAliases()
-		for _, name := range names {
-			if _, err := fmt.Fprintln(cmd.OutOrStdout(), name); err != nil {
-				return err
-			}
-		}
-		return nil
-	},
-}
-
-var controlsAliasExplainCmd = &cobra.Command{
-	Use:   "alias-explain <alias>",
-	Short: "Show expanded predicate for an alias",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		expanded, ok := predicates.Resolve(strings.TrimSpace(args[0]))
-		if !ok {
-			return fmt.Errorf("unknown alias %q (available: %s)", args[0], strings.Join(predicates.ListAliases(), ", "))
-		}
-		out := map[string]any{"alias": args[0], "expanded": expanded}
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
-	},
-}
-
-func init() {
-	controlsListCmd.Flags().StringVarP(&controlsListFlags.listDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	controlsListCmd.Flags().StringVarP(&controlsListFlags.listCols, "columns", "c", "id,name,type", "Comma-separated columns: id,name,type,severity,domain")
-	controlsListCmd.Flags().StringVarP(&controlsListFlags.listSort, "sort", "s", "id", "Sort column: id,name,type,severity,domain")
-	controlsListCmd.Flags().StringVarP(&controlsListFlags.listFormat, "format", "f", "text", "Output format: text, json, csv")
-	controlsListCmd.Flags().BoolVar(&controlsListFlags.listNoHdr, "no-headers", false, "Hide headers for table/csv output")
-	controlsListCmd.Flags().BoolVar(&controlsListFlags.listBuiltIn, "built-in", false, "List built-in embedded controls instead of filesystem")
-	controlsListCmd.Flags().BoolVar(&controlsListFlags.listPacks, "packs", false, "List built-in control packs instead of controls")
-	controlsExplainCmd.Flags().StringVar(&controlsListFlags.explainDir, "controls", "controls/s3", "Path to control definitions directory")
-
-	ControlsCmd.AddCommand(controlsListCmd)
-	ControlsCmd.AddCommand(controlsExplainCmd)
-	ControlsCmd.AddCommand(controlsAliasesCmd)
-	ControlsCmd.AddCommand(controlsAliasExplainCmd)
-}
-
-func runControlsList(cmd *cobra.Command, args []string) error {
-	if controlsListFlags.listPacks {
-		return runControlsListPacks(cmd)
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runControlsExplain(cmd, args, controlsDir)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
-	controls, err := loadControlsForList()
+
+	cmd.Flags().StringVar(&controlsDir, "controls", "controls/s3", "Path to control definitions directory")
+
+	return cmd
+}
+
+func newControlsAliasesCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "aliases",
+		Short: "List built-in semantic predicate aliases",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			names := predicates.ListAliases()
+			for _, name := range names {
+				if _, err := fmt.Fprintln(cmd.OutOrStdout(), name); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	}
+}
+
+func newControlsAliasExplainCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "alias-explain <alias>",
+		Short: "Show expanded predicate for an alias",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			expanded, ok := predicates.Resolve(strings.TrimSpace(args[0]))
+			if !ok {
+				return fmt.Errorf("unknown alias %q (available: %s)", args[0], strings.Join(predicates.ListAliases(), ", "))
+			}
+			out := map[string]any{"alias": args[0], "expanded": expanded}
+			enc := json.NewEncoder(cmd.OutOrStdout())
+			enc.SetIndent("", "  ")
+			return enc.Encode(out)
+		},
+	}
+}
+
+func runControlsList(cmd *cobra.Command, flags *controlsListFlagsType) error {
+	if flags.listPacks {
+		return runControlsListPacks(cmd, flags.listFormat)
+	}
+	controls, err := loadControlsForList(flags)
 	if err != nil {
 		return err
 	}
 	rows := buildControlListRows(controls)
-	if err := sortControlRows(rows, controlsListFlags.listSort); err != nil {
+	if err := sortControlRows(rows, flags.listSort); err != nil {
 		return err
 	}
-	return writeControlRows(cmd.OutOrStdout(), rows, controlsListFlags.listFormat, controlsListFlags.listCols, !controlsListFlags.listNoHdr)
+	return writeControlRows(cmd.OutOrStdout(), rows, flags.listFormat, flags.listCols, !flags.listNoHdr)
 }
 
-func loadControlsForList() ([]policy.ControlDefinition, error) {
-	if controlsListFlags.listBuiltIn {
+func loadControlsForList(flags *controlsListFlagsType) ([]policy.ControlDefinition, error) {
+	if flags.listBuiltIn {
 		controls, err := builtin.LoadAll(context.Background())
 		if err != nil {
 			return nil, fmt.Errorf("load built-in controls: %w", err)
@@ -155,7 +176,7 @@ func loadControlsForList() ([]policy.ControlDefinition, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := loader.LoadControls(context.Background(), strings.TrimSpace(controlsListFlags.listDir))
+	controls, err := loader.LoadControls(context.Background(), strings.TrimSpace(flags.listDir))
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}
@@ -223,12 +244,12 @@ func writeControlRows(w io.Writer, rows []controlListRow, formatValue, columnsVa
 	}
 }
 
-func runControlsListPacks(cmd *cobra.Command) error {
+func runControlsListPacks(cmd *cobra.Command, listFormat string) error {
 	items, err := packs.ListPacks()
 	if err != nil {
 		return err
 	}
-	switch strings.ToLower(strings.TrimSpace(controlsListFlags.listFormat)) {
+	switch strings.ToLower(strings.TrimSpace(listFormat)) {
 	case "json":
 		enc := json.NewEncoder(cmd.OutOrStdout())
 		enc.SetIndent("", "  ")
@@ -245,7 +266,7 @@ func runControlsListPacks(cmd *cobra.Command) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("invalid --format %q for --packs (use: text, json)", controlsListFlags.listFormat)
+		return fmt.Errorf("invalid --format %q for --packs (use: text, json)", listFormat)
 	}
 }
 
@@ -376,7 +397,7 @@ func writeControlListCSV(w io.Writer, rows []controlListRow, columns []string, s
 	return cw.Error()
 }
 
-func runControlsExplain(cmd *cobra.Command, args []string) error {
+func runControlsExplain(cmd *cobra.Command, args []string, controlsDir string) error {
 	// Reuse existing explain implementation, but scoped under controls command.
-	return diagnose.RunExplain(cmd, args, controlsListFlags.explainDir, "text")
+	return diagnose.RunExplain(cmd, args, controlsDir, "text")
 }

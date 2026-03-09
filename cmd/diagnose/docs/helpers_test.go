@@ -24,8 +24,8 @@ func getTestRootCmd() *cobra.Command {
 	root.PersistentFlags().String("log-file", "", "Log file path")
 
 	docsCmd := &cobra.Command{Use: "docs", Short: "Documentation commands"}
-	docsCmd.AddCommand(DocsSearchCmd)
-	docsCmd.AddCommand(DocsOpenCmd)
+	docsCmd.AddCommand(NewDocsSearchCmd())
+	docsCmd.AddCommand(NewDocsOpenCmd())
 	root.AddCommand(docsCmd)
 
 	return root

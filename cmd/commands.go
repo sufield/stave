@@ -150,10 +150,10 @@ func WireCommands(root *cobra.Command) {
 	initalias.SetRootCmd(root)
 
 	// Getting started
-	root.AddCommand(initcmd.InitCmd)
-	root.AddCommand(initcmd.QuickstartCmd)
-	root.AddCommand(initcmd.DemoCmd)
-	root.AddCommand(initcmd.GenerateCmd)
+	root.AddCommand(initcmd.NewInitCmd())
+	root.AddCommand(initcmd.NewQuickstartCmd())
+	root.AddCommand(initcmd.NewDemoCmd())
+	root.AddCommand(initcmd.NewGenerateCmd())
 	root.AddCommand(doctor.NewCmd())
 
 	// Core evaluation
@@ -165,12 +165,12 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(diagnose.NewDiagnoseCmd())
 	root.AddCommand(diagnose.NewExplainCmd())
 	root.AddCommand(diagnose.NewTraceCmd())
-	root.AddCommand(artifacts.LintCmd)
-	root.AddCommand(artifacts.FmtCmd)
+	root.AddCommand(artifacts.NewLintCmd())
+	root.AddCommand(artifacts.NewFmtCmd())
 
 	// Workflow & CI
 	root.AddCommand(enforce.StatusCmd)
-	root.AddCommand(contextcmd.ContextCmd)
+	root.AddCommand(contextcmd.NewContextCmd())
 	root.AddCommand(securityaudit.NewCmd())
 
 	snapshotCmd := &cobra.Command{
@@ -193,11 +193,11 @@ func WireCommands(root *cobra.Command) {
 
 	// Data & Artifacts
 	root.AddCommand(ingest.IngestCmd)
-	root.AddCommand(artifacts.ControlsCmd)
-	root.AddCommand(artifacts.PacksCmd)
+	root.AddCommand(artifacts.NewControlsCmd())
+	root.AddCommand(artifacts.NewPacksCmd())
 	root.AddCommand(enforce.EnforceCmd)
 	root.AddCommand(enforce.GraphCmd)
-	root.AddCommand(diagreport.ReportCmd)
+	root.AddCommand(diagreport.NewReportCmd())
 
 	// Utilities
 	docsCmd := &cobra.Command{
@@ -211,8 +211,8 @@ func WireCommands(root *cobra.Command) {
 
 	root.AddCommand(bugreport.NewCmd())
 	root.AddCommand(initconfig.NewConfigCmd(ui.NewRuntime(nil, nil)))
-	root.AddCommand(initalias.AliasCmd)
-	root.AddCommand(initenv.EnvCmd)
+	root.AddCommand(initalias.NewAliasCmd())
+	root.AddCommand(initenv.NewEnvCmd())
 	root.AddCommand(diagnose.NewPromptCmd())
 	root.AddCommand(enforce.FixCmd)
 }
@@ -233,8 +233,8 @@ func wireCISubtree(ciCmd *cobra.Command) {
 }
 
 func wireDocsSubtree(docsCmd *cobra.Command) {
-	docsCmd.AddCommand(diagdocs.DocsSearchCmd)
-	docsCmd.AddCommand(diagdocs.DocsOpenCmd)
+	docsCmd.AddCommand(diagdocs.NewDocsSearchCmd())
+	docsCmd.AddCommand(diagdocs.NewDocsOpenCmd())
 }
 
 // runCapabilities executes the capabilities command.

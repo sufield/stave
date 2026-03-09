@@ -14,11 +14,11 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var (
-	docsOpenRoot   string
-	docsOpenPaths  []string
-	docsOpenFormat string
-)
+type docsOpenFlagsType struct {
+	root   string
+	paths  []string
+	format string
+}
 
 type docsOpenOutput struct {
 	Topic   string `json:"topic"`
@@ -34,29 +34,36 @@ type docsOpenRequest struct {
 	format ui.OutputFormat
 }
 
-var DocsOpenCmd = &cobra.Command{
-	Use:   "open <topic>",
-	Short: "Resolve a docs topic to one best-matching file path and summary",
-	Long: `Open resolves a topic to the best local documentation page and prints the exact
+// NewDocsOpenCmd constructs the docs open command with closure-scoped flags.
+func NewDocsOpenCmd() *cobra.Command {
+	var flags docsOpenFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "open <topic>",
+		Short: "Resolve a docs topic to one best-matching file path and summary",
+		Long: `Open resolves a topic to the best local documentation page and prints the exact
 file path plus a short summary in terminal output.
 
 Examples:
   stave docs open "snapshot upcoming"
   stave docs open "ci gate policy" --format json` + metadata.OfflineHelpSuffix,
-	Args:          cobra.MinimumNArgs(1),
-	RunE:          runDocsOpen,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runDocsOpen(cmd, args, &flags)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.Flags().StringVar(&flags.root, "docs-root", ".", "Directory to search from")
+	cmd.Flags().StringSliceVar(&flags.paths, "path", []string{"README.md", "docs", "docs-content/cli-reference"}, "File or directory to include (repeatable)")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
+
+	return cmd
 }
 
-func init() {
-	DocsOpenCmd.Flags().StringVar(&docsOpenRoot, "docs-root", ".", "Directory to search from")
-	DocsOpenCmd.Flags().StringSliceVar(&docsOpenPaths, "path", []string{"README.md", "docs", "docs-content/cli-reference"}, "File or directory to include (repeatable)")
-	DocsOpenCmd.Flags().StringVarP(&docsOpenFormat, "format", "f", "text", "Output format: text or json")
-}
-
-func runDocsOpen(cmd *cobra.Command, args []string) error {
-	req, err := resolveDocsOpenRequest(cmd, args)
+func runDocsOpen(cmd *cobra.Command, args []string, flags *docsOpenFlagsType) error {
+	req, err := resolveDocsOpenRequest(cmd, args, flags)
 	if err != nil {
 		return err
 	}
@@ -67,19 +74,19 @@ func runDocsOpen(cmd *cobra.Command, args []string) error {
 	return writeDocsOpenOutput(cmd.OutOrStdout(), req.format, out)
 }
 
-func resolveDocsOpenRequest(cmd *cobra.Command, args []string) (docsOpenRequest, error) {
+func resolveDocsOpenRequest(cmd *cobra.Command, args []string, flags *docsOpenFlagsType) (docsOpenRequest, error) {
 	topic := strings.TrimSpace(strings.Join(args, " "))
 	if topic == "" {
 		return docsOpenRequest{}, fmt.Errorf("topic cannot be empty")
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, docsOpenFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return docsOpenRequest{}, err
 	}
 	return docsOpenRequest{
 		topic:  topic,
-		root:   fsutil.CleanUserPath(docsOpenRoot),
-		paths:  docsOpenPaths,
+		root:   fsutil.CleanUserPath(flags.root),
+		paths:  flags.paths,
 		format: format,
 	}, nil
 }

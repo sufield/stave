@@ -9,21 +9,6 @@ import (
 )
 
 func TestInitProfileAWSS3AddsProfileStructure(t *testing.T) {
-	oldForce := globalForce
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	globalForce = false
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		globalForce = oldForce
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	root := GetRootCmd()
 	buf := new(bytes.Buffer)
@@ -47,21 +32,6 @@ func TestInitProfileAWSS3AddsProfileStructure(t *testing.T) {
 }
 
 func TestInitWithGitHubActionsCreatesWorkflow(t *testing.T) {
-	oldForce := globalForce
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	globalForce = false
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		globalForce = oldForce
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	root := GetRootCmd()
 	buf := new(bytes.Buffer)
@@ -100,18 +70,6 @@ func TestInitWithGitHubActionsCreatesWorkflow(t *testing.T) {
 }
 
 func TestInitRejectsUnsupportedProfile(t *testing.T) {
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	root := GetRootCmd()
 	buf := new(bytes.Buffer)
@@ -128,21 +86,6 @@ func TestInitRejectsUnsupportedProfile(t *testing.T) {
 }
 
 func TestInitWithHourlyCaptureCadence(t *testing.T) {
-	oldForce := globalForce
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	globalForce = false
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		globalForce = oldForce
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	root := GetRootCmd()
 	buf := new(bytes.Buffer)
@@ -179,18 +122,6 @@ func TestInitWithHourlyCaptureCadence(t *testing.T) {
 }
 
 func TestInitRejectsUnsupportedCaptureCadence(t *testing.T) {
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	root := GetRootCmd()
 	buf := new(bytes.Buffer)
