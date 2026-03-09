@@ -3,6 +3,8 @@ package snapshot
 import (
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/pruner"
 )
 
 func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
@@ -29,7 +31,7 @@ func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 		// keep-min=2 means we can't prune even though one is older than 30d
 		t.Fatalf("TotalActions=%d, want 0 (keep-min floor)", plan.TotalActions)
 	}
-	if plan.Mode != "PREVIEW" {
+	if plan.Mode != pruner.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW", plan.Mode)
 	}
 }
@@ -61,7 +63,7 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 
 	var pruned []planFileEntry
 	for _, f := range plan.Files {
-		if f.Action == "PRUNE" {
+		if f.Action == pruner.ActionPrune {
 			pruned = append(pruned, f)
 		}
 	}
@@ -184,7 +186,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 		Force: true,
 	})
 
-	if plan.Mode != "ARCHIVE" {
+	if plan.Mode != pruner.ModeArchive {
 		t.Fatalf("Mode=%q, want ARCHIVE", plan.Mode)
 	}
 	if !plan.Applied {
@@ -193,7 +195,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 
 	archiveCount := 0
 	for _, f := range plan.Files {
-		if f.Action == "ARCHIVE" {
+		if f.Action == pruner.ActionArchive {
 			archiveCount++
 		}
 	}
@@ -271,7 +273,7 @@ func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 		Force: false,
 	})
 
-	if plan.Mode != "PREVIEW" {
+	if plan.Mode != pruner.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW (--apply without --force)", plan.Mode)
 	}
 	if plan.Applied {
@@ -298,13 +300,13 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 		Force: true,
 	})
 
-	if plan.Mode != "PRUNE" {
+	if plan.Mode != pruner.ModePrune {
 		t.Fatalf("Mode=%q, want PRUNE", plan.Mode)
 	}
 
 	pruneCount := 0
 	for _, f := range plan.Files {
-		if f.Action == "PRUNE" {
+		if f.Action == pruner.ActionPrune {
 			pruneCount++
 		}
 	}

@@ -11,7 +11,7 @@ import (
 // PlanEntry is a single snapshot plan row.
 type PlanEntry struct {
 	RelPath string
-	Action  string
+	Action  PlanAction
 }
 
 // SnapshotPlanApplyInput defines apply inputs for snapshot plan execution.
@@ -43,7 +43,7 @@ func ApplySnapshotPlan(in SnapshotPlanApplyInput) (SnapshotPlanApplyResult, erro
 	}
 
 	for _, entry := range in.Entries {
-		if entry.Action == "KEEP" {
+		if entry.Action == ActionKeep {
 			continue
 		}
 		if isArchive {

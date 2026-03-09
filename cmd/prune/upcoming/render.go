@@ -48,7 +48,7 @@ func toAdapterItems(items []UpcomingItem) []textout.UpcomingItem {
 	for i, item := range items {
 		out[i] = textout.UpcomingItem{
 			DueAt:          item.DueAt,
-			Status:         item.Status,
+			Status:         string(item.Status),
 			ControlID:      item.ControlID,
 			AssetID:        item.AssetID,
 			AssetType:      item.AssetType,

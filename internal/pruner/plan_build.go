@@ -9,6 +9,24 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
+// PlanAction represents the action to take on a snapshot in a retention plan.
+type PlanAction string
+
+const (
+	ActionKeep    PlanAction = "KEEP"
+	ActionPrune   PlanAction = "PRUNE"
+	ActionArchive PlanAction = "ARCHIVE"
+)
+
+// PlanMode represents the execution mode of a snapshot retention plan.
+type PlanMode string
+
+const (
+	ModePreview PlanMode = "PREVIEW"
+	ModePrune   PlanMode = "PRUNE"
+	ModeArchive PlanMode = "ARCHIVE"
+)
+
 // TierMappingRule assigns a relative snapshot path pattern to a retention tier.
 type TierMappingRule struct {
 	Pattern string
@@ -23,11 +41,11 @@ type RetentionTier struct {
 
 // SnapshotPlanFile is one file row in the generated snapshot plan.
 type SnapshotPlanFile struct {
-	RelPath    string    `json:"rel_path"`
-	CapturedAt time.Time `json:"captured_at"`
-	Tier       string    `json:"tier"`
-	Action     string    `json:"action"`
-	Reason     string    `json:"reason"`
+	RelPath    string     `json:"rel_path"`
+	CapturedAt time.Time  `json:"captured_at"`
+	Tier       string     `json:"tier"`
+	Action     PlanAction `json:"action"`
+	Reason     string     `json:"reason"`
 }
 
 // SnapshotPlanTierSummary aggregates plan counts per tier.
@@ -47,7 +65,7 @@ type SnapshotPlanOutput struct {
 	GeneratedAt      time.Time                 `json:"generated_at"`
 	ObservationsRoot string                    `json:"observations_root"`
 	ArchiveDir       string                    `json:"archive_dir,omitempty"`
-	Mode             string                    `json:"mode"`
+	Mode             PlanMode                  `json:"mode"`
 	Applied          bool                      `json:"applied"`
 	DefaultTier      string                    `json:"default_tier"`
 	TierSummaries    []SnapshotPlanTierSummary `json:"tier_summaries"`
@@ -112,14 +130,14 @@ type tierPlanResult struct {
 	actionCount int
 }
 
-func resolveSnapshotPlanMode(apply, force bool, archiveDir string) (string, bool) {
+func resolveSnapshotPlanMode(apply, force bool, archiveDir string) (PlanMode, bool) {
 	if !apply || !force {
-		return "PREVIEW", false
+		return ModePreview, false
 	}
 	if archiveDir != "" {
-		return "ARCHIVE", true
+		return ModeArchive, true
 	}
-	return "PRUNE", true
+	return ModePrune, true
 }
 
 func groupSnapshotFilesByTier(
@@ -179,9 +197,9 @@ func buildTierPlan(params BuildSnapshotPlanParams, tierName string, files []Snap
 	})
 	candidateSet := buildPlanCandidateSet(candidates)
 
-	action := "PRUNE"
+	action := ActionPrune
 	if params.ArchiveDir != "" {
-		action = "ARCHIVE"
+		action = ActionArchive
 	}
 
 	entries, actionCount := buildTierEntries(files, candidateSet, tierName, action, cfg.olderThanStr, cfg.olderThan, params.Now)
@@ -247,7 +265,7 @@ func buildInvalidTierPlan(tierName string, files []SnapshotFile, olderThanStr st
 			RelPath:    sf.RelPath,
 			CapturedAt: sf.CapturedAt.UTC(),
 			Tier:       tierName,
-			Action:     "KEEP",
+			Action:     ActionKeep,
 			Reason:     "invalid tier config",
 		})
 	}
@@ -277,7 +295,7 @@ func buildPlanCandidateSet(candidates []Candidate) map[int]bool {
 func buildTierEntries(
 	files []SnapshotFile,
 	candidateSet map[int]bool,
-	tierName, action, olderThanStr string,
+	tierName string, action PlanAction, olderThanStr string,
 	olderThan time.Duration,
 	now time.Time,
 ) ([]SnapshotPlanFile, int) {
@@ -296,7 +314,7 @@ func buildTierEntries(
 			entry.Reason = "older than " + olderThanStr
 			actionCount++
 		} else {
-			entry.Action = "KEEP"
+			entry.Action = ActionKeep
 			if sf.CapturedAt.Before(cutoff) {
 				entry.Reason = "keep-min floor"
 			} else {

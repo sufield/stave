@@ -11,7 +11,7 @@ import (
 // UpcomingItem represents a single upcoming snapshot action item.
 type UpcomingItem struct {
 	DueAt          time.Time
-	Status         string
+	Status         risk.Status
 	ControlID      string
 	AssetID        string
 	AssetType      string

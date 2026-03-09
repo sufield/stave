@@ -19,7 +19,7 @@ func TestApplySnapshotPlan_Delete(t *testing.T) {
 
 	res, err := ApplySnapshotPlan(SnapshotPlanApplyInput{
 		Entries: []PlanEntry{
-			{RelPath: "old.json", Action: "DELETE"},
+			{RelPath: "old.json", Action: ActionPrune},
 		},
 		ObservationsRoot: obsRoot,
 	})
@@ -51,7 +51,7 @@ func TestApplySnapshotPlan_Archive(t *testing.T) {
 	archiveDir := filepath.Join(tmp, "archive")
 	res, err := ApplySnapshotPlan(SnapshotPlanApplyInput{
 		Entries: []PlanEntry{
-			{RelPath: filepath.Join("nested", "old.json"), Action: "ARCHIVE"},
+			{RelPath: filepath.Join("nested", "old.json"), Action: ActionArchive},
 		},
 		ObservationsRoot: obsRoot,
 		ArchiveDir:       archiveDir,

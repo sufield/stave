@@ -7,16 +7,19 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
+// qualitySeverity classifies the severity of a snapshot quality issue.
+type qualitySeverity string
+
 const (
-	severityError   = "error"
-	severityWarning = "warning"
+	severityError   qualitySeverity = "error"
+	severityWarning qualitySeverity = "warning"
 )
 
 type qualityIssue struct {
-	Code     string         `json:"code"`
-	Severity string         `json:"severity"`
-	Message  string         `json:"message"`
-	Evidence map[string]any `json:"evidence,omitempty"`
+	Code     string          `json:"code"`
+	Severity qualitySeverity `json:"severity"`
+	Message  string          `json:"message"`
+	Evidence map[string]any  `json:"evidence,omitempty"`
 }
 
 type qualitySummary struct {
