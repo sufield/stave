@@ -203,38 +203,29 @@ func buildOutput(root string) (statusOutput, error) {
 }
 
 func writeText(w io.Writer, out statusOutput) error {
-	last := out.LastSession
-	controls := out.Controls
-	rawSnapshots := out.RawSnapshots
-	observations := out.Observations
-	if _, err := fmt.Fprintf(w, "Summary\n-------\n"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "Project: %s\n", out.ProjectRoot); err != nil {
-		return err
-	}
-	if last != nil {
-		if _, err := fmt.Fprintf(w, "Last command: %s (%s)\n", last.LastCommand, last.WhenUTC.Format(time.RFC3339)); err != nil {
-			return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
 		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	if _, err := fmt.Fprintf(w, "Artifacts:\n"); err != nil {
-		return err
+
+	writef("Summary\n-------\n")
+	writef("Project: %s\n", out.ProjectRoot)
+	if out.LastSession != nil {
+		writef("Last command: %s (%s)\n", out.LastSession.LastCommand, out.LastSession.WhenUTC.Format(time.RFC3339))
 	}
-	if _, err := fmt.Fprintf(w, "  - controls: %d\n", controls.Count); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  - snapshots/raw: %d\n", rawSnapshots.Count); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  - observations: %d\n", observations.Count); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  - output/evaluation.json: %v\n", out.EvaluationOut); err != nil {
+	writef("Artifacts:\n")
+	writef("  - controls: %d\n", out.Controls.Count)
+	writef("  - snapshots/raw: %d\n", out.RawSnapshots.Count)
+	writef("  - observations: %d\n", out.Observations.Count)
+	writef("  - output/evaluation.json: %v\n", out.EvaluationOut)
+	if err != nil {
 		return err
 	}
 	next := ui.SeverityLabel("info", fmt.Sprintf("Next: %s", out.NextCommand), w)
-	_, err := fmt.Fprintf(w, "\n%s\n", next)
+	writef("\n%s\n", next)
 	return err
 }
 

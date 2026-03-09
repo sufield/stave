@@ -27,26 +27,29 @@ func writeJSON(w io.Writer, out asset.ObservationDelta) error {
 }
 
 func writeText(w io.Writer, out asset.ObservationDelta) error {
-	if _, err := fmt.Fprintf(w, "Observation delta: %s -> %s\n", out.FromCaptured.Format(time.RFC3339), out.ToCaptured.Format(time.RFC3339)); err != nil {
-		return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	if _, err := fmt.Fprintf(w, "Summary: added=%d removed=%d modified=%d total=%d\n\n",
-		out.Summary.Added(), out.Summary.Removed(), out.Summary.Modified(), out.Summary.Total()); err != nil {
+
+	writef("Observation delta: %s -> %s\n", out.FromCaptured.Format(time.RFC3339), out.ToCaptured.Format(time.RFC3339))
+	writef("Summary: added=%d removed=%d modified=%d total=%d\n\n",
+		out.Summary.Added(), out.Summary.Removed(), out.Summary.Modified(), out.Summary.Total())
+	if err != nil {
 		return err
 	}
 	if len(out.Changes) == 0 {
-		_, err := fmt.Fprintln(w, "No asset changes detected.")
+		writef("No asset changes detected.\n")
 		return err
 	}
 	for _, c := range out.Changes {
-		if _, err := fmt.Fprintf(w, "- %s [%s]\n", c.AssetID, c.ChangeType); err != nil {
-			return err
-		}
+		writef("- %s [%s]\n", c.AssetID, c.ChangeType)
 		for _, p := range c.PropertyChanges {
-			if _, err := fmt.Fprintf(w, "  * %s: %v -> %v\n", p.Path, p.From, p.To); err != nil {
-				return err
-			}
+			writef("  * %s: %v -> %v\n", p.Path, p.From, p.To)
 		}
 	}
-	return nil
+	return err
 }

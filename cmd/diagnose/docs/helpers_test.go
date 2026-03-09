@@ -1,6 +1,7 @@
 package docs
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -29,6 +30,21 @@ func getTestRootCmd() *cobra.Command {
 	root.AddCommand(docsCmd)
 
 	return root
+}
+
+// execDocsSearch sets up a root command, runs "docs search" with the given
+// args, and returns the combined stdout+stderr output. Fails the test on error.
+func execDocsSearch(t *testing.T, args ...string) string {
+	t.Helper()
+	root := getTestRootCmd()
+	buf := new(bytes.Buffer)
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs(append([]string{"docs", "search"}, args...))
+	if err := root.Execute(); err != nil {
+		t.Fatalf("docs search command failed: %v", err)
+	}
+	return buf.String()
 }
 
 func writeTestFile(t *testing.T, path, content string) {
