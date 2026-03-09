@@ -31,7 +31,7 @@ func writeSnapshotPlanHeader(w io.Writer, plan SnapshotPlanOutput) error {
 		return err
 	}
 	modeHint := ""
-	if plan.Mode == "PREVIEW" {
+	if plan.Mode == ModePreview {
 		modeHint = " (use --apply --force to execute)"
 	}
 	_, err := fmt.Fprintf(w, "Mode:      %s%s\n", plan.Mode, modeHint)

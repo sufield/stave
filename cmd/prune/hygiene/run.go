@@ -158,11 +158,11 @@ func buildHygieneOutputs(execCtx hygieneExecution) (hygieneapp.ReportRequest, hy
 		LookbackStart:    execCtx.previousNow,
 		LookbackDuration: timeutil.FormatDuration(execCtx.lookbackDur),
 		DueSoonThreshold: timeutil.FormatDuration(execCtx.dueSoonDur),
-		Filters: map[string]any{
-			"control_ids": req.ControlIDs,
-			"asset_types": req.AssetTypes,
-			"statuses":    req.Statuses,
-			"due_within":  execCtx.filtersDueWithin,
+		Filters: hygieneapp.HygieneFilters{
+			ControlIDs: req.ControlIDs,
+			AssetTypes: req.AssetTypes,
+			Statuses:   req.Statuses,
+			DueWithin:  execCtx.filtersDueWithin,
 		},
 		SnapshotStats: snapshotStats,
 		RiskStats:     currentRisk,

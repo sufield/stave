@@ -46,6 +46,6 @@ func renderQualityText(w io.Writer, report qualityReport) {
 	}
 	fmt.Fprintln(out, "Issues:")
 	for _, issue := range report.Issues {
-		fmt.Fprintf(out, "- [%s] %s: %s\n", strings.ToUpper(issue.Severity), issue.Code, issue.Message)
+		fmt.Fprintf(out, "- [%s] %s: %s\n", strings.ToUpper(string(issue.Severity)), issue.Code, issue.Message)
 	}
 }

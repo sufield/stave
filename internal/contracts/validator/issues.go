@@ -42,25 +42,36 @@ func resolveOptions(opts []Option) options {
 	return o
 }
 
+// DiagnosticCategory classifies the kind of schema diagnostic.
+type DiagnosticCategory string
+
+const (
+	DiagAdditionalProperties DiagnosticCategory = "additional_properties"
+	DiagRequired             DiagnosticCategory = "required"
+	DiagEnum                 DiagnosticCategory = "enum"
+	DiagType                 DiagnosticCategory = "type"
+	DiagSchemaViolation      DiagnosticCategory = "schema_violation"
+)
+
 // IsUnknownFieldDiagnostic checks if a diagnostic refers to additional/unknown fields.
 func IsUnknownFieldDiagnostic(d Diagnostic) bool {
-	return classifyDiagnosticCode(d) == "additional_properties"
+	return classifyDiagnosticCode(d) == DiagAdditionalProperties
 }
 
-func classifyDiagnosticCode(d Diagnostic) string {
+func classifyDiagnosticCode(d Diagnostic) DiagnosticCategory {
 	if d.Kind != nil {
 		switch d.Kind.(type) {
 		case *kind.AdditionalProperties:
-			return "additional_properties"
+			return DiagAdditionalProperties
 		case *kind.Required, *kind.Dependency, *kind.DependentRequired:
-			return "required"
+			return DiagRequired
 		case *kind.Enum, *kind.Const:
-			return "enum"
+			return DiagEnum
 		case *kind.Type:
-			return "type"
+			return DiagType
 		}
 	}
-	return "schema_violation"
+	return DiagSchemaViolation
 }
 
 // DiagnosticsResult converts generic schema diagnostics into canonical diag results.
@@ -68,14 +79,14 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 	o := resolveOptions(opts)
 	externalErrors := make([]diag.ExternalError, 0, len(diags))
 	for _, d := range diags {
-		code := classifyDiagnosticCode(d)
-		if !strict && code == "additional_properties" {
+		category := classifyDiagnosticCode(d)
+		if !strict && category == DiagAdditionalProperties {
 			continue
 		}
 		externalErrors = append(externalErrors, diagnosticExternalError{
 			path:        d.Path,
 			description: d.Message,
-			code:        code,
+			code:        string(category),
 		})
 	}
 

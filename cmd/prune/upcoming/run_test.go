@@ -86,13 +86,13 @@ func TestComputeAndMapUpcomingItems_SortsChronologicallyAndComputesStatus(t *tes
 	if items[0].ControlID != "CTL.24H" {
 		t.Fatalf("expected first item CTL.24H, got %s", items[0].ControlID)
 	}
-	if items[0].Status != "OVERDUE" {
+	if items[0].Status != risk.Overdue {
 		t.Fatalf("expected first status OVERDUE, got %s", items[0].Status)
 	}
 	if items[1].ControlID != "CTL.48H" {
 		t.Fatalf("expected second item CTL.48H, got %s", items[1].ControlID)
 	}
-	if items[1].Status != "UPCOMING" {
+	if items[1].Status != risk.Upcoming {
 		t.Fatalf("expected second status UPCOMING, got %s", items[1].Status)
 	}
 	if !items[0].DueAt.Before(items[1].DueAt) {
@@ -111,10 +111,10 @@ func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
 	items := []UpcomingItem{
-		{Status: "OVERDUE", Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
-		{Status: "DUE_NOW", Remaining: 0, DueAt: now},
-		{Status: "UPCOMING", Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},
-		{Status: "UPCOMING", Remaining: 72 * time.Hour, DueAt: now.Add(72 * time.Hour)},
+		{Status: risk.Overdue, Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
+		{Status: risk.DueNow, Remaining: 0, DueAt: now},
+		{Status: risk.Upcoming, Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},
+		{Status: risk.Upcoming, Remaining: 72 * time.Hour, DueAt: now.Add(72 * time.Hour)},
 	}
 	s := summarizeUpcoming(items, 6*time.Hour)
 	if s.Overdue != 1 || s.DueNow != 1 || s.DueSoon != 1 || s.Later != 1 || s.Total != 4 {

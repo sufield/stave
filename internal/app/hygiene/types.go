@@ -1,6 +1,11 @@
 package hygiene
 
-import "time"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // SnapshotStats summarizes snapshot inventory and retention posture.
 type SnapshotStats struct {
@@ -30,13 +35,21 @@ type TrendMetric struct {
 	Previous int    `json:"previous"`
 }
 
+// HygieneFilters captures the active filter criteria for a hygiene report.
+type HygieneFilters struct {
+	ControlIDs []kernel.ControlID `json:"control_ids"`
+	AssetTypes []kernel.AssetType `json:"asset_types"`
+	Statuses   []risk.Status      `json:"statuses"`
+	DueWithin  string             `json:"due_within"`
+}
+
 // Output is the structured representation of a hygiene report.
 type Output struct {
 	GeneratedAt      time.Time      `json:"generated_at"`
 	LookbackStart    time.Time      `json:"lookback_start"`
 	LookbackDuration string         `json:"lookback_duration"`
 	DueSoonThreshold string         `json:"due_soon_threshold"`
-	Filters          map[string]any `json:"filters,omitempty"`
+	Filters          HygieneFilters `json:"filters"`
 	SnapshotStats    SnapshotStats  `json:"snapshot_stats"`
 	RiskStats        RiskStats      `json:"risk_stats"`
 	Trend            []TrendMetric  `json:"trend"`

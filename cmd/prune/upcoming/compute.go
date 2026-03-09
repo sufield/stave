@@ -11,7 +11,7 @@ func mapRiskItems(items risk.Items) []UpcomingItem {
 	for _, d := range items {
 		out = append(out, UpcomingItem{
 			DueAt:          d.DueAt,
-			Status:         string(d.Status),
+			Status:         d.Status,
 			ControlID:      string(d.ControlID),
 			AssetID:        string(d.AssetID),
 			AssetType:      string(d.AssetType),
@@ -29,7 +29,7 @@ func summarizeUpcoming(items []UpcomingItem, dueSoonThreshold time.Duration) Upc
 	riskItems := make(risk.Items, len(items))
 	for i, item := range items {
 		riskItems[i] = risk.Item{
-			Status:    risk.Status(item.Status),
+			Status:    item.Status,
 			Remaining: item.Remaining,
 		}
 	}

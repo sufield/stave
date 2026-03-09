@@ -139,7 +139,7 @@ func (a *qualityAssessor) checkRequiredAssets() {
 	)
 }
 
-func (r *qualityReport) addIssue(code, severity, message string, evidence map[string]any) {
+func (r *qualityReport) addIssue(code string, severity qualitySeverity, message string, evidence map[string]any) {
 	if r == nil {
 		return
 	}
