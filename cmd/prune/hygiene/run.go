@@ -135,7 +135,7 @@ func buildHygieneOutputs(execCtx hygieneExecution) (hygieneapp.ReportRequest, hy
 	if err != nil {
 		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
 	}
-	files, err := listObservationSnapshotFiles(req.ObservationsDir)
+	files, err := listObservationSnapshotFiles(ctx, req.ObservationsDir)
 	if err != nil {
 		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
 	}

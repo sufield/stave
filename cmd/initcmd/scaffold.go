@@ -65,7 +65,7 @@ func runInit(cmd *cobra.Command, flags *initFlagsType) error {
 			}, allowSymlink)
 		},
 		AfterScaffold: func(baseDir string) error {
-			return maybePromptAndInitGitRepo(baseDir, os.Stdin, os.Stdout)
+			return maybePromptAndInitGitRepo(baseDir, os.Stdin, cmd.OutOrStdout())
 		},
 	})
 	if err != nil {

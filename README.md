@@ -1,6 +1,6 @@
 # Stave
 
-Offline safety evaluator for cloud configuration snapshots.
+A configuration analysis engine that detects insecure configurations in your cloud environment using only local configuration snapshots — no cloud credentials required.
 
 [Docs](docs/index.md) | [Quickstart](docs/time-to-first-finding.md) | [Releases](https://github.com/sufield/stave/releases) | [Security](SECURITY.md) | [Contributing](CONTRIBUTING.md)
 
@@ -80,11 +80,12 @@ stave diagnose
 ## How it works
 
 ```
-Capture → Evaluate → Act
+Capture → Validate → Apply → Act
 
-1. Capture    Export resource configurations as JSON snapshots
-2. Evaluate   Stave reads snapshots + evaluates against safety controls
-3. Act        Review findings, remediate, re-evaluate
+1. Capture    Export asset configurations as JSON snapshots
+2. Validate   Check inputs are well-formed and complete
+3. Apply      Evaluate snapshots against safety controls, produce findings
+4. Act        Review findings, remediate, re-evaluate
 ```
 
 Snapshots must conform to the [observation contract](docs/observation-contract.md). You need at least two snapshots (two points in time) for Stave to calculate unsafe duration windows.
@@ -170,12 +171,12 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 
 ```
 validate → plan → apply → diagnose
-   ↓          ↓          ↓
- Inputs    Findings   Insights
-  OK?       Found?    Why?
-                        ↓
-                      trace
-                   (clause detail)
+   ↓         ↓       ↓        ↓
+ Inputs    Ready?  Findings  Insights
+  OK?               Found?    Why?
+                                ↓
+                              trace
+                           (clause detail)
 ```
 
 ## Concepts
@@ -231,7 +232,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 - [Start here](docs/start-here.md)
 - [Time to first finding](docs/time-to-first-finding.md)
 - [Design philosophy](docs/design-philosophy.md)
-- [System controls as code](docs/system-invariant-as-code.md)
+- [System Invariant as Code](docs/system-invariant-as-code.md)
 - [Evaluation semantics](docs/evaluation-semantics.md)
 - [Authoring controls](docs/controls/authoring.md)
 - [User documentation](docs/user-docs.md)

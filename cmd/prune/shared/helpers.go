@@ -1,6 +1,7 @@
 package pruneshared
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -20,12 +21,12 @@ type SnapshotFile = pruner.SnapshotFile
 type PruningCriteria = pruner.Criteria
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
-func ListObservationSnapshotFiles(observationsDir string) ([]SnapshotFile, error) {
+func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) ([]SnapshotFile, error) {
 	loader, err := compose.NewSnapshotObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	files, err := pruner.ListSnapshotFilesFlatWithLoader(observationsDir, loader)
+	files, err := pruner.ListSnapshotFilesFlatWithLoader(ctx, observationsDir, loader)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -20,10 +21,10 @@ func writeJSON(w io.Writer, v any) error {
 	return jsonutil.WriteIndented(w, v)
 }
 
-func listObservationSnapshotFilesRecursive(observationsDir string, excludeDirs []string) ([]snapshotFile, error) {
+func listObservationSnapshotFilesRecursive(ctx context.Context, observationsDir string, excludeDirs []string) ([]snapshotFile, error) {
 	loader, err := compose.NewSnapshotObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	return pruner.ListSnapshotFilesRecursiveWithLoader(observationsDir, excludeDirs, loader)
+	return pruner.ListSnapshotFilesRecursiveWithLoader(ctx, observationsDir, excludeDirs, loader)
 }
