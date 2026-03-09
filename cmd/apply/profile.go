@@ -129,8 +129,18 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 }
 
 func validateApplyProfileInput(inputFile string) error {
-	if _, err := os.Stat(inputFile); err != nil {
-		return fmt.Errorf("--input not accessible: %s: %w", inputFile, err)
+	fi, err := os.Stat(inputFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("--input not found: %s", inputFile)
+		}
+		if os.IsPermission(err) {
+			return fmt.Errorf("--input not readable: %s (check file permissions)", inputFile)
+		}
+		return fmt.Errorf("cannot access --input %q: %w", inputFile, err)
+	}
+	if fi.IsDir() {
+		return fmt.Errorf("--input must be a file, got directory: %s", inputFile)
 	}
 	return nil
 }
@@ -157,7 +167,7 @@ func filterProfileSnapshots(stderr io.Writer, snapshots []asset.Snapshot, scopeF
 		return nil, nil
 	}
 	filteredSnapshots := asset.FilterSnapshots(scopeFilter, snapshots)
-	if len(filteredSnapshots) == 0 || len(filteredSnapshots[0].Assets) == 0 {
+	if len(filteredSnapshots) == 0 {
 		if !quiet {
 			fmt.Fprintln(stderr, "No S3 buckets matching health scope found in observations")
 		}
@@ -168,9 +178,6 @@ func filterProfileSnapshots(stderr io.Writer, snapshots []asset.Snapshot, scopeF
 
 func loadProfileControls(ctx context.Context, inputFile string) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
-	inputsHash, _ := fsutil.HashFile(inputFile)
-	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
-	cmdutil.AttachRunID(inputsHash.String(), controlsHash.String())
 
 	controls, err := compose.LoadControls(ctx, ctlDir)
 	if err != nil {
@@ -179,7 +186,17 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 	if len(controls) == 0 {
 		return "", nil, fmt.Errorf("no S3 controls found in %s", ctlDir)
 	}
+
+	attachProfileRunID(inputFile, ctlDir)
 	return ctlDir, controls, nil
+}
+
+// attachProfileRunID computes and attaches a deterministic run ID from input
+// hashes. Best-effort: hash failures produce empty strings, which is harmless.
+func attachProfileRunID(inputFile, ctlDir string) {
+	inputsHash, _ := fsutil.HashFile(inputFile)
+	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
+	cmdutil.AttachRunID(inputsHash.String(), controlsHash.String())
 }
 
 func finalizeApplyProfileRun(

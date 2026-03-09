@@ -37,3 +37,11 @@ Some tests use `t.Skip` to bypass execution when preconditions are not met (e.g.
 This is safe in practice because CLI commands execute sequentially and tests using `t.Parallel()` do not touch it, but it prevents future parallelism and makes the dependency graph implicit.
 
 **Fix:** Inject `Composition` through the `App` struct and pass it to command constructors. Replace the convenience functions with methods on the injected composition. Update the test to pass a custom `Composition` directly to the function under test.
+
+### Other write-once package globals add implicit coupling
+
+**Area:** `cmd/cmdutil/projconfig/config_resolution.go` — `ConfigKeyService`, `cmd/initcmd/alias/commands.go` — `rootCmd`
+
+`ConfigKeyService` is a package-level `var` initialized at load time. `rootCmd` is set via `SetRootCmd()` during app wiring for alias collision detection. Both are effectively write-once and safe in sequential CLI execution, but they create implicit dependencies that complicate testing and prevent parallel test execution.
+
+**Fix:** Pass `ConfigKeyService` as a dependency through command constructors. For `rootCmd`, pass the root command (or a collision-checking interface) as a parameter to `NewAliasCmd()` or `runAliasSet()`.
