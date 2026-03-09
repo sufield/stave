@@ -33,18 +33,35 @@ type globalFlagsType struct {
 	NoColor         bool   // disable colored output even on TTY
 }
 
-// gFlags holds all persistent CLI flag values.
-var gFlags globalFlagsType
+// App owns all CLI-wide mutable state, eliminating package-level globals
+// and making the CLI reentrant.
+type App struct {
+	Flags     globalFlagsType
+	Logger    *slog.Logger
+	LogCloser *logging.LogCloser
+	ExitFunc  func(int)
+	Root      *cobra.Command
+}
 
-// globalLogger is the structured logger for all commands.
-var globalLogger *slog.Logger
-
-// globalLogCloser holds the log file closer if applicable.
-var globalLogCloser *logging.LogCloser
-
-// exitFunc is used for terminating the process. It is a variable to allow tests
-// to override process exit behavior without affecting production code paths.
-var exitFunc = os.Exit
+// NewApp creates a fully-wired CLI application.
+func NewApp() *App {
+	app := &App{ExitFunc: os.Exit}
+	app.Root = &cobra.Command{
+		Use:               CLIName,
+		Short:             "Configuration safety evaluator",
+		Version:           GetVersion(),
+		SilenceErrors:     true,
+		SilenceUsage:      true,
+		PersistentPreRunE: app.bootstrap,
+		PersistentPostRun: app.postRun,
+		Long:              rootLongHelp,
+	}
+	AddGlobalFlags(app.Root, &app.Flags)
+	WireMetaCommands(app.Root)
+	WireCommands(app.Root)
+	wireHelpGroups(app.Root)
+	return app
+}
 
 // CLI metadata is re-exported from internal/metadata to keep command code concise
 // while centralizing ownership outside cmd/.
@@ -75,23 +92,20 @@ func ExitCode(err error) int {
 	return ui.ExitCode(err)
 }
 
-// IsJSONMode returns true if global output mode is JSON.
-func IsJSONMode() bool {
-	return gFlags.OutputMode == "json"
+func (a *App) isJSONMode() bool {
+	return a.Flags.OutputMode == "json"
 }
 
-// GetSanitizationPolicy returns the unified OutputSanitizationPolicy derived from CLI flags.
-func GetSanitizationPolicy() sanitize.OutputSanitizationPolicy {
-	pathMode := sanitize.ParsePathMode(gFlags.PathMode)
+func (a *App) getSanitizationPolicy() sanitize.OutputSanitizationPolicy {
+	pathMode := sanitize.ParsePathMode(a.Flags.PathMode)
 	return sanitize.OutputSanitizationPolicy{
-		SanitizeIDs: gFlags.Sanitize,
+		SanitizeIDs: a.Flags.Sanitize,
 		PathMode:    pathMode,
 	}
 }
 
-// resolvePathSanitize returns true when error paths should be shortened.
-func resolvePathSanitize() bool {
-	return GetSanitizationPolicy().ShouldSanitizePaths()
+func (a *App) resolvePathSanitize() bool {
+	return a.getSanitizationPolicy().ShouldSanitizePaths()
 }
 
 // GetVersion returns the version string.
@@ -99,24 +113,7 @@ func GetVersion() string {
 	return staveversion.Version
 }
 
-// GetRootCmd returns the root cobra command for documentation generation.
+// GetRootCmd returns a fully-wired root cobra command for tests and doc generation.
 func GetRootCmd() *cobra.Command {
-	return RootCmd
+	return NewApp().Root
 }
-
-// NewRootCmd builds the CLI root command.
-func NewRootCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:               CLIName,
-		Short:             "Configuration safety evaluator",
-		Version:           GetVersion(),
-		SilenceErrors:     true,
-		SilenceUsage:      true,
-		PersistentPreRunE: bootstrapRootCommand,
-		PersistentPostRun: postRunRootCommand,
-		Long:              rootLongHelp,
-	}
-}
-
-// RootCmd represents the base command when called without any subcommands.
-var RootCmd = NewRootCmd()

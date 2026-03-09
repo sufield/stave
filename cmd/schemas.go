@@ -102,7 +102,7 @@ func runSchemas(cmd *cobra.Command, _ []string) error {
 
 	out := buildSchemasOutput()
 
-	if format.IsJSON() || IsJSONMode() {
+	if format.IsJSON() || cmdutil.IsJSONMode(cmd) {
 		enc := json.NewEncoder(cmd.OutOrStdout())
 		enc.SetIndent("", "  ")
 		return enc.Encode(out)

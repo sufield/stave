@@ -12,7 +12,7 @@ import (
 // expandAliasIfMatch checks if os.Args[1] matches a user-defined alias.
 // If so, it replaces the command arguments with the expanded alias tokens
 // followed by any extra arguments the user passed.
-func expandAliasIfMatch() {
+func (a *App) expandAliasIfMatch() {
 	if len(os.Args) < 2 || strings.HasPrefix(os.Args[1], "-") {
 		return
 	}
@@ -28,11 +28,11 @@ func expandAliasIfMatch() {
 	// Alias values with quoted arguments containing spaces won't tokenize correctly.
 	tokens := strings.Fields(expanded)
 	newArgs := append(tokens, os.Args[2:]...)
-	RootCmd.SetArgs(newArgs)
+	a.Root.SetArgs(newArgs)
 }
 
-func attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
-	logging.SetDefaultLogger(globalLogger)
+func (a *App) attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
+	logging.SetDefaultLogger(a.Logger)
 	cmdutil.AttachRunIDFromPlan(plan)
-	globalLogger = logging.DefaultLogger()
+	a.Logger = logging.DefaultLogger()
 }

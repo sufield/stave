@@ -106,7 +106,7 @@ var versionCmd = &cobra.Command{
 				}
 			}
 		}
-		if IsJSONMode() {
+		if cmdutil.IsJSONMode(cmd) {
 			enc := json.NewEncoder(cmd.OutOrStdout())
 			enc.SetIndent("", "  ")
 			return enc.Encode(out)
@@ -152,14 +152,11 @@ const (
 	groupUtilities      = "utilities"
 )
 
-func init() {
-	WireMetaCommands(RootCmd)
-	WireCommands(RootCmd)
-}
-
 // WireMetaCommands attaches root metadata/introspection commands.
 func WireMetaCommands(root *cobra.Command) {
-	versionCmd.Flags().BoolVar(&versionVerbose, "verbose", false, "Include schema and lockfile status")
+	if versionCmd.Flags().Lookup("verbose") == nil {
+		versionCmd.Flags().BoolVar(&versionVerbose, "verbose", false, "Include schema and lockfile status")
+	}
 	root.AddCommand(capabilitiesCmd, schemasCmd, versionCmd)
 }
 
@@ -250,8 +247,8 @@ func runCapabilities(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func assignRootCommandGroup(use, groupID string) {
-	cmd, _, err := RootCmd.Find([]string{use})
+func assignCommandGroup(root *cobra.Command, use, groupID string) {
+	cmd, _, err := root.Find([]string{use})
 	if err != nil || cmd == nil {
 		return
 	}
