@@ -96,7 +96,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 
 	cannotProveSafeCount := asset.CountUnprovablySafe(filteredSnapshots)
 
-	format, formatErr := ui.ParseOutputFormat(opts.outputFormat)
+	format, formatErr := compose.ResolveFormatValue(cmd, opts.outputFormat)
 	if formatErr != nil {
 		return formatErr
 	}
@@ -112,7 +112,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return output.Enrich(enricher, san, r)
 	}
 
-	pipeOut := profileOutput(cmd.OutOrStdout(), opts.quiet)
+	pipeOut := compose.ResolveStdout(cmd, opts.quiet, format)
 	pipeErr := appeval.NewPipeline(cmd.Context(), &appeval.PipelineData{
 		Result: result,
 		Output: pipeOut,
@@ -220,13 +220,6 @@ func finalizeApplyProfileRun(
 		fmt.Fprintln(stderr, "Evaluation complete. No violations found.")
 	}
 	return nil
-}
-
-func profileOutput(stdout io.Writer, quiet bool) io.Writer {
-	if quiet {
-		return io.Discard
-	}
-	return stdout
 }
 
 func getControlsBaseDir() string {

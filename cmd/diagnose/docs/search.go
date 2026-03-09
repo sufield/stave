@@ -96,7 +96,7 @@ func runDocsSearch(cmd *cobra.Command, args []string, flags *docsSearchFlagsType
 		return err
 	}
 	if len(files) == 0 {
-		return fmt.Errorf("no documentation files found under %s", req.root)
+		return &ui.InputError{Err: fmt.Errorf("no documentation files found under %s", req.root)}
 	}
 
 	hits, err := searchDocsFiles(files, req.query, req.caseSensitive)
@@ -123,11 +123,11 @@ func runDocsSearch(cmd *cobra.Command, args []string, flags *docsSearchFlagsType
 
 func buildDocsSearchRequest(cmd *cobra.Command, args []string, flags *docsSearchFlagsType) (docsSearchRequest, error) {
 	if flags.show < 1 {
-		return docsSearchRequest{}, fmt.Errorf("invalid --show %d: must be >= 1", flags.show)
+		return docsSearchRequest{}, &ui.InputError{Err: fmt.Errorf("invalid --show %d: must be >= 1", flags.show)}
 	}
 	query := strings.TrimSpace(strings.Join(args, " "))
 	if query == "" {
-		return docsSearchRequest{}, fmt.Errorf("query cannot be empty")
+		return docsSearchRequest{}, &ui.InputError{Err: fmt.Errorf("query cannot be empty")}
 	}
 	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
@@ -184,7 +184,10 @@ func collectDocsFiles(root string, include []string) ([]docsFile, error) {
 		full := fsutil.CleanUserPath(filepath.Join(root, includePath))
 		info, err := os.Stat(full)
 		if err != nil {
-			continue
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("cannot access %s: %w", includePath, err)
 		}
 		if info.Mode().IsRegular() {
 			appendDocFileIfEligible(root, full, seen, &files)

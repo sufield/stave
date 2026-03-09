@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -26,7 +27,7 @@ func runFix(cmd *cobra.Command, flags *fixFlagsType) error {
 	}
 	needle := strings.TrimSpace(flags.findingRef)
 	if needle == "" {
-		return fmt.Errorf("--finding cannot be empty")
+		return &ui.InputError{Err: fmt.Errorf("--finding cannot be empty")}
 	}
 	selected, err := selectFixFinding(findings, needle)
 	if err != nil {

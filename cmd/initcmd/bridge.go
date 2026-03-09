@@ -74,7 +74,7 @@ func onboardingCommandError(err error, runLine string) error {
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("%v\nRun: %s", err, runLine)
+	return fmt.Errorf("%w\nRun: %s", err, runLine)
 }
 
 func readBool(m map[string]any, keys ...string) bool {

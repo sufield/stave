@@ -62,7 +62,7 @@ func prepareValidateCommand(cmd *cobra.Command, opts *options) (ui.OutputFormat,
 		return "", err
 	}
 
-	format, err := ui.ParseOutputFormat(opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return "", err
 	}

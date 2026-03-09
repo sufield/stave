@@ -3,7 +3,6 @@ package apply
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -143,10 +142,8 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 
 // mapToBuildInput converts the plan and assets into the input struct for BuildDependencies.
 func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStack) appeval.BuildDependenciesInput {
-	output := f.cmd.OutOrStdout()
-	if cmdutil.QuietEnabled(f.cmd) {
-		output = io.Discard
-	}
+	format, _ := compose.ResolveFormatValue(f.cmd, f.flags.outputFormat)
+	output := compose.ResolveStdout(f.cmd, cmdutil.QuietEnabled(f.cmd), format)
 
 	return appeval.BuildDependenciesInput{
 		Plan:              *plan,

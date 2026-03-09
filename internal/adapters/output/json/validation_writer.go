@@ -3,6 +3,8 @@ package json
 import (
 	"encoding/json"
 	"io"
+
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // WriteValidation writes a validation report as JSON.
@@ -12,7 +14,7 @@ func WriteValidation(w io.Writer, report any, useEnvelope bool, isValid bool) er
 	enc.SetIndent("", "  ")
 
 	if useEnvelope {
-		return enc.Encode(map[string]any{"ok": isValid, "data": report})
+		return enc.Encode(safetyenvelope.JSONEnvelope[any]{OK: isValid, Data: report})
 	}
 	return enc.Encode(report)
 }

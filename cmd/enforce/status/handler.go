@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -149,11 +149,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return err
 	}
-	formatRaw := strings.TrimSpace(opts.Format)
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
-		formatRaw = "json"
-	}
-	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return err
 	}

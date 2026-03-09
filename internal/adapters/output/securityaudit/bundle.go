@@ -138,7 +138,7 @@ func writeRunManifest(opts BundleWriteOpts, path string, now time.Time, bundleDi
 		return fmt.Errorf("marshal run manifest: %w", err)
 	}
 	wopts := fsutil.DefaultWriteOpts()
-	wopts.Overwrite = true
+	wopts.Overwrite = opts.Force
 	wopts.AllowSymlink = opts.AllowSymlink
 	if err := fsutil.SafeWriteFile(path, append(data, '\n'), wopts); err != nil {
 		return fmt.Errorf("write run manifest: %w", err)

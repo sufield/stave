@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -16,22 +17,15 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-func diagnoseOutput(cmd *cobra.Command, quiet bool) io.Writer {
-	if quiet {
-		return io.Discard
-	}
-	return cmd.OutOrStdout()
-}
-
 func renderDiagnoseOutput(cmd *cobra.Command, opts diagnoseOptions, report *diagnosis.Report) error {
 	if opts.Template != "" {
 		return renderDiagnoseTemplate(cmd, opts, report)
 	}
-	format, err := ui.ParseOutputFormat(opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return err
 	}
-	out := diagnoseOutput(cmd, opts.Quiet)
+	out := compose.ResolveStdout(cmd, opts.Quiet, format)
 	if err := writeDiagnoseReport(cmd, out, format, report); err != nil {
 		return err
 	}
@@ -39,7 +33,7 @@ func renderDiagnoseOutput(cmd *cobra.Command, opts diagnoseOptions, report *diag
 }
 
 func renderDiagnoseTemplate(cmd *cobra.Command, opts diagnoseOptions, report *diagnosis.Report) error {
-	out := diagnoseOutput(cmd, opts.Quiet)
+	out := compose.ResolveStdout(cmd, opts.Quiet, "text")
 	if err := ui.ExecuteTemplate(out, opts.Template, safetyenvelope.NewDiagnose(report)); err != nil {
 		return err
 	}
@@ -54,7 +48,7 @@ func diagnoseDiagnosisExit(report *diagnosis.Report) error {
 }
 
 func writeDiagnoseReport(cmd *cobra.Command, out io.Writer, format ui.OutputFormat, report *diagnosis.Report) error {
-	if format.IsJSON() || cmdutil.IsJSONMode(cmd) {
+	if format.IsJSON() {
 		return writeDiagnoseJSON(cmd, out, report)
 	}
 	return outtext.WriteDiagnosisReport(out, report, func(level, msg string) string {

@@ -59,6 +59,19 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	return ports.FixedClock{Time: t}, nil
 }
 
+// ResolveStdout returns the appropriate stdout writer for the given quiet/format
+// combination. JSON output is always preserved (for scripting/piping); text
+// output is discarded when quiet mode is active.
+func ResolveStdout(cmd *cobra.Command, quiet bool, format ui.OutputFormat) io.Writer {
+	if quiet && !format.IsJSON() {
+		return io.Discard
+	}
+	if cmd != nil {
+		return cmd.OutOrStdout()
+	}
+	return os.Stdout
+}
+
 // ResolveFormatValue determines the effective output format from a flag value and
 // global JSON mode. When the flag was not explicitly changed and global JSON mode
 // is active, "json" is used instead.

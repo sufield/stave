@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
@@ -24,7 +24,7 @@ func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
 		return err
 	}
 
-	format, err := ui.ParseOutputFormat(strings.TrimSpace(flags.format))
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}

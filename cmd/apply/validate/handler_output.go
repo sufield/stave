@@ -3,7 +3,6 @@ package validate
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -140,7 +139,7 @@ func writeValidationTextWithOptions(w io.Writer, result *appservice.ValidationRe
 			return err
 		}
 	}
-	return writeValidationNextStep(w, result.Valid(), counts.warnings, opts)
+	return nil
 }
 
 type issueCounts struct {
@@ -199,15 +198,6 @@ func writeValidationSummary(w io.Writer, summary appservice.ValidationSummary) e
 		}
 	}
 	_, err := fmt.Fprintln(w)
-	return err
-}
-
-func writeValidationNextStep(w io.Writer, valid bool, warningCount int, opts *options) error {
-	if !valid || warningCount > 0 {
-		return nil
-	}
-	_, err := fmt.Fprintf(w, "\nNext step:\n  stave apply --controls %s --observations %s\n",
-		opts.ControlsDir, opts.ObservationsDir)
 	return err
 }
 
@@ -280,13 +270,6 @@ func plural(n int) string {
 		return ""
 	}
 	return "s"
-}
-
-func validateOutputWithOptions(opts *options) io.Writer {
-	if opts.QuietMode {
-		return io.Discard
-	}
-	return os.Stdout
 }
 
 // PackConfigIssues checks for unknown control pack names in the project config.

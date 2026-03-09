@@ -169,8 +169,11 @@ func TestBuildDiagnoseConfigAndOutputHelpers(t *testing.T) {
 	}
 
 	testCmd := &cobra.Command{}
-	if diagnoseOutput(testCmd, true) != io.Discard {
-		t.Fatal("diagnoseOutput(true) should return io.Discard")
+	if compose.ResolveStdout(testCmd, true, "text") != io.Discard {
+		t.Fatal("ResolveStdout(quiet=true, text) should return io.Discard")
+	}
+	if compose.ResolveStdout(testCmd, true, "json") == io.Discard {
+		t.Fatal("ResolveStdout(quiet=true, json) should preserve stdout for piping")
 	}
 }
 
