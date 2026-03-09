@@ -2,7 +2,6 @@ package docs
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -16,6 +15,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -144,9 +144,7 @@ func buildDocsSearchRequest(cmd *cobra.Command, args []string, flags *docsSearch
 }
 
 func writeDocsSearchJSON(w io.Writer, out docsSearchOutput) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(out)
+	return jsonutil.WriteIndented(w, out)
 }
 
 func writeDocsSearchText(w io.Writer, query string, total int, hits []docsSearchHit) error {

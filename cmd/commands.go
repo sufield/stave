@@ -3,7 +3,6 @@ package cmd
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -36,6 +35,7 @@ import (
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -120,9 +120,7 @@ func newVersionCmd() *cobra.Command {
 				}
 			}
 			if cmdutil.IsJSONMode(cmd) {
-				enc := json.NewEncoder(cmd.OutOrStdout())
-				enc.SetIndent("", "  ")
-				return enc.Encode(out)
+				return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 			}
 			if !verbose {
 				_, err := fmt.Fprintln(cmd.OutOrStdout(), out.Version)
@@ -244,12 +242,9 @@ func wireDocsSubtree(docsCmd *cobra.Command) {
 func runCapabilities(cmd *cobra.Command, _ []string) error {
 	caps := capabilities.GetCapabilities(GetVersion())
 
-	encoder := json.NewEncoder(cmd.OutOrStdout())
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(caps); err != nil {
+	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), caps); err != nil {
 		return fmt.Errorf("failed to encode capabilities: %w", err)
 	}
-
 	return nil
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -116,7 +117,7 @@ func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) erro
 	}
 	w := cmd.OutOrStdout()
 	if format.IsJSON() {
-		if err := writeJSON(w, plan); err != nil {
+		if err := jsonutil.WriteIndented(w, plan); err != nil {
 			return fmt.Errorf("write plan output: %w", err)
 		}
 		return nil

@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 func writeQualityOutput(w io.Writer, format ui.OutputFormat, report qualityReport, quiet bool) error {
 	if format.IsJSON() {
-		if err := writeJSON(w, report); err != nil {
+		if err := jsonutil.WriteIndented(w, report); err != nil {
 			return fmt.Errorf("write quality report: %w", err)
 		}
 		return nil

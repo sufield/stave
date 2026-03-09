@@ -6,11 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/adapters/output"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
@@ -56,7 +56,7 @@ func writeFixLoopReport(cmd *cobra.Command, execCtx fixLoopExecution, report *fi
 			return err
 		}
 	}
-	if err := shared.WriteJSON(cmd.OutOrStdout(), report); err != nil {
+	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), report); err != nil {
 		return fmt.Errorf("write remediation report: %w", err)
 	}
 	return nil
@@ -75,7 +75,7 @@ func writeOutputJSONFile(cmd *cobra.Command, path string, value any) error {
 		return err
 	}
 	defer f.Close()
-	if err := shared.WriteJSON(f, value); err != nil {
+	if err := jsonutil.WriteIndented(f, value); err != nil {
 		return fmt.Errorf("write %s: %w", path, err)
 	}
 	return nil

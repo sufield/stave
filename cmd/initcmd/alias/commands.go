@@ -1,7 +1,6 @@
 package alias
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -13,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 var aliasNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
@@ -152,9 +152,7 @@ func runAliasList(cmd *cobra.Command, rawFormat string) error {
 		for _, name := range names {
 			entries = append(entries, aliasEntry{Name: name, Command: aliases[name]})
 		}
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(entries)
+		return jsonutil.WriteIndented(out, entries)
 	}
 
 	if len(names) == 0 {

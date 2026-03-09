@@ -17,13 +17,9 @@ func writeOutput(cmd *cobra.Command, w io.Writer, format ui.OutputFormat, out as
 		return nil
 	}
 	if format.IsJSON() {
-		return writeJSON(w, out)
+		return jsonutil.WriteIndented(w, out)
 	}
 	return writeText(w, out)
-}
-
-func writeJSON(w io.Writer, out asset.ObservationDelta) error {
-	return jsonutil.WriteIndented(w, out)
 }
 
 func writeText(w io.Writer, out asset.ObservationDelta) error {

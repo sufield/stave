@@ -1,7 +1,6 @@
 package docs
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -132,9 +132,7 @@ func resolveDocsOpenSummary(absPath string, line int, fallback string) string {
 
 func writeDocsOpenOutput(w io.Writer, format ui.OutputFormat, out docsOpenOutput) error {
 	if format.IsJSON() {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return jsonutil.WriteIndented(w, out)
 	}
 	return writeDocsOpenText(w, out)
 }

@@ -3,10 +3,8 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
@@ -43,8 +41,4 @@ func LoadBaselineFile(path, expectedKind string) (*evaluation.Baseline, error) {
 	}
 	evaluation.SortBaselineEntries(base.Findings)
 	return &base, nil
-}
-
-func WriteJSON(w io.Writer, v any) error {
-	return jsonutil.WriteIndented(w, v)
 }

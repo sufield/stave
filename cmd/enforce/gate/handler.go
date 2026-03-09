@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -161,7 +162,7 @@ func executePolicy(ctx context.Context, input runInput) (gateResult, error) {
 
 func writeOutput(cmd *cobra.Command, format ui.OutputFormat, result gateResult) error {
 	if format.IsJSON() {
-		if err := shared.WriteJSON(cmd.OutOrStdout(), result); err != nil {
+		if err := jsonutil.WriteIndented(cmd.OutOrStdout(), result); err != nil {
 			return fmt.Errorf("write gate output: %w", err)
 		}
 		return nil

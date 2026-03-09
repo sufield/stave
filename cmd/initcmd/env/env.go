@@ -1,7 +1,6 @@
 package env
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/envvar"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // NewEnvCmd constructs the env command tree with closure-scoped flags.
@@ -89,9 +89,7 @@ func writeEnvListJSON(cmd *cobra.Command, vars []envvar.Entry) error {
 			DefaultValue: v.DefaultValue,
 		}
 	}
-	enc := json.NewEncoder(cmd.OutOrStdout())
-	enc.SetIndent("", "  ")
-	return enc.Encode(entries)
+	return jsonutil.WriteIndented(cmd.OutOrStdout(), entries)
 }
 
 func writeEnvListText(cmd *cobra.Command, vars []envvar.Entry) error {
