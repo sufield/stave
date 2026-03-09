@@ -3,7 +3,6 @@ package artifacts
 import (
 	"context"
 	"encoding/csv"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +18,7 @@ import (
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 type controlsListFlagsType struct {
@@ -140,9 +140,7 @@ func newControlsAliasExplainCmd() *cobra.Command {
 				return fmt.Errorf("unknown alias %q (available: %s)", args[0], strings.Join(predicates.ListAliases(), ", "))
 			}
 			out := map[string]any{"alias": args[0], "expanded": expanded}
-			enc := json.NewEncoder(cmd.OutOrStdout())
-			enc.SetIndent("", "  ")
-			return enc.Encode(out)
+			return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 		},
 	}
 }
@@ -226,9 +224,7 @@ func writeControlRows(w io.Writer, rows []controlListRow, formatValue, columnsVa
 	format := strings.ToLower(strings.TrimSpace(formatValue))
 	switch format {
 	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(rows)
+		return jsonutil.WriteIndented(w, rows)
 	case "csv", "text":
 		columns, err := parseControlColumns(columnsValue)
 		if err != nil {
@@ -250,9 +246,7 @@ func runControlsListPacks(cmd *cobra.Command, listFormat string) error {
 	}
 	switch strings.ToLower(strings.TrimSpace(listFormat)) {
 	case "json":
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(items)
+		return jsonutil.WriteIndented(cmd.OutOrStdout(), items)
 	case "text":
 		if len(items) == 0 {
 			_, err = fmt.Fprintln(cmd.OutOrStdout(), "No packs found.")

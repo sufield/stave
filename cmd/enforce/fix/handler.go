@@ -1,7 +1,6 @@
 package fix
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
@@ -11,6 +10,7 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -103,9 +103,7 @@ func writeFixResult(w io.Writer, selected remediation.Finding) error {
 	if _, err := fmt.Fprintln(w, "Fix Plan:"); err != nil {
 		return err
 	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(selected.RemediationPlan)
+	return jsonutil.WriteIndented(w, selected.RemediationPlan)
 }
 
 func fixFindingKey(f remediation.Finding) string {

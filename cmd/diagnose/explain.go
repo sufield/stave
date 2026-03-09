@@ -2,7 +2,6 @@ package diagnose
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -15,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 type explainFlagsType struct {
@@ -115,9 +115,7 @@ func buildExplainOutput(ctl policy.ControlDefinition) explainOutput {
 
 func writeExplainOutput(w io.Writer, format ui.OutputFormat, out explainOutput) error {
 	if format.IsJSON() {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return jsonutil.WriteIndented(w, out)
 	}
 	return writeExplainText(w, out)
 }
@@ -327,7 +325,5 @@ func writeExplainMinimalObservation(w io.Writer, observation any) error {
 	if _, err := fmt.Fprintln(w, "\nMinimal observation snippet:"); err != nil {
 		return err
 	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(observation)
+	return jsonutil.WriteIndented(w, observation)
 }

@@ -1,7 +1,6 @@
 package artifacts
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // NewPacksCmd constructs the packs command tree.
@@ -63,9 +63,7 @@ func newPacksShowCmd() *cobra.Command {
 				}
 				return fmt.Errorf("unknown pack %q (available: %s)", args[0], strings.Join(names, ", "))
 			}
-			enc := json.NewEncoder(cmd.OutOrStdout())
-			enc.SetIndent("", "  ")
-			return enc.Encode(pack)
+			return jsonutil.WriteIndented(cmd.OutOrStdout(), pack)
 		},
 	}
 }

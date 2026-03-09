@@ -2,7 +2,6 @@ package hygiene
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,7 @@ import (
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 func loadSnapshotsIfDirExists(
@@ -56,9 +56,7 @@ func filterSnapshotsBefore(snapshots []asset.Snapshot, cutoff time.Time) []asset
 
 func writeHygieneOutput(format ui.OutputFormat, report hygieneapp.ReportRequest, jsonOut hygieneapp.Output, w io.Writer) error {
 	if format.IsJSON() {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(jsonOut); err != nil {
+		if err := jsonutil.WriteIndented(w, jsonOut); err != nil {
 			return fmt.Errorf("write report: %w", err)
 		}
 		return nil

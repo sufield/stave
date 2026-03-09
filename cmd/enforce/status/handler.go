@@ -1,7 +1,6 @@
 package status
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 type options struct {
@@ -154,9 +154,7 @@ func run(cmd *cobra.Command, opts *options) error {
 		return err
 	}
 	if format.IsJSON() {
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 	}
 	return writeText(cmd.OutOrStdout(), out)
 }
