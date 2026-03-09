@@ -17,17 +17,9 @@ import (
 
 var aliasNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
-// rootCmd is set by the wiring layer via SetRootCmd after root command creation.
-// It is used only for alias collision detection.
-var rootCmd *cobra.Command
-
-// SetRootCmd injects the root command for alias collision detection.
-func SetRootCmd(cmd *cobra.Command) {
-	rootCmd = cmd
-}
-
 // NewAliasCmd constructs the alias command tree with closure-scoped flags.
-func NewAliasCmd() *cobra.Command {
+// rootCmd is used for alias collision detection against existing commands.
+func NewAliasCmd(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "alias",
 		Short: "Manage command aliases",
@@ -35,14 +27,14 @@ func NewAliasCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newAliasSetCmd())
+	cmd.AddCommand(newAliasSetCmd(rootCmd))
 	cmd.AddCommand(newAliasListCmd())
 	cmd.AddCommand(newAliasDeleteCmd())
 
 	return cmd
 }
 
-func newAliasSetCmd() *cobra.Command {
+func newAliasSetCmd(rootCmd *cobra.Command) *cobra.Command {
 	return &cobra.Command{
 		Use:   "set <name> <command>",
 		Short: "Create or update an alias",
@@ -54,8 +46,10 @@ existing command names.
 Examples:
   stave alias set ap "apply --controls controls/s3 --observations examples/observations --max-unsafe 24h"
   stave alias set q "apply --quiet"` + metadata.OfflineHelpSuffix,
-		Args:          cobra.ExactArgs(2),
-		RunE:          runAliasSet,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runAliasSet(cmd, args, rootCmd)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -94,7 +88,7 @@ func newAliasDeleteCmd() *cobra.Command {
 	}
 }
 
-func runAliasSet(cmd *cobra.Command, args []string) error {
+func runAliasSet(cmd *cobra.Command, args []string, rootCmd *cobra.Command) error {
 	name := args[0]
 	command := args[1]
 

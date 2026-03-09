@@ -134,7 +134,7 @@ func isSensitiveEnvKey(key string) bool {
 	if k == "aws_access_key_id" || k == "aws_secret_access_key" || k == "aws_session_token" {
 		return true
 	}
-	for _, part := range sensitive.SubstringKeywords {
+	for _, part := range sensitive.SubstringKeywords() {
 		if strings.Contains(k, part) {
 			return true
 		}
