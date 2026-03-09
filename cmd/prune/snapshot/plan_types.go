@@ -2,13 +2,13 @@ package snapshot
 
 import "github.com/sufield/stave/internal/pruner"
 
-var (
-	planObservationsRoot string
-	planArchiveDir       string
-	planNow              string
-	planFormat           string
-	planApply            bool
-)
+type planFlagsType struct {
+	observationsRoot string
+	archiveDir       string
+	now              string
+	format           string
+	apply            bool
+}
 
 type planFileEntry = pruner.SnapshotPlanFile
 type planTierSummary = pruner.SnapshotPlanTierSummary

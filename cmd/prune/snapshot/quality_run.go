@@ -2,7 +2,6 @@ package snapshot
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -21,10 +20,8 @@ type qualityFlagsType struct {
 	strict                    bool
 }
 
-var qualityFlags qualityFlagsType
-
-func runQuality(cmd *cobra.Command, _ []string) error {
-	runInput, err := prepareQualityInput(cmd)
+func runQuality(cmd *cobra.Command, flags *qualityFlagsType) error {
+	runInput, err := prepareQualityInput(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -52,64 +49,41 @@ func runQuality(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func prepareQualityInput(cmd *cobra.Command) (qualityInput, error) {
-	qualityFlags.observationsDir = fsutil.CleanUserPath(qualityFlags.observationsDir)
-	if err := validateMinSnapshots(); err != nil {
-		return qualityInput{}, err
+func prepareQualityInput(cmd *cobra.Command, flags *qualityFlagsType) (qualityInput, error) {
+	flags.observationsDir = fsutil.CleanUserPath(flags.observationsDir)
+	if flags.minSnapshots < 1 {
+		return qualityInput{}, fmt.Errorf("invalid --min-snapshots %d: must be >= 1", flags.minSnapshots)
 	}
-	maxStaleness, maxGap, err := parseQualityDurations()
+	maxStaleness, err := timeutil.ParseDurationFlag(flags.maxStaleness, "--max-staleness")
 	if err != nil {
 		return qualityInput{}, err
 	}
-	now, err := resolveQualityNow()
+	if maxStaleness < 0 {
+		return qualityInput{}, fmt.Errorf("invalid --max-staleness %q: must be >= 0", flags.maxStaleness)
+	}
+	maxGap, err := timeutil.ParseDurationFlag(flags.maxGap, "--max-gap")
 	if err != nil {
 		return qualityInput{}, err
 	}
-	format, err := resolveQualityFormat(cmd)
+	if maxGap < 0 {
+		return qualityInput{}, fmt.Errorf("invalid --max-gap %q: must be >= 0", flags.maxGap)
+	}
+	now, err := cmdutil.ResolveNow(flags.now)
+	if err != nil {
+		return qualityInput{}, err
+	}
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return qualityInput{}, err
 	}
 	return qualityInput{
-		observationsDir: qualityFlags.observationsDir,
-		minSnapshots:    qualityFlags.minSnapshots,
+		observationsDir: flags.observationsDir,
+		minSnapshots:    flags.minSnapshots,
 		maxStaleness:    maxStaleness,
 		maxGap:          maxGap,
-		requiredAssets:  qualityFlags.required,
+		requiredAssets:  flags.required,
 		now:             now,
 		format:          format,
-		strict:          qualityFlags.strict,
+		strict:          flags.strict,
 	}, nil
-}
-
-func validateMinSnapshots() error {
-	if qualityFlags.minSnapshots >= 1 {
-		return nil
-	}
-	return fmt.Errorf("invalid --min-snapshots %d: must be >= 1", qualityFlags.minSnapshots)
-}
-
-func parseQualityDurations() (time.Duration, time.Duration, error) {
-	maxStaleness, err := timeutil.ParseDurationFlag(qualityFlags.maxStaleness, "--max-staleness")
-	if err != nil {
-		return 0, 0, err
-	}
-	if maxStaleness < 0 {
-		return 0, 0, fmt.Errorf("invalid --max-staleness %q: must be >= 0", qualityFlags.maxStaleness)
-	}
-	maxGap, err := timeutil.ParseDurationFlag(qualityFlags.maxGap, "--max-gap")
-	if err != nil {
-		return 0, 0, err
-	}
-	if maxGap < 0 {
-		return 0, 0, fmt.Errorf("invalid --max-gap %q: must be >= 0", qualityFlags.maxGap)
-	}
-	return maxStaleness, maxGap, nil
-}
-
-func resolveQualityNow() (time.Time, error) {
-	return cmdutil.ResolveNow(qualityFlags.now)
-}
-
-func resolveQualityFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return cmdutil.ResolveFormatValue(cmd, qualityFlags.format)
 }

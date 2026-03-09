@@ -2,14 +2,20 @@ package manifest
 
 import "github.com/spf13/cobra"
 
-var KeygenCmd = &cobra.Command{
-	Use:   "keygen",
-	Short: "Generate an Ed25519 keypair for manifest signing",
-	Args:  cobra.NoArgs,
-	RunE:  runSnapshotManifestKeygen,
-}
+func newKeygenCmd() *cobra.Command {
+	var privateKeyOut, publicKeyOut string
 
-func init() {
-	KeygenCmd.Flags().StringVar(&snapshotManifestPrivateKeyPath, "private-key-out", "manifest.private", "Output private key path")
-	KeygenCmd.Flags().StringVar(&snapshotManifestPublicKeyOut, "public-key-out", "manifest.public", "Output public key path")
+	cmd := &cobra.Command{
+		Use:   "keygen",
+		Short: "Generate an Ed25519 keypair for manifest signing",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runSnapshotManifestKeygen(cmd, privateKeyOut, publicKeyOut)
+		},
+	}
+
+	cmd.Flags().StringVar(&privateKeyOut, "private-key-out", "manifest.private", "Output private key path")
+	cmd.Flags().StringVar(&publicKeyOut, "public-key-out", "manifest.public", "Output public key path")
+
+	return cmd
 }

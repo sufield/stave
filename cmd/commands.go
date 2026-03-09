@@ -222,7 +222,7 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
 	for _, subCmd := range prune.Commands() {
 		snapshotCmd.AddCommand(subCmd)
 	}
-	snapshotCmd.AddCommand(manifest.Cmd)
+	snapshotCmd.AddCommand(manifest.NewCmd())
 }
 
 func wireCISubtree(ciCmd *cobra.Command) {

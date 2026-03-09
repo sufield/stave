@@ -17,10 +17,10 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func runSnapshotManifestSign(cmd *cobra.Command, _ []string) error {
-	in := filepath.Clean(snapshotManifestInPath)
-	out := filepath.Clean(snapshotManifestOutPath)
-	privateKeyPath := filepath.Clean(snapshotManifestPrivateKeyPath)
+func runSnapshotManifestSign(cmd *cobra.Command, inFile, keyPath, outFile string) error {
+	in := filepath.Clean(inFile)
+	out := filepath.Clean(outFile)
+	privateKeyPath := filepath.Clean(keyPath)
 
 	manifestData, err := fsutil.ReadFileLimited(in)
 	if err != nil {

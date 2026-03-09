@@ -15,9 +15,9 @@ func Commands() []*cobra.Command {
 	return []*cobra.Command{
 		cleanupcmd.NewCmd(),
 		archivecmd.NewCmd(),
-		upcomingcmd.Cmd,
-		snapshotcmd.Quality,
-		snapshotcmd.Plan,
-		hygienecmd.Cmd,
+		upcomingcmd.NewCmd(),
+		snapshotcmd.NewQualityCmd(),
+		snapshotcmd.NewPlanCmd(),
+		hygienecmd.NewCmd(),
 	}
 }

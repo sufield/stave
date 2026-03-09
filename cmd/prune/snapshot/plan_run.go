@@ -12,8 +12,8 @@ import (
 	"github.com/sufield/stave/internal/pruner"
 )
 
-func runPlan(cmd *cobra.Command, _ []string) error {
-	runInput, err := preparePlanRunInput()
+func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
+	runInput, err := preparePlanRunInput(flags)
 	if err != nil {
 		return err
 	}
@@ -30,10 +30,10 @@ func runPlan(cmd *cobra.Command, _ []string) error {
 		TierRules:   runInput.tierRules,
 		Tiers:       runInput.tiers,
 		Files:       files,
-		Apply:       planApply,
+		Apply:       flags.apply,
 		Force:       cmdutil.ForceEnabled(cmd),
 	})
-	if err := writePlanOutput(cmd, plan); err != nil {
+	if err := writePlanOutput(cmd, plan, flags.format); err != nil {
 		return err
 	}
 	if plan.Applied {
@@ -51,20 +51,21 @@ type planRunInput struct {
 	tierRules        []cmdutil.TierMappingRule
 }
 
-func preparePlanRunInput() (planRunInput, error) {
-	planObservationsRoot = fsutil.CleanUserPath(planObservationsRoot)
-	if planArchiveDir != "" {
-		planArchiveDir = fsutil.CleanUserPath(planArchiveDir)
+func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
+	obsRoot := fsutil.CleanUserPath(flags.observationsRoot)
+	var archiveDir string
+	if flags.archiveDir != "" {
+		archiveDir = fsutil.CleanUserPath(flags.archiveDir)
 	}
 
-	now, err := cmdutil.ResolveNow(planNow)
+	now, err := cmdutil.ResolveNow(flags.now)
 	if err != nil {
 		return planRunInput{}, err
 	}
 	tiers, tierRules, defaultTier := resolvePlanRetentionConfig()
 	return planRunInput{
-		observationsRoot: planObservationsRoot,
-		archiveDir:       planArchiveDir,
+		observationsRoot: obsRoot,
+		archiveDir:       archiveDir,
 		now:              now,
 		defaultTier:      defaultTier,
 		tiers:            tiers,
@@ -102,8 +103,8 @@ func listPlanFiles(observationsRoot, archiveDir string) ([]snapshotFile, error) 
 	return listObservationSnapshotFilesRecursive(observationsRoot, excludeDirs)
 }
 
-func writePlanOutput(cmd *cobra.Command, plan planOutput) error {
-	format, err := cmdutil.ResolveFormatValue(cmd, planFormat)
+func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) error {
+	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}

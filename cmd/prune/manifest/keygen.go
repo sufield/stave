@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runSnapshotManifestKeygen(cmd *cobra.Command, _ []string) error {
-	privateOut := filepath.Clean(snapshotManifestPrivateKeyPath)
-	publicOut := filepath.Clean(snapshotManifestPublicKeyOut)
+func runSnapshotManifestKeygen(cmd *cobra.Command, privateKeyOutPath, publicKeyOutPath string) error {
+	privateOut := filepath.Clean(privateKeyOutPath)
+	publicOut := filepath.Clean(publicKeyOutPath)
 
 	publicKey, privateKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
