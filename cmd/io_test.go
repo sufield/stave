@@ -155,13 +155,14 @@ func TestValidateInFlagRegistered(t *testing.T) {
 }
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
+	applyCmd := apply.NewApplyCmd()
 	cases := []struct {
 		name      string
 		shorthand string
 		flags     interface{ ShorthandLookup(name string) *pflag.Flag }
 	}{
-		{name: "apply controls", shorthand: "i", flags: apply.ApplyCmd.Flags()},
-		{name: "apply observations", shorthand: "o", flags: apply.ApplyCmd.Flags()},
+		{name: "apply controls", shorthand: "i", flags: applyCmd.Flags()},
+		{name: "apply observations", shorthand: "o", flags: applyCmd.Flags()},
 		{name: "validate controls", shorthand: "i", flags: applyvalidate.ValidateCmd.Flags()},
 		{name: "validate observations", shorthand: "o", flags: applyvalidate.ValidateCmd.Flags()},
 		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.DiagnoseCmd.Flags()},

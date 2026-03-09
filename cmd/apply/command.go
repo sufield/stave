@@ -18,33 +18,6 @@ type applyFlagsType struct {
 	applyIntegrityManifest, applyIntegrityPublicKey  string
 }
 
-var applyFlags applyFlagsType
-
-func init() {
-	cmdutil.RegisterControlsFlag(ApplyCmd, &applyFlags.controlsDir, "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
-	ApplyCmd.Flags().StringVarP(&applyFlags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
-	ApplyCmd.Flags().StringVar(&applyFlags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
-	ApplyCmd.Flags().StringVar(&applyFlags.nowTime, "now", "", "Override current time (RFC3339 format). Required for deterministic output")
-	ApplyCmd.Flags().BoolVar(&applyFlags.allowUnknownInput, "allow-unknown-input", cmdutil.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
-	ApplyCmd.Flags().StringVarP(&applyFlags.outputFormat, "format", "f", "json", "Output format: json, text, or sarif")
-	ApplyCmd.Flags().StringVar(&applyFlags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
-	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
-	ApplyCmd.Flags().StringVar(&applyFlags.applyIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
-	ApplyCmd.Flags().StringVarP(&applyFlags.applyProfile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")
-	ApplyCmd.Flags().StringVar(&applyFlags.profileInputFile, "input", "", "Path to observations bundle file (required with --profile)")
-	ApplyCmd.Flags().StringSliceVar(&applyFlags.profileBucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include (can specify multiple)")
-	ApplyCmd.Flags().BoolVar(&applyFlags.profileIncludeAll, "include-all", false, "Disable health scope filtering (extract all buckets)")
-	_ = ApplyCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
-}
-
-var (
-	readinessPlanControlsDir     string
-	readinessPlanObservationsDir string
-	readinessPlanMaxUnsafe       string
-	readinessPlanNowTime         string
-	readinessPlanFormat          string
-)
-
 type readinessInput struct {
 	ControlsDir     string
 	ObservationsDir string
@@ -53,11 +26,19 @@ type readinessInput struct {
 	ControlsFlagSet bool
 }
 
-// PlanCmd is the plan command.
-var PlanCmd = &cobra.Command{
-	Use:   "plan",
-	Short: "Readiness gate before apply",
-	Long: `Plan checks whether your project is ready to run apply.
+// planFlagsType groups all CLI flags for the plan command.
+type planFlagsType struct {
+	controlsDir, observationsDir, maxUnsafe, nowTime, format string
+}
+
+// NewPlanCmd constructs the plan command with closure-scoped flags.
+func NewPlanCmd() *cobra.Command {
+	var flags planFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "plan",
+		Short: "Readiness gate before apply",
+		Long: `Plan checks whether your project is ready to run apply.
 
 It validates prerequisite health and input readiness so teams can move through
 a clear phase gate with minimal trial-and-error.
@@ -72,17 +53,32 @@ Examples:
   stave plan
   stave plan --controls ./controls --observations ./observations
   stave plan --format json` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runPlan,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args:          cobra.NoArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runPlan(cmd, &flags)
+		},
+	}
+
+	cmdutil.RegisterControlsFlag(cmd, &flags.controlsDir, "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
+	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	cmd.Flags().StringVar(&flags.nowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+
+	return cmd
 }
 
-// ApplyCmd is the apply command.
-var ApplyCmd = &cobra.Command{
-	Use:   "apply",
-	Short: "Run control evaluation after plan checks pass",
-	Long: `Apply executes control evaluation only after readiness checks pass.
+// NewApplyCmd constructs the apply command with closure-scoped flags.
+func NewApplyCmd() *cobra.Command {
+	var flags applyFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "apply",
+		Short: "Run control evaluation after plan checks pass",
+		Long: `Apply executes control evaluation only after readiness checks pass.
 
 Purpose: Execute the control engine against prepared inputs.
 
@@ -112,17 +108,28 @@ Examples:
   stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z
 
 If readiness checks fail, apply exits early with concrete next steps.` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runApply,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
+		Args:          cobra.NoArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runApply(cmd, args, &flags)
+		},
+	}
 
-func init() {
-	cmdutil.RegisterControlsFlag(PlanCmd, &readinessPlanControlsDir, "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
-	PlanCmd.Flags().StringVarP(&readinessPlanObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
-	PlanCmd.Flags().StringVar(&readinessPlanMaxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
-	PlanCmd.Flags().StringVar(&readinessPlanNowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	PlanCmd.Flags().StringVarP(&readinessPlanFormat, "format", "f", "text", "Output format: text or json")
-	_ = PlanCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	cmdutil.RegisterControlsFlag(cmd, &flags.controlsDir, "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
+	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	cmd.Flags().StringVar(&flags.nowTime, "now", "", "Override current time (RFC3339 format). Required for deterministic output")
+	cmd.Flags().BoolVar(&flags.allowUnknownInput, "allow-unknown-input", cmdutil.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
+	cmd.Flags().StringVarP(&flags.outputFormat, "format", "f", "json", "Output format: json, text, or sarif")
+	cmd.Flags().StringVar(&flags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
+	cmd.Flags().StringVar(&flags.applyIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")
+	cmd.Flags().StringVar(&flags.applyIntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
+	cmd.Flags().StringVarP(&flags.applyProfile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")
+	cmd.Flags().StringVar(&flags.profileInputFile, "input", "", "Path to observations bundle file (required with --profile)")
+	cmd.Flags().StringSliceVar(&flags.profileBucketAllowlist, "bucket-allowlist", nil, "Bucket names/ARNs to include (can specify multiple)")
+	cmd.Flags().BoolVar(&flags.profileIncludeAll, "include-all", false, "Disable health scope filtering (extract all buckets)")
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
+
+	return cmd
 }

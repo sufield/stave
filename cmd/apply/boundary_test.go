@@ -70,7 +70,7 @@ func TestApplyCommandsDoNotImportExtractors(t *testing.T) {
 
 // TestApplyPhasedContract verifies that apply help references the plan phase.
 func TestApplyProfileS3Contract(t *testing.T) {
-	helpText := ApplyCmd.Long
+	helpText := NewApplyCmd().Long
 	if !strings.Contains(helpText, "stave plan") {
 		t.Error("apply help text should reference stave plan")
 	}

@@ -18,21 +18,21 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func runPlan(cmd *cobra.Command, _ []string) error {
+func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 
-	format, err := ui.ParseOutputFormat(strings.TrimSpace(readinessPlanFormat))
+	format, err := ui.ParseOutputFormat(strings.TrimSpace(flags.format))
 	if err != nil {
 		return err
 	}
 
 	report, err := assessReadiness(cmd, readinessInput{
-		ControlsDir:     readinessPlanControlsDir,
-		ObservationsDir: readinessPlanObservationsDir,
-		MaxUnsafe:       readinessPlanMaxUnsafe,
-		Now:             readinessPlanNowTime,
+		ControlsDir:     flags.controlsDir,
+		ObservationsDir: flags.observationsDir,
+		MaxUnsafe:       flags.maxUnsafe,
+		Now:             flags.nowTime,
 		ControlsFlagSet: cmdutil.ControlsFlagChanged(cmd),
 	})
 	if err != nil {
@@ -48,22 +48,22 @@ func runPlan(cmd *cobra.Command, _ []string) error {
 	return readinessExitError(report)
 }
 
-func runApply(cmd *cobra.Command, args []string) error {
+func runApply(cmd *cobra.Command, _ []string, flags *applyFlagsType) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 
 	// Profile mode bypasses standard readiness checks — it uses its own
 	// input validation inside runApplyCoreProfileWithOptions.
-	if applyFlags.applyProfile != "" {
-		return runApplyCore(cmd, args)
+	if flags.applyProfile != "" {
+		return runApplyCore(cmd, flags)
 	}
 
 	report, err := assessReadiness(cmd, readinessInput{
-		ControlsDir:     applyFlags.controlsDir,
-		ObservationsDir: applyFlags.observationsDir,
-		MaxUnsafe:       applyFlags.maxUnsafe,
-		Now:             applyFlags.nowTime,
+		ControlsDir:     flags.controlsDir,
+		ObservationsDir: flags.observationsDir,
+		MaxUnsafe:       flags.maxUnsafe,
+		Now:             flags.nowTime,
 		ControlsFlagSet: cmdutil.ControlsFlagChanged(cmd),
 	})
 	if err != nil {
@@ -75,7 +75,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 		}
 		return ui.WithNextCommand(fmt.Errorf("%w: readiness checks failed; apply not executed", ui.ErrValidationFailed), "stave plan")
 	}
-	return runApplyCore(cmd, args)
+	return runApplyCore(cmd, flags)
 }
 
 func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {
