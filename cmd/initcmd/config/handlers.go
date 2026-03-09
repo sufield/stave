@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.Editor[projconfig.ProjectConfig] {
@@ -57,9 +57,7 @@ func (cc *configCommand) writeConfigMutationResult(
 		return err
 	}
 	if format.IsJSON() {
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
+		return jsonutil.WriteIndented(cmd.OutOrStdout(), result)
 	}
 
 	if _, err := fmt.Fprintln(cmd.OutOrStdout(), textLine); err != nil {
@@ -87,9 +85,7 @@ func (cc *configCommand) runConfigGet(cmd *cobra.Command, key string) error {
 		return err
 	}
 	if format.IsJSON() {
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 	}
 	_, err = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", out.Value)
 	return err

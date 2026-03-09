@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -55,7 +56,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		return fmt.Errorf("create %s: %w", outPath, err)
 	}
 	defer f.Close()
-	if err := shared.WriteJSON(f, out); err != nil {
+	if err := jsonutil.WriteIndented(f, out); err != nil {
 		return fmt.Errorf("write baseline file: %w", err)
 	}
 
@@ -98,7 +99,7 @@ func runCheck(cmd *cobra.Command, opts *checkOptions) error {
 		Resolved: comparison.Resolved,
 	}
 
-	if err := shared.WriteJSON(cmd.OutOrStdout(), result); err != nil {
+	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), result); err != nil {
 		return fmt.Errorf("write baseline check output: %w", err)
 	}
 

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"text/tabwriter"
@@ -9,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 func newSchemasCmd() *cobra.Command {
@@ -101,9 +101,7 @@ func runSchemas(cmd *cobra.Command, format string) error {
 	out := buildSchemasOutput()
 
 	if parsed.IsJSON() {
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 	}
 
 	return writeSchemasText(cmd.OutOrStdout(), out)

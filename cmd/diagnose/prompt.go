@@ -19,6 +19,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -219,9 +220,7 @@ func writePromptOutput(opts promptRunOptions, stdout, stderr io.Writer, rendered
 			FindingIDs: collectFindingIDs(data.Findings),
 			AssetID:    data.AssetID,
 		}
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(jsonOut); err != nil {
+		if err := jsonutil.WriteIndented(out, jsonOut); err != nil {
 			return err
 		}
 	} else if _, err := fmt.Fprint(out, rendered); err != nil {

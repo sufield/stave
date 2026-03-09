@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -85,7 +86,7 @@ func run(cmd *cobra.Command, opts *options) error {
 		res.Resolved = []evaluation.BaselineEntry{}
 	}
 
-	if err := shared.WriteJSON(cmd.OutOrStdout(), res); err != nil {
+	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), res); err != nil {
 		return fmt.Errorf("write diff output: %w", err)
 	}
 

@@ -1,7 +1,6 @@
 package contextcmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // NewContextCmd constructs the context command tree with closure-scoped flags.
@@ -165,9 +165,7 @@ func writeContextListOutput(w io.Writer, items []contextListItem, format ui.Outp
 }
 
 func writeContextListJSON(w io.Writer, items []contextListItem) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(items)
+	return jsonutil.WriteIndented(w, items)
 }
 
 func writeContextListText(w io.Writer, items []contextListItem) error {
@@ -287,9 +285,7 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 		return err
 	}
 	if format.IsJSON() {
-		enc := json.NewEncoder(cmd.OutOrStdout())
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 	}
 	_, err = fmt.Fprintf(cmd.OutOrStdout(), "Context: %s (%s)\nStore: %s\nProject root: %s\nConfig: %s\nControls default: %s\nObservations default: %s\n",
 		out.Name,

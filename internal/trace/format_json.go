@@ -1,8 +1,9 @@
 package trace
 
 import (
-	"encoding/json"
 	"io"
+
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // jsonResult is the top-level JSON output.
@@ -59,9 +60,7 @@ func WriteJSON(w io.Writer, tr *TraceResult) error {
 		Root:        groupToJSON(tr.Root),
 		FinalResult: tr.FinalResult,
 	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(out)
+	return jsonutil.WriteIndented(w, out)
 }
 
 func groupToJSON(g *GroupNode) jsonNode {
