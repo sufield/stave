@@ -18,48 +18,6 @@ import (
 	"github.com/sufield/stave/internal/testutil"
 )
 
-// saveValidateFlags captures current validate flag values and returns a restore function.
-func saveValidateFlags() func() {
-	saved := struct {
-		controlsDir     string
-		observationsDir string
-		maxUnsafe       string
-		nowTime         string
-		format          string
-		strictMode      bool
-		fixHints        bool
-		quietMode       bool
-		inFile          string
-		schemaVersion   string
-		kind            string
-	}{
-		validateOpts.ControlsDir,
-		validateOpts.ObservationsDir,
-		validateOpts.MaxUnsafe,
-		validateOpts.NowTime,
-		validateOpts.Format,
-		validateOpts.StrictMode,
-		validateOpts.FixHints,
-		validateOpts.QuietMode,
-		validateOpts.InFile,
-		validateOpts.SchemaVersion,
-		validateOpts.Kind,
-	}
-	return func() {
-		validateOpts.ControlsDir = saved.controlsDir
-		validateOpts.ObservationsDir = saved.observationsDir
-		validateOpts.MaxUnsafe = saved.maxUnsafe
-		validateOpts.NowTime = saved.nowTime
-		validateOpts.Format = saved.format
-		validateOpts.StrictMode = saved.strictMode
-		validateOpts.FixHints = saved.fixHints
-		validateOpts.QuietMode = saved.quietMode
-		validateOpts.InFile = saved.inFile
-		validateOpts.SchemaVersion = saved.schemaVersion
-		validateOpts.Kind = saved.kind
-	}
-}
-
 // testdataDir returns the path to a testdata e2e fixture directory.
 func testdataDir(t *testing.T, name string) string {
 	t.Helper()
@@ -117,20 +75,16 @@ func TestExitCode(t *testing.T) {
 }
 
 func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
-	restore := saveValidateFlags()
-	defer restore()
-
 	fixture := testdataDir(t, "e2e-01-violation")
-	validateOpts.ControlsDir = filepath.Join(fixture, "controls")
-	validateOpts.ObservationsDir = filepath.Join(fixture, "observations")
-	validateOpts.MaxUnsafe = "168h"
-	validateOpts.NowTime = "2026-01-15T00:00:00Z"
-	validateOpts.Format = "text"
-	validateOpts.StrictMode = false
-	validateOpts.QuietMode = false
-	validateOpts.InFile = ""
+	opts := &options{
+		ControlsDir:     filepath.Join(fixture, "controls"),
+		ObservationsDir: filepath.Join(fixture, "observations"),
+		MaxUnsafe:       "168h",
+		NowTime:         "2026-01-15T00:00:00Z",
+		Format:          "text",
+	}
 
-	// Capture stdout because runValidate writes through validateOutputWithOptions(validateOpts)/os.Stdout.
+	// Capture stdout because runValidateWithOptions writes through validateOutputWithOptions/os.Stdout.
 	oldStdout := os.Stdout
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -142,7 +96,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	}()
 
 	// Exercise full validate command flow (directory mode).
-	err = runValidate(nil, nil)
+	err = runValidateWithOptions(nil, ui.NewRuntime(nil, nil), opts)
 	_ = w.Close()
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v", err)
@@ -174,7 +128,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
 
 	if err != nil {
 		t.Errorf("expected nil error for clean validation, got %v", err)
@@ -201,7 +155,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
 
 	if err == nil {
 		t.Error("expected error for validation with errors")
@@ -233,7 +187,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
 
 	if err == nil {
 		t.Error("expected error for validation with warnings")
@@ -266,7 +220,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, validateOpts)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
 
 	if err == nil {
 		t.Error("expected error for validation with errors")
@@ -278,7 +232,8 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 
 // TestOutputAndExit_JSONOutput tests outputAndExit with JSON output format.
 func TestOutputAndExit_JSONOutput(t *testing.T) {
-	validateOpts.FixHints = false
+	opts := defaultOptions()
+	opts.FixHints = false
 	result := &appservice.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
@@ -296,7 +251,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, validateOpts)
+	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, opts)
 
 	// Check JSON output contains expected fields
 	output := buf.String()
@@ -317,11 +272,10 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 }
 
 func TestWriteValidationText_WithFixHints(t *testing.T) {
-	restore := saveValidateFlags()
-	defer restore()
-	validateOpts.FixHints = true
-	validateOpts.ControlsDir = "./controls"
-	validateOpts.ObservationsDir = "./observations"
+	opts := defaultOptions()
+	opts.FixHints = true
+	opts.ControlsDir = "./controls"
+	opts.ObservationsDir = "./observations"
 
 	result := &appservice.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
@@ -337,7 +291,7 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := writeValidationTextWithOptions(&buf, result, validateOpts); err != nil {
+	if err := writeValidationTextWithOptions(&buf, result, opts); err != nil {
 		t.Fatalf("writeValidationText failed: %v", err)
 	}
 	out := buf.String()
@@ -350,9 +304,8 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 }
 
 func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
-	restore := saveValidateFlags()
-	defer restore()
-	validateOpts.FixHints = true
+	opts := defaultOptions()
+	opts.FixHints = true
 
 	result := &appservice.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
@@ -366,7 +319,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	_ = outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, validateOpts)
+	_ = outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, opts)
 	out := buf.String()
 	if !strings.Contains(out, `"fix_hints"`) {
 		t.Fatalf("expected fix_hints in json output, got: %s", out)
@@ -400,13 +353,12 @@ func TestDiagnoseHelpText(t *testing.T) {
 
 // TestQuietModeOutputs tests that quiet mode suppresses stdout output.
 func TestQuietModeOutputs(t *testing.T) {
-	// Test validateOutput with quiet mode
-	validateOpts.QuietMode = true
-	out := validateOutputWithOptions(validateOpts)
+	opts := defaultOptions()
+	opts.QuietMode = true
+	out := validateOutputWithOptions(opts)
 	if _, ok := out.(interface{ Name() string }); ok {
 		t.Error("quiet mode should return io.Discard, not stdout")
 	}
-	validateOpts.QuietMode = false
 }
 
 // TestExitCodesContract tests that exit codes match the documented contract.

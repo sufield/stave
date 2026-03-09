@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/gitinfo"
 	projectapp "github.com/sufield/stave/internal/app/project"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -39,13 +40,14 @@ type scaffoldOptions struct {
 }
 
 func runInit(cmd *cobra.Command, flags *initFlagsType) error {
+	allowSymlink := cmdutil.AllowSymlinkOutEnabled(cmd)
 	result, err := projectapp.RunInit(projectapp.InitRequest{
 		Dir:               flags.dir,
 		Profile:           flags.profile,
 		DryRun:            flags.dryRun,
 		WithGitHubActions: flags.withGitHubActions,
 		CaptureCadence:    flags.captureCadence,
-		Force:             globalForce,
+		Force:             cmdutil.ForceEnabled(cmd),
 	}, projectapp.InitDeps{
 		ValidateInputs: validateScaffoldInputs,
 		Plan: func(baseDir string, overwrite bool, opts projectapp.ScaffoldOptions) (projectapp.ScaffoldResult, error) {
@@ -60,7 +62,7 @@ func runInit(cmd *cobra.Command, flags *initFlagsType) error {
 				Profile:           opts.Profile,
 				WithGitHubActions: opts.WithGitHubActions,
 				CaptureCadence:    opts.CaptureCadence,
-			})
+			}, allowSymlink)
 		},
 		AfterScaffold: func(baseDir string) error {
 			return maybePromptAndInitGitRepo(baseDir, os.Stdin, os.Stdout)
@@ -76,7 +78,7 @@ func runInit(cmd *cobra.Command, flags *initFlagsType) error {
 		Created: result.Created,
 		Skipped: result.Skipped,
 		DryRun:  result.DryRun,
-	})
+	}, cmdutil.QuietEnabled(cmd))
 	return nil
 }
 
@@ -145,12 +147,12 @@ func promptInitializeGit(baseDir string, in io.Reader, out io.Writer) (bool, err
 	return answer == "" || answer == "y" || answer == "yes", nil
 }
 
-func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions) (projectapp.ScaffoldResult, error) {
+func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allowSymlink bool) (projectapp.ScaffoldResult, error) {
 	dirs, files := scaffoldLayout(opts)
 
 	for _, rel := range dirs {
 		path := filepath.Join(baseDir, rel)
-		if err := fsutil.SafeMkdirAll(path, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: globalAllowSymlinkOut}); err != nil {
+		if err := fsutil.SafeMkdirAll(path, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: allowSymlink}); err != nil {
 			return projectapp.ScaffoldResult{}, fmt.Errorf("create directory %s: %w", path, err)
 		}
 	}
@@ -158,7 +160,7 @@ func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions) (proj
 	var created, skipped []string
 	for rel, content := range files {
 		full := filepath.Join(baseDir, rel)
-		wrote, err := writeScaffoldFile(full, []byte(content), overwrite)
+		wrote, err := writeScaffoldFile(full, []byte(content), overwrite, allowSymlink)
 		if err != nil {
 			return projectapp.ScaffoldResult{}, fmt.Errorf("write %s: %w", full, err)
 		}
@@ -285,7 +287,7 @@ type scaffoldSummaryRequest struct {
 	DryRun  bool
 }
 
-func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest) {
+func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest, quiet bool) {
 	absBaseDir, err := filepath.Abs(req.BaseDir)
 	if err != nil {
 		absBaseDir = req.BaseDir
@@ -320,7 +322,7 @@ func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest) {
 	}
 
 	rt := ui.NewRuntime(w, os.Stderr)
-	rt.Quiet = globalQuiet
+	rt.Quiet = quiet
 	rt.PrintNextSteps(
 		"Run `stave doctor` to verify your local environment.",
 		"Run `stave apply --observations ./observations` to evaluate with built-in S3 checks.",
@@ -400,7 +402,7 @@ func printTreeChildren(w io.Writer, node *summaryTreeNode, prefix string) {
 	}
 }
 
-func writeScaffoldFile(path string, data []byte, overwrite bool) (bool, error) {
+func writeScaffoldFile(path string, data []byte, overwrite, allowSymlink bool) (bool, error) {
 	if !overwrite {
 		if _, err := os.Stat(path); err == nil {
 			return false, nil
@@ -408,7 +410,7 @@ func writeScaffoldFile(path string, data []byte, overwrite bool) (bool, error) {
 	}
 	opts := fsutil.ConfigWriteOpts()
 	opts.Overwrite = overwrite
-	opts.AllowSymlink = globalAllowSymlinkOut
+	opts.AllowSymlink = allowSymlink
 	if err := fsutil.SafeWriteFile(path, data, opts); err != nil {
 		return false, err
 	}

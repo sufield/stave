@@ -15,10 +15,6 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
-func runValidate(cmd *cobra.Command, _ []string) error {
-	return runValidateWithOptions(cmd, ui.NewRuntime(nil, nil), validateOpts)
-}
-
 // runValidateWithOptions parses flags, calls app layer, prints results, and sets exit code.
 func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	if opts == nil {

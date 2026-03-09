@@ -2,8 +2,6 @@ package initcmd
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -27,39 +25,21 @@ const (
 	projectConfigFile        = projconfig.ProjectConfigFile
 )
 
-// Package-level globals — set externally or read from cobra flags.
-var (
-	globalForce           bool
-	globalQuiet           bool
-	globalAllowSymlinkOut bool
-)
-
-// SetGlobals allows the parent package to inject global flag values.
-func SetGlobals(force, quiet, allowSymlink bool) {
-	globalForce = force
-	globalQuiet = quiet
-	globalAllowSymlinkOut = allowSymlink
-}
-
 // GetRootCmd builds a minimal root *cobra.Command with initcmd subcommands
 // attached. It is used by package-level tests that need to exercise commands
 // via root.Execute() without importing the parent cmd package (which would
 // create a circular dependency).
 func GetRootCmd() *cobra.Command {
-	globalForce = false
-	globalQuiet = false
-	globalAllowSymlinkOut = false
-
 	root := &cobra.Command{
 		Use:           "stave",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
 	root.PersistentFlags().String("output", "text", "Output format: json or text")
-	root.PersistentFlags().BoolVar(&globalQuiet, "quiet", false, "Suppress output")
+	root.PersistentFlags().Bool("quiet", false, "Suppress output")
 	root.PersistentFlags().CountP("verbose", "v", "Increase verbosity")
-	root.PersistentFlags().BoolVar(&globalForce, "force", false, "Allow overwrite operations")
-	root.PersistentFlags().BoolVar(&globalAllowSymlinkOut, "allow-symlink-output", false, "Allow writing through symlinks")
+	root.PersistentFlags().Bool("force", false, "Allow overwrite operations")
+	root.PersistentFlags().Bool("allow-symlink-output", false, "Allow writing through symlinks")
 	root.PersistentFlags().Bool("sanitize", false, "Sanitize identifiers")
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
@@ -77,14 +57,6 @@ func GetRootCmd() *cobra.Command {
 
 // GetVersion returns the CLI version string.
 func GetVersion() string { return version.Version }
-
-// evalOutput returns os.Stdout or io.Discard based on quiet mode.
-func evalOutput() io.Writer {
-	if globalQuiet {
-		return io.Discard
-	}
-	return os.Stdout
-}
 
 // ---------------------------------------------------------------------------
 // Utility helpers shared across init sub-files.

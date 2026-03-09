@@ -89,13 +89,14 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 		return onboardingCommandError(err, "stave quickstart --now 2026-01-15T00:00:00Z")
 	}
 	if err := writeDemoReport(demoReportRequest{
-		Path:        reportPath,
-		Fixture:     "quickstart",
-		Snapshot:    latest,
-		Result:      result,
-		Findings:    findings,
-		GeneratedAt: reportNow,
-		Overwrite:   true,
+		Path:         reportPath,
+		Fixture:      "quickstart",
+		Snapshot:     latest,
+		Result:       result,
+		Findings:     findings,
+		GeneratedAt:  reportNow,
+		Overwrite:    true,
+		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
 	}); err != nil {
 		return onboardingCommandError(err, "stave quickstart --report ./stave-report.json")
 	}
@@ -318,13 +319,14 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 	}
 
 	if err := writeDemoReport(demoReportRequest{
-		Path:        reportPath,
-		Fixture:     fixture,
-		Snapshot:    lastSnap,
-		Result:      result,
-		Findings:    findings,
-		GeneratedAt: reportNow,
-		Overwrite:   true,
+		Path:         reportPath,
+		Fixture:      fixture,
+		Snapshot:     lastSnap,
+		Result:       result,
+		Findings:     findings,
+		GeneratedAt:  reportNow,
+		Overwrite:    true,
+		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
 	}); err != nil {
 		return onboardingCommandError(err, "stave demo --report ./stave-report.json")
 	}
@@ -421,20 +423,20 @@ func writeDemoReport(req demoReportRequest) error {
 
 	parent := filepath.Dir(req.Path)
 	if parent != "." {
-		if err := fsutil.SafeMkdirAll(parent, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: globalAllowSymlinkOut}); err != nil {
+		if err := fsutil.SafeMkdirAll(parent, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: req.AllowSymlink}); err != nil {
 			return fmt.Errorf("create report directory: %w", err)
 		}
 	}
 	opts := fsutil.DefaultWriteOpts()
 	opts.Overwrite = req.Overwrite
-	opts.AllowSymlink = globalAllowSymlinkOut
+	opts.AllowSymlink = req.AllowSymlink
 	if err := fsutil.SafeWriteFile(req.Path, append(data, '\n'), opts); err != nil {
 		return fmt.Errorf("write demo report: %w", err)
 	}
 	return nil
 }
 
-func runGenerateControl(_ *cobra.Command, args []string, outPath string) error {
+func runGenerateControl(cmd *cobra.Command, args []string, outPath string) error {
 	name := strings.TrimSpace(args[0])
 	if name == "" {
 		return fmt.Errorf("control name cannot be empty")
@@ -445,10 +447,10 @@ func runGenerateControl(_ *cobra.Command, args []string, outPath string) error {
 	if out == "" {
 		out = filepath.Join("controls", id+".yaml")
 	}
-	return writeGeneratedFile(out, []byte(content))
+	return writeGeneratedFile(out, []byte(content), cmd)
 }
 
-func runGenerateObservation(_ *cobra.Command, args []string, outPath string) error {
+func runGenerateObservation(cmd *cobra.Command, args []string, outPath string) error {
 	name := strings.TrimSpace(args[0])
 	if name == "" {
 		return fmt.Errorf("observation name cannot be empty")
@@ -459,28 +461,32 @@ func runGenerateObservation(_ *cobra.Command, args []string, outPath string) err
 	if out == "" {
 		out = filepath.Join("observations", slug+".json")
 	}
-	return writeGeneratedFile(out, []byte(content))
+	return writeGeneratedFile(out, []byte(content), cmd)
 }
 
-func writeGeneratedFile(path string, content []byte) error {
+func writeGeneratedFile(path string, content []byte, cmd *cobra.Command) error {
 	path = fsutil.CleanUserPath(path)
 	if strings.TrimSpace(path) == "" {
 		return fmt.Errorf("output path cannot be empty")
 	}
-	if !globalForce {
+	force := cmdutil.ForceEnabled(cmd)
+	allowSymlink := cmdutil.AllowSymlinkOutEnabled(cmd)
+	if !force {
 		if _, err := os.Stat(path); err == nil {
 			return fmt.Errorf("file already exists: %s (use --force to overwrite)", path)
 		}
 	}
-	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700, AllowSymlink: globalAllowSymlinkOut}); err != nil {
+	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700, AllowSymlink: allowSymlink}); err != nil {
 		return err
 	}
 	opts := fsutil.ConfigWriteOpts()
-	opts.Overwrite = globalForce
-	opts.AllowSymlink = globalAllowSymlinkOut
+	opts.Overwrite = force
+	opts.AllowSymlink = allowSymlink
 	if err := fsutil.SafeWriteFile(path, content, opts); err != nil {
 		return err
 	}
-	fmt.Fprintf(evalOutput(), "Generated %s\n", path)
+	if !cmdutil.QuietEnabled(cmd) {
+		fmt.Fprintf(os.Stdout, "Generated %s\n", path)
+	}
 	return nil
 }

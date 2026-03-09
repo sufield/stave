@@ -58,8 +58,8 @@ func runDiagnose(cmd *cobra.Command, opts *diagnoseOptions) error {
 }
 
 func prepareDiagnoseExecution(cmd *cobra.Command, opts *diagnoseOptions) (diagnoseExecution, error) {
-	normalized := opts.normalizePaths(cmd)
-	if err := normalized.validateDirs(); err != nil {
+	normalized, inferLog := opts.normalizePaths(cmd)
+	if err := normalized.validateDirs(inferLog); err != nil {
 		return diagnoseExecution{}, err
 	}
 	maxDuration, err := normalized.parseMaxUnsafe()

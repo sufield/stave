@@ -104,15 +104,15 @@ func buildEvaluatorOptions(flags *applyFlagsType) appeval.Options {
 // checkDirsExist verifies that the controls and observations directories
 // exist and are accessible. When the source is stdin the observations
 // directory check is skipped.
-func checkDirsExist(flags *applyFlagsType, source appeval.ObservationSource) error {
+func checkDirsExist(flags *applyFlagsType, source appeval.ObservationSource, log *projctx.InferenceLog) error {
 	usePackMode := shouldUseConfiguredPacks(flags)
 	if !usePackMode {
-		if err := cmdutil.ValidateDirWithInference("--controls", flags.controlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
+		if err := cmdutil.ValidateDirWithInference("--controls", flags.controlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
 			return err
 		}
 	}
 	if !source.IsStdin() {
-		if err := cmdutil.ValidateDirWithInference("--observations", flags.observationsDir, "observations", ui.ErrHintObservationsNotAccessible); err != nil {
+		if err := cmdutil.ValidateDirWithInference("--observations", flags.observationsDir, "observations", ui.ErrHintObservationsNotAccessible, log); err != nil {
 			return err
 		}
 	}
@@ -134,14 +134,14 @@ func shouldUseConfiguredPacks(flags *applyFlagsType) bool {
 // It normalizes paths, validates domain constraints, and checks directory
 // existence. Returns an error for any invalid or inaccessible input.
 func validateApplyFlags(cmd *cobra.Command, flags *applyFlagsType) (applyParams, error) {
-	normalizeApplyFlags(cmd, flags)
+	log := normalizeApplyFlags(cmd, flags)
 
 	parsed, err := validateApplyDomain(flags)
 	if err != nil {
 		return applyParams{}, err
 	}
 
-	if err := checkDirsExist(flags, parsed.Source); err != nil {
+	if err := checkDirsExist(flags, parsed.Source, log); err != nil {
 		return applyParams{}, err
 	}
 
@@ -154,8 +154,8 @@ func validateApplyFlags(cmd *cobra.Command, flags *applyFlagsType) (applyParams,
 
 // normalizeApplyFlags cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
-func normalizeApplyFlags(cmd *cobra.Command, flags *applyFlagsType) {
-	projctx.ResetInferAttempts()
+func normalizeApplyFlags(cmd *cobra.Command, flags *applyFlagsType) *projctx.InferenceLog {
+	log := projctx.NewInferenceLog()
 	flags.applyControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
 
 	flags.controlsDir = fsutil.CleanUserPath(flags.controlsDir)
@@ -163,10 +163,11 @@ func normalizeApplyFlags(cmd *cobra.Command, flags *applyFlagsType) {
 	flags.applyIntegrityManifest = fsutil.CleanUserPath(flags.applyIntegrityManifest)
 	flags.applyIntegrityPublicKey = fsutil.CleanUserPath(flags.applyIntegrityPublicKey)
 
-	flags.controlsDir = projctx.InferControlsDir(cmd, flags.controlsDir)
+	flags.controlsDir = log.InferControlsDir(cmd, flags.controlsDir)
 	if flags.observationsDir != "-" {
-		flags.observationsDir = projctx.InferObservationsDir(cmd, flags.observationsDir)
+		flags.observationsDir = log.InferObservationsDir(cmd, flags.observationsDir)
 	}
+	return log
 }
 
 // validateApplyDomain validates parsed flag values against domain constraints
