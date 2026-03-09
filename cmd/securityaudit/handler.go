@@ -1,12 +1,9 @@
 package securityaudit
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -18,9 +15,7 @@ import (
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/kernel"
 	domainsecurityaudit "github.com/sufield/stave/internal/domain/securityaudit"
-	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -36,16 +31,6 @@ type auditFlagsType struct {
 
 type auditCmd struct {
 	flags auditFlagsType
-}
-
-type fileWriteOpts struct {
-	force        bool
-	allowSymlink bool
-}
-
-type writtenFile struct {
-	name    string
-	content []byte
 }
 
 func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
@@ -76,11 +61,6 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	}
 	bundleDir := c.resolveOutDir(now)
 
-	opts := fileWriteOpts{
-		force:        cmdutil.ForceEnabled(cmd),
-		allowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
-	}
-
 	runner := appsa.NewSecurityAuditRunner(govulncheck.Run, nil)
 	report, artifacts, err := runner.Run(cmd.Context(), appsa.SecurityAuditRequest{
 		Now:                  now,
@@ -107,7 +87,13 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	mainOutPath, err := writeBundle(opts, now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath)
+	mainOutPath, err := securityout.WriteBundle(
+		securityout.BundleWriteOpts{
+			Force:        cmdutil.ForceEnabled(cmd),
+			AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
+		},
+		now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath,
+	)
 	if err != nil {
 		return err
 	}
@@ -122,45 +108,6 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 		return ui.ErrSecurityAuditFindings
 	}
 	return nil
-}
-
-func writeBundle(opts fileWriteOpts, now time.Time, bundleDir, mainName string, mainData []byte, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, resolveOutPath func(string) string) (string, error) {
-	if err := fsutil.SafeMkdirAll(bundleDir, fsutil.WriteOptions{
-		Perm:         0o700,
-		AllowSymlink: opts.allowSymlink,
-	}); err != nil {
-		return "", fmt.Errorf("create bundle directory: %w", err)
-	}
-
-	var written []writtenFile
-
-	mainBundlePath := filepath.Join(bundleDir, mainName)
-	if err := writeOutputFile(opts, mainBundlePath, mainData); err != nil {
-		return "", err
-	}
-	written = append(written, writtenFile{name: mainName, content: mainData})
-
-	mainOutPath := resolveOutPath(mainBundlePath)
-	if mainOutPath != mainBundlePath {
-		if err := writeOutputFile(opts, mainOutPath, mainData); err != nil {
-			return "", err
-		}
-	}
-
-	for _, artifact := range artifacts.Files {
-		target := filepath.Join(bundleDir, artifact.Path)
-		if err := writeOutputFile(opts, target, artifact.Content); err != nil {
-			return "", err
-		}
-		written = append(written, writtenFile{name: artifact.Path, content: artifact.Content})
-	}
-
-	runManifestPath := filepath.Join(bundleDir, "run_manifest.json")
-	if err := writeRunManifest(opts, runManifestPath, now, bundleDir, mainName, written, report); err != nil {
-		return "", err
-	}
-
-	return mainOutPath, nil
 }
 
 func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecurityaudit.Summary) error {
@@ -215,82 +162,4 @@ func (c *auditCmd) resolveOutPath(defaultPath string) string {
 		return defaultPath
 	}
 	return outPath
-}
-
-func writeOutputFile(opts fileWriteOpts, path string, data []byte) error {
-	parent := filepath.Dir(path)
-	if strings.TrimSpace(parent) != "" && parent != "." {
-		if err := fsutil.SafeMkdirAll(parent, fsutil.WriteOptions{
-			Perm:         0o700,
-			AllowSymlink: opts.allowSymlink,
-		}); err != nil {
-			return fmt.Errorf("create output directory %q: %w", parent, err)
-		}
-	}
-	wopts := fsutil.DefaultWriteOpts()
-	wopts.Overwrite = opts.force
-	wopts.AllowSymlink = opts.allowSymlink
-	if err := fsutil.SafeWriteFile(path, data, wopts); err != nil {
-		return fmt.Errorf("write output %q: %w", path, err)
-	}
-	return nil
-}
-
-type manifestFile struct {
-	Path      string `json:"path"`
-	SHA256    string `json:"sha256"`
-	SizeBytes int64  `json:"size_bytes"`
-}
-
-type runManifest struct {
-	SchemaVersion     string         `json:"schema_version"`
-	GeneratedAt       string         `json:"generated_at"`
-	MainReport        string         `json:"main_report"`
-	BundleDir         string         `json:"bundle_dir"`
-	ToolVersion       string         `json:"tool_version"`
-	FailOn            string         `json:"fail_on"`
-	Gated             bool           `json:"gated"`
-	GatedFindings     int            `json:"gated_findings"`
-	Files             []manifestFile `json:"files"`
-	EvidenceFreshness string         `json:"evidence_freshness"`
-	VulnSourceUsed    string         `json:"vuln_source_used"`
-}
-
-func writeRunManifest(opts fileWriteOpts, path string, now time.Time, bundleDir string, mainReport string, written []writtenFile, report domainsecurityaudit.Report) error {
-	files := make([]manifestFile, 0, len(written))
-	for _, w := range written {
-		files = append(files, manifestFile{
-			Path:      w.name,
-			SHA256:    string(platformcrypto.HashBytes(w.content)),
-			SizeBytes: int64(len(w.content)),
-		})
-	}
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Path < files[j].Path
-	})
-
-	manifest := runManifest{
-		SchemaVersion:     string(kernel.SchemaSecurityAuditRunManifest),
-		GeneratedAt:       now.Format(time.RFC3339),
-		MainReport:        mainReport,
-		BundleDir:         bundleDir,
-		ToolVersion:       report.ToolVersion,
-		FailOn:            string(report.Summary.FailOn),
-		Gated:             report.Summary.Gated,
-		GatedFindings:     report.Summary.GatedFindingCount,
-		Files:             files,
-		EvidenceFreshness: report.Summary.EvidenceFreshness,
-		VulnSourceUsed:    report.Summary.VulnSourceUsed,
-	}
-	data, err := json.MarshalIndent(manifest, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal run manifest: %w", err)
-	}
-	wopts := fsutil.DefaultWriteOpts()
-	wopts.Overwrite = true
-	wopts.AllowSymlink = opts.allowSymlink
-	if err := fsutil.SafeWriteFile(path, append(data, '\n'), wopts); err != nil {
-		return fmt.Errorf("write run manifest: %w", err)
-	}
-	return nil
 }
