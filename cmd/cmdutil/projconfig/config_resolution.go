@@ -123,25 +123,19 @@ func ResolveCLIOutputWithSource() ResolvedConfigValue {
 }
 
 // ResolveCLIQuietWithSource returns quiet mode and source.
-func ResolveCLIQuietWithSource() ResolvedConfigValue {
+func ResolveCLIQuietWithSource() ResolvedBoolValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok && cfg.CLIDefaults.Quiet != nil {
-		if *cfg.CLIDefaults.Quiet {
-			return ResolvedConfigValue{Value: "true", Source: path + ":cli_defaults.quiet"}
-		}
-		return ResolvedConfigValue{Value: "false", Source: path + ":cli_defaults.quiet"}
+		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.Quiet, Source: path + ":cli_defaults.quiet"}
 	}
-	return ResolvedConfigValue{Value: "false", Source: "default"}
+	return ResolvedBoolValue{Bool: false, Source: "default"}
 }
 
 // ResolveCLISanitizeWithSource returns sanitize mode and source.
-func ResolveCLISanitizeWithSource() ResolvedConfigValue {
+func ResolveCLISanitizeWithSource() ResolvedBoolValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok && cfg.CLIDefaults.Sanitize != nil {
-		if *cfg.CLIDefaults.Sanitize {
-			return ResolvedConfigValue{Value: "true", Source: path + ":cli_defaults.sanitize"}
-		}
-		return ResolvedConfigValue{Value: "false", Source: path + ":cli_defaults.sanitize"}
+		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.Sanitize, Source: path + ":cli_defaults.sanitize"}
 	}
-	return ResolvedConfigValue{Value: "false", Source: "default"}
+	return ResolvedBoolValue{Bool: false, Source: "default"}
 }
 
 // ResolveCLIPathModeWithSource returns path mode and source.
@@ -156,14 +150,11 @@ func ResolveCLIPathModeWithSource() ResolvedConfigValue {
 }
 
 // ResolveCLIAllowUnknownInputWithSource returns allow-unknown-input and source.
-func ResolveCLIAllowUnknownInputWithSource() ResolvedConfigValue {
+func ResolveCLIAllowUnknownInputWithSource() ResolvedBoolValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok && cfg.CLIDefaults.AllowUnknownInput != nil {
-		if *cfg.CLIDefaults.AllowUnknownInput {
-			return ResolvedConfigValue{Value: "true", Source: path + ":cli_defaults.allow_unknown_input"}
-		}
-		return ResolvedConfigValue{Value: "false", Source: path + ":cli_defaults.allow_unknown_input"}
+		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.AllowUnknownInput, Source: path + ":cli_defaults.allow_unknown_input"}
 	}
-	return ResolvedConfigValue{Value: "false", Source: "default"}
+	return ResolvedBoolValue{Bool: false, Source: "default"}
 }
 
 // ResolveDefinedRetentionTiers returns the defined retention tiers from project config.

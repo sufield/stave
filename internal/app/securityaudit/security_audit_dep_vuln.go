@@ -55,16 +55,16 @@ func shouldAttemptLiveCheck(req SecurityAuditRequest) bool {
 	if !req.LiveVulnCheck {
 		return false
 	}
-	return req.VulnSource == "local" || req.VulnSource == "hybrid"
+	return req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid
 }
 
 func resolveVulnFallback(req SecurityAuditRequest) (vulnerabilitySnapshot, error) {
-	if req.VulnSource == "local" || req.VulnSource == "hybrid" {
+	if req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid {
 		if cached, ok := loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now); ok {
 			return cached, nil
 		}
 	}
-	if req.VulnSource == "ci" || req.VulnSource == "hybrid" {
+	if req.VulnSource == VulnSourceCI || req.VulnSource == VulnSourceHybrid {
 		if ciEvidence, ok := loadVulnEvidenceFromCandidates(ciVulnEvidenceCandidates(req), req.Now); ok {
 			return ciEvidence, nil
 		}

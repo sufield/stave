@@ -111,6 +111,33 @@ func New(projectConfigFile string, validator ConfigValidator, resolver ConfigRes
 	}
 }
 
+// ParsedKey represents a validated configuration key, either a top-level
+// key or a hierarchical retention-tier subkey.
+type ParsedKey struct {
+	topLevel ConfigKey
+	tierSub  string
+	raw      string
+}
+
+// String returns the original key string.
+func (k ParsedKey) String() string { return k.raw }
+
+// ParseConfigKey validates a raw key string and returns a ParsedKey.
+func ParseConfigKey(raw string) (ParsedKey, error) {
+	if after, ok := tierSubKey(raw); ok {
+		if after == "" {
+			return ParsedKey{}, fmt.Errorf("invalid tier key %q", raw)
+		}
+		return ParsedKey{tierSub: after, raw: raw}, nil
+	}
+	k := ConfigKey(raw)
+	switch k {
+	case KeyMaxUnsafe, KeySnapshotRetention, KeyDefaultTier, KeyCIFailurePolicy, KeyCaptureCadence, KeyFilenameTemplate:
+		return ParsedKey{topLevel: k, raw: raw}, nil
+	}
+	return ParsedKey{}, fmt.Errorf("unsupported key %q", raw)
+}
+
 var topLevelKeys = []string{
 	string(KeyCaptureCadence),
 	string(KeyCIFailurePolicy),
@@ -161,18 +188,14 @@ func resolveViaResolver(key ConfigKey, cfg *Config, cfgPath, fallbackTier string
 	return KeyValueOutput{Key: string(key), Value: v.Value, Source: v.Source}, true
 }
 
-func (s *Service) ResolveConfigKeyValue(key string, cfg *Config, cfgPath, fallbackTier string) (KeyValueOutput, error) {
-	k := ConfigKey(key)
-	if kv, ok := resolveViaResolver(k, cfg, cfgPath, fallbackTier, s.resolver); ok {
-		return kv, nil
+func (s *Service) ResolveConfigKeyValue(key ParsedKey, cfg *Config, cfgPath, fallbackTier string) (KeyValueOutput, error) {
+	if key.topLevel != "" {
+		if kv, ok := resolveViaResolver(key.topLevel, cfg, cfgPath, fallbackTier, s.resolver); ok {
+			return kv, nil
+		}
+		return cfg.ResolveLocalField(key.topLevel, cfgPath, s.projectConfigFile)
 	}
-	if k == KeyCaptureCadence || k == KeyFilenameTemplate {
-		return cfg.ResolveLocalField(k, cfgPath, s.projectConfigFile)
-	}
-	if after, ok := tierSubKey(key); ok {
-		return s.ResolveRetentionTierConfigKey(key, after, cfg, cfgPath)
-	}
-	return KeyValueOutput{}, fmt.Errorf("unsupported key %q", key)
+	return s.ResolveRetentionTierConfigKey(key.raw, key.tierSub, cfg, cfgPath)
 }
 
 // SetField validates and assigns value to the field identified by key.
@@ -217,11 +240,11 @@ func (c *Config) SetField(key ConfigKey, value string, v ConfigValidator) error 
 	return nil
 }
 
-func (s *Service) SetConfigKeyValue(cfg *Config, key, value string) error {
-	if after, ok := tierSubKey(key); ok {
-		return s.SetRetentionTierConfigKey(cfg, after, value)
+func (s *Service) SetConfigKeyValue(cfg *Config, key ParsedKey, value string) error {
+	if key.tierSub != "" {
+		return s.SetRetentionTierConfigKey(cfg, key.tierSub, value)
 	}
-	return cfg.SetField(ConfigKey(key), value, s.validator)
+	return cfg.SetField(key.topLevel, value, s.validator)
 }
 
 // DeleteField clears the field identified by key. Returns true if key was recognized.
@@ -245,19 +268,17 @@ func (c *Config) DeleteField(key ConfigKey) bool {
 	return true
 }
 
-func (s *Service) DeleteConfigKeyValue(cfg *Config, key string) error {
-	if cfg.DeleteField(ConfigKey(key)) {
+func (s *Service) DeleteConfigKeyValue(cfg *Config, key ParsedKey) error {
+	if key.topLevel != "" {
+		cfg.DeleteField(key.topLevel)
 		return nil
 	}
-	if after, ok := tierSubKey(key); ok {
-		tier := s.validator.NormalizeTier(after)
-		if tier == "" {
-			return fmt.Errorf("invalid tier key %q", key)
-		}
-		delete(cfg.RetentionTiers, tier)
-		return nil
+	tier := s.validator.NormalizeTier(key.tierSub)
+	if tier == "" {
+		return fmt.Errorf("invalid tier key %q", key.raw)
 	}
-	return fmt.Errorf("unsupported key %q", key)
+	delete(cfg.RetentionTiers, tier)
+	return nil
 }
 
 func (s *Service) SetRetentionTierConfigKey(cfg *Config, subKey, value string) error {

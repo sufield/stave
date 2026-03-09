@@ -11,13 +11,23 @@ type Metadata struct {
 	ResolvedPaths ResolvedPaths     `json:"resolved_paths"`
 }
 
+// ControlSourceMode identifies how controls were selected for evaluation.
+type ControlSourceMode string
+
+const (
+	// ControlSourceDir means controls were loaded from a filesystem directory.
+	ControlSourceDir ControlSourceMode = "dir"
+	// ControlSourcePacks means controls were loaded from built-in packs.
+	ControlSourcePacks ControlSourceMode = "packs"
+)
+
 // ControlSourceInfo describes how controls were selected.
 type ControlSourceInfo struct {
-	Source             string   `json:"source"` // "dir" or "packs"
-	EnabledPacks       []string `json:"enabled_packs,omitempty"`
-	ResolvedControlIDs []string `json:"resolved_control_ids,omitempty"`
-	RegistryVersion    string   `json:"registry_version,omitempty"`
-	RegistryHash       string   `json:"registry_hash,omitempty"`
+	Source             ControlSourceMode `json:"source"`
+	EnabledPacks       []string          `json:"enabled_packs,omitempty"`
+	ResolvedControlIDs []string          `json:"resolved_control_ids,omitempty"`
+	RegistryVersion    string            `json:"registry_version,omitempty"`
+	RegistryHash       string            `json:"registry_hash,omitempty"`
 }
 
 // GitInfo captures git repository state at evaluation time.
@@ -75,12 +85,12 @@ type metadataWire struct {
 
 func (m Metadata) toWire() metadataWire {
 	wire := metadataWire{
-		SelectedControlsSource: m.ControlSource.Source,
+		SelectedControlsSource: string(m.ControlSource.Source),
 		ContextName:            m.ContextName,
 		ResolvedPaths:          m.ResolvedPaths,
 	}
 	// Pack specific metadata
-	if m.ControlSource.Source == "packs" {
+	if m.ControlSource.Source == ControlSourcePacks {
 		wire.EnabledControlPacks = append([]string(nil), m.ControlSource.EnabledPacks...)
 		wire.ResolvedControlIDs = append([]string(nil), m.ControlSource.ResolvedControlIDs...)
 		wire.PackRegistryVersion = m.ControlSource.RegistryVersion
@@ -127,14 +137,14 @@ func (m Metadata) ToExtensions() *Extensions {
 		return nil
 	}
 	ext := &Extensions{
-		SelectedSource: m.ControlSource.Source,
+		SelectedSource: string(m.ControlSource.Source),
 		ContextName:    m.ContextName,
 		ResolvedPaths: map[string]string{
 			"controls":     m.ResolvedPaths.Controls,
 			"observations": m.ResolvedPaths.Observations,
 		},
 	}
-	if m.ControlSource.Source == "packs" {
+	if m.ControlSource.Source == ControlSourcePacks {
 		ext.EnabledPacks = append([]string(nil), m.ControlSource.EnabledPacks...)
 		ext.ResolvedControlIDs = append([]string(nil), m.ControlSource.ResolvedControlIDs...)
 		ext.PackRegistryVersion = m.ControlSource.RegistryVersion

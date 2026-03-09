@@ -69,17 +69,29 @@ func (s projectConfigStore) Write(path string, cfg *projconfig.ProjectConfig) er
 }
 
 func resolveServiceConfigKeyValue(key string, cfg *projconfig.ProjectConfig, cfgPath, fallbackTier string) (configservice.KeyValueOutput, error) {
-	return projconfig.ConfigKeyService.ResolveConfigKeyValue(key, projconfig.FromProjectConfig(cfg), cfgPath, fallbackTier)
+	parsed, err := configservice.ParseConfigKey(key)
+	if err != nil {
+		return configservice.KeyValueOutput{}, err
+	}
+	return projconfig.ConfigKeyService.ResolveConfigKeyValue(parsed, projconfig.FromProjectConfig(cfg), cfgPath, fallbackTier)
 }
 
 func deleteConfigKeyValue(cfg *projconfig.ProjectConfig, key string) error {
+	parsed, err := configservice.ParseConfigKey(key)
+	if err != nil {
+		return err
+	}
 	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
-		return projconfig.ConfigKeyService.DeleteConfigKeyValue(serviceCfg, key)
+		return projconfig.ConfigKeyService.DeleteConfigKeyValue(serviceCfg, parsed)
 	})
 }
 
 func setConfigKeyValue(cfg *projconfig.ProjectConfig, key, value string) error {
+	parsed, err := configservice.ParseConfigKey(key)
+	if err != nil {
+		return err
+	}
 	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
-		return projconfig.ConfigKeyService.SetConfigKeyValue(serviceCfg, key, value)
+		return projconfig.ConfigKeyService.SetConfigKeyValue(serviceCfg, parsed, value)
 	})
 }

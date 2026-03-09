@@ -85,7 +85,7 @@ func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedP
 	h, _ := packs.RegistryHash()
 	result.PreloadedControls = loaded
 	result.ControlSource = evaluation.ControlSourceInfo{
-		Source:             "packs",
+		Source:             evaluation.ControlSourcePacks,
 		EnabledPacks:       packNames,
 		ResolvedControlIDs: resolvedIDs,
 		RegistryVersion:    v,

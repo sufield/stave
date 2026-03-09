@@ -10,7 +10,7 @@ import (
 
 type defaultSBOMGenerator struct{}
 
-func (defaultSBOMGenerator) Generate(input buildInfoSnapshot, format string, now time.Time) (sbomSnapshot, error) {
+func (defaultSBOMGenerator) Generate(input buildInfoSnapshot, format SBOMFormat, now time.Time) (sbomSnapshot, error) {
 	modules := make([]buildModuleSnapshot, 0, len(input.Deps)+1)
 	if input.Main.Path != "" {
 		modules = append(modules, input.Main)
@@ -25,8 +25,8 @@ func (defaultSBOMGenerator) Generate(input buildInfoSnapshot, format string, now
 	})
 
 	ts := now.UTC().Format(time.RFC3339)
-	switch strings.ToLower(strings.TrimSpace(format)) {
-	case "spdx":
+	switch format {
+	case SBOMFormatSPDX:
 		doc := map[string]any{
 			"spdxVersion": "SPDX-2.3",
 			"SPDXID":      "SPDXRef-DOCUMENT",
@@ -64,7 +64,7 @@ func (defaultSBOMGenerator) Generate(input buildInfoSnapshot, format string, now
 			DependencyCount: len(modules),
 			RawJSON:         append(raw, '\n'),
 		}, nil
-	case "cyclonedx":
+	case SBOMFormatCycloneDX:
 		components := make([]map[string]any, 0, len(modules))
 		for _, module := range modules {
 			version := normalizeVersion(module.Version)
