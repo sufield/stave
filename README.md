@@ -10,15 +10,11 @@ A configuration analysis engine that detects insecure configurations in your clo
 
 ## Why Stave exists
 
-S3 public exposure persists because existing tools require:
+Most existing S3 security tools share a blind spot. They treat Block Public Access as the definitive signal for public exposure. When BPA is enabled, buckets pass — even when legacy ACLs still grant public read or write. AWS Trusted Advisor is the most prominent example.                                                                     
+                                                                  
+Stave catches what these tools miss. It evaluates the full configuration surface — ACLs, bucket policies, and BPA settings — against composable predicate logic, not a single-flag heuristic.
 
-- Cloud credentials to scan
-- Network access to query APIs
-- Runtime environments that expand attack surface
-
-These constraints prevent consistent, repeatable safety evaluation.
-
-Stave works differently. It evaluates local configuration snapshots against safety controls — offline, deterministic, and credential-free.
+It works from local observation snapshots: offline, deterministic, and credential-free. No API calls, no runtime agents, no network access at scan time.
 
 ## What Stave does
 
