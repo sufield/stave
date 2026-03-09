@@ -122,7 +122,7 @@ var topLevelKeys = []string{
 
 // TopLevelKeys returns the supported non-tier keys in deterministic order.
 func (s *Service) TopLevelKeys() []string {
-	return topLevelKeys
+	return append([]string(nil), topLevelKeys...)
 }
 
 // ResolveLocalField resolves config-local fields that don't need an external resolver.

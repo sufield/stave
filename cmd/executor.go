@@ -128,7 +128,7 @@ func (a *App) writeCommandError(err error, args []string) {
 
 func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
 	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)
-	printNoProjectHintIfNeeded(args)
+	a.printNoProjectHintIfNeeded(args)
 	projectRoot := persistSessionStateIfApplicable(args)
 	a.printWorkflowHandoff(args, projectRoot)
 }
@@ -140,12 +140,12 @@ func markFirstRunHintSeenIfNeeded(show bool, markerPath string) {
 	}
 }
 
-func printNoProjectHintIfNeeded(args []string) {
+func (a *App) printNoProjectHintIfNeeded(args []string) {
 	if len(args) != 0 {
 		return
 	}
 	if _, found := projconfig.FindNearestFile(projconfig.ProjectConfigFile); !found {
-		fmt.Fprintf(os.Stderr, "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
+		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}
 }
 

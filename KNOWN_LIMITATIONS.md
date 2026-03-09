@@ -27,3 +27,13 @@ stave myalias
 Some tests use `t.Skip` to bypass execution when preconditions are not met (e.g., missing fixtures, unavailable binaries). If the precondition is expected to always hold in CI, a `t.Skip` can silently hide a real regression.
 
 **Fix:** Audit `t.Skip` call sites and convert to `t.Fatal` where the precondition should always be satisfied in CI. Reserve `t.Skip` for genuinely optional tests (e.g., integration tests that require external services).
+
+### DefaultComposition is a mutable package-level variable
+
+**Area:** `cmd/cmdutil/compose/infra.go` — `DefaultComposition`
+
+`DefaultComposition` is an exported `var` holding adapter constructor functions. It is read through convenience functions (`NewObservationRepository`, `NewControlRepository`, etc.) used throughout the command layer. One test (`cmd/diagnose/handler_test.go`) directly replaces its value without synchronization.
+
+This is safe in practice because CLI commands execute sequentially and tests using `t.Parallel()` do not touch it, but it prevents future parallelism and makes the dependency graph implicit.
+
+**Fix:** Inject `Composition` through the `App` struct and pass it to command constructors. Replace the convenience functions with methods on the injected composition. Update the test to pass a custom `Composition` directly to the function under test.

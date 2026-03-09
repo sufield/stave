@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -171,7 +170,7 @@ func runPromptFromFinding(cmd *cobra.Command, flags *promptFlagsType) error {
 	}
 	data := builder.build(matched)
 	rendered := renderPrompt(data)
-	return writePromptOutput(opts, cmd.OutOrStdout(), rendered, data)
+	return writePromptOutput(opts, cmd.OutOrStdout(), cmd.ErrOrStderr(), rendered, data)
 }
 
 func gatherPromptFromFindingOptions(cmd *cobra.Command, flags *promptFlagsType) (promptRunOptions, error) {
@@ -221,7 +220,7 @@ func filterFindings(all []evaluation.Finding, assetID string) []evaluation.Findi
 	return matched
 }
 
-func writePromptOutput(opts promptRunOptions, stdout io.Writer, rendered string, data promptData) error {
+func writePromptOutput(opts promptRunOptions, stdout, stderr io.Writer, rendered string, data promptData) error {
 	out := stdout
 	if opts.Quiet {
 		out = io.Discard
@@ -242,13 +241,13 @@ func writePromptOutput(opts promptRunOptions, stdout io.Writer, rendered string,
 		return err
 	}
 
-	clipboardHint(opts.Quiet)
+	clipboardHint(stderr, opts.Quiet)
 	return nil
 }
 
 // clipboardHint prints a hint for piping output to the system clipboard.
 // Only prints when not in quiet mode and a known clipboard tool exists.
-func clipboardHint(quiet bool) {
+func clipboardHint(w io.Writer, quiet bool) {
 	if quiet {
 		return
 	}
@@ -261,7 +260,7 @@ func clipboardHint(quiet bool) {
 	default:
 		return
 	}
-	fmt.Fprintf(os.Stderr, "Hint: pipe to clipboard with:\n  stave prompt from-finding ... | %s\n", tool)
+	fmt.Fprintf(w, "Hint: pipe to clipboard with:\n  stave prompt from-finding ... | %s\n", tool)
 }
 
 func collectFindingIDs(findings []promptFindingData) []string {

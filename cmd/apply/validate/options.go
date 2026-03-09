@@ -154,7 +154,7 @@ func parseValidateParams(opts *options) validateParams {
 	}
 
 	if opts.NowTime != "" {
-		t, parseErr := time.Parse(time.RFC3339, opts.NowTime)
+		t, parseErr := timeutil.ParseRFC3339(opts.NowTime, "--now")
 		if parseErr != nil {
 			params.issues = append(params.issues, diag.New("INVALID_NOW_TIME").
 				Error().
