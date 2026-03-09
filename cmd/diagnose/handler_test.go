@@ -237,17 +237,17 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	origComp := cmdutil.DefaultComposition
 	defer func() { cmdutil.DefaultComposition = origComp }()
 
-	diagnoseOpts = diagnoseOptions{
+	opts := &diagnoseOptions{
 		ControlsDir:     ctlDir,
 		ObservationsDir: obsDir,
 		MaxUnsafe:       "bad-duration",
 		Format:          "text",
 	}
-	if err := runDiagnose(cmd, nil); err == nil || !strings.Contains(err.Error(), "invalid --max-unsafe") {
+	if err := runDiagnose(cmd, opts); err == nil || !strings.Contains(err.Error(), "invalid --max-unsafe") {
 		t.Fatalf("expected max-unsafe validation error, got %v", err)
 	}
 
-	diagnoseOpts.MaxUnsafe = "24h"
+	opts.MaxUnsafe = "24h"
 	cmdutil.DefaultComposition = cmdutil.Composition{
 		NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
 			return nil, os.ErrPermission
@@ -256,7 +256,7 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 			return nil, nil
 		},
 	}
-	if err := runDiagnose(cmd, nil); err == nil || !strings.Contains(err.Error(), "create observation loader") {
+	if err := runDiagnose(cmd, opts); err == nil || !strings.Contains(err.Error(), "create observation loader") {
 		t.Fatalf("expected observation loader error, got %v", err)
 	}
 }

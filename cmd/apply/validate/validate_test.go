@@ -389,7 +389,7 @@ func TestValidateHelpText(t *testing.T) {
 
 // TestDiagnoseHelpText verifies diagnose command help contains required sections.
 func TestDiagnoseHelpText(t *testing.T) {
-	help := diagnose.DiagnoseCmd.Long
+	help := diagnose.NewDiagnoseCmd().Long
 	required := []string{"Purpose:", "Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {

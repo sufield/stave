@@ -7,11 +7,14 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// DiagnoseCmd represents the diagnose command.
-var DiagnoseCmd = &cobra.Command{
-	Use:   "diagnose",
-	Short: "Diagnose evaluation inputs and results",
-	Long: `Diagnose analyzes evaluation inputs and results to identify likely causes
+// NewDiagnoseCmd constructs the diagnose command with closure-scoped flags.
+func NewDiagnoseCmd() *cobra.Command {
+	var opts diagnoseOptions
+
+	cmd := &cobra.Command{
+		Use:   "diagnose",
+		Short: "Diagnose evaluation inputs and results",
+		Long: `Diagnose analyzes evaluation inputs and results to identify likely causes
 when results don't match expectations.
 
 Purpose: Understand why evaluation produced (or didn't produce) certain findings.
@@ -73,29 +76,32 @@ Examples:
     --asset-id res:aws:s3:bucket:my-bucket \
     --format json
 ` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runDiagnose,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
+		Args:          cobra.NoArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runDiagnose(cmd, &opts)
+		},
+	}
 
-func init() {
-	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
-	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
-	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.MaxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	DiagnoseCmd.Flags().StringVarP(&diagnoseOpts.Format, "format", "f", "text", "Output format: text or json")
-	DiagnoseCmd.Flags().BoolVar(&diagnoseOpts.Quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
-	DiagnoseCmd.Flags().StringSliceVar(&diagnoseOpts.Cases, "case", nil, "Filter to one or more diagnostic case values")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
-	DiagnoseCmd.Flags().StringVar(&diagnoseOpts.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
-	_ = DiagnoseCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-	_ = DiagnoseCmd.RegisterFlagCompletionFunc("case", cmdutil.CompleteFixed(
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
+	cmd.Flags().StringVarP(&opts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
+	cmd.Flags().StringVarP(&opts.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
+	cmd.Flags().StringVar(&opts.MaxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	cmd.Flags().StringVar(&opts.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "Output format: text or json")
+	cmd.Flags().BoolVar(&opts.Quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	cmd.Flags().StringSliceVar(&opts.Cases, "case", nil, "Filter to one or more diagnostic case values")
+	cmd.Flags().StringVar(&opts.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
+	cmd.Flags().StringVar(&opts.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
+	cmd.Flags().StringVar(&opts.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
+	cmd.Flags().StringVar(&opts.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("case", cmdutil.CompleteFixed(
 		string(diagnosis.ExpectedNone),
 		string(diagnosis.ViolationEvidence),
 		string(diagnosis.EmptyFindings),
 	))
+
+	return cmd
 }

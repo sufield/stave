@@ -16,10 +16,6 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 )
 
-// RootCmd is set by the parent cmd package during init to provide
-// access to the root command for tests that exercise the full command tree.
-var RootCmd *cobra.Command
-
 // GetRootCmd builds a minimal root command with diagnose subcommands attached.
 // Used by package-level tests that exercise commands via root.Execute()
 // without importing the parent cmd package (circular dependency).
@@ -37,15 +33,15 @@ func GetRootCmd() *cobra.Command {
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
 
-	root.AddCommand(DiagnoseCmd)
-	root.AddCommand(ExplainCmd)
+	root.AddCommand(NewDiagnoseCmd())
+	root.AddCommand(NewExplainCmd())
 
 	return root
 }
 
 // runDiagnose executes the diagnose command.
-func runDiagnose(cmd *cobra.Command, _ []string) error {
-	execCtx, err := prepareDiagnoseExecution(cmd)
+func runDiagnose(cmd *cobra.Command, opts *diagnoseOptions) error {
+	execCtx, err := prepareDiagnoseExecution(cmd, opts)
 	if err != nil {
 		return err
 	}
@@ -60,16 +56,16 @@ func runDiagnose(cmd *cobra.Command, _ []string) error {
 	return renderDiagnoseOutput(cmd, execCtx.opts, report)
 }
 
-func prepareDiagnoseExecution(cmd *cobra.Command) (diagnoseExecution, error) {
-	opts := diagnoseOpts.normalizePaths(cmd)
-	if err := opts.validateDirs(); err != nil {
+func prepareDiagnoseExecution(cmd *cobra.Command, opts *diagnoseOptions) (diagnoseExecution, error) {
+	normalized := opts.normalizePaths(cmd)
+	if err := normalized.validateDirs(); err != nil {
 		return diagnoseExecution{}, err
 	}
-	maxDuration, err := opts.parseMaxUnsafe()
+	maxDuration, err := normalized.parseMaxUnsafe()
 	if err != nil {
 		return diagnoseExecution{}, err
 	}
-	clock, err := opts.parseClock()
+	clock, err := normalized.parseClock()
 	if err != nil {
 		return diagnoseExecution{}, err
 	}
@@ -79,10 +75,10 @@ func prepareDiagnoseExecution(cmd *cobra.Command) (diagnoseExecution, error) {
 	}
 	return diagnoseExecution{
 		cmd:         cmd,
-		opts:        opts,
+		opts:        normalized,
 		diagnoseRun: diagnoseRun,
 		ctx:         cmd.Context(),
-		baseCfg:     buildDiagnoseConfig(opts, maxDuration, clock),
+		baseCfg:     buildDiagnoseConfig(normalized, maxDuration, clock),
 	}, nil
 }
 
