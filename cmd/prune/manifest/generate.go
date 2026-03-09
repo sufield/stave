@@ -17,9 +17,9 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func runSnapshotManifestGenerate(cmd *cobra.Command, _ []string) error {
-	dir := filepath.Clean(snapshotManifestObservationsDir)
-	out := filepath.Clean(snapshotManifestOutPath)
+func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile string) error {
+	dir := filepath.Clean(observationsDir)
+	out := filepath.Clean(outFile)
 
 	if fi, err := os.Stat(dir); err != nil {
 		return fmt.Errorf("access observations directory %q: %w", dir, err)

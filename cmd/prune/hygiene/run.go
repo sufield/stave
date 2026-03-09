@@ -35,10 +35,8 @@ type hygieneFlagsType struct {
 	dueWithin       string
 }
 
-var hygieneFlags hygieneFlagsType
-
-func runHygiene(cmd *cobra.Command, _ []string) error {
-	execCtx, err := prepareHygieneExecution(cmd)
+func runHygiene(cmd *cobra.Command, flags *hygieneFlagsType) error {
+	execCtx, err := prepareHygieneExecution(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -46,7 +44,7 @@ func runHygiene(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, hygieneFlags.format)
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
@@ -72,22 +70,22 @@ type hygieneExecution struct {
 	filtersDueWithin string
 }
 
-func prepareHygieneExecution(cmd *cobra.Command) (hygieneExecution, error) {
+func prepareHygieneExecution(cmd *cobra.Command, flags *hygieneFlagsType) (hygieneExecution, error) {
 	req := hygieneapp.Request{
-		ControlsDir:     fsutil.CleanUserPath(hygieneFlags.controlsDir),
-		ObservationsDir: fsutil.CleanUserPath(hygieneFlags.observationsDir),
-		ArchiveDir:      fsutil.CleanUserPath(hygieneFlags.archiveDir),
-		MaxUnsafe:       hygieneFlags.maxUnsafe,
-		DueSoon:         hygieneFlags.dueSoon,
-		Lookback:        hygieneFlags.lookback,
-		DueWithin:       hygieneFlags.dueWithin,
-		OlderThan:       hygieneFlags.olderThan,
-		RetentionTier:   hygieneFlags.retentionTier,
-		KeepMin:         hygieneFlags.keepMin,
-		NowTime:         hygieneFlags.now,
-		ControlIDs:      cmdutil.ToControlIDs(hygieneFlags.controlIDs),
-		AssetTypes:      cmdutil.ToAssetTypes(hygieneFlags.assetTypes),
-		Statuses:        toStatuses(hygieneFlags.statuses),
+		ControlsDir:     fsutil.CleanUserPath(flags.controlsDir),
+		ObservationsDir: fsutil.CleanUserPath(flags.observationsDir),
+		ArchiveDir:      fsutil.CleanUserPath(flags.archiveDir),
+		MaxUnsafe:       flags.maxUnsafe,
+		DueSoon:         flags.dueSoon,
+		Lookback:        flags.lookback,
+		DueWithin:       flags.dueWithin,
+		OlderThan:       flags.olderThan,
+		RetentionTier:   flags.retentionTier,
+		KeepMin:         flags.keepMin,
+		NowTime:         flags.now,
+		ControlIDs:      cmdutil.ToControlIDs(flags.controlIDs),
+		AssetTypes:      cmdutil.ToAssetTypes(flags.assetTypes),
+		Statuses:        toStatuses(flags.statuses),
 	}
 	parsed, err := req.Parse()
 	if err != nil {

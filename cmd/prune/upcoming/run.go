@@ -22,10 +22,8 @@ type upcomingFlagsType struct {
 	statuses                     []string
 }
 
-var upcomingFlags upcomingFlagsType
-
-func runUpcoming(cmd *cobra.Command, _ []string) error {
-	opts, err := gatherUpcomingOptions(cmd)
+func runUpcoming(cmd *cobra.Command, flags *upcomingFlagsType) error {
+	opts, err := gatherUpcomingOptions(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -63,12 +61,12 @@ func runUpcoming(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func gatherUpcomingOptions(cmd *cobra.Command) (upcomingRunOptions, error) {
+func gatherUpcomingOptions(cmd *cobra.Command, flags *upcomingFlagsType) (upcomingRunOptions, error) {
 	opts := upcomingRunOptions{
-		ControlsDir:     fsutil.CleanUserPath(upcomingFlags.controlsDir),
-		ObservationsDir: fsutil.CleanUserPath(upcomingFlags.observationsDir),
-		MaxUnsafeRaw:    strings.TrimSpace(upcomingFlags.maxUnsafe),
-		DueSoonRaw:      strings.TrimSpace(upcomingFlags.dueSoon),
+		ControlsDir:     fsutil.CleanUserPath(flags.controlsDir),
+		ObservationsDir: fsutil.CleanUserPath(flags.observationsDir),
+		MaxUnsafeRaw:    strings.TrimSpace(flags.maxUnsafe),
+		DueSoonRaw:      strings.TrimSpace(flags.dueSoon),
 	}
 
 	maxUnsafeDur, err := timeutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
@@ -80,33 +78,33 @@ func gatherUpcomingOptions(cmd *cobra.Command) (upcomingRunOptions, error) {
 		return upcomingRunOptions{}, err
 	}
 	if dueSoonDur < 0 {
-		return upcomingRunOptions{}, fmt.Errorf("invalid --due-soon %q: must be >= 0", upcomingFlags.dueSoon)
+		return upcomingRunOptions{}, fmt.Errorf("invalid --due-soon %q: must be >= 0", flags.dueSoon)
 	}
 
 	var dueWithinDur *time.Duration
-	if strings.TrimSpace(upcomingFlags.dueWithin) != "" {
-		parsedDueWithin, parseErr := timeutil.ParseDurationFlag(upcomingFlags.dueWithin, "--due-within")
+	if strings.TrimSpace(flags.dueWithin) != "" {
+		parsedDueWithin, parseErr := timeutil.ParseDurationFlag(flags.dueWithin, "--due-within")
 		if parseErr != nil {
 			return upcomingRunOptions{}, parseErr
 		}
 		if parsedDueWithin < 0 {
-			return upcomingRunOptions{}, fmt.Errorf("invalid --due-within %q: must be >= 0", upcomingFlags.dueWithin)
+			return upcomingRunOptions{}, fmt.Errorf("invalid --due-within %q: must be >= 0", flags.dueWithin)
 		}
 		dueWithinDur = &parsedDueWithin
 	}
 
-	now, err := cmdutil.ResolveNow(upcomingFlags.now)
+	now, err := cmdutil.ResolveNow(flags.now)
 	if err != nil {
 		return upcomingRunOptions{}, err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, upcomingFlags.format)
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return upcomingRunOptions{}, err
 	}
 	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
-		ControlIDs: cmdutil.ToControlIDs(upcomingFlags.controlIDs),
-		AssetTypes: cmdutil.ToAssetTypes(upcomingFlags.assetTypes),
-		Statuses:   upcomingFlags.statuses,
+		ControlIDs: cmdutil.ToControlIDs(flags.controlIDs),
+		AssetTypes: cmdutil.ToAssetTypes(flags.assetTypes),
+		Statuses:   flags.statuses,
 		DueWithin:  dueWithinDur,
 	})
 	if err != nil {
