@@ -25,9 +25,9 @@ func ValidateDir(flag, path string, hint error) error {
 // inference-failure explanation for the given inferKey (e.g. "controls" or
 // "observations"). This pattern was previously duplicated across apply,
 // diagnose, and validate command packages.
-func ValidateDirWithInference(flag, path, inferKey string, hint error) error {
+func ValidateDirWithInference(flag, path, inferKey string, hint error, log *projctx.InferenceLog) error {
 	if err := ValidateDir(flag, path, hint); err != nil {
-		if detail := projctx.ExplainInferenceFailure(inferKey); detail != "" {
+		if detail := log.ExplainFailure(inferKey); detail != "" {
 			return fmt.Errorf("%w\n%s", err, detail)
 		}
 		return err

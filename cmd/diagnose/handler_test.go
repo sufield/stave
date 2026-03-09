@@ -83,11 +83,11 @@ func TestDiagnoseOptionsNormalizeAndValidate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	opts := (diagnoseOptions{
+	opts, inferLog := (diagnoseOptions{
 		ControlsDir:     ctlDir + string(os.PathSeparator) + ".",
 		ObservationsDir: obsDir + string(os.PathSeparator) + ".",
 	}).normalizePaths(cmd)
-	if err := opts.validateDirs(); err != nil {
+	if err := opts.validateDirs(inferLog); err != nil {
 		t.Fatalf("normalizePaths+validateDirs() error = %v", err)
 	}
 	if opts.ControlsDir != ctlDir || opts.ObservationsDir != obsDir {
@@ -108,11 +108,11 @@ func TestDiagnoseOptionsNormalizeAndValidate_DirErrors(t *testing.T) {
 	_ = cmd.Flags().Set("controls", notDir)
 	_ = cmd.Flags().Set("observations", notDir)
 
-	opts := (diagnoseOptions{
+	opts, inferLog := (diagnoseOptions{
 		ControlsDir:     notDir,
 		ObservationsDir: notDir,
 	}).normalizePaths(cmd)
-	if err := opts.validateDirs(); err == nil || !strings.Contains(err.Error(), "--controls must be a directory") {
+	if err := opts.validateDirs(inferLog); err == nil || !strings.Contains(err.Error(), "--controls must be a directory") {
 		t.Fatalf("expected controls directory error, got %v", err)
 	}
 }

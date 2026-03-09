@@ -81,7 +81,6 @@ func runApply(cmd *cobra.Command, _ []string, flags *applyFlagsType) error {
 }
 
 func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {
-	projctx.ResetInferAttempts()
 	ctlDir, obsDir := resolveReadinessDirs(cmd, in)
 
 	report, err := service.AssessReadiness(validation.ReadinessInput{
@@ -104,10 +103,11 @@ func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.Readines
 }
 
 func resolveReadinessDirs(cmd *cobra.Command, in readinessInput) (string, string) {
+	log := projctx.NewInferenceLog()
 	ctlDir := fsutil.CleanUserPath(in.ControlsDir)
 	obsDir := fsutil.CleanUserPath(in.ObservationsDir)
-	ctlDir = projctx.InferControlsDir(cmd, ctlDir)
-	obsDir = projctx.InferObservationsDir(cmd, obsDir)
+	ctlDir = log.InferControlsDir(cmd, ctlDir)
+	obsDir = log.InferObservationsDir(cmd, obsDir)
 	return ctlDir, obsDir
 }
 

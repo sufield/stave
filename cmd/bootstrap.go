@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/initcmd"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
@@ -17,7 +16,6 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
-	initcmd.SetGlobals(a.Flags.Force, a.Flags.Quiet, a.Flags.AllowSymlinkOut)
 	return a.initLogger()
 }
 

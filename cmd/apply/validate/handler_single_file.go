@@ -16,12 +16,6 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
-// runValidateSingleFile validates a single file (--in mode).
-func runValidateSingleFile(cmd *cobra.Command, out io.Writer) error {
-	format, _ := ui.ParseOutputFormat(validateOpts.Format)
-	return runValidateSingleFileWithOptions(cmd, out, validateOpts, format)
-}
-
 func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *options, format ui.OutputFormat) error {
 	data, sourceName, err := ui.ReadInput(os.Stdin, opts.InFile)
 	if err != nil {

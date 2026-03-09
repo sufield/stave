@@ -92,13 +92,14 @@ Examples:
 }
 
 type demoReportRequest struct {
-	Path        string
-	Fixture     string
-	Snapshot    asset.Snapshot
-	Result      evaluation.Result
-	Findings    []remediation.Finding
-	GeneratedAt time.Time
-	Overwrite   bool
+	Path         string
+	Fixture      string
+	Snapshot     asset.Snapshot
+	Result       evaluation.Result
+	Findings     []remediation.Finding
+	GeneratedAt  time.Time
+	Overwrite    bool
+	AllowSymlink bool
 }
 
 var demoFastLaneControlIDs = []string{

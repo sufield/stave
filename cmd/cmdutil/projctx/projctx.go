@@ -37,32 +37,36 @@ type InferAttempt struct {
 	Resolved   string
 }
 
-var inferAttempts = map[string]InferAttempt{}
+// InferenceLog records path inference attempts for diagnostics.
+// Create one per command invocation; it replaces the former package-level map.
+type InferenceLog struct {
+	attempts map[string]InferAttempt
+}
 
-// ResetInferAttempts clears the inference attempt log.
-func ResetInferAttempts() {
-	inferAttempts = map[string]InferAttempt{}
+// NewInferenceLog creates an empty inference log.
+func NewInferenceLog() *InferenceLog {
+	return &InferenceLog{attempts: map[string]InferAttempt{}}
 }
 
 // InferControlsDir attempts path inference for the --controls flag.
-func InferControlsDir(cmd *cobra.Command, current string) string {
-	return inferDir(cmd, "controls", current)
+func (l *InferenceLog) InferControlsDir(cmd *cobra.Command, current string) string {
+	return l.inferDir(cmd, "controls", current)
 }
 
 // InferObservationsDir attempts path inference for the --observations flag.
-func InferObservationsDir(cmd *cobra.Command, current string) string {
-	return inferDir(cmd, "observations", current)
+func (l *InferenceLog) InferObservationsDir(cmd *cobra.Command, current string) string {
+	return l.inferDir(cmd, "observations", current)
 }
 
 // inferDir attempts path inference for a flag if the user didn't
 // explicitly set it. The flag name doubles as the directory name to search for.
-func inferDir(cmd *cobra.Command, name, current string) string {
+func (l *InferenceLog) inferDir(cmd *cobra.Command, name, current string) string {
 	if cmd == nil || cmd.Flags().Changed(name) {
 		return current
 	}
 
 	if _, err := ResolveSelectedGlobalContext(); err != nil {
-		inferAttempts[name] = InferAttempt{
+		l.attempts[name] = InferAttempt{
 			FlagName: name,
 			DirName:  name,
 			Error:    err.Error(),
@@ -71,7 +75,7 @@ func inferDir(cmd *cobra.Command, name, current string) string {
 	}
 
 	if ctxDir, ok := ResolveContextDefaultDir("", name); ok {
-		inferAttempts[name] = InferAttempt{
+		l.attempts[name] = InferAttempt{
 			FlagName: name,
 			DirName:  name,
 			Searched: "context default",
@@ -82,7 +86,7 @@ func inferDir(cmd *cobra.Command, name, current string) string {
 
 	base, err := pathinfer.BaseDir()
 	if err != nil {
-		inferAttempts[name] = InferAttempt{
+		l.attempts[name] = InferAttempt{
 			FlagName: name,
 			DirName:  name,
 			Error:    err.Error(),
@@ -92,7 +96,7 @@ func inferDir(cmd *cobra.Command, name, current string) string {
 	dir, candidates, err := pathinfer.Unique(base, name, InferMaxDepth)
 	searched := fmt.Sprintf("%s/%s and nested %s/ within %d levels", base, name, name, InferMaxDepth)
 	if err != nil {
-		inferAttempts[name] = InferAttempt{
+		l.attempts[name] = InferAttempt{
 			FlagName:   name,
 			DirName:    name,
 			Base:       base,
@@ -102,7 +106,7 @@ func inferDir(cmd *cobra.Command, name, current string) string {
 		}
 		return current
 	}
-	inferAttempts[name] = InferAttempt{
+	l.attempts[name] = InferAttempt{
 		FlagName: name,
 		DirName:  name,
 		Base:     base,
@@ -112,9 +116,12 @@ func inferDir(cmd *cobra.Command, name, current string) string {
 	return dir
 }
 
-// ExplainInferenceFailure returns a human-readable explanation of a failed inference.
-func ExplainInferenceFailure(name string) string {
-	attempt, ok := inferAttempts[name]
+// ExplainFailure returns a human-readable explanation of a failed inference.
+func (l *InferenceLog) ExplainFailure(name string) string {
+	if l == nil {
+		return ""
+	}
+	attempt, ok := l.attempts[name]
 	if !ok || strings.TrimSpace(attempt.Error) == "" {
 		return ""
 	}

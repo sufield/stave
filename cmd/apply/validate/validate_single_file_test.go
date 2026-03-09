@@ -12,9 +12,6 @@ import (
 )
 
 func TestRunValidateSingleFile_ContractControlV1(t *testing.T) {
-	restore := saveValidateFlags()
-	defer restore()
-
 	tmp := t.TempDir()
 	inFile := filepath.Join(tmp, "ctl.yaml")
 	if err := os.WriteFile(inFile, []byte(`
@@ -32,14 +29,16 @@ unsafe_predicate:
 		t.Fatalf("write control: %v", err)
 	}
 
-	validateOpts.InFile = inFile
-	validateOpts.Kind = "control"
-	validateOpts.SchemaVersion = "v1"
-	validateOpts.StrictMode = true
-	validateOpts.Format = "text"
+	opts := defaultOptions()
+	opts.InFile = inFile
+	opts.Kind = "control"
+	opts.SchemaVersion = "v1"
+	opts.StrictMode = true
+	opts.Format = "text"
 
+	format, _ := ui.ParseOutputFormat(opts.Format)
 	var buf bytes.Buffer
-	if err := runValidateSingleFile(&cobra.Command{Use: "test"}, &buf); err != nil {
+	if err := runValidateSingleFileWithOptions(&cobra.Command{Use: "test"}, &buf, opts, format); err != nil {
 		t.Fatalf("expected contract validate success, got %v", err)
 	}
 	if !strings.Contains(buf.String(), "Validation passed") {
@@ -48,9 +47,6 @@ unsafe_predicate:
 }
 
 func TestRunValidateSingleFile_ContractStrictUnknownField(t *testing.T) {
-	restore := saveValidateFlags()
-	defer restore()
-
 	tmp := t.TempDir()
 	inFile := filepath.Join(tmp, "ctl.yaml")
 	if err := os.WriteFile(inFile, []byte(`
@@ -69,14 +65,16 @@ unexpected: true
 		t.Fatalf("write control: %v", err)
 	}
 
-	validateOpts.InFile = inFile
-	validateOpts.Kind = "control"
-	validateOpts.SchemaVersion = "v1"
-	validateOpts.StrictMode = true
-	validateOpts.Format = "text"
+	opts := defaultOptions()
+	opts.InFile = inFile
+	opts.Kind = "control"
+	opts.SchemaVersion = "v1"
+	opts.StrictMode = true
+	opts.Format = "text"
 
+	format, _ := ui.ParseOutputFormat(opts.Format)
 	var buf bytes.Buffer
-	err := runValidateSingleFile(&cobra.Command{Use: "test"}, &buf)
+	err := runValidateSingleFileWithOptions(&cobra.Command{Use: "test"}, &buf, opts, format)
 	if err == nil {
 		t.Fatal("expected strict contract validation failure")
 	}
@@ -86,9 +84,6 @@ unexpected: true
 }
 
 func TestRunValidateSingleFile_ContractRejectsInvalidControl(t *testing.T) {
-	restore := saveValidateFlags()
-	defer restore()
-
 	tmp := t.TempDir()
 	inFile := filepath.Join(tmp, "invalid-ctl.yaml")
 	if err := os.WriteFile(inFile, []byte(`
@@ -102,14 +97,16 @@ expect: disabled
 		t.Fatalf("write invalid control: %v", err)
 	}
 
-	validateOpts.InFile = inFile
-	validateOpts.Kind = "control"
-	validateOpts.SchemaVersion = "v1"
-	validateOpts.StrictMode = true
-	validateOpts.Format = "text"
+	opts := defaultOptions()
+	opts.InFile = inFile
+	opts.Kind = "control"
+	opts.SchemaVersion = "v1"
+	opts.StrictMode = true
+	opts.Format = "text"
 
+	format, _ := ui.ParseOutputFormat(opts.Format)
 	var buf bytes.Buffer
-	err := runValidateSingleFile(&cobra.Command{Use: "test"}, &buf)
+	err := runValidateSingleFileWithOptions(&cobra.Command{Use: "test"}, &buf, opts, format)
 	if err == nil {
 		t.Fatal("expected contract validation failure for invalid shape")
 	}

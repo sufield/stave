@@ -16,9 +16,6 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// validateOpts is the mutable option set used by package-level helper tests.
-var validateOpts = defaultOptions()
-
 type options struct {
 	ControlsDir     string
 	ObservationsDir string
@@ -85,34 +82,35 @@ func prepareValidateCommand(cmd *cobra.Command, opts *options) (ui.OutputFormat,
 }
 
 func prepareValidatePaths(cmd *cobra.Command, opts *options) error {
-	normalizeValidatePaths(cmd, opts)
-	return validateValidateDirs(opts)
+	log := normalizeValidatePaths(cmd, opts)
+	return validateValidateDirs(opts, log)
 }
 
 // normalizeValidatePaths cleans user-supplied paths, trims string fields,
 // and applies project-root inference for controls and observations dirs.
-func normalizeValidatePaths(cmd *cobra.Command, opts *options) {
+func normalizeValidatePaths(cmd *cobra.Command, opts *options) *projctx.InferenceLog {
 	opts.ControlsDir = fsutil.CleanUserPath(opts.ControlsDir)
 	opts.ObservationsDir = fsutil.CleanUserPath(opts.ObservationsDir)
 	opts.InFile = fsutil.CleanUserPath(opts.InFile)
 	opts.Kind = strings.TrimSpace(opts.Kind)
 	opts.SchemaVersion = strings.TrimSpace(opts.SchemaVersion)
-	projctx.ResetInferAttempts()
+	log := projctx.NewInferenceLog()
 
-	opts.ControlsDir = projctx.InferControlsDir(cmd, opts.ControlsDir)
-	opts.ObservationsDir = projctx.InferObservationsDir(cmd, opts.ObservationsDir)
+	opts.ControlsDir = log.InferControlsDir(cmd, opts.ControlsDir)
+	opts.ObservationsDir = log.InferObservationsDir(cmd, opts.ObservationsDir)
+	return log
 }
 
 // validateValidateDirs checks that controls and observations directories
 // exist and are accessible. Skipped when --in is set (single file mode).
-func validateValidateDirs(opts *options) error {
+func validateValidateDirs(opts *options, log *projctx.InferenceLog) error {
 	if opts.InFile != "" {
 		return nil
 	}
-	if err := cmdutil.ValidateDirWithInference("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
+	if err := cmdutil.ValidateDirWithInference("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
 		return err
 	}
-	return cmdutil.ValidateDirWithInference("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible)
+	return cmdutil.ValidateDirWithInference("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log)
 }
 
 // logVerboseContext prints context details to stderr when verbose mode is enabled.

@@ -36,24 +36,24 @@ type diagnoseOptions struct {
 	AssetID         string
 }
 
-func (o diagnoseOptions) normalizePaths(cmd *cobra.Command) diagnoseOptions {
+func (o diagnoseOptions) normalizePaths(cmd *cobra.Command) (diagnoseOptions, *projctx.InferenceLog) {
 	out := o
 	out.ControlsDir = fsutil.CleanUserPath(out.ControlsDir)
 	out.ObservationsDir = fsutil.CleanUserPath(out.ObservationsDir)
 	out.PreviousOutput = fsutil.CleanUserPath(out.PreviousOutput)
-	projctx.ResetInferAttempts()
+	log := projctx.NewInferenceLog()
 
-	out.ControlsDir = projctx.InferControlsDir(cmd, out.ControlsDir)
-	out.ObservationsDir = projctx.InferObservationsDir(cmd, out.ObservationsDir)
+	out.ControlsDir = log.InferControlsDir(cmd, out.ControlsDir)
+	out.ObservationsDir = log.InferObservationsDir(cmd, out.ObservationsDir)
 
-	return out
+	return out, log
 }
 
-func (o diagnoseOptions) validateDirs() error {
-	if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible); err != nil {
+func (o diagnoseOptions) validateDirs(log *projctx.InferenceLog) error {
+	if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
 		return err
 	}
-	return cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible)
+	return cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log)
 }
 
 func (o diagnoseOptions) parseMaxUnsafe() (time.Duration, error) {
