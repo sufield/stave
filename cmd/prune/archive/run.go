@@ -16,10 +16,6 @@ import (
 	"github.com/sufield/stave/internal/pruner"
 )
 
-var (
-	archiveOpts archiveOptions
-)
-
 type archiveOptions struct {
 	ObservationsDir string
 	ArchiveDir      string
@@ -69,11 +65,11 @@ type archiveResolvedInput struct {
 	mode       string
 }
 
-func runArchive(cmd *cobra.Command, _ []string) error {
+func runArchive(cmd *cobra.Command, opts *archiveOptions) error {
 	var plan archiveExecutionPlan
 	return appeval.RunCleanup(appeval.CleanupDeps{
 		BuildPlan: func() (appeval.CleanupPlan, error) {
-			p, err := buildArchiveExecutionPlan(cmd)
+			p, err := buildArchiveExecutionPlan(cmd, opts)
 			if err != nil {
 				return appeval.CleanupPlan{}, err
 			}
@@ -98,8 +94,8 @@ func runArchive(cmd *cobra.Command, _ []string) error {
 	})
 }
 
-func buildArchiveExecutionPlan(cmd *cobra.Command) (archiveExecutionPlan, error) {
-	in, err := resolveArchiveInput(cmd)
+func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiveExecutionPlan, error) {
+	in, err := resolveArchiveInput(cmd, opts)
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}
@@ -139,33 +135,33 @@ func buildArchiveExecutionPlan(cmd *cobra.Command) (archiveExecutionPlan, error)
 	}, nil
 }
 
-func resolveArchiveInput(cmd *cobra.Command) (archiveResolvedInput, error) {
-	obsDir, destArchiveDir, err := resolveArchivePaths(archiveOpts.ObservationsDir, archiveOpts.ArchiveDir)
+func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResolvedInput, error) {
+	obsDir, destArchiveDir, err := resolveArchivePaths(opts.ObservationsDir, opts.ArchiveDir)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	if archiveOpts.KeepMin < 0 {
-		return archiveResolvedInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", archiveOpts.KeepMin)
+	if opts.KeepMin < 0 {
+		return archiveResolvedInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", opts.KeepMin)
 	}
-	tier, err := pruneshared.ValidateRetentionTier(archiveOpts.RetentionTier)
+	tier, err := pruneshared.ValidateRetentionTier(opts.RetentionTier)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	olderThan, err := pruneshared.ResolveOlderThan(cmd, archiveOpts.OlderThan, tier)
+	olderThan, err := pruneshared.ResolveOlderThan(cmd, opts.OlderThan, tier)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	now, err := cmdutil.ResolveNow(archiveOpts.Now)
+	now, err := cmdutil.ResolveNow(opts.Now)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, archiveOpts.Format)
+	format, err := cmdutil.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
 
 	overwrite := cmdutil.ForceEnabled(cmd)
-	dryRun := archiveOpts.DryRun || !overwrite
+	dryRun := opts.DryRun || !overwrite
 	mode := "MOVE"
 	if dryRun {
 		mode = "DRY_RUN"
@@ -178,7 +174,7 @@ func resolveArchiveInput(cmd *cobra.Command) (archiveResolvedInput, error) {
 		olderThan:  olderThan,
 		now:        now,
 		format:     format,
-		keepMin:    archiveOpts.KeepMin,
+		keepMin:    opts.KeepMin,
 		dryRun:     dryRun,
 		quiet:      cmdutil.QuietEnabled(cmd),
 		overwrite:  overwrite,
