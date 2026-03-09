@@ -13,12 +13,13 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-var schemasFormat string
+func newSchemasCmd() *cobra.Command {
+	var format string
 
-var schemasCmd = &cobra.Command{
-	Use:   "schemas",
-	Short: "List all contract schemas",
-	Long: `Schemas lists every wire-format contract schema that this version of Stave
+	cmd := &cobra.Command{
+		Use:   "schemas",
+		Short: "List all contract schemas",
+		Long: `Schemas lists every wire-format contract schema that this version of Stave
 reads or writes, grouped by category.
 
 Exit Codes:
@@ -34,14 +35,17 @@ Examples:
 
   # Pipe to jq
   stave schemas --format json | jq '.data'` + OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runSchemas,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runSchemas(cmd, format)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 
-func init() {
-	schemasCmd.Flags().StringVar(&schemasFormat, "format", "text", "Output format (text, json)")
+	cmd.Flags().StringVar(&format, "format", "text", "Output format (text, json)")
+
+	return cmd
 }
 
 type schemaEntry struct {
@@ -90,19 +94,19 @@ func buildSchemasOutput() schemasOutput {
 	}
 }
 
-func runSchemas(cmd *cobra.Command, _ []string) error {
-	formatRaw := strings.TrimSpace(schemasFormat)
+func runSchemas(cmd *cobra.Command, format string) error {
+	formatRaw := strings.TrimSpace(format)
 	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
 		formatRaw = "json"
 	}
-	format, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
+	parsed, err := ui.ParseOutputFormat(strings.ToLower(formatRaw))
 	if err != nil {
 		return err
 	}
 
 	out := buildSchemasOutput()
 
-	if format.IsJSON() || cmdutil.IsJSONMode(cmd) {
+	if parsed.IsJSON() || cmdutil.IsJSONMode(cmd) {
 		enc := json.NewEncoder(cmd.OutOrStdout())
 		enc.SetIndent("", "  ")
 		return enc.Encode(out)

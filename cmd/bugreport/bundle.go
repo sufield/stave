@@ -120,7 +120,7 @@ func addConfigArtifact(bundle *bundleWriter) error {
 	return nil
 }
 
-func addLogArtifact(cmd *cobra.Command, bundle *bundleWriter, cwd string) error {
+func addLogArtifact(cmd *cobra.Command, bundle *bundleWriter, cwd string, tailLineCount int) error {
 	logPath, ok := findLogPath(cmd, cwd)
 	if !ok {
 		return nil
@@ -130,7 +130,7 @@ func addLogArtifact(cmd *cobra.Command, bundle *bundleWriter, cwd string) error 
 		bundle.addWarning("skipped log tail (%s): %v", logPath, err)
 		return nil
 	}
-	tail := tailBytesByLine(logBytes, tailLines)
+	tail := tailBytesByLine(logBytes, tailLineCount)
 	tail = redactSensitiveBlob(tail)
 	if err := bundle.addText("logs/stave.log.tail.txt", tail); err != nil {
 		return fmt.Errorf("write logs/stave.log.tail.txt: %w", err)
