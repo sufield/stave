@@ -19,9 +19,9 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	return a.initLogger()
 }
 
-func (a *App) postRun(_ *cobra.Command, _ []string) {
+func (a *App) postRun(cmd *cobra.Command, _ []string) {
 	if !a.Flags.Quiet && !cmdutil.IsJSONMode(a.Root) {
-		fmt.Fprintln(os.Stderr, "\nNeed help? Run 'stave bug-report' to create a diagnostic bundle.")
+		fmt.Fprintln(cmd.ErrOrStderr(), "\nNeed help? Run 'stave bug-report' to create a diagnostic bundle.")
 	}
 	if a.LogCloser != nil {
 		_ = a.LogCloser.Close()

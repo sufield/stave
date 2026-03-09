@@ -3,7 +3,6 @@ package alias
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -95,7 +94,7 @@ func newAliasDeleteCmd() *cobra.Command {
 	}
 }
 
-func runAliasSet(_ *cobra.Command, args []string) error {
+func runAliasSet(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	command := args[1]
 
@@ -105,8 +104,8 @@ func runAliasSet(_ *cobra.Command, args []string) error {
 
 	// Check for collision with existing commands
 	if rootCmd != nil {
-		if cmd, _, err := rootCmd.Find([]string{name}); err == nil && cmd != nil && cmd != rootCmd {
-			return fmt.Errorf("alias %q collides with existing command %q", name, cmd.Use)
+		if found, _, err := rootCmd.Find([]string{name}); err == nil && found != nil && found != rootCmd {
+			return fmt.Errorf("alias %q collides with existing command %q", name, found.Use)
 		}
 	}
 
@@ -124,7 +123,7 @@ func runAliasSet(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("write alias: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Alias set: %s -> %s\n", name, command)
+	fmt.Fprintf(cmd.ErrOrStderr(), "Alias set: %s -> %s\n", name, command)
 	return nil
 }
 
@@ -168,7 +167,7 @@ func runAliasList(cmd *cobra.Command, rawFormat string) error {
 	return nil
 }
 
-func runAliasDelete(_ *cobra.Command, args []string) error {
+func runAliasDelete(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	cfg, path := projconfig.LoadUserConfigFull()
@@ -185,6 +184,6 @@ func runAliasDelete(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("write alias: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Alias deleted: %s\n", name)
+	fmt.Fprintf(cmd.ErrOrStderr(), "Alias deleted: %s\n", name)
 	return nil
 }

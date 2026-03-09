@@ -36,6 +36,7 @@ import (
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type versionOutput struct {
@@ -111,8 +112,7 @@ func newVersionCmd() *cobra.Command {
 					if _, statErr := os.Stat(lockPath); statErr == nil {
 						out.LockPresent = true
 						out.LockFile = lockPath
-						// #nosec G304 -- lockPath is derived from detected project root plus fixed lockfile name.
-						if data, readErr := os.ReadFile(lockPath); readErr == nil {
+						if data, readErr := fsutil.ReadFileLimited(lockPath); readErr == nil {
 							sum := sha256.Sum256(data)
 							out.LockHash = hex.EncodeToString(sum[:])
 						}

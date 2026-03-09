@@ -246,7 +246,11 @@ func WarnIfGitDirty(cmd *cobra.Command, git *evaluation.GitInfo, label string) {
 	if cmdutil.QuietEnabled(cmd) {
 		return
 	}
-	_, _ = fmt.Fprintf(os.Stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n", label, strings.Join(git.DirtyList, ", "))
+	stderr := io.Writer(os.Stderr)
+	if cmd != nil {
+		stderr = cmd.ErrOrStderr()
+	}
+	_, _ = fmt.Fprintf(stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n", label, strings.Join(git.DirtyList, ", "))
 }
 
 // EmptyDash returns "-" for empty strings.

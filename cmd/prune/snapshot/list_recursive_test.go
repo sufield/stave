@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -52,7 +53,7 @@ func TestListObservationSnapshotFilesRecursive_FlatDir(t *testing.T) {
 	writeTestObservation(t, filepath.Join(root, "2026-01-10.json"), t1)
 	writeTestObservation(t, filepath.Join(root, "2026-01-11.json"), t2)
 
-	files, err := listObservationSnapshotFilesRecursive(root, nil)
+	files, err := listObservationSnapshotFilesRecursive(context.Background(), root, nil)
 	if err != nil {
 		t.Fatalf("recursive list: %v", err)
 	}
@@ -77,7 +78,7 @@ func TestListObservationSnapshotFilesRecursive_NestedDirs(t *testing.T) {
 	writeTestObservation(t, filepath.Join(root, "dev", "2026-01-11.json"), t2)
 	writeTestObservation(t, filepath.Join(root, "prod", "sub", "2026-01-12.json"), t3)
 
-	files, err := listObservationSnapshotFilesRecursive(root, nil)
+	files, err := listObservationSnapshotFilesRecursive(context.Background(), root, nil)
 	if err != nil {
 		t.Fatalf("recursive list: %v", err)
 	}
@@ -104,7 +105,7 @@ func TestListObservationSnapshotFilesRecursive_SkipsUnderscoreDirs(t *testing.T)
 	writeTestObservation(t, filepath.Join(root, "prod", "2026-01-10.json"), t1)
 	writeTestObservation(t, filepath.Join(root, "_staging", "2026-01-11.json"), t2)
 
-	files, err := listObservationSnapshotFilesRecursive(root, nil)
+	files, err := listObservationSnapshotFilesRecursive(context.Background(), root, nil)
 	if err != nil {
 		t.Fatalf("recursive list: %v", err)
 	}
@@ -125,7 +126,7 @@ func TestListObservationSnapshotFilesRecursive_ExcludeDirs(t *testing.T) {
 	writeTestObservation(t, filepath.Join(root, "prod", "2026-01-10.json"), t1)
 	writeTestObservation(t, filepath.Join(archiveDir, "2026-01-11.json"), t2)
 
-	files, err := listObservationSnapshotFilesRecursive(root, []string{archiveDir})
+	files, err := listObservationSnapshotFilesRecursive(context.Background(), root, []string{archiveDir})
 	if err != nil {
 		t.Fatalf("recursive list: %v", err)
 	}
@@ -143,7 +144,7 @@ func TestListObservationSnapshotFilesRecursive_RelPathUsesForwardSlashes(t *test
 
 	writeTestObservation(t, filepath.Join(root, "env", "region", "2026-01-10.json"), t1)
 
-	files, err := listObservationSnapshotFilesRecursive(root, nil)
+	files, err := listObservationSnapshotFilesRecursive(context.Background(), root, nil)
 	if err != nil {
 		t.Fatalf("recursive list: %v", err)
 	}
@@ -169,7 +170,7 @@ func TestListObservationSnapshotFilesRecursive_SortedByCapturedAt(t *testing.T) 
 	writeTestObservation(t, filepath.Join(root, "a.json"), t1)
 	writeTestObservation(t, filepath.Join(root, "b.json"), t2)
 
-	files, err := listObservationSnapshotFilesRecursive(root, nil)
+	files, err := listObservationSnapshotFilesRecursive(context.Background(), root, nil)
 	if err != nil {
 		t.Fatalf("recursive list: %v", err)
 	}

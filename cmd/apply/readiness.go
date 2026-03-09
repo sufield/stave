@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -73,7 +72,7 @@ func runApply(cmd *cobra.Command, _ []string, flags *applyFlagsType) error {
 	}
 	if !report.Ready {
 		if !cmdutil.QuietEnabled(cmd) {
-			_ = writeReadinessText(os.Stderr, report)
+			_ = writeReadinessText(cmd.ErrOrStderr(), report)
 		}
 		return ui.WithNextCommand(fmt.Errorf("%w: readiness checks failed; apply not executed", ui.ErrValidationFailed), "stave plan")
 	}

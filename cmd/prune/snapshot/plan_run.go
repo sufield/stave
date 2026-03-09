@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -19,7 +20,7 @@ func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
 	if err != nil {
 		return err
 	}
-	files, err := listPlanFiles(runInput.observationsRoot, runInput.archiveDir)
+	files, err := listPlanFiles(cmd.Context(), runInput.observationsRoot, runInput.archiveDir)
 	if err != nil {
 		return err
 	}
@@ -95,14 +96,14 @@ func resolvePlanRetentionConfig() (projconfig.RetentionTiersMap, []projconfig.Ti
 	return tiers, tierRules, defaultTier
 }
 
-func listPlanFiles(observationsRoot, archiveDir string) ([]snapshotFile, error) {
+func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]snapshotFile, error) {
 	excludeDirs := make([]string, 0, 1)
 	if archiveDir != "" {
 		if abs, err := filepath.Abs(archiveDir); err == nil {
 			excludeDirs = append(excludeDirs, abs)
 		}
 	}
-	return listObservationSnapshotFilesRecursive(observationsRoot, excludeDirs)
+	return listObservationSnapshotFilesRecursive(ctx, observationsRoot, excludeDirs)
 }
 
 func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) error {

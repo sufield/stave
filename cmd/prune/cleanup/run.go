@@ -95,7 +95,7 @@ func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error
 	if err != nil {
 		return deletePlan{}, err
 	}
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(in.obsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.obsDir)
 	if err != nil {
 		return deletePlan{}, err
 	}

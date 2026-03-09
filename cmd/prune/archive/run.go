@@ -100,7 +100,7 @@ func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiv
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(in.obsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.obsDir)
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}

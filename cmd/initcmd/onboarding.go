@@ -486,7 +486,7 @@ func writeGeneratedFile(path string, content []byte, cmd *cobra.Command) error {
 		return err
 	}
 	if !cmdutil.QuietEnabled(cmd) {
-		fmt.Fprintf(os.Stdout, "Generated %s\n", path)
+		fmt.Fprintf(cmd.OutOrStdout(), "Generated %s\n", path)
 	}
 	return nil
 }
