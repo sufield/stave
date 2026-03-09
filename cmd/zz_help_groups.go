@@ -2,10 +2,8 @@ package cmd
 
 import "github.com/spf13/cobra"
 
-func init() {
-	// This file intentionally runs late in lexical init order so grouping is
-	// applied after all commands have been registered.
-	RootCmd.AddGroup(
+func wireHelpGroups(root *cobra.Command) {
+	root.AddGroup(
 		&cobra.Group{ID: groupGettingStarted, Title: "Getting Started"},
 		&cobra.Group{ID: groupCore, Title: "Control Engine"},
 		&cobra.Group{ID: groupWorkflow, Title: "Workflow & CI"},
@@ -13,47 +11,47 @@ func init() {
 		&cobra.Group{ID: groupUtilities, Title: "Utilities & Help"},
 	)
 
-	assignRootCommandGroup("doctor", groupGettingStarted)
-	assignRootCommandGroup("demo", groupGettingStarted)
-	assignRootCommandGroup("init", groupGettingStarted)
-	assignRootCommandGroup("quickstart", groupGettingStarted)
-	assignRootCommandGroup("generate", groupGettingStarted)
+	assignCommandGroup(root, "doctor", groupGettingStarted)
+	assignCommandGroup(root, "demo", groupGettingStarted)
+	assignCommandGroup(root, "init", groupGettingStarted)
+	assignCommandGroup(root, "quickstart", groupGettingStarted)
+	assignCommandGroup(root, "generate", groupGettingStarted)
 
-	assignRootCommandGroup("validate", groupCore)
-	assignRootCommandGroup("lint", groupCore)
-	assignRootCommandGroup("fmt", groupCore)
-	assignRootCommandGroup("apply", groupCore)
-	assignRootCommandGroup("diagnose", groupCore)
-	assignRootCommandGroup("verify", groupCore)
-	assignRootCommandGroup("explain", groupCore)
-	assignRootCommandGroup("trace", groupCore)
+	assignCommandGroup(root, "validate", groupCore)
+	assignCommandGroup(root, "lint", groupCore)
+	assignCommandGroup(root, "fmt", groupCore)
+	assignCommandGroup(root, "apply", groupCore)
+	assignCommandGroup(root, "diagnose", groupCore)
+	assignCommandGroup(root, "verify", groupCore)
+	assignCommandGroup(root, "explain", groupCore)
+	assignCommandGroup(root, "trace", groupCore)
 
-	assignRootCommandGroup("snapshot", groupWorkflow)
-	assignRootCommandGroup("ci", groupWorkflow)
-	assignRootCommandGroup("plan", groupWorkflow)
-	assignRootCommandGroup("context", groupWorkflow)
-	assignRootCommandGroup("status", groupWorkflow)
-	assignRootCommandGroup("security-audit", groupWorkflow)
+	assignCommandGroup(root, "snapshot", groupWorkflow)
+	assignCommandGroup(root, "ci", groupWorkflow)
+	assignCommandGroup(root, "plan", groupWorkflow)
+	assignCommandGroup(root, "context", groupWorkflow)
+	assignCommandGroup(root, "status", groupWorkflow)
+	assignCommandGroup(root, "security-audit", groupWorkflow)
 
-	assignRootCommandGroup("ingest", groupArtifacts)
-	assignRootCommandGroup("controls", groupArtifacts)
-	assignRootCommandGroup("packs", groupArtifacts)
-	assignRootCommandGroup("enforce", groupArtifacts)
-	assignRootCommandGroup("extractor", groupArtifacts)
-	assignRootCommandGroup("graph", groupArtifacts)
-	assignRootCommandGroup("report", groupArtifacts)
+	assignCommandGroup(root, "ingest", groupArtifacts)
+	assignCommandGroup(root, "controls", groupArtifacts)
+	assignCommandGroup(root, "packs", groupArtifacts)
+	assignCommandGroup(root, "enforce", groupArtifacts)
+	assignCommandGroup(root, "extractor", groupArtifacts)
+	assignCommandGroup(root, "graph", groupArtifacts)
+	assignCommandGroup(root, "report", groupArtifacts)
 
-	assignRootCommandGroup("docs", groupUtilities)
-	assignRootCommandGroup("bug-report", groupUtilities)
-	assignRootCommandGroup("capabilities", groupUtilities)
-	assignRootCommandGroup("config", groupUtilities)
-	assignRootCommandGroup("version", groupUtilities)
-	assignRootCommandGroup("alias", groupUtilities)
-	assignRootCommandGroup("prompt", groupUtilities)
-	assignRootCommandGroup("fix", groupUtilities)
-	assignRootCommandGroup("env", groupUtilities)
-	assignRootCommandGroup("schemas", groupUtilities)
+	assignCommandGroup(root, "docs", groupUtilities)
+	assignCommandGroup(root, "bug-report", groupUtilities)
+	assignCommandGroup(root, "capabilities", groupUtilities)
+	assignCommandGroup(root, "config", groupUtilities)
+	assignCommandGroup(root, "version", groupUtilities)
+	assignCommandGroup(root, "alias", groupUtilities)
+	assignCommandGroup(root, "prompt", groupUtilities)
+	assignCommandGroup(root, "fix", groupUtilities)
+	assignCommandGroup(root, "env", groupUtilities)
+	assignCommandGroup(root, "schemas", groupUtilities)
 
-	RootCmd.SetCompletionCommandGroupID(groupUtilities)
-	RootCmd.SetHelpCommandGroupID(groupUtilities)
+	root.SetCompletionCommandGroupID(groupUtilities)
+	root.SetHelpCommandGroupID(groupUtilities)
 }

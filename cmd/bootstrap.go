@@ -6,34 +6,35 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/initcmd"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
-func bootstrapRootCommand(_ *cobra.Command, _ []string) error {
-	if err := checkRequireOffline(); err != nil {
+func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
+	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
-	initcmd.SetGlobals(gFlags.Force, gFlags.Quiet, gFlags.AllowSymlinkOut)
-	return initLogger()
+	initcmd.SetGlobals(a.Flags.Force, a.Flags.Quiet, a.Flags.AllowSymlinkOut)
+	return a.initLogger()
 }
 
-func postRunRootCommand(_ *cobra.Command, _ []string) {
-	if !gFlags.Quiet && !IsJSONMode() {
+func (a *App) postRun(_ *cobra.Command, _ []string) {
+	if !a.Flags.Quiet && !cmdutil.IsJSONMode(a.Root) {
 		fmt.Fprintln(os.Stderr, "\nNeed help? Run 'stave bug-report' to create a diagnostic bundle.")
 	}
-	if globalLogCloser != nil {
-		_ = globalLogCloser.Close()
+	if a.LogCloser != nil {
+		_ = a.LogCloser.Close()
 	}
 }
 
 // checkRequireOffline validates the offline guarantee when --require-offline is set.
 // It checks that no proxy environment variables are set, which would indicate the
 // environment expects network connectivity that Stave does not use.
-func checkRequireOffline() error {
-	if !gFlags.RequireOffline {
+func (a *App) checkRequireOffline() error {
+	if !a.Flags.RequireOffline {
 		return nil
 	}
 	for _, env := range kernel.DefaultPolicy().ProxyEnvVars {
@@ -44,38 +45,38 @@ func checkRequireOffline() error {
 	return nil
 }
 
-// initLogger initializes the global logger based on flags.
-func initLogger() error {
+// initLogger initializes the App logger based on flags.
+func (a *App) initLogger() error {
 	cfg := logging.DefaultConfig()
 
 	// Determine log level
-	if gFlags.LogLevel != "" {
-		cfg.Level = logging.ParseLevel(gFlags.LogLevel)
+	if a.Flags.LogLevel != "" {
+		cfg.Level = logging.ParseLevel(a.Flags.LogLevel)
 	} else {
-		cfg.Level = logging.LevelFromVerbosity(gFlags.Verbosity)
+		cfg.Level = logging.LevelFromVerbosity(a.Flags.Verbosity)
 	}
 
-	cfg.Format = logging.ParseFormat(gFlags.LogFormat)
-	cfg.LogFile = fsutil.CleanUserPath(gFlags.LogFile)
-	cfg.Timestamps = gFlags.LogTimestamps
-	cfg.Timings = gFlags.LogTimings
-	cfg.AllowSymlink = gFlags.AllowSymlinkOut
-	cfg.NoColor = noColorRequested()
+	cfg.Format = logging.ParseFormat(a.Flags.LogFormat)
+	cfg.LogFile = fsutil.CleanUserPath(a.Flags.LogFile)
+	cfg.Timestamps = a.Flags.LogTimestamps
+	cfg.Timings = a.Flags.LogTimings
+	cfg.AllowSymlink = a.Flags.AllowSymlinkOut
+	cfg.NoColor = a.noColorRequested()
 
 	lc, err := logging.NewLogger(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
-	globalLogCloser = lc
-	globalLogger = lc.Logger
+	a.LogCloser = lc
+	a.Logger = lc.Logger
 	logging.SetDefaultLogger(lc.Logger)
 
 	return nil
 }
 
-func noColorRequested() bool {
-	if gFlags.NoColor {
+func (a *App) noColorRequested() bool {
+	if a.Flags.NoColor {
 		return true
 	}
 	_, ok := os.LookupEnv("NO_COLOR")

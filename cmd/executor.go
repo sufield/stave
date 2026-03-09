@@ -19,21 +19,26 @@ import (
 // the appropriate exit code based on the result.
 // Panics are recovered and converted to error messages to prevent stack traces.
 func Execute() {
+	app := NewApp()
+	app.execute()
+}
+
+func (a *App) execute() {
 	args := os.Args[1:]
 
-	expandAliasIfMatch()
+	a.expandAliasIfMatch()
 
 	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
 
-	cleanupInterrupt := installInterruptHandler()
+	cleanupInterrupt := a.installInterruptHandler()
 	defer cleanupInterrupt()
-	defer recoverExecutePanic()
+	defer a.recoverExecutePanic()
 
-	executeRootCommand(args)
-	finalizeExecute(args, showFirstRunHint, firstRunMarkerPath)
+	a.executeRootCommand(args)
+	a.finalizeExecute(args, showFirstRunHint, firstRunMarkerPath)
 }
 
-func installInterruptHandler() func() {
+func (a *App) installInterruptHandler() func() {
 	sigCh := make(chan os.Signal, 1)
 	done := make(chan struct{})
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
@@ -42,7 +47,7 @@ func installInterruptHandler() func() {
 		select {
 		case <-sigCh:
 			fmt.Fprintln(os.Stderr, "Interrupted")
-			exitFunc(ui.ExitInterrupted)
+			a.ExitFunc(ui.ExitInterrupted)
 		case <-done:
 			return
 		}
@@ -54,18 +59,18 @@ func installInterruptHandler() func() {
 	}
 }
 
-func recoverExecutePanic() {
+func (a *App) recoverExecutePanic() {
 	if recovered := recover(); recovered != nil {
 		panicMsg := panicMessageFromValue(recovered)
-		sanitized := sanitizeExecuteMessage(panicMsg)
-		userMsg := panicUserMessage(sanitized)
+		sanitized := a.sanitizeExecuteMessage(panicMsg)
+		userMsg := a.panicUserMessage(sanitized)
 
 		errInfo := ui.NewErrorInfo(ui.CodeInternalError, userMsg).
 			WithTitle("Internal error").
 			WithAction("Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists.").
 			WithURL(CLIIssuesURL)
-		writeErrorInfo(errInfo)
-		exitFunc(ui.ExitInternal)
+		a.writeErrorInfo(errInfo)
+		a.ExitFunc(ui.ExitInternal)
 	}
 }
 
@@ -80,51 +85,51 @@ func panicMessageFromValue(recovered any) string {
 	}
 }
 
-func panicUserMessage(sanitized string) string {
-	if gFlags.Verbosity >= 2 {
-		if globalLogger != nil {
-			globalLogger.Error("panic recovered", "panic", sanitized)
+func (a *App) panicUserMessage(sanitized string) string {
+	if a.Flags.Verbosity >= 2 {
+		if a.Logger != nil {
+			a.Logger.Error("panic recovered", "panic", sanitized)
 		}
 		return fmt.Sprintf("internal error: %s", sanitized)
 	}
-	if globalLogger != nil {
-		globalLogger.Error("panic recovered")
+	if a.Logger != nil {
+		a.Logger.Error("panic recovered")
 	}
 	return "internal error occurred; rerun with -vv to see details"
 }
 
-func sanitizeExecuteMessage(message string) string {
-	if !resolvePathSanitize() {
+func (a *App) sanitizeExecuteMessage(message string) string {
+	if !a.resolvePathSanitize() {
 		return message
 	}
 	return ui.SanitizePaths(message)
 }
 
-func executeRootCommand(args []string) {
-	err := RootCmd.Execute()
+func (a *App) executeRootCommand(args []string) {
+	err := a.Root.Execute()
 	if err == nil {
 		return
 	}
-	if globalLogger != nil {
-		globalLogger.Debug("command failed", "error", err.Error())
+	if a.Logger != nil {
+		a.Logger.Debug("command failed", "error", err.Error())
 	}
 	if !isSentinelError(err) {
-		writeCommandError(err, args)
+		a.writeCommandError(err, args)
 	}
-	exitFunc(ExitCode(err))
+	a.ExitFunc(ExitCode(err))
 }
 
-func writeCommandError(err error, args []string) {
+func (a *App) writeCommandError(err error, args []string) {
 	errMsg := ensureFirstRunRunHint(err.Error(), args)
-	errMsg = sanitizeExecuteMessage(errMsg)
-	writeErrorInfo(errorInfoFromError(err, errMsg))
+	errMsg = a.sanitizeExecuteMessage(errMsg)
+	a.writeErrorInfo(errorInfoFromError(err, errMsg))
 }
 
-func finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
+func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
 	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)
 	printNoProjectHintIfNeeded(args)
 	projectRoot := persistSessionStateIfApplicable(args)
-	printWorkflowHandoff(args, projectRoot)
+	a.printWorkflowHandoff(args, projectRoot)
 }
 
 func markFirstRunHintSeenIfNeeded(show bool, markerPath string) {
@@ -157,9 +162,9 @@ func persistSessionStateIfApplicable(args []string) string {
 	return projectRoot
 }
 
-func printWorkflowHandoff(args []string, projectRoot string) {
+func (a *App) printWorkflowHandoff(args []string, projectRoot string) {
 	rt := ui.NewRuntime(nil, nil)
-	rt.Quiet = gFlags.Quiet
+	rt.Quiet = a.Flags.Quiet
 	rt.PrintWorkflowHandoff(ui.WorkflowHandoffRequest{
 		Args:        args,
 		ProjectRoot: projectRoot,
@@ -233,12 +238,12 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 	}
 }
 
-func writeErrorInfo(errInfo *ui.ErrorInfo) {
+func (a *App) writeErrorInfo(errInfo *ui.ErrorInfo) {
 	if errInfo == nil {
 		return
 	}
 	// Best-effort: if we can't display the error, there's nothing else to try.
-	if IsJSONMode() {
+	if a.isJSONMode() {
 		_ = ui.WriteErrorJSON(os.Stderr, errInfo)
 	} else {
 		_ = ui.WriteErrorText(os.Stderr, errInfo)

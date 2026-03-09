@@ -12,22 +12,22 @@ import (
 )
 
 func TestAttachRunIDFromPlan(t *testing.T) {
-	originalGlobal := globalLogger
 	originalDefault := logging.DefaultLogger()
 	t.Cleanup(func() {
-		globalLogger = originalGlobal
 		logging.SetDefaultLogger(originalDefault)
 	})
 
 	var buf bytes.Buffer
-	globalLogger = slog.New(slog.NewTextHandler(&buf, nil))
+	app := &App{
+		Logger: slog.New(slog.NewTextHandler(&buf, nil)),
+	}
 
 	plan := &appeval.EvaluationPlan{
 		ObservationsHash: "obs-hash",
 		ControlsHash:     "ctl-hash",
 	}
-	attachRunIDFromPlan(plan)
-	globalLogger.Info("test message")
+	app.attachRunIDFromPlan(plan)
+	app.Logger.Info("test message")
 
 	out := buf.String()
 	wantRunID := identity.ComputeRunID(GetVersion(), plan.ObservationsHash.String(), plan.ControlsHash.String())
@@ -37,18 +37,18 @@ func TestAttachRunIDFromPlan(t *testing.T) {
 }
 
 func TestAttachRunIDFromPlanNil(t *testing.T) {
-	originalGlobal := globalLogger
 	originalDefault := logging.DefaultLogger()
 	t.Cleanup(func() {
-		globalLogger = originalGlobal
 		logging.SetDefaultLogger(originalDefault)
 	})
 
 	var buf bytes.Buffer
-	globalLogger = slog.New(slog.NewTextHandler(&buf, nil))
+	app := &App{
+		Logger: slog.New(slog.NewTextHandler(&buf, nil)),
+	}
 
-	attachRunIDFromPlan(nil)
-	globalLogger.Info("test message")
+	app.attachRunIDFromPlan(nil)
+	app.Logger.Info("test message")
 
 	out := buf.String()
 	if strings.Contains(out, logging.RunIDKey+"=") {
