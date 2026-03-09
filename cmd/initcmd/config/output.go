@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/configservice"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 type configKeyValueOutput struct {
@@ -71,9 +71,7 @@ func resolveDefinedRetentionTiers(cfg *projconfig.ProjectConfig) map[string]conf
 }
 
 func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
-	enc := json.NewEncoder(cmd.OutOrStdout())
-	enc.SetIndent("", "  ")
-	return enc.Encode(out)
+	return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 }
 
 func toConfigField(v projconfig.ResolvedConfigValue) configResolvedField {

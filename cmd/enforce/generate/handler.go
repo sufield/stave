@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -162,9 +163,7 @@ func writeOutputFile(cmd *cobra.Command, outPath, rendered string) error {
 }
 
 func writeResult(w io.Writer, res result) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(res)
+	return jsonutil.WriteIndented(w, res)
 }
 
 func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (string, string, error) {

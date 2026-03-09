@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -88,7 +89,5 @@ func writeFindingDetailJSON(w io.Writer, detail *evaluation.FindingDetail) error
 			out.Trace = buf.Bytes()
 		}
 	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(out)
+	return jsonutil.WriteIndented(w, out)
 }
