@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	s3 "github.com/sufield/stave/internal/adapters/input/extract/s3"
 	s3snapshot "github.com/sufield/stave/internal/adapters/input/extract/s3/snapshot"
 	appingest "github.com/sufield/stave/internal/app/ingest"
@@ -59,7 +60,7 @@ func (r *s3Runner) prepareRun(cmd *cobra.Command) (s3RunConfig, error) {
 	outFile := fsutil.CleanUserPath(r.opts.OutFile)
 	outDir := fsutil.CleanUserPath(r.opts.OutDir)
 
-	now, parseErr := cmdutil.ResolveNow(r.opts.Now)
+	now, parseErr := compose.ResolveNow(r.opts.Now)
 	if parseErr != nil {
 		return s3RunConfig{}, parseErr
 	}

@@ -7,6 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/metadata"
@@ -67,7 +70,7 @@ Supported template syntax:
 }
 
 func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
-	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
+	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 	inputFile := fsutil.CleanUserPath(flags.inputFile)
@@ -78,9 +81,9 @@ func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 		return err
 	}
 
-	cmdutil.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
+	compose.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
 
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
@@ -102,22 +105,22 @@ func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 func collectReportGitAudit() *evaluation.GitInfo {
 	cfg, _ := selectedContextConfigPath()
 	ctl := selectedContextControlsPath()
-	base := cmdutil.RootForContextName()
-	return cmdutil.CollectGitAudit(base, []string{ctl, cfg})
+	base := projctx.RootForContextName()
+	return compose.CollectGitAudit(base, []string{ctl, cfg})
 }
 
 func selectedContextConfigPath() (string, bool) {
-	if sc, err := cmdutil.ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
+	if sc, err := projctx.ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
 		if p := strings.TrimSpace(sc.Context.ProjectConfig); p != "" {
 			return sc.Context.AbsPath(p), true
 		}
 	}
-	_, path, ok := cmdutil.FindProjectConfigWithPath()
+	_, path, ok := projconfig.FindProjectConfigWithPath()
 	return path, ok
 }
 
 func selectedContextControlsPath() string {
-	if sc, err := cmdutil.ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
+	if sc, err := projctx.ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
 		if p := strings.TrimSpace(sc.Context.Defaults.ControlsDir); p != "" {
 			return sc.Context.AbsPath(p)
 		}

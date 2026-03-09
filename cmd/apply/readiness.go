@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -19,7 +21,7 @@ import (
 )
 
 func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
-	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
+	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 
@@ -49,7 +51,7 @@ func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
 }
 
 func runApply(cmd *cobra.Command, _ []string, flags *applyFlagsType) error {
-	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
+	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 
@@ -79,7 +81,7 @@ func runApply(cmd *cobra.Command, _ []string, flags *applyFlagsType) error {
 }
 
 func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {
-	cmdutil.ResetInferAttempts()
+	projctx.ResetInferAttempts()
 	ctlDir, obsDir := resolveReadinessDirs(cmd, in)
 
 	report, err := service.AssessReadiness(validation.ReadinessInput{
@@ -104,8 +106,8 @@ func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.Readines
 func resolveReadinessDirs(cmd *cobra.Command, in readinessInput) (string, string) {
 	ctlDir := fsutil.CleanUserPath(in.ControlsDir)
 	obsDir := fsutil.CleanUserPath(in.ObservationsDir)
-	ctlDir = cmdutil.InferControlsDir(cmd, ctlDir)
-	obsDir = cmdutil.InferObservationsDir(cmd, obsDir)
+	ctlDir = projctx.InferControlsDir(cmd, ctlDir)
+	obsDir = projctx.InferObservationsDir(cmd, obsDir)
 	return ctlDir, obsDir
 }
 
@@ -126,7 +128,7 @@ func readinessExitError(report validation.ReadinessReport) error {
 }
 
 func readinessHasEnabledPacks() bool {
-	if cfg, ok := cmdutil.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
+	if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
 		return true
 	}
 	return false

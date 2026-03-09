@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -28,8 +29,8 @@ func runUpcoming(cmd *cobra.Command, flags *upcomingFlagsType) error {
 		return err
 	}
 
-	ctx := cmdutil.CommandContext(cmd)
-	loaded, err := cmdutil.LoadObsAndInv(ctx, opts.ObservationsDir, opts.ControlsDir)
+	ctx := compose.CommandContext(cmd)
+	loaded, err := compose.LoadObsAndInv(ctx, opts.ObservationsDir, opts.ControlsDir)
 	if err != nil {
 		return err
 	}
@@ -93,11 +94,11 @@ func gatherUpcomingOptions(cmd *cobra.Command, flags *upcomingFlagsType) (upcomi
 		dueWithinDur = &parsedDueWithin
 	}
 
-	now, err := cmdutil.ResolveNow(flags.now)
+	now, err := compose.ResolveNow(flags.now)
 	if err != nil {
 		return upcomingRunOptions{}, err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return upcomingRunOptions{}, err
 	}

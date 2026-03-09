@@ -9,18 +9,20 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.Editor[cmdutil.ProjectConfig] {
+func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.Editor[projconfig.ProjectConfig] {
 	var stderr io.Writer = os.Stderr
 	if cc.rt != nil && cc.rt.Stderr != nil {
 		stderr = cc.rt.Stderr
 	}
 
 	store := projectConfigStore{allowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)}
-	return &cliconfig.Editor[cmdutil.ProjectConfig]{
+	return &cliconfig.Editor[projconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
 		Stderr:      stderr,
@@ -50,7 +52,7 @@ func (cc *configCommand) writeConfigMutationResult(
 	textLine string,
 	showHint bool,
 ) error {
-	format, err := cmdutil.ResolveFormatValue(cmd, cc.opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, cc.opts.Format)
 	if err != nil {
 		return err
 	}
@@ -71,8 +73,8 @@ func (cc *configCommand) writeConfigMutationResult(
 
 func (cc *configCommand) runConfigGet(cmd *cobra.Command, key string) error {
 	key = strings.TrimSpace(key)
-	cfg, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	retTier := cmdutil.ResolveRetentionTierWithSource(cfg, cfgPath)
+	cfg, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
 
 	kv, err := resolveServiceConfigKeyValue(key, cfg, cfgPath, retTier.Value)
 	if err != nil {
@@ -80,7 +82,7 @@ func (cc *configCommand) runConfigGet(cmd *cobra.Command, key string) error {
 	}
 	out := configKeyValueOutput{Key: kv.Key, Value: kv.Value, Source: kv.Source}
 
-	format, err := cmdutil.ResolveFormatValue(cmd, cc.opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, cc.opts.Format)
 	if err != nil {
 		return err
 	}
@@ -136,7 +138,7 @@ func (cc *configCommand) runConfigDelete(cmd *cobra.Command, key string) error {
 
 func (cc *configCommand) runConfigShow(cmd *cobra.Command) error {
 	out := buildConfigShowOutput()
-	format, err := cmdutil.ResolveFormatValue(cmd, cc.opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, cc.opts.Format)
 	if err != nil {
 		return err
 	}

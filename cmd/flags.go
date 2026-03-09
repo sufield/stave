@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -14,10 +15,10 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	})
 
 	// Global persistent flags available to all commands
-	flags.OutputMode = cmdutil.ResolveOutputModeDefault()
-	flags.Quiet = cmdutil.ResolveQuietDefault()
-	flags.Sanitize = cmdutil.ResolveSanitizeDefault()
-	flags.PathMode = cmdutil.ResolvePathModeDefault()
+	flags.OutputMode = projconfig.ResolveOutputModeDefault()
+	flags.Quiet = projconfig.ResolveQuietDefault()
+	flags.Sanitize = projconfig.ResolveSanitizeDefault()
+	flags.PathMode = projconfig.ResolvePathModeDefault()
 
 	// Output flags
 	root.PersistentFlags().StringVar(&flags.OutputMode, "output", flags.OutputMode, cmdutil.WithDynamicDefaultHelp("Output format: json or text"))

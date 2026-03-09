@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
@@ -44,7 +45,7 @@ func runHygiene(cmd *cobra.Command, flags *hygieneFlagsType) error {
 	if err != nil {
 		return err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,7 @@ func prepareHygieneExecution(cmd *cobra.Command, flags *hygieneFlagsType) (hygie
 	if err != nil {
 		return hygieneExecution{}, err
 	}
-	ctx := cmdutil.CommandContext(cmd)
+	ctx := compose.CommandContext(cmd)
 	return hygieneExecution{
 		ctx:              ctx,
 		req:              req,
@@ -123,7 +124,7 @@ func prepareHygieneExecution(cmd *cobra.Command, flags *hygieneFlagsType) (hygie
 func buildHygieneOutputs(execCtx hygieneExecution) (hygieneapp.ReportRequest, hygieneapp.Output, error) {
 	ctx := execCtx.ctx
 	req := execCtx.req
-	loaded, err := cmdutil.LoadObsAndInv(ctx, req.ObservationsDir, req.ControlsDir)
+	loaded, err := compose.LoadObsAndInv(ctx, req.ObservationsDir, req.ControlsDir)
 	if err != nil {
 		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
 	}

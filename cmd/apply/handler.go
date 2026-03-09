@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
@@ -14,7 +15,7 @@ import (
 
 // runApplyCore gathers validated options, then dispatches by mode.
 func runApplyCore(cmd *cobra.Command, flags *applyFlagsType) error {
-	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
+	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 

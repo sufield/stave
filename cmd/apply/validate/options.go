@@ -7,6 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -35,9 +38,9 @@ func defaultOptions() *options {
 	return &options{
 		ControlsDir:     "controls/s3",
 		ObservationsDir: "observations",
-		MaxUnsafe:       cmdutil.ResolveMaxUnsafeDefault(),
+		MaxUnsafe:       projconfig.ResolveMaxUnsafeDefault(),
 		Format:          "text",
-		QuietMode:       cmdutil.ResolveQuietDefault(),
+		QuietMode:       projconfig.ResolveQuietDefault(),
 	}
 }
 
@@ -58,7 +61,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 }
 
 func prepareValidateCommand(cmd *cobra.Command, opts *options) (ui.OutputFormat, error) {
-	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
+	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return "", err
 	}
 
@@ -71,10 +74,10 @@ func prepareValidateCommand(cmd *cobra.Command, opts *options) (ui.OutputFormat,
 		return "", err
 	}
 
-	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	gitMeta := cmdutil.CollectGitAudit(cmdutil.RootForContextName(), []string{opts.ControlsDir, cfgPath})
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	gitMeta := compose.CollectGitAudit(projctx.RootForContextName(), []string{opts.ControlsDir, cfgPath})
 	if !opts.QuietMode {
-		cmdutil.WarnIfGitDirty(cmd, gitMeta, "validate")
+		compose.WarnIfGitDirty(cmd, gitMeta, "validate")
 	}
 	logVerboseContext(cmd, opts)
 
@@ -94,10 +97,10 @@ func normalizeValidatePaths(cmd *cobra.Command, opts *options) {
 	opts.InFile = fsutil.CleanUserPath(opts.InFile)
 	opts.Kind = strings.TrimSpace(opts.Kind)
 	opts.SchemaVersion = strings.TrimSpace(opts.SchemaVersion)
-	cmdutil.ResetInferAttempts()
+	projctx.ResetInferAttempts()
 
-	opts.ControlsDir = cmdutil.InferControlsDir(cmd, opts.ControlsDir)
-	opts.ObservationsDir = cmdutil.InferObservationsDir(cmd, opts.ObservationsDir)
+	opts.ControlsDir = projctx.InferControlsDir(cmd, opts.ControlsDir)
+	opts.ObservationsDir = projctx.InferObservationsDir(cmd, opts.ObservationsDir)
 }
 
 // validateValidateDirs checks that controls and observations directories
@@ -121,13 +124,13 @@ func logVerboseContext(cmd *cobra.Command, opts *options) {
 	if verbosity == 0 || opts.QuietMode || cmdutil.QuietEnabled(cmd) {
 		return
 	}
-	sc, _ := cmdutil.ResolveSelectedGlobalContext()
+	sc, _ := projctx.ResolveSelectedGlobalContext()
 	ctxName := sc.Name
 	if !sc.Active || strings.TrimSpace(ctxName) == "" {
 		ctxName = "none"
 	}
-	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "context=%s project_config=%s controls=%s observations=%s\n", ctxName, cmdutil.EmptyDash(cfgPath), opts.ControlsDir, opts.ObservationsDir)
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "context=%s project_config=%s controls=%s observations=%s\n", ctxName, compose.EmptyDash(cfgPath), opts.ControlsDir, opts.ObservationsDir)
 }
 
 type validateParams struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -122,7 +123,7 @@ func prepareFixLoopExecution(cmd *cobra.Command, flags *fixLoopFlagsType) (fixLo
 	if err != nil {
 		return fixLoopExecution{}, err
 	}
-	clock, err := cmdutil.ResolveClock(flags.now)
+	clock, err := compose.ResolveClock(flags.now)
 	if err != nil {
 		return fixLoopExecution{}, err
 	}
@@ -148,7 +149,7 @@ func validateFixLoopDirs(flags *fixLoopFlagsType) error {
 }
 
 func loadFixLoopControls(execCtx fixLoopExecution) ([]policy.ControlDefinition, error) {
-	controls, err := cmdutil.LoadControls(execCtx.ctx, execCtx.controlsDir)
+	controls, err := compose.LoadControls(execCtx.ctx, execCtx.controlsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +166,7 @@ func evaluateFixLoopState(
 	observationsDir string,
 	label string,
 ) (fixLoopEvaluation, error) {
-	loader, err := cmdutil.NewObservationRepository()
+	loader, err := compose.NewObservationRepository()
 	if err != nil {
 		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation: create observation loader: %w", label, err)
 	}

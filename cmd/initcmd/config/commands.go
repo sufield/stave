@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -63,7 +63,7 @@ Supported keys:
   snapshot_retention_tiers.<tier>` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-			return cmdutil.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+			return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cc.runConfigGet(cmd, args[0])
@@ -91,10 +91,10 @@ Supported keys:
 		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return cmdutil.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+				return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
-				return []string{cmdutil.GatePolicyAny, cmdutil.GatePolicyNew, cmdutil.GatePolicyOverdue}, cobra.ShellCompDirectiveNoFileComp
+				return []string{projconfig.GatePolicyAny, projconfig.GatePolicyNew, projconfig.GatePolicyOverdue}, cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "capture_cadence" {
 				return []string{"daily", "hourly"}, cobra.ShellCompDirectiveNoFileComp
@@ -118,7 +118,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return cmdutil.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+				return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		},

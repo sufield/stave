@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -63,7 +65,7 @@ Examples:
 	cmd.Flags().StringVar(&flags.observation, "observation", "", "Path to single observation JSON file (required)")
 	cmd.Flags().StringVar(&flags.assetID, "asset-id", "", "Asset ID to trace against (required)")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&flags.quiet, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	cmd.Flags().BoolVar(&flags.quiet, "quiet", projconfig.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = cmd.MarkFlagRequired("control")
 	_ = cmd.MarkFlagRequired("observation")
@@ -78,12 +80,12 @@ func runTrace(cmd *cobra.Command, flags *traceFlagsType) error {
 	if flags.quiet {
 		return nil
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
 
-	ctx := cmdutil.CommandContext(cmd)
+	ctx := compose.CommandContext(cmd)
 	ctlDir := fsutil.CleanUserPath(strings.TrimSpace(flags.controlsDir))
 	control, err := loadTraceControl(ctx, ctlDir, strings.TrimSpace(flags.controlID))
 	if err != nil {
@@ -110,7 +112,7 @@ func runTrace(cmd *cobra.Command, flags *traceFlagsType) error {
 }
 
 func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*policy.ControlDefinition, error) {
-	ctl, err := cmdutil.LoadControlByID(ctx, controlsDir, controlID)
+	ctl, err := compose.LoadControlByID(ctx, controlsDir, controlID)
 	if err != nil {
 		return nil, ui.WithNextCommand(err,
 			fmt.Sprintf("stave explain --controls %s <control-id>", controlsDir))
@@ -119,7 +121,7 @@ func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*poli
 }
 
 func loadTraceSnapshot(ctx context.Context, observationPath string) (*asset.Snapshot, error) {
-	obsLoader, err := cmdutil.NewSnapshotObservationRepository()
+	obsLoader, err := compose.NewSnapshotObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

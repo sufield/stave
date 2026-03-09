@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/govulncheck"
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
@@ -69,7 +70,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("resolve executable path: %w", err)
 	}
-	now, err := cmdutil.ResolveNow(c.flags.nowTime)
+	now, err := compose.ResolveNow(c.flags.nowTime)
 	if err != nil {
 		return &ui.InputError{Err: err}
 	}

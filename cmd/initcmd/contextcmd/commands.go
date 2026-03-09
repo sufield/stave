@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/metadata"
@@ -132,7 +132,7 @@ func runContextList(cmd *cobra.Command, rawFormat string) error {
 		return err
 	}
 	items := contextListItemsFromState(st)
-	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
+	format, err := compose.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}

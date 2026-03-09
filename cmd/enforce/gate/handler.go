@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -17,9 +19,9 @@ import (
 )
 
 const (
-	gatePolicyAny     = cmdutil.GatePolicyAny
-	gatePolicyNew     = cmdutil.GatePolicyNew
-	gatePolicyOverdue = cmdutil.GatePolicyOverdue
+	gatePolicyAny     = projconfig.GatePolicyAny
+	gatePolicyNew     = projconfig.GatePolicyNew
+	gatePolicyOverdue = projconfig.GatePolicyOverdue
 )
 
 type options struct {
@@ -35,12 +37,12 @@ type options struct {
 
 func defaultOptions() *options {
 	return &options{
-		Policy:          cmdutil.ResolveCIFailurePolicyDefault(),
+		Policy:          projconfig.ResolveCIFailurePolicyDefault(),
 		InPath:          "output/evaluation.json",
 		BaselinePath:    "output/baseline.json",
 		ControlsDir:     "controls/s3",
 		ObservationsDir: "observations",
-		MaxUnsafe:       cmdutil.ResolveMaxUnsafeDefault(),
+		MaxUnsafe:       projconfig.ResolveMaxUnsafeDefault(),
 		Format:          "text",
 	}
 }
@@ -86,7 +88,7 @@ func run(cmd *cobra.Command, opts *options) error {
 
 	result = sanitizeGateResult(cmdutil.GetSanitizer(cmd), result)
 
-	format, err := cmdutil.ResolveFormatValue(cmd, opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return err
 	}
@@ -115,12 +117,12 @@ func prepareRunInput(opts *options) (runInput, error) {
 	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
 	observationsDir := fsutil.CleanUserPath(opts.ObservationsDir)
 
-	policy, err := cmdutil.NormalizeGatePolicy(opts.Policy)
+	policy, err := projconfig.NormalizeGatePolicy(opts.Policy)
 	if err != nil {
 		return runInput{}, err
 	}
 
-	now, err := cmdutil.ResolveNow(opts.Now)
+	now, err := compose.ResolveNow(opts.Now)
 	if err != nil {
 		return runInput{}, err
 	}
@@ -239,7 +241,7 @@ func sanitizeGateResult(s kernel.Sanitizer, r gateResult) gateResult {
 }
 
 func runPolicyOverdue(ctx context.Context, now time.Time, controlsDir, observationsDir string, maxUnsafe time.Duration) (gateResult, error) {
-	loaded, err := cmdutil.LoadObsAndInv(ctx, observationsDir, controlsDir)
+	loaded, err := compose.LoadObsAndInv(ctx, observationsDir, controlsDir)
 	if err != nil {
 		return gateResult{}, err
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -22,7 +23,7 @@ import (
 )
 
 func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	execCtx, err := opts.prepareExecution(cmdutil.CommandContext(cmd))
+	execCtx, err := opts.prepareExecution(compose.CommandContext(cmd))
 	if err != nil {
 		return err
 	}
@@ -64,7 +65,7 @@ type verifyOutcome struct {
 }
 
 func loadVerifyControls(ctx context.Context, controlsDir string) ([]policy.ControlDefinition, error) {
-	controls, err := cmdutil.LoadControls(ctx, controlsDir)
+	controls, err := compose.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +159,7 @@ type runEvaluationRequest struct {
 }
 
 func runEvaluation(req runEvaluationRequest) (*evaluation.Result, int, error) {
-	loader, err := cmdutil.NewObservationRepository()
+	loader, err := compose.NewObservationRepository()
 	if err != nil {
 		return nil, 0, fmt.Errorf("create observation loader: %w", err)
 	}

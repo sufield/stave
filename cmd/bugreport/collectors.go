@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/pkg/sensitive"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -142,7 +143,7 @@ func isSensitiveEnvKey(key string) bool {
 }
 
 func findConfigPath() (string, bool) {
-	path, ok := cmdutil.FindNearestFile(cmdutil.ProjectConfigFile)
+	path, ok := projconfig.FindNearestFile(projconfig.ProjectConfigFile)
 	if !ok || strings.TrimSpace(path) == "" {
 		return "", false
 	}

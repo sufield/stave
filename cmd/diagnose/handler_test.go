@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -234,8 +234,8 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	_ = cmd.Flags().Set("controls", ctlDir)
 	_ = cmd.Flags().Set("observations", obsDir)
 
-	origComp := cmdutil.DefaultComposition
-	defer func() { cmdutil.DefaultComposition = origComp }()
+	origComp := compose.DefaultComposition
+	defer func() { compose.DefaultComposition = origComp }()
 
 	opts := &diagnoseOptions{
 		ControlsDir:     ctlDir,
@@ -248,7 +248,7 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	}
 
 	opts.MaxUnsafe = "24h"
-	cmdutil.DefaultComposition = cmdutil.Composition{
+	compose.DefaultComposition = compose.Composition{
 		NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
 			return nil, os.ErrPermission
 		},

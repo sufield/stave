@@ -16,6 +16,8 @@ import (
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	"github.com/sufield/stave/cmd/bugreport"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
@@ -102,7 +104,7 @@ func newVersionCmd() *cobra.Command {
 				SchemaOutput:      kernel.SchemaOutput,
 			}
 			if verbose {
-				root, err := cmdutil.DetectProjectRoot(".")
+				root, err := projctx.DetectProjectRoot(".")
 				if err == nil {
 					out.ProjectRoot = root
 					lockPath := filepath.Join(root, CLILockfile)
@@ -129,7 +131,7 @@ func newVersionCmd() *cobra.Command {
 			_, err := fmt.Fprintf(cmd.OutOrStdout(),
 				"Version: %s\nSchemas: control=%s observation=%s output=%s\nProject root: %s\nLockfile: %v (%s)\nLock hash: %s\n",
 				out.Version, out.SchemaControl, out.SchemaObservation, out.SchemaOutput,
-				cmdutil.EmptyDash(out.ProjectRoot), out.LockPresent, cmdutil.EmptyDash(out.LockFile), cmdutil.EmptyDash(out.LockHash))
+				compose.EmptyDash(out.ProjectRoot), out.LockPresent, compose.EmptyDash(out.LockFile), compose.EmptyDash(out.LockHash))
 			return err
 		},
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/doctor"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -26,7 +27,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 		StaveVersion: staveversion.Version,
 	})
 
-	resolvedFormat, err := cmdutil.ResolveFormatValue(cmd, format)
+	resolvedFormat, err := compose.ResolveFormatValue(cmd, format)
 	if err != nil {
 		return err
 	}

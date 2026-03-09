@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -151,11 +152,11 @@ func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResol
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	now, err := cmdutil.ResolveNow(opts.Now)
+	now, err := compose.ResolveNow(opts.Now)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, opts.Format)
+	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return archiveResolvedInput{}, err
 	}

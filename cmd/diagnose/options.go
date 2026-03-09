@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
@@ -39,10 +41,10 @@ func (o diagnoseOptions) normalizePaths(cmd *cobra.Command) diagnoseOptions {
 	out.ControlsDir = fsutil.CleanUserPath(out.ControlsDir)
 	out.ObservationsDir = fsutil.CleanUserPath(out.ObservationsDir)
 	out.PreviousOutput = fsutil.CleanUserPath(out.PreviousOutput)
-	cmdutil.ResetInferAttempts()
+	projctx.ResetInferAttempts()
 
-	out.ControlsDir = cmdutil.InferControlsDir(cmd, out.ControlsDir)
-	out.ObservationsDir = cmdutil.InferObservationsDir(cmd, out.ObservationsDir)
+	out.ControlsDir = projctx.InferControlsDir(cmd, out.ControlsDir)
+	out.ObservationsDir = projctx.InferObservationsDir(cmd, out.ObservationsDir)
 
 	return out
 }
@@ -59,7 +61,7 @@ func (o diagnoseOptions) parseMaxUnsafe() (time.Duration, error) {
 }
 
 func (o diagnoseOptions) parseClock() (ports.Clock, error) {
-	return cmdutil.ResolveClock(o.NowTime)
+	return compose.ResolveClock(o.NowTime)
 }
 
 type diagnoseExecution struct {
@@ -130,7 +132,7 @@ func runDiagnoseFindingDetail(req diagnoseFindingDetailRequest) error {
 		return err
 	}
 
-	format, fmtErr := cmdutil.ResolveFormatValue(req.cmd, req.formatRaw)
+	format, fmtErr := compose.ResolveFormatValue(req.cmd, req.formatRaw)
 	if fmtErr != nil {
 		return fmtErr
 	}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -74,7 +75,7 @@ func latestFileTime(path string) (time.Time, bool) {
 
 type statusOutput struct {
 	ProjectRoot   string                `json:"project_root"`
-	LastSession   *cmdutil.SessionState `json:"last_session,omitempty"`
+	LastSession   *projctx.SessionState `json:"last_session,omitempty"`
 	Controls      dirSummary            `json:"controls"`
 	RawSnapshots  dirSummary            `json:"snapshots_raw"`
 	Observations  dirSummary            `json:"observations"`
@@ -139,7 +140,7 @@ func (s ProjectState) needsReevaluation() bool {
 }
 
 func run(cmd *cobra.Command, opts *options) error {
-	root, err := cmdutil.DetectProjectRoot(opts.Dir)
+	root, err := projctx.DetectProjectRoot(opts.Dir)
 	if err != nil {
 		return ui.WithNextCommand(err, "stave init")
 	}
@@ -180,7 +181,7 @@ func buildOutput(root string) (statusOutput, error) {
 	evalPath := filepath.Join(root, "output", "evaluation.json")
 	evalTime, hasEval := latestFileTime(evalPath)
 
-	last, err := cmdutil.LoadSessionState(root)
+	last, err := projctx.LoadSessionState(root)
 	if err != nil {
 		return statusOutput{}, err
 	}

@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/ports"
@@ -82,9 +84,9 @@ func gatherRunOptions(cmd *cobra.Command, flags *applyFlagsType) (runOptions, er
 }
 
 func buildEvaluatorOptions(flags *applyFlagsType) appeval.Options {
-	root := cmdutil.RootForContextName()
-	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	_, userPath, _ := cmdutil.FindUserConfigWithPath()
+	root := projctx.RootForContextName()
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	_, userPath, _ := projconfig.FindUserConfigWithPath()
 	return appeval.Options{
 		ContextName:        resolveApplyContextName(root),
 		ProjectRoot:        root,
@@ -121,7 +123,7 @@ func shouldUseConfiguredPacks(flags *applyFlagsType) bool {
 	if flags.applyControlsFlagSet {
 		return false
 	}
-	cfg, ok := cmdutil.FindProjectConfig()
+	cfg, ok := projconfig.FindProjectConfig()
 	if !ok {
 		return false
 	}
@@ -153,7 +155,7 @@ func validateApplyFlags(cmd *cobra.Command, flags *applyFlagsType) (applyParams,
 // normalizeApplyFlags cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
 func normalizeApplyFlags(cmd *cobra.Command, flags *applyFlagsType) {
-	cmdutil.ResetInferAttempts()
+	projctx.ResetInferAttempts()
 	flags.applyControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
 
 	flags.controlsDir = fsutil.CleanUserPath(flags.controlsDir)
@@ -161,9 +163,9 @@ func normalizeApplyFlags(cmd *cobra.Command, flags *applyFlagsType) {
 	flags.applyIntegrityManifest = fsutil.CleanUserPath(flags.applyIntegrityManifest)
 	flags.applyIntegrityPublicKey = fsutil.CleanUserPath(flags.applyIntegrityPublicKey)
 
-	flags.controlsDir = cmdutil.InferControlsDir(cmd, flags.controlsDir)
+	flags.controlsDir = projctx.InferControlsDir(cmd, flags.controlsDir)
 	if flags.observationsDir != "-" {
-		flags.observationsDir = cmdutil.InferObservationsDir(cmd, flags.observationsDir)
+		flags.observationsDir = projctx.InferObservationsDir(cmd, flags.observationsDir)
 	}
 }
 

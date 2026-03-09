@@ -3,6 +3,7 @@ package gate
 import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -35,7 +36,7 @@ Examples:
 	}
 
 	opts.bindFlags(cmd)
-	_ = cmd.RegisterFlagCompletionFunc("policy", cmdutil.CompleteFixed(cmdutil.GatePolicyAny, cmdutil.GatePolicyNew, cmdutil.GatePolicyOverdue))
+	_ = cmd.RegisterFlagCompletionFunc("policy", cmdutil.CompleteFixed(projconfig.GatePolicyAny, projconfig.GatePolicyNew, projconfig.GatePolicyOverdue))
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 	return cmd
 }

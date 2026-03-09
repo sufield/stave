@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
@@ -122,7 +123,7 @@ func resolveQuickstartReportTime(latest asset.Snapshot, flags *quickstartFlagsTy
 	if strings.TrimSpace(flags.nowTime) == "" {
 		return reportNow, nil
 	}
-	parsed, err := cmdutil.ResolveNow(flags.nowTime)
+	parsed, err := compose.ResolveNow(flags.nowTime)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", flags.nowTime)
 	}
@@ -238,7 +239,7 @@ func loadQuickstartSnapshotsFromFile(path string) ([]asset.Snapshot, error) {
 		return nil, err
 	}
 
-	loader, err := cmdutil.NewSnapshotObservationRepository()
+	loader, err := compose.NewSnapshotObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
@@ -305,7 +306,7 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 
 	reportNow := lastSnap.CapturedAt.UTC()
 	if strings.TrimSpace(flags.nowTime) != "" {
-		reportNow, err = cmdutil.ResolveNow(flags.nowTime)
+		reportNow, err = compose.ResolveNow(flags.nowTime)
 		if err != nil {
 			return onboardingCommandError(fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", flags.nowTime), "stave demo --now 2026-01-15T00:00:00Z")
 		}

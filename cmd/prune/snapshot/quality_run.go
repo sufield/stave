@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -25,7 +26,7 @@ func runQuality(cmd *cobra.Command, flags *qualityFlagsType) error {
 	if err != nil {
 		return err
 	}
-	snapshots, err := cmdutil.LoadSnapshots(cmdutil.CommandContext(cmd), runInput.observationsDir)
+	snapshots, err := compose.LoadSnapshots(compose.CommandContext(cmd), runInput.observationsDir)
 	if err != nil {
 		return err
 	}
@@ -68,11 +69,11 @@ func prepareQualityInput(cmd *cobra.Command, flags *qualityFlagsType) (qualityIn
 	if maxGap < 0 {
 		return qualityInput{}, fmt.Errorf("invalid --max-gap %q: must be >= 0", flags.maxGap)
 	}
-	now, err := cmdutil.ResolveNow(flags.now)
+	now, err := compose.ResolveNow(flags.now)
 	if err != nil {
 		return qualityInput{}, err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return qualityInput{}, err
 	}

@@ -3,6 +3,7 @@ package apply
 import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -63,7 +64,7 @@ Examples:
 
 	cmdutil.RegisterControlsFlag(cmd, &flags.controlsDir, "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
 	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
-	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	cmd.Flags().StringVar(&flags.nowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
@@ -118,9 +119,9 @@ If readiness checks fail, apply exits early with concrete next steps.` + metadat
 
 	cmdutil.RegisterControlsFlag(cmd, &flags.controlsDir, "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
 	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
-	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", cmdutil.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	cmd.Flags().StringVar(&flags.nowTime, "now", "", "Override current time (RFC3339 format). Required for deterministic output")
-	cmd.Flags().BoolVar(&flags.allowUnknownInput, "allow-unknown-input", cmdutil.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
+	cmd.Flags().BoolVar(&flags.allowUnknownInput, "allow-unknown-input", projconfig.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
 	cmd.Flags().StringVarP(&flags.outputFormat, "format", "f", "json", "Output format: json, text, or sarif")
 	cmd.Flags().StringVar(&flags.ignoreFile, "ignore", "", "Path to asset ignore list YAML file")
 	cmd.Flags().StringVar(&flags.applyIntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected observation hashes")

@@ -7,7 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -20,7 +21,7 @@ type PruningCriteria = pruner.Criteria
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
 func ListObservationSnapshotFiles(observationsDir string) ([]SnapshotFile, error) {
-	loader, err := cmdutil.NewSnapshotObservationRepository()
+	loader, err := compose.NewSnapshotObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
@@ -53,13 +54,13 @@ func PlanPrune(files []SnapshotFile, criteria PruningCriteria) []SnapshotFile {
 
 // ValidateRetentionTier normalizes and validates a retention tier name.
 func ValidateRetentionTier(rawTier string) (string, error) {
-	tier := cmdutil.NormalizeRetentionTier(rawTier)
+	tier := projconfig.NormalizeRetentionTier(rawTier)
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
-	if !cmdutil.HasConfiguredRetentionTier(tier) {
-		if cfg, ok := cmdutil.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
-			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(cmdutil.SortedRetentionTierNames(cfg.RetentionTiers), ", "))
+	if !projconfig.HasConfiguredRetentionTier(tier) {
+		if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
+			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(projconfig.SortedRetentionTierNames(cfg.RetentionTiers), ", "))
 		}
 	}
 	return tier, nil
@@ -69,7 +70,7 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 func ResolveOlderThan(cmd *cobra.Command, raw, tier string) (time.Duration, error) {
 	olderThanRaw := raw
 	if !cmd.Flags().Changed("older-than") {
-		olderThanRaw = cmdutil.ResolveSnapshotRetentionForTier(tier)
+		olderThanRaw = projconfig.ResolveSnapshotRetentionForTier(tier)
 	}
 	olderThan, err := timeutil.ParseDuration(olderThanRaw)
 	if err != nil {
