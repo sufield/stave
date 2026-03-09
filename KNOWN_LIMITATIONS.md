@@ -28,20 +28,20 @@ Some tests use `t.Skip` to bypass execution when preconditions are not met (e.g.
 
 **Fix:** Audit `t.Skip` call sites and convert to `t.Fatal` where the precondition should always be satisfied in CI. Reserve `t.Skip` for genuinely optional tests (e.g., integration tests that require external services).
 
-### DefaultComposition is a mutable package-level variable
+### defaultComposition is an unexported package-level variable
 
-**Area:** `cmd/cmdutil/compose/infra.go` — `DefaultComposition`
+**Area:** `cmd/cmdutil/compose/infra.go` — `defaultComposition`
 
-`DefaultComposition` is an exported `var` holding adapter constructor functions. It is read through convenience functions (`NewObservationRepository`, `NewControlRepository`, etc.) used throughout the command layer. One test (`cmd/diagnose/handler_test.go`) directly replaces its value without synchronization.
+`defaultComposition` is an unexported `var` holding adapter constructor functions. It is read through convenience functions (`NewObservationRepository`, `NewControlRepository`, etc.) used throughout the command layer. Tests that need to override it use `compose.OverrideForTest(t, ...)` which restores the original via `t.Cleanup`.
 
-This is safe in practice because CLI commands execute sequentially and tests using `t.Parallel()` do not touch it, but it prevents future parallelism and makes the dependency graph implicit.
+This is safe in practice because CLI commands execute sequentially, but it prevents future test parallelism and makes the dependency graph implicit.
 
-**Fix:** Inject `Composition` through the `App` struct and pass it to command constructors. Replace the convenience functions with methods on the injected composition. Update the test to pass a custom `Composition` directly to the function under test.
+**Fix (future):** Inject `Composition` through the `App` struct and pass it to command constructors. Replace the convenience functions with methods on the injected composition.
 
-### Other write-once package globals add implicit coupling
+### ConfigKeyService is a write-once package global
 
-**Area:** `cmd/cmdutil/projconfig/config_resolution.go` — `ConfigKeyService`, `cmd/initcmd/alias/commands.go` — `rootCmd`
+**Area:** `cmd/cmdutil/projconfig/config_resolution.go` — `ConfigKeyService`
 
-`ConfigKeyService` is a package-level `var` initialized at load time. `rootCmd` is set via `SetRootCmd()` during app wiring for alias collision detection. Both are effectively write-once and safe in sequential CLI execution, but they create implicit dependencies that complicate testing and prevent parallel test execution.
+`ConfigKeyService` is a package-level `var` initialized at load time with stateless dependencies. It is effectively immutable and safe in sequential CLI execution, but creates an implicit dependency.
 
-**Fix:** Pass `ConfigKeyService` as a dependency through command constructors. For `rootCmd`, pass the root command (or a collision-checking interface) as a parameter to `NewAliasCmd()` or `runAliasSet()`.
+**Fix (future):** Pass `ConfigKeyService` as a dependency through command constructors.

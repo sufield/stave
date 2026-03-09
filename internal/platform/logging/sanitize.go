@@ -2,6 +2,7 @@ package logging
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -11,11 +12,8 @@ import (
 // SanitizedValue is the placeholder for sensitive values.
 const SanitizedValue = "[SANITIZED]"
 
-// sensitiveKeys is an alias for the shared exact-match set.
-var sensitiveKeys = sensitive.ExactKeys
-
-// sensitiveSubstrings is an alias for the shared substring set.
-var sensitiveSubstrings = sensitive.SubstringKeywords
+// sensitiveSubstrings caches the shared substring set at init time.
+var sensitiveSubstrings = sensitive.SubstringKeywords()
 
 // isSensitiveKey reports whether a key name suggests sensitive data.
 // Uses a tiered approach: exact match -> token match -> substring match.
@@ -35,7 +33,7 @@ func isSensitiveKey(key string) bool {
 	}
 
 	// Fast: exact match against precomputed map.
-	if _, ok := sensitiveKeys[norm]; ok {
+	if sensitive.IsExactKey(norm) {
 		return true
 	}
 
@@ -44,10 +42,8 @@ func isSensitiveKey(key string) bool {
 		tokens := strings.FieldsFunc(norm, func(r rune) bool {
 			return r == '_' || r == '-' || r == '.' || r == ':'
 		})
-		for _, t := range tokens {
-			if _, ok := sensitiveKeys[t]; ok {
-				return true
-			}
+		if slices.ContainsFunc(tokens, sensitive.IsExactKey) {
+			return true
 		}
 	}
 

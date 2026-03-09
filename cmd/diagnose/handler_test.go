@@ -237,9 +237,6 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	_ = cmd.Flags().Set("controls", ctlDir)
 	_ = cmd.Flags().Set("observations", obsDir)
 
-	origComp := compose.DefaultComposition
-	defer func() { compose.DefaultComposition = origComp }()
-
 	opts := &diagnoseOptions{
 		ControlsDir:     ctlDir,
 		ObservationsDir: obsDir,
@@ -251,14 +248,14 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	}
 
 	opts.MaxUnsafe = "24h"
-	compose.DefaultComposition = compose.Composition{
+	compose.OverrideForTest(t, compose.Composition{
 		NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
 			return nil, os.ErrPermission
 		},
 		NewControlRepository: func() (appcontracts.ControlRepository, error) {
 			return nil, nil
 		},
-	}
+	})
 	if err := runDiagnose(cmd, opts); err == nil || !strings.Contains(err.Error(), "create observation loader") {
 		t.Fatalf("expected observation loader error, got %v", err)
 	}

@@ -143,8 +143,10 @@ type Composition struct {
 	NewFindingWriter         func(format string, jsonMode bool) (appcontracts.FindingMarshaler, error)
 }
 
-// DefaultComposition is the standard adapter wiring.
-var DefaultComposition = Composition{
+// defaultComposition is the standard adapter wiring.
+// Use the package-level functions (NewObservationRepository, etc.) to access it.
+// Tests that need to override should use OverrideForTest.
+var defaultComposition = Composition{
 	NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
 		return obsjson.NewObservationLoader(), nil
 	},
@@ -158,6 +160,18 @@ var DefaultComposition = Composition{
 		return obsjson.NewObservationLoader(), nil
 	},
 	NewFindingWriter: defaultNewFindingWriter,
+}
+
+// OverrideForTest replaces the default composition for the duration of a test.
+// The original composition is restored via t.Cleanup.
+func OverrideForTest(t interface {
+	Helper()
+	Cleanup(func())
+}, c Composition) {
+	t.Helper()
+	orig := defaultComposition
+	defaultComposition = c
+	t.Cleanup(func() { defaultComposition = orig })
 }
 
 // defaultNewFindingWriter creates a finding marshaler for the given output format.
@@ -181,27 +195,27 @@ func defaultNewFindingWriter(format string, jsonMode bool) (appcontracts.Finding
 
 // NewObservationRepository creates a new observation repository.
 func NewObservationRepository() (appcontracts.ObservationRepository, error) {
-	return DefaultComposition.NewObservationRepository()
+	return defaultComposition.NewObservationRepository()
 }
 
 // NewControlRepository creates a new control repository.
 func NewControlRepository() (appcontracts.ControlRepository, error) {
-	return DefaultComposition.NewControlRepository()
+	return defaultComposition.NewControlRepository()
 }
 
 // NewStdinObservationRepository creates an observation repository that reads from stdin.
 func NewStdinObservationRepository(r io.Reader) (appcontracts.ObservationRepository, error) {
-	return DefaultComposition.NewStdinObservationRepo(r)
+	return defaultComposition.NewStdinObservationRepo(r)
 }
 
 // NewSnapshotObservationRepository creates a snapshot observation repository.
 func NewSnapshotObservationRepository() (SnapshotObservationRepository, error) {
-	return DefaultComposition.NewSnapshotObservation()
+	return defaultComposition.NewSnapshotObservation()
 }
 
 // NewFindingWriter creates a finding marshaler for the given output format.
 func NewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
-	return DefaultComposition.NewFindingWriter(format, jsonMode)
+	return defaultComposition.NewFindingWriter(format, jsonMode)
 }
 
 // LoadObsAndInv creates loaders and loads both concurrently.
