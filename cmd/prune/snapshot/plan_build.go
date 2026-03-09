@@ -3,7 +3,7 @@ package snapshot
 import (
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -14,8 +14,8 @@ type planBuildParams struct {
 	ObsRoot     string
 	ArchiveDir  string
 	DefaultTier string
-	TierRules   []cmdutil.TierMappingRule
-	Tiers       cmdutil.RetentionTiersMap
+	TierRules   []projconfig.TierMappingRule
+	Tiers       projconfig.RetentionTiersMap
 	Files       []snapshotFile
 	Apply       bool
 	Force       bool
@@ -37,20 +37,20 @@ func toPrunerBuildParams(params planBuildParams) pruner.BuildSnapshotPlanParams 
 		Files:              params.Files,
 		Apply:              params.Apply,
 		Force:              params.Force,
-		DefaultOlderThan:   cmdutil.DefaultSnapshotRetention,
-		DefaultKeepMin:     cmdutil.DefaultTierKeepMin,
+		DefaultOlderThan:   projconfig.DefaultSnapshotRetention,
+		DefaultKeepMin:     projconfig.DefaultTierKeepMin,
 		ParseDuration:      timeutil.ParseDuration,
 		ResolveTierForPath: newPrunerTierResolver(cmdRules),
 	}
 }
 
-func newPrunerTierResolver(rules []cmdutil.TierMappingRule) func(string, []pruner.TierMappingRule, string) string {
+func newPrunerTierResolver(rules []projconfig.TierMappingRule) func(string, []pruner.TierMappingRule, string) string {
 	return func(relPath string, _ []pruner.TierMappingRule, defaultTier string) string {
-		return cmdutil.ResolveTierForPath(relPath, rules, defaultTier)
+		return projconfig.ResolveTierForPath(relPath, rules, defaultTier)
 	}
 }
 
-func toPrunerTierRules(in []cmdutil.TierMappingRule) []pruner.TierMappingRule {
+func toPrunerTierRules(in []projconfig.TierMappingRule) []pruner.TierMappingRule {
 	out := make([]pruner.TierMappingRule, 0, len(in))
 	for _, rule := range in {
 		out = append(out, pruner.TierMappingRule{
@@ -61,7 +61,7 @@ func toPrunerTierRules(in []cmdutil.TierMappingRule) []pruner.TierMappingRule {
 	return out
 }
 
-func toPrunerRetentionTiers(in cmdutil.RetentionTiersMap) map[string]pruner.RetentionTier {
+func toPrunerRetentionTiers(in projconfig.RetentionTiersMap) map[string]pruner.RetentionTier {
 	out := make(map[string]pruner.RetentionTier, len(in))
 	for name, tier := range in {
 		out[name] = pruner.RetentionTier{

@@ -5,26 +5,26 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
-// projectConfigStore implements cliconfig.Store[cmdutil.ProjectConfig].
+// projectConfigStore implements cliconfig.Store[projconfig.ProjectConfig].
 type projectConfigStore struct {
 	allowSymlink bool
 }
 
-func (s projectConfigStore) Find() (*cmdutil.ProjectConfig, string, bool) {
-	return cmdutil.FindProjectConfigWithPath()
+func (s projectConfigStore) Find() (*projconfig.ProjectConfig, string, bool) {
+	return projconfig.FindProjectConfigWithPath()
 }
 
-func (s projectConfigStore) LoadOrCreate() (*cmdutil.ProjectConfig, string, error) {
-	cfg, cfgPath, existed := cmdutil.FindProjectConfigWithPath()
+func (s projectConfigStore) LoadOrCreate() (*projconfig.ProjectConfig, string, error) {
+	cfg, cfgPath, existed := projconfig.FindProjectConfigWithPath()
 	if existed {
 		if cfg == nil {
-			cfg = &cmdutil.ProjectConfig{}
+			cfg = &projconfig.ProjectConfig{}
 		}
 		return cfg, cfgPath, nil
 	}
@@ -32,14 +32,14 @@ func (s projectConfigStore) LoadOrCreate() (*cmdutil.ProjectConfig, string, erro
 	if err != nil {
 		return nil, "", err
 	}
-	return &cmdutil.ProjectConfig{}, filepath.Join(wd, cmdutil.ProjectConfigFile), nil
+	return &projconfig.ProjectConfig{}, filepath.Join(wd, projconfig.ProjectConfigFile), nil
 }
 
-func (s projectConfigStore) CurrentValue(cfg *cmdutil.ProjectConfig, key, cfgPath string) string {
+func (s projectConfigStore) CurrentValue(cfg *projconfig.ProjectConfig, key, cfgPath string) string {
 	if cfg == nil {
 		return "(not set)"
 	}
-	retTier := cmdutil.ResolveRetentionTierWithSource(cfg, cfgPath)
+	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
 	kv, err := resolveServiceConfigKeyValue(key, cfg, cfgPath, retTier.Value)
 	if err != nil || kv.Value == "" {
 		return "(not set)"
@@ -47,18 +47,18 @@ func (s projectConfigStore) CurrentValue(cfg *cmdutil.ProjectConfig, key, cfgPat
 	return kv.Value
 }
 
-func (s projectConfigStore) Set(cfg *cmdutil.ProjectConfig, key, value string) error {
+func (s projectConfigStore) Set(cfg *projconfig.ProjectConfig, key, value string) error {
 	return setConfigKeyValue(cfg, key, value)
 }
 
-func (s projectConfigStore) Delete(cfg *cmdutil.ProjectConfig, key string) error {
+func (s projectConfigStore) Delete(cfg *projconfig.ProjectConfig, key string) error {
 	return deleteConfigKeyValue(cfg, key)
 }
 
-func (s projectConfigStore) Write(path string, cfg *cmdutil.ProjectConfig) error {
+func (s projectConfigStore) Write(path string, cfg *projconfig.ProjectConfig) error {
 	outBytes, err := yaml.Marshal(cfg)
 	if err != nil {
-		return fmt.Errorf("marshal %s: %w", cmdutil.ProjectConfigFile, err)
+		return fmt.Errorf("marshal %s: %w", projconfig.ProjectConfigFile, err)
 	}
 	opts := fsutil.ConfigWriteOpts()
 	opts.AllowSymlink = s.allowSymlink
@@ -68,18 +68,18 @@ func (s projectConfigStore) Write(path string, cfg *cmdutil.ProjectConfig) error
 	return nil
 }
 
-func resolveServiceConfigKeyValue(key string, cfg *cmdutil.ProjectConfig, cfgPath, fallbackTier string) (configservice.KeyValueOutput, error) {
-	return cmdutil.ConfigKeyService.ResolveConfigKeyValue(key, cmdutil.FromProjectConfig(cfg), cfgPath, fallbackTier)
+func resolveServiceConfigKeyValue(key string, cfg *projconfig.ProjectConfig, cfgPath, fallbackTier string) (configservice.KeyValueOutput, error) {
+	return projconfig.ConfigKeyService.ResolveConfigKeyValue(key, projconfig.FromProjectConfig(cfg), cfgPath, fallbackTier)
 }
 
-func deleteConfigKeyValue(cfg *cmdutil.ProjectConfig, key string) error {
-	return cmdutil.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
-		return cmdutil.ConfigKeyService.DeleteConfigKeyValue(serviceCfg, key)
+func deleteConfigKeyValue(cfg *projconfig.ProjectConfig, key string) error {
+	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
+		return projconfig.ConfigKeyService.DeleteConfigKeyValue(serviceCfg, key)
 	})
 }
 
-func setConfigKeyValue(cfg *cmdutil.ProjectConfig, key, value string) error {
-	return cmdutil.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
-		return cmdutil.ConfigKeyService.SetConfigKeyValue(serviceCfg, key, value)
+func setConfigKeyValue(cfg *projconfig.ProjectConfig, key, value string) error {
+	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
+		return projconfig.ConfigKeyService.SetConfigKeyValue(serviceCfg, key, value)
 	})
 }

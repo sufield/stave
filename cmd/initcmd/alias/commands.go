@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -112,13 +114,13 @@ func runAliasSet(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("alias command cannot be empty")
 	}
 
-	cfg, path := cmdutil.LoadUserConfigFull()
+	cfg, path := projconfig.LoadUserConfigFull()
 	if cfg.Aliases == nil {
 		cfg.Aliases = map[string]string{}
 	}
 	cfg.Aliases[name] = command
 
-	if err := cmdutil.WriteUserConfigFull(cfg, path); err != nil {
+	if err := projconfig.WriteUserConfigFull(cfg, path); err != nil {
 		return fmt.Errorf("write alias: %w", err)
 	}
 
@@ -132,9 +134,9 @@ type aliasEntry struct {
 }
 
 func runAliasList(cmd *cobra.Command, rawFormat string) error {
-	aliases := cmdutil.LoadUserAliases()
+	aliases := projconfig.LoadUserAliases()
 
-	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
+	format, err := compose.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}
@@ -169,7 +171,7 @@ func runAliasList(cmd *cobra.Command, rawFormat string) error {
 func runAliasDelete(_ *cobra.Command, args []string) error {
 	name := args[0]
 
-	cfg, path := cmdutil.LoadUserConfigFull()
+	cfg, path := projconfig.LoadUserConfigFull()
 	if cfg.Aliases == nil || cfg.Aliases[name] == "" {
 		return fmt.Errorf("alias %q not found", name)
 	}
@@ -179,7 +181,7 @@ func runAliasDelete(_ *cobra.Command, args []string) error {
 		cfg.Aliases = nil
 	}
 
-	if err := cmdutil.WriteUserConfigFull(cfg, path); err != nil {
+	if err := projconfig.WriteUserConfigFull(cfg, path); err != nil {
 		return fmt.Errorf("write alias: %w", err)
 	}
 

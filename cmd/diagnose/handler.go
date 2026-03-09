@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -92,11 +93,11 @@ func executeDiagnoseReport(execCtx diagnoseExecution) (*diagnosis.Report, error)
 }
 
 func newDiagnoseRun() (*appdiagnose.Run, error) {
-	obsLoader, err := cmdutil.NewObservationRepository()
+	obsLoader, err := compose.NewObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	ctlLoader, err := cmdutil.NewControlRepository()
+	ctlLoader, err := compose.NewControlRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}

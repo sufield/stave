@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/envvar"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -67,7 +67,7 @@ type envListEntry struct {
 func runEnvList(cmd *cobra.Command, rawFormat string) error {
 	vars := envvar.All()
 
-	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
+	format, err := compose.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}

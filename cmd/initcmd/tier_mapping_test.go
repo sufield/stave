@@ -3,32 +3,32 @@ package initcmd
 import (
 	"testing"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 )
 
 func TestResolveTierForPath_FirstMatchWins(t *testing.T) {
-	rules := []cmdutil.TierMappingRule{
+	rules := []projconfig.TierMappingRule{
 		{Pattern: "prod/**", Tier: "critical"},
 		{Pattern: "prod/**", Tier: "non_critical"}, // should never match
 	}
-	got := cmdutil.ResolveTierForPath("prod/2026-01-01.json", rules, "default")
+	got := projconfig.ResolveTierForPath("prod/2026-01-01.json", rules, "default")
 	if got != "critical" {
 		t.Fatalf("got %q, want critical", got)
 	}
 }
 
 func TestResolveTierForPath_DefaultFallback(t *testing.T) {
-	rules := []cmdutil.TierMappingRule{
+	rules := []projconfig.TierMappingRule{
 		{Pattern: "prod/**", Tier: "critical"},
 	}
-	got := cmdutil.ResolveTierForPath("staging/2026-01-01.json", rules, "non_critical")
+	got := projconfig.ResolveTierForPath("staging/2026-01-01.json", rules, "non_critical")
 	if got != "non_critical" {
 		t.Fatalf("got %q, want non_critical", got)
 	}
 }
 
 func TestResolveTierForPath_NoRules(t *testing.T) {
-	got := cmdutil.ResolveTierForPath("any/file.json", nil, "fallback")
+	got := projconfig.ResolveTierForPath("any/file.json", nil, "fallback")
 	if got != "fallback" {
 		t.Fatalf("got %q, want fallback", got)
 	}
@@ -48,19 +48,19 @@ func TestMatchGlobPattern_PrefixStarStar(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.path, func(t *testing.T) {
-			got, err := cmdutil.MatchGlobPattern(tt.pattern, tt.path)
+			got, err := projconfig.MatchGlobPattern(tt.pattern, tt.path)
 			if err != nil {
 				t.Fatalf("error: %v", err)
 			}
 			if got != tt.want {
-				t.Fatalf("cmdutil.MatchGlobPattern(%q, %q) = %v, want %v", tt.pattern, tt.path, got, tt.want)
+				t.Fatalf("projconfig.MatchGlobPattern(%q, %q) = %v, want %v", tt.pattern, tt.path, got, tt.want)
 			}
 		})
 	}
 }
 
 func TestMatchGlobPattern_ExactFile(t *testing.T) {
-	got, err := cmdutil.MatchGlobPattern("special.json", "special.json")
+	got, err := projconfig.MatchGlobPattern("special.json", "special.json")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestMatchGlobPattern_ExactFile(t *testing.T) {
 }
 
 func TestMatchGlobPattern_SimpleWildcard(t *testing.T) {
-	got, err := cmdutil.MatchGlobPattern("*.json", "snapshot.json")
+	got, err := projconfig.MatchGlobPattern("*.json", "snapshot.json")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestMatchGlobPattern_SimpleWildcard(t *testing.T) {
 		t.Fatal("expected match for *.json")
 	}
 
-	got2, err := cmdutil.MatchGlobPattern("*.json", "sub/snapshot.json")
+	got2, err := projconfig.MatchGlobPattern("*.json", "sub/snapshot.json")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}

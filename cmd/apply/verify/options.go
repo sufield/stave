@@ -6,6 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -24,8 +26,8 @@ type options struct {
 func defaultOptions() *options {
 	return &options{
 		ControlsDir:  "controls",
-		MaxUnsafe:    cmdutil.ResolveMaxUnsafeDefault(),
-		AllowUnknown: cmdutil.ResolveAllowUnknownInputDefault(),
+		MaxUnsafe:    projconfig.ResolveMaxUnsafeDefault(),
+		AllowUnknown: projconfig.ResolveAllowUnknownInputDefault(),
 	}
 }
 
@@ -109,7 +111,7 @@ func (o *options) parseRuntime() (time.Duration, ports.Clock, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-	clock, err := cmdutil.ResolveClock(o.Now)
+	clock, err := compose.ResolveClock(o.Now)
 	if err != nil {
 		return 0, nil, err
 	}

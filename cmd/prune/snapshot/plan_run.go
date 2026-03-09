@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -47,8 +49,8 @@ type planRunInput struct {
 	archiveDir       string
 	now              time.Time
 	defaultTier      string
-	tiers            cmdutil.RetentionTiersMap
-	tierRules        []cmdutil.TierMappingRule
+	tiers            projconfig.RetentionTiersMap
+	tierRules        []projconfig.TierMappingRule
 }
 
 func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
@@ -58,7 +60,7 @@ func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
 		archiveDir = fsutil.CleanUserPath(flags.archiveDir)
 	}
 
-	now, err := cmdutil.ResolveNow(flags.now)
+	now, err := compose.ResolveNow(flags.now)
 	if err != nil {
 		return planRunInput{}, err
 	}
@@ -73,20 +75,20 @@ func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
 	}, nil
 }
 
-func resolvePlanRetentionConfig() (cmdutil.RetentionTiersMap, []cmdutil.TierMappingRule, string) {
-	cfg, _, _ := cmdutil.FindProjectConfigWithPath()
-	defaultTier := cmdutil.ResolveRetentionTierDefault()
-	var tiers cmdutil.RetentionTiersMap
-	var tierRules []cmdutil.TierMappingRule
+func resolvePlanRetentionConfig() (projconfig.RetentionTiersMap, []projconfig.TierMappingRule, string) {
+	cfg, _, _ := projconfig.FindProjectConfigWithPath()
+	defaultTier := projconfig.ResolveRetentionTierDefault()
+	var tiers projconfig.RetentionTiersMap
+	var tierRules []projconfig.TierMappingRule
 	if cfg != nil {
 		tiers = cfg.RetentionTiers
 		tierRules = cfg.ObservationTierMapping
 	}
 	if tiers == nil {
-		tiers = cmdutil.RetentionTiersMap{
-			cmdutil.DefaultRetentionTier: {
-				OlderThan: cmdutil.DefaultSnapshotRetention,
-				KeepMin:   cmdutil.DefaultTierKeepMin,
+		tiers = projconfig.RetentionTiersMap{
+			projconfig.DefaultRetentionTier: {
+				OlderThan: projconfig.DefaultSnapshotRetention,
+				KeepMin:   projconfig.DefaultTierKeepMin,
 			},
 		}
 	}
@@ -104,7 +106,7 @@ func listPlanFiles(observationsRoot, archiveDir string) ([]snapshotFile, error) 
 }
 
 func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) error {
-	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
+	format, err := compose.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}

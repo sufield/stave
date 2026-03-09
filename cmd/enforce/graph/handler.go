@@ -10,6 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -25,7 +27,7 @@ type options struct {
 }
 
 func defaultOptions() *options {
-	allowUnknown := cmdutil.ResolveAllowUnknownInputDefault()
+	allowUnknown := projconfig.ResolveAllowUnknownInputDefault()
 	return &options{
 		ControlsDir:     "controls/s3",
 		ObservationsDir: "observations",
@@ -99,11 +101,11 @@ func validateFormat(format string) error {
 }
 
 func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	controls, err := cmdutil.LoadControls(ctx, input.controlsDir)
+	controls, err := compose.LoadControls(ctx, input.controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
-	snapshots, err := cmdutil.LoadSnapshots(ctx, input.observationsDir)
+	snapshots, err := compose.LoadSnapshots(ctx, input.observationsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -290,7 +291,7 @@ func validateOutputWithOptions(opts *options) io.Writer {
 
 // PackConfigIssues checks for unknown control pack names in the project config.
 func PackConfigIssues() []diag.Issue {
-	cfg, ok := cmdutil.FindProjectConfig()
+	cfg, ok := projconfig.FindProjectConfig()
 	if !ok || len(cfg.EnabledControlPacks) == 0 {
 		return nil
 	}

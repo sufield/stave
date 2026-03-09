@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/validation"
 
@@ -77,16 +78,16 @@ func normalizeValidateKind(raw string) (string, error) {
 // This is used by the plan/apply commands.
 func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ReadinessValidationResult, error) {
 	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ReadinessValidationResult, error) {
-		obsLoader, err := cmdutil.NewObservationRepository()
+		obsLoader, err := compose.NewObservationRepository()
 		if err != nil {
 			return validation.ReadinessValidationResult{}, err
 		}
-		ctlLoader, err := cmdutil.NewControlRepository()
+		ctlLoader, err := compose.NewControlRepository()
 		if err != nil {
 			return validation.ReadinessValidationResult{}, err
 		}
 		validateRun := appvalidation.NewRun(obsLoader, ctlLoader)
-		valResult, err := validateRun.Execute(cmdutil.CommandContext(cmd), appvalidation.Config{
+		valResult, err := validateRun.Execute(compose.CommandContext(cmd), appvalidation.Config{
 			ControlsDir:     ctlDir,
 			ObservationsDir: obsDir,
 			MaxUnsafe:       maxUnsafeDur,

@@ -1,6 +1,6 @@
 // Package cmdutil provides shared helpers for cmd sub-packages, preventing
 // circular imports between cmd and its sub-packages.
-package cmdutil
+package projconfig
 
 import (
 	"fmt"

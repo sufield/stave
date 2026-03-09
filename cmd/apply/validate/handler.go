@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/diag"
 
@@ -55,11 +56,11 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 }
 
 func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
-	obsLoader, err := cmdutil.NewObservationRepository()
+	obsLoader, err := compose.NewObservationRepository()
 	if err != nil {
 		return nil, err
 	}
-	ctlLoader, err := cmdutil.NewControlRepository()
+	ctlLoader, err := compose.NewControlRepository()
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
 	}
 
-	ctx := cmdutil.CommandContext(cmd)
+	ctx := compose.CommandContext(cmd)
 	return validateRun.Execute(ctx, cfg)
 }
 

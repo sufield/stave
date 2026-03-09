@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/testutil"
 )
 
@@ -24,7 +24,7 @@ func TestNormalizeGatePolicy(t *testing.T) {
 		{in: "unknown", wantErr: true},
 	}
 	for _, tc := range tests {
-		got, err := cmdutil.NormalizeGatePolicy(tc.in)
+		got, err := projconfig.NormalizeGatePolicy(tc.in)
 		if tc.wantErr {
 			if err == nil {
 				t.Fatalf("normalizeGatePolicy(%q): expected error", tc.in)

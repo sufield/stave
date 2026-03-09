@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -26,7 +27,7 @@ func ValidateDir(flag, path string, hint error) error {
 // diagnose, and validate command packages.
 func ValidateDirWithInference(flag, path, inferKey string, hint error) error {
 	if err := ValidateDir(flag, path, hint); err != nil {
-		if detail := ExplainInferenceFailure(inferKey); detail != "" {
+		if detail := projctx.ExplainInferenceFailure(inferKey); detail != "" {
 			return fmt.Errorf("%w\n%s", err, detail)
 		}
 		return err

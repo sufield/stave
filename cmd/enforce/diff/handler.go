@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -39,7 +40,7 @@ func run(cmd *cobra.Command, opts *options) error {
 }
 
 func compute(ctx context.Context, observationsDir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
-	snapshots, err := cmdutil.LoadSnapshots(ctx, observationsDir)
+	snapshots, err := compose.LoadSnapshots(ctx, observationsDir)
 	if err != nil {
 		return asset.ObservationDelta{}, err
 	}

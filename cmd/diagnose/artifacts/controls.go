@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	packs "github.com/sufield/stave/internal/builtin/pack"
@@ -172,7 +172,7 @@ func loadControlsForList(flags *controlsListFlagsType) ([]policy.ControlDefiniti
 		return controls, nil
 	}
 
-	loader, err := cmdutil.NewControlRepository()
+	loader, err := compose.NewControlRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -100,7 +101,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return formatErr
 	}
 
-	marshaler, writerErr := cmdutil.NewFindingWriter(format.String(), cmdutil.IsJSONMode(cmd))
+	marshaler, writerErr := compose.NewFindingWriter(format.String(), cmdutil.IsJSONMode(cmd))
 	if writerErr != nil {
 		return writerErr
 	}
@@ -135,7 +136,7 @@ func validateApplyProfileInput(inputFile string) error {
 }
 
 func resolveApplyProfileClock(nowTime string) (ports.Clock, error) {
-	return cmdutil.ResolveClock(nowTime)
+	return compose.ResolveClock(nowTime)
 }
 
 func resolveApplyProfileScopeFilter(opts applyProfileOptions) asset.AssetPredicate {
@@ -171,7 +172,7 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
 	cmdutil.AttachRunID(inputsHash.String(), controlsHash.String())
 
-	controls, err := cmdutil.LoadControls(ctx, ctlDir)
+	controls, err := compose.LoadControls(ctx, ctlDir)
 	if err != nil {
 		return "", nil, err
 	}

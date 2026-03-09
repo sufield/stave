@@ -1,4 +1,4 @@
-package cmdutil
+package compose
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/gitinfo"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
@@ -62,7 +63,7 @@ func ResolveClock(raw string) (ports.Clock, error) {
 // global JSON mode. When the flag was not explicitly changed and global JSON mode
 // is active, "json" is used instead.
 func ResolveFormatValue(cmd *cobra.Command, raw string) (ui.OutputFormat, error) {
-	formatRaw, err := ResolveFormat(cmd, raw)
+	formatRaw, err := cmdutil.ResolveFormat(cmd, raw)
 	if err != nil {
 		return "", err
 	}
@@ -242,7 +243,7 @@ func WarnIfGitDirty(cmd *cobra.Command, git *evaluation.GitInfo, label string) {
 	if git == nil || !git.Dirty {
 		return
 	}
-	if QuietEnabled(cmd) {
+	if cmdutil.QuietEnabled(cmd) {
 		return
 	}
 	_, _ = fmt.Fprintf(os.Stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n", label, strings.Join(git.DirtyList, ", "))

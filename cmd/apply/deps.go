@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -80,14 +82,14 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return nil, f.wrapError(err)
 	}
 
-	cmdutil.WarnIfGitDirty(f.cmd, res.gitMeta, "apply")
+	compose.WarnIfGitDirty(f.cmd, res.gitMeta, "apply")
 
 	return &ApplyDeps{Runner: built.Runner, Config: built.Config}, nil
 }
 
 // assembleResources creates the intermediate assets needed for dependency building.
 func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack, error) {
-	marshaler, err := cmdutil.NewFindingWriter(f.flags.outputFormat, cmdutil.IsJSONMode(f.cmd))
+	marshaler, err := compose.NewFindingWriter(f.flags.outputFormat, cmdutil.IsJSONMode(f.cmd))
 	if err != nil {
 		return resourceStack{}, err
 	}
@@ -95,7 +97,7 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	if err != nil {
 		return resourceStack{}, err
 	}
-	ctlLoader, err := cmdutil.NewControlRepository()
+	ctlLoader, err := compose.NewControlRepository()
 	if err != nil {
 		return resourceStack{}, fmt.Errorf("create control loader: %w", err)
 	}
@@ -104,8 +106,8 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 		return resourceStack{}, err
 	}
 
-	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	gitMeta := cmdutil.CollectGitAudit(plan.ProjectRoot, []string{f.flags.controlsDir, cfgPath})
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	gitMeta := compose.CollectGitAudit(plan.ProjectRoot, []string{f.flags.controlsDir, cfgPath})
 
 	enricher := remediation.NewMapper()
 	san := cmdutil.GetSanitizer(f.cmd)
@@ -127,9 +129,9 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 // selecting stdin or file mode and applying integrity checks if configured.
 func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
 	if source.IsStdin() {
-		return cmdutil.NewStdinObservationRepository(os.Stdin)
+		return compose.NewStdinObservationRepository(os.Stdin)
 	}
-	loader, err := cmdutil.NewObservationRepository()
+	loader, err := compose.NewObservationRepository()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
@@ -170,7 +172,7 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 
 // buildProjectConfig assembles project configuration input from the project config file.
 func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
-	projCfg, ok := cmdutil.FindProjectConfig()
+	projCfg, ok := projconfig.FindProjectConfig()
 	if !ok {
 		return appeval.ProjectConfigInput{}
 	}
@@ -197,7 +199,7 @@ func (f *Factory) wrapError(err error) error {
 }
 
 // toSuppressions converts project suppression rules to evaluator suppression inputs.
-func (f *Factory) toSuppressions(in []cmdutil.ProjectSuppressionRule) []appeval.SuppressionInput {
+func (f *Factory) toSuppressions(in []projconfig.ProjectSuppressionRule) []appeval.SuppressionInput {
 	if len(in) == 0 {
 		return nil
 	}

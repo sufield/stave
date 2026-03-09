@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/configservice"
 )
 
@@ -23,28 +23,28 @@ type configResolvedField = configservice.ResolvedField
 type configShowOutput = configservice.EffectiveConfig
 
 func buildConfigShowOutput() configShowOutput {
-	cfg, cfgPath, hasCfg := cmdutil.FindProjectConfigWithPath()
+	cfg, cfgPath, hasCfg := projconfig.FindProjectConfigWithPath()
 
-	retTier := cmdutil.ResolveRetentionTierWithSource(cfg, cfgPath)
+	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
 	out := configShowOutput{
 		DefaultRetentionTier:     toConfigField(retTier),
-		MaxUnsafe:                toConfigField(cmdutil.ResolveMaxUnsafeWithSource(cfg, cfgPath)),
-		SnapshotRetention:        toConfigField(cmdutil.ResolveSnapshotRetentionWithSource(cfg, cfgPath, retTier.Value)),
-		CIFailurePolicy:          toConfigField(cmdutil.ResolveCIFailurePolicyWithSource(cfg, cfgPath)),
-		CLIOutput:                toConfigField(cmdutil.ResolveCLIOutputWithSource()),
-		CLIQuiet:                 toConfigField(cmdutil.ResolveCLIQuietWithSource()),
-		CLISanitize:              toConfigField(cmdutil.ResolveCLISanitizeWithSource()),
-		CLIPathMode:              toConfigField(cmdutil.ResolveCLIPathModeWithSource()),
-		CLIAllowUnknownInput:     toConfigField(cmdutil.ResolveCLIAllowUnknownInputWithSource()),
+		MaxUnsafe:                toConfigField(projconfig.ResolveMaxUnsafeWithSource(cfg, cfgPath)),
+		SnapshotRetention:        toConfigField(projconfig.ResolveSnapshotRetentionWithSource(cfg, cfgPath, retTier.Value)),
+		CIFailurePolicy:          toConfigField(projconfig.ResolveCIFailurePolicyWithSource(cfg, cfgPath)),
+		CLIOutput:                toConfigField(projconfig.ResolveCLIOutputWithSource()),
+		CLIQuiet:                 toConfigField(projconfig.ResolveCLIQuietWithSource()),
+		CLISanitize:              toConfigField(projconfig.ResolveCLISanitizeWithSource()),
+		CLIPathMode:              toConfigField(projconfig.ResolveCLIPathModeWithSource()),
+		CLIAllowUnknownInput:     toConfigField(projconfig.ResolveCLIAllowUnknownInputWithSource()),
 		DefinedRetentionTiers:    resolveDefinedRetentionTiers(cfg),
 		EffectiveRetentionByTier: map[string]configResolvedField{},
 	}
 	applyProjectConfigLocation(&out, hasCfg, cfgPath)
-	if _, userPath, ok := cmdutil.FindUserConfigWithPath(); ok {
+	if _, userPath, ok := projconfig.FindUserConfigWithPath(); ok {
 		out.UserConfigFile = userPath
 	}
 	for tier := range out.DefinedRetentionTiers {
-		out.EffectiveRetentionByTier[tier] = toConfigField(cmdutil.ResolveSnapshotRetentionWithSource(cfg, cfgPath, tier))
+		out.EffectiveRetentionByTier[tier] = toConfigField(projconfig.ResolveSnapshotRetentionWithSource(cfg, cfgPath, tier))
 	}
 	return out
 }
@@ -57,8 +57,8 @@ func applyProjectConfigLocation(out *configShowOutput, hasCfg bool, cfgPath stri
 	out.ProjectRoot = filepath.Dir(cfgPath)
 }
 
-func resolveDefinedRetentionTiers(cfg *cmdutil.ProjectConfig) map[string]configservice.RetentionTierConfig {
-	if tiers := cmdutil.ResolveDefinedRetentionTiers(cfg); len(tiers) > 0 {
+func resolveDefinedRetentionTiers(cfg *projconfig.ProjectConfig) map[string]configservice.RetentionTierConfig {
+	if tiers := projconfig.ResolveDefinedRetentionTiers(cfg); len(tiers) > 0 {
 		out := make(map[string]configservice.RetentionTierConfig, len(tiers))
 		for name, tier := range tiers {
 			out[name] = configservice.RetentionTierConfig{OlderThan: tier.OlderThan, KeepMin: tier.KeepMin}
@@ -66,7 +66,7 @@ func resolveDefinedRetentionTiers(cfg *cmdutil.ProjectConfig) map[string]configs
 		return out
 	}
 	return map[string]configservice.RetentionTierConfig{
-		cmdutil.DefaultRetentionTier: {OlderThan: cmdutil.DefaultSnapshotRetention, KeepMin: cmdutil.DefaultTierKeepMin},
+		projconfig.DefaultRetentionTier: {OlderThan: projconfig.DefaultSnapshotRetention, KeepMin: projconfig.DefaultTierKeepMin},
 	}
 }
 
@@ -76,7 +76,7 @@ func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
 	return enc.Encode(out)
 }
 
-func toConfigField(v cmdutil.ResolvedConfigValue) configResolvedField {
+func toConfigField(v projconfig.ResolvedConfigValue) configResolvedField {
 	return configResolvedField(v)
 }
 
@@ -137,7 +137,7 @@ func writeDefinedRetentionTierText(w io.Writer, tiers map[string]configservice.R
 	}
 	for _, name := range sortedConfigKeys(tiers) {
 		tier := tiers[name]
-		keepMin := cmdutil.RetentionTierConfig{KeepMin: tier.KeepMin}.EffectiveKeepMin()
+		keepMin := projconfig.RetentionTierConfig{KeepMin: tier.KeepMin}.EffectiveKeepMin()
 		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, keepMin); err != nil {
 			return err
 		}

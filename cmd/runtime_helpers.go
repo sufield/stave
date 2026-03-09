@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/platform/logging"
 )
@@ -16,7 +17,7 @@ func (a *App) expandAliasIfMatch() {
 	if len(os.Args) < 2 || strings.HasPrefix(os.Args[1], "-") {
 		return
 	}
-	aliases := cmdutil.LoadUserAliases()
+	aliases := projconfig.LoadUserAliases()
 	if len(aliases) == 0 {
 		return
 	}

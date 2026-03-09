@@ -1,4 +1,4 @@
-package cmdutil
+package projconfig
 
 // defaults.go provides simple default-value accessors that delegate to the
 // source-tracked resolvers in config_resolution.go. This eliminates the

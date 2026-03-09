@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -14,7 +14,7 @@ import (
 
 func TestResolveNow_Empty(t *testing.T) {
 	before := time.Now().UTC()
-	got, err := cmdutil.ResolveNow("")
+	got, err := compose.ResolveNow("")
 	after := time.Now().UTC()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -25,7 +25,7 @@ func TestResolveNow_Empty(t *testing.T) {
 }
 
 func TestResolveNow_ValidRFC3339(t *testing.T) {
-	got, err := cmdutil.ResolveNow("2026-01-15T12:00:00Z")
+	got, err := compose.ResolveNow("2026-01-15T12:00:00Z")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -36,7 +36,7 @@ func TestResolveNow_ValidRFC3339(t *testing.T) {
 }
 
 func TestResolveNow_NonUTC(t *testing.T) {
-	got, err := cmdutil.ResolveNow("2026-01-15T12:00:00+05:00")
+	got, err := compose.ResolveNow("2026-01-15T12:00:00+05:00")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestResolveNow_NonUTC(t *testing.T) {
 }
 
 func TestResolveNow_Invalid(t *testing.T) {
-	_, err := cmdutil.ResolveNow("not-a-timestamp")
+	_, err := compose.ResolveNow("not-a-timestamp")
 	if err == nil {
 		t.Fatal("expected error for invalid timestamp")
 	}
@@ -81,7 +81,7 @@ func TestLoadedResourcesLoad_Success(t *testing.T) {
 	ctl := policy.ControlDefinition{ID: "TEST.001"}
 	obs := &mockObsRepo{snapshots: []asset.Snapshot{snap}}
 	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{ctl}}
-	res := cmdutil.LoadedAssets{
+	res := compose.LoadedAssets{
 		ObsRepo:     obs,
 		ControlRepo: ctlR,
 	}
@@ -100,7 +100,7 @@ func TestLoadedResourcesLoad_Success(t *testing.T) {
 func TestLoadedResourcesLoad_ObsError(t *testing.T) {
 	obs := &mockObsRepo{err: errors.New("obs boom")}
 	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{{ID: "T"}}}
-	res := cmdutil.LoadedAssets{
+	res := compose.LoadedAssets{
 		ObsRepo:     obs,
 		ControlRepo: ctlR,
 	}
@@ -117,7 +117,7 @@ func TestLoadedResourcesLoad_ObsError(t *testing.T) {
 func TestLoadedResourcesLoad_InvError(t *testing.T) {
 	obs := &mockObsRepo{snapshots: []asset.Snapshot{{}}}
 	ctlR := &mockCtlRepo{err: errors.New("ctl boom")}
-	res := cmdutil.LoadedAssets{
+	res := compose.LoadedAssets{
 		ObsRepo:     obs,
 		ControlRepo: ctlR,
 	}

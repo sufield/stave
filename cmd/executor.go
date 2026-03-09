@@ -7,7 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -143,7 +144,7 @@ func printNoProjectHintIfNeeded(args []string) {
 	if len(args) != 0 {
 		return
 	}
-	if _, found := cmdutil.FindNearestFile(cmdutil.ProjectConfigFile); !found {
+	if _, found := projconfig.FindNearestFile(projconfig.ProjectConfigFile); !found {
 		fmt.Fprintf(os.Stderr, "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}
 }
@@ -153,12 +154,12 @@ func persistSessionStateIfApplicable(args []string) string {
 	if err != nil {
 		return ""
 	}
-	projectRoot, detectErr := cmdutil.DetectProjectRoot(cwd)
+	projectRoot, detectErr := projctx.DetectProjectRoot(cwd)
 	if detectErr != nil {
 		return ""
 	}
 	// Best-effort: session state is advisory; failure doesn't affect the command result.
-	_ = cmdutil.SaveSessionState(projectRoot, args)
+	_ = projctx.SaveSessionState(projectRoot, args)
 	return projectRoot
 }
 

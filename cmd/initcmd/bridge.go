@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
@@ -19,12 +19,12 @@ import (
 
 // Constant aliases — shorthand for scaffold templates and tests.
 const (
-	defaultMaxUnsafeDuration = cmdutil.DefaultMaxUnsafeDuration
-	defaultSnapshotRetention = cmdutil.DefaultSnapshotRetention
-	defaultRetentionTier     = cmdutil.DefaultRetentionTier
-	defaultTierKeepMin       = cmdutil.DefaultTierKeepMin
-	defaultCIFailurePolicy   = cmdutil.DefaultCIFailurePolicy
-	projectConfigFile        = cmdutil.ProjectConfigFile
+	defaultMaxUnsafeDuration = projconfig.DefaultMaxUnsafeDuration
+	defaultSnapshotRetention = projconfig.DefaultSnapshotRetention
+	defaultRetentionTier     = projconfig.DefaultRetentionTier
+	defaultTierKeepMin       = projconfig.DefaultTierKeepMin
+	defaultCIFailurePolicy   = projconfig.DefaultCIFailurePolicy
+	projectConfigFile        = projconfig.ProjectConfigFile
 )
 
 // Package-level globals — set externally or read from cobra flags.

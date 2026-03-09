@@ -1,4 +1,6 @@
-package cmdutil
+// Package projctx provides project context resolution, path inference,
+// and session state management for cmd sub-packages.
+package projctx
 
 import (
 	"encoding/json"
@@ -9,11 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/pathinfer"
 	"github.com/sufield/stave/internal/platform/fsutil"
-
-	"github.com/spf13/cobra"
 )
 
 const SessionFileRel = ".stave/session.json"

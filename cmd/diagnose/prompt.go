@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -108,7 +110,7 @@ Examples:
 	fromFindingCmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	fromFindingCmd.Flags().StringVarP(&flags.obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	fromFindingCmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	fromFindingCmd.Flags().BoolVar(&flags.quietMode, "quiet", cmdutil.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	fromFindingCmd.Flags().BoolVar(&flags.quietMode, "quiet", projconfig.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = fromFindingCmd.MarkFlagRequired("evaluation-file")
 	_ = fromFindingCmd.MarkFlagRequired("asset-id")
@@ -146,7 +148,7 @@ func runPromptFromFinding(cmd *cobra.Command, flags *promptFlagsType) error {
 	}
 
 	// 2. Load enrichment sources (controls + optional observations).
-	ctx := cmdutil.CommandContext(cmd)
+	ctx := compose.CommandContext(cmd)
 
 	ctlByID, err := loadControlsMap(ctx, opts.ControlsDir)
 	if err != nil {
@@ -173,7 +175,7 @@ func runPromptFromFinding(cmd *cobra.Command, flags *promptFlagsType) error {
 }
 
 func gatherPromptFromFindingOptions(cmd *cobra.Command, flags *promptFlagsType) (promptRunOptions, error) {
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return promptRunOptions{}, err
 	}
@@ -197,7 +199,7 @@ func gatherPromptFromFindingOptions(cmd *cobra.Command, flags *promptFlagsType) 
 }
 
 func loadControlsMap(ctx context.Context, dir string) (map[string]*policy.ControlDefinition, error) {
-	controls, err := cmdutil.LoadControls(ctx, dir)
+	controls, err := compose.LoadControls(ctx, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +369,7 @@ func (b *promptBuilder) marshalControl(ctl *policy.ControlDefinition) string {
 // loadAssetProperties loads the latest observation snapshot and extracts
 // properties for the given asset ID as indented JSON.
 func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, error) {
-	snapshots, err := cmdutil.LoadSnapshots(ctx, obsDir)
+	snapshots, err := compose.LoadSnapshots(ctx, obsDir)
 	if err != nil {
 		return "", err
 	}

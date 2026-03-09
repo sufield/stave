@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -78,12 +78,12 @@ func RunExplain(cmd *cobra.Command, args []string, controlsDir, format string) e
 		return fmt.Errorf("control id cannot be empty")
 	}
 	controlPath := strings.TrimSpace(controlsDir)
-	control, err := loadExplainControl(cmdutil.CommandContext(cmd), id, controlPath)
+	control, err := loadExplainControl(compose.CommandContext(cmd), id, controlPath)
 	if err != nil {
 		return err
 	}
 	out := buildExplainOutput(control)
-	resolvedFormat, err := cmdutil.ResolveFormatValue(cmd, format)
+	resolvedFormat, err := compose.ResolveFormatValue(cmd, format)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func RunExplain(cmd *cobra.Command, args []string, controlsDir, format string) e
 }
 
 func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
-	ctl, err := cmdutil.LoadControlByID(ctx, controlsDir, id)
+	ctl, err := compose.LoadControlByID(ctx, controlsDir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave validate --controls %s", controlsDir))

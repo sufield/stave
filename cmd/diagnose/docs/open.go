@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -79,7 +79,7 @@ func resolveDocsOpenRequest(cmd *cobra.Command, args []string, flags *docsOpenFl
 	if topic == "" {
 		return docsOpenRequest{}, fmt.Errorf("topic cannot be empty")
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
+	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return docsOpenRequest{}, err
 	}

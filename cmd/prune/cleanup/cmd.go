@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -40,8 +41,8 @@ Examples:
 	}
 
 	cmd.Flags().StringVarP(&opts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	cmd.Flags().StringVar(&opts.OlderThan, "older-than", cmdutil.ResolveSnapshotRetentionDefault(), cmdutil.WithDynamicDefaultHelp("Prune snapshots older than this age (e.g., 14d, 720h)"))
-	cmd.Flags().StringVar(&opts.RetentionTier, "retention-tier", cmdutil.ResolveRetentionTierDefault(), cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
+	cmd.Flags().StringVar(&opts.OlderThan, "older-than", projconfig.ResolveSnapshotRetentionDefault(), cmdutil.WithDynamicDefaultHelp("Prune snapshots older than this age (e.g., 14d, 720h)"))
+	cmd.Flags().StringVar(&opts.RetentionTier, "retention-tier", projconfig.ResolveRetentionTierDefault(), cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
 	cmd.Flags().StringVar(&opts.Now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	cmd.Flags().IntVar(&opts.KeepMin, "keep-min", 2, "Minimum number of snapshots to keep")
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Preview planned file operations without applying them")

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -36,7 +36,7 @@ func (o *options) normalize() {
 }
 
 func (o *options) resolveFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return cmdutil.ResolveFormatValue(cmd, o.Format)
+	return compose.ResolveFormatValue(cmd, o.Format)
 }
 
 func (o *options) buildFilter() (asset.FilterOptions, error) {

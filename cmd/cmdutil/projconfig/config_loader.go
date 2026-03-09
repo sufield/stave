@@ -1,4 +1,4 @@
-package cmdutil
+package projconfig
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/envvar"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
@@ -38,7 +39,7 @@ func FindProjectConfig() (*ProjectConfig, bool) {
 
 // FindProjectConfigWithPath returns the config, its path, and whether found.
 func FindProjectConfigWithPath() (*ProjectConfig, string, bool) {
-	if path, ok := ResolveContextConfigFilePath(""); ok {
+	if path, ok := projctx.ResolveContextConfigFilePath(""); ok {
 		data, err := fsutil.ReadFileLimited(path)
 		if err == nil {
 			var cfg ProjectConfig
