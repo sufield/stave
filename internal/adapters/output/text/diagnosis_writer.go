@@ -27,34 +27,24 @@ func WriteDiagnosisReport(w io.Writer, report *diagnosis.Report, labelFn LabelFu
 }
 
 func writeDiagnosisSummary(w io.Writer, report *diagnosis.Report) error {
-	if _, err := fmt.Fprintln(w, "Summary"); err != nil {
-		return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	if _, err := fmt.Fprintln(w, "-------"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Snapshots:        %d\n", report.Summary.TotalSnapshots); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Assets:           %d\n", report.Summary.TotalAssets); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Controls:         %d\n", report.Summary.TotalControls); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Time span:        %s\n", timeutil.FormatDurationHuman(report.Summary.TimeSpan.Std())); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Threshold:        %s\n", timeutil.FormatDurationHuman(report.Summary.MaxUnsafeThreshold.Std())); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Violations:       %d\n", report.Summary.ViolationsFound); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "  Attack surface resources: %d\n", report.Summary.AttackSurface); err != nil {
-		return err
-	}
-	return nil
+
+	writef("Summary\n")
+	writef("-------\n")
+	writef("  Snapshots:        %d\n", report.Summary.TotalSnapshots)
+	writef("  Assets:           %d\n", report.Summary.TotalAssets)
+	writef("  Controls:         %d\n", report.Summary.TotalControls)
+	writef("  Time span:        %s\n", timeutil.FormatDurationHuman(report.Summary.TimeSpan.Std()))
+	writef("  Threshold:        %s\n", timeutil.FormatDurationHuman(report.Summary.MaxUnsafeThreshold.Std()))
+	writef("  Violations:       %d\n", report.Summary.ViolationsFound)
+	writef("  Attack surface resources: %d\n", report.Summary.AttackSurface)
+	return err
 }
 
 func writeNoDiagnosisIssues(w io.Writer, labelFn LabelFunc) error {
@@ -77,29 +67,25 @@ func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Entry, labelFn LabelF
 			return err
 		}
 	}
-	if _, err := fmt.Fprintln(w, "\nNext step: apply the suggested action/command, then rerun `stave apply` and `stave diagnose`."); err != nil {
-		return err
-	}
-	return nil
+	_, err := fmt.Fprintln(w, "\nNext step: apply the suggested action/command, then rerun `stave apply` and `stave diagnose`.")
+	return err
 }
 
 func writeDiagnosisItem(w io.Writer, index int, diag diagnosis.Entry) error {
-	if _, err := fmt.Fprintf(w, "\n[%d] %s\n", index+1, diag.Case); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "    Signal: %s\n", diag.Signal); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "    Evidence: %s\n", diag.Evidence); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "    Action: %s\n", diag.Action); err != nil {
-		return err
-	}
-	if diag.Command != "" {
-		if _, err := fmt.Fprintf(w, "    Command: %s\n", diag.Command); err != nil {
-			return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
 		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	return nil
+
+	writef("\n[%d] %s\n", index+1, diag.Case)
+	writef("    Signal: %s\n", diag.Signal)
+	writef("    Evidence: %s\n", diag.Evidence)
+	writef("    Action: %s\n", diag.Action)
+	if diag.Command != "" {
+		writef("    Command: %s\n", diag.Command)
+	}
+	return err
 }

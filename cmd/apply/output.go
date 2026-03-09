@@ -45,23 +45,22 @@ func writeReadinessText(w io.Writer, report validation.ReadinessReport) error {
 }
 
 func writeReadinessSummary(w io.Writer, report validation.ReadinessReport) error {
-	if _, err := fmt.Fprintf(w, "Plan Summary\n------------\n"); err != nil {
-		return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	if _, err := fmt.Fprintf(w, "Ready: %t\n", report.Ready); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "Controls: %s\n", report.ControlsDir); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "Observations: %s\n", report.ObservationsDir); err != nil {
-		return err
-	}
-	_, err := fmt.Fprintf(w, "Checked: %d controls, %d snapshots, %d asset observations\n",
+
+	writef("Plan Summary\n------------\n")
+	writef("Ready: %t\n", report.Ready)
+	writef("Controls: %s\n", report.ControlsDir)
+	writef("Observations: %s\n", report.ObservationsDir)
+	writef("Checked: %d controls, %d snapshots, %d asset observations\n",
 		report.Summary.ControlsChecked,
 		report.Summary.SnapshotsChecked,
-		report.Summary.AssetObservationsChecked,
-	)
+		report.Summary.AssetObservationsChecked)
 	return err
 }
 
@@ -81,19 +80,20 @@ func writeReadinessIssues(w io.Writer, issues []validation.ReadinessIssue) error
 }
 
 func writeReadinessIssue(w io.Writer, issue validation.ReadinessIssue) error {
-	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", strings.ToUpper(string(issue.Status)), issue.Name, issue.Message); err != nil {
-		return err
-	}
-	if strings.TrimSpace(issue.Fix) != "" {
-		if _, err := fmt.Fprintf(w, "    Fix: %s\n", issue.Fix); err != nil {
-			return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
 		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	if strings.TrimSpace(issue.Command) == "" {
-		return nil
+
+	writef("  [%s] %s: %s\n", strings.ToUpper(string(issue.Status)), issue.Name, issue.Message)
+	if strings.TrimSpace(issue.Fix) != "" {
+		writef("    Fix: %s\n", issue.Fix)
 	}
-	if _, err := fmt.Fprintf(w, "    Command: %s\n", issue.Command); err != nil {
-		return err
+	if strings.TrimSpace(issue.Command) != "" {
+		writef("    Command: %s\n", issue.Command)
 	}
-	return nil
+	return err
 }

@@ -161,15 +161,19 @@ func writeValidationHeader(w io.Writer, valid bool, counts issueCounts) error {
 }
 
 func writeValidationFailedHeader(w io.Writer, counts issueCounts) error {
-	if _, err := fmt.Fprintf(w, "Validation failed (%d error%s", counts.errors, plural(counts.errors)); err != nil {
-		return err
-	}
-	if counts.warnings > 0 {
-		if _, err := fmt.Fprintf(w, ", %d warning%s", counts.warnings, plural(counts.warnings)); err != nil {
-			return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
 		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	_, err := fmt.Fprintln(w, ")")
+
+	writef("Validation failed (%d error%s", counts.errors, plural(counts.errors))
+	if counts.warnings > 0 {
+		writef(", %d warning%s", counts.warnings, plural(counts.warnings))
+	}
+	writef(")\n")
 	return err
 }
 
@@ -183,54 +187,53 @@ func writeValidationIssues(w io.Writer, issues []diag.Issue) error {
 }
 
 func writeValidationSummary(w io.Writer, summary appservice.ValidationSummary) error {
-	if _, err := fmt.Fprintln(w, "---"); err != nil {
-		return err
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, format, args...)
 	}
-	if _, err := fmt.Fprintf(w, "Checked: %d controls, %d snapshots, %d asset observations",
+
+	writef("---\n")
+	writef("Checked: %d controls, %d snapshots, %d asset observations",
 		summary.ControlsLoaded,
 		summary.SnapshotsLoaded,
-		summary.AssetObservationsLoaded); err != nil {
-		return err
-	}
+		summary.AssetObservationsLoaded)
 	if summary.IdentityObservationsLoaded > 0 {
-		if _, err := fmt.Fprintf(w, ", %d identity observations", summary.IdentityObservationsLoaded); err != nil {
-			return err
-		}
+		writef(", %d identity observations", summary.IdentityObservationsLoaded)
 	}
-	_, err := fmt.Fprintln(w)
+	writef("\n")
 	return err
 }
 
 // writeIssue writes a single validation issue.
 // Returns an error if writing to the output fails.
 func writeIssue(w io.Writer, issue diag.Issue) error {
+	var err error
+	writef := func(format string, args ...any) {
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, format, args...)
+	}
+
 	level := "WARNING"
 	if issue.Signal == diag.SignalError {
 		level = "ERROR"
 	}
-	line := ui.SeverityLabel(level, issue.Code, w)
-	if _, err := fmt.Fprintln(w, line); err != nil {
-		return err
-	}
+	writef("%s\n", ui.SeverityLabel(level, issue.Code, w))
 
 	for _, key := range issue.Evidence.Keys() {
-		value := issue.Evidence.Sanitized(key)
-		if _, err := fmt.Fprintf(w, "  %s=%s\n", key, value); err != nil {
-			return err
-		}
+		writef("  %s=%s\n", key, issue.Evidence.Sanitized(key))
 	}
-
 	if issue.Action != "" {
-		if _, err := fmt.Fprintf(w, "  Fix: %s\n", issue.Action); err != nil {
-			return err
-		}
+		writef("  Fix: %s\n", issue.Action)
 	}
 	if issue.Command != "" {
-		if _, err := fmt.Fprintf(w, "  Example: %s\n", issue.Command); err != nil {
-			return err
-		}
+		writef("  Example: %s\n", issue.Command)
 	}
-	_, err := fmt.Fprintln(w)
+	writef("\n")
 	return err
 }
 

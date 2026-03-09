@@ -1,7 +1,6 @@
 package docs
 
 import (
-	"bytes"
 	"encoding/json"
 	"path/filepath"
 	"strings"
@@ -13,23 +12,14 @@ func TestDocsSearchCommand_TextOutput(t *testing.T) {
 	writeTestFile(t, filepath.Join(temp, "README.md"), "# Stave\nUse stave snapshot upcoming to plan next actions.\n")
 	writeTestFile(t, filepath.Join(temp, "docs", "user-docs.md"), "Run `stave snapshot upcoming` and `stave ci gate`.\n")
 
-	root := getTestRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
-	root.SetArgs([]string{
-		"docs", "search", "snapshot upcoming",
+	out := execDocsSearch(t,
+		"snapshot upcoming",
 		"--docs-root", temp,
 		"--path", "README.md",
 		"--path", "docs",
 		"--format", "text",
 		"--show", "5",
-	})
-
-	if err := root.Execute(); err != nil {
-		t.Fatalf("docs search command failed: %v", err)
-	}
-	out := buf.String()
+	)
 	if !strings.Contains(out, `Query: "snapshot upcoming"`) {
 		t.Fatalf("expected query header, got: %s", out)
 	}
@@ -45,24 +35,16 @@ func TestDocsSearchCommand_JSONOutput(t *testing.T) {
 	temp := t.TempDir()
 	writeTestFile(t, filepath.Join(temp, "README.md"), "stave ci gate enforces policy.\n")
 
-	root := getTestRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
-	root.SetArgs([]string{
-		"docs", "search", "ci gate",
+	raw := execDocsSearch(t,
+		"ci gate",
 		"--docs-root", temp,
 		"--path", "README.md",
 		"--format", "json",
-	})
-
-	if err := root.Execute(); err != nil {
-		t.Fatalf("docs search command failed: %v", err)
-	}
+	)
 
 	var out docsSearchOutput
-	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
-		t.Fatalf("failed to decode json output: %v\noutput=%s", err, buf.String())
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		t.Fatalf("failed to decode json output: %v\noutput=%s", err, raw)
 	}
 	if out.Query != "ci gate" {
 		t.Fatalf("unexpected query: %q", out.Query)
@@ -76,21 +58,12 @@ func TestDocsSearchCommand_NoMatches(t *testing.T) {
 	temp := t.TempDir()
 	writeTestFile(t, filepath.Join(temp, "README.md"), "nothing relevant here\n")
 
-	root := getTestRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
-	root.SetArgs([]string{
-		"docs", "search", "snapshot upcoming",
+	out := execDocsSearch(t,
+		"snapshot upcoming",
 		"--docs-root", temp,
 		"--path", "README.md",
 		"--format", "text",
-	})
-
-	if err := root.Execute(); err != nil {
-		t.Fatalf("docs search command failed: %v", err)
-	}
-	out := buf.String()
+	)
 	if !strings.Contains(out, "No matches found.") {
 		t.Fatalf("expected no matches message, got: %s", out)
 	}

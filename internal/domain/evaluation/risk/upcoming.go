@@ -290,13 +290,21 @@ func classifyStatus(now, dueAt time.Time) Status {
 	return Upcoming
 }
 
+// statusRank maps status values to urgency order (lower = more urgent).
+// OVERDUE sorts before DUE_NOW, which sorts before UPCOMING.
+var statusRank = map[Status]int{
+	Overdue:  0,
+	DueNow:   1,
+	Upcoming: 2,
+}
+
 func sortItems(items []Item) {
 	sort.Slice(items, func(i, j int) bool {
 		if !items[i].DueAt.Equal(items[j].DueAt) {
 			return items[i].DueAt.Before(items[j].DueAt)
 		}
 		if items[i].Status != items[j].Status {
-			return items[i].Status < items[j].Status
+			return statusRank[items[i].Status] < statusRank[items[j].Status]
 		}
 		if items[i].ControlID != items[j].ControlID {
 			return items[i].ControlID < items[j].ControlID

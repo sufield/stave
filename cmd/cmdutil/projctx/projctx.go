@@ -65,54 +65,34 @@ func (l *InferenceLog) inferDir(cmd *cobra.Command, name, current string) string
 		return current
 	}
 
+	record := func(a InferAttempt) {
+		a.FlagName = name
+		a.DirName = name
+		l.attempts[name] = a
+	}
+
 	if _, err := ResolveSelectedGlobalContext(); err != nil {
-		l.attempts[name] = InferAttempt{
-			FlagName: name,
-			DirName:  name,
-			Error:    err.Error(),
-		}
+		record(InferAttempt{Error: err.Error()})
 		return current
 	}
 
 	if ctxDir, ok := ResolveContextDefaultDir("", name); ok {
-		l.attempts[name] = InferAttempt{
-			FlagName: name,
-			DirName:  name,
-			Searched: "context default",
-			Resolved: ctxDir,
-		}
+		record(InferAttempt{Searched: "context default", Resolved: ctxDir})
 		return ctxDir
 	}
 
 	base, err := pathinfer.BaseDir()
 	if err != nil {
-		l.attempts[name] = InferAttempt{
-			FlagName: name,
-			DirName:  name,
-			Error:    err.Error(),
-		}
+		record(InferAttempt{Error: err.Error()})
 		return current
 	}
 	dir, candidates, err := pathinfer.Unique(base, name, InferMaxDepth)
 	searched := fmt.Sprintf("%s/%s and nested %s/ within %d levels", base, name, name, InferMaxDepth)
 	if err != nil {
-		l.attempts[name] = InferAttempt{
-			FlagName:   name,
-			DirName:    name,
-			Base:       base,
-			Searched:   searched,
-			Candidates: candidates,
-			Error:      err.Error(),
-		}
+		record(InferAttempt{Base: base, Searched: searched, Candidates: candidates, Error: err.Error()})
 		return current
 	}
-	l.attempts[name] = InferAttempt{
-		FlagName: name,
-		DirName:  name,
-		Base:     base,
-		Searched: searched,
-		Resolved: dir,
-	}
+	record(InferAttempt{Base: base, Searched: searched, Resolved: dir})
 	return dir
 }
 
