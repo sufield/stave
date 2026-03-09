@@ -82,8 +82,8 @@ func outputValidateResult(cmd *cobra.Command, out io.Writer, result *appservice.
 		if cmd != nil {
 			stderr = cmd.ErrOrStderr()
 		}
-		fmt.Fprintf(stderr, "Hint:\n  stave apply --controls %s --observations %s\n",
-			opts.ControlsDir, opts.ObservationsDir)
+		ui.WriteHint(stderr, fmt.Sprintf("stave apply --controls %s --observations %s",
+			opts.ControlsDir, opts.ObservationsDir))
 	}
 	return exitErr
 }

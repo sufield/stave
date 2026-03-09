@@ -72,6 +72,23 @@ func TestRuntimeBeginProgress_QuietOrNoTTY(t *testing.T) {
 	}
 }
 
+func TestWriteHint(t *testing.T) {
+	var buf bytes.Buffer
+	WriteHint(&buf, "stave diagnose --controls ctl")
+	want := "Hint:\n  stave diagnose --controls ctl\n"
+	if got := buf.String(); got != want {
+		t.Fatalf("WriteHint output = %q, want %q", got, want)
+	}
+}
+
+func TestWriteHint_EmptyIsNoOp(t *testing.T) {
+	var buf bytes.Buffer
+	WriteHint(&buf, "")
+	if buf.Len() != 0 {
+		t.Fatalf("expected no output for empty command, got %q", buf.String())
+	}
+}
+
 func TestRuntimePrintNextSteps(t *testing.T) {
 	var stderr bytes.Buffer
 	rt := NewRuntime(&bytes.Buffer{}, &stderr)
