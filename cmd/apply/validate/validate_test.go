@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	appservice "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -84,28 +84,17 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 		Format:          "text",
 	}
 
-	// Capture stdout because runValidateWithOptions writes through validateOutputWithOptions/os.Stdout.
-	oldStdout := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("create stdout pipe: %v", err)
-	}
-	os.Stdout = w
-	defer func() {
-		os.Stdout = oldStdout
-	}()
+	cmd := &cobra.Command{Use: "test"}
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetErr(&buf)
 
 	// Exercise full validate command flow (directory mode).
-	err = runValidateWithOptions(nil, ui.NewRuntime(nil, nil), opts)
-	_ = w.Close()
+	err := runValidateWithOptions(cmd, ui.NewRuntime(nil, nil), opts)
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v", err)
 	}
-	outBytes, readErr := io.ReadAll(r)
-	if readErr != nil {
-		t.Fatalf("read captured stdout: %v", readErr)
-	}
-	output := string(outBytes)
+	output := buf.String()
 
 	if !strings.Contains(output, "Validation passed") {
 		t.Fatalf("expected validation success output, got: %s", output)
@@ -351,13 +340,16 @@ func TestDiagnoseHelpText(t *testing.T) {
 	}
 }
 
-// TestQuietModeOutputs tests that quiet mode suppresses stdout output.
+// TestQuietModeOutputs tests that quiet mode suppresses text stdout output
+// but preserves JSON output for scripting.
 func TestQuietModeOutputs(t *testing.T) {
-	opts := defaultOptions()
-	opts.QuietMode = true
-	out := validateOutputWithOptions(opts)
-	if _, ok := out.(interface{ Name() string }); ok {
-		t.Error("quiet mode should return io.Discard, not stdout")
+	out := compose.ResolveStdout(nil, true, "text")
+	if out != io.Discard {
+		t.Error("quiet+text mode should return io.Discard")
+	}
+	out = compose.ResolveStdout(nil, true, "json")
+	if out == io.Discard {
+		t.Error("quiet+json mode should preserve stdout for piping")
 	}
 }
 

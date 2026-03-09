@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -69,7 +70,7 @@ func gatherRunOptions(cmd *cobra.Command, flags *applyFlagsType) (runOptions, er
 	if err != nil {
 		return runOptions{}, err
 	}
-	format, err := ui.ParseOutputFormat(flags.outputFormat)
+	format, err := compose.ResolveFormatValue(cmd, flags.outputFormat)
 	if err != nil {
 		return runOptions{}, err
 	}

@@ -209,7 +209,7 @@ func loadControlsMap(ctx context.Context, dir string) (map[string]*policy.Contro
 
 func writePromptOutput(opts promptRunOptions, stdout, stderr io.Writer, rendered string, data appdiagnose.PromptData) error {
 	out := stdout
-	if opts.Quiet {
+	if opts.Quiet && !opts.Format.IsJSON() {
 		out = io.Discard
 	}
 

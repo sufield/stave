@@ -37,9 +37,8 @@ type controlListRow struct {
 // NewControlsCmd constructs the controls command tree with closure-scoped flags.
 func NewControlsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "controls",
-		Aliases: []string{"controls"},
-		Short:   "Work with control definitions",
+		Use:   "controls",
+		Short: "Work with control definitions",
 		Long: `Controls groups commands for discovering and understanding control
 definitions used by Stave.
 

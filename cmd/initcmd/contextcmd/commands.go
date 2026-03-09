@@ -282,7 +282,7 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 		ObserveDir:    strings.TrimSpace(ctx.Defaults.ObservationsDir),
 	}
 
-	format, err := ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(rawFormat)))
+	format, err := compose.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}

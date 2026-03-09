@@ -75,7 +75,7 @@ Examples:
 func RunExplain(cmd *cobra.Command, args []string, controlsDir, format string) error {
 	id := strings.TrimSpace(args[0])
 	if id == "" {
-		return fmt.Errorf("control id cannot be empty")
+		return &ui.InputError{Err: fmt.Errorf("control id cannot be empty")}
 	}
 	controlPath := strings.TrimSpace(controlsDir)
 	control, err := loadExplainControl(compose.CommandContext(cmd), id, controlPath)

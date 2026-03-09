@@ -25,8 +25,9 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 		return err
 	}
 
-	rt.Quiet = opts.QuietMode || cmdutil.QuietEnabled(cmd)
-	out := validateOutputWithOptions(opts)
+	quiet := opts.QuietMode || cmdutil.QuietEnabled(cmd)
+	rt.Quiet = quiet
+	out := compose.ResolveStdout(cmd, quiet, format)
 	if opts.InFile != "" {
 		return runValidateSingleFileWithOptions(cmd, out, opts, format)
 	}
