@@ -17,7 +17,7 @@ func NewConfig(plan EvaluationPlan, opts ...Option) EvaluateConfig {
 			ObservationsDir: plan.ObservationsPath,
 		},
 		Metadata: evaluation.Metadata{
-			ControlSource: evaluation.ControlSourceInfo{Source: "dir"},
+			ControlSource: evaluation.ControlSourceInfo{Source: evaluation.ControlSourceDir},
 			ContextName:   plan.ContextName,
 			ResolvedPaths: evaluation.ResolvedPaths{
 				Controls:     plan.ControlsPath,

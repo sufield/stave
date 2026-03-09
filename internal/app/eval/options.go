@@ -133,7 +133,7 @@ func validateFilePath(path, flag string) error {
 func (o Options) parseMaxUnsafeDuration() (time.Duration, error) {
 	d, err := timeutil.ParseDuration(o.MaxUnsafe)
 	if err != nil {
-		return 0, fmt.Errorf("invalid max-unsafe: %w", err)
+		return 0, fmt.Errorf("invalid --max-unsafe: %w", err)
 	}
 	return d, nil
 }

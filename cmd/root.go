@@ -93,7 +93,7 @@ func ExitCode(err error) int {
 }
 
 func (a *App) isJSONMode() bool {
-	return a.Flags.OutputMode == "json"
+	return a.Flags.OutputMode == string(ui.OutputFormatJSON)
 }
 
 func (a *App) getSanitizationPolicy() sanitize.OutputSanitizationPolicy {

@@ -115,7 +115,7 @@ func TestValidateApplyFlags(t *testing.T) {
 				observationsDir: filepath.Join(fixture, "observations"),
 				maxUnsafe:       "not-a-duration",
 			},
-			wantContain: "invalid max-unsafe",
+			wantContain: "invalid --max-unsafe",
 		},
 		{
 			name: "invalid --now format",

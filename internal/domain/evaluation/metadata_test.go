@@ -20,7 +20,7 @@ func TestEvaluationMetadataToMap_DirSource(t *testing.T) {
 	meta := Metadata{
 		ContextName: "stave",
 		ControlSource: ControlSourceInfo{
-			Source: "dir",
+			Source: ControlSourceDir,
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/repo/controls",
@@ -56,7 +56,7 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 	meta := Metadata{
 		ContextName: "stave",
 		ControlSource: ControlSourceInfo{
-			Source:             "packs",
+			Source:             ControlSourcePacks,
 			EnabledPacks:       []string{"s3"},
 			ResolvedControlIDs: []string{"CTL.S3.PUBLIC.001"},
 			RegistryVersion:    "v1",

@@ -61,12 +61,12 @@ func ResolveOutputModeDefault() string {
 
 // ResolveQuietDefault returns the quiet default.
 func ResolveQuietDefault() bool {
-	return ResolveCLIQuietWithSource().Value == "true"
+	return ResolveCLIQuietWithSource().Bool
 }
 
 // ResolveSanitizeDefault returns the sanitize default.
 func ResolveSanitizeDefault() bool {
-	return ResolveCLISanitizeWithSource().Value == "true"
+	return ResolveCLISanitizeWithSource().Bool
 }
 
 // ResolvePathModeDefault returns the path-mode default.
@@ -76,5 +76,5 @@ func ResolvePathModeDefault() string {
 
 // ResolveAllowUnknownInputDefault returns the allow-unknown-input default.
 func ResolveAllowUnknownInputDefault() bool {
-	return ResolveCLIAllowUnknownInputWithSource().Value == "true"
+	return ResolveCLIAllowUnknownInputWithSource().Bool
 }

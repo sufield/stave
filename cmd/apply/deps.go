@@ -1,10 +1,10 @@
 package apply
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -192,7 +192,7 @@ func (f *Factory) buildFilter() appeval.ControlFilter {
 
 // wrapError enriches known dependency errors with user-facing hints.
 func (f *Factory) wrapError(err error) error {
-	if strings.Contains(err.Error(), "cannot combine explicit --controls") {
+	if errors.Is(err, appeval.ErrConfigConflict) {
 		return ui.WithHint(err, ui.ErrHintControlSourceConflict)
 	}
 	return err

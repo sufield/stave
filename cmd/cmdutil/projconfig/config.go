@@ -145,6 +145,21 @@ type ResolvedConfigValue struct {
 	Source string
 }
 
+// ResolvedBoolValue holds a resolved boolean and its source.
+type ResolvedBoolValue struct {
+	Bool   bool
+	Source string
+}
+
+// ToConfigValue converts to ResolvedConfigValue for display.
+func (v ResolvedBoolValue) ToConfigValue() ResolvedConfigValue {
+	s := "false"
+	if v.Bool {
+		s = "true"
+	}
+	return ResolvedConfigValue{Value: s, Source: v.Source}
+}
+
 // NormalizeRetentionTier normalizes a tier name.
 func NormalizeRetentionTier(tier string) string {
 	return strings.ToLower(strings.TrimSpace(tier))

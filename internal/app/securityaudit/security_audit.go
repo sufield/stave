@@ -17,6 +17,23 @@ import (
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
 
+// SBOMFormat identifies the SBOM output standard.
+type SBOMFormat string
+
+const (
+	SBOMFormatSPDX      SBOMFormat = "spdx"
+	SBOMFormatCycloneDX SBOMFormat = "cyclonedx"
+)
+
+// VulnSource identifies the vulnerability evidence strategy.
+type VulnSource string
+
+const (
+	VulnSourceHybrid VulnSource = "hybrid"
+	VulnSourceLocal  VulnSource = "local"
+	VulnSourceCI     VulnSource = "ci"
+)
+
 // SecurityAuditRequest defines all inputs for a full enterprise audit run.
 type SecurityAuditRequest struct {
 	Now                  time.Time
@@ -25,9 +42,9 @@ type SecurityAuditRequest struct {
 	BinaryPath           string
 	OutDir               string
 	SeverityFilter       []securityaudit.Severity
-	SBOMFormat           string
+	SBOMFormat           SBOMFormat
 	ComplianceFrameworks []string
-	VulnSource           string
+	VulnSource           VulnSource
 	LiveVulnCheck        bool
 	ReleaseBundleDir     string
 	PrivacyMode          bool
@@ -254,14 +271,14 @@ func normalizeSecurityAuditRequest(req SecurityAuditRequest) SecurityAuditReques
 	if strings.TrimSpace(req.Cwd) == "" {
 		req.Cwd = "."
 	}
-	if strings.TrimSpace(req.SBOMFormat) == "" {
-		req.SBOMFormat = "spdx"
+	if strings.TrimSpace(string(req.SBOMFormat)) == "" {
+		req.SBOMFormat = SBOMFormatSPDX
 	}
-	req.SBOMFormat = strings.ToLower(strings.TrimSpace(req.SBOMFormat))
-	if strings.TrimSpace(req.VulnSource) == "" {
-		req.VulnSource = "hybrid"
+	req.SBOMFormat = SBOMFormat(strings.ToLower(strings.TrimSpace(string(req.SBOMFormat))))
+	if strings.TrimSpace(string(req.VulnSource)) == "" {
+		req.VulnSource = VulnSourceHybrid
 	}
-	req.VulnSource = strings.ToLower(strings.TrimSpace(req.VulnSource))
+	req.VulnSource = VulnSource(strings.ToLower(strings.TrimSpace(string(req.VulnSource))))
 	if req.FailOn == "" {
 		req.FailOn = securityaudit.SeverityHigh
 	}
@@ -283,11 +300,11 @@ func normalizeSecurityAuditRequest(req SecurityAuditRequest) SecurityAuditReques
 }
 
 func validateSecurityAuditRequest(req SecurityAuditRequest) error {
-	if req.SBOMFormat != "spdx" && req.SBOMFormat != "cyclonedx" {
+	if req.SBOMFormat != SBOMFormatSPDX && req.SBOMFormat != SBOMFormatCycloneDX {
 		return fmt.Errorf("invalid SBOM format %q (use spdx or cyclonedx)", req.SBOMFormat)
 	}
 	switch req.VulnSource {
-	case "hybrid", "local", "ci":
+	case VulnSourceHybrid, VulnSourceLocal, VulnSourceCI:
 	default:
 		return fmt.Errorf("invalid vulnerability source %q (use hybrid, local, or ci)", req.VulnSource)
 	}

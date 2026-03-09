@@ -12,7 +12,7 @@ func TestEvaluationMetadata_ToMap_Golden(t *testing.T) {
 	meta := Metadata{
 		ContextName: "prod-check",
 		ControlSource: ControlSourceInfo{
-			Source:       "packs",
+			Source:       ControlSourcePacks,
 			EnabledPacks: []string{"cis-aws-v1"},
 		},
 		ResolvedPaths: ResolvedPaths{

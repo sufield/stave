@@ -52,6 +52,40 @@ func TestTopLevelKeys(t *testing.T) {
 	}
 }
 
+func TestParseConfigKey(t *testing.T) {
+	for _, key := range topLevelKeys {
+		k, err := ParseConfigKey(key)
+		if err != nil {
+			t.Errorf("ParseConfigKey(%q) error = %v", key, err)
+		}
+		if k.String() != key {
+			t.Errorf("String() = %q, want %q", k.String(), key)
+		}
+	}
+
+	k, err := ParseConfigKey("snapshot_retention_tiers.staging")
+	if err != nil {
+		t.Fatalf("ParseConfigKey(tier) error = %v", err)
+	}
+	if k.String() != "snapshot_retention_tiers.staging" {
+		t.Errorf("String() = %q, want tier key", k.String())
+	}
+
+	_, err = ParseConfigKey("unknown_key")
+	if err == nil {
+		t.Fatal("expected error for unsupported key")
+	}
+}
+
+func mustParseKey(t *testing.T, raw string) ParsedKey {
+	t.Helper()
+	k, err := ParseConfigKey(raw)
+	if err != nil {
+		t.Fatalf("ParseConfigKey(%q) error = %v", raw, err)
+	}
+	return k
+}
+
 func TestDeleteConfigKeyValue(t *testing.T) {
 	svc := newTestService()
 	cfg := &Config{
@@ -75,7 +109,7 @@ func TestDeleteConfigKeyValue(t *testing.T) {
 		"snapshot_filename_template",
 	}
 	for _, key := range keys {
-		if err := svc.DeleteConfigKeyValue(cfg, key); err != nil {
+		if err := svc.DeleteConfigKeyValue(cfg, mustParseKey(t, key)); err != nil {
 			t.Fatalf("DeleteConfigKeyValue(%q) error = %v", key, err)
 		}
 	}
@@ -89,20 +123,10 @@ func TestDeleteConfigKeyValue(t *testing.T) {
 		t.Fatalf("top-level delete did not clear config: %#v", cfg)
 	}
 
-	if err := svc.DeleteConfigKeyValue(cfg, "snapshot_retention_tiers.critical"); err != nil {
+	if err := svc.DeleteConfigKeyValue(cfg, mustParseKey(t, "snapshot_retention_tiers.critical")); err != nil {
 		t.Fatalf("DeleteConfigKeyValue(tier) error = %v", err)
 	}
 	if _, ok := cfg.RetentionTiers["critical"]; ok {
 		t.Fatalf("tier was not deleted: %#v", cfg.RetentionTiers)
-	}
-}
-
-func TestDeleteConfigKeyValue_Unsupported(t *testing.T) {
-	svc := newTestService()
-	cfg := &Config{}
-
-	err := svc.DeleteConfigKeyValue(cfg, "unknown_key")
-	if err == nil {
-		t.Fatal("expected error for unsupported key")
 	}
 }

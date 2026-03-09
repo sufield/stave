@@ -32,10 +32,10 @@ func buildConfigShowOutput() configShowOutput {
 		SnapshotRetention:        toConfigField(projconfig.ResolveSnapshotRetentionWithSource(cfg, cfgPath, retTier.Value)),
 		CIFailurePolicy:          toConfigField(projconfig.ResolveCIFailurePolicyWithSource(cfg, cfgPath)),
 		CLIOutput:                toConfigField(projconfig.ResolveCLIOutputWithSource()),
-		CLIQuiet:                 toConfigField(projconfig.ResolveCLIQuietWithSource()),
-		CLISanitize:              toConfigField(projconfig.ResolveCLISanitizeWithSource()),
+		CLIQuiet:                 toConfigField(projconfig.ResolveCLIQuietWithSource().ToConfigValue()),
+		CLISanitize:              toConfigField(projconfig.ResolveCLISanitizeWithSource().ToConfigValue()),
 		CLIPathMode:              toConfigField(projconfig.ResolveCLIPathModeWithSource()),
-		CLIAllowUnknownInput:     toConfigField(projconfig.ResolveCLIAllowUnknownInputWithSource()),
+		CLIAllowUnknownInput:     toConfigField(projconfig.ResolveCLIAllowUnknownInputWithSource().ToConfigValue()),
 		DefinedRetentionTiers:    resolveDefinedRetentionTiers(cfg),
 		EffectiveRetentionByTier: map[string]configResolvedField{},
 	}

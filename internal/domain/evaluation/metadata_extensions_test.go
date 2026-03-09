@@ -13,7 +13,7 @@ func TestToExtensions_DirSourceNoGit(t *testing.T) {
 	m := Metadata{
 		ContextName: "test-ctx",
 		ControlSource: ControlSourceInfo{
-			Source: "dir",
+			Source: ControlSourceDir,
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/ctl",
@@ -47,7 +47,7 @@ func TestToExtensions_DirSourceNoGit(t *testing.T) {
 func TestToExtensions_PacksSourceWithGit(t *testing.T) {
 	m := Metadata{
 		ControlSource: ControlSourceInfo{
-			Source:             "packs",
+			Source:             ControlSourcePacks,
 			EnabledPacks:       []string{"core", "hipaa"},
 			ResolvedControlIDs: []string{"CTL.001", "CTL.002"},
 			RegistryVersion:    "v1.0",

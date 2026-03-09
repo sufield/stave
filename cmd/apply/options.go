@@ -2,7 +2,6 @@ package apply
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -181,9 +180,6 @@ func validateApplyDomain(flags *applyFlagsType) (appeval.ParsedOptions, error) {
 		IntegrityPublicKey: flags.applyIntegrityPublicKey,
 	}).Validate()
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "invalid --max-unsafe") {
-			return appeval.ParsedOptions{}, &ui.InputError{Err: ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)}
-		}
 		return appeval.ParsedOptions{}, &ui.InputError{Err: err}
 	}
 	return parsed, nil
