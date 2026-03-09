@@ -67,7 +67,7 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResul
 
 // diagnoseLoad converts a load error into a diagnostic result.
 // Config is the receiver so SanitizePaths is available without passing it as a parameter.
-func (c Config) diagnoseLoad(err error, code string, action string, path string) *diag.Result {
+func (c Config) diagnoseLoad(err error, code diag.Code, action string, path string) *diag.Result {
 	if err == nil {
 		return nil
 	}

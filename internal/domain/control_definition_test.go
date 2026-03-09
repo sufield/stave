@@ -226,7 +226,7 @@ func validControlForValidationTests() policy.ControlDefinition {
 	}
 }
 
-func assertIssueCodeAndSignal(t *testing.T, issue diag.Issue, wantCode string, wantSignal diag.Signal) {
+func assertIssueCodeAndSignal(t *testing.T, issue diag.Issue, wantCode diag.Code, wantSignal diag.Signal) {
 	t.Helper()
 	if issue.Code != wantCode {
 		t.Fatalf("issue code = %q, want %q", issue.Code, wantCode)

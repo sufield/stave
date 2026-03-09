@@ -15,12 +15,12 @@ import (
 func TestNormalizeGatePolicy(t *testing.T) {
 	tests := []struct {
 		in      string
-		want    string
+		want    projconfig.GatePolicy
 		wantErr bool
 	}{
-		{in: gatePolicyAny, want: gatePolicyAny},
+		{in: string(gatePolicyAny), want: gatePolicyAny},
 		{in: "  FAIL_ON_NEW_VIOLATION  ", want: gatePolicyNew},
-		{in: gatePolicyOverdue, want: gatePolicyOverdue},
+		{in: string(gatePolicyOverdue), want: gatePolicyOverdue},
 		{in: "unknown", wantErr: true},
 	}
 	for _, tc := range tests {

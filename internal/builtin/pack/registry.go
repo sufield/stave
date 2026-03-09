@@ -13,6 +13,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
@@ -47,7 +48,7 @@ type Pack struct {
 // or the package-level functions for production (backed by embedded data).
 type Registry struct {
 	version   string
-	hash      string
+	hash      kernel.Digest
 	packs     map[string]Pack
 	packNames []string
 	// controls preserves the raw control metadata from the index.
@@ -66,7 +67,7 @@ func NewRegistry(data []byte) (*Registry, error) {
 
 	r := &Registry{
 		version:   strings.TrimSpace(idx.Version),
-		hash:      string(crypto.HashBytes(data)),
+		hash:      crypto.HashBytes(data),
 		packs:     make(map[string]Pack, len(idx.Packs)),
 		controls:  idx.Controls,
 		packNames: make([]string, 0, len(idx.Packs)),
@@ -157,7 +158,7 @@ func (r *Registry) Version() string {
 }
 
 // Hash returns the SHA-256 hex digest of the raw registry bytes.
-func (r *Registry) Hash() string {
+func (r *Registry) Hash() kernel.Digest {
 	return r.hash
 }
 
@@ -279,7 +280,7 @@ func RegistryVersion() (string, error) {
 }
 
 // RegistryHash returns the SHA-256 hash of embedded index bytes.
-func RegistryHash() (string, error) {
+func RegistryHash() (kernel.Digest, error) {
 	reg, err := registry()
 	if err != nil {
 		return "", err

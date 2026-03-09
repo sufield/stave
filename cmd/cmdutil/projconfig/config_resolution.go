@@ -107,7 +107,7 @@ func ResolveCIFailurePolicyWithSource(cfg *ProjectConfig, cfgPath string) Resolv
 		envvar.CIFailurePolicy, "ci_failure_policy",
 		func(c *ProjectConfig) string { return c.CIFailurePolicy },
 		func(c *UserConfig) string { return c.CIFailurePolicy },
-		DefaultCIFailurePolicy, passthrough, cfg, cfgPath,
+		string(DefaultCIFailurePolicy), passthrough, cfg, cfgPath,
 	)
 }
 

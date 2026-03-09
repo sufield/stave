@@ -136,7 +136,7 @@ type RunInfoDTO struct {
 	MaxUnsafe   kernel.Duration `json:"max_unsafe"`
 	Snapshots   int             `json:"snapshots"`
 	InputHashes *InputHashesDTO `json:"input_hashes,omitempty"`
-	PackHash    string          `json:"pack_hash,omitempty"`
+	PackHash    kernel.Digest   `json:"pack_hash,omitempty"`
 }
 
 // InputHashesDTO mirrors evaluation.InputHashes.
@@ -169,7 +169,7 @@ type ExtensionsDTO struct {
 	EnabledPacks        []string          `json:"enabled_control_packs,omitempty"`
 	ResolvedControlIDs  []string          `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string            `json:"pack_registry_version,omitempty"`
-	PackRegistryHash    string            `json:"pack_registry_hash,omitempty"`
+	PackRegistryHash    kernel.Digest     `json:"pack_registry_hash,omitempty"`
 	Git                 *GitMetadataDTO   `json:"git,omitempty"`
 }
 

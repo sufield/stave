@@ -222,7 +222,7 @@ func writeIssue(w io.Writer, issue diag.Issue) error {
 	if issue.Signal == diag.SignalError {
 		level = "ERROR"
 	}
-	writef("%s\n", ui.SeverityLabel(level, issue.Code, w))
+	writef("%s\n", ui.SeverityLabel(level, string(issue.Code), w))
 
 	for _, key := range issue.Evidence.Keys() {
 		writef("  %s=%s\n", key, issue.Evidence.Sanitized(key))
@@ -284,7 +284,7 @@ func PackConfigIssues() []diag.Issue {
 	known, err := packs.PackNames()
 	if err != nil {
 		return []diag.Issue{
-			diag.New("PACK_REGISTRY_LOAD_FAILED").
+			diag.New(diag.CodePackRegistryLoadFailed).
 				Error().
 				Action("Reinstall Stave binary or verify embedded registry integrity").
 				WithSensitive("error", err.Error()).
@@ -301,7 +301,7 @@ func PackConfigIssues() []diag.Issue {
 		if name == "" || knownSet[name] {
 			continue
 		}
-		issues = append(issues, diag.New("UNKNOWN_CONTROL_PACK").
+		issues = append(issues, diag.New(diag.CodeUnknownControlPack).
 			Error().
 			Action(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
 			With("pack", name).

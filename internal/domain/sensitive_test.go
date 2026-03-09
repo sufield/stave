@@ -158,7 +158,7 @@ func TestIssue_MarshalJSON_NonSensitiveEvidence(t *testing.T) {
 	}
 
 	plain := plainIssue{
-		Code:   diag.CodeSingleSnapshot,
+		Code:   string(diag.CodeSingleSnapshot),
 		Signal: diag.SignalWarn,
 		Evidence: map[string]string{
 			"snapshot_count": "1",

@@ -45,5 +45,5 @@ type RunInfo struct {
 	InputHashes *InputHashes    `json:"input_hashes,omitempty"`
 	// PackHash is the SHA-256 hex digest of the evaluated control set,
 	// enabling auditability of which controls were active during evaluation.
-	PackHash string `json:"pack_hash,omitempty"`
+	PackHash kernel.Digest `json:"pack_hash,omitempty"`
 }

@@ -142,7 +142,7 @@ func parseValidateParams(opts *options) validateParams {
 
 	maxDuration, err := timeutil.ParseDuration(opts.MaxUnsafe)
 	if err != nil {
-		params.issues = append(params.issues, diag.New("INVALID_MAX_UNSAFE").
+		params.issues = append(params.issues, diag.New(diag.CodeInvalidMaxUnsafe).
 			Error().
 			Action("Use format like 168h, 7d, or 1d12h").
 			Command("stave validate --max-unsafe 168h").
@@ -156,7 +156,7 @@ func parseValidateParams(opts *options) validateParams {
 	if opts.NowTime != "" {
 		t, parseErr := timeutil.ParseRFC3339(opts.NowTime, "--now")
 		if parseErr != nil {
-			params.issues = append(params.issues, diag.New("INVALID_NOW_TIME").
+			params.issues = append(params.issues, diag.New(diag.CodeInvalidNowTime).
 				Error().
 				Action("Use RFC3339 format").
 				Command("stave validate --now 2026-01-15T00:00:00Z").

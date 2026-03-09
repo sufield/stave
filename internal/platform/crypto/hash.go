@@ -23,13 +23,13 @@ func ShortToken(value string) string {
 
 // HashDelimited computes the SHA-256 hex digest of parts joined by sep.
 // Each part is followed by sep (e.g. "a\nb\n" for sep='\n').
-func HashDelimited(parts []string, sep byte) string {
+func HashDelimited(parts []string, sep byte) kernel.Digest {
 	h := sha256.New()
 	for _, p := range parts {
 		h.Write([]byte(p))
 		h.Write([]byte{sep})
 	}
-	return hex.EncodeToString(h.Sum(nil))
+	return kernel.Digest(hex.EncodeToString(h.Sum(nil)))
 }
 
 // HashReader returns the SHA-256 hex digest of data read from r.

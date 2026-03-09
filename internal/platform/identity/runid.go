@@ -18,7 +18,7 @@ func ComputeRunID(version, inputsHash, controlsHash string) string {
 // ComputeRunIDParts computes a deterministic run ID from any ordered parts.
 // Formula: sha256(part1 + "\n" + part2 + "\n" + ... + partN + "\n")[:RunIDLength]
 func ComputeRunIDParts(parts ...string) string {
-	digest := platformcrypto.HashDelimited(parts, '\n')
+	digest := string(platformcrypto.HashDelimited(parts, '\n'))
 	if len(digest) > RunIDLength {
 		return digest[:RunIDLength]
 	}
@@ -40,5 +40,5 @@ func HashStrings(strs []string) string {
 	sorted := append([]string(nil), strs...)
 	sort.Strings(sorted)
 
-	return platformcrypto.HashDelimited(sorted, 0)
+	return string(platformcrypto.HashDelimited(sorted, 0))
 }

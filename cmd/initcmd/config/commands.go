@@ -94,7 +94,7 @@ Supported keys:
 				return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
-				return []string{projconfig.GatePolicyAny, projconfig.GatePolicyNew, projconfig.GatePolicyOverdue}, cobra.ShellCompDirectiveNoFileComp
+				return []string{string(projconfig.GatePolicyAny), string(projconfig.GatePolicyNew), string(projconfig.GatePolicyOverdue)}, cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "capture_cadence" {
 				return []string{"daily", "hourly"}, cobra.ShellCompDirectiveNoFileComp
