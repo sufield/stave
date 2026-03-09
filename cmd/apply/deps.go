@@ -34,12 +34,13 @@ func (d *ApplyDeps) Close() {}
 // Factory encapsulates the construction of ApplyDeps.
 type Factory struct {
 	cmd    *cobra.Command
+	flags  *applyFlagsType
 	params applyParams
 }
 
 // NewFactory creates a Factory for building apply dependencies.
-func NewFactory(cmd *cobra.Command, params applyParams) *Factory {
-	return &Factory{cmd: cmd, params: params}
+func NewFactory(cmd *cobra.Command, flags *applyFlagsType, params applyParams) *Factory {
+	return &Factory{cmd: cmd, flags: flags, params: params}
 }
 
 // resourceStack groups the intermediate assets created during dependency assembly.
@@ -54,7 +55,7 @@ type resourceStack struct {
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
 func (f *Factory) BuildWithNewPlan() (*ApplyDeps, error) {
-	plan, err := appeval.NewPlan(buildEvaluatorOptions())
+	plan, err := appeval.NewPlan(buildEvaluatorOptions(f.flags))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 
 // assembleResources creates the intermediate assets needed for dependency building.
 func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack, error) {
-	marshaler, err := cmdutil.NewFindingWriter(applyFlags.outputFormat, cmdutil.IsJSONMode(f.cmd))
+	marshaler, err := cmdutil.NewFindingWriter(f.flags.outputFormat, cmdutil.IsJSONMode(f.cmd))
 	if err != nil {
 		return resourceStack{}, err
 	}
@@ -98,13 +99,13 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	if err != nil {
 		return resourceStack{}, fmt.Errorf("create control loader: %w", err)
 	}
-	exemptionCfg, err := loadExemptionConfig(applyFlags.ignoreFile)
+	exemptionCfg, err := loadExemptionConfig(f.flags.ignoreFile)
 	if err != nil {
 		return resourceStack{}, err
 	}
 
 	_, cfgPath, _ := cmdutil.FindProjectConfigWithPath()
-	gitMeta := cmdutil.CollectGitAudit(plan.ProjectRoot, []string{applyFlags.controlsDir, cfgPath})
+	gitMeta := cmdutil.CollectGitAudit(plan.ProjectRoot, []string{f.flags.controlsDir, cfgPath})
 
 	enricher := remediation.NewMapper()
 	san := cmdutil.GetSanitizer(f.cmd)
@@ -132,7 +133,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	if err := appeval.ConfigureIntegrityCheck(loader, applyFlags.applyIntegrityManifest, applyFlags.applyIntegrityPublicKey); err != nil {
+	if err := appeval.ConfigureIntegrityCheck(loader, f.flags.applyIntegrityManifest, f.flags.applyIntegrityPublicKey); err != nil {
 		return nil, err
 	}
 	return loader, nil
@@ -155,13 +156,13 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 		Clock:             f.params.clock,
 		Output:            output,
 		Stderr:            f.cmd.ErrOrStderr(),
-		AllowUnknownInput: applyFlags.allowUnknownInput,
+		AllowUnknownInput: f.flags.allowUnknownInput,
 		ToolVersion:       version.Version,
 		ExemptionConfig:   res.exemptionCfg,
 		ProjectConfig:     f.buildProjectConfig(),
 		GitMetadata:       res.gitMeta,
 		Filters:           f.buildFilter(),
-		ControlsDir:       applyFlags.controlsDir,
+		ControlsDir:       f.flags.controlsDir,
 		PredicateParser:   ctlyaml.YAMLPredicateParser,
 		Context:           f.cmd.Context(),
 	}
@@ -177,7 +178,7 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 		Suppressions:        f.toSuppressions(projCfg.Suppressions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
-		ControlsFlagSet:     applyFlags.applyControlsFlagSet,
+		ControlsFlagSet:     f.flags.applyControlsFlagSet,
 		BuiltinLoader:       ctlbuiltin.LoadAll,
 	}
 }

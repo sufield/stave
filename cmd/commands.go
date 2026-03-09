@@ -178,8 +178,8 @@ func WireCommands(root *cobra.Command) {
 
 	// Core evaluation
 	root.AddCommand(applyvalidate.ValidateCmd)
-	root.AddCommand(apply.PlanCmd)
-	root.AddCommand(apply.ApplyCmd)
+	root.AddCommand(apply.NewPlanCmd())
+	root.AddCommand(apply.NewApplyCmd())
 	root.AddCommand(applyverify.VerifyCmd)
 	root.AddCommand(extractor.ExtractorCmd)
 	root.AddCommand(diagnose.DiagnoseCmd)

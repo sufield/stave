@@ -13,12 +13,12 @@ import (
 )
 
 // runApplyCore gathers validated options, then dispatches by mode.
-func runApplyCore(cmd *cobra.Command, _ []string) error {
+func runApplyCore(cmd *cobra.Command, flags *applyFlagsType) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 
-	opts, err := gatherRunOptions(cmd)
+	opts, err := gatherRunOptions(cmd, flags)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(err)
 	}
@@ -27,19 +27,19 @@ func runApplyCore(cmd *cobra.Command, _ []string) error {
 	case runModeProfile:
 		return runApplyProfileWithOptions(cmd, opts.profile)
 	default:
-		return runStandardApply(cmd, opts)
+		return runStandardApply(cmd, flags, opts)
 	}
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(cmd *cobra.Command, opts runOptions) error {
+func runStandardApply(cmd *cobra.Command, flags *applyFlagsType, opts runOptions) error {
 	plan, err := appeval.NewPlan(opts.evaluatorInput)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
 	cmdutil.AttachRunIDFromPlan(plan)
 
-	results, err := executeApply(cmd, cmd.Context(), opts, plan)
+	results, err := executeApply(cmd, cmd.Context(), flags, opts, plan)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(err)
 	}
@@ -71,10 +71,11 @@ func runStrictIntegrityCheck(cmd *cobra.Command) error {
 func executeApply(
 	cmd *cobra.Command,
 	ctx context.Context,
+	flags *applyFlagsType,
 	opts runOptions,
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
-	deps, err := NewFactory(cmd, opts.params).Build(plan)
+	deps, err := NewFactory(cmd, flags, opts.params).Build(plan)
 	if err != nil {
 		return EvaluateResult{}, err
 	}
