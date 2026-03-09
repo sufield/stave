@@ -77,7 +77,7 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 }
 
 func TestValidationCodesUnique(t *testing.T) {
-	codes := []string{
+	codes := []diag.Code{
 		diag.CodeControlLoadFailed,
 		diag.CodeObservationLoadFailed,
 		diag.CodeControlMissingID,
@@ -100,7 +100,7 @@ func TestValidationCodesUnique(t *testing.T) {
 		diag.CodeAssetIDReusedTypes,
 		diag.CodeAssetSingleAppearance,
 	}
-	seen := make(map[string]struct{})
+	seen := make(map[diag.Code]struct{})
 	for _, c := range codes {
 		if _, exists := seen[c]; exists {
 			t.Errorf("duplicate validation code: %s", c)

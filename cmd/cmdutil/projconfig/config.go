@@ -14,24 +14,27 @@ import (
 
 // Constants for config files and built-in defaults.
 const (
-	DefaultMaxUnsafeDuration = "168h"
-	DefaultSnapshotRetention = "30d"
-	DefaultRetentionTier     = "critical"
-	DefaultTierKeepMin       = 2
-	DefaultCIFailurePolicy   = "fail_on_any_violation"
-	ProjectConfigFile        = "stave.yaml"
+	DefaultMaxUnsafeDuration            = "168h"
+	DefaultSnapshotRetention            = "30d"
+	DefaultRetentionTier                = "critical"
+	DefaultTierKeepMin                  = 2
+	DefaultCIFailurePolicy   GatePolicy = "fail_on_any_violation"
+	ProjectConfigFile                   = "stave.yaml"
 )
+
+// GatePolicy represents a CI failure policy mode.
+type GatePolicy string
 
 // Gate policy constants shared by enforce and config service.
 const (
-	GatePolicyAny     = "fail_on_any_violation"
-	GatePolicyNew     = "fail_on_new_violation"
-	GatePolicyOverdue = "fail_on_overdue_upcoming"
+	GatePolicyAny     GatePolicy = "fail_on_any_violation"
+	GatePolicyNew     GatePolicy = "fail_on_new_violation"
+	GatePolicyOverdue GatePolicy = "fail_on_overdue_upcoming"
 )
 
 // NormalizeGatePolicy validates and normalizes a gate policy string.
-func NormalizeGatePolicy(raw string) (string, error) {
-	policy := strings.ToLower(strings.TrimSpace(raw))
+func NormalizeGatePolicy(raw string) (GatePolicy, error) {
+	policy := GatePolicy(strings.ToLower(strings.TrimSpace(raw)))
 	switch policy {
 	case GatePolicyAny, GatePolicyNew, GatePolicyOverdue:
 		return policy, nil

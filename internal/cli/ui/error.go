@@ -15,9 +15,12 @@ type ErrorEnvelope struct {
 	Error *ErrorInfo `json:"error,omitempty"`
 }
 
+// ErrorCode is a typed error code for structured CLI error envelopes.
+type ErrorCode string
+
 // ErrorInfo contains structured error details.
 type ErrorInfo struct {
-	Code     string            `json:"code"`
+	Code     ErrorCode         `json:"code"`
 	Title    string            `json:"title,omitempty"`
 	Message  string            `json:"message"`
 	Action   string            `json:"action,omitempty"`
@@ -38,14 +41,15 @@ func (e *ErrorInfo) Error() string {
 
 // Common error codes.
 const (
-	CodeIOError         = "IO_ERROR"
-	CodeParseError      = "PARSE_ERROR"
-	CodeSchemaError     = "SCHEMA_ERROR"
-	CodeInternalError   = "INTERNAL_ERROR"
-	CodeInvalidInput    = "INVALID_INPUT"
-	CodeMissingRequired = "MISSING_REQUIRED"
-	CodeViolationsFound = "VIOLATIONS_FOUND"
-	CodeDiagnostics     = "DIAGNOSTICS_FOUND"
+	CodeIOError               ErrorCode = "IO_ERROR"
+	CodeParseError            ErrorCode = "PARSE_ERROR"
+	CodeSchemaError           ErrorCode = "SCHEMA_ERROR"
+	CodeInternalError         ErrorCode = "INTERNAL_ERROR"
+	CodeInvalidInput          ErrorCode = "INVALID_INPUT"
+	CodeMissingRequired       ErrorCode = "MISSING_REQUIRED"
+	CodeViolationsFound       ErrorCode = "VIOLATIONS_FOUND"
+	CodeDiagnostics           ErrorCode = "DIAGNOSTICS_FOUND"
+	CodeSecurityAuditFindings ErrorCode = "SECURITY_AUDIT_FINDINGS"
 )
 
 // Exit codes following the contract.
@@ -125,7 +129,7 @@ func WriteErrorJSON(w io.Writer, info *ErrorInfo) error {
 }
 
 // NewErrorInfo creates an ErrorInfo with the given code and message.
-func NewErrorInfo(code, message string) *ErrorInfo {
+func NewErrorInfo(code ErrorCode, message string) *ErrorInfo {
 	return &ErrorInfo{
 		Code:    code,
 		Message: message,

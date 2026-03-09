@@ -26,7 +26,7 @@ const (
 )
 
 type options struct {
-	Policy          string
+	Policy          string // raw flag value, normalized to GatePolicy by prepareRunInput
 	InPath          string
 	BaselinePath    string
 	ControlsDir     string
@@ -38,7 +38,7 @@ type options struct {
 
 func defaultOptions() *options {
 	return &options{
-		Policy:          projconfig.ResolveCIFailurePolicyDefault(),
+		Policy:          string(projconfig.ResolveCIFailurePolicyDefault()),
 		InPath:          "output/evaluation.json",
 		BaselinePath:    "output/baseline.json",
 		ControlsDir:     "controls/s3",
@@ -60,12 +60,12 @@ func (o *options) bindFlags(cmd *cobra.Command) {
 }
 
 type gateResult struct {
-	SchemaVersion kernel.Schema `json:"schema_version"`
-	Kind          string        `json:"kind"`
-	CheckedAt     time.Time     `json:"checked_at"`
-	Policy        string        `json:"policy"`
-	Pass          bool          `json:"pass"`
-	Reason        string        `json:"reason"`
+	SchemaVersion kernel.Schema         `json:"schema_version"`
+	Kind          string                `json:"kind"`
+	CheckedAt     time.Time             `json:"checked_at"`
+	Policy        projconfig.GatePolicy `json:"policy"`
+	Pass          bool                  `json:"pass"`
+	Reason        string                `json:"reason"`
 
 	EvaluationPath   string `json:"evaluation_path,omitempty"`
 	BaselinePath     string `json:"baseline_path,omitempty"`
@@ -103,7 +103,7 @@ func run(cmd *cobra.Command, opts *options) error {
 }
 
 type runInput struct {
-	policy          string
+	policy          projconfig.GatePolicy
 	now             time.Time
 	inPath          string
 	baselinePath    string

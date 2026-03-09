@@ -13,7 +13,7 @@ const (
 
 // Issue is the canonical diagnostic finding shape across validation flows.
 type Issue struct {
-	Code     string                `json:"code"`
+	Code     Code                  `json:"code"`
 	Signal   Signal                `json:"signal"`
 	Message  string                `json:"message,omitempty"`
 	Action   string                `json:"action"`
@@ -27,7 +27,7 @@ type Builder struct {
 }
 
 // New starts a new issue builder with a required code.
-func New(code string) *Builder {
+func New(code Code) *Builder {
 	return &Builder{
 		issue: Issue{
 			Code:     code,

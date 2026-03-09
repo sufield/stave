@@ -145,9 +145,9 @@ func TestResolveCIFailurePolicyDefault_Fallback(t *testing.T) {
 }
 
 func TestResolveCIFailurePolicyDefault_EnvOverridesProjectFile(t *testing.T) {
-	t.Setenv(envvar.CIFailurePolicy.Name, projconfig.GatePolicyOverdue)
+	t.Setenv(envvar.CIFailurePolicy.Name, string(projconfig.GatePolicyOverdue))
 	tmp := t.TempDir()
-	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+projconfig.GatePolicyNew+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(projconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, tmp)
@@ -166,7 +166,7 @@ func TestResolveCIFailurePolicyDefault_ProjectFile(t *testing.T) {
 	if err := os.MkdirAll(nested, 0o755); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+projconfig.GatePolicyNew+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(projconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, nested)
@@ -182,7 +182,7 @@ func TestResolveCIFailurePolicyDefault_UserConfigFallback(t *testing.T) {
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
 	t.Setenv(envvar.UserConfig.Name, userCfgPath)
-	if err := os.WriteFile(userCfgPath, []byte("ci_failure_policy: "+projconfig.GatePolicyOverdue+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(userCfgPath, []byte("ci_failure_policy: "+string(projconfig.GatePolicyOverdue)+"\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
 	chdirForTest(t, tmp)

@@ -21,7 +21,7 @@ const (
 	defaultSnapshotRetention = projconfig.DefaultSnapshotRetention
 	defaultRetentionTier     = projconfig.DefaultRetentionTier
 	defaultTierKeepMin       = projconfig.DefaultTierKeepMin
-	defaultCIFailurePolicy   = projconfig.DefaultCIFailurePolicy
+	defaultCIFailurePolicy   = string(projconfig.DefaultCIFailurePolicy)
 	projectConfigFile        = projconfig.ProjectConfigFile
 )
 

@@ -212,7 +212,7 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 	}
 	switch {
 	case ui.IsSentinel(err) && ExitCode(err) == ui.ExitSecurity:
-		return ui.NewErrorInfo("SECURITY_AUDIT_FINDINGS", message).
+		return ui.NewErrorInfo(ui.CodeSecurityAuditFindings, message).
 			WithTitle("Security audit gate failed").
 			WithAction(suggested + "Review the generated security-audit report and remediate findings at or above --fail-on.").
 			WithURL(docsRef)

@@ -90,7 +90,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 
 	for _, issue := range readinessDiagnostics(val).Issues {
 		req.Report.RecordIssue(validation.ReadinessIssue{
-			Name:    issue.Code,
+			Name:    string(issue.Code),
 			Status:  readinessIssueStatus(issue),
 			Message: issue.Action,
 			Fix:     issue.Action,

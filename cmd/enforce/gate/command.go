@@ -36,7 +36,7 @@ Examples:
 	}
 
 	opts.bindFlags(cmd)
-	_ = cmd.RegisterFlagCompletionFunc("policy", cmdutil.CompleteFixed(projconfig.GatePolicyAny, projconfig.GatePolicyNew, projconfig.GatePolicyOverdue))
+	_ = cmd.RegisterFlagCompletionFunc("policy", cmdutil.CompleteFixed(string(projconfig.GatePolicyAny), string(projconfig.GatePolicyNew), string(projconfig.GatePolicyOverdue)))
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 	return cmd
 }

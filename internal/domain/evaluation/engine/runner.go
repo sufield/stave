@@ -190,7 +190,7 @@ func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time)
 // computePackHash returns a deterministic SHA-256 hex digest of the evaluated
 // control set, keyed on sorted control IDs. This enables auditability of
 // which controls were active during an evaluation run.
-func computePackHash(controls []policy.ControlDefinition) string {
+func computePackHash(controls []policy.ControlDefinition) kernel.Digest {
 	if len(controls) == 0 {
 		return ""
 	}
@@ -204,5 +204,5 @@ func computePackHash(controls []policy.ControlDefinition) string {
 		h.Write([]byte(id))
 		h.Write([]byte{'\n'})
 	}
-	return hex.EncodeToString(h.Sum(nil))
+	return kernel.Digest(hex.EncodeToString(h.Sum(nil)))
 }

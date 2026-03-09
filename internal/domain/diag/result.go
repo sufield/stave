@@ -122,6 +122,6 @@ func (r *Result) firstIssueSummary() string {
 	case hasPath:
 		return path
 	default:
-		return issue.Code
+		return string(issue.Code)
 	}
 }

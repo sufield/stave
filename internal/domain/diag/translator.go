@@ -14,7 +14,7 @@ type ExternalError interface {
 
 // Translator converts external validation diagnostics into canonical issues.
 type Translator struct {
-	defaultCode   string
+	defaultCode   Code
 	defaultAction string
 	pathPrefix    string
 }
@@ -34,8 +34,8 @@ var schemaActionByCode = map[string]func(string) string{
 }
 
 // NewTranslator creates a translator with a fallback canonical code.
-func NewTranslator(defaultCode string) *Translator {
-	code := strings.TrimSpace(defaultCode)
+func NewTranslator(defaultCode Code) *Translator {
+	code := Code(strings.TrimSpace(string(defaultCode)))
 	if code == "" {
 		code = CodeSchemaViolation
 	}
@@ -86,7 +86,7 @@ func (t *Translator) TranslateOne(externalErr ExternalError) Issue {
 	return builder.Build()
 }
 
-func (t *Translator) mapCode(extCode string) string {
+func (t *Translator) mapCode(extCode string) Code {
 	if _, ok := schemaViolationCodes[extCode]; ok {
 		return CodeSchemaViolation
 	}

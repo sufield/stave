@@ -49,9 +49,9 @@ func HasConfiguredRetentionTier(tier string) bool {
 }
 
 // ResolveCIFailurePolicyDefault returns the CI failure policy default.
-func ResolveCIFailurePolicyDefault() string {
+func ResolveCIFailurePolicyDefault() GatePolicy {
 	cfg, path := projectConfigPtrAndPath()
-	return ResolveCIFailurePolicyWithSource(cfg, path).Value
+	return GatePolicy(ResolveCIFailurePolicyWithSource(cfg, path).Value)
 }
 
 // ResolveOutputModeDefault returns the output mode default.

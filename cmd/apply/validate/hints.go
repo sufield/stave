@@ -15,7 +15,7 @@ type hintContext struct {
 
 type hintBuilder func(issue diag.Issue, ctx hintContext) string
 
-var issueHintBuilders = map[string]hintBuilder{
+var issueHintBuilders = map[diag.Code]hintBuilder{
 	diag.CodeControlLoadFailed:       hintGenerateControl,
 	diag.CodeNoControls:              hintGenerateControl,
 	diag.CodeObservationLoadFailed:   hintIngestObservations,

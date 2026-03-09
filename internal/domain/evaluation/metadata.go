@@ -1,6 +1,10 @@
 package evaluation
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // Metadata holds typed metadata for an evaluation run.
 // It replaces the untyped Extensions map for compile-time safety.
@@ -27,7 +31,7 @@ type ControlSourceInfo struct {
 	EnabledPacks       []string          `json:"enabled_packs,omitempty"`
 	ResolvedControlIDs []string          `json:"resolved_control_ids,omitempty"`
 	RegistryVersion    string            `json:"registry_version,omitempty"`
-	RegistryHash       string            `json:"registry_hash,omitempty"`
+	RegistryHash       kernel.Digest     `json:"registry_hash,omitempty"`
 }
 
 // GitInfo captures git repository state at evaluation time.
@@ -94,7 +98,7 @@ func (m Metadata) toWire() metadataWire {
 		wire.EnabledControlPacks = append([]string(nil), m.ControlSource.EnabledPacks...)
 		wire.ResolvedControlIDs = append([]string(nil), m.ControlSource.ResolvedControlIDs...)
 		wire.PackRegistryVersion = m.ControlSource.RegistryVersion
-		wire.PackRegistryHash = m.ControlSource.RegistryHash
+		wire.PackRegistryHash = string(m.ControlSource.RegistryHash)
 	}
 	// Git metadata with nil safe handling
 	if m.Git != nil {
@@ -118,7 +122,7 @@ type Extensions struct {
 	EnabledPacks        []string          `json:"enabled_control_packs,omitempty"`
 	ResolvedControlIDs  []string          `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string            `json:"pack_registry_version,omitempty"`
-	PackRegistryHash    string            `json:"pack_registry_hash,omitempty"`
+	PackRegistryHash    kernel.Digest     `json:"pack_registry_hash,omitempty"`
 	Git                 *GitMetadata      `json:"git,omitempty"`
 }
 
