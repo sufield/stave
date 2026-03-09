@@ -112,6 +112,14 @@ func (r *Runtime) BeginProgress(label string) func() {
 	}
 }
 
+// WriteHint writes a single "Hint:\n  <command>" line to w.
+// Use for single-command follow-up guidance after an operation.
+func WriteHint(w io.Writer, command string) {
+	if command != "" {
+		fmt.Fprintf(w, "Hint:\n  %s\n", command)
+	}
+}
+
 // PrintNextSteps writes a formatted "Next steps:" block to stderr.
 // Hints are always written to stderr so they never contaminate JSON stdout.
 func (r *Runtime) PrintNextSteps(steps ...string) {

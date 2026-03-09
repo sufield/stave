@@ -64,7 +64,7 @@ func (cc *configCommand) writeConfigMutationResult(
 		return err
 	}
 	if showHint && !cmdutil.QuietEnabled(cmd) {
-		fmt.Fprintln(cc.stderrWriter(), "Hint:\n  stave config show")
+		ui.WriteHint(cc.stderrWriter(), "stave config show")
 	}
 	return nil
 }

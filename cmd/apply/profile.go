@@ -212,7 +212,7 @@ func finalizeApplyProfileRun(
 	}
 	if findingsCount > 0 {
 		if !quiet {
-			fmt.Fprintf(stderr, "Hint:\n  stave diagnose --controls %s --observations %s\n", ctlDir, inputFile)
+			ui.WriteHint(stderr, fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, inputFile))
 		}
 		return ui.ErrViolationsFound
 	}

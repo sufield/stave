@@ -16,7 +16,7 @@ func handleApplyResult(cmd *cobra.Command, result EvaluateResult) error {
 	quiet := cmdutil.QuietEnabled(cmd)
 	if result.SafetyStatus != evaluation.SafetyStatusSafe {
 		if !quiet {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Hint:\n  %s\n", result.DiagnoseHint)
+			ui.WriteHint(cmd.ErrOrStderr(), result.DiagnoseHint)
 			rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
 			rt.Quiet = quiet
 			rt.PrintNextSteps(result.NextSteps...)
