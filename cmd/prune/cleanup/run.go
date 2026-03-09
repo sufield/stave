@@ -15,10 +15,6 @@ import (
 	"github.com/sufield/stave/internal/pruner"
 )
 
-var (
-	deleteOpts deleteOptions
-)
-
 type deleteOptions struct {
 	ObservationsDir string
 	OlderThan       string
@@ -61,11 +57,11 @@ type deleteRunInput struct {
 	mode      string
 }
 
-func runDelete(cmd *cobra.Command, _ []string) error {
+func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
 	var plan deletePlan
 	return appeval.RunCleanup(appeval.CleanupDeps{
 		BuildPlan: func() (appeval.CleanupPlan, error) {
-			p, err := buildDeletePlan(cmd)
+			p, err := buildDeletePlan(cmd, opts)
 			if err != nil {
 				return appeval.CleanupPlan{}, err
 			}
@@ -93,8 +89,8 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	})
 }
 
-func buildDeletePlan(cmd *cobra.Command) (deletePlan, error) {
-	in, err := resolveDeleteInput(cmd)
+func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error) {
+	in, err := resolveDeleteInput(cmd, opts)
 	if err != nil {
 		return deletePlan{}, err
 	}
@@ -130,32 +126,32 @@ func buildDeletePlan(cmd *cobra.Command) (deletePlan, error) {
 	}, nil
 }
 
-func resolveDeleteInput(cmd *cobra.Command) (deleteRunInput, error) {
-	obsDir := fsutil.CleanUserPath(deleteOpts.ObservationsDir)
+func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput, error) {
+	obsDir := fsutil.CleanUserPath(opts.ObservationsDir)
 	if obsDir == "" {
 		return deleteRunInput{}, fmt.Errorf("--observations cannot be empty")
 	}
-	if deleteOpts.KeepMin < 0 {
-		return deleteRunInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", deleteOpts.KeepMin)
+	if opts.KeepMin < 0 {
+		return deleteRunInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", opts.KeepMin)
 	}
-	tier, err := pruneshared.ValidateRetentionTier(deleteOpts.RetentionTier)
+	tier, err := pruneshared.ValidateRetentionTier(opts.RetentionTier)
 	if err != nil {
 		return deleteRunInput{}, err
 	}
-	olderThan, err := pruneshared.ResolveOlderThan(cmd, deleteOpts.OlderThan, tier)
+	olderThan, err := pruneshared.ResolveOlderThan(cmd, opts.OlderThan, tier)
 	if err != nil {
 		return deleteRunInput{}, err
 	}
-	now, err := cmdutil.ResolveNow(deleteOpts.Now)
+	now, err := cmdutil.ResolveNow(opts.Now)
 	if err != nil {
 		return deleteRunInput{}, err
 	}
-	format, err := cmdutil.ResolveFormatValue(cmd, deleteOpts.Format)
+	format, err := cmdutil.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return deleteRunInput{}, err
 	}
 
-	dryRun := deleteOpts.DryRun || !cmdutil.ForceEnabled(cmd)
+	dryRun := opts.DryRun || !cmdutil.ForceEnabled(cmd)
 	mode := "DELETE"
 	if dryRun {
 		mode = "DRY_RUN"
@@ -167,7 +163,7 @@ func resolveDeleteInput(cmd *cobra.Command) (deleteRunInput, error) {
 		olderThan: olderThan,
 		now:       now,
 		format:    format,
-		keepMin:   deleteOpts.KeepMin,
+		keepMin:   opts.KeepMin,
 		dryRun:    dryRun,
 		quiet:     cmdutil.QuietEnabled(cmd),
 		mode:      mode,

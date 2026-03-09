@@ -218,7 +218,7 @@ func WireCommands(root *cobra.Command) {
 
 func wireSnapshotSubtree() {
 	snapshotCmd.AddCommand(enforce.DiffCmd)
-	for _, subCmd := range prune.Commands {
+	for _, subCmd := range prune.Commands() {
 		snapshotCmd.AddCommand(subCmd)
 	}
 	snapshotCmd.AddCommand(manifest.Cmd)
