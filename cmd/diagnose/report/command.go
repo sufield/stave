@@ -21,15 +21,17 @@ type reportFlagsType struct {
 	templateFile string
 }
 
-var reportFlags reportFlagsType
-
 //go:embed templates/report_default.tmpl
 var defaultReportTemplate string
 
-var ReportCmd = &cobra.Command{
-	Use:   "report",
-	Short: "Generate a plain-text report from evaluation output",
-	Long: `Report reads evaluation JSON and renders plaintext output.
+// NewReportCmd constructs the report command with closure-scoped flags.
+func NewReportCmd() *cobra.Command {
+	var flags reportFlagsType
+
+	cmd := &cobra.Command{
+		Use:   "report",
+		Short: "Generate a plain-text report from evaluation output",
+		Long: `Report reads evaluation JSON and renders plaintext output.
 
 By default it uses an embedded deterministic Go template.
 You can provide a custom template via --template-file.
@@ -47,35 +49,38 @@ Supported template syntax:
   {{ range .Slice }}...{{ end }}
   {{ json .Field }}
   {{"\n"}}` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runReport,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runReport(cmd, &flags)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.Flags().StringVarP(&flags.inputFile, "in", "i", "", "Path to evaluation JSON file (required)")
+	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
+	cmd.Flags().StringVar(&flags.templateFile, "template-file", "", "Path to custom Go template for text report output")
+	_ = cmd.MarkFlagRequired("in")
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+
+	return cmd
 }
 
-func init() {
-	ReportCmd.Flags().StringVarP(&reportFlags.inputFile, "in", "i", "", "Path to evaluation JSON file (required)")
-	ReportCmd.Flags().StringVarP(&reportFlags.format, "format", "f", "text", "Output format: text or json")
-	ReportCmd.Flags().StringVar(&reportFlags.templateFile, "template-file", "", "Path to custom Go template for text report output")
-	_ = ReportCmd.MarkFlagRequired("in")
-	_ = ReportCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-}
-
-func runReport(cmd *cobra.Command, _ []string) error {
+func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 	if err := cmdutil.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
-	reportFlags.inputFile = fsutil.CleanUserPath(reportFlags.inputFile)
-	reportFlags.templateFile = fsutil.CleanUserPath(reportFlags.templateFile)
+	inputFile := fsutil.CleanUserPath(flags.inputFile)
+	templateFile := fsutil.CleanUserPath(flags.templateFile)
 
-	eval, err := shared.LoadEvaluationEnvelope(reportFlags.inputFile)
+	eval, err := shared.LoadEvaluationEnvelope(inputFile)
 	if err != nil {
 		return err
 	}
 
 	cmdutil.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
 
-	format, err := cmdutil.ResolveFormatValue(cmd, reportFlags.format)
+	format, err := cmdutil.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
@@ -88,7 +93,7 @@ func runReport(cmd *cobra.Command, _ []string) error {
 		*eval,
 		staveversion.Version,
 		defaultReportTemplate,
-		reportFlags.templateFile,
+		templateFile,
 		cmd.OutOrStdout(),
 		quiet,
 	)

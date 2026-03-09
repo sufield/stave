@@ -20,41 +20,44 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-var (
-	fmtCheck bool
-)
+// NewFmtCmd constructs the fmt command with closure-scoped flags.
+func NewFmtCmd() *cobra.Command {
+	var checkOnly bool
 
-var FmtCmd = &cobra.Command{
-	Use:   "fmt <path>",
-	Short: "Format control and observation files deterministically",
-	Long: `Fmt normalizes file formatting for control YAML and observation JSON.
+	cmd := &cobra.Command{
+		Use:   "fmt <path>",
+		Short: "Format control and observation files deterministically",
+		Long: `Fmt normalizes file formatting for control YAML and observation JSON.
 
 Rules:
   - .yaml/.yml files are parsed as ctrl.v1 controls and emitted in canonical field order
   - .json files are parsed as obs.v0.1 snapshots and emitted with stable indentation
 
 Use --check to verify formatting without writing files.` + metadata.OfflineHelpSuffix,
-	Args:          cobra.ExactArgs(1),
-	RunE:          runFmt,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runFmt(cmd, args, checkOnly)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.Flags().BoolVar(&checkOnly, "check", false, "Check formatting only; do not write files")
+
+	return cmd
 }
 
-func init() {
-	FmtCmd.Flags().BoolVar(&fmtCheck, "check", false, "Check formatting only; do not write files")
-}
-
-func runFmt(cmd *cobra.Command, args []string) error {
+func runFmt(cmd *cobra.Command, args []string, checkOnly bool) error {
 	target := fsutil.CleanUserPath(args[0])
 	files, err := collectFormatTargets(target)
 	if err != nil {
 		return err
 	}
-	changed, checked, err := applyFormattingToTargets(cmd, files, fmtCheck)
+	changed, checked, err := applyFormattingToTargets(cmd, files, checkOnly)
 	if err != nil {
 		return err
 	}
-	return writeFmtSummary(cmd.OutOrStdout(), changed, checked, fmtCheck)
+	return writeFmtSummary(cmd.OutOrStdout(), changed, checked, checkOnly)
 }
 
 func formatFile(path string) ([]byte, bool, error) {

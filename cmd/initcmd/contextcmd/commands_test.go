@@ -13,13 +13,9 @@ func TestContextCreateUseShowDeleteFlow(t *testing.T) {
 	t.Setenv("STAVE_CONTEXTS_FILE", filepath.Join(t.TempDir(), "contexts.yaml"))
 
 	project := t.TempDir()
-	contextCreateDir = project
-	contextCreateConfigFile = "stave.yaml"
-	contextCreateControls = "controls"
-	contextCreateObserv = "observations"
 
 	createCmd := &cobra.Command{}
-	if err := runContextCreate(createCmd, []string{"prod"}); err != nil {
+	if err := runContextCreate(createCmd, []string{"prod"}, project, "stave.yaml", "controls", "observations"); err != nil {
 		t.Fatalf("create: %v", err)
 	}
 
@@ -31,8 +27,7 @@ func TestContextCreateUseShowDeleteFlow(t *testing.T) {
 	showCmd := &cobra.Command{}
 	var showBuf bytes.Buffer
 	showCmd.SetOut(&showBuf)
-	contextFormat = "json"
-	if err := runContextShow(showCmd, nil); err != nil {
+	if err := runContextShow(showCmd, "json"); err != nil {
 		t.Fatalf("show: %v", err)
 	}
 	out := showBuf.String()
@@ -50,21 +45,16 @@ func TestContextListSorted(t *testing.T) {
 	t.Setenv("STAVE_CONTEXTS_FILE", filepath.Join(t.TempDir(), "contexts.yaml"))
 
 	project := t.TempDir()
-	contextCreateDir = project
-	contextCreateConfigFile = "stave.yaml"
-	contextCreateControls = "controls"
-	contextCreateObserv = "observations"
-	if err := runContextCreate(&cobra.Command{}, []string{"zeta"}); err != nil {
+	if err := runContextCreate(&cobra.Command{}, []string{"zeta"}, project, "stave.yaml", "controls", "observations"); err != nil {
 		t.Fatalf("create zeta: %v", err)
 	}
-	if err := runContextCreate(&cobra.Command{}, []string{"alpha"}); err != nil {
+	if err := runContextCreate(&cobra.Command{}, []string{"alpha"}, project, "stave.yaml", "controls", "observations"); err != nil {
 		t.Fatalf("create alpha: %v", err)
 	}
 	listCmd := &cobra.Command{}
 	var buf bytes.Buffer
 	listCmd.SetOut(&buf)
-	contextFormat = "text"
-	if err := runContextList(listCmd, nil); err != nil {
+	if err := runContextList(listCmd, "text"); err != nil {
 		t.Fatalf("list: %v", err)
 	}
 	out := buf.String()

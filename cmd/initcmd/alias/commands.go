@@ -14,8 +14,6 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-var aliasFormat string
-
 var aliasNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // rootCmd is set by the wiring layer via SetRootCmd after root command creation.
@@ -27,17 +25,27 @@ func SetRootCmd(cmd *cobra.Command) {
 	rootCmd = cmd
 }
 
-var AliasCmd = &cobra.Command{
-	Use:   "alias",
-	Short: "Manage command aliases",
-	Long:  "Create, list, and delete command aliases stored in user config." + metadata.OfflineHelpSuffix,
-	Args:  cobra.NoArgs,
+// NewAliasCmd constructs the alias command tree with closure-scoped flags.
+func NewAliasCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "alias",
+		Short: "Manage command aliases",
+		Long:  "Create, list, and delete command aliases stored in user config." + metadata.OfflineHelpSuffix,
+		Args:  cobra.NoArgs,
+	}
+
+	cmd.AddCommand(newAliasSetCmd())
+	cmd.AddCommand(newAliasListCmd())
+	cmd.AddCommand(newAliasDeleteCmd())
+
+	return cmd
 }
 
-var AliasSetCmd = &cobra.Command{
-	Use:   "set <name> <command>",
-	Short: "Create or update an alias",
-	Long: `Set creates or updates a command alias.
+func newAliasSetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "set <name> <command>",
+		Short: "Create or update an alias",
+		Long: `Set creates or updates a command alias.
 
 Alias names must match [a-zA-Z0-9_-]+ and must not collide with
 existing command names.
@@ -45,39 +53,44 @@ existing command names.
 Examples:
   stave alias set ap "apply --controls controls/s3 --observations examples/observations --max-unsafe 24h"
   stave alias set q "apply --quiet"` + metadata.OfflineHelpSuffix,
-	Args:          cobra.ExactArgs(2),
-	RunE:          runAliasSet,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+		Args:          cobra.ExactArgs(2),
+		RunE:          runAliasSet,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 }
 
-var AliasListCmd = &cobra.Command{
-	Use:           "list",
-	Short:         "List all aliases",
-	Long:          "List all defined aliases from user config." + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runAliasList,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+func newAliasListCmd() *cobra.Command {
+	var format string
+
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all aliases",
+		Long:  "List all defined aliases from user config." + metadata.OfflineHelpSuffix,
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runAliasList(cmd, format)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+
+	return cmd
 }
 
-var AliasDeleteCmd = &cobra.Command{
-	Use:           "delete <name>",
-	Short:         "Delete an alias",
-	Long:          "Delete removes an alias from user config." + metadata.OfflineHelpSuffix,
-	Args:          cobra.ExactArgs(1),
-	RunE:          runAliasDelete,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
-
-func init() {
-	AliasListCmd.Flags().StringVarP(&aliasFormat, "format", "f", "text", "Output format: text or json")
-	_ = AliasListCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-
-	AliasCmd.AddCommand(AliasSetCmd)
-	AliasCmd.AddCommand(AliasListCmd)
-	AliasCmd.AddCommand(AliasDeleteCmd)
+func newAliasDeleteCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:           "delete <name>",
+		Short:         "Delete an alias",
+		Long:          "Delete removes an alias from user config." + metadata.OfflineHelpSuffix,
+		Args:          cobra.ExactArgs(1),
+		RunE:          runAliasDelete,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 }
 
 func runAliasSet(_ *cobra.Command, args []string) error {
@@ -118,10 +131,10 @@ type aliasEntry struct {
 	Command string `json:"command"`
 }
 
-func runAliasList(cmd *cobra.Command, _ []string) error {
+func runAliasList(cmd *cobra.Command, rawFormat string) error {
 	aliases := cmdutil.LoadUserAliases()
 
-	format, err := cmdutil.ResolveFormatValue(cmd, aliasFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}

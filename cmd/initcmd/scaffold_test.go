@@ -9,21 +9,6 @@ import (
 )
 
 func TestInitCreatesScaffold(t *testing.T) {
-	oldForce := globalForce
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	globalForce = false
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		globalForce = oldForce
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 
 	root := GetRootCmd()
@@ -118,21 +103,6 @@ func TestInitCreatesScaffold(t *testing.T) {
 }
 
 func TestInitSkipsExistingFilesWithoutForce(t *testing.T) {
-	oldForce := globalForce
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	globalForce = false
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		globalForce = oldForce
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	if err := os.MkdirAll(projectDir, 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
@@ -161,21 +131,6 @@ func TestInitSkipsExistingFilesWithoutForce(t *testing.T) {
 }
 
 func TestInitForceOverwritesExistingFiles(t *testing.T) {
-	oldForce := globalForce
-	oldProfile := initFlags.profile
-	oldWithGHA := initFlags.withGitHubActions
-	oldCaptureCadence := initFlags.captureCadence
-	globalForce = false
-	initFlags.profile = ""
-	initFlags.withGitHubActions = false
-	initFlags.captureCadence = "daily"
-	defer func() {
-		globalForce = oldForce
-		initFlags.profile = oldProfile
-		initFlags.withGitHubActions = oldWithGHA
-		initFlags.captureCadence = oldCaptureCadence
-	}()
-
 	projectDir := filepath.Join(t.TempDir(), "stave-project")
 	if err := os.MkdirAll(projectDir, 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)

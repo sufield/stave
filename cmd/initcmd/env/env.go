@@ -12,38 +12,48 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-var envListFormat string
-
-var EnvCmd = &cobra.Command{
-	Use:   "env",
-	Short: "Manage environment variables",
-	Long: `Env groups commands for discovering STAVE_* environment variables
+// NewEnvCmd constructs the env command tree with closure-scoped flags.
+func NewEnvCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "env",
+		Short: "Manage environment variables",
+		Long: `Env groups commands for discovering STAVE_* environment variables
 supported by Stave.
 
 Examples:
   stave env list
   stave env list --format json` + metadata.OfflineHelpSuffix,
-	Args: cobra.NoArgs,
+		Args: cobra.NoArgs,
+	}
+
+	cmd.AddCommand(newEnvListCmd())
+
+	return cmd
 }
 
-var EnvListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List supported STAVE_* environment variables",
-	Long: `List prints every supported STAVE_* environment variable with its
+func newEnvListCmd() *cobra.Command {
+	var format string
+
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List supported STAVE_* environment variables",
+		Long: `List prints every supported STAVE_* environment variable with its
 description, category, and current value.
 
 Examples:
   stave env list
   stave env list --format json` + metadata.OfflineHelpSuffix,
-	Args:          cobra.NoArgs,
-	RunE:          runEnvList,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-}
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runEnvList(cmd, format)
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 
-func init() {
-	EnvListCmd.Flags().StringVarP(&envListFormat, "format", "f", "text", "Output format: text or json")
-	EnvCmd.AddCommand(EnvListCmd)
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+
+	return cmd
 }
 
 type envListEntry struct {
@@ -54,10 +64,10 @@ type envListEntry struct {
 	DefaultValue string `json:"default_value,omitempty"`
 }
 
-func runEnvList(cmd *cobra.Command, _ []string) error {
+func runEnvList(cmd *cobra.Command, rawFormat string) error {
 	vars := envvar.All()
 
-	format, err := cmdutil.ResolveFormatValue(cmd, envListFormat)
+	format, err := cmdutil.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
 		return err
 	}
