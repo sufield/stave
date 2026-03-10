@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // qualitySeverity classifies the severity of a snapshot quality issue.
@@ -31,7 +32,7 @@ type qualitySummary struct {
 
 type qualityReport struct {
 	SchemaVersion string         `json:"schema_version"`
-	Kind          string         `json:"kind"`
+	Kind          kernel.OutputKind `json:"kind"`
 	CheckedAt     time.Time      `json:"checked_at"`
 	Pass          bool           `json:"pass"`
 	Strict        bool           `json:"strict"`

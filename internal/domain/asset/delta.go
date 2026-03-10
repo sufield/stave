@@ -100,7 +100,7 @@ func (s ObservationDeltaSummary) MarshalJSON() ([]byte, error) {
 // between two points in time. It is the diff.v0.1 output.
 type ObservationDelta struct {
 	SchemaVersion kernel.Schema           `json:"schema_version"`
-	Kind          string                  `json:"kind"`
+	Kind          kernel.OutputKind       `json:"kind"`
 	FromCaptured  time.Time               `json:"from_captured_at"`
 	ToCaptured    time.Time               `json:"to_captured_at"`
 	Summary       ObservationDeltaSummary `json:"summary"`
@@ -140,7 +140,7 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 
 	delta := ObservationDelta{
 		SchemaVersion: kernel.SchemaDiff,
-		Kind:          "observation_delta",
+		Kind:          kernel.KindObservationDelta,
 		FromCaptured:  prev.CapturedAt.UTC(),
 		ToCaptured:    curr.CapturedAt.UTC(),
 		Changes:       make([]AssetDiff, 0),
