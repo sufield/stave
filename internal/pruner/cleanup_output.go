@@ -17,8 +17,8 @@ type CleanupFile struct {
 	CapturedAt time.Time `json:"captured_at"`
 }
 
-// CleanupOutputCore holds the fields shared by PruneOutput and ArchiveOutput.
-type CleanupOutputCore struct {
+// CleanupOutput holds the fields shared by PruneOutput and ArchiveOutput.
+type CleanupOutput struct {
 	SchemaVersion   string        `json:"schema_version"`
 	Kind            string        `json:"kind"`
 	CheckedAt       time.Time     `json:"checked_at"`
@@ -35,17 +35,17 @@ type CleanupOutputCore struct {
 
 // PruneOutput is the structured output for prune command.
 type PruneOutput struct {
-	CleanupOutputCore
+	CleanupOutput
 }
 
 // ArchiveOutput is the structured output for archive command.
 type ArchiveOutput struct {
-	CleanupOutputCore
+	CleanupOutput
 	ArchiveDir string `json:"archive_dir"`
 }
 
-// CleanupInputCore holds the fields shared by PruneOutputInput and ArchiveOutputInput.
-type CleanupInputCore struct {
+// CleanupInput holds the shared fields for building prune/archive output.
+type CleanupInput struct {
 	Now             time.Time
 	Mode            string
 	DryRun          bool
@@ -57,19 +57,14 @@ type CleanupInputCore struct {
 	CandidateFiles  []SnapshotFile
 }
 
-// PruneOutputInput holds all data needed to build prune output.
-type PruneOutputInput struct {
-	CleanupInputCore
-}
-
 // ArchiveOutputInput holds all data needed to build archive output.
 type ArchiveOutputInput struct {
-	CleanupInputCore
+	CleanupInput
 	ArchiveDir string
 }
 
-func buildCleanupOutputCore(schema kernel.Schema, kind string, input CleanupInputCore) CleanupOutputCore {
-	return CleanupOutputCore{
+func buildCleanupOutput(schema kernel.Schema, kind string, input CleanupInput) CleanupOutput {
+	return CleanupOutput{
 		SchemaVersion:   string(schema),
 		Kind:            kind,
 		CheckedAt:       input.Now.UTC(),
@@ -86,17 +81,17 @@ func buildCleanupOutputCore(schema kernel.Schema, kind string, input CleanupInpu
 }
 
 // BuildPruneOutput creates prune JSON output payload.
-func BuildPruneOutput(input PruneOutputInput) PruneOutput {
+func BuildPruneOutput(input CleanupInput) PruneOutput {
 	return PruneOutput{
-		CleanupOutputCore: buildCleanupOutputCore(kernel.SchemaSnapshotPrune, "snapshot_prune", input.CleanupInputCore),
+		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotPrune, "snapshot_prune", input),
 	}
 }
 
 // BuildArchiveOutput creates archive JSON output payload.
 func BuildArchiveOutput(input ArchiveOutputInput) ArchiveOutput {
 	return ArchiveOutput{
-		CleanupOutputCore: buildCleanupOutputCore(kernel.SchemaSnapshotArchive, "snapshot_archive", input.CleanupInputCore),
-		ArchiveDir:        input.ArchiveDir,
+		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotArchive, "snapshot_archive", input.CleanupInput),
+		ArchiveDir:    input.ArchiveDir,
 	}
 }
 
