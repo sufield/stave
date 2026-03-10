@@ -144,7 +144,7 @@ func TestValidateApplyFlags(t *testing.T) {
 	t.Run("controls path is a file", func(t *testing.T) {
 		files, _ := filepath.Glob(filepath.Join(fixture, "controls", "*.yaml"))
 		if len(files) == 0 {
-			t.Skip("no control YAML files in fixture")
+			t.Fatal("no control YAML files in fixture: e2e-01-violation/controls must contain at least one *.yaml file")
 		}
 		flags := &applyFlagsType{
 			controlsDir:     files[0],

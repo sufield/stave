@@ -298,10 +298,21 @@ func (staveConfigResolver) CIFailurePolicy(cfg *configservice.Config, cfgPath st
 var ConfigKeyService = configservice.New(ProjectConfigFile, staveConfigValidator{}, staveConfigResolver{}, staveKeepMinResolver{})
 
 // ConfigKeyCompletions returns config key completions including retention tier
-// variants from the project config. Previously duplicated in cmd/ and
-// cmd/initcmd/config/.
+// variants from the project config. It delegates to ConfigKeyCompletionsFrom
+// using the package-level ConfigKeyService.
 func ConfigKeyCompletions() []string {
-	baseKeys := ConfigKeyService.TopLevelKeys()
+	return ConfigKeyCompletionsFrom(ConfigKeyService)
+}
+
+// ConfigKeyCompletionsFrom returns config key completions using the supplied
+// service. Callers that hold an injected *configservice.Service (e.g. the
+// config command tree) should prefer this function over ConfigKeyCompletions so
+// they do not depend on the package-level global.
+func ConfigKeyCompletionsFrom(svc *configservice.Service) []string {
+	if svc == nil {
+		svc = ConfigKeyService
+	}
+	baseKeys := svc.TopLevelKeys()
 	tiers := []string{DefaultRetentionTier}
 
 	if cfg, ok := FindProjectConfig(); ok {

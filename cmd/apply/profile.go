@@ -80,7 +80,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return err
 	}
 
-	progress := ui.NewRuntime(nil, nil)
+	progress := ui.DefaultRuntime()
 	progress.Quiet = opts.quiet
 	done := progress.BeginProgress("apply profile observations")
 	defer done()

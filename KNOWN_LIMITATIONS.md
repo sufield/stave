@@ -4,44 +4,104 @@ This document tracks known limitations in the Stave CLI that are candidates for 
 
 ## CLI
 
-### Alias expansion does not respect shell quoting
+### ~~Alias expansion does not respect shell quoting~~ ✅ Fixed
 
-**Area:** `cmd/runtime_helpers.go` — `expandAliasIfMatch()`
+**Area:** `cmd/runtime_helpers.go` — `expandAliasIfMatch()`  
+**Fixed in:** `cmd/cmdutil/shellwords.go`
 
-Alias values are tokenized with `strings.Fields`, which splits on whitespace without respecting shell quoting rules. Alias values that contain quoted arguments with embedded spaces will not tokenize correctly.
+`strings.Fields` has been replaced with `cmdutil.ParseShellTokens`, a POSIX
+shell-aware tokenizer that handles single quotes, double quotes, and backslash
+escapes. Alias values that contain quoted arguments with embedded spaces now
+expand correctly.
 
-**Example:**
+**Example (previously broken, now works):**
 
 ```
 stave alias set myalias 'apply --controls "path with spaces/controls"'
 stave myalias
-# "path with spaces/controls" is split into three tokens instead of one
+# "path with spaces/controls" is now preserved as a single token
 ```
 
-**Fix:** Replace `strings.Fields` with a shell-aware tokenizer that handles single quotes, double quotes, and backslash escapes (e.g., POSIX `shellwords` parsing).
+Malformed alias values (unclosed quotes, trailing backslash) produce a clear
+error on stderr instead of silently misexpanding.
 
-### Test `t.Skip` may mask regressions
+---
+
+### ~~Test `t.Skip` may mask regressions~~ ✅ Fixed
 
 **Area:** Various `*_test.go` files
 
-Some tests use `t.Skip` to bypass execution when preconditions are not met (e.g., missing fixtures, unavailable binaries). If the precondition is expected to always hold in CI, a `t.Skip` can silently hide a real regression.
+All `t.Skip` call sites have been audited. Two sites that guarded against
+conditions that should always hold in CI were converted to `t.Fatal`:
 
-**Fix:** Audit `t.Skip` call sites and convert to `t.Fatal` where the precondition should always be satisfied in CI. Reserve `t.Skip` for genuinely optional tests (e.g., integration tests that require external services).
+- `cmd/apply/unit_test.go` — "no control YAML files in fixture": the
+  `e2e-01-violation/controls/` directory always contains at least one `.yaml`
+  file in the repository.
+- `cmd/apply/profile_e2e_test.go` — "input file not found": the
+  `testdata/e2e/aws-s3-obs-{public,private}/observations.json` files are
+  committed to the repository.
 
-### defaultComposition is an unexported package-level variable
+The remaining `t.Skip` call sites are genuinely optional and have been left
+unchanged:
 
-**Area:** `cmd/cmdutil/compose/infra.go` — `defaultComposition`
+| File | Reason for keeping `t.Skip` |
+|---|---|
+| `cmd/doctor/handler_test.go` | `chmod` behaviour is not guaranteed on all CI platforms |
+| `internal/adapters/gitinfo/repo_test.go` | Requires the `git` binary to be installed |
+| `internal/adapters/input/controls/yaml/loader_test.go` | References a canonical repo path that may not exist outside the main checkout |
+| `internal/config/store_test.go` | `os.UserConfigDir()` may be unavailable in some container environments |
+| `internal/platform/fsutil/hash_test.go` | Explicitly opted out via `testing.Short()` — creates large sparse files |
+| `internal/platform/fsutil/io_test.go` | Symlink tests are unreliable on Windows |
 
-`defaultComposition` is an unexported `var` holding adapter constructor functions. It is read through convenience functions (`NewObservationRepository`, `NewControlRepository`, etc.) used throughout the command layer. Tests that need to override it use `compose.OverrideForTest(t, ...)` which restores the original via `t.Cleanup`.
+---
 
-This is safe in practice because CLI commands execute sequentially, but it prevents future test parallelism and makes the dependency graph implicit.
+### ~~`defaultComposition` is an unexported package-level variable~~ ✅ Fixed (structural)
 
-**Fix (future):** Inject `Composition` through the `App` struct and pass it to command constructors. Replace the convenience functions with methods on the injected composition.
+**Area:** `cmd/cmdutil/compose/infra.go` — `defaultComposition`  
+**Fixed in:** `cmd/root.go`, `cmd/bootstrap.go`, `cmd/cmdutil/compose/infra.go`
 
-### ConfigKeyService is a write-once package global
+`App` now owns the composition explicitly via the `Composition compose.Composition`
+field, initialised from `compose.DefaultComposition()` in `NewApp()`.
+`compose.UseComposition(c)` is called in `App.bootstrap` (the
+`PersistentPreRunE` hook) so that all package-level convenience functions
+(`NewObservationRepository`, `NewControlRepository`, etc.) delegate through
+`App.Composition` for the lifetime of the invocation.
 
-**Area:** `cmd/cmdutil/projconfig/config_resolution.go` — `ConfigKeyService`
+`WireCommands` and `WireMetaCommands` now accept `*App` instead of
+`*cobra.Command`, giving them access to all App-level dependencies and
+establishing the injection path for future work.
 
-`ConfigKeyService` is a package-level `var` initialized at load time with stateless dependencies. It is effectively immutable and safe in sequential CLI execution, but creates an implicit dependency.
+The `compose.OverrideForTest` helper remains available for tests that need
+scoped overrides with automatic cleanup.
 
-**Fix (future):** Pass `ConfigKeyService` as a dependency through command constructors.
+**Remaining future work:** thread `Composition` through individual command
+constructors (apply, validate, verify, diagnose, enforce, prune, etc.) so each
+handler receives the composition explicitly rather than reading it from the
+package global. This completes the dependency-injection path and enables
+parallel test execution across `App` instances.
+
+---
+
+### ~~`ConfigKeyService` is a write-once package global~~ ✅ Fixed
+
+**Area:** `cmd/cmdutil/projconfig/config_resolution.go` — `ConfigKeyService`  
+**Fixed in:** `cmd/root.go`, `cmd/commands.go`, `cmd/initcmd/config/`
+
+`App` now holds a `ConfigKeyService *configservice.Service` field, initialised
+from `projconfig.ConfigKeyService` in `NewApp()` and passed explicitly to
+`initconfig.NewConfigCmd` through `WireCommands`.
+
+The config command tree (`commands.go`, `handlers.go`, `store.go`) no longer
+calls the package-level `projconfig.ConfigKeyService` directly:
+
+- `NewConfigCmd(rt, svc)` accepts the service as a required parameter; passing
+  `nil` falls back to the package-level default for backward compatibility.
+- `configCommand` stores the injected service and passes it to
+  `projectConfigStore` and to the `resolveServiceConfigKeyValue` /
+  `deleteConfigKeyValue` / `setConfigKeyValue` helpers.
+- Shell-completion `ValidArgsFunction` closures use
+  `projconfig.ConfigKeyCompletionsFrom(cc.svc)` instead of the global
+  `ConfigKeyCompletions()`.
+- `projconfig.ConfigKeyCompletionsFrom(svc)` was added alongside the existing
+  `ConfigKeyCompletions()` (which now delegates to it) so callers that hold an
+  injected service can avoid the package global.

@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
-	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -13,8 +13,12 @@ import (
 // expandAliasIfMatch checks if os.Args[1] matches a user-defined alias.
 // If so, it replaces the command arguments with the expanded alias tokens
 // followed by any extra arguments the user passed.
+//
+// Alias values are tokenized with a POSIX shell-aware parser that respects
+// single quotes, double quotes, and backslash escapes, so alias values like
+// 'apply --controls "path with spaces/controls"' expand correctly.
 func (a *App) expandAliasIfMatch() {
-	if len(os.Args) < 2 || strings.HasPrefix(os.Args[1], "-") {
+	if len(os.Args) < 2 || os.Args[1][0] == '-' {
 		return
 	}
 	aliases := projconfig.LoadUserAliases()
@@ -25,9 +29,14 @@ func (a *App) expandAliasIfMatch() {
 	if !ok {
 		return
 	}
-	// Note: strings.Fields splits on whitespace without respecting shell quoting.
-	// Alias values with quoted arguments containing spaces won't tokenize correctly.
-	tokens := strings.Fields(expanded)
+	tokens, err := cmdutil.ParseShellTokens(expanded)
+	if err != nil {
+		// Malformed alias value: surface the error via stderr and leave
+		// os.Args unchanged so the CLI produces a "command not found" error
+		// rather than silently misexpanding.
+		fmt.Fprintf(os.Stderr, "stave: alias %q: %v\n", os.Args[1], err)
+		return
+	}
 	newArgs := append(tokens, os.Args[2:]...)
 	a.Root.SetArgs(newArgs)
 }

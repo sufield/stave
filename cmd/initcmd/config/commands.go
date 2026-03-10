@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -15,16 +16,30 @@ type ConfigOptions struct {
 type configCommand struct {
 	rt   *ui.Runtime
 	opts *ConfigOptions
+	// svc is the config-key resolution service. It must not be nil; pass
+	// projconfig.ConfigKeyService for the standard default.
+	svc *configservice.Service
 }
 
 // NewConfigCmd builds the config command tree with runtime-aware behavior.
-func NewConfigCmd(rt *ui.Runtime) *cobra.Command {
+//
+// rt is the output runtime; pass ui.DefaultRuntime() to use the process's
+// standard streams. If nil, DefaultRuntime() is used automatically.
+//
+// svc is the config-key resolution service and must not be nil. Pass
+// projconfig.ConfigKeyService for the standard default. Passing nil panics
+// immediately so the programming error surfaces at construction time rather
+// than as an opaque nil-pointer dereference during command execution.
+func NewConfigCmd(rt *ui.Runtime, svc *configservice.Service) *cobra.Command {
 	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
+		rt = ui.DefaultRuntime()
+	}
+	if svc == nil {
+		panic("NewConfigCmd: svc must not be nil; pass projconfig.ConfigKeyService for the default")
 	}
 
 	opts := &ConfigOptions{Format: "text"}
-	cc := &configCommand{rt: rt, opts: opts}
+	cc := &configCommand{rt: rt, opts: opts, svc: svc}
 
 	cmd := &cobra.Command{
 		Use:   "config",
@@ -63,7 +78,7 @@ Supported keys:
   snapshot_retention_tiers.<tier>` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-			return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+			return projconfig.ConfigKeyCompletionsFrom(cc.svc), cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cc.runConfigGet(cmd, args[0])
@@ -91,7 +106,7 @@ Supported keys:
 		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+				return projconfig.ConfigKeyCompletionsFrom(cc.svc), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
 				return []string{string(projconfig.GatePolicyAny), string(projconfig.GatePolicyNew), string(projconfig.GatePolicyOverdue)}, cobra.ShellCompDirectiveNoFileComp
@@ -118,7 +133,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return projconfig.ConfigKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
+				return projconfig.ConfigKeyCompletionsFrom(cc.svc), cobra.ShellCompDirectiveNoFileComp
 			}
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		},

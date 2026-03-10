@@ -10,20 +10,23 @@ A configuration analysis engine that detects insecure configurations in your clo
 
 ## Why Stave exists
 
-Most existing S3 security tools share a blind spot. They treat Block Public Access as the definitive signal for public exposure. When BPA is enabled, buckets pass — even when legacy ACLs still grant public read or write. AWS Trusted Advisor is the most prominent example.                                                                     
-                                                                  
-Stave catches what these tools miss. It evaluates the full configuration surface — ACLs, bucket policies, and BPA settings — against composable predicate logic, not a single-flag heuristic.
+Cloud security tools fall into two camps: runtime scanners that require credentials and network access, and IaC linters that only see templates before deployment. Neither evaluates actual running configurations offline, tracks how long misconfigurations persist, or lets you define custom safety invariants as composable logic.
 
-It works from local observation snapshots: offline, deterministic, and credential-free. No API calls, no runtime agents, no network access at scan time.
+Stave fills this gap. Its evaluation engine operates on arbitrary asset properties using a generic predicate language — any vendor, any asset type, any JSON property shape. Controls are YAML-defined, composable, and evaluated deterministically from local snapshots. No API calls, no runtime agents, no network access at scan time.
+
+The first built-in control pack targets AWS S3 — where existing tools share a blind spot (treating Block Public Access as the sole signal for exposure, missing legacy ACL grants). But the engine is not S3-specific: the same predicate operators, duration tracking, and enforcement pipeline apply to any infrastructure asset you can capture as a JSON snapshot.
 
 ## What Stave does
 
 Stave reads point-in-time configuration snapshots and evaluates them against YAML-defined safety controls:
 
-- **43 built-in S3 controls** — public exposure, ACL escalation, encryption, versioning, lifecycle, object lock, logging, governance, takeover prevention
+- **Generic predicate engine** — evaluates arbitrary JSON properties using composable `any`/`all` logic with operators like `eq`, `ne`, `in`, `missing`, `contains`, field comparisons, and more
+- **Any vendor, any asset type** — observations carry a vendor string and asset type; the engine treats all assets uniformly
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across multiple snapshots
+- **Custom control authoring** — define safety invariants in YAML for any asset type without code changes
 - **Deterministic output** — same input always produces same findings
 - **Enforcement artifacts** — generates fix plans with specific remediation actions
+- **43 built-in S3 controls** — first control pack covers public exposure, ACL escalation, encryption, versioning, lifecycle, object lock, logging, governance, and takeover prevention
 
 All evaluation runs locally. No cloud credentials. No network access. Air-gapped by design.
 
@@ -86,6 +89,16 @@ Capture → Validate → Apply → Act
 
 Snapshots must conform to the [observation contract](docs/observation-contract.md). You need at least two snapshots (two points in time) for Stave to calculate unsafe duration windows.
 
+## Extensibility
+
+The core engine is vendor-neutral and asset-type-agnostic. To evaluate a new asset type:
+
+1. **Capture** — export asset configurations as JSON conforming to `obs.v0.1` (any vendor, any asset type, arbitrary JSON properties)
+2. **Author controls** — write YAML controls using the `ctrl.v1` schema with predicates over your asset's property paths
+3. **Evaluate** — `stave apply --controls ./my-controls --observations ./my-snapshots`
+
+No code changes required. The predicate engine resolves dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
+
 ## How Stave compares
 
 | Category | Examples | No credentials needed | Offline snapshots | Deterministic | Duration aware | Enforcement |
@@ -118,7 +131,7 @@ Details: [Security and Trust](docs/trust/01-security-and-trust.md) | [Threat Mod
 
 ## Built-in controls
 
-Stave ships 43 S3 controls across 15 categories:
+Stave ships 43 S3 controls across 15 categories as its first control pack. Custom controls for any asset type can be authored in the same YAML format and loaded from any directory (`stave apply --controls /path/to/controls/`).
 
 | Category | Controls | What they detect |
 |----------|:---:|-----------------|
@@ -180,7 +193,7 @@ validate → plan → apply → diagnose
 | Term | Definition |
 |------|------------|
 | **Snapshot** | Point-in-time observation of infrastructure assets (JSON) |
-| **Asset** | A single infrastructure component (e.g., S3 bucket) with properties |
+| **Asset** | A single infrastructure component with a vendor, type, and arbitrary JSON properties |
 | **Control** | A safety rule assets must satisfy (YAML, `ctrl.v1` schema) |
 | **Unsafe predicate** | Conditions that mark an asset as unsafe |
 | **Finding** | A detected violation with evidence and remediation guidance |
@@ -201,9 +214,11 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 **v0.0.2**
 
-- AWS S3 only
-- Configuration snapshots only
-- Offline evaluation
+- Engine supports any vendor and asset type
+- Built-in control pack: AWS S3 (43 controls)
+- Built-in extraction: AWS S3 (`stave ingest --profile aws-s3`)
+- Custom controls and observations supported for any asset type
+- Offline evaluation only
 
 ### Schema stability
 

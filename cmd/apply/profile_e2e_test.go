@@ -74,7 +74,7 @@ func TestApplyProfileE2E(t *testing.T) {
 			goldenFile := filepath.Join(baseDir, "golden.json")
 
 			if _, err := os.Stat(inputFile); err != nil {
-				t.Skipf("input file not found: %s", inputFile)
+				t.Fatalf("input file not found (testdata must be present in repo): %s", inputFile)
 			}
 
 			cmd := exec.Command(binPath,

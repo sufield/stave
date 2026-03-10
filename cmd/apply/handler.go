@@ -82,7 +82,7 @@ func executeApply(
 	}
 	defer deps.Close()
 
-	progress := ui.NewRuntime(nil, nil)
+	progress := ui.DefaultRuntime()
 	progress.Quiet = cmdutil.QuietEnabled(cmd)
 	done := progress.BeginProgress("apply controls against observations")
 	defer done()

@@ -90,7 +90,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	cmd.SetErr(&buf)
 
 	// Exercise full validate command flow (directory mode).
-	err := runValidateWithOptions(cmd, ui.NewRuntime(nil, nil), opts)
+	err := runValidateWithOptions(cmd, ui.DefaultRuntime(), opts)
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v", err)
 	}
@@ -320,7 +320,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 
 // TestValidateHelpText verifies validate command help contains required sections.
 func TestValidateHelpText(t *testing.T) {
-	help := NewCmd(nil).Long
+	help := NewCmd(ui.DefaultRuntime()).Long
 	required := []string{"Purpose:", "Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {

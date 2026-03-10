@@ -45,7 +45,7 @@ func (o *options) validate() error {
 // NewCmd builds the extractor command tree.
 func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
+		rt = ui.DefaultRuntime()
 	}
 
 	opts := defaultOptions()

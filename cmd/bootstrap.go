@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
@@ -16,6 +17,15 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
+	// Activate the composition owned by this App instance so that all
+	// package-level convenience functions (compose.NewObservationRepository,
+	// compose.NewControlRepository, etc.) delegate through App.Composition
+	// rather than the package initialiser default.
+	//
+	// CLI commands execute sequentially, so replacing the package-level
+	// variable here is safe. For parallel test isolation, use
+	// compose.OverrideForTest instead.
+	compose.UseComposition(a.Composition)
 	return a.initLogger()
 }
 

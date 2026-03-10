@@ -164,7 +164,7 @@ func persistSessionStateIfApplicable(args []string) string {
 }
 
 func (a *App) printWorkflowHandoff(args []string, projectRoot string) {
-	rt := ui.NewRuntime(nil, nil)
+	rt := ui.DefaultRuntime()
 	rt.Quiet = a.Flags.Quiet
 	rt.PrintWorkflowHandoff(ui.WorkflowHandoffRequest{
 		Args:        args,
