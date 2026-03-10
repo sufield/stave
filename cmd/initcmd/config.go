@@ -91,7 +91,7 @@ Uncomment the ` + "`cli_defaults`" + ` keys you want for this project shell.
 ` + obsConvertCmd + `
 ` + "```" + `
 
-2. Evaluate against built-in checks and diagnose:
+2. Apply built-in checks and diagnose:
 ` + "```bash" + `
 stave apply --observations ./observations --format json > output/evaluation.json
 stave diagnose --observations ./observations --previous-output output/evaluation.json

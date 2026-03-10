@@ -72,7 +72,7 @@ func scaffoldGitHubActionsEvaluation() string {
             --observations ./observations \
             --strict
 
-      - name: Evaluate and generate machine-readable output
+      - name: Apply controls and generate machine-readable output
         run: |
           mkdir -p output
           stave apply \
