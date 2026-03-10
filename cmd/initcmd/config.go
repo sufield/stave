@@ -8,7 +8,7 @@ import (
 func scaffoldGitignore() string {
 	return `# Stave raw capture inputs (sensitive by default)
 snapshots/raw/*
-!snapshots/raw/*.sample.*
+!snapshots/raw/*.example.*
 
 # Normalized observations often contain asset identifiers
 observations/*.json

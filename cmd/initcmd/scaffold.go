@@ -245,12 +245,12 @@ func scaffoldBaseFiles(opts scaffoldOptions) map[string]string {
 				"enabled_control_packs:\n" +
 				"  - s3",
 		),
-		"observations/2026-01-11T000000Z.json":  normalizeTemplate(templateObservation),
-		"observations/2026-01-18T000000Z.json":  strings.ReplaceAll(normalizeTemplate(templateObservation), "2026-01-11T00:00:00Z", "2026-01-18T00:00:00Z"),
-		"snapshots/raw/observation.sample.json": normalizeTemplate(templateObservationSample),
-		"controls/control.sample.yaml":          normalizeTemplate(templateControlSample),
-		"stave.sample.yaml":                     normalizeTemplate(templateStaveConfigSample),
-		"output/.gitkeep":                       "",
+		"observations/2026-01-11T000000Z.json":   normalizeTemplate(templateObservation),
+		"observations/2026-01-18T000000Z.json":   strings.ReplaceAll(normalizeTemplate(templateObservation), "2026-01-11T00:00:00Z", "2026-01-18T00:00:00Z"),
+		"snapshots/raw/observation.example.json": normalizeTemplate(templateObservationSample),
+		"controls/control.example.yaml":          normalizeTemplate(templateControlSample),
+		"stave.example.yaml":                     normalizeTemplate(templateStaveConfigSample),
+		"output/.gitkeep":                        "",
 	}
 }
 
@@ -307,7 +307,7 @@ func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest, quiet bool) {
 	if !req.DryRun {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "Project manifest: %s\n", projectConfigFile)
-		fmt.Fprintln(w, "Template reference: stave.sample.yaml")
+		fmt.Fprintln(w, "Template reference: stave.example.yaml")
 	}
 	if len(req.Skipped) > 0 {
 		fmt.Fprintln(w)

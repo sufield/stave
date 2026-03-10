@@ -753,6 +753,42 @@ unsafe_predicate_alias: s3.unknown_alias
 	}
 }
 
+// TestControlLoader_SkipsExampleFiles verifies that .example.yaml files
+// (scaffolded templates) are not loaded as live controls.
+func TestControlLoader_SkipsExampleFiles(t *testing.T) {
+	dir := t.TempDir()
+
+	// Write a valid control
+	if err := os.WriteFile(filepath.Join(dir, "real.yaml"), []byte(validControlYAML("CTL.TEST.REAL.001")), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// Write an example file that would fail validation if loaded
+	if err := os.WriteFile(filepath.Join(dir, "control.example.yaml"), []byte("# all comments\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// Also test .example.yml variant
+	if err := os.WriteFile(filepath.Join(dir, "other.example.yml"), []byte("# template\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	loader, err := NewControlLoader()
+	if err != nil {
+		t.Fatalf("failed to create loader: %v", err)
+	}
+
+	controls, err := loader.LoadControls(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(controls) != 1 {
+		t.Errorf("expected 1 control (skipping example files), got %d", len(controls))
+	}
+	if len(controls) > 0 && controls[0].ID != "CTL.TEST.REAL.001" {
+		t.Errorf("expected CTL.TEST.REAL.001, got %s", controls[0].ID)
+	}
+}
+
 func TestControlLoader_ZeroValueUsable(t *testing.T) {
 	dir := t.TempDir()
 	content := `dsl_version: ctrl.v1

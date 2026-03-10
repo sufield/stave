@@ -74,7 +74,7 @@ func walkControlPaths(ctx context.Context, dir string) ([]string, error) {
 		if d.IsDir() {
 			return nil
 		}
-		if !isYAML(path) {
+		if !isYAML(path) || isExampleFile(path) {
 			return nil
 		}
 		paths = append(paths, path)
@@ -89,4 +89,11 @@ func walkControlPaths(ctx context.Context, dir string) ([]string, error) {
 func isYAML(path string) bool {
 	ext := filepath.Ext(path)
 	return ext == ".yaml" || ext == ".yml"
+}
+
+// isExampleFile returns true for files following the .example.yaml convention,
+// which are scaffolded templates not meant to be loaded as live controls.
+func isExampleFile(path string) bool {
+	name := filepath.Base(path)
+	return strings.HasSuffix(name, ".example.yaml") || strings.HasSuffix(name, ".example.yml")
 }

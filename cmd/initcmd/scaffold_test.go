@@ -83,22 +83,22 @@ func TestInitCreatesScaffold(t *testing.T) {
 	}
 
 	// Sample files replace .gitkeep in controls/ and snapshots/raw/
-	invSample, err := os.ReadFile(filepath.Join(projectDir, "controls/control.sample.yaml"))
+	invSample, err := os.ReadFile(filepath.Join(projectDir, "controls/control.example.yaml"))
 	if err != nil {
-		t.Fatalf("expected controls/control.sample.yaml to exist: %v", err)
+		t.Fatalf("expected controls/control.example.yaml to exist: %v", err)
 	}
 	if !strings.Contains(string(invSample), "# dsl_version: ctrl.v1") {
 		t.Fatalf("expected control sample to contain dsl_version comment, got %q", string(invSample))
 	}
-	if _, statErr := os.Stat(filepath.Join(projectDir, "snapshots/raw/observation.sample.json")); statErr != nil {
-		t.Fatalf("expected snapshots/raw/observation.sample.json to exist: %v", statErr)
+	if _, statErr := os.Stat(filepath.Join(projectDir, "snapshots/raw/observation.example.json")); statErr != nil {
+		t.Fatalf("expected snapshots/raw/observation.example.json to exist: %v", statErr)
 	}
-	staveSample, err := os.ReadFile(filepath.Join(projectDir, "stave.sample.yaml"))
+	staveSample, err := os.ReadFile(filepath.Join(projectDir, "stave.example.yaml"))
 	if err != nil {
-		t.Fatalf("expected stave.sample.yaml to exist: %v", err)
+		t.Fatalf("expected stave.example.yaml to exist: %v", err)
 	}
 	if !strings.Contains(string(staveSample), "# max_unsafe:") {
-		t.Fatalf("expected stave.sample.yaml to contain max_unsafe comment, got %q", string(staveSample))
+		t.Fatalf("expected stave.example.yaml to contain max_unsafe comment, got %q", string(staveSample))
 	}
 }
 
