@@ -45,7 +45,7 @@ git clone https://github.com/sufield/stave.git
 cd stave && make build
 ```
 
-### First finding in 60 seconds
+### Demo with sample data
 
 ```bash
 stave demo
@@ -157,7 +157,7 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 
 | Command | Purpose |
 |---------|---------|
-| `demo` | First finding in 60 seconds |
+| `demo` | Run a demo with bundled sample data |
 | `quickstart` | Auto-detect snapshots and evaluate |
 | `status` | Project state and next steps |
 | `doctor` | Environment readiness check |
