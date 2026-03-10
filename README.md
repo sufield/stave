@@ -212,7 +212,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 ## Status
 
-**v0.0.2**
+**v0.0.3**
 
 - Engine supports any vendor and asset type
 - Built-in control pack: AWS S3 (43 controls)

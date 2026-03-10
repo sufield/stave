@@ -1,4 +1,4 @@
-.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz
+.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz
 
 # Binary name
 BINARY=stave
@@ -177,6 +177,31 @@ release-local:
 ## release-check: Validate GoReleaser configuration
 release-check:
 	goreleaser check
+
+## release: Prepare and push a release (usage: make release V=0.0.3)
+release:
+ifndef V
+	$(error Usage: make release V=0.0.3)
+endif
+	@echo "==> Preparing release v$(V)..."
+	@echo "$(V)" > VERSION
+	@sed -i 's/^\*\*v[0-9]*\.[0-9]*\.[0-9]*\*\*$$/\*\*v$(V)\*\*/' README.md
+	@echo "==> VERSION file: $$(cat VERSION)"
+	@echo "==> README status: $$(grep -o 'v[0-9]*\.[0-9]*\.[0-9]*' README.md | head -1)"
+	@echo "==> Running tests..."
+	$(MAKE) test
+	@echo "==> Running e2e..."
+	$(MAKE) e2e
+	@echo "==> Validating goreleaser config..."
+	$(MAKE) release-check
+	@echo "==> All checks passed. Committing..."
+	git add VERSION README.md
+	git commit -m "Prepare release v$(V)"
+	git tag v$(V)
+	@echo ""
+	@echo "Release v$(V) is ready. Push with:"
+	@echo "  git push origin main"
+	@echo "  git push git@github.com-sufield:sufield/stave.git v$(V)"
 
 ## gofixer: Run full Go modernization workflow from gofixer.md
 gofixer:

@@ -123,9 +123,11 @@ actual:   $act_se"
 
   if [[ -f "$case_dir/expected.out.json" ]]; then
     # Full byte-level golden comparison (N2): canonical jq -S normalization
-    # Strip extensions (contains git state that varies between environments)
-    diff -u <(jq -S 'del(.extensions)' "$case_dir/expected.out.json") \
-            <(jq -S 'del(.extensions)' "$out") \
+    # Strip extensions (git state varies between environments) and
+    # run.tool_version (varies between dev builds and tagged releases).
+    local jq_filter='del(.extensions) | del(.run.tool_version)'
+    diff -u <(jq -S "$jq_filter" "$case_dir/expected.out.json") \
+            <(jq -S "$jq_filter" "$out") \
       || fail "$name full output mismatch (see diff above)"
   fi
 

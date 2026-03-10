@@ -24,6 +24,8 @@ func extractExitCode(t *testing.T, err error) int {
 }
 
 // compareGoldenJSON compares stdout bytes against a golden JSON file if it exists.
+// Fields that vary between dev builds and tagged releases (tool_version) are
+// stripped before comparison so golden files don't need updating on each release.
 func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	t.Helper()
 	goldenData, err := os.ReadFile(goldenFile)
@@ -37,11 +39,25 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	if err := json.Unmarshal(stdout, &actual); err != nil {
 		return
 	}
+	stripToolVersion(golden)
+	stripToolVersion(actual)
 	goldenNorm, _ := json.Marshal(golden)
 	actualNorm, _ := json.Marshal(actual)
 	if !bytes.Equal(goldenNorm, actualNorm) {
 		t.Errorf("output does not match golden file\ngot:\n%s\nwant:\n%s",
 			string(stdout), string(goldenData))
+	}
+}
+
+// stripToolVersion removes run.tool_version from a parsed JSON value so that
+// golden comparisons are not sensitive to the build version.
+func stripToolVersion(v any) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return
+	}
+	if run, ok := m["run"].(map[string]any); ok {
+		delete(run, "tool_version")
 	}
 }
 

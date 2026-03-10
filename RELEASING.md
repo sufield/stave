@@ -1,15 +1,42 @@
 # Releasing Stave
 
-## Release Flow
+## Quick Release
 
-1. Update `VERSION` file with the new version (e.g., `0.1.0`).
-2. Commit: `git commit -am "Prepare release v0.1.0"`.
-3. Tag: `git tag v0.1.0`.
-4. Push: `git push origin main v0.1.0`.
+```bash
+make release V=0.0.3
+```
 
-The release workflow validates that the tag version matches the `VERSION` file before proceeding.
+This single command:
 
-## What the Workflow Does
+1. Updates `VERSION` file to the new version.
+2. Updates the version badge in `README.md`.
+3. Runs `make test` (unit tests).
+4. Runs `make e2e` (end-to-end golden file tests).
+5. Validates GoReleaser configuration (`goreleaser check`).
+6. Commits the version bump.
+7. Creates the git tag `v0.0.3`.
+
+After it completes, push to trigger the release workflow:
+
+```bash
+git push origin main
+git push git@github.com-sufield:sufield/stave.git v0.0.3
+```
+
+The push uses the `github.com-sufield` SSH host alias (configured in `~/.ssh/config`) to authenticate as the `sufield` account.
+
+## What Gets Validated
+
+| Check | When | What it catches |
+|-------|------|-----------------|
+| `make test` | Before commit | Broken code |
+| `make e2e` | Before commit | Golden file regressions |
+| `goreleaser check` | Before commit | Invalid release config |
+| `VERSION` ↔ tag match | CI release workflow | Version file forgotten |
+
+Golden file comparisons (`scripts/e2e.sh`, `cmd/apply/verify/determinism_test.go`, `cmd/apply/profile_e2e_test.go`) strip `run.tool_version` before comparing, so version bumps do not require regenerating golden files.
+
+## What the Release Workflow Does
 
 1. Validates `VERSION` file matches the git tag.
 2. Runs **GoReleaser** which:
@@ -51,7 +78,7 @@ ls dist/stave_v*
 
 ## Reproducible Builds
 
-The `make reproduce-release` target still works independently of GoReleaser. It builds all five targets with deterministic flags and prints checksums for comparison with the release `SHA256SUMS`.
+The `make reproduce-release` target builds all five targets with deterministic flags and prints checksums for comparison with the release `SHA256SUMS`.
 
 ## Docker Images
 
@@ -63,3 +90,11 @@ docker pull ghcr.io/sufield/stave:latest
 ```
 
 The images use a `scratch` base (static binary, zero CVE surface).
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| CI fails: "Tag version does not match VERSION file" | Forgot to update `VERSION` before tagging | Use `make release V=x.y.z` which handles this automatically |
+| `brew install` fails with checksum mismatch | Retagged an existing version | Release a new version number instead of retagging |
+| Golden file tests fail after version bump | Test comparison includes `tool_version` | Already fixed — comparisons strip this field |
