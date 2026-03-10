@@ -12,6 +12,15 @@ type controlEvalStrategy interface {
 	Evaluate(timeline *asset.Timeline, now time.Time) (evaluation.Row, []evaluation.Finding)
 }
 
+// Compile-time interface assertions.
+var (
+	_ controlEvalStrategy = unsafeStateStrategy{}
+	_ controlEvalStrategy = unsafeDurationStrategy{}
+	_ controlEvalStrategy = unsafeRecurrenceStrategy{}
+	_ controlEvalStrategy = prefixExposureStrategy{}
+	_ controlEvalStrategy = unsupportedStrategy{}
+)
+
 func (e *Runner) strategyFor(ctl *policy.ControlDefinition) controlEvalStrategy {
 	switch ctl.Type {
 	case policy.TypeUnsafeState:

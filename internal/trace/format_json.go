@@ -3,6 +3,7 @@ package trace
 import (
 	"io"
 
+	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
@@ -15,9 +16,19 @@ type jsonResult struct {
 	FinalResult bool           `json:"final_result"`
 }
 
+// nodeKind discriminates the JSON union type for trace nodes.
+type nodeKind string
+
+const (
+	kindGroup    nodeKind = "group"
+	kindClause   nodeKind = "clause"
+	kindFieldRef nodeKind = "field_ref"
+	kindAnyMatch nodeKind = "any_match"
+)
+
 // jsonNode is a flat union type discriminated by "kind".
 type jsonNode struct {
-	Kind string `json:"kind"`
+	Kind nodeKind `json:"kind"`
 
 	// group fields
 	Logic        string     `json:"logic,omitempty"`
@@ -26,15 +37,15 @@ type jsonNode struct {
 	Reason       string     `json:"reason,omitempty"`
 
 	// clause fields
-	Index          *int   `json:"index,omitempty"`
-	Field          string `json:"field,omitempty"`
-	Op             string `json:"op,omitempty"`
-	Value          any    `json:"value,omitempty"`
-	ResolvedValue  any    `json:"resolved_value,omitempty"`
-	FieldValue     any    `json:"field_value,omitempty"`
-	ValueFromParam string `json:"value_from_param,omitempty"`
-	FieldExists    *bool  `json:"field_exists,omitempty"`
-	Explanation    string `json:"explanation,omitempty"`
+	Index          *int               `json:"index,omitempty"`
+	Field          string             `json:"field,omitempty"`
+	Op             predicate.Operator `json:"op,omitempty"`
+	Value          any                `json:"value,omitempty"`
+	ResolvedValue  any                `json:"resolved_value,omitempty"`
+	FieldValue     any                `json:"field_value,omitempty"`
+	ValueFromParam string             `json:"value_from_param,omitempty"`
+	FieldExists    *bool              `json:"field_exists,omitempty"`
+	Explanation    string             `json:"explanation,omitempty"`
 
 	// field_ref fields
 	OtherField  string `json:"other_field,omitempty"`
@@ -70,7 +81,7 @@ func groupToJSON(g *GroupNode) jsonNode {
 		sc = &v
 	}
 	n := jsonNode{
-		Kind:         "group",
+		Kind:         kindGroup,
 		Logic:        g.Logic.String(),
 		Result:       g.Result,
 		ShortCircuit: sc,
@@ -93,7 +104,7 @@ func clauseToJSON(c *ClauseNode) jsonNode {
 	idx := c.Index
 	exists := c.FieldExists
 	return jsonNode{
-		Kind:           "clause",
+		Kind:           kindClause,
 		Index:          &idx,
 		Field:          c.Field,
 		Op:             c.Op,
@@ -112,7 +123,7 @@ func fieldRefToJSON(f *FieldRefNode) jsonNode {
 	exists := f.FieldExists
 	otherExists := f.OtherExists
 	return jsonNode{
-		Kind:        "field_ref",
+		Kind:        kindFieldRef,
 		Index:       &idx,
 		Field:       f.Field,
 		Op:          f.Op,
@@ -131,7 +142,7 @@ func anyMatchToJSON(a *AnyMatchNode) jsonNode {
 	exists := a.FieldExists
 	count := a.IdentityCount
 	n := jsonNode{
-		Kind:          "any_match",
+		Kind:          kindAnyMatch,
 		Index:         &idx,
 		Field:         a.Field,
 		FieldExists:   &exists,

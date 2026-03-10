@@ -1,24 +1,27 @@
 package predicate
 
-import "sort"
+import "slices"
+
+// Operator identifies a predicate comparison operator (eq, ne, missing, etc.).
+type Operator string
 
 // Canonical predicate operator identifiers.
 const (
-	OpEq               = "eq"
-	OpNe               = "ne"
-	OpGt               = "gt"
-	OpLt               = "lt"
-	OpGte              = "gte"
-	OpLte              = "lte"
-	OpMissing          = "missing"
-	OpPresent          = "present"
-	OpIn               = "in"
-	OpListEmpty        = "list_empty"
-	OpNotSubsetOfField = "not_subset_of_field"
-	OpNeqField         = "neq_field"
-	OpNotInField       = "not_in_field"
-	OpContains         = "contains"
-	OpAnyMatch         = "any_match"
+	OpEq               Operator = "eq"
+	OpNe               Operator = "ne"
+	OpGt               Operator = "gt"
+	OpLt               Operator = "lt"
+	OpGte              Operator = "gte"
+	OpLte              Operator = "lte"
+	OpMissing          Operator = "missing"
+	OpPresent          Operator = "present"
+	OpIn               Operator = "in"
+	OpListEmpty        Operator = "list_empty"
+	OpNotSubsetOfField Operator = "not_subset_of_field"
+	OpNeqField         Operator = "neq_field"
+	OpNotInField       Operator = "not_in_field"
+	OpContains         Operator = "contains"
+	OpAnyMatch         Operator = "any_match"
 )
 
 // operatorFunc handles evaluation logic for a specific operator.
@@ -35,7 +38,7 @@ func delegated(bool, any, any) (bool, bool) {
 }
 
 // operators is the internal source of truth for operator behavior.
-var operators = map[string]operatorFunc{
+var operators = map[Operator]operatorFunc{
 	OpEq:  handled(func(exists bool, f, m any) bool { return exists && EqualValues(f, m) }),
 	OpNe:  handled(func(exists bool, f, m any) bool { return !exists || !EqualValues(f, m) }),
 	OpGt:  handled(func(exists bool, f, m any) bool { return exists && GreaterThan(f, m) }),
@@ -72,24 +75,24 @@ var operators = map[string]operatorFunc{
 }
 
 // IsSupported returns true if the operator is supported.
-func IsSupported(op string) bool {
+func IsSupported(op Operator) bool {
 	_, ok := operators[op]
 	return ok
 }
 
 // ListSupported returns all supported operators in deterministic order.
-func ListSupported() []string {
-	ops := make([]string, 0, len(operators))
+func ListSupported() []Operator {
+	ops := make([]Operator, 0, len(operators))
 	for op := range operators {
 		ops = append(ops, op)
 	}
-	sort.Strings(ops)
+	slices.Sort(ops)
 	return ops
 }
 
 // Evaluate maps basic operators to semantic comparison functions.
 // Unknown operators fail closed.
-func Evaluate(op string, fieldVal, matchVal any) bool {
+func Evaluate(op Operator, fieldVal, matchVal any) bool {
 	const fieldIsPresent = true
 	result, handled := EvaluateOperator(op, fieldIsPresent, fieldVal, matchVal)
 	return handled && result
@@ -98,7 +101,7 @@ func Evaluate(op string, fieldVal, matchVal any) bool {
 // EvaluateOperator evaluates operators that do not require external context.
 // Returns (result, handled). If handled is false, caller should evaluate with
 // additional context-specific logic.
-func EvaluateOperator(op string, fieldExists bool, fieldValue, compareValue any) (bool, bool) {
+func EvaluateOperator(op Operator, fieldExists bool, fieldValue, compareValue any) (bool, bool) {
 	fn, ok := operators[op]
 	if !ok {
 		return false, false

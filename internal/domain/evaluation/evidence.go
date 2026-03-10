@@ -89,6 +89,16 @@ type SourceEvidence struct {
 	ACLPublicGrantees []string `json:"acl_public_grantees,omitempty"`
 }
 
+// DriftPattern classifies the temporal behavior of a violation.
+type DriftPattern string
+
+// Canonical drift pattern identifiers.
+const (
+	DriftPersistent   DriftPattern = "persistent"
+	DriftDegraded     DriftPattern = "degraded"
+	DriftIntermittent DriftPattern = "intermittent"
+)
+
 // PostureDrift classifies the temporal behavior of a violation.
 // Computed from the asset.Timeline — not declared in control YAML.
 type PostureDrift struct {
@@ -96,7 +106,7 @@ type PostureDrift struct {
 	// "persistent" — unsafe since first observation, never seen safe.
 	// "degraded"   — was safe, now in first unsafe episode.
 	// "intermittent" — has toggled between safe and unsafe at least once.
-	Pattern string `json:"pattern"`
+	Pattern DriftPattern `json:"pattern"`
 	// EpisodeCount is the total number of unsafe episodes (closed + open).
 	EpisodeCount int `json:"episode_count"`
 }
@@ -111,15 +121,15 @@ func ComputePostureDrift(timeline *asset.Timeline) *PostureDrift {
 	closedEpisodes := timeline.History().Count()
 	totalEpisodes := closedEpisodes + 1 // +1 for the open episode
 
-	var pattern string
+	var pattern DriftPattern
 	switch {
 	case closedEpisodes > 0:
-		pattern = "intermittent"
+		pattern = DriftIntermittent
 	case timeline.HasOpenEpisode() && timeline.Stats().HasFirstObservation() &&
 		timeline.FirstUnsafeAt().After(timeline.Stats().FirstSeenAt()):
-		pattern = "degraded"
+		pattern = DriftDegraded
 	default:
-		pattern = "persistent"
+		pattern = DriftPersistent
 	}
 
 	return &PostureDrift{

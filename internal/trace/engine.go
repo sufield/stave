@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 
 	"github.com/sufield/stave/internal/domain/policy"
@@ -46,6 +47,15 @@ type Node interface {
 	toJSON() jsonNode
 }
 
+// Compile-time interface assertions.
+var (
+	_ Node                     = (*GroupNode)(nil)
+	_ Node                     = (*ClauseNode)(nil)
+	_ Node                     = (*FieldRefNode)(nil)
+	_ Node                     = (*AnyMatchNode)(nil)
+	_ evaluation.TraceRenderer = (*TraceResult)(nil)
+)
+
 // TraceResult is the top-level output of a trace.
 type TraceResult struct {
 	ControlID   kernel.ControlID
@@ -71,7 +81,7 @@ func (g *GroupNode) Matched() bool { return g.Result }
 type ClauseNode struct {
 	Index          int
 	Field          string
-	Op             string
+	Op             predicate.Operator
 	Value          any // raw from control
 	ResolvedValue  any // after value_from_param resolution
 	FieldValue     any // actual asset value
@@ -86,7 +96,7 @@ func (c *ClauseNode) Matched() bool { return c.Result }
 type FieldRefNode struct {
 	Index       int
 	Field       string
-	Op          string
+	Op          predicate.Operator
 	OtherField  string
 	FieldValue  any
 	OtherValue  any
@@ -121,13 +131,13 @@ func (tr *TraceResult) RenderJSON(w io.Writer) error { return WriteJSON(w, tr) }
 // Initialized via sync.Once to avoid an initialization cycle (traceAnyMatchRule
 // transitively references operatorTracers through TracePredicate).
 var (
-	operatorTracers     map[string]func(ruleContext) Node
+	operatorTracers     map[predicate.Operator]func(ruleContext) Node
 	initOperatorTracers sync.Once
 )
 
 func ensureOperatorTracers() {
 	initOperatorTracers.Do(func() {
-		operatorTracers = map[string]func(ruleContext) Node{
+		operatorTracers = map[predicate.Operator]func(ruleContext) Node{
 			predicate.OpNotSubsetOfField: traceFieldRefRule,
 			predicate.OpNeqField:         traceFieldRefRule,
 			predicate.OpNotInField:       traceFieldRefRule,

@@ -11,10 +11,10 @@ import (
 // PredicateRule is a single predicate condition or nested predicate.
 type PredicateRule struct {
 	// Simple field comparison
-	Field          string `yaml:"field,omitempty"`
-	Op             string `yaml:"op,omitempty"`
-	Value          any    `yaml:"value,omitempty"`
-	ValueFromParam string `yaml:"value_from_param,omitempty"` // resolve value from params
+	Field          string             `yaml:"field,omitempty"`
+	Op             predicate.Operator `yaml:"op,omitempty"`
+	Value          any                `yaml:"value,omitempty"`
+	ValueFromParam string             `yaml:"value_from_param,omitempty"` // resolve value from params
 
 	// Nested predicates
 	Any []PredicateRule `yaml:"any,omitempty"`

@@ -61,7 +61,7 @@ type SnapshotPlanTierSummary struct {
 
 // SnapshotPlanOutput is the materialized retention plan.
 type SnapshotPlanOutput struct {
-	SchemaVersion    string                    `json:"schema_version"`
+	SchemaVersion    kernel.Schema             `json:"schema_version"`
 	Kind             string                    `json:"kind"`
 	GeneratedAt      time.Time                 `json:"generated_at"`
 	ObservationsRoot string                    `json:"observations_root"`
@@ -110,7 +110,7 @@ func BuildSnapshotPlan(params BuildSnapshotPlanParams) SnapshotPlanOutput {
 	}
 
 	return SnapshotPlanOutput{
-		SchemaVersion:    string(kernel.SchemaSnapshotPlan),
+		SchemaVersion:    kernel.SchemaSnapshotPlan,
 		Kind:             "snapshot_plan",
 		GeneratedAt:      params.Now.UTC(),
 		ObservationsRoot: params.ObsRoot,

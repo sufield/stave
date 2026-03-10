@@ -21,7 +21,7 @@ func TestComputePostureDrift(t *testing.T) {
 		name           string
 		setup          func(*asset.Timeline)
 		wantNil        bool
-		wantPattern    string
+		wantPattern    evaluation.DriftPattern
 		wantEpisodeCnt int
 	}{
 		{

@@ -1,12 +1,15 @@
 package trace
 
-import "github.com/sufield/stave/internal/domain/policy"
+import (
+	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
+)
 
 // ruleContext is a flat data carrier for a single predicate rule evaluation.
 type ruleContext struct {
 	Index          int
 	Field          string
-	Op             string
+	Op             predicate.Operator
 	Value          any // raw from control
 	ValueFromParam string
 	CompareValue   any // after value_from_param resolution
