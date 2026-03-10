@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -27,12 +28,8 @@ type Group struct {
 // GroupStats returns the total finding count across groups and whether any
 // group contains more than one contributing control.
 func GroupStats(groups []Group) (totalFindings int, hasMulti bool) {
-	for _, g := range groups {
-		totalFindings += g.FindingCount
-		if g.FindingCount > 1 {
-			hasMulti = true
-		}
-	}
+	totalFindings = lo.SumBy(groups, func(g Group) int { return g.FindingCount })
+	hasMulti = lo.SomeBy(groups, func(g Group) bool { return g.FindingCount > 1 })
 	return totalFindings, hasMulti
 }
 
@@ -95,17 +92,16 @@ func (a *remediationAccumulator) toSortedGroups() []Group {
 		return nil
 	}
 
-	result := make([]Group, 0, len(a.order))
-	for _, key := range a.order {
+	result := lo.Map(a.order, func(key string, _ int) Group {
 		g := a.groups[key]
-		result = append(result, Group{
+		return Group{
 			AssetID:              g.assetID,
 			AssetType:            g.resourceType,
 			RemediationPlan:      g.remediationPlan,
 			ContributingControls: sortRemediationControlSet(g.controlSet),
 			FindingCount:         g.findingCount,
-		})
-	}
+		}
+	})
 
 	slices.SortFunc(result, func(i, j Group) int {
 		if i.AssetID != j.AssetID {
@@ -122,10 +118,7 @@ func makeRemediationGroupKey(assetID asset.ID, actionsHash string) string {
 }
 
 func sortRemediationControlSet(invSet map[kernel.ControlID]struct{}) []kernel.ControlID {
-	controls := make([]kernel.ControlID, 0, len(invSet))
-	for id := range invSet {
-		controls = append(controls, id)
-	}
+	controls := lo.Keys(invSet)
 	slices.Sort(controls)
 	return controls
 }
@@ -137,13 +130,12 @@ func canonicalActionsHash(actions []evaluation.RemediationAction) string {
 
 	// 1. Create strings for sorting.
 	// We use a specific format to ensure uniqueness and stability.
-	parts := make([]string, len(actions))
-	for i, a := range actions {
+	parts := lo.Map(actions, func(a evaluation.RemediationAction, _ int) string {
 		// Use JSON for the value to ensure stable serialization
 		// of complex types (like maps or slices).
 		valBytes, _ := json.Marshal(a.Value)
-		parts[i] = fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path, valBytes)
-	}
+		return fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path, valBytes)
+	})
 
 	// 2. Sort to ensure the hash is independent of action order.
 	slices.Sort(parts)

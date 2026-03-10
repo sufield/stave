@@ -1,6 +1,7 @@
 package diagnosis
 
 import (
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 )
@@ -15,12 +16,9 @@ func (idx unsafeIndex) isUnsafe(snapIdx int, assetID asset.ID) bool {
 
 // isAssetUnsafeAnyControl checks if an asset matches any control's unsafe_predicate.
 func isAssetUnsafeAnyControl(r asset.Asset, controls []policy.ControlDefinition) bool {
-	for _, ctl := range controls {
-		if ctl.UnsafePredicate.Evaluate(r, ctl.Params) {
-			return true
-		}
-	}
-	return false
+	return lo.SomeBy(controls, func(ctl policy.ControlDefinition) bool {
+		return ctl.UnsafePredicate.Evaluate(r, ctl.Params)
+	})
 }
 
 func buildUnsafeAnyControlBySnapshotAsset(snapshots []asset.Snapshot, controls []policy.ControlDefinition) unsafeIndex {

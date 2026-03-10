@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	"github.com/sufield/stave/internal/domain/diag"
@@ -77,18 +78,17 @@ func classifyDiagnosticCode(d Diagnostic) DiagnosticCategory {
 // DiagnosticsResult converts generic schema diagnostics into canonical diag results.
 func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Result {
 	o := resolveOptions(opts)
-	externalErrors := make([]diag.ExternalError, 0, len(diags))
-	for _, d := range diags {
+	externalErrors := lo.FilterMap(diags, func(d Diagnostic, _ int) (diag.ExternalError, bool) {
 		category := classifyDiagnosticCode(d)
 		if !strict && category == DiagAdditionalProperties {
-			continue
+			return nil, false
 		}
-		externalErrors = append(externalErrors, diagnosticExternalError{
+		return diagnosticExternalError{
 			path:        d.Path,
 			description: d.Message,
 			code:        string(category),
-		})
-	}
+		}, true
+	})
 
 	return diag.NewTranslator(diag.CodeSchemaViolation).
 		WithDefaultAction(action).
