@@ -40,3 +40,14 @@ func (f OutputFormat) String() string {
 func (f OutputFormat) IsJSON() bool {
 	return f == OutputFormatJSON
 }
+
+// ParseOutputMode validates the global --output flag value (json or text only).
+func ParseOutputMode(s string) (OutputFormat, error) {
+	normalized := OutputFormat(NormalizeToken(s))
+	switch normalized {
+	case OutputFormatJSON, OutputFormatText:
+		return normalized, nil
+	default:
+		return "", fmt.Errorf("invalid --output %q (use text or json)", s)
+	}
+}

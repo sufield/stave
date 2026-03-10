@@ -22,7 +22,7 @@ func TestNewObjectLockEvidence(t *testing.T) {
 			name: "disabled returns nil",
 			in: &s3storage.ObjectLockConfig{
 				Enabled: false,
-				Mode:    "COMPLIANCE",
+				Mode:    s3storage.ObjectLockCompliance,
 			},
 			want: nil,
 		},
@@ -30,7 +30,7 @@ func TestNewObjectLockEvidence(t *testing.T) {
 			name: "enabled with full values",
 			in: &s3storage.ObjectLockConfig{
 				Enabled:       true,
-				Mode:          "COMPLIANCE",
+				Mode:          s3storage.ObjectLockCompliance,
 				RetentionDays: 30,
 			},
 			want: &s3storage.ObjectLockEvidence{

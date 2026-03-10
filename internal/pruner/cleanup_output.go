@@ -11,6 +11,25 @@ import (
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
+// CleanupAction represents the kind of cleanup operation (delete or move).
+type CleanupAction string
+
+const (
+	// ActionDelete indicates snapshot files will be permanently deleted.
+	ActionDelete CleanupAction = "DELETE"
+	// ActionMove indicates snapshot files will be moved to an archive directory.
+	ActionMove CleanupAction = "MOVE"
+)
+
+// ModeString returns the wire-format mode string for JSON output.
+// If dryRun is true, the mode is "DRY_RUN" regardless of action.
+func (a CleanupAction) ModeString(dryRun bool) string {
+	if dryRun {
+		return "DRY_RUN"
+	}
+	return string(a)
+}
+
 // CleanupFile is one snapshot listed in prune/archive output.
 type CleanupFile struct {
 	Name       string    `json:"name"`
@@ -47,7 +66,7 @@ type ArchiveOutput struct {
 // CleanupInput holds the shared fields for building prune/archive output.
 type CleanupInput struct {
 	Now             time.Time
-	Mode            string
+	Action          CleanupAction
 	DryRun          bool
 	ObservationsDir string
 	Tier            string
@@ -68,7 +87,7 @@ func buildCleanupOutput(schema kernel.Schema, kind string, input CleanupInput) C
 		SchemaVersion:   schema,
 		Kind:            kind,
 		CheckedAt:       input.Now.UTC(),
-		Mode:            input.Mode,
+		Mode:            input.Action.ModeString(input.DryRun),
 		Applied:         !input.DryRun && len(input.CandidateFiles) > 0,
 		ObservationsDir: input.ObservationsDir,
 		RetentionTier:   input.Tier,
@@ -100,9 +119,10 @@ type SnapshotCleanupRenderInput struct {
 	Format         ui.OutputFormat
 	Output         any
 	OutputKind     string
-	Action         string
+	ActionLabel    string
 	SummaryPrefix  string
-	Mode           string
+	Action         CleanupAction
+	DryRun         bool
 	AllFiles       []SnapshotFile
 	CandidateFiles []SnapshotFile
 	OlderThan      time.Duration
@@ -124,11 +144,11 @@ func RenderSnapshotCleanupExecutionPlan(out io.Writer, in SnapshotCleanupRenderI
 		return nil
 	}
 	if len(in.CandidateFiles) == 0 {
-		fmt.Fprintf(out, "No snapshots to %s (total=%d, older-than=%s, keep-min=%d).\n", in.Action, len(in.AllFiles), timeutil.FormatDuration(in.OlderThan), in.KeepMin)
+		fmt.Fprintf(out, "No snapshots to %s (total=%d, older-than=%s, keep-min=%d).\n", in.ActionLabel, len(in.AllFiles), timeutil.FormatDuration(in.OlderThan), in.KeepMin)
 		return nil
 	}
 	fmt.Fprintf(out, "%s mode=%s total=%d candidates=%d older-than=%s tier=%s keep-min=%d now=%s\n",
-		in.SummaryPrefix, in.Mode, len(in.AllFiles), len(in.CandidateFiles), timeutil.FormatDuration(in.OlderThan), in.Tier, in.KeepMin, in.Now.Format(time.RFC3339))
+		in.SummaryPrefix, in.Action.ModeString(in.DryRun), len(in.AllFiles), len(in.CandidateFiles), timeutil.FormatDuration(in.OlderThan), in.Tier, in.KeepMin, in.Now.Format(time.RFC3339))
 	for _, sf := range in.CandidateFiles {
 		fmt.Fprintf(out, "- %s (captured_at=%s)\n", sf.Name, sf.CapturedAt.Format(time.RFC3339))
 	}

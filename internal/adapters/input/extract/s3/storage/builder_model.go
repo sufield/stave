@@ -29,8 +29,8 @@ func BuildModel(in BuildModelInput) S3StorageModel {
 			InTransitEnforced: in.Analysis.Transport.EnforcesHTTPS,
 		},
 		Versioning: S3Versioning{
-			Enabled:          bucket.Versioning != nil && bucket.Versioning.Status == "Enabled",
-			MFADeleteEnabled: bucket.Versioning != nil && bucket.Versioning.MFADelete == "Enabled",
+			Enabled:          bucket.Versioning != nil && bucket.Versioning.Status == VersioningEnabled,
+			MFADeleteEnabled: bucket.Versioning != nil && bucket.Versioning.MFADelete == MFADeleteEnabled,
 		},
 		Logging: S3Logging{
 			Enabled:      bucket.Logging != nil,
@@ -70,7 +70,7 @@ func encryptionAlgorithmOrEmpty(enc *EncryptionConfig) string {
 	if enc == nil {
 		return ""
 	}
-	return enc.Algorithm
+	return string(enc.Algorithm)
 }
 
 func encryptionKMSKeyOrEmpty(enc *EncryptionConfig) string {
