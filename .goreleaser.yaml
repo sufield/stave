@@ -96,7 +96,7 @@ homebrew_casks:
         stave doctor        Checks for jq, aws-cli, git, graphviz
 
       Get started:
-        stave demo          First finding in 60 seconds
+        stave demo          Run a demo with bundled sample data
         stave quickstart    Auto-detect snapshots and evaluate
         stave init          Scaffold a new project
 
