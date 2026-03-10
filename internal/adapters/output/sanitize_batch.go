@@ -1,22 +1,22 @@
 package output
 
 import (
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // SanitizeFindings returns sanitized copies of a slice of findings.
 func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []remediation.Finding {
-	return fp.Map(findings, func(f remediation.Finding) remediation.Finding { return f.Sanitized(s) })
+	return lo.Map(findings, func(f remediation.Finding, _ int) remediation.Finding { return f.Sanitized(s) })
 }
 
 // SanitizeSkippedAssets returns sanitized copies of skipped assets.
 func SanitizeSkippedAssets(s kernel.Sanitizer, assets []asset.SkippedAsset) []asset.SkippedAsset {
-	return fp.Map(assets, func(a asset.SkippedAsset) asset.SkippedAsset { return a.Sanitized(s) })
+	return lo.Map(assets, func(a asset.SkippedAsset, _ int) asset.SkippedAsset { return a.Sanitized(s) })
 }
 
 // SanitizeInputHashKeys returns a copy with file keys sanitized to basenames.
@@ -40,7 +40,7 @@ func SanitizeBaselineEntries(s kernel.Sanitizer, entries []evaluation.BaselineEn
 	if s == nil || len(entries) == 0 {
 		return entries
 	}
-	return fp.Map(entries, func(e evaluation.BaselineEntry) evaluation.BaselineEntry {
+	return lo.Map(entries, func(e evaluation.BaselineEntry, _ int) evaluation.BaselineEntry {
 		e.AssetID = asset.ID(s.ID(string(e.AssetID)))
 		return e
 	})

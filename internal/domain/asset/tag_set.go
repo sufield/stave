@@ -1,7 +1,7 @@
 package asset
 
 import (
-	"slices"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // TagSet is a value object for asset tags used by scope matching.
@@ -19,11 +19,7 @@ func NewTagSet(raw map[string]string) TagSet {
 	normalized := make(map[string]string, len(raw))
 	conflictSet := make(map[string]struct{})
 
-	keys := make([]string, 0, len(raw))
-	for key := range raw {
-		keys = append(keys, key)
-	}
-	slices.Sort(keys)
+	keys := fp.SortedKeys(raw)
 
 	for _, key := range keys {
 		normalizedKey := tagKey(key).normalize()
@@ -38,11 +34,7 @@ func NewTagSet(raw map[string]string) TagSet {
 		normalized[norm] = raw[key]
 	}
 
-	conflicts := make([]string, 0, len(conflictSet))
-	for key := range conflictSet {
-		conflicts = append(conflicts, key)
-	}
-	slices.Sort(conflicts)
+	conflicts := fp.SortedKeys(conflictSet)
 
 	return TagSet{
 		normalized: normalized,

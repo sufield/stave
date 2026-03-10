@@ -3,7 +3,9 @@ package asset
 import (
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // FilterOptions narrows an ObservationDelta by change/asset criteria.
@@ -52,13 +54,7 @@ func filterAssetDiffs(changes []AssetDiff, opt FilterOptions) []AssetDiff {
 }
 
 func buildChangeTypeSet(types []ChangeType) map[ChangeType]struct{} {
-	m := make(map[ChangeType]struct{}, len(types))
-	for _, ct := range types {
-		if ct != "" {
-			m[ct] = struct{}{}
-		}
-	}
-	return m
+	return fp.ToSet(lo.Filter(types, func(ct ChangeType, _ int) bool { return ct != "" }))
 }
 
 func buildAssetTypeSet(types []kernel.AssetType) map[kernel.AssetType]struct{} {

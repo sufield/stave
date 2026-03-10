@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -19,7 +20,6 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -251,7 +251,7 @@ func clipboardHint(w io.Writer, quiet bool) {
 }
 
 func collectFindingIDs(findings []appdiagnose.FindingData) []string {
-	return fp.Map(findings, func(f appdiagnose.FindingData) string { return string(f.ControlID) })
+	return lo.Map(findings, func(f appdiagnose.FindingData, _ int) string { return string(f.ControlID) })
 }
 
 // promptJSONOutput is the structured JSON output.
@@ -274,7 +274,7 @@ func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, e
 
 	latest := asset.LatestSnapshot(snapshots)
 
-	a, found := fp.FindFunc(latest.Assets, func(r asset.Asset) bool { return r.ID.String() == assetID })
+	a, found := lo.Find(latest.Assets, func(r asset.Asset) bool { return r.ID.String() == assetID })
 	if !found {
 		return "", nil
 	}

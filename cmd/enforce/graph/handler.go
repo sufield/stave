@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -14,6 +14,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/sanitize"
@@ -128,24 +129,12 @@ func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot) cov
 }
 
 func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
-	assetMap := make(map[string]asset.Asset, len(assets))
-	for _, a := range assets {
-		assetMap[a.ID.String()] = a
-	}
-	assetIDs := make([]string, 0, len(assetMap))
-	for id := range assetMap {
-		assetIDs = append(assetIDs, id)
-	}
-	slices.Sort(assetIDs)
-	return assetMap, assetIDs
+	assetMap := lo.KeyBy(assets, func(a asset.Asset) string { return a.ID.String() })
+	return assetMap, fp.SortedKeys(assetMap)
 }
 
 func coverageControlIDs(controls []policy.ControlDefinition) []string {
-	controlIDs := make([]string, 0, len(controls))
-	for _, ctl := range controls {
-		controlIDs = append(controlIDs, ctl.ID.String())
-	}
-	return controlIDs
+	return lo.Map(controls, func(ctl policy.ControlDefinition, _ int) string { return ctl.ID.String() })
 }
 
 func coverageEdges(

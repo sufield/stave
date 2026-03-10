@@ -3,7 +3,8 @@ package kernel
 import (
 	"encoding/json"
 	"maps"
-	"sort"
+
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // Ensure SanitizableMap implements json.Marshaler and json.Unmarshaler.
@@ -79,15 +80,7 @@ func (r SanitizableMap) Sanitized(key string) string {
 
 // Keys returns all keys in sorted order for deterministic iteration.
 func (r SanitizableMap) Keys() []string {
-	if r.entries == nil {
-		return nil
-	}
-	keys := make([]string, 0, len(r.entries))
-	for k := range r.entries {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
+	return fp.SortedKeys(r.entries)
 }
 
 // Len returns the number of entries.

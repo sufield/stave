@@ -3,7 +3,7 @@ package asset
 import (
 	"strings"
 
-	"github.com/sufield/stave/internal/pkg/fp"
+	"github.com/samber/lo"
 )
 
 // AssetPredicate decides whether a single asset is in scope.
@@ -185,7 +185,7 @@ func (s Snapshot) FilteredBy(filter AssetPredicate) (Snapshot, bool) {
 		return s, len(s.Assets) > 0
 	}
 
-	kept := fp.Filter(s.Assets, filter.IsInScope)
+	kept := lo.Filter(s.Assets, func(a Asset, _ int) bool { return filter.IsInScope(a) })
 	if len(kept) == 0 {
 		return Snapshot{}, false
 	}
