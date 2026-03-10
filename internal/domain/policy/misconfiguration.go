@@ -3,12 +3,14 @@ package policy
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 const fieldNamespacePropertiesPrefix = "properties."
 
 // PredicateOperator identifies a predicate comparison operator (eq, ne, missing, etc.).
-type PredicateOperator string
+type PredicateOperator = predicate.Operator
 
 // Misconfiguration represents a single property-level unsafe condition detected
 // by an control's predicate. It captures what was found and why it is unsafe.
@@ -30,7 +32,7 @@ func (m Misconfiguration) DisplayProperty() string {
 
 // IsMissing reports whether this violation indicates a missing field.
 func (m Misconfiguration) IsMissing() bool {
-	return m.Operator == "missing" || m.ActualValue == nil
+	return m.Operator == predicate.OpMissing || m.ActualValue == nil
 }
 
 // Sanitized returns a copy with sensitive observed values removed.
@@ -48,11 +50,11 @@ func (m Misconfiguration) String() string {
 	}
 
 	switch m.Operator {
-	case "eq", "equals":
+	case predicate.OpEq, "equals":
 		return fmt.Sprintf("property '%s' is exactly '%v'", prop, m.ActualValue)
-	case "contains":
+	case predicate.OpContains:
 		return fmt.Sprintf("property '%s' contains unsafe value '%v'", prop, m.ActualValue)
-	case "any_match":
+	case predicate.OpAnyMatch:
 		return fmt.Sprintf("one or more items in '%s' matched the unsafe criteria", prop)
 	default:
 		return fmt.Sprintf(

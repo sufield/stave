@@ -5,10 +5,10 @@ import "testing"
 // TestIsSupported verifies the operator registry.
 func TestIsSupported(t *testing.T) {
 	// All supported operators should return true
-	supported := []string{
-		"eq", "ne", "gt", "lt", "gte", "lte", "missing", "present", "in",
-		"list_empty", "not_subset_of_field", "neq_field", "not_in_field",
-		"contains", "any_match",
+	supported := []Operator{
+		OpEq, OpNe, OpGt, OpLt, OpGte, OpLte, OpMissing, OpPresent, OpIn,
+		OpListEmpty, OpNotSubsetOfField, OpNeqField, OpNotInField,
+		OpContains, OpAnyMatch,
 	}
 	for _, op := range supported {
 		if !IsSupported(op) {
@@ -17,7 +17,7 @@ func TestIsSupported(t *testing.T) {
 	}
 
 	// Unknown operators should return false
-	unsupported := []string{"unknown", ""}
+	unsupported := []Operator{Operator("unknown"), Operator("")}
 	for _, op := range unsupported {
 		if IsSupported(op) {
 			t.Errorf("IsSupported(%q) = true, want false", op)
@@ -194,22 +194,22 @@ func TestListHasElementsNotIn(t *testing.T) {
 
 // TestListSupportedDocumented ensures all operators are documented.
 func TestListSupportedDocumented(t *testing.T) {
-	expected := map[string]string{
-		"eq":                  "Equals (string, bool, numeric)",
-		"ne":                  "Not equals (string, bool, numeric)",
-		"gt":                  "Greater than (numeric)",
-		"lt":                  "Less than (numeric)",
-		"gte":                 "Greater than or equal (numeric)",
-		"lte":                 "Less than or equal (numeric)",
-		"missing":             "Field absent, nil, or empty",
-		"present":             "Field exists and non-empty",
-		"in":                  "Value in list",
-		"list_empty":          "List field is empty or missing",
-		"not_subset_of_field": "List contains elements not in another field",
-		"neq_field":           "Value not equal to another field",
-		"not_in_field":        "Value not in list specified by another field",
-		"contains":            "String contains substring",
-		"any_match":           "Any element in array matches nested predicate",
+	expected := map[Operator]string{
+		OpEq:               "Equals (string, bool, numeric)",
+		OpNe:               "Not equals (string, bool, numeric)",
+		OpGt:               "Greater than (numeric)",
+		OpLt:               "Less than (numeric)",
+		OpGte:              "Greater than or equal (numeric)",
+		OpLte:              "Less than or equal (numeric)",
+		OpMissing:          "Field absent, nil, or empty",
+		OpPresent:          "Field exists and non-empty",
+		OpIn:               "Value in list",
+		OpListEmpty:        "List field is empty or missing",
+		OpNotSubsetOfField: "List contains elements not in another field",
+		OpNeqField:         "Value not equal to another field",
+		OpNotInField:       "Value not in list specified by another field",
+		OpContains:         "String contains substring",
+		OpAnyMatch:         "Any element in array matches nested predicate",
 	}
 
 	ops := ListSupported()

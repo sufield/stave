@@ -38,7 +38,7 @@ func traceFieldRefRule(rc ruleContext) Node {
 	}
 }
 
-func evaluateFieldRefResult(op string, fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
+func evaluateFieldRefResult(op predicate.Operator, fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
 	switch op {
 	case predicate.OpNotSubsetOfField:
 		return evalNotSubsetOfField(fieldExists, fieldValue, otherExists, otherValue)

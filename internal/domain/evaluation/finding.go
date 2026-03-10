@@ -74,10 +74,18 @@ type RemediationTarget struct {
 	AssetType kernel.AssetType `json:"asset_type"`
 }
 
+// RemediationActionType identifies the kind of remediation action (e.g. "set").
+type RemediationActionType string
+
+// Canonical remediation action type identifiers.
+const (
+	ActionSet RemediationActionType = "set"
+)
+
 type RemediationAction struct {
-	ActionType string `json:"action_type"`
-	Path       string `json:"path"`
-	Value      any    `json:"value,omitempty"`
+	ActionType RemediationActionType `json:"action_type"`
+	Path       string                `json:"path"`
+	Value      any                   `json:"value,omitempty"`
 }
 
 // FindingDetail aggregates all context needed to understand and remediate

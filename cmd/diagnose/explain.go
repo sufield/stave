@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -23,11 +24,11 @@ type explainFlagsType struct {
 }
 
 type explainRule struct {
-	Path    string `json:"path"`
-	Op      string `json:"op"`
-	Value   any    `json:"value,omitempty"`
-	From    string `json:"from,omitempty"`
-	Comment string `json:"comment,omitempty"`
+	Path    string             `json:"path"`
+	Op      predicate.Operator `json:"op"`
+	Value   any                `json:"value,omitempty"`
+	From    string             `json:"from,omitempty"`
+	Comment string             `json:"comment,omitempty"`
 }
 
 type explainOutput struct {
@@ -224,18 +225,18 @@ func buildMinimalObservation(fields []string, rules []explainRule) map[string]an
 }
 
 func sampleValueForRule(r explainRule) any {
-	if r.Op == "missing" {
+	if r.Op == predicate.OpMissing {
 		return nil
 	}
 	if r.Value != nil {
 		return r.Value
 	}
 	switch r.Op {
-	case "eq", "neq":
+	case predicate.OpEq, predicate.OpNe:
 		return false
-	case "contains", "in":
+	case predicate.OpContains, predicate.OpIn:
 		return "example"
-	case "present":
+	case predicate.OpPresent:
 		return "example"
 	default:
 		return "example"

@@ -102,8 +102,8 @@ func buildPlan(req runRequest) (plan, error) {
 	refs := make([]outenforce.FindingRef, len(in.Findings))
 	for i, f := range in.Findings {
 		refs[i] = outenforce.FindingRef{
-			ControlID: string(f.ControlID),
-			AssetID:   string(f.AssetID),
+			ControlID: f.ControlID,
+			AssetID:   f.AssetID,
 		}
 	}
 	targets := outenforce.ExtractBucketTargets(refs)

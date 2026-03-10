@@ -19,7 +19,7 @@ type CleanupFile struct {
 
 // CleanupOutput holds the fields shared by PruneOutput and ArchiveOutput.
 type CleanupOutput struct {
-	SchemaVersion   string        `json:"schema_version"`
+	SchemaVersion   kernel.Schema `json:"schema_version"`
 	Kind            string        `json:"kind"`
 	CheckedAt       time.Time     `json:"checked_at"`
 	Mode            string        `json:"mode"`
@@ -65,7 +65,7 @@ type ArchiveOutputInput struct {
 
 func buildCleanupOutput(schema kernel.Schema, kind string, input CleanupInput) CleanupOutput {
 	return CleanupOutput{
-		SchemaVersion:   string(schema),
+		SchemaVersion:   schema,
 		Kind:            kind,
 		CheckedAt:       input.Now.UTC(),
 		Mode:            input.Mode,

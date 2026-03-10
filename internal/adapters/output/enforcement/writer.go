@@ -7,6 +7,8 @@ import (
 	"unicode"
 
 	"github.com/samber/lo"
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // BucketTarget represents one S3 bucket remediation target.
@@ -81,20 +83,20 @@ func RenderSCP(targets []BucketTarget) (string, error) {
 }
 
 // FindingRef is a minimal representation of an evaluation finding used for
-// target extraction. It avoids coupling this package to domain types.
+// target extraction.
 type FindingRef struct {
-	ControlID string
-	AssetID   string
+	ControlID kernel.ControlID
+	AssetID   asset.ID
 }
 
 // ExtractBucketTargets filters findings to S3 public-exposure controls,
 // deduplicates by asset ID, and returns sorted bucket targets.
 func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
 	targets := lo.FilterMap(findings, func(f FindingRef, _ int) (BucketTarget, bool) {
-		if !strings.HasPrefix(f.ControlID, "CTL.S3.PUBLIC.") {
+		if !strings.HasPrefix(string(f.ControlID), "CTL.S3.PUBLIC.") {
 			return BucketTarget{}, false
 		}
-		assetID := strings.TrimSpace(f.AssetID)
+		assetID := strings.TrimSpace(f.AssetID.String())
 		if assetID == "" {
 			return BucketTarget{}, false
 		}

@@ -38,6 +38,6 @@ func FuzzEvaluateOperator(f *testing.F) {
 		json.Unmarshal([]byte(compareValJSON), &compareVal)
 
 		fieldExists := fieldVal != nil
-		EvaluateOperator(op, fieldExists, fieldVal, compareVal)
+		EvaluateOperator(Operator(op), fieldExists, fieldVal, compareVal)
 	})
 }

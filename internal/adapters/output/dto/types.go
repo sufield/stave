@@ -69,8 +69,8 @@ type SourceEvidenceDTO struct {
 
 // PostureDriftDTO mirrors evaluation.PostureDrift.
 type PostureDriftDTO struct {
-	Pattern      string `json:"pattern"`
-	EpisodeCount int    `json:"episode_count"`
+	Pattern      evaluation.DriftPattern `json:"pattern"`
+	EpisodeCount int                     `json:"episode_count"`
 }
 
 // ExposureDTO mirrors policy.Exposure.
@@ -103,9 +103,9 @@ type RemediationTargetDTO struct {
 
 // RemediationActionDTO mirrors evaluation.RemediationAction.
 type RemediationActionDTO struct {
-	ActionType string `json:"action_type"`
-	Path       string `json:"path"`
-	Value      any    `json:"value,omitempty"`
+	ActionType evaluation.RemediationActionType `json:"action_type"`
+	Path       string                           `json:"path"`
+	Value      any                              `json:"value,omitempty"`
 }
 
 // SuppressedFindingDTO mirrors evaluation.SuppressedFinding.

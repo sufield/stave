@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 	"testing"
 
@@ -95,29 +94,29 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 func TestOperatorList_MatchesDocumentation(t *testing.T) {
 	// Expected operators — must match predicate.ListSupported()
 	// and the Predicate Operator Reference in docs/evaluation-semantics.md.
-	expected := []string{
-		"eq",
-		"ne",
-		"gt",
-		"lt",
-		"gte",
-		"lte",
-		"missing",
-		"present",
-		"in",
-		"list_empty",
-		"not_subset_of_field",
-		"neq_field",
-		"not_in_field",
-		"contains",
-		"any_match",
+	expected := []predicate.Operator{
+		predicate.OpEq,
+		predicate.OpNe,
+		predicate.OpGt,
+		predicate.OpLt,
+		predicate.OpGte,
+		predicate.OpLte,
+		predicate.OpMissing,
+		predicate.OpPresent,
+		predicate.OpIn,
+		predicate.OpListEmpty,
+		predicate.OpNotSubsetOfField,
+		predicate.OpNeqField,
+		predicate.OpNotInField,
+		predicate.OpContains,
+		predicate.OpAnyMatch,
 	}
 
 	actual := predicate.ListSupported()
 
-	expectedSorted := make([]string, len(expected))
+	expectedSorted := make([]predicate.Operator, len(expected))
 	copy(expectedSorted, expected)
-	sort.Strings(expectedSorted)
+	slices.Sort(expectedSorted)
 
 	if len(actual) != len(expectedSorted) {
 		t.Fatalf("operator count mismatch: code has %d, test expects %d\ncode: %v\nexpected: %v",
