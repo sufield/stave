@@ -165,11 +165,7 @@ func (f *scopeFilter) satisfiesTagRequirements(a Asset) bool {
 
 // FilterSnapshots filters snapshots to only include assets matching the predicate.
 func FilterSnapshots(predicate AssetPredicate, snapshots []Snapshot) []Snapshot {
-	if predicate == nil {
-		return snapshots
-	}
-	// Fast path: universal filter admits everything.
-	if sf, ok := predicate.(*scopeFilter); ok && sf.isUniversal() {
+	if predicate == nil || predicate == UniversalFilter {
 		return snapshots
 	}
 

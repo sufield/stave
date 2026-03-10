@@ -16,7 +16,7 @@ var (
 type RealClock struct{}
 
 // NewRealClock returns the default production clock implementation.
-func NewRealClock() Clock {
+func NewRealClock() RealClock {
 	return RealClock{}
 }
 

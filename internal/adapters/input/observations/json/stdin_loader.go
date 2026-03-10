@@ -31,17 +31,22 @@ func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Rea
 	return snap, nil
 }
 
-// StdinObservationLoader wraps an ObservationLoader to read from stdin.
+// SnapshotReader loads a single snapshot from an io.Reader.
+type SnapshotReader interface {
+	LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error)
+}
+
+// StdinObservationLoader wraps a SnapshotReader to read from stdin.
 // It implements contracts.ObservationRepository for use with the apply command.
 type StdinObservationLoader struct {
-	loader *ObservationLoader
+	loader SnapshotReader
 	reader io.Reader
 }
 
 var _ appcontracts.ObservationRepository = (*StdinObservationLoader)(nil)
 
 // NewStdinObservationLoader creates a loader that reads from the given reader.
-func NewStdinObservationLoader(loader *ObservationLoader, r io.Reader) *StdinObservationLoader {
+func NewStdinObservationLoader(loader SnapshotReader, r io.Reader) *StdinObservationLoader {
 	if loader == nil {
 		loader = NewObservationLoader()
 	}

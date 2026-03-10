@@ -134,8 +134,12 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	if err := appeval.ConfigureIntegrityCheck(loader, f.flags.applyIntegrityManifest, f.flags.applyIntegrityPublicKey); err != nil {
-		return nil, err
+	if f.flags.applyIntegrityManifest != "" {
+		cfg, ok := loader.(appcontracts.IntegrityCheckConfigurer)
+		if !ok {
+			return nil, fmt.Errorf("observation loader %T does not support integrity verification", loader)
+		}
+		cfg.ConfigureIntegrityCheck(f.flags.applyIntegrityManifest, f.flags.applyIntegrityPublicKey)
 	}
 	return loader, nil
 }
