@@ -49,6 +49,9 @@ type ObservationLoader struct {
 	validator              ObservationValidator
 	integrityManifestPath  string
 	integrityPublicKeyPath string
+	// OnProgress is called after each file is processed with (processed, total) counts.
+	// It is optional and safe to leave nil.
+	OnProgress func(processed, total int)
 }
 
 var (
@@ -85,8 +88,9 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 	var snapshots []asset.Snapshot
 	fileHashes := make(map[string]string, len(entries))
 	var joinedErr error
+	total := len(entries)
 
-	for _, entry := range entries {
+	for i, entry := range entries {
 		if err := ctx.Err(); err != nil {
 			return appcontracts.LoadResult{}, err
 		}
@@ -105,6 +109,10 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		}
 		snapshots = append(snapshots, snap)
 		fileHashes[entry.Name()] = hash
+
+		if l.OnProgress != nil {
+			l.OnProgress(i+1, total)
+		}
 	}
 
 	if joinedErr != nil {
@@ -117,6 +125,12 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 	}
 
 	return appcontracts.LoadResult{Snapshots: snapshots, Hashes: hashes}, nil
+}
+
+// SetOnProgress sets a callback that is called after each file is processed
+// with (processed, total) counts. Pass nil to disable.
+func (l *ObservationLoader) SetOnProgress(fn func(processed, total int)) {
+	l.OnProgress = fn
 }
 
 // ConfigureIntegrityCheck sets optional manifest verification for future LoadSnapshots calls.

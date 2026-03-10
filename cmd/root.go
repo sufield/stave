@@ -34,16 +34,19 @@ type globalFlagsType struct {
 	RequireOffline  bool   // runtime self-check for offline operation
 	Strict          bool   // enable strict runtime integrity checks
 	NoColor         bool   // disable colored output even on TTY
+	CPUProfile      string // write CPU profile to file
+	MemProfile      string // write heap profile to file
 }
 
 // App owns all CLI-wide mutable state, eliminating package-level globals
 // and making the CLI reentrant.
 type App struct {
-	Flags     globalFlagsType
-	Logger    *slog.Logger
-	LogCloser *logging.LogCloser
-	ExitFunc  func(int)
-	Root      *cobra.Command
+	Flags          globalFlagsType
+	Logger         *slog.Logger
+	LogCloser      *logging.LogCloser
+	ExitFunc       func(int)
+	Root           *cobra.Command
+	cpuProfileFile *os.File // held open during execution, closed in postRun
 
 	// Composition holds the adapter constructor wiring used by command handlers.
 	// It is initialised from compose.DefaultComposition() and activated via

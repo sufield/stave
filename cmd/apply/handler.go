@@ -76,16 +76,19 @@ func executeApply(
 	opts runOptions,
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
-	deps, err := NewFactory(cmd, flags, opts.params).Build(plan)
+	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
+	rt.Quiet = cmdutil.QuietEnabled(cmd)
+	progress := rt.BeginCountedProgress("apply controls against observations")
+	defer progress.Done()
+
+	factory := NewFactory(cmd, flags, opts.params)
+	factory.OnObsProgress = progress.Update
+
+	deps, err := factory.Build(plan)
 	if err != nil {
 		return EvaluateResult{}, err
 	}
 	defer deps.Close()
-
-	progress := ui.DefaultRuntime()
-	progress.Quiet = cmdutil.QuietEnabled(cmd)
-	done := progress.BeginProgress("apply controls against observations")
-	defer done()
 
 	status, err := appeval.Run(ctx, appeval.RunInput{
 		Runner: deps.Runner,

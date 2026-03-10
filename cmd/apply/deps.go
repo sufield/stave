@@ -37,6 +37,9 @@ type Factory struct {
 	cmd    *cobra.Command
 	flags  *applyFlagsType
 	params applyParams
+	// OnObsProgress is called by the observation loader after each file
+	// with (processed, total) counts. Optional.
+	OnObsProgress func(processed, total int)
 }
 
 // NewFactory creates a Factory for building apply dependencies.
@@ -124,6 +127,11 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	}, nil
 }
 
+// progressConfigurer sets an optional progress callback on a loader.
+type progressConfigurer interface {
+	SetOnProgress(fn func(processed, total int))
+}
+
 // buildObservationLoader creates and configures the observation repository,
 // selecting stdin or file mode and applying integrity checks if configured.
 func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
@@ -140,6 +148,11 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 			return nil, fmt.Errorf("observation loader %T does not support integrity verification", loader)
 		}
 		cfg.ConfigureIntegrityCheck(f.flags.applyIntegrityManifest, f.flags.applyIntegrityPublicKey)
+	}
+	if f.OnObsProgress != nil {
+		if pc, ok := loader.(progressConfigurer); ok {
+			pc.SetOnProgress(f.OnObsProgress)
+		}
 	}
 	return loader, nil
 }

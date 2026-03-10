@@ -31,6 +31,9 @@ type LoaderOption func(*ControlLoader)
 // ControlLoader loads control definitions from YAML files.
 type ControlLoader struct {
 	validator SchemaValidator
+	// OnProgress is called after each file is processed with (processed, total) counts.
+	// It is optional and safe to leave nil.
+	OnProgress func(processed, total int)
 }
 
 var _ appcontracts.ControlRepository = (*ControlLoader)(nil)
@@ -53,6 +56,12 @@ func NewControlLoader(opts ...LoaderOption) (*ControlLoader, error) {
 	return l, nil
 }
 
+// SetOnProgress sets a callback that is called after each file is processed
+// with (processed, total) counts. Pass nil to disable.
+func (l *ControlLoader) SetOnProgress(fn func(processed, total int)) {
+	l.OnProgress = fn
+}
+
 // LoadControls loads all YAML control definitions from the given directory,
 // recursively traversing subdirectories. Directories prefixed with "_" are skipped.
 // It supports an optional _registry/controls.index.json fast-path for large sets.
@@ -71,7 +80,8 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 
 	controls := make([]policy.ControlDefinition, 0, len(paths))
 	idSources := make(map[kernel.ControlID]string, len(paths))
-	for _, path := range paths {
+	total := len(paths)
+	for i, path := range paths {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
@@ -86,6 +96,10 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 		}
 		idSources[ctl.ID] = path
 		controls = append(controls, ctl)
+
+		if l.OnProgress != nil {
+			l.OnProgress(i+1, total)
+		}
 	}
 
 	// Sort by control ID for deterministic output
