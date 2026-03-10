@@ -91,6 +91,20 @@ homebrew_casks:
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/sufield/stave"
     description: "Configuration safety evaluation CLI"
+    caveats: |
+      First, check your environment:
+        stave doctor        Checks for jq, aws-cli, git, graphviz
+
+      Get started:
+        stave demo          First finding in 60 seconds
+        stave quickstart    Auto-detect snapshots and evaluate
+        stave init          Scaffold a new project
+
+      Shell completions:
+        stave completion bash > $(brew --prefix)/etc/bash_completion.d/stave
+        stave completion zsh  > $(brew --prefix)/share/zsh/site-functions/_stave
+
+      Documentation: https://github.com/sufield/stave
 
 nfpms:
   - id: default
