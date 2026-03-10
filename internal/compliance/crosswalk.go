@@ -11,6 +11,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 	"github.com/sufield/stave/internal/pkg/fp"
@@ -190,5 +191,5 @@ func normalizeFramework(value string) string {
 
 // FrameworkStrings converts a slice of Framework values to their string representations.
 func FrameworkStrings(fs []Framework) []string {
-	return fp.Map(fs, func(f Framework) string { return string(f) })
+	return lo.Map(fs, func(f Framework, _ int) string { return string(f) })
 }

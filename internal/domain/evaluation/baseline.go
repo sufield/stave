@@ -4,9 +4,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // BaselineEntry represents a single finding captured in a baseline snapshot.
@@ -80,8 +80,8 @@ func (r BaselineComparisonResult) HasNewFindings() bool {
 
 // CompareBaseline compares base and current entries, returning newly introduced and resolved entries.
 func CompareBaseline(base, current []BaselineEntry) BaselineComparisonResult {
-	baseSet := fp.ToMap(base, BaselineEntry.Key)
-	curSet := fp.ToMap(current, BaselineEntry.Key)
+	baseSet := lo.KeyBy(base, BaselineEntry.Key)
+	curSet := lo.KeyBy(current, BaselineEntry.Key)
 
 	var newEntries, resolved []BaselineEntry
 	for k, e := range curSet {

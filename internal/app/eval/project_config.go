@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // ErrConfigConflict is returned when project configuration contains
@@ -127,10 +128,7 @@ func loadBuiltInControlsByID(
 	for _, id := range controlIDs {
 		allowed[kernel.ControlID(id)] = true
 	}
-	excluded := make(map[kernel.ControlID]struct{}, len(excludeIDs))
-	for _, id := range excludeIDs {
-		excluded[id] = struct{}{}
-	}
+	excluded := fp.ToSet(excludeIDs)
 
 	// Single pass: select allowed controls, mark as seen.
 	selected := make([]policy.ControlDefinition, 0, len(controlIDs))

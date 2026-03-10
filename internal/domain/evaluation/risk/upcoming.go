@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // Status represents urgency for when an unsafe threshold is due.
@@ -68,7 +68,7 @@ type Items []Item
 
 // CountOverdue returns the number of items with OVERDUE status.
 func (items Items) CountOverdue() int {
-	return fp.CountFunc(items, func(item Item) bool { return item.Status == Overdue })
+	return lo.CountBy(items, func(item Item) bool { return item.Status == Overdue })
 }
 
 // HasAnyRisk reports whether any item is overdue, due now, or upcoming.

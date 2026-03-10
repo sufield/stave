@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // ControlFilter selects which controls to evaluate.
@@ -26,10 +27,7 @@ func FilterControls(invs []policy.ControlDefinition, f ControlFilter) ([]policy.
 		return nil, fmt.Errorf("invalid min-severity %s (use: critical, high, medium, low, info)", f.MinSeverity)
 	}
 
-	excluded := make(map[kernel.ControlID]struct{}, len(f.ExcludeControlID))
-	for _, id := range f.ExcludeControlID {
-		excluded[id] = struct{}{}
-	}
+	excluded := fp.ToSet(f.ExcludeControlID)
 
 	filtered := make([]policy.ControlDefinition, 0, len(invs))
 	for _, ctl := range invs {

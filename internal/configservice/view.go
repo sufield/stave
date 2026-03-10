@@ -2,6 +2,8 @@ package configservice
 
 import (
 	"sort"
+
+	"github.com/samber/lo"
 )
 
 // ResolvedField is a value annotated with its source.
@@ -33,19 +35,7 @@ func BuildKeyCompletions(baseKeys []string, tiers []string) []string {
 	keys := make([]string, 0, len(baseKeys)+len(tiers)*3)
 	keys = append(keys, baseKeys...)
 
-	seen := make(map[string]struct{}, len(tiers))
-	normalizedTiers := make([]string, 0, len(tiers))
-	for _, tier := range tiers {
-		if tier == "" {
-			continue
-		}
-		if _, exists := seen[tier]; exists {
-			continue
-		}
-		seen[tier] = struct{}{}
-		normalizedTiers = append(normalizedTiers, tier)
-	}
-
+	normalizedTiers := lo.Uniq(lo.Filter(tiers, func(t string, _ int) bool { return t != "" }))
 	sort.Strings(normalizedTiers)
 	for _, tier := range normalizedTiers {
 		keys = append(keys, "snapshot_retention_tiers."+tier)

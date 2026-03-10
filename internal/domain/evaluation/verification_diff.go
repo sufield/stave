@@ -1,5 +1,7 @@
 package evaluation
 
+import "github.com/samber/lo"
+
 // VerificationDiff is the deterministic before/after comparison result.
 type VerificationDiff struct {
 	Resolved   []Finding
@@ -10,15 +12,8 @@ type VerificationDiff struct {
 // CompareVerificationFindings compares before and after findings.
 // Returned slices are sorted by control_id then asset_id.
 func CompareVerificationFindings(before, after []Finding) VerificationDiff {
-	beforeSet := make(map[string]Finding, len(before))
-	for _, f := range before {
-		beforeSet[verificationFindingKey(f)] = f
-	}
-
-	afterSet := make(map[string]Finding, len(after))
-	for _, f := range after {
-		afterSet[verificationFindingKey(f)] = f
-	}
+	beforeSet := lo.KeyBy(before, verificationFindingKey)
+	afterSet := lo.KeyBy(after, verificationFindingKey)
 
 	resolved := make([]Finding, 0)
 	remaining := make([]Finding, 0)

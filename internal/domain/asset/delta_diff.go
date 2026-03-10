@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/pkg/fp"
 )
 
@@ -94,7 +95,7 @@ func appendPropertyPath(base, segment string) string {
 }
 
 func assetMap(resources []Asset) map[string]Asset {
-	return fp.ToMap(resources, func(r Asset) string { return r.ID.String() })
+	return lo.KeyBy(resources, func(r Asset) string { return r.ID.String() })
 }
 
 func uniqueSortedKeys[V any](a, b map[string]V) []string {
@@ -106,10 +107,5 @@ func uniqueSortedKeys[V any](a, b map[string]V) []string {
 		keySet[k] = struct{}{}
 	}
 
-	keys := make([]string, 0, len(keySet))
-	for k := range keySet {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
+	return fp.SortedKeys(keySet)
 }

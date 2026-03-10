@@ -2,11 +2,12 @@ package pruner
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // PlanAction represents the action to take on a snapshot in a retention plan.
@@ -150,25 +151,17 @@ func groupSnapshotFilesByTier(
 		resolver = func(_ string, _ []TierMappingRule, fallback string) string { return fallback }
 	}
 
-	byTier := make(map[string][]SnapshotFile)
-	for i := range files {
-		sf := files[i]
+	return lo.GroupBy(files, func(sf SnapshotFile) string {
 		tier := resolver(sf.RelPath, rules, defaultTier)
 		if strings.TrimSpace(tier) == "" {
-			tier = defaultTier
+			return defaultTier
 		}
-		byTier[tier] = append(byTier[tier], sf)
-	}
-	return byTier
+		return tier
+	})
 }
 
 func sortedSnapshotTierNames(byTier map[string][]SnapshotFile) []string {
-	tierNames := make([]string, 0, len(byTier))
-	for name := range byTier {
-		tierNames = append(tierNames, name)
-	}
-	sort.Strings(tierNames)
-	return tierNames
+	return fp.SortedKeys(byTier)
 }
 
 type tierConfig struct {

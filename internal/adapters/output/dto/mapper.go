@@ -1,12 +1,12 @@
 package dto
 
 import (
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -76,7 +76,7 @@ func fromFindings(fs []remediation.Finding) []FindingDTO {
 	if fs != nil && len(fs) == 0 {
 		return []FindingDTO{}
 	}
-	return fp.Map(fs, FromFinding)
+	return lo.Map(fs, func(f remediation.Finding, _ int) FindingDTO { return FromFinding(f) })
 }
 
 func fromEvidence(e evaluation.Evidence) EvidenceDTO {
@@ -94,11 +94,11 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 	}
 
 	if len(e.Misconfigurations) > 0 {
-		dto.Misconfigurations = fp.Map(e.Misconfigurations, fromMisconfiguration)
+		dto.Misconfigurations = lo.Map(e.Misconfigurations, func(m policy.Misconfiguration, _ int) MisconfigurationDTO { return fromMisconfiguration(m) })
 	}
 
 	if len(e.RootCauses) > 0 {
-		dto.RootCauses = fp.Map(e.RootCauses, evaluation.RootCause.String)
+		dto.RootCauses = lo.Map(e.RootCauses, func(c evaluation.RootCause, _ int) string { return c.String() })
 	}
 
 	if e.SourceEvidence != nil {
@@ -139,7 +139,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 		ExpectedEffect: p.ExpectedEffect,
 	}
 	if len(p.Actions) > 0 {
-		dto.Actions = fp.Map(p.Actions, fromRemediationAction)
+		dto.Actions = lo.Map(p.Actions, func(a evaluation.RemediationAction, _ int) RemediationActionDTO { return fromRemediationAction(a) })
 	}
 	return dto
 }

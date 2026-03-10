@@ -3,7 +3,7 @@ package acl
 import (
 	"strings"
 
-	"github.com/sufield/stave/internal/pkg/fp"
+	"github.com/samber/lo"
 )
 
 const (
@@ -65,7 +65,7 @@ func (g Grant) Permissions() Permission {
 
 // PublicGrantees returns public grantee identifiers in encounter order.
 func (gs Grants) PublicGrantees() []string {
-	return fp.FilterMap(gs, func(g Grant) (string, bool) {
+	return lo.FilterMap(gs, func(g Grant, _ int) (string, bool) {
 		if g.IsPublic() {
 			return g.Grantee, true
 		}
