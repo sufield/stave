@@ -1,5 +1,9 @@
-// Package fp provides generic functional-programming utilities for slices.
+// Package fp provides generic functional-programming utilities for slices and maps.
 //
-// Functions include [Map], [Filter], [CountFunc], [ToSet], [FindFunc],
-// [Flatten], [Dedupe], and [Zip].
+// Slice transforms: [Map], [Filter], [FilterMap], [FlatMap], [Flatten].
+// Search: [FindFunc], [CountFunc].
+// Deduplication: [Dedupe].
+// Collection builders: [ToSet], [ToMap], [GroupBy].
+// Map utilities: [MapKeys], [SortedKeys].
+// Combinators: [Zip].
 package fp
