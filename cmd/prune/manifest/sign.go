@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
@@ -57,7 +58,9 @@ func runSnapshotManifestSign(cmd *cobra.Command, inFile, keyPath, outFile string
 		return fmt.Errorf("write signed manifest %q: %w", out, err)
 	}
 
-	fmt.Fprintf(cmd.OutOrStdout(), "Wrote signed manifest: %s\n", out)
+	if cmdutil.TextOutputEnabled(cmd) {
+		fmt.Fprintf(cmd.OutOrStdout(), "Wrote signed manifest: %s\n", out)
+	}
 	return nil
 }
 

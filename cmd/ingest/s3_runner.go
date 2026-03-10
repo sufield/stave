@@ -154,7 +154,9 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 	}
 
 	if r.opts.DryRun {
-		fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
+		if cmdutil.TextOutputEnabled(cmd) {
+			fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
+		}
 		return nil
 	}
 
@@ -162,7 +164,7 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 		return err
 	}
 
-	if !cmdutil.QuietEnabled(cmd) {
+	if cmdutil.TextOutputEnabled(cmd) {
 		fmt.Fprintf(cmd.OutOrStdout(), "Extracted %d bucket(s) to %s\n", len(snapshots[0].Assets), cfg.outFile)
 		printIngestCoverage(cmd.OutOrStdout(), snapshots[len(snapshots)-1].Assets)
 	}
@@ -170,9 +172,13 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 }
 
 func (r *s3Runner) handleEmptySnapshot(cmd *cobra.Command, cfg s3RunConfig) error {
-	fmt.Fprintln(cmd.OutOrStdout(), "No S3 buckets matching health scope found in snapshot")
+	if cmdutil.TextOutputEnabled(cmd) {
+		fmt.Fprintln(cmd.OutOrStdout(), "No S3 buckets matching health scope found in snapshot")
+	}
 	if r.opts.DryRun {
-		fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
+		if cmdutil.TextOutputEnabled(cmd) {
+			fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
+		}
 		return nil
 	}
 	return r.writeObservationsFile(cmd, cfg.outFile, nil)

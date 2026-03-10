@@ -63,11 +63,6 @@ type Config struct {
 	// FullPaths logs full file paths instead of base names.
 	// Disabled by default for privacy.
 	FullPaths bool
-
-	// NoColor disables ANSI color output when NO_COLOR is set.
-	// Stave text output is plain by default; this is future-proofing for any
-	// colored text handlers.
-	NoColor bool
 }
 
 // suppressTimestamps reports whether timestamps should be stripped for deterministic output.
@@ -92,7 +87,6 @@ func DefaultConfig() Config {
 		Timestamps: false,
 		Timings:    false,
 		FullPaths:  false,
-		NoColor:    false,
 	}
 }
 

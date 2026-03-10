@@ -47,7 +47,7 @@ func analyzeCondition(raw any) ConditionAnalysis {
 
 			// 2) Check whether operator+values create an effective constraint.
 			valSlice := NormalizeStringOrSlice(values)
-			if isEffectiveConstraint(op, k, valSlice) {
+			if isEffectiveConstraint(op, valSlice) {
 				setFlag(&analysis)
 			}
 		}
@@ -56,7 +56,7 @@ func analyzeCondition(raw any) ConditionAnalysis {
 }
 
 // isEffectiveConstraint determines whether the condition is a real boundary.
-func isEffectiveConstraint(op, key string, values []string) bool {
+func isEffectiveConstraint(op string, values []string) bool {
 	if len(values) == 0 {
 		return false
 	}
@@ -75,7 +75,6 @@ func isEffectiveConstraint(op, key string, values []string) bool {
 		}
 	}
 
-	_ = key // reserved for key-specific logic extensions.
 	return false
 }
 
