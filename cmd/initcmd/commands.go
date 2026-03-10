@@ -115,7 +115,7 @@ func NewDemoCmd() *cobra.Command {
 		Short: "Run one-command hello-world safety loop",
 		Long: `Demo executes the shortest possible Stave loop:
 
-Snapshot -> Evaluate -> Finding -> Evidence -> Fix hint -> Report artifact
+Snapshot -> Apply -> Finding -> Evidence -> Fix hint -> Report artifact
 
 It loads a tiny built-in fixture, runs a fast-lane control set, prints one
 clear result, and writes a small report file.

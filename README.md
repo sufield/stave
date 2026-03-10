@@ -2,7 +2,7 @@
 
 A configuration analysis engine that detects insecure configurations in your cloud environment using only local configuration snapshots — no cloud credentials required.
 
-[Docs](docs/index.md) | [Quickstart](docs/time-to-first-finding.md) | [Releases](https://github.com/sufield/stave/releases) | [Security](SECURITY.md) | [Contributing](CONTRIBUTING.md)
+[Docs](docs/index.md) | [FAQ](docs/faq.md) | [Quickstart](docs/time-to-first-finding.md) | [Releases](https://github.com/sufield/stave/releases) | [Security](SECURITY.md) | [Contributing](CONTRIBUTING.md)
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sufield/stave/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sufield/stave)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave)](https://goreportcard.com/report/github.com/sufield/stave)
