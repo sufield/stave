@@ -79,7 +79,7 @@ func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error
 	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.Now, OlderThan: in.OlderThan, KeepMin: in.KeepMin})
 	out := pruner.BuildPruneOutput(pruner.CleanupInput{
 		Now:             in.Now,
-		Mode:            in.Mode,
+		Action:          in.Action,
 		DryRun:          in.DryRun,
 		ObservationsDir: in.ObsDir,
 		Tier:            in.Tier,
@@ -91,7 +91,7 @@ func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error
 	return deletePlan{
 		CleanupPlan: pruneshared.CleanupPlan{
 			Now:             in.Now,
-			Mode:            in.Mode,
+			Action:          in.Action,
 			DryRun:          in.DryRun,
 			Quiet:           in.Quiet,
 			Format:          in.Format,
@@ -132,10 +132,6 @@ func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput
 	}
 
 	dryRun := opts.DryRun || !cmdutil.ForceEnabled(cmd)
-	mode := "DELETE"
-	if dryRun {
-		mode = "DRY_RUN"
-	}
 
 	return deleteRunInput{
 		CleanupRunInput: pruneshared.CleanupRunInput{
@@ -147,7 +143,7 @@ func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput
 			KeepMin:   opts.KeepMin,
 			DryRun:    dryRun,
 			Quiet:     cmdutil.QuietEnabled(cmd),
-			Mode:      mode,
+			Action:    pruner.ActionDelete,
 		},
 	}, nil
 }
@@ -157,9 +153,10 @@ func renderDeletePlan(plan deletePlan, out io.Writer) error {
 		Format:         plan.Format,
 		Output:         plan.output,
 		OutputKind:     "prune",
-		Action:         "prune",
+		ActionLabel:    "prune",
 		SummaryPrefix:  "Prune",
-		Mode:           plan.Mode,
+		Action:         plan.Action,
+		DryRun:         plan.DryRun,
 		AllFiles:       plan.AllFiles,
 		CandidateFiles: plan.CandidateFiles,
 		OlderThan:      plan.OlderThan,

@@ -28,7 +28,7 @@ type input struct {
 type result struct {
 	SchemaVersion kernel.Schema `json:"schema_version"`
 	Kind          string        `json:"kind"`
-	Mode          string        `json:"mode"`
+	Mode          Mode          `json:"mode"`
 	OutputFile    string        `json:"output_file"`
 	Targets       []string      `json:"targets"`
 }
@@ -115,7 +115,7 @@ func buildPlan(req runRequest) (plan, error) {
 		result: result{
 			SchemaVersion: kernel.SchemaEnforce,
 			Kind:          "enforcement",
-			Mode:          string(req.mode),
+			Mode:          req.mode,
 			OutputFile:    outPath,
 			Targets:       targetNames(targets),
 		},

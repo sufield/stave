@@ -179,7 +179,7 @@ func fromTerraformEncryptionConfig(cfg *s3terraform.EncryptionConfig) *s3storage
 		return nil
 	}
 	return &s3storage.EncryptionConfig{
-		Algorithm: cfg.Algorithm,
+		Algorithm: s3storage.EncryptionAlgorithm(cfg.Algorithm),
 		KMSKeyARN: cfg.KMSKeyARN,
 	}
 }
@@ -189,8 +189,8 @@ func fromTerraformVersioningConfig(cfg *s3terraform.VersioningConfig) *s3storage
 		return nil
 	}
 	return &s3storage.VersioningConfig{
-		Status:    cfg.Status,
-		MFADelete: cfg.MFADelete,
+		Status:    s3storage.VersioningStatus(cfg.Status),
+		MFADelete: s3storage.MFADeleteStatus(cfg.MFADelete),
 	}
 }
 
@@ -231,7 +231,7 @@ func fromTerraformObjectLockConfig(cfg *s3terraform.ObjectLockConfig) *s3storage
 	}
 	return &s3storage.ObjectLockConfig{
 		Enabled:       cfg.Enabled,
-		Mode:          cfg.Mode,
+		Mode:          s3storage.ObjectLockMode(cfg.Mode),
 		RetentionDays: cfg.RetentionDays,
 	}
 }

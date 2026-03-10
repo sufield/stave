@@ -10,6 +10,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
@@ -17,6 +18,9 @@ import (
 
 func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	if err := a.startCPUProfile(); err != nil {
+		return err
+	}
+	if err := a.validateOutputMode(); err != nil {
 		return err
 	}
 	if err := a.checkRequireOffline(); err != nil {
@@ -84,6 +88,12 @@ func (a *App) writeMemProfile(cmd *cobra.Command) {
 	if err := pprof.WriteHeapProfile(f); err != nil {
 		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: write memory profile: %v\n", err)
 	}
+}
+
+// validateOutputMode validates the --output flag value early, before any command runs.
+func (a *App) validateOutputMode() error {
+	_, err := ui.ParseOutputMode(a.Flags.OutputMode)
+	return err
 }
 
 // checkRequireOffline validates the offline guarantee when --require-offline is set.

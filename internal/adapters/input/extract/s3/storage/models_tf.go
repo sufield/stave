@@ -2,16 +2,48 @@ package storage
 
 import s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 
+// VersioningStatus represents the S3 bucket versioning state.
+type VersioningStatus string
+
+const (
+	VersioningEnabled   VersioningStatus = "Enabled"
+	VersioningSuspended VersioningStatus = "Suspended"
+)
+
+// MFADeleteStatus represents the S3 MFA delete state.
+type MFADeleteStatus string
+
+const (
+	MFADeleteEnabled  MFADeleteStatus = "Enabled"
+	MFADeleteDisabled MFADeleteStatus = "Disabled"
+)
+
+// ObjectLockMode represents the S3 object lock retention mode.
+type ObjectLockMode string
+
+const (
+	ObjectLockCompliance ObjectLockMode = "COMPLIANCE"
+	ObjectLockGovernance ObjectLockMode = "GOVERNANCE"
+)
+
+// EncryptionAlgorithm represents the S3 server-side encryption algorithm.
+type EncryptionAlgorithm string
+
+const (
+	EncryptionAES256 EncryptionAlgorithm = "AES256"
+	EncryptionAWSKMS EncryptionAlgorithm = "aws:kms"
+)
+
 // EncryptionConfig represents S3 server-side encryption configuration.
 type EncryptionConfig struct {
-	Algorithm string // "AES256" or "aws:kms"
+	Algorithm EncryptionAlgorithm
 	KMSKeyARN string // empty for AES256
 }
 
 // VersioningConfig represents S3 bucket versioning configuration.
 type VersioningConfig struct {
-	Status    string // "Enabled", "Suspended", or ""
-	MFADelete string // "Enabled", "Disabled", or ""
+	Status    VersioningStatus
+	MFADelete MFADeleteStatus
 }
 
 // LoggingConfig represents S3 bucket logging configuration.
@@ -33,7 +65,7 @@ type LifecycleConfig struct {
 // ObjectLockConfig represents S3 bucket object lock configuration.
 type ObjectLockConfig struct {
 	Enabled       bool
-	Mode          string // "COMPLIANCE", "GOVERNANCE", or ""
+	Mode          ObjectLockMode
 	RetentionDays int
 }
 

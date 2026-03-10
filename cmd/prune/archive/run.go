@@ -85,7 +85,7 @@ func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiv
 	out := pruner.BuildArchiveOutput(pruner.ArchiveOutputInput{
 		CleanupInput: pruner.CleanupInput{
 			Now:             in.Now,
-			Mode:            in.Mode,
+			Action:          in.Action,
 			DryRun:          in.DryRun,
 			ObservationsDir: in.ObsDir,
 			Tier:            in.Tier,
@@ -99,7 +99,7 @@ func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiv
 	return archiveExecutionPlan{
 		CleanupPlan: pruneshared.CleanupPlan{
 			Now:             in.Now,
-			Mode:            in.Mode,
+			Action:          in.Action,
 			DryRun:          in.DryRun,
 			Quiet:           in.Quiet,
 			Format:          in.Format,
@@ -144,10 +144,6 @@ func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResol
 
 	overwrite := cmdutil.ForceEnabled(cmd)
 	dryRun := opts.DryRun || !overwrite
-	mode := "MOVE"
-	if dryRun {
-		mode = "DRY_RUN"
-	}
 
 	return archiveResolvedInput{
 		CleanupRunInput: pruneshared.CleanupRunInput{
@@ -159,7 +155,7 @@ func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResol
 			KeepMin:   opts.KeepMin,
 			DryRun:    dryRun,
 			Quiet:     cmdutil.QuietEnabled(cmd),
-			Mode:      mode,
+			Action:    pruner.ActionMove,
 		},
 		ArchiveDir: destArchiveDir,
 		Overwrite:  overwrite,
@@ -184,9 +180,10 @@ func renderArchiveExecutionPlan(plan archiveExecutionPlan, out io.Writer) error 
 		Format:         plan.Format,
 		Output:         plan.output,
 		OutputKind:     "archive",
-		Action:         "archive",
+		ActionLabel:    "archive",
 		SummaryPrefix:  "Archive",
-		Mode:           plan.Mode,
+		Action:         plan.Action,
+		DryRun:         plan.DryRun,
 		AllFiles:       plan.AllFiles,
 		CandidateFiles: plan.CandidateFiles,
 		OlderThan:      plan.OlderThan,

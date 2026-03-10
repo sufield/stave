@@ -18,7 +18,7 @@ import (
 // CleanupPlan holds the fields shared by delete and archive execution plans.
 type CleanupPlan struct {
 	Now             time.Time
-	Mode            string
+	Action          pruner.CleanupAction
 	DryRun          bool
 	Quiet           bool
 	Format          ui.OutputFormat
@@ -40,7 +40,7 @@ type CleanupRunInput struct {
 	KeepMin   int
 	DryRun    bool
 	Quiet     bool
-	Mode      string
+	Action    pruner.CleanupAction
 }
 
 // SnapshotFile is an alias for pruner.SnapshotFile.

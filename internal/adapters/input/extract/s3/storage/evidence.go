@@ -61,7 +61,7 @@ func NewEncryptionEvidence(e *EncryptionConfig) *EncryptionEvidence {
 		return nil
 	}
 	return &EncryptionEvidence{
-		Algorithm: e.Algorithm,
+		Algorithm: string(e.Algorithm),
 		KMSKeyARN: e.KMSKeyARN,
 	}
 }
@@ -71,8 +71,8 @@ func NewVersioningEvidence(v *VersioningConfig) *VersioningEvidence {
 		return nil
 	}
 	return &VersioningEvidence{
-		Status:    v.Status,
-		MFADelete: v.MFADelete,
+		Status:    string(v.Status),
+		MFADelete: string(v.MFADelete),
 	}
 }
 
@@ -100,7 +100,7 @@ func NewObjectLockEvidence(o *ObjectLockConfig) *ObjectLockEvidence {
 	}
 	return &ObjectLockEvidence{
 		Enabled:       true,
-		Mode:          o.Mode,
+		Mode:          string(o.Mode),
 		RetentionDays: o.RetentionDays,
 	}
 }

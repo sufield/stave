@@ -8,8 +8,8 @@ import (
 )
 
 func TestNewWriter(t *testing.T) {
-	w := NewWriter(nil, nil, OutputJSON, true)
-	if w.Mode() != OutputJSON {
+	w := NewWriter(nil, nil, OutputFormatJSON, true)
+	if w.Mode() != OutputFormatJSON {
 		t.Errorf("expected mode JSON, got %v", w.Mode())
 	}
 	if !w.IsJSON() {
@@ -19,7 +19,7 @@ func TestNewWriter(t *testing.T) {
 
 func TestWriter_Stdout_QuietModeText(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputText, true)
+	w := NewWriter(&stdout, &stderr, OutputFormatText, true)
 
 	// In text+quiet mode, stdout should be discarded
 	out := w.Stdout()
@@ -30,7 +30,7 @@ func TestWriter_Stdout_QuietModeText(t *testing.T) {
 
 func TestWriter_Stdout_QuietModeJSON(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputJSON, true)
+	w := NewWriter(&stdout, &stderr, OutputFormatJSON, true)
 
 	// In JSON mode, stdout should NOT be discarded (JSON always goes to stdout)
 	out := w.Stdout()
@@ -41,7 +41,7 @@ func TestWriter_Stdout_QuietModeJSON(t *testing.T) {
 
 func TestWriter_Stderr_QuietMode(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputJSON, true)
+	w := NewWriter(&stdout, &stderr, OutputFormatJSON, true)
 
 	// In quiet mode, stderr should be discarded
 	out := w.Stderr()
@@ -52,7 +52,7 @@ func TestWriter_Stderr_QuietMode(t *testing.T) {
 
 func TestWriter_WriteJSON(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputJSON, false)
+	w := NewWriter(&stdout, &stderr, OutputFormatJSON, false)
 
 	data := map[string]string{"key": "value"}
 	err := w.WriteJSON(data)
@@ -76,7 +76,7 @@ func TestWriter_WriteJSON(t *testing.T) {
 
 func TestWriter_WriteJSONRaw(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputJSON, false)
+	w := NewWriter(&stdout, &stderr, OutputFormatJSON, false)
 
 	data := map[string]string{"key": "value"}
 	err := w.WriteJSONRaw(data)
@@ -97,7 +97,7 @@ func TestWriter_WriteJSONRaw(t *testing.T) {
 
 func TestWriter_Info_QuietMode(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputText, true)
+	w := NewWriter(&stdout, &stderr, OutputFormatText, true)
 
 	w.Info("hello")
 
@@ -108,7 +108,7 @@ func TestWriter_Info_QuietMode(t *testing.T) {
 
 func TestWriter_Info_WritesToStderr(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	w := NewWriter(&stdout, &stderr, OutputText, false)
+	w := NewWriter(&stdout, &stderr, OutputFormatText, false)
 	forceTTY := false
 	w.rt.IsTTY = &forceTTY
 

@@ -10,28 +10,18 @@ import (
 	"os"
 )
 
-// OutputMode specifies the output format.
-type OutputMode string
-
-const (
-	// OutputJSON produces machine-readable JSON to stdout.
-	OutputJSON OutputMode = "json"
-	// OutputText produces human-readable text to stdout.
-	OutputText OutputMode = "text"
-)
-
 // Writer manages output streams with mode awareness.
 type Writer struct {
 	stdout io.Writer
 	stderr io.Writer
-	mode   OutputMode
+	mode   OutputFormat
 	quiet  bool
 	rt     *Runtime
 }
 
 // NewWriter creates a Writer.
 // Passing nil streams defaults to os.Stdout/os.Stderr.
-func NewWriter(stdout, stderr io.Writer, mode OutputMode, quiet bool) *Writer {
+func NewWriter(stdout, stderr io.Writer, mode OutputFormat, quiet bool) *Writer {
 	if stdout == nil {
 		stdout = os.Stdout
 	}
@@ -52,7 +42,7 @@ func NewWriter(stdout, stderr io.Writer, mode OutputMode, quiet bool) *Writer {
 // Stdout returns the appropriate stdout writer.
 // In quiet mode with text output, returns io.Discard.
 func (w *Writer) Stdout() io.Writer {
-	if w.quiet && w.mode == OutputText {
+	if w.quiet && w.mode == OutputFormatText {
 		return io.Discard
 	}
 	return w.stdout
@@ -67,14 +57,14 @@ func (w *Writer) Stderr() io.Writer {
 	return w.stderr
 }
 
-// Mode returns the output mode.
-func (w *Writer) Mode() OutputMode {
+// Mode returns the output format.
+func (w *Writer) Mode() OutputFormat {
 	return w.mode
 }
 
 // IsJSON returns true if output mode is JSON.
 func (w *Writer) IsJSON() bool {
-	return w.mode == OutputJSON
+	return w.mode == OutputFormatJSON
 }
 
 // Envelope wraps data in the standard ok/data envelope for JSON output.

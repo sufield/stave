@@ -49,7 +49,7 @@ func (olc *ObjectLockConfig) Canonical() S3ObjectLock {
 	}
 	return S3ObjectLock{
 		Enabled:       olc.Enabled,
-		Mode:          olc.Mode,
+		Mode:          string(olc.Mode),
 		RetentionDays: olc.RetentionDays,
 	}
 }
