@@ -51,7 +51,7 @@ func main() {
 	}
 
 	if *check {
-		existing, err := os.ReadFile(safeOut)
+		existing, err := os.ReadFile(safeOut) //nolint:gosec // path validated by safeLocalPath
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error reading %s: %v\n", safeOut, err)
 			os.Exit(1)
@@ -131,7 +131,7 @@ func render(tmplPath string, data Data) ([]byte, error) {
 		},
 	}
 
-	tmplContent, err := os.ReadFile(safe)
+	tmplContent, err := os.ReadFile(safe) //nolint:gosec // path validated by safeLocalPath
 	if err != nil {
 		return nil, fmt.Errorf("reading template: %w", err)
 	}
