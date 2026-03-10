@@ -99,13 +99,7 @@ func (items Items) Filter(c FilterCriteria) Items {
 	if !c.active() {
 		return items
 	}
-	out := make(Items, 0, len(items))
-	for _, item := range items {
-		if c.matches(item) {
-			out = append(out, item)
-		}
-	}
-	return out
+	return lo.Filter(items, func(item Item, _ int) bool { return c.matches(item) })
 }
 
 func (c FilterCriteria) active() bool {
@@ -179,15 +173,12 @@ func ComputeItems(req Request) Items {
 		return nil
 	}
 	sorted := sortSnapshotsByCapturedAt(req.Snapshots)
-	items := make([]Item, 0)
-	for _, ctl := range req.Controls {
-		if !isRiskControl(ctl) {
-			continue
-		}
+	riskControls := lo.Filter(req.Controls, func(ctl policy.ControlDefinition, _ int) bool { return isRiskControl(ctl) })
+	items := lo.FlatMap(riskControls, func(ctl policy.ControlDefinition, _ int) []Item {
 		threshold := resolveMaxUnsafe(ctl, req.GlobalMaxUnsafe)
 		states := computeStates(ctl, sorted, req.PredicateParser)
-		items = append(items, itemsForControl(ctl, states, req.Now, threshold)...)
-	}
+		return itemsForControl(ctl, states, req.Now, threshold)
+	})
 	sortItems(items)
 	return items
 }

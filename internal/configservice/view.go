@@ -35,7 +35,7 @@ func BuildKeyCompletions(baseKeys []string, tiers []string) []string {
 	keys := make([]string, 0, len(baseKeys)+len(tiers)*3)
 	keys = append(keys, baseKeys...)
 
-	normalizedTiers := lo.Uniq(lo.Filter(tiers, func(t string, _ int) bool { return t != "" }))
+	normalizedTiers := lo.Uniq(lo.Compact(tiers))
 	sort.Strings(normalizedTiers)
 	for _, tier := range normalizedTiers {
 		keys = append(keys, "snapshot_retention_tiers."+tier)

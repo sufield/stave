@@ -4,15 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 func ContainsSubstring(values []string, target string) bool {
-	for _, v := range values {
-		if strings.Contains(v, target) {
-			return true
-		}
-	}
-	return false
+	return lo.SomeBy(values, func(v string) bool { return strings.Contains(v, target) })
 }
 
 // ToMap marshals a typed model into map[string]any for asset.Asset.Properties.

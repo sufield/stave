@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -80,10 +81,7 @@ func (s assetTypeSet) IsInconsistent() bool {
 }
 
 func (s assetTypeSet) List() []string {
-	out := make([]string, 0, len(s))
-	for t := range s {
-		out = append(out, string(t))
-	}
+	out := lo.Map(lo.Keys(s), func(t kernel.AssetType, _ int) string { return string(t) })
 	slices.Sort(out)
 	return out
 }
@@ -279,12 +277,9 @@ func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTim
 
 // checkIdentityConsistency validates asset identity across snapshots.
 func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.Issue) {
-	reusedTypeIDs := make([]ID, 0, len(ctx.assetTypes))
-	for id, types := range ctx.assetTypes {
-		if types.IsInconsistent() {
-			reusedTypeIDs = append(reusedTypeIDs, id)
-		}
-	}
+	reusedTypeIDs := lo.FilterMap(lo.Entries(ctx.assetTypes), func(e lo.Entry[ID, assetTypeSet], _ int) (ID, bool) {
+		return e.Key, e.Value.IsInconsistent()
+	})
 	slices.SortFunc(reusedTypeIDs, func(a, b ID) int {
 		return strings.Compare(a.String(), b.String())
 	})
@@ -301,12 +296,9 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.I
 	}
 
 	if s.IsMultiSnapshot() {
-		singleAppearanceIDs := make([]ID, 0, len(ctx.assetCounts))
-		for id, count := range ctx.assetCounts {
-			if count.IsTransient() {
-				singleAppearanceIDs = append(singleAppearanceIDs, id)
-			}
-		}
+		singleAppearanceIDs := lo.FilterMap(lo.Entries(ctx.assetCounts), func(e lo.Entry[ID, assetOccurrence], _ int) (ID, bool) {
+			return e.Key, e.Value.IsTransient()
+		})
 		slices.SortFunc(singleAppearanceIDs, func(a, b ID) int {
 			return strings.Compare(a.String(), b.String())
 		})

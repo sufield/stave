@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/pkg/sensitive"
 )
 
@@ -48,10 +49,8 @@ func isSensitiveKey(key string) bool {
 	}
 
 	// Slow: substring match for compound names (e.g. "accesstoken").
-	for _, sub := range sensitiveSubstrings {
-		if strings.Contains(norm, sub) {
-			return true
-		}
+	if lo.SomeBy(sensitiveSubstrings, func(sub string) bool { return strings.Contains(norm, sub) }) {
+		return true
 	}
 
 	return false

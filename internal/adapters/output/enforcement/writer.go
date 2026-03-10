@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+
+	"github.com/samber/lo"
 )
 
 // BucketTarget represents one S3 bucket remediation target.
@@ -88,25 +90,17 @@ type FindingRef struct {
 // ExtractBucketTargets filters findings to S3 public-exposure controls,
 // deduplicates by asset ID, and returns sorted bucket targets.
 func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
-	seen := make(map[string]struct{})
-	targets := make([]BucketTarget, 0)
-	for _, f := range findings {
+	targets := lo.FilterMap(findings, func(f FindingRef, _ int) (BucketTarget, bool) {
 		if !strings.HasPrefix(f.ControlID, "CTL.S3.PUBLIC.") {
-			continue
+			return BucketTarget{}, false
 		}
 		assetID := strings.TrimSpace(f.AssetID)
 		if assetID == "" {
-			continue
+			return BucketTarget{}, false
 		}
-		if _, ok := seen[assetID]; ok {
-			continue
-		}
-		seen[assetID] = struct{}{}
-		targets = append(targets, BucketTarget{
-			AssetID:    assetID,
-			BucketName: extractBucketName(assetID),
-		})
-	}
+		return BucketTarget{AssetID: assetID, BucketName: extractBucketName(assetID)}, true
+	})
+	targets = lo.UniqBy(targets, func(t BucketTarget) string { return t.AssetID })
 	SortTargets(targets)
 	return targets
 }

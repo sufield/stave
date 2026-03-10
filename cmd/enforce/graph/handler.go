@@ -161,13 +161,7 @@ func coverageEdges(
 }
 
 func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string {
-	uncovered := make([]string, 0)
-	for _, rid := range assetIDs {
-		if !coveredAssets[rid] {
-			uncovered = append(uncovered, rid)
-		}
-	}
-	return uncovered
+	return lo.Reject(assetIDs, func(rid string, _ int) bool { return coveredAssets[rid] })
 }
 
 func writeResult(w io.Writer, format string, result coverageResult, sanitizer *sanitize.Sanitizer) error {
