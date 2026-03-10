@@ -57,5 +57,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
+          disable_search: true
           flags: unit
           fail_ci_if_error: true
