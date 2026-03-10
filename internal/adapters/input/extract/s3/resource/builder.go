@@ -73,30 +73,34 @@ func mergePublicAccessBlock(effective *s3storage.PublicAccessBlock, candidate *s
 // ToExposurePolicyAnalysis maps an S3 policy analysis to the exposure domain type.
 func ToExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysis {
 	return s3exposure.PolicyAnalysis{
-		AllowsPublicRead:            policy.AllowsPublicRead,
-		AllowsPublicList:            policy.AllowsPublicList,
-		AllowsPublicWrite:           policy.AllowsPublicWrite,
-		AllowsPublicACLRead:         policy.AllowsPublicACLRead,
-		AllowsPublicACLWrite:        policy.AllowsPublicACLWrite,
-		AllowsAuthenticatedRead:     policy.AllowsAuthenticatedRead,
-		AllowsAuthenticatedList:     policy.AllowsAuthenticatedList,
-		AllowsAuthenticatedWrite:    policy.AllowsAuthenticatedWrite,
-		AllowsAuthenticatedACLRead:  policy.AllowsAuthenticatedACLRead,
-		AllowsAuthenticatedACLWrite: policy.AllowsAuthenticatedACLWrite,
+		AccessFlags: s3exposure.AccessFlags{
+			AllowsPublicRead:            policy.AllowsPublicRead,
+			AllowsPublicWrite:           policy.AllowsPublicWrite,
+			AllowsPublicACLRead:         policy.AllowsPublicACLRead,
+			AllowsPublicACLWrite:        policy.AllowsPublicACLWrite,
+			AllowsAuthenticatedRead:     policy.AllowsAuthenticatedRead,
+			AllowsAuthenticatedWrite:    policy.AllowsAuthenticatedWrite,
+			AllowsAuthenticatedACLRead:  policy.AllowsAuthenticatedACLRead,
+			AllowsAuthenticatedACLWrite: policy.AllowsAuthenticatedACLWrite,
+		},
+		AllowsPublicList:        policy.AllowsPublicList,
+		AllowsAuthenticatedList: policy.AllowsAuthenticatedList,
 	}
 }
 
 // ToExposureACLAnalysis maps an S3 ACL analysis to the exposure domain type.
 func ToExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
 	return s3exposure.ACLAnalysis{
-		AllowsPublicRead:            acl.AllowsPublicRead,
-		AllowsPublicWrite:           acl.AllowsPublicWrite,
-		AllowsPublicACLRead:         acl.AllowsPublicACLRead,
-		AllowsPublicACLWrite:        acl.AllowsPublicACLWrite,
-		AllowsAuthenticatedRead:     acl.AllowsAuthenticatedRead,
-		AllowsAuthenticatedWrite:    acl.AllowsAuthenticatedWrite,
-		AllowsAuthenticatedACLRead:  acl.AllowsAuthenticatedACLRead,
-		AllowsAuthenticatedACLWrite: acl.AllowsAuthenticatedACLWrite,
+		AccessFlags: s3exposure.AccessFlags{
+			AllowsPublicRead:            acl.AllowsPublicRead,
+			AllowsPublicWrite:           acl.AllowsPublicWrite,
+			AllowsPublicACLRead:         acl.AllowsPublicACLRead,
+			AllowsPublicACLWrite:        acl.AllowsPublicACLWrite,
+			AllowsAuthenticatedRead:     acl.AllowsAuthenticatedRead,
+			AllowsAuthenticatedWrite:    acl.AllowsAuthenticatedWrite,
+			AllowsAuthenticatedACLRead:  acl.AllowsAuthenticatedACLRead,
+			AllowsAuthenticatedACLWrite: acl.AllowsAuthenticatedACLWrite,
+		},
 		HasFullControlPublic:        acl.HasFullControlPublic,
 		HasFullControlAuthenticated: acl.HasFullControlAuthenticated,
 	}

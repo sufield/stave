@@ -29,10 +29,9 @@ type Config struct {
 
 // Run executes the diagnose use case.
 type Run struct {
-	ObservationRepo    appcontracts.ObservationRepository
-	ControlRepo        appcontracts.ControlRepository
-	FileResultLoader   appcontracts.FileResultLoader
-	ReaderResultLoader appcontracts.ReaderResultLoader
+	ObservationRepo appcontracts.ObservationRepository
+	ControlRepo     appcontracts.ControlRepository
+	ResultLoader    appcontracts.ResultLoader
 }
 
 type artifacts struct {
@@ -44,8 +43,7 @@ type artifacts struct {
 func NewRun(
 	obsRepo appcontracts.ObservationRepository,
 	ctlRepo appcontracts.ControlRepository,
-	fileLoader appcontracts.FileResultLoader,
-	readerLoader appcontracts.ReaderResultLoader,
+	resultLoader appcontracts.ResultLoader,
 ) (*Run, error) {
 	if obsRepo == nil {
 		return nil, fmt.Errorf("NewRun requires non-nil ObservationRepository")
@@ -54,10 +52,9 @@ func NewRun(
 		return nil, fmt.Errorf("NewRun requires non-nil ControlRepository")
 	}
 	return &Run{
-		ObservationRepo:    obsRepo,
-		ControlRepo:        ctlRepo,
-		FileResultLoader:   fileLoader,
-		ReaderResultLoader: readerLoader,
+		ObservationRepo: obsRepo,
+		ControlRepo:     ctlRepo,
+		ResultLoader:    resultLoader,
 	}, nil
 }
 
@@ -143,16 +140,16 @@ func (d *Run) resolveResult(
 	artifacts artifacts,
 ) (*evaluation.Result, error) {
 	if cfg.OutputReader != nil {
-		if d.ReaderResultLoader == nil {
+		if d.ResultLoader == nil {
 			return nil, fmt.Errorf("evaluation result repository is not configured: cannot load from reader")
 		}
-		return d.ReaderResultLoader.LoadFromReader(cfg.OutputReader, "stdin")
+		return d.ResultLoader.LoadFromReader(cfg.OutputReader, "stdin")
 	}
 	if cfg.OutputFile != "" {
-		if d.FileResultLoader == nil {
+		if d.ResultLoader == nil {
 			return nil, fmt.Errorf("evaluation result repository is not configured: cannot load from file %q", cfg.OutputFile)
 		}
-		return d.FileResultLoader.LoadFromFile(cfg.OutputFile)
+		return d.ResultLoader.LoadFromFile(cfg.OutputFile)
 	}
 
 	result := service.Evaluate(service.EvaluateInput{

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -34,36 +32,18 @@ type archiveOutput = pruner.ArchiveOutput
 type ArchiveReportInput = pruner.ArchiveOutputInput
 
 type archiveExecutionPlan struct {
-	now             time.Time
-	mode            string
-	dryRun          bool
-	quiet           bool
-	overwrite       bool
-	allowSymlink    bool
-	format          ui.OutputFormat
-	observationsDir string
-	archiveDir      string
-	tier            string
-	olderThan       time.Duration
-	keepMin         int
-	allFiles        []snapshotFile
-	candidateFiles  []snapshotFile
-	output          archiveOutput
+	pruneshared.CleanupPlan
+	overwrite    bool
+	allowSymlink bool
+	archiveDir   string
+	output       archiveOutput
 }
 
 type archiveResolvedInput struct {
-	obsDir     string
-	archiveDir string
-	tier       string
-	olderThan  time.Duration
-	now        time.Time
-	format     ui.OutputFormat
-	keepMin    int
-	dryRun     bool
-	quiet      bool
-	overwrite  bool
-	allowSym   bool
-	mode       string
+	pruneshared.CleanupRunInput
+	ArchiveDir string
+	Overwrite  bool
+	AllowSym   bool
 }
 
 func runArchive(cmd *cobra.Command, opts *archiveOptions) error {
@@ -76,8 +56,8 @@ func runArchive(cmd *cobra.Command, opts *archiveOptions) error {
 			}
 			plan = p
 			return appeval.CleanupPlan{
-				CandidateCount: len(plan.candidateFiles),
-				DryRun:         plan.dryRun,
+				CandidateCount: len(plan.CandidateFiles),
+				DryRun:         plan.DryRun,
 			}, nil
 		},
 		Render: func(_ appeval.CleanupPlan) error {
@@ -87,8 +67,8 @@ func runArchive(cmd *cobra.Command, opts *archiveOptions) error {
 			if err := applyArchiveExecutionPlan(plan); err != nil {
 				return err
 			}
-			if !cmdutil.QuietEnabled(cmd) && !plan.format.IsJSON() {
-				fmt.Fprintf(cmd.OutOrStdout(), "Archived %d snapshot(s) to %s.\n", len(plan.candidateFiles), plan.archiveDir)
+			if !cmdutil.QuietEnabled(cmd) && !plan.Format.IsJSON() {
+				fmt.Fprintf(cmd.OutOrStdout(), "Archived %d snapshot(s) to %s.\n", len(plan.CandidateFiles), plan.archiveDir)
 			}
 			return nil
 		},
@@ -100,39 +80,43 @@ func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiv
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.obsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.ObsDir)
 	if err != nil {
 		return archiveExecutionPlan{}, err
 	}
-	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.now, OlderThan: in.olderThan, KeepMin: in.keepMin})
+	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.Now, OlderThan: in.OlderThan, KeepMin: in.KeepMin})
 	out := pruner.BuildArchiveOutput(ArchiveReportInput{
-		Now:             in.now,
-		Mode:            in.mode,
-		DryRun:          in.dryRun,
-		ObservationsDir: in.obsDir,
-		ArchiveDir:      in.archiveDir,
-		Tier:            in.tier,
-		OlderThan:       in.olderThan,
-		KeepMin:         in.keepMin,
-		AllFiles:        allFiles,
-		CandidateFiles:  candidateFiles,
+		CleanupInputCore: pruner.CleanupInputCore{
+			Now:             in.Now,
+			Mode:            in.Mode,
+			DryRun:          in.DryRun,
+			ObservationsDir: in.ObsDir,
+			Tier:            in.Tier,
+			OlderThan:       in.OlderThan,
+			KeepMin:         in.KeepMin,
+			AllFiles:        allFiles,
+			CandidateFiles:  candidateFiles,
+		},
+		ArchiveDir: in.ArchiveDir,
 	})
 	return archiveExecutionPlan{
-		now:             in.now,
-		mode:            in.mode,
-		dryRun:          in.dryRun,
-		quiet:           in.quiet,
-		overwrite:       in.overwrite,
-		allowSymlink:    in.allowSym,
-		format:          in.format,
-		observationsDir: in.obsDir,
-		archiveDir:      in.archiveDir,
-		tier:            in.tier,
-		olderThan:       in.olderThan,
-		keepMin:         in.keepMin,
-		allFiles:        allFiles,
-		candidateFiles:  candidateFiles,
-		output:          out,
+		CleanupPlan: pruneshared.CleanupPlan{
+			Now:             in.Now,
+			Mode:            in.Mode,
+			DryRun:          in.DryRun,
+			Quiet:           in.Quiet,
+			Format:          in.Format,
+			ObservationsDir: in.ObsDir,
+			Tier:            in.Tier,
+			OlderThan:       in.OlderThan,
+			KeepMin:         in.KeepMin,
+			AllFiles:        allFiles,
+			CandidateFiles:  candidateFiles,
+		},
+		overwrite:    in.Overwrite,
+		allowSymlink: in.AllowSym,
+		archiveDir:   in.ArchiveDir,
+		output:       out,
 	}, nil
 }
 
@@ -169,18 +153,20 @@ func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResol
 	}
 
 	return archiveResolvedInput{
-		obsDir:     obsDir,
-		archiveDir: destArchiveDir,
-		tier:       tier,
-		olderThan:  olderThan,
-		now:        now,
-		format:     format,
-		keepMin:    opts.KeepMin,
-		dryRun:     dryRun,
-		quiet:      cmdutil.QuietEnabled(cmd),
-		overwrite:  overwrite,
-		allowSym:   cmdutil.AllowSymlinkOutEnabled(cmd),
-		mode:       mode,
+		CleanupRunInput: pruneshared.CleanupRunInput{
+			ObsDir:    obsDir,
+			Tier:      tier,
+			OlderThan: olderThan,
+			Now:       now,
+			Format:    format,
+			KeepMin:   opts.KeepMin,
+			DryRun:    dryRun,
+			Quiet:     cmdutil.QuietEnabled(cmd),
+			Mode:      mode,
+		},
+		ArchiveDir: destArchiveDir,
+		Overwrite:  overwrite,
+		AllowSym:   cmdutil.AllowSymlinkOutEnabled(cmd),
 	}, nil
 }
 
@@ -198,26 +184,26 @@ func resolveArchivePaths(observationsPath, archivePath string) (string, string, 
 
 func renderArchiveExecutionPlan(plan archiveExecutionPlan, out io.Writer) error {
 	return pruner.RenderSnapshotCleanupExecutionPlan(out, pruner.SnapshotCleanupRenderInput{
-		Format:         plan.format,
+		Format:         plan.Format,
 		Output:         plan.output,
 		OutputKind:     "archive",
 		Action:         "archive",
 		SummaryPrefix:  "Archive",
-		Mode:           plan.mode,
-		AllFiles:       plan.allFiles,
-		CandidateFiles: plan.candidateFiles,
-		OlderThan:      plan.olderThan,
-		KeepMin:        plan.keepMin,
-		Tier:           plan.tier,
-		Now:            plan.now,
-		Quiet:          plan.quiet,
+		Mode:           plan.Mode,
+		AllFiles:       plan.AllFiles,
+		CandidateFiles: plan.CandidateFiles,
+		OlderThan:      plan.OlderThan,
+		KeepMin:        plan.KeepMin,
+		Tier:           plan.Tier,
+		Now:            plan.Now,
+		Quiet:          plan.Quiet,
 	})
 }
 
 func applyArchiveExecutionPlan(plan archiveExecutionPlan) error {
 	_, err := pruner.ApplyArchive(pruner.ArchiveInput{
 		ArchiveDir: plan.archiveDir,
-		Moves:      toArchiveMoves(plan.candidateFiles, plan.archiveDir),
+		Moves:      toArchiveMoves(plan.CandidateFiles, plan.archiveDir),
 		Options: pruner.MoveOptions{
 			Overwrite:    plan.overwrite,
 			AllowSymlink: plan.allowSymlink,

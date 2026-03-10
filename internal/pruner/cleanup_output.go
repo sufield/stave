@@ -17,8 +17,8 @@ type CleanupFile struct {
 	CapturedAt time.Time `json:"captured_at"`
 }
 
-// PruneOutput is the structured output for prune command.
-type PruneOutput struct {
+// CleanupOutputCore holds the fields shared by PruneOutput and ArchiveOutput.
+type CleanupOutputCore struct {
 	SchemaVersion   string        `json:"schema_version"`
 	Kind            string        `json:"kind"`
 	CheckedAt       time.Time     `json:"checked_at"`
@@ -31,58 +31,47 @@ type PruneOutput struct {
 	TotalSnapshots  int           `json:"total_snapshots"`
 	Candidates      int           `json:"candidates"`
 	Files           []CleanupFile `json:"files"`
+}
+
+// PruneOutput is the structured output for prune command.
+type PruneOutput struct {
+	CleanupOutputCore
 }
 
 // ArchiveOutput is the structured output for archive command.
 type ArchiveOutput struct {
-	SchemaVersion   string        `json:"schema_version"`
-	Kind            string        `json:"kind"`
-	CheckedAt       time.Time     `json:"checked_at"`
-	Mode            string        `json:"mode"`
-	Applied         bool          `json:"applied"`
-	ObservationsDir string        `json:"observations_dir"`
-	ArchiveDir      string        `json:"archive_dir"`
-	RetentionTier   string        `json:"retention_tier"`
-	OlderThan       string        `json:"older_than"`
-	KeepMin         int           `json:"keep_min"`
-	TotalSnapshots  int           `json:"total_snapshots"`
-	Candidates      int           `json:"candidates"`
-	Files           []CleanupFile `json:"files"`
+	CleanupOutputCore
+	ArchiveDir string `json:"archive_dir"`
+}
+
+// CleanupInputCore holds the fields shared by PruneOutputInput and ArchiveOutputInput.
+type CleanupInputCore struct {
+	Now             time.Time
+	Mode            string
+	DryRun          bool
+	ObservationsDir string
+	Tier            string
+	OlderThan       time.Duration
+	KeepMin         int
+	AllFiles        []SnapshotFile
+	CandidateFiles  []SnapshotFile
 }
 
 // PruneOutputInput holds all data needed to build prune output.
 type PruneOutputInput struct {
-	Now             time.Time
-	Mode            string
-	DryRun          bool
-	ObservationsDir string
-	Tier            string
-	OlderThan       time.Duration
-	KeepMin         int
-	AllFiles        []SnapshotFile
-	CandidateFiles  []SnapshotFile
+	CleanupInputCore
 }
 
 // ArchiveOutputInput holds all data needed to build archive output.
 type ArchiveOutputInput struct {
-	Now             time.Time
-	Mode            string
-	DryRun          bool
-	ObservationsDir string
-	ArchiveDir      string
-	Tier            string
-	OlderThan       time.Duration
-	KeepMin         int
-	AllFiles        []SnapshotFile
-	CandidateFiles  []SnapshotFile
+	CleanupInputCore
+	ArchiveDir string
 }
 
-// BuildPruneOutput creates prune JSON output payload.
-func BuildPruneOutput(input PruneOutputInput) PruneOutput {
-	outFiles := toCleanupFiles(input.CandidateFiles)
-	return PruneOutput{
-		SchemaVersion:   string(kernel.SchemaSnapshotPrune),
-		Kind:            "snapshot_prune",
+func buildCleanupOutputCore(schema kernel.Schema, kind string, input CleanupInputCore) CleanupOutputCore {
+	return CleanupOutputCore{
+		SchemaVersion:   string(schema),
+		Kind:            kind,
 		CheckedAt:       input.Now.UTC(),
 		Mode:            input.Mode,
 		Applied:         !input.DryRun && len(input.CandidateFiles) > 0,
@@ -92,27 +81,22 @@ func BuildPruneOutput(input PruneOutputInput) PruneOutput {
 		KeepMin:         input.KeepMin,
 		TotalSnapshots:  len(input.AllFiles),
 		Candidates:      len(input.CandidateFiles),
-		Files:           outFiles,
+		Files:           toCleanupFiles(input.CandidateFiles),
+	}
+}
+
+// BuildPruneOutput creates prune JSON output payload.
+func BuildPruneOutput(input PruneOutputInput) PruneOutput {
+	return PruneOutput{
+		CleanupOutputCore: buildCleanupOutputCore(kernel.SchemaSnapshotPrune, "snapshot_prune", input.CleanupInputCore),
 	}
 }
 
 // BuildArchiveOutput creates archive JSON output payload.
 func BuildArchiveOutput(input ArchiveOutputInput) ArchiveOutput {
-	outFiles := toCleanupFiles(input.CandidateFiles)
 	return ArchiveOutput{
-		SchemaVersion:   string(kernel.SchemaSnapshotArchive),
-		Kind:            "snapshot_archive",
-		CheckedAt:       input.Now.UTC(),
-		Mode:            input.Mode,
-		Applied:         !input.DryRun && len(input.CandidateFiles) > 0,
-		ObservationsDir: input.ObservationsDir,
-		ArchiveDir:      input.ArchiveDir,
-		RetentionTier:   input.Tier,
-		OlderThan:       timeutil.FormatDuration(input.OlderThan),
-		KeepMin:         input.KeepMin,
-		TotalSnapshots:  len(input.AllFiles),
-		Candidates:      len(input.CandidateFiles),
-		Files:           outFiles,
+		CleanupOutputCore: buildCleanupOutputCore(kernel.SchemaSnapshotArchive, "snapshot_archive", input.CleanupInputCore),
+		ArchiveDir:        input.ArchiveDir,
 	}
 }
 

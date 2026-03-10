@@ -79,6 +79,12 @@ type ReaderResultLoader interface {
 	LoadFromReader(r io.Reader, sourceName string) (*evaluation.Result, error)
 }
 
+// ResultLoader combines file and reader loading into a single interface.
+type ResultLoader interface {
+	FileResultLoader
+	ReaderResultLoader
+}
+
 // IntegrityCheckConfigurer allows observation loaders to accept manifest
 // verification configuration. Implementations must configure integrity
 // checking before any snapshot listing calls.

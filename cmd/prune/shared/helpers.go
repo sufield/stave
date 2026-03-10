@@ -10,9 +10,38 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 )
+
+// CleanupPlan holds the fields shared by delete and archive execution plans.
+type CleanupPlan struct {
+	Now             time.Time
+	Mode            string
+	DryRun          bool
+	Quiet           bool
+	Format          ui.OutputFormat
+	ObservationsDir string
+	Tier            string
+	OlderThan       time.Duration
+	KeepMin         int
+	AllFiles        []SnapshotFile
+	CandidateFiles  []SnapshotFile
+}
+
+// CleanupRunInput holds the fields shared by delete and archive resolved inputs.
+type CleanupRunInput struct {
+	ObsDir    string
+	Tier      string
+	OlderThan time.Duration
+	Now       time.Time
+	Format    ui.OutputFormat
+	KeepMin   int
+	DryRun    bool
+	Quiet     bool
+	Mode      string
+}
 
 // SnapshotFile is an alias for pruner.SnapshotFile.
 type SnapshotFile = pruner.SnapshotFile

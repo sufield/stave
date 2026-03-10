@@ -81,7 +81,6 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 		evalObservationRepoStub{snapshots: snapshots},
 		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
 		evalStub,
-		evalStub,
 	)
 	if newErr != nil {
 		t.Fatal(newErr)
@@ -130,7 +129,6 @@ func TestDiagnoseExecute_EvaluationResultRepoErrors(t *testing.T) {
 	run, newErr := appdiagnose.NewRun(
 		evalObservationRepoStub{snapshots: []asset.Snapshot{{CapturedAt: now}}},
 		evalControlRepoStub{controls: []policy.ControlDefinition{{ID: "CTL.TEST.001"}}},
-		errStub,
 		errStub,
 	)
 	if newErr != nil {
