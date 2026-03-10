@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	baselineKind      = "baseline"
-	baselineCheckKind = "baseline_check"
+	baselineKind      = kernel.KindBaseline
+	baselineCheckKind = kernel.KindBaselineCheck
 )
 
 type saveOptions struct {

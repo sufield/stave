@@ -39,7 +39,7 @@ type CleanupFile struct {
 // CleanupOutput holds the fields shared by PruneOutput and ArchiveOutput.
 type CleanupOutput struct {
 	SchemaVersion   kernel.Schema `json:"schema_version"`
-	Kind            string        `json:"kind"`
+	Kind            kernel.OutputKind `json:"kind"`
 	CheckedAt       time.Time     `json:"checked_at"`
 	Mode            string        `json:"mode"`
 	Applied         bool          `json:"applied"`
@@ -82,7 +82,7 @@ type ArchiveOutputInput struct {
 	ArchiveDir string
 }
 
-func buildCleanupOutput(schema kernel.Schema, kind string, input CleanupInput) CleanupOutput {
+func buildCleanupOutput(schema kernel.Schema, kind kernel.OutputKind, input CleanupInput) CleanupOutput {
 	return CleanupOutput{
 		SchemaVersion:   schema,
 		Kind:            kind,
@@ -102,14 +102,14 @@ func buildCleanupOutput(schema kernel.Schema, kind string, input CleanupInput) C
 // BuildPruneOutput creates prune JSON output payload.
 func BuildPruneOutput(input CleanupInput) PruneOutput {
 	return PruneOutput{
-		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotPrune, "snapshot_prune", input),
+		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotPrune, kernel.KindSnapshotPrune, input),
 	}
 }
 
 // BuildArchiveOutput creates archive JSON output payload.
 func BuildArchiveOutput(input ArchiveOutputInput) ArchiveOutput {
 	return ArchiveOutput{
-		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotArchive, "snapshot_archive", input.CleanupInput),
+		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotArchive, kernel.KindSnapshotArchive, input.CleanupInput),
 		ArchiveDir:    input.ArchiveDir,
 	}
 }

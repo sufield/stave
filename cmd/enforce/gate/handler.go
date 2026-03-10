@@ -61,7 +61,7 @@ func (o *options) bindFlags(cmd *cobra.Command) {
 
 type gateResult struct {
 	SchemaVersion kernel.Schema         `json:"schema_version"`
-	Kind          string                `json:"kind"`
+	Kind          kernel.OutputKind     `json:"kind"`
 	CheckedAt     time.Time             `json:"checked_at"`
 	Policy        projconfig.GatePolicy `json:"policy"`
 	Pass          bool                  `json:"pass"`
@@ -191,7 +191,7 @@ func runPolicyAny(now time.Time, evaluationPath string) (gateResult, error) {
 	}
 	return gateResult{
 		SchemaVersion:     kernel.SchemaGate,
-		Kind:              "gate_check",
+		Kind:              kernel.KindGateCheck,
 		CheckedAt:         now,
 		Policy:            gatePolicyAny,
 		Pass:              pass,
@@ -218,7 +218,7 @@ func runPolicyNew(now time.Time, evaluationPath, baselinePath string) (gateResul
 	}
 	return gateResult{
 		SchemaVersion:     kernel.SchemaGate,
-		Kind:              "gate_check",
+		Kind:              kernel.KindGateCheck,
 		CheckedAt:         now,
 		Policy:            gatePolicyNew,
 		Pass:              pass,
@@ -261,7 +261,7 @@ func runPolicyOverdue(ctx context.Context, now time.Time, controlsDir, observati
 	}
 	return gateResult{
 		SchemaVersion:    kernel.SchemaGate,
-		Kind:             "gate_check",
+		Kind:             kernel.KindGateCheck,
 		CheckedAt:        now,
 		Policy:           gatePolicyOverdue,
 		Pass:             pass,

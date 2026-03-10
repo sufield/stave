@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
@@ -24,7 +25,7 @@ func LoadEvaluationEnvelope(path string) (*safetyenvelope.Evaluation, error) {
 	return &eval, nil
 }
 
-func LoadBaselineFile(path, expectedKind string) (*evaluation.Baseline, error) {
+func LoadBaselineFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read baseline file: %w", err)

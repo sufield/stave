@@ -385,7 +385,7 @@ func loadDemoControls(ctx context.Context) ([]policy.ControlDefinition, error) {
 
 type demoReport struct {
 	SchemaVersion string             `json:"schema_version"`
-	Kind          string             `json:"kind"`
+	Kind          kernel.OutputKind  `json:"kind"`
 	Fixture       string             `json:"fixture"`
 	GeneratedAt   string             `json:"generated_at"`
 	Summary       evaluation.Summary `json:"summary"`
@@ -402,7 +402,7 @@ type demoFindingRef struct {
 func writeDemoReport(req demoReportRequest) error {
 	report := demoReport{
 		SchemaVersion: string(kernel.SchemaDemoReport),
-		Kind:          "demo_report",
+		Kind:          kernel.KindDemoReport,
 		Fixture:       req.Fixture,
 		GeneratedAt:   req.GeneratedAt.UTC().Format(time.RFC3339),
 		Summary:       req.Result.Summary,

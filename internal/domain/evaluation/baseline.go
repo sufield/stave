@@ -30,11 +30,11 @@ func (e BaselineEntry) Key() BaselineEntryKey {
 
 // Baseline is the baseline.v0.1 output file.
 type Baseline struct {
-	SchemaVersion    kernel.Schema   `json:"schema_version"`
-	Kind             string          `json:"kind"`
-	CreatedAt        time.Time       `json:"created_at"`
-	SourceEvaluation string          `json:"source_evaluation"`
-	Findings         []BaselineEntry `json:"findings"`
+	SchemaVersion    kernel.Schema      `json:"schema_version"`
+	Kind             kernel.OutputKind  `json:"kind"`
+	CreatedAt        time.Time          `json:"created_at"`
+	SourceEvaluation string             `json:"source_evaluation"`
+	Findings         []BaselineEntry    `json:"findings"`
 }
 
 // BaselineComparisonSummary provides aggregate counts for a baseline check.
@@ -48,7 +48,7 @@ type BaselineComparisonSummary struct {
 // BaselineComparison is the baseline_check output.
 type BaselineComparison struct {
 	SchemaVersion kernel.Schema             `json:"schema_version"`
-	Kind          string                    `json:"kind"`
+	Kind          kernel.OutputKind         `json:"kind"`
 	CheckedAt     time.Time                 `json:"checked_at"`
 	BaselineFile  string                    `json:"baseline_file"`
 	Evaluation    string                    `json:"evaluation"`

@@ -16,7 +16,7 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-const kind = "ci_diff"
+const kind = kernel.KindCIDiff
 
 type options struct {
 	CurrentPath  string
@@ -33,7 +33,7 @@ type summary struct {
 
 type result struct {
 	SchemaVersion      kernel.Schema              `json:"schema_version"`
-	Kind               string                     `json:"kind"`
+	Kind               kernel.OutputKind           `json:"kind"`
 	ComparedAt         time.Time                  `json:"compared_at"`
 	CurrentEvaluation  string                     `json:"current_evaluation"`
 	BaselineEvaluation string                     `json:"baseline_evaluation"`

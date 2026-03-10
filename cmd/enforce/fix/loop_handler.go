@@ -46,7 +46,7 @@ type fixLoopArtifacts struct {
 
 type fixLoopReport struct {
 	SchemaVersion kernel.Schema                      `json:"schema_version"`
-	Kind          string                             `json:"kind"`
+	Kind          kernel.OutputKind                   `json:"kind"`
 	CheckedAt     time.Time                          `json:"checked_at"`
 	Pass          bool                               `json:"pass"`
 	Reason        string                             `json:"reason"`
@@ -246,7 +246,7 @@ func buildFixLoopReport(
 	}
 	return fixLoopReport{
 		SchemaVersion: kernel.SchemaFixLoop,
-		Kind:          "remediation_report",
+		Kind:          kernel.KindRemediationReport,
 		CheckedAt:     run.Now,
 		Pass:          pass,
 		Reason:        reason,
