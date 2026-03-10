@@ -81,7 +81,7 @@ stave/
 │   └── platform/           Platform utilities (crypto, fsutil, logging, state)
 │
 ├── schemas/                Schema source of truth (JSON Schema files)
-├── controls/s3/            S3 control packs (43 YAML files)
+├── controls/s3/            S3 control packs (YAML files)
 └── examples/               Example observations and controls
 ```
 
