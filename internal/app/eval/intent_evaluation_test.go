@@ -86,7 +86,7 @@ func TestIntentEvaluationLoadArtifacts_SourceTypeCheckOptional(t *testing.T) {
 		ObservationsDir:   "obs",
 		OptionalSnapshots: true,
 	})
-	if result.ObservationErr == nil || !strings.Contains(result.ObservationErr.Error(), "missing generated_by.source_type") {
+	if result.ObservationErr == nil || !errors.Is(result.ObservationErr, ErrSourceTypeMissing) {
 		t.Fatalf("expected source_type compatibility error, got: %v", result.ObservationErr)
 	}
 }
@@ -98,10 +98,10 @@ func TestIntentEvaluationLoadArtifacts_RequireArtifacts(t *testing.T) {
 		ObservationsDir: "obs",
 		RequireControls: true,
 	})
-	if result.ControlErr == nil || !strings.Contains(result.ControlErr.Error(), "no controls in ctl") {
+	if result.ControlErr == nil || !errors.Is(result.ControlErr, ErrNoControls) {
 		t.Fatalf("expected required control error, got: %v", result.ControlErr)
 	}
-	if result.ObservationErr == nil || !strings.Contains(result.ObservationErr.Error(), "no snapshots in obs") {
+	if result.ObservationErr == nil || !errors.Is(result.ObservationErr, ErrNoSnapshots) {
 		t.Fatalf("expected required snapshot error, got: %v", result.ObservationErr)
 	}
 }

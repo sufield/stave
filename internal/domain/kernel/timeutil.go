@@ -2,7 +2,6 @@ package kernel
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -80,7 +79,7 @@ func FormatDurationHuman(d time.Duration) string {
 func ParseDuration(s string) (time.Duration, error) {
 	trimmed := strings.TrimSpace(s)
 	if trimmed == "" {
-		return 0, errors.New("empty duration")
+		return 0, ErrEmptyDuration
 	}
 	if strings.Contains(trimmed, "-") {
 		return 0, fmt.Errorf("invalid duration (negative): %s", s)

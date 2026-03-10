@@ -18,6 +18,9 @@ import (
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
+// ErrEmptyRegistry is returned when a registry index contains no packs.
+var ErrEmptyRegistry = errors.New("registry contains no packs")
+
 //go:embed embedded/index.yaml
 var embeddedRegistryFS embed.FS
 
@@ -63,7 +66,7 @@ func NewRegistry(data []byte) (*Registry, error) {
 		return nil, fmt.Errorf("parse registry: %w", err)
 	}
 	if len(idx.Packs) == 0 {
-		return nil, errors.New("registry contains no packs")
+		return nil, ErrEmptyRegistry
 	}
 
 	r := &Registry{

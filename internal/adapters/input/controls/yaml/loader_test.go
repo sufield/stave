@@ -2,11 +2,13 @@ package yaml
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
@@ -41,8 +43,8 @@ unsafe_predicate:
 	if !strings.Contains(errStr, "dsl_version") {
 		t.Errorf("error should mention dsl_version, got: %s", errStr)
 	}
-	if !strings.Contains(errStr, "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %s", errStr)
 	}
 }
 
@@ -74,10 +76,9 @@ unsafe_predicate:
 		t.Fatal("expected error for unsupported dsl_version")
 	}
 
-	errStr := err.Error()
 	// Schema validation should reject unsupported version via const constraint or version check
-	if !strings.Contains(errStr, "schema validation failed") && !strings.Contains(errStr, "UNSUPPORTED_SCHEMA_VERSION") {
-		t.Errorf("error should mention schema validation failure, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) && !strings.Contains(err.Error(), "UNSUPPORTED_SCHEMA_VERSION") {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 
@@ -143,8 +144,8 @@ unsafe_predicate:
 	if err == nil {
 		t.Fatal("expected semantic validation error for whitespace type")
 	}
-	if !strings.Contains(err.Error(), "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", err.Error())
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 
@@ -174,9 +175,8 @@ unsafe_predicate:
 		t.Fatal("expected error for missing id")
 	}
 
-	errStr := err.Error()
-	if !strings.Contains(errStr, "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 
@@ -467,9 +467,8 @@ description: Test
 		t.Fatal("expected error for missing unsafe_predicate")
 	}
 
-	errStr := err.Error()
-	if !strings.Contains(errStr, "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 

@@ -7,11 +7,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
@@ -41,8 +43,8 @@ func TestObservationLoader_RejectsMissingSchemaVersion(t *testing.T) {
 	if !strings.Contains(errStr, "schema_version") {
 		t.Errorf("error should mention schema_version, got: %s", errStr)
 	}
-	if !strings.Contains(errStr, "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %s", errStr)
 	}
 }
 
@@ -65,10 +67,9 @@ func TestObservationLoader_RejectsUnsupportedSchemaVersion(t *testing.T) {
 		t.Fatal("expected error for unsupported schema_version")
 	}
 
-	errStr := err.Error()
 	// Schema validation should reject unsupported version via const constraint or version check
-	if !strings.Contains(errStr, "schema validation failed") && !strings.Contains(errStr, "UNSUPPORTED_SCHEMA_VERSION") {
-		t.Errorf("error should mention schema validation failure, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) && !strings.Contains(err.Error(), "UNSUPPORTED_SCHEMA_VERSION") {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 
@@ -118,8 +119,8 @@ func TestObservationLoader_RejectsZeroCapturedAt(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for zero captured_at")
 	}
-	if !strings.Contains(err.Error(), "captured_at must be a non-zero RFC3339 timestamp") {
-		t.Fatalf("expected zero captured_at error, got: %v", err)
+	if !errors.Is(err, ErrMissingTimestamp) {
+		t.Fatalf("expected ErrMissingTimestamp, got: %v", err)
 	}
 }
 
@@ -135,8 +136,8 @@ func TestObservationLoader_LoadSnapshotFromReader_RejectsZeroCapturedAt(t *testi
 	if err == nil {
 		t.Fatal("expected error for zero captured_at")
 	}
-	if !strings.Contains(err.Error(), "captured_at must be a non-zero RFC3339 timestamp") {
-		t.Fatalf("expected zero captured_at error, got: %v", err)
+	if !errors.Is(err, ErrMissingTimestamp) {
+		t.Fatalf("expected ErrMissingTimestamp, got: %v", err)
 	}
 }
 
@@ -161,9 +162,8 @@ func TestObservationLoader_RejectsMissingResourceVendor(t *testing.T) {
 		t.Fatal("expected error for missing vendor")
 	}
 
-	errStr := err.Error()
-	if !strings.Contains(errStr, "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 
@@ -189,9 +189,8 @@ func TestObservationLoader_RejectsMissingIdentityProperties(t *testing.T) {
 		t.Fatal("expected error for missing properties")
 	}
 
-	errStr := err.Error()
-	if !strings.Contains(errStr, "schema validation failed") {
-		t.Errorf("error should mention schema validation, got: %s", errStr)
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Errorf("error should be ErrSchemaValidationFailed, got: %v", err)
 	}
 }
 
@@ -325,8 +324,8 @@ func TestObservationLoader_IntegrityManifest_HashMismatch(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected integrity verification error")
 	}
-	if !strings.Contains(err.Error(), "hash mismatch") {
-		t.Fatalf("expected hash mismatch error, got: %v", err)
+	if !errors.Is(err, integrity.ErrIntegrityViolation) {
+		t.Fatalf("expected ErrIntegrityViolation, got: %v", err)
 	}
 }
 

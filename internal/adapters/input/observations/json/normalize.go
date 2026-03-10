@@ -1,6 +1,7 @@
 package json
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -8,13 +9,22 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
+// Sentinel errors for observation normalization.
+var (
+	// ErrNilSnapshot is returned when a nil snapshot is passed for normalization.
+	ErrNilSnapshot = errors.New("snapshot is nil")
+
+	// ErrMissingTimestamp is returned when a snapshot lacks a valid captured_at timestamp.
+	ErrMissingTimestamp = errors.New("captured_at must be a non-zero RFC3339 timestamp")
+)
+
 // normalizeSnapshotTypes enforces domain-level type parsing after schema validation.
 func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 	if snapshot == nil {
-		return fmt.Errorf("snapshot is nil")
+		return ErrNilSnapshot
 	}
 	if !snapshot.HasTimestamp() {
-		return fmt.Errorf("captured_at must be a non-zero RFC3339 timestamp")
+		return ErrMissingTimestamp
 	}
 	for i := range snapshot.Assets {
 		if err := normalizeTypeAndVendor(&snapshot.Assets[i].Type, &snapshot.Assets[i].Vendor, "assets", i); err != nil {

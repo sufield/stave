@@ -1,6 +1,7 @@
 package pack
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -73,8 +74,8 @@ func TestNewRegistry_RejectsEmptyPacks(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty packs")
 	}
-	if !strings.Contains(err.Error(), "contains no packs") {
-		t.Fatalf("expected empty packs error, got: %v", err)
+	if !errors.Is(err, ErrEmptyRegistry) {
+		t.Fatalf("expected ErrEmptyRegistry, got: %v", err)
 	}
 }
 

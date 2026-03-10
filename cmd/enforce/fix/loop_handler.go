@@ -154,7 +154,7 @@ func loadFixLoopControls(execCtx fixLoopExecution) ([]policy.ControlDefinition, 
 		return nil, err
 	}
 	if len(controls) == 0 {
-		return nil, fmt.Errorf("no controls in %s", execCtx.controlsDir)
+		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, execCtx.controlsDir)
 	}
 	return controls, nil
 }

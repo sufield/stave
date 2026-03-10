@@ -34,7 +34,7 @@ func validate(kind string, version string, payload any, label string) error {
 		return fmt.Errorf("validate %s schema: %w", label, err)
 	}
 	if len(diags) > 0 {
-		return fmt.Errorf("%s schema validation failed (%d issues): %s: %s", label, len(diags), diags[0].Path, diags[0].Message)
+		return fmt.Errorf("%w: %s (%d issues): %s: %s", contractvalidator.ErrSchemaValidationFailed, label, len(diags), diags[0].Path, diags[0].Message)
 	}
 	return nil
 }

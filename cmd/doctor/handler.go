@@ -2,6 +2,7 @@ package doctor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -12,6 +13,9 @@ import (
 	"github.com/sufield/stave/internal/doctor"
 	staveversion "github.com/sufield/stave/internal/version"
 )
+
+// ErrDoctorRequiredIssues is returned when doctor detects required issues.
+var ErrDoctorRequiredIssues = errors.New("doctor found required issues")
 
 func runDoctor(cmd *cobra.Command, format string) error {
 	cwd, err := os.Getwd()
@@ -34,7 +38,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 
 	if cmdutil.QuietEnabled(cmd) {
 		if hasFail {
-			return fmt.Errorf("doctor found required issues")
+			return ErrDoctorRequiredIssues
 		}
 		return nil
 	}
@@ -57,7 +61,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 	}
 
 	if hasFail {
-		return fmt.Errorf("doctor found required issues")
+		return ErrDoctorRequiredIssues
 	}
 	return nil
 }

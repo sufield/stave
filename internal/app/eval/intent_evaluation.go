@@ -79,14 +79,14 @@ func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluati
 		defer wg.Done()
 		controls, ctlErr = appcontracts.LoadControls(ctx, i.ControlRepo, cfg.ControlsDir)
 		if ctlErr == nil && cfg.RequireControls && len(controls) == 0 {
-			ctlErr = fmt.Errorf("no controls in %s (expected .yaml files with dsl_version: ctrl.v1)", cfg.ControlsDir)
+			ctlErr = fmt.Errorf("%w: no controls in %s (expected .yaml files with dsl_version: ctrl.v1)", ErrNoControls, cfg.ControlsDir)
 		}
 	}()
 	go func() {
 		defer wg.Done()
 		loadResult, obsErr = appcontracts.LoadSnapshots(ctx, i.ObservationRepo, cfg.ObservationsDir)
 		if obsErr == nil && !cfg.OptionalSnapshots && len(loadResult.Snapshots) == 0 {
-			obsErr = fmt.Errorf("no snapshots in %s (expected .json files with schema_version: obs.v0.1)", cfg.ObservationsDir)
+			obsErr = fmt.Errorf("%w: no snapshots in %s (expected .json files with schema_version: obs.v0.1)", ErrNoSnapshots, cfg.ObservationsDir)
 		}
 		if obsErr == nil && !cfg.SkipSourceTypeCheck {
 			obsErr = validateSourceTypeCompatibility(loadResult.Snapshots, cfg.AllowUnknownInput, stderrWarnf(cfg.Stderr))
@@ -130,7 +130,7 @@ func handleSourceTypeIssue(i int, s asset.Snapshot, verdict sourceTypeVerdict, a
 			}
 			return nil
 		}
-		return fmt.Errorf("snapshot[%d] missing generated_by.source_type (use --allow-unknown-input to skip)", i)
+		return fmt.Errorf("%w: snapshot[%d] missing generated_by.source_type (use --allow-unknown-input to skip)", ErrSourceTypeMissing, i)
 	case sourceTypeUnsupported:
 		if allowUnknown {
 			if warnf != nil {
@@ -138,7 +138,7 @@ func handleSourceTypeIssue(i int, s asset.Snapshot, verdict sourceTypeVerdict, a
 			}
 			return nil
 		}
-		return fmt.Errorf("snapshot[%d] has unsupported source_type %q (use --allow-unknown-input to skip)", i, s.GeneratedBy.SourceType)
+		return fmt.Errorf("%w: snapshot[%d] has unsupported source_type %q (use --allow-unknown-input to skip)", ErrSourceTypeUnsupported, i, s.GeneratedBy.SourceType)
 	default:
 		return nil
 	}

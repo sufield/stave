@@ -184,7 +184,7 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 		return "", nil, err
 	}
 	if len(controls) == 0 {
-		return "", nil, fmt.Errorf("no S3 controls found in %s", ctlDir)
+		return "", nil, fmt.Errorf("%w: no S3 controls found in %s", appeval.ErrNoControls, ctlDir)
 	}
 
 	attachProfileRunID(inputFile, ctlDir)

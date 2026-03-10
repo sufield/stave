@@ -19,6 +19,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -260,7 +261,7 @@ func loadQuickstartSnapshotsFromFile(ctx context.Context, path string) ([]asset.
 		return nil, err
 	}
 	if len(bundle.Snapshots) == 0 {
-		return nil, fmt.Errorf("no snapshots found in %s", path)
+		return nil, fmt.Errorf("%w: no snapshots found in %s", appeval.ErrNoSnapshots, path)
 	}
 	snapshots := make([]asset.Snapshot, 0, len(bundle.Snapshots))
 	for i, raw := range bundle.Snapshots {

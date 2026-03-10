@@ -39,7 +39,7 @@ func (c *contractObservationValidator) ValidateObservation(data []byte, source s
 		return fmt.Errorf("schema validation error: %w", err)
 	}
 	if issues.HasErrors() || issues.HasWarnings() {
-		return fmt.Errorf("schema validation failed: %w", issues)
+		return fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 	return nil
 }

@@ -17,27 +17,27 @@ type Validator struct {
 // no missing files, no extra files, no mismatched hashes.
 func (v *Validator) Verify(m Manifest) error {
 	if v.ActualHashes == nil {
-		return fmt.Errorf("no hashes provided for verification")
+		return fmt.Errorf("%w: no hashes provided for verification", ErrIntegrityViolation)
 	}
 
 	for name, expected := range m.Files {
 		actual, ok := v.ActualHashes.Files[name]
 		if !ok {
-			return fmt.Errorf("integrity error: missing required file %s", name)
+			return fmt.Errorf("%w: missing required file %s", ErrIntegrityViolation, name)
 		}
 		if actual != expected {
-			return fmt.Errorf("integrity error: hash mismatch for %s (expected %s, got %s)", name, expected, actual)
+			return fmt.Errorf("%w: hash mismatch for %s (expected %s, got %s)", ErrIntegrityViolation, name, expected, actual)
 		}
 	}
 
 	for name := range v.ActualHashes.Files {
 		if _, ok := m.Files[name]; !ok {
-			return fmt.Errorf("integrity error: untrusted file %s found in directory", name)
+			return fmt.Errorf("%w: untrusted file %s found in directory", ErrIntegrityViolation, name)
 		}
 	}
 
 	if v.ActualHashes.Overall != m.Overall {
-		return fmt.Errorf("integrity error: overall manifest hash mismatch (expected %s, got %s)", m.Overall, v.ActualHashes.Overall)
+		return fmt.Errorf("%w: overall manifest hash mismatch (expected %s, got %s)", ErrIntegrityViolation, m.Overall, v.ActualHashes.Overall)
 	}
 
 	return nil

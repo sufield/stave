@@ -124,7 +124,7 @@ func (l *ControlLoader) loadControl(path string) (policy.ControlDefinition, erro
 		return policy.ControlDefinition{}, fmt.Errorf("schema validation error: %w", err)
 	}
 	if issues.HasErrors() || issues.HasWarnings() {
-		return policy.ControlDefinition{}, fmt.Errorf("schema validation failed: %w", issues)
+		return policy.ControlDefinition{}, fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 
 	// Schema passed, unmarshal into domain type
