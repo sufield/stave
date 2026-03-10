@@ -1,6 +1,10 @@
 package acl
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/sufield/stave/internal/pkg/fp"
+)
 
 const (
 	permRead        = "READ"
@@ -61,18 +65,10 @@ func (g Grant) Permissions() Permission {
 
 // PublicGrantees returns public grantee identifiers in encounter order.
 func (gs Grants) PublicGrantees() []string {
-	if len(gs) == 0 {
-		return nil
-	}
-
-	out := make([]string, 0, len(gs))
-	for _, grant := range gs {
-		if grant.IsPublic() {
-			out = append(out, grant.Grantee)
+	return fp.FilterMap(gs, func(g Grant) (string, bool) {
+		if g.IsPublic() {
+			return g.Grantee, true
 		}
-	}
-	if len(out) == 0 {
-		return nil
-	}
-	return out
+		return "", false
+	})
 }
