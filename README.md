@@ -93,16 +93,16 @@ Snapshots must conform to the [observation contract](docs/observation-contract.m
 | CSPM | AWS Config, Wiz, Prisma, Prowler | ❌ | ❌ | ❌ | ❌ | ⚠️ |
 | IaC policy | OPA, Checkov, tfsec | ✅ | ❌ | ✅ | ❌ | ❌ |
 | S3 auditors | ScoutSuite, s3audit, CloudMapper | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Stave** | | ✅ | ✅ | ✅ | ✅ | ✅ |
+| System Invariant as Code | **Stave** | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 Think of it as:
 
-| Tool type | Analogy |
-|-----------|---------|
-| CSPM | Runtime cloud scanner |
-| IaC policy | Template linter |
-| S3 auditor | Exposure enumerator |
-| **Stave** | Snapshot safety evaluator |
+| Category | Analogy | Example |
+|-----------|---------|---------|
+| CSPM | Runtime cloud scanner | AWS Config, Wiz |
+| IaC policy | Template linter | OPA, Checkov |
+| S3 auditor | Exposure enumerator | ScoutSuite |
+| System Invariant as Code | Safety evaluator | **Stave** |
 
 ## Security model
 
