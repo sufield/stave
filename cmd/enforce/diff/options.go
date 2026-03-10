@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -42,7 +43,7 @@ func (o *options) resolveFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
 func (o *options) buildFilter() (asset.FilterOptions, error) {
 	filter := asset.FilterOptions{
 		ChangeTypes: make([]asset.ChangeType, 0, len(o.ChangeTypes)),
-		AssetTypes:  make([]string, 0, len(o.AssetTypes)),
+		AssetTypes:  make([]kernel.AssetType, 0, len(o.AssetTypes)),
 		AssetID:     strings.TrimSpace(o.AssetID),
 	}
 	for _, raw := range o.ChangeTypes {
@@ -62,7 +63,7 @@ func (o *options) buildFilter() (asset.FilterOptions, error) {
 		if rt == "" {
 			continue
 		}
-		filter.AssetTypes = append(filter.AssetTypes, rt)
+		filter.AssetTypes = append(filter.AssetTypes, kernel.NewAssetType(rt))
 	}
 	return filter, nil
 }

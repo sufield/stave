@@ -6,10 +6,10 @@ import (
 )
 
 // unsafeIndex maps (snapshot index, asset ID) -> unsafe status.
-type unsafeIndex map[int]map[string]bool
+type unsafeIndex map[int]map[asset.ID]bool
 
 // isUnsafe reports whether the asset was unsafe in the given snapshot.
-func (idx unsafeIndex) isUnsafe(snapIdx int, assetID string) bool {
+func (idx unsafeIndex) isUnsafe(snapIdx int, assetID asset.ID) bool {
 	return idx[snapIdx][assetID]
 }
 
@@ -26,9 +26,9 @@ func isAssetUnsafeAnyControl(r asset.Asset, controls []policy.ControlDefinition)
 func buildUnsafeAnyControlBySnapshotAsset(snapshots []asset.Snapshot, controls []policy.ControlDefinition) unsafeIndex {
 	idx := make(unsafeIndex, len(snapshots))
 	for snapIdx, snap := range snapshots {
-		idx[snapIdx] = make(map[string]bool, len(snap.Assets))
+		idx[snapIdx] = make(map[asset.ID]bool, len(snap.Assets))
 		for _, r := range snap.Assets {
-			idx[snapIdx][r.ID.String()] = isAssetUnsafeAnyControl(r, controls)
+			idx[snapIdx][r.ID] = isAssetUnsafeAnyControl(r, controls)
 		}
 	}
 	return idx

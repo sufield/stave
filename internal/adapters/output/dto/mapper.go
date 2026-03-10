@@ -32,7 +32,7 @@ func FromFinding(f remediation.Finding) FindingDTO {
 		ControlID:          f.ControlID,
 		ControlName:        f.ControlName,
 		ControlDescription: f.ControlDescription,
-		AssetID:            string(f.AssetID),
+		AssetID:            f.AssetID,
 		AssetType:          f.AssetType,
 		AssetVendor:        f.AssetVendor,
 		Evidence:           fromEvidence(f.Evidence),
@@ -132,7 +132,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 	dto := RemediationPlanDTO{
 		ID: p.ID,
 		Target: RemediationTargetDTO{
-			AssetID:   string(p.Target.AssetID),
+			AssetID:   p.Target.AssetID,
 			AssetType: p.Target.AssetType,
 		},
 		Preconditions:  p.Preconditions,
@@ -197,7 +197,7 @@ func fromSuppressedFindings(fs []evaluation.SuppressedFinding) []SuppressedFindi
 	for i, f := range fs {
 		out[i] = SuppressedFindingDTO{
 			ControlID: f.ControlID,
-			AssetID:   string(f.AssetID),
+			AssetID:   f.AssetID,
 			Reason:    f.Reason,
 			Expires:   f.Expires,
 		}
@@ -212,7 +212,7 @@ func fromRemediationGroups(gs []remediation.Group) []RemediationGroupDTO {
 	out := make([]RemediationGroupDTO, len(gs))
 	for i, g := range gs {
 		out[i] = RemediationGroupDTO{
-			AssetID:              string(g.AssetID),
+			AssetID:              g.AssetID,
 			AssetType:            g.AssetType,
 			RemediationPlan:      fromRemediationPlan(g.RemediationPlan),
 			ContributingControls: g.ContributingControls,
@@ -244,7 +244,7 @@ func fromSkippedAssets(as []asset.SkippedAsset) []SkippedAssetDTO {
 	out := make([]SkippedAssetDTO, len(as))
 	for i, a := range as {
 		out[i] = SkippedAssetDTO{
-			AssetID: string(a.ID),
+			AssetID: a.ID,
 			Pattern: a.Pattern,
 			Reason:  a.Reason,
 		}

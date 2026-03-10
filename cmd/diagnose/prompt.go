@@ -139,7 +139,7 @@ func runPromptFromFinding(cmd *cobra.Command, flags *promptFlagsType) error {
 		return fmt.Errorf("load evaluation file: %w", err)
 	}
 
-	matched := appdiagnose.FilterFindings(evalResult.Findings, opts.AssetID)
+	matched := appdiagnose.FilterFindings(evalResult.Findings, asset.ID(opts.AssetID))
 	if len(matched) == 0 {
 		return fmt.Errorf("no findings for asset %q in %s", opts.AssetID, opts.EvalFile)
 	}
@@ -252,7 +252,7 @@ func clipboardHint(w io.Writer, quiet bool) {
 func collectFindingIDs(findings []appdiagnose.FindingData) []string {
 	findingIDs := make([]string, 0, len(findings))
 	for _, f := range findings {
-		findingIDs = append(findingIDs, f.ControlID)
+		findingIDs = append(findingIDs, string(f.ControlID))
 	}
 	return findingIDs
 }

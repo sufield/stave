@@ -21,13 +21,13 @@ func diffAsset(in assetDiffInput) *AssetDiff {
 		return &AssetDiff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeAdded,
-			ToType:     in.Curr.Type.String(),
+			ToType:     in.Curr.Type,
 		}
 	case in.HasPrev && !in.HasCurr:
 		return &AssetDiff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeRemoved,
-			FromType:   in.Prev.Type.String(),
+			FromType:   in.Prev.Type,
 		}
 	default:
 		// TELL: Let the asset identify its own property-level differences.
@@ -38,8 +38,8 @@ func diffAsset(in assetDiffInput) *AssetDiff {
 		return &AssetDiff{
 			AssetID:         ID(in.ID),
 			ChangeType:      ChangeModified,
-			FromType:        in.Prev.Type.String(),
-			ToType:          in.Curr.Type.String(),
+			FromType:        in.Prev.Type,
+			ToType:          in.Curr.Type,
 			PropertyChanges: propChanges,
 		}
 	}

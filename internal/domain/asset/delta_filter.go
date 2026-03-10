@@ -1,11 +1,15 @@
 package asset
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // FilterOptions narrows an ObservationDelta by change/asset criteria.
 type FilterOptions struct {
 	ChangeTypes []ChangeType
-	AssetTypes  []string
+	AssetTypes  []kernel.AssetType
 	AssetID     string
 }
 
@@ -57,10 +61,10 @@ func buildChangeTypeSet(types []ChangeType) map[ChangeType]struct{} {
 	return m
 }
 
-func buildAssetTypeSet(types []string) map[string]struct{} {
-	m := make(map[string]struct{}, len(types))
+func buildAssetTypeSet(types []kernel.AssetType) map[kernel.AssetType]struct{} {
+	m := make(map[kernel.AssetType]struct{}, len(types))
 	for _, rt := range types {
-		if clean := strings.TrimSpace(rt); clean != "" {
+		if clean := kernel.AssetType(strings.TrimSpace(string(rt))); clean != "" {
 			m[clean] = struct{}{}
 		}
 	}
@@ -75,7 +79,7 @@ func matchesChangeType(ct ChangeType, filter map[ChangeType]struct{}) bool {
 	return ok
 }
 
-func matchesAssetType(change AssetDiff, filter map[string]struct{}) bool {
+func matchesAssetType(change AssetDiff, filter map[kernel.AssetType]struct{}) bool {
 	if len(filter) == 0 {
 		return true
 	}
@@ -90,7 +94,7 @@ func matchesID(change AssetDiff, substr string) bool {
 	return strings.Contains(change.AssetID.String(), substr)
 }
 
-func effectiveAssetType(change AssetDiff) string {
+func effectiveAssetType(change AssetDiff) kernel.AssetType {
 	if change.ToType != "" {
 		return change.ToType
 	}

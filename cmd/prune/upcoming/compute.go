@@ -12,9 +12,9 @@ func mapRiskItems(items risk.Items) []UpcomingItem {
 		out = append(out, UpcomingItem{
 			DueAt:          d.DueAt,
 			Status:         d.Status,
-			ControlID:      string(d.ControlID),
-			AssetID:        string(d.AssetID),
-			AssetType:      string(d.AssetType),
+			ControlID:      d.ControlID,
+			AssetID:        d.AssetID,
+			AssetType:      d.AssetType,
 			FirstUnsafeAt:  d.FirstUnsafeAt,
 			LastSeenUnsafe: d.LastSeenUnsafe,
 			Threshold:      d.Threshold,

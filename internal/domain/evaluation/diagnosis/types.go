@@ -180,10 +180,10 @@ func (i *Input) countUniqueAssets() int {
 	}
 
 	// Presize to reduce map growth churn for larger snapshot sets.
-	uniqueAssets := make(map[string]struct{}, len(i.Snapshots))
+	uniqueAssets := make(map[asset.ID]struct{}, len(i.Snapshots))
 	for _, snap := range i.Snapshots {
 		for _, r := range snap.Assets {
-			uniqueAssets[string(r.ID)] = struct{}{}
+			uniqueAssets[r.ID] = struct{}{}
 		}
 	}
 	return len(uniqueAssets)
