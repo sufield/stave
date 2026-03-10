@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -11,6 +12,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 )
 
 // runApplyCore gathers validated options, then dispatches by mode.
@@ -21,7 +23,7 @@ func runApplyCore(cmd *cobra.Command, flags *applyFlagsType) error {
 
 	opts, err := gatherRunOptions(cmd, flags)
 	if err != nil {
-		return ui.EvaluateErrorWithHint(err)
+		return ui.EvaluateErrorWithHint(attachDomainHints(err))
 	}
 
 	switch opts.mode {
@@ -36,13 +38,13 @@ func runApplyCore(cmd *cobra.Command, flags *applyFlagsType) error {
 func runStandardApply(cmd *cobra.Command, flags *applyFlagsType, opts runOptions) error {
 	plan, err := appeval.NewPlan(opts.evaluatorInput)
 	if err != nil {
-		return ui.EvaluateErrorWithHint(fmt.Errorf("failed to resolve evaluation plan: %w", err))
+		return ui.EvaluateErrorWithHint(attachDomainHints(fmt.Errorf("failed to resolve evaluation plan: %w", err)))
 	}
 	cmdutil.AttachRunIDFromPlan(plan)
 
 	results, err := executeApply(cmd, cmd.Context(), flags, opts, plan)
 	if err != nil {
-		return ui.EvaluateErrorWithHint(err)
+		return ui.EvaluateErrorWithHint(attachDomainHints(err))
 	}
 
 	return outputResults(cmd, results)
@@ -67,6 +69,24 @@ func runStrictIntegrityCheck(cmd *cobra.Command) error {
 		return ui.WithNextCommand(err, "stave packs list")
 	}
 	return nil
+}
+
+// attachDomainHints decorates known domain sentinel errors with hint sentinels
+// so the hint system resolves via the sentinel-first path rather than string fallback.
+func attachDomainHints(err error) error {
+	switch {
+	case errors.Is(err, appeval.ErrNoControls):
+		return ui.WithHint(err, ui.ErrHintNoControls)
+	case errors.Is(err, appeval.ErrNoSnapshots):
+		return ui.WithHint(err, ui.ErrHintNoSnapshots)
+	case errors.Is(err, appeval.ErrSourceTypeMissing),
+		errors.Is(err, appeval.ErrSourceTypeUnsupported):
+		return ui.WithHint(err, ui.ErrHintSourceType)
+	case errors.Is(err, contractvalidator.ErrSchemaValidationFailed):
+		return ui.WithHint(err, ui.ErrHintSchemaValidation)
+	default:
+		return err
+	}
 }
 
 func executeApply(

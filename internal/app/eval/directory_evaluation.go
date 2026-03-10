@@ -41,7 +41,7 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 	}
 	snapshots := loadResult.Snapshots
 	if len(snapshots) == 0 {
-		return nil, 0, fmt.Errorf("no snapshots in %s", req.ObservationsDir)
+		return nil, 0, fmt.Errorf("%w: no snapshots in %s", ErrNoSnapshots, req.ObservationsDir)
 	}
 
 	if err := ValidateSourceTypeCompatibility(snapshots, req.AllowUnknownType, nil); err != nil {

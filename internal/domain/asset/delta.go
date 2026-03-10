@@ -2,7 +2,6 @@ package asset
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -111,7 +110,7 @@ type ObservationDelta struct {
 func LatestTwoSnapshots(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err error) {
 	// PRECONDITION: Requires at least 2 snapshots to establish a chronological delta.
 	if len(snapshots) < 2 {
-		return Snapshot{}, Snapshot{}, fmt.Errorf("insufficient snapshots: want 2, got %d", len(snapshots))
+		return Snapshot{}, Snapshot{}, fmt.Errorf("%w: want 2, got %d", ErrInsufficientSnapshots, len(snapshots))
 	}
 
 	sorted := append([]Snapshot(nil), snapshots...)
@@ -125,7 +124,7 @@ func LatestTwoSnapshots(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err
 	prev = sorted[len(sorted)-2]
 	curr = sorted[len(sorted)-1]
 	if curr.CapturedAt.Before(prev.CapturedAt) {
-		return Snapshot{}, Snapshot{}, errors.New("snapshots are not chronologically ordered")
+		return Snapshot{}, Snapshot{}, ErrSnapshotsNotOrdered
 	}
 	// POSTCONDITION: Snapshots are returned in strict ascending chronological order.
 	return prev, curr, nil

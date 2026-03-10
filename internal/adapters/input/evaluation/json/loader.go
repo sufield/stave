@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -11,6 +12,9 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
+
+// ErrNoFindings is returned when input JSON does not contain evaluation findings.
+var ErrNoFindings = errors.New("input JSON does not contain evaluation findings")
 
 // Loader reads evaluation result artifacts from JSON.
 type Loader struct{}
@@ -67,7 +71,7 @@ func ParseFindings(raw []byte) ([]remediation.Finding, error) {
 	if err := json.Unmarshal(raw, &probe); err != nil {
 		return nil, err
 	}
-	return nil, fmt.Errorf("input JSON does not contain evaluation findings")
+	return nil, ErrNoFindings
 }
 
 // LoadFromReader loads an evaluation result from an io.Reader.

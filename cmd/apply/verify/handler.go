@@ -70,7 +70,7 @@ func loadVerifyControls(ctx context.Context, controlsDir string) ([]policy.Contr
 		return nil, err
 	}
 	if len(controls) == 0 {
-		return nil, fmt.Errorf("no controls in %s", controlsDir)
+		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, controlsDir)
 	}
 	return controls, nil
 }

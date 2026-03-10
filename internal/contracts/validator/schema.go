@@ -3,6 +3,7 @@ package validator
 import (
 	"cmp"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -11,6 +12,9 @@ import (
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	"gopkg.in/yaml.v3"
 )
+
+// ErrSchemaValidationFailed is returned when input does not conform to a contract schema.
+var ErrSchemaValidationFailed = errors.New("schema validation failed")
 
 // NOTE FOR MAINTAINERS:
 // Keep this file focused on core Validator orchestration.

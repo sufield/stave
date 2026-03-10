@@ -18,6 +18,10 @@ import (
 )
 
 const SessionFileRel = ".stave/session.json"
+
+// ErrNotInProject is returned when the current directory is not inside a Stave project.
+var ErrNotInProject = errors.New("not inside a Stave project; run `stave init` first")
+
 const InferMaxDepth = 3
 
 // SessionState holds the last command and time for session persistence.
@@ -215,7 +219,7 @@ func DetectProjectRoot(start string) (string, error) {
 		}
 		parent := filepath.Dir(curr)
 		if parent == curr {
-			return "", errors.New("not inside a Stave project; run `stave init` first")
+			return "", ErrNotInProject
 		}
 		curr = parent
 	}

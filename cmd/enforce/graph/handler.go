@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/fp"
@@ -111,7 +112,7 @@ func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition
 		return nil, asset.Snapshot{}, err
 	}
 	if len(snapshots) == 0 {
-		return nil, asset.Snapshot{}, fmt.Errorf("no observation snapshots found in %s", input.observationsDir)
+		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", appeval.ErrNoSnapshots, input.observationsDir)
 	}
 	return controls, asset.LatestSnapshot(snapshots), nil
 }

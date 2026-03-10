@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -33,7 +34,7 @@ func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile st
 		return err
 	}
 	if len(files) == 0 {
-		return fmt.Errorf("no observation snapshots found in %q", dir)
+		return fmt.Errorf("%w: no observation snapshots found in %q", appeval.ErrNoSnapshots, dir)
 	}
 	manifest := integrity.Manifest{
 		Files:   files,

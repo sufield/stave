@@ -17,6 +17,9 @@ import (
 // ErrContextNotFound is returned when a named context does not exist in the store.
 var ErrContextNotFound = errors.New("context not found")
 
+// ErrNoConfigDir is returned when neither config dir nor home dir can be resolved.
+var ErrNoConfigDir = errors.New("could not resolve a config directory or user home")
+
 type Defaults struct {
 	ControlsDir     string `yaml:"controls_dir,omitempty"`
 	ObservationsDir string `yaml:"observations_dir,omitempty"`
@@ -64,7 +67,7 @@ func resolveStorePath() (string, error) {
 	}
 	home, err := os.UserHomeDir()
 	if err != nil || strings.TrimSpace(home) == "" {
-		return "", errors.New("could not resolve a config directory or user home")
+		return "", ErrNoConfigDir
 	}
 	return filepath.Join(home, ".config", "stave", "contexts.yaml"), nil
 }

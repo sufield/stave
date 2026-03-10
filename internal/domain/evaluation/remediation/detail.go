@@ -1,18 +1,22 @@
 package remediation
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
+// ErrFindingNotFound is returned when no finding matches the requested control+asset pair.
+var ErrFindingNotFound = errors.New("finding not found")
+
 // BuildFindingDetail composes violation evidence, predicate trace, and
 // remediation into a single FindingDetail for the requested control+asset pair.
 func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailRequest) (*evaluation.FindingDetail, error) {
 	violation := r.FindFinding(req.ControlID, req.AssetID)
 	if violation == nil {
-		return nil, fmt.Errorf("no finding for control %q asset %q", req.ControlID, req.AssetID)
+		return nil, fmt.Errorf("%w: control %q asset %q", ErrFindingNotFound, req.ControlID, req.AssetID)
 	}
 
 	// The finding knows its own control — resolve it through the provider.
