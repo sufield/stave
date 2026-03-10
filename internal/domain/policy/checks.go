@@ -1,10 +1,9 @@
 package policy
 
 import (
-	"slices"
-
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/diag"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // FindMissingParamReferences checks if predicates reference params that don't exist.
@@ -14,12 +13,7 @@ func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []st
 		addMissingParamReference(rule.ValueFromParam, params, missingSet)
 	})
 
-	missing := make([]string, 0, len(missingSet))
-	for param := range missingSet {
-		missing = append(missing, param)
-	}
-	slices.Sort(missing)
-	return missing
+	return fp.SortedKeys(missingSet)
 }
 
 func addMissingParamReference(param string, params ControlParams, missingSet map[string]struct{}) {

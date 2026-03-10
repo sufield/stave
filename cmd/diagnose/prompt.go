@@ -19,6 +19,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -250,11 +251,7 @@ func clipboardHint(w io.Writer, quiet bool) {
 }
 
 func collectFindingIDs(findings []appdiagnose.FindingData) []string {
-	findingIDs := make([]string, 0, len(findings))
-	for _, f := range findings {
-		findingIDs = append(findingIDs, string(f.ControlID))
-	}
-	return findingIDs
+	return fp.Map(findings, func(f appdiagnose.FindingData) string { return string(f.ControlID) })
 }
 
 // promptJSONOutput is the structured JSON output.
@@ -277,15 +274,13 @@ func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, e
 
 	latest := asset.LatestSnapshot(snapshots)
 
-	for _, r := range latest.Assets {
-		if r.ID.String() == assetID {
-			propsJSON, err := json.MarshalIndent(r.Properties, "", "  ")
-			if err != nil {
-				return "", fmt.Errorf("marshal asset properties: %w", err)
-			}
-			return string(propsJSON), nil
-		}
+	a, found := fp.FindFunc(latest.Assets, func(r asset.Asset) bool { return r.ID.String() == assetID })
+	if !found {
+		return "", nil
 	}
-
-	return "", nil
+	propsJSON, err := json.MarshalIndent(a.Properties, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("marshal asset properties: %w", err)
+	}
+	return string(propsJSON), nil
 }

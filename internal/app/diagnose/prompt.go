@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/fp"
 	"gopkg.in/yaml.v3"
 )
 
@@ -103,13 +104,7 @@ func marshalControl(ctl *policy.ControlDefinition) string {
 
 // FilterFindings returns findings matching the given asset ID.
 func FilterFindings(all []evaluation.Finding, assetID asset.ID) []evaluation.Finding {
-	matched := make([]evaluation.Finding, 0, len(all))
-	for _, v := range all {
-		if v.AssetID == assetID {
-			matched = append(matched, v)
-		}
-	}
-	return matched
+	return fp.Filter(all, func(v evaluation.Finding) bool { return v.AssetID == assetID })
 }
 
 // BuildEvidenceSummary creates a human-readable summary of violation evidence.
@@ -152,11 +147,7 @@ func BuildRootCausesSummary(causes []evaluation.RootCause) string {
 	if len(causes) == 0 {
 		return ""
 	}
-	parts := make([]string, len(causes))
-	for i, c := range causes {
-		parts[i] = string(c)
-	}
-	return strings.Join(parts, ", ")
+	return strings.Join(fp.Map(causes, func(c evaluation.RootCause) string { return string(c) }), ", ")
 }
 
 // BuildGuidanceSummary creates readable action guidance from control metadata.

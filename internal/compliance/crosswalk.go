@@ -13,6 +13,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/securityaudit"
+	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // Framework is a validated, normalized compliance framework identifier.
@@ -98,10 +99,7 @@ func ResolveControlCrosswalk(
 	if err != nil {
 		return CrosswalkResolution{}, err
 	}
-	allowed := make(map[Framework]struct{}, len(selected))
-	for _, f := range selected {
-		allowed[f] = struct{}{}
-	}
+	allowed := fp.ToSet(selected)
 
 	byCheck := make(map[string][]securityaudit.ControlRef, len(checkIDs))
 	missing := make([]string, 0)
@@ -192,9 +190,5 @@ func normalizeFramework(value string) string {
 
 // FrameworkStrings converts a slice of Framework values to their string representations.
 func FrameworkStrings(fs []Framework) []string {
-	out := make([]string, len(fs))
-	for i, f := range fs {
-		out[i] = string(f)
-	}
-	return out
+	return fp.Map(fs, func(f Framework) string { return string(f) })
 }
