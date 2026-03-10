@@ -33,8 +33,8 @@ The push uses the `github.com-sufield` SSH host alias (configured in `~/.ssh/con
 |-------|------|-----------------|
 | `make test` | Before commit | Broken code |
 | `make e2e` | Before commit | Golden file regressions |
-| `make docs-check` | Before commit + CI | CLI reference docs out of sync |
 | `make readme-check` | Before commit + CI | README control counts or version stale |
+| `make docs-check` | Before commit (publisher) | CLI reference docs out of sync |
 | `goreleaser check` | Before commit | Invalid release config |
 | `VERSION` ↔ tag match | CI release workflow | Version file forgotten |
 

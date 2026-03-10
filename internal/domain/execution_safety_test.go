@@ -19,9 +19,10 @@ import (
 // Restrictions are sourced from internal/domain/kernel/airgap.go.
 // Vendored dependencies are excluded.
 func TestNoBannedImportsInRuntime(t *testing.T) {
-	// Excluded directories: vendored dependencies.
+	// Excluded directories: vendored dependencies and dev tooling not shipped in runtime.
 	excludedDirs := map[string]bool{
-		"vendor": true,
+		"vendor":         true,
+		"internal/tools": true,
 	}
 
 	root := findRepoRoot(t)
@@ -179,7 +180,8 @@ func TestNoHTTPSchemaIdentifiers(t *testing.T) {
 // The only allowed env var read is NO_COLOR.
 func TestNoCredentialEnvReads(t *testing.T) {
 	excludedDirs := map[string]bool{
-		"vendor": true,
+		"vendor":         true,
+		"internal/tools": true,
 	}
 
 	root := findRepoRoot(t)

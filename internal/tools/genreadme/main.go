@@ -3,9 +3,9 @@
 //
 // Usage:
 //
-//	go run ./cmd/genreadme                    # write README.md
-//	go run ./cmd/genreadme -check             # exit 1 if README.md is stale
-//	go run ./cmd/genreadme -tmpl README.md.tmpl -out README.md
+//	go run ./internal/tools/genreadme                    # write README.md
+//	go run ./internal/tools/genreadme -check             # exit 1 if README.md is stale
+//	go run ./internal/tools/genreadme -tmpl README.md.tmpl -out README.md
 package main
 
 import (
@@ -32,6 +32,12 @@ func main() {
 	check := flag.Bool("check", false, "check mode: exit 1 if output is stale")
 	flag.Parse()
 
+	safeOut, err := safeLocalPath(*outPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
 	data, err := collect(*controlsDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -45,25 +51,25 @@ func main() {
 	}
 
 	if *check {
-		existing, err := os.ReadFile(*outPath)
+		existing, err := os.ReadFile(safeOut)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error reading %s: %v\n", *outPath, err)
+			fmt.Fprintf(os.Stderr, "error reading %s: %v\n", safeOut, err)
 			os.Exit(1)
 		}
 		if !bytes.Equal(existing, rendered) {
-			fmt.Fprintf(os.Stderr, "FAIL: %s is stale. Run 'make readme' to update.\n", *outPath)
+			fmt.Fprintf(os.Stderr, "FAIL: %s is stale. Run 'make readme' to update.\n", safeOut)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stderr, "OK: %s is up to date\n", *outPath)
+		fmt.Fprintf(os.Stderr, "OK: %s is up to date\n", safeOut)
 		return
 	}
 
-	if err := os.WriteFile(*outPath, rendered, 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", *outPath, err)
+	if err := os.WriteFile(safeOut, rendered, 0600); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", safeOut, err)
 		os.Exit(1)
 	}
 	fmt.Fprintf(os.Stderr, "Wrote %s (%d controls across %d categories)\n",
-		*outPath, data.TotalControls, data.CategoryCount)
+		safeOut, data.TotalControls, data.CategoryCount)
 }
 
 func collect(controlsDir string) (Data, error) {
@@ -101,14 +107,31 @@ func collect(controlsDir string) (Data, error) {
 	}, nil
 }
 
+// safeLocalPath rejects absolute paths and path traversal.
+func safeLocalPath(p string) (string, error) {
+	clean := filepath.Clean(p)
+	if filepath.IsAbs(clean) {
+		return "", fmt.Errorf("absolute paths not allowed: %s", p)
+	}
+	if clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("path traversal not allowed: %s", p)
+	}
+	return clean, nil
+}
+
 func render(tmplPath string, data Data) ([]byte, error) {
+	safe, err := safeLocalPath(tmplPath)
+	if err != nil {
+		return nil, err
+	}
+
 	funcMap := template.FuncMap{
 		"ctrl": func(category string) int {
 			return data.S3[category]
 		},
 	}
 
-	tmplContent, err := os.ReadFile(tmplPath)
+	tmplContent, err := os.ReadFile(safe)
 	if err != nil {
 		return nil, fmt.Errorf("reading template: %w", err)
 	}

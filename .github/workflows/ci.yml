@@ -137,8 +137,6 @@ jobs:
           go-version-file: 'go.mod'
           check-latest: true
           cache: true
-      - name: Check CLI docs freshness
-        run: make docs-check
       - name: Check README freshness
         run: make readme-check
 

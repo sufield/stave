@@ -1,4 +1,4 @@
-.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz docker-demo docs-check demo-check readme readme-check
+.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz docker-demo demo-check readme readme-check
 
 # Binary name
 BINARY=stave
@@ -195,8 +195,6 @@ endif
 	$(MAKE) test
 	@echo "==> Running e2e..."
 	$(MAKE) e2e
-	@echo "==> Checking CLI docs freshness..."
-	$(MAKE) docs-check
 	@echo "==> Checking README freshness..."
 	$(MAKE) readme-check
 	@echo "==> Validating goreleaser config..."
@@ -274,15 +272,6 @@ docker-demo: build
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		-f ../docs-content/demo/Dockerfile \
 		-t stave-demo ..
-
-## docs-check: Verify generated CLI docs match committed docs
-docs-check: build
-	@mkdir -p .tmp/docs-check
-	@rm -rf .tmp/docs-check/*
-	../publisher/generate-cli-docs.sh --binary ./stave --stave-root . --output .tmp/docs-check
-	@diff -ru ../docs-content/cli-reference .tmp/docs-check \
-		|| (echo "FAIL: CLI docs are stale. Run 'make -C ../publisher docs-gen' to update." && exit 1)
-	@echo "OK: CLI docs are up to date"
 
 ## demo-check: Verify demo scenarios produce expected finding counts
 demo-check: build
