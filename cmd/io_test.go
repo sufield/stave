@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/ingest"
+	"github.com/sufield/stave/internal/cli/ui"
 )
 
 // TestDirPermissions0o700 verifies that output directories are created with
@@ -131,7 +132,7 @@ func TestNoWorldReadableDirs(t *testing.T) {
 func TestExtractS3FlagRegistered(t *testing.T) {
 	flags := []string{"force", "dry-run"}
 	for _, name := range flags {
-		f := ingest.NewIngestCmd(nil).Flags().Lookup(name)
+		f := ingest.NewIngestCmd(ui.DefaultRuntime()).Flags().Lookup(name)
 		if f == nil {
 			t.Errorf("extract missing --%s flag", name)
 		}
@@ -148,7 +149,7 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	f := applyvalidate.NewCmd(nil).Flags().Lookup("in")
+	f := applyvalidate.NewCmd(ui.DefaultRuntime()).Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
@@ -156,7 +157,7 @@ func TestValidateInFlagRegistered(t *testing.T) {
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
 	applyCmd := apply.NewApplyCmd()
-	validateCmd := applyvalidate.NewCmd(nil)
+	validateCmd := applyvalidate.NewCmd(ui.DefaultRuntime())
 	cases := []struct {
 		name      string
 		shorthand string

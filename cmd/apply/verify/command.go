@@ -9,7 +9,7 @@ import (
 // NewCmd builds the verify command.
 func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
+		rt = ui.DefaultRuntime()
 	}
 
 	opts := defaultOptions()

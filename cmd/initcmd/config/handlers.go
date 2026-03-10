@@ -21,7 +21,7 @@ func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.E
 		stderr = cc.rt.Stderr
 	}
 
-	store := projectConfigStore{allowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)}
+	store := projectConfigStore{allowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd), svc: cc.svc}
 	return &cliconfig.Editor[projconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
@@ -74,7 +74,7 @@ func (cc *configCommand) runConfigGet(cmd *cobra.Command, key string) error {
 	cfg, cfgPath, _ := projconfig.FindProjectConfigWithPath()
 	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
 
-	kv, err := resolveServiceConfigKeyValue(key, cfg, cfgPath, retTier.Value)
+	kv, err := resolveServiceConfigKeyValue(cc.svc, key, cfg, cfgPath, retTier.Value)
 	if err != nil {
 		return err
 	}

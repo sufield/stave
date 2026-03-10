@@ -140,12 +140,16 @@ func newVersionCmd() *cobra.Command {
 }
 
 // WireMetaCommands attaches root metadata/introspection commands.
-func WireMetaCommands(root *cobra.Command) {
-	root.AddCommand(newCapabilitiesCmd(), newSchemasCmd(), newVersionCmd())
+func WireMetaCommands(app *App) {
+	app.Root.AddCommand(newCapabilitiesCmd(), newSchemasCmd(), newVersionCmd())
 }
 
 // WireCommands attaches the full command tree to the root command.
-func WireCommands(root *cobra.Command) {
+// It receives *App so that per-App dependencies (Composition, ConfigKeyService,
+// etc.) can be threaded into command constructors that need them.
+func WireCommands(app *App) {
+	root := app.Root
+
 	// Getting started
 	root.AddCommand(initcmd.NewInitCmd())
 	root.AddCommand(initcmd.NewQuickstartCmd())
@@ -154,11 +158,11 @@ func WireCommands(root *cobra.Command) {
 	root.AddCommand(doctor.NewCmd())
 
 	// Core evaluation
-	root.AddCommand(applyvalidate.NewCmd(nil))
+	root.AddCommand(applyvalidate.NewCmd(ui.DefaultRuntime()))
 	root.AddCommand(apply.NewPlanCmd())
 	root.AddCommand(apply.NewApplyCmd())
-	root.AddCommand(applyverify.NewCmd(nil))
-	root.AddCommand(extractor.NewCmd(nil))
+	root.AddCommand(applyverify.NewCmd(ui.DefaultRuntime()))
+	root.AddCommand(extractor.NewCmd(ui.DefaultRuntime()))
 	root.AddCommand(diagnose.NewDiagnoseCmd())
 	root.AddCommand(diagnose.NewExplainCmd())
 	root.AddCommand(diagnose.NewTraceCmd())
@@ -189,7 +193,7 @@ func WireCommands(root *cobra.Command) {
 	wireCISubtree(ciCmd)
 
 	// Data & Artifacts
-	root.AddCommand(ingest.NewIngestCmd(nil))
+	root.AddCommand(ingest.NewIngestCmd(ui.DefaultRuntime()))
 	root.AddCommand(artifacts.NewControlsCmd())
 	root.AddCommand(artifacts.NewPacksCmd())
 	root.AddCommand(enforce.NewEnforceCmd())
@@ -207,7 +211,9 @@ func WireCommands(root *cobra.Command) {
 	wireDocsSubtree(docsCmd)
 
 	root.AddCommand(bugreport.NewCmd())
-	root.AddCommand(initconfig.NewConfigCmd(ui.NewRuntime(nil, nil)))
+	// ConfigKeyService is passed explicitly so the config command tree does not
+	// depend on the projconfig package-level global.
+	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), app.ConfigKeyService))
 	root.AddCommand(initalias.NewAliasCmd(root))
 	root.AddCommand(initenv.NewEnvCmd())
 	root.AddCommand(diagnose.NewPromptCmd())

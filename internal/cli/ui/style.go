@@ -74,7 +74,7 @@ func (r *Runtime) SeverityLabel(level, message string) string {
 
 // CanColor reports whether ANSI color output should be used for this writer.
 func CanColor(out io.Writer) bool {
-	return NewRuntime(nil, nil).CanColor(out)
+	return DefaultRuntime().CanColor(out)
 }
 
 // CanColor reports whether ANSI color output should be used for this writer.

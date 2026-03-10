@@ -6,7 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/sanitize"
@@ -41,11 +44,31 @@ type App struct {
 	LogCloser *logging.LogCloser
 	ExitFunc  func(int)
 	Root      *cobra.Command
+
+	// Composition holds the adapter constructor wiring used by command handlers.
+	// It is initialised from compose.DefaultComposition() and activated via
+	// compose.UseComposition in App.bootstrap before any command runs.
+	// Replace it before calling Root.Execute() to swap adapters in tests or
+	// custom entry points without touching the package-level global directly.
+	//
+	// TODO: thread Composition through individual command constructors so each
+	// handler receives it explicitly rather than through the package global.
+	// See KNOWN_LIMITATIONS.md – "defaultComposition is an unexported package-level variable".
+	Composition compose.Composition
+
+	// ConfigKeyService is the config-key resolution service used by the
+	// "stave config" command tree. It is passed explicitly to NewConfigCmd so
+	// the config handlers do not depend on the projconfig package-level global.
+	ConfigKeyService *configservice.Service
 }
 
 // NewApp creates a fully-wired CLI application.
 func NewApp() *App {
-	app := &App{ExitFunc: os.Exit}
+	app := &App{
+		ExitFunc:         os.Exit,
+		Composition:      compose.DefaultComposition(),
+		ConfigKeyService: projconfig.ConfigKeyService,
+	}
 	app.Root = &cobra.Command{
 		Use:               CLIName,
 		Short:             "Configuration safety evaluator",
@@ -57,8 +80,8 @@ func NewApp() *App {
 		Long:              rootLongHelp,
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
-	WireMetaCommands(app.Root)
-	WireCommands(app.Root)
+	WireMetaCommands(app)
+	WireCommands(app)
 	wireHelpGroups(app.Root)
 	return app
 }

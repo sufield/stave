@@ -144,7 +144,9 @@ type Composition struct {
 }
 
 // defaultComposition is the standard adapter wiring.
-// Use the package-level functions (NewObservationRepository, etc.) to access it.
+// Use DefaultComposition() to obtain a copy of the defaults, UseComposition() to
+// activate a custom composition for the current process, and the package-level
+// convenience functions (NewObservationRepository, etc.) to consume it.
 // Tests that need to override should use OverrideForTest.
 var defaultComposition = Composition{
 	NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
@@ -160,6 +162,37 @@ var defaultComposition = Composition{
 		return obsjson.NewObservationLoader(), nil
 	},
 	NewFindingWriter: defaultNewFindingWriter,
+}
+
+// DefaultComposition returns a fresh copy of the standard adapter wiring.
+// Callers (e.g. App.NewApp) should store the result and pass it to
+// UseComposition before executing any command.
+func DefaultComposition() Composition {
+	return Composition{
+		NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
+			return obsjson.NewObservationLoader(), nil
+		},
+		NewStdinObservationRepo: func(r io.Reader) (appcontracts.ObservationRepository, error) {
+			return obsjson.NewStdinObservationLoader(obsjson.NewObservationLoader(), r), nil
+		},
+		NewControlRepository: func() (appcontracts.ControlRepository, error) {
+			return ctlyaml.NewControlLoader()
+		},
+		NewSnapshotObservation: func() (SnapshotObservationRepository, error) {
+			return obsjson.NewObservationLoader(), nil
+		},
+		NewFindingWriter: defaultNewFindingWriter,
+	}
+}
+
+// UseComposition replaces the active composition used by the package-level
+// convenience functions (NewObservationRepository, NewControlRepository, etc.).
+// It is intended to be called once from App.bootstrap before any command runs,
+// making App the explicit owner of the composition.
+//
+// For test overrides that need automatic cleanup, use OverrideForTest instead.
+func UseComposition(c Composition) {
+	defaultComposition = c
 }
 
 // OverrideForTest replaces the default composition for the duration of a test.

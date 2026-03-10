@@ -33,7 +33,7 @@ type ingestCommand struct {
 // NewIngestCmd builds the ingest command tree.
 func NewIngestCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
-		rt = ui.NewRuntime(nil, nil)
+		rt = ui.DefaultRuntime()
 	}
 
 	opts := &Options{OutFile: "observations.json"}

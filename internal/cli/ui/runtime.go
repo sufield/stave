@@ -22,7 +22,10 @@ type Runtime struct {
 	IsTTY *bool
 }
 
-// NewRuntime creates a Runtime with default streams when nil streams are provided.
+// NewRuntime creates a Runtime with the given output streams.
+// Passing nil for either stream falls back to the corresponding process stream
+// (os.Stdout / os.Stderr). Prefer DefaultRuntime() when you simply want the
+// process streams, so the intent is visible at the call site.
 func NewRuntime(stdout, stderr io.Writer) *Runtime {
 	if stdout == nil {
 		stdout = os.Stdout
@@ -33,6 +36,16 @@ func NewRuntime(stdout, stderr io.Writer) *Runtime {
 	return &Runtime{
 		Stdout: stdout,
 		Stderr: stderr,
+	}
+}
+
+// DefaultRuntime returns a Runtime wired to the process's standard output and
+// error streams. Use this instead of NewRuntime(nil, nil) to make the intent
+// explicit at the call site.
+func DefaultRuntime() *Runtime {
+	return &Runtime{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
 	}
 }
 
