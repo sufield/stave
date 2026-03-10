@@ -11,32 +11,22 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
-// PipelineData carries state through evaluation pipeline steps.
-type PipelineData struct {
-	Result   evaluation.Result
-	Enriched appcontracts.EnrichedResult
-	Bytes    []byte
-	Output   io.Writer
-}
-
-// Step is a single pipeline operation that transforms PipelineData.
-type Step func(ctx context.Context, d *PipelineData) error
-
-// Pipeline chains steps with short-circuit error handling.
-type Pipeline struct {
+// Pipeline chains context-aware steps with short-circuit error handling.
+// The type parameter T is the data carrier passed through each step.
+type Pipeline[T any] struct {
 	ctx  context.Context
-	data *PipelineData
+	data *T
 	err  error
 }
 
-// NewPipeline creates a pipeline with the given context and data.
-func NewPipeline(ctx context.Context, data *PipelineData) *Pipeline {
-	return &Pipeline{ctx: ctx, data: data}
+// NewPipeline creates a pipeline with the given context and data carrier.
+func NewPipeline[T any](ctx context.Context, data *T) *Pipeline[T] {
+	return &Pipeline[T]{ctx: ctx, data: data}
 }
 
 // Then executes the next step, short-circuiting on prior error or
 // cancelled context.
-func (p *Pipeline) Then(step Step) *Pipeline {
+func (p *Pipeline[T]) Then(step func(context.Context, *T) error) *Pipeline[T] {
 	if p.err != nil {
 		return p
 	}
@@ -49,9 +39,20 @@ func (p *Pipeline) Then(step Step) *Pipeline {
 }
 
 // Error returns the first error encountered in the pipeline.
-func (p *Pipeline) Error() error {
+func (p *Pipeline[T]) Error() error {
 	return p.err
 }
+
+// PipelineData carries state through evaluation pipeline steps.
+type PipelineData struct {
+	Result   evaluation.Result
+	Enriched appcontracts.EnrichedResult
+	Bytes    []byte
+	Output   io.Writer
+}
+
+// Step is a single pipeline operation that transforms PipelineData.
+type Step func(ctx context.Context, d *PipelineData) error
 
 // EnrichStep returns a Step that enriches evaluation results into findings.
 func EnrichStep(enrichFn appcontracts.EnrichFunc) Step {
