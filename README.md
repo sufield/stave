@@ -101,21 +101,20 @@ No code changes required. The predicate engine resolves dot-notation field paths
 
 ## How Stave compares
 
-| Category | Examples | No credentials needed | Offline snapshots | Deterministic | Duration aware | Enforcement |
-|----------|----------|:---:|:---:|:---:|:---:|:---:|
-| CSPM | AWS Config, Wiz, Prisma, Prowler | ❌ | ❌ | ❌ | ❌ | ⚠️ |
-| IaC policy | OPA, Checkov, tfsec | ✅ | ❌ | ✅ | ❌ | ❌ |
-| S3 auditors | ScoutSuite, s3audit, CloudMapper | ❌ | ❌ | ❌ | ❌ | ❌ |
-| System Invariant as Code | **Stave** | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-Think of it as:
-
-| Category | Analogy | Example |
-|-----------|---------|---------|
-| CSPM | Runtime cloud scanner | AWS Config, Wiz |
-| IaC policy | Template linter | OPA, Checkov |
-| S3 auditor | Exposure enumerator | ScoutSuite |
+| Category | Analogy | Examples |
+|----------|---------|----------|
+| CSPM | Runtime cloud scanner | AWS Config, Wiz, Prisma, Prowler |
+| IaC policy | Template linter | OPA, Checkov, tfsec |
+| S3 auditors | Exposure enumerator | ScoutSuite, s3audit, CloudMapper |
 | System Invariant as Code | Safety evaluator | **Stave** |
+
+| Feature | CSPM | IaC Policy | S3 Auditors | **Stave** |
+|---------|:---:|:---:|:---:|:---:|
+| No credentials needed | ❌ | ✅ | ❌ | ✅ |
+| Offline snapshots | ❌ | ❌ | ❌ | ✅ |
+| Deterministic | ❌ | ✅ | ❌ | ✅ |
+| Duration aware | ❌ | ❌ | ❌ | ✅ |
+| Enforcement | ⚠️ | ❌ | ❌ | ✅ |
 
 ## Security model
 
