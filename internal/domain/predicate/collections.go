@@ -1,6 +1,10 @@
 package predicate
 
-import "slices"
+import (
+	"slices"
+
+	"github.com/samber/lo"
+)
 
 // ValueInList checks if a value is contained in a list.
 func ValueInList(fieldValue, listValue any) bool {
@@ -99,18 +103,11 @@ func valueInAnyList(fieldValue any, list []any) bool {
 	// Preserve existing semantics: for string-like needles, only exact string
 	// items match in []any lists.
 	if fieldStr, isString := toString(fieldValue); isString {
-		for _, item := range list {
-			if itemStr, ok := toString(item); ok && fieldStr == itemStr {
-				return true
-			}
-		}
-		return false
+		return lo.SomeBy(list, func(item any) bool {
+			itemStr, ok := toString(item)
+			return ok && fieldStr == itemStr
+		})
 	}
 
-	for _, item := range list {
-		if EqualValues(fieldValue, item) {
-			return true
-		}
-	}
-	return false
+	return lo.ContainsBy(list, func(item any) bool { return EqualValues(fieldValue, item) })
 }

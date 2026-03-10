@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/samber/lo"
 	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 	s3resource "github.com/sufield/stave/internal/adapters/input/extract/s3/resource"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
@@ -110,10 +111,7 @@ func (e *Extractor) collectFromResourceChanges(
 }
 
 func (e *Extractor) buildResourceSlices(state *s3terraform.State) []asset.Asset {
-	bucketNames := make([]string, 0, len(state.Buckets))
-	for name := range state.Buckets {
-		bucketNames = append(bucketNames, name)
-	}
+	bucketNames := lo.Keys(state.Buckets)
 	sort.Strings(bucketNames)
 
 	accountPAB := fromTerraformPublicAccessBlock(state.AccountPAB)

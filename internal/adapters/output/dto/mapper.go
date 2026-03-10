@@ -171,12 +171,8 @@ func fromInputHashes(h *evaluation.InputHashes) *InputHashesDTO {
 	if h == nil {
 		return nil
 	}
-	files := make(map[string]kernel.Digest, len(h.Files))
-	for k, v := range h.Files {
-		files[string(k)] = v
-	}
 	return &InputHashesDTO{
-		Files:   files,
+		Files:   lo.MapKeys(h.Files, func(_ kernel.Digest, k evaluation.FilePath) string { return string(k) }),
 		Overall: h.Overall,
 	}
 }
@@ -193,63 +189,55 @@ func fromSuppressedFindings(fs []evaluation.SuppressedFinding) []SuppressedFindi
 	if len(fs) == 0 {
 		return nil
 	}
-	out := make([]SuppressedFindingDTO, len(fs))
-	for i, f := range fs {
-		out[i] = SuppressedFindingDTO{
+	return lo.Map(fs, func(f evaluation.SuppressedFinding, _ int) SuppressedFindingDTO {
+		return SuppressedFindingDTO{
 			ControlID: f.ControlID,
 			AssetID:   f.AssetID,
 			Reason:    f.Reason,
 			Expires:   f.Expires,
 		}
-	}
-	return out
+	})
 }
 
 func fromRemediationGroups(gs []remediation.Group) []RemediationGroupDTO {
 	if len(gs) == 0 {
 		return nil
 	}
-	out := make([]RemediationGroupDTO, len(gs))
-	for i, g := range gs {
-		out[i] = RemediationGroupDTO{
+	return lo.Map(gs, func(g remediation.Group, _ int) RemediationGroupDTO {
+		return RemediationGroupDTO{
 			AssetID:              g.AssetID,
 			AssetType:            g.AssetType,
 			RemediationPlan:      fromRemediationPlan(g.RemediationPlan),
 			ContributingControls: g.ContributingControls,
 			FindingCount:         g.FindingCount,
 		}
-	}
-	return out
+	})
 }
 
 func fromSkippedControls(cs []evaluation.SkippedControl) []SkippedControlDTO {
 	if len(cs) == 0 {
 		return nil
 	}
-	out := make([]SkippedControlDTO, len(cs))
-	for i, c := range cs {
-		out[i] = SkippedControlDTO{
+	return lo.Map(cs, func(c evaluation.SkippedControl, _ int) SkippedControlDTO {
+		return SkippedControlDTO{
 			ControlID:   c.ControlID,
 			ControlName: c.ControlName,
 			Reason:      c.Reason,
 		}
-	}
-	return out
+	})
 }
 
 func fromSkippedAssets(as []asset.SkippedAsset) []SkippedAssetDTO {
 	if len(as) == 0 {
 		return nil
 	}
-	out := make([]SkippedAssetDTO, len(as))
-	for i, a := range as {
-		out[i] = SkippedAssetDTO{
+	return lo.Map(as, func(a asset.SkippedAsset, _ int) SkippedAssetDTO {
+		return SkippedAssetDTO{
 			AssetID: a.ID,
 			Pattern: a.Pattern,
 			Reason:  a.Reason,
 		}
-	}
-	return out
+	})
 }
 
 func fromExtensions(e *evaluation.Extensions) *ExtensionsDTO {

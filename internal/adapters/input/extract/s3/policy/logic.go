@@ -3,6 +3,8 @@ package policy
 import (
 	"regexp"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 type policyActionMask uint8
@@ -108,12 +110,9 @@ func classifyPolicyAction(action string) (policyActionMask, bool) {
 }
 
 func hasWildcardResource(resources []string) bool {
-	for _, res := range resources {
-		if res == policyWildcard || res == policyS3GlobalResource {
-			return true
-		}
-	}
-	return false
+	return lo.SomeBy(resources, func(res string) bool {
+		return res == policyWildcard || res == policyS3GlobalResource
+	})
 }
 
 // isAccountIDOnly identifies whether the principal is a specific AWS account ID.
