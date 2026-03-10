@@ -33,8 +33,8 @@ type PropertyChange struct {
 type AssetDiff struct {
 	AssetID         ID               `json:"asset_id"`
 	ChangeType      ChangeType       `json:"change_type"` // added|removed|modified
-	FromType        string           `json:"from_type,omitempty"`
-	ToType          string           `json:"to_type,omitempty"`
+	FromType        kernel.AssetType `json:"from_type,omitempty"`
+	ToType          kernel.AssetType `json:"to_type,omitempty"`
 	PropertyChanges []PropertyChange `json:"property_changes,omitempty"`
 }
 

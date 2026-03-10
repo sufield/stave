@@ -1,6 +1,10 @@
 package asset
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 func TestObservationDeltaApplyFilter(t *testing.T) {
 	delta := ObservationDelta{
@@ -13,7 +17,7 @@ func TestObservationDeltaApplyFilter(t *testing.T) {
 
 	filtered := delta.ApplyFilter(FilterOptions{
 		ChangeTypes: []ChangeType{ChangeModified, ChangeRemoved},
-		AssetTypes:  []string{"res:aws:s3:bucket"},
+		AssetTypes:  []kernel.AssetType{"res:aws:s3:bucket"},
 		AssetID:     "bucket",
 	})
 

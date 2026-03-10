@@ -115,15 +115,15 @@ func (s *assetResetState) observe(isUnsafe bool, t time.Time) bool {
 
 // resetEvent records a detected streak reset for a single asset.
 type resetEvent struct {
-	assetID string
+	assetID asset.ID
 	safeAt  time.Time
 }
 
-func collectAssetIDs(snapshots []asset.Snapshot) map[string]struct{} {
-	ids := make(map[string]struct{})
+func collectAssetIDs(snapshots []asset.Snapshot) map[asset.ID]struct{} {
+	ids := make(map[asset.ID]struct{})
 	for _, snap := range snapshots {
 		for _, r := range snap.Assets {
-			ids[r.ID.String()] = struct{}{}
+			ids[r.ID] = struct{}{}
 		}
 	}
 	return ids
@@ -131,32 +131,31 @@ func collectAssetIDs(snapshots []asset.Snapshot) map[string]struct{} {
 
 // findResets walks sorted snapshots and returns all streak resets found.
 // Only assets present in scope are examined.
-func findResets(snapshots []asset.Snapshot, unsafeIdx unsafeIndex, scope map[string]struct{}) []resetEvent {
-	states := make(map[string]assetResetState, len(scope))
+func findResets(snapshots []asset.Snapshot, unsafeIdx unsafeIndex, scope map[asset.ID]struct{}) []resetEvent {
+	states := make(map[asset.ID]assetResetState, len(scope))
 	var resets []resetEvent
 
 	for snapIdx, snap := range snapshots {
 		for _, r := range snap.Assets {
-			assetID := r.ID.String()
-			if _, inScope := scope[assetID]; !inScope {
+			if _, inScope := scope[r.ID]; !inScope {
 				continue
 			}
 
-			isUnsafe := unsafeIdx.isUnsafe(snapIdx, assetID)
+			isUnsafe := unsafeIdx.isUnsafe(snapIdx, r.ID)
 
-			s, exists := states[assetID]
+			s, exists := states[r.ID]
 			if !exists {
-				states[assetID] = newResetState(isUnsafe, snap.CapturedAt)
+				states[r.ID] = newResetState(isUnsafe, snap.CapturedAt)
 				continue
 			}
 
 			if s.observe(isUnsafe, snap.CapturedAt) {
 				resets = append(resets, resetEvent{
-					assetID: assetID,
+					assetID: r.ID,
 					safeAt:  s.lastSafeAt,
 				})
 			}
-			states[assetID] = s
+			states[r.ID] = s
 		}
 	}
 
@@ -168,7 +167,7 @@ func resetEntry(e resetEvent) Entry {
 	return Entry{
 		Case:    ViolationEvidence,
 		Signal:  "Streak reset detected",
-		AssetID: asset.ID(e.assetID),
+		AssetID: e.assetID,
 		Evidence: fmt.Sprintf("asset=%s became safe at %s then unsafe again",
 			e.assetID, e.safeAt.Format(time.RFC3339)),
 		Action: "Current violation reflects time since last reset, not total unsafe time",
@@ -185,9 +184,9 @@ func detectStreakResets(input Input) []Entry {
 	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
 	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
 
-	violated := make(map[string]struct{}, len(input.Findings))
+	violated := make(map[asset.ID]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
-		violated[string(f.AssetID)] = struct{}{}
+		violated[f.AssetID] = struct{}{}
 	}
 
 	resets := findResets(snapshots, unsafeIdx, violated)
@@ -210,6 +209,6 @@ func detectAnyReset(input Input) bool {
 	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
 	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
 
-	allAssetIDs := collectAssetIDs(snapshots)
-	return len(findResets(snapshots, unsafeIdx, allAssetIDs)) > 0
+	allIDs := collectAssetIDs(snapshots)
+	return len(findResets(snapshots, unsafeIdx, allIDs)) > 0
 }

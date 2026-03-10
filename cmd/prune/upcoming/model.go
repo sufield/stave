@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -12,9 +13,9 @@ import (
 type UpcomingItem struct {
 	DueAt          time.Time
 	Status         risk.Status
-	ControlID      string
-	AssetID        string
-	AssetType      string
+	ControlID      kernel.ControlID
+	AssetID        asset.ID
+	AssetType      kernel.AssetType
 	FirstUnsafeAt  time.Time
 	LastSeenUnsafe time.Time
 	Threshold      time.Duration

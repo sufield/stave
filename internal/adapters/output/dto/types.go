@@ -7,6 +7,8 @@ package dto
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
@@ -15,7 +17,7 @@ type FindingDTO struct {
 	ControlID          kernel.ControlID    `json:"control_id"`
 	ControlName        string              `json:"control_name"`
 	ControlDescription string              `json:"control_description"`
-	AssetID            string              `json:"asset_id"`
+	AssetID            asset.ID            `json:"asset_id"`
 	AssetType          kernel.AssetType    `json:"asset_type"`
 	AssetVendor        kernel.Vendor       `json:"asset_vendor"`
 	Source             *SourceRefDTO       `json:"source,omitempty"`
@@ -95,7 +97,7 @@ type RemediationPlanDTO struct {
 
 // RemediationTargetDTO mirrors evaluation.RemediationTarget.
 type RemediationTargetDTO struct {
-	AssetID   string           `json:"asset_id"`
+	AssetID   asset.ID         `json:"asset_id"`
 	AssetType kernel.AssetType `json:"asset_type"`
 }
 
@@ -109,7 +111,7 @@ type RemediationActionDTO struct {
 // SuppressedFindingDTO mirrors evaluation.SuppressedFinding.
 type SuppressedFindingDTO struct {
 	ControlID kernel.ControlID `json:"control_id"`
-	AssetID   string           `json:"asset_id"`
+	AssetID   asset.ID         `json:"asset_id"`
 	Reason    string           `json:"reason"`
 	Expires   string           `json:"expires,omitempty"`
 }
@@ -123,9 +125,9 @@ type SkippedControlDTO struct {
 
 // SkippedAssetDTO mirrors asset.SkippedAsset.
 type SkippedAssetDTO struct {
-	AssetID string `json:"asset_id"`
-	Pattern string `json:"matched_pattern"`
-	Reason  string `json:"reason"`
+	AssetID asset.ID `json:"asset_id"`
+	Pattern string   `json:"matched_pattern"`
+	Reason  string   `json:"reason"`
 }
 
 // RunInfoDTO mirrors evaluation.RunInfo.
@@ -154,7 +156,7 @@ type SummaryDTO struct {
 
 // RemediationGroupDTO mirrors remediation.Group.
 type RemediationGroupDTO struct {
-	AssetID              string             `json:"asset_id"`
+	AssetID              asset.ID           `json:"asset_id"`
 	AssetType            kernel.AssetType   `json:"asset_type"`
 	RemediationPlan      RemediationPlanDTO `json:"fix_plan"`
 	ContributingControls []kernel.ControlID `json:"contributing_controls"`
@@ -183,15 +185,15 @@ type GitMetadataDTO struct {
 
 // RowDTO mirrors evaluation.Row.
 type RowDTO struct {
-	ControlID  kernel.ControlID `json:"control_id"`
-	AssetID    string           `json:"asset_id"`
-	AssetType  kernel.AssetType `json:"asset_type"`
-	Domain     string           `json:"asset_domain"`
-	Decision   string           `json:"decision"`
-	Confidence string           `json:"confidence"`
-	Evidence   *EvidenceDTO     `json:"evidence,omitempty"`
-	WhyNow     string           `json:"why_now,omitempty"`
-	Reason     string           `json:"reason,omitempty"`
+	ControlID  kernel.ControlID           `json:"control_id"`
+	AssetID    asset.ID                   `json:"asset_id"`
+	AssetType  kernel.AssetType           `json:"asset_type"`
+	Domain     string                     `json:"asset_domain"`
+	Decision   evaluation.Decision        `json:"decision"`
+	Confidence evaluation.ConfidenceLevel `json:"confidence"`
+	Evidence   *EvidenceDTO               `json:"evidence,omitempty"`
+	WhyNow     string                     `json:"why_now,omitempty"`
+	Reason     string                     `json:"reason,omitempty"`
 }
 
 // ResultDTO is the top-level evaluation output envelope content.

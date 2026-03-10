@@ -6,18 +6,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"gopkg.in/yaml.v3"
 )
 
 // FindingData holds data for a single finding in the rendered prompt.
 type FindingData struct {
-	ControlID    string
+	ControlID    kernel.ControlID
 	ControlName  string
 	Description  string
-	AssetID      string
-	AssetType    string
+	AssetID      asset.ID
+	AssetType    kernel.AssetType
 	Evidence     string
 	MatchedProps string
 	RootCauses   string
@@ -46,11 +48,11 @@ func (b *PromptBuilder) Build(matched []evaluation.Finding) PromptData {
 
 	for _, v := range matched {
 		fd := FindingData{
-			ControlID:    string(v.ControlID),
+			ControlID:    v.ControlID,
 			ControlName:  v.ControlName,
 			Description:  v.ControlDescription,
-			AssetID:      string(v.AssetID),
-			AssetType:    string(v.AssetType),
+			AssetID:      v.AssetID,
+			AssetType:    v.AssetType,
 			Evidence:     BuildEvidenceSummary(v.Evidence),
 			MatchedProps: summarizeMisconfigurations(v.Evidence.Misconfigurations),
 			RootCauses:   BuildRootCausesSummary(v.Evidence.RootCauses),
@@ -100,10 +102,10 @@ func marshalControl(ctl *policy.ControlDefinition) string {
 }
 
 // FilterFindings returns findings matching the given asset ID.
-func FilterFindings(all []evaluation.Finding, assetID string) []evaluation.Finding {
+func FilterFindings(all []evaluation.Finding, assetID asset.ID) []evaluation.Finding {
 	matched := make([]evaluation.Finding, 0, len(all))
 	for _, v := range all {
-		if string(v.AssetID) == assetID {
+		if v.AssetID == assetID {
 			matched = append(matched, v)
 		}
 	}

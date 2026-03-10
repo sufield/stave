@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
@@ -12,9 +14,9 @@ import (
 type UpcomingItem struct {
 	DueAt          time.Time
 	Status         string
-	ControlID      string
-	AssetID        string
-	AssetType      string
+	ControlID      kernel.ControlID
+	AssetID        asset.ID
+	AssetType      kernel.AssetType
 	FirstUnsafeAt  time.Time
 	LastSeenUnsafe time.Time
 	Threshold      time.Duration
