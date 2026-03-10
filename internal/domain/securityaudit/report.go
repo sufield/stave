@@ -3,6 +3,8 @@ package securityaudit
 import (
 	"slices"
 	"sort"
+
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // Finding is one security-audit result entry.
@@ -35,7 +37,7 @@ type Summary struct {
 
 // Report is the top-level security-audit report document.
 type Report struct {
-	SchemaVersion string        `json:"schema_version"`
+	SchemaVersion kernel.Schema `json:"schema_version"`
 	GeneratedAt   string        `json:"generated_at"`
 	ToolVersion   string        `json:"tool_version"`
 	Summary       Summary       `json:"summary"`

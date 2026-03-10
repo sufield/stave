@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -46,12 +47,12 @@ func BenchmarkProcess(b *testing.B) {
 }
 
 func buildBenchmarkSnapshot(assetCount int) []byte {
-	assets := ""
+	var assets strings.Builder
 	for i := range assetCount {
 		if i > 0 {
-			assets += ","
+			assets.WriteString(",")
 		}
-		assets += fmt.Sprintf(`{
+		assets.WriteString(fmt.Sprintf(`{
 			"id": "arn:aws:s3:::bucket-%d",
 			"type": "aws_s3_bucket",
 			"vendor": "aws",
@@ -64,12 +65,12 @@ func buildBenchmarkSnapshot(assetCount int) []byte {
 					"controls": {"public_access_fully_blocked": true}
 				}
 			}
-		}`, i)
+		}`, i))
 	}
-	return []byte(fmt.Sprintf(`{
+	return fmt.Appendf(nil, `{
 		"schema_version": "obs.v0.1",
 		"generated_by": {"source_type": "aws-s3-snapshot", "tool": "benchmark"},
 		"captured_at": "2026-01-15T00:00:00Z",
 		"assets": [%s]
-	}`, assets))
+	}`, assets.String())
 }

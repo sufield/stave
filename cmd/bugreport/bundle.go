@@ -18,13 +18,13 @@ import (
 )
 
 type manifest struct {
-	BundleVersion string   `json:"bundle_version"`
-	GeneratedAt   string   `json:"generated_at"`
-	StaveVersion  string   `json:"stave_version"`
-	Sanitized     bool     `json:"sanitized"`
-	Files         []string `json:"files"`
-	Warnings      []string `json:"warnings,omitempty"`
-	IssueURL      string   `json:"issue_url"`
+	BundleVersion kernel.Schema `json:"bundle_version"`
+	GeneratedAt   string        `json:"generated_at"`
+	StaveVersion  string        `json:"stave_version"`
+	Sanitized     bool          `json:"sanitized"`
+	Files         []string      `json:"files"`
+	Warnings      []string      `json:"warnings,omitempty"`
+	IssueURL      string        `json:"issue_url"`
 }
 
 type bundleWriter struct {
@@ -142,7 +142,7 @@ func addManifest(bundle *bundleWriter) error {
 	sort.Strings(bundle.files)
 	manifestFiles := append([]string(nil), bundle.files...)
 	m := manifest{
-		BundleVersion: string(kernel.SchemaBugReport),
+		BundleVersion: kernel.SchemaBugReport,
 		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
 		StaveVersion:  staveversion.Version,
 		Sanitized:     true,

@@ -31,13 +31,13 @@ type qualitySummary struct {
 }
 
 type qualityReport struct {
-	SchemaVersion string         `json:"schema_version"`
+	SchemaVersion kernel.Schema     `json:"schema_version"`
 	Kind          kernel.OutputKind `json:"kind"`
-	CheckedAt     time.Time      `json:"checked_at"`
-	Pass          bool           `json:"pass"`
-	Strict        bool           `json:"strict"`
-	Summary       qualitySummary `json:"summary"`
-	Issues        []qualityIssue `json:"issues"`
+	CheckedAt     time.Time         `json:"checked_at"`
+	Pass          bool              `json:"pass"`
+	Strict        bool              `json:"strict"`
+	Summary       qualitySummary    `json:"summary"`
+	Issues        []qualityIssue    `json:"issues"`
 }
 
 // qualityParams defines inputs for snapshot quality assessment.

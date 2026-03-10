@@ -158,7 +158,7 @@ func buildFindings(ev evidenceBundle, req SecurityAuditRequest) []securityaudit.
 
 func buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) securityaudit.ArtifactManifest {
 	manifest := securityaudit.ArtifactManifest{
-		SchemaVersion: string(kernel.SchemaSecurityAuditArtifacts),
+		SchemaVersion: kernel.SchemaSecurityAuditArtifacts,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
 		BundleDir:     req.OutDir,
 		Files:         make([]securityaudit.ArtifactEntry, 0, 10),
@@ -195,7 +195,7 @@ func buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) security
 
 func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, ev evidenceBundle, artifacts securityaudit.ArtifactManifest) securityaudit.Report {
 	report := securityaudit.Report{
-		SchemaVersion: string(kernel.SchemaSecurityAudit),
+		SchemaVersion: kernel.SchemaSecurityAudit,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
 		ToolVersion:   req.ToolVersion,
 		Summary: securityaudit.Summary{

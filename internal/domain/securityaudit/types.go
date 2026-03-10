@@ -3,6 +3,8 @@ package securityaudit
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // Status represents the outcome of one audit check.
@@ -60,7 +62,7 @@ type ArtifactEntry struct {
 
 // ArtifactManifest tracks bundle files and metadata.
 type ArtifactManifest struct {
-	SchemaVersion  string          `json:"schema_version"`
+	SchemaVersion  kernel.Schema   `json:"schema_version"`
 	GeneratedAt    string          `json:"generated_at"`
 	BundleDir      string          `json:"bundle_dir"`
 	MainReportPath string          `json:"main_report_path"`

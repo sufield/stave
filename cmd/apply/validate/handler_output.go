@@ -44,11 +44,11 @@ func collectFixHints(issues []diag.Issue, opts *options) []string {
 }
 
 // ValidateSchemaVersion is the schema version for validate output.
-const ValidateSchemaVersion = string(kernel.SchemaValidate)
+const ValidateSchemaVersion = kernel.SchemaValidate
 
 // JSONValidationReport is the JSON output structure.
 type JSONValidationReport struct {
-	SchemaVersion string                `json:"schema_version"`
+	SchemaVersion kernel.Schema         `json:"schema_version"`
 	Valid         bool                  `json:"valid"`
 	Errors        []diag.Issue          `json:"errors,omitempty"`
 	Warnings      []diag.Issue          `json:"warnings,omitempty"`
