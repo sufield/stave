@@ -28,9 +28,6 @@ type archiveOptions struct {
 
 type archiveOutput = pruner.ArchiveOutput
 
-// ArchiveReportInput holds all data needed to build archive output.
-type ArchiveReportInput = pruner.ArchiveOutputInput
-
 type archiveExecutionPlan struct {
 	pruneshared.CleanupPlan
 	overwrite    bool
@@ -85,8 +82,8 @@ func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiv
 		return archiveExecutionPlan{}, err
 	}
 	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.Now, OlderThan: in.OlderThan, KeepMin: in.KeepMin})
-	out := pruner.BuildArchiveOutput(ArchiveReportInput{
-		CleanupInputCore: pruner.CleanupInputCore{
+	out := pruner.BuildArchiveOutput(pruner.ArchiveOutputInput{
+		CleanupInput: pruner.CleanupInput{
 			Now:             in.Now,
 			Mode:            in.Mode,
 			DryRun:          in.DryRun,

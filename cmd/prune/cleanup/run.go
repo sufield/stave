@@ -26,9 +26,6 @@ type deleteOptions struct {
 
 type deleteOutput = pruner.PruneOutput
 
-// deleteReportInput holds all data needed to build prune output.
-type deleteReportInput = pruner.PruneOutputInput
-
 type deletePlan struct {
 	pruneshared.CleanupPlan
 	output deleteOutput
@@ -80,18 +77,16 @@ func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error
 		return deletePlan{}, err
 	}
 	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.Now, OlderThan: in.OlderThan, KeepMin: in.KeepMin})
-	out := pruner.BuildPruneOutput(deleteReportInput{
-		CleanupInputCore: pruner.CleanupInputCore{
-			Now:             in.Now,
-			Mode:            in.Mode,
-			DryRun:          in.DryRun,
-			ObservationsDir: in.ObsDir,
-			Tier:            in.Tier,
-			OlderThan:       in.OlderThan,
-			KeepMin:         in.KeepMin,
-			AllFiles:        allFiles,
-			CandidateFiles:  candidateFiles,
-		},
+	out := pruner.BuildPruneOutput(pruner.CleanupInput{
+		Now:             in.Now,
+		Mode:            in.Mode,
+		DryRun:          in.DryRun,
+		ObservationsDir: in.ObsDir,
+		Tier:            in.Tier,
+		OlderThan:       in.OlderThan,
+		KeepMin:         in.KeepMin,
+		AllFiles:        allFiles,
+		CandidateFiles:  candidateFiles,
 	})
 	return deletePlan{
 		CleanupPlan: pruneshared.CleanupPlan{
