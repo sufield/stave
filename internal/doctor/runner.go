@@ -1,5 +1,7 @@
 package doctor
 
+import "github.com/samber/lo"
+
 // Registry defines a set of diagnostic checks that can be executed together.
 type Registry struct {
 	checks []CheckFunc
@@ -21,17 +23,10 @@ func RunWithRegistry(ctx Context, registry Registry) ([]Check, bool) {
 
 func runChecks(ctx Context, checks []CheckFunc) ([]Check, bool) {
 	ctx = withDefaults(ctx)
-	results := make([]Check, 0, len(checks))
-	hasFail := false
-	for _, fn := range checks {
+	results := lo.FilterMap(checks, func(fn CheckFunc, _ int) (Check, bool) {
 		c := fn(ctx)
-		if c.Name == "" {
-			continue
-		}
-		if c.Status == StatusFail {
-			hasFail = true
-		}
-		results = append(results, c)
-	}
+		return c, c.Name != ""
+	})
+	hasFail := lo.SomeBy(results, func(c Check) bool { return c.Status == StatusFail })
 	return results, hasFail
 }

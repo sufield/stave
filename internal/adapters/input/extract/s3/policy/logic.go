@@ -154,12 +154,9 @@ func extractPrincipalARNs(principal any) []string {
 
 // filterConcreteARNs removes empty strings and wildcards from ARN lists.
 func filterConcreteARNs(arns []string) []string {
-	out := make([]string, 0, len(arns))
-	for _, arn := range arns {
-		if arn != "" && arn != policyWildcard {
-			out = append(out, arn)
-		}
-	}
+	out := lo.Filter(arns, func(arn string, _ int) bool {
+		return arn != "" && arn != policyWildcard
+	})
 	if len(out) == 0 {
 		return nil
 	}
@@ -187,13 +184,10 @@ func NormalizeStringOrSlice(v any) []string {
 	case string:
 		return []string{val}
 	case []any:
-		result := make([]string, 0, len(val))
-		for _, item := range val {
-			if s, ok := item.(string); ok {
-				result = append(result, s)
-			}
-		}
-		return result
+		return lo.FilterMap(val, func(item any, _ int) (string, bool) {
+			s, ok := item.(string)
+			return s, ok
+		})
 	case []string:
 		return val
 	}

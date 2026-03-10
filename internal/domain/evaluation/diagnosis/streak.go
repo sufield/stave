@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 )
@@ -191,11 +192,7 @@ func detectStreakResets(input Input) []Entry {
 
 	resets := findResets(snapshots, unsafeIdx, violated)
 
-	entries := make([]Entry, 0, len(resets))
-	for _, e := range resets {
-		entries = append(entries, resetEntry(e))
-	}
-	return entries
+	return lo.Map(resets, func(e resetEvent, _ int) Entry { return resetEntry(e) })
 }
 
 // detectAnyReset checks if any asset had a reset during the observation period.

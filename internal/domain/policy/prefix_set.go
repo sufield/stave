@@ -3,6 +3,8 @@ package policy
 import (
 	"slices"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 // PrefixSet is a normalized, sorted collection of path prefixes.
@@ -108,17 +110,16 @@ func normalizePrefixes(prefixes []string) []string {
 		return nil
 	}
 
-	result := make([]string, 0, len(prefixes))
-	for _, p := range prefixes {
+	result := lo.FilterMap(prefixes, func(p string, _ int) (string, bool) {
 		p = strings.TrimSpace(p)
 		if p == "" {
-			continue
+			return "", false
 		}
 		if !strings.HasSuffix(p, "/") {
 			p += "/"
 		}
-		result = append(result, p)
-	}
+		return p, true
+	})
 	if len(result) == 0 {
 		return nil
 	}
