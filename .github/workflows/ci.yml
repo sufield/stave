@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.1'
+          go-version-file: 'go.mod'
           check-latest: true
           cache: true
       - name: Sync schemas and run tests
@@ -35,7 +35,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.1'
+          go-version-file: 'go.mod'
           check-latest: true
           cache: true
       - name: Install golangci-lint from source
@@ -52,12 +52,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.1'
+          go-version-file: 'go.mod'
           check-latest: true
           cache: true
       - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1
         with:
-          go-version-input: '1.26.1'
+          go-version-file: 'go.mod'
 
   license:
     name: License compliance
@@ -68,7 +68,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.1'
+          go-version-file: 'go.mod'
           check-latest: true
           cache: true
       - name: Install go-licenses
@@ -106,7 +106,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.1'
+          go-version-file: 'go.mod'
           check-latest: true
           cache: true
       - name: Build and run E2E tests
@@ -125,6 +125,23 @@ jobs:
           version: '~> v2'
           args: check
 
+  docs-freshness:
+    name: Docs freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version-file: 'go.mod'
+          check-latest: true
+          cache: true
+      - name: Check CLI docs freshness
+        run: make docs-check
+      - name: Check README freshness
+        run: make readme-check
+
   security-audit:
     name: Security audit smoke
     runs-on: ubuntu-latest
@@ -134,7 +151,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: '1.26.1'
+          go-version-file: 'go.mod'
           check-latest: true
           cache: true
       - name: Run security-audit (json, fail-on NONE)

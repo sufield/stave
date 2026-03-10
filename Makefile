@@ -1,4 +1,4 @@
-.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz
+.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz docker-demo docs-check demo-check readme readme-check
 
 # Binary name
 BINARY=stave
@@ -23,6 +23,9 @@ CONTROL_DST=internal/adapters/input/controls/builtin/embedded
 
 # Version from VERSION file
 VERSION=$(shell cat VERSION)
+
+# Go version from go.mod (single source of truth for CI, Dockerfile, etc.)
+GO_VERSION=$(shell grep '^toolchain' go.mod | sed 's/toolchain go//')
 
 # Build flags
 LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.Version=$(VERSION)"
@@ -185,13 +188,17 @@ ifndef V
 endif
 	@echo "==> Preparing release v$(V)..."
 	@echo "$(V)" > VERSION
-	@sed -i 's/^\*\*v[0-9]*\.[0-9]*\.[0-9]*\*\*$$/\*\*v$(V)\*\*/' README.md
+	$(MAKE) readme
 	@echo "==> VERSION file: $$(cat VERSION)"
-	@echo "==> README status: $$(grep -o 'v[0-9]*\.[0-9]*\.[0-9]*' README.md | head -1)"
+	@echo "==> README version: $$(grep -o 'v[0-9]*\.[0-9]*\.[0-9]*' README.md | head -1)"
 	@echo "==> Running tests..."
 	$(MAKE) test
 	@echo "==> Running e2e..."
 	$(MAKE) e2e
+	@echo "==> Checking CLI docs freshness..."
+	$(MAKE) docs-check
+	@echo "==> Checking README freshness..."
+	$(MAKE) readme-check
 	@echo "==> Validating goreleaser config..."
 	$(MAKE) release-check
 	@echo "==> All checks passed. Committing..."
@@ -252,6 +259,56 @@ help:
 
 e2e-s3: build
 	./scripts/e2e-s3.sh
+
+## readme: Render README.md from README.md.tmpl (fills in control counts, version)
+readme: sync-controls
+	$(GOCMD) run ./internal/tools/genreadme
+
+## readme-check: Verify README.md matches template output
+readme-check: sync-controls
+	$(GOCMD) run ./internal/tools/genreadme -check
+
+## docker-demo: Build demo Docker image using Go version from go.mod
+docker-demo: build
+	docker build \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		-f ../docs-content/demo/Dockerfile \
+		-t stave-demo ..
+
+## docs-check: Verify generated CLI docs match committed docs
+docs-check: build
+	@mkdir -p .tmp/docs-check
+	@rm -rf .tmp/docs-check/*
+	../publisher/generate-cli-docs.sh --binary ./stave --stave-root . --output .tmp/docs-check
+	@diff -ru ../docs-content/cli-reference .tmp/docs-check \
+		|| (echo "FAIL: CLI docs are stale. Run 'make -C ../publisher docs-gen' to update." && exit 1)
+	@echo "OK: CLI docs are up to date"
+
+## demo-check: Verify demo scenarios produce expected finding counts
+demo-check: build
+	@echo "Checking demo scenarios..."
+	@fail=0; \
+	for scenario in ../docs-content/demo/scenarios/*/; do \
+		name="$$(basename "$$scenario")"; \
+		expected="$$(cat "$$scenario/expected.findings.count" 2>/dev/null)"; \
+		if [ -z "$$expected" ]; then continue; fi; \
+		actual="$$(./stave apply \
+			--profile aws-s3 \
+			--input "$$scenario/observations.json" \
+			--include-all \
+			--now 2026-01-15T00:00:00Z \
+			--max-unsafe 12h \
+			--format json 2>/dev/null \
+			| jq '.findings | length' || echo "ERROR")"; \
+		if [ "$$actual" != "$$expected" ]; then \
+			echo "FAIL: $$name: expected $$expected findings, got $$actual"; \
+			fail=1; \
+		else \
+			echo "  OK: $$name ($$actual findings)"; \
+		fi; \
+	done; \
+	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
+	echo "All demo scenarios match expected counts"
 
 # ── Public repo sync ──────────────────────────────────────────────
 # Syncs the stave project to a separate public repository, excluding
