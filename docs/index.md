@@ -9,6 +9,7 @@
 
 ## Concepts
 
+- [FAQ](faq.md) — Terminology, approach, and how Stave differs from existing tools
 - [Design Philosophy](design-philosophy.md) — Why Stave works the way it does
 - [System Controls as Code](system-invariant-as-code.md) — Controls-based safety evaluation
 - [Evaluation Semantics](evaluation-semantics.md) — How findings are produced

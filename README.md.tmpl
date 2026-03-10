@@ -242,6 +242,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 - [Start here](docs/start-here.md)
 - [Time to first finding](docs/time-to-first-finding.md)
+- [FAQ](docs/faq.md)
 - [Design philosophy](docs/design-philosophy.md)
 - [System Invariant as Code](docs/system-invariant-as-code.md)
 - [Evaluation semantics](docs/evaluation-semantics.md)
