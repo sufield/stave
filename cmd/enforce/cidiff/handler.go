@@ -33,7 +33,7 @@ type summary struct {
 
 type result struct {
 	SchemaVersion      kernel.Schema              `json:"schema_version"`
-	Kind               kernel.OutputKind           `json:"kind"`
+	Kind               kernel.OutputKind          `json:"kind"`
 	ComparedAt         time.Time                  `json:"compared_at"`
 	CurrentEvaluation  string                     `json:"current_evaluation"`
 	BaselineEvaluation string                     `json:"baseline_evaluation"`

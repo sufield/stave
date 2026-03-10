@@ -35,7 +35,7 @@ type ManifestFile struct {
 
 // RunManifest is the structured run manifest written alongside bundles.
 type RunManifest struct {
-	SchemaVersion     string         `json:"schema_version"`
+	SchemaVersion     kernel.Schema  `json:"schema_version"`
 	GeneratedAt       string         `json:"generated_at"`
 	MainReport        string         `json:"main_report"`
 	BundleDir         string         `json:"bundle_dir"`
@@ -121,7 +121,7 @@ func writeRunManifest(opts BundleWriteOpts, path string, now time.Time, bundleDi
 	})
 
 	manifest := RunManifest{
-		SchemaVersion:     string(kernel.SchemaSecurityAuditRunManifest),
+		SchemaVersion:     kernel.SchemaSecurityAuditRunManifest,
 		GeneratedAt:       now.Format(time.RFC3339),
 		MainReport:        mainReport,
 		BundleDir:         bundleDir,

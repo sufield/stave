@@ -38,18 +38,18 @@ type CleanupFile struct {
 
 // CleanupOutput holds the fields shared by PruneOutput and ArchiveOutput.
 type CleanupOutput struct {
-	SchemaVersion   kernel.Schema `json:"schema_version"`
+	SchemaVersion   kernel.Schema     `json:"schema_version"`
 	Kind            kernel.OutputKind `json:"kind"`
-	CheckedAt       time.Time     `json:"checked_at"`
-	Mode            string        `json:"mode"`
-	Applied         bool          `json:"applied"`
-	ObservationsDir string        `json:"observations_dir"`
-	RetentionTier   string        `json:"retention_tier"`
-	OlderThan       string        `json:"older_than"`
-	KeepMin         int           `json:"keep_min"`
-	TotalSnapshots  int           `json:"total_snapshots"`
-	Candidates      int           `json:"candidates"`
-	Files           []CleanupFile `json:"files"`
+	CheckedAt       time.Time         `json:"checked_at"`
+	Mode            string            `json:"mode"`
+	Applied         bool              `json:"applied"`
+	ObservationsDir string            `json:"observations_dir"`
+	RetentionTier   string            `json:"retention_tier"`
+	OlderThan       string            `json:"older_than"`
+	KeepMin         int               `json:"keep_min"`
+	TotalSnapshots  int               `json:"total_snapshots"`
+	Candidates      int               `json:"candidates"`
+	Files           []CleanupFile     `json:"files"`
 }
 
 // PruneOutput is the structured output for prune command.

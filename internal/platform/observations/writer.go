@@ -22,10 +22,10 @@ type WriteRequest struct {
 // WriteJSON marshals observations to indented JSON and writes the file safely.
 func WriteJSON(req WriteRequest) error {
 	output := struct {
-		SchemaVersion string           `json:"schema_version"`
+		SchemaVersion kernel.Schema    `json:"schema_version"`
 		Snapshots     []asset.Snapshot `json:"snapshots"`
 	}{
-		SchemaVersion: string(req.SchemaVersion),
+		SchemaVersion: req.SchemaVersion,
 		Snapshots:     req.Snapshots,
 	}
 

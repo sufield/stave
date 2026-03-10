@@ -26,11 +26,11 @@ type input struct {
 }
 
 type result struct {
-	SchemaVersion kernel.Schema      `json:"schema_version"`
-	Kind          kernel.OutputKind  `json:"kind"`
-	Mode          Mode               `json:"mode"`
-	OutputFile    string             `json:"output_file"`
-	Targets       []string           `json:"targets"`
+	SchemaVersion kernel.Schema     `json:"schema_version"`
+	Kind          kernel.OutputKind `json:"kind"`
+	Mode          Mode              `json:"mode"`
+	OutputFile    string            `json:"output_file"`
+	Targets       []string          `json:"targets"`
 }
 
 type runRequest struct {

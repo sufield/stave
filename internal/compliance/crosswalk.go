@@ -69,7 +69,7 @@ type CrosswalkResolution struct {
 }
 
 type resolutionOutput struct {
-	SchemaVersion string                                `json:"schema_version"`
+	SchemaVersion kernel.Schema                         `json:"schema_version"`
 	Frameworks    []string                              `json:"frameworks"`
 	Checks        map[string][]securityaudit.ControlRef `json:"checks"`
 	Missing       []string                              `json:"missing"`
@@ -124,7 +124,7 @@ func ResolveControlCrosswalk(
 
 	slices.Sort(missing)
 	resolution := resolutionOutput{
-		SchemaVersion: string(kernel.SchemaCrosswalkResolution),
+		SchemaVersion: kernel.SchemaCrosswalkResolution,
 		Frameworks:    FrameworkStrings(selected),
 		Checks:        byCheck,
 		Missing:       missing,

@@ -21,7 +21,7 @@ func assessQuality(params qualityParams) qualityReport {
 
 func newQualityReport(now time.Time, strict bool, snapshots int) qualityReport {
 	return qualityReport{
-		SchemaVersion: string(kernel.SchemaSnapshotQuality),
+		SchemaVersion: kernel.SchemaSnapshotQuality,
 		Kind:          kernel.KindSnapshotQuality,
 		CheckedAt:     now,
 		Strict:        strict,
