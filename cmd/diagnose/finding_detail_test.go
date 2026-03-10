@@ -137,7 +137,6 @@ func TestRunDiagnoseFindingDetail_SuccessJSON(t *testing.T) {
 		diagnoseObsRepoStub{snapshots: snapshots},
 		diagnoseInvRepoStub{controls: controls},
 		evalStub,
-		evalStub,
 	)
 	if err != nil {
 		t.Fatal(err)

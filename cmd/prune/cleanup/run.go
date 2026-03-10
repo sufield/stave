@@ -3,7 +3,6 @@ package cleanup
 import (
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -32,30 +30,12 @@ type deleteOutput = pruner.PruneOutput
 type deleteReportInput = pruner.PruneOutputInput
 
 type deletePlan struct {
-	now             time.Time
-	mode            string
-	dryRun          bool
-	quiet           bool
-	format          ui.OutputFormat
-	observationsDir string
-	tier            string
-	olderThan       time.Duration
-	keepMin         int
-	allFiles        []snapshotFile
-	candidateFiles  []snapshotFile
-	output          deleteOutput
+	pruneshared.CleanupPlan
+	output deleteOutput
 }
 
 type deleteRunInput struct {
-	obsDir    string
-	tier      string
-	olderThan time.Duration
-	now       time.Time
-	format    ui.OutputFormat
-	keepMin   int
-	dryRun    bool
-	quiet     bool
-	mode      string
+	pruneshared.CleanupRunInput
 }
 
 func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
@@ -68,8 +48,8 @@ func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
 			}
 			plan = p
 			return appeval.CleanupPlan{
-				CandidateCount: len(plan.candidateFiles),
-				DryRun:         plan.dryRun,
+				CandidateCount: len(plan.CandidateFiles),
+				DryRun:         plan.DryRun,
 			}, nil
 		},
 		Render: func(_ appeval.CleanupPlan) error {
@@ -77,12 +57,12 @@ func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
 		},
 		Apply: func(_ appeval.CleanupPlan) error {
 			deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
-				Files: toDeleteFiles(plan.candidateFiles),
+				Files: toDeleteFiles(plan.CandidateFiles),
 			})
 			if err != nil {
 				return err
 			}
-			if !cmdutil.QuietEnabled(cmd) && !plan.format.IsJSON() {
+			if !cmdutil.QuietEnabled(cmd) && !plan.Format.IsJSON() {
 				fmt.Fprintf(cmd.OutOrStdout(), "Deleted %d snapshot(s).\n", deletion.Deleted)
 			}
 			return nil
@@ -95,35 +75,39 @@ func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error
 	if err != nil {
 		return deletePlan{}, err
 	}
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.obsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.ObsDir)
 	if err != nil {
 		return deletePlan{}, err
 	}
-	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.now, OlderThan: in.olderThan, KeepMin: in.keepMin})
+	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.Now, OlderThan: in.OlderThan, KeepMin: in.KeepMin})
 	out := pruner.BuildPruneOutput(deleteReportInput{
-		Now:             in.now,
-		Mode:            in.mode,
-		DryRun:          in.dryRun,
-		ObservationsDir: in.obsDir,
-		Tier:            in.tier,
-		OlderThan:       in.olderThan,
-		KeepMin:         in.keepMin,
-		AllFiles:        allFiles,
-		CandidateFiles:  candidateFiles,
+		CleanupInputCore: pruner.CleanupInputCore{
+			Now:             in.Now,
+			Mode:            in.Mode,
+			DryRun:          in.DryRun,
+			ObservationsDir: in.ObsDir,
+			Tier:            in.Tier,
+			OlderThan:       in.OlderThan,
+			KeepMin:         in.KeepMin,
+			AllFiles:        allFiles,
+			CandidateFiles:  candidateFiles,
+		},
 	})
 	return deletePlan{
-		now:             in.now,
-		mode:            in.mode,
-		dryRun:          in.dryRun,
-		quiet:           in.quiet,
-		format:          in.format,
-		observationsDir: in.obsDir,
-		tier:            in.tier,
-		olderThan:       in.olderThan,
-		keepMin:         in.keepMin,
-		allFiles:        allFiles,
-		candidateFiles:  candidateFiles,
-		output:          out,
+		CleanupPlan: pruneshared.CleanupPlan{
+			Now:             in.Now,
+			Mode:            in.Mode,
+			DryRun:          in.DryRun,
+			Quiet:           in.Quiet,
+			Format:          in.Format,
+			ObservationsDir: in.ObsDir,
+			Tier:            in.Tier,
+			OlderThan:       in.OlderThan,
+			KeepMin:         in.KeepMin,
+			AllFiles:        allFiles,
+			CandidateFiles:  candidateFiles,
+		},
+		output: out,
 	}, nil
 }
 
@@ -159,33 +143,35 @@ func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput
 	}
 
 	return deleteRunInput{
-		obsDir:    obsDir,
-		tier:      tier,
-		olderThan: olderThan,
-		now:       now,
-		format:    format,
-		keepMin:   opts.KeepMin,
-		dryRun:    dryRun,
-		quiet:     cmdutil.QuietEnabled(cmd),
-		mode:      mode,
+		CleanupRunInput: pruneshared.CleanupRunInput{
+			ObsDir:    obsDir,
+			Tier:      tier,
+			OlderThan: olderThan,
+			Now:       now,
+			Format:    format,
+			KeepMin:   opts.KeepMin,
+			DryRun:    dryRun,
+			Quiet:     cmdutil.QuietEnabled(cmd),
+			Mode:      mode,
+		},
 	}, nil
 }
 
 func renderDeletePlan(plan deletePlan, out io.Writer) error {
 	return pruner.RenderSnapshotCleanupExecutionPlan(out, pruner.SnapshotCleanupRenderInput{
-		Format:         plan.format,
+		Format:         plan.Format,
 		Output:         plan.output,
 		OutputKind:     "prune",
 		Action:         "prune",
 		SummaryPrefix:  "Prune",
-		Mode:           plan.mode,
-		AllFiles:       plan.allFiles,
-		CandidateFiles: plan.candidateFiles,
-		OlderThan:      plan.olderThan,
-		KeepMin:        plan.keepMin,
-		Tier:           plan.tier,
-		Now:            plan.now,
-		Quiet:          plan.quiet,
+		Mode:           plan.Mode,
+		AllFiles:       plan.AllFiles,
+		CandidateFiles: plan.CandidateFiles,
+		OlderThan:      plan.OlderThan,
+		KeepMin:        plan.KeepMin,
+		Tier:           plan.Tier,
+		Now:            plan.Now,
+		Quiet:          plan.Quiet,
 	})
 }
 

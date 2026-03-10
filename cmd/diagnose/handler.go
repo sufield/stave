@@ -102,7 +102,7 @@ func newDiagnoseRun() (*appdiagnose.Run, error) {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
 	evalLoader := evaljson.NewLoader()
-	return appdiagnose.NewRun(obsLoader, ctlLoader, evalLoader, evalLoader)
+	return appdiagnose.NewRun(obsLoader, ctlLoader, evalLoader)
 }
 
 func buildDiagnoseConfig(opts diagnoseOptions, maxDuration time.Duration, clock ports.Clock) appdiagnose.Config {
