@@ -228,7 +228,9 @@ func writePromptOutput(opts promptRunOptions, stdout, stderr io.Writer, rendered
 		return err
 	}
 
-	clipboardHint(stderr, opts.Quiet)
+	if !opts.Format.IsJSON() {
+		clipboardHint(stderr, opts.Quiet)
+	}
 	return nil
 }
 

@@ -127,7 +127,6 @@ func (a *App) initLogger() error {
 	cfg.Timestamps = a.Flags.LogTimestamps
 	cfg.Timings = a.Flags.LogTimings
 	cfg.AllowSymlink = a.Flags.AllowSymlinkOut
-	cfg.NoColor = a.noColorRequested()
 
 	lc, err := logging.NewLogger(cfg)
 	if err != nil {
@@ -139,12 +138,4 @@ func (a *App) initLogger() error {
 	logging.SetDefaultLogger(lc.Logger)
 
 	return nil
-}
-
-func (a *App) noColorRequested() bool {
-	if a.Flags.NoColor {
-		return true
-	}
-	_, ok := os.LookupEnv("NO_COLOR")
-	return ok
 }

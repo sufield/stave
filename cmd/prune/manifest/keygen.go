@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
 )
 
 func runSnapshotManifestKeygen(cmd *cobra.Command, privateKeyOutPath, publicKeyOutPath string) error {
@@ -37,7 +39,9 @@ func runSnapshotManifestKeygen(cmd *cobra.Command, privateKeyOutPath, publicKeyO
 		return fmt.Errorf("write public key %q: %w", publicOut, err)
 	}
 
-	fmt.Fprintf(cmd.OutOrStdout(), "Wrote private key: %s\n", privateOut)
-	fmt.Fprintf(cmd.OutOrStdout(), "Wrote public key: %s\n", publicOut)
+	if cmdutil.TextOutputEnabled(cmd) {
+		fmt.Fprintf(cmd.OutOrStdout(), "Wrote private key: %s\n", privateOut)
+		fmt.Fprintf(cmd.OutOrStdout(), "Wrote public key: %s\n", publicOut)
+	}
 	return nil
 }

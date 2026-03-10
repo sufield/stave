@@ -29,6 +29,7 @@ type result struct {
 	SchemaVersion kernel.Schema     `json:"schema_version"`
 	Kind          kernel.OutputKind `json:"kind"`
 	Mode          Mode              `json:"mode"`
+	DryRun        bool              `json:"dry_run,omitempty"`
 	OutputFile    string            `json:"output_file"`
 	Targets       []string          `json:"targets"`
 }
@@ -144,9 +145,7 @@ func targetNames(targets []outenforce.BucketTarget) []string {
 }
 
 func writeDryRun(w io.Writer, res result) error {
-	if _, err := fmt.Fprintf(w, "[dry-run] would write: %s\n", res.OutputFile); err != nil {
-		return err
-	}
+	res.DryRun = true
 	return writeResult(w, res)
 }
 

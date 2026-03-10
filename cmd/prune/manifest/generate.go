@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -47,9 +48,11 @@ func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile st
 		return fmt.Errorf("write manifest %q: %w", out, err)
 	}
 
-	fmt.Fprintf(cmd.OutOrStdout(), "Wrote manifest with %d files: %s\n", len(files), out)
-	if skipped > 0 {
-		fmt.Fprintf(cmd.OutOrStdout(), "Skipped %d non-observation JSON file(s)\n", skipped)
+	if cmdutil.TextOutputEnabled(cmd) {
+		fmt.Fprintf(cmd.OutOrStdout(), "Wrote manifest with %d files: %s\n", len(files), out)
+		if skipped > 0 {
+			fmt.Fprintf(cmd.OutOrStdout(), "Skipped %d non-observation JSON file(s)\n", skipped)
+		}
 	}
 	return nil
 }

@@ -60,7 +60,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		return fmt.Errorf("write baseline file: %w", err)
 	}
 
-	if !cmdutil.QuietEnabled(cmd) {
+	if cmdutil.TextOutputEnabled(cmd) {
 		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Saved baseline: %s (findings=%d)\n", outPath, len(entries))
 	}
 	return nil

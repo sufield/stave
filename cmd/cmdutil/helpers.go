@@ -49,6 +49,12 @@ func QuietEnabled(cmd *cobra.Command) bool {
 	return v
 }
 
+// TextOutputEnabled returns true when human-readable text should be written to stdout.
+// It returns false when either --quiet is set or global --output json is active.
+func TextOutputEnabled(cmd *cobra.Command) bool {
+	return !QuietEnabled(cmd) && !IsJSONMode(cmd)
+}
+
 // SanitizeEnabled returns true if --sanitize flag is set.
 func SanitizeEnabled(cmd *cobra.Command) bool {
 	if cmd == nil {
