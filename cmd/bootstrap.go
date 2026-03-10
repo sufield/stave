@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"runtime/pprof"
 
 	"github.com/spf13/cobra"
 
@@ -14,6 +16,9 @@ import (
 )
 
 func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
+	if err := a.startCPUProfile(); err != nil {
+		return err
+	}
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
@@ -30,11 +35,54 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 }
 
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
+	a.stopCPUProfile()
+	a.writeMemProfile(cmd)
 	if !a.Flags.Quiet && !cmdutil.IsJSONMode(a.Root) {
 		fmt.Fprintln(cmd.ErrOrStderr(), "\nNeed help? Run 'stave bug-report' to create a diagnostic bundle.")
 	}
 	if a.LogCloser != nil {
 		_ = a.LogCloser.Close()
+	}
+}
+
+func (a *App) startCPUProfile() error {
+	if a.Flags.CPUProfile == "" {
+		return nil
+	}
+	f, err := os.Create(a.Flags.CPUProfile)
+	if err != nil {
+		return fmt.Errorf("create CPU profile: %w", err)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("start CPU profile: %w", err)
+	}
+	a.cpuProfileFile = f
+	return nil
+}
+
+func (a *App) stopCPUProfile() {
+	if a.cpuProfileFile == nil {
+		return
+	}
+	pprof.StopCPUProfile()
+	_ = a.cpuProfileFile.Close()
+	a.cpuProfileFile = nil
+}
+
+func (a *App) writeMemProfile(cmd *cobra.Command) {
+	if a.Flags.MemProfile == "" {
+		return
+	}
+	f, err := os.Create(a.Flags.MemProfile)
+	if err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: create memory profile: %v\n", err)
+		return
+	}
+	defer f.Close()
+	runtime.GC()
+	if err := pprof.WriteHeapProfile(f); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: write memory profile: %v\n", err)
 	}
 }
 

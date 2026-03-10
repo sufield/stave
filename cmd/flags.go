@@ -38,4 +38,10 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	root.PersistentFlags().BoolVar(&flags.RequireOffline, "require-offline", false, "Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set")
 	root.PersistentFlags().BoolVar(&flags.Strict, "strict", false, "Enable strict integrity checks for embedded registries and references")
 	root.PersistentFlags().BoolVar(&flags.NoColor, "no-color", false, "Disable ANSI colors in output")
+
+	// Performance profiling flags (hidden — for developer use only)
+	root.PersistentFlags().StringVar(&flags.CPUProfile, "cpu-profile", "", "Write CPU profile to file")
+	root.PersistentFlags().StringVar(&flags.MemProfile, "mem-profile", "", "Write heap profile to file")
+	_ = root.PersistentFlags().MarkHidden("cpu-profile")
+	_ = root.PersistentFlags().MarkHidden("mem-profile")
 }
