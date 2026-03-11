@@ -13,17 +13,15 @@ import (
 )
 
 func handleApplyResult(cmd *cobra.Command, result EvaluateResult) error {
-	quiet := cmdutil.QuietEnabled(cmd)
 	if result.SafetyStatus != evaluation.SafetyStatusSafe {
-		if !quiet {
+		if !cmdutil.QuietEnabled(cmd) {
 			ui.WriteHint(cmd.ErrOrStderr(), result.DiagnoseHint)
-			rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-			rt.Quiet = quiet
+			rt := cmdutil.NewRuntime(cmd)
 			rt.PrintNextSteps(result.NextSteps...)
 		}
 		return ui.ErrViolationsFound
 	}
-	if !quiet {
+	if !cmdutil.QuietEnabled(cmd) {
 		fmt.Fprintln(cmd.ErrOrStderr(), "Evaluation complete. No violations found.")
 	}
 	return nil
