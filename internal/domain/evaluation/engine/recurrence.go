@@ -5,64 +5,62 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// EpisodeWindowSummary is aggregate recurrence information for a time window.
-type EpisodeWindowSummary struct {
+// RecurrenceStats captures aggregate frequency data for a specific time window.
+type RecurrenceStats struct {
 	Count int
 	First time.Time
 	Last  time.Time
 }
 
-// SummarizeEpisodesInWindow computes recurrence summary for episodes started
-// within the given window. Open episodes are not part of archived history.
-func SummarizeEpisodesInWindow(timeline *asset.Timeline, w kernel.TimeWindow) EpisodeWindowSummary {
-	count, first, last := timeline.History().WindowSummary(w)
-	return EpisodeWindowSummary{Count: count, First: first, Last: last}
-}
-
-// EvaluateRecurrenceForControl checks for recurrence violations for a specific control.
+// EvaluateRecurrenceForControl evaluates the timeline against recurrence limits.
+// It returns a slice containing a violation finding if the recurrence limit is exceeded.
 func EvaluateRecurrenceForControl(
-	timeline *asset.Timeline,
+	t *asset.Timeline,
 	ctl *policy.ControlDefinition,
 	now time.Time,
 ) []evaluation.Finding {
-	recurrence := ctl.RecurrencePolicy()
-	if !recurrence.Configured() {
+	p := ctl.RecurrencePolicy()
+	if !p.Configured() {
 		return nil
 	}
 
-	summary := SummarizeEpisodesInWindow(timeline, recurrence.Window(now))
-	if summary.Count < recurrence.Limit {
+	count, first, last := t.History().WindowSummary(p.Window(now))
+	if count < p.Limit {
 		return nil
 	}
 
-	return []evaluation.Finding{CreateRecurrenceFinding(timeline, ctl, summary)}
+	stats := RecurrenceStats{Count: count, First: first, Last: last}
+	return []evaluation.Finding{*CreateRecurrenceFinding(t, ctl, stats)}
 }
 
-// CreateRecurrenceFinding generates a finding for a recurrence violation.
+// CreateRecurrenceFinding generates a finding based on the frequency of unsafe episodes.
 func CreateRecurrenceFinding(
-	timeline *asset.Timeline,
+	t *asset.Timeline,
 	ctl *policy.ControlDefinition,
-	summary EpisodeWindowSummary,
-) evaluation.Finding {
-	recurrence := ctl.RecurrencePolicy()
+	stats RecurrenceStats,
+) *evaluation.Finding {
+	p := ctl.RecurrencePolicy()
 
-	f := newBaseFinding(ctl, timeline)
+	f := newBaseFinding(ctl, t)
 	f.Evidence = evaluation.Evidence{
-		EpisodeCount:     summary.Count,
-		WindowDays:       recurrence.WindowDays,
-		RecurrenceLimit:  recurrence.Limit,
-		FirstEpisodeAt:   summary.First,
-		LastEpisodeAt:    summary.Last,
-		FirstUnsafeAt:    summary.First,
-		LastSeenUnsafeAt: summary.Last,
-		ThresholdHours:   ctl.MaxUnsafeDuration().Hours(),
+		EpisodeCount:    stats.Count,
+		WindowDays:      p.WindowDays,
+		RecurrenceLimit: p.Limit,
+		FirstEpisodeAt:  stats.First,
+		LastEpisodeAt:   stats.Last,
+
+		// For recurrence, the span of episodes defines the unsafe period.
+		FirstUnsafeAt:    stats.First,
+		LastSeenUnsafeAt: stats.Last,
+
+		// Threshold represents the individual episode duration limit.
+		ThresholdHours: ctl.MaxUnsafeDuration().Hours(),
+
+		// UnsafeDurationHours is intentionally omitted.
+		// Recurrence findings are triggered by count, not cumulative duration.
 	}
-	// NOTE: We do NOT set UnsafeDurationHours for recurrence findings because
-	// the span between first and last episode includes safe time between episodes.
-	// Recurrence is about episode count, not cumulative duration.
-	return *f
+	return f
 }
