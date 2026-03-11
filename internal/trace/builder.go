@@ -9,20 +9,29 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// NewFindingTraceBuilder returns a FindingTraceBuilder that uses the trace
-// engine with the given predicate parser. Suitable for injection into the
-// service layer from the cmd layer.
+// Builder implements evaluation.FindingTraceBuilder using the trace engine
+// with an injected predicate parser.
+type Builder struct {
+	predicateParser func(any) (*policy.UnsafePredicate, error)
+}
+
+// NewFindingTraceBuilder creates a Builder that satisfies the
+// evaluation.FindingTraceBuilder interface. Suitable for injection into
+// the service layer from the cmd layer.
 func NewFindingTraceBuilder(
 	predicateParser func(any) (*policy.UnsafePredicate, error),
-) evaluation.FindingTraceBuilder {
-	return func(
-		ctl *policy.ControlDefinition,
-		assetID asset.ID,
-		snapshots []asset.Snapshot,
-		lastSeenUnsafeAt time.Time,
-	) *evaluation.FindingTrace {
-		return buildFindingTrace(ctl, assetID, snapshots, lastSeenUnsafeAt, predicateParser)
-	}
+) *Builder {
+	return &Builder{predicateParser: predicateParser}
+}
+
+// BuildTrace builds a predicate evaluation trace for the given finding context.
+func (b *Builder) BuildTrace(
+	ctl *policy.ControlDefinition,
+	assetID asset.ID,
+	snapshots []asset.Snapshot,
+	lastSeenUnsafeAt time.Time,
+) *evaluation.FindingTrace {
+	return buildFindingTrace(ctl, assetID, snapshots, lastSeenUnsafeAt, b.predicateParser)
 }
 
 func buildFindingTrace(

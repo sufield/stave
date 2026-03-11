@@ -150,14 +150,16 @@ type ControlProvider interface {
 }
 
 // FindingTraceBuilder builds a predicate evaluation trace for a finding.
-// Defined as a function type so the service layer can inject the trace
-// implementation without the domain importing the trace package.
-type FindingTraceBuilder func(
-	ctl *policy.ControlDefinition,
-	assetID asset.ID,
-	snapshots []asset.Snapshot,
-	lastSeenUnsafeAt time.Time,
-) *FindingTrace
+// The domain defines this interface; the trace package provides the concrete
+// implementation, keeping the domain free of trace-engine imports.
+type FindingTraceBuilder interface {
+	BuildTrace(
+		ctl *policy.ControlDefinition,
+		assetID asset.ID,
+		snapshots []asset.Snapshot,
+		lastSeenUnsafeAt time.Time,
+	) *FindingTrace
+}
 
 // FindingDetailRequest holds the inputs for building a finding detail
 // from within the Result aggregate.
