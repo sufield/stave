@@ -35,6 +35,7 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	// variable here is safe. For parallel test isolation, use
 	// compose.OverrideForTest instead.
 	compose.UseComposition(a.Composition)
+	a.initSanitizer()
 	return a.initLogger()
 }
 
