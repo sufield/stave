@@ -52,11 +52,11 @@ func (c *bucketResolutionContext) resolveRead() []ExposureClassification {
 	selected := selectReadExposureCandidate(readExposureInput{
 		bucketName:           c.input.Name,
 		bucketWebsiteEnabled: c.input.Website.Enabled,
-		globalGet:            perms.Get,
+		isGlobalGet:          perms.Get,
 		writeAbsorbsRead:     c.writeAbsorbsRead(),
-		hasAuthenticatedOnly: c.hasAuthenticatedOnly,
-		policyGet:            c.policyPerms.Get,
-		aclGet:               c.aclPerms.Get,
+		isAuthenticatedOnly:  c.hasAuthenticatedOnly,
+		isPolicyGet:          c.policyPerms.Get,
+		isACLGet:             c.aclPerms.Get,
 		principalScope:       c.principalScope(),
 		readEvidence:         c.readEvidence(),
 		policyReadEvidence:   c.evidence.Get(evidencePolicyRead),
@@ -87,15 +87,15 @@ func (c *bucketResolutionContext) resolveWrite() []ExposureClassification {
 	perms := c.globalPerms()
 	selected := selectWriteExposureCandidate(writeExposureInput{
 		bucketName:          c.input.Name,
-		globalPut:           perms.Put,
-		policyPut:           c.policyPerms.Put,
-		aclPut:              c.aclPerms.Put,
+		isGlobalPut:         perms.Put,
+		isPolicyPut:         c.policyPerms.Put,
+		isACLPut:            c.aclPerms.Put,
 		principalScope:      c.principalScope(),
 		writeScope:          c.writeScope(),
 		policyWriteEvidence: c.evidence.Get(evidencePolicyWrite),
 		aclWriteEvidence:    c.evidence.Get(evidenceACLWrite),
-		writeSourceHasGet:   c.writeSource.HasGet,
-		writeSourceHasList:  c.writeSource.HasList,
+		hasGetAction:        c.writeSource.HasGet,
+		hasListAction:       c.writeSource.HasList,
 	})
 	if selected == nil {
 		return nil

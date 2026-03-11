@@ -17,8 +17,8 @@ func ResolveEffectiveVisibility(policy PolicyAnalysis, acl ACLAnalysis, pab Publ
 		Source:   "None",
 	}
 
-	policyReadEffective := !policyBlocked && policy.AllowsPublicRead
-	aclReadEffective := !aclBlocked && acl.AllowsPublicRead
+	policyReadEffective := !policyBlocked && policy.PublicRead
+	aclReadEffective := !aclBlocked && acl.PublicRead
 	switch {
 	case policyReadEffective && aclReadEffective:
 		res.Source = "Combined"
@@ -28,7 +28,7 @@ func ResolveEffectiveVisibility(policy PolicyAnalysis, acl ACLAnalysis, pab Publ
 		res.Source = "ACL"
 	}
 
-	res.IsLatent = (policy.AllowsPublicRead || acl.AllowsPublicRead) && !res.Read
+	res.IsLatent = (policy.PublicRead || acl.PublicRead) && !res.Read
 	res.PrincipalScope = resolvePrincipalScope(policy, acl, effectiveMask)
 
 	return res
@@ -45,16 +45,16 @@ func resolvePrincipalScope(policy PolicyAnalysis, acl ACLAnalysis, effectiveMask
 }
 
 func hasAuthenticatedPrincipalAccess(policy PolicyAnalysis, acl ACLAnalysis) bool {
-	return policy.AllowsAuthenticatedRead ||
-		policy.AllowsAuthenticatedList ||
-		policy.AllowsAuthenticatedWrite ||
-		policy.AllowsAuthenticatedACLRead ||
-		policy.AllowsAuthenticatedACLWrite ||
-		acl.AllowsAuthenticatedRead ||
-		acl.AllowsAuthenticatedWrite ||
-		acl.AllowsAuthenticatedACLRead ||
-		acl.AllowsAuthenticatedACLWrite ||
-		acl.HasFullControlAuthenticated
+	return policy.AuthenticatedRead ||
+		policy.AuthenticatedList ||
+		policy.AuthenticatedWrite ||
+		policy.AuthenticatedACLRead ||
+		policy.AuthenticatedACLWrite ||
+		acl.AuthenticatedRead ||
+		acl.AuthenticatedWrite ||
+		acl.AuthenticatedACLRead ||
+		acl.AuthenticatedACLWrite ||
+		acl.AuthenticatedFullControl
 }
 
 type visibilityInputs struct {
@@ -79,20 +79,20 @@ func BuildVisibilityResult(hasPolicy bool, policy PolicyAnalysis, hasACL bool, a
 func newVisibilityResult(in visibilityInputs) VisibilityResult {
 	effective := ResolveEffectiveVisibility(in.policy, in.acl, in.pab)
 	result := VisibilityResult{
-		PublicReadViaPolicy: in.hasPolicy && in.policy.AllowsPublicRead,
-		PublicListViaPolicy: in.hasPolicy && in.policy.AllowsPublicList,
-		PublicReadViaACL:    in.hasACL && in.acl.AllowsPublicRead,
+		PublicReadViaPolicy: in.hasPolicy && in.policy.PublicRead,
+		PublicListViaPolicy: in.hasPolicy && in.policy.PublicList,
+		PublicReadViaACL:    in.hasACL && in.acl.PublicRead,
 	}
 
 	result.PolicyExposureBlocked = in.pab.BlockPublicPolicy || in.pab.RestrictPublicBuckets
-	result.ACLExposureBlocked = in.pab.BlockPublicAcls || in.pab.IgnorePublicAcls
+	result.ACLExposureBlocked = in.pab.BlockPublicACLs || in.pab.IgnorePublicACLs
 
 	result.PublicRead = effective.Read
 	result.PublicWrite = effective.Write
 	result.PublicList = effective.List
 	result.PublicACLReadable = effective.ACLRead
 	result.PublicACLWritable = effective.ACLWrite
-	result.PublicWriteViaACL = in.hasACL && !result.ACLExposureBlocked && in.acl.AllowsPublicWrite
+	result.PublicWriteViaACL = in.hasACL && !result.ACLExposureBlocked && in.acl.PublicWrite
 
 	applyAuthenticatedVisibilityFromPolicy(&result, in)
 	applyAuthenticatedVisibilityFromACL(&result, in)
@@ -106,20 +106,20 @@ func applyAuthenticatedVisibilityFromPolicy(result *VisibilityResult, in visibil
 	if !in.hasPolicy || result.PolicyExposureBlocked {
 		return
 	}
-	result.AuthenticatedUsersRead = in.policy.AllowsAuthenticatedRead
-	result.AuthenticatedUsersWrite = in.policy.AllowsAuthenticatedWrite
-	result.AuthenticatedUsersACLWritable = in.policy.AllowsAuthenticatedACLWrite
-	result.AuthenticatedUsersACLReadable = in.policy.AllowsAuthenticatedACLRead
+	result.AuthenticatedUsersRead = in.policy.AuthenticatedRead
+	result.AuthenticatedUsersWrite = in.policy.AuthenticatedWrite
+	result.AuthenticatedUsersACLWritable = in.policy.AuthenticatedACLWrite
+	result.AuthenticatedUsersACLReadable = in.policy.AuthenticatedACLRead
 }
 
 func applyAuthenticatedVisibilityFromACL(result *VisibilityResult, in visibilityInputs) {
 	if !in.hasACL || result.ACLExposureBlocked {
 		return
 	}
-	result.AuthenticatedUsersRead = result.AuthenticatedUsersRead || in.acl.AllowsAuthenticatedRead
-	result.AuthenticatedUsersWrite = result.AuthenticatedUsersWrite || in.acl.AllowsAuthenticatedWrite
-	result.AuthenticatedUsersACLWritable = result.AuthenticatedUsersACLWritable || in.acl.AllowsAuthenticatedACLWrite
-	result.AuthenticatedUsersACLReadable = result.AuthenticatedUsersACLReadable || in.acl.AllowsAuthenticatedACLRead
-	result.HasFullControlPublic = in.acl.HasFullControlPublic
-	result.HasFullControlAuthenticatedOnly = in.acl.HasFullControlAuthenticated
+	result.AuthenticatedUsersRead = result.AuthenticatedUsersRead || in.acl.AuthenticatedRead
+	result.AuthenticatedUsersWrite = result.AuthenticatedUsersWrite || in.acl.AuthenticatedWrite
+	result.AuthenticatedUsersACLWritable = result.AuthenticatedUsersACLWritable || in.acl.AuthenticatedACLWrite
+	result.AuthenticatedUsersACLReadable = result.AuthenticatedUsersACLReadable || in.acl.AuthenticatedACLRead
+	result.HasFullControlPublic = in.acl.PublicFullControl
+	result.HasFullControlAuthenticatedOnly = in.acl.AuthenticatedFullControl
 }

@@ -3,42 +3,42 @@ package exposure
 // AccessFlags holds the read/write/ACL permission flags shared by
 // PolicyAnalysis and ACLAnalysis.
 type AccessFlags struct {
-	AllowsPublicRead            bool
-	AllowsPublicWrite           bool
-	AllowsPublicACLRead         bool
-	AllowsPublicACLWrite        bool
-	AllowsAuthenticatedRead     bool
-	AllowsAuthenticatedWrite    bool
-	AllowsAuthenticatedACLRead  bool
-	AllowsAuthenticatedACLWrite bool
+	PublicRead            bool
+	PublicWrite           bool
+	PublicACLRead         bool
+	PublicACLWrite        bool
+	AuthenticatedRead     bool
+	AuthenticatedWrite    bool
+	AuthenticatedACLRead  bool
+	AuthenticatedACLWrite bool
 }
 
 // PolicyAnalysis contains the subset of policy flags used by visibility logic.
 type PolicyAnalysis struct {
 	AccessFlags
-	AllowsPublicList        bool
-	AllowsAuthenticatedList bool
+	PublicList        bool
+	AuthenticatedList bool
 }
 
 // ACLAnalysis contains the subset of ACL flags used by visibility logic.
 type ACLAnalysis struct {
 	AccessFlags
-	HasFullControlPublic        bool
-	HasFullControlAuthenticated bool
+	PublicFullControl        bool
+	AuthenticatedFullControl bool
 }
 
 // PublicAccessBlock mirrors bucket/account-level PAB flags.
 type PublicAccessBlock struct {
-	BlockPublicAcls       bool
-	IgnorePublicAcls      bool
+	BlockPublicACLs       bool
+	IgnorePublicACLs      bool
 	BlockPublicPolicy     bool
 	RestrictPublicBuckets bool
 }
 
 // IsFullyBlocked returns true when all four PAB flags are enabled.
 func (p PublicAccessBlock) IsFullyBlocked() bool {
-	return p.BlockPublicAcls &&
-		p.IgnorePublicAcls &&
+	return p.BlockPublicACLs &&
+		p.IgnorePublicACLs &&
 		p.BlockPublicPolicy &&
 		p.RestrictPublicBuckets
 }

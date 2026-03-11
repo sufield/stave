@@ -207,19 +207,19 @@ func isAuthenticatedUsersPrincipalToken(value string) bool {
 
 func policyPublicMask(policy PolicyAnalysis) accessPermissionMask {
 	var mask accessPermissionMask
-	if policy.AllowsPublicRead {
+	if policy.PublicRead {
 		mask |= accessPermRead
 	}
-	if policy.AllowsPublicWrite {
+	if policy.PublicWrite {
 		mask |= accessPermWrite
 	}
-	if policy.AllowsPublicList {
+	if policy.PublicList {
 		mask |= accessPermList
 	}
-	if policy.AllowsPublicACLRead {
+	if policy.PublicACLRead {
 		mask |= accessPermACLRead
 	}
-	if policy.AllowsPublicACLWrite {
+	if policy.PublicACLWrite {
 		mask |= accessPermACLWrite
 	}
 	return mask
@@ -227,16 +227,16 @@ func policyPublicMask(policy PolicyAnalysis) accessPermissionMask {
 
 func aclPublicMask(acl ACLAnalysis) accessPermissionMask {
 	var mask accessPermissionMask
-	if acl.AllowsPublicRead {
+	if acl.PublicRead {
 		mask |= accessPermRead
 	}
-	if acl.AllowsPublicWrite {
+	if acl.PublicWrite {
 		mask |= accessPermWrite
 	}
-	if acl.AllowsPublicACLRead {
+	if acl.PublicACLRead {
 		mask |= accessPermACLRead
 	}
-	if acl.AllowsPublicACLWrite {
+	if acl.PublicACLWrite {
 		mask |= accessPermACLWrite
 	}
 	return mask
@@ -247,7 +247,7 @@ func applyPublicAccessBlock(
 	pab PublicAccessBlock,
 ) (effectiveMask accessPermissionMask, policyBlocked, aclBlocked bool) {
 	policyBlocked = pab.BlockPublicPolicy || pab.RestrictPublicBuckets
-	aclBlocked = pab.BlockPublicAcls || pab.IgnorePublicAcls
+	aclBlocked = pab.BlockPublicACLs || pab.IgnorePublicACLs
 
 	if !policyBlocked {
 		effectiveMask |= policyMask
