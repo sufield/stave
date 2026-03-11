@@ -108,7 +108,7 @@ func (s *Store) Save() error {
 		s.path = path
 	}
 
-	if err := os.MkdirAll(filepath.Dir(s.path), 0o700); err != nil {
+	if err := fsutil.SafeMkdirAll(filepath.Dir(s.path), fsutil.WriteOptions{Perm: 0o700}); err != nil {
 		return fmt.Errorf("create config directory: %w", err)
 	}
 
