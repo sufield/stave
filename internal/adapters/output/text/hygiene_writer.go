@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/sufield/stave/internal/app/hygiene"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 // hygieneWriter collects the first write error so callers don't need to check every fmt call.
@@ -22,7 +22,7 @@ func (h *hygieneWriter) f(format string, args ...any) {
 }
 
 // WriteHygieneReport writes a hygiene report as markdown to w.
-func WriteHygieneReport(w io.Writer, req hygiene.ReportRequest) error {
+func WriteHygieneReport(w io.Writer, req appcontracts.ReportRequest) error {
 	ctx := req.Context
 	h := &hygieneWriter{w: w}
 
@@ -40,7 +40,7 @@ func WriteHygieneReport(w io.Writer, req hygiene.ReportRequest) error {
 	return h.err
 }
 
-func writeLifecycleTable(h *hygieneWriter, stats hygiene.SnapshotStats) {
+func writeLifecycleTable(h *hygieneWriter, stats appcontracts.SnapshotStats) {
 	h.f("## Lifecycle Inventory\n\n")
 	h.f("| Metric | Value |\n| :--- | :--- |\n")
 	h.f("| Total snapshots | %d |\n", stats.Total)
@@ -52,7 +52,7 @@ func writeLifecycleTable(h *hygieneWriter, stats hygiene.SnapshotStats) {
 	h.f("| Keep minimum | %d |\n\n", stats.KeepMin)
 }
 
-func writeRiskTable(h *hygieneWriter, risk hygiene.RiskStats, dueSoon time.Duration) {
+func writeRiskTable(h *hygieneWriter, risk appcontracts.RiskStats, dueSoon time.Duration) {
 	h.f("## Current Risk Status\n\n")
 	h.f("| Metric | Value |\n| :--- | :--- |\n")
 	h.f("| Current violations | %d |\n", risk.CurrentViolations)
@@ -63,7 +63,7 @@ func writeRiskTable(h *hygieneWriter, risk hygiene.RiskStats, dueSoon time.Durat
 	h.f("| Upcoming total | %d |\n\n", risk.UpcomingTotal)
 }
 
-func writeTrendTable(h *hygieneWriter, trends []hygiene.TrendMetric) {
+func writeTrendTable(h *hygieneWriter, trends []appcontracts.TrendMetric) {
 	h.f("## Risk Posture & Trends\n\n")
 	h.f("| Metric | Current | Previous | Change |\n| :--- | :--- | :--- | :--- |\n")
 	for _, trend := range trends {

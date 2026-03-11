@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/output"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -66,7 +65,7 @@ func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safet
 	enricher := remediation.NewMapper()
 	sanitizer := cmdutil.GetSanitizer(cmd)
 	enriched := output.Enrich(enricher, sanitizer, result)
-	return appworkflow.BuildSafetyEnvelopeFromEnriched(enriched)
+	return output.BuildSafetyEnvelopeFromEnriched(enriched)
 }
 
 func writeOutputJSONFile(cmd *cobra.Command, path string, value any) error {

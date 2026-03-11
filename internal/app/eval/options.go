@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
@@ -39,6 +40,7 @@ type Options struct {
 	ObservationsSource ObservationSource
 	IntegrityManifest  string
 	IntegrityPublicKey string
+	Hasher             appcontracts.ContentHasher
 }
 
 // ParsedOptions holds validated, parsed values ready for use.

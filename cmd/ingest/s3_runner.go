@@ -17,7 +17,10 @@ import (
 	appingest "github.com/sufield/stave/internal/app/ingest"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/observations"
+	"github.com/sufield/stave/internal/sanitize"
 )
 
 type s3Runner struct {
@@ -185,13 +188,26 @@ func (r *s3Runner) handleEmptySnapshot(cmd *cobra.Command, cfg s3RunConfig) erro
 }
 
 func (r *s3Runner) writeObservationsFile(cmd *cobra.Command, path string, snapshots []asset.Snapshot) error {
-	return appingest.WriteObservationsFile(appingest.ObservationsWriteRequest{
+	req := appingest.ObservationsWriteRequest{
 		Path:         path,
 		Snapshots:    snapshots,
-		Scrub:        r.opts.Scrub,
 		Overwrite:    r.opts.Force || cmdutil.ForceEnabled(cmd),
 		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
-	})
+		Writer: func(p string, snaps []asset.Snapshot, overwrite, allowSymlink bool) error {
+			return observations.WriteJSON(observations.WriteRequest{
+				Path:          p,
+				SchemaVersion: kernel.SchemaObservation,
+				Snapshots:     snaps,
+				Overwrite:     overwrite,
+				AllowSymlink:  allowSymlink,
+			})
+		},
+	}
+	if r.opts.Scrub {
+		s := sanitize.New()
+		req.Scrubber = s.ScrubSnapshot
+	}
+	return appingest.WriteObservationsFile(req)
 }
 
 // evidenceShortLabel extracts a short label from an evidence or missing_inputs string.

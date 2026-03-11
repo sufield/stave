@@ -54,7 +54,7 @@ func filterSnapshotsBefore(snapshots []asset.Snapshot, cutoff time.Time) []asset
 	return filtered
 }
 
-func writeHygieneOutput(format ui.OutputFormat, report hygieneapp.ReportRequest, jsonOut hygieneapp.Output, w io.Writer) error {
+func writeHygieneOutput(format ui.OutputFormat, report appcontracts.ReportRequest, jsonOut hygieneapp.Output, w io.Writer) error {
 	if format.IsJSON() {
 		if err := jsonutil.WriteIndented(w, jsonOut); err != nil {
 			return fmt.Errorf("write report: %w", err)

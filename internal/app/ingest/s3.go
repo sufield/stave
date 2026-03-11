@@ -6,9 +6,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/platform/observations"
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 // S3IngestExtractRequest captures the minimum data required to extract
@@ -37,33 +34,37 @@ func ExtractS3Snapshots(req S3IngestExtractRequest) ([]asset.Snapshot, error) {
 	return snapshots, nil
 }
 
+// SnapshotScrubber sanitizes snapshot data before persistence.
+type SnapshotScrubber func(asset.Snapshot) asset.Snapshot
+
+// ObservationsWriter persists normalized observations to the filesystem.
+// The concrete implementation lives in the platform layer.
+type ObservationsWriter func(path string, snapshots []asset.Snapshot, overwrite, allowSymlink bool) error
+
 // ObservationsWriteRequest controls normalized observation output persistence.
 type ObservationsWriteRequest struct {
 	Path         string
 	Snapshots    []asset.Snapshot
-	Scrub        bool
+	Scrubber     SnapshotScrubber // optional; when set, each snapshot is scrubbed before writing
 	Overwrite    bool
 	AllowSymlink bool
+	Writer       ObservationsWriter // injected from cmd layer
 }
 
 // WriteObservationsFile writes observations with fs safety checks and optional
 // sanitization.
 func WriteObservationsFile(req ObservationsWriteRequest) error {
+	if req.Writer == nil {
+		return fmt.Errorf("observations writer is required")
+	}
 	snapshots := req.Snapshots
-	if req.Scrub && len(snapshots) > 0 {
-		r := sanitize.New()
+	if req.Scrubber != nil && len(snapshots) > 0 {
 		scrubbed := make([]asset.Snapshot, len(snapshots))
 		for i, s := range snapshots {
-			scrubbed[i] = r.ScrubSnapshot(s)
+			scrubbed[i] = req.Scrubber(s)
 		}
 		snapshots = scrubbed
 	}
 
-	return observations.WriteJSON(observations.WriteRequest{
-		Path:          req.Path,
-		SchemaVersion: kernel.SchemaObservation,
-		Snapshots:     snapshots,
-		Overwrite:     req.Overwrite,
-		AllowSymlink:  req.AllowSymlink,
-	})
+	return req.Writer(req.Path, snapshots, req.Overwrite, req.AllowSymlink)
 }

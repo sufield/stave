@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/validation"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
@@ -43,7 +44,9 @@ func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *o
 		req = appvalidation.AutoRequest{Data: data}
 	}
 
-	result, err := appvalidation.NewContentService().Validate(req)
+	result, err := appvalidation.NewContentService(func() appvalidation.SchemaValidator {
+		return contractvalidator.New()
+	}).Validate(req)
 	if err != nil {
 		if kind != "" {
 			return fmt.Errorf("validate %s %s: %w", kind, sourceName, err)

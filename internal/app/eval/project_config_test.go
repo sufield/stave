@@ -5,9 +5,19 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
+
+func defaultPackRegistry(t *testing.T) *pack.Registry {
+	t.Helper()
+	reg, err := pack.DefaultRegistry()
+	if err != nil {
+		t.Fatalf("load pack registry: %v", err)
+	}
+	return reg
+}
 
 func TestResolveProjectConfig_InvalidSuppressionExpiry(t *testing.T) {
 	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
@@ -38,6 +48,7 @@ func TestResolveProjectConfig_PackSelectionConflict(t *testing.T) {
 func TestResolveProjectConfig_UnknownPack(t *testing.T) {
 	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
 		EnabledControlPacks: []string{"does-not-exist"},
+		PackRegistry:        defaultPackRegistry(t),
 	})
 	if err == nil {
 		t.Fatal("expected unknown pack error")
@@ -48,6 +59,7 @@ func TestResolveProjectConfig_LoadsEnabledPack(t *testing.T) {
 	got, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
 		EnabledControlPacks: []string{"s3/public-exposure"},
 		BuiltinLoader:       builtin.LoadAll,
+		PackRegistry:        defaultPackRegistry(t),
 	})
 	if err != nil {
 		t.Fatalf("ResolveProjectConfig() error = %v", err)

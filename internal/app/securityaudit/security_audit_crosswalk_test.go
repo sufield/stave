@@ -5,13 +5,29 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/domain/securityaudit"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {
 	root := repoRootForTest(t)
-	resolver := defaultCrosswalkResolver{}
+	resolver := defaultCrosswalkResolver{
+		readFile: fsutil.ReadFileLimited,
+		resolve: func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error) {
+			resolved, err := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
+			if err != nil {
+				return CrosswalkResult{}, err
+			}
+			return CrosswalkResult{
+				ByCheck:        resolved.ByCheck,
+				MissingChecks:  resolved.MissingChecks,
+				ResolutionJSON: resolved.ResolutionJSON,
+			}, nil
+		},
+	}
 	checkIDs := securityaudit.AllCheckIDs()
 
 	resolved, err := resolver.Resolve(context.Background(), SecurityAuditRequest{

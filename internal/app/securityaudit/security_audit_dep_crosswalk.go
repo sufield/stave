@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-
-	"github.com/sufield/stave/internal/compliance"
-	"github.com/sufield/stave/internal/platform/fsutil"
+	"time"
 )
 
-type defaultCrosswalkResolver struct{}
+type defaultCrosswalkResolver struct {
+	readFile func(path string) ([]byte, error)
+	resolve  func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
+}
 
-func (defaultCrosswalkResolver) Resolve(
+func (d defaultCrosswalkResolver) Resolve(
 	_ context.Context,
 	req SecurityAuditRequest,
 	checkIDs []string,
@@ -21,23 +22,17 @@ func (defaultCrosswalkResolver) Resolve(
 		return crosswalkSnapshot{}, err
 	}
 	path := filepath.Join(root, "internal", "contracts", "security", "control_crosswalk.v1.yaml")
-	raw, err := fsutil.ReadFileLimited(path)
+	raw, err := d.readFile(path)
 	if err != nil {
 		return crosswalkSnapshot{}, fmt.Errorf("read crosswalk file: %w", err)
 	}
-	resolved, err := compliance.ResolveControlCrosswalk(
-		raw,
-		req.ComplianceFrameworks,
-		checkIDs,
-		req.Now.UTC(),
-	)
+	result, err := d.resolve(raw, req.ComplianceFrameworks, checkIDs, req.Now.UTC())
 	if err != nil {
 		return crosswalkSnapshot{}, err
 	}
-
 	return crosswalkSnapshot{
-		ByCheck:        resolved.ByCheck,
-		MissingChecks:  resolved.MissingChecks,
-		ResolutionJSON: resolved.ResolutionJSON,
+		ByCheck:        result.ByCheck,
+		MissingChecks:  result.MissingChecks,
+		ResolutionJSON: result.ResolutionJSON,
 	}, nil
 }

@@ -63,10 +63,11 @@ type ContentService struct {
 	newValidator func() SchemaValidator
 }
 
-// NewContentService constructs a content validation service.
-func NewContentService() *ContentService {
+// NewContentService constructs a content validation service with an
+// injectable validator factory. Callers provide the concrete constructor.
+func NewContentService(factory func() SchemaValidator) *ContentService {
 	return &ContentService{
-		newValidator: func() SchemaValidator { return contractvalidator.New() },
+		newValidator: factory,
 	}
 }
 

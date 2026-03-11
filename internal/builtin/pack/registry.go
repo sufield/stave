@@ -162,6 +162,16 @@ func (r *Registry) Hash() kernel.Digest {
 	return r.hash
 }
 
+// RegistryVersion returns the version string. Satisfies appcontracts.PackRegistry.
+func (r *Registry) RegistryVersion() (string, error) {
+	return r.version, nil
+}
+
+// RegistryHash returns the hash as a string. Satisfies appcontracts.PackRegistry.
+func (r *Registry) RegistryHash() (string, error) {
+	return string(r.hash), nil
+}
+
 // ControlRefs returns the raw control metadata map.
 func (r *Registry) ControlRefs() map[string]ControlRef {
 	return maps.Clone(r.controls)

@@ -15,7 +15,11 @@ import (
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/compliance"
+	"github.com/sufield/stave/internal/doctor"
+	"github.com/sufield/stave/internal/domain/kernel"
 	domainsecurityaudit "github.com/sufield/stave/internal/domain/securityaudit"
+	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -61,7 +65,33 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	}
 	bundleDir := c.resolveOutDir(now)
 
-	runner := appsa.NewSecurityAuditRunner(govulncheck.Run, nil)
+	runner := appsa.NewSecurityAuditRunner(appsa.RunnerDeps{
+		ReadFile: fsutil.ReadFileLimited,
+		HashFile: fsutil.HashFile,
+		HashBytes: func(data []byte) kernel.Digest {
+			return platformcrypto.HashBytes(data)
+		},
+		GovulncheckRunner: govulncheck.Run,
+		SignatureVerifier:  nil,
+		RunDiagnostics: func(cwd, binaryPath, staveVersion string) {
+			_, _ = doctor.Run(doctor.Context{
+				Cwd:          cwd,
+				BinaryPath:   binaryPath,
+				StaveVersion: staveVersion,
+			})
+		},
+		ResolveCrosswalk: func(raw []byte, frameworks, checkIDs []string, now time.Time) (appsa.CrosswalkResult, error) {
+			resolved, err := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
+			if err != nil {
+				return appsa.CrosswalkResult{}, err
+			}
+			return appsa.CrosswalkResult{
+				ByCheck:        resolved.ByCheck,
+				MissingChecks:  resolved.MissingChecks,
+				ResolutionJSON: resolved.ResolutionJSON,
+			}, nil
+		},
+	})
 	report, artifacts, err := runner.Run(cmd.Context(), appsa.SecurityAuditRequest{
 		Now:                  now,
 		ToolVersion:          staveversion.Version,

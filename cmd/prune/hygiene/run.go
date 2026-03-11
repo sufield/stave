@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -121,29 +122,29 @@ func prepareHygieneExecution(cmd *cobra.Command, flags *hygieneFlagsType) (hygie
 	}, nil
 }
 
-func buildHygieneOutputs(execCtx hygieneExecution) (hygieneapp.ReportRequest, hygieneapp.Output, error) {
+func buildHygieneOutputs(execCtx hygieneExecution) (appcontracts.ReportRequest, hygieneapp.Output, error) {
 	ctx := execCtx.ctx
 	req := execCtx.req
 	loaded, err := compose.LoadObsAndInv(ctx, req.ObservationsDir, req.ControlsDir)
 	if err != nil {
-		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
+		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	activeSnapshots := loaded.Snapshots
 	controls := loaded.Controls
 
 	archiveSnapshots, err := loadSnapshotsIfDirExists(ctx, loaded.ObsRepo, req.ArchiveDir)
 	if err != nil {
-		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
+		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	files, err := listObservationSnapshotFiles(ctx, req.ObservationsDir)
 	if err != nil {
-		return hygieneapp.ReportRequest{}, hygieneapp.Output{}, err
+		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	snapshotStats := buildHygieneSnapshotStats(execCtx, activeSnapshots, archiveSnapshots, files)
 	currentRisk, trend := computeHygieneRiskTrend(execCtx, controls, activeSnapshots)
 
-	reportReq := hygieneapp.ReportRequest{
-		Context: hygieneapp.ReportContext{
+	reportReq := appcontracts.ReportRequest{
+		Context: appcontracts.ReportContext{
 			Now:         execCtx.now,
 			PreviousNow: execCtx.previousNow,
 			Lookback:    execCtx.lookbackDur,
@@ -176,10 +177,10 @@ func buildHygieneSnapshotStats(
 	activeSnapshots []asset.Snapshot,
 	archiveSnapshots []asset.Snapshot,
 	files []snapshotFile,
-) hygieneapp.SnapshotStats {
+) appcontracts.SnapshotStats {
 	keepMin := execCtx.req.KeepMin
 	pruneCandidates := planPrune(files, PruningCriteria{Now: execCtx.now, OlderThan: execCtx.retentionDur, KeepMin: keepMin})
-	return hygieneapp.SnapshotStats{
+	return appcontracts.SnapshotStats{
 		Active:            len(activeSnapshots),
 		Archived:          len(archiveSnapshots),
 		Total:             len(activeSnapshots) + len(archiveSnapshots),
@@ -194,7 +195,7 @@ func computeHygieneRiskTrend(
 	execCtx hygieneExecution,
 	controls []policy.ControlDefinition,
 	activeSnapshots []asset.Snapshot,
-) (hygieneapp.RiskStats, []hygieneapp.TrendMetric) {
+) (appcontracts.RiskStats, []appcontracts.TrendMetric) {
 	svc := hygieneapp.NewService()
 	previousNow := execCtx.previousNow
 	riskOpts := execCtx.riskOpts

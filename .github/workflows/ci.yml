@@ -38,10 +38,11 @@ jobs:
           go-version-file: 'go.mod'
           check-latest: true
           cache: true
-      - name: Install golangci-lint from source
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
       - name: Run golangci-lint
-        run: golangci-lint run --timeout=5m
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.8.0
+          args: --timeout=5m
 
   vuln:
     name: Vulnerability check

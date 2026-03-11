@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	packs "github.com/sufield/stave/internal/builtin/pack"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -35,6 +35,7 @@ type ProjectConfigInput struct {
 	ExcludeControls     []kernel.ControlID
 	ControlsFlagSet     bool
 	BuiltinLoader       func(ctx context.Context) ([]policy.ControlDefinition, error)
+	PackRegistry        appcontracts.PackRegistry
 }
 
 // ResolvedProjectConfig holds pre-resolved project configuration.
@@ -73,7 +74,10 @@ func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedP
 	packNames := slices.Clone(in.EnabledControlPacks)
 	slices.Sort(packNames)
 
-	resolvedIDs, err := packs.ResolveEnabledPacks(packNames)
+	if in.PackRegistry == nil {
+		return ResolvedProjectConfig{}, fmt.Errorf("pack registry is required when enabled_control_packs is set")
+	}
+	resolvedIDs, err := in.PackRegistry.ResolveEnabledPacks(packNames)
 	if err != nil {
 		return ResolvedProjectConfig{}, fmt.Errorf("resolve enabled_control_packs: %w", err)
 	}
@@ -82,15 +86,15 @@ func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedP
 		return ResolvedProjectConfig{}, err
 	}
 
-	v, _ := packs.RegistryVersion()
-	h, _ := packs.RegistryHash()
+	v, _ := in.PackRegistry.RegistryVersion()
+	h, _ := in.PackRegistry.RegistryHash()
 	result.PreloadedControls = loaded
 	result.ControlSource = evaluation.ControlSourceInfo{
 		Source:             evaluation.ControlSourcePacks,
 		EnabledPacks:       packNames,
 		ResolvedControlIDs: resolvedIDs,
 		RegistryVersion:    v,
-		RegistryHash:       h,
+		RegistryHash:       kernel.Digest(h),
 	}
 	return result, nil
 }
