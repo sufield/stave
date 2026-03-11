@@ -50,7 +50,7 @@ func CreateRecurrenceFinding(
 ) evaluation.Finding {
 	recurrence := ctl.RecurrencePolicy()
 
-	f := baseFinding(ctl, timeline)
+	f := newBaseFinding(ctl, timeline)
 	f.Evidence = evaluation.Evidence{
 		EpisodeCount:     summary.Count,
 		WindowDays:       recurrence.WindowDays,
@@ -64,5 +64,5 @@ func CreateRecurrenceFinding(
 	// NOTE: We do NOT set UnsafeDurationHours for recurrence findings because
 	// the span between first and last episode includes safe time between episodes.
 	// Recurrence is about episode count, not cumulative duration.
-	return f
+	return *f
 }

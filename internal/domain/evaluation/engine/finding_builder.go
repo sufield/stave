@@ -8,33 +8,33 @@ import (
 
 // FindingContext groups the situational details for a specific violation.
 type FindingContext struct {
-	Why        string
+	Reason     string
 	Misconfigs []policy.Misconfiguration
 }
 
-// baseFinding returns a Finding pre-populated with control metadata, asset
-// identity, and posture drift. Callers set Evidence before returning.
-func baseFinding(ctl *policy.ControlDefinition, timeline *asset.Timeline) evaluation.Finding {
-	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
-	a := timeline.Asset()
-	f.AssetID = timeline.ID
-	f.AssetType = a.Type
-	f.AssetVendor = a.Vendor
-	f.Source = a.Source
-	f.PostureDrift = evaluation.ComputePostureDrift(timeline)
+// NewFinding creates a finding by combining control metadata, asset identity,
+// and the specific situational evidence (FindingContext).
+func NewFinding(
+	ctl *policy.ControlDefinition,
+	t *asset.Timeline,
+	ctx FindingContext,
+) *evaluation.Finding {
+	f := newBaseFinding(ctl, t)
+	f.Evidence = evaluation.Evidence{
+		Misconfigurations: ctx.Misconfigs,
+		WhyNow:            ctx.Reason,
+	}
 	return f
 }
 
-// NewFinding creates a finding by combining control metadata and timeline state.
-func NewFinding(
-	ctl *policy.ControlDefinition,
-	timeline *asset.Timeline,
-	ctx FindingContext,
-) evaluation.Finding {
-	f := baseFinding(ctl, timeline)
-	f.Evidence = evaluation.Evidence{
-		Misconfigurations: ctx.Misconfigs,
-		WhyNow:            ctx.Why,
-	}
-	return f
+// newBaseFinding returns a Finding pre-populated with control and asset metadata.
+func newBaseFinding(ctl *policy.ControlDefinition, t *asset.Timeline) *evaluation.Finding {
+	a := t.Asset()
+	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
+	f.AssetID = t.ID
+	f.AssetType = a.Type
+	f.AssetVendor = a.Vendor
+	f.Source = a.Source
+	f.PostureDrift = evaluation.ComputePostureDrift(t)
+	return &f
 }
