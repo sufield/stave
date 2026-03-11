@@ -16,7 +16,10 @@ type Candidate struct {
 }
 
 // PlanPrune selects candidates older than the cutoff while preserving KeepMin floor.
-// Input order is preserved for returned candidates.
+// Items must be sorted by CapturedAt ascending (oldest first) so that the
+// KeepMin cap trims the oldest candidates, not arbitrary ones.
+// When OlderThan is zero the cutoff equals Now, selecting all items for pruning
+// (subject to KeepMin).
 func PlanPrune(items []Candidate, criteria Criteria) []Candidate {
 	cutoff := criteria.Now.Add(-criteria.OlderThan)
 	candidates := make([]Candidate, 0, len(items))
