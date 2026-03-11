@@ -74,17 +74,17 @@ func mergePublicAccessBlock(effective *s3storage.PublicAccessBlock, candidate *s
 func ToExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysis {
 	return s3exposure.PolicyAnalysis{
 		AccessFlags: s3exposure.AccessFlags{
-			AllowsPublicRead:            policy.AllowsPublicRead,
-			AllowsPublicWrite:           policy.AllowsPublicWrite,
-			AllowsPublicACLRead:         policy.AllowsPublicACLRead,
-			AllowsPublicACLWrite:        policy.AllowsPublicACLWrite,
-			AllowsAuthenticatedRead:     policy.AllowsAuthenticatedRead,
-			AllowsAuthenticatedWrite:    policy.AllowsAuthenticatedWrite,
-			AllowsAuthenticatedACLRead:  policy.AllowsAuthenticatedACLRead,
-			AllowsAuthenticatedACLWrite: policy.AllowsAuthenticatedACLWrite,
+			PublicRead:            policy.AllowsPublicRead,
+			PublicWrite:           policy.AllowsPublicWrite,
+			PublicACLRead:         policy.AllowsPublicACLRead,
+			PublicACLWrite:        policy.AllowsPublicACLWrite,
+			AuthenticatedRead:     policy.AllowsAuthenticatedRead,
+			AuthenticatedWrite:    policy.AllowsAuthenticatedWrite,
+			AuthenticatedACLRead:  policy.AllowsAuthenticatedACLRead,
+			AuthenticatedACLWrite: policy.AllowsAuthenticatedACLWrite,
 		},
-		AllowsPublicList:        policy.AllowsPublicList,
-		AllowsAuthenticatedList: policy.AllowsAuthenticatedList,
+		PublicList:        policy.AllowsPublicList,
+		AuthenticatedList: policy.AllowsAuthenticatedList,
 	}
 }
 
@@ -92,25 +92,25 @@ func ToExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysi
 func ToExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
 	return s3exposure.ACLAnalysis{
 		AccessFlags: s3exposure.AccessFlags{
-			AllowsPublicRead:            acl.AllowsPublicRead,
-			AllowsPublicWrite:           acl.AllowsPublicWrite,
-			AllowsPublicACLRead:         acl.AllowsPublicACLRead,
-			AllowsPublicACLWrite:        acl.AllowsPublicACLWrite,
-			AllowsAuthenticatedRead:     acl.AllowsAuthenticatedRead,
-			AllowsAuthenticatedWrite:    acl.AllowsAuthenticatedWrite,
-			AllowsAuthenticatedACLRead:  acl.AllowsAuthenticatedACLRead,
-			AllowsAuthenticatedACLWrite: acl.AllowsAuthenticatedACLWrite,
+			PublicRead:            acl.AllowsPublicRead,
+			PublicWrite:           acl.AllowsPublicWrite,
+			PublicACLRead:         acl.AllowsPublicACLRead,
+			PublicACLWrite:        acl.AllowsPublicACLWrite,
+			AuthenticatedRead:     acl.AllowsAuthenticatedRead,
+			AuthenticatedWrite:    acl.AllowsAuthenticatedWrite,
+			AuthenticatedACLRead:  acl.AllowsAuthenticatedACLRead,
+			AuthenticatedACLWrite: acl.AllowsAuthenticatedACLWrite,
 		},
-		HasFullControlPublic:        acl.HasFullControlPublic,
-		HasFullControlAuthenticated: acl.HasFullControlAuthenticated,
+		PublicFullControl:        acl.HasFullControlPublic,
+		AuthenticatedFullControl: acl.HasFullControlAuthenticated,
 	}
 }
 
 // ToExposurePublicAccessBlock maps an S3 public access block to the exposure domain type.
 func ToExposurePublicAccessBlock(pab s3storage.PublicAccessBlock) s3exposure.PublicAccessBlock {
 	return s3exposure.PublicAccessBlock{
-		BlockPublicAcls:       pab.BlockPublicAcls,
-		IgnorePublicAcls:      pab.IgnorePublicAcls,
+		BlockPublicACLs:       pab.BlockPublicAcls,
+		IgnorePublicACLs:      pab.IgnorePublicAcls,
 		BlockPublicPolicy:     pab.BlockPublicPolicy,
 		RestrictPublicBuckets: pab.RestrictPublicBuckets,
 	}

@@ -4,7 +4,7 @@ import "testing"
 
 func TestResolveEffectiveVisibility_PolicyBlockedLatentRead(t *testing.T) {
 	got := ResolveEffectiveVisibility(
-		PolicyAnalysis{AccessFlags: AccessFlags{AllowsPublicRead: true}},
+		PolicyAnalysis{AccessFlags: AccessFlags{PublicRead: true}},
 		ACLAnalysis{},
 		PublicAccessBlock{BlockPublicPolicy: true},
 	)
@@ -19,8 +19,8 @@ func TestResolveEffectiveVisibility_PolicyBlockedLatentRead(t *testing.T) {
 
 func TestResolveEffectiveVisibility_UnionAcrossPolicyAndACL(t *testing.T) {
 	got := ResolveEffectiveVisibility(
-		PolicyAnalysis{AllowsPublicList: true},
-		ACLAnalysis{AccessFlags: AccessFlags{AllowsPublicRead: true}},
+		PolicyAnalysis{PublicList: true},
+		ACLAnalysis{AccessFlags: AccessFlags{PublicRead: true}},
 		PublicAccessBlock{},
 	)
 

@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
+// Priority levels for exposure findings (higher is more severe).
 const (
 	priorityWebsitePublic = 400
 	priorityAuthOnly      = 300
@@ -20,42 +21,24 @@ type exposureCandidate struct {
 	finding  ExposureClassification
 }
 
-// candidateRequest bundles the parameters required to build an exposure finding.
-type candidateRequest struct {
-	Priority       int
-	ID             kernel.ControlID
-	ExposureType   string
-	Actions        []string
-	Evidence       []string
-	BucketName     string
-	PrincipalScope kernel.PrincipalScope
-	WriteScope     string
-}
-
-// buildCandidate converts a request into an exposure candidate.
-func buildCandidate(req candidateRequest) *exposureCandidate {
-	return &exposureCandidate{
-		priority: req.Priority,
-		finding: ExposureClassification{
-			ID:             req.ID,
-			Bucket:         req.BucketName,
-			ExposureType:   req.ExposureType,
-			PrincipalScope: req.PrincipalScope,
-			Actions:        req.Actions,
-			WriteScope:     req.WriteScope,
-			EvidencePath:   req.Evidence,
-		},
+// updateCandidate sets *c to the new finding if the new priority is higher.
+func updateCandidate(c **exposureCandidate, priority int, finding ExposureClassification) {
+	if *c == nil || priority > (*c).priority {
+		*c = &exposureCandidate{
+			priority: priority,
+			finding:  finding,
+		}
 	}
 }
 
 type readExposureInput struct {
 	bucketName           string
 	bucketWebsiteEnabled bool
-	globalGet            bool
+	isGlobalGet          bool
 	writeAbsorbsRead     bool
-	hasAuthenticatedOnly bool
-	policyGet            bool
-	aclGet               bool
+	isAuthenticatedOnly  bool
+	isPolicyGet          bool
+	isACLGet             bool
 	principalScope       kernel.PrincipalScope
 	readEvidence         []string
 	policyReadEvidence   []string
@@ -63,7 +46,7 @@ type readExposureInput struct {
 }
 
 func selectReadExposureCandidate(in readExposureInput) *exposureCandidate {
-	if !in.globalGet || in.writeAbsorbsRead {
+	if !in.isGlobalGet || in.writeAbsorbsRead {
 		return nil
 	}
 
@@ -71,54 +54,51 @@ func selectReadExposureCandidate(in readExposureInput) *exposureCandidate {
 
 	if in.bucketWebsiteEnabled {
 		evidence := in.aclReadEvidence
-		if in.policyGet {
+		if in.isPolicyGet {
 			evidence = in.readEvidence
 		}
-		best = better(best, buildCandidate(candidateRequest{
-			Priority:       priorityWebsitePublic,
+
+		updateCandidate(&best, priorityWebsitePublic, ExposureClassification{
 			ID:             exposureIDWebsitePublic,
+			Bucket:         in.bucketName,
 			ExposureType:   "website_public",
-			Actions:        []string{outputGetObject},
-			Evidence:       appendEvidence([]string{"bucket.website.enabled"}, evidence...),
-			BucketName:     in.bucketName,
 			PrincipalScope: in.principalScope,
-		}))
+			Actions:        []string{outputGetObject},
+			EvidencePath:   append(slices.Clone([]string{"bucket.website.enabled"}), evidence...),
+		})
 	}
 
-	if in.hasAuthenticatedOnly {
-		best = better(best, buildCandidate(candidateRequest{
-			Priority:       priorityAuthOnly,
+	if in.isAuthenticatedOnly {
+		updateCandidate(&best, priorityAuthOnly, ExposureClassification{
 			ID:             exposureIDGlobalAuthenticatedRead,
+			Bucket:         in.bucketName,
 			ExposureType:   "authenticated_read",
-			Actions:        []string{outputGetObject},
-			Evidence:       in.readEvidence,
-			BucketName:     in.bucketName,
 			PrincipalScope: in.principalScope,
-		}))
+			Actions:        []string{outputGetObject},
+			EvidencePath:   in.readEvidence,
+		})
 	}
 
-	if in.policyGet {
-		best = better(best, buildCandidate(candidateRequest{
-			Priority:       priorityPolicyRead,
+	if in.isPolicyGet {
+		updateCandidate(&best, priorityPolicyRead, ExposureClassification{
 			ID:             exposureIDPublicRead,
+			Bucket:         in.bucketName,
 			ExposureType:   "public_read",
-			Actions:        []string{outputGetObject},
-			Evidence:       in.policyReadEvidence,
-			BucketName:     in.bucketName,
 			PrincipalScope: in.principalScope,
-		}))
+			Actions:        []string{outputGetObject},
+			EvidencePath:   in.policyReadEvidence,
+		})
 	}
 
-	if in.aclGet {
-		best = better(best, buildCandidate(candidateRequest{
-			Priority:       priorityACLRead,
+	if in.isACLGet {
+		updateCandidate(&best, priorityACLRead, ExposureClassification{
 			ID:             exposureIDACLPublicRead,
+			Bucket:         in.bucketName,
 			ExposureType:   "acl_public_read",
-			Actions:        []string{outputGetObject},
-			Evidence:       in.aclReadEvidence,
-			BucketName:     in.bucketName,
 			PrincipalScope: in.principalScope,
-		}))
+			Actions:        []string{outputGetObject},
+			EvidencePath:   in.aclReadEvidence,
+		})
 	}
 
 	return best
@@ -126,61 +106,53 @@ func selectReadExposureCandidate(in readExposureInput) *exposureCandidate {
 
 type writeExposureInput struct {
 	bucketName          string
-	globalPut           bool
-	policyPut           bool
-	aclPut              bool
+	isGlobalPut         bool
+	isPolicyPut         bool
+	isACLPut            bool
 	principalScope      kernel.PrincipalScope
 	writeScope          string
 	policyWriteEvidence []string
 	aclWriteEvidence    []string
-	writeSourceHasGet   bool
-	writeSourceHasList  bool
+	hasGetAction        bool
+	hasListAction       bool
 }
 
 func selectWriteExposureCandidate(in writeExposureInput) *exposureCandidate {
-	if !in.globalPut {
+	if !in.isGlobalPut {
 		return nil
 	}
 
 	var best *exposureCandidate
 
-	if in.policyPut {
-		best = better(best, buildCandidate(candidateRequest{
-			Priority:       priorityPolicyWrite,
+	if in.isPolicyPut {
+		updateCandidate(&best, priorityPolicyWrite, ExposureClassification{
 			ID:             exposureIDPublicWrite,
+			Bucket:         in.bucketName,
 			ExposureType:   "public_write",
-			Actions:        writeActions(in.writeSourceHasGet, in.writeSourceHasList),
-			Evidence:       in.policyWriteEvidence,
-			BucketName:     in.bucketName,
 			PrincipalScope: in.principalScope,
 			WriteScope:     in.writeScope,
-		}))
+			Actions:        buildWriteActions(in.hasGetAction, in.hasListAction),
+			EvidencePath:   in.policyWriteEvidence,
+		})
 	}
 
-	if in.aclPut {
-		best = better(best, buildCandidate(candidateRequest{
-			Priority:       priorityACLWrite,
+	if in.isACLPut {
+		updateCandidate(&best, priorityACLWrite, ExposureClassification{
 			ID:             exposureIDACLPublicWrite,
+			Bucket:         in.bucketName,
 			ExposureType:   "acl_public_write",
-			Actions:        []string{outputPutObject},
-			Evidence:       in.aclWriteEvidence,
-			BucketName:     in.bucketName,
 			PrincipalScope: in.principalScope,
 			WriteScope:     in.writeScope,
-		}))
+			Actions:        []string{outputPutObject},
+			EvidencePath:   in.aclWriteEvidence,
+		})
 	}
 
 	return best
 }
 
-func better(current, next *exposureCandidate) *exposureCandidate {
-	if current == nil || next.priority > current.priority {
-		return next
-	}
-	return current
-}
-
-func writeActions(hasGet, hasList bool) []string {
+// buildWriteActions generates a sorted list of permitted actions.
+func buildWriteActions(hasGet, hasList bool) []string {
 	actions := []string{outputPutObject}
 	if hasGet {
 		actions = append(actions, outputGetObject)
@@ -190,11 +162,4 @@ func writeActions(hasGet, hasList bool) []string {
 	}
 	slices.Sort(actions)
 	return actions
-}
-
-func appendEvidence(prefix []string, base ...string) []string {
-	result := make([]string, 0, len(prefix)+len(base))
-	result = append(result, prefix...)
-	result = append(result, base...)
-	return result
 }
