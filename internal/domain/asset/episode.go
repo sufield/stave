@@ -73,7 +73,7 @@ func NewClosedEpisode(start, end time.Time) (Episode, error) {
 // NewOpenEpisode creates an ongoing episode with no end time.
 func NewOpenEpisode(start time.Time) (Episode, error) {
 	if start.IsZero() {
-		return Episode{}, fmt.Errorf("episode must have a start time")
+		return Episode{}, fmt.Errorf("episode: start_at is required")
 	}
 	return Episode{startAt: start, open: true}, nil
 }

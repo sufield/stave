@@ -2,7 +2,6 @@ package asset
 
 import (
 	"math"
-	"reflect"
 
 	"github.com/sufield/stave/internal/pkg/maps"
 )
@@ -89,52 +88,46 @@ func identityNestedIntProperty(props map[string]any, parent, key string) (int, b
 	return value, true
 }
 
+// toIdentityInt converts an arbitrary numeric value to int.
+// JSON decoding produces float64; other sources may use concrete int types.
 func toIdentityInt(value any) (int, bool) {
-	if n, ok := signedIdentityInt(value); ok {
-		return n, true
-	}
-	if n, ok := unsignedIdentityInt(value); ok {
-		return n, true
-	}
-	if n, ok := floatIdentityInt(value); ok {
-		return n, true
-	}
-	return 0, false
-}
-
-func signedIdentityInt(value any) (int, bool) {
-	rv := reflect.ValueOf(value)
-	switch rv.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		n := rv.Int()
-		if n < int64(-math.MaxInt-1) || n > int64(math.MaxInt) {
+	switch v := value.(type) {
+	// Signed integers.
+	case int:
+		return v, true
+	case int8:
+		return int(v), true
+	case int16:
+		return int(v), true
+	case int32:
+		return int(v), true
+	case int64:
+		if v < math.MinInt || v > math.MaxInt {
 			return 0, false
 		}
-		return int(n), true
-	default:
-		return 0, false
-	}
-}
-
-func unsignedIdentityInt(value any) (int, bool) {
-	rv := reflect.ValueOf(value)
-	switch rv.Kind() {
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		n := rv.Uint()
-		if n > uint64(math.MaxInt) {
+		return int(v), true
+	// Unsigned integers.
+	case uint:
+		if v > math.MaxInt {
 			return 0, false
 		}
-		return int(n), true
-	default:
-		return 0, false
-	}
-}
-
-func floatIdentityInt(value any) (int, bool) {
-	rv := reflect.ValueOf(value)
-	switch rv.Kind() {
-	case reflect.Float32, reflect.Float64:
-		return int(rv.Float()), true
+		return int(v), true
+	case uint8:
+		return int(v), true
+	case uint16:
+		return int(v), true
+	case uint32:
+		return int(v), true
+	case uint64:
+		if v > math.MaxInt {
+			return 0, false
+		}
+		return int(v), true
+	// Floats (encoding/json decodes numbers as float64).
+	case float32:
+		return int(v), true
+	case float64:
+		return int(v), true
 	default:
 		return 0, false
 	}
