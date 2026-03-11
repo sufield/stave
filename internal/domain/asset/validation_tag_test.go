@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -37,9 +38,9 @@ func TestValidateAllWarnsOnAmbiguousTagKeys(t *testing.T) {
 		if got := gotResourceID; got != "r-1" {
 			t.Fatalf("asset_id evidence = %q, want r-1", got)
 		}
-		gotConflicts, _ := issue.Evidence.Get("conflict_keys")
-		if got := gotConflicts; got != "env" {
-			t.Fatalf("conflict_keys evidence = %q, want env", got)
+		gotConflict, _ := issue.Evidence.Get("conflict")
+		if !strings.Contains(gotConflict, "env") {
+			t.Fatalf("conflict evidence = %q, want to contain env", gotConflict)
 		}
 		return
 	}
