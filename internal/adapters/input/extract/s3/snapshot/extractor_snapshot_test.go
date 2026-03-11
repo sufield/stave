@@ -153,7 +153,7 @@ func TestSnapshotExtractor_MissingPolicy(t *testing.T) {
 	}
 
 	// Safety should not be provable
-	if provable, ok := resource.Properties["safety_provable"].(bool); ok && provable {
+	if resource.IsProvablySafe() {
 		t.Error("expected safety_provable=false when policy is missing")
 	}
 }
