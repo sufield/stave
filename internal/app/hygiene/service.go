@@ -69,14 +69,7 @@ func (s *Service) ComputeRisk(
 	}
 	summary := computeUpcomingSummary(controls, snapshots, opts)
 
-	return appcontracts.RiskStats{
-		CurrentViolations: violations,
-		Overdue:           summary.Overdue,
-		DueNow:            summary.DueNow,
-		DueSoon:           summary.DueSoon,
-		Later:             summary.Later,
-		UpcomingTotal:     summary.Total,
-	}
+	return appcontracts.NewRiskStats(violations, summary)
 }
 
 func computeUpcomingSummary(

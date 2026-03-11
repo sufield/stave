@@ -180,15 +180,14 @@ func buildHygieneSnapshotStats(
 ) appcontracts.SnapshotStats {
 	keepMin := execCtx.req.KeepMin
 	pruneCandidates := planPrune(files, PruningCriteria{Now: execCtx.now, OlderThan: execCtx.retentionDur, KeepMin: keepMin})
-	return appcontracts.SnapshotStats{
-		Active:            len(activeSnapshots),
-		Archived:          len(archiveSnapshots),
-		Total:             len(activeSnapshots) + len(archiveSnapshots),
-		PruneCandidates:   len(pruneCandidates),
-		RetentionTier:     execCtx.tier,
-		RetentionDuration: execCtx.retentionDur,
-		KeepMin:           keepMin,
-	}
+	return appcontracts.NewSnapshotStats(
+		len(activeSnapshots),
+		len(archiveSnapshots),
+		len(pruneCandidates),
+		keepMin,
+		execCtx.tier,
+		execCtx.retentionDur,
+	)
 }
 
 func computeHygieneRiskTrend(
