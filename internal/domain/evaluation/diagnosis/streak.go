@@ -154,7 +154,7 @@ func detectStreakResets(input Input) []Issue {
 	issues := make([]Issue, 0, len(events))
 	for _, e := range events {
 		issues = append(issues, Issue{
-			Case:    ViolationEvidence,
+			Case:    ScenarioViolationEvidence,
 			Signal:  "Streak reset detected",
 			AssetID: e.assetID,
 			Evidence: fmt.Sprintf("asset=%s became safe at %s then unsafe again",

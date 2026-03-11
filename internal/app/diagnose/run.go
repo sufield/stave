@@ -70,14 +70,14 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		return nil, fmt.Errorf("resolve result: %w", err)
 	}
 
-	input := diagnosis.NewInput(diagnosis.Params{
-		Snapshots: loaded.snapshots,
-		Controls:  loaded.controls,
-		Findings:  result.Findings,
-		Result:    result,
-		MaxUnsafe: cfg.MaxUnsafe,
-		Now:       cfg.Clock.Now(),
-	})
+	input := diagnosis.NewInput(
+		loaded.snapshots,
+		loaded.controls,
+		result.Findings,
+		result,
+		cfg.MaxUnsafe,
+		cfg.Clock.Now(),
+	)
 
 	report := diagnosis.Explain(input)
 	return &report, nil

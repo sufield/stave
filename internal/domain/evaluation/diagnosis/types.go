@@ -10,18 +10,18 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// Kind represents the type of diagnostic scenario.
-type Kind string
+// Scenario represents the category of the diagnostic result.
+type Scenario string
 
 const (
-	ExpectedNone      Kind = "expected_violations_none"
-	ViolationEvidence Kind = "violation_evidence"
-	EmptyFindings     Kind = "empty_findings"
+	ScenarioExpectedNone      Scenario = "expected_violations_none"
+	ScenarioViolationEvidence Scenario = "violation_evidence"
+	ScenarioEmptyFindings     Scenario = "empty_findings"
 )
 
 // Issue represents a single diagnostic finding.
 type Issue struct {
-	Case     Kind     `json:"case"`
+	Case     Scenario `json:"case"`
 	Signal   string   `json:"signal"`
 	Evidence string   `json:"evidence"`
 	Action   string   `json:"action"`
@@ -31,14 +31,14 @@ type Issue struct {
 
 // Sanitized returns a copy with asset identifiers replaced by deterministic tokens.
 func (d Issue) Sanitized(r kernel.IDSanitizer) Issue {
-	out := d
-	if d.AssetID != "" {
-		raw := string(d.AssetID)
-		sanitized := r.ID(raw)
-		out.AssetID = asset.ID(sanitized)
-		out.Evidence = strings.ReplaceAll(d.Evidence, raw, sanitized)
+	if d.AssetID == "" {
+		return d
 	}
-	return out
+	raw := string(d.AssetID)
+	token := r.ID(raw)
+	d.AssetID = asset.ID(token)
+	d.Evidence = strings.ReplaceAll(d.Evidence, raw, token)
+	return d
 }
 
 // Summary contains aggregate metrics about the diagnostic input.
@@ -55,7 +55,7 @@ type Summary struct {
 	AttackSurface      int             `json:"attack_surface"`
 }
 
-// Report contains all diagnostic findings.
+// Report is the top-level container for a diagnostic run.
 type Report struct {
 	Issues  []Issue `json:"diagnostics"`
 	Summary Summary `json:"summary"`
@@ -75,7 +75,7 @@ func (dr *Report) Sanitized(r kernel.IDSanitizer) *Report {
 	return &out
 }
 
-// Input holds all inputs needed for diagnosis.
+// Input encapsulates all data required to run a diagnosis.
 type Input struct {
 	Snapshots asset.Snapshots
 	Controls  []policy.ControlDefinition
@@ -84,50 +84,37 @@ type Input struct {
 	MaxUnsafe time.Duration
 	Now       time.Time
 
-	summary      Summary
-	summaryReady bool
+	// cached summary computed at creation
+	summary Summary
 }
 
-// Params is the constructor parameter object for Input.
-type Params struct {
-	Snapshots asset.Snapshots
-	Controls  []policy.ControlDefinition
-	Findings  []evaluation.Finding
-	Result    *evaluation.Result
-	MaxUnsafe time.Duration
-	Now       time.Time
-}
-
-// NewInput builds an Input with precomputed summary metadata.
-// This front-loads computation so subsequent Summarize calls are O(1).
-func NewInput(params Params) Input {
-	input := Input{
-		Snapshots: params.Snapshots,
-		Controls:  params.Controls,
-		Findings:  params.Findings,
-		Result:    params.Result,
-		MaxUnsafe: params.MaxUnsafe,
-		Now:       params.Now,
+// NewInput initializes the input and pre-computes summary statistics.
+func NewInput(
+	snapshots asset.Snapshots,
+	controls []policy.ControlDefinition,
+	findings []evaluation.Finding,
+	result *evaluation.Result,
+	maxUnsafe time.Duration,
+	now time.Time,
+) Input {
+	i := Input{
+		Snapshots: snapshots,
+		Controls:  controls,
+		Findings:  findings,
+		Result:    result,
+		MaxUnsafe: maxUnsafe,
+		Now:       now,
 	}
-	input.summary = input.buildSummary()
-	input.summaryReady = true
-	return input
+	i.summary = i.buildSummary()
+	return i
 }
 
-// Summarize generates a Summary from the input data.
+// Summarize returns pre-computed metadata about the input data.
 func (i *Input) Summarize() Summary {
 	if i == nil {
 		return Summary{}
 	}
-
-	if i.summaryReady {
-		return i.summary
-	}
-
-	s := i.buildSummary()
-	i.summary = s
-	i.summaryReady = true
-	return s
+	return i.summary
 }
 
 func (i *Input) buildSummary() Summary {
@@ -146,7 +133,6 @@ func (i *Input) buildSummary() Summary {
 	s.TimeSpan = kernel.Duration(s.MaxCapturedAt.Sub(s.MinCapturedAt))
 	s.TotalAssets = i.countUniqueAssets()
 
-	// Evaluation result overlay.
 	if i.Result != nil {
 		s.ViolationsFound = len(i.Result.Findings)
 		s.AttackSurface = i.Result.Summary.AttackSurface
@@ -155,36 +141,37 @@ func (i *Input) buildSummary() Summary {
 	return s
 }
 
-func (i *Input) calculateTemporalBounds() (time.Time, time.Time) {
-	if i == nil || len(i.Snapshots) == 0 {
-		return time.Time{}, time.Time{}
+func (i *Input) calculateTemporalBounds() (minT, maxT time.Time) {
+	if len(i.Snapshots) == 0 {
+		return
 	}
 
-	earliest := i.Snapshots[0].CapturedAt
-	latest := i.Snapshots[0].CapturedAt
+	minT = i.Snapshots[0].CapturedAt
+	maxT = i.Snapshots[0].CapturedAt
+
 	for _, snap := range i.Snapshots {
-		if snap.CapturedAt.Before(earliest) {
-			earliest = snap.CapturedAt
+		if snap.CapturedAt.Before(minT) {
+			minT = snap.CapturedAt
 		}
-		if snap.CapturedAt.After(latest) {
-			latest = snap.CapturedAt
+		if snap.CapturedAt.After(maxT) {
+			maxT = snap.CapturedAt
 		}
 	}
-
-	return earliest, latest
+	return
 }
 
 func (i *Input) countUniqueAssets() int {
-	if i == nil || len(i.Snapshots) == 0 {
+	if len(i.Snapshots) == 0 {
 		return 0
 	}
 
-	// Presize to reduce map growth churn for larger snapshot sets.
-	uniqueAssets := make(map[asset.ID]struct{}, len(i.Snapshots))
+	capacity := len(i.Snapshots[0].Assets)
+	unique := make(map[asset.ID]struct{}, capacity)
+
 	for _, snap := range i.Snapshots {
-		for _, r := range snap.Assets {
-			uniqueAssets[r.ID] = struct{}{}
+		for _, a := range snap.Assets {
+			unique[a.ID] = struct{}{}
 		}
 	}
-	return len(uniqueAssets)
+	return len(unique)
 }

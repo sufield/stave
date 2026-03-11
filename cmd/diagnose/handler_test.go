@@ -180,7 +180,7 @@ func TestBuildDiagnoseConfigAndOutputHelpers(t *testing.T) {
 func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
-			{Case: diagnosis.EmptyFindings, Signal: "s", Evidence: "e", Action: "a"},
+			{Case: diagnosis.ScenarioEmptyFindings, Signal: "s", Evidence: "e", Action: "a"},
 		},
 		Summary: diagnosis.Summary{
 			TotalSnapshots:     1,

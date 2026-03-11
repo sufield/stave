@@ -8,13 +8,24 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 )
+
+const (
+	msgInsufficientSnapshots        = "Insufficient snapshots for duration tracking"
+	msgTimeSpanShorterThanThreshold = "Time span shorter than threshold"
+)
+
+// fmtd is a shorthand for timeutil.FormatDuration to keep diagnostic lines concise.
+func fmtd(d time.Duration) string {
+	return timeutil.FormatDuration(d)
+}
 
 func checkTimeSpan(input Input) *Issue {
 	if len(input.Snapshots) < 2 {
 		return &Issue{
-			Case:     ExpectedNone,
-			Signal:   signalInsufficientSnapshots,
+			Case:     ScenarioExpectedNone,
+			Signal:   msgInsufficientSnapshots,
 			Evidence: fmt.Sprintf("Only %d snapshot(s); need at least 2 to compute duration", len(input.Snapshots)),
 			Action:   "Collect more snapshots over time to enable duration-based detection",
 		}
@@ -25,8 +36,8 @@ func checkTimeSpan(input Input) *Issue {
 
 	if span < input.MaxUnsafe {
 		return &Issue{
-			Case:   ExpectedNone,
-			Signal: signalTimeSpanShorterThanThreshold,
+			Case:   ScenarioExpectedNone,
+			Signal: msgTimeSpanShorterThanThreshold,
 			Evidence: fmt.Sprintf("Snapshots span %s; threshold is %s",
 				fmtd(span), fmtd(input.MaxUnsafe)),
 			Action:  "Collect snapshots over a longer period, or reduce --max-unsafe",
@@ -37,14 +48,14 @@ func checkTimeSpan(input Input) *Issue {
 	return nil
 }
 
-func buildNowSkewEntry(now, maxCapturedAt time.Time) *Issue {
+func buildNowSkewIssue(now, maxCapturedAt time.Time) *Issue {
 	if now.IsZero() || maxCapturedAt.IsZero() || !now.Before(maxCapturedAt) {
 		return nil
 	}
 
 	return &Issue{
-		Case:   ViolationEvidence,
-		Signal: signalNowBeforeLatestSnapshot,
+		Case:   ScenarioViolationEvidence,
+		Signal: msgSkewedEvaluationTime,
 		Evidence: fmt.Sprintf("--now=%s but latest captured_at=%s",
 			fmtTime(now), fmtTime(maxCapturedAt)),
 		Action:  "Set --now to a time after or equal to latest snapshot",
@@ -52,7 +63,7 @@ func buildNowSkewEntry(now, maxCapturedAt time.Time) *Issue {
 	}
 }
 
-func buildTopFindingEntries(findings []evaluation.Finding, limit int) []Issue {
+func buildTopFindingIssues(findings []evaluation.Finding, limit int) []Issue {
 	count := min(len(findings), limit)
 	if count <= 0 {
 		return nil
@@ -62,8 +73,8 @@ func buildTopFindingEntries(findings []evaluation.Finding, limit int) []Issue {
 	for _, f := range findings[:count] {
 		ev := f.Evidence
 		entries = append(entries, Issue{
-			Case:    ViolationEvidence,
-			Signal:  signalContinuousUnsafeStreak,
+			Case:    ScenarioViolationEvidence,
+			Signal:  msgContinuousUnsafeStreak,
 			AssetID: f.AssetID,
 			Evidence: fmt.Sprintf("asset=%s control=%s first_unsafe=%s last_unsafe=%s duration=%.1fh threshold=%.1fh",
 				f.AssetID,
