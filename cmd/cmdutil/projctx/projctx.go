@@ -254,7 +254,7 @@ func SaveSessionState(projectRoot string, argv []string) error {
 		return err
 	}
 	path := filepath.Join(projectRoot, SessionFileRel)
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700}); err != nil {
 		return err
 	}
 	return fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts())

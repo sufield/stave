@@ -125,7 +125,7 @@ func WriteUserConfigFull(cfg *UserConfig, path string) error {
 		return fmt.Errorf("marshal user config: %w", err)
 	}
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	if err := fsutil.SafeMkdirAll(dir, fsutil.WriteOptions{Perm: 0o700}); err != nil {
 		return fmt.Errorf("create config directory %s: %w", dir, err)
 	}
 	return fsutil.SafeWriteFile(path, outBytes, fsutil.ConfigWriteOpts())
