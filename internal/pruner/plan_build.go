@@ -151,10 +151,13 @@ func groupSnapshotFilesByTier(
 		resolver = func(_ string, _ []TierMappingRule, fallback string) string { return fallback }
 	}
 
+	// Pre-trim default tier once instead of per-file.
+	trimmedDefault := strings.TrimSpace(defaultTier)
+
 	return lo.GroupBy(files, func(sf SnapshotFile) string {
-		tier := resolver(sf.RelPath, rules, defaultTier)
-		if strings.TrimSpace(tier) == "" {
-			return defaultTier
+		tier := strings.TrimSpace(resolver(sf.RelPath, rules, defaultTier))
+		if tier == "" {
+			return trimmedDefault
 		}
 		return tier
 	})
@@ -216,19 +219,15 @@ func resolveTierPlanConfig(params BuildSnapshotPlanParams, tierName string) (tie
 		keepMin:      params.DefaultKeepMin,
 	}
 
+	// Override with tier-specific settings if they exist.
 	if tierCfg, ok := params.Tiers[tierName]; ok {
 		cfg.keepMin = effectiveKeepMin(tierCfg.KeepMin, params.DefaultKeepMin)
 		if strings.TrimSpace(tierCfg.OlderThan) != "" {
 			cfg.olderThanStr = tierCfg.OlderThan
-			olderThan, err := parseSnapshotDuration(cfg.olderThanStr, params.ParseDuration)
-			if err != nil {
-				return cfg, err
-			}
-			cfg.olderThan = olderThan
-			return cfg, nil
 		}
 	}
 
+	// Single parse point for the resolved duration string.
 	olderThan, err := parseSnapshotDuration(cfg.olderThanStr, params.ParseDuration)
 	if err != nil {
 		return cfg, err
@@ -277,24 +276,25 @@ func buildInvalidTierPlan(tierName string, files []SnapshotFile, olderThanStr st
 	}
 }
 
-func buildPlanCandidateSet(candidates []Candidate) map[int]bool {
-	candidateSet := make(map[int]bool, len(candidates))
+func buildPlanCandidateSet(candidates []Candidate) map[int]struct{} {
+	candidateSet := make(map[int]struct{}, len(candidates))
 	for _, c := range candidates {
-		candidateSet[c.Index] = true
+		candidateSet[c.Index] = struct{}{}
 	}
 	return candidateSet
 }
 
 func buildTierEntries(
 	files []SnapshotFile,
-	candidateSet map[int]bool,
+	candidateSet map[int]struct{},
 	tierName string, action PlanAction, olderThanStr string,
 	olderThan time.Duration,
 	now time.Time,
 ) ([]SnapshotPlanFile, int) {
 	entries := make([]SnapshotPlanFile, 0, len(files))
 	actionCount := 0
-	cutoff := now.Add(-olderThan)
+	cutoff := now.UTC().Add(-olderThan)
+	pruneReason := "older than " + olderThanStr
 
 	for i, sf := range files {
 		entry := SnapshotPlanFile{
@@ -302,9 +302,9 @@ func buildTierEntries(
 			CapturedAt: sf.CapturedAt.UTC(),
 			Tier:       tierName,
 		}
-		if candidateSet[i] {
+		if _, ok := candidateSet[i]; ok {
 			entry.Action = action
-			entry.Reason = "older than " + olderThanStr
+			entry.Reason = pruneReason
 			actionCount++
 		} else {
 			entry.Action = ActionKeep
