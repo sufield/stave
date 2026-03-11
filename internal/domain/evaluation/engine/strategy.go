@@ -55,7 +55,7 @@ func (s unsafeStateStrategy) Evaluate(timeline *asset.Timeline, now time.Time) (
 	}
 
 	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
-	if timeline.UnsafeDuration(now) > maxUnsafe {
+	if timeline.ExceedsUnsafeThreshold(now, maxUnsafe) {
 		row.Decision = evaluation.DecisionViolation
 		row.Confidence = evaluation.ConfidenceHigh
 		row.WhyNow = timeline.FormatUnsafeSummary(maxUnsafe, now)
@@ -77,7 +77,7 @@ func (s unsafeDurationStrategy) Evaluate(timeline *asset.Timeline, now time.Time
 	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
 
 	// First check for VIOLATION (takes precedence over INCONCLUSIVE).
-	if timeline.HasOpenEpisode() && timeline.UnsafeDuration(now) > maxUnsafe {
+	if timeline.ExceedsUnsafeThreshold(now, maxUnsafe) {
 		row.Decision = evaluation.DecisionViolation
 		row.Confidence = evaluation.DeriveConfidenceLevel(timeline.Stats().MaxGap(), maxUnsafe)
 		row.WhyNow = timeline.FormatUnsafeSummary(maxUnsafe, now)

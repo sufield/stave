@@ -97,25 +97,25 @@ func (a *Entry) Summarize() Summary {
 		PublicGrantees: Grants(a.grants).PublicGrantees(),
 	}
 	for _, grant := range a.grants {
-		if !grant.IsPublic() {
+		audience := grant.Audience()
+		if audience == AudiencePrivate {
 			continue
 		}
 
 		perms := grant.Permissions()
-		if grant.HasFullControl() {
-			if grant.IsAllUsers() {
+		fullControl := grant.HasFullControl()
+
+		switch audience {
+		case AudienceAllUsers:
+			s.AllUsersPerms |= perms
+			if fullControl {
 				s.HasFullControlPublic = true
 			}
-			if grant.IsAuthenticatedOnly() {
+		case AudienceAuthenticatedOnly:
+			s.AuthOnlyPerms |= perms
+			if fullControl {
 				s.HasFullControlAuthenticated = true
 			}
-		}
-
-		switch {
-		case grant.IsAllUsers():
-			s.AllUsersPerms |= perms
-		case grant.IsAuthenticatedOnly():
-			s.AuthOnlyPerms |= perms
 		}
 	}
 

@@ -14,6 +14,18 @@ const (
 	permFullControl = "FULL_CONTROL"
 )
 
+// GrantAudience classifies who a grant targets.
+type GrantAudience int
+
+const (
+	// AudiencePrivate means the grant targets a specific account or user.
+	AudiencePrivate GrantAudience = iota
+	// AudienceAllUsers means the grant targets anonymous/public access.
+	AudienceAllUsers
+	// AudienceAuthenticatedOnly means the grant targets any authenticated AWS user.
+	AudienceAuthenticatedOnly
+)
+
 // Grant represents a single ACL grant from adapters or fixtures.
 type Grant struct {
 	Grantee    string // URI or ID
@@ -48,9 +60,21 @@ func (g Grant) IsAuthenticatedOnly() bool {
 	return g.IsAuthenticatedUsers() && !g.IsAllUsers()
 }
 
+// Audience classifies who this grant targets: AllUsers, AuthenticatedOnly, or Private.
+func (g Grant) Audience() GrantAudience {
+	switch {
+	case g.IsAllUsers():
+		return AudienceAllUsers
+	case g.IsAuthenticatedUsers():
+		return AudienceAuthenticatedOnly
+	default:
+		return AudiencePrivate
+	}
+}
+
 // IsPublic reports whether this grant applies to public or authenticated principals.
 func (g Grant) IsPublic() bool {
-	return g.IsAllUsers() || g.IsAuthenticatedUsers()
+	return g.Audience() != AudiencePrivate
 }
 
 // HasFullControl reports whether the grant includes FULL_CONTROL.
