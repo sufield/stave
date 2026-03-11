@@ -52,7 +52,7 @@ func buildBenchmarkSnapshot(assetCount int) []byte {
 		if i > 0 {
 			assets.WriteString(",")
 		}
-		assets.WriteString(fmt.Sprintf(`{
+		fmt.Fprintf(&assets, `{
 			"id": "arn:aws:s3:::bucket-%d",
 			"type": "aws_s3_bucket",
 			"vendor": "aws",
@@ -65,7 +65,7 @@ func buildBenchmarkSnapshot(assetCount int) []byte {
 					"controls": {"public_access_fully_blocked": true}
 				}
 			}
-		}`, i))
+		}`, i)
 	}
 	return fmt.Appendf(nil, `{
 		"schema_version": "obs.v0.1",
