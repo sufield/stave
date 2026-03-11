@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/configservice"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
 // resolveConfigCascade implements the env → project config → user config → default
 // resolution pattern shared by multiple config keys.
 func resolveConfigCascade(
-	env envvar.Entry,
+	env env.Entry,
 	configKey string,
 	projectField func(*ProjectConfig) string,
 	userField func(*UserConfig) string,
@@ -42,7 +42,7 @@ func passthrough(v string) string { return v }
 // ResolveMaxUnsafeWithSource returns max-unsafe and its source.
 func ResolveMaxUnsafeWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
 	return resolveConfigCascade(
-		envvar.MaxUnsafe, "max_unsafe",
+		env.MaxUnsafe, "max_unsafe",
 		func(c *ProjectConfig) string { return c.MaxUnsafe },
 		func(c *UserConfig) string { return c.MaxUnsafe },
 		DefaultMaxUnsafeDuration, passthrough, cfg, cfgPath,
@@ -52,7 +52,7 @@ func ResolveMaxUnsafeWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConf
 // ResolveRetentionTierWithSource returns the retention tier and its source.
 func ResolveRetentionTierWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
 	return resolveConfigCascade(
-		envvar.RetentionTier, "default_retention_tier",
+		env.RetentionTier, "default_retention_tier",
 		func(c *ProjectConfig) string { return c.RetentionTier },
 		func(c *UserConfig) string { return c.RetentionTier },
 		DefaultRetentionTier, NormalizeRetentionTier, cfg, cfgPath,
@@ -61,8 +61,8 @@ func ResolveRetentionTierWithSource(cfg *ProjectConfig, cfgPath string) Resolved
 
 // ResolveSnapshotRetentionWithSource returns retention value and source for a tier.
 func ResolveSnapshotRetentionWithSource(cfg *ProjectConfig, cfgPath, tier string) ResolvedConfigValue {
-	if v := strings.TrimSpace(os.Getenv(envvar.SnapshotRetention.Name)); v != "" {
-		return ResolvedConfigValue{Value: v, Source: "env:" + envvar.SnapshotRetention.Name, Layer: LayerEnvironment}
+	if v := strings.TrimSpace(os.Getenv(env.SnapshotRetention.Name)); v != "" {
+		return ResolvedConfigValue{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
 	}
 	if v, ok := resolveRetentionFromProject(cfg, cfgPath, tier); ok {
 		return v
@@ -105,7 +105,7 @@ func resolveRetentionFromUser() (ResolvedConfigValue, bool) {
 // ResolveCIFailurePolicyWithSource returns CI failure policy and source.
 func ResolveCIFailurePolicyWithSource(cfg *ProjectConfig, cfgPath string) ResolvedConfigValue {
 	return resolveConfigCascade(
-		envvar.CIFailurePolicy, "ci_failure_policy",
+		env.CIFailurePolicy, "ci_failure_policy",
 		func(c *ProjectConfig) string { return c.CIFailurePolicy },
 		func(c *UserConfig) string { return c.CIFailurePolicy },
 		string(DefaultCIFailurePolicy), passthrough, cfg, cfgPath,

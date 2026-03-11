@@ -1,10 +1,12 @@
-// Package envvar centralizes all STAVE_* environment variable names.
+// Package env centralizes all STAVE_* environment variable names.
 // Every Stave-specific env var should be referenced through this package
 // so that renames are single-point and the full set is discoverable.
-package envvar
+package env
 
 import (
 	"os"
+	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -25,11 +27,13 @@ func (e Entry) Value() string {
 	return e.DefaultValue
 }
 
-// IsTrue returns true if the environment variable is set to "1" or "true"
-// (case-insensitive). Useful for boolean flags like Debug and DevValidateFindings.
+// IsTrue returns true if the environment variable is set to a truthy value.
+// It accepts all forms recognized by strconv.ParseBool: 1, t, T, TRUE, true,
+// True, 0, f, F, FALSE, false, False. Unset or unparseable values are false.
 func (e Entry) IsTrue() bool {
-	v := strings.ToLower(strings.TrimSpace(os.Getenv(e.Name)))
-	return v == "1" || v == "true"
+	v := strings.TrimSpace(os.Getenv(e.Name))
+	b, err := strconv.ParseBool(v)
+	return err == nil && b
 }
 
 // Configuration override env vars (user-facing).
@@ -110,22 +114,34 @@ var (
 	}
 )
 
-// All returns every registered STAVE_* variable in a deterministic order:
-// config vars first (alphabetical), then debug vars (alphabetical).
+// all is the registry of every STAVE_* variable. Order does not matter here;
+// All() sorts the result programmatically.
+var all = []Entry{
+	CIFailurePolicy,
+	Context,
+	ContextsFile,
+	Debug,
+	DevValidateFindings,
+	DocsURL,
+	FirstRunHintFile,
+	IssuesURL,
+	MaxUnsafe,
+	ProjectRoot,
+	RetentionTier,
+	SnapshotRetention,
+	UserConfig,
+}
+
+// All returns every registered STAVE_* variable in deterministic order:
+// sorted by category then name. The returned slice is a fresh copy.
 func All() []Entry {
-	return []Entry{
-		CIFailurePolicy,
-		Context,
-		ContextsFile,
-		FirstRunHintFile,
-		MaxUnsafe,
-		ProjectRoot,
-		RetentionTier,
-		SnapshotRetention,
-		UserConfig,
-		DocsURL,
-		IssuesURL,
-		Debug,
-		DevValidateFindings,
-	}
+	out := make([]Entry, len(all))
+	copy(out, all)
+	slices.SortFunc(out, func(a, b Entry) int {
+		if c := strings.Compare(a.Category, b.Category); c != 0 {
+			return c
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+	return out
 }

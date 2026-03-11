@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
-	t.Setenv(envvar.MaxUnsafe.Name, "")
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.MaxUnsafe.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
@@ -22,8 +22,8 @@ func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
 }
 
 func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
-	t.Setenv(envvar.MaxUnsafe.Name, "24h")
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.MaxUnsafe.Name, "24h")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("max_unsafe: 48h\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
@@ -37,8 +37,8 @@ func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
 }
 
 func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
-	t.Setenv(envvar.MaxUnsafe.Name, "")
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.MaxUnsafe.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	root := filepath.Join(tmp, "project")
 	nested := filepath.Join(root, "a", "b")
@@ -57,11 +57,11 @@ func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
 }
 
 func TestResolveMaxUnsafeDefault_UserConfigFallback(t *testing.T) {
-	t.Setenv(envvar.MaxUnsafe.Name, "")
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.MaxUnsafe.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(envvar.UserConfig.Name, userCfgPath)
+	t.Setenv(env.UserConfig.Name, userCfgPath)
 	if err := os.WriteFile(userCfgPath, []byte("max_unsafe: 60h\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestResolveMaxUnsafeDefault_UserConfigFallback(t *testing.T) {
 }
 
 func TestResolveSnapshotRetentionDefault_Fallback(t *testing.T) {
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
@@ -85,7 +85,7 @@ func TestResolveSnapshotRetentionDefault_Fallback(t *testing.T) {
 }
 
 func TestResolveSnapshotRetentionDefault_EnvOverridesProjectFile(t *testing.T) {
-	t.Setenv(envvar.SnapshotRetention.Name, "10d")
+	t.Setenv(env.SnapshotRetention.Name, "10d")
 	tmp := t.TempDir()
 	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("snapshot_retention: 45d\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
@@ -99,7 +99,7 @@ func TestResolveSnapshotRetentionDefault_EnvOverridesProjectFile(t *testing.T) {
 }
 
 func TestResolveSnapshotRetentionDefault_ProjectFile(t *testing.T) {
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	root := filepath.Join(tmp, "project")
 	nested := filepath.Join(root, "x", "y")
@@ -118,10 +118,10 @@ func TestResolveSnapshotRetentionDefault_ProjectFile(t *testing.T) {
 }
 
 func TestResolveSnapshotRetentionDefault_UserConfigFallback(t *testing.T) {
-	t.Setenv(envvar.SnapshotRetention.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(envvar.UserConfig.Name, userCfgPath)
+	t.Setenv(env.UserConfig.Name, userCfgPath)
 	if err := os.WriteFile(userCfgPath, []byte("snapshot_retention: 21d\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestResolveSnapshotRetentionDefault_UserConfigFallback(t *testing.T) {
 }
 
 func TestResolveCIFailurePolicyDefault_Fallback(t *testing.T) {
-	t.Setenv(envvar.CIFailurePolicy.Name, "")
+	t.Setenv(env.CIFailurePolicy.Name, "")
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
@@ -145,7 +145,7 @@ func TestResolveCIFailurePolicyDefault_Fallback(t *testing.T) {
 }
 
 func TestResolveCIFailurePolicyDefault_EnvOverridesProjectFile(t *testing.T) {
-	t.Setenv(envvar.CIFailurePolicy.Name, string(projconfig.GatePolicyOverdue))
+	t.Setenv(env.CIFailurePolicy.Name, string(projconfig.GatePolicyOverdue))
 	tmp := t.TempDir()
 	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(projconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
@@ -159,7 +159,7 @@ func TestResolveCIFailurePolicyDefault_EnvOverridesProjectFile(t *testing.T) {
 }
 
 func TestResolveCIFailurePolicyDefault_ProjectFile(t *testing.T) {
-	t.Setenv(envvar.CIFailurePolicy.Name, "")
+	t.Setenv(env.CIFailurePolicy.Name, "")
 	tmp := t.TempDir()
 	root := filepath.Join(tmp, "project")
 	nested := filepath.Join(root, "n", "m")
@@ -178,10 +178,10 @@ func TestResolveCIFailurePolicyDefault_ProjectFile(t *testing.T) {
 }
 
 func TestResolveCIFailurePolicyDefault_UserConfigFallback(t *testing.T) {
-	t.Setenv(envvar.CIFailurePolicy.Name, "")
+	t.Setenv(env.CIFailurePolicy.Name, "")
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(envvar.UserConfig.Name, userCfgPath)
+	t.Setenv(env.UserConfig.Name, userCfgPath)
 	if err := os.WriteFile(userCfgPath, []byte("ci_failure_policy: "+string(projconfig.GatePolicyOverdue)+"\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestResolveCIFailurePolicyDefault_UserConfigFallback(t *testing.T) {
 func TestResolveAllowUnknownInputDefault_FromUserConfig(t *testing.T) {
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(envvar.UserConfig.Name, userCfgPath)
+	t.Setenv(env.UserConfig.Name, userCfgPath)
 	if err := os.WriteFile(userCfgPath, []byte("cli_defaults:\n  allow_unknown_input: true\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
@@ -210,7 +210,7 @@ func TestResolveAllowUnknownInputDefault_FromUserConfig(t *testing.T) {
 func TestResolveCLIPathModeDefault_FromUserConfig(t *testing.T) {
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(envvar.UserConfig.Name, userCfgPath)
+	t.Setenv(env.UserConfig.Name, userCfgPath)
 	if err := os.WriteFile(userCfgPath, []byte("cli_defaults:\n  path_mode: full\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
@@ -222,7 +222,7 @@ func TestResolveCLIPathModeDefault_FromUserConfig(t *testing.T) {
 }
 
 func TestResolveRetentionTierDefault_Fallback(t *testing.T) {
-	t.Setenv(envvar.RetentionTier.Name, "")
+	t.Setenv(env.RetentionTier.Name, "")
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
@@ -233,8 +233,8 @@ func TestResolveRetentionTierDefault_Fallback(t *testing.T) {
 }
 
 func TestResolveSnapshotRetentionForTier_FromProjectTiers(t *testing.T) {
-	t.Setenv(envvar.SnapshotRetention.Name, "")
-	t.Setenv(envvar.RetentionTier.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
+	t.Setenv(env.RetentionTier.Name, "")
 	tmp := t.TempDir()
 	cfg := "snapshot_retention: 30d\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n  non_critical:\n    older_than: 14d\n"
 	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte(cfg), 0o644); err != nil {
@@ -249,8 +249,8 @@ func TestResolveSnapshotRetentionForTier_FromProjectTiers(t *testing.T) {
 }
 
 func TestResolveSnapshotRetentionForTier_FallsBackToGlobal(t *testing.T) {
-	t.Setenv(envvar.SnapshotRetention.Name, "")
-	t.Setenv(envvar.RetentionTier.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
+	t.Setenv(env.RetentionTier.Name, "")
 	tmp := t.TempDir()
 	cfg := "snapshot_retention: 45d\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n"
 	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte(cfg), 0o644); err != nil {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/envvar"
+	staveenv "github.com/sufield/stave/internal/env"
 )
 
 func TestEnvList_TextOutput(t *testing.T) {
@@ -20,7 +20,7 @@ func TestEnvList_TextOutput(t *testing.T) {
 	}
 
 	out := buf.String()
-	for _, v := range envvar.All() {
+	for _, v := range staveenv.All() {
 		if !strings.Contains(out, v.Name) {
 			t.Errorf("expected %s in text output", v.Name)
 		}
@@ -63,14 +63,14 @@ func TestEnvList_JSONOutput(t *testing.T) {
 	}
 	// Verify default values are included for vars that have them.
 	for _, e := range entries {
-		if e.Name == envvar.MaxUnsafe.Name && e.DefaultValue != "168h" {
+		if e.Name == staveenv.MaxUnsafe.Name && e.DefaultValue != "168h" {
 			t.Errorf("expected MaxUnsafe default_value=168h, got %q", e.DefaultValue)
 		}
 	}
 }
 
 func TestEnvList_ShowsCurrentValue(t *testing.T) {
-	t.Setenv(envvar.Debug.Name, "1")
+	t.Setenv(staveenv.Debug.Name, "1")
 
 	root := getTestRootCmd()
 	buf := new(bytes.Buffer)
@@ -84,7 +84,7 @@ func TestEnvList_ShowsCurrentValue(t *testing.T) {
 	out := buf.String()
 	// The line for STAVE_DEBUG should show the value "1" (not "(not set)").
 	for line := range strings.SplitSeq(out, "\n") {
-		if strings.Contains(line, envvar.Debug.Name) {
+		if strings.Contains(line, staveenv.Debug.Name) {
 			if strings.Contains(line, "(not set)") {
 				t.Fatal("expected STAVE_DEBUG value to be shown, got (not set)")
 			}
@@ -109,7 +109,7 @@ func TestEnvList_ShowsDefaultValue(t *testing.T) {
 
 	out := buf.String()
 	for line := range strings.SplitSeq(out, "\n") {
-		if strings.Contains(line, envvar.MaxUnsafe.Name) {
+		if strings.Contains(line, staveenv.MaxUnsafe.Name) {
 			if !strings.Contains(line, "168h") {
 				t.Fatalf("expected effective default 168h for MaxUnsafe, got line: %s", line)
 			}

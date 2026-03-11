@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -147,19 +147,19 @@ func TestWriteFindings_WithoutEnvelope(t *testing.T) {
 }
 
 func TestShouldValidateFindingContract_EnvSwitches(t *testing.T) {
-	t.Setenv(envvar.DevValidateFindings.Name, "")
-	t.Setenv(envvar.Debug.Name, "")
+	t.Setenv(env.DevValidateFindings.Name, "")
+	t.Setenv(env.Debug.Name, "")
 	if shouldValidateFindingContract() {
 		t.Fatal("expected validation toggle to be false by default")
 	}
 
-	t.Setenv(envvar.DevValidateFindings.Name, "1")
+	t.Setenv(env.DevValidateFindings.Name, "1")
 	if !shouldValidateFindingContract() {
 		t.Fatal("expected validation toggle to be true for STAVE_DEV_VALIDATE_FINDINGS=1")
 	}
 
-	t.Setenv(envvar.DevValidateFindings.Name, "")
-	t.Setenv(envvar.Debug.Name, "1")
+	t.Setenv(env.DevValidateFindings.Name, "")
+	t.Setenv(env.Debug.Name, "1")
 	if !shouldValidateFindingContract() {
 		t.Fatal("expected validation toggle to be true for STAVE_DEBUG=1")
 	}

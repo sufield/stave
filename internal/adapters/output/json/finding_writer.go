@@ -12,7 +12,7 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/adapters/output/dto"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
@@ -100,7 +100,7 @@ func encodeJSON(out io.Writer, indent bool, useEnvelope bool, result dto.ResultD
 }
 
 func shouldValidateFindingContract() bool {
-	return envvar.DevValidateFindings.IsTrue() || envvar.Debug.IsTrue()
+	return env.DevValidateFindings.IsTrue() || env.Debug.IsTrue()
 }
 
 func validateFindings(v *contractvalidator.Validator, findings []remediation.Finding) error {

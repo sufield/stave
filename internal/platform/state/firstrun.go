@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -15,7 +15,7 @@ const firstRunHintMarkerRel = "stave/.first_run_seen"
 // FirstRunMarkerPath returns the path to the first-run seen marker file.
 // The path is overridable via STAVE_FIRST_RUN_HINT_FILE for testing.
 func FirstRunMarkerPath() (string, error) {
-	if override := strings.TrimSpace(os.Getenv(envvar.FirstRunHintFile.Name)); override != "" {
+	if override := strings.TrimSpace(os.Getenv(env.FirstRunHintFile.Name)); override != "" {
 		return filepath.Clean(override), nil
 	}
 	cfgDir, err := os.UserConfigDir()

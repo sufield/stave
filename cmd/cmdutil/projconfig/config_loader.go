@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
@@ -66,7 +66,7 @@ func FindProjectConfigWithPath() (*ProjectConfig, string, bool) {
 
 // FindUserConfigPath returns the user config path.
 func FindUserConfigPath() (string, bool) {
-	if override := strings.TrimSpace(os.Getenv(envvar.UserConfig.Name)); override != "" {
+	if override := strings.TrimSpace(os.Getenv(env.UserConfig.Name)); override != "" {
 		return override, true
 	}
 	home, err := os.UserHomeDir()

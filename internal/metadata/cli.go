@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 // IssuesRef returns the issue tracker URL, respecting STAVE_ISSUES_URL
 // so airgapped users can point to an internal tracker.
 func IssuesRef() string {
-	return envvar.IssuesURL.Value()
+	return env.IssuesURL.Value()
 }
 
 // DocsRef returns a documentation reference for the given topic.
@@ -30,7 +30,7 @@ func DocsRef(topic string) string {
 	if topic == "" {
 		topic = "troubleshooting"
 	}
-	if base := strings.TrimSpace(os.Getenv(envvar.DocsURL.Name)); base != "" {
+	if base := strings.TrimSpace(os.Getenv(env.DocsURL.Name)); base != "" {
 		return base + "#" + topic
 	}
 	return "run 'stave docs search " + topic + "'"

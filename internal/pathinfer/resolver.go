@@ -11,14 +11,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 // BaseDir returns the base directory for path inference.
 // If STAVE_PROJECT_ROOT is set and points to a valid directory, it is returned.
 // Otherwise, the current working directory is returned.
 func BaseDir() (string, error) {
-	if root := os.Getenv(envvar.ProjectRoot.Name); root != "" {
+	if root := os.Getenv(env.ProjectRoot.Name); root != "" {
 		// #nosec G703 -- STAVE_PROJECT_ROOT is an explicit local override and is only checked for existence/type.
 		fi, err := os.Stat(root)
 		if err == nil && fi.IsDir() {
