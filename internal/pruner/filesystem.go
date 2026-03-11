@@ -47,6 +47,10 @@ func ListSnapshotFilesFlat(observationsDir string, loadCapturedAt LoadCapturedAt
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
 		}
+		// Skip symlinks — they could point outside the observations directory.
+		if entry.Type()&os.ModeSymlink != 0 {
+			continue
+		}
 		if len(files) >= maxSnapshotFiles {
 			return nil, fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
 				"prune older snapshots first to reduce the count",
@@ -146,6 +150,11 @@ func walkSnapshotFile(path string, info os.FileInfo, walkErr error, state snapsh
 		return walkSnapshotDir(path, info, state.absRoot, state.excludeSet)
 	}
 	if !strings.HasSuffix(info.Name(), ".json") {
+		return nil
+	}
+	// Skip symlinks — they could point outside the observations directory.
+	// filepath.Walk uses Lstat, so info.Mode() correctly reports symlinks.
+	if info.Mode()&os.ModeSymlink != 0 {
 		return nil
 	}
 	capturedAt, err := state.loadCapturedAt(path, info.Name())

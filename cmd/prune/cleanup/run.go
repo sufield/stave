@@ -59,7 +59,8 @@ func (d *deleteOrchestrator) Render(_ appeval.CleanupPlan) error {
 
 func (d *deleteOrchestrator) Apply(_ appeval.CleanupPlan) error {
 	deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
-		Files: toDeleteFiles(d.plan.CandidateFiles),
+		ObservationsDir: d.plan.ObservationsDir,
+		Files:           toDeleteFiles(d.plan.CandidateFiles),
 	})
 	if err != nil {
 		return err
