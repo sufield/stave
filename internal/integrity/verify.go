@@ -30,9 +30,14 @@ func (v *Validator) Verify(m Manifest) error {
 		}
 	}
 
-	for name := range v.ActualHashes.Files {
-		if _, ok := m.Files[name]; !ok {
-			return fmt.Errorf("%w: untrusted file %s found in directory", ErrIntegrityViolation, name)
+	// If counts differ, at least one actual file isn't in the manifest.
+	// The first loop already confirmed every manifest file exists in actual,
+	// so a count mismatch means extra files — find one for reporting.
+	if len(v.ActualHashes.Files) != len(m.Files) {
+		for name := range v.ActualHashes.Files {
+			if _, ok := m.Files[name]; !ok {
+				return fmt.Errorf("%w: untrusted file %s found in directory", ErrIntegrityViolation, name)
+			}
 		}
 	}
 
