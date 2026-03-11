@@ -6,6 +6,7 @@ import (
 )
 
 // ruleContext is a flat data carrier for a single predicate rule evaluation.
+// All input data is pre-resolved so downstream tracers only record results.
 type ruleContext struct {
 	Index          int
 	Field          string
@@ -15,7 +16,12 @@ type ruleContext struct {
 	CompareValue   any // after value_from_param resolution
 	FieldValue     any // actual asset value
 	FieldExists    bool
-	EvalCtx        policy.EvalContext // needed by field-ref and any-match tracers
+	EvalCtx        policy.EvalContext // needed by any-match tracer
+
+	// Field-ref operators: pre-resolved other-field state.
+	OtherField  string
+	OtherValue  any
+	OtherExists bool
 }
 
 func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalContext) ruleContext {
@@ -26,7 +32,7 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 		compareValue, _ = evalCtx.Param(rule.ValueFromParam)
 	}
 
-	return ruleContext{
+	rc := ruleContext{
 		Index:          index,
 		Field:          rule.Field,
 		Op:             rule.Op,
@@ -36,5 +42,25 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 		FieldValue:     fieldValue,
 		FieldExists:    fieldExists,
 		EvalCtx:        evalCtx,
+	}
+
+	// Pre-resolve the other-field for field-ref operators so tracers
+	// don't need to reach back into the EvalContext.
+	if isFieldRefOp(rc.Op) {
+		if path, ok := compareValue.(string); ok {
+			rc.OtherField = path
+			rc.OtherValue, rc.OtherExists = policy.GetFieldValueWithContext(evalCtx, path)
+		}
+	}
+
+	return rc
+}
+
+func isFieldRefOp(op predicate.Operator) bool {
+	switch op {
+	case predicate.OpNeqField, predicate.OpNotInField, predicate.OpNotSubsetOfField:
+		return true
+	default:
+		return false
 	}
 }
