@@ -128,10 +128,10 @@ func (r *LoadedAssets) Load(ctx context.Context, obsDir, ctlDir string) error {
 	return nil
 }
 
-// SnapshotObservationRepository extends ObservationRepository with reader loading.
+// SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
 type SnapshotObservationRepository interface {
 	appcontracts.ObservationRepository
-	LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error)
+	appcontracts.SnapshotReader
 }
 
 // Composition holds constructor wiring for adapters.

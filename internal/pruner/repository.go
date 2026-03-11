@@ -3,20 +3,14 @@ package pruner
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
-// SnapshotObservationLoader loads snapshot documents from a reader.
-type SnapshotObservationLoader interface {
-	LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error)
-}
-
 // loadSnapshotCapturedAt opens a snapshot file and returns its CapturedAt timestamp.
-func loadSnapshotCapturedAt(ctx context.Context, loader SnapshotObservationLoader, path, name string) (time.Time, error) {
+func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (time.Time, error) {
 	// #nosec G304 -- path is discovered from directory entries.
 	f, err := os.Open(path)
 	if err != nil {
@@ -32,7 +26,7 @@ func loadSnapshotCapturedAt(ctx context.Context, loader SnapshotObservationLoade
 
 // ListSnapshotFilesFlatWithLoader lists snapshot files directly under observationsDir
 // and resolves captured_at via the provided loader.
-func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string, loader SnapshotObservationLoader) ([]SnapshotFile, error) {
+func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string, loader appcontracts.SnapshotReader) ([]SnapshotFile, error) {
 	if loader == nil {
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
@@ -47,7 +41,7 @@ func ListSnapshotFilesRecursiveWithLoader(
 	ctx context.Context,
 	observationsDir string,
 	excludeDirs []string,
-	loader SnapshotObservationLoader,
+	loader appcontracts.SnapshotReader,
 ) ([]SnapshotFile, error) {
 	if loader == nil {
 		return nil, fmt.Errorf("snapshot loader is required")
