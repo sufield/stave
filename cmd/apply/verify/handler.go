@@ -14,7 +14,6 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
@@ -97,9 +96,7 @@ func buildVerificationOutcome(cmd *cobra.Command, execCtx verifyExecution, befor
 	remaining := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Remaining))
 	introduced := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Introduced))
 
-	result := safetyenvelope.Verification{
-		SchemaVersion: kernel.SchemaOutput,
-		Kind:          safetyenvelope.KindVerification,
+	result := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
 			ToolVersion:     staveversion.Version,
 			Offline:         true,
@@ -118,8 +115,7 @@ func buildVerificationOutcome(cmd *cobra.Command, execCtx verifyExecution, befor
 		Resolved:   resolved,
 		Remaining:  remaining,
 		Introduced: introduced,
-	}
-	result.Normalize()
+	})
 	return verifyOutcome{
 		result:          result,
 		remainingCount:  len(remaining),
