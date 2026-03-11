@@ -185,11 +185,11 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 	finalizationTime := resolveFinalizationTime(input.Now, snapshots[len(snapshots)-1].CapturedAt)
 
 	// Build per-asset timelines from sorted snapshots in a single pass.
-	history := make(map[string][]assetTimePoint)
+	history := make(map[string][]observation)
 	for _, snap := range snapshots {
-		for _, r := range snap.Assets {
-			assetID := r.ID.String()
-			history[assetID] = append(history[assetID], assetTimePoint{snap.CapturedAt, r})
+		for _, a := range snap.Assets {
+			assetID := a.ID.String()
+			history[assetID] = append(history[assetID], observation{snap.CapturedAt, a})
 		}
 	}
 
@@ -198,17 +198,17 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 	for _, ctl := range input.Controls {
 		stat := controlStat{matchedAssetIDs: make(map[string]struct{})}
 
-		for resID, points := range history {
-			sr := analyzeAssetStreak(assetStreakRequest{
+		for assetID, points := range history {
+			streak, matched := analyzeAssetStreak(assetStreakRequest{
 				Points:    points,
 				Predicate: ctl.UnsafePredicate,
 				Params:    ctl.Params,
 				EndTime:   finalizationTime,
 			})
-			if sr.matched {
-				stat.matchedAssetIDs[resID] = struct{}{}
+			if matched {
+				stat.matchedAssetIDs[assetID] = struct{}{}
 			}
-			stat.maxStreak = max(stat.maxStreak, sr.maxStreak)
+			stat.maxStreak = max(stat.maxStreak, streak)
 		}
 
 		stats[ctl.ID] = stat
