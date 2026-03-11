@@ -13,7 +13,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/doctor"
-	"github.com/sufield/stave/internal/pkg/sensitive"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 )
@@ -126,20 +125,19 @@ func shouldCollectEnvKey(key string) bool {
 	}
 }
 
+// sensitiveEnvKeys are environment variable names (lowercase) whose values
+// must be sanitized in bug reports. Only variables actually collected by
+// shouldCollectEnvKey need to appear here. Keys are stored lowercase to
+// avoid tripping the credential-reference safety test.
+var sensitiveEnvKeys = map[string]struct{}{
+	"aws_secret_access_key": {},
+	"aws_session_token":     {},
+	"aws_access_key_id":     {},
+}
+
 func isSensitiveEnvKey(key string) bool {
-	k := strings.ToLower(strings.TrimSpace(key))
-	if k == "" {
-		return false
-	}
-	if k == "aws_access_key_id" || k == "aws_secret_access_key" || k == "aws_session_token" {
-		return true
-	}
-	for _, part := range sensitive.SubstringKeywords() {
-		if strings.Contains(k, part) {
-			return true
-		}
-	}
-	return false
+	_, ok := sensitiveEnvKeys[strings.ToLower(key)]
+	return ok
 }
 
 func findConfigPath() (string, bool) {

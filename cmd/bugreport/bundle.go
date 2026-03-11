@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/metadata"
@@ -113,7 +115,19 @@ func addConfigArtifact(bundle *bundleWriter) error {
 		bundle.addWarning("skipped project config (%s): %v", cfgPath, err)
 		return nil
 	}
-	sanitized := redactSensitiveBlob(cfgBytes)
+	// Parse into the known ProjectConfig struct and re-serialize.
+	// Only recognized fields appear in the output — unknown fields
+	// (which might contain secrets) are dropped entirely.
+	var cfg projconfig.ProjectConfig
+	if err = yaml.Unmarshal(cfgBytes, &cfg); err != nil {
+		bundle.addWarning("skipped project config (%s): parse error: %v", cfgPath, err)
+		return nil
+	}
+	sanitized, err := yaml.Marshal(&cfg)
+	if err != nil {
+		bundle.addWarning("skipped project config (%s): marshal error: %v", cfgPath, err)
+		return nil
+	}
 	if err := bundle.addText("config/stave.yaml", sanitized); err != nil {
 		return fmt.Errorf("write config/stave.yaml: %w", err)
 	}
@@ -131,7 +145,7 @@ func addLogArtifact(cmd *cobra.Command, bundle *bundleWriter, cwd string, tailLi
 		return nil
 	}
 	tail := tailBytesByLine(logBytes, tailLineCount)
-	tail = redactSensitiveBlob(tail)
+	tail = redactCredentialFormats(tail)
 	if err := bundle.addText("logs/stave.log.tail.txt", tail); err != nil {
 		return fmt.Errorf("write logs/stave.log.tail.txt: %w", err)
 	}
