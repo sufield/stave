@@ -214,15 +214,18 @@ func (s Snapshots) checkTagSanity() (issues []diag.Issue) {
 			if !tags.HasConflicts() {
 				continue
 			}
-			issues = append(issues, diag.New(diag.CodeAmbiguousTags).
-				Warning().
-				Action("Use a single casing per tag key (for example, choose either \"Env\" or \"env\")").
-				WithMap(map[string]string{
-					"asset_id":      r.ID.String(),
-					"snapshot_at":   snap.CapturedAt.Format(time.RFC3339),
-					"conflict_keys": strings.Join(tags.Conflicts(), ", "),
-				}).
-				Build())
+			for _, c := range tags.Conflicts() {
+				issues = append(issues, diag.New(diag.CodeAmbiguousTags).
+					Warning().
+					Action(fmt.Sprintf("Use a single casing for tag key %q (kept %q, discarded %s)",
+						c.Key, c.Kept, formatQuoted(c.Discarded))).
+					WithMap(map[string]string{
+						"asset_id":    r.ID.String(),
+						"snapshot_at": snap.CapturedAt.Format(time.RFC3339),
+						"conflict":    c.String(),
+					}).
+					Build())
+			}
 		}
 	}
 	return

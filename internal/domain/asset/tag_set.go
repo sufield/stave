@@ -1,13 +1,38 @@
 package asset
 
 import (
+	"fmt"
+	"slices"
+	"strings"
+
 	"github.com/sufield/stave/internal/pkg/fp"
 )
+
+// TagConflict records a case-insensitive key collision in a TagSet.
+type TagConflict struct {
+	Key       string   // normalized key
+	Kept      string   // raw key whose value was kept (first alphabetically)
+	Discarded []string // raw keys whose values were dropped
+}
+
+// String formats the conflict for diagnostic messages.
+func (c TagConflict) String() string {
+	return fmt.Sprintf("%s (kept %q, discarded %s)",
+		c.Key, c.Kept, formatQuoted(c.Discarded))
+}
+
+func formatQuoted(ss []string) string {
+	quoted := make([]string, len(ss))
+	for i, s := range ss {
+		quoted[i] = fmt.Sprintf("%q", s)
+	}
+	return strings.Join(quoted, ", ")
+}
 
 // TagSet is a value object for asset tags used by scope matching.
 type TagSet struct {
 	normalized map[string]string
-	conflicts  []string
+	conflicts  []TagConflict
 }
 
 // NewTagSet constructs an immutable tag set from raw key/value pairs.
@@ -17,7 +42,9 @@ func NewTagSet(raw map[string]string) TagSet {
 	}
 
 	normalized := make(map[string]string, len(raw))
-	conflictSet := make(map[string]struct{})
+	// Track winner per normalized key so we can report kept vs discarded.
+	winners := make(map[string]string)
+	conflictDiscarded := make(map[string][]string)
 
 	keys := fp.SortedKeys(raw)
 
@@ -28,13 +55,22 @@ func NewTagSet(raw map[string]string) TagSet {
 		}
 		norm := normalizedKey.string()
 		if _, exists := normalized[norm]; exists {
-			conflictSet[norm] = struct{}{}
+			conflictDiscarded[norm] = append(conflictDiscarded[norm], key)
 			continue
 		}
 		normalized[norm] = raw[key]
+		winners[norm] = key
 	}
 
-	conflicts := fp.SortedKeys(conflictSet)
+	conflictKeys := fp.SortedKeys(conflictDiscarded)
+	conflicts := make([]TagConflict, len(conflictKeys))
+	for i, norm := range conflictKeys {
+		conflicts[i] = TagConflict{
+			Key:       norm,
+			Kept:      winners[norm],
+			Discarded: conflictDiscarded[norm],
+		}
+	}
 
 	return TagSet{
 		normalized: normalized,
@@ -73,7 +109,7 @@ func (ts TagSet) HasConflicts() bool {
 	return len(ts.conflicts) > 0
 }
 
-// Conflicts returns normalized keys that had case-insensitive collisions.
-func (ts TagSet) Conflicts() []string {
-	return append([]string(nil), ts.conflicts...)
+// Conflicts returns details of case-insensitive key collisions.
+func (ts TagSet) Conflicts() []TagConflict {
+	return slices.Clone(ts.conflicts)
 }

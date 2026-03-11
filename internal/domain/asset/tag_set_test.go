@@ -55,8 +55,14 @@ func TestTagSetCaseInsensitiveKeysAndConflictDetection(t *testing.T) {
 	}
 
 	conflicts := ts.Conflicts()
-	if len(conflicts) != 1 || conflicts[0] != "owner" {
-		t.Fatalf("conflicts = %v, want [owner]", conflicts)
+	if len(conflicts) != 1 || conflicts[0].Key != "owner" {
+		t.Fatalf("conflicts = %v, want key=owner", conflicts)
+	}
+	if conflicts[0].Kept != "Owner" {
+		t.Fatalf("kept = %q, want Owner", conflicts[0].Kept)
+	}
+	if len(conflicts[0].Discarded) != 1 || conflicts[0].Discarded[0] != "owner" {
+		t.Fatalf("discarded = %v, want [owner]", conflicts[0].Discarded)
 	}
 
 	// Conflict detection should not break case-insensitive matching.
@@ -75,10 +81,10 @@ func TestTagSetConflictsReturnsCopy(t *testing.T) {
 	if len(conflicts) == 0 {
 		t.Fatalf("expected conflicts")
 	}
-	conflicts[0] = "mutated"
+	conflicts[0].Key = "mutated"
 
 	got := ts.Conflicts()
-	if got[0] != "env" {
+	if got[0].Key != "env" {
 		t.Fatalf("expected immutable conflict output, got %v", got)
 	}
 }
