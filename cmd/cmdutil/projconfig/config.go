@@ -142,16 +142,30 @@ type UserConfig struct {
 	Aliases           map[string]string `yaml:"aliases,omitempty"`
 }
 
-// ResolvedConfigValue holds a resolved value and its source.
+// ConfigLayer identifies a source layer in the configuration cascade.
+// Layers are ordered by priority: Environment > ProjectConfig > UserConfig > Default.
+// Higher numeric values indicate higher priority.
+type ConfigLayer int
+
+const (
+	LayerDefault       ConfigLayer = iota // built-in default value
+	LayerUserConfig                       // user config (~/.config/stave/config.yaml)
+	LayerProjectConfig                    // project config (stave.yaml)
+	LayerEnvironment                      // environment variable
+)
+
+// ResolvedConfigValue holds a resolved value, its source, and the layer it came from.
 type ResolvedConfigValue struct {
 	Value  string
 	Source string
+	Layer  ConfigLayer
 }
 
-// ResolvedBoolValue holds a resolved boolean and its source.
+// ResolvedBoolValue holds a resolved boolean, its source, and the layer it came from.
 type ResolvedBoolValue struct {
 	Bool   bool
 	Source string
+	Layer  ConfigLayer
 }
 
 // ToConfigValue converts to ResolvedConfigValue for display.
@@ -160,7 +174,7 @@ func (v ResolvedBoolValue) ToConfigValue() ResolvedConfigValue {
 	if v.Bool {
 		s = "true"
 	}
-	return ResolvedConfigValue{Value: s, Source: v.Source}
+	return ResolvedConfigValue{Value: s, Source: v.Source, Layer: v.Layer}
 }
 
 // NormalizeRetentionTier normalizes a tier name.
