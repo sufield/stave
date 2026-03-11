@@ -68,8 +68,8 @@ func evaluateAssetExposure(
 		}
 
 		evidence := res.String()
-		findings = append(findings, NewFinding(ctl, t, FindingContext{
-			Why: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
+		findings = append(findings, *NewFinding(ctl, t, FindingContext{
+			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{
 				{Property: propExposureSource, ActualValue: evidence, Operator: "eq", UnsafeValue: evidence},
 				{Property: propProtectedPrefix, ActualValue: prefix, Operator: "eq", UnsafeValue: prefix},
@@ -95,12 +95,12 @@ func buildConfigIssue(
 ) (evaluation.Row, []evaluation.Finding) {
 	row.Decision = evaluation.DecisionViolation
 	f := NewFinding(ctl, t, FindingContext{
-		Why: why,
+		Reason: why,
 		Misconfigs: []policy.Misconfiguration{
 			{Property: propExposureSource, ActualValue: reasonCode, Operator: "eq", UnsafeValue: reasonCode},
 		},
 	})
-	return row, []evaluation.Finding{f}
+	return row, []evaluation.Finding{*f}
 }
 
 func buildOverlapIssue(
@@ -111,14 +111,14 @@ func buildOverlapIssue(
 ) (evaluation.Row, []evaluation.Finding) {
 	row.Decision = evaluation.DecisionViolation
 	f := NewFinding(ctl, t, FindingContext{
-		Why: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
+		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
 		Misconfigs: []policy.Misconfiguration{
 			{Property: propExposureSource, ActualValue: valConfigOverlap, Operator: "eq", UnsafeValue: valConfigOverlap},
 			{Property: "overlap_with", ActualValue: c.Allowed, Operator: "eq", UnsafeValue: c.Allowed},
 			{Property: propProtectedPrefix, ActualValue: c.Protected, Operator: "eq", UnsafeValue: c.Protected},
 		},
 	})
-	return row, []evaluation.Finding{f}
+	return row, []evaluation.Finding{*f}
 }
 
 func prefixExposureSets(ctl *policy.ControlDefinition) (allowed, protected policy.PrefixSet) {

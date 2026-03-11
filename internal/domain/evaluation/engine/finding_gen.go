@@ -28,7 +28,7 @@ func CreateDurationFinding(
 	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, a.Properties)
 	rootCauses := DeriveRootCauses(misconfigs)
 
-	f := baseFinding(ctl, timeline)
+	f := newBaseFinding(ctl, timeline)
 	f.Evidence = evaluation.Evidence{
 		FirstUnsafeAt:       timeline.FirstUnsafeAt(),
 		LastSeenUnsafeAt:    timeline.LastSeenUnsafeAt(),
@@ -39,7 +39,7 @@ func CreateDurationFinding(
 		SourceEvidence:      ExtractSourceEvidence(a, rootCauses),
 		WhyNow:              timeline.FormatUnsafeSummary(maxUnsafe, now),
 	}
-	return f
+	return *f
 }
 
 // DeriveRootCauses extracts mechanism labels from misconfiguration property paths.
