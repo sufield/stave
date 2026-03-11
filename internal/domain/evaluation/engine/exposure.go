@@ -10,105 +10,123 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// EvaluatePrefixExposureForRow evaluates a prefix_exposure control for a
-// single asset. It checks whether any protected prefixes are publicly
-// readable using normalized storage.prefix_exposure facts prepared by input
-// adapters.
+const (
+	propExposureSource  = "exposure_source"
+	propProtectedPrefix = "protected_prefix"
+	valNotConfigured    = "not_configured"
+	valConfigOverlap    = "config_overlap"
+)
+
+// EvaluatePrefixExposureForRow evaluates whether protected prefixes are publicly readable.
 func EvaluatePrefixExposureForRow(
 	timeline *asset.Timeline,
 	ctl *policy.ControlDefinition,
 	_ time.Time,
 ) (evaluation.Row, []evaluation.Finding) {
 	row := newPrefixExposureRow(timeline, ctl)
+
+	// 1. Validate Control Configuration
 	allowed, protected := prefixExposureSets(ctl)
 
 	if protected.Empty() {
-		return prefixExposureNotConfigured(row, ctl, timeline)
+		return buildConfigIssue(row, ctl, timeline, msgMissingProtectedPrefixes(), valNotConfigured)
 	}
 
 	if conflict := policy.DetectOverlap(allowed, protected); conflict != nil {
-		return prefixExposureOverlap(row, ctl, timeline, conflict)
+		return buildOverlapIssue(row, ctl, timeline, conflict)
 	}
-	return prefixExposureFindings(row, ctl, timeline, protected)
+
+	// 2. Evaluate Asset Facts
+	return evaluateAssetExposure(row, ctl, timeline, protected)
 }
 
-func newPrefixExposureRow(timeline *asset.Timeline, ctl *policy.ControlDefinition) evaluation.Row {
-	resourceType := timeline.Asset().Type
+func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) evaluation.Row {
+	resType := t.Asset().Type
 	return evaluation.Row{
 		ControlID:   ctl.ID,
-		AssetID:     timeline.ID,
-		AssetType:   resourceType,
-		AssetDomain: resourceType.Domain(),
+		AssetID:     t.ID,
+		AssetType:   resType,
+		AssetDomain: resType.Domain(),
 		Decision:    evaluation.DecisionPass,
 		Confidence:  evaluation.ConfidenceHigh,
 	}
 }
 
-func prefixExposureSets(ctl *policy.ControlDefinition) (policy.PrefixSet, policy.PrefixSet) {
+func evaluateAssetExposure(
+	row evaluation.Row,
+	ctl *policy.ControlDefinition,
+	t *asset.Timeline,
+	protected policy.PrefixSet,
+) (evaluation.Row, []evaluation.Finding) {
+	facts := exposure.FactsFromStorage(t.Asset().Properties)
+	var findings []evaluation.Finding
+
+	for _, prefix := range protected.Paths() {
+		res := facts.CheckExposure(prefix)
+		if !res.Exposed {
+			continue
+		}
+
+		evidence := res.String()
+		findings = append(findings, NewFinding(ctl, t, FindingContext{
+			Why: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
+			Misconfigs: []policy.Misconfiguration{
+				{Property: propExposureSource, ActualValue: evidence, Operator: "eq", UnsafeValue: evidence},
+				{Property: propProtectedPrefix, ActualValue: prefix, Operator: "eq", UnsafeValue: prefix},
+			},
+		}))
+	}
+
+	if len(findings) > 0 {
+		row.Decision = evaluation.DecisionViolation
+	}
+
+	return row, findings
+}
+
+// --- Configuration Error Helpers ---
+
+func buildConfigIssue(
+	row evaluation.Row,
+	ctl *policy.ControlDefinition,
+	t *asset.Timeline,
+	why string,
+	reasonCode string,
+) (evaluation.Row, []evaluation.Finding) {
+	row.Decision = evaluation.DecisionViolation
+	f := NewFinding(ctl, t, FindingContext{
+		Why: why,
+		Misconfigs: []policy.Misconfiguration{
+			{Property: propExposureSource, ActualValue: reasonCode, Operator: "eq", UnsafeValue: reasonCode},
+		},
+	})
+	return row, []evaluation.Finding{f}
+}
+
+func buildOverlapIssue(
+	row evaluation.Row,
+	ctl *policy.ControlDefinition,
+	t *asset.Timeline,
+	c *policy.PrefixConflict,
+) (evaluation.Row, []evaluation.Finding) {
+	row.Decision = evaluation.DecisionViolation
+	f := NewFinding(ctl, t, FindingContext{
+		Why: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
+		Misconfigs: []policy.Misconfiguration{
+			{Property: propExposureSource, ActualValue: valConfigOverlap, Operator: "eq", UnsafeValue: valConfigOverlap},
+			{Property: "overlap_with", ActualValue: c.Allowed, Operator: "eq", UnsafeValue: c.Allowed},
+			{Property: propProtectedPrefix, ActualValue: c.Protected, Operator: "eq", UnsafeValue: c.Protected},
+		},
+	})
+	return row, []evaluation.Finding{f}
+}
+
+func prefixExposureSets(ctl *policy.ControlDefinition) (allowed, protected policy.PrefixSet) {
 	p := ctl.ExposurePrefixes()
 	return policy.NewPrefixSet(p.AllowedPublicPrefixes),
 		policy.NewPrefixSet(p.ProtectedPrefixes)
 }
 
-func prefixExposureNotConfigured(
-	row evaluation.Row,
-	ctl *policy.ControlDefinition,
-	timeline *asset.Timeline,
-) (evaluation.Row, []evaluation.Finding) {
-	row.Decision = evaluation.DecisionViolation
-	finding := NewFinding(ctl, timeline, FindingContext{
-		Why: "No protected prefixes configured. Add prefixes to the control params to activate prefix exposure detection. " +
-			"Example:\n  params:\n    protected_prefixes:\n      - \"invoices/\"\n      - \"secrets/\"\n    allowed_public_prefixes:\n      - \"images/\"\n      - \"static/\"",
-		Misconfigs: []policy.Misconfiguration{
-			{Property: "exposure_source", ActualValue: "not_configured", Operator: "eq", UnsafeValue: "not_configured"},
-		},
-	})
-	return row, []evaluation.Finding{finding}
-}
-
-func prefixExposureOverlap(
-	row evaluation.Row,
-	ctl *policy.ControlDefinition,
-	timeline *asset.Timeline,
-	conflict *policy.PrefixConflict,
-) (evaluation.Row, []evaluation.Finding) {
-	row.Decision = evaluation.DecisionViolation
-	finding := NewFinding(ctl, timeline, FindingContext{
-		Why: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", conflict.Protected, conflict.Allowed),
-		Misconfigs: []policy.Misconfiguration{
-			{Property: "exposure_source", ActualValue: "config_overlap", Operator: "eq", UnsafeValue: "config_overlap"},
-			{Property: "overlap_with", ActualValue: conflict.Allowed, Operator: "eq", UnsafeValue: conflict.Allowed},
-			{Property: "protected_prefix", ActualValue: conflict.Protected, Operator: "eq", UnsafeValue: conflict.Protected},
-		},
-	})
-	return row, []evaluation.Finding{finding}
-}
-
-func prefixExposureFindings(
-	row evaluation.Row,
-	ctl *policy.ControlDefinition,
-	timeline *asset.Timeline,
-	protected policy.PrefixSet,
-) (evaluation.Row, []evaluation.Finding) {
-	a := timeline.Asset()
-	facts := exposure.FactsFromStorage(a.Properties)
-
-	findings := make([]evaluation.Finding, 0)
-	for _, prefix := range protected.Paths() {
-		result := facts.CheckExposure(prefix)
-		if !result.Exposed {
-			continue
-		}
-		evidence := result.String()
-		row.Decision = evaluation.DecisionViolation
-		finding := NewFinding(ctl, timeline, FindingContext{
-			Why: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
-			Misconfigs: []policy.Misconfiguration{
-				{Property: "exposure_source", ActualValue: evidence, Operator: "eq", UnsafeValue: evidence},
-				{Property: "protected_prefix", ActualValue: prefix, Operator: "eq", UnsafeValue: prefix},
-			},
-		})
-		findings = append(findings, finding)
-	}
-	return row, findings
+func msgMissingProtectedPrefixes() string {
+	return "No protected prefixes configured. Add protected_prefixes to control params to enable detection."
 }
