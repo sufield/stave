@@ -66,8 +66,14 @@ func ApplySnapshotPlan(in SnapshotPlanApplyInput) (SnapshotPlanApplyResult, erro
 
 // archiveEntry moves a single snapshot file from obsRoot into archiveDir.
 func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool) error {
-	src := filepath.Join(obsRoot, entry.RelPath)
-	dst := filepath.Join(archiveDir, entry.RelPath)
+	src, err := fsutil.JoinWithinRoot(obsRoot, entry.RelPath)
+	if err != nil {
+		return fmt.Errorf("archive %s: source: %w", entry.RelPath, err)
+	}
+	dst, err := fsutil.JoinWithinRoot(archiveDir, entry.RelPath)
+	if err != nil {
+		return fmt.Errorf("archive %s: destination: %w", entry.RelPath, err)
+	}
 	if err := fsutil.SafeMkdirAll(filepath.Dir(dst), fsutil.WriteOptions{
 		Perm:         0o700,
 		AllowSymlink: allowSymlink,
@@ -82,7 +88,10 @@ func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool
 
 // deleteEntry removes a single snapshot file from obsRoot.
 func deleteEntry(entry PlanEntry, obsRoot string) error {
-	src := filepath.Join(obsRoot, entry.RelPath)
+	src, err := fsutil.JoinWithinRoot(obsRoot, entry.RelPath)
+	if err != nil {
+		return fmt.Errorf("prune %s: %w", entry.RelPath, err)
+	}
 	if err := os.Remove(src); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("prune %s: %w", entry.RelPath, err)
 	}
