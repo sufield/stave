@@ -1,6 +1,7 @@
 package pruner
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,16 @@ import (
 	"strings"
 	"time"
 )
+
+// maxSnapshotFiles is the safety cap on snapshot file enumeration.
+// Prevents unbounded memory growth from directories with millions of files.
+// 100 000 files ≈ 10–20 MB of SnapshotFile structs in memory.
+// This is a var (not const) so tests can temporarily lower it.
+var maxSnapshotFiles = 100_000
+
+// ErrTooManySnapshots indicates the observations directory exceeds the
+// enumeration safety limit.
+var ErrTooManySnapshots = errors.New("too many snapshot files")
 
 // SnapshotFile represents one snapshot file discovered on disk.
 type SnapshotFile struct {
@@ -31,10 +42,15 @@ func ListSnapshotFilesFlat(observationsDir string, loadCapturedAt LoadCapturedAt
 		return nil, fmt.Errorf("failed to read observations directory: %w", err)
 	}
 
-	files := make([]SnapshotFile, 0, len(entries))
+	files := make([]SnapshotFile, 0, min(len(entries), maxSnapshotFiles))
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
+		}
+		if len(files) >= maxSnapshotFiles {
+			return nil, fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
+				"prune older snapshots first to reduce the count",
+				ErrTooManySnapshots, observationsDir, maxSnapshotFiles)
 		}
 		path := filepath.Join(observationsDir, entry.Name())
 		capturedAt, loadErr := loadCapturedAt(path, entry.Name())
@@ -85,6 +101,11 @@ func ListSnapshotFilesRecursive(
 		loadCapturedAt: loadCapturedAt,
 	}
 	walkErr := filepath.Walk(absRoot, func(path string, info os.FileInfo, walkErr error) error {
+		if len(files) >= maxSnapshotFiles {
+			return fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
+				"prune older snapshots first to reduce the count",
+				ErrTooManySnapshots, observationsDir, maxSnapshotFiles)
+		}
 		return walkSnapshotFile(path, info, walkErr, state)
 	})
 	if walkErr != nil {
