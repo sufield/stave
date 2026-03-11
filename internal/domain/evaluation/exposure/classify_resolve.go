@@ -6,7 +6,7 @@ func newBucketResolutionContext(input ExposureBucketInput) bucketResolutionConte
 	ctx := bucketResolutionContext{
 		input:                input,
 		hasAuthenticatedOnly: true,
-		evidence:             newEvidenceTracker(),
+		evidence:             NewEvidenceTracker(),
 	}
 	ctx.inspectPolicy()
 	ctx.inspectACL()
@@ -25,10 +25,10 @@ func (c *bucketResolutionContext) principalScope() kernel.PrincipalScope {
 }
 
 func (c *bucketResolutionContext) readEvidence() []string {
-	if ev := c.evidence.Get(evidencePolicyRead); len(ev) > 0 {
+	if ev := c.evidence.Get(EvPolicyRead); len(ev) > 0 {
 		return ev
 	}
-	return c.evidence.Get(evidenceACLRead)
+	return c.evidence.Get(EvACLRead)
 }
 
 func (c *bucketResolutionContext) writeScope() string {
@@ -59,8 +59,8 @@ func (c *bucketResolutionContext) resolveRead() []ExposureClassification {
 		isACLGet:             c.aclPerms.Get,
 		principalScope:       c.principalScope(),
 		readEvidence:         c.readEvidence(),
-		policyReadEvidence:   c.evidence.Get(evidencePolicyRead),
-		aclReadEvidence:      c.evidence.Get(evidenceACLRead),
+		policyReadEvidence:   c.evidence.Get(EvPolicyRead),
+		aclReadEvidence:      c.evidence.Get(EvACLRead),
 	})
 	if selected == nil {
 		return nil
@@ -79,7 +79,7 @@ func (c *bucketResolutionContext) resolveList() []ExposureClassification {
 		ExposureType:   "public_list",
 		PrincipalScope: c.principalScope(),
 		Actions:        []string{outputListBucket},
-		EvidencePath:   c.evidence.Get(evidenceList),
+		EvidencePath:   c.evidence.Get(EvList),
 	}}
 }
 
@@ -92,8 +92,8 @@ func (c *bucketResolutionContext) resolveWrite() []ExposureClassification {
 		isACLPut:            c.aclPerms.Put,
 		principalScope:      c.principalScope(),
 		writeScope:          c.writeScope(),
-		policyWriteEvidence: c.evidence.Get(evidencePolicyWrite),
-		aclWriteEvidence:    c.evidence.Get(evidenceACLWrite),
+		policyWriteEvidence: c.evidence.Get(EvPolicyWrite),
+		aclWriteEvidence:    c.evidence.Get(EvACLWrite),
 		hasGetAction:        c.writeSource.HasGet,
 		hasListAction:       c.writeSource.HasList,
 	})
@@ -113,7 +113,7 @@ func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
 			ExposureType:   "public_acl_read",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputGetBucketACL},
-			EvidencePath:   c.evidence.Get(evidenceACLReadPolicy),
+			EvidencePath:   c.evidence.Get(EvACLReadPolicy),
 		})
 	}
 	if perms.ACLWrite {
@@ -123,7 +123,7 @@ func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
 			ExposureType:   "public_acl_write",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputPutBucketACL},
-			EvidencePath:   c.evidence.Get(evidenceACLWritePolicy),
+			EvidencePath:   c.evidence.Get(EvACLWritePolicy),
 		})
 	}
 	if perms.Delete {
@@ -133,7 +133,7 @@ func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
 			ExposureType:   "public_delete",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputDeleteObject},
-			EvidencePath:   c.evidence.Get(evidenceDelete),
+			EvidencePath:   c.evidence.Get(EvDelete),
 		})
 	}
 	return findings

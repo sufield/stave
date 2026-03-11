@@ -24,24 +24,24 @@ func (c *bucketResolutionContext) inspectPolicy() {
 	}
 }
 
-func (c *bucketResolutionContext) recordPolicyPermissions(perms statementPermission, evidence []string) {
+func (c *bucketResolutionContext) recordPolicyPermissions(perms Permission, evidence []string) {
 	c.recordPermissions(permissionInspectionRequest{
 		Perms:         perms,
 		EvidencePath:  evidence,
 		Set:           &c.policyPerms,
-		ReadEvidence:  evidencePolicyRead,
-		WriteEvidence: evidencePolicyWrite,
+		ReadEvidence:  EvPolicyRead,
+		WriteEvidence: EvPolicyWrite,
 	})
 }
 
-func analyzeStatementActions(actions []string) statementPermission {
-	var total statementPermission
+func analyzeStatementActions(actions []string) Permission {
+	var total Permission
 	for _, action := range actions {
 		a := strings.ToLower(action)
-		if p, ok := actionToPermission[a]; ok {
+		if p, ok := actionToPerm[a]; ok {
 			total |= p
 		}
-		if total == stmtPermAll {
+		if total == PermAll {
 			break
 		}
 	}
@@ -64,17 +64,17 @@ func (c *bucketResolutionContext) inspectACL() {
 		if grant.IsAllUsers() {
 			c.hasAuthenticatedOnly = false
 		}
-		c.recordACLPermissions(statementPermission(grant.ExposurePermissions()), aclEvidence(i))
+		c.recordACLPermissions(grant.ExposurePermissions(), aclEvidence(i))
 	}
 }
 
-func (c *bucketResolutionContext) recordACLPermissions(perms statementPermission, evidence []string) {
+func (c *bucketResolutionContext) recordACLPermissions(perms Permission, evidence []string) {
 	c.recordPermissions(permissionInspectionRequest{
 		Perms:         perms,
 		EvidencePath:  evidence,
 		Set:           &c.aclPerms,
-		ReadEvidence:  evidenceACLRead,
-		WriteEvidence: evidenceACLWrite,
+		ReadEvidence:  EvACLRead,
+		WriteEvidence: EvACLWrite,
 	})
 }
 
@@ -87,16 +87,16 @@ func aclEvidence(grantIdx int) []string {
 }
 
 type permissionRecordRequest struct {
-	Perms        statementPermission
-	Bit          statementPermission
+	Perms        Permission
+	Bit          Permission
 	Target       *bool
-	EvidenceKey  string
+	EvidenceKey  EvidenceCategory
 	EvidencePath []string
-	Tracker      *evidenceTracker
+	Tracker      *EvidenceTracker
 }
 
 func recordIf(req permissionRecordRequest) {
-	if !req.Perms.has(req.Bit) {
+	if !req.Perms.Has(req.Bit) {
 		return
 	}
 	*req.Target = true
@@ -104,11 +104,11 @@ func recordIf(req permissionRecordRequest) {
 }
 
 type permissionInspectionRequest struct {
-	Perms         statementPermission
+	Perms         Permission
 	EvidencePath  []string
 	Set           *permissionSet
-	ReadEvidence  string
-	WriteEvidence string
+	ReadEvidence  EvidenceCategory
+	WriteEvidence EvidenceCategory
 }
 
 func (c *bucketResolutionContext) recordPermissions(req permissionInspectionRequest) {
@@ -118,49 +118,49 @@ func (c *bucketResolutionContext) recordPermissions(req permissionInspectionRequ
 
 	recordIf(permissionRecordRequest{
 		Perms:        req.Perms,
-		Bit:          stmtPermRead,
+		Bit:          PermRead,
 		Target:       &req.Set.Get,
 		EvidenceKey:  req.ReadEvidence,
 		EvidencePath: req.EvidencePath,
-		Tracker:      &c.evidence,
+		Tracker:      c.evidence,
 	})
 	recordIf(permissionRecordRequest{
 		Perms:        req.Perms,
-		Bit:          stmtPermList,
+		Bit:          PermList,
 		Target:       &req.Set.List,
-		EvidenceKey:  evidenceList,
+		EvidenceKey:  EvList,
 		EvidencePath: req.EvidencePath,
-		Tracker:      &c.evidence,
+		Tracker:      c.evidence,
 	})
 	recordIf(permissionRecordRequest{
 		Perms:        req.Perms,
-		Bit:          stmtPermACLRead,
+		Bit:          PermACLRead,
 		Target:       &req.Set.ACLRead,
-		EvidenceKey:  evidenceACLReadPolicy,
+		EvidenceKey:  EvACLReadPolicy,
 		EvidencePath: req.EvidencePath,
-		Tracker:      &c.evidence,
+		Tracker:      c.evidence,
 	})
 	recordIf(permissionRecordRequest{
 		Perms:        req.Perms,
-		Bit:          stmtPermACLWrite,
+		Bit:          PermACLWrite,
 		Target:       &req.Set.ACLWrite,
-		EvidenceKey:  evidenceACLWritePolicy,
+		EvidenceKey:  EvACLWritePolicy,
 		EvidencePath: req.EvidencePath,
-		Tracker:      &c.evidence,
+		Tracker:      c.evidence,
 	})
 	recordIf(permissionRecordRequest{
 		Perms:        req.Perms,
-		Bit:          stmtPermDelete,
+		Bit:          PermDelete,
 		Target:       &req.Set.Delete,
-		EvidenceKey:  evidenceDelete,
+		EvidenceKey:  EvDelete,
 		EvidencePath: req.EvidencePath,
-		Tracker:      &c.evidence,
+		Tracker:      c.evidence,
 	})
 
-	if req.Perms.has(stmtPermWrite) {
+	if req.Perms.Has(PermWrite) {
 		if !req.Set.Put {
-			c.writeSource.HasGet = req.Perms.has(stmtPermRead)
-			c.writeSource.HasList = req.Perms.has(stmtPermList)
+			c.writeSource.HasGet = req.Perms.Has(PermRead)
+			c.writeSource.HasList = req.Perms.Has(PermList)
 		}
 		req.Set.Put = true
 		c.evidence.Record(req.WriteEvidence, req.EvidencePath)

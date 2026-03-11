@@ -4,16 +4,16 @@ import "github.com/sufield/stave/internal/domain/kernel"
 
 // ResolveEffectiveVisibility computes effective public visibility accounting for PAB.
 func ResolveEffectiveVisibility(policy PolicyAnalysis, acl ACLAnalysis, pab PublicAccessBlock) EffectiveVisibility {
-	policyMask := policyPublicMask(policy)
-	aclMask := aclPublicMask(acl)
-	effectiveMask, policyBlocked, aclBlocked := applyPublicAccessBlock(policyMask, aclMask, pab)
+	policyMask := policy.ToPublicMask()
+	aclMask := acl.ToPublicMask()
+	effectiveMask, policyBlocked, aclBlocked := pab.ResolveEffectivePermissions(policyMask, aclMask)
 
 	res := EffectiveVisibility{
-		Read:     effectiveMask.has(accessPermRead),
-		Write:    effectiveMask.has(accessPermWrite),
-		List:     effectiveMask.has(accessPermList),
-		ACLRead:  effectiveMask.has(accessPermACLRead),
-		ACLWrite: effectiveMask.has(accessPermACLWrite),
+		Read:     effectiveMask.Has(PermRead),
+		Write:    effectiveMask.Has(PermWrite),
+		List:     effectiveMask.Has(PermList),
+		ACLRead:  effectiveMask.Has(PermACLRead),
+		ACLWrite: effectiveMask.Has(PermACLWrite),
 		Source:   "None",
 	}
 
@@ -34,7 +34,7 @@ func ResolveEffectiveVisibility(policy PolicyAnalysis, acl ACLAnalysis, pab Publ
 	return res
 }
 
-func resolvePrincipalScope(policy PolicyAnalysis, acl ACLAnalysis, effectiveMask accessPermissionMask) kernel.PrincipalScope {
+func resolvePrincipalScope(policy PolicyAnalysis, acl ACLAnalysis, effectiveMask Permission) kernel.PrincipalScope {
 	if effectiveMask != 0 {
 		return kernel.ScopePublic
 	}
