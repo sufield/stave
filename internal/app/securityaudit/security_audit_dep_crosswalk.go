@@ -30,9 +30,5 @@ func (d defaultCrosswalkResolver) Resolve(
 	if err != nil {
 		return crosswalkSnapshot{}, err
 	}
-	return crosswalkSnapshot{
-		ByCheck:        result.ByCheck,
-		MissingChecks:  result.MissingChecks,
-		ResolutionJSON: result.ResolutionJSON,
-	}, nil
+	return crosswalkSnapshot(result), nil
 }

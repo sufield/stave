@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
-	domainsecaudit "github.com/sufield/stave/internal/domain/securityaudit"
 	"github.com/sufield/stave/internal/domain/ports"
+	domainsecaudit "github.com/sufield/stave/internal/domain/securityaudit"
 )
 
 // RunnerDeps holds injectable infrastructure dependencies for SecurityAuditRunner.
@@ -15,7 +15,7 @@ type RunnerDeps struct {
 	HashFile          func(path string) (kernel.Digest, error)
 	HashBytes         func(data []byte) kernel.Digest
 	GovulncheckRunner GovulncheckRunner
-	SignatureVerifier  ports.Verifier
+	SignatureVerifier ports.Verifier
 	RunDiagnostics    func(cwd, binaryPath, staveVersion string)
 	ResolveCrosswalk  func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
 }
