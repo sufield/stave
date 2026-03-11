@@ -3,77 +3,70 @@ package trace
 import (
 	"fmt"
 
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 // traceFieldRefRule traces neq_field, not_in_field, not_subset_of_field.
+// All input data is pre-resolved in ruleContext; this function only
+// records the result.
 func traceFieldRefRule(rc ruleContext) Node {
-	otherFieldPath, ok := rc.CompareValue.(string)
-	if !ok {
-		return &FieldRefNode{
-			Index:       rc.Index,
-			Field:       rc.Field,
-			Op:          rc.Op,
-			OtherField:  fmt.Sprintf("%v", rc.CompareValue),
-			FieldValue:  rc.FieldValue,
-			FieldExists: rc.FieldExists,
-			Result:      false,
-		}
+	otherField := rc.OtherField
+	if otherField == "" {
+		// CompareValue wasn't a string field path — malformed rule.
+		otherField = fmt.Sprintf("%v", rc.CompareValue)
 	}
-
-	otherValue, otherExists := policy.GetFieldValueWithContext(rc.EvalCtx, otherFieldPath)
-	result := evaluateFieldRefResult(rc.Op, rc.FieldExists, rc.FieldValue, otherExists, otherValue)
 
 	return &FieldRefNode{
 		Index:       rc.Index,
 		Field:       rc.Field,
 		Op:          rc.Op,
-		OtherField:  otherFieldPath,
+		OtherField:  otherField,
 		FieldValue:  rc.FieldValue,
-		OtherValue:  otherValue,
+		OtherValue:  rc.OtherValue,
 		FieldExists: rc.FieldExists,
-		OtherExists: otherExists,
-		Result:      result,
+		OtherExists: rc.OtherExists,
+		Result:      evaluateFieldRef(rc.Op, rc.FieldExists, rc.FieldValue, rc.OtherExists, rc.OtherValue),
 	}
 }
 
-func evaluateFieldRefResult(op predicate.Operator, fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
-	switch op {
-	case predicate.OpNotSubsetOfField:
-		return evalNotSubsetOfField(fieldExists, fieldValue, otherExists, otherValue)
-	case predicate.OpNeqField:
-		return evalNotEqualField(fieldExists, fieldValue, otherExists, otherValue)
-	case predicate.OpNotInField:
-		return evalNotInField(fieldExists, fieldValue, otherExists, otherValue)
-	default:
+// fieldRefCompareFn is the final comparison applied after existence checks pass.
+type fieldRefCompareFn func(fieldValue, otherValue any) bool
+
+var fieldRefOps = map[predicate.Operator]struct {
+	// missingField is the result when the source field doesn't exist.
+	missingField bool
+	// missingOther is the result when the other field doesn't exist
+	// (but the source field does).
+	missingOther bool
+	compare      fieldRefCompareFn
+}{
+	predicate.OpNotSubsetOfField: {
+		missingField: false,
+		missingOther: true,
+		compare:      predicate.ListHasElementsNotIn,
+	},
+	predicate.OpNeqField: {
+		missingField: false,
+		missingOther: true,
+		compare:      func(a, b any) bool { return !predicate.EqualValues(a, b) },
+	},
+	predicate.OpNotInField: {
+		missingField: true,
+		missingOther: true,
+		compare:      func(a, b any) bool { return !predicate.ValueInList(a, b) },
+	},
+}
+
+func evaluateFieldRef(op predicate.Operator, fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
+	spec, ok := fieldRefOps[op]
+	if !ok {
 		return false
 	}
-}
-
-func evalNotSubsetOfField(fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
 	if !fieldExists {
-		return false
+		return spec.missingField
 	}
 	if !otherExists {
-		return true
+		return spec.missingOther
 	}
-	return predicate.ListHasElementsNotIn(fieldValue, otherValue)
-}
-
-func evalNotEqualField(fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
-	if !fieldExists {
-		return false
-	}
-	if !otherExists {
-		return true
-	}
-	return !predicate.EqualValues(fieldValue, otherValue)
-}
-
-func evalNotInField(fieldExists bool, fieldValue any, otherExists bool, otherValue any) bool {
-	if !fieldExists || !otherExists {
-		return true
-	}
-	return !predicate.ValueInList(fieldValue, otherValue)
+	return spec.compare(fieldValue, otherValue)
 }
