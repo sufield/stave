@@ -26,7 +26,6 @@ func uploadPolicyResource(keyMode string) asset.Asset {
 		Type:   kernel.TypeUploadPolicy,
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
-			"type": "upload_policy",
 			"upload": map[string]any{
 				"container":        "test-container",
 				"operation":        "write",
@@ -59,7 +58,6 @@ func TestWriteScope_DifferentResourceTypeDoesNotMatch(t *testing.T) {
 		Type:   kernel.TypeStorageContainer,
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
-			"type": "storage_container",
 			"storage": map[string]any{
 				"visibility": map[string]any{
 					"public_read": true,
@@ -79,7 +77,6 @@ func TestWriteScope_ReadOperationDoesNotMatch(t *testing.T) {
 		Type:   kernel.TypeUploadPolicy,
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
-			"type": "upload_policy",
 			"upload": map[string]any{
 				"container":        "test-container",
 				"operation":        "read",
@@ -100,24 +97,8 @@ func TestWriteScope_MissingFieldsDoNotMatch(t *testing.T) {
 		props map[string]any
 	}{
 		{
-			"missing type",
-			map[string]any{
-				"upload": map[string]any{
-					"operation":        "write",
-					"allowed_key_mode": "prefix",
-				},
-			},
-		},
-		{
-			"missing upload object",
-			map[string]any{
-				"type": "upload_policy",
-			},
-		},
-		{
 			"missing allowed_key_mode",
 			map[string]any{
-				"type": "upload_policy",
 				"upload": map[string]any{
 					"operation": "write",
 				},

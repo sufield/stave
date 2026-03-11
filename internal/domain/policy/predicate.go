@@ -50,7 +50,7 @@ func (ctx EvalContext) ParsePredicate(v any) (*UnsafePredicate, error) {
 // NewAssetEvalContext creates a context for evaluating an asset.
 func NewAssetEvalContext(r asset.Asset, params ControlParams) EvalContext {
 	return EvalContext{
-		Properties: r.Properties,
+		Properties: r.Map(),
 		Params:     params,
 	}
 }
@@ -59,7 +59,7 @@ func NewAssetEvalContext(r asset.Asset, params ControlParams) EvalContext {
 // includes snapshot-level identities for any_match predicates.
 func NewAssetEvalContextWithIdentities(r asset.Asset, params ControlParams, identities []asset.CloudIdentity) EvalContext {
 	return EvalContext{
-		Properties: r.Properties,
+		Properties: r.Map(),
 		Params:     params,
 		Identities: identities,
 	}
