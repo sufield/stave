@@ -59,7 +59,7 @@ func (s unsafeStateStrategy) Evaluate(timeline *asset.Timeline, now time.Time) (
 		row.Decision = evaluation.DecisionViolation
 		row.Confidence = evaluation.ConfidenceHigh
 		row.WhyNow = timeline.FormatUnsafeSummary(maxUnsafe, now)
-		return row, []evaluation.Finding{CreateDurationFinding(timeline, s.ctl, maxUnsafe, now)}
+		return row, []evaluation.Finding{*CreateDurationFinding(timeline, s.ctl, maxUnsafe, now)}
 	}
 
 	row.Decision = evaluation.DecisionPass
@@ -81,7 +81,7 @@ func (s unsafeDurationStrategy) Evaluate(timeline *asset.Timeline, now time.Time
 		row.Decision = evaluation.DecisionViolation
 		row.Confidence = evaluation.DeriveConfidenceLevel(timeline.Stats().MaxGap(), maxUnsafe)
 		row.WhyNow = timeline.FormatUnsafeSummary(maxUnsafe, now)
-		return row, []evaluation.Finding{CreateDurationFinding(timeline, s.ctl, maxUnsafe, now)}
+		return row, []evaluation.Finding{*CreateDurationFinding(timeline, s.ctl, maxUnsafe, now)}
 	}
 
 	coverage := CoverageValidator{
