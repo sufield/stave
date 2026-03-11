@@ -1,11 +1,12 @@
 package pruner
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 )
@@ -52,9 +53,7 @@ func ListSnapshotFilesFlat(observationsDir string, loadCapturedAt LoadCapturedAt
 			continue
 		}
 		if len(files) >= maxSnapshotFiles {
-			return nil, fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
-				"prune older snapshots first to reduce the count",
-				ErrTooManySnapshots, observationsDir, maxSnapshotFiles)
+			return nil, snapshotLimitError(observationsDir)
 		}
 		path := filepath.Join(observationsDir, entry.Name())
 		capturedAt, loadErr := loadCapturedAt(path, entry.Name())
@@ -69,16 +68,12 @@ func ListSnapshotFilesFlat(observationsDir string, loadCapturedAt LoadCapturedAt
 		})
 	}
 
-	sort.Slice(files, func(i, j int) bool {
-		if !files[i].CapturedAt.Equal(files[j].CapturedAt) {
-			return files[i].CapturedAt.Before(files[j].CapturedAt)
-		}
-		return files[i].Name < files[j].Name
-	})
+	sortByNameFallback(files)
 	return files, nil
 }
 
-// ListSnapshotFilesRecursive walks observationsDir recursively.
+// ListSnapshotFilesRecursive walks observationsDir recursively using WalkDir
+// for efficient enumeration (avoids extra Lstat syscalls).
 // excludeDirs is a list of absolute paths to skip (e.g., archive dir).
 // Directories starting with "_" are skipped.
 // RelPath is relative to observationsDir, using forward slashes.
@@ -96,90 +91,71 @@ func ListSnapshotFilesRecursive(
 		return nil, fmt.Errorf("resolve observations root: %w", err)
 	}
 
-	excludeSet := buildExcludedDirSet(excludeDirs)
-	var files []SnapshotFile
-	state := snapshotWalkState{
-		absRoot:        absRoot,
-		excludeSet:     excludeSet,
-		files:          &files,
-		loadCapturedAt: loadCapturedAt,
+	excludeSet, err := buildExcludedDirSet(excludeDirs)
+	if err != nil {
+		return nil, err
 	}
-	walkErr := filepath.Walk(absRoot, func(path string, info os.FileInfo, walkErr error) error {
-		if len(files) >= maxSnapshotFiles {
-			return fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
-				"prune older snapshots first to reduce the count",
-				ErrTooManySnapshots, observationsDir, maxSnapshotFiles)
+
+	var files []SnapshotFile
+	walkErr := filepath.WalkDir(absRoot, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
-		return walkSnapshotFile(path, info, walkErr, state)
+		if d.IsDir() {
+			return filterDir(path, d, absRoot, excludeSet)
+		}
+		if !strings.HasSuffix(d.Name(), ".json") {
+			return nil
+		}
+		// Skip symlinks — they could point outside the observations directory.
+		if d.Type()&os.ModeSymlink != 0 {
+			return nil
+		}
+		if len(files) >= maxSnapshotFiles {
+			return snapshotLimitError(observationsDir)
+		}
+		capturedAt, loadErr := loadCapturedAt(path, d.Name())
+		if loadErr != nil {
+			return loadErr
+		}
+		relPath, relErr := relativeSnapshotPath(absRoot, path)
+		if relErr != nil {
+			return relErr
+		}
+		files = append(files, SnapshotFile{
+			Path:       path,
+			RelPath:    relPath,
+			Name:       d.Name(),
+			CapturedAt: capturedAt.UTC(),
+		})
+		return nil
 	})
 	if walkErr != nil {
 		return nil, walkErr
 	}
 
-	sort.Slice(files, func(i, j int) bool {
-		if !files[i].CapturedAt.Equal(files[j].CapturedAt) {
-			return files[i].CapturedAt.Before(files[j].CapturedAt)
-		}
-		return files[i].RelPath < files[j].RelPath
-	})
+	sortByRelPathFallback(files)
 	return files, nil
 }
 
-func buildExcludedDirSet(excludeDirs []string) map[string]bool {
+func buildExcludedDirSet(excludeDirs []string) (map[string]bool, error) {
 	excludeSet := make(map[string]bool, len(excludeDirs))
 	for _, dir := range excludeDirs {
-		if abs, err := filepath.Abs(dir); err == nil {
-			excludeSet[abs] = true
+		abs, err := filepath.Abs(dir)
+		if err != nil {
+			return nil, fmt.Errorf("resolve exclude directory %s: %w", dir, err)
 		}
+		excludeSet[abs] = true
 	}
-	return excludeSet
+	return excludeSet, nil
 }
 
-type snapshotWalkState struct {
-	absRoot        string
-	excludeSet     map[string]bool
-	files          *[]SnapshotFile
-	loadCapturedAt LoadCapturedAtFunc
-}
-
-func walkSnapshotFile(path string, info os.FileInfo, walkErr error, state snapshotWalkState) error {
-	if walkErr != nil {
-		return walkErr
-	}
-	if info.IsDir() {
-		return walkSnapshotDir(path, info, state.absRoot, state.excludeSet)
-	}
-	if !strings.HasSuffix(info.Name(), ".json") {
-		return nil
-	}
-	// Skip symlinks — they could point outside the observations directory.
-	// filepath.Walk uses Lstat, so info.Mode() correctly reports symlinks.
-	if info.Mode()&os.ModeSymlink != 0 {
-		return nil
-	}
-	capturedAt, err := state.loadCapturedAt(path, info.Name())
-	if err != nil {
-		return err
-	}
-	relPath, err := relativeSnapshotPath(state.absRoot, path)
-	if err != nil {
-		return err
-	}
-	*state.files = append(*state.files, SnapshotFile{
-		Path:       path,
-		RelPath:    relPath,
-		Name:       info.Name(),
-		CapturedAt: capturedAt.UTC(),
-	})
-	return nil
-}
-
-func walkSnapshotDir(path string, info os.FileInfo, absRoot string, excludeSet map[string]bool) error {
+func filterDir(path string, d os.DirEntry, absRoot string, excludeSet map[string]bool) error {
 	abs, _ := filepath.Abs(path)
 	if excludeSet[abs] {
 		return filepath.SkipDir
 	}
-	if path != absRoot && strings.HasPrefix(info.Name(), "_") {
+	if path != absRoot && strings.HasPrefix(d.Name(), "_") {
 		return filepath.SkipDir
 	}
 	return nil
@@ -191,4 +167,30 @@ func relativeSnapshotPath(absRoot, path string) (string, error) {
 		return "", fmt.Errorf("relative path for %s: %w", path, err)
 	}
 	return filepath.ToSlash(relPath), nil
+}
+
+func snapshotLimitError(dir string) error {
+	return fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
+		"prune older snapshots first to reduce the count",
+		ErrTooManySnapshots, dir, maxSnapshotFiles)
+}
+
+// sortByNameFallback sorts by CapturedAt, breaking ties by Name.
+func sortByNameFallback(files []SnapshotFile) {
+	slices.SortFunc(files, func(a, b SnapshotFile) int {
+		if c := a.CapturedAt.Compare(b.CapturedAt); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.Name, b.Name)
+	})
+}
+
+// sortByRelPathFallback sorts by CapturedAt, breaking ties by RelPath.
+func sortByRelPathFallback(files []SnapshotFile) {
+	slices.SortFunc(files, func(a, b SnapshotFile) int {
+		if c := a.CapturedAt.Compare(b.CapturedAt); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.RelPath, b.RelPath)
+	})
 }
