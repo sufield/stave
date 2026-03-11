@@ -136,23 +136,20 @@ func evaluateAnyMatch(eval complexOperatorEval) bool {
 	if !eval.fieldExists {
 		return false
 	}
-	if eval.ctx.PredicateParser == nil {
-		return false
-	}
 	identities, ok := eval.fieldValue.([]asset.CloudIdentity)
 	if !ok {
 		return false
 	}
-	nestedPred, err := eval.ctx.PredicateParser(eval.compareValue)
-	if err != nil {
+	nestedPred, err := eval.ctx.ParsePredicate(eval.compareValue)
+	if nestedPred == nil || err != nil {
 		return false
 	}
+	idCtx := EvalContext{
+		Params:          eval.ctx.Params,
+		PredicateParser: eval.ctx.PredicateParser,
+	}
 	for i := range identities {
-		idCtx := EvalContext{
-			Properties:      identities[i].Map(),
-			Params:          eval.ctx.Params,
-			PredicateParser: eval.ctx.PredicateParser,
-		}
+		idCtx.Properties = identities[i].Map()
 		if nestedPred.EvaluateWithContext(idCtx) {
 			return true
 		}

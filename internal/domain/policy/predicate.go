@@ -28,6 +28,16 @@ type EvalContext struct {
 	PredicateParser func(v any) (*UnsafePredicate, error) // nested predicate parser for any_match
 }
 
+// ParsePredicate delegates to the configured PredicateParser.
+// Returns (nil, nil) when no parser is configured, letting callers
+// treat absence as a no-op without interrogating the field directly.
+func (ctx EvalContext) ParsePredicate(v any) (*UnsafePredicate, error) {
+	if ctx.PredicateParser == nil {
+		return nil, nil
+	}
+	return ctx.PredicateParser(v)
+}
+
 // NewAssetEvalContext creates a context for evaluating an asset.
 func NewAssetEvalContext(r asset.Asset, params ControlParams) EvalContext {
 	return EvalContext{
