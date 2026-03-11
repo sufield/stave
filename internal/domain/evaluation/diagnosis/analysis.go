@@ -8,6 +8,11 @@ import (
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
+// fmtd is a shorthand for timeutil.FormatDuration to keep diagnostic lines concise.
+func fmtd(d time.Duration) string {
+	return timeutil.FormatDuration(d)
+}
+
 const (
 	topFindingDiagnosticLimit = 3
 
@@ -74,9 +79,9 @@ func (s *session) diagnoseNoViolations() []Entry {
 			Case:   ExpectedNone,
 			Signal: signalThresholdExceedsObserved,
 			Evidence: fmt.Sprintf("Max unsafe streak: %s (control %s); threshold: %s",
-				timeutil.FormatDuration(maxStreak), ctlID, timeutil.FormatDuration(s.input.MaxUnsafe)),
-			Action:  fmt.Sprintf("Lower --max-unsafe to %s or shorter", timeutil.FormatDuration(maxStreak)),
-			Command: fmt.Sprintf("stave apply --max-unsafe %s", timeutil.FormatDuration(maxStreak)),
+				fmtd(maxStreak), ctlID, fmtd(s.input.MaxUnsafe)),
+			Action:  fmt.Sprintf("Lower --max-unsafe to %s or shorter", fmtd(maxStreak)),
+			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
 		})
 	}
 
@@ -110,9 +115,9 @@ func (s *session) diagnoseEmptyFindings() []Entry {
 			Case:   EmptyFindings,
 			Signal: signalMatchesUnderThreshold,
 			Evidence: fmt.Sprintf("%d unique resources matched; max streak %s; threshold %s",
-				matchedCount, timeutil.FormatDuration(maxStreak), timeutil.FormatDuration(s.input.MaxUnsafe)),
+				matchedCount, fmtd(maxStreak), fmtd(s.input.MaxUnsafe)),
 			Action:  "Lower --max-unsafe or collect snapshots over longer time span",
-			Command: fmt.Sprintf("stave apply --max-unsafe %s", timeutil.FormatDuration(maxStreak)),
+			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
 		})
 	}
 
@@ -176,7 +181,7 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 		return nil
 	}
 
-	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
+	snapshots := sortedSnapshots(input.Snapshots)
 	finalizationTime := resolveFinalizationTime(input.Now, snapshots[len(snapshots)-1].CapturedAt)
 
 	// Build per-asset timelines from sorted snapshots in a single pass.
