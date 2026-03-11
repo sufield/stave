@@ -21,7 +21,7 @@ func EvaluateRecurrenceForControl(
 	t *asset.Timeline,
 	ctl *policy.ControlDefinition,
 	now time.Time,
-) []evaluation.Finding {
+) []*evaluation.Finding {
 	p := ctl.RecurrencePolicy()
 	if !p.Configured() {
 		return nil
@@ -33,7 +33,7 @@ func EvaluateRecurrenceForControl(
 	}
 
 	stats := RecurrenceStats{Count: count, First: first, Last: last}
-	return []evaluation.Finding{*CreateRecurrenceFinding(t, ctl, stats)}
+	return []*evaluation.Finding{CreateRecurrenceFinding(t, ctl, stats)}
 }
 
 // CreateRecurrenceFinding generates a finding based on the frequency of unsafe episodes.
