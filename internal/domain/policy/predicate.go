@@ -28,6 +28,15 @@ type EvalContext struct {
 	PredicateParser func(v any) (*UnsafePredicate, error) // nested predicate parser for any_match
 }
 
+// Param returns a control parameter by name, encapsulating the nil-map check.
+func (ctx EvalContext) Param(key string) (any, bool) {
+	if ctx.Params == nil {
+		return nil, false
+	}
+	v, ok := ctx.Params[key]
+	return v, ok
+}
+
 // ParsePredicate delegates to the configured PredicateParser.
 // Returns (nil, nil) when no parser is configured, letting callers
 // treat absence as a no-op without interrogating the field directly.

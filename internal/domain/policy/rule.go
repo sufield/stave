@@ -56,10 +56,7 @@ func (pr *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
 	// Resolve comparison value (from value or value_from_param)
 	compareValue := pr.Value
 	if pr.ValueFromParam != "" {
-		if ctx.Params == nil {
-			return false
-		}
-		paramValue, ok := ctx.Params[pr.ValueFromParam]
+		paramValue, ok := ctx.Param(pr.ValueFromParam)
 		if !ok || paramValue == nil {
 			return false
 		}
