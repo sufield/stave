@@ -3,6 +3,7 @@ package asset
 import (
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/pkg/fp"
@@ -48,7 +49,7 @@ func diffAsset(in assetDiffInput) *AssetDiff {
 
 // DiffAssets compares two assets and returns property-level changes.
 func DiffAssets(prev, curr Asset) []PropertyChange {
-	changes := make([]PropertyChange, 0)
+	var changes []PropertyChange
 	if prev.Type != curr.Type {
 		changes = append(changes, PropertyChange{Path: "_meta.type", From: prev.Type.String(), To: curr.Type.String()})
 	}
@@ -74,7 +75,7 @@ func diffDeep(path string, from, to any) []PropertyChange {
 	if fromIsMap && toIsMap {
 		keys := uniqueSortedKeys(fromMap, toMap)
 
-		changes := make([]PropertyChange, 0)
+		var changes []PropertyChange
 		for _, k := range keys {
 			changes = append(changes, diffDeep(appendPropertyPath(path, k), fromMap[k], toMap[k])...)
 		}
@@ -87,7 +88,13 @@ func diffDeep(path string, from, to any) []PropertyChange {
 	return nil
 }
 
+// appendPropertyPath joins path segments with dots. Segments that contain
+// dots themselves (common in cloud tags like "aws:s3.bucket") are wrapped
+// in brackets to keep the breadcrumb unambiguous.
 func appendPropertyPath(base, segment string) string {
+	if strings.Contains(segment, ".") {
+		segment = "[" + segment + "]"
+	}
 	if base == "" {
 		return segment
 	}
