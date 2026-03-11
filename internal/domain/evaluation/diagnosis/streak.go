@@ -182,7 +182,7 @@ func detectStreakResets(input Input) []Entry {
 		return nil
 	}
 
-	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
+	snapshots := sortedSnapshots(input.Snapshots)
 	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
 
 	violated := make(map[asset.ID]struct{}, len(input.Findings))
@@ -203,7 +203,7 @@ func detectAnyReset(input Input) bool {
 		return false
 	}
 
-	snapshots := sortedSnapshotsByCapturedAt(input.Snapshots)
+	snapshots := sortedSnapshots(input.Snapshots)
 	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
 
 	allIDs := collectAssetIDs(snapshots)
