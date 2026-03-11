@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,50 +12,52 @@ import (
 )
 
 const (
-	sourceEvidencePolicyStatementsPath = "source_evidence.policy_public_statements"
-	sourceEvidenceACLGranteesPath      = "source_evidence.acl_public_grantees"
+	pathPolicyStatements = "source_evidence.policy_public_statements"
+	pathACLGrantees      = "source_evidence.acl_public_grantees"
+
+	suffixPolicy = "_via_policy"
+	suffixACL    = "_via_acl"
 )
 
-// CreateDurationFinding generates a finding for a specific control.
+// CreateDurationFinding generates a violation finding specifically for duration-based controls.
 func CreateDurationFinding(
-	timeline *asset.Timeline,
+	t *asset.Timeline,
 	ctl *policy.ControlDefinition,
-	maxUnsafe time.Duration,
+	threshold time.Duration,
 	now time.Time,
-) evaluation.Finding {
-	duration := timeline.UnsafeDuration(now)
-	a := timeline.Asset()
+) *evaluation.Finding {
+	a := t.Asset()
+	duration := t.UnsafeDuration(now)
 	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, a.Properties)
-	rootCauses := DeriveRootCauses(misconfigs)
+	causes := DeriveRootCauses(misconfigs)
 
-	f := newBaseFinding(ctl, timeline)
+	f := newBaseFinding(ctl, t)
 	f.Evidence = evaluation.Evidence{
-		FirstUnsafeAt:       timeline.FirstUnsafeAt(),
-		LastSeenUnsafeAt:    timeline.LastSeenUnsafeAt(),
+		FirstUnsafeAt:       t.FirstUnsafeAt(),
+		LastSeenUnsafeAt:    t.LastSeenUnsafeAt(),
 		UnsafeDurationHours: duration.Hours(),
-		ThresholdHours:      maxUnsafe.Hours(),
+		ThresholdHours:      threshold.Hours(),
 		Misconfigurations:   misconfigs,
-		RootCauses:          rootCauses,
-		SourceEvidence:      ExtractSourceEvidence(a, rootCauses),
-		WhyNow:              timeline.FormatUnsafeSummary(maxUnsafe, now),
+		RootCauses:          causes,
+		SourceEvidence:      ExtractSourceEvidence(a, causes),
+		WhyNow:              t.FormatUnsafeSummary(threshold, now),
 	}
-	return *f
+	return f
 }
 
-// DeriveRootCauses extracts mechanism labels from misconfiguration property paths.
-// Paths containing "_via_policy" produce "policy"; "_via_acl" produce "acl".
+// DeriveRootCauses maps misconfiguration property paths to high-level mechanism labels.
 // Stable order: policy before acl. Returns nil if no mechanisms detected.
 func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCause {
-	hasPolicy := false
-	hasACL := false
+	var hasPolicy, hasACL bool
 	for _, mc := range misconfigs {
-		if strings.Contains(mc.Property, "_via_policy") {
+		if strings.Contains(mc.Property, suffixPolicy) {
 			hasPolicy = true
 		}
-		if strings.Contains(mc.Property, "_via_acl") {
+		if strings.Contains(mc.Property, suffixACL) {
 			hasACL = true
 		}
 	}
+
 	var causes []evaluation.RootCause
 	if hasPolicy {
 		causes = append(causes, evaluation.RootCausePolicy)
@@ -66,19 +68,22 @@ func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCau
 	return causes
 }
 
-// ExtractSourceEvidence extracts source evidence from canonical asset
-// properties. The domain relies only on canonical fields and does not read
-// vendor-specific property paths.
-func ExtractSourceEvidence(a asset.Asset, rootCauses []evaluation.RootCause) *evaluation.SourceEvidence {
-	if len(rootCauses) == 0 {
+// ExtractSourceEvidence retrieves supporting raw data from the asset based on the detected root causes.
+func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evaluation.SourceEvidence {
+	if len(causes) == 0 {
 		return nil
 	}
 
 	props := maps.ParseMap(a.Properties)
 	evidence := &evaluation.SourceEvidence{}
 
-	for _, cause := range rootCauses {
-		populateSourceEvidenceForCause(cause, props, evidence)
+	for _, cause := range causes {
+		switch cause {
+		case evaluation.RootCausePolicy:
+			evidence.PolicyPublicStatements = getSortedEvidence(props, pathPolicyStatements)
+		case evaluation.RootCauseACL:
+			evidence.ACLPublicGrantees = getSortedEvidence(props, pathACLGrantees)
+		}
 	}
 
 	if len(evidence.PolicyPublicStatements) == 0 && len(evidence.ACLPublicGrantees) == 0 {
@@ -87,28 +92,12 @@ func ExtractSourceEvidence(a asset.Asset, rootCauses []evaluation.RootCause) *ev
 	return evidence
 }
 
-func populateSourceEvidenceForCause(cause evaluation.RootCause, props maps.Value, evidence *evaluation.SourceEvidence) {
-	switch cause {
-	case evaluation.RootCausePolicy:
-		evidence.PolicyPublicStatements = populateSourceEvidenceList(
-			evidence.PolicyPublicStatements,
-			props,
-			sourceEvidencePolicyStatementsPath,
-		)
-	case evaluation.RootCauseACL:
-		evidence.ACLPublicGrantees = populateSourceEvidenceList(
-			evidence.ACLPublicGrantees,
-			props,
-			sourceEvidenceACLGranteesPath,
-		)
-	}
-}
-
-func populateSourceEvidenceList(existing []string, props maps.Value, path string) []string {
-	if len(existing) > 0 {
-		return existing
-	}
+// getSortedEvidence extracts a string slice from a property path and sorts it for deterministic output.
+func getSortedEvidence(props maps.Value, path string) []string {
 	values := props.GetPath(path).StringSlice()
-	sort.Strings(values)
+	if len(values) == 0 {
+		return nil
+	}
+	slices.Sort(values)
 	return values
 }
