@@ -42,12 +42,15 @@ func ApplySnapshotPlan(in SnapshotPlanApplyInput) (SnapshotPlanApplyResult, erro
 		}
 	}
 
+	// Cache parent directories already created to avoid redundant syscalls.
+	createdDirs := make(map[string]struct{})
+
 	for _, entry := range in.Entries {
 		if entry.Action == ActionKeep {
 			continue
 		}
 		if isArchive {
-			if err := archiveEntry(entry, in.ObservationsRoot, in.ArchiveDir, in.AllowSymlink); err != nil {
+			if err := archiveEntry(entry, in.ObservationsRoot, in.ArchiveDir, in.AllowSymlink, createdDirs); err != nil {
 				return result, err
 			}
 			result.Applied++
@@ -65,7 +68,8 @@ func ApplySnapshotPlan(in SnapshotPlanApplyInput) (SnapshotPlanApplyResult, erro
 }
 
 // archiveEntry moves a single snapshot file from obsRoot into archiveDir.
-func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool) error {
+// createdDirs caches parent directories already created during this run.
+func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool, createdDirs map[string]struct{}) error {
 	src, err := fsutil.JoinWithinRoot(obsRoot, entry.RelPath)
 	if err != nil {
 		return fmt.Errorf("archive %s: source: %w", entry.RelPath, err)
@@ -74,11 +78,15 @@ func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool
 	if err != nil {
 		return fmt.Errorf("archive %s: destination: %w", entry.RelPath, err)
 	}
-	if err := fsutil.SafeMkdirAll(filepath.Dir(dst), fsutil.WriteOptions{
-		Perm:         0o700,
-		AllowSymlink: allowSymlink,
-	}); err != nil {
-		return fmt.Errorf("archive create parent for %s: %w", entry.RelPath, err)
+	parentDir := filepath.Dir(dst)
+	if _, ok := createdDirs[parentDir]; !ok {
+		if err := fsutil.SafeMkdirAll(parentDir, fsutil.WriteOptions{
+			Perm:         0o700,
+			AllowSymlink: allowSymlink,
+		}); err != nil {
+			return fmt.Errorf("archive create parent for %s: %w", entry.RelPath, err)
+		}
+		createdDirs[parentDir] = struct{}{}
 	}
 	if err := MoveSnapshotFile(src, dst, MoveOptions{AllowSymlink: allowSymlink}); err != nil {
 		return fmt.Errorf("archive %s: %w", entry.RelPath, err)
