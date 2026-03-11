@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -12,17 +13,17 @@ type EpisodeHistory struct {
 	episodes []Episode
 }
 
-// Record archives a closed episode.
+// Record archives a closed episode in chronological order by StartAt.
 // PRECONDITION: open episodes are ignored.
 func (h *EpisodeHistory) Record(e Episode) {
 	if e.IsOpen() {
 		return
 	}
-	h.episodes = append(h.episodes, e)
-
-	if last := h.episodes[len(h.episodes)-1]; last.IsOpen() {
-		panic("contract violated: EpisodeHistory must only contain closed episodes")
-	}
+	// Insert in sorted position so scans can short-circuit by time.
+	i, _ := slices.BinarySearchFunc(h.episodes, e, func(a, b Episode) int {
+		return a.startAt.Compare(b.startAt)
+	})
+	h.episodes = slices.Insert(h.episodes, i, e)
 }
 
 // Count returns number of archived episodes.
@@ -31,31 +32,40 @@ func (h *EpisodeHistory) Count() int {
 }
 
 // RecurringViolationCount returns count of episodes that started in the window.
+// Episodes are sorted by StartAt, so we skip before the window and break after.
 func (h *EpisodeHistory) RecurringViolationCount(w kernel.TimeWindow) int {
 	var count int
 	for _, episode := range h.episodes {
-		if w.ContainsExclusive(episode.StartAt()) {
-			count++
+		start := episode.StartAt()
+		if !start.After(w.Start) {
+			continue
 		}
+		if !start.Before(w.End) {
+			break
+		}
+		count++
 	}
 	return count
 }
 
 // WindowSummary returns count and bounds for episodes started in the window.
+// Episodes are sorted by StartAt, so first is taken from the earliest match
+// and we break once past the window.
 func (h *EpisodeHistory) WindowSummary(w kernel.TimeWindow) (count int, first, last time.Time) {
 	for _, episode := range h.episodes {
-		if !w.ContainsExclusive(episode.StartAt()) {
+		start := episode.StartAt()
+		if !start.After(w.Start) {
 			continue
+		}
+		if !start.Before(w.End) {
+			break
 		}
 
 		count++
-		startAt := episode.StartAt()
-		if first.IsZero() || startAt.Before(first) {
-			first = startAt
+		if first.IsZero() {
+			first = start
 		}
-
-		endAt := episode.EndAt()
-		if last.IsZero() || endAt.After(last) {
+		if endAt := episode.EndAt(); last.IsZero() || endAt.After(last) {
 			last = endAt
 		}
 	}
