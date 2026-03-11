@@ -15,31 +15,49 @@ import (
 )
 
 // BuildDependenciesInput configures evaluator dependency assembly.
-// Callers must provide all pre-built dependencies; the evaluator
-// package does not create concrete adapters.
+// Fields are grouped by lifecycle phase: Adapters for injected ports,
+// Runtime for evaluation parameters, Writers for output destinations,
+// and Project for configuration resolution.
 type BuildDependenciesInput struct {
-	Plan EvaluationPlan
+	Plan    EvaluationPlan
+	Context context.Context
 
+	Adapters Adapters
+	Runtime  RuntimeConfig
+	Writers  OutputWriters
+	Project  ProjectScope
+}
+
+// Adapters holds the injected port implementations for evaluation.
+type Adapters struct {
 	FindingMarshaler  appcontracts.FindingMarshaler
 	EnrichFn          appcontracts.EnrichFunc
 	ObservationLoader appcontracts.ObservationRepository
 	ControlLoader     appcontracts.ControlRepository
+}
 
+// RuntimeConfig holds evaluation parameters that control behavior.
+type RuntimeConfig struct {
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
-	Output            io.Writer
-	Stderr            io.Writer
-	AllowUnknownInput bool
 	ToolVersion       string
+	AllowUnknownInput bool
+	ExemptionConfig   *policy.ExemptionConfig
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+}
 
-	ExemptionConfig *policy.ExemptionConfig
+// OutputWriters holds the destination writers for evaluation output.
+type OutputWriters struct {
+	Stdout io.Writer
+	Stderr io.Writer
+}
 
-	ProjectConfig   ProjectConfigInput
-	GitMetadata     *evaluation.GitInfo
-	Filters         ControlFilter
-	ControlsDir     string
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	Context         context.Context
+// ProjectScope holds project configuration and control filtering inputs.
+type ProjectScope struct {
+	Config      ProjectConfigInput
+	GitMetadata *evaluation.GitInfo
+	Filters     ControlFilter
+	ControlsDir string
 }
 
 // BuildDependenciesOutput is the assembled runner + config pair.
@@ -61,7 +79,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 		ctx = context.Background()
 	}
 
-	resolved, err := ResolveProjectConfig(ctx, in.ProjectConfig)
+	resolved, err := ResolveProjectConfig(ctx, in.Project.Config)
 	if err != nil {
 		return BuildDependenciesOutput{}, err
 	}
@@ -71,17 +89,17 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 		return BuildDependenciesOutput{}, err
 	}
 
-	output, stderr := resolveOutputWriters(in.Output, in.Stderr)
+	output, stderr := resolveOutputWriters(in.Writers.Stdout, in.Writers.Stderr)
 
 	opts := []Option{
-		WithRuntime(output, stderr, in.Clock, in.ToolVersion),
-		WithMaxUnsafe(in.MaxUnsafe),
-		WithAllowUnknownInput(in.AllowUnknownInput),
-		WithExemptionConfig(in.ExemptionConfig),
+		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.ToolVersion),
+		WithMaxUnsafe(in.Runtime.MaxUnsafe),
+		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
+		WithExemptionConfig(in.Runtime.ExemptionConfig),
 		WithSuppressionConfig(resolved.SuppressionConfig),
 		WithPreloadedControls(preloaded),
-		WithGitMetadata(in.GitMetadata),
-		WithPredicateParser(in.PredicateParser),
+		WithGitMetadata(in.Project.GitMetadata),
+		WithPredicateParser(in.Runtime.PredicateParser),
 	}
 	if resolved.ControlSource.Source != "" {
 		opts = append(opts, WithControlSource(resolved.ControlSource))
@@ -89,7 +107,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 
 	cfg := NewConfig(in.Plan, opts...)
 
-	runner := NewEvaluateRun(in.ObservationLoader, in.ControlLoader, in.FindingMarshaler, in.EnrichFn)
+	runner := NewEvaluateRun(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
 	runner.Logger = slog.Default()
 
 	return BuildDependenciesOutput{
@@ -100,21 +118,21 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 
 func resolvePreloadedControls(ctx context.Context, in BuildDependenciesInput, resolved ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
 	preloaded := resolved.PreloadedControls
-	if !in.Filters.Enabled() {
+	if !in.Project.Filters.Enabled() {
 		return preloaded, nil
 	}
 	if len(preloaded) == 0 {
-		dir := strings.TrimSpace(in.ControlsDir)
+		dir := strings.TrimSpace(in.Project.ControlsDir)
 		if dir == "" {
 			dir = in.Plan.ControlsPath
 		}
-		loaded, err := in.ControlLoader.LoadControls(ctx, dir)
+		loaded, err := in.Adapters.ControlLoader.LoadControls(ctx, dir)
 		if err != nil {
 			return nil, fmt.Errorf("load controls for filtering: %w", err)
 		}
 		preloaded = loaded
 	}
-	return FilterControls(preloaded, in.Filters)
+	return FilterControls(preloaded, in.Project.Filters)
 }
 
 func resolveOutputWriters(output, stderr io.Writer) (io.Writer, io.Writer) {
@@ -131,16 +149,16 @@ func validateBuildDependenciesInput(in BuildDependenciesInput) error {
 	if in.Plan.ControlsPath == "" {
 		return fmt.Errorf("evaluation plan is required")
 	}
-	if in.ControlLoader == nil {
+	if in.Adapters.ControlLoader == nil {
 		return fmt.Errorf("control loader is not configured")
 	}
-	if in.ObservationLoader == nil {
+	if in.Adapters.ObservationLoader == nil {
 		return fmt.Errorf("observation loader is not configured")
 	}
-	if in.FindingMarshaler == nil {
+	if in.Adapters.FindingMarshaler == nil {
 		return fmt.Errorf("finding marshaler is not configured")
 	}
-	if in.EnrichFn == nil {
+	if in.Adapters.EnrichFn == nil {
 		return fmt.Errorf("enrich function is not configured")
 	}
 	return nil

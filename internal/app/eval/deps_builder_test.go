@@ -45,10 +45,12 @@ func TestBuildDependencies_ValidationErrors(t *testing.T) {
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},
-		FindingMarshaler:  depsMarshalerStub{},
-		EnrichFn:          depsEnrichFn,
-		ObservationLoader: depsObservationRepoStub{},
-		ControlLoader:     depsControlRepoStub{},
+		Adapters: Adapters{
+			FindingMarshaler:  depsMarshalerStub{},
+			EnrichFn:          depsEnrichFn,
+			ObservationLoader: depsObservationRepoStub{},
+			ControlLoader:     depsControlRepoStub{},
+		},
 	}
 
 	tests := []struct {
@@ -66,28 +68,28 @@ func TestBuildDependencies_ValidationErrors(t *testing.T) {
 		{
 			name: "nil control loader",
 			mutate: func(in *BuildDependenciesInput) {
-				in.ControlLoader = nil
+				in.Adapters.ControlLoader = nil
 			},
 			wantErr: "control loader is not configured",
 		},
 		{
 			name: "nil observation loader",
 			mutate: func(in *BuildDependenciesInput) {
-				in.ObservationLoader = nil
+				in.Adapters.ObservationLoader = nil
 			},
 			wantErr: "observation loader is not configured",
 		},
 		{
 			name: "nil finding marshaler",
 			mutate: func(in *BuildDependenciesInput) {
-				in.FindingMarshaler = nil
+				in.Adapters.FindingMarshaler = nil
 			},
 			wantErr: "finding marshaler is not configured",
 		},
 		{
 			name: "nil enrich function",
 			mutate: func(in *BuildDependenciesInput) {
-				in.EnrichFn = nil
+				in.Adapters.EnrichFn = nil
 			},
 			wantErr: "enrich function is not configured",
 		},
@@ -119,12 +121,16 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},
-		FindingMarshaler:  depsMarshalerStub{},
-		EnrichFn:          depsEnrichFn,
-		ObservationLoader: obsRepo,
-		ControlLoader:     ctlRepo,
-		MaxUnsafe:         time.Hour,
-		ToolVersion:       "test",
+		Adapters: Adapters{
+			FindingMarshaler:  depsMarshalerStub{},
+			EnrichFn:          depsEnrichFn,
+			ObservationLoader: obsRepo,
+			ControlLoader:     ctlRepo,
+		},
+		Runtime: RuntimeConfig{
+			MaxUnsafe:   time.Hour,
+			ToolVersion: "test",
+		},
 	})
 	if err != nil {
 		t.Fatalf("BuildDependencies() error = %v", err)
@@ -154,11 +160,15 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},
-		FindingMarshaler:  depsMarshalerStub{},
-		EnrichFn:          depsEnrichFn,
-		ObservationLoader: &depsObservationRepoStub{},
-		ControlLoader:     &depsControlRepoStub{},
-		ExemptionConfig:   exemption,
+		Adapters: Adapters{
+			FindingMarshaler:  depsMarshalerStub{},
+			EnrichFn:          depsEnrichFn,
+			ObservationLoader: &depsObservationRepoStub{},
+			ControlLoader:     &depsControlRepoStub{},
+		},
+		Runtime: RuntimeConfig{
+			ExemptionConfig: exemption,
+		},
 	})
 	if err != nil {
 		t.Fatalf("BuildDependencies() error = %v", err)

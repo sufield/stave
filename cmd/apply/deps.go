@@ -164,24 +164,32 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 	output := compose.ResolveStdout(f.cmd, cmdutil.QuietEnabled(f.cmd), format)
 
 	return appeval.BuildDependenciesInput{
-		Plan:              *plan,
-		FindingMarshaler:  res.marshaler,
-		EnrichFn:          res.enrichFn,
-		ObservationLoader: res.obsLoader,
-		ControlLoader:     res.ctlLoader,
-		MaxUnsafe:         f.params.maxDuration,
-		Clock:             f.params.clock,
-		Output:            output,
-		Stderr:            f.cmd.ErrOrStderr(),
-		AllowUnknownInput: f.flags.allowUnknownInput,
-		ToolVersion:       version.Version,
-		ExemptionConfig:   res.exemptionCfg,
-		ProjectConfig:     f.buildProjectConfig(),
-		GitMetadata:       res.gitMeta,
-		Filters:           f.buildFilter(),
-		ControlsDir:       f.flags.controlsDir,
-		PredicateParser:   ctlyaml.YAMLPredicateParser,
-		Context:           f.cmd.Context(),
+		Plan:    *plan,
+		Context: f.cmd.Context(),
+		Adapters: appeval.Adapters{
+			FindingMarshaler:  res.marshaler,
+			EnrichFn:          res.enrichFn,
+			ObservationLoader: res.obsLoader,
+			ControlLoader:     res.ctlLoader,
+		},
+		Runtime: appeval.RuntimeConfig{
+			MaxUnsafe:         f.params.maxDuration,
+			Clock:             f.params.clock,
+			ToolVersion:       version.Version,
+			AllowUnknownInput: f.flags.allowUnknownInput,
+			ExemptionConfig:   res.exemptionCfg,
+			PredicateParser:   ctlyaml.YAMLPredicateParser,
+		},
+		Writers: appeval.OutputWriters{
+			Stdout: output,
+			Stderr: f.cmd.ErrOrStderr(),
+		},
+		Project: appeval.ProjectScope{
+			Config:      f.buildProjectConfig(),
+			GitMetadata: res.gitMeta,
+			Filters:     f.buildFilter(),
+			ControlsDir: f.flags.controlsDir,
+		},
 	}
 }
 
