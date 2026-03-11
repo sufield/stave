@@ -202,9 +202,7 @@ func buildFixLoopVerification(
 	resolved := shared.FindingsToVerificationEntries(diff.Resolved)
 	remaining := shared.FindingsToVerificationEntries(diff.Remaining)
 	introduced := shared.FindingsToVerificationEntries(diff.Introduced)
-	verification := safetyenvelope.Verification{
-		SchemaVersion: kernel.SchemaOutput,
-		Kind:          safetyenvelope.KindVerification,
+	verification := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
 			ToolVersion:     version.Version,
 			Offline:         true,
@@ -223,8 +221,7 @@ func buildFixLoopVerification(
 		Resolved:   resolved,
 		Remaining:  remaining,
 		Introduced: introduced,
-	}
-	verification.Normalize()
+	})
 	if err := safetyenvelope.ValidateVerification(verification); err != nil {
 		return safetyenvelope.Verification{}, fmt.Errorf("verification schema validation: %w", err)
 	}

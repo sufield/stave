@@ -38,10 +38,15 @@ func TestNewEvaluation_NormalizesSlices(t *testing.T) {
 	}
 }
 
-func TestVerificationNormalize(t *testing.T) {
-	v := Verification{}
-	v.Normalize()
+func TestNewVerification_NormalizesSlices(t *testing.T) {
+	v := NewVerification(VerificationRequest{})
 
+	if v.SchemaVersion != kernel.SchemaOutput {
+		t.Fatalf("SchemaVersion = %q, want %q", v.SchemaVersion, kernel.SchemaOutput)
+	}
+	if v.Kind != KindVerification {
+		t.Fatalf("Kind = %q, want %q", v.Kind, KindVerification)
+	}
 	if v.Resolved == nil {
 		t.Fatal("Resolved should be normalized to empty slice")
 	}

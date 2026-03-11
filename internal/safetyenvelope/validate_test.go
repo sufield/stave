@@ -52,9 +52,7 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 		t.Fatalf("ValidateEvaluation() error = %v", err)
 	}
 
-	verification := Verification{
-		SchemaVersion: kernel.SchemaOutput,
-		Kind:          KindVerification,
+	verification := NewVerification(VerificationRequest{
 		Run: VerificationRunInfo{
 			ToolVersion:     "test",
 			Offline:         true,
@@ -70,8 +68,7 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 			Remaining:        0,
 			Introduced:       0,
 		},
-	}
-	verification.Normalize()
+	})
 	if err := ValidateVerification(verification); err != nil {
 		t.Fatalf("ValidateVerification() error = %v", err)
 	}

@@ -130,7 +130,30 @@ type VerificationEntry struct {
 	AssetType   kernel.AssetType `json:"asset_type"`
 }
 
-func (v *Verification) Normalize() {
+// VerificationRequest bundles inputs for constructing a Verification envelope.
+type VerificationRequest struct {
+	Run        VerificationRunInfo
+	Summary    VerificationSummary
+	Resolved   []VerificationEntry
+	Remaining  []VerificationEntry
+	Introduced []VerificationEntry
+}
+
+func NewVerification(req VerificationRequest) Verification {
+	out := Verification{
+		SchemaVersion: kernel.SchemaOutput,
+		Kind:          KindVerification,
+		Run:           req.Run,
+		Summary:       req.Summary,
+		Resolved:      req.Resolved,
+		Remaining:     req.Remaining,
+		Introduced:    req.Introduced,
+	}
+	out.normalize()
+	return out
+}
+
+func (v *Verification) normalize() {
 	v.Resolved = normalizeSlice(v.Resolved)
 	v.Remaining = normalizeSlice(v.Remaining)
 	v.Introduced = normalizeSlice(v.Introduced)
