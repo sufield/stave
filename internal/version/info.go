@@ -11,15 +11,6 @@ var (
 	BuiltBy    = ""
 )
 
-// ShortCommit returns a 7-character prefix of the commit hash,
-// suitable for CLI display. Returns the full string if shorter.
-func ShortCommit() string {
-	if len(Commit) > 7 {
-		return Commit[:7]
-	}
-	return Commit
-}
-
 func init() {
 	info, ok := debug.ReadBuildInfo()
 	if !ok {

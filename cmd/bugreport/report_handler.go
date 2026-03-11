@@ -86,7 +86,7 @@ func writeSummary(cmd *cobra.Command, outPath string) error {
 	if _, err := fmt.Fprintf(w, "Created diagnostic bundle: %s\n", outPath); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Attach this file when filing an issue: %s\n", metadata.CLIIssuesURL); err != nil {
+	if _, err := fmt.Fprintf(w, "Attach this file when filing an issue: %s\n", metadata.IssuesRef()); err != nil {
 		return err
 	}
 	_, err := fmt.Fprintf(w, "\nTo view bundle contents:\n  stave bug-report inspect %s\n", outPath)

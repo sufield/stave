@@ -38,7 +38,7 @@ func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile st
 	}
 	manifest := integrity.Manifest{
 		Files:   files,
-		Overall: computeOverallHash(files),
+		Overall: integrity.ComputeOverall(files),
 	}
 
 	data, err := json.MarshalIndent(manifest, "", "  ")

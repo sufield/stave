@@ -5,14 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"slices"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -32,7 +28,7 @@ func runSnapshotManifestSign(cmd *cobra.Command, inFile, keyPath, outFile string
 	if err = json.Unmarshal(manifestData, &manifest); err != nil {
 		return fmt.Errorf("parse manifest %q: %w", in, err)
 	}
-	if err = validateManifestOverall(manifest); err != nil {
+	if err = manifest.ValidateOverall(); err != nil {
 		return fmt.Errorf("invalid manifest %q: %w", in, err)
 	}
 	privateKey, err := loadPrivateKey(privateKeyPath)
@@ -74,26 +70,4 @@ func loadPrivateKey(path string) (ed25519.PrivateKey, error) {
 		return nil, fmt.Errorf("unsupported key encoding; expected PEM private key: %w", err)
 	}
 	return privateKey, nil
-}
-
-func validateManifestOverall(manifest integrity.Manifest) error {
-	recomputed := computeOverallHash(manifest.Files)
-	if manifest.Overall != recomputed {
-		return fmt.Errorf("overall hash mismatch (expected %s, got %s)", recomputed, manifest.Overall)
-	}
-	return nil
-}
-
-func computeOverallHash(files map[evaluation.FilePath]kernel.Digest) kernel.Digest {
-	names := make([]string, 0, len(files))
-	for name := range files {
-		names = append(names, string(name))
-	}
-	slices.Sort(names)
-
-	var b strings.Builder
-	for _, name := range names {
-		fmt.Fprintf(&b, "%s=%s\n", name, files[evaluation.FilePath(name)])
-	}
-	return platformcrypto.HashBytes([]byte(b.String()))
 }

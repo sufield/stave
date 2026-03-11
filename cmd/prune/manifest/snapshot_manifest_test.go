@@ -115,7 +115,7 @@ func TestValidateManifestOverall_Mismatch(t *testing.T) {
 		},
 		Overall: kernel.Digest(strings.Repeat("b", 64)),
 	}
-	if err := validateManifestOverall(manifest); err == nil {
+	if err := manifest.ValidateOverall(); err == nil {
 		t.Fatalf("expected overall mismatch error")
 	}
 }
@@ -127,7 +127,7 @@ func TestCanonicalManifestBytes_Deterministic(t *testing.T) {
 			"a.json": kernel.Digest(strings.Repeat("a", 64)),
 		},
 	}
-	m1.Overall = computeOverallHash(m1.Files)
+	m1.Overall = integrity.ComputeOverall(m1.Files)
 
 	m2 := integrity.Manifest{
 		Files: map[evaluation.FilePath]kernel.Digest{
@@ -135,7 +135,7 @@ func TestCanonicalManifestBytes_Deterministic(t *testing.T) {
 			"b.json": kernel.Digest(strings.Repeat("b", 64)),
 		},
 	}
-	m2.Overall = computeOverallHash(m2.Files)
+	m2.Overall = integrity.ComputeOverall(m2.Files)
 
 	b1, err := m1.CanonicalBytes()
 	if err != nil {
