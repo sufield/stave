@@ -6,83 +6,62 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// BuildTimelinesPerControl constructs timelines for each asset, per control.
+// BuildTimelinesPerControl constructs chronological timelines for each asset across all controls.
 //
 // MVP 1.0 Semantics:
-// - Absence of an asset in a snapshot does NOT imply safe (no new evidence)
-// - Episodes only contain completed episodes (true -> false transitions)
-// - Open episodes remain represented by timeline open-state timestamps
+// - Absence of an asset in a snapshot does NOT imply it is safe (no new evidence).
+// - Episodes array only contains COMPLETED episodes (unsafe -> safe transition).
+// - Open episodes (unsafe at end of input) are tracked via the timeline's state fields.
 func BuildTimelinesPerControl(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	predicateParser func(any) (*policy.UnsafePredicate, error),
-) map[kernel.ControlID]map[string]*asset.Timeline {
-	// map[controlID][assetID]*asset.Timeline
-	result := make(map[kernel.ControlID]map[string]*asset.Timeline)
+) map[kernel.ControlID]map[asset.ID]*asset.Timeline {
 
+	// Initialize result map with capacity hints.
+	timelinesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.Timeline, len(controls))
 	for _, ctl := range controls {
-		timelines := make(map[string]*asset.Timeline)
-		result[ctl.ID] = timelines
+		timelinesByControl[ctl.ID] = make(map[asset.ID]*asset.Timeline)
+	}
 
-		for _, snapshot := range snapshots {
-			recordSnapshotForControl(timelines, ctl, snapshot, predicateParser)
+	// Iterate through Snapshots -> Assets -> Controls.
+	// This "pivots" the data into the requested shape in O(S*A*C) time,
+	// but only traverses the snapshot list once.
+	for _, snap := range snapshots {
+		captureTime := snap.CapturedAt
+
+		for _, a := range snap.Assets {
+			for _, ctl := range controls {
+				timelines := timelinesByControl[ctl.ID]
+
+				// Get or initialize timeline.
+				t, exists := timelines[a.ID]
+				if !exists {
+					t = asset.NewTimeline(a)
+					timelines[a.ID] = t
+				}
+
+				// Evaluate and record.
+				isUnsafe := checkUnsafe(ctl, a, snap, predicateParser)
+				t.RecordObservation(captureTime, isUnsafe)
+
+				// Always update the materialized asset to the most recent version.
+				t.SetAsset(a)
+			}
 		}
-
-		// NOTE: We intentionally do NOT close episodes when:
-		// 1. Asset disappears from latest snapshot (absence != safe)
-		// 2. Asset is still unsafe at end of input (open episodes stay open)
-		//
-		// Episodes array only contains COMPLETED episodes (true -> false).
-		// Open episode state is tracked on timeline state fields.
 	}
 
-	for _, ctl := range controls {
-		if _, ok := result[ctl.ID]; !ok {
-			panic("postcondition failed: BuildTimelinesPerControl missing entry for control " + string(ctl.ID))
-		}
-	}
-
-	return result
+	return timelinesByControl
 }
 
-func recordSnapshotForControl(
-	timelines map[string]*asset.Timeline,
-	ctl policy.ControlDefinition,
-	snapshot asset.Snapshot,
-	predicateParser func(any) (*policy.UnsafePredicate, error),
-) {
-	for _, a := range snapshot.Assets {
-		timeline := getOrCreateTimeline(timelines, a)
-		isUnsafe := isAssetUnsafeForControl(ctl, a, snapshot, predicateParser)
-
-		timeline.RecordObservation(snapshot.CapturedAt, isUnsafe)
-		// Always keep the latest observed asset materialized on the timeline.
-		timeline.SetAsset(a)
-	}
-}
-
-func getOrCreateTimeline(
-	timelines map[string]*asset.Timeline,
-	a asset.Asset,
-) *asset.Timeline {
-	assetID := a.ID.String()
-	timeline, exists := timelines[assetID]
-	if exists {
-		return timeline
-	}
-
-	timeline = asset.NewTimeline(a)
-	timelines[assetID] = timeline
-	return timeline
-}
-
-func isAssetUnsafeForControl(
+// checkUnsafe encapsulates the logic to evaluate an asset against a control predicate.
+func checkUnsafe(
 	ctl policy.ControlDefinition,
 	a asset.Asset,
-	snapshot asset.Snapshot,
-	predicateParser func(any) (*policy.UnsafePredicate, error),
+	snap asset.Snapshot,
+	parser func(any) (*policy.UnsafePredicate, error),
 ) bool {
-	ctx := policy.NewAssetEvalContextWithIdentities(a, ctl.Params, snapshot.Identities)
-	ctx.PredicateParser = predicateParser
+	ctx := policy.NewAssetEvalContextWithIdentities(a, ctl.Params, snap.Identities)
+	ctx.PredicateParser = parser
 	return ctl.UnsafePredicate.EvaluateWithContext(ctx)
 }
