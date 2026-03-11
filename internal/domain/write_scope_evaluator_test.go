@@ -50,7 +50,6 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 					Type:   kernel.TypeUploadPolicy,
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
-						"type": "upload_policy",
 						"upload": map[string]any{
 							"container":        "orders-storage",
 							"operation":        "write",
@@ -80,7 +79,6 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 					Type:   kernel.TypeUploadPolicy,
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
-						"type": "upload_policy",
 						"upload": map[string]any{
 							"container":        "orders-storage",
 							"operation":        "write",
@@ -156,7 +154,6 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 					Type:   kernel.TypeUploadPolicy,
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
-						"type": "upload_policy",
 						"upload": map[string]any{
 							"container":        "orders-storage",
 							"operation":        "write",
@@ -175,7 +172,6 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 					Type:   kernel.TypeUploadPolicy,
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
-						"type": "upload_policy",
 						"upload": map[string]any{
 							"container":        "orders-storage",
 							"operation":        "write",

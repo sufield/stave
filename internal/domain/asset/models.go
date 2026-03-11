@@ -23,10 +23,18 @@ type Asset struct {
 	Source     *SourceRef       `json:"source,omitempty"`
 }
 
-// Map returns predicate-evaluable properties.
-// Returns nil when Properties is empty so callers can detect the absence.
+// Map returns predicate-evaluable properties including core fields.
+// Mirrors CloudIdentity.Map() so the predicate engine sees a consistent
+// set of base fields (id, type, vendor) across all evaluated components.
 func (r Asset) Map() map[string]any {
-	return r.Properties
+	out := make(map[string]any, len(r.Properties)+3)
+	out["id"] = r.ID
+	out["type"] = r.Type
+	out["vendor"] = r.Vendor
+	if r.Properties != nil {
+		maps.Copy(out, r.Properties)
+	}
+	return out
 }
 
 // CloudIdentity represents an IAM identity such as a user, role, or service account.
