@@ -22,7 +22,7 @@ type EvaluationRequest struct {
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
 // This keeps command adapters from directly constructing domain evaluators.
-func EvaluateLoaded(req EvaluationRequest) evaluation.Result {
+func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 	if req.Clock == nil {
 		req.Clock = ports.NewRealClock()
 	}

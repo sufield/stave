@@ -1,10 +1,9 @@
 package engine
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"cmp"
+	"errors"
 	"slices"
-	"sort"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
@@ -12,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // Runner executes evaluation logic over snapshots.
@@ -36,7 +36,7 @@ func (e *Runner) getMaxUnsafeForControl(ctl *policy.ControlDefinition) time.Dura
 }
 
 // normalizeSnapshots returns a copy of snapshots sorted by captured_at ascending.
-func normalizeSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
+func (e *Runner) normalizeSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 	sorted := slices.Clone(snapshots)
 	slices.SortFunc(sorted, func(a, b asset.Snapshot) int {
 		return a.CapturedAt.Compare(b.CapturedAt)
@@ -54,11 +54,11 @@ func (e *Runner) deterministicNow(sorted []asset.Snapshot) time.Time {
 }
 
 // Evaluate processes snapshots and returns findings for unsafe duration violations.
-func (e *Runner) Evaluate(snapshots []asset.Snapshot) evaluation.Result {
+func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error) {
 	if e.Clock == nil {
-		panic("precondition failed: Runner.Evaluate requires non-nil Clock")
+		return evaluation.Result{}, errors.New("precondition failed: Runner.Evaluate requires non-nil Clock")
 	}
-	sorted := normalizeSnapshots(snapshots)
+	sorted := e.normalizeSnapshots(snapshots)
 	now := e.deterministicNow(sorted)
 
 	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.PredicateParser)
@@ -80,14 +80,14 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) evaluation.Result {
 			continue
 		}
 
-		e.evaluateControlAcrossTimelines(&ctl, timelinesPerInv[ctl.ID], now, acc)
+		e.evaluateControl(&ctl, timelinesPerInv[ctl.ID], now, acc)
 	}
 
-	return e.sortAndBuildResult(acc, now, len(snapshots))
+	return e.buildResult(acc, now, len(snapshots)), nil
 }
 
-// evaluateControlAcrossTimelines evaluates a single control across all asset timelines.
-func (e *Runner) evaluateControlAcrossTimelines(
+// evaluateControl evaluates a single control across all asset timelines.
+func (e *Runner) evaluateControl(
 	ctl *policy.ControlDefinition,
 	timelines map[string]*asset.Timeline,
 	now time.Time,
@@ -95,7 +95,16 @@ func (e *Runner) evaluateControlAcrossTimelines(
 ) {
 	strategy := e.strategyFor(ctl)
 
-	for assetID, timeline := range timelines {
+	// Deterministic iteration: sort asset IDs first.
+	assetIDs := make([]string, 0, len(timelines))
+	for id := range timelines {
+		assetIDs = append(assetIDs, id)
+	}
+	slices.Sort(assetIDs)
+
+	for _, assetID := range assetIDs {
+		timeline := timelines[assetID]
+
 		// Check if asset is exempted.
 		if rule := e.Exemptions.ShouldExempt(assetID); rule != nil {
 			if acc.TrackExemption(asset.ID(assetID)) {
@@ -126,22 +135,22 @@ func (e *Runner) evaluateControlAcrossTimelines(
 	}
 }
 
-// sortAndBuildResult sorts accumulated data and constructs the final Result.
-func (e *Runner) sortAndBuildResult(acc *Accumulator, now time.Time, snapshotCount int) evaluation.Result {
+// buildResult sorts accumulated data and constructs the final Result.
+func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int) evaluation.Result {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
 
 	// Sort skipped assets for deterministic output.
-	sort.Slice(acc.skippedByAst, func(i, j int) bool {
-		return acc.skippedByAst[i].ID < acc.skippedByAst[j].ID
+	slices.SortFunc(acc.skippedByAst, func(a, b asset.SkippedAsset) int {
+		return cmp.Compare(a.ID, b.ID)
 	})
 
 	// Sort rows for deterministic output (by control_id, then asset_id).
-	sort.Slice(acc.rows, func(i, j int) bool {
-		if acc.rows[i].ControlID != acc.rows[j].ControlID {
-			return acc.rows[i].ControlID < acc.rows[j].ControlID
+	slices.SortFunc(acc.rows, func(a, b evaluation.Row) int {
+		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
+			return c
 		}
-		return acc.rows[i].AssetID < acc.rows[j].AssetID
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 
 	regularFindings, suppressedFindings := e.partitionFindings(acc.findings, now)
@@ -154,7 +163,7 @@ func (e *Runner) sortAndBuildResult(acc *Accumulator, now time.Time, snapshotCou
 			MaxUnsafe:   kernel.Duration(e.MaxUnsafe),
 			Snapshots:   snapshotCount,
 			InputHashes: e.InputHashes,
-			PackHash:    computePackHash(e.Controls),
+			PackHash:    e.computePackHash(),
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: len(acc.seenAssets),
@@ -193,19 +202,14 @@ func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time)
 // computePackHash returns a deterministic SHA-256 hex digest of the evaluated
 // control set, keyed on sorted control IDs. This enables auditability of
 // which controls were active during an evaluation run.
-func computePackHash(controls []policy.ControlDefinition) kernel.Digest {
-	if len(controls) == 0 {
+func (e *Runner) computePackHash() kernel.Digest {
+	if len(e.Controls) == 0 {
 		return ""
 	}
-	ids := make([]string, len(controls))
-	for i, ctl := range controls {
+	ids := make([]string, len(e.Controls))
+	for i, ctl := range e.Controls {
 		ids[i] = string(ctl.ID)
 	}
-	sort.Strings(ids)
-	h := sha256.New()
-	for _, id := range ids {
-		h.Write([]byte(id))
-		h.Write([]byte{'\n'})
-	}
-	return kernel.Digest(hex.EncodeToString(h.Sum(nil)))
+	slices.Sort(ids)
+	return crypto.HashDelimited(ids, '\n')
 }

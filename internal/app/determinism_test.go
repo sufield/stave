@@ -110,12 +110,15 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 	// Run evaluation and serialize to JSON — twice
 	var outputs [2][]byte
 	for i := range 2 {
-		result := service.Evaluate(service.EvaluateInput{
+		result, evalErr := service.Evaluate(service.EvaluateInput{
 			Controls:  controls,
 			Snapshots: snapshots,
 			MaxUnsafe: maxUnsafe,
 			Clock:     clock,
 		})
+		if evalErr != nil {
+			t.Fatalf("run %d: Evaluate failed: %v", i, evalErr)
+		}
 		result.Run.ToolVersion = "test-v1"
 		result.Run.InputHashes = &evaluation.InputHashes{
 			Overall: "abc123",
@@ -189,12 +192,15 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	var outputs [10][]byte
 	for i := range 10 {
-		result := service.Evaluate(service.EvaluateInput{
+		result, evalErr := service.Evaluate(service.EvaluateInput{
 			Controls:  controls,
 			Snapshots: snapshots,
 			MaxUnsafe: maxUnsafe,
 			Clock:     clock,
 		})
+		if evalErr != nil {
+			t.Fatalf("run %d: Evaluate failed: %v", i, evalErr)
+		}
 		result.Run.ToolVersion = "test-v1"
 
 		writer := outjson.NewFindingWriter(true)

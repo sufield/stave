@@ -75,7 +75,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 	}
 	snapshots := preflight.Snapshots
 
-	result := service.Evaluate(service.EvaluateInput{
+	result, err := service.Evaluate(service.EvaluateInput{
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafe:         cfg.MaxUnsafe,
@@ -87,6 +87,9 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		PredicateParser:   cfg.PredicateParser,
 		Metadata:          cfg.Metadata,
 	})
+	if err != nil {
+		return "", fmt.Errorf("evaluation failed: %w", err)
+	}
 
 	// Write output: use explicit pipeline when available, else fallback writer.
 	if err := e.writeOutput(ctx, cfg.Output, result); err != nil {

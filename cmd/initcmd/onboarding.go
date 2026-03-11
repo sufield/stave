@@ -77,13 +77,16 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 		sourceLabel = "built-in demo fixture"
 	}
 
-	result := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, evalErr := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:    controls,
 		Snapshots:   snapshots,
 		MaxUnsafe:   0,
 		Clock:       clockadp.FixedClock{Time: snapshots[len(snapshots)-1].CapturedAt},
 		ToolVersion: GetVersion(),
 	})
+	if evalErr != nil {
+		return onboardingCommandError(evalErr, "stave quickstart")
+	}
 	findings := remediation.NewMapper().EnrichFindings(result)
 	latest := snapshots[len(snapshots)-1]
 	reportNow, err := resolveQuickstartReportTime(latest, flags)
@@ -298,13 +301,16 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 	}
 
 	lastSnap := snapshots[len(snapshots)-1]
-	result := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, evalErr := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:    controls,
 		Snapshots:   snapshots,
 		MaxUnsafe:   0,
 		Clock:       clockadp.FixedClock{Time: lastSnap.CapturedAt},
 		ToolVersion: GetVersion(),
 	})
+	if evalErr != nil {
+		return onboardingCommandError(evalErr, "stave demo")
+	}
 	findings := remediation.NewMapper().EnrichFindings(result)
 
 	reportNow := lastSnap.CapturedAt.UTC()

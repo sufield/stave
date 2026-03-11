@@ -85,7 +85,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 	done := progress.BeginProgress("apply profile observations")
 	defer done()
 
-	result := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, evalErr := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:        controls,
 		Snapshots:       filteredSnapshots,
 		MaxUnsafe:       0,
@@ -93,6 +93,9 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		ToolVersion:     version.Version,
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
+	if evalErr != nil {
+		return evalErr
+	}
 
 	cannotProveSafeCount := asset.CountUnprovablySafe(filteredSnapshots)
 

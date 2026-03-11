@@ -44,17 +44,20 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 		return nil, 0, fmt.Errorf("%w: no snapshots in %s", ErrNoSnapshots, req.ObservationsDir)
 	}
 
-	if err := ValidateSourceTypeCompatibility(snapshots, req.AllowUnknownType, nil); err != nil {
+	if err = ValidateSourceTypeCompatibility(snapshots, req.AllowUnknownType, nil); err != nil {
 		return nil, 0, fmt.Errorf("source_type compatibility in %s: %w", req.ObservationsDir, err)
 	}
 
-	result := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:    req.Controls,
 		Snapshots:   snapshots,
 		MaxUnsafe:   req.MaxUnsafe,
 		Clock:       req.Clock,
 		ToolVersion: req.ToolVersion,
 	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("evaluation failed: %w", err)
+	}
 
 	return &result, len(snapshots), nil
 }

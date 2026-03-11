@@ -10,13 +10,16 @@ import (
 )
 
 func TestEvaluateLoaded_DefaultsClockWhenNil(t *testing.T) {
-	result := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:    nil,
 		Snapshots:   nil,
 		MaxUnsafe:   24 * time.Hour,
 		Clock:       nil,
 		ToolVersion: "test-version",
 	})
+	if err != nil {
+		t.Fatalf("EvaluateLoaded returned error: %v", err)
+	}
 
 	if result.Run.ToolVersion != "test-version" {
 		t.Fatalf("tool_version=%q, want %q", result.Run.ToolVersion, "test-version")
