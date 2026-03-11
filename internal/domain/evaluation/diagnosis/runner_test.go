@@ -51,15 +51,15 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		Now:       baseTime.Add(48 * time.Hour),
 	})
 
-	report := Run(input)
+	report := Explain(input)
 
 	// Should detect threshold mismatch
-	if len(report.Entries) == 0 {
+	if len(report.Issues) == 0 {
 		t.Error("expected diagnostics for threshold mismatch")
 	}
 
 	found := false
-	for _, d := range report.Entries {
+	for _, d := range report.Issues {
 		if d.Signal == "Threshold exceeds observed unsafe duration" {
 			found = true
 			break
@@ -110,10 +110,10 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		Now:       baseTime.Add(24 * time.Hour),
 	})
 
-	report := Run(input)
+	report := Explain(input)
 
 	found := false
-	for _, d := range report.Entries {
+	for _, d := range report.Issues {
 		if d.Signal == "Time span shorter than threshold" {
 			found = true
 			break
@@ -164,10 +164,10 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		Now:       baseTime.Add(200 * time.Hour),
 	})
 
-	report := Run(input)
+	report := Explain(input)
 
 	found := false
-	for _, d := range report.Entries {
+	for _, d := range report.Issues {
 		if d.Case == ExpectedNone && d.Signal != "" {
 			if d.Signal == "No resources matched unsafe_predicate for CTL.EXP.DURATION.001" {
 				found = true
@@ -213,10 +213,10 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 		Now:       baseTime.Add(100 * time.Hour), // Before latest snapshot
 	})
 
-	report := Run(input)
+	report := Explain(input)
 
 	found := false
-	for _, d := range report.Entries {
+	for _, d := range report.Issues {
 		if d.Signal == "Evaluation time before latest snapshot" {
 			found = true
 			break
@@ -263,7 +263,7 @@ func TestRun_Summary(t *testing.T) {
 		Now:       baseTime.Add(240 * time.Hour),
 	})
 
-	report := Run(input)
+	report := Explain(input)
 
 	if report.Summary.TotalSnapshots != 2 {
 		t.Errorf("expected 2 snapshots, got %d", report.Summary.TotalSnapshots)

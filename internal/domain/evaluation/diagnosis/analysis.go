@@ -32,7 +32,7 @@ type controlStat struct {
 }
 
 // session holds precomputed control stats for a diagnostic run,
-// avoiding redundant recomputation across diagnoseNoViolations and diagnoseEmptyFindings.
+// avoiding redundant recomputation across diagnostic methods.
 type session struct {
 	input       Input
 	stats       map[kernel.ControlID]controlStat
@@ -69,13 +69,14 @@ func (s *session) countUniqueMatches() int {
 	return len(unique)
 }
 
-// diagnoseNoViolations checks for issues when user expected violations but got none.
-func (s *session) diagnoseNoViolations() []Entry {
-	var entries []Entry
+// diagnoseMissingFindings checks for issues when no violations were found.
+func (s *session) diagnoseMissingFindings() []Issue {
+	var issues []Issue
 
+	// Threshold issues: streaks exist but are too short.
 	maxStreak, ctlID := s.globalMaxStreak()
 	if maxStreak > 0 && maxStreak < s.input.MaxUnsafe {
-		entries = append(entries, Entry{
+		issues = append(issues, Issue{
 			Case:   ExpectedNone,
 			Signal: signalThresholdExceedsObserved,
 			Evidence: fmt.Sprintf("Max unsafe streak: %s (control %s); threshold: %s",
@@ -85,44 +86,17 @@ func (s *session) diagnoseNoViolations() []Entry {
 		})
 	}
 
-	if report := checkTimeSpan(s.input); report != nil {
-		entries = append(entries, *report)
+	// Predicate match issues.
+	issues = append(issues, s.diagnosePredicateMatches()...)
+
+	// Temporal issues: history is too short.
+	if tsIssue := checkTimeSpan(s.input); tsIssue != nil {
+		issues = append(issues, *tsIssue)
 	}
 
-	entries = append(entries, s.checkPerControlMatches()...)
-
-	return entries
-}
-
-// diagnoseEmptyFindings checks for issues when findings array is empty.
-func (s *session) diagnoseEmptyFindings() []Entry {
-	var entries []Entry
-
-	matchedCount := s.countUniqueMatches()
-	if matchedCount == 0 {
-		entries = append(entries, Entry{
-			Case:     EmptyFindings,
-			Signal:   signalNoPredicateMatchesAny,
-			Evidence: fmt.Sprintf("0/%d unique resources matched predicates across %d controls", s.totalAssets, len(s.input.Controls)),
-			Action:   "Verify extractor writes expected properties, or adjust predicate field paths",
-		})
-		return entries
-	}
-
-	maxStreak, _ := s.globalMaxStreak()
-	if maxStreak > 0 && maxStreak < s.input.MaxUnsafe {
-		entries = append(entries, Entry{
-			Case:   EmptyFindings,
-			Signal: signalMatchesUnderThreshold,
-			Evidence: fmt.Sprintf("%d unique resources matched; max streak %s; threshold %s",
-				matchedCount, fmtd(maxStreak), fmtd(s.input.MaxUnsafe)),
-			Action:  "Lower --max-unsafe or collect snapshots over longer time span",
-			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
-		})
-	}
-
+	// Reset behavior.
 	if detectAnyReset(s.input) {
-		entries = append(entries, Entry{
+		issues = append(issues, Issue{
 			Case:     EmptyFindings,
 			Signal:   signalAssetsResetBeforeMax,
 			Evidence: "Unsafe streaks were reset when resources became safe",
@@ -130,16 +104,27 @@ func (s *session) diagnoseEmptyFindings() []Entry {
 		})
 	}
 
-	return entries
+	return issues
 }
 
-func (s *session) checkPerControlMatches() []Entry {
-	var entries []Entry
+func (s *session) diagnosePredicateMatches() []Issue {
+	var issues []Issue
 
+	uniqueMatches := s.countUniqueMatches()
+	if uniqueMatches == 0 && s.totalAssets > 0 {
+		issues = append(issues, Issue{
+			Case:     EmptyFindings,
+			Signal:   signalNoPredicateMatchesAny,
+			Evidence: fmt.Sprintf("0/%d unique resources matched predicates across %d controls", s.totalAssets, len(s.input.Controls)),
+			Action:   "Verify extractor writes expected properties, or adjust predicate field paths",
+		})
+	}
+
+	// Per-control match check.
 	for _, ctl := range s.input.Controls {
 		stat, ok := s.stats[ctl.ID]
 		if ok && len(stat.matchedAssetIDs) == 0 && s.totalAssets > 0 {
-			entries = append(entries, Entry{
+			issues = append(issues, Issue{
 				Case:   ExpectedNone,
 				Signal: fmt.Sprintf("No resources matched unsafe_predicate for %s", ctl.ID),
 				Evidence: fmt.Sprintf("0/%d unique resources matched %s",
@@ -149,25 +134,40 @@ func (s *session) checkPerControlMatches() []Entry {
 		}
 	}
 
-	return entries
+	// Under-threshold matches.
+	if uniqueMatches > 0 {
+		maxStreak, _ := s.globalMaxStreak()
+		if maxStreak > 0 && maxStreak < s.input.MaxUnsafe {
+			issues = append(issues, Issue{
+				Case:   EmptyFindings,
+				Signal: signalMatchesUnderThreshold,
+				Evidence: fmt.Sprintf("%d unique resources matched; max streak %s; threshold %s",
+					uniqueMatches, fmtd(maxStreak), fmtd(s.input.MaxUnsafe)),
+				Action:  "Lower --max-unsafe or collect snapshots over longer time span",
+				Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
+			})
+		}
+	}
+
+	return issues
 }
 
-// diagnoseViolationEvidence provides details about found violations.
-func diagnoseViolationEvidence(input Input, maxCapturedAt time.Time) []Entry {
-	if len(input.Snapshots) == 0 {
+// diagnoseExistingFindings provides context for existing violations.
+func (s *session) diagnoseExistingFindings(maxCapturedAt time.Time) []Issue {
+	if len(s.input.Snapshots) == 0 {
 		return nil
 	}
 
-	var entries []Entry
+	var issues []Issue
 
-	if nowSkew := buildNowSkewEntry(input.Now, maxCapturedAt); nowSkew != nil {
-		entries = append(entries, *nowSkew)
+	if skew := buildNowSkewEntry(s.input.Now, maxCapturedAt); skew != nil {
+		issues = append(issues, *skew)
 	}
 
-	entries = append(entries, buildTopFindingEntries(input.Findings, topFindingDiagnosticLimit)...)
-	entries = append(entries, detectStreakResets(input)...)
+	issues = append(issues, buildTopFindingEntries(s.input.Findings, topFindingDiagnosticLimit)...)
+	issues = append(issues, detectStreakResets(s.input)...)
 
-	return entries
+	return issues
 }
 
 // computeMaxUnsafeStreakPerControl finds the longest unsafe streak per (asset, control).

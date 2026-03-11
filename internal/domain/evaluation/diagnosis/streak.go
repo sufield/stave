@@ -163,9 +163,9 @@ func findResets(snapshots []asset.Snapshot, unsafeIdx *unsafeIndex, scope map[as
 	return resets
 }
 
-// resetEntry formats a resetEvent into an Entry.
-func resetEntry(e resetEvent) Entry {
-	return Entry{
+// resetEntry formats a resetEvent into an Issue.
+func resetEntry(e resetEvent) Issue {
+	return Issue{
 		Case:    ViolationEvidence,
 		Signal:  "Streak reset detected",
 		AssetID: e.assetID,
@@ -177,7 +177,7 @@ func resetEntry(e resetEvent) Entry {
 
 // detectStreakResets finds assets that became safe between unsafe periods.
 // Only examines assets with existing findings.
-func detectStreakResets(input Input) []Entry {
+func detectStreakResets(input Input) []Issue {
 	if len(input.Snapshots) < 2 {
 		return nil
 	}
@@ -192,7 +192,7 @@ func detectStreakResets(input Input) []Entry {
 
 	resets := findResets(snapshots, unsafeIdx, violated)
 
-	return lo.Map(resets, func(e resetEvent, _ int) Entry { return resetEntry(e) })
+	return lo.Map(resets, func(e resetEvent, _ int) Issue { return resetEntry(e) })
 }
 
 // detectAnyReset checks if any asset had a reset during the observation period.

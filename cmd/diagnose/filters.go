@@ -20,10 +20,10 @@ func filterDiagnosisReport(
 		return report
 	}
 	filtered := *report
-	filtered.Entries = make([]diagnosis.Entry, 0, len(report.Entries))
-	for _, d := range report.Entries {
+	filtered.Issues = make([]diagnosis.Issue, 0, len(report.Issues))
+	for _, d := range report.Issues {
 		if diagnoseDiagnosisMatchesFilter(d, caseSet, needle) {
-			filtered.Entries = append(filtered.Entries, d)
+			filtered.Issues = append(filtered.Issues, d)
 		}
 	}
 	return &filtered
@@ -41,7 +41,7 @@ func diagnoseCaseSet(cases []string) map[string]struct{} {
 	return caseSet
 }
 
-func diagnoseDiagnosisMatchesFilter(d diagnosis.Entry, caseSet map[string]struct{}, needle string) bool {
+func diagnoseDiagnosisMatchesFilter(d diagnosis.Issue, caseSet map[string]struct{}, needle string) bool {
 	if len(caseSet) > 0 {
 		if _, ok := caseSet[string(d.Case)]; !ok {
 			return false

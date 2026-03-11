@@ -169,12 +169,12 @@ func NewDiagnose(report *diagnosis.Report) Diagnose {
 	normalized := &diagnosis.Report{}
 	if report != nil {
 		cp := *report
-		if cp.Entries != nil {
-			cp.Entries = append([]diagnosis.Entry(nil), cp.Entries...)
+		if cp.Issues != nil {
+			cp.Issues = append([]diagnosis.Issue(nil), cp.Issues...)
 		}
 		normalized = &cp
 	}
-	normalized.Entries = normalizeSlice(normalized.Entries)
+	normalized.Issues = normalizeSlice(normalized.Issues)
 	return Diagnose{
 		SchemaVersion: kernel.SchemaDiagnose,
 		Report:        normalized,

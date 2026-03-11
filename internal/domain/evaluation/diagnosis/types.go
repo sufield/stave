@@ -19,8 +19,8 @@ const (
 	EmptyFindings     Kind = "empty_findings"
 )
 
-// Entry represents a single diagnostic finding.
-type Entry struct {
+// Issue represents a single diagnostic finding.
+type Issue struct {
 	Case     Kind     `json:"case"`
 	Signal   string   `json:"signal"`
 	Evidence string   `json:"evidence"`
@@ -30,7 +30,7 @@ type Entry struct {
 }
 
 // Sanitized returns a copy with asset identifiers replaced by deterministic tokens.
-func (d Entry) Sanitized(r kernel.IDSanitizer) Entry {
+func (d Issue) Sanitized(r kernel.IDSanitizer) Issue {
 	out := d
 	if d.AssetID != "" {
 		raw := string(d.AssetID)
@@ -57,7 +57,7 @@ type Summary struct {
 
 // Report contains all diagnostic findings.
 type Report struct {
-	Entries []Entry `json:"diagnostics"`
+	Issues  []Issue `json:"diagnostics"`
 	Summary Summary `json:"summary"`
 }
 
@@ -68,9 +68,9 @@ func (dr *Report) Sanitized(r kernel.IDSanitizer) *Report {
 		return nil
 	}
 	out := *dr
-	out.Entries = make([]Entry, len(dr.Entries))
-	for i, d := range dr.Entries {
-		out.Entries[i] = d.Sanitized(r)
+	out.Issues = make([]Issue, len(dr.Issues))
+	for i, d := range dr.Issues {
+		out.Issues[i] = d.Sanitized(r)
 	}
 	return &out
 }
