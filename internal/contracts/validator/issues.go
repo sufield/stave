@@ -90,10 +90,10 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 		}, true
 	})
 
-	return diag.NewTranslator(diag.CodeSchemaViolation).
-		WithDefaultAction(action).
-		WithPathPrefix(o.pathPrefix).
-		Translate(externalErrors)
+	return diag.NewTranslator(diag.CodeSchemaViolation,
+		diag.WithDefaultAction(action),
+		diag.WithPathPrefix(o.pathPrefix),
+	).Translate(externalErrors)
 }
 
 func syntaxResult(prefix, action string, err error) *diag.Result {
