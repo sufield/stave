@@ -4,24 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// --- Streak primitives ---
+// --- Streak analysis ---
 
-// assetTimePoint pairs a capture timestamp with the asset state at that time.
-type assetTimePoint struct {
-	capturedAt time.Time
-	observed   asset.Asset
-}
-
-// streakResult holds the outcome of analyzing a single asset's timeline
-// against a single control's unsafe predicate.
-type streakResult struct {
-	matched   bool
-	maxStreak time.Duration
+// observation pairs a capture timestamp with the asset state at that time.
+type observation struct {
+	at    time.Time
+	state asset.Asset
 }
 
 // streakTracker tracks whether a contiguous unsafe period is in progress
@@ -29,13 +21,6 @@ type streakResult struct {
 type streakTracker struct {
 	start  time.Time
 	active bool
-}
-
-type assetStreakRequest struct {
-	Points    []assetTimePoint
-	Predicate policy.UnsafePredicate
-	Params    policy.ControlParams
-	EndTime   time.Time
 }
 
 // markUnsafe begins a new streak if one is not already active.
@@ -57,61 +42,58 @@ func (t *streakTracker) endStreak(at time.Time) time.Duration {
 	return d
 }
 
+type assetStreakRequest struct {
+	Points    []observation
+	Predicate policy.UnsafePredicate
+	Params    policy.ControlParams
+	EndTime   time.Time
+}
+
 // analyzeAssetStreak walks an asset's chronological timeline to find the
 // longest contiguous unsafe period (streak). A streak starts when the predicate
 // first matches and ends when it stops matching or at endTime if still unsafe.
-func analyzeAssetStreak(req assetStreakRequest) streakResult {
-	var result streakResult
-	var streak streakTracker
+func analyzeAssetStreak(req assetStreakRequest) (maxStreak time.Duration, matched bool) {
+	var tracker streakTracker
 
 	for _, pt := range req.Points {
-		if req.Predicate.Evaluate(pt.observed, req.Params) {
-			result.matched = true
-			streak.markUnsafe(pt.capturedAt)
+		if req.Predicate.Evaluate(pt.state, req.Params) {
+			matched = true
+			tracker.markUnsafe(pt.at)
 		} else {
-			result.maxStreak = max(result.maxStreak, streak.endStreak(pt.capturedAt))
+			if d := tracker.endStreak(pt.at); d > maxStreak {
+				maxStreak = d
+			}
 		}
 	}
 
-	result.maxStreak = max(result.maxStreak, streak.endStreak(req.EndTime))
-	return result
-}
-
-// --- Streak reset detection ---
-
-// assetResetState tracks the three-state machine for reset detection:
-// never-unsafe -> currently-unsafe -> was-unsafe-now-safe -> currently-unsafe-again (reset).
-type assetResetState struct {
-	wasEverUnsafe bool
-	currentlySafe bool
-	lastSafeAt    time.Time
-}
-
-func newResetState(isUnsafe bool, t time.Time) assetResetState {
-	return assetResetState{
-		wasEverUnsafe: isUnsafe,
-		currentlySafe: !isUnsafe,
-		lastSafeAt:    t,
+	if d := tracker.endStreak(req.EndTime); d > maxStreak {
+		maxStreak = d
 	}
+	return maxStreak, matched
 }
 
-// streakReset returns true when an asset transitions back to unsafe after
-// a period of safety: unsafe -> safe -> unsafe. This means the violation clock
-// was reset by the safe interval.
-func (s assetResetState) streakReset(isUnsafe bool) bool {
-	return isUnsafe && s.currentlySafe && s.wasEverUnsafe
+// --- Reset detection ---
+
+// resetTracker implements a state machine to detect: Unsafe → Safe → Unsafe.
+type resetTracker struct {
+	wasEverUnsafe   bool
+	isCurrentlySafe bool
+	lastSafeAt      time.Time
 }
 
 // observe processes the next observation. Returns true if a streak reset occurred
-// (unsafe -> safe -> unsafe transition).
-func (s *assetResetState) observe(isUnsafe bool, t time.Time) bool {
-	reset := s.streakReset(isUnsafe)
-	s.currentlySafe = !isUnsafe
+// (unsafe → safe → unsafe transition).
+func (rt *resetTracker) observe(isUnsafe bool, at time.Time) bool {
+	resetDetected := isUnsafe && rt.isCurrentlySafe && rt.wasEverUnsafe
+
+	rt.isCurrentlySafe = !isUnsafe
 	if isUnsafe {
-		s.wasEverUnsafe = true
+		rt.wasEverUnsafe = true
+	} else {
+		rt.lastSafeAt = at
 	}
-	s.lastSafeAt = t
-	return reset
+
+	return resetDetected
 }
 
 // resetEvent records a detected streak reset for a single asset.
@@ -120,59 +102,36 @@ type resetEvent struct {
 	safeAt  time.Time
 }
 
-func collectAssetIDs(snapshots []asset.Snapshot) map[asset.ID]struct{} {
-	ids := make(map[asset.ID]struct{})
-	for _, snap := range snapshots {
-		for _, r := range snap.Assets {
-			ids[r.ID] = struct{}{}
-		}
-	}
-	return ids
-}
-
 // findResets walks sorted snapshots and returns all streak resets found.
-// Only assets present in scope are examined.
-func findResets(snapshots []asset.Snapshot, unsafeIdx *unsafeIndex, scope map[asset.ID]struct{}) []resetEvent {
-	states := make(map[asset.ID]assetResetState, len(scope))
-	var resets []resetEvent
+// If filter is nil, all assets are examined.
+func findResets(snapshots []asset.Snapshot, unsafeIdx *unsafeIndex, filter map[asset.ID]struct{}) []resetEvent {
+	trackers := make(map[asset.ID]*resetTracker)
+	var events []resetEvent
 
-	for snapIdx, snap := range snapshots {
-		for _, r := range snap.Assets {
-			if _, inScope := scope[r.ID]; !inScope {
-				continue
+	for sIdx, snap := range snapshots {
+		for _, a := range snap.Assets {
+			if filter != nil {
+				if _, ok := filter[a.ID]; !ok {
+					continue
+				}
 			}
 
-			isUnsafe := unsafeIdx.isUnsafe(snapIdx, r.ID)
-
-			s, exists := states[r.ID]
+			tracker, exists := trackers[a.ID]
 			if !exists {
-				states[r.ID] = newResetState(isUnsafe, snap.CapturedAt)
-				continue
+				tracker = &resetTracker{isCurrentlySafe: true}
+				trackers[a.ID] = tracker
 			}
 
-			if s.observe(isUnsafe, snap.CapturedAt) {
-				resets = append(resets, resetEvent{
-					assetID: r.ID,
-					safeAt:  s.lastSafeAt,
+			if tracker.observe(unsafeIdx.isUnsafe(sIdx, a.ID), snap.CapturedAt) {
+				events = append(events, resetEvent{
+					assetID: a.ID,
+					safeAt:  tracker.lastSafeAt,
 				})
 			}
-			states[r.ID] = s
 		}
 	}
 
-	return resets
-}
-
-// resetEntry formats a resetEvent into an Issue.
-func resetEntry(e resetEvent) Issue {
-	return Issue{
-		Case:    ViolationEvidence,
-		Signal:  "Streak reset detected",
-		AssetID: e.assetID,
-		Evidence: fmt.Sprintf("asset=%s became safe at %s then unsafe again",
-			e.assetID, e.safeAt.Format(time.RFC3339)),
-		Action: "Current violation reflects time since last reset, not total unsafe time",
-	}
+	return events
 }
 
 // detectStreakResets finds assets that became safe between unsafe periods.
@@ -182,17 +141,28 @@ func detectStreakResets(input Input) []Issue {
 		return nil
 	}
 
-	snapshots := sortedSnapshots(input.Snapshots)
-	unsafeIdx := buildUnsafeIndex(snapshots, input.Controls)
+	snaps := sortedSnapshots(input.Snapshots)
+	idx := buildUnsafeIndex(snaps, input.Controls)
 
 	violated := make(map[asset.ID]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
 		violated[f.AssetID] = struct{}{}
 	}
 
-	resets := findResets(snapshots, unsafeIdx, violated)
+	events := findResets(snaps, idx, violated)
 
-	return lo.Map(resets, func(e resetEvent, _ int) Issue { return resetEntry(e) })
+	issues := make([]Issue, 0, len(events))
+	for _, e := range events {
+		issues = append(issues, Issue{
+			Case:    ViolationEvidence,
+			Signal:  "Streak reset detected",
+			AssetID: e.assetID,
+			Evidence: fmt.Sprintf("asset=%s became safe at %s then unsafe again",
+				e.assetID, e.safeAt.Format(time.RFC3339)),
+			Action: "Current violation reflects time since last reset, not total unsafe time",
+		})
+	}
+	return issues
 }
 
 // detectAnyReset checks if any asset had a reset during the observation period.
@@ -203,9 +173,8 @@ func detectAnyReset(input Input) bool {
 		return false
 	}
 
-	snapshots := sortedSnapshots(input.Snapshots)
-	unsafeIdx := buildUnsafeIndex(snapshots, input.Controls)
+	snaps := sortedSnapshots(input.Snapshots)
+	idx := buildUnsafeIndex(snaps, input.Controls)
 
-	allIDs := collectAssetIDs(snapshots)
-	return len(findResets(snapshots, unsafeIdx, allIDs)) > 0
+	return len(findResets(snaps, idx, nil)) > 0
 }
