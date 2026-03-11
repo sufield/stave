@@ -82,6 +82,14 @@ type ArchiveOutputInput struct {
 	ArchiveDir string
 }
 
+// buildCleanupOutput constructs the JSON output payload for prune/archive.
+//
+// NOTE: Applied is a pre-computed intent flag, not a post-execution confirmation.
+// The orchestrator sequence is BuildPlan → Render → Apply, so the JSON output
+// (including Applied) is written to stdout before filesystem operations execute.
+// If Apply fails partway through, the already-emitted JSON may be inaccurate.
+// Fixing this requires a two-pass render (preview then result), which is deferred
+// as a future enhancement.
 func buildCleanupOutput(schema kernel.Schema, kind kernel.OutputKind, input CleanupInput) CleanupOutput {
 	return CleanupOutput{
 		SchemaVersion:   schema,
