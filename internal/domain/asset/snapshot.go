@@ -95,13 +95,12 @@ func (s Snapshots) FindFirstUnsortedPair() (unsortedPair, bool) {
 	return unsortedPair{}, false
 }
 
-// CountUnprovablySafe counts assets whose safety cannot be proven
-// (where the safety_provable property is explicitly false).
+// CountUnprovablySafe counts assets whose safety cannot be proven.
 func CountUnprovablySafe(snapshots []Snapshot) int {
 	count := 0
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			if provable, ok := a.Properties["safety_provable"].(bool); ok && !provable {
+			if !a.IsProvablySafe() {
 				count++
 			}
 		}

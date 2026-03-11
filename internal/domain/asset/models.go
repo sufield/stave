@@ -37,6 +37,13 @@ func (r Asset) Map() map[string]any {
 	return out
 }
 
+// IsProvablySafe reports whether the asset's safety_provable property is
+// explicitly true. Returns false when the property is missing or false.
+func (r Asset) IsProvablySafe() bool {
+	provable, ok := r.Properties["safety_provable"].(bool)
+	return ok && provable
+}
+
 // CloudIdentity represents an IAM identity such as a user, role, or service account.
 // Identity attributes are stored in a flexible properties map so predicate evaluation
 // can use a unified model across both assets and identities.
