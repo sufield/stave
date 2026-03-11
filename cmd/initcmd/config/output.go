@@ -75,7 +75,7 @@ func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
 }
 
 func toConfigField(v projconfig.ResolvedConfigValue) configResolvedField {
-	return configResolvedField(v)
+	return configResolvedField{Value: v.Value, Source: v.Source}
 }
 
 func writeConfigShowText(cmd *cobra.Command, out configShowOutput) error {

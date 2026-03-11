@@ -22,19 +22,19 @@ func resolveConfigCascade(
 	cfgPath string,
 ) ResolvedConfigValue {
 	if v := strings.TrimSpace(os.Getenv(env.Name)); v != "" {
-		return ResolvedConfigValue{Value: normalize(v), Source: "env:" + env.Name}
+		return ResolvedConfigValue{Value: normalize(v), Source: "env:" + env.Name, Layer: LayerEnvironment}
 	}
 	if cfg != nil {
 		if v := strings.TrimSpace(projectField(cfg)); v != "" {
-			return ResolvedConfigValue{Value: normalize(v), Source: cfgPath + ":" + configKey}
+			return ResolvedConfigValue{Value: normalize(v), Source: cfgPath + ":" + configKey, Layer: LayerProjectConfig}
 		}
 	}
 	if userCfg, userPath, ok := FindUserConfigWithPath(); ok {
 		if v := strings.TrimSpace(userField(userCfg)); v != "" {
-			return ResolvedConfigValue{Value: normalize(v), Source: userPath + ":" + configKey}
+			return ResolvedConfigValue{Value: normalize(v), Source: userPath + ":" + configKey, Layer: LayerUserConfig}
 		}
 	}
-	return ResolvedConfigValue{Value: defaultValue, Source: "default"}
+	return ResolvedConfigValue{Value: defaultValue, Source: "default", Layer: LayerDefault}
 }
 
 func passthrough(v string) string { return v }
@@ -62,7 +62,7 @@ func ResolveRetentionTierWithSource(cfg *ProjectConfig, cfgPath string) Resolved
 // ResolveSnapshotRetentionWithSource returns retention value and source for a tier.
 func ResolveSnapshotRetentionWithSource(cfg *ProjectConfig, cfgPath, tier string) ResolvedConfigValue {
 	if v := strings.TrimSpace(os.Getenv(envvar.SnapshotRetention.Name)); v != "" {
-		return ResolvedConfigValue{Value: v, Source: "env:" + envvar.SnapshotRetention.Name}
+		return ResolvedConfigValue{Value: v, Source: "env:" + envvar.SnapshotRetention.Name, Layer: LayerEnvironment}
 	}
 	if v, ok := resolveRetentionFromProject(cfg, cfgPath, tier); ok {
 		return v
@@ -70,7 +70,7 @@ func ResolveSnapshotRetentionWithSource(cfg *ProjectConfig, cfgPath, tier string
 	if v, ok := resolveRetentionFromUser(); ok {
 		return v
 	}
-	return ResolvedConfigValue{Value: DefaultSnapshotRetention, Source: "default"}
+	return ResolvedConfigValue{Value: DefaultSnapshotRetention, Source: "default", Layer: LayerDefault}
 }
 
 func resolveRetentionFromProject(cfg *ProjectConfig, cfgPath, tier string) (ResolvedConfigValue, bool) {
@@ -83,11 +83,12 @@ func resolveRetentionFromProject(cfg *ProjectConfig, cfgPath, tier string) (Reso
 			return ResolvedConfigValue{
 				Value:  v,
 				Source: cfgPath + ":snapshot_retention_tiers." + normalizedTier,
+				Layer:  LayerProjectConfig,
 			}, true
 		}
 	}
 	if v := strings.TrimSpace(cfg.SnapshotRetention); v != "" {
-		return ResolvedConfigValue{Value: v, Source: cfgPath + ":snapshot_retention"}, true
+		return ResolvedConfigValue{Value: v, Source: cfgPath + ":snapshot_retention", Layer: LayerProjectConfig}, true
 	}
 	return ResolvedConfigValue{}, false
 }
@@ -95,7 +96,7 @@ func resolveRetentionFromProject(cfg *ProjectConfig, cfgPath, tier string) (Reso
 func resolveRetentionFromUser() (ResolvedConfigValue, bool) {
 	if userCfg, userPath, ok := FindUserConfigWithPath(); ok {
 		if v := strings.TrimSpace(userCfg.SnapshotRetention); v != "" {
-			return ResolvedConfigValue{Value: v, Source: userPath + ":snapshot_retention"}, true
+			return ResolvedConfigValue{Value: v, Source: userPath + ":snapshot_retention", Layer: LayerUserConfig}, true
 		}
 	}
 	return ResolvedConfigValue{}, false
@@ -116,26 +117,26 @@ func ResolveCLIOutputWithSource() ResolvedConfigValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok {
 		v := strings.ToLower(strings.TrimSpace(cfg.CLIDefaults.Output))
 		if v == "json" || v == "text" {
-			return ResolvedConfigValue{Value: v, Source: path + ":cli_defaults.output"}
+			return ResolvedConfigValue{Value: v, Source: path + ":cli_defaults.output", Layer: LayerUserConfig}
 		}
 	}
-	return ResolvedConfigValue{Value: "text", Source: "default"}
+	return ResolvedConfigValue{Value: "text", Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLIQuietWithSource returns quiet mode and source.
 func ResolveCLIQuietWithSource() ResolvedBoolValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok && cfg.CLIDefaults.Quiet != nil {
-		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.Quiet, Source: path + ":cli_defaults.quiet"}
+		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.Quiet, Source: path + ":cli_defaults.quiet", Layer: LayerUserConfig}
 	}
-	return ResolvedBoolValue{Bool: false, Source: "default"}
+	return ResolvedBoolValue{Bool: false, Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLISanitizeWithSource returns sanitize mode and source.
 func ResolveCLISanitizeWithSource() ResolvedBoolValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok && cfg.CLIDefaults.Sanitize != nil {
-		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.Sanitize, Source: path + ":cli_defaults.sanitize"}
+		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.Sanitize, Source: path + ":cli_defaults.sanitize", Layer: LayerUserConfig}
 	}
-	return ResolvedBoolValue{Bool: false, Source: "default"}
+	return ResolvedBoolValue{Bool: false, Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLIPathModeWithSource returns path mode and source.
@@ -143,18 +144,18 @@ func ResolveCLIPathModeWithSource() ResolvedConfigValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok {
 		v := strings.ToLower(strings.TrimSpace(cfg.CLIDefaults.PathMode))
 		if v == "base" || v == "full" {
-			return ResolvedConfigValue{Value: v, Source: path + ":cli_defaults.path_mode"}
+			return ResolvedConfigValue{Value: v, Source: path + ":cli_defaults.path_mode", Layer: LayerUserConfig}
 		}
 	}
-	return ResolvedConfigValue{Value: "base", Source: "default"}
+	return ResolvedConfigValue{Value: "base", Source: "default", Layer: LayerDefault}
 }
 
 // ResolveCLIAllowUnknownInputWithSource returns allow-unknown-input and source.
 func ResolveCLIAllowUnknownInputWithSource() ResolvedBoolValue {
 	if cfg, path, ok := FindUserConfigWithPath(); ok && cfg.CLIDefaults.AllowUnknownInput != nil {
-		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.AllowUnknownInput, Source: path + ":cli_defaults.allow_unknown_input"}
+		return ResolvedBoolValue{Bool: *cfg.CLIDefaults.AllowUnknownInput, Source: path + ":cli_defaults.allow_unknown_input", Layer: LayerUserConfig}
 	}
-	return ResolvedBoolValue{Bool: false, Source: "default"}
+	return ResolvedBoolValue{Bool: false, Source: "default", Layer: LayerDefault}
 }
 
 // ResolveDefinedRetentionTiers returns the defined retention tiers from project config.
