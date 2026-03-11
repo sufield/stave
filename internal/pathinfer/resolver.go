@@ -68,42 +68,41 @@ func findDirectPath(path string) (string, bool) {
 }
 
 func dirCandidates(base, name string, maxDepth int) ([]string, error) {
-	var candidates []string
-	walker := walkState{
-		Base:       base,
-		Name:       name,
-		MaxDepth:   maxDepth,
-		Candidates: &candidates,
+	walker := &walkState{
+		base:     base,
+		name:     name,
+		maxDepth: maxDepth,
 	}
 	if err := filepath.WalkDir(base, walker.walk); err != nil {
-		return candidates, fmt.Errorf("walk %s: %w", base, err)
+		return walker.candidates, fmt.Errorf("walk %s: %w", base, err)
 	}
-	return candidates, nil
+	return walker.candidates, nil
 }
 
 type walkState struct {
-	Base       string
-	Name       string
-	MaxDepth   int
-	Candidates *[]string
+	base       string
+	name       string
+	maxDepth   int
+	candidates []string
 }
 
-func (s walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
+func (s *walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
 	if walkErr != nil || !entry.IsDir() {
 		return nil
 	}
-	rel, ok := relativeWalkPath(s.Base, path)
+	rel, ok := relativeWalkPath(s.base, path)
 	if !ok || rel == "." {
 		return nil
 	}
-	depth := strings.Count(rel, string(filepath.Separator))
-	if entry.Name() == s.Name {
-		if depth <= s.MaxDepth {
-			*s.Candidates = append(*s.Candidates, path)
+	// Use forward slashes for consistent depth counting across platforms.
+	depth := strings.Count(filepath.ToSlash(rel), "/")
+	if entry.Name() == s.name {
+		if depth <= s.maxDepth {
+			s.candidates = append(s.candidates, path)
 		}
 		return fs.SkipDir
 	}
-	if depth >= s.MaxDepth {
+	if depth >= s.maxDepth {
 		return fs.SkipDir
 	}
 	return nil
