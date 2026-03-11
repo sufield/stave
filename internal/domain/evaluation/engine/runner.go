@@ -62,12 +62,17 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) evaluation.Result {
 	now := e.deterministicNow(sorted)
 
 	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.PredicateParser)
-	acc := newEvaluationAccumulator()
+
+	assetHint := 0
+	if len(sorted) > 0 {
+		assetHint = len(sorted[0].Assets)
+	}
+	acc := NewAccumulator(assetHint)
 
 	for _, ctl := range e.Controls {
 		// Skip control types the evaluator cannot process.
 		if !ctl.IsEvaluatable() {
-			acc.addSkippedControl(
+			acc.AddSkippedControl(
 				ctl.ID,
 				ctl.Name,
 				"type not evaluatable: "+ctl.Type.String(),
@@ -86,19 +91,17 @@ func (e *Runner) evaluateControlAcrossTimelines(
 	ctl *policy.ControlDefinition,
 	timelines map[string]*asset.Timeline,
 	now time.Time,
-	acc *evaluationAccumulator,
+	acc *Accumulator,
 ) {
 	strategy := e.strategyFor(ctl)
 
 	for assetID, timeline := range timelines {
 		// Check if asset is exempted.
 		if rule := e.Exemptions.ShouldExempt(assetID); rule != nil {
-			if acc.isNewExemption(asset.ID(assetID)) {
-				acc.exemptedAssetIDs.add(asset.ID(assetID))
-				acc.addSkippedAsset(asset.ID(assetID), rule.Pattern, rule.Reason)
+			if acc.TrackExemption(asset.ID(assetID)) {
+				acc.AddSkippedAsset(asset.ID(assetID), rule.Pattern, rule.Reason)
 			}
-			// Add SKIPPED row.
-			acc.addRow(evaluation.Row{
+			acc.AddRow(evaluation.Row{
 				ControlID:   ctl.ID,
 				AssetID:     asset.ID(assetID),
 				AssetType:   timeline.Asset().Type,
@@ -111,26 +114,26 @@ func (e *Runner) evaluateControlAcrossTimelines(
 		}
 
 		// Track assets that were actually evaluated (not exempted).
-		acc.seenAssets.add(asset.ID(assetID))
+		acc.seenAssets.Add(asset.ID(assetID))
 
 		if timeline.CurrentlyUnsafe() {
-			acc.unsafeAssets.add(asset.ID(assetID))
+			acc.unsafeAssets.Add(asset.ID(assetID))
 		}
 
 		row, findings := strategy.Evaluate(timeline, now)
-		acc.addRow(row)
-		acc.addFindings(findings)
+		acc.AddRow(row)
+		acc.AddFindings(findings)
 	}
 }
 
 // sortAndBuildResult sorts accumulated data and constructs the final Result.
-func (e *Runner) sortAndBuildResult(acc *evaluationAccumulator, now time.Time, snapshotCount int) evaluation.Result {
+func (e *Runner) sortAndBuildResult(acc *Accumulator, now time.Time, snapshotCount int) evaluation.Result {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
 
 	// Sort skipped assets for deterministic output.
-	sort.Slice(acc.skippedAssets, func(i, j int) bool {
-		return acc.skippedAssets[i].ID < acc.skippedAssets[j].ID
+	sort.Slice(acc.skippedByAst, func(i, j int) bool {
+		return acc.skippedByAst[i].ID < acc.skippedByAst[j].ID
 	})
 
 	// Sort rows for deterministic output (by control_id, then asset_id).
@@ -154,14 +157,14 @@ func (e *Runner) sortAndBuildResult(acc *evaluationAccumulator, now time.Time, s
 			PackHash:    computePackHash(e.Controls),
 		},
 		Summary: evaluation.Summary{
-			AssetsEvaluated: acc.seenAssets.len(),
-			AttackSurface:   acc.unsafeAssets.len(),
+			AssetsEvaluated: len(acc.seenAssets),
+			AttackSurface:   len(acc.unsafeAssets),
 			Violations:      len(regularFindings),
 		},
 		Findings:           regularFindings,
 		SuppressedFindings: suppressedFindings,
-		Skipped:            acc.skipped,
-		SkippedAssets:      acc.skippedAssets,
+		Skipped:            acc.skippedByCtl,
+		SkippedAssets:      acc.skippedByAst,
 		Rows:               acc.rows,
 	}
 }
