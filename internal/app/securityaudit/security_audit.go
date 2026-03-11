@@ -52,12 +52,12 @@ type SecurityAuditRequest struct {
 // SecurityAuditRunner orchestrates security-audit evidence collection.
 type SecurityAuditRunner struct {
 	diagnostics defaultDiagnosticsService
-	buildInfo   defaultBuildInfoProvider
-	sbom        defaultSBOMGenerator
-	vulns       defaultVulnEvidenceProvider
-	binary      defaultBinaryInspector
-	policy      defaultPolicyInspector
-	crosswalk   defaultCrosswalkResolver
+	buildInfo   BuildInfoProvider
+	sbom        SBOMGenerator
+	vulns       VulnEvidenceProvider
+	binary      BinaryInspector
+	policy      PolicyInspector
+	crosswalk   CrosswalkResolver
 	hashBytes   func([]byte) kernel.Digest
 }
 

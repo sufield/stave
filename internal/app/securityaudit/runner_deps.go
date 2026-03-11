@@ -1,6 +1,7 @@
 package securityaudit
 
 import (
+	"context"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -27,3 +28,46 @@ type CrosswalkResult struct {
 	MissingChecks  []string
 	ResolutionJSON []byte
 }
+
+// Evidence provider interfaces. Each defines the contract for a single
+// evidence-collection step in the security audit pipeline.
+
+// BuildInfoProvider collects Go build metadata.
+type BuildInfoProvider interface {
+	Collect(now time.Time) (buildInfoSnapshot, error)
+}
+
+// SBOMGenerator produces a Software Bill of Materials.
+type SBOMGenerator interface {
+	Generate(input buildInfoSnapshot, format SBOMFormat, now time.Time) (sbomSnapshot, error)
+}
+
+// VulnEvidenceProvider resolves vulnerability evidence.
+type VulnEvidenceProvider interface {
+	Resolve(ctx context.Context, req SecurityAuditRequest) (vulnerabilitySnapshot, error)
+}
+
+// BinaryInspector inspects binary artifacts for integrity and hardening.
+type BinaryInspector interface {
+	Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error)
+}
+
+// PolicyInspector inspects runtime policy compliance.
+type PolicyInspector interface {
+	Inspect(ctx context.Context, req SecurityAuditRequest) (policyInspectionSnapshot, error)
+}
+
+// CrosswalkResolver maps security checks to compliance frameworks.
+type CrosswalkResolver interface {
+	Resolve(ctx context.Context, req SecurityAuditRequest, checkIDs []string) (crosswalkSnapshot, error)
+}
+
+// Compile-time interface satisfaction checks.
+var (
+	_ BuildInfoProvider    = defaultBuildInfoProvider{}
+	_ SBOMGenerator        = defaultSBOMGenerator{}
+	_ VulnEvidenceProvider = defaultVulnEvidenceProvider{}
+	_ BinaryInspector      = defaultBinaryInspector{}
+	_ PolicyInspector      = defaultPolicyInspector{}
+	_ CrosswalkResolver    = defaultCrosswalkResolver{}
+)
