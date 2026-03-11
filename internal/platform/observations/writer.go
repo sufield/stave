@@ -19,6 +19,20 @@ type WriteRequest struct {
 	AllowSymlink  bool
 }
 
+// JSONWriter implements the app-layer ObservationPersistence port.
+type JSONWriter struct{}
+
+// WriteObservations marshals snapshots as obs.v0.1 JSON and writes the file safely.
+func (JSONWriter) WriteObservations(path string, snapshots []asset.Snapshot, overwrite, allowSymlink bool) error {
+	return WriteJSON(WriteRequest{
+		Path:          path,
+		SchemaVersion: kernel.SchemaObservation,
+		Snapshots:     snapshots,
+		Overwrite:     overwrite,
+		AllowSymlink:  allowSymlink,
+	})
+}
+
 // WriteJSON marshals observations to indented JSON and writes the file safely.
 func WriteJSON(req WriteRequest) error {
 	output := struct {

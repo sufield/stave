@@ -43,33 +43,40 @@ type archiveResolvedInput struct {
 	AllowSym   bool
 }
 
+type archiveOrchestrator struct {
+	cmd  *cobra.Command
+	opts *archiveOptions
+	plan archiveExecutionPlan
+}
+
+func (a *archiveOrchestrator) BuildPlan() (appeval.CleanupPlan, error) {
+	p, err := buildArchiveExecutionPlan(a.cmd, a.opts)
+	if err != nil {
+		return appeval.CleanupPlan{}, err
+	}
+	a.plan = p
+	return appeval.CleanupPlan{
+		CandidateCount: len(a.plan.CandidateFiles),
+		DryRun:         a.plan.DryRun,
+	}, nil
+}
+
+func (a *archiveOrchestrator) Render(_ appeval.CleanupPlan) error {
+	return renderArchiveExecutionPlan(a.plan, a.cmd.OutOrStdout())
+}
+
+func (a *archiveOrchestrator) Apply(_ appeval.CleanupPlan) error {
+	if err := applyArchiveExecutionPlan(a.plan); err != nil {
+		return err
+	}
+	if !cmdutil.QuietEnabled(a.cmd) && !a.plan.Format.IsJSON() {
+		fmt.Fprintf(a.cmd.OutOrStdout(), "Archived %d snapshot(s) to %s.\n", len(a.plan.CandidateFiles), a.plan.archiveDir)
+	}
+	return nil
+}
+
 func runArchive(cmd *cobra.Command, opts *archiveOptions) error {
-	var plan archiveExecutionPlan
-	return appeval.RunCleanup(appeval.CleanupDeps{
-		BuildPlan: func() (appeval.CleanupPlan, error) {
-			p, err := buildArchiveExecutionPlan(cmd, opts)
-			if err != nil {
-				return appeval.CleanupPlan{}, err
-			}
-			plan = p
-			return appeval.CleanupPlan{
-				CandidateCount: len(plan.CandidateFiles),
-				DryRun:         plan.DryRun,
-			}, nil
-		},
-		Render: func(_ appeval.CleanupPlan) error {
-			return renderArchiveExecutionPlan(plan, cmd.OutOrStdout())
-		},
-		Apply: func(_ appeval.CleanupPlan) error {
-			if err := applyArchiveExecutionPlan(plan); err != nil {
-				return err
-			}
-			if !cmdutil.QuietEnabled(cmd) && !plan.Format.IsJSON() {
-				fmt.Fprintf(cmd.OutOrStdout(), "Archived %d snapshot(s) to %s.\n", len(plan.CandidateFiles), plan.archiveDir)
-			}
-			return nil
-		},
-	})
+	return appeval.RunCleanup(&archiveOrchestrator{cmd: cmd, opts: opts})
 }
 
 func buildArchiveExecutionPlan(cmd *cobra.Command, opts *archiveOptions) (archiveExecutionPlan, error) {

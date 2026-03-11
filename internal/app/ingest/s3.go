@@ -35,11 +35,15 @@ func ExtractS3Snapshots(req S3IngestExtractRequest) ([]asset.Snapshot, error) {
 }
 
 // SnapshotScrubber sanitizes snapshot data before persistence.
-type SnapshotScrubber func(asset.Snapshot) asset.Snapshot
+type SnapshotScrubber interface {
+	ScrubSnapshot(asset.Snapshot) asset.Snapshot
+}
 
-// ObservationsWriter persists normalized observations to the filesystem.
+// ObservationPersistence writes normalized observations to storage.
 // The concrete implementation lives in the platform layer.
-type ObservationsWriter func(path string, snapshots []asset.Snapshot, overwrite, allowSymlink bool) error
+type ObservationPersistence interface {
+	WriteObservations(path string, snapshots []asset.Snapshot, overwrite, allowSymlink bool) error
+}
 
 // ObservationsWriteRequest controls normalized observation output persistence.
 type ObservationsWriteRequest struct {
@@ -48,7 +52,7 @@ type ObservationsWriteRequest struct {
 	Scrubber     SnapshotScrubber // optional; when set, each snapshot is scrubbed before writing
 	Overwrite    bool
 	AllowSymlink bool
-	Writer       ObservationsWriter // injected from cmd layer
+	Writer       ObservationPersistence // injected from cmd layer
 }
 
 // WriteObservationsFile writes observations with fs safety checks and optional
@@ -61,10 +65,10 @@ func WriteObservationsFile(req ObservationsWriteRequest) error {
 	if req.Scrubber != nil && len(snapshots) > 0 {
 		scrubbed := make([]asset.Snapshot, len(snapshots))
 		for i, s := range snapshots {
-			scrubbed[i] = req.Scrubber(s)
+			scrubbed[i] = req.Scrubber.ScrubSnapshot(s)
 		}
 		snapshots = scrubbed
 	}
 
-	return req.Writer(req.Path, snapshots, req.Overwrite, req.AllowSymlink)
+	return req.Writer.WriteObservations(req.Path, snapshots, req.Overwrite, req.AllowSymlink)
 }
