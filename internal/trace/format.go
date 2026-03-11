@@ -6,19 +6,29 @@ import (
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-// formatValue produces a human-readable representation of a value.
+// maxValueLen caps formatted values in trace explanations so that large
+// payloads (e.g. inline IAM policy JSON) don't make the output unreadable.
+const maxValueLen = 120
+
+// formatValue produces a human-readable representation of a value,
+// truncating results that exceed maxValueLen.
 func formatValue(v any) string {
 	if v == nil {
 		return "<nil>"
 	}
+	var s string
 	switch val := v.(type) {
 	case string:
-		return fmt.Sprintf("%q", val)
+		s = fmt.Sprintf("%q", val)
 	case bool:
-		return fmt.Sprintf("%t", val)
+		s = fmt.Sprintf("%t", val)
 	default:
-		return fmt.Sprintf("%v", val)
+		s = fmt.Sprintf("%v", val)
 	}
+	if len(s) > maxValueLen {
+		return s[:maxValueLen] + "…"
+	}
+	return s
 }
 
 func resultTag(result bool) string {
