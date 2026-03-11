@@ -2,6 +2,7 @@ package asset
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/sufield/stave/internal/dbc"
@@ -194,8 +195,8 @@ func (rt *Timeline) FormatUnsafeSummary(threshold time.Duration, now time.Time) 
 
 	return fmt.Sprintf(
 		"Asset has been unsafe for %d hours (threshold: %d hours). Unsafe since %s.",
-		int(rt.UnsafeDuration(now).Hours()),
-		int(threshold.Hours()),
+		int(math.Round(rt.UnsafeDuration(now).Hours())),
+		int(math.Round(threshold.Hours())),
 		rt.FirstUnsafeAt().Format(time.RFC3339),
 	)
 }
