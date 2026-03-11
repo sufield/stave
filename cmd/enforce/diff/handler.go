@@ -8,7 +8,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
@@ -27,8 +26,7 @@ func run(cmd *cobra.Command, opts *options) error {
 		return err
 	}
 
-	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-	rt.Quiet = cmdutil.QuietEnabled(cmd)
+	rt := cmdutil.NewRuntime(cmd)
 	stop := rt.BeginProgress("Computing observation delta")
 	out, err := compute(cmd.Context(), opts.ObservationsDir, filter)
 	stop()

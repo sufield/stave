@@ -51,8 +51,7 @@ func runStandardApply(cmd *cobra.Command, flags *applyFlagsType, opts runOptions
 }
 
 func runStrictIntegrityCheck(cmd *cobra.Command) error {
-	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-	rt.Quiet = cmdutil.QuietEnabled(cmd)
+	rt := cmdutil.NewRuntime(cmd)
 	rt.Strict = cmdutil.StrictEnabled(cmd)
 	if !rt.Strict {
 		return nil
@@ -96,8 +95,7 @@ func executeApply(
 	opts runOptions,
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
-	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-	rt.Quiet = cmdutil.QuietEnabled(cmd)
+	rt := cmdutil.NewRuntime(cmd)
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
