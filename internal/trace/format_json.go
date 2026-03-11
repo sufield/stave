@@ -80,17 +80,18 @@ func groupToJSON(g *GroupNode) jsonNode {
 		v := g.ShortCircuitIndex
 		sc = &v
 	}
-	n := jsonNode{
+	children := make([]jsonNode, len(g.Children))
+	for i, child := range g.Children {
+		children[i] = nodeToJSON(child)
+	}
+	return jsonNode{
 		Kind:         kindGroup,
 		Logic:        g.Logic.String(),
+		Children:     children,
 		Result:       g.Result,
 		ShortCircuit: sc,
 		Reason:       g.Reason,
 	}
-	for _, child := range g.Children {
-		n.Children = append(n.Children, nodeToJSON(child))
-	}
-	return n
 }
 
 func nodeToJSON(node Node) jsonNode { return node.toJSON() }
