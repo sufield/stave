@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func TestFirstRunMarkerPath_Override(t *testing.T) {
 	want := filepath.Join(t.TempDir(), "marker")
-	t.Setenv(envvar.FirstRunHintFile.Name, want)
+	t.Setenv(env.FirstRunHintFile.Name, want)
 	got, err := FirstRunMarkerPath()
 	if err != nil {
 		t.Fatalf("FirstRunMarkerPath error: %v", err)

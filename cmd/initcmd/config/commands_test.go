@@ -9,14 +9,14 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func TestConfigShow_DefaultsText(t *testing.T) {
-	t.Setenv(envvar.MaxUnsafe.Name, "")
-	t.Setenv(envvar.SnapshotRetention.Name, "")
-	t.Setenv(envvar.RetentionTier.Name, "")
-	t.Setenv(envvar.CIFailurePolicy.Name, "")
+	t.Setenv(env.MaxUnsafe.Name, "")
+	t.Setenv(env.SnapshotRetention.Name, "")
+	t.Setenv(env.RetentionTier.Name, "")
+	t.Setenv(env.CIFailurePolicy.Name, "")
 
 	temp := t.TempDir()
 	chdirForConfigTest(t, temp)
@@ -52,7 +52,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 		t.Fatalf("write config: %v", err)
 	}
 
-	t.Setenv(envvar.SnapshotRetention.Name, "7d")
+	t.Setenv(env.SnapshotRetention.Name, "7d")
 
 	root := getTestRootCmd()
 	buf := new(bytes.Buffer)
@@ -81,7 +81,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 	if out.SnapshotRetention.Value != "7d" {
 		t.Fatalf("snapshot_retention=%q want 7d", out.SnapshotRetention.Value)
 	}
-	if out.SnapshotRetention.Source != "env:"+envvar.SnapshotRetention.Name {
+	if out.SnapshotRetention.Source != "env:"+env.SnapshotRetention.Name {
 		t.Fatalf("snapshot_retention source=%q", out.SnapshotRetention.Source)
 	}
 }

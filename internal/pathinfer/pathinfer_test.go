@@ -6,12 +6,12 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func TestBaseDir_EnvSet(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv(envvar.ProjectRoot.Name, dir)
+	t.Setenv(env.ProjectRoot.Name, dir)
 
 	got, err := BaseDir()
 	if err != nil {
@@ -23,7 +23,7 @@ func TestBaseDir_EnvSet(t *testing.T) {
 }
 
 func TestBaseDir_EnvInvalid_FallsBackToCwd(t *testing.T) {
-	t.Setenv(envvar.ProjectRoot.Name, "/nonexistent-path-that-does-not-exist")
+	t.Setenv(env.ProjectRoot.Name, "/nonexistent-path-that-does-not-exist")
 
 	got, err := BaseDir()
 	if err != nil {
@@ -36,7 +36,7 @@ func TestBaseDir_EnvInvalid_FallsBackToCwd(t *testing.T) {
 }
 
 func TestBaseDir_EnvUnset_ReturnsCwd(t *testing.T) {
-	t.Setenv(envvar.ProjectRoot.Name, "")
+	t.Setenv(env.ProjectRoot.Name, "")
 
 	got, err := BaseDir()
 	if err != nil {

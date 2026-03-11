@@ -1,7 +1,7 @@
 package initcmd
 
 import (
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func scaffoldGitHubActions(opts scaffoldOptions) string {
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      ` + envvar.MaxUnsafe.Name + `: 168h
+      ` + env.MaxUnsafe.Name + `: 168h
 `
 }
 

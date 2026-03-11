@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/envvar"
+	staveenv "github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -65,7 +65,7 @@ type envListEntry struct {
 }
 
 func runEnvList(cmd *cobra.Command, rawFormat string) error {
-	vars := envvar.All()
+	vars := staveenv.All()
 
 	format, err := compose.ResolveFormatValue(cmd, rawFormat)
 	if err != nil {
@@ -78,7 +78,7 @@ func runEnvList(cmd *cobra.Command, rawFormat string) error {
 	return writeEnvListText(cmd, vars)
 }
 
-func writeEnvListJSON(cmd *cobra.Command, vars []envvar.Entry) error {
+func writeEnvListJSON(cmd *cobra.Command, vars []staveenv.Entry) error {
 	entries := make([]envListEntry, len(vars))
 	for i, v := range vars {
 		entries[i] = envListEntry{
@@ -92,7 +92,7 @@ func writeEnvListJSON(cmd *cobra.Command, vars []envvar.Entry) error {
 	return jsonutil.WriteIndented(cmd.OutOrStdout(), entries)
 }
 
-func writeEnvListText(cmd *cobra.Command, vars []envvar.Entry) error {
+func writeEnvListText(cmd *cobra.Command, vars []staveenv.Entry) error {
 	w := cmd.OutOrStdout()
 	if err := writeEnvListHeader(w); err != nil {
 		return err
@@ -123,7 +123,7 @@ func writeEnvListHeader(w io.Writer) error {
 	return err
 }
 
-func envColumnWidths(vars []envvar.Entry) (int, int) {
+func envColumnWidths(vars []staveenv.Entry) (int, int) {
 	nameWidth := 0
 	descWidth := 0
 	for _, variable := range vars {
@@ -137,7 +137,7 @@ func envColumnWidths(vars []envvar.Entry) (int, int) {
 	return nameWidth, descWidth
 }
 
-func writeEnvListCategory(w io.Writer, vars []envvar.Entry, label, key string, nameWidth, descWidth int) error {
+func writeEnvListCategory(w io.Writer, vars []staveenv.Entry, label, key string, nameWidth, descWidth int) error {
 	if _, err := fmt.Fprintf(w, "\n%s:\n", label); err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func writeEnvListCategory(w io.Writer, vars []envvar.Entry, label, key string, n
 	return nil
 }
 
-func writeEnvListVariable(w io.Writer, variable envvar.Entry, nameWidth, descWidth int) error {
+func writeEnvListVariable(w io.Writer, variable staveenv.Entry, nameWidth, descWidth int) error {
 	value := variable.Value()
 	if value == "" {
 		value = "(not set)"

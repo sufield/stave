@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func TestSaveLoadAndResolveSelected(t *testing.T) {
-	t.Setenv(envvar.ContextsFile.Name, filepath.Join(t.TempDir(), "contexts.yaml"))
+	t.Setenv(env.ContextsFile.Name, filepath.Join(t.TempDir(), "contexts.yaml"))
 	st := &Store{Active: "prod", Contexts: map[string]Context{
 		"prod": {ProjectRoot: "/repo/prod", ProjectConfig: "stave.yaml", Defaults: Defaults{ControlsDir: "controls", ObservationsDir: "observations"}},
 		"dev":  {ProjectRoot: "/repo/dev", ProjectConfig: "stave.yaml"},
@@ -33,7 +33,7 @@ func TestSaveLoadAndResolveSelected(t *testing.T) {
 		t.Fatalf("unexpected resolve result: ok=%v name=%q ctx=%+v", ok, name, ctx)
 	}
 
-	t.Setenv(envvar.Context.Name, "dev")
+	t.Setenv(env.Context.Name, "dev")
 	name, ctx, ok, err = loaded.ResolveSelected()
 	if err != nil {
 		t.Fatalf("resolve env override: %v", err)
@@ -45,7 +45,7 @@ func TestSaveLoadAndResolveSelected(t *testing.T) {
 
 func TestResolveSelectedMissingEnvContext(t *testing.T) {
 	st := &Store{Active: "prod", Contexts: map[string]Context{"prod": {ProjectRoot: "/repo/prod"}}}
-	t.Setenv(envvar.Context.Name, "missing")
+	t.Setenv(env.Context.Name, "missing")
 	_, _, _, err := st.ResolveSelected()
 	if err == nil {
 		t.Fatal("expected error for missing env context")
@@ -73,7 +73,7 @@ func TestAbsPath(t *testing.T) {
 
 func TestLoadMissingFileReturnsEmptyStore(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "nope.yaml")
-	t.Setenv(envvar.ContextsFile.Name, p)
+	t.Setenv(env.ContextsFile.Name, p)
 	st, path, err := Load()
 	if err != nil {
 		t.Fatalf("load: %v", err)
@@ -90,7 +90,7 @@ func TestLoadMissingFileReturnsEmptyStore(t *testing.T) {
 }
 
 func TestContextsFilePathDefaultsToUserConfigDir(t *testing.T) {
-	t.Setenv(envvar.ContextsFile.Name, "")
+	t.Setenv(env.ContextsFile.Name, "")
 	cfgDir, err := os.UserConfigDir()
 	if err != nil || cfgDir == "" {
 		t.Skip("user config dir unavailable in test environment")

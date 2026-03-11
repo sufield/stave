@@ -2,7 +2,7 @@ package initcmd
 
 import (
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 )
 
 func scaffoldGitignore() string {
@@ -82,7 +82,7 @@ cli.yaml
 ` + "```" + `
 Activate it with:
 ` + "```bash" + `
-export ` + envvar.UserConfig.Name + `="$PWD/cli.yaml"
+export ` + env.UserConfig.Name + `="$PWD/cli.yaml"
 ` + "```" + `
 Uncomment the ` + "`cli_defaults`" + ` keys you want for this project shell.
 
@@ -124,7 +124,7 @@ func scaffoldUserConfigExample() string {
 # This file is a template to reduce repeated flags in local workflows.
 #
 # Activate for current shell:
-#   export ` + envvar.UserConfig.Name + `="$PWD/cli.yaml"
+#   export ` + env.UserConfig.Name + `="$PWD/cli.yaml"
 #
 # Uncomment fields you need.
 

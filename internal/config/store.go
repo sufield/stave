@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/sufield/stave/internal/envvar"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -59,7 +59,7 @@ func (s *Store) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func resolveStorePath() (string, error) {
-	if v := strings.TrimSpace(os.Getenv(envvar.ContextsFile.Name)); v != "" {
+	if v := strings.TrimSpace(os.Getenv(env.ContextsFile.Name)); v != "" {
 		return v, nil
 	}
 	if cfgDir, err := os.UserConfigDir(); err == nil && strings.TrimSpace(cfgDir) != "" {
@@ -142,7 +142,7 @@ func (s *Store) Names() []string {
 // ResolveSelected identifies the selected context.
 // Precedence is environment variable first, then active context in store.
 func (s *Store) ResolveSelected() (name string, ctx *Context, exists bool, err error) {
-	name = strings.TrimSpace(os.Getenv(envvar.Context.Name))
+	name = strings.TrimSpace(os.Getenv(env.Context.Name))
 	source := "environment variable"
 	if name == "" {
 		name = strings.TrimSpace(s.Active)
