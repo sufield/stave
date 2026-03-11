@@ -179,7 +179,7 @@ func TestBuildDiagnoseConfigAndOutputHelpers(t *testing.T) {
 
 func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 	report := &diagnosis.Report{
-		Entries: []diagnosis.Entry{
+		Issues: []diagnosis.Issue{
 			{Case: diagnosis.EmptyFindings, Signal: "s", Evidence: "e", Action: "a"},
 		},
 		Summary: diagnosis.Summary{
@@ -263,7 +263,7 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 
 func TestWriteDiagnoseReport_Branches(t *testing.T) {
 	report := &diagnosis.Report{
-		Entries: []diagnosis.Entry{},
+		Issues: []diagnosis.Issue{},
 		Summary: diagnosis.Summary{
 			TotalSnapshots:     1,
 			TotalAssets:        1,

@@ -79,7 +79,7 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		Now:       cfg.Clock.Now(),
 	})
 
-	report := diagnosis.Run(input)
+	report := diagnosis.Explain(input)
 	return &report, nil
 }
 

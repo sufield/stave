@@ -42,7 +42,7 @@ func renderDiagnoseTemplate(cmd *cobra.Command, opts diagnoseOptions, report *di
 }
 
 func diagnoseDiagnosisExit(report *diagnosis.Report) error {
-	if len(report.Entries) > 0 {
+	if len(report.Issues) > 0 {
 		return ui.ErrDiagnosticsFound
 	}
 	return nil

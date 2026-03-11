@@ -60,7 +60,7 @@ func TestNewVerification_NormalizesSlices(t *testing.T) {
 
 func TestNewDiagnose_DoesNotMutateInput(t *testing.T) {
 	in := &diagnosis.Report{
-		Entries: []diagnosis.Entry{
+		Issues: []diagnosis.Issue{
 			{
 				Case:     diagnosis.EmptyFindings,
 				Signal:   "signal",
@@ -77,12 +77,12 @@ func TestNewDiagnose_DoesNotMutateInput(t *testing.T) {
 	if out.Report == in {
 		t.Fatal("NewDiagnose should return a copied report pointer")
 	}
-	if out.Report.Entries == nil {
+	if out.Report.Issues == nil {
 		t.Fatal("entries should be normalized to empty slice")
 	}
 
-	out.Report.Entries[0].Signal = "changed"
-	if in.Entries[0].Signal != "signal" {
-		t.Fatalf("input report was mutated: got %q", in.Entries[0].Signal)
+	out.Report.Issues[0].Signal = "changed"
+	if in.Issues[0].Signal != "signal" {
+		t.Fatalf("input report was mutated: got %q", in.Issues[0].Signal)
 	}
 }

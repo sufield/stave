@@ -10,9 +10,9 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-func checkTimeSpan(input Input) *Entry {
+func checkTimeSpan(input Input) *Issue {
 	if len(input.Snapshots) < 2 {
-		return &Entry{
+		return &Issue{
 			Case:     ExpectedNone,
 			Signal:   signalInsufficientSnapshots,
 			Evidence: fmt.Sprintf("Only %d snapshot(s); need at least 2 to compute duration", len(input.Snapshots)),
@@ -24,7 +24,7 @@ func checkTimeSpan(input Input) *Entry {
 	span := snapshots[len(snapshots)-1].CapturedAt.Sub(snapshots[0].CapturedAt)
 
 	if span < input.MaxUnsafe {
-		return &Entry{
+		return &Issue{
 			Case:   ExpectedNone,
 			Signal: signalTimeSpanShorterThanThreshold,
 			Evidence: fmt.Sprintf("Snapshots span %s; threshold is %s",
@@ -37,12 +37,12 @@ func checkTimeSpan(input Input) *Entry {
 	return nil
 }
 
-func buildNowSkewEntry(now, maxCapturedAt time.Time) *Entry {
+func buildNowSkewEntry(now, maxCapturedAt time.Time) *Issue {
 	if now.IsZero() || maxCapturedAt.IsZero() || !now.Before(maxCapturedAt) {
 		return nil
 	}
 
-	return &Entry{
+	return &Issue{
 		Case:   ViolationEvidence,
 		Signal: signalNowBeforeLatestSnapshot,
 		Evidence: fmt.Sprintf("--now=%s but latest captured_at=%s",
@@ -52,16 +52,16 @@ func buildNowSkewEntry(now, maxCapturedAt time.Time) *Entry {
 	}
 }
 
-func buildTopFindingEntries(findings []evaluation.Finding, limit int) []Entry {
+func buildTopFindingEntries(findings []evaluation.Finding, limit int) []Issue {
 	count := min(len(findings), limit)
 	if count <= 0 {
 		return nil
 	}
 
-	entries := make([]Entry, 0, count)
+	entries := make([]Issue, 0, count)
 	for _, f := range findings[:count] {
 		ev := f.Evidence
-		entries = append(entries, Entry{
+		entries = append(entries, Issue{
 			Case:    ViolationEvidence,
 			Signal:  signalContinuousUnsafeStreak,
 			AssetID: f.AssetID,

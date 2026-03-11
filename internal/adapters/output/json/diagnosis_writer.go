@@ -21,7 +21,7 @@ func WriteDiagnosis(w io.Writer, report *diagnosis.Report, useEnvelope bool) err
 
 	if useEnvelope {
 		envelope := safetyenvelope.JSONEnvelope[safetyenvelope.Diagnose]{
-			OK:   len(jsonOutput.Report.Entries) == 0,
+			OK:   len(jsonOutput.Report.Issues) == 0,
 			Data: jsonOutput,
 		}
 		return enc.Encode(envelope)

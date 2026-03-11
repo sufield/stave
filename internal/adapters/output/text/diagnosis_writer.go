@@ -20,10 +20,10 @@ func WriteDiagnosisReport(w io.Writer, report *diagnosis.Report, labelFn LabelFu
 	if err := writeDiagnosisSummary(w, report); err != nil {
 		return err
 	}
-	if len(report.Entries) == 0 {
+	if len(report.Issues) == 0 {
 		return writeNoDiagnosisIssues(w, labelFn)
 	}
-	return writeDiagnosesList(w, report.Entries, labelFn)
+	return writeDiagnosesList(w, report.Issues, labelFn)
 }
 
 func writeDiagnosisSummary(w io.Writer, report *diagnosis.Report) error {
@@ -56,7 +56,7 @@ func writeNoDiagnosisIssues(w io.Writer, labelFn LabelFunc) error {
 	return err
 }
 
-func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Entry, labelFn LabelFunc) error {
+func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Issue, labelFn LabelFunc) error {
 	warn := labelFn("warning", fmt.Sprintf("Diagnostics (%d):", len(diagnoses)))
 	if _, err := fmt.Fprintf(w, "\n%s\n", warn); err != nil {
 		return err
@@ -71,7 +71,7 @@ func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Entry, labelFn LabelF
 	return err
 }
 
-func writeDiagnosisItem(w io.Writer, index int, diag diagnosis.Entry) error {
+func writeDiagnosisItem(w io.Writer, index int, diag diagnosis.Issue) error {
 	var err error
 	writef := func(format string, args ...any) {
 		if err != nil {

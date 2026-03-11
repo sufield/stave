@@ -38,7 +38,7 @@ func TestWriteDiagnosisReport_NoDiagnoses(t *testing.T) {
 func TestWriteDiagnosisReport_WithDiagnoses(t *testing.T) {
 	report := &diagnosis.Report{}
 	report.Summary.TotalSnapshots = 1
-	report.Entries = []diagnosis.Entry{
+	report.Issues = []diagnosis.Issue{
 		{Case: diagnosis.EmptyFindings, Signal: "info", Evidence: "none", Action: "ok"},
 	}
 
