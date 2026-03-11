@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/securityaudit"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // GovulncheckRunner executes govulncheck and returns its combined output.
@@ -22,6 +21,7 @@ type GovulncheckRunner func(ctx context.Context, cwd string) ([]byte, error)
 
 type defaultVulnEvidenceProvider struct {
 	runGovulncheck GovulncheckRunner
+	readFile       func(path string) ([]byte, error)
 }
 
 func (p defaultVulnEvidenceProvider) Resolve(ctx context.Context, req SecurityAuditRequest) (vulnerabilitySnapshot, error) {
@@ -31,7 +31,7 @@ func (p defaultVulnEvidenceProvider) Resolve(ctx context.Context, req SecurityAu
 			return ensureVulnRawJSON(live, req.Now), nil
 		}
 		// Keep fallback behavior but preserve the live-check failure reason.
-		fallback, err := resolveVulnFallback(req)
+		fallback, err := resolveVulnFallback(req, p.readFile)
 		if err == nil && fallback.Available {
 			fallback.Details = fmt.Sprintf("live check failed (%v); used fallback evidence", liveErr)
 			return ensureVulnRawJSON(fallback, req.Now), nil
@@ -44,7 +44,7 @@ func (p defaultVulnEvidenceProvider) Resolve(ctx context.Context, req SecurityAu
 			Details:      fmt.Sprintf("govulncheck execution failed: %v", liveErr),
 		}, req.Now), nil
 	}
-	fallback, err := resolveVulnFallback(req)
+	fallback, err := resolveVulnFallback(req, p.readFile)
 	if err != nil {
 		return vulnerabilitySnapshot{}, err
 	}
@@ -58,14 +58,14 @@ func shouldAttemptLiveCheck(req SecurityAuditRequest) bool {
 	return req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid
 }
 
-func resolveVulnFallback(req SecurityAuditRequest) (vulnerabilitySnapshot, error) {
+func resolveVulnFallback(req SecurityAuditRequest, readFile func(string) ([]byte, error)) (vulnerabilitySnapshot, error) {
 	if req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid {
-		if cached, ok := loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now); ok {
+		if cached, ok := loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now, readFile); ok {
 			return cached, nil
 		}
 	}
 	if req.VulnSource == VulnSourceCI || req.VulnSource == VulnSourceHybrid {
-		if ciEvidence, ok := loadVulnEvidenceFromCandidates(ciVulnEvidenceCandidates(req), req.Now); ok {
+		if ciEvidence, ok := loadVulnEvidenceFromCandidates(ciVulnEvidenceCandidates(req), req.Now, readFile); ok {
 			return ciEvidence, nil
 		}
 	}
@@ -161,9 +161,9 @@ func compactPaths(paths ...string) []string {
 	return out
 }
 
-func loadVulnEvidenceFromCandidates(candidates []string, now time.Time) (vulnerabilitySnapshot, bool) {
+func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile func(string) ([]byte, error)) (vulnerabilitySnapshot, bool) {
 	for _, candidate := range candidates {
-		raw, err := fsutil.ReadFileLimited(candidate)
+		raw, err := readFile(candidate)
 		if err != nil {
 			continue
 		}

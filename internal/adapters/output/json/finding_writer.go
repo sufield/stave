@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/adapters/output/dto"
 	"github.com/sufield/stave/internal/envvar"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -53,7 +53,7 @@ func NewFindingWriterWithEnvelope(indent bool) *FindingWriter {
 
 // MarshalFindings transforms enriched findings into JSON bytes without performing I/O.
 func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
-	envelope := appworkflow.BuildSafetyEnvelopeFromEnriched(enriched)
+	envelope := output.BuildSafetyEnvelopeFromEnriched(enriched)
 	if err := validateEvaluationEnvelope(envelope, w.ValidateContract); err != nil {
 		return nil, err
 	}

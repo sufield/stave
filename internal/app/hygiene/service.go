@@ -3,6 +3,7 @@ package hygiene
 import (
 	"time"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
@@ -53,7 +54,7 @@ func (s *Service) ComputeRisk(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
-) RiskStats {
+) appcontracts.RiskStats {
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
 		result := service.Evaluate(service.EvaluateInput{
@@ -68,7 +69,7 @@ func (s *Service) ComputeRisk(
 	}
 	summary := computeUpcomingSummary(controls, snapshots, opts)
 
-	return RiskStats{
+	return appcontracts.RiskStats{
 		CurrentViolations: violations,
 		Overdue:           summary.Overdue,
 		DueNow:            summary.DueNow,

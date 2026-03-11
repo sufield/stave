@@ -10,11 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/domain/securityaudit"
-	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
 
 // SBOMFormat identifies the SBOM output standard.
@@ -61,22 +58,22 @@ type SecurityAuditRunner struct {
 	binary      defaultBinaryInspector
 	policy      defaultPolicyInspector
 	crosswalk   defaultCrosswalkResolver
+	hashBytes   func([]byte) kernel.Digest
 }
 
 // NewSecurityAuditRunner wires default dependencies.
-// The govulncheckRunner is injected from the adapter layer so that
-// the app layer never imports os/exec directly.
-// The signatureVerifier is optional — if nil, signature files are reported
-// as found but not cryptographically verified.
-func NewSecurityAuditRunner(govulncheckRunner GovulncheckRunner, signatureVerifier ports.Verifier) *SecurityAuditRunner {
+// All platform and infrastructure operations are injected via RunnerDeps
+// so the app layer never imports platform, adapter, or infrastructure packages.
+func NewSecurityAuditRunner(deps RunnerDeps) *SecurityAuditRunner {
 	return &SecurityAuditRunner{
-		diagnostics: defaultDiagnosticsService{},
+		diagnostics: defaultDiagnosticsService{run: deps.RunDiagnostics},
 		buildInfo:   defaultBuildInfoProvider{},
 		sbom:        defaultSBOMGenerator{},
-		vulns:       defaultVulnEvidenceProvider{runGovulncheck: govulncheckRunner},
-		binary:      defaultBinaryInspector{signatureVerifier: signatureVerifier},
-		policy:      defaultPolicyInspector{},
-		crosswalk:   defaultCrosswalkResolver{},
+		vulns:       defaultVulnEvidenceProvider{runGovulncheck: deps.GovulncheckRunner, readFile: deps.ReadFile},
+		binary:      defaultBinaryInspector{signatureVerifier: deps.SignatureVerifier, hashFile: deps.HashFile, readFile: deps.ReadFile},
+		policy:      defaultPolicyInspector{readFile: deps.ReadFile},
+		crosswalk:   defaultCrosswalkResolver{readFile: deps.ReadFile, resolve: deps.ResolveCrosswalk},
+		hashBytes:   deps.HashBytes,
 	}
 }
 
@@ -89,11 +86,9 @@ func (r *SecurityAuditRunner) Run(
 	if err := validateSecurityAuditRequest(req); err != nil {
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}
-	_, _ = r.diagnostics.Run(doctor.Context{
-		Cwd:          req.Cwd,
-		BinaryPath:   req.BinaryPath,
-		StaveVersion: req.ToolVersion,
-	})
+	if r.diagnostics.run != nil {
+		r.diagnostics.run(req.Cwd, req.BinaryPath, req.ToolVersion)
+	}
 
 	ev, err := r.collectEvidence(ctx, req)
 	if err != nil {
@@ -101,7 +96,7 @@ func (r *SecurityAuditRunner) Run(
 	}
 
 	findings := buildFindings(ev, req)
-	artifacts := buildArtifactManifest(req, ev)
+	artifacts := r.buildArtifactManifest(req, ev)
 	report := assembleReport(req, findings, ev, artifacts)
 	return report, artifacts, nil
 }
@@ -156,7 +151,7 @@ func buildFindings(ev evidenceBundle, req SecurityAuditRequest) []securityaudit.
 	return findings
 }
 
-func buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) securityaudit.ArtifactManifest {
+func (r *SecurityAuditRunner) buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) securityaudit.ArtifactManifest {
 	manifest := securityaudit.ArtifactManifest{
 		SchemaVersion: kernel.SchemaSecurityAuditArtifacts,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
@@ -170,7 +165,7 @@ func buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) security
 		}
 		manifest.Files = append(manifest.Files, securityaudit.ArtifactEntry{
 			Path:      filepath.Clean(path),
-			SHA256:    string(platformcrypto.HashBytes(payload)),
+			SHA256:    string(r.hashBytes(payload)),
 			SizeBytes: int64(len(payload)),
 			Content:   payload,
 		})

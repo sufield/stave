@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 )
 
 func TestValidateContentService_ContractModeRuns(t *testing.T) {
-	svc := appvalidation.NewContentService()
+	svc := appvalidation.NewContentService(func() appvalidation.SchemaValidator { return contractvalidator.New() })
 
 	data := []byte(`
 dsl_version: ctrl.v1
@@ -48,7 +49,7 @@ unknown_field: true
 }
 
 func TestValidateContentService_AutoModeSetsSummary(t *testing.T) {
-	svc := appvalidation.NewContentService()
+	svc := appvalidation.NewContentService(func() appvalidation.SchemaValidator { return contractvalidator.New() })
 
 	ctlData := []byte(`
 dsl_version: ctrl.v1

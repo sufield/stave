@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -190,12 +191,14 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 	if !ok {
 		return appeval.ProjectConfigInput{}
 	}
+	reg, _ := pack.DefaultRegistry()
 	return appeval.ProjectConfigInput{
 		Suppressions:        f.toSuppressions(projCfg.Suppressions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
 		ControlsFlagSet:     f.flags.applyControlsFlagSet,
 		BuiltinLoader:       ctlbuiltin.LoadAll,
+		PackRegistry:        reg,
 	}
 }
 

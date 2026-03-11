@@ -84,11 +84,12 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 
 	_ = now // used for context
 	detail, err := BuildFindingDetail(FindingDetailInput{
-		ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
-		AssetID:   asset.ID("res:aws:s3:bucket:test-bucket"),
-		Controls:  policy.ControlDefinitions{ctl},
-		Snapshots: []asset.Snapshot{earlierSnap, snap},
-		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		ControlID:    kernel.ControlID("CTL.S3.PUBLIC.001"),
+		AssetID:      asset.ID("res:aws:s3:bucket:test-bucket"),
+		Controls:     policy.ControlDefinitions{ctl},
+		Snapshots:    []asset.Snapshot{earlierSnap, snap},
+		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		TraceBuilder: trace.NewFindingTraceBuilder(nil),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

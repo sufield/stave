@@ -6,7 +6,7 @@ import (
 	"time"
 
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
-	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
@@ -29,14 +29,14 @@ func TestFilterSnapshotsBefore(t *testing.T) {
 func TestRenderMarkdown(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	previous := now.Add(-7 * 24 * time.Hour)
-	reportReq := hygieneapp.ReportRequest{
-		Context: hygieneapp.ReportContext{
+	reportReq := appcontracts.ReportRequest{
+		Context: appcontracts.ReportContext{
 			Now:         now,
 			PreviousNow: previous,
 			Lookback:    7 * 24 * time.Hour,
 			DueSoon:     24 * time.Hour,
 		},
-		Snapshots: hygieneapp.SnapshotStats{
+		Snapshots: appcontracts.SnapshotStats{
 			Active:            6,
 			Archived:          2,
 			Total:             8,
@@ -45,7 +45,7 @@ func TestRenderMarkdown(t *testing.T) {
 			RetentionDuration: 30 * 24 * time.Hour,
 			KeepMin:           2,
 		},
-		Risks: hygieneapp.RiskStats{
+		Risks: appcontracts.RiskStats{
 			CurrentViolations: 4,
 			Overdue:           1,
 			DueNow:            1,
@@ -53,7 +53,7 @@ func TestRenderMarkdown(t *testing.T) {
 			Later:             0,
 			UpcomingTotal:     4,
 		},
-		Trends: []hygieneapp.TrendMetric{
+		Trends: []appcontracts.TrendMetric{
 			{Name: "Current violations", Current: 4, Previous: 6},
 		},
 	}

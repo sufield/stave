@@ -91,3 +91,16 @@ type ResultLoader interface {
 type IntegrityCheckConfigurer interface {
 	ConfigureIntegrityCheck(manifestPath, publicKeyPath string)
 }
+
+// ContentHasher computes reproducible digests over file system paths.
+type ContentHasher interface {
+	HashDir(path string, exts ...string) (string, error)
+	HashFile(path string) (string, error)
+}
+
+// PackRegistry resolves built-in control packs from the embedded registry.
+type PackRegistry interface {
+	ResolveEnabledPacks(names []string) ([]string, error)
+	RegistryVersion() (string, error)
+	RegistryHash() (string, error)
+}

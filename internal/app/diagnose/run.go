@@ -85,10 +85,10 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 
 // FindingDetailConfig holds configuration for the finding detail use case.
 type FindingDetailConfig struct {
-	DiagnoseConfig  Config
-	ControlID       kernel.ControlID
-	AssetID         asset.ID
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	DiagnoseConfig Config
+	ControlID      kernel.ControlID
+	AssetID        asset.ID
+	TraceBuilder   evaluation.FindingTraceBuilder
 }
 
 // ExecuteFindingDetail loads data and builds a detailed diagnosis for a single finding.
@@ -104,12 +104,12 @@ func (d *Run) ExecuteFindingDetail(ctx context.Context, cfg FindingDetailConfig)
 	}
 
 	return service.BuildFindingDetail(service.FindingDetailInput{
-		ControlID:       cfg.ControlID,
-		AssetID:         cfg.AssetID,
-		Controls:        loaded.controls,
-		Snapshots:       loaded.snapshots,
-		Result:          result,
-		PredicateParser: cfg.PredicateParser,
+		ControlID:    cfg.ControlID,
+		AssetID:      cfg.AssetID,
+		Controls:     loaded.controls,
+		Snapshots:    loaded.snapshots,
+		Result:       result,
+		TraceBuilder: cfg.TraceBuilder,
 	})
 }
 

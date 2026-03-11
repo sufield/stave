@@ -98,6 +98,7 @@ func buildEvaluatorOptions(flags *applyFlagsType) appeval.Options {
 		ObservationsSource: appeval.ObservationSource(flags.observationsDir),
 		IntegrityManifest:  flags.applyIntegrityManifest,
 		IntegrityPublicKey: flags.applyIntegrityPublicKey,
+		Hasher:             fsutil.FSContentHasher{},
 	}
 }
 

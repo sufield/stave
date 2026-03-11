@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -67,7 +68,7 @@ func TestComputeRisk_EmptyInput(t *testing.T) {
 		Now:              time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC),
 		DueSoonThreshold: time.Hour,
 	})
-	if stats != (RiskStats{}) {
+	if stats != (appcontracts.RiskStats{}) {
 		t.Fatalf("empty risk expected, got %+v", stats)
 	}
 }

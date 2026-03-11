@@ -1,4 +1,4 @@
-package workflow
+package output
 
 import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"

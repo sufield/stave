@@ -1,9 +1,13 @@
 package hygiene
 
-import "testing"
+import (
+	"testing"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+)
 
 func TestCalculateTrend(t *testing.T) {
-	current := RiskStats{
+	current := appcontracts.RiskStats{
 		CurrentViolations: 4,
 		Overdue:           1,
 		DueNow:            1,
@@ -11,7 +15,7 @@ func TestCalculateTrend(t *testing.T) {
 		Later:             0,
 		UpcomingTotal:     4,
 	}
-	previous := RiskStats{
+	previous := appcontracts.RiskStats{
 		CurrentViolations: 6,
 		Overdue:           2,
 		DueNow:            0,

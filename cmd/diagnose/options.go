@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
+	"github.com/sufield/stave/internal/trace"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -123,10 +124,10 @@ func runDiagnoseFindingDetail(req diagnoseFindingDetailRequest) error {
 	}
 
 	detail, err := req.diagnoseRun.ExecuteFindingDetail(req.ctx, appdiagnose.FindingDetailConfig{
-		DiagnoseConfig:  req.baseCfg,
-		ControlID:       kernel.ControlID(req.controlID),
-		AssetID:         asset.ID(req.assetID),
-		PredicateParser: ctlyaml.YAMLPredicateParser,
+		DiagnoseConfig: req.baseCfg,
+		ControlID:      kernel.ControlID(req.controlID),
+		AssetID:        asset.ID(req.assetID),
+		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.YAMLPredicateParser),
 	})
 	if err != nil {
 		return err

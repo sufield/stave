@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // EvaluationPlan holds resolved paths and content hashes for an evaluation run.
@@ -34,10 +34,10 @@ func NewPlan(opts Options) (*EvaluationPlan, error) {
 		ObservationsPath: opts.ObservationsSource.Path(),
 	}
 	populatePlanConfigPaths(plan, opts)
-	if err := populatePlanHashes(plan); err != nil {
+	if err := populatePlanHashes(plan, opts.Hasher); err != nil {
 		return nil, fmt.Errorf("hash plan inputs: %w", err)
 	}
-	if err := populatePlanLockHash(plan, opts.ProjectRoot); err != nil {
+	if err := populatePlanLockHash(plan, opts.ProjectRoot, opts.Hasher); err != nil {
 		return nil, fmt.Errorf("hash lock file: %w", err)
 	}
 	return plan, nil
@@ -52,32 +52,35 @@ func populatePlanConfigPaths(plan *EvaluationPlan, opts Options) {
 	}
 }
 
-func populatePlanHashes(plan *EvaluationPlan) error {
-	h, err := fsutil.HashDirByExt(plan.ControlsPath, ".yaml", ".yml")
+func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher) error {
+	if hasher == nil {
+		return nil
+	}
+	h, err := hasher.HashDir(plan.ControlsPath, ".yaml", ".yml")
 	if err != nil {
 		return fmt.Errorf("controls directory %s: %w", plan.ControlsPath, err)
 	}
-	plan.ControlsHash = h
+	plan.ControlsHash = kernel.Digest(h)
 
 	if plan.ObservationsPath != "" {
-		h, err = fsutil.HashDirByExt(plan.ObservationsPath, ".json")
+		h, err = hasher.HashDir(plan.ObservationsPath, ".json")
 		if err != nil {
 			return fmt.Errorf("observations directory %s: %w", plan.ObservationsPath, err)
 		}
-		plan.ObservationsHash = h
+		plan.ObservationsHash = kernel.Digest(h)
 	}
 
 	if plan.ConfigPath != "" {
-		h, err = fsutil.HashFile(plan.ConfigPath)
+		h, err = hasher.HashFile(plan.ConfigPath)
 		if err != nil {
 			return fmt.Errorf("config file %s: %w", plan.ConfigPath, err)
 		}
-		plan.ConfigHash = h
+		plan.ConfigHash = kernel.Digest(h)
 	}
 	return nil
 }
 
-func populatePlanLockHash(plan *EvaluationPlan, projectRoot string) error {
+func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error {
 	root := strings.TrimSpace(projectRoot)
 	if root == "" {
 		return nil
@@ -90,10 +93,13 @@ func populatePlanLockHash(plan *EvaluationPlan, projectRoot string) error {
 		return fmt.Errorf("lock file %s: %w", lockPath, err)
 	}
 	plan.LockFile = lockPath
-	h, err := fsutil.HashFile(lockPath)
+	if hasher == nil {
+		return nil
+	}
+	h, err := hasher.HashFile(lockPath)
 	if err != nil {
 		return fmt.Errorf("lock file %s: %w", lockPath, err)
 	}
-	plan.LockHash = h
+	plan.LockHash = kernel.Digest(h)
 	return nil
 }

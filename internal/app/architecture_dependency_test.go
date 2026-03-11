@@ -19,6 +19,7 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 	type rule struct {
 		dirPrefix string
 		forbidden []string
+		allowed   []string // exceptions within forbidden prefixes
 	}
 
 	rules := []rule{
@@ -34,8 +35,20 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 			dirPrefix: filepath.Join("internal", "app"),
 			forbidden: []string{
 				"github.com/sufield/stave/internal/adapters/",
+				"github.com/sufield/stave/internal/platform/",
+				"github.com/sufield/stave/internal/doctor",
 				"github.com/sufield/stave/cmd/",
 				"os/exec",
+			},
+		},
+		{
+			dirPrefix: filepath.Join("internal", "adapters"),
+			forbidden: []string{
+				"github.com/sufield/stave/internal/app/",
+				"github.com/sufield/stave/cmd/",
+			},
+			allowed: []string{
+				"github.com/sufield/stave/internal/app/contracts",
 			},
 		},
 	}
@@ -70,7 +83,16 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 				p := strings.Trim(imp.Path.Value, "\"")
 				for _, ban := range r.forbidden {
 					if p == ban || strings.HasPrefix(p, ban) {
-						violations = append(violations, rel+": imports "+p)
+						isAllowed := false
+						for _, allow := range r.allowed {
+							if p == allow || strings.HasPrefix(p, allow) {
+								isAllowed = true
+								break
+							}
+						}
+						if !isAllowed {
+							violations = append(violations, rel+": imports "+p)
+						}
 					}
 				}
 			}

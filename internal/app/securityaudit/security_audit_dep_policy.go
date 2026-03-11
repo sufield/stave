@@ -13,19 +13,20 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type defaultPolicyInspector struct{}
+type defaultPolicyInspector struct {
+	readFile func(path string) ([]byte, error)
+}
 
-func (defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequest) (policyInspectionSnapshot, error) {
+func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequest) (policyInspectionSnapshot, error) {
 	root, err := findRepoRoot(req.Cwd)
 	if err != nil {
 		return policyInspectionSnapshot{}, err
 	}
 
-	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root)
-	credentialViolations, credErr := inspectForCredentialEnvRefs(root)
+	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root, d.readFile)
+	credentialViolations, credErr := inspectForCredentialEnvRefs(root, d.readFile)
 	if inspectErr != nil || credErr != nil {
 		return policyInspectionSnapshot{}, errors.Join(inspectErr, credErr)
 	}
@@ -114,7 +115,7 @@ type sourceMatch func(relPath, content string) []string
 
 // inspectSourceFiles walks root, reads each non-test, non-vendor .go file,
 // and calls matchFn to collect violations.
-func inspectSourceFiles(root string, matchFn sourceMatch) ([]string, error) {
+func inspectSourceFiles(root string, matchFn sourceMatch, readFile func(string) ([]byte, error)) ([]string, error) {
 	excludedDirs := map[string]bool{"vendor": true}
 	var violations []string
 	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
@@ -131,7 +132,7 @@ func inspectSourceFiles(root string, matchFn sourceMatch) ([]string, error) {
 		if !shouldInspectPath(rel, excludedDirs) {
 			return nil
 		}
-		data, readErr := fsutil.ReadFileLimited(path)
+		data, readErr := readFile(path)
 		if readErr != nil {
 			return readErr
 		}
@@ -159,7 +160,7 @@ func shouldInspectPath(relPath string, excludedDirs map[string]bool) bool {
 	return true
 }
 
-func inspectForBannedRuntimeImports(root string) ([]string, error) {
+func inspectForBannedRuntimeImports(root string, readFile func(string) ([]byte, error)) ([]string, error) {
 	return inspectSourceFiles(root, func(relPath, content string) []string {
 		var hits []string
 		for _, banned := range kernel.DefaultPolicy().BannedRuntimeImports {
@@ -168,10 +169,10 @@ func inspectForBannedRuntimeImports(root string) ([]string, error) {
 			}
 		}
 		return hits
-	})
+	}, readFile)
 }
 
-func inspectForCredentialEnvRefs(root string) ([]string, error) {
+func inspectForCredentialEnvRefs(root string, readFile func(string) ([]byte, error)) ([]string, error) {
 	return inspectSourceFiles(root, func(relPath, content string) []string {
 		var hits []string
 		for _, envVar := range kernel.DefaultPolicy().BannedCredentialEnvVars {
@@ -180,5 +181,5 @@ func inspectForCredentialEnvRefs(root string) ([]string, error) {
 			}
 		}
 		return hits
-	})
+	}, readFile)
 }
