@@ -64,7 +64,11 @@ func sampleEvaluation() safetyenvelope.Evaluation {
 func TestOutputReportTextDefaultTemplate(t *testing.T) {
 	eval := sampleEvaluation()
 	var buf bytes.Buffer
-	if err := reportrender.RenderText(eval, "test-version", defaultReportTemplate, "", &buf, false); err != nil {
+	if err := reportrender.RenderText(eval, reportrender.RenderTextOptions{
+		ToolVersion:     "test-version",
+		DefaultTemplate: defaultReportTemplate,
+		Writer:          &buf,
+	}); err != nil {
 		t.Fatalf("render template: %v", err)
 	}
 	out := buf.String()
@@ -89,7 +93,11 @@ func TestOutputReportTextCustomTemplate(t *testing.T) {
 	customTpl := `violations={{ .Summary.Violations }}
 {{range .Findings}}{{ .ControlID }}{{ "\n" }}{{end}}`
 	var buf bytes.Buffer
-	if err := reportrender.RenderText(eval, "test-version", customTpl, "", &buf, false); err != nil {
+	if err := reportrender.RenderText(eval, reportrender.RenderTextOptions{
+		ToolVersion:     "test-version",
+		DefaultTemplate: customTpl,
+		Writer:          &buf,
+	}); err != nil {
 		t.Fatalf("render custom template: %v", err)
 	}
 	out := buf.String()
@@ -106,7 +114,12 @@ func TestOutputReportTextInvalidTemplate(t *testing.T) {
 	}
 
 	eval := sampleEvaluation()
-	err := reportrender.RenderText(eval, "test-version", defaultReportTemplate, tpl, &bytes.Buffer{}, false)
+	err := reportrender.RenderText(eval, reportrender.RenderTextOptions{
+		ToolVersion:     "test-version",
+		DefaultTemplate: defaultReportTemplate,
+		TemplatePath:    tpl,
+		Writer:          &bytes.Buffer{},
+	})
 	if err == nil {
 		t.Fatal("expected template parse error")
 	}

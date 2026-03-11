@@ -92,14 +92,13 @@ func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 	if format.IsJSON() {
 		return reportrender.RenderJSON(*eval, staveversion.Version, cmd.OutOrStdout(), quiet)
 	}
-	return reportrender.RenderText(
-		*eval,
-		staveversion.Version,
-		defaultReportTemplate,
-		templateFile,
-		cmd.OutOrStdout(),
-		quiet,
-	)
+	return reportrender.RenderText(*eval, reportrender.RenderTextOptions{
+		ToolVersion:     staveversion.Version,
+		DefaultTemplate: defaultReportTemplate,
+		TemplatePath:    templateFile,
+		Writer:          cmd.OutOrStdout(),
+		Quiet:           quiet,
+	})
 }
 
 func collectReportGitAudit() *evaluation.GitInfo {
