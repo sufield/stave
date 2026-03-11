@@ -13,10 +13,12 @@ func (e testExternalError) Description() string { return e.desc }
 func (e testExternalError) Code() string        { return e.code }
 
 func TestTranslator_TranslateWithPrefix(t *testing.T) {
-	translator := NewTranslator(CodeSchemaViolation).
-		WithDefaultAction("Fix input to match schema")
+	translator := NewTranslator(CodeSchemaViolation,
+		WithDefaultAction("Fix input to match schema"),
+		WithPathPrefix("controls.yaml"),
+	)
 
-	result := translator.WithPathPrefix("controls.yaml").Translate([]ExternalError{
+	result := translator.Translate([]ExternalError{
 		testExternalError{
 			field: "/dsl_version",
 			desc:  "missing required field",
@@ -46,8 +48,9 @@ func TestTranslator_TranslateWithPrefix(t *testing.T) {
 }
 
 func TestTranslator_DefaultActionFallback(t *testing.T) {
-	translator := NewTranslator(CodeSchemaViolation).
-		WithDefaultAction("Fix input to match schema")
+	translator := NewTranslator(CodeSchemaViolation,
+		WithDefaultAction("Fix input to match schema"),
+	)
 
 	issue := translator.TranslateOne(testExternalError{
 		field: "/x",

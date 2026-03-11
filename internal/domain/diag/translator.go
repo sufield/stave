@@ -19,6 +19,23 @@ type Translator struct {
 	pathPrefix    string
 }
 
+// Option configures a Translator during construction.
+type Option func(*Translator)
+
+// WithDefaultAction returns an Option that sets a fallback action for unmapped codes.
+func WithDefaultAction(action string) Option {
+	return func(t *Translator) {
+		t.defaultAction = strings.TrimSpace(action)
+	}
+}
+
+// WithPathPrefix returns an Option that adds a context prefix to translated paths.
+func WithPathPrefix(prefix string) Option {
+	return func(t *Translator) {
+		t.pathPrefix = strings.TrimSpace(prefix)
+	}
+}
+
 var schemaViolationCodes = map[string]struct{}{
 	"required":              {},
 	"type":                  {},
@@ -33,33 +50,27 @@ var schemaActionByCode = map[string]func(string) string{
 	"additional_properties": additionalPropertiesAction,
 }
 
-// NewTranslator creates a translator with a fallback canonical code.
-func NewTranslator(defaultCode Code) *Translator {
+// NewTranslator creates a translator with a fallback canonical code and optional configuration.
+func NewTranslator(defaultCode Code, opts ...Option) *Translator {
 	code := Code(strings.TrimSpace(string(defaultCode)))
 	if code == "" {
 		code = CodeSchemaViolation
 	}
-	return &Translator{defaultCode: code}
-}
-
-// WithDefaultAction sets a fallback action for unmapped external error codes.
-func (t *Translator) WithDefaultAction(action string) *Translator {
-	t.defaultAction = strings.TrimSpace(action)
-	return t
-}
-
-// WithPathPrefix adds a context prefix (for example file path) to translated paths.
-func (t *Translator) WithPathPrefix(prefix string) *Translator {
-	t.pathPrefix = strings.TrimSpace(prefix)
+	t := &Translator{defaultCode: code}
+	for _, opt := range opts {
+		opt(t)
+	}
 	return t
 }
 
 // Translate converts external diagnostics into a Result.
 func (t *Translator) Translate(externalErrors []ExternalError) *Result {
 	result := NewResult()
+	issues := make([]Issue, 0, len(externalErrors))
 	for _, externalErr := range externalErrors {
-		result.Add(t.TranslateOne(externalErr))
+		issues = append(issues, t.TranslateOne(externalErr))
 	}
+	result.AddAll(issues)
 	return result
 }
 
