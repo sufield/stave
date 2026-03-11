@@ -23,6 +23,13 @@ type ObservationRepository interface {
 	LoadSnapshots(ctx context.Context, dir string) (LoadResult, error)
 }
 
+// SnapshotReader loads a single snapshot from an io.Reader.
+// This is the narrow port used by pruner (for timestamp extraction),
+// stdin loading, and composition; ObservationRepository is the wider port.
+type SnapshotReader interface {
+	LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error)
+}
+
 // ControlRepository loads control definitions from storage.
 type ControlRepository interface {
 	LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
