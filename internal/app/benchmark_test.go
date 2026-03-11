@@ -80,7 +80,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = service.Evaluate(service.EvaluateInput{
+		_, _ = service.Evaluate(service.EvaluateInput{
 			Controls:  controls,
 			Snapshots: snapshots,
 			MaxUnsafe: maxUnsafe,
@@ -150,7 +150,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 
 	// Run evaluation and measure time
 	start := time.Now()
-	_ = service.Evaluate(service.EvaluateInput{
+	_, _ = service.Evaluate(service.EvaluateInput{
 		Controls:  controls,
 		Snapshots: snapshots,
 		MaxUnsafe: maxUnsafe,
@@ -217,12 +217,15 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	maxUnsafe := 168 * time.Hour
 
 	start := time.Now()
-	result := service.Evaluate(service.EvaluateInput{
+	result, err := service.Evaluate(service.EvaluateInput{
 		Controls:  controls,
 		Snapshots: []asset.Snapshot{snapshot},
 		MaxUnsafe: maxUnsafe,
 		Clock:     clock,
 	})
+	if err != nil {
+		t.Fatalf("Evaluate returned error: %v", err)
+	}
 	elapsed := time.Since(start)
 
 	// Verify results

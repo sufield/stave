@@ -53,7 +53,7 @@ func BenchmarkEvaluate(b *testing.B) {
 
 	b.ResetTimer()
 	for b.Loop() {
-		runner.Evaluate(snapshots)
+		_, _ = runner.Evaluate(snapshots)
 	}
 }
 

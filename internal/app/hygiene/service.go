@@ -57,7 +57,7 @@ func (s *Service) ComputeRisk(
 ) appcontracts.RiskStats {
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
-		result := service.Evaluate(service.EvaluateInput{
+		result, err := service.Evaluate(service.EvaluateInput{
 			Controls:        controls,
 			Snapshots:       snapshots,
 			MaxUnsafe:       opts.GlobalMaxUnsafe,
@@ -65,6 +65,9 @@ func (s *Service) ComputeRisk(
 			ToolVersion:     opts.ToolVersion,
 			PredicateParser: opts.PredicateParser,
 		})
+		if err != nil {
+			return appcontracts.RiskStats{}
+		}
 		violations = len(result.Findings)
 	}
 	summary := computeUpcomingSummary(controls, snapshots, opts)

@@ -37,5 +37,9 @@ func (e *testEvaluator) Controls() []policy.ControlDefinition {
 
 func (e *testEvaluator) Evaluate(snapshots []asset.Snapshot) evaluation.Result {
 	e.runner.InputHashes = e.InputHashes
-	return e.runner.Evaluate(snapshots)
+	result, err := e.runner.Evaluate(snapshots)
+	if err != nil {
+		panic("testEvaluator.Evaluate: " + err.Error())
+	}
+	return result
 }

@@ -152,12 +152,15 @@ func (d *Run) resolveResult(
 		return d.ResultLoader.LoadFromFile(cfg.OutputFile)
 	}
 
-	result := service.Evaluate(service.EvaluateInput{
+	result, err := service.Evaluate(service.EvaluateInput{
 		Controls:        artifacts.controls,
 		Snapshots:       artifacts.snapshots,
 		MaxUnsafe:       cfg.MaxUnsafe,
 		Clock:           cfg.Clock,
 		PredicateParser: cfg.PredicateParser,
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &result, nil
 }

@@ -25,7 +25,7 @@ type EvaluateInput struct {
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
-func Evaluate(input EvaluateInput) evaluation.Result {
+func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 	runner := engine.Runner{
 		Controls:        input.Controls,
 		MaxUnsafe:       input.MaxUnsafe,
@@ -36,7 +36,10 @@ func Evaluate(input EvaluateInput) evaluation.Result {
 		InputHashes:     input.InputHashes,
 		PredicateParser: input.PredicateParser,
 	}
-	result := runner.Evaluate(input.Snapshots)
+	result, err := runner.Evaluate(input.Snapshots)
+	if err != nil {
+		return evaluation.Result{}, err
+	}
 	result.Metadata = input.Metadata
-	return result
+	return result, nil
 }
