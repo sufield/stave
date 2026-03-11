@@ -257,7 +257,7 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 		}
 	}
 
-	if ctx.timeline.IsAheadOf(now) {
+	if ctx.timeline.IsAheadOf(now.UTC()) {
 		issues = append(issues, s.createNowPrecedenceError(now, ctx.timeline))
 	}
 

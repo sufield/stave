@@ -90,20 +90,25 @@ func (r *Result) filter(signal Signal) []Issue {
 
 // Error implements error for interoperability with Go error handling.
 func (r *Result) Error() string {
-	if r == nil {
+	if r == nil || len(r.Issues) == 0 {
 		return "validation failed: 0 errors, 0 warnings"
 	}
-	base := fmt.Sprintf(
-		"validation failed: %d errors, %d warnings",
-		len(r.Errors()),
-		len(r.Warnings()),
-	)
 
-	first := r.firstIssueSummary()
-	if first == "" {
-		return base
+	var errs, warns int
+	for _, iss := range r.Issues {
+		switch iss.Signal {
+		case SignalError:
+			errs++
+		case SignalWarn:
+			warns++
+		}
 	}
-	return base + ": " + first
+
+	summary := fmt.Sprintf("validation failed: %d errors, %d warnings", errs, warns)
+	if first := r.firstIssueSummary(); first != "" {
+		return summary + ": " + first
+	}
+	return summary
 }
 
 func (r *Result) firstIssueSummary() string {
