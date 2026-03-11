@@ -149,16 +149,19 @@ type ControlProvider interface {
 	FindByID(kernel.ControlID) *policy.ControlDefinition
 }
 
+// TraceRequest groups the inputs for building a predicate evaluation trace.
+type TraceRequest struct {
+	Control    *policy.ControlDefinition
+	AssetID    asset.ID
+	Snapshots  []asset.Snapshot
+	TargetTime time.Time
+}
+
 // FindingTraceBuilder builds a predicate evaluation trace for a finding.
 // The domain defines this interface; the trace package provides the concrete
 // implementation, keeping the domain free of trace-engine imports.
 type FindingTraceBuilder interface {
-	BuildTrace(
-		ctl *policy.ControlDefinition,
-		assetID asset.ID,
-		snapshots []asset.Snapshot,
-		lastSeenUnsafeAt time.Time,
-	) *FindingTrace
+	BuildTrace(req TraceRequest) *FindingTrace
 }
 
 // FindingDetailRequest holds the inputs for building a finding detail

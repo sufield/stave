@@ -36,16 +36,6 @@ func New() *Sanitizer {
 	}
 }
 
-// NewNoOp creates a sanitizer that performs no transformations.
-func NewNoOp() *Sanitizer {
-	return &Sanitizer{
-		noOp:          true,
-		pathMode:      PathModeBase,
-		resourceScrub: DefaultAssetScrub,
-		identityScrub: DefaultIdentityScrub,
-	}
-}
-
 func (r *Sanitizer) enabled() bool {
 	return r != nil && !r.noOp
 }

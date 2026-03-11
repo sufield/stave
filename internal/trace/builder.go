@@ -1,7 +1,6 @@
 package trace
 
 import (
-	"sort"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
@@ -24,40 +23,25 @@ func NewFindingTraceBuilder(
 	return &Builder{predicateParser: predicateParser}
 }
 
-// BuildTrace builds a predicate evaluation trace for the given finding context.
-func (b *Builder) BuildTrace(
-	ctl *policy.ControlDefinition,
-	assetID asset.ID,
-	snapshots []asset.Snapshot,
-	lastSeenUnsafeAt time.Time,
-) *evaluation.FindingTrace {
-	return buildFindingTrace(ctl, assetID, snapshots, lastSeenUnsafeAt, b.predicateParser)
-}
-
-func buildFindingTrace(
-	ctl *policy.ControlDefinition,
-	assetID asset.ID,
-	snapshots []asset.Snapshot,
-	lastSeenUnsafeAt time.Time,
-	predicateParser func(any) (*policy.UnsafePredicate, error),
-) *evaluation.FindingTrace {
-	if ctl == nil {
+// BuildTrace builds a predicate evaluation trace for the given request.
+func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTrace {
+	if req.Control == nil {
 		return nil
 	}
 
-	found, snapshot := findAssetInSnapshots(assetID, snapshots, lastSeenUnsafeAt)
+	found, snapshot := findAssetInSnapshots(req.AssetID, req.Snapshots, req.TargetTime)
 	if found == nil || snapshot == nil {
 		return nil
 	}
 
-	ctx := policy.NewAssetEvalContextWithIdentities(*found, policy.ControlParams(ctl.Params), snapshot.Identities)
-	ctx.PredicateParser = predicateParser
-	root := TracePredicate(ctl.UnsafePredicate, ctx)
+	ctx := policy.NewAssetEvalContextWithIdentities(*found, policy.ControlParams(req.Control.Params), snapshot.Identities)
+	ctx.PredicateParser = b.predicateParser
+	root := TracePredicate(req.Control.UnsafePredicate, ctx)
 	tr := &TraceResult{
-		ControlID:   ctl.ID,
+		ControlID:   req.Control.ID,
 		AssetID:     found.ID,
 		Properties:  found.Properties,
-		Params:      ctl.Params,
+		Params:      req.Control.Params,
 		Root:        root,
 		FinalResult: root.Result,
 	}
@@ -68,43 +52,30 @@ func buildFindingTrace(
 }
 
 // findAssetInSnapshots locates an asset in the loaded snapshots,
-// preferring the snapshot closest to targetTime. Returns nil if not found.
+// preferring the snapshot at targetTime. Uses a single pass: returns
+// immediately on an exact time match, otherwise keeps the first (fallback)
+// asset found while scanning.
 func findAssetInSnapshots(
 	assetID asset.ID,
 	snapshots []asset.Snapshot,
 	targetTime time.Time,
 ) (*asset.Asset, *asset.Snapshot) {
-	if len(snapshots) == 0 {
-		return nil, nil
-	}
+	var fallbackAsset *asset.Asset
+	var fallbackSnap *asset.Snapshot
 
-	// Sort by captured_at descending so we search most recent first.
-	sorted := make([]asset.Snapshot, len(snapshots))
-	copy(sorted, snapshots)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].CapturedAt.After(sorted[j].CapturedAt)
-	})
-
-	// If we have a target time, prefer the snapshot at that exact time.
-	if !targetTime.IsZero() {
-		for i := range sorted {
-			if !sorted[i].CapturedAt.Equal(targetTime) {
-				continue
-			}
-			found := sorted[i].FindAsset(assetID.String())
-			if found != nil {
-				return found, &sorted[i]
-			}
+	idStr := assetID.String()
+	for i := range snapshots {
+		found := snapshots[i].FindAsset(idStr)
+		if found == nil {
+			continue
+		}
+		if !targetTime.IsZero() && snapshots[i].CapturedAt.Equal(targetTime) {
+			return found, &snapshots[i]
+		}
+		if fallbackAsset == nil {
+			fallbackAsset = found
+			fallbackSnap = &snapshots[i]
 		}
 	}
-
-	// Fall back: search all snapshots.
-	for i := range sorted {
-		found := sorted[i].FindAsset(assetID.String())
-		if found != nil {
-			return found, &sorted[i]
-		}
-	}
-
-	return nil, nil
+	return fallbackAsset, fallbackSnap
 }

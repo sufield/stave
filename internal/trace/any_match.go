@@ -17,10 +17,6 @@ func traceAnyMatchRule(rc ruleContext) Node {
 		return node
 	}
 
-	if rc.EvalCtx.PredicateParser == nil {
-		return node
-	}
-
 	identities, ok := rc.FieldValue.([]asset.CloudIdentity)
 	if !ok {
 		return node
@@ -28,21 +24,20 @@ func traceAnyMatchRule(rc ruleContext) Node {
 
 	node.IdentityCount = len(identities)
 
-	nestedPred, err := rc.EvalCtx.PredicateParser(rc.CompareValue)
-	if err != nil {
+	nestedPred, err := rc.EvalCtx.ParsePredicate(rc.CompareValue)
+	if nestedPred == nil || err != nil {
 		return node
 	}
 
+	idCtx := policy.EvalContext{
+		Params:          rc.EvalCtx.Params,
+		PredicateParser: rc.EvalCtx.PredicateParser,
+	}
 	for i, id := range identities {
-		idCtx := policy.EvalContext{
-			Properties:      id.Map(),
-			Params:          rc.EvalCtx.Params,
-			PredicateParser: rc.EvalCtx.PredicateParser,
-		}
+		idCtx.Properties = id.Map()
 		nestedGroup := TracePredicate(*nestedPred, idCtx)
 		if nestedGroup.Result {
-			idx := i
-			node.MatchedIndex = &idx
+			node.MatchedIndex = &i // safe: loop vars are per-iteration in Go 1.22+
 			node.MatchedID = id.ID.String()
 			node.NestedTrace = nestedGroup
 			node.Result = true
