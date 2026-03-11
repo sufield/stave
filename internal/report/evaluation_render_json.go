@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -27,6 +28,7 @@ type reportComplianceEntry struct {
 	TotalFindings      int            `json:"total_findings"`
 	FindingsBySeverity map[string]int `json:"findings_by_severity"`
 	Controls           []string       `json:"controls"`
+	controlSet         map[string]struct{}
 }
 
 type reportRun struct {
@@ -54,6 +56,7 @@ type reportFinding struct {
 	ThresholdH  float64           `json:"threshold_hours"`
 	FirstUnsafe string            `json:"first_unsafe,omitempty"`
 	LastUnsafe  string            `json:"last_unsafe,omitempty"`
+	sevRank     int               // precomputed from policy.Severity for sort
 }
 
 type reportRemediation struct {
@@ -88,7 +91,7 @@ func buildReportViewModel(eval safetyenvelope.Evaluation, toolVersion string) re
 		appendReportFinding(&out, complianceData, finding)
 	}
 
-	out.Findings = sortReportFindings(out.Findings)
+	sortReportFindings(out.Findings)
 	finalizeReportComplianceSummary(&out, complianceData)
 	return out
 }
@@ -121,23 +124,25 @@ func appendReportFinding(
 	complianceData map[string]*reportComplianceEntry,
 	finding remediation.Finding,
 ) {
-	out.Findings = append(out.Findings, toReportFinding(finding))
+	rf := toReportFinding(finding)
+	out.Findings = append(out.Findings, rf)
 	out.Remediations = append(out.Remediations, toReportRemediation(finding))
-	sev := normalizedSeverity(finding.ControlSeverity.String())
-	out.FindingsBySeverity[sev]++
-	updateComplianceData(complianceData, finding.ControlCompliance, sev)
+	out.FindingsBySeverity[rf.Severity]++
+	updateComplianceData(complianceData, finding.ControlCompliance, rf.Severity)
 }
 
 func toReportFinding(finding remediation.Finding) reportFinding {
+	sev := finding.ControlSeverity
 	out := reportFinding{
 		ControlID:  string(finding.ControlID),
 		AssetID:    string(finding.AssetID),
 		AssetType:  string(finding.AssetType),
 		Vendor:     string(finding.AssetVendor),
-		Severity:   finding.ControlSeverity.String(),
+		Severity:   sev.String(),
 		Compliance: finding.ControlCompliance,
 		DurationH:  finding.Evidence.UnsafeDurationHours,
 		ThresholdH: finding.Evidence.ThresholdHours,
+		sevRank:    int(policy.SeverityCritical - sev),
 	}
 	if !finding.Evidence.FirstUnsafeAt.IsZero() {
 		out.FirstUnsafe = finding.Evidence.FirstUnsafeAt.Format(time.RFC3339)
@@ -163,8 +168,8 @@ func updateComplianceData(complianceData map[string]*reportComplianceEntry, comp
 		entry := ensureComplianceEntry(complianceData, framework)
 		entry.TotalFindings++
 		entry.FindingsBySeverity[severity]++
-		if !slices.Contains(entry.Controls, control) {
-			entry.Controls = append(entry.Controls, control)
+		if _, exists := entry.controlSet[control]; !exists {
+			entry.controlSet[control] = struct{}{}
 		}
 	}
 }
@@ -174,7 +179,10 @@ func ensureComplianceEntry(complianceData map[string]*reportComplianceEntry, fra
 	if ok {
 		return entry
 	}
-	entry = &reportComplianceEntry{FindingsBySeverity: make(map[string]int)}
+	entry = &reportComplianceEntry{
+		FindingsBySeverity: make(map[string]int),
+		controlSet:         make(map[string]struct{}),
+	}
 	complianceData[framework] = entry
 	return entry
 }
@@ -185,48 +193,25 @@ func finalizeReportComplianceSummary(out *reportOutput, complianceData map[strin
 	}
 	out.ComplianceSummary = make(map[string]reportComplianceEntry, len(complianceData))
 	for framework, entry := range complianceData {
-		slices.Sort(entry.Controls)
+		controls := make([]string, 0, len(entry.controlSet))
+		for c := range entry.controlSet {
+			controls = append(controls, c)
+		}
+		slices.Sort(controls)
+		entry.Controls = controls
+		entry.controlSet = nil
 		out.ComplianceSummary[framework] = *entry
 	}
 }
 
-func severityRank(s string) int {
-	s = normalizedSeverity(s)
-	switch s {
-	case "critical":
-		return 0
-	case "high":
-		return 1
-	case "medium":
-		return 2
-	case "low":
-		return 3
-	case "info":
-		return 4
-	default:
-		return 5
-	}
-}
-
-func normalizedSeverity(s string) string {
-	v := strings.ToLower(strings.TrimSpace(s))
-	if v == "" {
-		return "unspecified"
-	}
-	return v
-}
-
-func sortReportFindings(in []reportFinding) []reportFinding {
-	out := make([]reportFinding, len(in))
-	copy(out, in)
-	slices.SortFunc(out, func(a, b reportFinding) int {
-		if ra, rb := severityRank(a.Severity), severityRank(b.Severity); ra != rb {
-			return ra - rb
+func sortReportFindings(findings []reportFinding) {
+	slices.SortFunc(findings, func(a, b reportFinding) int {
+		if a.sevRank != b.sevRank {
+			return a.sevRank - b.sevRank
 		}
 		if c := strings.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
 		return strings.Compare(a.AssetID, b.AssetID)
 	})
-	return out
 }
