@@ -85,12 +85,10 @@ func (s unsafeDurationStrategy) Evaluate(timeline *asset.Timeline, now time.Time
 	}
 
 	coverage := CoverageValidator{
-		Timeline:         timeline,
-		RequiredCoverage: maxUnsafe,
-		MaxGapThreshold:  s.runner.maxGapThreshold(),
-		CoverageReason:   "coverage span less than max_unsafe_duration threshold",
+		MinRequiredSpan: maxUnsafe,
+		MaxAllowedGap:   s.runner.maxGapThreshold(),
 	}
-	if reason, inconclusive := coverage.Validate(); inconclusive {
+	if reason, ok := coverage.IsSufficient(timeline); !ok {
 		row.MarkInconclusive(reason)
 		return row, nil
 	}
@@ -125,12 +123,10 @@ func (s unsafeRecurrenceStrategy) Evaluate(timeline *asset.Timeline, now time.Ti
 	}
 
 	coverage := CoverageValidator{
-		Timeline:         timeline,
-		RequiredCoverage: recurrence.WindowDuration(),
-		MaxGapThreshold:  0, // recurrence: coverage-based inconclusive only.
-		CoverageReason:   "coverage span less than recurrence window",
+		MinRequiredSpan: recurrence.WindowDuration(),
+		// No gap-based inconclusive for recurrence controls.
 	}
-	if reason, inconclusive := coverage.Validate(); inconclusive {
+	if reason, ok := coverage.IsSufficient(timeline); !ok {
 		row.MarkInconclusive(reason)
 		return row, nil
 	}

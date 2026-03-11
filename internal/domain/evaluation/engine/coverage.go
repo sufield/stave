@@ -7,34 +7,37 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
-// CoverageValidator determines whether timeline continuity is sufficient
-// for a confident PASS/VIOLATION decision.
+// CoverageValidator defines the criteria for determining if a timeline
+// has enough data for a confident PASS/VIOLATION decision.
 type CoverageValidator struct {
-	Timeline         *asset.Timeline
-	RequiredCoverage time.Duration
-	MaxGapThreshold  time.Duration
-	CoverageReason   string
+	MinRequiredSpan time.Duration
+	MaxAllowedGap   time.Duration
 }
 
-// Validate returns (reason, inconclusive). When inconclusive is true,
-// reason explains why the decision cannot be made confidently.
-func (v CoverageValidator) Validate() (string, bool) {
-	if v.Timeline == nil {
-		return "no coverage data", true
+// IsSufficient checks if the provided timeline meets the coverage criteria.
+// It returns (explanation, true) if coverage is sufficient.
+// If coverage is insufficient, it returns (reason, false).
+func (v CoverageValidator) IsSufficient(t *asset.Timeline) (string, bool) {
+	if t == nil {
+		return "no timeline data provided", false
 	}
 
-	stats := v.Timeline.Stats()
+	stats := t.Stats()
 	if !stats.HasCoverageData() {
-		return "no coverage data", true
+		return "no observation snapshots found", false
 	}
 
-	if stats.CoverageSpan() < v.RequiredCoverage {
-		return v.CoverageReason, true
+	// 1. Check total duration of observations
+	if stats.CoverageSpan() < v.MinRequiredSpan {
+		return fmt.Sprintf("observation span %s is less than required %s",
+			stats.CoverageSpan(), v.MinRequiredSpan), false
 	}
 
-	if v.MaxGapThreshold > 0 && stats.MaxGap() > v.MaxGapThreshold {
-		return fmt.Sprintf("observation gap exceeds %s threshold", v.MaxGapThreshold), true
+	// 2. Check for large gaps in the data
+	if v.MaxAllowedGap > 0 && stats.MaxGap() > v.MaxAllowedGap {
+		return fmt.Sprintf("maximum observation gap %s exceeds threshold %s",
+			stats.MaxGap(), v.MaxAllowedGap), false
 	}
 
-	return "", false
+	return "", true
 }

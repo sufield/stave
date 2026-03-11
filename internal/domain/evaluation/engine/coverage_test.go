@@ -9,23 +9,21 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
-func TestCoverageValidatorValidate(t *testing.T) {
+func TestCoverageValidatorIsSufficient(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	t.Run("no coverage data", func(t *testing.T) {
 		timeline := asset.NewTimeline(asset.Asset{ID: "res-1"})
 		v := CoverageValidator{
-			Timeline:         timeline,
-			RequiredCoverage: 24 * time.Hour,
-			MaxGapThreshold:  12 * time.Hour,
-			CoverageReason:   "coverage too short",
+			MinRequiredSpan: 24 * time.Hour,
+			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, inconclusive := v.Validate()
-		if !inconclusive {
-			t.Fatal("expected inconclusive=true")
+		reason, ok := v.IsSufficient(timeline)
+		if ok {
+			t.Fatal("expected ok=false")
 		}
-		if reason != "no coverage data" {
-			t.Fatalf("reason=%q, want %q", reason, "no coverage data")
+		if reason != "no observation snapshots found" {
+			t.Fatalf("reason=%q, want %q", reason, "no observation snapshots found")
 		}
 	})
 
@@ -35,17 +33,15 @@ func TestCoverageValidatorValidate(t *testing.T) {
 		timeline.RecordObservation(base.Add(6*time.Hour), false)
 
 		v := CoverageValidator{
-			Timeline:         timeline,
-			RequiredCoverage: 24 * time.Hour,
-			MaxGapThreshold:  12 * time.Hour,
-			CoverageReason:   "coverage span less than required threshold",
+			MinRequiredSpan: 24 * time.Hour,
+			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, inconclusive := v.Validate()
-		if !inconclusive {
-			t.Fatal("expected inconclusive=true")
+		reason, ok := v.IsSufficient(timeline)
+		if ok {
+			t.Fatal("expected ok=false")
 		}
-		if reason != "coverage span less than required threshold" {
-			t.Fatalf("reason=%q, want coverage reason", reason)
+		if !strings.Contains(reason, "observation span") || !strings.Contains(reason, "less than required") {
+			t.Fatalf("unexpected reason: %q", reason)
 		}
 	})
 
@@ -56,16 +52,14 @@ func TestCoverageValidatorValidate(t *testing.T) {
 		timeline.RecordObservation(base.Add(26*time.Hour), false)
 
 		v := CoverageValidator{
-			Timeline:         timeline,
-			RequiredCoverage: 24 * time.Hour,
-			MaxGapThreshold:  12 * time.Hour,
-			CoverageReason:   "coverage span less than required threshold",
+			MinRequiredSpan: 24 * time.Hour,
+			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, inconclusive := v.Validate()
-		if !inconclusive {
-			t.Fatal("expected inconclusive=true")
+		reason, ok := v.IsSufficient(timeline)
+		if ok {
+			t.Fatal("expected ok=false")
 		}
-		if !strings.Contains(reason, "observation gap exceeds 12h") {
+		if !strings.Contains(reason, "maximum observation gap") || !strings.Contains(reason, "exceeds threshold") {
 			t.Fatalf("unexpected reason: %q", reason)
 		}
 	})
@@ -78,17 +72,28 @@ func TestCoverageValidatorValidate(t *testing.T) {
 		timeline.RecordObservation(base.Add(30*time.Hour), false)
 
 		v := CoverageValidator{
-			Timeline:         timeline,
-			RequiredCoverage: 24 * time.Hour,
-			MaxGapThreshold:  12 * time.Hour,
-			CoverageReason:   "coverage span less than required threshold",
+			MinRequiredSpan: 24 * time.Hour,
+			MaxAllowedGap:   12 * time.Hour,
 		}
-		reason, inconclusive := v.Validate()
-		if inconclusive {
-			t.Fatalf("expected inconclusive=false, got reason=%q", reason)
+		reason, ok := v.IsSufficient(timeline)
+		if !ok {
+			t.Fatalf("expected ok=true, got reason=%q", reason)
 		}
 		if reason != "" {
 			t.Fatalf("reason=%q, want empty", reason)
+		}
+	})
+
+	t.Run("nil timeline", func(t *testing.T) {
+		v := CoverageValidator{
+			MinRequiredSpan: 24 * time.Hour,
+		}
+		reason, ok := v.IsSufficient(nil)
+		if ok {
+			t.Fatal("expected ok=false for nil timeline")
+		}
+		if reason != "no timeline data provided" {
+			t.Fatalf("reason=%q, want %q", reason, "no timeline data provided")
 		}
 	})
 }

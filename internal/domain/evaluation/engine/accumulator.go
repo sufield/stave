@@ -18,12 +18,6 @@ func (s assetIDSet) Add(id asset.ID) bool {
 	return true
 }
 
-// Has reports whether the set contains the given ID.
-func (s assetIDSet) Has(id asset.ID) bool {
-	_, ok := s[id]
-	return ok
-}
-
 // Accumulator gathers evaluation artifacts across multiple controls and snapshots.
 type Accumulator struct {
 	// Collected artifacts
