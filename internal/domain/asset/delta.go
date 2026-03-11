@@ -3,6 +3,7 @@ package asset
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"time"
 
@@ -113,7 +114,7 @@ func LatestTwoSnapshots(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err
 		return Snapshot{}, Snapshot{}, fmt.Errorf("%w: want 2, got %d", ErrInsufficientSnapshots, len(snapshots))
 	}
 
-	sorted := append([]Snapshot(nil), snapshots...)
+	sorted := slices.Clone(snapshots)
 	sort.Slice(sorted, func(i, j int) bool {
 		if sorted[i].CapturedAt.Equal(sorted[j].CapturedAt) {
 			return i < j
