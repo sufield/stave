@@ -100,10 +100,7 @@ func (a *App) panicUserMessage(sanitized string) string {
 }
 
 func (a *App) sanitizeExecuteMessage(message string) string {
-	if !a.resolvePathSanitize() {
-		return message
-	}
-	return ui.SanitizePaths(message)
+	return a.sanitizer.ScrubMessage(message)
 }
 
 func (a *App) executeRootCommand(args []string) {

@@ -36,16 +36,14 @@ type OutputSanitizationPolicy struct {
 	PathMode PathMode
 }
 
-// Sanitizer returns a functional sanitizer.
+// Sanitizer returns a configured sanitizer.
 // When SanitizeIDs is false, it returns a no-op sanitizer.
+// PathMode is always injected so that Path() respects the user's preference.
 func (p OutputSanitizationPolicy) Sanitizer() *Sanitizer {
-	if p.SanitizeIDs {
-		return New()
+	s := New()
+	s.pathMode = p.PathMode
+	if !p.SanitizeIDs {
+		s.noOp = true
 	}
-	return NewNoOp()
-}
-
-// ShouldSanitizePaths returns true when paths should be shortened to basenames.
-func (p OutputSanitizationPolicy) ShouldSanitizePaths() bool {
-	return p.PathMode == PathModeBase
+	return s
 }

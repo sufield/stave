@@ -63,6 +63,10 @@ type App struct {
 	// "stave config" command tree. It is passed explicitly to NewConfigCmd so
 	// the config handlers do not depend on the projconfig package-level global.
 	ConfigKeyService *configservice.Service
+
+	// sanitizer is initialized from CLI flags during bootstrap and used for
+	// path/message sanitization in error handling and panic recovery.
+	sanitizer *sanitize.Sanitizer
 }
 
 // NewApp creates a fully-wired CLI application.
@@ -122,16 +126,11 @@ func (a *App) isJSONMode() bool {
 	return a.Flags.OutputMode == string(ui.OutputFormatJSON)
 }
 
-func (a *App) getSanitizationPolicy() sanitize.OutputSanitizationPolicy {
-	pathMode := sanitize.ParsePathMode(a.Flags.PathMode)
-	return sanitize.OutputSanitizationPolicy{
+func (a *App) initSanitizer() {
+	a.sanitizer = sanitize.OutputSanitizationPolicy{
 		SanitizeIDs: a.Flags.Sanitize,
-		PathMode:    pathMode,
-	}
-}
-
-func (a *App) resolvePathSanitize() bool {
-	return a.getSanitizationPolicy().ShouldSanitizePaths()
+		PathMode:    sanitize.ParsePathMode(a.Flags.PathMode),
+	}.Sanitizer()
 }
 
 // GetVersion returns the version string.

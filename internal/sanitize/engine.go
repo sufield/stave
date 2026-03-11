@@ -4,11 +4,16 @@ package sanitize
 
 import (
 	"path/filepath"
+	"regexp"
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
+
+// messagePathRe matches absolute POSIX-style paths embedded inside free-form
+// strings (e.g. wrapped error messages), capturing the basename as group 1.
+var messagePathRe = regexp.MustCompile(`/(?:[^\s:]+/)+([^\s:/]+)`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
@@ -17,6 +22,7 @@ var _ kernel.Sanitizer = (*Sanitizer)(nil)
 // It is deterministic: the same input value always produces the same token.
 type Sanitizer struct {
 	noOp          bool
+	pathMode      PathMode
 	resourceScrub ScrubConfig
 	identityScrub ScrubConfig
 }
@@ -24,6 +30,7 @@ type Sanitizer struct {
 // New creates a new Sanitizer with default scrub configs.
 func New() *Sanitizer {
 	return &Sanitizer{
+		pathMode:      PathModeBase,
 		resourceScrub: DefaultAssetScrub,
 		identityScrub: DefaultIdentityScrub,
 	}
@@ -33,6 +40,7 @@ func New() *Sanitizer {
 func NewNoOp() *Sanitizer {
 	return &Sanitizer{
 		noOp:          true,
+		pathMode:      PathModeBase,
 		resourceScrub: DefaultAssetScrub,
 		identityScrub: DefaultIdentityScrub,
 	}
@@ -78,12 +86,23 @@ func (r *Sanitizer) Value(v string) string {
 	return "[SANITIZED]"
 }
 
-// Path strips the directory prefix, returning the basename only.
+// Path sanitizes a file path according to the configured PathMode.
+// PathModeFull returns the path as-is; PathModeBase strips to the basename.
 func (r *Sanitizer) Path(p string) string {
-	if !r.enabled() {
+	if !r.enabled() || r.pathMode == PathModeFull {
 		return p
 	}
 	return filepath.Base(p)
+}
+
+// ScrubMessage replaces absolute paths in a free-form string (e.g. an error
+// message) with their basenames. Returns the message unchanged when path
+// sanitization is inactive.
+func (r *Sanitizer) ScrubMessage(msg string) string {
+	if r == nil || r.pathMode == PathModeFull {
+		return msg
+	}
+	return messagePathRe.ReplaceAllString(msg, "$1")
 }
 
 // Bucket sanitizes a bucket name for enforcement artifacts.

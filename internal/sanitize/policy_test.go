@@ -37,14 +37,28 @@ func TestOutputSanitizationPolicy_Sanitizer(t *testing.T) {
 	}
 }
 
-func TestOutputSanitizationPolicy_ShouldSanitizePaths(t *testing.T) {
-	base := OutputSanitizationPolicy{PathMode: PathModeBase}
-	if !base.ShouldSanitizePaths() {
-		t.Error("ShouldSanitizePaths() should be true for PathModeBase")
+func TestSanitizer_PathRespectsMode(t *testing.T) {
+	baseSan := OutputSanitizationPolicy{SanitizeIDs: true, PathMode: PathModeBase}.Sanitizer()
+	if got := baseSan.Path("/home/user/data/obs.json"); got != "obs.json" {
+		t.Errorf("Path() with PathModeBase = %q, want obs.json", got)
 	}
 
-	full := OutputSanitizationPolicy{PathMode: PathModeFull}
-	if full.ShouldSanitizePaths() {
-		t.Error("ShouldSanitizePaths() should be false for PathModeFull")
+	fullSan := OutputSanitizationPolicy{SanitizeIDs: true, PathMode: PathModeFull}.Sanitizer()
+	if got := fullSan.Path("/home/user/data/obs.json"); got != "/home/user/data/obs.json" {
+		t.Errorf("Path() with PathModeFull = %q, want full path", got)
+	}
+}
+
+func TestSanitizer_ScrubMessage(t *testing.T) {
+	baseSan := OutputSanitizationPolicy{SanitizeIDs: true, PathMode: PathModeBase}.Sanitizer()
+	got := baseSan.ScrubMessage("cannot read /home/user/data/obs.json: no such file")
+	if got != "cannot read obs.json: no such file" {
+		t.Errorf("ScrubMessage() with PathModeBase = %q", got)
+	}
+
+	fullSan := OutputSanitizationPolicy{SanitizeIDs: true, PathMode: PathModeFull}.Sanitizer()
+	msg := "cannot read /home/user/data/obs.json: no such file"
+	if got := fullSan.ScrubMessage(msg); got != msg {
+		t.Errorf("ScrubMessage() with PathModeFull should be no-op, got %q", got)
 	}
 }
