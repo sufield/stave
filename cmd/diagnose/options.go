@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
-	"github.com/sufield/stave/internal/trace"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -20,6 +19,7 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/trace"
 )
 
 type diagnoseOptions struct {

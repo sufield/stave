@@ -280,24 +280,6 @@ func ResolveEnabledPacks(names []string) ([]string, error) {
 	return reg.ResolveEnabledPacks(names)
 }
 
-// RegistryVersion returns the embedded pack registry version.
-func RegistryVersion() (string, error) {
-	reg, err := registry()
-	if err != nil {
-		return "", err
-	}
-	return reg.Version(), nil
-}
-
-// RegistryHash returns the SHA-256 hash of embedded index bytes.
-func RegistryHash() (kernel.Digest, error) {
-	reg, err := registry()
-	if err != nil {
-		return "", err
-	}
-	return reg.Hash(), nil
-}
-
 func clonePack(p Pack) Pack {
 	out := p
 	out.Controls = slices.Clone(p.Controls)

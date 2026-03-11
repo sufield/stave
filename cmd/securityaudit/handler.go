@@ -72,7 +72,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 			return platformcrypto.HashBytes(data)
 		},
 		GovulncheckRunner: govulncheck.Run,
-		SignatureVerifier:  nil,
+		SignatureVerifier: nil,
 		RunDiagnostics: func(cwd, binaryPath, staveVersion string) {
 			_, _ = doctor.Run(doctor.Context{
 				Cwd:          cwd,
@@ -81,9 +81,9 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 			})
 		},
 		ResolveCrosswalk: func(raw []byte, frameworks, checkIDs []string, now time.Time) (appsa.CrosswalkResult, error) {
-			resolved, err := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
-			if err != nil {
-				return appsa.CrosswalkResult{}, err
+			resolved, resolveErr := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
+			if resolveErr != nil {
+				return appsa.CrosswalkResult{}, resolveErr
 			}
 			return appsa.CrosswalkResult{
 				ByCheck:        resolved.ByCheck,
