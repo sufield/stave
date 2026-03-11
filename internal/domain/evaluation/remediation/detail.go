@@ -39,7 +39,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 	}
 
 	if req.TraceBuilder != nil {
-		detail.Trace = req.TraceBuilder(ctl, req.AssetID, req.Snapshots, violation.Evidence.LastSeenUnsafeAt)
+		detail.Trace = req.TraceBuilder.BuildTrace(ctl, req.AssetID, req.Snapshots, violation.Evidence.LastSeenUnsafeAt)
 	}
 
 	mapper := NewMapper()
