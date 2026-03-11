@@ -3,18 +3,7 @@ package exposure
 import "strings"
 
 const (
-	policyWildcard                 = "*"
-	policyS3Wildcard               = "s3:*"
-	policyActionGetObject          = "s3:getobject"
-	policyActionListBucket         = "s3:listbucket"
-	policyActionListBucketVersions = "s3:listbucketversions"
-	policyActionPutObject          = "s3:putobject"
-	policyActionPutObjectACL       = "s3:putobjectacl"
-	policyActionDeleteObject       = "s3:deleteobject"
-	policyActionDeleteBucket       = "s3:deletebucket"
-	policyActionPutBucketACL       = "s3:putbucketacl"
-	policyActionGetBucketACL       = "s3:getbucketacl"
-	policyActionGetObjectACL       = "s3:getobjectacl"
+	policyWildcard = "*"
 )
 
 const (
@@ -22,74 +11,52 @@ const (
 	principalTokenAuthenticatedUsers = "authenticatedusers"
 )
 
-const (
-	permRead        = "READ"
-	permWrite       = "WRITE"
-	permReadACL     = "READ_ACP"
-	permWriteACL    = "WRITE_ACP"
-	permFullControl = "FULL_CONTROL"
-
-	scopeObject = "object"
-	scopeBucket = "bucket"
-)
-
-const (
-	evidencePolicyRead     = "policy_read"
-	evidenceACLRead        = "acl_read"
-	evidencePolicyWrite    = "policy_write"
-	evidenceACLWrite       = "acl_write"
-	evidenceList           = "list"
-	evidenceACLReadPolicy  = "acl_read_policy"
-	evidenceACLWritePolicy = "acl_write_policy"
-	evidenceDelete         = "delete"
-)
-
-// accessPermissionMask is the shared internal permission bitmask used by
+// Permission is the internal permission bitmask used by
 // visibility resolution and exposure classification.
-type accessPermissionMask uint32
+type Permission uint32
 
 const (
-	accessPermRead accessPermissionMask = 1 << iota
-	accessPermWrite
-	accessPermList
-	accessPermACLRead
-	accessPermACLWrite
-	accessPermDelete
+	PermRead Permission = 1 << iota
+	PermWrite
+	PermList
+	PermACLRead
+	PermACLWrite
+	PermDelete
 
-	accessPermAll = accessPermRead | accessPermWrite | accessPermList | accessPermACLRead | accessPermACLWrite | accessPermDelete
+	PermAll = PermRead | PermWrite | PermList | PermACLRead | PermACLWrite | PermDelete
 )
 
-func (m accessPermissionMask) has(target accessPermissionMask) bool {
-	return m&target != 0
-}
+// Has reports whether target bits are set in p.
+func (p Permission) Has(target Permission) bool { return p&target != 0 }
 
-type statementPermission = accessPermissionMask
+// EvidenceCategory provides type safety for tracking why an exposure was flagged.
+type EvidenceCategory string
 
 const (
-	stmtPermRead  statementPermission = accessPermRead
-	stmtPermWrite statementPermission = accessPermWrite
-	stmtPermList  statementPermission = accessPermList
-
-	stmtPermACLRead  statementPermission = accessPermACLRead
-	stmtPermACLWrite statementPermission = accessPermACLWrite
-	stmtPermDelete   statementPermission = accessPermDelete
-
-	stmtPermAll statementPermission = accessPermAll
+	EvPolicyRead     EvidenceCategory = "policy_read"
+	EvACLRead        EvidenceCategory = "acl_read"
+	EvPolicyWrite    EvidenceCategory = "policy_write"
+	EvACLWrite       EvidenceCategory = "acl_write"
+	EvList           EvidenceCategory = "list"
+	EvACLReadPolicy  EvidenceCategory = "acl_read_policy"
+	EvACLWritePolicy EvidenceCategory = "acl_write_policy"
+	EvDelete         EvidenceCategory = "delete"
 )
 
-var actionToPermission = map[string]statementPermission{
-	policyWildcard:                 stmtPermAll,
-	policyS3Wildcard:               stmtPermAll,
-	policyActionGetObject:          stmtPermRead,
-	policyActionPutObject:          stmtPermWrite,
-	policyActionListBucket:         stmtPermList,
-	policyActionGetBucketACL:       stmtPermACLRead,
-	policyActionGetObjectACL:       stmtPermACLRead,
-	policyActionPutBucketACL:       stmtPermACLWrite,
-	policyActionPutObjectACL:       stmtPermACLWrite,
-	policyActionDeleteObject:       stmtPermDelete,
-	policyActionDeleteBucket:       stmtPermDelete,
-	policyActionListBucketVersions: stmtPermList,
+// actionToPerm maps S3 Action strings to internal permission bits.
+var actionToPerm = map[string]Permission{
+	"*":                     PermAll,
+	"s3:*":                  PermAll,
+	"s3:getobject":          PermRead,
+	"s3:putobject":          PermWrite,
+	"s3:listbucket":         PermList,
+	"s3:listbucketversions": PermList,
+	"s3:getbucketacl":       PermACLRead,
+	"s3:getobjectacl":       PermACLRead,
+	"s3:putbucketacl":       PermACLWrite,
+	"s3:putobjectacl":       PermACLWrite,
+	"s3:deleteobject":       PermDelete,
+	"s3:deletebucket":       PermDelete,
 }
 
 type permissionSet struct {
@@ -117,26 +84,29 @@ type writeSourceState struct {
 	HasList bool
 }
 
-type evidenceTracker struct {
-	sources map[string][]string
+// EvidenceTracker manages the paths/reasons for discovered exposures.
+type EvidenceTracker struct {
+	sources map[EvidenceCategory][]string
 }
 
-func newEvidenceTracker() evidenceTracker {
-	return evidenceTracker{sources: make(map[string][]string)}
+// NewEvidenceTracker creates an initialized EvidenceTracker.
+func NewEvidenceTracker() *EvidenceTracker {
+	return &EvidenceTracker{sources: make(map[EvidenceCategory][]string)}
 }
 
-func (t *evidenceTracker) Record(category string, path []string) {
+// Record stores the first (most relevant) evidence for a category.
+func (t *EvidenceTracker) Record(cat EvidenceCategory, path []string) {
 	if len(path) == 0 {
 		return
 	}
-	if _, exists := t.sources[category]; exists {
-		return
+	if _, exists := t.sources[cat]; !exists {
+		t.sources[cat] = path
 	}
-	t.sources[category] = path
 }
 
-func (t *evidenceTracker) Get(category string) []string {
-	return t.sources[category]
+// Get returns the evidence path for a category.
+func (t *EvidenceTracker) Get(cat EvidenceCategory) []string {
+	return t.sources[cat]
 }
 
 type bucketResolutionContext struct {
@@ -146,56 +116,47 @@ type bucketResolutionContext struct {
 	policyPerms          permissionSet
 	aclPerms             permissionSet
 	writeSource          writeSourceState
-	evidence             evidenceTracker
-}
-
-func (g ACLGrant) normalizedGrantee() string {
-	return strings.ToLower(strings.TrimSpace(g.Grantee))
-}
-
-func (g ACLGrant) normalizedPermission() string {
-	return strings.ToUpper(strings.TrimSpace(g.Permission))
-}
-
-func (g ACLGrant) normalizedScope() string {
-	return strings.ToLower(strings.TrimSpace(g.Scope))
+	evidence             *EvidenceTracker
 }
 
 // IsAllUsers reports whether this grant applies to all users.
 func (g ACLGrant) IsAllUsers() bool {
-	return strings.Contains(g.normalizedGrantee(), principalTokenAllUsers)
+	return strings.Contains(strings.ToLower(g.Grantee), principalTokenAllUsers)
 }
 
 // IsAuthenticatedUsers reports whether this grant applies to authenticated users.
 func (g ACLGrant) IsAuthenticatedUsers() bool {
-	return strings.Contains(g.normalizedGrantee(), principalTokenAuthenticatedUsers)
+	return strings.Contains(strings.ToLower(g.Grantee), principalTokenAuthenticatedUsers)
 }
 
-// IsPublic reports whether this grant applies to any public principal.
+// IsPublic reports whether this grant applies to AllUsers or AuthenticatedUsers.
 func (g ACLGrant) IsPublic() bool {
-	return g.IsAllUsers() || g.IsAuthenticatedUsers()
+	grantee := strings.ToLower(g.Grantee)
+	return strings.Contains(grantee, principalTokenAllUsers) ||
+		strings.Contains(grantee, principalTokenAuthenticatedUsers)
 }
 
-// HasFullControl reports whether this grant provides FULL_CONTROL permission.
-func (g ACLGrant) HasFullControl() bool {
-	return g.normalizedPermission() == permFullControl
-}
+// ExposurePermissions converts the ACL string representation into a bitmask.
+func (g ACLGrant) ExposurePermissions() Permission {
+	perm := strings.ToUpper(strings.TrimSpace(g.Permission))
+	scope := strings.ToLower(strings.TrimSpace(g.Scope))
 
-// ExposurePermissions returns the permission bitmask for this grant.
-func (g ACLGrant) ExposurePermissions() accessPermissionMask {
-	switch {
-	case g.HasFullControl():
-		return accessPermAll
-	case g.normalizedPermission() == permRead && g.normalizedScope() == scopeObject:
-		return accessPermRead
-	case g.normalizedPermission() == permRead && g.normalizedScope() == scopeBucket:
-		return accessPermList
-	case g.normalizedPermission() == permWrite:
-		return accessPermWrite
-	case g.normalizedPermission() == permReadACL:
-		return accessPermACLRead
-	case g.normalizedPermission() == permWriteACL:
-		return accessPermACLWrite
+	if perm == "FULL_CONTROL" {
+		return PermAll
+	}
+
+	switch perm {
+	case "READ":
+		if scope == "bucket" {
+			return PermList
+		}
+		return PermRead
+	case "WRITE":
+		return PermWrite
+	case "READ_ACP":
+		return PermACLRead
+	case "WRITE_ACP":
+		return PermACLWrite
 	default:
 		return 0
 	}
@@ -203,57 +164,4 @@ func (g ACLGrant) ExposurePermissions() accessPermissionMask {
 
 func isAuthenticatedUsersPrincipalToken(value string) bool {
 	return strings.Contains(strings.ToLower(value), principalTokenAuthenticatedUsers)
-}
-
-func policyPublicMask(policy PolicyAnalysis) accessPermissionMask {
-	var mask accessPermissionMask
-	if policy.PublicRead {
-		mask |= accessPermRead
-	}
-	if policy.PublicWrite {
-		mask |= accessPermWrite
-	}
-	if policy.PublicList {
-		mask |= accessPermList
-	}
-	if policy.PublicACLRead {
-		mask |= accessPermACLRead
-	}
-	if policy.PublicACLWrite {
-		mask |= accessPermACLWrite
-	}
-	return mask
-}
-
-func aclPublicMask(acl ACLAnalysis) accessPermissionMask {
-	var mask accessPermissionMask
-	if acl.PublicRead {
-		mask |= accessPermRead
-	}
-	if acl.PublicWrite {
-		mask |= accessPermWrite
-	}
-	if acl.PublicACLRead {
-		mask |= accessPermACLRead
-	}
-	if acl.PublicACLWrite {
-		mask |= accessPermACLWrite
-	}
-	return mask
-}
-
-func applyPublicAccessBlock(
-	policyMask, aclMask accessPermissionMask,
-	pab PublicAccessBlock,
-) (effectiveMask accessPermissionMask, policyBlocked, aclBlocked bool) {
-	policyBlocked = pab.BlockPublicPolicy || pab.RestrictPublicBuckets
-	aclBlocked = pab.BlockPublicACLs || pab.IgnorePublicACLs
-
-	if !policyBlocked {
-		effectiveMask |= policyMask
-	}
-	if !aclBlocked {
-		effectiveMask |= aclMask
-	}
-	return effectiveMask, policyBlocked, aclBlocked
 }
