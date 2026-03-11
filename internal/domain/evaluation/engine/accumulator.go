@@ -68,9 +68,10 @@ func (a *Accumulator) AddRow(row evaluation.Row) {
 	a.rows = append(a.rows, row)
 }
 
-func (a *Accumulator) AddFindings(findings []evaluation.Finding) {
-	if len(findings) == 0 {
-		return
+func (a *Accumulator) AddFindings(findings []*evaluation.Finding) {
+	for _, f := range findings {
+		if f != nil {
+			a.findings = append(a.findings, *f)
+		}
 	}
-	a.findings = append(a.findings, findings...)
 }

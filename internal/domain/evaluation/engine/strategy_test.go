@@ -14,7 +14,7 @@ func TestStrategyFor_CoversAllEvaluatableTypes(t *testing.T) {
 	for _, ct := range policy.EvaluatableTypes {
 		ctl := &policy.ControlDefinition{Type: ct}
 		s := runner.strategyFor(ctl)
-		if _, ok := s.(unsupportedStrategy); ok {
+		if _, ok := s.(*unsupportedStrategy); ok {
 			t.Errorf("EvaluatableType %q falls through to unsupportedStrategy in strategyFor", ct)
 		}
 	}

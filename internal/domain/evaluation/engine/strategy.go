@@ -8,63 +8,63 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-type controlEvalStrategy interface {
-	Evaluate(timeline *asset.Timeline, now time.Time) (evaluation.Row, []evaluation.Finding)
+// strategy defines how different control types analyze a timeline.
+type strategy interface {
+	Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding)
 }
 
 // Compile-time interface assertions.
 var (
-	_ controlEvalStrategy = unsafeStateStrategy{}
-	_ controlEvalStrategy = unsafeDurationStrategy{}
-	_ controlEvalStrategy = unsafeRecurrenceStrategy{}
-	_ controlEvalStrategy = prefixExposureStrategy{}
-	_ controlEvalStrategy = unsupportedStrategy{}
+	_ strategy = (*unsafeStateStrategy)(nil)
+	_ strategy = (*unsafeDurationStrategy)(nil)
+	_ strategy = (*unsafeRecurrenceStrategy)(nil)
+	_ strategy = (*prefixExposureStrategy)(nil)
+	_ strategy = (*unsupportedStrategy)(nil)
 )
 
-func (e *Runner) strategyFor(ctl *policy.ControlDefinition) controlEvalStrategy {
+// strategyFor returns the appropriate evaluator based on the control type.
+func (r *Runner) strategyFor(ctl *policy.ControlDefinition) strategy {
 	switch ctl.Type {
 	case policy.TypeUnsafeState:
-		return unsafeStateStrategy{runner: e, ctl: ctl}
+		return &unsafeStateStrategy{runner: r, ctl: ctl}
 	case policy.TypeUnsafeDuration:
-		return unsafeDurationStrategy{runner: e, ctl: ctl}
+		return &unsafeDurationStrategy{runner: r, ctl: ctl}
 	case policy.TypeUnsafeRecurrence:
-		return unsafeRecurrenceStrategy{runner: e, ctl: ctl}
+		return &unsafeRecurrenceStrategy{runner: r, ctl: ctl}
 	case policy.TypePrefixExposure:
-		return prefixExposureStrategy{ctl: ctl}
+		return &prefixExposureStrategy{ctl: ctl}
 	default:
-		return unsupportedStrategy{ctl: ctl}
+		return &unsupportedStrategy{ctl: ctl}
 	}
 }
+
+// --- Duration & State Strategies ---
 
 type unsafeStateStrategy struct {
 	runner *Runner
 	ctl    *policy.ControlDefinition
 }
 
-func (s unsafeStateStrategy) Evaluate(timeline *asset.Timeline, now time.Time) (evaluation.Row, []evaluation.Finding) {
-	row := newControlRow(s.ctl, timeline)
+func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+	row := newControlRow(s.ctl, t)
+	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
 
-	if timeline.CurrentlySafe() {
-		row.Decision = evaluation.DecisionPass
-		row.Confidence = evaluation.ConfidenceHigh
-		return row, nil
+	if t.CurrentlySafe() {
+		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
 	}
-	if timeline.MissingUnsafeTimestamps() {
+
+	if t.MissingUnsafeTimestamps() {
 		row.MarkInconclusive("missing timestamps")
 		return row, nil
 	}
 
-	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
-	if timeline.ExceedsUnsafeThreshold(now, maxUnsafe) {
-		row.Decision = evaluation.DecisionViolation
-		row.Confidence = evaluation.ConfidenceHigh
-		row.WhyNow = timeline.FormatUnsafeSummary(maxUnsafe, now)
-		return row, []evaluation.Finding{*CreateDurationFinding(timeline, s.ctl, maxUnsafe, now)}
+	if t.ExceedsUnsafeThreshold(now, maxUnsafe) {
+		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
+		finding := CreateDurationFinding(t, s.ctl, maxUnsafe, now)
+		return finalizeRow(row, evaluation.DecisionViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
 	}
 
-	row.Decision = evaluation.DecisionPass
-	row.Confidence = evaluation.ConfidenceHigh
-	return row, nil
+	return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
 }
 
 type unsafeDurationStrategy struct {
@@ -72,101 +72,112 @@ type unsafeDurationStrategy struct {
 	ctl    *policy.ControlDefinition
 }
 
-func (s unsafeDurationStrategy) Evaluate(timeline *asset.Timeline, now time.Time) (evaluation.Row, []evaluation.Finding) {
-	row := newControlRow(s.ctl, timeline)
+func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+	row := newControlRow(s.ctl, t)
 	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
 
-	// First check for VIOLATION (takes precedence over INCONCLUSIVE).
-	if timeline.ExceedsUnsafeThreshold(now, maxUnsafe) {
-		row.Decision = evaluation.DecisionViolation
-		row.Confidence = evaluation.DeriveConfidenceLevel(timeline.Stats().MaxGap(), maxUnsafe)
-		row.WhyNow = timeline.FormatUnsafeSummary(maxUnsafe, now)
-		return row, []evaluation.Finding{*CreateDurationFinding(timeline, s.ctl, maxUnsafe, now)}
+	// 1. Violation Check (Always takes precedence)
+	if t.ExceedsUnsafeThreshold(now, maxUnsafe) {
+		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
+		finding := CreateDurationFinding(t, s.ctl, maxUnsafe, now)
+		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
+		return finalizeRow(row, evaluation.DecisionViolation, confidence), []*evaluation.Finding{finding}
 	}
 
+	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
 	coverage := CoverageValidator{
 		MinRequiredSpan: maxUnsafe,
 		MaxAllowedGap:   s.runner.maxGapThreshold(),
 	}
-	if reason, ok := coverage.IsSufficient(timeline); !ok {
+	if reason, ok := coverage.IsSufficient(t); !ok {
 		row.MarkInconclusive(reason)
 		return row, nil
 	}
 
-	// Adequate coverage and no violation => PASS.
-	row.Decision = evaluation.DecisionPass
-	row.Confidence = evaluation.DeriveConfidenceLevel(timeline.Stats().MaxGap(), maxUnsafe)
-	return row, nil
+	// 3. Adequate coverage and no violation => PASS
+	confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
+	return finalizeRow(row, evaluation.DecisionPass, confidence), nil
 }
+
+// --- Recurrence Strategy ---
 
 type unsafeRecurrenceStrategy struct {
 	runner *Runner
 	ctl    *policy.ControlDefinition
 }
 
-func (s unsafeRecurrenceStrategy) Evaluate(timeline *asset.Timeline, now time.Time) (evaluation.Row, []evaluation.Finding) {
-	row := newControlRow(s.ctl, timeline)
-	recurrence := s.ctl.RecurrencePolicy()
+func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+	row := newControlRow(s.ctl, t)
+	p := s.ctl.RecurrencePolicy()
 
-	if !recurrence.Configured() {
-		row.Decision = evaluation.DecisionPass
-		row.Confidence = evaluation.ConfidenceHigh
+	if !p.Configured() {
 		row.Reason = "missing recurrence parameters"
-		return row, nil
+		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
 	}
 
-	episodesInWindow := timeline.History().RecurringViolationCount(recurrence.Window(now))
-	if episodesInWindow >= recurrence.Limit {
-		row.Decision = evaluation.DecisionViolation
-		row.Confidence = evaluation.DeriveConfidenceLevel(timeline.Stats().MaxGap(), recurrence.WindowDuration())
-		return row, EvaluateRecurrenceForControl(timeline, s.ctl, now)
+	// 1. Violation Check
+	if findings := EvaluateRecurrenceForControl(t, s.ctl, now); len(findings) > 0 {
+		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), p.WindowDuration())
+		return finalizeRow(row, evaluation.DecisionViolation, confidence), findings
 	}
 
-	coverage := CoverageValidator{
-		MinRequiredSpan: recurrence.WindowDuration(),
-		// No gap-based inconclusive for recurrence controls.
-	}
-	if reason, ok := coverage.IsSufficient(timeline); !ok {
+	// 2. Coverage Check
+	coverage := CoverageValidator{MinRequiredSpan: p.WindowDuration()}
+	if reason, ok := coverage.IsSufficient(t); !ok {
 		row.MarkInconclusive(reason)
 		return row, nil
 	}
 
-	row.Decision = evaluation.DecisionPass
-	row.Confidence = evaluation.DeriveConfidenceLevel(timeline.Stats().MaxGap(), recurrence.WindowDuration())
-	return row, nil
+	confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), p.WindowDuration())
+	return finalizeRow(row, evaluation.DecisionPass, confidence), nil
 }
+
+// --- Specialized Strategies ---
 
 type prefixExposureStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s prefixExposureStrategy) Evaluate(timeline *asset.Timeline, now time.Time) (evaluation.Row, []evaluation.Finding) {
-	return EvaluatePrefixExposureForRow(timeline, s.ctl, now)
+func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+	row, findings := EvaluatePrefixExposureForRow(t, s.ctl, now)
+	return row, wrapInPointers(findings)
 }
 
 type unsupportedStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s unsupportedStrategy) Evaluate(timeline *asset.Timeline, _ time.Time) (evaluation.Row, []evaluation.Finding) {
-	resourceType := timeline.Asset().Type
-	return evaluation.Row{
-		ControlID:   s.ctl.ID,
-		AssetID:     timeline.ID,
-		AssetType:   resourceType,
-		AssetDomain: resourceType.Domain(),
-		Decision:    evaluation.DecisionSkipped,
-		Confidence:  evaluation.ConfidenceHigh,
-		Reason:      "type not evaluatable: " + s.ctl.Type.String(),
-	}, nil
+func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time) (evaluation.Row, []*evaluation.Finding) {
+	row := newControlRow(s.ctl, t)
+	row.Reason = "type not evaluatable: " + s.ctl.Type.String()
+	return finalizeRow(row, evaluation.DecisionSkipped, evaluation.ConfidenceHigh), nil
 }
 
-func newControlRow(ctl *policy.ControlDefinition, timeline *asset.Timeline) evaluation.Row {
-	resourceType := timeline.Asset().Type
+// --- Internal Helpers ---
+
+func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.Row {
+	resType := t.Asset().Type
 	return evaluation.Row{
 		ControlID:   ctl.ID,
-		AssetID:     timeline.ID,
-		AssetType:   resourceType,
-		AssetDomain: resourceType.Domain(),
+		AssetID:     t.ID,
+		AssetType:   resType,
+		AssetDomain: resType.Domain(),
 	}
+}
+
+func finalizeRow(r evaluation.Row, d evaluation.Decision, c evaluation.ConfidenceLevel) evaluation.Row {
+	r.Decision = d
+	r.Confidence = c
+	return r
+}
+
+func wrapInPointers(findings []evaluation.Finding) []*evaluation.Finding {
+	if len(findings) == 0 {
+		return nil
+	}
+	res := make([]*evaluation.Finding, len(findings))
+	for i := range findings {
+		res[i] = &findings[i]
+	}
+	return res
 }
