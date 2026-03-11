@@ -65,12 +65,11 @@ func getFieldValueWithParts(ctx EvalContext, parts []string) (any, bool) {
 	}
 
 	// Handle params.* fields
-	if parts[0] == fieldNamespaceParams && ctx.Params != nil {
+	if parts[0] == fieldNamespaceParams {
 		if len(parts) < 2 {
 			return nil, false
 		}
-		v, ok := ctx.Params[parts[1]]
-		return v, ok
+		return ctx.Param(parts[1])
 	}
 
 	// Handle properties.* fields (for assets)

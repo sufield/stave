@@ -22,8 +22,8 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 	fieldValue, fieldExists := policy.GetFieldValueWithContext(evalCtx, rule.Field)
 
 	compareValue := rule.Value
-	if rule.ValueFromParam != "" && evalCtx.Params != nil {
-		compareValue = evalCtx.Params[rule.ValueFromParam]
+	if rule.ValueFromParam != "" {
+		compareValue, _ = evalCtx.Param(rule.ValueFromParam)
 	}
 
 	return ruleContext{
