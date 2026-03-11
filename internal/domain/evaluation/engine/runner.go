@@ -89,14 +89,14 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 // evaluateControl evaluates a single control across all asset timelines.
 func (e *Runner) evaluateControl(
 	ctl *policy.ControlDefinition,
-	timelines map[string]*asset.Timeline,
+	timelines map[asset.ID]*asset.Timeline,
 	now time.Time,
 	acc *Accumulator,
 ) {
 	strategy := e.strategyFor(ctl)
 
 	// Deterministic iteration: sort asset IDs first.
-	assetIDs := make([]string, 0, len(timelines))
+	assetIDs := make([]asset.ID, 0, len(timelines))
 	for id := range timelines {
 		assetIDs = append(assetIDs, id)
 	}
@@ -106,13 +106,13 @@ func (e *Runner) evaluateControl(
 		timeline := timelines[assetID]
 
 		// Check if asset is exempted.
-		if rule := e.Exemptions.ShouldExempt(assetID); rule != nil {
-			if acc.TrackExemption(asset.ID(assetID)) {
-				acc.AddSkippedAsset(asset.ID(assetID), rule.Pattern, rule.Reason)
+		if rule := e.Exemptions.ShouldExempt(string(assetID)); rule != nil {
+			if acc.TrackExemption(assetID) {
+				acc.AddSkippedAsset(assetID, rule.Pattern, rule.Reason)
 			}
 			acc.AddRow(evaluation.Row{
 				ControlID:   ctl.ID,
-				AssetID:     asset.ID(assetID),
+				AssetID:     assetID,
 				AssetType:   timeline.Asset().Type,
 				AssetDomain: timeline.Asset().Type.Domain(),
 				Decision:    evaluation.DecisionSkipped,
@@ -123,10 +123,10 @@ func (e *Runner) evaluateControl(
 		}
 
 		// Track assets that were actually evaluated (not exempted).
-		acc.seenAssets.Add(asset.ID(assetID))
+		acc.seenAssets.Add(assetID)
 
 		if timeline.CurrentlyUnsafe() {
-			acc.unsafeAssets.Add(asset.ID(assetID))
+			acc.unsafeAssets.Add(assetID)
 		}
 
 		row, findings := strategy.Evaluate(timeline, now)
