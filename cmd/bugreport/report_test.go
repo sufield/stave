@@ -44,20 +44,22 @@ func TestCollectBugReportEnv_RedactsSensitive(t *testing.T) {
 	}
 }
 
-func TestRedactSensitiveBlob(t *testing.T) {
+func TestRedactCredentialFormats(t *testing.T) {
 	in := []byte(strings.Join([]string{
-		"aws_secret_access_key: super-secret",
-		"api_token=token-value",
+		"safe_field: normal-value",
 		"access_key: AKIAABCDEFGHIJKLMNOP",
 		"url: https://user:pass@example.com/path",
 	}, "\n"))
 
-	out := string(redactSensitiveBlob(in))
-	if strings.Contains(out, "super-secret") || strings.Contains(out, "token-value") || strings.Contains(out, "AKIAABCDEFGHIJKLMNOP") || strings.Contains(out, "user:pass@") {
-		t.Fatalf("sanitization failed, got:\n%s", out)
+	out := string(redactCredentialFormats(in))
+	if strings.Contains(out, "AKIAABCDEFGHIJKLMNOP") {
+		t.Fatalf("AKIA key should be redacted, got:\n%s", out)
 	}
-	if !strings.Contains(out, "aws_secret_access_key: [SANITIZED]") {
-		t.Fatalf("expected key/value sanitization, got:\n%s", out)
+	if strings.Contains(out, "user:pass@") {
+		t.Fatalf("URL credentials should be redacted, got:\n%s", out)
+	}
+	if !strings.Contains(out, "safe_field: normal-value") {
+		t.Fatalf("non-credential content should be preserved, got:\n%s", out)
 	}
 }
 
@@ -76,8 +78,9 @@ func TestRunBugReport_CreatesBundle(t *testing.T) {
 	require(os.Chdir(tmpDir))
 	t.Cleanup(func() { _ = os.Chdir(oldWD) })
 
-	// Minimal project config discoverable by findNearestFile(projectConfigFile).
-	require(os.WriteFile("stave.yaml", []byte("name: demo\napi_token: secret-value\n"), 0o600))
+	// Minimal project config with a known field and an unknown field that
+	// should be dropped by structured parsing (not regex-redacted).
+	require(os.WriteFile("stave.yaml", []byte("max_unsafe: 168h\napi_token: secret-value\n"), 0o600))
 	require(os.WriteFile("stave.log", []byte("line1\nline2\nline3\n"), 0o600))
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "secret-from-env")
 	t.Setenv("AWS_REGION", "us-west-2")

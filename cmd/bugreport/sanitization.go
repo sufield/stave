@@ -2,14 +2,17 @@ package bugreport
 
 import "regexp"
 
+// Format-based credential detectors. These match credential formats
+// (not field names), providing defense-in-depth for unstructured text.
 var (
-	sensitiveKVRe = regexp.MustCompile(`(?im)^(\s*[^:=\n]*(?:secret|token|password|api[_-]?key|private[_-]?key|credential|auth[_-]?key|auth[_-]?token|access[_-]?key)[^:=\n]*\s*[:=]\s*)(.+)$`)
-	akiaRe        = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
-	urlCredRe     = regexp.MustCompile(`(?i)(https?://[^/\s:@]+:)[^@/\s]+@`)
+	akiaRe    = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
+	urlCredRe = regexp.MustCompile(`(?i)(https?://[^/\s:@]+:)[^@/\s]+@`)
 )
 
-func redactSensitiveBlob(data []byte) []byte {
-	data = sensitiveKVRe.ReplaceAll(data, []byte("${1}[SANITIZED]"))
+// redactCredentialFormats scrubs known credential formats from raw text.
+// This catches AWS access key IDs and URL-embedded passwords regardless
+// of field names. It does NOT use keyword-based matching.
+func redactCredentialFormats(data []byte) []byte {
 	data = akiaRe.ReplaceAll(data, []byte("[SANITIZED]"))
 	data = urlCredRe.ReplaceAll(data, []byte("${1}[SANITIZED]@"))
 	return data

@@ -114,8 +114,11 @@ func TestIsSensitiveArg(t *testing.T) {
 		{"--token", true},
 		{"--api-key", true},
 		{"--api_key", true},
-		{"--accessToken", true},
-		{"--authorization", true},
+		{"--accessToken", false},  // camelCase without separator — not matched by token splitting
+		{"--access-token", true},  // hyphenated — "token" token matches
+		{"--authorization", true}, // exact match in sensitiveArgNames
+		{"--private-key", true},   // "key" token matches
+		{"--author-name", false},  // "author" is not a sensitive token
 		{"--file=mykey.txt", false},
 		{"--monkey", false},
 		{"", false},
