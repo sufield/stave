@@ -1,33 +1,53 @@
 package diagnosis
 
 import (
-	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// unsafeIndex maps (snapshot index, asset ID) -> unsafe status.
-type unsafeIndex map[int]map[asset.ID]bool
-
-// isUnsafe reports whether the asset was unsafe in the given snapshot.
-func (idx unsafeIndex) isUnsafe(snapIdx int, assetID asset.ID) bool {
-	return idx[snapIdx][assetID]
+// unsafeKey uniquely identifies an asset's state at a specific point in time.
+type unsafeKey struct {
+	snapIdx int
+	assetID asset.ID
 }
 
-// isAssetUnsafeAnyControl checks if an asset matches any control's unsafe_predicate.
-func isAssetUnsafeAnyControl(r asset.Asset, controls []policy.ControlDefinition) bool {
-	return lo.SomeBy(controls, func(ctl policy.ControlDefinition) bool {
-		return ctl.UnsafePredicate.Evaluate(r, ctl.Params)
-	})
+// unsafeIndex tracks which assets were considered unsafe across multiple snapshots.
+type unsafeIndex struct {
+	violations map[unsafeKey]struct{}
 }
 
-func buildUnsafeAnyControlBySnapshotAsset(snapshots []asset.Snapshot, controls []policy.ControlDefinition) unsafeIndex {
-	idx := make(unsafeIndex, len(snapshots))
-	for snapIdx, snap := range snapshots {
-		idx[snapIdx] = make(map[asset.ID]bool, len(snap.Assets))
-		for _, r := range snap.Assets {
-			idx[snapIdx][r.ID] = isAssetUnsafeAnyControl(r, controls)
+// isUnsafe reports whether the asset matched any unsafe predicate in the given snapshot.
+func (idx *unsafeIndex) isUnsafe(snapIdx int, assetID asset.ID) bool {
+	if idx == nil || idx.violations == nil {
+		return false
+	}
+	_, ok := idx.violations[unsafeKey{snapIdx, assetID}]
+	return ok
+}
+
+// buildUnsafeIndex constructs a lookup of all unsafe states across snapshots.
+func buildUnsafeIndex(snapshots []asset.Snapshot, controls []policy.ControlDefinition) *unsafeIndex {
+	idx := &unsafeIndex{
+		violations: make(map[unsafeKey]struct{}),
+	}
+
+	for sIdx, snap := range snapshots {
+		for _, a := range snap.Assets {
+			if matchesAnyControl(a, controls) {
+				idx.violations[unsafeKey{sIdx, a.ID}] = struct{}{}
+			}
 		}
 	}
+
 	return idx
+}
+
+// matchesAnyControl checks if an asset matches any control's unsafe_predicate.
+func matchesAnyControl(a asset.Asset, controls []policy.ControlDefinition) bool {
+	for i := range controls {
+		if controls[i].UnsafePredicate.Evaluate(a, controls[i].Params) {
+			return true
+		}
+	}
+	return false
 }

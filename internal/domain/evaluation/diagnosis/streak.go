@@ -132,7 +132,7 @@ func collectAssetIDs(snapshots []asset.Snapshot) map[asset.ID]struct{} {
 
 // findResets walks sorted snapshots and returns all streak resets found.
 // Only assets present in scope are examined.
-func findResets(snapshots []asset.Snapshot, unsafeIdx unsafeIndex, scope map[asset.ID]struct{}) []resetEvent {
+func findResets(snapshots []asset.Snapshot, unsafeIdx *unsafeIndex, scope map[asset.ID]struct{}) []resetEvent {
 	states := make(map[asset.ID]assetResetState, len(scope))
 	var resets []resetEvent
 
@@ -183,7 +183,7 @@ func detectStreakResets(input Input) []Entry {
 	}
 
 	snapshots := sortedSnapshots(input.Snapshots)
-	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
+	unsafeIdx := buildUnsafeIndex(snapshots, input.Controls)
 
 	violated := make(map[asset.ID]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
@@ -204,7 +204,7 @@ func detectAnyReset(input Input) bool {
 	}
 
 	snapshots := sortedSnapshots(input.Snapshots)
-	unsafeIdx := buildUnsafeAnyControlBySnapshotAsset(snapshots, input.Controls)
+	unsafeIdx := buildUnsafeIndex(snapshots, input.Controls)
 
 	allIDs := collectAssetIDs(snapshots)
 	return len(findResets(snapshots, unsafeIdx, allIDs)) > 0
