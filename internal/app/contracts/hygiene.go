@@ -1,6 +1,10 @@
 package contracts
 
-import "time"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/domain/evaluation/risk"
+)
 
 // ReportRequest bundles all data required to generate a hygiene report.
 type ReportRequest struct {
@@ -19,6 +23,7 @@ type ReportContext struct {
 }
 
 // SnapshotStats summarizes snapshot inventory and retention posture.
+// Use NewSnapshotStats to ensure Total is consistent with Active + Archived.
 type SnapshotStats struct {
 	Active            int           `json:"active"`
 	Archived          int           `json:"archived"`
@@ -29,7 +34,21 @@ type SnapshotStats struct {
 	KeepMin           int           `json:"keep_min"`
 }
 
+// NewSnapshotStats creates SnapshotStats with Total computed as Active + Archived.
+func NewSnapshotStats(active, archived, pruneCandidates, keepMin int, tier string, retentionDuration time.Duration) SnapshotStats {
+	return SnapshotStats{
+		Active:            active,
+		Archived:          archived,
+		Total:             active + archived,
+		PruneCandidates:   pruneCandidates,
+		RetentionTier:     tier,
+		RetentionDuration: retentionDuration,
+		KeepMin:           keepMin,
+	}
+}
+
 // RiskStats captures the current and upcoming risk surface.
+// Use NewRiskStats to ensure UpcomingTotal is consistent with the urgency buckets.
 type RiskStats struct {
 	CurrentViolations int `json:"current_violations"`
 	Overdue           int `json:"overdue"`
@@ -37,6 +56,19 @@ type RiskStats struct {
 	DueSoon           int `json:"due_soon"`
 	Later             int `json:"later"`
 	UpcomingTotal     int `json:"upcoming_total"`
+}
+
+// NewRiskStats creates RiskStats from current violations and a risk summary.
+// UpcomingTotal is derived from the summary rather than set independently.
+func NewRiskStats(violations int, summary risk.Summary) RiskStats {
+	return RiskStats{
+		CurrentViolations: violations,
+		Overdue:           summary.Overdue,
+		DueNow:            summary.DueNow,
+		DueSoon:           summary.DueSoon,
+		Later:             summary.Later,
+		UpcomingTotal:     summary.Total,
+	}
 }
 
 // TrendMetric compares current vs previous values for a metric.
