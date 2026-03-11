@@ -8,68 +8,83 @@ import (
 
 // RenderSnapshotPlanText writes a human-readable snapshot plan report.
 func RenderSnapshotPlanText(w io.Writer, plan SnapshotPlanOutput) error {
-	if err := writeSnapshotPlanHeader(w, plan); err != nil {
-		return err
-	}
-	if err := writeSnapshotPlanTierSections(w, plan); err != nil {
-		return err
-	}
-	return writeSnapshotPlanSummary(w, plan)
+	ew := &errWriter{w: w}
+	writeSnapshotPlanHeader(ew, plan)
+	writeSnapshotPlanTierSections(ew, plan)
+	writeSnapshotPlanSummary(ew, plan)
+	return ew.err
 }
 
-func writeSnapshotPlanHeader(w io.Writer, plan SnapshotPlanOutput) error {
-	if _, err := fmt.Fprintln(w, "Snapshot Retention Plan"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintln(w, "======================="); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "Generated: %s\n", plan.GeneratedAt.Format(time.RFC3339)); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "Root:      %s\n", plan.ObservationsRoot); err != nil {
-		return err
-	}
+func writeSnapshotPlanHeader(ew *errWriter, plan SnapshotPlanOutput) {
+	ew.println("Snapshot Retention Plan")
+	ew.println("=======================")
+	ew.printf("Generated: %s\n", plan.GeneratedAt.Format(time.RFC3339))
+	ew.printf("Root:      %s\n", plan.ObservationsRoot)
 	modeHint := ""
 	if plan.Mode == ModePreview {
 		modeHint = " (use --apply --force to execute)"
 	}
-	_, err := fmt.Fprintf(w, "Mode:      %s%s\n", plan.Mode, modeHint)
-	return err
+	ew.printf("Mode:      %s%s\n", plan.Mode, modeHint)
 }
 
-func writeSnapshotPlanTierSections(w io.Writer, plan SnapshotPlanOutput) error {
+func writeSnapshotPlanTierSections(ew *errWriter, plan SnapshotPlanOutput) {
+	if plan.TotalFiles == 0 {
+		ew.println("\nNo snapshots found.")
+		return
+	}
+
+	// Pre-group files by tier to avoid O(tiers × files) scanning.
+	byTier := make(map[string][]SnapshotPlanFile, len(plan.TierSummaries))
+	for i := range plan.Files {
+		f := &plan.Files[i]
+		byTier[f.Tier] = append(byTier[f.Tier], *f)
+	}
+
 	for _, tierSummary := range plan.TierSummaries {
-		if err := writeSnapshotPlanTier(w, tierSummary, plan.Files); err != nil {
-			return err
-		}
+		writeSnapshotPlanTier(ew, tierSummary, byTier[tierSummary.Tier])
 	}
-	return nil
 }
 
-func writeSnapshotPlanTier(w io.Writer, tierSummary SnapshotPlanTierSummary, files []SnapshotPlanFile) error {
-	if _, err := fmt.Fprintf(w, "\nTier: %s (older_than=%s, keep_min=%d)\n", tierSummary.Tier, tierSummary.OlderThan, tierSummary.KeepMin); err != nil {
-		return err
-	}
+func writeSnapshotPlanTier(ew *errWriter, tierSummary SnapshotPlanTierSummary, files []SnapshotPlanFile) {
+	ew.printf("\nTier: %s (older_than=%s, keep_min=%d)\n", tierSummary.Tier, tierSummary.OlderThan, tierSummary.KeepMin)
 	for _, file := range files {
-		if file.Tier != tierSummary.Tier {
-			continue
-		}
-		if _, err := fmt.Fprintf(w, "  %-8s %s  captured=%s  %s\n",
-			file.Action, file.RelPath, file.CapturedAt.Format(time.RFC3339), file.Reason); err != nil {
-			return err
-		}
+		ew.printf("  %-8s %s  captured=%s  %s\n",
+			file.Action, file.RelPath, file.CapturedAt.Format(time.RFC3339), file.Reason)
 	}
-	return nil
 }
 
-func writeSnapshotPlanSummary(w io.Writer, plan SnapshotPlanOutput) error {
+func writeSnapshotPlanSummary(ew *errWriter, plan SnapshotPlanOutput) {
 	actionWord := "prune"
 	if plan.ArchiveDir != "" {
 		actionWord = "archive"
 	}
-	keepCount := plan.TotalFiles - plan.TotalActions
-	_, err := fmt.Fprintf(w, "\nSummary: %d files, %d keep, %d %s\n",
+	// Derive keep count from tier summaries for cross-validation
+	// rather than subtracting from totals.
+	keepCount := 0
+	for _, ts := range plan.TierSummaries {
+		keepCount += ts.KeepCount
+	}
+	ew.printf("\nSummary: %d files, %d keep, %d %s\n",
 		plan.TotalFiles, keepCount, plan.TotalActions, actionWord)
-	return err
+}
+
+// errWriter is a sticky-error writer that absorbs fmt.Fprint errors,
+// allowing rendering code to stay concise without per-call error checks.
+type errWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (ew *errWriter) printf(format string, args ...any) {
+	if ew.err != nil {
+		return
+	}
+	_, ew.err = fmt.Fprintf(ew.w, format, args...)
+}
+
+func (ew *errWriter) println(args ...any) {
+	if ew.err != nil {
+		return
+	}
+	_, ew.err = fmt.Fprintln(ew.w, args...)
 }
