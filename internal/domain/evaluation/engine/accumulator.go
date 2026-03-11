@@ -6,63 +6,77 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// assetIDSet tracks a set of asset IDs without the ambiguity of map[string]bool.
+// assetIDSet provides a clean interface for unique asset tracking.
 type assetIDSet map[asset.ID]struct{}
 
-func newAssetIDSet() assetIDSet           { return assetIDSet{} }
-func (s assetIDSet) add(id asset.ID)      { s[id] = struct{}{} }
-func (s assetIDSet) has(id asset.ID) bool { _, ok := s[id]; return ok }
-func (s assetIDSet) len() int             { return len(s) }
-
-// evaluationAccumulator collects findings, rows, and skip info during evaluation.
-type evaluationAccumulator struct {
-	findings         []evaluation.Finding
-	rows             []evaluation.Row
-	skipped          []evaluation.SkippedControl
-	skippedAssets    []asset.SkippedAsset
-	seenAssets       assetIDSet
-	unsafeAssets     assetIDSet
-	exemptedAssetIDs assetIDSet
+// Add inserts an ID and returns true if it was not already present.
+func (s assetIDSet) Add(id asset.ID) bool {
+	if _, ok := s[id]; ok {
+		return false
+	}
+	s[id] = struct{}{}
+	return true
 }
 
-func newEvaluationAccumulator() *evaluationAccumulator {
-	return &evaluationAccumulator{
-		seenAssets:       newAssetIDSet(),
-		unsafeAssets:     newAssetIDSet(),
-		exemptedAssetIDs: newAssetIDSet(),
+// Has reports whether the set contains the given ID.
+func (s assetIDSet) Has(id asset.ID) bool {
+	_, ok := s[id]
+	return ok
+}
+
+// Accumulator gathers evaluation artifacts across multiple controls and snapshots.
+type Accumulator struct {
+	// Collected artifacts
+	findings     []evaluation.Finding
+	rows         []evaluation.Row
+	skippedByCtl []evaluation.SkippedControl
+	skippedByAst []asset.SkippedAsset
+
+	// Bookkeeping sets
+	seenAssets   assetIDSet
+	unsafeAssets assetIDSet
+	exemptAssets assetIDSet
+}
+
+// NewAccumulator initializes the accumulator.
+// assetHint helps pre-allocate internal maps if the total asset count is known.
+func NewAccumulator(assetHint int) *Accumulator {
+	return &Accumulator{
+		seenAssets:   make(assetIDSet, assetHint),
+		unsafeAssets: make(assetIDSet, assetHint),
+		exemptAssets: make(assetIDSet, assetHint),
 	}
 }
 
-func (acc *evaluationAccumulator) isNewExemption(assetID asset.ID) bool {
-	return !acc.exemptedAssetIDs.has(assetID)
+// TrackExemption records an asset as exempt.
+// It returns true if this is the first time this asset has been exempted in this session.
+func (a *Accumulator) TrackExemption(id asset.ID) bool {
+	return a.exemptAssets.Add(id)
 }
 
-func (acc *evaluationAccumulator) addSkippedControl(
-	controlID kernel.ControlID,
-	controlName, reason string,
-) {
-	acc.skipped = append(acc.skipped, evaluation.SkippedControl{
-		ControlID:   controlID,
-		ControlName: controlName,
+func (a *Accumulator) AddSkippedControl(id kernel.ControlID, name, reason string) {
+	a.skippedByCtl = append(a.skippedByCtl, evaluation.SkippedControl{
+		ControlID:   id,
+		ControlName: name,
 		Reason:      reason,
 	})
 }
 
-func (acc *evaluationAccumulator) addSkippedAsset(assetID asset.ID, pattern, reason string) {
-	acc.skippedAssets = append(acc.skippedAssets, asset.SkippedAsset{
-		ID:      assetID,
+func (a *Accumulator) AddSkippedAsset(id asset.ID, pattern, reason string) {
+	a.skippedByAst = append(a.skippedByAst, asset.SkippedAsset{
+		ID:      id,
 		Pattern: pattern,
 		Reason:  reason,
 	})
 }
 
-func (acc *evaluationAccumulator) addRow(row evaluation.Row) {
-	acc.rows = append(acc.rows, row)
+func (a *Accumulator) AddRow(row evaluation.Row) {
+	a.rows = append(a.rows, row)
 }
 
-func (acc *evaluationAccumulator) addFindings(findings []evaluation.Finding) {
+func (a *Accumulator) AddFindings(findings []evaluation.Finding) {
 	if len(findings) == 0 {
 		return
 	}
-	acc.findings = append(acc.findings, findings...)
+	a.findings = append(a.findings, findings...)
 }
