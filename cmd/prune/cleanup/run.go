@@ -35,36 +35,43 @@ type deleteRunInput struct {
 	pruneshared.CleanupRunInput
 }
 
-func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
-	var plan deletePlan
-	return appeval.RunCleanup(appeval.CleanupDeps{
-		BuildPlan: func() (appeval.CleanupPlan, error) {
-			p, err := buildDeletePlan(cmd, opts)
-			if err != nil {
-				return appeval.CleanupPlan{}, err
-			}
-			plan = p
-			return appeval.CleanupPlan{
-				CandidateCount: len(plan.CandidateFiles),
-				DryRun:         plan.DryRun,
-			}, nil
-		},
-		Render: func(_ appeval.CleanupPlan) error {
-			return renderDeletePlan(plan, cmd.OutOrStdout())
-		},
-		Apply: func(_ appeval.CleanupPlan) error {
-			deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
-				Files: toDeleteFiles(plan.CandidateFiles),
-			})
-			if err != nil {
-				return err
-			}
-			if !cmdutil.QuietEnabled(cmd) && !plan.Format.IsJSON() {
-				fmt.Fprintf(cmd.OutOrStdout(), "Deleted %d snapshot(s).\n", deletion.Deleted)
-			}
-			return nil
-		},
+type deleteOrchestrator struct {
+	cmd  *cobra.Command
+	opts *deleteOptions
+	plan deletePlan
+}
+
+func (d *deleteOrchestrator) BuildPlan() (appeval.CleanupPlan, error) {
+	p, err := buildDeletePlan(d.cmd, d.opts)
+	if err != nil {
+		return appeval.CleanupPlan{}, err
+	}
+	d.plan = p
+	return appeval.CleanupPlan{
+		CandidateCount: len(d.plan.CandidateFiles),
+		DryRun:         d.plan.DryRun,
+	}, nil
+}
+
+func (d *deleteOrchestrator) Render(_ appeval.CleanupPlan) error {
+	return renderDeletePlan(d.plan, d.cmd.OutOrStdout())
+}
+
+func (d *deleteOrchestrator) Apply(_ appeval.CleanupPlan) error {
+	deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
+		Files: toDeleteFiles(d.plan.CandidateFiles),
 	})
+	if err != nil {
+		return err
+	}
+	if !cmdutil.QuietEnabled(d.cmd) && !d.plan.Format.IsJSON() {
+		fmt.Fprintf(d.cmd.OutOrStdout(), "Deleted %d snapshot(s).\n", deletion.Deleted)
+	}
+	return nil
+}
+
+func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
+	return appeval.RunCleanup(&deleteOrchestrator{cmd: cmd, opts: opts})
 }
 
 func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error) {

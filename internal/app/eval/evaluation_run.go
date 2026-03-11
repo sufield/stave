@@ -93,7 +93,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		return "", fmt.Errorf("failed to write findings: %w", err)
 	}
 
-	return result.SafetyStatus(), nil
+	return evaluation.ClassifySafetyStatus(len(result.Findings), nil), nil
 }
 
 // writeOutput writes findings using the Enrich → Marshal → Write pipeline.

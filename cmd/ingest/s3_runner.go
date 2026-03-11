@@ -17,7 +17,6 @@ import (
 	appingest "github.com/sufield/stave/internal/app/ingest"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/observations"
 	"github.com/sufield/stave/internal/sanitize"
@@ -193,19 +192,10 @@ func (r *s3Runner) writeObservationsFile(cmd *cobra.Command, path string, snapsh
 		Snapshots:    snapshots,
 		Overwrite:    r.opts.Force || cmdutil.ForceEnabled(cmd),
 		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
-		Writer: func(p string, snaps []asset.Snapshot, overwrite, allowSymlink bool) error {
-			return observations.WriteJSON(observations.WriteRequest{
-				Path:          p,
-				SchemaVersion: kernel.SchemaObservation,
-				Snapshots:     snaps,
-				Overwrite:     overwrite,
-				AllowSymlink:  allowSymlink,
-			})
-		},
+		Writer:       observations.JSONWriter{},
 	}
 	if r.opts.Scrub {
-		s := sanitize.New()
-		req.Scrubber = s.ScrubSnapshot
+		req.Scrubber = sanitize.New()
 	}
 	return appingest.WriteObservationsFile(req)
 }

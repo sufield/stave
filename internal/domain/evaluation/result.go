@@ -178,11 +178,3 @@ func GroupViolationsByDomain(rows []Row) []DomainCount {
 	})
 	return result
 }
-
-// SafetyStatus classifies the overall safety posture of this evaluation result.
-// UNSAFE if any violations exist, SAFE otherwise. Upcoming risk items (which
-// can produce BORDERLINE) are not tracked in Result; callers with risk data
-// should use ClassifySafetyStatus directly.
-func (r Result) SafetyStatus() SafetyStatus {
-	return ClassifySafetyStatus(len(r.Findings), nil)
-}
