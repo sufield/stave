@@ -180,6 +180,12 @@ func (rt *Timeline) verifyHistoryOrdering() {
 	}
 }
 
+// ExceedsUnsafeThreshold reports whether the current unsafe duration exceeds
+// the given threshold. Returns false when there is no open episode.
+func (rt *Timeline) ExceedsUnsafeThreshold(now time.Time, maxUnsafe time.Duration) bool {
+	return rt.UnsafeDuration(now) > maxUnsafe
+}
+
 // FormatUnsafeSummary builds a user-facing explanation for the current unsafe state.
 func (rt *Timeline) FormatUnsafeSummary(threshold time.Duration, now time.Time) string {
 	if !rt.HasOpenEpisode() {
