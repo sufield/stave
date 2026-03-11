@@ -99,9 +99,9 @@ Examples:
 	cmd.Flags().StringVar(&opts.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 	_ = cmd.RegisterFlagCompletionFunc("case", cmdutil.CompleteFixed(
-		string(diagnosis.ExpectedNone),
-		string(diagnosis.ViolationEvidence),
-		string(diagnosis.EmptyFindings),
+		string(diagnosis.ScenarioExpectedNone),
+		string(diagnosis.ScenarioViolationEvidence),
+		string(diagnosis.ScenarioEmptyFindings),
 	))
 
 	return cmd

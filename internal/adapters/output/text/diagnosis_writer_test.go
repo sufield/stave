@@ -39,7 +39,7 @@ func TestWriteDiagnosisReport_WithDiagnoses(t *testing.T) {
 	report := &diagnosis.Report{}
 	report.Summary.TotalSnapshots = 1
 	report.Issues = []diagnosis.Issue{
-		{Case: diagnosis.EmptyFindings, Signal: "info", Evidence: "none", Action: "ok"},
+		{Case: diagnosis.ScenarioEmptyFindings, Signal: "info", Evidence: "none", Action: "ok"},
 	}
 
 	var buf bytes.Buffer
@@ -50,7 +50,7 @@ func TestWriteDiagnosisReport_WithDiagnoses(t *testing.T) {
 	if !strings.Contains(out, "Diagnostics (1):") {
 		t.Fatalf("missing diagnostics header: %s", out)
 	}
-	if !strings.Contains(out, string(diagnosis.EmptyFindings)) {
+	if !strings.Contains(out, string(diagnosis.ScenarioEmptyFindings)) {
 		t.Fatalf("missing diagnostic case: %s", out)
 	}
 	if !strings.Contains(out, "Next step: apply the suggested action/command") {

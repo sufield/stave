@@ -43,13 +43,7 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(Params{
-		Snapshots: snapshots,
-		Controls:  controls,
-		Findings:  []evaluation.Finding{}, // No violations
-		MaxUnsafe: 168 * time.Hour,
-		Now:       baseTime.Add(48 * time.Hour),
-	})
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(48*time.Hour))
 
 	report := Explain(input)
 
@@ -102,13 +96,7 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		},
 	}
 
-	input := NewInput(Params{
-		Snapshots: snapshots,
-		Controls:  controls,
-		Findings:  []evaluation.Finding{},
-		MaxUnsafe: 168 * time.Hour,
-		Now:       baseTime.Add(24 * time.Hour),
-	})
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(24*time.Hour))
 
 	report := Explain(input)
 
@@ -156,23 +144,15 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(Params{
-		Snapshots: snapshots,
-		Controls:  controls,
-		Findings:  []evaluation.Finding{},
-		MaxUnsafe: 168 * time.Hour,
-		Now:       baseTime.Add(200 * time.Hour),
-	})
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(200*time.Hour))
 
 	report := Explain(input)
 
 	found := false
 	for _, d := range report.Issues {
-		if d.Case == ExpectedNone && d.Signal != "" {
-			if d.Signal == "No resources matched unsafe_predicate for CTL.EXP.DURATION.001" {
-				found = true
-				break
-			}
+		if d.Signal == "No resources matched any unsafe_predicate" {
+			found = true
+			break
 		}
 	}
 	if !found {
@@ -205,13 +185,7 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 		},
 	}
 
-	input := NewInput(Params{
-		Snapshots: snapshots,
-		Controls:  []policy.ControlDefinition{{ID: "CTL.TEST"}},
-		Findings:  findings,
-		MaxUnsafe: 168 * time.Hour,
-		Now:       baseTime.Add(100 * time.Hour), // Before latest snapshot
-	})
+	input := NewInput(snapshots, []policy.ControlDefinition{{ID: "CTL.TEST"}}, findings, nil, 168*time.Hour, baseTime.Add(100*time.Hour))
 
 	report := Explain(input)
 
@@ -255,13 +229,7 @@ func TestRun_Summary(t *testing.T) {
 		{ID: "CTL.2", Name: "Test2"},
 	}
 
-	input := NewInput(Params{
-		Snapshots: snapshots,
-		Controls:  controls,
-		Findings:  []evaluation.Finding{},
-		MaxUnsafe: 168 * time.Hour,
-		Now:       baseTime.Add(240 * time.Hour),
-	})
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(240*time.Hour))
 
 	report := Explain(input)
 

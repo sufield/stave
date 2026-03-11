@@ -62,7 +62,7 @@ func TestNewDiagnose_DoesNotMutateInput(t *testing.T) {
 	in := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{
-				Case:     diagnosis.EmptyFindings,
+				Case:     diagnosis.ScenarioEmptyFindings,
 				Signal:   "signal",
 				Evidence: "evidence",
 				Action:   "action",

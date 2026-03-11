@@ -9,7 +9,7 @@ import (
 func TestFilterDiagnosisReport_NoFiltersReturnsOriginal(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
-			{Case: diagnosis.ExpectedNone, Signal: "threshold too high"},
+			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
 		},
 	}
 	filtered := filterDiagnosisReport(report, nil, "")
@@ -21,20 +21,20 @@ func TestFilterDiagnosisReport_NoFiltersReturnsOriginal(t *testing.T) {
 func TestFilterDiagnosisReport_ByCaseAndSignal(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
-			{Case: diagnosis.ExpectedNone, Signal: "threshold too high"},
-			{Case: diagnosis.EmptyFindings, Signal: "no predicate matches"},
-			{Case: diagnosis.ViolationEvidence, Signal: "streak evidence available"},
+			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
+			{Case: diagnosis.ScenarioEmptyFindings, Signal: "no predicate matches"},
+			{Case: diagnosis.ScenarioViolationEvidence, Signal: "streak evidence available"},
 		},
 	}
 	filtered := filterDiagnosisReport(
 		report,
-		[]string{string(diagnosis.ExpectedNone), string(diagnosis.EmptyFindings)},
+		[]string{string(diagnosis.ScenarioExpectedNone), string(diagnosis.ScenarioEmptyFindings)},
 		"threshold",
 	)
 	if len(filtered.Issues) != 1 {
 		t.Fatalf("expected 1 diagnostic after filters, got %d", len(filtered.Issues))
 	}
-	if filtered.Issues[0].Case != diagnosis.ExpectedNone {
+	if filtered.Issues[0].Case != diagnosis.ScenarioExpectedNone {
 		t.Fatalf("unexpected case after filtering: %s", filtered.Issues[0].Case)
 	}
 }
