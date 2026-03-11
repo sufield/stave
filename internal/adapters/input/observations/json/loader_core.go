@@ -19,6 +19,7 @@ import (
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -119,7 +120,7 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		return appcontracts.LoadResult{}, joinedErr
 	}
 
-	hashes := computeOverallHash(fileHashes)
+	hashes := buildInputHashes(fileHashes)
 	if err := l.verifyConfiguredIntegrity(hashes); err != nil {
 		return appcontracts.LoadResult{}, err
 	}
@@ -165,22 +166,13 @@ func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot,
 	return snap, hash, nil
 }
 
-func computeOverallHash(fileHashes map[string]string) *evaluation.InputHashes {
-	sortedNames := make([]string, 0, len(fileHashes))
-	for name := range fileHashes {
-		sortedNames = append(sortedNames, name)
-	}
-	slices.Sort(sortedNames)
-
+func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {
 	typedFiles := make(map[evaluation.FilePath]kernel.Digest, len(fileHashes))
-	var canonical strings.Builder
-	for _, name := range sortedNames {
-		typedFiles[evaluation.FilePath(name)] = kernel.Digest(fileHashes[name])
-		fmt.Fprintf(&canonical, "%s=%s\n", name, fileHashes[name])
+	for name, hash := range fileHashes {
+		typedFiles[evaluation.FilePath(name)] = kernel.Digest(hash)
 	}
-
 	return &evaluation.InputHashes{
 		Files:   typedFiles,
-		Overall: platformcrypto.HashBytes([]byte(canonical.String())),
+		Overall: integrity.ComputeOverall(typedFiles),
 	}
 }

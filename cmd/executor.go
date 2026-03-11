@@ -69,7 +69,7 @@ func (a *App) recoverExecutePanic() {
 		errInfo := ui.NewErrorInfo(ui.CodeInternalError, userMsg).
 			WithTitle("Internal error").
 			WithAction("Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists.").
-			WithURL(CLIIssuesURL)
+			WithURL(metadata.IssuesRef())
 		a.writeErrorInfo(errInfo)
 		a.ExitFunc(ui.ExitInternal)
 	}

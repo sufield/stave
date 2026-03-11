@@ -3,16 +3,46 @@ package integrity
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
+	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
 
 // Manifest defines expected per-file and aggregate hashes for integrity verification.
 type Manifest struct {
 	Files   map[evaluation.FilePath]kernel.Digest `json:"files"`
 	Overall kernel.Digest                         `json:"overall"`
+}
+
+// ComputeOverall returns the aggregate digest for the Files map.
+// It hashes a sorted canonical representation ("name=hash\n" per entry)
+// so that the result is order-independent and tamper-evident.
+func ComputeOverall(files map[evaluation.FilePath]kernel.Digest) kernel.Digest {
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, string(name))
+	}
+	slices.Sort(names)
+
+	var b strings.Builder
+	for _, name := range names {
+		fmt.Fprintf(&b, "%s=%s\n", name, files[evaluation.FilePath(name)])
+	}
+	return platformcrypto.HashBytes([]byte(b.String()))
+}
+
+// ValidateOverall recomputes the aggregate hash and returns an error if
+// it doesn't match the stored Overall digest.
+func (m Manifest) ValidateOverall() error {
+	recomputed := ComputeOverall(m.Files)
+	if m.Overall != recomputed {
+		return fmt.Errorf("overall hash mismatch (expected %s, got %s)", recomputed, m.Overall)
+	}
+	return nil
 }
 
 // SignedManifest wraps a manifest with a detached signature.

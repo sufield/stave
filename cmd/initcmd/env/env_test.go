@@ -53,8 +53,8 @@ func TestEnvList_JSONOutput(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &entries); err != nil {
 		t.Fatalf("invalid JSON output: %v\n%s", err, buf.String())
 	}
-	if len(entries) != 12 {
-		t.Fatalf("expected 12 entries, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Fatalf("expected 13 entries, got %d", len(entries))
 	}
 	for _, e := range entries {
 		if e.Name == "" || e.Description == "" || e.Category == "" {

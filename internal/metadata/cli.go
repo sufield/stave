@@ -13,11 +13,15 @@ const (
 	// OfflineHelpSuffix is appended to command Long descriptions to reinforce the offline guarantee.
 	OfflineHelpSuffix = "\n\nOffline-only: reads local files; makes zero network connections; no cloud credentials."
 
-	CLIUserDocsURL   = "https://github.com/sufield/stave/blob/main/docs/user-docs.md"
-	CLIIssuesURL     = "https://github.com/sufield/stave/issues"
 	CLIProjectConfig = "stave.yaml"
 	CLILockfile      = "stave.lock"
 )
+
+// IssuesRef returns the issue tracker URL, respecting STAVE_ISSUES_URL
+// so airgapped users can point to an internal tracker.
+func IssuesRef() string {
+	return envvar.IssuesURL.Value()
+}
 
 // DocsRef returns a documentation reference for the given topic.
 // If STAVE_DOCS_URL is set, it returns a URL with the topic as fragment.

@@ -162,7 +162,7 @@ func addManifest(bundle *bundleWriter) error {
 		Sanitized:     true,
 		Files:         manifestFiles,
 		Warnings:      bundle.warnings,
-		IssueURL:      metadata.CLIIssuesURL,
+		IssueURL:      metadata.IssuesRef(),
 	}
 	if err := bundle.addJSON("manifest.json", m); err != nil {
 		return fmt.Errorf("write manifest.json: %w", err)

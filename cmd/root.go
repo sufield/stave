@@ -98,7 +98,6 @@ func NewApp() *App {
 const (
 	CLIName           = metadata.CLIName
 	OfflineHelpSuffix = metadata.OfflineHelpSuffix
-	CLIIssuesURL      = metadata.CLIIssuesURL
 	CLIProjectConfig  = metadata.CLIProjectConfig
 	CLILockfile       = metadata.CLILockfile
 )

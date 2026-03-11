@@ -55,6 +55,12 @@ var (
 		Description: "Override documentation base URL for hints and error messages",
 		Category:    "config",
 	}
+	IssuesURL = Entry{
+		Name:         "STAVE_ISSUES_URL",
+		Description:  "Override issue tracker URL for bug reports and error messages",
+		Category:     "config",
+		DefaultValue: "https://github.com/sufield/stave/issues",
+	}
 	FirstRunHintFile = Entry{
 		Name:        "STAVE_FIRST_RUN_HINT_FILE",
 		Description: "Override path to first-run hint marker file",
@@ -118,6 +124,7 @@ func All() []Entry {
 		SnapshotRetention,
 		UserConfig,
 		DocsURL,
+		IssuesURL,
 		Debug,
 		DevValidateFindings,
 	}
