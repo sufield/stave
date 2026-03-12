@@ -73,7 +73,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 		"First unsafe at:",
 		"Unsafe duration:    12.0h",
 		"Misconfigurations:",
-		"property 'storage.visibility.public_read' is exactly 'true'",
+		`property "storage.visibility.public_read" has unsafe value: true`,
 		"Root causes:",
 		"identity",
 		"Remediation Guidance",

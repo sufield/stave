@@ -4,62 +4,67 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-const fieldNamespacePropertiesPrefix = "properties."
+// propertiesPathPrefix is the internal namespace for asset-specific data.
+const propertiesPathPrefix = "properties."
 
-// PredicateOperator identifies a predicate comparison operator (eq, ne, missing, etc.).
-type PredicateOperator = predicate.Operator
-
-// Misconfiguration represents a single property-level unsafe condition detected
-// by an control's predicate. It captures what was found and why it is unsafe.
+// Misconfiguration describes a specific property-level condition that triggered
+// a security violation. It provides the "Logic Proof" for the finding.
 type Misconfiguration struct {
-	// Property is the field path that triggered the match.
+	// Property is the raw field path (e.g., "properties.public_access_block.block_public_acls").
 	Property string `json:"property"`
-	// ActualValue is the observed value of the property (nil if missing).
+
+	// ActualValue is the state observed on the resource during evaluation.
 	ActualValue any `json:"actual_value"`
-	// Operator is the predicate operator that matched: eq, ne, missing, etc.
-	Operator PredicateOperator `json:"operator"`
-	// UnsafeValue is the threshold or comparison value from the predicate clause.
+
+	// Operator is the logic gate that failed (e.g., "eq", "missing", "contains").
+	Operator predicate.Operator `json:"operator"`
+
+	// UnsafeValue is the value or threshold defined in the policy that triggered the violation.
 	UnsafeValue any `json:"unsafe_value,omitempty"`
 }
 
-// DisplayProperty returns a cleaner property path for human-facing output.
+// DisplayProperty returns the property path without the internal "properties." prefix.
 func (m Misconfiguration) DisplayProperty() string {
-	return strings.TrimPrefix(m.Property, fieldNamespacePropertiesPrefix)
+	return strings.TrimPrefix(m.Property, propertiesPathPrefix)
 }
 
-// IsMissing reports whether this violation indicates a missing field.
+// IsMissing reports whether the violation was caused by a required property being absent.
 func (m Misconfiguration) IsMissing() bool {
 	return m.Operator == predicate.OpMissing || m.ActualValue == nil
 }
 
-// Sanitized returns a copy with sensitive observed values removed.
+// Sanitized returns a copy of the misconfiguration with the actual value redacted.
+// Use this before including evidence in public or shared reports.
 func (m Misconfiguration) Sanitized() Misconfiguration {
-	out := m
-	out.ActualValue = "[SANITIZED]"
-	return out
+	m.ActualValue = kernel.Redacted
+	return m
 }
 
-// String returns a normalized, human-readable reason string.
+// String returns a human-readable explanation of why this property is considered misconfigured.
 func (m Misconfiguration) String() string {
-	prop := m.DisplayProperty()
+	path := m.DisplayProperty()
+
 	if m.IsMissing() {
-		return fmt.Sprintf("property '%s' is missing", prop)
+		return fmt.Sprintf("property %q is missing", path)
 	}
 
 	switch m.Operator {
-	case predicate.OpEq, "equals":
-		return fmt.Sprintf("property '%s' is exactly '%v'", prop, m.ActualValue)
+	case predicate.OpEq:
+		return fmt.Sprintf("property %q has unsafe value: %v", path, m.ActualValue)
+
 	case predicate.OpContains:
-		return fmt.Sprintf("property '%s' contains unsafe value '%v'", prop, m.ActualValue)
+		return fmt.Sprintf("property %q contains unsafe element: %v", path, m.ActualValue)
+
 	case predicate.OpAnyMatch:
-		return fmt.Sprintf("one or more items in '%s' matched the unsafe criteria", prop)
+		return fmt.Sprintf("one or more items in %q matched unsafe criteria", path)
+
 	default:
-		return fmt.Sprintf(
-			"property '%s' (%v) failed '%s' check against '%v'",
-			prop, m.ActualValue, m.Operator, m.UnsafeValue,
-		)
+		// Fallback for custom or less common operators
+		return fmt.Sprintf("property %q (value: %v) failed %s check against %v",
+			path, m.ActualValue, m.Operator, m.UnsafeValue)
 	}
 }
