@@ -40,7 +40,7 @@ type Adapters struct {
 type RuntimeConfig struct {
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
-	Hasher            ports.Hasher
+	Hasher            ports.Digester
 	ToolVersion       string
 	AllowUnknownInput bool
 	ExemptionConfig   *policy.ExemptionConfig

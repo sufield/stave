@@ -16,7 +16,7 @@ type EvaluationRequest struct {
 	Snapshots       []asset.Snapshot
 	MaxUnsafe       time.Duration
 	Clock           ports.Clock
-	Hasher          ports.Hasher
+	Hasher          ports.Digester
 	ToolVersion     string
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"strings"
 
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -39,19 +40,19 @@ func HashDelimited(parts []string, sep byte) kernel.Digest {
 	return kernel.Digest(hex.EncodeToString(h.Sum(nil)))
 }
 
-// NewHasher returns the default ports.Hasher implementation.
+// NewHasher returns the default ports.Digester and ports.IdentityGenerator implementation.
 // This is the single point of change if the hashing algorithm is swapped.
 func NewHasher() *sha256Hasher { return &sha256Hasher{} }
 
-// sha256Hasher implements ports.Hasher using SHA-256.
+// sha256Hasher implements ports.Digester and ports.IdentityGenerator using SHA-256.
 type sha256Hasher struct{}
 
-func (*sha256Hasher) HashDelimited(parts []string, sep byte) kernel.Digest {
-	return HashDelimited(parts, sep)
+func (*sha256Hasher) Digest(components []string, sep byte) kernel.Digest {
+	return HashDelimited(components, sep)
 }
 
-func (*sha256Hasher) GenerateID(prefix, data string) string {
-	return StableID(prefix, data)
+func (*sha256Hasher) GenerateID(prefix string, components ...string) string {
+	return StableID(prefix, strings.Join(components, "|"))
 }
 
 // HashReader returns the SHA-256 hex digest of data read from r.
