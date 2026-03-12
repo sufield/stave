@@ -23,7 +23,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 		resources[i] = asset.Asset{
 			ID:     asset.ID("aws:s3:::mvp-bucket-" + string(rune('a'+i%26)) + string(rune('0'+i/26))),
 			Type:   kernel.AssetType("storage_bucket"),
-			Vendor: kernel.VendorAWS,
+			Vendor: kernel.Vendor("aws"),
 			Properties: map[string]any{
 				"storage": map[string]any{
 					"kind": "s3_bucket",
@@ -99,7 +99,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 		resources[i] = asset.Asset{
 			ID:     asset.ID("aws:s3:::mvp-rules-bucket-" + string(rune('a'+i%26)) + string(rune('0'+i/26))),
 			Type:   kernel.AssetType("storage_bucket"),
-			Vendor: kernel.VendorAWS,
+			Vendor: kernel.Vendor("aws"),
 			Properties: map[string]any{
 				"storage": map[string]any{
 					"kind": "s3_bucket",
@@ -180,7 +180,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 		resources[i] = asset.Asset{
 			ID:     asset.ID("aws:s3:::large-snapshot-" + string(rune('a'+i%26)) + string(rune('0'+(i/26)%10)) + string(rune('0'+(i/260)%10))),
 			Type:   kernel.AssetType("storage_bucket"),
-			Vendor: kernel.VendorAWS,
+			Vendor: kernel.Vendor("aws"),
 			Properties: map[string]any{
 				"storage": map[string]any{
 					"kind": "s3_bucket",

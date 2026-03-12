@@ -95,7 +95,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 	resource := asset.Asset{
 		ID:         "res-1",
 		Type:       kernel.AssetType("aws_s3_bucket"),
-		Vendor:     kernel.VendorAWS,
+		Vendor:     kernel.Vendor("aws"),
 		Properties: map[string]any{"public": true},
 	}
 	snapshots := []asset.Snapshot{

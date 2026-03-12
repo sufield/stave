@@ -6,7 +6,6 @@ import (
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
 	"github.com/sufield/stave/internal/domain/asset"
 	s3exposure "github.com/sufield/stave/internal/domain/evaluation/exposure"
-	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // BuildBucketAsset converts a bucket model into a normalized asset.Asset.
@@ -46,7 +45,7 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 	return asset.Asset{
 		ID:         asset.ID(bucket.Name),
 		Type:       s3storage.TypeS3Bucket,
-		Vendor:     kernel.VendorAWS,
+		Vendor:     s3storage.VendorAWS,
 		Properties: props,
 	}
 }

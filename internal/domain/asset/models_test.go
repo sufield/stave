@@ -11,7 +11,7 @@ func TestCloudIdentityMap_ReturnsIdentityEnvelope(t *testing.T) {
 	id := CloudIdentity{
 		ID:     "role-1",
 		Type:   kernel.AssetType("iam_role"),
-		Vendor: kernel.VendorAWS,
+		Vendor: kernel.Vendor("aws"),
 	}
 
 	got := id.Map()
@@ -24,7 +24,7 @@ func TestCloudIdentityMap_ReturnsIdentityEnvelope(t *testing.T) {
 	if got["type"] != kernel.AssetType("iam_role") {
 		t.Fatalf("type = %v, want iam_role", got["type"])
 	}
-	if got["vendor"] != kernel.VendorAWS {
+	if got["vendor"] != kernel.Vendor("aws") {
 		t.Fatalf("vendor = %v, want aws", got["vendor"])
 	}
 }
@@ -33,7 +33,7 @@ func TestCloudIdentityMap_UsesProperties(t *testing.T) {
 	id := CloudIdentity{
 		ID:     "role-1",
 		Type:   kernel.AssetType("iam_role"),
-		Vendor: kernel.VendorAWS,
+		Vendor: kernel.Vendor("aws"),
 		Properties: map[string]any{
 			"owner":   "team-security",
 			"purpose": "runtime",

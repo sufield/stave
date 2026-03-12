@@ -7,7 +7,6 @@ import (
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
 	"github.com/sufield/stave/internal/domain/asset"
 	s3exposure "github.com/sufield/stave/internal/domain/evaluation/exposure"
-	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 type snapshotResourceProperties struct {
@@ -64,7 +63,7 @@ func (e *SnapshotExtractor) observationToAsset(obs S3Observation) asset.Asset {
 	return asset.Asset{
 		ID:         asset.ID(obs.BucketName),
 		Type:       s3storage.TypeS3Bucket,
-		Vendor:     kernel.VendorAWS,
+		Vendor:     s3storage.VendorAWS,
 		Properties: snapshotPropertiesToMap(props),
 	}
 }

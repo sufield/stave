@@ -135,7 +135,7 @@ func testUnsafeResource(unsafe bool) asset.Asset {
 	return asset.Asset{
 		ID:     asset.ID("res-1"),
 		Type:   kernel.AssetType("storage_bucket"),
-		Vendor: kernel.VendorAWS,
+		Vendor: kernel.Vendor("aws"),
 		Properties: map[string]any{
 			"unsafe": unsafe,
 		},
