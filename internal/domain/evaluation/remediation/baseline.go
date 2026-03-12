@@ -4,15 +4,21 @@ import "github.com/sufield/stave/internal/domain/evaluation"
 
 // BaselineEntriesFromFindings converts findings to deduplicated, sorted baseline entries.
 func BaselineEntriesFromFindings(findings []Finding) []evaluation.BaselineEntry {
-	byKey := make(map[evaluation.BaselineEntryKey]evaluation.BaselineEntry, len(findings))
+	if len(findings) == 0 {
+		return nil
+	}
+
+	unique := make(map[evaluation.BaselineEntryKey]evaluation.BaselineEntry, len(findings))
 	for _, f := range findings {
 		entry := evaluation.BaselineEntryFromFinding(f.Finding)
-		byKey[entry.Key()] = entry
+		unique[entry.Key()] = entry
 	}
-	out := make([]evaluation.BaselineEntry, 0, len(byKey))
-	for _, e := range byKey {
-		out = append(out, e)
+
+	entries := make([]evaluation.BaselineEntry, 0, len(unique))
+	for _, e := range unique {
+		entries = append(entries, e)
 	}
-	evaluation.SortBaselineEntries(out)
-	return out
+
+	evaluation.SortBaselineEntries(entries)
+	return entries
 }

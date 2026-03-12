@@ -1,7 +1,8 @@
 package evaluation
 
 import (
-	"sort"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/samber/lo"
@@ -101,10 +102,10 @@ func CompareBaseline(base, current []BaselineEntry) BaselineComparisonResult {
 
 // SortBaselineEntries sorts entries by control ID then asset ID.
 func SortBaselineEntries(entries []BaselineEntry) {
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].ControlID != entries[j].ControlID {
-			return entries[i].ControlID < entries[j].ControlID
+	slices.SortFunc(entries, func(a, b BaselineEntry) int {
+		if a.ControlID != b.ControlID {
+			return strings.Compare(string(a.ControlID), string(b.ControlID))
 		}
-		return entries[i].AssetID < entries[j].AssetID
+		return strings.Compare(string(a.AssetID), string(b.AssetID))
 	})
 }
