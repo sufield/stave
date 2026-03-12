@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.PUBLIC.DELETE.001",
+      "id": "CTL.STORAGE.PUBLIC.DELETE.001",
       "resource": "deletable-bucket",
       "exposure_type": "public_delete",
       "principal_scope": "public",

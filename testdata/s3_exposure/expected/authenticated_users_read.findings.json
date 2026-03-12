@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.GLOBAL.AUTHENTICATED.READ.001",
+      "id": "CTL.STORAGE.GLOBAL.AUTHENTICATED.READ.001",
       "resource": "auth-read-bucket",
       "exposure_type": "authenticated_access",
       "principal_scope": "authenticated",

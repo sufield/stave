@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.WEBSITE.PUBLIC.001",
+      "id": "CTL.STORAGE.WEBSITE.PUBLIC.001",
       "resource": "website-bucket",
       "exposure_type": "web_public",
       "principal_scope": "public",

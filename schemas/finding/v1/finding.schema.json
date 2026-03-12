@@ -20,7 +20,7 @@
       "type": "string",
       "minLength": 1,
       "title": "Control ID",
-      "description": "Unique identifier of the control that was violated (e.g., CTL.S3.PUBLIC.001)."
+      "description": "Unique identifier of the control that was violated (e.g., CTL.STORAGE.PUBLIC.001)."
     },
     "control_name": {
       "type": "string",
@@ -83,7 +83,7 @@
           "type": "string",
           "minLength": 1,
           "title": "Exposure Type",
-          "description": "Kind of exposure (e.g., public_read, acl_write, bucket_takeover)."
+          "description": "Kind of exposure (e.g., public_read, public_write, resource_takeover)."
         },
         "principal_scope": {
           "type": "string",

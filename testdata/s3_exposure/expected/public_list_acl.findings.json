@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.PUBLIC.LIST.001",
+      "id": "CTL.STORAGE.PUBLIC.LIST.001",
       "resource": "public-list-bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",

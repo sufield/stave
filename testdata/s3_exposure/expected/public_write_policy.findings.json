@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.PUBLIC.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.WRITE.001",
       "resource": "public-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
