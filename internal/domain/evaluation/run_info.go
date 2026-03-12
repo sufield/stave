@@ -6,36 +6,40 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// FilePath is a typed wrapper for file path strings used in input hash maps.
+// FilePath is a typed wrapper for file paths to provide type safety within hash maps.
 type FilePath string
 
 func (p FilePath) String() string { return string(p) }
 
-// InputHashes contains SHA-256 hashes of input observation files for auditability.
+// InputHashes maintains SHA-256 fingerprints of the source observation data.
+// This structure is critical for the auditability and reproducibility of an evaluation.
 type InputHashes struct {
-	// Files maps each file path to its SHA-256 hex digest.
+	// Files maps each sanitized file path to its corresponding SHA-256 hex digest.
 	Files map[FilePath]kernel.Digest `json:"files"`
-	// Overall is the SHA-256 hex digest of the canonical "filename=hash\n" string
-	// built from Files sorted lexicographically by filename.
+	// Overall is an aggregate digest representing the entire set of input files.
+	// It is typically computed from a sorted list of "filename:hash" pairs.
 	Overall kernel.Digest `json:"overall"`
 }
 
-// Sanitized returns a copy with file path keys shortened to basenames.
-func (h *InputHashes) Sanitized(r kernel.PathSanitizer) *InputHashes {
+// Sanitized returns a deep copy of the hashes with path keys masked or shortened
+// using the provided sanitizer.
+func (h *InputHashes) Sanitized(s kernel.PathSanitizer) *InputHashes {
 	if h == nil {
 		return nil
 	}
-	out := &InputHashes{
+
+	sanitizedFiles := make(map[FilePath]kernel.Digest, len(h.Files))
+	for path, digest := range h.Files {
+		sanitizedFiles[FilePath(s.Path(string(path)))] = digest
+	}
+
+	return &InputHashes{
+		Files:   sanitizedFiles,
 		Overall: h.Overall,
-		Files:   make(map[FilePath]kernel.Digest, len(h.Files)),
 	}
-	for k, v := range h.Files {
-		out.Files[FilePath(r.Path(string(k)))] = v
-	}
-	return out
 }
 
-// RunInfo contains metadata about the evaluation run.
+// RunInfo captures the execution context and configuration of a specific evaluation run.
 type RunInfo struct {
 	ToolVersion string          `json:"tool_version"`
 	Offline     bool            `json:"offline"`
@@ -43,7 +47,7 @@ type RunInfo struct {
 	MaxUnsafe   kernel.Duration `json:"max_unsafe"`
 	Snapshots   int             `json:"snapshots"`
 	InputHashes *InputHashes    `json:"input_hashes,omitempty"`
-	// PackHash is the SHA-256 hex digest of the evaluated control set,
-	// enabling auditability of which controls were active during evaluation.
+	// PackHash is a fingerprint of the exact control set used during the run,
+	// ensuring that the evaluation logic itself is auditable.
 	PackHash kernel.Digest `json:"pack_hash,omitempty"`
 }
