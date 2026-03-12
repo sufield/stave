@@ -1,23 +1,51 @@
 package kernel
 
-// OutputKind identifies the type of structured output document.
-// Each constant corresponds to a stable "kind" value written into JSON output.
+// OutputKind identifies the schema type of a structured output document.
+// This value is used by consumers to determine how to parse the JSON payload.
 type OutputKind string
 
 func (k OutputKind) String() string { return string(k) }
 
-// Core output kinds.
 const (
-	KindBaseline          OutputKind = "baseline"
-	KindBaselineCheck     OutputKind = "baseline_check"
-	KindCIDiff            OutputKind = "ci_diff"
+	// --- Reporting Kinds ---
 	KindDemoReport        OutputKind = "demo_report"
-	KindEnforcement       OutputKind = "enforcement"
-	KindGateCheck         OutputKind = "gate_check"
-	KindObservationDelta  OutputKind = "observation_delta"
 	KindRemediationReport OutputKind = "remediation_report"
-	KindSnapshotArchive   OutputKind = "snapshot_archive"
-	KindSnapshotPlan      OutputKind = "snapshot_plan"
-	KindSnapshotPrune     OutputKind = "snapshot_prune"
-	KindSnapshotQuality   OutputKind = "snapshot_quality"
+
+	// --- Baseline & Compliance Kinds ---
+	KindBaseline      OutputKind = "baseline"
+	KindBaselineCheck OutputKind = "baseline_check"
+	KindEnforcement   OutputKind = "enforcement"
+	KindGateCheck     OutputKind = "gate_check"
+
+	// --- Observation & State Kinds ---
+	KindObservationDelta OutputKind = "observation_delta"
+	KindSnapshotArchive  OutputKind = "snapshot_archive"
+	KindSnapshotPlan     OutputKind = "snapshot_plan"
+	KindSnapshotPrune    OutputKind = "snapshot_prune"
+	KindSnapshotQuality  OutputKind = "snapshot_quality"
+
+	// --- Continuous Integration Kinds ---
+	KindCIDiff OutputKind = "ci_diff"
 )
+
+// validOutputKinds provides a fast lookup for validation.
+var validOutputKinds = map[OutputKind]struct{}{
+	KindBaseline:          {},
+	KindBaselineCheck:     {},
+	KindCIDiff:            {},
+	KindDemoReport:        {},
+	KindEnforcement:       {},
+	KindGateCheck:         {},
+	KindObservationDelta:  {},
+	KindRemediationReport: {},
+	KindSnapshotArchive:   {},
+	KindSnapshotPlan:      {},
+	KindSnapshotPrune:     {},
+	KindSnapshotQuality:   {},
+}
+
+// IsValid reports whether the kind is a recognized output document type.
+func (k OutputKind) IsValid() bool {
+	_, ok := validOutputKinds[k]
+	return ok
+}
