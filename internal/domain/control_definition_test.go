@@ -74,8 +74,8 @@ func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
 	issue := issues[0]
 	assertIssueCodeAndSignal(t, issue, diag.CodeControlBadType, diag.SignalWarn)
 
-	if got, ok := issue.Evidence.Get("type"); !ok || got != "" {
-		t.Fatalf("evidence type = %q (ok=%v), want empty string for unknown type", got, ok)
+	if got, ok := issue.Evidence.Get("type"); !ok || got != "unknown" {
+		t.Fatalf("evidence type = %q (ok=%v), want %q for unknown type", got, ok, "unknown")
 	}
 	if !strings.Contains(issue.Action, "Use a canonical type:") {
 		t.Fatalf("action = %q, want canonical type hint", issue.Action)
