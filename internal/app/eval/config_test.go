@@ -17,7 +17,7 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 		ControlsPath:     "/tmp/ctl",
 		ObservationsPath: "/tmp/obs",
 	}
-	clock := clockadp.FixedClock{Time: time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)}
+	clock := clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC))
 	cfg := NewConfig(plan,
 		WithMaxUnsafe(24*time.Hour),
 		WithRuntime(io.Discard, io.Discard, clock, "test"),
@@ -62,7 +62,7 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 
 	cfg := NewConfig(plan,
 		WithMaxUnsafe(24*time.Hour),
-		WithRuntime(io.Discard, io.Discard, clockadp.FixedClock{Time: time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)}, "test"),
+		WithRuntime(io.Discard, io.Discard, clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)), "test"),
 		WithSuppressionConfig(suppressionCfg),
 		WithPreloadedControls(filtered),
 		WithGitMetadata(&evaluation.GitInfo{

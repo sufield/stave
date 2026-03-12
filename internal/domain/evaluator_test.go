@@ -78,7 +78,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 
 	// 168h = 7 days threshold, now is Jan 11 (10 days after first unsafe)
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -131,7 +131,7 @@ func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
 
 	// 168h threshold, but only 24h unsafe
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -178,7 +178,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 	}
 
 	maxUnsafe := 24 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -231,7 +231,7 @@ func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour // 7 days
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -310,7 +310,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 	// Unsafe duration: 2 days (48h)
 	// Expected: CTL.EXP.DURATION.101 triggers (48h > 24h), CTL.EXP.DURATION.102 does not (48h < 168h)
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-03T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -372,7 +372,7 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 
 	// 9 days unsafe > 7 days threshold = violation
 	maxUnsafe := 720 * time.Hour // CLI default: 30 days (won't matter)
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-10T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -422,8 +422,8 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 	maxUnsafe := 168 * time.Hour // 7 days
 
 	// Run twice with different wall-clock times - results should be identical
-	clock1 := clockadp.FixedClock{Time: mustParseTime("2026-06-01T00:00:00Z")} // Far in future
-	clock2 := clockadp.FixedClock{Time: mustParseTime("2026-01-10T12:00:00Z")} // Closer to snapshots
+	clock1 := clockadp.FixedClock(mustParseTime("2026-06-01T00:00:00Z")) // Far in future
+	clock2 := clockadp.FixedClock(mustParseTime("2026-01-10T12:00:00Z")) // Closer to snapshots
 
 	evaluator1 := NewEvaluator(controls, maxUnsafe, clock1)
 	evaluator2 := NewEvaluator(controls, maxUnsafe, clock2)
@@ -488,7 +488,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-10T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -565,7 +565,7 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-03T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -638,7 +638,7 @@ func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-29T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-29T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -693,7 +693,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		}
 
 		maxUnsafe := 168 * time.Hour
-		clock := clockadp.FixedClock{Time: mustParseTime("2026-01-05T00:00:00Z")}
+		clock := clockadp.FixedClock(mustParseTime("2026-01-05T00:00:00Z"))
 		evaluator := NewEvaluator(controls, maxUnsafe, clock)
 		result := evaluator.Evaluate(snapshots)
 
@@ -736,7 +736,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		}
 
 		maxUnsafe := 168 * time.Hour
-		clock := clockadp.FixedClock{Time: mustParseTime("2026-01-02T00:00:00Z")}
+		clock := clockadp.FixedClock(mustParseTime("2026-01-02T00:00:00Z"))
 		evaluator := NewEvaluator(controls, maxUnsafe, clock)
 		result := evaluator.Evaluate(snapshots)
 
@@ -799,7 +799,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 		}
 
 		maxUnsafe := 168 * time.Hour
-		clock := clockadp.FixedClock{Time: mustParseTime("2026-01-29T00:00:00Z")}
+		clock := clockadp.FixedClock(mustParseTime("2026-01-29T00:00:00Z"))
 		evaluator := NewEvaluator(controls, maxUnsafe, clock)
 		result := evaluator.Evaluate(snapshots)
 
@@ -871,7 +871,7 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour // CLI default, but per-control is 48h
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -935,7 +935,7 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour // CLI default, but per-control is 48h
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-13T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-13T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -998,7 +998,7 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-12T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-12T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
 	// Get timelines directly to check coverage metrics
@@ -1079,7 +1079,7 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-10T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
 	timelines := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
@@ -1137,7 +1137,7 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-03T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -1201,7 +1201,7 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-03T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -1258,7 +1258,7 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-10T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -1332,7 +1332,7 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T02:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-03T02:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -1409,7 +1409,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 			},
 		}
 
-		clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T02:00:00Z")}
+		clock := clockadp.FixedClock(mustParseTime("2026-01-03T02:00:00Z"))
 		evaluator := NewEvaluator(controls, 168*time.Hour, clock)
 		result := evaluator.Evaluate(snapshots)
 
@@ -1476,7 +1476,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 
 		controls[0].Params["max_unsafe_duration"] = "24h" // Adjust threshold for this test
 
-		clock := clockadp.FixedClock{Time: mustParseTime("2026-01-02T00:00:00Z")}
+		clock := clockadp.FixedClock(mustParseTime("2026-01-02T00:00:00Z"))
 		evaluator := NewEvaluator(controls, 168*time.Hour, clock)
 		result := evaluator.Evaluate(snapshots)
 
@@ -1560,7 +1560,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 			},
 		}
 
-		clock := clockadp.FixedClock{Time: mustParseTime("2026-01-03T02:00:00Z")}
+		clock := clockadp.FixedClock(mustParseTime("2026-01-03T02:00:00Z"))
 		evaluator := NewEvaluator(controls, 168*time.Hour, clock)
 
 		// Run twice and verify same result
@@ -1655,7 +1655,7 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-03-15T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-03-15T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
@@ -1744,7 +1744,7 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-04-10T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-04-10T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 

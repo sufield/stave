@@ -75,7 +75,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 		},
 	}
 
-	clock := clockadp.FixedClock{Time: baseTime.Add(11 * 24 * time.Hour)}
+	clock := clockadp.FixedClock(baseTime.Add(11 * 24 * time.Hour))
 	maxUnsafe := 168 * time.Hour // 7 days
 
 	b.ResetTimer()
@@ -145,7 +145,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 		},
 	}
 
-	clock := clockadp.FixedClock{Time: baseTime.Add(11 * 24 * time.Hour)}
+	clock := clockadp.FixedClock(baseTime.Add(11 * 24 * time.Hour))
 	maxUnsafe := 168 * time.Hour
 
 	// Run evaluation and measure time
@@ -213,7 +213,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	_ = ctl.Prepare()
 	controls := []policy.ControlDefinition{ctl}
 
-	clock := clockadp.FixedClock{Time: baseTime.Add(1 * time.Hour)}
+	clock := clockadp.FixedClock(baseTime.Add(1 * time.Hour))
 	maxUnsafe := 168 * time.Hour
 
 	start := time.Now()

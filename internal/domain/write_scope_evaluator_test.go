@@ -92,7 +92,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -185,7 +185,7 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
@@ -252,7 +252,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 	}
 
 	maxUnsafe := 168 * time.Hour
-	clock := clockadp.FixedClock{Time: mustParseTime("2026-01-11T00:00:00Z")}
+	clock := clockadp.FixedClock(mustParseTime("2026-01-11T00:00:00Z"))
 
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)

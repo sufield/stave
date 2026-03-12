@@ -56,7 +56,7 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ports.FixedClock{Time: t}, nil
+	return ports.FixedClock(t), nil
 }
 
 // ResolveStdout returns the appropriate stdout writer for the given quiet/format
