@@ -42,31 +42,31 @@ type schemaDescriptor struct {
 var schemaRegistry = []schemaDescriptor{
 	{
 		kind:      schemaKindControl,
-		version:   kernel.EmbeddedContractSchemaVersion,
+		version:   kernel.RegistryLayoutStandard,
 		path:      "embedded/control/v1/control.schema.json",
 		isDefault: true,
 	},
 	{
 		kind:      schemaKindObservation,
-		version:   kernel.EmbeddedContractSchemaVersion,
+		version:   kernel.RegistryLayoutStandard,
 		path:      "embedded/observation/v1/observation.schema.json",
 		isDefault: true,
 	},
 	{
 		kind:      schemaKindFinding,
-		version:   kernel.EmbeddedContractSchemaVersion,
+		version:   kernel.RegistryLayoutStandard,
 		path:      "embedded/finding/v1/finding.schema.json",
 		isDefault: true,
 	},
 	{
 		kind:      schemaKindOutput,
-		version:   kernel.OutputContractSchemaVersion,
+		version:   kernel.RegistryLayoutLegacyOutput,
 		path:      "embedded/output/v0.1/output.schema.json",
 		isDefault: true,
 	},
 	{
 		kind:      schemaKindDiagnose,
-		version:   kernel.EmbeddedContractSchemaVersion,
+		version:   kernel.RegistryLayoutStandard,
 		path:      "embedded/diagnose/v1/diagnose.schema.json",
 		isDefault: true,
 	},
