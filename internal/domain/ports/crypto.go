@@ -7,10 +7,13 @@ type Verifier interface {
 	Verify(data []byte, sig kernel.Signature) error
 }
 
-// Hasher provides deterministic hashing operations for domain identifiers.
+// Hasher provides deterministic content hashing for domain aggregates.
 type Hasher interface {
 	// HashDelimited computes a hex digest of parts joined by sep.
 	HashDelimited(parts []string, sep byte) kernel.Digest
-	// StableID returns a prefixed, deterministic identifier derived from input.
-	StableID(prefix, input string) string
+}
+
+// IdentityGenerator produces stable, deterministic identifiers for domain entities.
+type IdentityGenerator interface {
+	GenerateID(prefix, data string) string
 }

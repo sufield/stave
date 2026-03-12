@@ -10,7 +10,7 @@ import (
 )
 
 type publicExposurePlanner struct {
-	hasher ports.Hasher
+	idGen ports.IdentityGenerator
 }
 
 func (p publicExposurePlanner) CanHandle(class kernel.ControlClass) bool {
@@ -32,7 +32,7 @@ func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	})
 
 	return &evaluation.RemediationPlan{
-		ID: StablePlanID(p.hasher, f.ControlID, f.AssetID),
+		ID: StablePlanID(p.idGen, f.ControlID, f.AssetID),
 		Target: evaluation.RemediationTarget{
 			AssetID:   f.AssetID,
 			AssetType: f.AssetType,

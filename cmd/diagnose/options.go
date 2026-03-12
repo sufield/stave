@@ -129,7 +129,7 @@ func runDiagnoseFindingDetail(req diagnoseFindingDetailRequest) error {
 		ControlID:      kernel.ControlID(req.controlID),
 		AssetID:        asset.ID(req.assetID),
 		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.YAMLPredicateParser),
-		Hasher:         crypto.NewHasher(),
+		IDGen:          crypto.NewHasher(),
 	})
 	if err != nil {
 		return err

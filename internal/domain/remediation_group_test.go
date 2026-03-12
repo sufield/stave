@@ -30,7 +30,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 		}
 		if actions != nil {
 			f.RemediationPlan = &evaluation.RemediationPlan{
-				ID:      remediation.StablePlanID(testHasher(), ctlID, resID),
+				ID:      remediation.StablePlanID(testIDGen(), ctlID, resID),
 				Target:  evaluation.RemediationTarget{AssetID: resID, AssetType: kernel.AssetType("storage_bucket")},
 				Actions: actions,
 			}
@@ -135,7 +135,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			groups := remediation.BuildGroups(testHasher(), tt.findings)
+			groups := remediation.BuildGroups(testHasher(), testIDGen(), tt.findings)
 
 			if tt.wantNil {
 				if groups != nil {
@@ -181,7 +181,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 		},
 	}
 
-	groups := remediation.BuildGroups(testHasher(), findings)
+	groups := remediation.BuildGroups(testHasher(), testIDGen(), findings)
 	if len(groups) != 2 {
 		t.Fatalf("expected 2 groups, got %d", len(groups))
 	}
@@ -216,7 +216,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 		},
 	}
 
-	groups := remediation.BuildGroups(testHasher(), findings)
+	groups := remediation.BuildGroups(testHasher(), testIDGen(), findings)
 	if len(groups) != 1 {
 		t.Fatalf("expected 1 group, got %d", len(groups))
 	}
@@ -255,7 +255,7 @@ func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 		},
 	}
 
-	groups := remediation.BuildGroups(testHasher(), findings)
+	groups := remediation.BuildGroups(testHasher(), testIDGen(), findings)
 	if len(groups) != 1 {
 		t.Fatalf("expected 1 group, got %d", len(groups))
 	}
@@ -266,7 +266,7 @@ func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 	}
 
 	// Running again should produce the same ID
-	groups2 := remediation.BuildGroups(testHasher(), findings)
+	groups2 := remediation.BuildGroups(testHasher(), testIDGen(), findings)
 	if groups[0].RemediationPlan.ID != groups2[0].RemediationPlan.ID {
 		t.Errorf("group fix plan ID not stable: %s vs %s", groups[0].RemediationPlan.ID, groups2[0].RemediationPlan.ID)
 	}

@@ -22,9 +22,9 @@ type Mapper struct {
 }
 
 // NewMapper creates a new remediation mapper with a default planner.
-func NewMapper(h ports.Hasher) *Mapper {
+func NewMapper(gen ports.IdentityGenerator) *Mapper {
 	return &Mapper{
-		planner: NewPlanner(h),
+		planner: NewPlanner(gen),
 	}
 }
 

@@ -91,7 +91,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
 		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
 		TraceBuilder: trace.NewFindingTraceBuilder(nil),
-		Hasher:       crypto.NewHasher(),
+		IDGen:        crypto.NewHasher(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -160,7 +160,7 @@ func TestBuildFindingDetail_NotFound(t *testing.T) {
 		Controls:  nil,
 		Snapshots: nil,
 		Result:    &evaluation.Result{},
-		Hasher:    crypto.NewHasher(),
+		IDGen:     crypto.NewHasher(),
 	})
 	if err == nil {
 		t.Fatal("expected error for missing finding")
@@ -184,7 +184,7 @@ func TestBuildFindingDetail_NoControlDefinition(t *testing.T) {
 		Controls:  nil,
 		Snapshots: nil,
 		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
-		Hasher:    crypto.NewHasher(),
+		IDGen:     crypto.NewHasher(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -219,7 +219,7 @@ func TestBuildFindingDetail_NoMatchingSnapshot(t *testing.T) {
 		Controls:  policy.ControlDefinitions{ctl},
 		Snapshots: []asset.Snapshot{}, // no snapshots
 		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
-		Hasher:    crypto.NewHasher(),
+		IDGen:     crypto.NewHasher(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

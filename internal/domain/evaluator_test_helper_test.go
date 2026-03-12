@@ -15,6 +15,9 @@ import (
 // This is the single point of change if the algorithm is swapped.
 func testHasher() ports.Hasher { return crypto.NewHasher() }
 
+// testIDGen returns the default ports.IdentityGenerator for domain tests.
+func testIDGen() ports.IdentityGenerator { return crypto.NewHasher() }
+
 // NewEvaluator builds a test evaluator with optional InputHashes injection.
 // It calls Prepare() on each control to mirror production loader behavior.
 func NewEvaluator(controls []policy.ControlDefinition, maxUnsafe time.Duration, clock ports.Clock) *testEvaluator {
