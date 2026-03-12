@@ -18,6 +18,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/trace"
 )
@@ -128,6 +129,7 @@ func runDiagnoseFindingDetail(req diagnoseFindingDetailRequest) error {
 		ControlID:      kernel.ControlID(req.controlID),
 		AssetID:        asset.ID(req.assetID),
 		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.YAMLPredicateParser),
+		Hasher:         crypto.NewHasher(),
 	})
 	if err != nil {
 		return err

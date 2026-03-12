@@ -11,11 +11,12 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 func TestWriteFindings_EmptyFindings(t *testing.T) {
 	w := NewFindingWriter()
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			ToolVersion: "0.1.0",
@@ -54,7 +55,7 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 
 func TestWriteFindings_SARIFStructure(t *testing.T) {
 	w := NewFindingWriter()
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	firstUnsafe := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
@@ -155,7 +156,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 
 func TestWriteFindings_RuleDeduplication(t *testing.T) {
 	w := NewFindingWriter()
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
@@ -235,7 +236,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 
 func TestWriteFindings_LogicalLocation(t *testing.T) {
 	w := NewFindingWriter()
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{

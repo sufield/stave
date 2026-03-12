@@ -16,6 +16,7 @@ type EvaluateInput struct {
 	Snapshots         []asset.Snapshot
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
+	Hasher            ports.Hasher
 	ExemptionConfig   *policy.ExemptionConfig
 	SuppressionConfig *policy.SuppressionConfig
 	ToolVersion       string
@@ -30,6 +31,7 @@ func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 		Controls:        input.Controls,
 		MaxUnsafe:       input.MaxUnsafe,
 		Clock:           input.Clock,
+		Hasher:          input.Hasher,
 		Exemptions:      input.ExemptionConfig,
 		Suppressions:    input.SuppressionConfig,
 		ToolVersion:     input.ToolVersion,

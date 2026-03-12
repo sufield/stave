@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // FindingWriter marshals findings as human-readable text.
@@ -136,7 +137,7 @@ func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation
 // writeRemediationGroups renders a summary of remediation groups when at least
 // one group has more than one contributing control.
 func (w *FindingWriter) writeRemediationGroups(d *drawer, enriched []remediation.Finding) {
-	groups := remediation.BuildGroups(enriched)
+	groups := remediation.BuildGroups(crypto.NewHasher(), enriched)
 	totalFindings, hasMulti := remediation.GroupStats(groups)
 	if len(groups) == 0 || !hasMulti {
 		return

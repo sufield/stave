@@ -10,6 +10,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/trace"
 )
 
@@ -90,6 +91,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
 		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
 		TraceBuilder: trace.NewFindingTraceBuilder(nil),
+		Hasher:       crypto.NewHasher(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -158,6 +160,7 @@ func TestBuildFindingDetail_NotFound(t *testing.T) {
 		Controls:  nil,
 		Snapshots: nil,
 		Result:    &evaluation.Result{},
+		Hasher:    crypto.NewHasher(),
 	})
 	if err == nil {
 		t.Fatal("expected error for missing finding")
@@ -181,6 +184,7 @@ func TestBuildFindingDetail_NoControlDefinition(t *testing.T) {
 		Controls:  nil,
 		Snapshots: nil,
 		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		Hasher:    crypto.NewHasher(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -215,6 +219,7 @@ func TestBuildFindingDetail_NoMatchingSnapshot(t *testing.T) {
 		Controls:  policy.ControlDefinitions{ctl},
 		Snapshots: []asset.Snapshot{}, // no snapshots
 		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		Hasher:    crypto.NewHasher(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

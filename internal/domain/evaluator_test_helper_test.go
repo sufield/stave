@@ -3,13 +3,17 @@ package domain
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/domain/policy"
-
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/engine"
+	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 )
+
+// testHasher returns the default ports.Hasher for domain tests.
+// This is the single point of change if the algorithm is swapped.
+func testHasher() ports.Hasher { return crypto.NewHasher() }
 
 // NewEvaluator builds a test evaluator with optional InputHashes injection.
 // It calls Prepare() on each control to mirror production loader behavior.

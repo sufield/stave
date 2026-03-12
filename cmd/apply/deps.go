@@ -21,6 +21,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -112,7 +113,7 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
 	gitMeta := compose.CollectGitAudit(plan.ProjectRoot, []string{f.flags.controlsDir, cfgPath})
 
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 	san := cmdutil.GetSanitizer(f.cmd)
 	enrichFn := func(result evaluation.Result) appcontracts.EnrichedResult {
 		return output.Enrich(enricher, san, result)

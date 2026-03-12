@@ -3,6 +3,7 @@ package output
 import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -23,6 +24,6 @@ func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) safet
 		SuppressedFindings: enriched.Result.SuppressedFindings,
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
-	out.RemediationGroups = remediation.BuildGroups(findings)
+	out.RemediationGroups = remediation.BuildGroups(crypto.NewHasher(), findings)
 	return out
 }

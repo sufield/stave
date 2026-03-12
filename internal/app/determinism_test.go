@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // TestEvaluateOutput_ByteIdentical runs the same evaluation twice and verifies
@@ -105,7 +106,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 
 	clock := clockadp.FixedClock{Time: laterTime}
 	maxUnsafe := 0 * time.Hour
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 
 	// Run evaluation and serialize to JSON — twice
 	var outputs [2][]byte
@@ -188,7 +189,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	clock := clockadp.FixedClock{Time: laterTime}
 	maxUnsafe := 0 * time.Hour
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 
 	var outputs [10][]byte
 	for i := range 10 {

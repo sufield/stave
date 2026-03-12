@@ -1,18 +1,13 @@
 package policy
 
-import (
-	"crypto/sha256"
-	"encoding/hex"
-)
+import "github.com/sufield/stave/internal/domain/ports"
 
 // StableRemediationPlanID returns a stable hash-derived fix-plan ID.
-func StableRemediationPlanID(controlID, assetID string) string {
-	sum := sha256.Sum256([]byte(controlID + "|" + assetID))
-	return "fix-" + hex.EncodeToString(sum[:8])
+func StableRemediationPlanID(h ports.Hasher, controlID, assetID string) string {
+	return h.StableID("fix-", controlID+"|"+assetID)
 }
 
 // StableRemediationGroupID returns a stable hash-derived group ID for an asset and action set.
-func StableRemediationGroupID(assetID, actionsHash string) string {
-	sum := sha256.Sum256([]byte(assetID + "|" + actionsHash))
-	return "fix-" + hex.EncodeToString(sum[:8])
+func StableRemediationGroupID(h ports.Hasher, controlID, actionsHash string) string {
+	return h.StableID("fix-", controlID+"|"+actionsHash)
 }

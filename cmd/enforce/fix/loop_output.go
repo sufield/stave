@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
@@ -62,7 +63,7 @@ func writeFixLoopReport(cmd *cobra.Command, execCtx fixLoopExecution, report *fi
 }
 
 func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safetyenvelope.Evaluation {
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 	sanitizer := cmdutil.GetSanitizer(cmd)
 	enriched := output.Enrich(enricher, sanitizer, result)
 	return output.BuildSafetyEnvelopeFromEnriched(enriched)

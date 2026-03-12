@@ -2,8 +2,6 @@ package remediation
 
 import (
 	"cmp"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -12,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
 // Group clusters findings that share the same remediation actions for the same asset.
@@ -35,8 +34,8 @@ func GroupStats(groups []Group) (totalFindings int, hasMulti bool) {
 }
 
 // BuildGroups aggregates findings into groups based on their remediation intent.
-func BuildGroups(findings []Finding) []Group {
-	acc := newAccumulator()
+func BuildGroups(h ports.Hasher, findings []Finding) []Group {
+	acc := newAccumulator(h)
 	for _, f := range findings {
 		if f.RemediationPlan != nil {
 			acc.add(f)
@@ -54,18 +53,20 @@ type groupEntry struct {
 }
 
 type accumulator struct {
+	hasher ports.Hasher
 	groups map[string]*groupEntry
 	order  []string // Tracks insertion order for semi-determinism before final sort
 }
 
-func newAccumulator() *accumulator {
+func newAccumulator(h ports.Hasher) *accumulator {
 	return &accumulator{
+		hasher: h,
 		groups: make(map[string]*groupEntry),
 	}
 }
 
 func (a *accumulator) add(f Finding) {
-	hash := canonicalActionsHash(f.RemediationPlan.Actions)
+	hash := canonicalActionsHash(a.hasher, f.RemediationPlan.Actions)
 	key := fmt.Sprintf("%s:%s", f.AssetID, hash)
 
 	if g, ok := a.groups[key]; ok {
@@ -76,7 +77,7 @@ func (a *accumulator) add(f Finding) {
 
 	// Clone the plan to avoid side-effects on the original finding
 	plan := *f.RemediationPlan
-	plan.ID = policy.StableRemediationGroupID(f.AssetID.String(), hash)
+	plan.ID = policy.StableRemediationGroupID(a.hasher, f.AssetID.String(), hash)
 
 	a.groups[key] = &groupEntry{
 		assetID:         f.AssetID,
@@ -125,7 +126,7 @@ func (a *accumulator) toSortedGroups() []Group {
 }
 
 // canonicalActionsHash generates a stable, short fingerprint for a set of actions.
-func canonicalActionsHash(actions []evaluation.RemediationAction) string {
+func canonicalActionsHash(h ports.Hasher, actions []evaluation.RemediationAction) string {
 	if len(actions) == 0 {
 		return ""
 	}
@@ -141,13 +142,6 @@ func canonicalActionsHash(actions []evaluation.RemediationAction) string {
 	// 2. Sort to ensure order-independence
 	slices.Sort(parts)
 
-	// 3. Hash the canonical representation
-	h := sha256.New()
-	for _, p := range parts {
-		h.Write([]byte(p))
-		h.Write([]byte{'\n'})
-	}
-
-	// 4. Use a 16-char prefix (8 bytes) for a balance of brevity and collision resistance
-	return hex.EncodeToString(h.Sum(nil)[:8])
+	// 3. Hash the canonical representation (first 16 hex chars for brevity + collision resistance)
+	return string(h.HashDelimited(parts, '\n'))[:16]
 }
