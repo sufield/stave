@@ -1,32 +1,52 @@
 package doctor
 
-import "github.com/samber/lo"
+import "slices"
 
-// Registry defines a set of diagnostic checks that can be executed together.
+// Registry maintains an ordered collection of diagnostic check functions.
 type Registry struct {
 	checks []CheckFunc
 }
 
-func NewRegistry(checks ...CheckFunc) Registry {
-	cloned := make([]CheckFunc, len(checks))
-	copy(cloned, checks)
-	return Registry{checks: cloned}
+// NewRegistry creates a new Registry from the provided check functions.
+func NewRegistry(checks ...CheckFunc) *Registry {
+	return &Registry{
+		checks: slices.Clone(checks),
+	}
 }
 
-func (r Registry) Run(ctx Context) ([]Check, bool) {
-	return runChecks(ctx, r.checks)
-}
+// Run executes all checks in the registry against the provided context.
+// It returns the list of results and a boolean indicating success (true if no FAIL status).
+func (r *Registry) Run(ctx *Context) ([]Check, bool) {
+	if r == nil || len(r.checks) == 0 {
+		return nil, true
+	}
 
-func RunWithRegistry(ctx Context, registry Registry) ([]Check, bool) {
-	return registry.Run(ctx)
-}
-
-func runChecks(ctx Context, checks []CheckFunc) ([]Check, bool) {
+	if ctx == nil {
+		ctx = NewContext()
+	}
 	ctx.FillDefaults()
-	results := lo.FilterMap(checks, func(fn CheckFunc, _ int) (Check, bool) {
-		c := fn(ctx)
-		return c, c.Name != ""
-	})
-	hasFail := lo.SomeBy(results, func(c Check) bool { return c.Status == StatusFail })
-	return results, hasFail
+
+	results := make([]Check, 0, len(r.checks))
+	success := true
+
+	for _, checkFn := range r.checks {
+		res := checkFn(*ctx)
+
+		if res.Name == "" {
+			continue
+		}
+
+		if res.Status == StatusFail {
+			success = false
+		}
+
+		results = append(results, res)
+	}
+
+	return results, success
+}
+
+// RunWithRegistry is a convenience wrapper for running a specific registry.
+func RunWithRegistry(ctx *Context, registry *Registry) ([]Check, bool) {
+	return registry.Run(ctx)
 }

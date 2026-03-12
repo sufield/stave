@@ -14,14 +14,14 @@ func TestRunDoctorChecksReportsPasses(t *testing.T) {
 	lookPath := func(file string) (string, error) { return "/usr/bin/" + file, nil }
 	getenv := func(key string) string { return "" }
 
-	checks, hasFail := doctor.Run(&doctor.Context{
+	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:        dir,
 		BinaryPath: "/usr/local/bin/stave",
 		LookPathFn: lookPath,
 		GetenvFn:   getenv,
 		Goos:       "darwin",
 	})
-	if hasFail {
+	if !ok {
 		t.Fatal("expected no failing checks")
 	}
 	if len(checks) == 0 {
@@ -63,14 +63,14 @@ func TestRunDoctorChecksReportsWarnings(t *testing.T) {
 		return ""
 	}
 
-	checks, hasFail := doctor.Run(&doctor.Context{
+	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:        dir,
 		BinaryPath: "",
 		LookPathFn: lookPath,
 		GetenvFn:   getenv,
 		Goos:       "linux",
 	})
-	if hasFail {
+	if !ok {
 		t.Fatal("expected no hard failures")
 	}
 
