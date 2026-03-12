@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "0aa80c27c104b6fc690e4a473ff2aad79d4b399dc88e6b69451ddc9a8189eb07",
-        "2026-01-11T000000Z.json": "c1dfab14fe990f1965d9f436ec9bee45338488ab3f96219c16164d10301e667f"
+        "2026-01-01T000000Z.json": "2e7ec197c727bad15e3ce1b6c57c7bc9dd604cdf97a7f1661d5dae2b35827a9f",
+        "2026-01-11T000000Z.json": "11b5edbe935437cd09341a991f90ad76f7576e0372a1cf4371859278311c726c"
       },
-      "overall": "460f685d7900e19748cb8aea722a1bc9737291bbddbbb4ad438f5a7c1d1110ce"
+      "overall": "996cc419c559bc1051d0764d754a35f8b31af6afd2d217f644157d5bb0d70a5e"
     },
     "pack_hash": "c99d10df055f3b9ad5fd7465f065d9c4d4e0b67fae6f316676fa5d035d6c9f2f"
   },
@@ -52,8 +52,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-d400e6e108a1827b",
@@ -120,8 +120,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-450602d45b928e47",
@@ -213,7 +213,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

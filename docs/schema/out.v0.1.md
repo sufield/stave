@@ -253,8 +253,8 @@ When `--explain-all` is enabled, each row represents one `(control, asset)` eval
         "soc2": "CC6.1"
       },
       "remediation": {
-        "description": "Control violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "Security control violation detected.",
+        "action": "Review the finding evidence and remediate the configuration."
       }
     }
   ]

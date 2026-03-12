@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "7f363fffc2cc1c0e1219de3a114d02b0ada8ff9ce70e13c1bb8c72d195726bee",
-        "2026-01-11T000000Z.json": "175cf0de13a2016eacbe0023847336e9a4d7ad8c0205a6ff2d135525ff06c54c"
+        "2026-01-01T000000Z.json": "3e9686274caa7b3f5a94c5a49d533da6c4c5f75ca5fceec895f7873b805478d6",
+        "2026-01-11T000000Z.json": "cd93ed4b46d67135f4d060feba270888aab02459564729cff51dcb50682b6391"
       },
-      "overall": "befa2fd22a790f989cadc891f4b72dd07561d029c469a5356d24d25c6705a383"
+      "overall": "782ec5b9b4a3da9f6e4ad466c33c48a0bd07de987ecdd4c7a0b60e6a73edc7b2"
     },
     "pack_hash": "5f21d2e745dd1a669cfff318aab1f081c79fe213a4ea1168020f7d59350f70af"
   },
@@ -55,8 +55,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -98,8 +98,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -112,7 +112,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63c486edd0fc49093a4e5cf7e1aac6de08a3359",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

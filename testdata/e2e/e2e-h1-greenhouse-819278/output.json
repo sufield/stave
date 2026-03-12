@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "e580da3fd480012ed9fa260eec11afdd8ee1622d8208d2122b4f18697d9d1d5a",
-        "2026-01-11T000000Z.json": "fbb95ffb22a68f2a3716ca3bcabc29afa6bf86e1b3841c36a88d16931e36604d"
+        "2026-01-01T000000Z.json": "6dfb370e49932c44d03eaf1f1e8605e2cab3be9ed2ca895af5f8357f2ae8fce3",
+        "2026-01-11T000000Z.json": "c0e98bb86fea18c0ccf4ed693485d5e510c8a0d30985cc18f82ebf1b8fed9ea2"
       },
-      "overall": "7b06465e29fcd50fd8dc0b9d4ba45c6562032ffcbe1ab50a0ab831f7b66bd6b9"
+      "overall": "99c2aa8db0af05c4c1635f58ffd0de04d1e5ee4ff57dbbe6a5d3714247209a02"
     },
     "pack_hash": "2c3e3588e28da436e5052caf84f629ff4f9eb044d66fbe9c83e9facf975fda1e"
   },
@@ -55,8 +55,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-c6cf38f04d4ee37e",
@@ -147,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63c486edd0fc49093a4e5cf7e1aac6de08a3359",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

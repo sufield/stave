@@ -9,19 +9,24 @@ func TestClassifyControlID(t *testing.T) {
 		want ControlClass
 	}{
 		{
-			name: "s3 public control",
+			name: "public exposure control",
 			id:   ControlID("CTL.S3.PUBLIC.001"),
-			want: ClassS3Public,
+			want: ClassPublicExposure,
 		},
 		{
-			name: "s3 acl write control",
+			name: "acl write exposure control",
 			id:   ControlID("CTL.S3.ACL.WRITE.001"),
-			want: ClassS3Public,
+			want: ClassPublicExposure,
 		},
 		{
-			name: "s3 general control",
+			name: "encryption control",
 			id:   ControlID("CTL.S3.ENCRYPT.001"),
-			want: ClassS3General,
+			want: ClassEncryptionMissing,
+		},
+		{
+			name: "baseline violation control",
+			id:   ControlID("CTL.S3.LOG.001"),
+			want: ClassBaselineViolation,
 		},
 		{
 			name: "unknown control",

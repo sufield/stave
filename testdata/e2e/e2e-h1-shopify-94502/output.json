@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2015-10-26T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2015-10-18T000000Z.json": "49a460ee968e74c4a9333007cc6399030f595f74b10e4c31f2e1438fdda412d2",
-        "2015-10-26T000000Z.json": "0d0a148098a277a3305c7db9e0d6222e932fded5c9c5e71421b61e3481e901bc"
+        "2015-10-18T000000Z.json": "a4876474de7de8ca05f8a0f130969dbe338028bf08d792a0b7a5fd987a20bb35",
+        "2015-10-26T000000Z.json": "f9d8017416f78c520bfe101c09fa8aecf5ae7e69541b95ea387c4d3d75a3f069"
       },
-      "overall": "ea0192d607ca8f769f20ddc7e1372314f27a5e9e34b0bc44c3ca3fbcd0eaeeaa"
+      "overall": "844537f58685ed00bc1757cd57aaea6ba03aaf92f8ae20cd7aa1986f1dd28d17"
     },
     "pack_hash": "3a43d33d6946a4821fb859b9790af47b5e39df446d519796faf7ed7af579facf"
   },
@@ -55,8 +55,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -92,8 +92,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -129,8 +129,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -184,8 +184,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -239,8 +239,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -294,8 +294,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -331,8 +331,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-bbb8fb610094e8b4",
@@ -402,8 +402,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-a9adeaefad1eb6e9",
@@ -473,8 +473,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-208c99a7323dbdeb",
@@ -538,8 +538,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-38b4bc7d0e891914",
@@ -606,8 +606,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-42d3435d00dd9ac6",
@@ -674,8 +674,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-5de57717d7b74f8f",
@@ -742,8 +742,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-fcb6eb7cde85b4a7",
@@ -922,7 +922,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63c486edd0fc49093a4e5cf7e1aac6de08a3359",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

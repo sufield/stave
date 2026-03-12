@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "bd12673903885645497047a160a02d4d9b268dd9bbc1ab92fa6d0c6490acc18c",
-        "2026-01-11T000000Z.json": "65268e06ee59880a4e709d6fc55ae6c3d06415953b6f560b6312baafcad00dcd"
+        "2026-01-01T000000Z.json": "34eb0c20a3cecc818c0266d51254580c321659aaa8f77e9edf5732a87459e3d2",
+        "2026-01-11T000000Z.json": "af618c6e87e674c414f1b7d1b7506f782802fabc1394c99b121b2314c6585ea6"
       },
-      "overall": "f93c5835c95c884dabaefa33d300e02094ffa9b2416bda315352f052b72a7b5d"
+      "overall": "ef2da2e9fab2400d362db45d56b466450d664da61e0969d3f76a8abf42795461"
     },
     "pack_hash": "5ca827a7244a5b91889376fa165f209215cfbac807ea3fc64f9834533f4b5c7b"
   },
@@ -61,8 +61,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -104,8 +104,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     }
   ],
@@ -118,7 +118,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

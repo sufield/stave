@@ -48,7 +48,7 @@ func (rp *remediationPlanner) planners() []specializedPlanner {
 
 func defaultSpecializedPlanners() []specializedPlanner {
 	return []specializedPlanner{
-		s3PublicPlanner{},
+		publicExposurePlanner{},
 	}
 }
 
