@@ -11,33 +11,34 @@ import (
 // ErrFindingNotFound is returned when no finding matches the requested control+asset pair.
 var ErrFindingNotFound = errors.New("finding not found")
 
-// BuildFindingDetail composes violation evidence, predicate trace, and
-// remediation into a single FindingDetail for the requested control+asset pair.
+// BuildFindingDetail composes evidence, predicate traces, and remediation plans
+// into a comprehensive detail view for a specific violation.
 func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailRequest) (*evaluation.FindingDetail, error) {
 	violation := r.FindFinding(req.ControlID, req.AssetID)
 	if violation == nil {
 		return nil, fmt.Errorf("%w: control %q asset %q", ErrFindingNotFound, req.ControlID, req.AssetID)
 	}
 
-	// The finding knows its own control — resolve it through the provider.
+	// 1. Resolve Control Definition (Metadata Source)
 	var ctl *policy.ControlDefinition
 	if req.Controls != nil {
 		ctl = req.Controls.FindByID(violation.ControlID)
 	}
 
+	// 2. Initialize the Detail View
 	detail := &evaluation.FindingDetail{
-		Evidence: violation.Evidence,
+		Evidence:     violation.Evidence,
+		PostureDrift: violation.PostureDrift,
+		Control:      buildControlSummary(ctl, violation),
+		Asset: evaluation.FindingAssetSummary{
+			ID:         violation.AssetID,
+			Type:       string(violation.AssetType),
+			Vendor:     string(violation.AssetVendor),
+			ObservedAt: violation.Evidence.LastSeenUnsafeAt,
+		},
 	}
 
-	detail.Control = buildControlSummary(ctl, violation)
-
-	detail.Asset = evaluation.FindingAssetSummary{
-		ID:         violation.AssetID,
-		Type:       string(violation.AssetType),
-		Vendor:     string(violation.AssetVendor),
-		ObservedAt: violation.Evidence.LastSeenUnsafeAt,
-	}
-
+	// 3. Optional: Build Predicate Trace
 	if req.TraceBuilder != nil {
 		detail.Trace = req.TraceBuilder.BuildTrace(evaluation.TraceRequest{
 			Control:    ctl,
@@ -47,32 +48,33 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 		})
 	}
 
+	// 4. Map and Plan Remediation
 	mapper := NewMapper()
-	mit := mapper.MapFinding(*violation)
-	detail.Remediation = &mit
+	spec := mapper.MapFinding(*violation)
+	detail.Remediation = &spec
 
 	enriched := Finding{
 		Finding:         *violation,
-		RemediationSpec: mit,
+		RemediationSpec: spec,
 	}
 	detail.RemediationPlan = NewPlanner().PlanFor(enriched)
 
-	detail.PostureDrift = violation.PostureDrift
-
-	detail.NextSteps = buildFindingNextSteps(detail)
+	// 5. Generate Instructional Next Steps
+	detail.NextSteps = buildNextSteps(detail)
 
 	return detail, nil
 }
 
-func buildControlSummary(ctl *policy.ControlDefinition, violation *evaluation.Finding) evaluation.FindingControlSummary {
+func buildControlSummary(ctl *policy.ControlDefinition, f *evaluation.Finding) evaluation.FindingControlSummary {
 	if ctl != nil {
-		var exposure *policy.Exposure
+		var exp *policy.Exposure
 		if ctl.Exposure != nil {
-			exposure = &policy.Exposure{
+			exp = &policy.Exposure{
 				Type:           ctl.Exposure.Type,
 				PrincipalScope: ctl.Exposure.PrincipalScope,
 			}
 		}
+
 		return evaluation.FindingControlSummary{
 			ID:          ctl.ID,
 			Name:        ctl.Name,
@@ -82,25 +84,31 @@ func buildControlSummary(ctl *policy.ControlDefinition, violation *evaluation.Fi
 			Type:        ctl.Type.String(),
 			ScopeTags:   ctl.ScopeTags,
 			Compliance:  policy.ComplianceMapping(ctl.Compliance),
-			Exposure:    exposure,
+			Exposure:    exp,
 		}
 	}
 
+	// Fallback: Use denormalized data stored in the finding if ctl definition is missing
 	return evaluation.FindingControlSummary{
-		ID:          violation.ControlID,
-		Name:        violation.ControlName,
-		Description: violation.ControlDescription,
-		Severity:    violation.ControlSeverity,
-		Compliance:  violation.ControlCompliance,
+		ID:          f.ControlID,
+		Name:        f.ControlName,
+		Description: f.ControlDescription,
+		Severity:    f.ControlSeverity,
+		Compliance:  f.ControlCompliance,
 	}
 }
 
-func buildFindingNextSteps(detail *evaluation.FindingDetail) []string {
+func buildNextSteps(d *evaluation.FindingDetail) []string {
 	steps := make([]string, 0, 3)
-	if detail.Remediation.Actionable() {
+
+	if d.Remediation.Actionable() {
 		steps = append(steps, "Apply the remediation action described above.")
 	}
+
 	steps = append(steps, "Re-run `stave apply` after applying changes to verify remediation.")
-	steps = append(steps, "Run `stave trace --control "+detail.Control.ID.String()+"` against a new snapshot to confirm the predicate no longer matches.")
+
+	traceCmd := fmt.Sprintf("stave trace --control %s", d.Control.ID)
+	steps = append(steps, fmt.Sprintf("Run `%s` against a new snapshot to confirm the predicate no longer matches.", traceCmd))
+
 	return steps
 }
