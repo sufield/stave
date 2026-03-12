@@ -82,27 +82,31 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 	if got["pack_registry_hash"] != "abc123" {
 		t.Fatalf("pack_registry_hash = %v, want abc123", got["pack_registry_hash"])
 	}
-	if got["git_repo_root"] != "/repo" {
-		t.Fatalf("git_repo_root = %v, want /repo", got["git_repo_root"])
+
+	gitMap, ok := got["git"].(map[string]any)
+	if !ok {
+		t.Fatalf("git type = %T, want map[string]any", got["git"])
 	}
-	if got["git_head_commit"] != "deadbeef" {
-		t.Fatalf("git_head_commit = %v, want deadbeef", got["git_head_commit"])
+	if gitMap["repo_root"] != "/repo" {
+		t.Fatalf("git.repo_root = %v, want /repo", gitMap["repo_root"])
+	}
+	if gitMap["head_commit"] != "deadbeef" {
+		t.Fatalf("git.head_commit = %v, want deadbeef", gitMap["head_commit"])
 	}
 
-	// Keep existing behavior: include git_dirty whenever Git metadata exists, even when false.
-	dirty, ok := got["git_dirty"].(bool)
+	dirty, ok := gitMap["dirty"].(bool)
 	if !ok {
-		t.Fatalf("git_dirty type = %T, want bool", got["git_dirty"])
+		t.Fatalf("git.dirty type = %T, want bool", gitMap["dirty"])
 	}
 	if dirty {
-		t.Fatalf("git_dirty = true, want false")
+		t.Fatalf("git.dirty = true, want false")
 	}
 
-	paths, ok := got["git_paths_dirty"].([]any)
+	paths, ok := gitMap["modified_paths"].([]any)
 	if !ok {
-		t.Fatalf("git_paths_dirty type = %T, want []any", got["git_paths_dirty"])
+		t.Fatalf("git.modified_paths type = %T, want []any", gitMap["modified_paths"])
 	}
 	if len(paths) != 1 || paths[0] != "stave.yaml" {
-		t.Fatalf("git_paths_dirty = %#v, want [stave.yaml]", paths)
+		t.Fatalf("git.modified_paths = %#v, want [stave.yaml]", paths)
 	}
 }
