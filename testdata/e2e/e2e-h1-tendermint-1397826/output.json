@@ -55,9 +55,87 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
+      },
+      "fix_plan": {
+        "id": "fix-c7229fb39719a71b",
+        "target": {
+          "asset_id": "tendermint-packages-ref",
+          "asset_type": "s3_bucket_reference"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.restrict_resource_public_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "tendermint-packages-ref",
+      "asset_type": "s3_bucket_reference",
+      "fix_plan": {
+        "id": "fix-f20db037fa749161",
+        "target": {
+          "asset_id": "tendermint-packages-ref",
+          "asset_type": "s3_bucket_reference"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.restrict_resource_public_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.BUCKET.TAKEOVER.001"
+      ],
+      "finding_count": 1
     }
   ],
   "extensions": {
@@ -69,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
+      "head_commit": "eb01335b75546d0a228a4ca2a367d323d1e405d0",
       "dirty": false
     }
   }

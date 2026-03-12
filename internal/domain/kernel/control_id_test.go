@@ -28,6 +28,52 @@ func TestNewControlID(t *testing.T) {
 	}
 }
 
+func TestControlIDSegments(t *testing.T) {
+	tests := []struct {
+		name         string
+		id           ControlID
+		wantProvider string
+		wantCategory string
+		wantSequence string
+	}{
+		{
+			name:         "standard three-segment",
+			id:           ControlID("CTL.S3.PUBLIC.001"),
+			wantProvider: "S3",
+			wantCategory: "PUBLIC",
+			wantSequence: "001",
+		},
+		{
+			name:         "multi-segment category",
+			id:           ControlID("CTL.S3.PUBLIC.READ.001"),
+			wantProvider: "S3",
+			wantCategory: "PUBLIC.READ",
+			wantSequence: "001",
+		},
+		{
+			name:         "deep category",
+			id:           ControlID("CTL.NETWORK.FIREWALL.INGRESS.005"),
+			wantProvider: "NETWORK",
+			wantCategory: "FIREWALL.INGRESS",
+			wantSequence: "005",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.id.Provider(); got != tt.wantProvider {
+				t.Errorf("Provider() = %q, want %q", got, tt.wantProvider)
+			}
+			if got := tt.id.Category(); got != tt.wantCategory {
+				t.Errorf("Category() = %q, want %q", got, tt.wantCategory)
+			}
+			if got := tt.id.Sequence(); got != tt.wantSequence {
+				t.Errorf("Sequence() = %q, want %q", got, tt.wantSequence)
+			}
+		})
+	}
+}
+
 func TestControlIDUnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		name    string

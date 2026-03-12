@@ -51,8 +51,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Security control violation detected.",
-        "action": "Review the finding evidence and remediate the configuration."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -65,7 +65,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
+      "head_commit": "eb01335b75546d0a228a4ca2a367d323d1e405d0",
       "dirty": false
     }
   }
