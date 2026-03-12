@@ -61,20 +61,19 @@ func checkWorkspaceWritable(ctx Context) Check {
 }
 
 func checkGit(ctx Context) Check {
-	return checkBinary(ctx, BinaryCheckRequest{
-		BinaryName:  "git",
-		CheckName:   "git",
+	return checkBinary(ctx, BinaryRequest{
+		Binary:      "git",
+		Name:        "git",
 		WarnMessage: "git not found; project/bootstrap workflows may be limited",
 		Fix:         "install git (https://git-scm.com/downloads)",
-		PassMessage: "git available",
 	})
 }
 
 func checkAWS(ctx Context) Check {
 	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
-	return checkBinary(ctx, BinaryCheckRequest{
-		BinaryName:  "aws",
-		CheckName:   "aws-cli",
+	return checkBinary(ctx, BinaryRequest{
+		Binary:      "aws",
+		Name:        "aws-cli",
 		WarnMessage: "aws not found; cannot collect real S3 snapshots for ingest",
 		Fix:         "install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)",
 		PassMessage: "AWS CLI available",
@@ -82,20 +81,19 @@ func checkAWS(ctx Context) Check {
 }
 
 func checkJQ(ctx Context) Check {
-	return checkBinary(ctx, BinaryCheckRequest{
-		BinaryName:  "jq",
-		CheckName:   "jq",
+	return checkBinary(ctx, BinaryRequest{
+		Binary:      "jq",
+		Name:        "jq",
 		WarnMessage: "jq not found; JSON filtering examples may not work",
 		Fix:         "install jq (https://jqlang.org/download/)",
-		PassMessage: "jq available",
 	})
 }
 
 func checkGraphviz(ctx Context) Check {
 	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
-	return checkBinary(ctx, BinaryCheckRequest{
-		BinaryName:  "dot",
-		CheckName:   "graphviz",
+	return checkBinary(ctx, BinaryRequest{
+		Binary:      "dot",
+		Name:        "graphviz",
 		WarnMessage: "dot not found; graph coverage DOT output cannot be rendered to PNG",
 		Fix:         "install graphviz (https://graphviz.org/download/)",
 		PassMessage: "graphviz (dot) available",
