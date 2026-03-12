@@ -1,275 +1,206 @@
 package policy
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-// PredicateRule is a single predicate condition or nested predicate.
+// PredicateRule represents a single logical gate in a security policy.
+// It can be a simple field comparison or a nested "any/all" block.
 type PredicateRule struct {
 	// Simple field comparison
 	Field          string             `yaml:"field,omitempty"`
 	Op             predicate.Operator `yaml:"op,omitempty"`
 	Value          any                `yaml:"value,omitempty"`
-	ValueFromParam string             `yaml:"value_from_param,omitempty"` // resolve value from params
+	ValueFromParam string             `yaml:"value_from_param,omitempty"`
 
-	// Nested predicates
+	// Nested logic blocks
 	Any []PredicateRule `yaml:"any,omitempty"`
 	All []PredicateRule `yaml:"all,omitempty"`
 
-	// Cached parsed field path to avoid repeated split allocations on hot evaluation paths.
-	fieldParts      []string `yaml:"-"`
-	fieldPartsReady bool     `yaml:"-"`
+	// fieldParts caches the split path segments to avoid allocations during evaluation.
+	fieldParts []string `yaml:"-"`
 }
 
-type complexOperatorEval struct {
-	ctx          EvalContext
-	fieldExists  bool
-	fieldValue   any
-	compareValue any
+// Matches evaluates the rule against an asset without additional parameters or identities.
+func (r *PredicateRule) Matches(a asset.Asset) bool {
+	return r.MatchesWithContext(NewAssetEvalContext(a, nil))
 }
 
-// Matches checks if a single predicate rule matches the asset without params.
-func (pr *PredicateRule) Matches(r asset.Asset) bool {
-	ctx := NewAssetEvalContext(r, nil)
-	return pr.MatchesWithContext(ctx)
-}
-
-// MatchesWithContext checks if a predicate rule matches with full context.
-func (pr *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
-	// Handle nested "any" predicate
-	if len(pr.Any) > 0 {
-		return pr.anyMatches(ctx)
+// MatchesWithContext evaluates the rule against a full evaluation context.
+func (r *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
+	// 1. Handle Nested Logical Blocks (Recursive)
+	if len(r.Any) > 0 {
+		for i := range r.Any {
+			if r.Any[i].MatchesWithContext(ctx) {
+				return true
+			}
+		}
+		return false
 	}
 
-	// Handle nested "all" predicate
-	if len(pr.All) > 0 {
-		return pr.allMatch(ctx)
+	if len(r.All) > 0 {
+		for i := range r.All {
+			if !r.All[i].MatchesWithContext(ctx) {
+				return false
+			}
+		}
+		return true
 	}
 
-	// Simple field comparison
-	fieldValue, fieldExists := getFieldValueByParts(ctx, pr.parsedFieldParts())
+	// 2. Resolve Field Value
+	val, exists := getFieldValueByParts(ctx, r.parsedFieldParts())
 
-	// Resolve comparison value (from value or value_from_param)
-	compareValue := pr.Value
-	if pr.ValueFromParam != "" {
-		paramValue, ok := ctx.Param(pr.ValueFromParam)
-		if !ok || paramValue == nil {
+	// 3. Resolve Comparison Value (Literal or Parameter)
+	compareVal := r.Value
+	if r.ValueFromParam != "" {
+		paramVal, ok := ctx.Param(r.ValueFromParam)
+		if !ok || paramVal == nil {
+			return false // Parameter referenced but not provided
+		}
+		compareVal = paramVal
+	}
+
+	// 4. Evaluate Standard Operators
+	if res, handled := predicate.EvaluateOperator(r.Op, exists, val, compareVal); handled {
+		return res
+	}
+
+	// 5. Evaluate Complex/Contextual Operators
+	return r.evaluateContextualOperator(ctx, exists, val, compareVal)
+}
+
+func (r *PredicateRule) evaluateContextualOperator(ctx EvalContext, exists bool, val, compareVal any) bool {
+	switch r.Op {
+	case predicate.OpAnyMatch:
+		return evaluateAnyMatch(ctx, exists, val, compareVal)
+
+	case predicate.OpNotSubsetOfField, predicate.OpNeqField, predicate.OpNotInField:
+		otherPath, ok := compareVal.(string)
+		if !ok {
 			return false
 		}
-		compareValue = paramValue
-	}
+		otherVal, otherExists := GetFieldValueWithContext(ctx, otherPath)
 
-	if result, handled := predicate.EvaluateOperator(pr.Op, fieldExists, fieldValue, compareValue); handled {
-		return result
+		switch r.Op {
+		case predicate.OpNotSubsetOfField:
+			if !exists {
+				return false
+			}
+			if !otherExists {
+				return true
+			}
+			return predicate.ListHasElementsNotIn(val, otherVal)
+		case predicate.OpNeqField:
+			if !exists {
+				return false
+			}
+			if !otherExists {
+				return true
+			}
+			return !predicate.EqualValues(val, otherVal)
+		case predicate.OpNotInField:
+			if !exists {
+				return true
+			}
+			if !otherExists {
+				return true
+			}
+			return !predicate.ValueInList(val, otherVal)
+		}
 	}
-
-	return pr.evaluateComplexOperator(complexOperatorEval{
-		ctx:          ctx,
-		fieldExists:  fieldExists,
-		fieldValue:   fieldValue,
-		compareValue: compareValue,
-	})
+	return false
 }
 
-func (pr *PredicateRule) evaluateComplexOperator(eval complexOperatorEval) bool {
-	switch pr.Op {
-	case predicate.OpNotSubsetOfField:
-		return evaluateNotSubsetOfField(eval)
-	case predicate.OpNeqField:
-		return evaluateNeqField(eval)
-	case predicate.OpNotInField:
-		return evaluateNotInField(eval)
-	case predicate.OpAnyMatch:
-		return evaluateAnyMatch(eval)
-	default:
+func evaluateAnyMatch(ctx EvalContext, exists bool, val, compareVal any) bool {
+	if !exists {
 		return false
 	}
-}
-
-func evaluateNotSubsetOfField(eval complexOperatorEval) bool {
-	if !eval.fieldExists {
-		return false
-	}
-	otherValue, otherExists, ok := resolveComparedField(eval.ctx, eval.compareValue)
+	identities, ok := val.([]asset.CloudIdentity)
 	if !ok {
 		return false
 	}
-	if !otherExists {
-		return true
-	}
-	return predicate.ListHasElementsNotIn(eval.fieldValue, otherValue)
-}
 
-func evaluateNeqField(eval complexOperatorEval) bool {
-	if !eval.fieldExists {
+	// any_match requires a nested predicate structure in the comparison value.
+	nested, err := ctx.ParsePredicate(compareVal)
+	if nested == nil || err != nil {
 		return false
 	}
-	otherValue, otherExists, ok := resolveComparedField(eval.ctx, eval.compareValue)
-	if !ok {
-		return false
-	}
-	if !otherExists {
-		return true
-	}
-	return !predicate.EqualValues(eval.fieldValue, otherValue)
-}
 
-func evaluateNotInField(eval complexOperatorEval) bool {
-	if !eval.fieldExists {
-		return true
-	}
-	otherValue, otherExists, ok := resolveComparedField(eval.ctx, eval.compareValue)
-	if !ok || !otherExists {
-		return true
-	}
-	return !predicate.ValueInList(eval.fieldValue, otherValue)
-}
-
-func evaluateAnyMatch(eval complexOperatorEval) bool {
-	if !eval.fieldExists {
-		return false
-	}
-	identities, ok := eval.fieldValue.([]asset.CloudIdentity)
-	if !ok {
-		return false
-	}
-	nestedPred, err := eval.ctx.ParsePredicate(eval.compareValue)
-	if nestedPred == nil || err != nil {
-		return false
-	}
+	// Re-use params and parser logic for the nested evaluation.
 	idCtx := EvalContext{
-		Params:          eval.ctx.Params,
-		PredicateParser: eval.ctx.PredicateParser,
+		Params:          ctx.Params,
+		PredicateParser: ctx.PredicateParser,
 	}
+
 	for i := range identities {
 		idCtx.Properties = identities[i].Map()
-		if nestedPred.EvaluateWithContext(idCtx) {
+		if nested.EvaluateWithContext(idCtx) {
 			return true
 		}
 	}
 	return false
 }
 
-func resolveComparedField(ctx EvalContext, compareValue any) (any, bool, bool) {
-	otherFieldPath, ok := compareValue.(string)
-	if !ok {
-		return nil, false, false
+// parsedFieldParts returns cached segments of the field path or parses them if missing.
+func (r *PredicateRule) parsedFieldParts() []string {
+	if r.fieldParts != nil || r.Field == "" {
+		return r.fieldParts
 	}
-	otherValue, otherExists := GetFieldValueWithContext(ctx, otherFieldPath)
-	return otherValue, otherExists, true
+	r.fieldParts = strings.Split(r.Field, ".")
+	return r.fieldParts
 }
 
-func (pr *PredicateRule) anyMatches(ctx EvalContext) bool {
-	for i := range pr.Any {
-		if pr.Any[i].MatchesWithContext(ctx) {
-			return true
-		}
-	}
-	return false
-}
+// --- Evidence Extraction ---
 
-func (pr *PredicateRule) allMatch(ctx EvalContext) bool {
-	for i := range pr.All {
-		if !pr.All[i].MatchesWithContext(ctx) {
-			return false
-		}
-	}
-	return len(pr.All) > 0
-}
-
-func (pr *PredicateRule) parsedFieldParts() []string {
-	if pr.fieldPartsReady {
-		return pr.fieldParts
-	}
-	if pr.Field == "" {
-		pr.fieldParts = nil
-		pr.fieldPartsReady = true
-		return nil
-	}
-	pr.fieldParts = strings.Split(pr.Field, ".")
-	pr.fieldPartsReady = true
-	return pr.fieldParts
-}
-
-// ExtractMisconfigurations extracts misconfiguration data from the predicate tree.
-// Returns a slice sorted by Property for deterministic output.
+// ExtractMisconfigurations traverses the predicate tree to pull the actual observed
+// values for every field mentioned in the unsafe predicate.
 func ExtractMisconfigurations(p *UnsafePredicate, props map[string]any) []Misconfiguration {
 	if p == nil {
 		return nil
 	}
-	var result []Misconfiguration
+
+	var results []Misconfiguration
 	for i := range p.Any {
-		p.Any[i].extractMisconfigurationFields(props, &result)
+		p.Any[i].collectFields(props, &results)
 	}
 	for i := range p.All {
-		p.All[i].extractMisconfigurationFields(props, &result)
+		p.All[i].collectFields(props, &results)
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Property < result[j].Property
+
+	// Sort by Property name for stable, deterministic reporting.
+	slices.SortFunc(results, func(a, b Misconfiguration) int {
+		return cmp.Compare(a.Property, b.Property)
 	})
-	return result
+
+	return results
 }
 
-// extractMisconfigurationFields extracts misconfiguration data from a single predicate rule.
-func (r *PredicateRule) extractMisconfigurationFields(props map[string]any, result *[]Misconfiguration) {
-	// Handle nested predicates
-	if len(r.Any) > 0 || len(r.All) > 0 {
-		for i := range r.Any {
-			r.Any[i].extractMisconfigurationFields(props, result)
-		}
-		for i := range r.All {
-			r.All[i].extractMisconfigurationFields(props, result)
-		}
-		return
+func (r *PredicateRule) collectFields(props map[string]any, results *[]Misconfiguration) {
+	// Recursive traversal for nested logic blocks
+	for i := range r.Any {
+		r.Any[i].collectFields(props, results)
+	}
+	for i := range r.All {
+		r.All[i].collectFields(props, results)
 	}
 
+	// Leaf node processing
 	if r.Field == "" {
 		return
 	}
+
 	fieldPath := strings.TrimPrefix(r.Field, propertiesPathPrefix)
-	val, _ := nestedPropertyValue(props, fieldPath)
-	*result = append(*result, Misconfiguration{
+	val, _ := getNestedValue(props, strings.Split(fieldPath, "."))
+
+	*results = append(*results, Misconfiguration{
 		Property:    fieldPath,
 		ActualValue: val,
 		Operator:    r.Op,
 		UnsafeValue: r.Value,
 	})
-}
-
-func nestedPropertyValue(props map[string]any, path string) (any, bool) {
-	parts := splitPath(path)
-	var current any = props
-	for _, part := range parts {
-		if m, ok := current.(map[string]any); ok {
-			v, exists := m[part]
-			if !exists {
-				return nil, false
-			}
-			current = v
-		} else {
-			return nil, false
-		}
-	}
-	return current, true
-}
-
-func splitPath(path string) []string {
-	var parts []string
-	start := 0
-	for i := 0; i < len(path); i++ {
-		if path[i] == '.' {
-			if i > start {
-				parts = append(parts, path[start:i])
-			}
-			start = i + 1
-		}
-	}
-	if start < len(path) {
-		parts = append(parts, path[start:])
-	}
-	return parts
 }
