@@ -166,8 +166,8 @@ Replaces infrastructure identifiers with deterministic tokens in findings, diagn
 | ARNs in `ResourceID` | `arn:aws:s3:::SANITIZED_<8hex>` (structure preserved) |
 | `Finding.Source.File` | Basename only (directory stripped) |
 | `Evidence.Misconfigurations[].ActualValue` | `[SANITIZED]` |
-| `SourceEvidence.PolicyPublicStatements` | `[SANITIZED]` |
-| `SourceEvidence.ACLPublicGrantees` | `[SANITIZED]` |
+| `SourceEvidence.IdentityStatements` | `[SANITIZED]` |
+| `SourceEvidence.ResourceGrantees` | `[SANITIZED]` |
 | `Diagnostic.Evidence` asset IDs | `SANITIZED_<8hex>` |
 | `CounterfactualReport.IncidentID` | `[SANITIZED]` |
 | `InputHashes` file keys | Basename only |

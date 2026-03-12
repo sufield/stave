@@ -60,10 +60,10 @@ func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCau
 
 	var causes []evaluation.RootCause
 	if hasIdentity {
-		causes = append(causes, evaluation.RootCausePolicy)
+		causes = append(causes, evaluation.RootCauseIdentity)
 	}
 	if hasResource {
-		causes = append(causes, evaluation.RootCauseACL)
+		causes = append(causes, evaluation.RootCauseResource)
 	}
 	return causes
 }
@@ -79,14 +79,14 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 
 	for _, cause := range causes {
 		switch cause {
-		case evaluation.RootCausePolicy:
-			evidence.PolicyPublicStatements = getSortedEvidence(props, pathPolicyStatements)
-		case evaluation.RootCauseACL:
-			evidence.ACLPublicGrantees = getSortedEvidence(props, pathACLGrantees)
+		case evaluation.RootCauseIdentity:
+			evidence.IdentityStatements = getSortedEvidence(props, pathPolicyStatements)
+		case evaluation.RootCauseResource:
+			evidence.ResourceGrantees = getSortedEvidence(props, pathACLGrantees)
 		}
 	}
 
-	if len(evidence.PolicyPublicStatements) == 0 && len(evidence.ACLPublicGrantees) == 0 {
+	if len(evidence.IdentityStatements) == 0 && len(evidence.ResourceGrantees) == 0 {
 		return nil
 	}
 	return evidence

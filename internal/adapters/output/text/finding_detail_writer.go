@@ -133,11 +133,11 @@ func writeEvidenceSourceDetails(d *drawer, ev *evaluation.Evidence) {
 	if ev.SourceEvidence == nil {
 		return
 	}
-	if len(ev.SourceEvidence.PolicyPublicStatements) > 0 {
-		d.f("  Policy statements:  %s\n", strings.Join(ev.SourceEvidence.PolicyPublicStatements, ", "))
+	if len(ev.SourceEvidence.IdentityStatements) > 0 {
+		d.f("  Identity statements: %s\n", strings.Join(ev.SourceEvidence.IdentityStatements, ", "))
 	}
-	if len(ev.SourceEvidence.ACLPublicGrantees) > 0 {
-		d.f("  ACL grantees:       %s\n", strings.Join(ev.SourceEvidence.ACLPublicGrantees, ", "))
+	if len(ev.SourceEvidence.ResourceGrantees) > 0 {
+		d.f("  Resource grantees:  %s\n", strings.Join(ev.SourceEvidence.ResourceGrantees, ", "))
 	}
 }
 

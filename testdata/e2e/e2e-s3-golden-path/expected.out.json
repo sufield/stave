@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "dev",
+    "tool_version": "0.0.3",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
@@ -399,7 +399,7 @@
           }
         ],
         "root_causes": [
-          "policy"
+          "identity"
         ],
         "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
@@ -473,7 +473,7 @@
           }
         ],
         "root_causes": [
-          "policy"
+          "identity"
         ],
         "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
@@ -694,8 +694,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -769,8 +767,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -844,8 +840,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -919,8 +913,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -994,8 +986,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -1069,8 +1059,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -1144,8 +1132,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -1219,8 +1205,6 @@
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
       "evidence": {
-        "unsafe_duration_hours": 0,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "exposure_source",
@@ -1388,7 +1372,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "4955da16ae6fdc53817d32ccb2f91e5a157cbbda",
+      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
       "dirty": false
     }
   }

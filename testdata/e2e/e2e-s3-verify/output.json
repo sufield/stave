@@ -3,7 +3,7 @@
   "kind": "verification",
   "run": {
     "max_unsafe": "168h0m0s",
-    "tool_version": "dev",
+    "tool_version": "0.0.3",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "before_snapshots": 2,

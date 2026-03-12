@@ -70,8 +70,8 @@ func makeTestResult() evaluation.Result {
 						{Property: "properties.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 					},
 					SourceEvidence: &evaluation.SourceEvidence{
-						PolicyPublicStatements: []string{"AllowPublicRead"},
-						ACLPublicGrantees:      []string{"http://acs.amazonaws.com/groups/global/AllUsers"},
+						IdentityStatements: []string{"AllowPublicRead"},
+						ResourceGrantees:   []string{"http://acs.amazonaws.com/groups/global/AllUsers"},
 					},
 					WhyNow: "Unsafe for 24h, threshold is 0h",
 				},

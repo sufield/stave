@@ -39,7 +39,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 			Misconfigurations: []policy.Misconfiguration{
 				{Property: "properties.storage.visibility.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 			},
-			RootCauses: []evaluation.RootCause{evaluation.RootCausePolicy},
+			RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},
 		Remediation: &policy.RemediationSpec{
 			Description: "Bucket is publicly exposed.",
@@ -75,7 +75,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 		"Misconfigurations:",
 		"property 'storage.visibility.public_read' is exactly 'true'",
 		"Root causes:",
-		"policy",
+		"identity",
 		"Remediation Guidance",
 		"Enable Block Public Access.",
 		"Example configuration:",

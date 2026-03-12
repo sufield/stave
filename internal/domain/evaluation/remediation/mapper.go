@@ -97,8 +97,8 @@ func (f Finding) Sanitized(s kernel.Sanitizer) Finding {
 
 	if f.Evidence.SourceEvidence != nil {
 		se := *f.Evidence.SourceEvidence
-		se.PolicyPublicStatements = sanitizeStrings(se.PolicyPublicStatements, s)
-		se.ACLPublicGrantees = sanitizeStrings(se.ACLPublicGrantees, s)
+		se.IdentityStatements = sanitizeStrings(se.IdentityStatements, s)
+		se.ResourceGrantees = sanitizeStrings(se.ResourceGrantees, s)
 		out.Evidence.SourceEvidence = &se
 	}
 
