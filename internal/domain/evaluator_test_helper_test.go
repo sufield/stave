@@ -11,9 +11,9 @@ import (
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
-// testHasher returns the default ports.Hasher for domain tests.
+// testDigester returns the default ports.Digester for domain tests.
 // This is the single point of change if the algorithm is swapped.
-func testHasher() ports.Hasher { return crypto.NewHasher() }
+func testDigester() ports.Digester { return crypto.NewHasher() }
 
 // testIDGen returns the default ports.IdentityGenerator for domain tests.
 func testIDGen() ports.IdentityGenerator { return crypto.NewHasher() }

@@ -2,18 +2,22 @@ package ports
 
 import "github.com/sufield/stave/internal/domain/kernel"
 
-// Verifier validates a cryptographic signature over data.
+// Verifier defines the capability to validate cryptographic signatures
+// against raw data, ensuring authenticity and integrity.
 type Verifier interface {
 	Verify(data []byte, sig kernel.Signature) error
 }
 
-// Hasher provides deterministic content hashing for domain aggregates.
-type Hasher interface {
-	// HashDelimited computes a hex digest of parts joined by sep.
-	HashDelimited(parts []string, sep byte) kernel.Digest
+// Digester provides deterministic content digests for auditing
+// and tracking changes in domain entities.
+type Digester interface {
+	// Digest computes a unique, stable summary for the provided components.
+	Digest(components []string, sep byte) kernel.Digest
 }
 
-// IdentityGenerator produces stable, deterministic identifiers for domain entities.
+// IdentityGenerator produces stable, deterministic identifiers used to
+// track entities (like remediation plans) across different evaluation runs.
 type IdentityGenerator interface {
-	GenerateID(prefix, data string) string
+	// GenerateID creates a stable string ID by combining a prefix with unique data.
+	GenerateID(prefix string, components ...string) string
 }

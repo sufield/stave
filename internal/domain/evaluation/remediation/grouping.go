@@ -34,7 +34,7 @@ func GroupStats(groups []Group) (totalFindings int, hasMulti bool) {
 }
 
 // BuildGroups aggregates findings into groups based on their remediation intent.
-func BuildGroups(h ports.Hasher, gen ports.IdentityGenerator, findings []Finding) []Group {
+func BuildGroups(h ports.Digester, gen ports.IdentityGenerator, findings []Finding) []Group {
 	acc := newAccumulator(h, gen)
 	for _, f := range findings {
 		if f.RemediationPlan != nil {
@@ -53,13 +53,13 @@ type groupEntry struct {
 }
 
 type accumulator struct {
-	hasher ports.Hasher
+	hasher ports.Digester
 	idGen  ports.IdentityGenerator
 	groups map[string]*groupEntry
 	order  []string // Tracks insertion order for semi-determinism before final sort
 }
 
-func newAccumulator(h ports.Hasher, gen ports.IdentityGenerator) *accumulator {
+func newAccumulator(h ports.Digester, gen ports.IdentityGenerator) *accumulator {
 	return &accumulator{
 		hasher: h,
 		idGen:  gen,
@@ -127,8 +127,8 @@ func (a *accumulator) toSortedGroups() []Group {
 	return result
 }
 
-// canonicalActionsHash generates a stable, short fingerprint for a set of actions.
-func canonicalActionsHash(h ports.Hasher, actions []evaluation.RemediationAction) string {
+// canonicalActionsHash generates a stable, short digest for a set of actions.
+func canonicalActionsHash(h ports.Digester, actions []evaluation.RemediationAction) string {
 	if len(actions) == 0 {
 		return ""
 	}
@@ -145,5 +145,5 @@ func canonicalActionsHash(h ports.Hasher, actions []evaluation.RemediationAction
 	slices.Sort(parts)
 
 	// 3. Hash the canonical representation (first 16 hex chars for brevity + collision resistance)
-	return string(h.HashDelimited(parts, '\n'))[:16]
+	return string(h.Digest(parts, '\n'))[:16]
 }

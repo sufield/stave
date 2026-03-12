@@ -21,7 +21,7 @@ type Runner struct {
 	// If zero, defaultRunnerMaxGapThreshold is used.
 	MaxGapThreshold time.Duration
 	Clock           ports.Clock
-	Hasher          ports.Hasher
+	Hasher          ports.Digester
 	Exemptions      *policy.ExemptionConfig
 	Suppressions    *policy.SuppressionConfig
 	ToolVersion     string
@@ -211,5 +211,5 @@ func (e *Runner) computePackHash() kernel.Digest {
 		ids[i] = string(ctl.ID)
 	}
 	slices.Sort(ids)
-	return e.Hasher.HashDelimited(ids, '\n')
+	return e.Hasher.Digest(ids, '\n')
 }

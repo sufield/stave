@@ -28,7 +28,7 @@ type EvaluateConfig struct {
 	LoadConfig
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
-	Hasher            ports.Hasher
+	Hasher            ports.Digester
 	Output            io.Writer
 	ExemptionConfig   *policy.ExemptionConfig
 	SuppressionConfig *policy.SuppressionConfig

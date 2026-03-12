@@ -16,7 +16,7 @@ type EvaluateInput struct {
 	Snapshots         []asset.Snapshot
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
-	Hasher            ports.Hasher
+	Hasher            ports.Digester
 	ExemptionConfig   *policy.ExemptionConfig
 	SuppressionConfig *policy.SuppressionConfig
 	ToolVersion       string
