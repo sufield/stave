@@ -58,19 +58,6 @@ type GovernanceOverrides struct {
 	EnforceStrictPublicInheritance bool
 }
 
-// ResolveEffectivePermissions calculates the final permission bitmask
-// after applying governance overrides to identity-bound and resource-bound sources.
-func ResolveEffectivePermissions(identity, resource Visibility, gov GovernanceOverrides) Permission {
-	var effective Permission
-	if !gov.BlockIdentityBoundPublicAccess {
-		effective |= identity.Public.ToMask()
-	}
-	if !gov.BlockResourceBoundPublicAccess {
-		effective |= resource.Public.ToMask()
-	}
-	return effective
-}
-
 // IsHardened returns true if the most restrictive security posture is applied.
 func (gov GovernanceOverrides) IsHardened() bool {
 	return gov.BlockResourceBoundPublicAccess &&
