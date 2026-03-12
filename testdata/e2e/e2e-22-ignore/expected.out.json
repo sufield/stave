@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
@@ -17,11 +17,47 @@
     "pack_hash": "d947d36c17b8076b35fa252cf155e5696670e376a7eee714dffbbb79a999ab84"
   },
   "summary": {
-    "assets_evaluated": 2,
-    "attack_surface": 1,
-    "violations": 1
+    "assets_evaluated": 3,
+    "attack_surface": 2,
+    "violations": 2
   },
   "findings": [
+    {
+      "control_id": "CTL.ID.KUBE.001",
+      "control_name": "Cluster-Admin Binding Detected",
+      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
+      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "asset_vendor": "kubernetes",
+      "source": {
+        "file": "rbac.yaml",
+        "line": 15
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "binds_to_cluster_admin",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Security control violation detected.",
+        "action": "Review the finding evidence and remediate the configuration."
+      }
+    },
     {
       "control_id": "CTL.ID.KUBE.003",
       "control_name": "Binding to system:unauthenticated",
@@ -54,16 +90,9 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Control violation detected.",
-        "action": "Review the unsafe configuration and remediate."
+        "description": "Security control violation detected.",
+        "action": "Review the finding evidence and remediate the configuration."
       }
-    }
-  ],
-  "skipped_assets": [
-    {
-      "asset_id": "k8s:ClusterRoleBinding/admin-binding",
-      "matched_pattern": "k8s:ClusterRoleBinding/admin-binding",
-      "reason": "Pre-approved cluster admin binding for break-glass access"
     }
   ],
   "extensions": {
@@ -75,7 +104,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

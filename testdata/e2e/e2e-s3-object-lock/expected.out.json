@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "ba73aa180a2d046bc6e9d3692367ae8c4af69ba9f4d51cf36ad37b124301129e",
-        "2026-01-11T000000Z.json": "d43310972a310f72bf459e40a275a6c0276b72c1266fe9add2d734062349c6c0"
+        "2026-01-01T000000Z.json": "92719942eddda618d8e66d8d1197bb235d3eba67c84cd789c96ac114eb32c1e3",
+        "2026-01-11T000000Z.json": "d82dd2fb743ea11ac1e9c9fb0b768724c543688fec56ee7115499419da42e6cf"
       },
-      "overall": "d9e0e1d37280a9ba269736d16e76d8963221a1d1672bede94a4c66474fd34de5"
+      "overall": "3c174dd2c7b10eccd39ef503e08b800927d4883d9f176e3b640e8fee50501557"
     },
     "pack_hash": "bb1a3dd9d2a4e80c9ff93dbbfa862ff5382902bc79e149dc41cf32fdb7df51e4"
   },
@@ -55,8 +55,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -98,8 +98,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -141,8 +141,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -155,7 +155,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c7d3918373d2bff62146c5780a39d1585ebabb34",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

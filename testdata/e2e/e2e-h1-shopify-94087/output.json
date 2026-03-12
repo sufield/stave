@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2015-10-23T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2015-10-15T000000Z.json": "d4e4d7dc35422e4ce9cc186a326d50e7738f9f8ba5bea67336982a63626c00ef",
-        "2015-10-23T000000Z.json": "9d7b25ed172c15d6d8eccf49a4edaeb6cfa5049e589db7b8856adb9cf7c26eec"
+        "2015-10-15T000000Z.json": "19ee962eb305cd3eb9bf950f76a5dce7be9003613189170c6367b0417562de94",
+        "2015-10-23T000000Z.json": "2baae6870054c3f8cec208b9eae47a3094df104089e1f5ce9cdf97268c6b95ea"
       },
-      "overall": "3438f132efbbc2d818ccc3051b44b598e3d59c2744196c200001954e37eacb7f"
+      "overall": "6a69cf2a84ed8c0d0dc281c1db06b70c2f91ea7263a1d1b4d742c5cc38b01c0e"
     },
     "pack_hash": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025"
   },
@@ -73,8 +73,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     }
   ],
@@ -87,7 +87,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63c486edd0fc49093a4e5cf7e1aac6de08a3359",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

@@ -21,19 +21,25 @@ func TestRemediationMapper_MapFinding(t *testing.T) {
 		{
 			name:           "public exposure control",
 			controlID:      "CTL.S3.PUBLIC.001",
-			wantAction:     "Remove public access, confirm via new snapshot.",
-			wantDescSubstr: "publicly exposed",
+			wantAction:     "Restrict access to authorized principals only.",
+			wantDescSubstr: "exposed to the public",
 		},
 		{
-			name:           "state exposure control",
+			name:           "encryption missing control",
 			controlID:      "CTL.S3.ENCRYPT.001",
-			wantAction:     "Review and correct the state configuration, verify in new snapshot.",
-			wantDescSubstr: "unsafe state",
+			wantAction:     "Enable server-side encryption using a managed key.",
+			wantDescSubstr: "not encrypted",
+		},
+		{
+			name:           "baseline violation control",
+			controlID:      "CTL.S3.LOG.001",
+			wantAction:     "Review the misconfigured properties and revert to compliant values.",
+			wantDescSubstr: "deviates from security baseline",
 		},
 		{
 			name:           "unknown control pattern",
 			controlID:      "CTL.UNKNOWN.001",
-			wantAction:     "Review the unsafe configuration and remediate.",
+			wantAction:     "Review the finding evidence and remediate the configuration.",
 			wantDescSubstr: "violation detected",
 		},
 	}
@@ -114,7 +120,7 @@ func TestRemediationMapper_FallbackWhenNoYAMLRemediation(t *testing.T) {
 
 	remediation := mapper.MapFinding(finding)
 
-	if remediation.Action != "Remove public access, confirm via new snapshot." {
+	if remediation.Action != "Restrict access to authorized principals only." {
 		t.Errorf("Action = %q, want prefix-based fallback", remediation.Action)
 	}
 }
@@ -136,12 +142,12 @@ func TestRemediationMapper_EnrichFindings(t *testing.T) {
 	}
 
 	// First finding should have public exposure remediation
-	if enriched[0].RemediationSpec.Action != "Remove public access, confirm via new snapshot." {
+	if enriched[0].RemediationSpec.Action != "Restrict access to authorized principals only." {
 		t.Errorf("first remediation action = %q", enriched[0].RemediationSpec.Action)
 	}
 
-	// Second finding should have state remediation
-	if enriched[1].RemediationSpec.Action != "Review and correct the state configuration, verify in new snapshot." {
+	// Second finding should have encryption remediation
+	if enriched[1].RemediationSpec.Action != "Enable server-side encryption using a managed key." {
 		t.Errorf("second remediation action = %q", enriched[1].RemediationSpec.Action)
 	}
 }

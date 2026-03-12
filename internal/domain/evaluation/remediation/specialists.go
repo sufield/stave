@@ -8,13 +8,13 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-type s3PublicPlanner struct{}
+type publicExposurePlanner struct{}
 
-func (p s3PublicPlanner) CanHandle(class kernel.ControlClass) bool {
-	return class == kernel.ClassS3Public
+func (p publicExposurePlanner) CanHandle(class kernel.ControlClass) bool {
+	return class == kernel.ClassPublicExposure
 }
 
-func (p s3PublicPlanner) Plan(f Finding) *evaluation.RemediationPlan {
+func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	actions := []evaluation.RemediationAction{
 		{ActionType: "set", Path: "properties.storage.controls.block_public_policy", Value: true},
 		{ActionType: "set", Path: "properties.storage.controls.restrict_public_buckets", Value: true},

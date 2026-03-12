@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "826e001f2203d230a2d31427809f25dd0a52ba860a319f874c40a572350ad0ec",
-        "2026-01-11T000000Z.json": "7a9d72da2a365175b067ac41994ff8553ea20b1af283d241a76dffc587ad4e43"
+        "2026-01-01T000000Z.json": "2a55f6d74d31e763a7bbc6d9c051eefdab36ebfc0b4e95d8063684186b23fab1",
+        "2026-01-11T000000Z.json": "c52088d8bbc11aef84095f79b8da6cec38ac8ae2381549a89dd6b655f914170e"
       },
-      "overall": "c9e87091385f0a8ffd33a2bca1df4e04a3026a23c4134fd935eebcd80d67e8f9"
+      "overall": "23efa62ae0fa7c912527e2ea6df3287499a57d84c76e21ee97b4db6a84b061c5"
     },
     "pack_hash": "e742e9c359fd8d9aa11a347372fe23bdefe8b4100696775b422e6ebfbf511265"
   },
@@ -55,8 +55,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -69,7 +69,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63c486edd0fc49093a4e5cf7e1aac6de08a3359",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }

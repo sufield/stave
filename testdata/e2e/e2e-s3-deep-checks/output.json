@@ -2,17 +2,17 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.2",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "84b280dca3adb8b43a17296354066895d624bb3f8a5f3722931fcf7b46890188",
-        "2026-01-11T000000Z.json": "6099cf2be9be9cbb794b754e009609119b2519d07caf69122cae0d81e685f049"
+        "2026-01-01T000000Z.json": "82cc2f430d880fd1b6014b7ee590c765c2bd3d2f3f4b8944519dc4b4aee325dc",
+        "2026-01-11T000000Z.json": "c4e0d2d8fa4f0b15547c214f00df2bee4bae22ff55f394c8041ddb25e9095d87"
       },
-      "overall": "b5520c19de8ceec1ae1e95a255d2e62bfcfdcf912effd31d1d5e21fd66adce04"
+      "overall": "d5871918672180c296248c39013b6d502b3d00bc7ee606741e05d6e7751e3110"
     },
     "pack_hash": "f349152f181d051f2df004a8d196370ea8ccf9d52833c1da70a43f6832bc3024"
   },
@@ -55,8 +55,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -92,8 +92,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -129,8 +129,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -166,8 +166,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource data is not encrypted at rest.",
+        "action": "Enable server-side encryption using a managed key."
       }
     },
     {
@@ -203,8 +203,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     },
     {
@@ -234,8 +234,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset is publicly exposed beyond threshold.",
-        "action": "Remove public access, confirm via new snapshot."
+        "description": "Resource is exposed to the public internet.",
+        "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
         "id": "fix-01361096bc1c13f3",
@@ -305,8 +305,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Asset has unsafe state configuration.",
-        "action": "Review and correct the state configuration, verify in new snapshot."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],
@@ -363,7 +363,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e63c486edd0fc49093a4e5cf7e1aac6de08a3359",
+      "head_commit": "c682ff267541a360a283bec1267f26dfa218b697",
       "dirty": false
     }
   }
