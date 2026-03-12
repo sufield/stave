@@ -10,8 +10,8 @@ func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOve
 		Read:     effectiveMask.Has(PermRead),
 		Write:    effectiveMask.Has(PermWrite),
 		List:     effectiveMask.Has(PermList),
-		ACLRead:  effectiveMask.Has(PermACLRead),
-		ACLWrite: effectiveMask.Has(PermACLWrite),
+		ACLRead:  effectiveMask.Has(PermMetadataRead),
+		ACLWrite: effectiveMask.Has(PermMetadataWrite),
 		Source:   "None",
 	}
 

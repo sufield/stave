@@ -15,17 +15,17 @@ var actionToPerm = map[string]exposure.Permission{
 	"s3:putobject":          exposure.PermWrite,
 	"s3:listbucket":         exposure.PermList,
 	"s3:listbucketversions": exposure.PermList,
-	"s3:getbucketacl":       exposure.PermACLRead,
-	"s3:getobjectacl":       exposure.PermACLRead,
-	"s3:putbucketacl":       exposure.PermACLWrite,
-	"s3:putobjectacl":       exposure.PermACLWrite,
+	"s3:getbucketacl":       exposure.PermMetadataRead,
+	"s3:getobjectacl":       exposure.PermMetadataRead,
+	"s3:putbucketacl":       exposure.PermMetadataWrite,
+	"s3:putobjectacl":       exposure.PermMetadataWrite,
 	"s3:deleteobject":       exposure.PermDelete,
 	"s3:deletebucket":       exposure.PermDelete,
 }
 
-// Normalize converts an S3-specific bucket input into a vendor-neutral NormalizedBucketInput.
-func Normalize(input S3BucketInput) exposure.NormalizedBucketInput {
-	result := exposure.NormalizedBucketInput{
+// Normalize converts an S3-specific bucket input into a vendor-neutral NormalizedResourceInput.
+func Normalize(input S3BucketInput) exposure.NormalizedResourceInput {
+	result := exposure.NormalizedResourceInput{
 		Name:                input.Name,
 		Exists:              input.Exists,
 		ExternalReference:   input.ExternalReference,
@@ -41,8 +41,8 @@ func Normalize(input S3BucketInput) exposure.NormalizedBucketInput {
 }
 
 // NormalizeAll converts a slice of S3 bucket inputs into normalized inputs.
-func NormalizeAll(inputs []S3BucketInput) []exposure.NormalizedBucketInput {
-	normalized := make([]exposure.NormalizedBucketInput, len(inputs))
+func NormalizeAll(inputs []S3BucketInput) []exposure.NormalizedResourceInput {
+	normalized := make([]exposure.NormalizedResourceInput, len(inputs))
 	for i, b := range inputs {
 		normalized[i] = Normalize(b)
 	}
@@ -56,7 +56,7 @@ func ClassifyS3Exposure(buckets []S3BucketInput) []exposure.ExposureClassificati
 
 // --- Policy Inspection ---
 
-func inspectPolicy(result *exposure.NormalizedBucketInput, policy PolicyConfig) {
+func inspectPolicy(result *exposure.NormalizedResourceInput, policy PolicyConfig) {
 	for i, stmt := range policy.Statements {
 		if !strings.EqualFold(stmt.Effect, "allow") {
 			continue
@@ -71,13 +71,13 @@ func inspectPolicy(result *exposure.NormalizedBucketInput, policy PolicyConfig) 
 		}
 
 		perms := analyzeActions(stmt.Actions)
-		recordPerms(result, perms, policyEvidence(i), true, exposure.EvPolicyRead, exposure.EvPolicyWrite)
+		recordPerms(result, perms, policyEvidence(i), true, exposure.EvIdentityRead, exposure.EvIdentityWrite)
 	}
 }
 
 // --- ACL Inspection ---
 
-func inspectACL(result *exposure.NormalizedBucketInput, acl ACLConfig) {
+func inspectACL(result *exposure.NormalizedResourceInput, acl ACLConfig) {
 	for i, grant := range acl.Grants {
 		if !grantIsPublic(grant) {
 			continue
@@ -85,14 +85,14 @@ func inspectACL(result *exposure.NormalizedBucketInput, acl ACLConfig) {
 		if grantIsAllUsers(grant) {
 			result.IsAuthenticatedOnly = false
 		}
-		recordPerms(result, grantPermissions(grant), aclEvidence(i), false, exposure.EvACLRead, exposure.EvACLWrite)
+		recordPerms(result, grantPermissions(grant), aclEvidence(i), false, exposure.EvResourceRead, exposure.EvResourceWrite)
 	}
 }
 
 // --- Permission Recording ---
 
 func recordPerms(
-	result *exposure.NormalizedBucketInput,
+	result *exposure.NormalizedResourceInput,
 	perms exposure.Permission,
 	path []string,
 	isPolicy bool,
@@ -100,7 +100,7 @@ func recordPerms(
 ) {
 	// Handle write source tracking (first write source wins).
 	if perms.Has(exposure.PermWrite) {
-		if !result.PolicyPerms.Has(exposure.PermWrite) && !result.ACLPerms.Has(exposure.PermWrite) {
+		if !result.IdentityPerms.Has(exposure.PermWrite) && !result.ResourcePerms.Has(exposure.PermWrite) {
 			result.WriteSourceHasGet = perms.Has(exposure.PermRead)
 			result.WriteSourceHasList = perms.Has(exposure.PermList)
 		}
@@ -108,9 +108,9 @@ func recordPerms(
 	}
 
 	// Select target permission set.
-	target := &result.ACLPerms
+	target := &result.ResourcePerms
 	if isPolicy {
-		target = &result.PolicyPerms
+		target = &result.IdentityPerms
 	}
 
 	// Table-driven bit dispatch.
@@ -121,9 +121,9 @@ func recordPerms(
 	for _, m := range []mapping{
 		{exposure.PermRead, readCat},
 		{exposure.PermWrite, writeCat},
-		{exposure.PermList, exposure.EvList},
-		{exposure.PermACLRead, exposure.EvACLReadPolicy},
-		{exposure.PermACLWrite, exposure.EvACLWritePolicy},
+		{exposure.PermList, exposure.EvDiscovery},
+		{exposure.PermMetadataRead, exposure.EvMetadataRead},
+		{exposure.PermMetadataWrite, exposure.EvMetadataWrite},
 		{exposure.PermDelete, exposure.EvDelete},
 	} {
 		if perms.Has(m.bit) {
@@ -196,9 +196,9 @@ func grantPermissions(g ACLGrant) exposure.Permission {
 	case "WRITE":
 		return exposure.PermWrite
 	case "READ_ACP":
-		return exposure.PermACLRead
+		return exposure.PermMetadataRead
 	case "WRITE_ACP":
-		return exposure.PermACLWrite
+		return exposure.PermMetadataWrite
 	default:
 		return 0
 	}
