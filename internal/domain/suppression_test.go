@@ -149,11 +149,18 @@ func TestSuppressionConfig_ExpiryOnExactDate(t *testing.T) {
 		},
 	})
 
-	// On the expiry date itself, the rule should be expired
-	onExpiry := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), onExpiry)
+	// During the expiry date, the rule should still be active (end-of-day inclusive).
+	duringExpiry := time.Date(2026, 6, 1, 12, 0, 0, 0, time.UTC)
+	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), duringExpiry)
+	if rule == nil {
+		t.Error("rule should still suppress during the expiry date")
+	}
+
+	// At the start of the next day, the rule should be expired.
+	nextDay := time.Date(2026, 6, 2, 0, 0, 0, 0, time.UTC)
+	rule = cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), nextDay)
 	if rule != nil {
-		t.Error("rule should be expired on expiry date")
+		t.Error("rule should be expired at the start of the next day")
 	}
 }
 
