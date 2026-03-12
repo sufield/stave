@@ -11,16 +11,16 @@ func BuildModel(in BuildModelInput) S3StorageModel {
 		Name:       bucket.Name,
 		Visibility: in.Visibility,
 		ACL: ACLSummary{
-			FullControlPublic:        in.Visibility.HasFullControlPublic,
-			FullControlAuthenticated: in.Visibility.HasFullControlAuthenticatedOnly,
+			FullControlPublic:        in.Analysis.ACL.HasFullControlPublic,
+			FullControlAuthenticated: in.Analysis.ACL.HasFullControlAuthenticated,
 		},
 		Controls: buildS3Controls(in),
 		PrefixExposure: buildPrefixExposureModel(prefixExposureModelInput{
 			PolicyJSON:     bucket.PolicyJSON,
 			ACLAnalysis:    in.Analysis.ACL,
 			HasACLAnalysis: in.Analysis.HasACL,
-			PolicyBlocked:  in.Visibility.PolicyExposureBlocked,
-			ACLBlocked:     in.Visibility.ACLExposureBlocked,
+			PolicyBlocked:  in.Visibility.IdentityExposureBlocked,
+			ACLBlocked:     in.Visibility.ResourceExposureBlocked,
 		}),
 		Encryption: S3Encryption{
 			AtRestEnabled:     bucket.Encryption != nil,

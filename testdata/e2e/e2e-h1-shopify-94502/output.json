@@ -590,7 +590,7 @@
         "threshold_hours": 0,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_read_via_acl",
+            "property": "storage.visibility.read_via_resource",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -658,7 +658,7 @@
         "threshold_hours": 0,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_read_via_acl",
+            "property": "storage.visibility.read_via_resource",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -726,7 +726,7 @@
         "threshold_hours": 0,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_read_via_acl",
+            "property": "storage.visibility.read_via_resource",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true

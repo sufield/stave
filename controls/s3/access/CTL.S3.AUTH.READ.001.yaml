@@ -28,7 +28,7 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "authenticated_users_read": false
+          "authenticated_read": false
         }
       }
     }

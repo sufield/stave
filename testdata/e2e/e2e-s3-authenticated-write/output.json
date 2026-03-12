@@ -36,7 +36,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_users_write",
+            "property": "storage.visibility.authenticated_write",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -51,7 +51,7 @@
       "remediation": {
         "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.\n",
         "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"authenticated_users_write\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"authenticated_write\": false\n    }\n  }\n}\n"
       }
     }
   ],

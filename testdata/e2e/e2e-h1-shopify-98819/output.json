@@ -36,7 +36,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_write_via_acl",
+            "property": "storage.visibility.write_via_resource",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -104,7 +104,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_users_read",
+            "property": "storage.visibility.authenticated_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true

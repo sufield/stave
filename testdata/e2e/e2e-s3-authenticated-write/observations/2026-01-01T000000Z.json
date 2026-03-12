@@ -18,7 +18,7 @@
           "visibility": {
             "public_read": false,
             "public_write": false,
-            "authenticated_users_write": true
+            "authenticated_write": true
           },
           "controls": {
             "public_access_fully_blocked": false
@@ -37,7 +37,7 @@
           "visibility": {
             "public_read": false,
             "public_write": false,
-            "authenticated_users_write": false
+            "authenticated_write": false
           },
           "controls": {
             "public_access_fully_blocked": true

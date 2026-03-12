@@ -5,7 +5,7 @@ description: >
   S3 bucket policies must not grant public read access.
 domain: exposure
 exposure:
-  type: public_read_via_policy
+  type: read_via_identity
   principal_scope: public
 severity: critical
 scope_tags:
@@ -23,12 +23,12 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "public_read_via_policy": false
+          "read_via_identity": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read_via_policy
+    - field: properties.storage.visibility.read_via_identity
       op: eq
       value: true

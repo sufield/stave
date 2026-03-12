@@ -36,7 +36,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_acl_readable",
+            "property": "storage.visibility.public_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -51,7 +51,7 @@
       "remediation": {
         "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.\n",
         "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_acl_readable\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
       }
     }
   ],
