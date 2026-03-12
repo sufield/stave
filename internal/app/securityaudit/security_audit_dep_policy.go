@@ -48,7 +48,7 @@ func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequ
 		"runtime_network_none": len(runtimeViolations) == 0,
 		"violations":           runtimeViolations,
 		"proxy_env_vars_set":   proxyVars,
-		"banned_imports":       kernel.DefaultPolicy().BannedRuntimeImports,
+		"banned_imports":       kernel.DefaultPolicy().BannedImports(),
 		"generated_at":         req.Now.UTC().Format(time.RFC3339),
 	}
 	filesystemDecl := map[string]any{
@@ -69,7 +69,7 @@ func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequ
 		runningPrivileged = os.Geteuid() == 0
 	}
 
-	iamActions := slices.Clone(kernel.DefaultPolicy().RequiredS3IAMActions)
+	iamActions := kernel.DefaultPolicy().ProviderPermissions("aws")
 
 	return policyInspectionSnapshot{
 		Network: networkInspection{
@@ -98,8 +98,9 @@ func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequ
 }
 
 func setProxyVars() []string {
-	out := make([]string, 0, len(kernel.DefaultPolicy().ProxyEnvVars))
-	for _, key := range kernel.DefaultPolicy().ProxyEnvVars {
+	proxyVarNames := kernel.DefaultPolicy().ProxyEnvVars()
+	out := make([]string, 0, len(proxyVarNames))
+	for _, key := range proxyVarNames {
 		if strings.TrimSpace(os.Getenv(key)) == "" {
 			continue
 		}
@@ -149,7 +150,7 @@ func inspectSourceFiles(root string, matchFn sourceMatch, readFile func(string) 
 // shouldInspectPath returns true if the relative path should be inspected,
 // filtering out policy paths and excluded directories.
 func shouldInspectPath(relPath string, excludedDirs map[string]bool) bool {
-	if slices.Contains(kernel.DefaultPolicy().PolicyPaths, relPath) {
+	if slices.Contains(kernel.DefaultPolicy().ProtectedPaths(), relPath) {
 		return false
 	}
 	for dir := range excludedDirs {
@@ -163,7 +164,7 @@ func shouldInspectPath(relPath string, excludedDirs map[string]bool) bool {
 func inspectForBannedRuntimeImports(root string, readFile func(string) ([]byte, error)) ([]string, error) {
 	return inspectSourceFiles(root, func(relPath, content string) []string {
 		var hits []string
-		for _, banned := range kernel.DefaultPolicy().BannedRuntimeImports {
+		for _, banned := range kernel.DefaultPolicy().BannedImports() {
 			if strings.Contains(content, banned) && !kernel.DefaultPolicy().IsImportAllowed(relPath, banned) {
 				hits = append(hits, relPath+": imports "+banned)
 			}
@@ -175,7 +176,7 @@ func inspectForBannedRuntimeImports(root string, readFile func(string) ([]byte, 
 func inspectForCredentialEnvRefs(root string, readFile func(string) ([]byte, error)) ([]string, error) {
 	return inspectSourceFiles(root, func(relPath, content string) []string {
 		var hits []string
-		for _, envVar := range kernel.DefaultPolicy().BannedCredentialEnvVars {
+		for _, envVar := range kernel.DefaultPolicy().BannedCredentialKeys() {
 			if strings.Contains(content, envVar) {
 				hits = append(hits, relPath+": references "+envVar)
 			}

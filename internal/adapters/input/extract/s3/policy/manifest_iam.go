@@ -1,10 +1,6 @@
 package policy
 
-import (
-	"slices"
-
-	"github.com/sufield/stave/internal/domain/kernel"
-)
+import "github.com/sufield/stave/internal/domain/kernel"
 
 // IAMManifestEntry is one extractor operation to IAM action mapping.
 type IAMManifestEntry struct {
@@ -24,5 +20,5 @@ var S3IngestIAMManifest = []IAMManifestEntry{
 // MinimumS3IngestIAMActions returns the normalized action allow-list.
 // The canonical source of truth is kernel.DefaultPolicy().RequiredS3IAMActions.
 func MinimumS3IngestIAMActions() []string {
-	return slices.Clone(kernel.DefaultPolicy().RequiredS3IAMActions)
+	return kernel.DefaultPolicy().ProviderPermissions("aws")
 }

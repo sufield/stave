@@ -133,7 +133,7 @@ func checkClipboard(ctx Context) Check {
 
 func checkOfflineProxyEnv(ctx Context) Check {
 	var proxySet []string
-	for _, k := range kernel.DefaultPolicy().ProxyEnvVars {
+	for _, k := range kernel.DefaultPolicy().ProxyEnvVars() {
 		if strings.TrimSpace(ctx.GetenvFn(k)) != "" {
 			proxySet = append(proxySet, k)
 		}

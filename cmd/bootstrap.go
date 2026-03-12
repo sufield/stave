@@ -104,7 +104,7 @@ func (a *App) checkRequireOffline() error {
 	if !a.Flags.RequireOffline {
 		return nil
 	}
-	for _, env := range kernel.DefaultPolicy().ProxyEnvVars {
+	for _, env := range kernel.DefaultPolicy().ProxyEnvVars() {
 		if val := os.Getenv(env); val != "" {
 			return fmt.Errorf("--require-offline: environment variable %s is set (%q); Stave makes zero network connections and proxy settings are unnecessary - unset it or remove --require-offline", env, val)
 		}
