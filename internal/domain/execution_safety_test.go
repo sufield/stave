@@ -68,7 +68,7 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 		}
 		content := string(data)
 
-		for _, banned := range kernel.DefaultPolicy().BannedRuntimeImports {
+		for _, banned := range kernel.DefaultPolicy().BannedImports() {
 			if strings.Contains(content, banned) {
 				if kernel.DefaultPolicy().IsImportAllowed(rel, banned) {
 					continue
@@ -219,7 +219,7 @@ func TestNoCredentialEnvReads(t *testing.T) {
 		}
 		content := string(data)
 
-		for _, envVar := range kernel.DefaultPolicy().BannedCredentialEnvVars {
+		for _, envVar := range kernel.DefaultPolicy().BannedCredentialKeys() {
 			if strings.Contains(content, envVar) {
 				violations = append(violations, rel+": references "+envVar)
 			}
@@ -238,7 +238,7 @@ func TestNoCredentialEnvReads(t *testing.T) {
 // isAirgapPolicyFile reports whether a relative path is one of the known
 // air-gap policy data files that should be excluded from safety inspections.
 func isAirgapPolicyFile(rel string) bool {
-	return slices.Contains(kernel.DefaultPolicy().PolicyPaths, rel)
+	return slices.Contains(kernel.DefaultPolicy().ProtectedPaths(), rel)
 }
 
 // findRepoRoot delegates to testutil.RepoRoot.

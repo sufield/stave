@@ -60,7 +60,7 @@ func TestRequireOffline_PassesCleanEnv(t *testing.T) {
 	app.Flags.RequireOffline = true
 
 	// Ensure no proxy vars are set in this test process
-	for _, env := range kernel.DefaultPolicy().ProxyEnvVars {
+	for _, env := range kernel.DefaultPolicy().ProxyEnvVars() {
 		t.Setenv(env, "")
 	}
 
