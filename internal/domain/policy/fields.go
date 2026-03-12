@@ -6,142 +6,83 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
-// Field namespaces and identity subfields used by predicate resolution.
+// Field namespaces used during predicate resolution.
 const (
-	fieldNamespaceIdentities = "identities"
-	fieldNamespaceIdentity   = "identity"
-	fieldNamespaceParams     = "params"
-	fieldNamespaceProperties = "properties"
-
-	identityFieldOwner                  = "owner"
-	identityFieldPurpose                = "purpose"
-	identityFieldGrants                 = "grants"
-	identityFieldScope                  = "scope"
-	identityGrantHasWildcard            = "has_wildcard"
-	identityScopeDistinctSystems        = "distinct_systems"
-	identityScopeDistinctResourceGroups = "distinct_resource_groups"
+	nsIdentities = "identities"
+	nsIdentity   = "identity"
+	nsParams     = "params"
+	nsProperties = "properties"
 )
 
-type identityExtractor func(*asset.CloudIdentity) (any, bool)
-
-var identityRootExtractors = map[string]identityExtractor{
-	identityFieldOwner:   identityOwnerValue,
-	identityFieldPurpose: identityPurposeValue,
-}
-
-var identityGrantExtractors = map[string]identityExtractor{
-	identityGrantHasWildcard: identityGrantHasWildcardValue,
-}
-
-var identityScopeExtractors = map[string]identityExtractor{
-	identityScopeDistinctSystems:        identityScopeDistinctSystemsValue,
-	identityScopeDistinctResourceGroups: identityScopeDistinctResourceGroupsValue,
-}
-
-// GetFieldValueWithContext is the exported form for use by the trace package.
+// GetFieldValueWithContext retrieves a value from the evaluation context using a dot-path.
+// Example paths: "identity.owner", "params.threshold", "properties.tags.env".
 func GetFieldValueWithContext(ctx EvalContext, field string) (any, bool) {
-	return getFieldValueWithContext(ctx, field)
-}
-
-func getFieldValueWithContext(ctx EvalContext, field string) (any, bool) {
-	return getFieldValueWithParts(ctx, strings.Split(field, "."))
-}
-
-// getFieldValueWithParts retrieves a field value from the evaluation context.
-// Returns (value, exists).
-func getFieldValueWithParts(ctx EvalContext, parts []string) (any, bool) {
-	// Handle "identities" field (returns slice for any_match)
-	if len(parts) == 1 && parts[0] == fieldNamespaceIdentities {
-		return ctx.Identities, ctx.Identities != nil
+	if field == "" {
+		return nil, false
 	}
+	return getFieldValueByParts(ctx, strings.Split(field, "."))
+}
 
+func getFieldValueByParts(ctx EvalContext, parts []string) (any, bool) {
 	if len(parts) == 0 {
 		return nil, false
 	}
 
-	// Handle identity.* fields
-	if parts[0] == fieldNamespaceIdentity && ctx.CloudIdentity != nil {
-		return getIdentityFieldValue(ctx.CloudIdentity, parts[1:])
-	}
+	head := parts[0]
+	tail := parts[1:]
 
-	// Handle params.* fields
-	if parts[0] == fieldNamespaceParams {
-		if len(parts) < 2 {
+	switch head {
+	case nsIdentities:
+		// Returns the full slice for "any_match" / "all_match" operations.
+		return ctx.Identities, ctx.Identities != nil
+
+	case nsIdentity:
+		if ctx.CloudIdentity == nil {
 			return nil, false
 		}
-		return ctx.Param(parts[1])
-	}
+		return getIdentityField(ctx.CloudIdentity, tail)
 
-	// Handle properties.* fields (for assets)
-	if parts[0] == fieldNamespaceProperties {
-		parts = parts[1:]
-	}
+	case nsParams:
+		if len(tail) == 0 {
+			return nil, false
+		}
+		// Params are assumed to be a flat map.
+		return ctx.Param(tail[0])
 
-	return getNestedValue(ctx.Properties, parts)
+	case nsProperties:
+		// "properties" is the default namespace; we strip the prefix if present.
+		return getNestedValue(ctx.Properties, tail)
+
+	default:
+		// If no namespace is matched, treat the whole path as a property lookup.
+		return getNestedValue(ctx.Properties, parts)
+	}
 }
 
-// getIdentityFieldValue extracts a value from an CloudIdentity struct.
-func getIdentityFieldValue(id *asset.CloudIdentity, parts []string) (any, bool) {
-	if len(parts) == 0 || id == nil {
+// getIdentityField maps string paths to asset.CloudIdentity methods.
+func getIdentityField(id *asset.CloudIdentity, parts []string) (any, bool) {
+	if len(parts) == 0 {
 		return nil, false
 	}
 
-	if extractor, ok := identityRootExtractors[parts[0]]; ok {
-		return extractor(id)
-	}
-
-	if len(parts) < 2 {
+	path := strings.Join(parts, ".")
+	switch path {
+	case "owner":
+		return id.Owner()
+	case "purpose":
+		return id.Purpose()
+	case "grants.has_wildcard":
+		return id.HasWildcard()
+	case "scope.distinct_systems":
+		return id.DistinctSystems()
+	case "scope.distinct_resource_groups":
+		return id.DistinctResourceGroups()
+	default:
 		return nil, false
 	}
-
-	switch parts[0] {
-	case identityFieldGrants:
-		_, exists := id.HasWildcard()
-		return extractIdentityNestedField(id, exists, parts[1], identityGrantExtractors)
-	case identityFieldScope:
-		_, exists := id.DistinctSystems()
-		return extractIdentityNestedField(id, exists, parts[1], identityScopeExtractors)
-	}
-	return nil, false
 }
 
-func identityOwnerValue(id *asset.CloudIdentity) (any, bool) {
-	return id.Owner()
-}
-
-func identityPurposeValue(id *asset.CloudIdentity) (any, bool) {
-	return id.Purpose()
-}
-
-func identityGrantHasWildcardValue(id *asset.CloudIdentity) (any, bool) {
-	return id.HasWildcard()
-}
-
-func identityScopeDistinctSystemsValue(id *asset.CloudIdentity) (any, bool) {
-	return id.DistinctSystems()
-}
-
-func identityScopeDistinctResourceGroupsValue(id *asset.CloudIdentity) (any, bool) {
-	return id.DistinctResourceGroups()
-}
-
-func extractIdentityNestedField(
-	id *asset.CloudIdentity,
-	parentExists bool,
-	field string,
-	extractors map[string]identityExtractor,
-) (any, bool) {
-	if !parentExists {
-		return nil, false
-	}
-	extractor, ok := extractors[field]
-	if !ok {
-		return nil, false
-	}
-	return extractor(id)
-}
-
-// getNestedValue retrieves a nested value from a map using path parts.
+// getNestedValue performs a recursive lookup in nested maps.
 func getNestedValue(props map[string]any, parts []string) (any, bool) {
 	if props == nil || len(parts) == 0 {
 		return nil, false
@@ -151,18 +92,19 @@ func getNestedValue(props map[string]any, parts []string) (any, bool) {
 	for _, part := range parts {
 		switch m := current.(type) {
 		case map[string]any:
-			v, exists := m[part]
-			if !exists {
+			val, ok := m[part]
+			if !ok {
 				return nil, false
 			}
-			current = v
+			current = val
 		case map[string]string:
-			v, exists := m[part]
-			if !exists {
+			val, ok := m[part]
+			if !ok {
 				return nil, false
 			}
-			current = v
+			current = val
 		default:
+			// Reached a leaf node before consuming all parts of the path.
 			return nil, false
 		}
 	}

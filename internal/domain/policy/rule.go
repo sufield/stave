@@ -51,7 +51,7 @@ func (pr *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
 	}
 
 	// Simple field comparison
-	fieldValue, fieldExists := getFieldValueWithParts(ctx, pr.parsedFieldParts())
+	fieldValue, fieldExists := getFieldValueByParts(ctx, pr.parsedFieldParts())
 
 	// Resolve comparison value (from value or value_from_param)
 	compareValue := pr.Value
@@ -159,7 +159,7 @@ func resolveComparedField(ctx EvalContext, compareValue any) (any, bool, bool) {
 	if !ok {
 		return nil, false, false
 	}
-	otherValue, otherExists := getFieldValueWithContext(ctx, otherFieldPath)
+	otherValue, otherExists := GetFieldValueWithContext(ctx, otherFieldPath)
 	return otherValue, otherExists, true
 }
 
@@ -230,7 +230,7 @@ func (r *PredicateRule) extractMisconfigurationFields(props map[string]any, resu
 	if r.Field == "" {
 		return
 	}
-	fieldPath := strings.TrimPrefix(r.Field, fieldNamespaceProperties+".")
+	fieldPath := strings.TrimPrefix(r.Field, nsProperties+".")
 	val, _ := nestedPropertyValue(props, fieldPath)
 	*result = append(*result, Misconfiguration{
 		Property:    fieldPath,
