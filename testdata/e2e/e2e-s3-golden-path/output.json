@@ -255,32 +255,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -350,32 +350,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -424,32 +424,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -498,32 +498,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -569,32 +569,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -658,32 +658,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -733,32 +733,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -808,32 +808,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -883,32 +883,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -958,32 +958,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -1033,32 +1033,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -1108,32 +1108,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -1183,32 +1183,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     },
     {
@@ -1258,32 +1258,32 @@
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       }
     }
   ],
@@ -1292,38 +1292,38 @@
       "asset_id": "private-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-569d532697e581e6",
+        "id": "fix-1c2153eebb183d02",
         "target": {
           "asset_id": "private-bucket",
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.PREFIX.001"
@@ -1334,38 +1334,38 @@
       "asset_id": "public-phi-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-788fb07096311631",
+        "id": "fix-f531715b8575c700",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
-          "Confirm bucket ownership and change window approval.",
-          "Ensure public access is not intentionally required for this asset."
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
         ],
         "actions": [
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_acls",
+            "path": "security_posture.block_identity_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.block_public_policy",
+            "path": "security_posture.block_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.ignore_public_acls",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "properties.storage.controls.restrict_public_buckets",
+            "path": "security_posture.restrict_resource_public_access",
             "value": true
           }
         ],
-        "expected_effect": "Prevents public access by blocking policy and ACL based exposure paths."
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
       },
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
@@ -1388,7 +1388,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7130245c05779c209c05c7b740ed5aa98be719d9",
+      "head_commit": "4955da16ae6fdc53817d32ccb2f91e5a157cbbda",
       "dirty": false
     }
   }

@@ -1,71 +1,72 @@
 package risk
 
-// SecurityScore quantifies policy risk from 0-100.
-type SecurityScore int
-
-const (
-	ScoreSafe         SecurityScore = 0
-	ScoreInfo         SecurityScore = 10
-	ScoreWarning      SecurityScore = 40
-	ScoreCritical     SecurityScore = 90
-	ScoreCatastrophic SecurityScore = 100
+import (
+	"strings"
 )
 
-// MaxScore returns the higher of two scores.
-func MaxScore(a, b SecurityScore) SecurityScore {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-// StmtPerm is a statement-level permission bitmask.
-type StmtPerm uint32
+// Score quantifies policy risk from 0 (Safe) to 100 (Catastrophic).
+type Score int
 
 const (
-	PermRead StmtPerm = 1 << iota
+	ScoreSafe         Score = 0
+	ScoreInfo         Score = 10
+	ScoreWarning      Score = 40
+	ScoreCritical     Score = 90
+	ScoreCatastrophic Score = 100
+)
+
+// Permission is a bitmask representing generic resource capabilities.
+type Permission uint32
+
+const (
+	PermRead Permission = 1 << iota
 	PermWrite
 	PermList
-	PermACLRead
-	PermACLWrite
+	PermAdminRead
+	PermAdminWrite
 	PermDelete
 
-	PermFullControl = PermRead | PermWrite | PermList | PermACLRead | PermACLWrite | PermDelete
+	PermFullControl = PermRead | PermWrite | PermList | PermAdminRead | PermAdminWrite | PermDelete
 )
 
-// Has returns true when all bits in target are present.
-func (p StmtPerm) Has(target StmtPerm) bool {
+// Has returns true only if ALL bits in the target are present in p.
+func (p Permission) Has(target Permission) bool {
 	return p&target == target
 }
 
-// Report is the aggregated result of policy risk evaluation.
-type Report struct {
-	Score       SecurityScore `json:"score"`
-	Findings    []string      `json:"findings"`
-	IsPublic    bool          `json:"is_public"`
-	Permissions StmtPerm      `json:"permissions"`
+// Overlap returns true if ANY bits in the target are present in p.
+func (p Permission) Overlap(target Permission) bool {
+	return p&target != 0
 }
 
-// StatementContext bundles all inputs needed to evaluate a single
-// policy statement's contribution to report risk.
+// Report represents the aggregated security posture of a policy.
+type Report struct {
+	Score       Score      `json:"score"`
+	Findings    []string   `json:"findings"`
+	IsPublic    bool       `json:"is_public"`
+	Permissions Permission `json:"permissions"`
+}
+
+// StatementContext contains the attributes of a single policy statement.
 type StatementContext struct {
-	Permissions     StmtPerm
+	Permissions     Permission
 	IsPublic        bool
 	IsAuthenticated bool
 	IsNetworkScoped bool
 	IsAllow         bool
-	Report          *Report
 }
 
-// AnalyzeActions maps action strings to aggregate permission bits using the provided action map.
-func AnalyzeActions(actions []string, actionMap map[string]StmtPerm, prefixRules []PrefixRule) StmtPerm {
-	var total StmtPerm
+// AnalyzeActions maps raw action strings to aggregate Permission bits.
+func AnalyzeActions(actions []string, actionMap map[string]Permission, prefixRules []PrefixRule) Permission {
+	var total Permission
 	for _, action := range actions {
+		// Exact match
 		if p, ok := actionMap[action]; ok {
 			total |= p
 		}
+		// Prefix match
 		for _, rule := range prefixRules {
-			if len(action) >= len(rule.Prefix) && action[:len(rule.Prefix)] == rule.Prefix {
+			if strings.HasPrefix(action, rule.Prefix) {
 				total |= rule.Perm
 			}
 		}
@@ -76,51 +77,60 @@ func AnalyzeActions(actions []string, actionMap map[string]StmtPerm, prefixRules
 	return total
 }
 
-// PrefixRule maps an action prefix to a permission.
+// PrefixRule maps a string prefix (e.g. "s3:Get") to a domain permission.
 type PrefixRule struct {
 	Prefix string
-	Perm   StmtPerm
+	Perm   Permission
 }
 
-// StatementRiskEligible returns true when the statement should be scored.
-func StatementRiskEligible(ctx StatementContext) bool {
-	if ctx.Report == nil {
-		return false
-	}
-	return ctx.IsAllow
+// Result represents the risk contribution of a single statement.
+type Result struct {
+	Score    Score
+	Findings []string
+	IsPublic bool
 }
 
-// ApplyStatementRisk applies both public and authenticated risk scoring.
-func ApplyStatementRisk(ctx StatementContext) {
-	if !StatementRiskEligible(ctx) {
-		return
+// Evaluate analyzes the context to determine the risk level.
+func (ctx StatementContext) Evaluate() Result {
+	if !ctx.IsAllow {
+		return Result{}
 	}
-	ApplyPublicStatementRisk(ctx)
-	ApplyAuthenticatedStatementRisk(ctx)
+
+	res := Result{}
+
+	// 1. Evaluate Public Risk
+	if ctx.IsPublic && !ctx.IsNetworkScoped {
+		res.IsPublic = true
+		// Critical: Any form of public modification
+		if ctx.Permissions.Overlap(PermWrite | PermAdminWrite | PermDelete) {
+			res.Score = ScoreCritical
+			res.Findings = append(res.Findings, "Unrestricted Public Write/Admin Access")
+		} else if ctx.Permissions.Has(PermRead) {
+			// Warning: Public Read
+			res.Score = ScoreWarning
+			res.Findings = append(res.Findings, "Unrestricted Public Read Access")
+		}
+	}
+
+	// 2. Evaluate Authenticated Risk
+	// High risk if any authenticated user in the cloud provider has full control
+	if ctx.IsAuthenticated && !ctx.IsPublic && ctx.Permissions == PermFullControl {
+		if ScoreWarning > res.Score {
+			res.Score = ScoreWarning
+		}
+		res.Findings = append(res.Findings, "Full Admin access granted to all Authenticated Users")
+	}
+
+	return res
 }
 
-// ApplyPublicStatementRisk scores public access risk.
-func ApplyPublicStatementRisk(ctx StatementContext) {
-	if !ctx.IsPublic || ctx.IsNetworkScoped {
-		return
+// UpdateReport merges a statement result into the main report.
+func (r *Report) UpdateReport(res Result) {
+	if res.Score > r.Score {
+		r.Score = res.Score
 	}
-	ctx.Report.IsPublic = true
-	if ctx.Permissions.Has(PermWrite | PermACLWrite) {
-		ctx.Report.Score = MaxScore(ctx.Report.Score, ScoreCritical)
-		ctx.Report.Findings = append(ctx.Report.Findings, "Unrestricted Public Write/ACL Access")
-		return
+	if res.IsPublic {
+		r.IsPublic = true
 	}
-	if ctx.Permissions.Has(PermRead) {
-		ctx.Report.Score = MaxScore(ctx.Report.Score, ScoreWarning)
-		ctx.Report.Findings = append(ctx.Report.Findings, "Unrestricted Public Read Access")
-	}
-}
-
-// ApplyAuthenticatedStatementRisk scores authenticated full-control risk.
-func ApplyAuthenticatedStatementRisk(ctx StatementContext) {
-	if !ctx.IsAuthenticated || ctx.IsPublic || ctx.Permissions != PermFullControl {
-		return
-	}
-	ctx.Report.Score = MaxScore(ctx.Report.Score, ScoreWarning)
-	ctx.Report.Findings = append(ctx.Report.Findings, "Full Admin access granted to Authenticated Users")
+	r.Findings = append(r.Findings, res.Findings...)
 }
