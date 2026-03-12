@@ -74,7 +74,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 		GovulncheckRunner: govulncheck.Run,
 		SignatureVerifier: nil,
 		RunDiagnostics: func(cwd, binaryPath, staveVersion string) {
-			_, _ = doctor.Run(doctor.Context{
+			_, _ = doctor.Run(&doctor.Context{
 				Cwd:          cwd,
 				BinaryPath:   binaryPath,
 				StaveVersion: staveVersion,

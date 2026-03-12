@@ -1,10 +1,21 @@
 package doctor
 
-func Run(ctx Context) ([]Check, bool) {
-	return RunWithRegistry(ctx, NewRegistry(defaultChecks()...))
+// Run executes the standard suite of diagnostic checks.
+// It returns a slice of Check results and a boolean that is true if any
+// check has FAIL status.
+func Run(ctx *Context) ([]Check, bool) {
+	if ctx == nil {
+		ctx = NewContext()
+	} else {
+		ctx.FillDefaults()
+	}
+
+	registry := NewRegistry(StandardChecks()...)
+	return RunWithRegistry(*ctx, registry)
 }
 
-func defaultChecks() []CheckFunc {
+// StandardChecks returns the default list of diagnostic functions.
+func StandardChecks() []CheckFunc {
 	return []CheckFunc{
 		checkVersionInfo,
 		checkOSVersion,
