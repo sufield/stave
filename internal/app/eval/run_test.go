@@ -26,25 +26,25 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			name:   "clean run",
-			status: evaluation.SafetyStatusSafe,
+			status: evaluation.StatusSafe,
 			config: EvaluateConfig{
 				LoadConfig: LoadConfig{
 					ControlsDir:     "/tmp/ctl",
 					ObservationsDir: "/tmp/obs",
 				},
 			},
-			wantStatus: evaluation.SafetyStatusSafe,
+			wantStatus: evaluation.StatusSafe,
 		},
 		{
 			name:   "violations found",
-			status: evaluation.SafetyStatusUnsafe,
+			status: evaluation.StatusUnsafe,
 			config: EvaluateConfig{
 				LoadConfig: LoadConfig{
 					ControlsDir:     "./s3-controls",
 					ObservationsDir: "./aws-snapshots",
 				},
 			},
-			wantStatus: evaluation.SafetyStatusUnsafe,
+			wantStatus: evaluation.StatusUnsafe,
 		},
 	}
 
@@ -69,7 +69,7 @@ func TestRun(t *testing.T) {
 
 func TestRun_PropagatesRunnerError(t *testing.T) {
 	wantErr := errors.New("boom")
-	runner := &runMockRunner{returnStatus: evaluation.SafetyStatusSafe, returnErr: wantErr}
+	runner := &runMockRunner{returnStatus: evaluation.StatusSafe, returnErr: wantErr}
 
 	_, err := Run(context.Background(), RunInput{
 		Runner: runner,
