@@ -154,7 +154,7 @@ func findTraceAsset(snapshot *asset.Snapshot, assetID, observationPath string) (
 }
 
 func buildTraceResult(ctl *policy.ControlDefinition, a *asset.Asset, snapshot *asset.Snapshot) *trace.TraceResult {
-	ctx := policy.NewAssetEvalContextWithIdentities(*a, policy.ControlParams(ctl.Params), snapshot.Identities)
+	ctx := policy.NewAssetEvalContext(*a, policy.ControlParams(ctl.Params), snapshot.Identities...)
 	ctx.PredicateParser = ctlyaml.YAMLPredicateParser
 	root := trace.TracePredicate(ctl.UnsafePredicate, ctx)
 	return &trace.TraceResult{

@@ -61,7 +61,7 @@ func checkUnsafe(
 	snap asset.Snapshot,
 	parser func(any) (*policy.UnsafePredicate, error),
 ) bool {
-	ctx := policy.NewAssetEvalContextWithIdentities(a, ctl.Params, snap.Identities)
+	ctx := policy.NewAssetEvalContext(a, ctl.Params, snap.Identities...)
 	ctx.PredicateParser = parser
 	return ctl.UnsafePredicate.EvaluateWithContext(ctx)
 }
