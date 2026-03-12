@@ -276,7 +276,7 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 }
 
 func TestCheckBinary_EmptyBinaryName(t *testing.T) {
-	c := checkBinary(Context{}, BinaryCheckRequest{CheckName: "empty-bin"})
+	c := checkBinary(Context{}, BinaryRequest{Name: "empty-bin"})
 	if c.Status != StatusFail {
 		t.Fatalf("expected FAIL for empty binary name, got %+v", c)
 	}

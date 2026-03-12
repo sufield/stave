@@ -1,32 +1,44 @@
 package doctor
 
-// BinaryCheckRequest defines parameters for dependency binary checks.
-type BinaryCheckRequest struct {
-	BinaryName  string
-	CheckName   string
+import "fmt"
+
+// BinaryRequest defines the parameters for validating a system dependency.
+type BinaryRequest struct {
+	Binary      string
+	Name        string
 	WarnMessage string
 	PassMessage string
 	Fix         string
 }
 
-func checkBinary(ctx Context, req BinaryCheckRequest) Check {
-	if req.BinaryName == "" {
-		return Check{Name: req.CheckName, Status: StatusFail, Message: "missing binary name"}
+// checkBinary verifies if a specific binary is available in the system PATH.
+func checkBinary(ctx Context, req BinaryRequest) Check {
+	if req.Binary == "" {
+		return Check{
+			Name:    req.Name,
+			Status:  StatusFail,
+			Message: "Logic error: binary name not specified in check request",
+		}
 	}
 
-	_, err := ctx.LookPathFn(req.BinaryName)
+	_, err := ctx.LookPathFn(req.Binary)
 	if err != nil {
 		return Check{
-			Name:    req.CheckName,
+			Name:    req.Name,
 			Status:  StatusWarn,
 			Message: req.WarnMessage,
 			Fix:     req.Fix,
 		}
 	}
 
+	message := req.PassMessage
+	if message == "" {
+		message = fmt.Sprintf("%s is available in PATH", req.Binary)
+	}
+
 	return Check{
-		Name:    req.CheckName,
+		Name:    req.Name,
 		Status:  StatusPass,
-		Message: req.PassMessage,
+		Message: message,
 	}
 }
