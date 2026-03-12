@@ -20,14 +20,14 @@ func TestReportFilterBySeverity(t *testing.T) {
 	}
 }
 
-func TestAtOrAbove(t *testing.T) {
-	if !AtOrAbove(SeverityCritical, SeverityHigh) {
+func TestSeverityGte(t *testing.T) {
+	if !SeverityCritical.Gte(SeverityHigh) {
 		t.Fatal("critical should be at or above high")
 	}
-	if AtOrAbove(SeverityLow, SeverityHigh) {
+	if SeverityLow.Gte(SeverityHigh) {
 		t.Fatal("low should not be at or above high")
 	}
-	if AtOrAbove(SeverityCritical, SeverityNone) {
+	if SeverityCritical.Gte(SeverityNone) {
 		t.Fatal("threshold none should never gate")
 	}
 }
