@@ -9,20 +9,26 @@ import (
 	"strings"
 )
 
+// LookPathInEnv searches for an executable in the system PATH.
+// It is the default implementation for Context.LookPathFn.
 func LookPathInEnv(file string) (string, error) {
-	pathEnv := os.Getenv("PATH")
+	return lookPath(file, os.Getenv("PATH"), os.Getenv("PATHEXT"), runtime.GOOS)
+}
+
+// lookPath is the testable core that searches for file across pathEnv directories.
+func lookPath(file, pathEnv, pathExt, goos string) (string, error) {
 	if pathEnv == "" {
 		return "", errors.New("PATH is empty")
 	}
 
-	candidates := candidateExecutableNames(file, runtime.GOOS, os.Getenv("PATHEXT"))
+	candidates := candidateExecutableNames(file, goos, pathExt)
 	for _, dir := range filepath.SplitList(pathEnv) {
 		if strings.TrimSpace(dir) == "" {
 			continue
 		}
 		for _, name := range candidates {
 			full := filepath.Join(dir, name)
-			if isExecutableFile(full) {
+			if isExecutable(full, goos) {
 				return full, nil
 			}
 		}
@@ -62,13 +68,13 @@ func candidateExecutableNames(file, goos, pathExt string) []string {
 	return out
 }
 
-func isExecutableFile(path string) bool {
+func isExecutable(path, goos string) bool {
 	// #nosec G703 -- path is a local executable candidate derived from PATH traversal.
 	info, err := os.Stat(path)
 	if err != nil || info.IsDir() {
 		return false
 	}
-	if runtime.GOOS == "windows" {
+	if goos == "windows" {
 		return true
 	}
 	return info.Mode().Perm()&0o111 != 0

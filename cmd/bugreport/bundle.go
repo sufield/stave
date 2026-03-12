@@ -85,7 +85,7 @@ func addZipFile(zw *zip.Writer, name string, data []byte) error {
 
 func addCoreArtifacts(bundle *bundleWriter, cwd string) error {
 	binaryPath, _ := os.Executable()
-	checks, hasFail := doctor.Run(doctor.Context{
+	checks, hasFail := doctor.Run(&doctor.Context{
 		Cwd:          cwd,
 		BinaryPath:   binaryPath,
 		StaveVersion: staveversion.Version,

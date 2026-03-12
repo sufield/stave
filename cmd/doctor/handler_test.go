@@ -14,7 +14,7 @@ func TestRunDoctorChecksReportsPasses(t *testing.T) {
 	lookPath := func(file string) (string, error) { return "/usr/bin/" + file, nil }
 	getenv := func(key string) string { return "" }
 
-	checks, hasFail := doctor.Run(doctor.Context{
+	checks, hasFail := doctor.Run(&doctor.Context{
 		Cwd:        dir,
 		BinaryPath: "/usr/local/bin/stave",
 		LookPathFn: lookPath,
@@ -63,7 +63,7 @@ func TestRunDoctorChecksReportsWarnings(t *testing.T) {
 		return ""
 	}
 
-	checks, hasFail := doctor.Run(doctor.Context{
+	checks, hasFail := doctor.Run(&doctor.Context{
 		Cwd:        dir,
 		BinaryPath: "",
 		LookPathFn: lookPath,

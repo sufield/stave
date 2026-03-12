@@ -11,7 +11,7 @@ import (
 func DoctorPrereqChecks() []validation.PrereqCheck {
 	cwd, _ := os.Getwd()
 	binaryPath, _ := os.Executable()
-	doctorChecks, _ := doctor.Run(doctor.Context{
+	doctorChecks, _ := doctor.Run(&doctor.Context{
 		Cwd:        cwd,
 		BinaryPath: binaryPath,
 	})

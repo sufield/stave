@@ -25,7 +25,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 
 	binaryPath, _ := os.Executable()
 
-	checks, hasFail := doctor.Run(doctor.Context{
+	checks, hasFail := doctor.Run(&doctor.Context{
 		Cwd:          cwd,
 		BinaryPath:   binaryPath,
 		StaveVersion: staveversion.Version,
