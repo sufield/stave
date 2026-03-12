@@ -27,10 +27,10 @@ type planner struct {
 }
 
 // NewPlanner creates a remediation planner populated with default specialists.
-func NewPlanner(h ports.Hasher) Planner {
+func NewPlanner(gen ports.IdentityGenerator) Planner {
 	return &planner{
 		specialists: []Specialist{
-			publicExposurePlanner{hasher: h},
+			publicExposurePlanner{idGen: gen},
 		},
 	}
 }
@@ -48,6 +48,6 @@ func (p *planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 
 // StablePlanID generates a deterministic ID for a remediation plan based on the
 // specific control and asset.
-func StablePlanID(h ports.Hasher, controlID kernel.ControlID, assetID asset.ID) string {
-	return policy.StableRemediationPlanID(h, controlID.String(), assetID.String())
+func StablePlanID(gen ports.IdentityGenerator, controlID kernel.ControlID, assetID asset.ID) string {
+	return policy.StableRemediationPlanID(gen, controlID, assetID)
 }

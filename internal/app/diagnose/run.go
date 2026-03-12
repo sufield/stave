@@ -89,7 +89,7 @@ type FindingDetailConfig struct {
 	ControlID      kernel.ControlID
 	AssetID        asset.ID
 	TraceBuilder   evaluation.FindingTraceBuilder
-	Hasher         ports.Hasher
+	IDGen          ports.IdentityGenerator
 }
 
 // ExecuteFindingDetail loads data and builds a detailed diagnosis for a single finding.
@@ -111,7 +111,7 @@ func (d *Run) ExecuteFindingDetail(ctx context.Context, cfg FindingDetailConfig)
 		Snapshots:    loaded.snapshots,
 		Result:       result,
 		TraceBuilder: cfg.TraceBuilder,
-		Hasher:       cfg.Hasher,
+		IDGen:        cfg.IDGen,
 	})
 }
 

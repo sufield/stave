@@ -34,8 +34,8 @@ func GroupStats(groups []Group) (totalFindings int, hasMulti bool) {
 }
 
 // BuildGroups aggregates findings into groups based on their remediation intent.
-func BuildGroups(h ports.Hasher, findings []Finding) []Group {
-	acc := newAccumulator(h)
+func BuildGroups(h ports.Hasher, gen ports.IdentityGenerator, findings []Finding) []Group {
+	acc := newAccumulator(h, gen)
 	for _, f := range findings {
 		if f.RemediationPlan != nil {
 			acc.add(f)
@@ -54,13 +54,15 @@ type groupEntry struct {
 
 type accumulator struct {
 	hasher ports.Hasher
+	idGen  ports.IdentityGenerator
 	groups map[string]*groupEntry
 	order  []string // Tracks insertion order for semi-determinism before final sort
 }
 
-func newAccumulator(h ports.Hasher) *accumulator {
+func newAccumulator(h ports.Hasher, gen ports.IdentityGenerator) *accumulator {
 	return &accumulator{
 		hasher: h,
+		idGen:  gen,
 		groups: make(map[string]*groupEntry),
 	}
 }
@@ -77,7 +79,7 @@ func (a *accumulator) add(f Finding) {
 
 	// Clone the plan to avoid side-effects on the original finding
 	plan := *f.RemediationPlan
-	plan.ID = policy.StableRemediationGroupID(a.hasher, f.AssetID.String(), hash)
+	plan.ID = policy.StableRemediationGroupID(a.idGen, f.AssetID, hash)
 
 	a.groups[key] = &groupEntry{
 		assetID:         f.AssetID,

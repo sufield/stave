@@ -10,7 +10,7 @@ import (
 )
 
 func TestRemediationMapper_MapFinding(t *testing.T) {
-	mapper := remediation.NewMapper(testHasher())
+	mapper := remediation.NewMapper(testIDGen())
 
 	tests := []struct {
 		name           string
@@ -64,7 +64,7 @@ func TestRemediationMapper_MapFinding(t *testing.T) {
 }
 
 func TestRemediationMapper_YAMLRemediationPrecedence(t *testing.T) {
-	mapper := remediation.NewMapper(testHasher())
+	mapper := remediation.NewMapper(testIDGen())
 
 	yamlRemediation := &policy.RemediationSpec{
 		Description: "Bucket has public read access via policy.",
@@ -88,7 +88,7 @@ func TestRemediationMapper_YAMLRemediationPrecedence(t *testing.T) {
 }
 
 func TestRemediationMapper_YAMLExampleFieldFlowsThrough(t *testing.T) {
-	mapper := remediation.NewMapper(testHasher())
+	mapper := remediation.NewMapper(testIDGen())
 
 	yamlRemediation := &policy.RemediationSpec{
 		Description: "Bucket has public read access via policy.",
@@ -110,7 +110,7 @@ func TestRemediationMapper_YAMLExampleFieldFlowsThrough(t *testing.T) {
 }
 
 func TestRemediationMapper_FallbackWhenNoYAMLRemediation(t *testing.T) {
-	mapper := remediation.NewMapper(testHasher())
+	mapper := remediation.NewMapper(testIDGen())
 
 	// Finding without ControlRemediation should fall back to prefix mapping
 	finding := evaluation.Finding{
@@ -126,7 +126,7 @@ func TestRemediationMapper_FallbackWhenNoYAMLRemediation(t *testing.T) {
 }
 
 func TestRemediationMapper_EnrichFindings(t *testing.T) {
-	mapper := remediation.NewMapper(testHasher())
+	mapper := remediation.NewMapper(testIDGen())
 
 	result := evaluation.Result{
 		Findings: []evaluation.Finding{

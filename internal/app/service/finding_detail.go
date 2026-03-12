@@ -17,7 +17,7 @@ type FindingDetailInput struct {
 	Snapshots    []asset.Snapshot
 	Result       *evaluation.Result
 	TraceBuilder evaluation.FindingTraceBuilder
-	Hasher       ports.Hasher
+	IDGen        ports.IdentityGenerator
 }
 
 // BuildFindingDetail delegates to the Result aggregate, injecting the
@@ -29,6 +29,6 @@ func BuildFindingDetail(input FindingDetailInput) (*evaluation.FindingDetail, er
 		Controls:     input.Controls,
 		Snapshots:    input.Snapshots,
 		TraceBuilder: input.TraceBuilder,
-		Hasher:       input.Hasher,
+		IDGen:        input.IDGen,
 	})
 }

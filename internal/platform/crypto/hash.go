@@ -50,8 +50,8 @@ func (*sha256Hasher) HashDelimited(parts []string, sep byte) kernel.Digest {
 	return HashDelimited(parts, sep)
 }
 
-func (*sha256Hasher) StableID(prefix, input string) string {
-	return StableID(prefix, input)
+func (*sha256Hasher) GenerateID(prefix, data string) string {
+	return StableID(prefix, data)
 }
 
 // HashReader returns the SHA-256 hex digest of data read from r.
