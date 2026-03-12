@@ -1,6 +1,7 @@
 package evaluation
 
 import (
+	"cmp"
 	"io"
 	"slices"
 	"time"
@@ -28,35 +29,16 @@ type Finding struct {
 	ControlRemediation *policy.RemediationSpec  `json:"-"`
 }
 
-// Less defines the natural ordering of findings: by control ID, then asset ID,
-// then WhyNow, then control name, then asset type.
-func (f Finding) Less(other Finding) bool {
-	if f.ControlID != other.ControlID {
-		return f.ControlID < other.ControlID
-	}
-	if f.AssetID != other.AssetID {
-		return f.AssetID < other.AssetID
-	}
-	if f.Evidence.WhyNow != other.Evidence.WhyNow {
-		return f.Evidence.WhyNow < other.Evidence.WhyNow
-	}
-	if f.ControlName != other.ControlName {
-		return f.ControlName < other.ControlName
-	}
-	return f.AssetType < other.AssetType
-}
-
-// SortFindings sorts a slice of findings by their natural ordering.
+// SortFindings sorts findings deterministically.
 func SortFindings(fs []Finding) {
 	slices.SortFunc(fs, func(a, b Finding) int {
-		switch {
-		case a.Less(b):
-			return -1
-		case b.Less(a):
-			return 1
-		default:
-			return 0
-		}
+		return cmp.Or(
+			cmp.Compare(a.ControlID, b.ControlID),
+			cmp.Compare(a.AssetID, b.AssetID),
+			cmp.Compare(a.Evidence.WhyNow, b.Evidence.WhyNow),
+			cmp.Compare(a.ControlName, b.ControlName),
+			cmp.Compare(a.AssetType, b.AssetType),
+		)
 	})
 }
 
