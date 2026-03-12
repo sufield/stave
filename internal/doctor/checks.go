@@ -8,63 +8,87 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
+// Check Names
+const (
+	CheckVersionInfo       = "version-info"
+	CheckOSVersion         = "os-version"
+	CheckShell             = "shell"
+	CheckCIEnv             = "ci-environment"
+	CheckContainer         = "container"
+	CheckWorkspaceWritable = "workspace-writable"
+	CheckGit               = "git"
+	CheckAWSCLI            = "aws-cli"
+	CheckJQ                = "jq"
+	CheckGraphviz          = "graphviz"
+	CheckClipboard         = "clipboard-tool"
+	CheckProxyEnv          = "offline-proxy-env"
+)
+
 func checkVersionInfo(ctx Context) Check {
-	msg := fmt.Sprintf("stave_version=%s go_version=%s os=%s arch=%s", ctx.StaveVersion, ctx.GoVersion, ctx.Goos, ctx.Goarch)
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "stave_version=%s go_version=%s os=%s arch=%s",
+		ctx.StaveVersion, ctx.GoVersion, ctx.Goos, ctx.Goarch)
+
 	if ctx.BinaryPath != "" {
-		msg += fmt.Sprintf(" binary=%s", ctx.BinaryPath)
+		fmt.Fprintf(&sb, " binary=%s", ctx.BinaryPath)
 	}
-	return Check{Name: "version-info", Status: StatusPass, Message: msg}
+
+	return Check{
+		Name:    CheckVersionInfo,
+		Status:  StatusPass,
+		Message: sb.String(),
+	}
 }
 
 func checkOSVersion(ctx Context) Check {
-	if osVer := detectOSVersion(ctx.Goos); osVer != "" {
-		return Check{Name: "os-version", Status: StatusPass, Message: osVer}
+	if ver := detectOSVersion(ctx.Goos); ver != "" {
+		return Check{Name: CheckOSVersion, Status: StatusPass, Message: ver}
 	}
 	return Check{}
 }
 
 func checkShell(ctx Context) Check {
 	if shell := ctx.GetenvFn("SHELL"); shell != "" {
-		return Check{Name: "shell", Status: StatusPass, Message: shell}
+		return Check{Name: CheckShell, Status: StatusPass, Message: shell}
 	}
 	return Check{}
 }
 
 func checkCI(ctx Context) Check {
 	if ci := detectCI(ctx.GetenvFn); ci != "" {
-		return Check{Name: "ci-environment", Status: StatusPass, Message: ci}
+		return Check{Name: CheckCIEnv, Status: StatusPass, Message: ci}
 	}
 	return Check{}
 }
 
 func checkContainer(_ Context) Check {
 	if container := detectContainer(); container != "" {
-		return Check{Name: "container", Status: StatusPass, Message: container}
+		return Check{Name: CheckContainer, Status: StatusPass, Message: container}
 	}
 	return Check{}
 }
 
 func checkWorkspaceWritable(ctx Context) Check {
-	if err := CheckWritableDir(ctx.Cwd); err != nil {
+	if err := IsDirectoryWritable(ctx.Cwd); err != nil {
 		return Check{
-			Name:    "workspace-writable",
+			Name:    CheckWorkspaceWritable,
 			Status:  StatusFail,
-			Message: fmt.Sprintf("cannot write in %s (%v)", ctx.Cwd, err),
+			Message: fmt.Sprintf("cannot write in %s: %v", ctx.Cwd, err),
 			Fix:     "run in a writable directory or adjust permissions (chmod/chown)",
 		}
 	}
 	return Check{
-		Name:    "workspace-writable",
+		Name:    CheckWorkspaceWritable,
 		Status:  StatusPass,
-		Message: fmt.Sprintf("current directory is writable: %s", ctx.Cwd),
+		Message: fmt.Sprintf("directory is writable: %s", ctx.Cwd),
 	}
 }
 
 func checkGit(ctx Context) Check {
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "git",
-		Name:        "git",
-		WarnMessage: "git not found; project/bootstrap workflows may be limited",
+		Name:        CheckGit,
+		WarnMessage: "git not found; project workflows and bootstrap may be limited",
 		Fix:         "install git (https://git-scm.com/downloads)",
 	})
 }
@@ -73,9 +97,9 @@ func checkAWS(ctx Context) Check {
 	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "aws",
-		Name:        "aws-cli",
-		WarnMessage: "aws not found; cannot collect real S3 snapshots for ingest",
-		Fix:         "install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)",
+		Name:        CheckAWSCLI,
+		WarnMessage: "aws not found; cannot collect live cloud snapshots",
+		Fix:         "install AWS CLI (https://aws.amazon.com/cli/)",
 		PassMessage: "AWS CLI available",
 	})
 }
@@ -83,78 +107,83 @@ func checkAWS(ctx Context) Check {
 func checkJQ(ctx Context) Check {
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "jq",
-		Name:        "jq",
-		WarnMessage: "jq not found; JSON filtering examples may not work",
+		Name:        CheckJQ,
+		WarnMessage: "jq not found; JSON filtering examples will not function",
 		Fix:         "install jq (https://jqlang.org/download/)",
 	})
 }
 
 func checkGraphviz(ctx Context) Check {
-	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "dot",
-		Name:        "graphviz",
-		WarnMessage: "dot not found; graph coverage DOT output cannot be rendered to PNG",
+		Name:        CheckGraphviz,
+		WarnMessage: "dot (graphviz) not found; cannot render DOT files to images",
 		Fix:         "install graphviz (https://graphviz.org/download/)",
-		PassMessage: "graphviz (dot) available",
 	})
 }
 
 func checkClipboard(ctx Context) Check {
 	switch ctx.Goos {
 	case "darwin":
-		if _, err := ctx.LookPathFn("pbcopy"); err != nil {
-			return Check{
-				Name:    "clipboard-tool",
-				Status:  StatusWarn,
-				Message: "pbcopy not found",
-				Fix:     "install/enable pbcopy to use generated files with clipboard tools",
-			}
-		}
-		return Check{Name: "clipboard-tool", Status: StatusPass, Message: "pbcopy available"}
+		return checkBinary(ctx, BinaryRequest{
+			Binary:      "pbcopy",
+			Name:        CheckClipboard,
+			WarnMessage: "pbcopy not found",
+			Fix:         "ensure pbcopy is available for clipboard integration",
+		})
 	case "linux":
-		_, xclipErr := ctx.LookPathFn("xclip")
-		_, wlcopyErr := ctx.LookPathFn("wl-copy")
-		if xclipErr != nil && wlcopyErr != nil {
+		_, errX := ctx.LookPathFn("xclip")
+		_, errW := ctx.LookPathFn("wl-copy")
+		if errX != nil && errW != nil {
 			return Check{
-				Name:    "clipboard-tool",
+				Name:    CheckClipboard,
 				Status:  StatusWarn,
-				Message: "xclip/wl-copy not found",
-				Fix:     "install xclip or wl-clipboard for clipboard piping examples",
+				Message: "neither xclip nor wl-copy found",
+				Fix:     "install xclip or wl-clipboard for clipboard piping",
 			}
 		}
-		return Check{Name: "clipboard-tool", Status: StatusPass, Message: "clipboard tool available (xclip or wl-copy)"}
+		return Check{Name: CheckClipboard, Status: StatusPass, Message: "clipboard tool available"}
 	default:
-		return Check{Name: "clipboard-tool", Status: StatusWarn, Message: "clipboard check skipped on this OS"}
+		return Check{
+			Name:    CheckClipboard,
+			Status:  StatusWarn,
+			Message: fmt.Sprintf("clipboard check not supported on %s", ctx.Goos),
+		}
 	}
 }
 
 func checkOfflineProxyEnv(ctx Context) Check {
-	var proxySet []string
-	for _, k := range kernel.DefaultPolicy().ProxyEnvVars() {
-		if strings.TrimSpace(ctx.GetenvFn(k)) != "" {
-			proxySet = append(proxySet, k)
+	var found []string
+	for _, env := range kernel.DefaultPolicy().ProxyEnvVars() {
+		if val := strings.TrimSpace(ctx.GetenvFn(env)); val != "" {
+			found = append(found, env)
 		}
 	}
-	if len(proxySet) > 0 {
+
+	if len(found) > 0 {
 		return Check{
-			Name:    "offline-proxy-env",
+			Name:    CheckProxyEnv,
 			Status:  StatusWarn,
-			Message: fmt.Sprintf("proxy variables set: %s", strings.Join(proxySet, ", ")),
-			Fix:     "unset proxy vars for strict offline runs, or use --require-offline to enforce",
+			Message: fmt.Sprintf("active proxy variables detected: %s", strings.Join(found, ", ")),
+			Fix:     "unset proxy variables for strict air-gap compliance, or use --require-offline",
 		}
 	}
-	return Check{Name: "offline-proxy-env", Status: StatusPass, Message: "no proxy environment variables set"}
+
+	return Check{
+		Name:    CheckProxyEnv,
+		Status:  StatusPass,
+		Message: "no proxy environment variables detected",
+	}
 }
 
-func CheckWritableDir(dir string) error {
-	probe, err := os.CreateTemp(dir, ".stave-doctor-*")
+// IsDirectoryWritable attempts to create and remove a temporary file to verify write access.
+func IsDirectoryWritable(dir string) error {
+	f, err := os.CreateTemp(dir, ".stave-probe-*")
 	if err != nil {
 		return err
 	}
-	name := probe.Name()
-	_ = probe.Close()
-	// #nosec G703 -- name is generated by CreateTemp under the caller-selected directory.
-	_ = os.Remove(name)
-	return nil
+	path := f.Name()
+	f.Close()
+	// #nosec G703 -- path is generated by CreateTemp under the caller-selected directory.
+	return os.Remove(path)
 }

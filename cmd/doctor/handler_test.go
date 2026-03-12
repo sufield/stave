@@ -106,14 +106,14 @@ func TestRunDoctorChecksReportsWarnings(t *testing.T) {
 	}
 }
 
-func TestCheckWritableDirFailsOnReadOnly(t *testing.T) {
+func TestIsDirectoryWritableFailsOnReadOnly(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.Chmod(dir, 0o500); err != nil {
 		t.Skipf("chmod unsupported in this environment: %v", err)
 	}
 	defer func() { _ = os.Chmod(dir, 0o700) }()
 
-	err := doctor.CheckWritableDir(dir)
+	err := doctor.IsDirectoryWritable(dir)
 	// Some environments still allow write due to ownership/ACL behavior; don't hard-fail.
 	if err == nil {
 		t.Skip("read-only probe not enforceable in this environment")
