@@ -28,7 +28,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 		Finding: evaluation.Finding{
 			ControlID: "CTL.S3.PUBLIC.001",
 			AssetID:   "my-phi-bucket",
-			AssetType: kernel.TypeStorageBucket,
+			AssetType: kernel.AssetType("storage_bucket"),
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
@@ -141,7 +141,7 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 		Finding: evaluation.Finding{
 			ControlID: "CTL.S3.PUBLIC.001",
 			AssetID:   "my-phi-bucket",
-			AssetType: kernel.TypeStorageBucket,
+			AssetType: kernel.AssetType("storage_bucket"),
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{

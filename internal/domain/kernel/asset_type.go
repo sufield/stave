@@ -7,55 +7,52 @@ import (
 	"strings"
 )
 
-// AssetType represents the type of an infrastructure asset (e.g., "aws_s3_bucket").
+// AssetType represents a normalized identifier for an infrastructure resource type.
+// Example: "aws_s3_bucket" or "gcp_compute_instance".
 type AssetType string
 
+// assetTypePattern enforces lowercase alphanumeric names with limited separators.
 var assetTypePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]*$`)
 
 const (
-	// TypeS3Bucket represents an AWS S3 bucket.
-	TypeS3Bucket AssetType = "aws_s3_bucket"
-	// TypeStorageBucket represents a generic storage bucket.
-	TypeStorageBucket AssetType = "storage_bucket"
-	// TypeStorageContainer represents a storage container.
-	TypeStorageContainer AssetType = "storage_container"
-	// TypeUploadPolicy represents an upload policy.
-	TypeUploadPolicy AssetType = "upload_policy"
-	// TypeIAMRole represents an IAM role.
-	TypeIAMRole AssetType = "iam_role"
-	// TypeServiceAccount represents a service account.
-	TypeServiceAccount AssetType = "service_account"
+	// UnknownAsset represents a missing or unidentifiable asset type.
+	UnknownAsset AssetType = "unknown"
 )
 
-// String implements fmt.Stringer.
-func (rt AssetType) String() string {
-	if rt == "" {
-		return "unknown"
-	}
-	return string(rt)
-}
-
-// Domain extracts the top-level asset family (for example: "aws_s3" from "aws_s3_bucket").
-func (rt AssetType) Domain() string {
-	parts := strings.Split(rt.String(), "_")
-	if len(parts) < 2 {
-		return "unknown"
-	}
-	return strings.Join(parts[:2], "_")
-}
-
-// NewAssetType normalizes a raw asset type into canonical lowercase form.
+// NewAssetType creates a normalized AssetType from a raw string.
 func NewAssetType(raw string) AssetType {
 	return AssetType(strings.ToLower(strings.TrimSpace(raw)))
 }
 
-// Validate checks whether the asset type satisfies domain naming rules.
-func (rt AssetType) Validate() error {
-	if rt == "" {
-		return fmt.Errorf("asset type must be non-empty")
+// String returns the string representation.
+func (a AssetType) String() string {
+	if a == "" {
+		return string(UnknownAsset)
 	}
-	if !assetTypePattern.MatchString(rt.String()) {
-		return fmt.Errorf("invalid asset type %q: use lowercase alphanumerics with _, ., or -", rt.String())
+	return string(a)
+}
+
+// Domain extracts the provider/family prefix.
+// For "aws_s3_bucket", it returns "aws_s3".
+// For "storage_bucket", it returns "storage".
+func (a AssetType) Domain() string {
+	s := a.String()
+	parts := strings.Split(s, "_")
+	if len(parts) < 2 {
+		return parts[0]
+	}
+	// Convention: the domain is the first two segments if they exist.
+	return strings.Join(parts[:2], "_")
+}
+
+// Validate ensures the AssetType adheres to the system's naming constraints.
+func (a AssetType) Validate() error {
+	s := string(a)
+	if s == "" || a == UnknownAsset {
+		return fmt.Errorf("asset type is required")
+	}
+	if !assetTypePattern.MatchString(s) {
+		return fmt.Errorf("invalid asset type %q: must be lowercase alphanumerics with underscores, dots, or hyphens", s)
 	}
 	return nil
 }
@@ -69,30 +66,29 @@ func ParseAssetType(s string) (AssetType, error) {
 	return t, nil
 }
 
-// MarshalJSON writes the asset type as its normalized string form.
-func (rt AssetType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(rt.String())
+// MarshalJSON ensures the type is always serialized in its canonical string form.
+func (a AssetType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.String())
 }
 
-// UnmarshalJSON parses and validates asset type values from JSON payloads.
-func (rt *AssetType) UnmarshalJSON(b []byte) error {
+// UnmarshalJSON validates the asset type during deserialization to prevent
+// invalid data from entering the domain model.
+func (a *AssetType) UnmarshalJSON(b []byte) error {
 	var raw string
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
 
-	parsed := NewAssetType(raw)
-	if parsed == "" {
-		// Allow empty values at generic JSON boundaries; strict checks happen
-		// through ParseAssetType/Validate in domain ingestion paths.
-		*rt = ""
+	normalized := NewAssetType(raw)
+	if normalized == "" || normalized == UnknownAsset {
+		*a = ""
 		return nil
 	}
 
-	if err := parsed.Validate(); err != nil {
+	if err := normalized.Validate(); err != nil {
 		return err
 	}
 
-	*rt = parsed
+	*a = normalized
 	return nil
 }

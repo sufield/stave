@@ -231,7 +231,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 	makeTimeline := func(storage map[string]any) *asset.Timeline {
 		resource := asset.Asset{
 			ID:     "res:aws:s3:bucket:example-bucket",
-			Type:   kernel.TypeStorageBucket,
+			Type:   kernel.AssetType("storage_bucket"),
 			Vendor: kernel.VendorAWS,
 			Properties: map[string]any{
 				"storage": storage,

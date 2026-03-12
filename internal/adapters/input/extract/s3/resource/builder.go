@@ -45,7 +45,7 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 
 	return asset.Asset{
 		ID:         asset.ID(bucket.Name),
-		Type:       kernel.TypeS3Bucket,
+		Type:       s3storage.TypeS3Bucket,
 		Vendor:     kernel.VendorAWS,
 		Properties: props,
 	}

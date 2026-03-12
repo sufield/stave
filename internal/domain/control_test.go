@@ -50,7 +50,7 @@ func TestParseDuration(t *testing.T) {
 func TestPredicateRuleMatches(t *testing.T) {
 	resource := asset.Asset{
 		ID:   "test-resource",
-		Type: kernel.TypeStorageBucket,
+		Type: kernel.AssetType("storage_bucket"),
 		Properties: map[string]any{
 			"public": true,
 			"acl":    "public-read",

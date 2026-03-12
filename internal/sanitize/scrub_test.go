@@ -17,7 +17,7 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 		Assets: []asset.Asset{
 			{
 				ID:     "my-phi-bucket",
-				Type:   kernel.TypeStorageBucket,
+				Type:   kernel.AssetType("storage_bucket"),
 				Vendor: kernel.VendorAWS,
 				Source: &asset.SourceRef{File: "/home/user/obs/snap1.json", Line: 5},
 				Properties: map[string]any{
@@ -93,7 +93,7 @@ func TestScrubSnapshot_Identities(t *testing.T) {
 		Identities: []asset.CloudIdentity{
 			{
 				ID:     "ident:1",
-				Type:   kernel.TypeIAMRole,
+				Type:   kernel.AssetType("iam_role"),
 				Vendor: kernel.VendorAWS,
 				Properties: map[string]any{
 					"owner":   "platform-team",

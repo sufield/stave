@@ -109,7 +109,7 @@ func TestRunDiagnoseFindingDetail_SuccessJSON(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "res-1",
-					Type:   kernel.TypeStorageBucket,
+					Type:   kernel.AssetType("storage_bucket"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"public": true,
@@ -125,7 +125,7 @@ func TestRunDiagnoseFindingDetail_SuccessJSON(t *testing.T) {
 				ControlName:        "Control A",
 				ControlDescription: "desc",
 				AssetID:            "res-1",
-				AssetType:          kernel.TypeStorageBucket,
+				AssetType:          kernel.AssetType("storage_bucket"),
 				AssetVendor:        kernel.VendorAWS,
 				Evidence:           evaluation.Evidence{LastSeenUnsafeAt: now},
 			},

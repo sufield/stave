@@ -36,7 +36,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
-					Type:   kernel.TypeStorageContainer,
+					Type:   kernel.AssetType("storage_container"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -47,7 +47,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 				},
 				{
 					ID:     "upload-policy-prefix",
-					Type:   kernel.TypeUploadPolicy,
+					Type:   kernel.AssetType("upload_policy"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"upload": map[string]any{
@@ -65,7 +65,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
-					Type:   kernel.TypeStorageContainer,
+					Type:   kernel.AssetType("storage_container"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -76,7 +76,7 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 				},
 				{
 					ID:     "upload-policy-prefix",
-					Type:   kernel.TypeUploadPolicy,
+					Type:   kernel.AssetType("upload_policy"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"upload": map[string]any{
@@ -151,7 +151,7 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "upload-policy-exact",
-					Type:   kernel.TypeUploadPolicy,
+					Type:   kernel.AssetType("upload_policy"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"upload": map[string]any{
@@ -169,7 +169,7 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "upload-policy-exact",
-					Type:   kernel.TypeUploadPolicy,
+					Type:   kernel.AssetType("upload_policy"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"upload": map[string]any{
@@ -220,7 +220,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
-					Type:   kernel.TypeStorageContainer,
+					Type:   kernel.AssetType("storage_container"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -237,7 +237,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "orders-storage",
-					Type:   kernel.TypeStorageContainer,
+					Type:   kernel.AssetType("storage_container"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{

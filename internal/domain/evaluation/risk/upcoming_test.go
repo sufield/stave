@@ -143,13 +143,13 @@ func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 
 func TestFilter_ByControlAndStatus(t *testing.T) {
 	items := Items{
-		{ControlID: "CTL.A", AssetType: kernel.TypeStorageBucket, Status: StatusOverdue, Remaining: -1 * time.Hour},
-		{ControlID: "CTL.B", AssetType: kernel.TypeIAMRole, Status: StatusUpcoming, Remaining: 4 * time.Hour},
-		{ControlID: "CTL.C", AssetType: kernel.TypeStorageBucket, Status: StatusUpcoming, Remaining: 1 * time.Hour},
+		{ControlID: "CTL.A", AssetType: kernel.AssetType("storage_bucket"), Status: StatusOverdue, Remaining: -1 * time.Hour},
+		{ControlID: "CTL.B", AssetType: kernel.AssetType("iam_role"), Status: StatusUpcoming, Remaining: 4 * time.Hour},
+		{ControlID: "CTL.C", AssetType: kernel.AssetType("storage_bucket"), Status: StatusUpcoming, Remaining: 1 * time.Hour},
 	}
 
 	filtered := items.Filter(FilterCriteria{
-		AssetTypes:   map[kernel.AssetType]struct{}{kernel.TypeStorageBucket: {}},
+		AssetTypes:   map[kernel.AssetType]struct{}{kernel.AssetType("storage_bucket"): {}},
 		Statuses:     map[Status]struct{}{StatusUpcoming: {}},
 		MaxRemaining: 2 * time.Hour,
 	})
@@ -201,7 +201,7 @@ func testControl(id string, threshold string) policy.ControlDefinition {
 func testUnsafeResource(unsafe bool) asset.Asset {
 	return asset.Asset{
 		ID:     asset.ID("res-1"),
-		Type:   kernel.TypeStorageBucket,
+		Type:   kernel.AssetType("storage_bucket"),
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
 			"unsafe": unsafe,
