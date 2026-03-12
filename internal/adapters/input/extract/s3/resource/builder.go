@@ -16,10 +16,10 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 
 	visibility := s3exposure.BuildVisibilityResult(
 		analysis.HasPolicy,
-		ToExposurePolicyAnalysis(analysis.Policy),
+		ToIdentityVisibility(analysis.Policy),
 		analysis.HasACL,
-		ToExposureACLAnalysis(analysis.ACL),
-		ToExposurePublicAccessBlock(effectivePAB),
+		ToResourceVisibility(analysis.ACL),
+		ToGovernanceOverrides(effectivePAB),
 	)
 
 	storageModel := s3storage.BuildModel(s3storage.BuildModelInput{
@@ -70,48 +70,54 @@ func mergePublicAccessBlock(effective *s3storage.PublicAccessBlock, candidate *s
 	effective.RestrictPublicBuckets = effective.RestrictPublicBuckets || candidate.RestrictPublicBuckets
 }
 
-// ToExposurePolicyAnalysis maps an S3 policy analysis to the exposure domain type.
-func ToExposurePolicyAnalysis(policy s3policy.Analysis) s3exposure.PolicyAnalysis {
-	return s3exposure.PolicyAnalysis{
-		AccessFlags: s3exposure.AccessFlags{
-			PublicRead:            policy.AllowsPublicRead,
-			PublicWrite:           policy.AllowsPublicWrite,
-			PublicACLRead:         policy.AllowsPublicACLRead,
-			PublicACLWrite:        policy.AllowsPublicACLWrite,
-			AuthenticatedRead:     policy.AllowsAuthenticatedRead,
-			AuthenticatedWrite:    policy.AllowsAuthenticatedWrite,
-			AuthenticatedACLRead:  policy.AllowsAuthenticatedACLRead,
-			AuthenticatedACLWrite: policy.AllowsAuthenticatedACLWrite,
+// ToIdentityVisibility maps an S3 policy analysis to the exposure domain Visibility.
+func ToIdentityVisibility(policy s3policy.Analysis) s3exposure.Visibility {
+	return s3exposure.Visibility{
+		Public: s3exposure.Capabilities{
+			Read:  policy.AllowsPublicRead,
+			Write: policy.AllowsPublicWrite,
+			List:  policy.AllowsPublicList,
+			Admin: policy.AllowsPublicACLRead || policy.AllowsPublicACLWrite,
 		},
-		PublicList:        policy.AllowsPublicList,
-		AuthenticatedList: policy.AllowsAuthenticatedList,
+		Authenticated: s3exposure.Capabilities{
+			Read:  policy.AllowsAuthenticatedRead,
+			Write: policy.AllowsAuthenticatedWrite,
+			List:  policy.AllowsAuthenticatedList,
+			Admin: policy.AllowsAuthenticatedACLRead || policy.AllowsAuthenticatedACLWrite,
+		},
 	}
 }
 
-// ToExposureACLAnalysis maps an S3 ACL analysis to the exposure domain type.
-func ToExposureACLAnalysis(acl s3acl.Analysis) s3exposure.ACLAnalysis {
-	return s3exposure.ACLAnalysis{
-		AccessFlags: s3exposure.AccessFlags{
-			PublicRead:            acl.AllowsPublicRead,
-			PublicWrite:           acl.AllowsPublicWrite,
-			PublicACLRead:         acl.AllowsPublicACLRead,
-			PublicACLWrite:        acl.AllowsPublicACLWrite,
-			AuthenticatedRead:     acl.AllowsAuthenticatedRead,
-			AuthenticatedWrite:    acl.AllowsAuthenticatedWrite,
-			AuthenticatedACLRead:  acl.AllowsAuthenticatedACLRead,
-			AuthenticatedACLWrite: acl.AllowsAuthenticatedACLWrite,
-		},
-		PublicFullControl:        acl.HasFullControlPublic,
-		AuthenticatedFullControl: acl.HasFullControlAuthenticated,
+// ToResourceVisibility maps an S3 ACL analysis to the exposure domain Visibility.
+func ToResourceVisibility(acl s3acl.Analysis) s3exposure.Visibility {
+	pub := s3exposure.Capabilities{
+		Read:  acl.AllowsPublicRead,
+		Write: acl.AllowsPublicWrite,
+		Admin: acl.AllowsPublicACLRead || acl.AllowsPublicACLWrite,
+	}
+	auth := s3exposure.Capabilities{
+		Read:  acl.AllowsAuthenticatedRead,
+		Write: acl.AllowsAuthenticatedWrite,
+		Admin: acl.AllowsAuthenticatedACLRead || acl.AllowsAuthenticatedACLWrite,
+	}
+	if acl.HasFullControlPublic {
+		pub = s3exposure.Capabilities{Read: true, Write: true, List: true, Delete: true, Admin: true}
+	}
+	if acl.HasFullControlAuthenticated {
+		auth = s3exposure.Capabilities{Read: true, Write: true, List: true, Delete: true, Admin: true}
+	}
+	return s3exposure.Visibility{
+		Public:        pub,
+		Authenticated: auth,
 	}
 }
 
-// ToExposurePublicAccessBlock maps an S3 public access block to the exposure domain type.
-func ToExposurePublicAccessBlock(pab s3storage.PublicAccessBlock) s3exposure.PublicAccessBlock {
-	return s3exposure.PublicAccessBlock{
-		BlockPublicACLs:       pab.BlockPublicAcls,
-		IgnorePublicACLs:      pab.IgnorePublicAcls,
-		BlockPublicPolicy:     pab.BlockPublicPolicy,
-		RestrictPublicBuckets: pab.RestrictPublicBuckets,
+// ToGovernanceOverrides maps an S3 public access block to the exposure domain GovernanceOverrides.
+func ToGovernanceOverrides(pab s3storage.PublicAccessBlock) s3exposure.GovernanceOverrides {
+	return s3exposure.GovernanceOverrides{
+		BlockIdentityBoundPublicAccess: pab.BlockPublicPolicy || pab.RestrictPublicBuckets,
+		BlockResourceBoundPublicAccess: pab.BlockPublicAcls || pab.IgnorePublicAcls,
+		EnforceStrictPublicInheritance: pab.BlockPublicAcls && pab.IgnorePublicAcls &&
+			pab.BlockPublicPolicy && pab.RestrictPublicBuckets,
 	}
 }
