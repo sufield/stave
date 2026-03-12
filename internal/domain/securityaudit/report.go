@@ -1,13 +1,13 @@
 package securityaudit
 
 import (
+	"cmp"
 	"slices"
-	"sort"
 
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// Finding is one security-audit result entry.
+// Finding represents a single entry in a security audit.
 type Finding struct {
 	ID             string       `json:"id"`
 	Pillar         Pillar       `json:"pillar"`
@@ -21,7 +21,7 @@ type Finding struct {
 	ControlRefs    []ControlRef `json:"control_refs,omitempty"`
 }
 
-// Summary captures aggregate run state.
+// Summary captures aggregate statistics for the audit run.
 type Summary struct {
 	Total             int              `json:"total"`
 	Pass              int              `json:"pass"`
@@ -35,7 +35,7 @@ type Summary struct {
 	EvidenceFreshness string           `json:"evidence_freshness,omitempty"`
 }
 
-// Report is the top-level security-audit report document.
+// Report is the root document for a security audit.
 type Report struct {
 	SchemaVersion kernel.Schema `json:"schema_version"`
 	GeneratedAt   string        `json:"generated_at"`
@@ -46,96 +46,106 @@ type Report struct {
 	Controls      []ControlRef  `json:"controls"`
 }
 
-// RecomputeSummary rebuilds pass/fail counts and severity tallies.
+// RecomputeSummary rebuilds all aggregate counts and gating status based on current findings.
 func (r *Report) RecomputeSummary() {
 	if r == nil {
 		return
 	}
-	out := Summary{
-		BySeverity:        map[Severity]int{},
+
+	s := Summary{
+		BySeverity:        make(map[Severity]int),
 		FailOn:            r.Summary.FailOn,
 		VulnSourceUsed:    r.Summary.VulnSourceUsed,
 		EvidenceFreshness: r.Summary.EvidenceFreshness,
+		Total:             len(r.Findings),
 	}
-	for _, finding := range r.Findings {
-		out.Total++
-		switch finding.Status {
+
+	for _, f := range r.Findings {
+		switch f.Status {
 		case StatusPass:
-			out.Pass++
+			s.Pass++
 		case StatusWarn:
-			out.Warn++
+			s.Warn++
 		case StatusFail:
-			out.Fail++
+			s.Fail++
 		}
-		out.BySeverity[finding.Severity]++
-		if finding.Status != StatusPass && AtOrAbove(finding.Severity, out.FailOn) {
-			out.GatedFindingCount++
+
+		s.BySeverity[f.Severity]++
+
+		if f.Status != StatusPass && AtOrAbove(f.Severity, s.FailOn) {
+			s.GatedFindingCount++
 		}
 	}
-	out.Gated = out.GatedFindingCount > 0
-	r.Summary = out
+
+	s.Gated = s.GatedFindingCount > 0
+	r.Summary = s
 }
 
-// FilterBySeverity returns a copy filtered to the provided severities.
+// FilterBySeverity returns a copy of the report containing only findings matching the allowed severities.
 func (r Report) FilterBySeverity(allowed []Severity) Report {
 	if len(allowed) == 0 {
-		r.RecomputeSummary()
 		return r
 	}
-	allowMap := make(map[Severity]bool, len(allowed))
-	for _, sev := range allowed {
-		allowMap[sev] = true
+
+	allowedSet := make(map[Severity]struct{}, len(allowed))
+	for _, s := range allowed {
+		allowedSet[s] = struct{}{}
 	}
 
 	filtered := make([]Finding, 0, len(r.Findings))
-	for _, finding := range r.Findings {
-		if allowMap[finding.Severity] {
-			filtered = append(filtered, finding)
+	for _, f := range r.Findings {
+		if _, ok := allowedSet[f.Severity]; ok {
+			filtered = append(filtered, f)
 		}
 	}
+
 	r.Findings = filtered
 	r.RecomputeSummary()
 	return r
 }
 
-// Normalize sorts findings and controls for deterministic output.
+// Normalize ensures deterministic ordering of all slices within the report.
 func (r *Report) Normalize() {
 	if r == nil {
 		return
 	}
-	sort.Slice(r.Findings, func(i, j int) bool {
-		a, b := r.Findings[i], r.Findings[j]
-		if SeverityRank(a.Severity) != SeverityRank(b.Severity) {
-			return SeverityRank(a.Severity) > SeverityRank(b.Severity)
-		}
-		if a.Status != b.Status {
-			return a.Status > b.Status
-		}
-		return a.ID < b.ID
+
+	// Sort Findings: Severity (highest first), then Status, then ID
+	slices.SortFunc(r.Findings, func(a, b Finding) int {
+		return cmp.Or(
+			cmp.Compare(SeverityRank(b.Severity), SeverityRank(a.Severity)),
+			cmp.Compare(a.Status, b.Status),
+			cmp.Compare(a.ID, b.ID),
+		)
 	})
-	sort.Slice(r.EvidenceIndex, func(i, j int) bool {
-		return r.EvidenceIndex[i].ID < r.EvidenceIndex[j].ID
+
+	// Sort Evidence Index by ID
+	slices.SortFunc(r.EvidenceIndex, func(a, b EvidenceRef) int {
+		return cmp.Compare(a.ID, b.ID)
 	})
-	sort.Slice(r.Controls, func(i, j int) bool {
-		a, b := r.Controls[i], r.Controls[j]
-		if a.Framework != b.Framework {
-			return a.Framework < b.Framework
-		}
-		if a.ControlID != b.ControlID {
-			return a.ControlID < b.ControlID
-		}
-		return a.Rationale < b.Rationale
+
+	// Sort Controls: Framework, then ControlID, then Rationale
+	slices.SortFunc(r.Controls, func(a, b ControlRef) int {
+		return cmp.Or(
+			cmp.Compare(a.Framework, b.Framework),
+			cmp.Compare(a.ControlID, b.ControlID),
+			cmp.Compare(a.Rationale, b.Rationale),
+		)
 	})
+
+	// Sort nested lists within each finding
 	for i := range r.Findings {
-		sort.Slice(r.Findings[i].ControlRefs, func(a, b int) bool {
-			ra, rb := r.Findings[i].ControlRefs[a], r.Findings[i].ControlRefs[b]
-			if ra.Framework != rb.Framework {
-				return ra.Framework < rb.Framework
-			}
-			return ra.ControlID < rb.ControlID
+		f := &r.Findings[i]
+
+		slices.SortFunc(f.ControlRefs, func(a, b ControlRef) int {
+			return cmp.Or(
+				cmp.Compare(a.Framework, b.Framework),
+				cmp.Compare(a.ControlID, b.ControlID),
+			)
 		})
-		r.Findings[i].EvidenceRefs = slices.Clone(r.Findings[i].EvidenceRefs)
-		sort.Strings(r.Findings[i].EvidenceRefs)
+
+		slices.Sort(f.EvidenceRefs)
 	}
+
 	r.RecomputeSummary()
 }

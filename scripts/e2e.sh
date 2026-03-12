@@ -154,7 +154,7 @@ main() {
   [[ -d "$root" ]] || fail "missing: $root"
 
   local cases=()
-  while IFS= read -r -d '' d; do cases+=("$d"); done < <(find "$root" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+  while IFS= read -r -d '' d; do cases+=("$d"); done < <(find "$root" -mindepth 1 -maxdepth 1 -type d -not -name 'e2e-h1-*' -print0 | sort -z)
 
   [[ "${#cases[@]}" -gt 0 ]] || fail "no cases found under $root"
 

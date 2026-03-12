@@ -61,7 +61,6 @@ func Evaluate(op Operator, fieldVal, matchVal any) bool {
 // It returns (result, handled). If handled is false, the operator requires
 // external context (like field-to-field comparison) handled by the caller.
 func EvaluateOperator(op Operator, exists bool, val, compare any) (res bool, handled bool) {
-	handled = true
 	switch op {
 	case OpEq:
 		res = exists && EqualValues(val, compare)
