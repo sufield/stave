@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.PUBLIC.READ.001",
+      "id": "CTL.STORAGE.PUBLIC.READ.001",
       "resource": "public-read-bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",

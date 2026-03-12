@@ -11,7 +11,7 @@ type ComplianceMapping map[string]string
 // accessibility violations carry exposure metadata.
 type Exposure struct {
 	// Type classifies the exposure condition
-	// (e.g., "public_read", "acl_write", "bucket_takeover").
+	// (e.g., "public_read", "public_write", "resource_takeover").
 	Type string `json:"type" yaml:"type"`
 	// PrincipalScope identifies who can exploit the exposure
 	// (e.g., "public", "authenticated", "cross_account").

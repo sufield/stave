@@ -2,81 +2,78 @@ package exposure
 
 import (
 	"fmt"
-	"sort"
+	"slices"
+	"strings"
 
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 const (
-	// Canonical exposure classification IDs.
-	idResourceTakeover    kernel.ControlID = "CTL.S3.BUCKET.TAKEOVER.001"
-	idWebPublic           kernel.ControlID = "CTL.S3.WEBSITE.PUBLIC.001"
-	idAuthenticatedRead   kernel.ControlID = "CTL.S3.GLOBAL.AUTHENTICATED.READ.001"
-	idPublicRead          kernel.ControlID = "CTL.S3.PUBLIC.READ.001"
-	idResourcePublicRead  kernel.ControlID = "CTL.S3.ACL.PUBLIC.READ.001"
-	idPublicList          kernel.ControlID = "CTL.S3.PUBLIC.LIST.001"
-	idPublicWrite         kernel.ControlID = "CTL.S3.PUBLIC.WRITE.001"
-	idResourcePublicWrite kernel.ControlID = "CTL.S3.ACL.PUBLIC.WRITE.001"
-	idPublicAdminRead     kernel.ControlID = "CTL.S3.PUBLIC.ACL.READ.001"
-	idPublicAdminWrite    kernel.ControlID = "CTL.S3.PUBLIC.ACL.WRITE.001"
-	idPublicDelete        kernel.ControlID = "CTL.S3.PUBLIC.DELETE.001"
+	// Canonical exposure classification IDs (Cloud Neutral).
+	idResourceTakeover    kernel.ControlID = "CTL.STORAGE.TAKEOVER.001"
+	idWebPublic           kernel.ControlID = "CTL.STORAGE.WEBSITE.PUBLIC.001"
+	idAuthenticatedRead   kernel.ControlID = "CTL.STORAGE.GLOBAL.AUTHENTICATED.READ.001"
+	idPublicRead          kernel.ControlID = "CTL.STORAGE.PUBLIC.READ.001"
+	idResourcePublicRead  kernel.ControlID = "CTL.STORAGE.RESOURCE.PUBLIC.READ.001"
+	idPublicList          kernel.ControlID = "CTL.STORAGE.PUBLIC.LIST.001"
+	idPublicWrite         kernel.ControlID = "CTL.STORAGE.PUBLIC.WRITE.001"
+	idResourcePublicWrite kernel.ControlID = "CTL.STORAGE.RESOURCE.PUBLIC.WRITE.001"
+	idPublicAdminRead     kernel.ControlID = "CTL.STORAGE.PUBLIC.ADMIN.READ.001"
+	idPublicAdminWrite    kernel.ControlID = "CTL.STORAGE.PUBLIC.ADMIN.WRITE.001"
+	idPublicDelete        kernel.ControlID = "CTL.STORAGE.PUBLIC.DELETE.001"
 )
 
 func init() {
-	validateExposureControlIDs()
-}
-
-func validateExposureControlIDs() {
-	for _, id := range []kernel.ControlID{
-		idResourceTakeover,
-		idWebPublic,
-		idAuthenticatedRead,
-		idPublicRead,
-		idResourcePublicRead,
-		idPublicList,
-		idPublicWrite,
-		idResourcePublicWrite,
-		idPublicAdminRead,
-		idPublicAdminWrite,
-		idPublicDelete,
-	} {
+	// Sanity check: Ensure hardcoded domain constants meet the required ID format.
+	ids := []kernel.ControlID{
+		idResourceTakeover, idWebPublic, idAuthenticatedRead, idPublicRead,
+		idResourcePublicRead, idPublicList, idPublicWrite, idResourcePublicWrite,
+		idPublicAdminRead, idPublicAdminWrite, idPublicDelete,
+	}
+	for _, id := range ids {
 		if err := kernel.ValidateControlIDFormat(id.String()); err != nil {
 			panic(fmt.Sprintf("invalid exposure control ID %q: %v", id, err))
 		}
 	}
 }
 
-// ClassifyExposure processes normalized resource inputs and returns merged,
-// deduplicated exposure classifications.
+// ClassifyExposure evaluates a set of normalized resource states and returns
+// classified risk findings.
 func ClassifyExposure(resources []NormalizedResourceInput) []ExposureClassification {
-	var findings []ExposureClassification
+	if len(resources) == 0 {
+		return nil
+	}
 
+	var findings []ExposureClassification
 	for _, r := range resources {
 		findings = append(findings, classifyResource(r)...)
 	}
 
-	sort.Slice(findings, func(i, j int) bool {
-		if findings[i].Resource != findings[j].Resource {
-			return findings[i].Resource < findings[j].Resource
+	// Sort findings deterministically: by Resource ID, then by Control ID severity.
+	slices.SortFunc(findings, func(a, b ExposureClassification) int {
+		if a.Resource != b.Resource {
+			return strings.Compare(a.Resource, b.Resource)
 		}
-		return findings[i].ID < findings[j].ID
+		return strings.Compare(string(a.ID), string(b.ID))
 	})
 
 	return findings
 }
 
 func classifyResource(r NormalizedResourceInput) []ExposureClassification {
+	// 1. Check for Resource Takeover (Dangling Reference)
 	if !r.Exists && r.ExternalReference {
 		return []ExposureClassification{{
 			ID:             idResourceTakeover,
 			Resource:       r.Name,
-			ExposureType:   "bucket_takeover",
+			ExposureType:   "resource_takeover",
 			PrincipalScope: kernel.ScopeNotApplicable,
 			Actions:        []string{},
-			EvidencePath:   []string{"bucket.exists", "bucket.external_reference"},
+			EvidencePath:   []string{"resource.exists", "resource.external_reference"},
 		}}
 	}
 
+	// 2. Build Analysis Context
 	ctx := resolutionContext{
 		input:         r,
 		identityPerms: capabilitySetFromMask(r.IdentityPerms),
@@ -89,10 +86,12 @@ func classifyResource(r NormalizedResourceInput) []ExposureClassification {
 		},
 	}
 
+	// 3. Resolve Risks across different capability axes
 	var findings []ExposureClassification
 	findings = append(findings, ctx.resolveRead()...)
 	findings = append(findings, ctx.resolveList()...)
 	findings = append(findings, ctx.resolveWrite()...)
 	findings = append(findings, ctx.resolveAdministrative()...)
+
 	return findings
 }

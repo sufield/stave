@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.PUBLIC.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.WRITE.001",
       "resource": "authenticated_write_bucket",
       "exposure_type": "public_write",
       "principal_scope": "authenticated",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.LIST.001",
+      "id": "CTL.STORAGE.PUBLIC.LIST.001",
       "resource": "full_write_with_list_bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.WRITE.001",
       "resource": "full_write_with_list_bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.READ.001",
+      "id": "CTL.STORAGE.PUBLIC.READ.001",
       "resource": "policy+acl_read_bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
@@ -51,7 +51,19 @@
       ]
     },
     {
-      "id": "CTL.S3.ACL.PUBLIC.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.READ.001",
+      "resource": "policy_read_acl_write_bucket",
+      "exposure_type": "public_read",
+      "principal_scope": "public",
+      "actions": ["Read"],
+      "evidence_path": [
+        "bucket.policy.statements[0].effect",
+        "bucket.policy.statements[0].principal",
+        "bucket.policy.statements[0].actions"
+      ]
+    },
+    {
+      "id": "CTL.STORAGE.RESOURCE.PUBLIC.WRITE.001",
       "resource": "policy_read_acl_write_bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
@@ -64,19 +76,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.READ.001",
-      "resource": "policy_read_acl_write_bucket",
-      "exposure_type": "public_read",
-      "principal_scope": "public",
-      "actions": ["Read"],
-      "evidence_path": [
-        "bucket.policy.statements[0].effect",
-        "bucket.policy.statements[0].principal",
-        "bucket.policy.statements[0].actions"
-      ]
-    },
-    {
-      "id": "CTL.S3.WEBSITE.PUBLIC.001",
+      "id": "CTL.STORAGE.WEBSITE.PUBLIC.001",
       "resource": "website_acl_read_bucket",
       "exposure_type": "web_public",
       "principal_scope": "public",

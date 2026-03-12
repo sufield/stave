@@ -1,7 +1,7 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.ACL.PUBLIC.READ.001",
+      "id": "CTL.STORAGE.RESOURCE.PUBLIC.READ.001",
       "resource": "acl-public-bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.ACL.READ.001",
+      "id": "CTL.STORAGE.PUBLIC.ADMIN.READ.001",
       "resource": "acl-readable-bucket",
       "exposure_type": "public_metadata_read",
       "principal_scope": "public",
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.ACL.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.ADMIN.WRITE.001",
       "resource": "acl-writable-bucket",
       "exposure_type": "public_metadata_write",
       "principal_scope": "public",
@@ -43,7 +43,7 @@
       ]
     },
     {
-      "id": "CTL.S3.GLOBAL.AUTHENTICATED.READ.001",
+      "id": "CTL.STORAGE.GLOBAL.AUTHENTICATED.READ.001",
       "resource": "auth-users-bucket",
       "exposure_type": "authenticated_access",
       "principal_scope": "authenticated",
@@ -57,7 +57,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.DELETE.001",
+      "id": "CTL.STORAGE.PUBLIC.DELETE.001",
       "resource": "deletable-bucket",
       "exposure_type": "public_delete",
       "principal_scope": "public",
@@ -71,18 +71,18 @@
       ]
     },
     {
-      "id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "id": "CTL.STORAGE.TAKEOVER.001",
       "resource": "missing-bucket-ref",
-      "exposure_type": "bucket_takeover",
+      "exposure_type": "resource_takeover",
       "principal_scope": "n/a",
       "actions": [],
       "evidence_path": [
-        "bucket.exists",
-        "bucket.external_reference"
+        "resource.exists",
+        "resource.external_reference"
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.WRITE.001",
       "resource": "public-full-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.LIST.001",
+      "id": "CTL.STORAGE.PUBLIC.LIST.001",
       "resource": "public-list-bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",
@@ -112,7 +112,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.READ.001",
+      "id": "CTL.STORAGE.PUBLIC.READ.001",
       "resource": "public-read-bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
@@ -126,7 +126,7 @@
       ]
     },
     {
-      "id": "CTL.S3.PUBLIC.WRITE.001",
+      "id": "CTL.STORAGE.PUBLIC.WRITE.001",
       "resource": "public-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
@@ -141,7 +141,7 @@
       ]
     },
     {
-      "id": "CTL.S3.WEBSITE.PUBLIC.001",
+      "id": "CTL.STORAGE.WEBSITE.PUBLIC.001",
       "resource": "website-bucket",
       "exposure_type": "web_public",
       "principal_scope": "public",

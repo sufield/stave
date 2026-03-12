@@ -75,7 +75,7 @@ func TestS3ExposureNoDuplicateREAD(t *testing.T) {
 
 	readCount := 0
 	for _, f := range findings {
-		if f.ID == "CTL.S3.PUBLIC.READ.001" {
+		if f.ID == "CTL.STORAGE.PUBLIC.READ.001" {
 			readCount++
 		}
 	}
@@ -99,14 +99,14 @@ func TestS3ExposureWebsiteSuppressesREAD(t *testing.T) {
 	findings := s3classify.ClassifyS3Exposure([]s3classify.S3BucketInput{bucket})
 
 	for _, f := range findings {
-		if f.ID == "CTL.S3.PUBLIC.READ.001" {
+		if f.ID == "CTL.STORAGE.PUBLIC.READ.001" {
 			t.Error("PUBLIC.READ should be suppressed when WEBSITE.PUBLIC is emitted")
 		}
 	}
 
 	websiteCount := 0
 	for _, f := range findings {
-		if f.ID == "CTL.S3.WEBSITE.PUBLIC.001" {
+		if f.ID == "CTL.STORAGE.WEBSITE.PUBLIC.001" {
 			websiteCount++
 		}
 	}
@@ -148,7 +148,7 @@ func TestS3ExposureWriteScopeBlindVsFull(t *testing.T) {
 			findings := s3classify.ClassifyS3Exposure([]s3classify.S3BucketInput{bucket})
 
 			for _, f := range findings {
-				if f.ID == "CTL.S3.PUBLIC.WRITE.001" {
+				if f.ID == "CTL.STORAGE.PUBLIC.WRITE.001" {
 					if f.WriteScope != tc.expectedScope {
 						t.Errorf("write_scope = %q, want %q", f.WriteScope, tc.expectedScope)
 					}

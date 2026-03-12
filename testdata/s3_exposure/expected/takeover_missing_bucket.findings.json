@@ -1,14 +1,14 @@
 {
   "findings": [
     {
-      "id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "id": "CTL.STORAGE.TAKEOVER.001",
       "resource": "dangling-origin-bucket",
-      "exposure_type": "bucket_takeover",
+      "exposure_type": "resource_takeover",
       "principal_scope": "n/a",
       "actions": [],
       "evidence_path": [
-        "bucket.exists",
-        "bucket.external_reference"
+        "resource.exists",
+        "resource.external_reference"
       ]
     }
   ]
