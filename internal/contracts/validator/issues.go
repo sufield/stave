@@ -152,7 +152,7 @@ func (v *Validator) validateKnownSchemaVersion(
 		return unsupportedVersionResult(req.ActualVersion, req.AcceptedVersions, action), nil
 	}
 
-	diags, err := v.Validate(req.Kind, kernel.EmbeddedContractSchemaVersion, req.Raw, req.IsYAML)
+	diags, err := v.Validate(req.Kind, kernel.RegistryLayoutStandard, req.Raw, req.IsYAML)
 	if err != nil {
 		return nil, err
 	}

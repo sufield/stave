@@ -11,15 +11,15 @@ import (
 )
 
 func ValidateEvaluation(payload Evaluation) error {
-	return validate(schemas.KindOutput, kernel.OutputContractSchemaVersion, payload, "evaluation output")
+	return validate(schemas.KindOutput, kernel.RegistryLayoutLegacyOutput, payload, "evaluation output")
 }
 
 func ValidateVerification(payload Verification) error {
-	return validate(schemas.KindOutput, kernel.OutputContractSchemaVersion, payload, "verification output")
+	return validate(schemas.KindOutput, kernel.RegistryLayoutLegacyOutput, payload, "verification output")
 }
 
 func ValidateDiagnose(payload Diagnose) error {
-	return validate(schemas.KindDiagnose, kernel.EmbeddedContractSchemaVersion, payload, "diagnose output")
+	return validate(schemas.KindDiagnose, kernel.RegistryLayoutStandard, payload, "diagnose output")
 }
 
 func validate(kind string, version string, payload any, label string) error {
