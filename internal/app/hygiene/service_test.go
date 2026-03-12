@@ -26,7 +26,7 @@ func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
 		GlobalMaxUnsafe:  4 * time.Hour,
 		Now:              base.Add(1 * time.Hour),
 		DueSoonThreshold: 90 * time.Minute,
-		Statuses:         []risk.Status{risk.Upcoming},
+		Statuses:         []risk.Status{risk.StatusUpcoming},
 		AssetTypes:       []kernel.AssetType{kernel.TypeStorageBucket},
 		DueWithin:        &dueSoon,
 	})
@@ -86,7 +86,7 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		GlobalMaxUnsafe:  4 * time.Hour,
 		Now:              base.Add(1 * time.Hour),
 		DueSoonThreshold: 90 * time.Minute,
-		Statuses:         []risk.Status{risk.Upcoming},
+		Statuses:         []risk.Status{risk.StatusUpcoming},
 		AssetTypes:       []kernel.AssetType{kernel.TypeStorageBucket},
 	}
 
@@ -96,10 +96,10 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 	}
 
 	manual := risk.Items{
-		{Status: risk.Overdue, Remaining: -time.Hour},
-		{Status: risk.DueNow, Remaining: 0},
-		{Status: risk.Upcoming, Remaining: 30 * time.Minute},
-		{Status: risk.Upcoming, Remaining: 4 * time.Hour},
+		{Status: risk.StatusOverdue, Remaining: -time.Hour},
+		{Status: risk.StatusDueNow, Remaining: 0},
+		{Status: risk.StatusUpcoming, Remaining: 30 * time.Minute},
+		{Status: risk.StatusUpcoming, Remaining: 4 * time.Hour},
 	}.Summarize(time.Hour)
 	if manual.Overdue != 1 || manual.DueNow != 1 || manual.DueSoon != 1 || manual.Later != 1 || manual.Total != 4 {
 		t.Fatalf("unexpected manual summary: %+v", manual)

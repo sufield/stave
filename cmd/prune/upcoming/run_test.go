@@ -86,13 +86,13 @@ func TestComputeAndMapUpcomingItems_SortsChronologicallyAndComputesStatus(t *tes
 	if items[0].ControlID != "CTL.24H" {
 		t.Fatalf("expected first item CTL.24H, got %s", items[0].ControlID)
 	}
-	if items[0].Status != risk.Overdue {
+	if items[0].Status != risk.StatusOverdue {
 		t.Fatalf("expected first status OVERDUE, got %s", items[0].Status)
 	}
 	if items[1].ControlID != "CTL.48H" {
 		t.Fatalf("expected second item CTL.48H, got %s", items[1].ControlID)
 	}
-	if items[1].Status != risk.Upcoming {
+	if items[1].Status != risk.StatusUpcoming {
 		t.Fatalf("expected second status UPCOMING, got %s", items[1].Status)
 	}
 	if !items[0].DueAt.Before(items[1].DueAt) {
@@ -111,10 +111,10 @@ func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
 	items := []UpcomingItem{
-		{Status: risk.Overdue, Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
-		{Status: risk.DueNow, Remaining: 0, DueAt: now},
-		{Status: risk.Upcoming, Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},
-		{Status: risk.Upcoming, Remaining: 72 * time.Hour, DueAt: now.Add(72 * time.Hour)},
+		{Status: risk.StatusOverdue, Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
+		{Status: risk.StatusDueNow, Remaining: 0, DueAt: now},
+		{Status: risk.StatusUpcoming, Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},
+		{Status: risk.StatusUpcoming, Remaining: 72 * time.Hour, DueAt: now.Add(72 * time.Hour)},
 	}
 	s := summarizeUpcoming(items, 6*time.Hour)
 	if s.Overdue != 1 || s.DueNow != 1 || s.DueSoon != 1 || s.Later != 1 || s.Total != 4 {
@@ -141,21 +141,21 @@ func TestRiskItemsFilter(t *testing.T) {
 	riskItems := risk.Items{
 		{
 			DueAt:     now.Add(2 * time.Hour),
-			Status:    risk.Upcoming,
+			Status:    risk.StatusUpcoming,
 			ControlID: "CTL.TEST.A.001",
 			AssetType: "res:aws:s3:bucket",
 			Remaining: 2 * time.Hour,
 		},
 		{
 			DueAt:     now.Add(72 * time.Hour),
-			Status:    risk.Upcoming,
+			Status:    risk.StatusUpcoming,
 			ControlID: "CTL.TEST.B.001",
 			AssetType: "res:aws:s3:bucket",
 			Remaining: 72 * time.Hour,
 		},
 		{
 			DueAt:     now.Add(-1 * time.Hour),
-			Status:    risk.Overdue,
+			Status:    risk.StatusOverdue,
 			ControlID: "CTL.TEST.A.001",
 			AssetType: "res:aws:s3:bucket",
 			Remaining: -1 * time.Hour,
@@ -203,7 +203,7 @@ func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
 	if len(criteria.Statuses) != 1 {
 		t.Fatalf("expected 1 status, got %d", len(criteria.Statuses))
 	}
-	if _, ok := criteria.Statuses[risk.Overdue]; !ok {
+	if _, ok := criteria.Statuses[risk.StatusOverdue]; !ok {
 		t.Fatal("expected OVERDUE in statuses")
 	}
 	if criteria.MaxRemaining != dueWithin {
@@ -213,8 +213,8 @@ func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
 
 func TestRiskFilterCriteria_EmptyPassesAll(t *testing.T) {
 	items := risk.Items{
-		{Status: risk.Overdue, ControlID: "CTL.A"},
-		{Status: risk.Upcoming, ControlID: "CTL.B"},
+		{Status: risk.StatusOverdue, ControlID: "CTL.A"},
+		{Status: risk.StatusUpcoming, ControlID: "CTL.B"},
 	}
 	criteria := risk.FilterCriteria{}
 	filtered := items.Filter(criteria)
