@@ -1,49 +1,65 @@
 package evaluation
 
-import "github.com/samber/lo"
+import (
+	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
-// VerificationDiff is the deterministic before/after comparison result.
+// VerificationDiff captures the delta between two evaluation runs.
+// Used primarily in "verify" workflows to confirm remediation success.
 type VerificationDiff struct {
-	Resolved   []Finding
-	Remaining  []Finding
-	Introduced []Finding
+	Resolved   []Finding `json:"resolved"`
+	Remaining  []Finding `json:"remaining"`
+	Introduced []Finding `json:"introduced"`
 }
 
-// CompareVerificationFindings compares before and after findings.
-// Returned slices are sorted by control_id then asset_id.
+// findingKey provides a unique identifier for a finding instance.
+type findingKey struct {
+	controlID kernel.ControlID
+	assetID   asset.ID
+}
+
+// CompareVerificationFindings identifies resolved, remaining, and introduced findings.
+// The resulting slices are sorted deterministically via SortFindings.
 func CompareVerificationFindings(before, after []Finding) VerificationDiff {
-	beforeSet := lo.KeyBy(before, verificationFindingKey)
-	afterSet := lo.KeyBy(after, verificationFindingKey)
+	// 1. Build maps for O(1) lookups.
+	// Capacity hints reduce re-allocations for large data sets.
+	beforeMap := make(map[findingKey]Finding, len(before))
+	for _, f := range before {
+		beforeMap[findingKey{f.ControlID, f.AssetID}] = f
+	}
 
-	resolved := make([]Finding, 0)
-	remaining := make([]Finding, 0)
-	introduced := make([]Finding, 0)
+	afterMap := make(map[findingKey]Finding, len(after))
+	for _, f := range after {
+		afterMap[findingKey{f.ControlID, f.AssetID}] = f
+	}
 
-	for key, f := range beforeSet {
-		if _, ok := afterSet[key]; !ok {
-			resolved = append(resolved, f)
-			continue
+	diff := VerificationDiff{
+		Resolved:   make([]Finding, 0),
+		Remaining:  make([]Finding, 0),
+		Introduced: make([]Finding, 0),
+	}
+
+	// 2. Identify Resolved and Remaining
+	for key, f := range beforeMap {
+		if _, exists := afterMap[key]; exists {
+			diff.Remaining = append(diff.Remaining, f)
+		} else {
+			diff.Resolved = append(diff.Resolved, f)
 		}
-		remaining = append(remaining, f)
 	}
 
-	for key, f := range afterSet {
-		if _, ok := beforeSet[key]; !ok {
-			introduced = append(introduced, f)
+	// 3. Identify Introduced (New)
+	for key, f := range afterMap {
+		if _, exists := beforeMap[key]; !exists {
+			diff.Introduced = append(diff.Introduced, f)
 		}
 	}
 
-	SortFindings(resolved)
-	SortFindings(remaining)
-	SortFindings(introduced)
+	// 4. Sort results for deterministic reporting
+	SortFindings(diff.Resolved)
+	SortFindings(diff.Remaining)
+	SortFindings(diff.Introduced)
 
-	return VerificationDiff{
-		Resolved:   resolved,
-		Remaining:  remaining,
-		Introduced: introduced,
-	}
-}
-
-func verificationFindingKey(f Finding) string {
-	return f.ControlID.String() + "\x00" + f.AssetID.String()
+	return diff
 }
