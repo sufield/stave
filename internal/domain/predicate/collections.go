@@ -2,76 +2,28 @@ package predicate
 
 import (
 	"slices"
-
-	"github.com/samber/lo"
 )
 
-// ValueInList checks if a value is contained in a list.
+// ValueInList reports whether fieldValue is contained within listValue.
+// It supports slices of strings or slices of any.
 func ValueInList(fieldValue, listValue any) bool {
 	switch list := listValue.(type) {
-	case []any:
-		return valueInAnyList(fieldValue, list)
 	case []string:
-		return valueInStringList(fieldValue, list)
-	default:
-		return false
-	}
-}
-
-// IsEmptyList checks if a value is an empty list or not a list.
-func IsEmptyList(v any) bool {
-	switch list := v.(type) {
-	case nil:
-		return true
+		s, ok := toString(fieldValue)
+		return ok && slices.Contains(list, s)
 	case []any:
-		return len(list) == 0
-	case []string:
-		return len(list) == 0
-	default:
-		return true // not a list = treat as empty
-	}
-}
-
-// ListHasElementsNotIn checks if listA contains any element not in listB.
-func ListHasElementsNotIn(listA, listB any) bool {
-	setB, ok := stringSetFromList(listB)
-	if !ok {
-		return true // listB is not a valid list, so listA has "extra" elements
-	}
-	return listContainsItemOutsideSet(listA, setB)
-}
-
-func stringSetFromList(list any) (map[string]struct{}, bool) {
-	set := make(map[string]struct{})
-	switch values := list.(type) {
-	case []any:
-		for _, item := range values {
-			if s, ok := item.(string); ok {
-				set[s] = struct{}{}
+		// For string-like values, use exact string matching (not EqualValues)
+		// to preserve case-sensitive semantics in []any lists.
+		if s, ok := toString(fieldValue); ok {
+			for _, item := range list {
+				if is, ok := toString(item); ok && s == is {
+					return true
+				}
 			}
+			return false
 		}
-		return set, true
-	case []string:
-		for _, item := range values {
-			set[item] = struct{}{}
-		}
-		return set, true
-	default:
-		return nil, false
-	}
-}
-
-func listContainsItemOutsideSet(list any, allowed map[string]struct{}) bool {
-	switch values := list.(type) {
-	case []any:
-		for _, item := range values {
-			if s, ok := item.(string); ok && !setContains(allowed, s) {
-				return true
-			}
-		}
-	case []string:
-		for _, item := range values {
-			if !setContains(allowed, item) {
+		for _, item := range list {
+			if EqualValues(fieldValue, item) {
 				return true
 			}
 		}
@@ -79,35 +31,72 @@ func listContainsItemOutsideSet(list any, allowed map[string]struct{}) bool {
 	return false
 }
 
-func setContains(set map[string]struct{}, value string) bool {
-	_, ok := set[value]
-	return ok
+// IsEmptyList returns true if v is nil, an empty slice, or not a slice at all.
+func IsEmptyList(v any) bool {
+	if v == nil {
+		return true
+	}
+	switch list := v.(type) {
+	case []any:
+		return len(list) == 0
+	case []string:
+		return len(list) == 0
+	default:
+		return true // Non-slice types are treated as "empty" in list contexts
+	}
 }
 
-func valueInStringList(fieldValue any, list []string) bool {
-	fieldStr, ok := toString(fieldValue)
+// ListHasElementsNotIn reports true if listA contains any element that is
+// not present in listB. This is effectively a "Not Subset Of" check.
+func ListHasElementsNotIn(listA, listB any) bool {
+	setB, ok := toStringSet(listB)
 	if !ok {
-		return false
+		// If listB isn't a valid list, then any item in listA is "not in listB"
+		return !IsEmptyList(listA)
 	}
-	if len(list) == 0 {
-		return false
+
+	// Iterate listA and return true on the first item not found in setB
+	switch values := listA.(type) {
+	case []string:
+		for _, s := range values {
+			if _, ok := setB[s]; !ok {
+				return true
+			}
+		}
+	case []any:
+		for _, item := range values {
+			if s, ok := toString(item); ok {
+				if _, exists := setB[s]; !exists {
+					return true
+				}
+			} else {
+				// Item in listA cannot be converted to string;
+				// since setB only contains strings, this item is "not in B".
+				return true
+			}
+		}
 	}
-	return slices.Contains(list, fieldStr)
+	return false
 }
 
-func valueInAnyList(fieldValue any, list []any) bool {
-	if len(list) == 0 {
-		return false
+// toStringSet converts a slice into a map for O(1) lookups.
+func toStringSet(list any) (map[string]struct{}, bool) {
+	switch values := list.(type) {
+	case []string:
+		set := make(map[string]struct{}, len(values))
+		for _, s := range values {
+			set[s] = struct{}{}
+		}
+		return set, true
+	case []any:
+		set := make(map[string]struct{}, len(values))
+		for _, item := range values {
+			if s, ok := toString(item); ok {
+				set[s] = struct{}{}
+			}
+		}
+		return set, true
+	default:
+		return nil, false
 	}
-
-	// Preserve existing semantics: for string-like needles, only exact string
-	// items match in []any lists.
-	if fieldStr, isString := toString(fieldValue); isString {
-		return lo.SomeBy(list, func(item any) bool {
-			itemStr, ok := toString(item)
-			return ok && fieldStr == itemStr
-		})
-	}
-
-	return lo.ContainsBy(list, func(item any) bool { return EqualValues(fieldValue, item) })
 }
