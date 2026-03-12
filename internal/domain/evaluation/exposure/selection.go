@@ -6,12 +6,14 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// Generic exposure types for reporting.
+// Type represents the category of exposure.
+type Type string
+
 const (
-	TypeWebPublic     = "web_public"
-	TypeAuthenticated = "authenticated_access"
-	TypePublicRead    = "public_read"
-	TypePublicWrite   = "public_write"
+	TypeWebPublic     Type = "web_public"
+	TypeAuthenticated Type = "authenticated_access"
+	TypePublicRead    Type = "public_read"
+	TypePublicWrite   Type = "public_write"
 )
 
 // Priority levels (higher is more severe risk).
@@ -24,15 +26,17 @@ const (
 	PriorityResourceWrite = 100
 )
 
+// exposureCandidate tracks the most severe finding identified during analysis.
 type exposureCandidate struct {
 	priority int
 	finding  ExposureClassification
 }
 
-// updateCandidate sets *c to the new finding if the new priority is higher.
-func updateCandidate(c **exposureCandidate, priority int, finding ExposureClassification) {
-	if *c == nil || priority > (*c).priority {
-		*c = &exposureCandidate{priority: priority, finding: finding}
+// consider updates the candidate if the provided priority is higher than the current one.
+func (c *exposureCandidate) consider(priority int, f ExposureClassification) {
+	if c.finding.ID == "" || priority > c.priority {
+		c.priority = priority
+		c.finding = f
 	}
 }
 
@@ -58,57 +62,43 @@ func SelectReadExposure(in ReadExposureInput) *exposureCandidate {
 		return nil
 	}
 
-	var best *exposureCandidate
+	best := &exposureCandidate{}
 
-	if in.WebHostingEnabled {
-		evidence := in.EvidenceResource
-		if in.HasIdentityRead {
-			evidence = in.EvidenceGeneral
-		}
-
-		updateCandidate(&best, PriorityWebPublic, ExposureClassification{
-			ID:             idWebPublic,
+	template := func(id kernel.ControlID, t Type, ev []string) ExposureClassification {
+		return ExposureClassification{
+			ID:             id,
 			Resource:       in.ResourceID,
-			ExposureType:   TypeWebPublic,
+			ExposureType:   string(t),
 			PrincipalScope: in.PrincipalScope,
 			Actions:        in.Actions,
-			EvidencePath:   append(slices.Clone([]string{"resource.web_hosting.enabled"}), evidence...),
-		})
+			EvidencePath:   ev,
+		}
+	}
+
+	if in.WebHostingEnabled {
+		ev := in.EvidenceResource
+		if in.HasIdentityRead {
+			ev = in.EvidenceGeneral
+		}
+		path := append(slices.Clone([]string{"resource.web_hosting.enabled"}), ev...)
+		best.consider(PriorityWebPublic, template(idWebPublic, TypeWebPublic, path))
 	}
 
 	if in.IsAuthenticatedOnly {
-		updateCandidate(&best, PriorityAuthenticated, ExposureClassification{
-			ID:             idAuthenticatedRead,
-			Resource:       in.ResourceID,
-			ExposureType:   TypeAuthenticated,
-			PrincipalScope: in.PrincipalScope,
-			Actions:        in.Actions,
-			EvidencePath:   in.EvidenceGeneral,
-		})
+		best.consider(PriorityAuthenticated, template(idAuthenticatedRead, TypeAuthenticated, in.EvidenceGeneral))
 	}
 
 	if in.HasIdentityRead {
-		updateCandidate(&best, PriorityIdentityRead, ExposureClassification{
-			ID:             idPublicRead,
-			Resource:       in.ResourceID,
-			ExposureType:   TypePublicRead,
-			PrincipalScope: in.PrincipalScope,
-			Actions:        in.Actions,
-			EvidencePath:   in.EvidenceIdentity,
-		})
+		best.consider(PriorityIdentityRead, template(idPublicRead, TypePublicRead, in.EvidenceIdentity))
 	}
 
 	if in.HasResourceRead {
-		updateCandidate(&best, PriorityResourceRead, ExposureClassification{
-			ID:             idResourcePublicRead,
-			Resource:       in.ResourceID,
-			ExposureType:   TypePublicRead,
-			PrincipalScope: in.PrincipalScope,
-			Actions:        in.Actions,
-			EvidencePath:   in.EvidenceResource,
-		})
+		best.consider(PriorityResourceRead, template(idResourcePublicRead, TypePublicRead, in.EvidenceResource))
 	}
 
+	if best.finding.ID == "" {
+		return nil
+	}
 	return best
 }
 
@@ -133,34 +123,34 @@ func SelectWriteExposure(in WriteExposureInput) *exposureCandidate {
 		return nil
 	}
 
-	var best *exposureCandidate
-
+	best := &exposureCandidate{}
 	actions := buildEffectiveActions(in.BaseActions, in.CanAlsoRead, in.CanAlsoList)
 
-	if in.HasIdentityWrite {
-		updateCandidate(&best, PriorityIdentityWrite, ExposureClassification{
-			ID:             idPublicWrite,
+	template := func(id kernel.ControlID, ev []string) ExposureClassification {
+		return ExposureClassification{
+			ID:             id,
 			Resource:       in.ResourceID,
-			ExposureType:   TypePublicWrite,
+			ExposureType:   string(TypePublicWrite),
 			PrincipalScope: in.PrincipalScope,
 			WriteScope:     in.WriteScope,
 			Actions:        actions,
-			EvidencePath:   in.EvidenceIdentity,
-		})
+			EvidencePath:   ev,
+		}
+	}
+
+	if in.HasIdentityWrite {
+		best.consider(PriorityIdentityWrite, template(idPublicWrite, in.EvidenceIdentity))
 	}
 
 	if in.HasResourceWrite {
-		updateCandidate(&best, PriorityResourceWrite, ExposureClassification{
-			ID:             idResourcePublicWrite,
-			Resource:       in.ResourceID,
-			ExposureType:   TypePublicWrite,
-			PrincipalScope: in.PrincipalScope,
-			WriteScope:     in.WriteScope,
-			Actions:        in.BaseActions,
-			EvidencePath:   in.EvidenceResource,
-		})
+		f := template(idResourcePublicWrite, in.EvidenceResource)
+		f.Actions = in.BaseActions
+		best.consider(PriorityResourceWrite, f)
 	}
 
+	if best.finding.ID == "" {
+		return nil
+	}
 	return best
 }
 
