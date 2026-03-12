@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-public-write",
-          "visibility": { "public_read": false, "public_list": false, "public_write": true, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": true, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": false, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": false, "ignore_public_acls": false, "block_public_policy": false, "restrict_public_buckets": false } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "in_transit_enforced": true },
           "versioning": { "enabled": true },
@@ -32,7 +32,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-no-encryption",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": false, "algorithm": "", "in_transit_enforced": true },
           "versioning": { "enabled": true },
@@ -49,7 +49,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-no-https",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "aws:kms", "in_transit_enforced": false },
           "versioning": { "enabled": true },
@@ -66,7 +66,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-no-versioning",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "in_transit_enforced": true },
           "versioning": { "enabled": false },
@@ -83,7 +83,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-no-logging",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "in_transit_enforced": true },
           "versioning": { "enabled": true },
@@ -100,7 +100,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-cross-account",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "in_transit_enforced": true },
           "versioning": { "enabled": true },
@@ -117,7 +117,7 @@
         "storage": {
           "kind": "bucket",
           "name": "vuln-wildcard-policy",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "in_transit_enforced": true },
           "versioning": { "enabled": true },
@@ -134,7 +134,7 @@
         "storage": {
           "kind": "bucket",
           "name": "secure-bucket",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "in_transit_enforced": true },
           "versioning": { "enabled": true },

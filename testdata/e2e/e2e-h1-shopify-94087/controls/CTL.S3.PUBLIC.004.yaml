@@ -13,6 +13,6 @@ params:
   max_unsafe_duration: 0h
 unsafe_predicate:
   any:
-  - field: properties.storage.visibility.public_read_via_acl
+  - field: properties.storage.visibility.read_via_resource
     op: eq
     value: true

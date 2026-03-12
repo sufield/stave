@@ -23,12 +23,12 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "public_acl_readable": false
+          "public_admin": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_acl_readable
+    - field: properties.storage.visibility.public_admin
       op: eq
       value: true

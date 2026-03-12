@@ -409,15 +409,27 @@ func TestGovernanceOverrides_IsHardened(t *testing.T) {
 	}
 }
 
-func TestEffectiveVisibility_IsPublic(t *testing.T) {
-	if (EffectiveVisibility{}).IsPublic() {
-		t.Error("empty should not be public")
+func TestEffectiveVisibility_IsExposed(t *testing.T) {
+	if (EffectiveVisibility{}).IsExposed() {
+		t.Error("empty should not be exposed")
 	}
-	if !(EffectiveVisibility{Read: true}).IsPublic() {
-		t.Error("read should be public")
+	if !(EffectiveVisibility{Read: true}).IsExposed() {
+		t.Error("read should be exposed")
 	}
-	if !(EffectiveVisibility{ACLWrite: true}).IsPublic() {
-		t.Error("acl write should be public")
+	if !(EffectiveVisibility{AdminWrite: true}).IsExposed() {
+		t.Error("admin write should be exposed")
+	}
+	if !(EffectiveVisibility{Delete: true}).IsExposed() {
+		t.Error("delete should be exposed")
+	}
+}
+
+func TestEffectiveVisibility_ToPermission(t *testing.T) {
+	v := EffectiveVisibility{Read: true, Write: true, AdminRead: true}
+	got := v.ToPermission()
+	want := PermRead | PermWrite | PermMetadataRead
+	if got != want {
+		t.Errorf("ToPermission() = %d, want %d", got, want)
 	}
 }
 
@@ -601,8 +613,8 @@ func TestBuildVisibilityResult_PublicRead(t *testing.T) {
 	if !result.PublicRead {
 		t.Error("expected public read")
 	}
-	if !result.PublicReadViaPolicy {
-		t.Error("expected public read via policy")
+	if !result.ReadViaIdentity {
+		t.Error("expected read via identity")
 	}
 }
 
@@ -626,18 +638,18 @@ func TestBuildVisibilityResult_AuthenticatedAccess(t *testing.T) {
 		false, Visibility{},
 		GovernanceOverrides{},
 	)
-	if !result.AuthenticatedUsersRead {
+	if !result.AuthenticatedRead {
 		t.Error("expected authenticated read")
 	}
-	if !result.AuthenticatedUsersWrite {
+	if !result.AuthenticatedWrite {
 		t.Error("expected authenticated write")
 	}
-	if !result.AuthenticatedUsersACLWritable {
-		t.Error("expected authenticated ACL writable")
+	if !result.AuthenticatedAdmin {
+		t.Error("expected authenticated admin")
 	}
 }
 
-func TestBuildVisibilityResult_ResourceAuthFullControl(t *testing.T) {
+func TestBuildVisibilityResult_ResourceFullAccess(t *testing.T) {
 	result := BuildVisibilityResult(
 		false, Visibility{},
 		true, Visibility{
@@ -646,13 +658,19 @@ func TestBuildVisibilityResult_ResourceAuthFullControl(t *testing.T) {
 		},
 		GovernanceOverrides{},
 	)
-	if !result.HasFullControlPublic {
-		t.Error("expected full control public")
+	if !result.WriteViaResource {
+		t.Error("expected write via resource")
 	}
-	if !result.HasFullControlAuthenticatedOnly {
-		t.Error("expected full control authenticated")
+	if !result.AdminViaResource {
+		t.Error("expected admin via resource")
 	}
-	if !result.PublicWriteViaACL {
-		t.Error("expected write via ACL")
+	if !result.PublicDelete {
+		t.Error("expected public delete")
+	}
+	if !result.PublicAdmin {
+		t.Error("expected public admin")
+	}
+	if !result.AuthenticatedAdmin {
+		t.Error("expected authenticated admin")
 	}
 }

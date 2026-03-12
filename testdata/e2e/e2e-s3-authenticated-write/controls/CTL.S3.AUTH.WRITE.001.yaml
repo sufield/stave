@@ -24,12 +24,12 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "authenticated_users_write": false
+          "authenticated_write": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.authenticated_users_write
+    - field: properties.storage.visibility.authenticated_write
       op: eq
       value: true

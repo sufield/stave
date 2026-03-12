@@ -30,7 +30,25 @@ func TestResolveEffectiveVisibility_UnionAcrossIdentityAndResource(t *testing.T)
 	if !got.List {
 		t.Fatal("expected List=true from identity")
 	}
-	if got.Source != "Resource" {
-		t.Fatalf("expected Source=Resource for effective public read, got %q", got.Source)
+}
+
+func TestResolveEffectiveVisibility_DeleteAndAdmin(t *testing.T) {
+	got := ResolveEffectiveVisibility(
+		Visibility{Public: Capabilities{Delete: true, Admin: true}},
+		Visibility{},
+		GovernanceOverrides{},
+	)
+
+	if !got.Delete {
+		t.Fatal("expected Delete=true")
+	}
+	if !got.AdminRead {
+		t.Fatal("expected AdminRead=true")
+	}
+	if !got.AdminWrite {
+		t.Fatal("expected AdminWrite=true")
+	}
+	if !got.IsExposed() {
+		t.Fatal("expected IsExposed=true")
 	}
 }

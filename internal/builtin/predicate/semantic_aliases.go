@@ -2,11 +2,11 @@
 // security conditions. Instead of writing verbose field-level predicate
 // rules in every control, authors reference a semantic alias like
 // "s3.is_public_readable" and the engine expands it into the full
-// UnsafePredicate (e.g. checking public_read, public_read_via_policy,
-// and public_read_via_acl).
+// UnsafePredicate (e.g. checking public_read, read_via_identity,
+// and read_via_resource).
 //
 // Categories: public exposure, latent exposure, authenticated-users
-// access, ACL grants, encryption, logging, versioning, controls, and
+// access, admin grants, encryption, logging, versioning, controls, and
 // object lock.
 //
 // Resolve returns a deep copy so callers cannot mutate the registry.
@@ -23,20 +23,20 @@ var aliasMap = map[string]policy.UnsafePredicate{
 	"s3.is_public_readable": {
 		Any: []policy.PredicateRule{
 			{Field: "properties.storage.visibility.public_read", Op: "eq", Value: true},
-			{Field: "properties.storage.visibility.public_read_via_policy", Op: "eq", Value: true},
-			{Field: "properties.storage.visibility.public_read_via_acl", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.read_via_identity", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.read_via_resource", Op: "eq", Value: true},
 		},
 	},
 	"s3.is_public_writable": {
 		Any: []policy.PredicateRule{
 			{Field: "properties.storage.visibility.public_write", Op: "eq", Value: true},
-			{Field: "properties.storage.visibility.public_write_via_acl", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.write_via_resource", Op: "eq", Value: true},
 		},
 	},
 	"s3.is_public_listable": {
 		Any: []policy.PredicateRule{
 			{Field: "properties.storage.visibility.public_list", Op: "eq", Value: true},
-			{Field: "properties.storage.visibility.public_list_via_policy", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.list_via_identity", Op: "eq", Value: true},
 		},
 	},
 
@@ -55,25 +55,25 @@ var aliasMap = map[string]policy.UnsafePredicate{
 	// ── Authenticated-users access ────────────────────────────────
 	"s3.authenticated_users_read": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.visibility.authenticated_users_read", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.authenticated_read", Op: "eq", Value: true},
 		},
 	},
 	"s3.authenticated_users_write": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.visibility.authenticated_users_write", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.authenticated_write", Op: "eq", Value: true},
 		},
 	},
 
-	// ── ACL grants ────────────────────────────────────────────────
+	// ── Admin grants ─────────────────────────────────────────────
 	"s3.acl_writable": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.visibility.public_acl_writable", Op: "eq", Value: true},
-			{Field: "properties.storage.visibility.authenticated_users_acl_writable", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.public_admin", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.authenticated_admin", Op: "eq", Value: true},
 		},
 	},
 	"s3.acl_readable_by_public": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.visibility.public_acl_readable", Op: "eq", Value: true},
+			{Field: "properties.storage.visibility.public_admin", Op: "eq", Value: true},
 		},
 	},
 	"s3.has_full_control_grant": {

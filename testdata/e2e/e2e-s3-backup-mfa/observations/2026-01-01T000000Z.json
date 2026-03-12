@@ -19,7 +19,7 @@
             "backup": "true",
             "Environment": "production"
           },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
           "versioning": { "enabled": true, "mfa_delete_enabled": false },
@@ -40,7 +40,7 @@
             "backup": "true",
             "Environment": "production"
           },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
           "versioning": { "enabled": true, "mfa_delete_enabled": true },
@@ -60,7 +60,7 @@
           "tags": {
             "Environment": "production"
           },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "public_read_via_policy": false, "public_read_via_acl": false, "public_list_via_policy": false },
+          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
           "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
           "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
           "versioning": { "enabled": true, "mfa_delete_enabled": false },

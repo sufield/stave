@@ -47,8 +47,8 @@ func buildS3Controls(in BuildModelInput) S3Controls {
 		PublicAccessFullyBlocked:        false,
 		AccountPublicAccessFullyBlocked: false,
 		PublicAccessBlockEffective:      false,
-		PolicyBlockEffective:            in.Visibility.PolicyExposureBlocked,
-		ACLBlockEffective:               in.Visibility.ACLExposureBlocked,
+		PolicyBlockEffective:            in.Visibility.IdentityExposureBlocked,
+		ACLBlockEffective:               in.Visibility.ResourceExposureBlocked,
 		PublicAccessBlock: PublicAccessBlockModel{
 			Account: NewPABStatus(in.AccountPAB),
 			Bucket:  NewPABStatus(in.Bucket.PublicAccessBlock),

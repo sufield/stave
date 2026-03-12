@@ -24,16 +24,16 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "public_acl_writable": false,
-          "authenticated_users_acl_writable": false
+          "public_admin": false,
+          "authenticated_admin": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_acl_writable
+    - field: properties.storage.visibility.public_admin
       op: eq
       value: true
-    - field: properties.storage.visibility.authenticated_users_acl_writable
+    - field: properties.storage.visibility.authenticated_admin
       op: eq
       value: true

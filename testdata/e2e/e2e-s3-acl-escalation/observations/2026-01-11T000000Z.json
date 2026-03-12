@@ -18,8 +18,8 @@
           "visibility": {
             "public_read": false,
             "public_write": false,
-            "public_acl_writable": true,
-            "authenticated_users_acl_writable": false
+            "public_admin": true,
+            "authenticated_admin": false
           },
           "controls": {
             "public_access_fully_blocked": false
@@ -38,8 +38,8 @@
           "visibility": {
             "public_read": false,
             "public_write": false,
-            "public_acl_writable": false,
-            "authenticated_users_acl_writable": true
+            "public_admin": false,
+            "authenticated_admin": true
           },
           "controls": {
             "public_access_fully_blocked": false
@@ -58,8 +58,8 @@
           "visibility": {
             "public_read": false,
             "public_write": false,
-            "public_acl_writable": false,
-            "authenticated_users_acl_writable": false
+            "public_admin": false,
+            "authenticated_admin": false
           },
           "controls": {
             "public_access_fully_blocked": true

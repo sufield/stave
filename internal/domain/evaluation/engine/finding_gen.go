@@ -15,8 +15,8 @@ const (
 	pathPolicyStatements = "source_evidence.policy_public_statements"
 	pathACLGrantees      = "source_evidence.acl_public_grantees"
 
-	suffixPolicy = "_via_policy"
-	suffixACL    = "_via_acl"
+	suffixIdentity = "_via_identity"
+	suffixResource = "_via_resource"
 )
 
 // CreateDurationFinding generates a violation finding specifically for duration-based controls.
@@ -48,21 +48,21 @@ func CreateDurationFinding(
 // DeriveRootCauses maps misconfiguration property paths to high-level mechanism labels.
 // Stable order: policy before acl. Returns nil if no mechanisms detected.
 func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCause {
-	var hasPolicy, hasACL bool
+	var hasIdentity, hasResource bool
 	for _, mc := range misconfigs {
-		if strings.Contains(mc.Property, suffixPolicy) {
-			hasPolicy = true
+		if strings.Contains(mc.Property, suffixIdentity) {
+			hasIdentity = true
 		}
-		if strings.Contains(mc.Property, suffixACL) {
-			hasACL = true
+		if strings.Contains(mc.Property, suffixResource) {
+			hasResource = true
 		}
 	}
 
 	var causes []evaluation.RootCause
-	if hasPolicy {
+	if hasIdentity {
 		causes = append(causes, evaluation.RootCausePolicy)
 	}
-	if hasACL {
+	if hasResource {
 		causes = append(causes, evaluation.RootCauseACL)
 	}
 	return causes

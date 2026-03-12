@@ -7,23 +7,12 @@ func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOve
 	effectiveMask := ResolveEffectivePermissions(identity, resource, gov)
 
 	res := EffectiveVisibility{
-		Read:     effectiveMask.Has(PermRead),
-		Write:    effectiveMask.Has(PermWrite),
-		List:     effectiveMask.Has(PermList),
-		ACLRead:  effectiveMask.Has(PermMetadataRead),
-		ACLWrite: effectiveMask.Has(PermMetadataWrite),
-		Source:   "None",
-	}
-
-	identityReadEffective := !gov.BlockIdentityBoundPublicAccess && identity.Public.Read
-	resourceReadEffective := !gov.BlockResourceBoundPublicAccess && resource.Public.Read
-	switch {
-	case identityReadEffective && resourceReadEffective:
-		res.Source = "Combined"
-	case identityReadEffective:
-		res.Source = "Identity"
-	case resourceReadEffective:
-		res.Source = "Resource"
+		Read:       effectiveMask.Has(PermRead),
+		Write:      effectiveMask.Has(PermWrite),
+		List:       effectiveMask.Has(PermList),
+		Delete:     effectiveMask.Has(PermDelete),
+		AdminRead:  effectiveMask.Has(PermMetadataRead),
+		AdminWrite: effectiveMask.Has(PermMetadataWrite),
 	}
 
 	res.IsLatent = (identity.Public.Read || resource.Public.Read) && !res.Read
@@ -68,49 +57,46 @@ func BuildVisibilityResult(hasIdentity bool, identity Visibility, hasResource bo
 func newVisibilityResult(in visibilityInputs) VisibilityResult {
 	effective := ResolveEffectiveVisibility(in.identity, in.resource, in.gov)
 	result := VisibilityResult{
-		PublicReadViaPolicy: in.hasIdentity && in.identity.Public.Read,
-		PublicListViaPolicy: in.hasIdentity && in.identity.Public.List,
-		PublicReadViaACL:    in.hasResource && in.resource.Public.Read,
+		ReadViaIdentity: in.hasIdentity && in.identity.Public.Read,
+		ListViaIdentity: in.hasIdentity && in.identity.Public.List,
+		ReadViaResource: in.hasResource && in.resource.Public.Read,
 	}
 
-	result.PolicyExposureBlocked = in.gov.BlockIdentityBoundPublicAccess
-	result.ACLExposureBlocked = in.gov.BlockResourceBoundPublicAccess
+	result.IdentityExposureBlocked = in.gov.BlockIdentityBoundPublicAccess
+	result.ResourceExposureBlocked = in.gov.BlockResourceBoundPublicAccess
 
 	result.PublicRead = effective.Read
 	result.PublicWrite = effective.Write
 	result.PublicList = effective.List
-	result.PublicACLReadable = effective.ACLRead
-	result.PublicACLWritable = effective.ACLWrite
-	result.PublicWriteViaACL = in.hasResource && !result.ACLExposureBlocked && in.resource.Public.Write
+	result.PublicDelete = effective.Delete
+	result.PublicAdmin = effective.AdminRead || effective.AdminWrite
+	result.WriteViaResource = in.hasResource && !result.ResourceExposureBlocked && in.resource.Public.Write
+	result.AdminViaResource = in.hasResource && !result.ResourceExposureBlocked && in.resource.Public.Admin
 
 	applyAuthenticatedVisibilityFromIdentity(&result, in)
 	applyAuthenticatedVisibilityFromResource(&result, in)
 
 	result.LatentPublicRead = effective.IsLatent
-	result.LatentPublicList = result.PublicListViaPolicy && !result.PublicList
+	result.LatentPublicList = result.ListViaIdentity && !result.PublicList
 	return result
 }
 
 func applyAuthenticatedVisibilityFromIdentity(result *VisibilityResult, in visibilityInputs) {
-	if !in.hasIdentity || result.PolicyExposureBlocked {
+	if !in.hasIdentity || result.IdentityExposureBlocked {
 		return
 	}
 	auth := in.identity.Authenticated
-	result.AuthenticatedUsersRead = auth.Read
-	result.AuthenticatedUsersWrite = auth.Write
-	result.AuthenticatedUsersACLWritable = auth.Admin
-	result.AuthenticatedUsersACLReadable = auth.Admin
+	result.AuthenticatedRead = auth.Read
+	result.AuthenticatedWrite = auth.Write
+	result.AuthenticatedAdmin = auth.Admin
 }
 
 func applyAuthenticatedVisibilityFromResource(result *VisibilityResult, in visibilityInputs) {
-	if !in.hasResource || result.ACLExposureBlocked {
+	if !in.hasResource || result.ResourceExposureBlocked {
 		return
 	}
 	auth := in.resource.Authenticated
-	result.AuthenticatedUsersRead = result.AuthenticatedUsersRead || auth.Read
-	result.AuthenticatedUsersWrite = result.AuthenticatedUsersWrite || auth.Write
-	result.AuthenticatedUsersACLWritable = result.AuthenticatedUsersACLWritable || auth.Admin
-	result.AuthenticatedUsersACLReadable = result.AuthenticatedUsersACLReadable || auth.Admin
-	result.HasFullControlPublic = in.resource.Public.IsFullControl()
-	result.HasFullControlAuthenticatedOnly = in.resource.Authenticated.IsFullControl()
+	result.AuthenticatedRead = result.AuthenticatedRead || auth.Read
+	result.AuthenticatedWrite = result.AuthenticatedWrite || auth.Write
+	result.AuthenticatedAdmin = result.AuthenticatedAdmin || auth.Admin
 }

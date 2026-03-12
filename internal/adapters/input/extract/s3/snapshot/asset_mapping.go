@@ -57,7 +57,7 @@ func (e *SnapshotExtractor) observationToAsset(obs S3Observation) asset.Asset {
 		s3resource.ToResourceVisibility(aclAnalysis),
 		s3resource.ToGovernanceOverrides(effectivePAB),
 	)
-	props.Public = effective.IsPublic() || (hasPolicy && policyAnalysis.HasWildcardActions)
+	props.Public = effective.IsExposed() || (hasPolicy && policyAnalysis.HasWildcardActions)
 	props.SafetyProvable = !policyMissing && !aclMissing
 	props.SourceEvidence = buildSnapshotSourceEvidence(props)
 

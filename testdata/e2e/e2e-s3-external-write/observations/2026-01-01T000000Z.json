@@ -19,9 +19,9 @@
             "public_read": false,
             "public_list": false,
             "public_write": false,
-            "public_read_via_policy": false,
-            "public_read_via_acl": false,
-            "public_list_via_policy": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
             "latent_public_read": false,
             "latent_public_list": false
           },

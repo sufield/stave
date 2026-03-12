@@ -122,9 +122,9 @@ func TestExtractPublicBucket(t *testing.T) {
 	assertBoolField(t, visibility, "public_list", true)
 
 	// Root-cause attribution: policy-only public (no public ACL in this fixture)
-	assertBoolField(t, visibility, "public_read_via_policy", true)
-	assertBoolField(t, visibility, "public_read_via_acl", false)
-	assertBoolField(t, visibility, "public_list_via_policy", true)
+	assertBoolField(t, visibility, "read_via_identity", true)
+	assertBoolField(t, visibility, "read_via_resource", false)
+	assertBoolField(t, visibility, "list_via_identity", true)
 }
 
 func TestExtractPrivateBucket(t *testing.T) {
@@ -167,9 +167,9 @@ func TestExtractPrivateBucket(t *testing.T) {
 	assertBoolField(t, visibility, "public_read", false)
 
 	// Root-cause fields: no public policy or ACL in this fixture
-	assertBoolField(t, visibility, "public_read_via_policy", false)
-	assertBoolField(t, visibility, "public_read_via_acl", false)
-	assertBoolField(t, visibility, "public_list_via_policy", false)
+	assertBoolField(t, visibility, "read_via_identity", false)
+	assertBoolField(t, visibility, "read_via_resource", false)
+	assertBoolField(t, visibility, "list_via_identity", false)
 
 	// Check vendor-specific evidence
 	vendor := getSubMap(t, resource.Properties, "vendor")
@@ -234,8 +234,8 @@ func TestExtractAccountPublicAccessBlock(t *testing.T) {
 	assertBoolField(t, visibility, "public_read", false)
 
 	// Root-cause fields are pre-PAB: policy grants public read, so via_policy should be true
-	assertBoolField(t, visibility, "public_read_via_policy", true)
-	assertBoolField(t, visibility, "public_read_via_acl", false)
+	assertBoolField(t, visibility, "read_via_identity", true)
+	assertBoolField(t, visibility, "read_via_resource", false)
 
 	// Latent fields: policy public read blocked by PAB = latent exposure
 	assertBoolField(t, visibility, "latent_public_read", true)
@@ -483,9 +483,9 @@ func TestExtractACLOnlyPublicRead(t *testing.T) {
 	assertBoolField(t, visibility, "public_list", false)
 
 	// Root-cause attribution
-	assertBoolField(t, visibility, "public_read_via_policy", false)
-	assertBoolField(t, visibility, "public_read_via_acl", true)
-	assertBoolField(t, visibility, "public_list_via_policy", false)
+	assertBoolField(t, visibility, "read_via_identity", false)
+	assertBoolField(t, visibility, "read_via_resource", true)
+	assertBoolField(t, visibility, "list_via_identity", false)
 }
 
 func TestExtractPartialPAB(t *testing.T) {
@@ -523,7 +523,7 @@ func TestExtractPartialPAB(t *testing.T) {
 	// With block_public_policy=true, policy-based public read is blocked
 	visibility := getSubMap(t, storage, "visibility")
 	assertBoolField(t, visibility, "public_read", false)
-	assertBoolField(t, visibility, "public_read_via_policy", true)
+	assertBoolField(t, visibility, "read_via_identity", true)
 	assertBoolField(t, visibility, "latent_public_read", true)
 }
 
@@ -556,7 +556,7 @@ func TestExtractLatentPublicList(t *testing.T) {
 	assertBoolField(t, visibility, "public_list", false)
 
 	// Policy still grants listing (pre-PAB root cause)
-	assertBoolField(t, visibility, "public_list_via_policy", true)
+	assertBoolField(t, visibility, "list_via_identity", true)
 
 	// Latent: policy grants list but PAB blocks it
 	assertBoolField(t, visibility, "latent_public_list", true)

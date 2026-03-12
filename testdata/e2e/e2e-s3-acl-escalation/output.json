@@ -36,13 +36,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_users_acl_writable",
+            "property": "storage.visibility.authenticated_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_acl_writable",
+            "property": "storage.visibility.public_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -57,7 +57,7 @@
       "remediation": {
         "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.\n",
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_acl_writable\": false,\n      \"authenticated_users_acl_writable\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       }
     },
     {
@@ -74,13 +74,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_users_acl_writable",
+            "property": "storage.visibility.authenticated_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_acl_writable",
+            "property": "storage.visibility.public_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -95,7 +95,7 @@
       "remediation": {
         "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.\n",
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_acl_writable\": false,\n      \"authenticated_users_acl_writable\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       }
     }
   ],

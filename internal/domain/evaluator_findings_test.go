@@ -15,20 +15,20 @@ func TestDeriveRootCauses(t *testing.T) {
 		want  []evaluation.RootCause
 	}{
 		{
-			name:  "policy only",
-			props: []policy.Misconfiguration{{Property: "storage.visibility.public_read_via_policy", ActualValue: true}},
+			name:  "identity only",
+			props: []policy.Misconfiguration{{Property: "storage.visibility.read_via_identity", ActualValue: true}},
 			want:  []evaluation.RootCause{evaluation.RootCausePolicy},
 		},
 		{
-			name:  "acl only",
-			props: []policy.Misconfiguration{{Property: "storage.visibility.public_read_via_acl", ActualValue: true}},
+			name:  "resource only",
+			props: []policy.Misconfiguration{{Property: "storage.visibility.read_via_resource", ActualValue: true}},
 			want:  []evaluation.RootCause{evaluation.RootCauseACL},
 		},
 		{
-			name: "both policy and acl",
+			name: "both identity and resource",
 			props: []policy.Misconfiguration{
-				{Property: "storage.visibility.public_read_via_acl", ActualValue: true},
-				{Property: "storage.visibility.public_read_via_policy", ActualValue: true},
+				{Property: "storage.visibility.read_via_resource", ActualValue: true},
+				{Property: "storage.visibility.read_via_identity", ActualValue: true},
 			},
 			want: []evaluation.RootCause{evaluation.RootCausePolicy, evaluation.RootCauseACL},
 		},
@@ -48,10 +48,10 @@ func TestDeriveRootCauses(t *testing.T) {
 			want:  nil,
 		},
 		{
-			name: "multiple policy keys deduplicated",
+			name: "multiple identity keys deduplicated",
 			props: []policy.Misconfiguration{
-				{Property: "storage.visibility.public_list_via_policy", ActualValue: true},
-				{Property: "storage.visibility.public_read_via_policy", ActualValue: true},
+				{Property: "storage.visibility.list_via_identity", ActualValue: true},
+				{Property: "storage.visibility.read_via_identity", ActualValue: true},
 			},
 			want: []evaluation.RootCause{evaluation.RootCausePolicy},
 		},

@@ -28,8 +28,8 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "public_acl_writable": false,
-          "authenticated_users_acl_writable": false
+          "public_admin": false,
+          "authenticated_admin": false
         }
       }
     }

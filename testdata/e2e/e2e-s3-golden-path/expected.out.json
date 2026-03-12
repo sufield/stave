@@ -392,7 +392,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_read_via_policy",
+            "property": "storage.visibility.read_via_identity",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -405,7 +405,7 @@
       },
       "control_severity": "critical",
       "exposure": {
-        "type": "public_read_via_policy",
+        "type": "read_via_identity",
         "principal_scope": "public"
       },
       "posture_drift": {
@@ -415,7 +415,7 @@
       "remediation": {
         "description": "Bucket policy grants public read (Principal \\\"*\\\" with read action).\n",
         "action": "Remove or constrain the public policy statement. Use restrictive principals or conditions and keep Public Access Block enabled.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read_via_policy\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-1f7cb52a37fba422",
@@ -466,7 +466,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_list_via_policy",
+            "property": "storage.visibility.list_via_identity",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -479,7 +479,7 @@
       },
       "control_severity": "critical",
       "exposure": {
-        "type": "public_list_via_policy",
+        "type": "list_via_identity",
         "principal_scope": "public"
       },
       "posture_drift": {
@@ -489,7 +489,7 @@
       "remediation": {
         "description": "Bucket policy grants public listing (Principal \\\"*\\\" with list action).\n",
         "action": "Remove or constrain policy statements allowing s3:ListBucket to anonymous principals.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_list_via_policy\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-9348058b446900e1",

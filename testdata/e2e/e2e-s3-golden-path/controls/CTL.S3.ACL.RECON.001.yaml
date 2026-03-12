@@ -27,7 +27,7 @@ remediation:
     {
       "storage": {
         "visibility": {
-          "public_acl_readable": false
+          "public_admin": false
         }
       }
     }
