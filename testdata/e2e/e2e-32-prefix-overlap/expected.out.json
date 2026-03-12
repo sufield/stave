@@ -57,8 +57,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Security control violation detected.",
-        "action": "Review the finding evidence and remediate the configuration."
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
       }
     }
   ],

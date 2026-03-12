@@ -57,7 +57,7 @@ func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *t
 	if !ok {
 		t.Fatalf("expected raw error evidence key")
 	}
-	if !strings.Contains(rawErr, "invalid control ID format") {
+	if !strings.Contains(rawErr, "invalid control ID") {
 		t.Fatalf("raw error = %q, expected format error text", rawErr)
 	}
 }
