@@ -9,122 +9,135 @@ import (
 // comparison_semantics.go defines typed comparison behavior used by predicate
 // operators over dynamic (any) values.
 
-// EqualValues compares two values for equality.
+// EqualValues compares two values for semantic equality, supporting mixed types
+// common in serialized cloud data (e.g., "true" == true, 1 == 1.0).
 func EqualValues(a, b any) bool {
-	// Fast path for same-type comparable values.
-	if eq, ok := equalComparable(a, b); ok && eq {
+	if a == nil || b == nil {
+		return a == b
+	}
+
+	// 1. Fast path: Direct equality for common comparable primitives.
+	if eq, ok := tryDirectEqual(a, b); ok && eq {
 		return true
 	}
 
-	// Handle mixed numeric equality (for example: int vs float64).
-	af, aOk := ToFloat64(a)
-	bf, bOk := ToFloat64(b)
-	if aOk && bOk {
-		return af == bf
+	// 2. Handle mixed numeric equality (e.g., int 1 vs float64 1.0).
+	if af, aOk := ToFloat64(a); aOk {
+		if bf, bOk := ToFloat64(b); bOk {
+			return af == bf
+		}
 	}
 
-	// Handle bool normalization (true/false, t/f, 1/0).
-	ab, aBOk := ToBool(a)
-	bb, bBOk := ToBool(b)
-	if aBOk && bBOk {
-		return ab == bb
+	// 3. Handle boolean normalization (e.g., "true" vs true).
+	if ab, aOk := ToBool(a); aOk {
+		if bb, bOk := ToBool(b); bOk {
+			return ab == bb
+		}
 	}
 
-	// Handle case-insensitive string comparison for cloud export variation.
-	as, aSOk := toString(a)
-	bs, bSOk := toString(b)
-	if aSOk && bSOk {
-		return strings.EqualFold(strings.TrimSpace(as), strings.TrimSpace(bs))
+	// 4. Handle case-insensitive string comparison (e.g., "Public" vs "public").
+	if as, aOk := toString(a); aOk {
+		if bs, bOk := toString(b); bOk {
+			return strings.EqualFold(strings.TrimSpace(as), strings.TrimSpace(bs))
+		}
 	}
 
 	return false
 }
 
-// GreaterThan compares two numeric values (a > b).
-// Returns false if either value cannot be converted to a number (fail closed).
-func GreaterThan(a, b any) bool {
-	return compare(a, b, func(af, bf float64) bool { return af > bf })
-}
+// Numeric Comparisons
 
-// LessThan compares two numeric values (a < b).
-func LessThan(a, b any) bool {
-	return compare(a, b, func(af, bf float64) bool { return af < bf })
-}
+func GreaterThan(a, b any) bool        { return numericCompare(a, b, 1) }
+func GreaterThanOrEqual(a, b any) bool { return numericCompare(a, b, 2) }
+func LessThan(a, b any) bool           { return numericCompare(a, b, 3) }
+func LessThanOrEqual(a, b any) bool    { return numericCompare(a, b, 4) }
 
-// GreaterThanOrEqual compares two numeric values (a >= b).
-func GreaterThanOrEqual(a, b any) bool {
-	return compare(a, b, func(af, bf float64) bool { return af >= bf })
-}
-
-// LessThanOrEqual compares two numeric values (a <= b).
-func LessThanOrEqual(a, b any) bool {
-	return compare(a, b, func(af, bf float64) bool { return af <= bf })
-}
-
-func compare(a, b any, compareFn func(af, bf float64) bool) bool {
+func numericCompare(a, b any, op int) bool {
 	af, aOk := ToFloat64(a)
 	bf, bOk := ToFloat64(b)
 	if !aOk || !bOk {
-		return false
+		return false // Fail closed on non-numeric types
 	}
-	return compareFn(af, bf)
+	switch op {
+	case 1:
+		return af > bf
+	case 2:
+		return af >= bf
+	case 3:
+		return af < bf
+	case 4:
+		return af <= bf
+	}
+	return false
 }
 
-// ToFloat64 converts numeric types to float64.
-// Returns (value, true) on success, (0, false) if the value is not numeric.
+// ToFloat64 converts numeric types and numeric strings to float64.
 func ToFloat64(v any) (float64, bool) {
-	if str, ok := v.(string); ok {
-		if f, err := strconv.ParseFloat(strings.TrimSpace(str), 64); err == nil {
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case float32:
+		return float64(n), true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case int32:
+		return float64(n), true
+	case int16:
+		return float64(n), true
+	case int8:
+		return float64(n), true
+	case uint:
+		return float64(n), true
+	case uint64:
+		return float64(n), true
+	case uint32:
+		return float64(n), true
+	case uint16:
+		return float64(n), true
+	case uint8:
+		return float64(n), true
+	case string:
+		if f, err := strconv.ParseFloat(strings.TrimSpace(n), 64); err == nil {
 			return f, true
 		}
-		return 0, false
-	}
-	return numericFloat64(v)
-}
-
-func numericFloat64(v any) (float64, bool) {
-	rv := reflect.ValueOf(v)
-	switch rv.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return float64(rv.Int()), true
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return float64(rv.Uint()), true
-	case reflect.Float32, reflect.Float64:
-		return rv.Float(), true
 	}
 	return 0, false
 }
 
-// ToBool converts booleans and boolean strings to bool.
+// ToBool converts booleans and boolean-like strings to bool.
 func ToBool(v any) (bool, bool) {
-	if b, ok := v.(bool); ok {
+	switch b := v.(type) {
+	case bool:
 		return b, true
-	}
-	if s, ok := toString(v); ok {
-		if val, err := strconv.ParseBool(strings.TrimSpace(s)); err == nil {
+	case string:
+		if val, err := strconv.ParseBool(strings.TrimSpace(b)); err == nil {
 			return val, true
 		}
 	}
 	return false, false
 }
 
-func equalComparable(a, b any) (_ bool, ok bool) {
-	ok = true
-	defer func() {
-		if recover() != nil {
-			ok = false
-		}
-	}()
-	return a == b, ok
-}
-
 func toString(v any) (string, bool) {
 	if s, ok := v.(string); ok {
 		return s, true
 	}
-	rv := reflect.ValueOf(v)
-	if rv.IsValid() && rv.Kind() == reflect.String {
+	// Named string types (e.g., kernel.AssetType) need a Kind check.
+	// This is lightweight (no alloc) — unlike the reflect calls removed
+	// from ToFloat64 which invoked .Int()/.Uint()/.Float().
+	if rv := reflect.ValueOf(v); rv.Kind() == reflect.String {
 		return rv.String(), true
 	}
 	return "", false
+}
+
+// tryDirectEqual safely attempts an a == b comparison for common comparable types.
+// Slices, maps, and functions would panic with ==; this whitelist prevents that.
+func tryDirectEqual(a, b any) (bool, bool) {
+	switch a.(type) {
+	case string, int, int64, float64, bool, uint64, int32:
+		return a == b, true
+	}
+	return false, false
 }
