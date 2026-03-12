@@ -13,7 +13,7 @@ import (
 )
 
 func handleApplyResult(cmd *cobra.Command, result EvaluateResult) error {
-	if result.SafetyStatus != evaluation.SafetyStatusSafe {
+	if result.SafetyStatus != evaluation.StatusSafe {
 		if !cmdutil.QuietEnabled(cmd) {
 			ui.WriteHint(cmd.ErrOrStderr(), result.DiagnoseHint)
 			rt := cmdutil.NewRuntime(cmd)

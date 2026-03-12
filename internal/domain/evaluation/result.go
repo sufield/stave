@@ -1,7 +1,8 @@
 package evaluation
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// ConfidenceLevel represents the confidence in an evaluation decision.
+// ConfidenceLevel quantifies the certainty of an evaluation result.
 type ConfidenceLevel string
 
 const (
@@ -20,76 +21,64 @@ const (
 	ConfidenceInconclusive ConfidenceLevel = "inconclusive"
 )
 
-// confidenceRange maps a gap-to-window ratio threshold to a confidence level.
-// Multiplication form (maxGap*N <= window) keeps integer precision.
+// confidenceRange defines thresholds for classifying evaluation confidence.
 type confidenceRange struct {
 	multiplier int
 	level      ConfidenceLevel
 }
 
-var confidenceRanges = []confidenceRange{
+var confidenceThresholds = []confidenceRange{
 	{4, ConfidenceHigh},   // maxGap <= 25% of window
 	{2, ConfidenceMedium}, // maxGap <= 50% of window
 }
 
-// DeriveConfidenceLevel classifies confidence based on MaxGap relative to the required window.
-//
-//	gap <= 25% window -> high
-//	gap <= 50% window -> medium
-//	gap >  50% window -> low
+// DeriveConfidenceLevel classifies confidence based on the largest observation gap
+// relative to the required evaluation window.
 func DeriveConfidenceLevel(maxGap, requiredWindow time.Duration) ConfidenceLevel {
 	if requiredWindow <= 0 {
 		return ConfidenceInconclusive
 	}
 
-	for _, r := range confidenceRanges {
-		if maxGap*time.Duration(r.multiplier) <= requiredWindow {
-			return r.level
+	for _, t := range confidenceThresholds {
+		if maxGap*time.Duration(t.multiplier) <= requiredWindow {
+			return t.level
 		}
 	}
 	return ConfidenceLow
 }
 
-// SafetyStatus classifies the overall safety posture of an evaluation.
+// SafetyStatus classifies the high-level security posture based on evaluation results.
 type SafetyStatus string
 
 const (
-	SafetyStatusSafe       SafetyStatus = "SAFE"
-	SafetyStatusBorderline SafetyStatus = "BORDERLINE"
-	SafetyStatusUnsafe     SafetyStatus = "UNSAFE"
+	StatusSafe       SafetyStatus = "SAFE"
+	StatusBorderline SafetyStatus = "BORDERLINE"
+	StatusUnsafe     SafetyStatus = "UNSAFE"
 )
 
-// ClassifySafetyStatus derives a SafetyStatus from violation count and
-// upcoming risk items. UNSAFE if any violations exist; BORDERLINE if
-// assets are approaching or at their unsafe threshold; SAFE otherwise.
-func ClassifySafetyStatus(violations int, upcomingRisks risk.Items) SafetyStatus {
+// ClassifySafetyStatus derives posture from violation counts and approaching risks.
+func ClassifySafetyStatus(violations int, upcoming risk.Items) SafetyStatus {
 	if violations > 0 {
-		return SafetyStatusUnsafe
+		return StatusUnsafe
 	}
-	if upcomingRisks.HasAnyRisk() {
-		return SafetyStatusBorderline
+	if upcoming.HasAnyRisk() {
+		return StatusBorderline
 	}
-	return SafetyStatusSafe
+	return StatusSafe
 }
 
-// Decision represents the outcome of evaluating an control against an asset.
+// Decision represents the final outcome of a control check against a resource.
 type Decision string
 
 const (
-	// DecisionViolation indicates the control was violated.
-	DecisionViolation Decision = "VIOLATION"
-	// DecisionPass indicates the asset complies with the control.
-	DecisionPass Decision = "PASS"
-	// DecisionInconclusive indicates insufficient data to determine compliance.
-	DecisionInconclusive Decision = "INCONCLUSIVE"
-	// DecisionNotApplicable indicates the control does not apply to this asset.
+	DecisionViolation     Decision = "VIOLATION"
+	DecisionPass          Decision = "PASS"
+	DecisionInconclusive  Decision = "INCONCLUSIVE"
 	DecisionNotApplicable Decision = "NOT_APPLICABLE"
-	// DecisionSkipped indicates the asset was skipped (e.g., due to ignore rules).
-	DecisionSkipped Decision = "SKIPPED"
+	DecisionSkipped       Decision = "SKIPPED"
 )
 
-// Row represents the evaluation outcome for a single (control, asset) pair.
-// Every evaluated pair gets exactly one row with an explicit decision.
+// Row captures the granular result for a single control/asset pairing.
 type Row struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	AssetID     asset.ID         `json:"asset_id"`
@@ -99,34 +88,34 @@ type Row struct {
 	Confidence  ConfidenceLevel  `json:"confidence"`
 	Evidence    *Evidence        `json:"evidence,omitempty"`
 	WhyNow      string           `json:"why_now,omitempty"`
-	Reason      string           `json:"reason,omitempty"` // For SKIPPED/NOT_APPLICABLE
+	Reason      string           `json:"reason,omitempty"` // populated for SKIPPED/INCONCLUSIVE
 }
 
-// MarkInconclusive updates the row to an inconclusive decision with the given reason.
-func (row *Row) MarkInconclusive(reason string) {
-	if row == nil {
+// MarkInconclusive shifts a row to an inconclusive state with a specific explanation.
+func (r *Row) MarkInconclusive(reason string) {
+	if r == nil {
 		return
 	}
-	row.Decision = DecisionInconclusive
-	row.Confidence = ConfidenceInconclusive
-	row.Reason = reason
+	r.Decision = DecisionInconclusive
+	r.Confidence = ConfidenceInconclusive
+	r.Reason = reason
 }
 
-// Summary provides aggregate statistics.
+// Summary provides high-level metrics for an evaluation run.
 type Summary struct {
 	AssetsEvaluated int `json:"assets_evaluated"`
 	AttackSurface   int `json:"attack_surface"`
 	Violations      int `json:"violations"`
 }
 
-// SkippedControl represents a control that was skipped during evaluation.
+// SkippedControl identifies a control that was ignored during the run.
 type SkippedControl struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	ControlName string           `json:"control_name"`
 	Reason      string           `json:"reason"`
 }
 
-// Result holds the complete evaluation output.
+// Result is the root aggregate of an evaluation execution.
 type Result struct {
 	Run                RunInfo              `json:"run"`
 	Summary            Summary              `json:"summary"`
@@ -135,46 +124,52 @@ type Result struct {
 	Skipped            []SkippedControl     `json:"skipped,omitempty"`
 	SkippedAssets      []asset.SkippedAsset `json:"skipped_assets,omitempty"`
 	Metadata           Metadata             `json:"-"`
-	// Rows contains per-pair evaluation decisions (populated when --explain-all is enabled)
-	Rows []Row `json:"rows,omitempty"`
+	Rows               []Row                `json:"rows,omitempty"` // populated if --explain is used
 }
 
-// FindFinding returns the finding matching the given control and asset IDs, or nil.
-func (r Result) FindFinding(controlID kernel.ControlID, assetID asset.ID) *Finding {
+// FindFinding retrieves a finding for a specific control/asset pair, returning nil if not found.
+func (r *Result) FindFinding(ctlID kernel.ControlID, astID asset.ID) *Finding {
 	for i := range r.Findings {
-		if r.Findings[i].ControlID == controlID && r.Findings[i].AssetID == assetID {
+		if r.Findings[i].ControlID == ctlID && r.Findings[i].AssetID == astID {
 			return &r.Findings[i]
 		}
 	}
 	return nil
 }
 
-// DomainCount holds the count of violation rows for a single asset domain.
+// DomainCount represents the number of violations in a specific business domain.
 type DomainCount struct {
 	Domain string
 	Count  int
 }
 
-// GroupViolationsByDomain returns sorted domain counts from violation rows.
+// GroupViolationsByDomain aggregates violation rows into sorted counts by asset domain.
 func GroupViolationsByDomain(rows []Row) []DomainCount {
-	counts := make(map[string]int)
-	for _, row := range rows {
-		if row.Decision != DecisionViolation {
-			continue
-		}
-		domain := strings.TrimSpace(row.AssetDomain)
-		if domain == "" {
-			domain = "unknown"
-		}
-		counts[domain]++
+	if len(rows) == 0 {
+		return nil
 	}
 
-	result := make([]DomainCount, 0, len(counts))
-	for domain, count := range counts {
-		result = append(result, DomainCount{Domain: domain, Count: count})
+	counts := make(map[string]int, len(rows)/10)
+	for i := range rows {
+		if rows[i].Decision != DecisionViolation {
+			continue
+		}
+
+		d := strings.ToLower(strings.TrimSpace(rows[i].AssetDomain))
+		if d == "" {
+			d = "unknown"
+		}
+		counts[d]++
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Domain < result[j].Domain
+
+	res := make([]DomainCount, 0, len(counts))
+	for d, c := range counts {
+		res = append(res, DomainCount{Domain: d, Count: c})
+	}
+
+	slices.SortFunc(res, func(a, b DomainCount) int {
+		return cmp.Compare(a.Domain, b.Domain)
 	})
-	return result
+
+	return res
 }

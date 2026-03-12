@@ -20,7 +20,7 @@ func BuildEvaluateResult(status evaluation.SafetyStatus, controlsDir, observatio
 		SafetyStatus: status,
 		NextSteps:    []string{},
 	}
-	if status == evaluation.SafetyStatusSafe {
+	if status == evaluation.StatusSafe {
 		return result
 	}
 
