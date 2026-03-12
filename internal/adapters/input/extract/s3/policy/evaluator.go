@@ -21,8 +21,8 @@ const (
 	PermRead        = risk.PermRead
 	PermWrite       = risk.PermWrite
 	PermList        = risk.PermList
-	PermACLRead     = risk.PermACLRead
-	PermACLWrite    = risk.PermACLWrite
+	PermAdminRead   = risk.PermAdminRead
+	PermAdminWrite  = risk.PermAdminWrite
 	PermDelete      = risk.PermDelete
 	PermFullControl = risk.PermFullControl
 )
@@ -32,16 +32,16 @@ type Evaluator struct {
 	TrustedCIDRs []string
 }
 
-var evaluatorActionMap = map[string]risk.StmtPerm{
+var evaluatorActionMap = map[string]risk.Permission{
 	policyWildcard:                 risk.PermFullControl,
 	policyS3Wildcard:               risk.PermFullControl,
 	policyActionGetObject:          risk.PermRead,
 	policyActionPutObject:          risk.PermWrite,
 	policyActionListBucket:         risk.PermList,
-	policyActionGetBucketACL:       risk.PermACLRead,
-	policyActionGetObjectACL:       risk.PermACLRead,
-	policyActionPutBucketACL:       risk.PermACLWrite,
-	policyActionPutObjectACL:       risk.PermACLWrite,
+	policyActionGetBucketACL:       risk.PermAdminRead,
+	policyActionGetObjectACL:       risk.PermAdminRead,
+	policyActionPutBucketACL:       risk.PermAdminWrite,
+	policyActionPutObjectACL:       risk.PermAdminWrite,
 	policyActionDeleteObject:       risk.PermDelete,
 	policyActionDeleteBucket:       risk.PermDelete,
 	policyActionListBucketVersions: risk.PermList,
@@ -95,22 +95,17 @@ func (e *Evaluator) Evaluate(jsonPolicy string) risk.Report {
 
 		isPublic, isAuth := classifyPolicyPrincipal(stmt.principalAny())
 		isNetworkScoped := IsNetworkScoped(stmt.conditionAny())
-		risk.ApplyStatementRisk(risk.StatementContext{
+		ctx := risk.StatementContext{
 			Permissions:     perms,
 			IsPublic:        isPublic,
 			IsAuthenticated: isAuth,
 			IsNetworkScoped: isNetworkScoped,
 			IsAllow:         stmt.Effect == "" || stmt.Effect.IsAllow(),
-			Report:          &report,
-		})
+		}
+		report.UpdateReport(ctx.Evaluate())
 	}
 
 	return report
-}
-
-// calculateStatementRisk delegates to domain risk scoring.
-func (e *Evaluator) calculateStatementRisk(ctx risk.StatementContext) {
-	risk.ApplyStatementRisk(ctx)
 }
 
 func classifyPolicyPrincipal(principal any) (isPublic bool, isAuthenticated bool) {

@@ -39,14 +39,14 @@ func TestBuildRemediationGroups(t *testing.T) {
 	}
 
 	sharedActions := makeActions(
-		"properties.storage.controls.block_public_acls",
-		"properties.storage.controls.block_public_policy",
-		"properties.storage.controls.ignore_public_acls",
-		"properties.storage.controls.restrict_public_buckets",
+		"security_posture.block_identity_public_access",
+		"security_posture.block_resource_metadata_access",
+		"security_posture.ignore_resource_metadata_access",
+		"security_posture.restrict_resource_public_access",
 	)
 
 	differentActions := makeActions(
-		"properties.storage.encryption.enabled",
+		"security_posture.encryption.enabled",
 	)
 
 	tests := []struct {
@@ -160,7 +160,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 
 func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: "set", Path: "properties.storage.controls.block_public_acls", Value: true},
+		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
 	}
 	findings := []remediation.Finding{
 		{
@@ -195,7 +195,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 
 func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: "set", Path: "properties.storage.controls.block_public_acls", Value: true},
+		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
 	}
 	findings := []remediation.Finding{
 		{
@@ -234,7 +234,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 
 func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: "set", Path: "properties.storage.controls.block_public_acls", Value: true},
+		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
 	}
 	findings := []remediation.Finding{
 		{

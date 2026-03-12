@@ -34,10 +34,10 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 	}
 
 	wantActionPaths := []string{
-		"properties.storage.controls.block_public_acls",
-		"properties.storage.controls.block_public_policy",
-		"properties.storage.controls.ignore_public_acls",
-		"properties.storage.controls.restrict_public_buckets",
+		"security_posture.block_identity_public_access",
+		"security_posture.block_resource_metadata_access",
+		"security_posture.ignore_resource_metadata_access",
+		"security_posture.restrict_resource_public_access",
 	}
 	gotPaths := make([]string, len(plan.Actions))
 	for i := range plan.Actions {
