@@ -114,42 +114,42 @@ func TestCheckExposure(t *testing.T) {
 		wantEvid string
 	}{
 		{
-			name:   "policy grants public read",
+			name:   "identity grants public read",
 			prefix: "invoices/",
 			facts: exposure.Facts{
-				HasPolicyEvidence: true,
-				PolicyGrants:      exposure.Grants{{Scope: "invoices/", SourceID: "AllowPublic"}},
+				HasIdentityEvidence: true,
+				IdentityGrants:      exposure.Grants{{Scope: "invoices/", SourceID: "AllowPublic"}},
 			},
 			wantPub:  true,
-			wantEvid: "policy:AllowPublic",
+			wantEvid: "identity:AllowPublic",
 		},
 		{
-			name:   "policy blocked",
+			name:   "identity blocked",
 			prefix: "invoices/",
 			facts: exposure.Facts{
-				HasPolicyEvidence:       true,
-				PolicyGrants:            exposure.Grants{{Scope: "*"}},
-				PolicyPublicReadBlocked: true,
+				HasIdentityEvidence: true,
+				IdentityGrants:      exposure.Grants{{Scope: "*"}},
+				IdentityReadBlocked: true,
 			},
 			wantPub: false,
 		},
 		{
-			name:   "acl grants public read",
+			name:   "resource grants public read",
 			prefix: "invoices/",
 			facts: exposure.Facts{
-				HasACLEvidence:   true,
-				ACLPublicReadAll: true,
+				HasResourceEvidence: true,
+				ResourceReadAll:     true,
 			},
 			wantPub:  true,
-			wantEvid: "acl",
+			wantEvid: "resource",
 		},
 		{
-			name:   "acl blocked",
+			name:   "resource blocked",
 			prefix: "invoices/",
 			facts: exposure.Facts{
-				HasACLEvidence:       true,
-				ACLPublicReadAll:     true,
-				ACLPublicReadBlocked: true,
+				HasResourceEvidence: true,
+				ResourceReadAll:     true,
+				ResourceReadBlocked: true,
 			},
 			wantPub: false,
 		},
@@ -174,7 +174,7 @@ func TestCheckExposure(t *testing.T) {
 	}
 }
 
-func TestPolicyGrantEvidence(t *testing.T) {
+func TestGrantEvidence(t *testing.T) {
 	tests := []struct {
 		name string
 		g    exposure.Grant
@@ -183,17 +183,17 @@ func TestPolicyGrantEvidence(t *testing.T) {
 		{
 			name: "with statement ID",
 			g:    exposure.Grant{Scope: "*", SourceID: "AllowPublic"},
-			want: "policy:AllowPublic",
+			want: "identity:AllowPublic",
 		},
 		{
 			name: "without statement ID",
 			g:    exposure.Grant{Scope: "*", SourceID: ""},
-			want: "policy",
+			want: "identity",
 		},
 		{
 			name: "whitespace-only statement ID",
 			g:    exposure.Grant{Scope: "*", SourceID: "   "},
-			want: "policy",
+			want: "identity",
 		},
 	}
 	for _, tt := range tests {
@@ -248,13 +248,13 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 			"kind": "bucket",
 			"name": "example-bucket",
 			"prefix_exposure": map[string]any{
-				"has_policy_evidence":        true,
-				"has_acl_evidence":           true,
-				"policy_public_read_scopes":  []any{"images/"},
-				"policy_source_by_scope":     map[string]any{"images/": "AllowPublicImages"},
-				"policy_public_read_blocked": false,
-				"acl_public_read_all":        false,
-				"acl_public_read_blocked":    false,
+				"has_identity_evidence":    true,
+				"has_resource_evidence":    true,
+				"identity_read_scopes":     []any{"images/"},
+				"identity_source_by_scope": map[string]any{"images/": "AllowPublicImages"},
+				"identity_read_blocked":    false,
+				"resource_read_all":        false,
+				"resource_read_blocked":    false,
 			},
 		})
 
@@ -275,13 +275,13 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 			"kind": "bucket",
 			"name": "example-bucket",
 			"prefix_exposure": map[string]any{
-				"has_policy_evidence":        true,
-				"has_acl_evidence":           true,
-				"policy_public_read_scopes":  []any{"*"},
-				"policy_source_by_scope":     map[string]any{"*": "AllowAll"},
-				"policy_public_read_blocked": false,
-				"acl_public_read_all":        false,
-				"acl_public_read_blocked":    false,
+				"has_identity_evidence":    true,
+				"has_resource_evidence":    true,
+				"identity_read_scopes":     []any{"*"},
+				"identity_source_by_scope": map[string]any{"*": "AllowAll"},
+				"identity_read_blocked":    false,
+				"resource_read_all":        false,
+				"resource_read_blocked":    false,
 			},
 		})
 
@@ -294,7 +294,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		if len(findings) != 1 {
 			t.Fatalf("findings=%d, want 1", len(findings))
 		}
-		if v := findMisconfiguration(findings[0].Evidence.Misconfigurations); v != "policy:AllowAll" {
+		if v := findMisconfiguration(findings[0].Evidence.Misconfigurations); v != "identity:AllowAll" {
 			t.Errorf("exposure_source=%v, want policy:AllowAll", v)
 		}
 	})

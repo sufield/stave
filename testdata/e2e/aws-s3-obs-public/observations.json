@@ -89,13 +89,13 @@
                 "retention_days": 0
               },
               "prefix_exposure": {
-                "has_policy_evidence": false,
-                "has_acl_evidence": false,
-                "policy_public_read_scopes": [],
-                "policy_source_by_scope": {},
-                "policy_public_read_blocked": true,
-                "acl_public_read_all": false,
-                "acl_public_read_blocked": true
+                "has_identity_evidence": false,
+                "has_resource_evidence": false,
+                "identity_read_scopes": [],
+                "identity_source_by_scope": {},
+                "identity_read_blocked": true,
+                "resource_read_all": false,
+                "resource_read_blocked": true
               },
               "website": null,
               "tags": {"containsPHI": "true", "data-classification": "public"}
@@ -192,13 +192,13 @@
                 "retention_days": 0
               },
               "prefix_exposure": {
-                "has_policy_evidence": false,
-                "has_acl_evidence": false,
-                "policy_public_read_scopes": [],
-                "policy_source_by_scope": {},
-                "policy_public_read_blocked": true,
-                "acl_public_read_all": false,
-                "acl_public_read_blocked": true
+                "has_identity_evidence": false,
+                "has_resource_evidence": false,
+                "identity_read_scopes": [],
+                "identity_source_by_scope": {},
+                "identity_read_blocked": true,
+                "resource_read_all": false,
+                "resource_read_blocked": true
               },
               "website": null,
               "tags": {"containsPHI": "true", "data-classification": "public"}
