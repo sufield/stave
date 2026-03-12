@@ -12,7 +12,7 @@ type BinaryRequest struct {
 }
 
 // checkBinary verifies if a specific binary is available in the system PATH.
-func checkBinary(ctx Context, req BinaryRequest) Check {
+func checkBinary(ctx *Context, req BinaryRequest) Check {
 	if req.Binary == "" {
 		return Check{
 			Name:    req.Name,
