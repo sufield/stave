@@ -15,12 +15,9 @@ import (
 
 const suppressionDateLayout = "2006-01-02"
 
-// ExpiryDate is a date-only value object used for suppression expiry.
-// Zero value means "no expiry".
-type ExpiryDate struct {
-	value time.Time
-	set   bool
-}
+// ExpiryDate represents a date-only value for suppression lifecycles.
+// Zero value (time.Time.IsZero()) means "no expiry".
+type ExpiryDate time.Time
 
 // ParseExpiryDate parses YYYY-MM-DD into an ExpiryDate.
 // Empty string returns zero ExpiryDate (no expiry).
@@ -32,25 +29,43 @@ func ParseExpiryDate(s string) (ExpiryDate, error) {
 	if err != nil {
 		return ExpiryDate{}, fmt.Errorf("invalid suppression expiry %q: %w", s, err)
 	}
-	return ExpiryDate{value: v, set: true}, nil
+	return ExpiryDate(v), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler for automatic YAML/JSON parsing.
+func (d *ExpiryDate) UnmarshalText(text []byte) error {
+	s := string(text)
+	if s == "" || s == "null" {
+		return nil
+	}
+	parsed, err := ParseExpiryDate(s)
+	if err != nil {
+		return err
+	}
+	*d = parsed
+	return nil
 }
 
 func (d ExpiryDate) IsZero() bool {
-	return !d.set
+	return time.Time(d).IsZero()
 }
 
 func (d ExpiryDate) String() string {
-	if !d.set {
+	if d.IsZero() {
 		return ""
 	}
-	return d.value.Format(suppressionDateLayout)
+	return time.Time(d).Format(suppressionDateLayout)
 }
 
+// IsExpired reports whether the current time has passed the expiry date.
+// A date of 2026-01-01 expires at the start of 2026-01-02, so the
+// suppression remains active for the entire specified day.
 func (d ExpiryDate) IsExpired(now time.Time) bool {
-	if !d.set {
+	if d.IsZero() {
 		return false
 	}
-	return now.After(d.value) || now.Equal(d.value)
+	endOfDay := time.Time(d).Add(24 * time.Hour)
+	return now.After(endOfDay) || now.Equal(endOfDay)
 }
 
 // SuppressionRule defines a single suppression entry from stave.yaml.
@@ -65,12 +80,12 @@ func (r SuppressionRule) matchesResource(assetID asset.ID) bool {
 	return matchPattern(r.AssetID.String(), assetID.String())
 }
 
-// SuppressionConfig holds all suppression rules.
+// SuppressionConfig holds all suppression rules with an indexed lookup.
 type SuppressionConfig struct {
 	Rules []SuppressionRule
 
-	indexedRules map[kernel.ControlID][]*SuppressionRule
-	prepared     bool
+	index map[kernel.ControlID][]*SuppressionRule
+	ready bool
 }
 
 // NewSuppressionConfig creates a prepared SuppressionConfig with indexed rules.
@@ -94,11 +109,11 @@ func (c *SuppressionConfig) ShouldSuppress(controlID kernel.ControlID, assetID a
 	if c == nil {
 		return nil
 	}
-	if !c.prepared {
-		panic("precondition failed: ShouldSuppress requires Prepare()")
+	if !c.ready {
+		c.Prepare()
 	}
 
-	for _, rule := range c.indexedRules[controlID] {
+	for _, rule := range c.index[controlID] {
 		if !rule.matchesResource(assetID) {
 			continue
 		}
@@ -111,17 +126,17 @@ func (c *SuppressionConfig) ShouldSuppress(controlID kernel.ControlID, assetID a
 	return nil
 }
 
-// Prepare validates and indexes suppression rules for efficient lookups.
-// It is safe to call multiple times.
+// Prepare indexes the rules for efficient O(1) control ID lookups.
+// Safe to call multiple times.
 func (c *SuppressionConfig) Prepare() {
-	if c == nil || c.prepared {
+	if c == nil || c.ready {
 		return
 	}
 
-	c.indexedRules = make(map[kernel.ControlID][]*SuppressionRule, len(c.Rules))
+	c.index = make(map[kernel.ControlID][]*SuppressionRule, len(c.Rules))
 	for i := range c.Rules {
 		rule := &c.Rules[i]
-		c.indexedRules[rule.ControlID] = append(c.indexedRules[rule.ControlID], rule)
+		c.index[rule.ControlID] = append(c.index[rule.ControlID], rule)
 	}
-	c.prepared = true
+	c.ready = true
 }
