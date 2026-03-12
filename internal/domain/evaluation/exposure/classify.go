@@ -52,13 +52,13 @@ func validateExposureControlIDs() {
 	}
 }
 
-// ClassifyExposure processes normalized bucket inputs and returns merged,
+// ClassifyExposure processes normalized resource inputs and returns merged,
 // deduplicated exposure classifications.
-func ClassifyExposure(buckets []NormalizedBucketInput) []ExposureClassification {
+func ClassifyExposure(resources []NormalizedResourceInput) []ExposureClassification {
 	var findings []ExposureClassification
 
-	for _, b := range buckets {
-		findings = append(findings, classifyBucket(b)...)
+	for _, r := range resources {
+		findings = append(findings, classifyResource(r)...)
 	}
 
 	sort.Slice(findings, func(i, j int) bool {
@@ -71,11 +71,11 @@ func ClassifyExposure(buckets []NormalizedBucketInput) []ExposureClassification 
 	return findings
 }
 
-func classifyBucket(b NormalizedBucketInput) []ExposureClassification {
-	if !b.Exists && b.ExternalReference {
+func classifyResource(r NormalizedResourceInput) []ExposureClassification {
+	if !r.Exists && r.ExternalReference {
 		return []ExposureClassification{{
 			ID:             idResourceTakeover,
-			Resource:       b.Name,
+			Resource:       r.Name,
 			ExposureType:   "bucket_takeover",
 			PrincipalScope: kernel.ScopeNotApplicable,
 			Actions:        []string{},
@@ -83,7 +83,7 @@ func classifyBucket(b NormalizedBucketInput) []ExposureClassification {
 		}}
 	}
 
-	ctx := bucketResolutionContext{input: b}
+	ctx := resolutionContext{input: r}
 
 	var findings []ExposureClassification
 	findings = append(findings, ctx.resolveRead()...)

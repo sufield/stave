@@ -8,11 +8,11 @@ const (
 	PermRead Permission = 1 << iota
 	PermWrite
 	PermList
-	PermACLRead
-	PermACLWrite
+	PermMetadataRead
+	PermMetadataWrite
 	PermDelete
 
-	PermAll = PermRead | PermWrite | PermList | PermACLRead | PermACLWrite | PermDelete
+	PermAll = PermRead | PermWrite | PermList | PermMetadataRead | PermMetadataWrite | PermDelete
 )
 
 // Has reports whether target bits are set in p.
@@ -22,14 +22,14 @@ func (p Permission) Has(target Permission) bool { return p&target != 0 }
 type EvidenceCategory string
 
 const (
-	EvPolicyRead     EvidenceCategory = "policy_read"
-	EvACLRead        EvidenceCategory = "acl_read"
-	EvPolicyWrite    EvidenceCategory = "policy_write"
-	EvACLWrite       EvidenceCategory = "acl_write"
-	EvList           EvidenceCategory = "list"
-	EvACLReadPolicy  EvidenceCategory = "acl_read_policy"
-	EvACLWritePolicy EvidenceCategory = "acl_write_policy"
-	EvDelete         EvidenceCategory = "delete"
+	EvIdentityRead  EvidenceCategory = "identity_read"
+	EvResourceRead  EvidenceCategory = "resource_read"
+	EvIdentityWrite EvidenceCategory = "identity_write"
+	EvResourceWrite EvidenceCategory = "resource_write"
+	EvDiscovery     EvidenceCategory = "discovery"
+	EvMetadataRead  EvidenceCategory = "metadata_read"
+	EvMetadataWrite EvidenceCategory = "metadata_write"
+	EvDelete        EvidenceCategory = "delete"
 )
 
 // EvidenceTracker manages the paths/reasons for discovered exposures.
@@ -57,6 +57,11 @@ func (t *EvidenceTracker) Get(cat EvidenceCategory) []string {
 	return t.sources[cat]
 }
 
-type bucketResolutionContext struct {
-	input NormalizedBucketInput
+// HasAny reports whether any evidence has been recorded.
+func (t *EvidenceTracker) HasAny() bool {
+	return len(t.sources) > 0
+}
+
+type resolutionContext struct {
+	input NormalizedResourceInput
 }

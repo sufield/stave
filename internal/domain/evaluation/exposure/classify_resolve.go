@@ -2,25 +2,25 @@ package exposure
 
 import "github.com/sufield/stave/internal/domain/kernel"
 
-func (c *bucketResolutionContext) globalPerms() Permission {
-	return c.input.PolicyPerms | c.input.ACLPerms
+func (c *resolutionContext) globalPerms() Permission {
+	return c.input.IdentityPerms | c.input.ResourcePerms
 }
 
-func (c *bucketResolutionContext) principalScope() kernel.PrincipalScope {
+func (c *resolutionContext) principalScope() kernel.PrincipalScope {
 	if c.input.IsAuthenticatedOnly {
 		return kernel.ScopeAuthenticated
 	}
 	return kernel.ScopePublic
 }
 
-func (c *bucketResolutionContext) readEvidence() []string {
-	if ev := c.input.Evidence.Get(EvPolicyRead); len(ev) > 0 {
+func (c *resolutionContext) readEvidence() []string {
+	if ev := c.input.Evidence.Get(EvIdentityRead); len(ev) > 0 {
 		return ev
 	}
-	return c.input.Evidence.Get(EvACLRead)
+	return c.input.Evidence.Get(EvResourceRead)
 }
 
-func (c *bucketResolutionContext) writeScope() string {
+func (c *resolutionContext) writeScope() string {
 	perms := c.globalPerms()
 	if !perms.Has(PermWrite) {
 		return ""
@@ -31,12 +31,12 @@ func (c *bucketResolutionContext) writeScope() string {
 	return "blind"
 }
 
-func (c *bucketResolutionContext) writeAbsorbsRead() bool {
+func (c *resolutionContext) writeAbsorbsRead() bool {
 	perms := c.globalPerms()
-	return perms.Has(PermWrite) && c.input.PolicyPerms.Has(PermWrite) && c.input.WriteSourceHasGet
+	return perms.Has(PermWrite) && c.input.IdentityPerms.Has(PermWrite) && c.input.WriteSourceHasGet
 }
 
-func (c *bucketResolutionContext) resolveRead() []ExposureClassification {
+func (c *resolutionContext) resolveRead() []ExposureClassification {
 	perms := c.globalPerms()
 	selected := SelectReadExposure(ReadExposureInput{
 		ResourceID:           c.input.Name,
@@ -44,12 +44,12 @@ func (c *bucketResolutionContext) resolveRead() []ExposureClassification {
 		IsExternallyReadable: perms.Has(PermRead),
 		WriteAbsorbsRead:     c.writeAbsorbsRead(),
 		IsAuthenticatedOnly:  c.input.IsAuthenticatedOnly,
-		HasIdentityRead:      c.input.PolicyPerms.Has(PermRead),
-		HasResourceRead:      c.input.ACLPerms.Has(PermRead),
+		HasIdentityRead:      c.input.IdentityPerms.Has(PermRead),
+		HasResourceRead:      c.input.ResourcePerms.Has(PermRead),
 		PrincipalScope:       c.principalScope(),
 		EvidenceGeneral:      c.readEvidence(),
-		EvidenceIdentity:     c.input.Evidence.Get(EvPolicyRead),
-		EvidenceResource:     c.input.Evidence.Get(EvACLRead),
+		EvidenceIdentity:     c.input.Evidence.Get(EvIdentityRead),
+		EvidenceResource:     c.input.Evidence.Get(EvResourceRead),
 		Actions:              []string{"Read"},
 	})
 	if selected == nil {
@@ -58,7 +58,7 @@ func (c *bucketResolutionContext) resolveRead() []ExposureClassification {
 	return []ExposureClassification{selected.finding}
 }
 
-func (c *bucketResolutionContext) resolveList() []ExposureClassification {
+func (c *resolutionContext) resolveList() []ExposureClassification {
 	perms := c.globalPerms()
 	if !perms.Has(PermList) {
 		return nil
@@ -69,21 +69,21 @@ func (c *bucketResolutionContext) resolveList() []ExposureClassification {
 		ExposureType:   "public_list",
 		PrincipalScope: c.principalScope(),
 		Actions:        []string{outputListBucket},
-		EvidencePath:   c.input.Evidence.Get(EvList),
+		EvidencePath:   c.input.Evidence.Get(EvDiscovery),
 	}}
 }
 
-func (c *bucketResolutionContext) resolveWrite() []ExposureClassification {
+func (c *resolutionContext) resolveWrite() []ExposureClassification {
 	perms := c.globalPerms()
 	selected := SelectWriteExposure(WriteExposureInput{
 		ResourceID:       c.input.Name,
 		IsPubliclyWrite:  perms.Has(PermWrite),
-		HasIdentityWrite: c.input.PolicyPerms.Has(PermWrite),
-		HasResourceWrite: c.input.ACLPerms.Has(PermWrite),
+		HasIdentityWrite: c.input.IdentityPerms.Has(PermWrite),
+		HasResourceWrite: c.input.ResourcePerms.Has(PermWrite),
 		PrincipalScope:   c.principalScope(),
 		WriteScope:       c.writeScope(),
-		EvidenceIdentity: c.input.Evidence.Get(EvPolicyWrite),
-		EvidenceResource: c.input.Evidence.Get(EvACLWrite),
+		EvidenceIdentity: c.input.Evidence.Get(EvIdentityWrite),
+		EvidenceResource: c.input.Evidence.Get(EvResourceWrite),
 		CanAlsoRead:      c.input.WriteSourceHasGet,
 		CanAlsoList:      c.input.WriteSourceHasList,
 		BaseActions:      []string{"Write"},
@@ -94,27 +94,27 @@ func (c *bucketResolutionContext) resolveWrite() []ExposureClassification {
 	return []ExposureClassification{selected.finding}
 }
 
-func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
+func (c *resolutionContext) resolveManagement() []ExposureClassification {
 	perms := c.globalPerms()
 	findings := make([]ExposureClassification, 0, 3)
-	if perms.Has(PermACLRead) {
+	if perms.Has(PermMetadataRead) {
 		findings = append(findings, ExposureClassification{
 			ID:             idPublicAdminRead,
 			Resource:       c.input.Name,
 			ExposureType:   "public_acl_read",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputGetBucketACL},
-			EvidencePath:   c.input.Evidence.Get(EvACLReadPolicy),
+			EvidencePath:   c.input.Evidence.Get(EvMetadataRead),
 		})
 	}
-	if perms.Has(PermACLWrite) {
+	if perms.Has(PermMetadataWrite) {
 		findings = append(findings, ExposureClassification{
 			ID:             idPublicAdminWrite,
 			Resource:       c.input.Name,
 			ExposureType:   "public_acl_write",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputPutBucketACL},
-			EvidencePath:   c.input.Evidence.Get(EvACLWritePolicy),
+			EvidencePath:   c.input.Evidence.Get(EvMetadataWrite),
 		})
 	}
 	if perms.Has(PermDelete) {

@@ -2,9 +2,9 @@ package exposure
 
 import "github.com/sufield/stave/internal/domain/kernel"
 
-// NormalizedBucketInput is the vendor-neutral representation of a bucket's
+// NormalizedResourceInput is the vendor-neutral representation of a resource's
 // exposure state. Adapters produce this from vendor-specific raw data.
-type NormalizedBucketInput struct {
+type NormalizedResourceInput struct {
 	Name              string
 	Exists            bool
 	ExternalReference bool
@@ -12,8 +12,8 @@ type NormalizedBucketInput struct {
 
 	// Pre-computed by the adapter from vendor-specific policy/ACL data.
 	IsAuthenticatedOnly bool
-	PolicyPerms         Permission
-	ACLPerms            Permission
+	IdentityPerms       Permission
+	ResourcePerms       Permission
 	WriteSourceHasGet   bool
 	WriteSourceHasList  bool
 	Evidence            *EvidenceTracker

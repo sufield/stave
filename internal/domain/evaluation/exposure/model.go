@@ -34,7 +34,7 @@ func (c Capabilities) ToMask() Permission {
 		m |= PermDelete
 	}
 	if c.Admin {
-		m |= PermACLRead | PermACLWrite
+		m |= PermMetadataRead | PermMetadataWrite
 	}
 	return m
 }
