@@ -28,6 +28,7 @@ type EvaluateConfig struct {
 	LoadConfig
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
+	Hasher            ports.Hasher
 	Output            io.Writer
 	ExemptionConfig   *policy.ExemptionConfig
 	SuppressionConfig *policy.SuppressionConfig
@@ -80,6 +81,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		Snapshots:         snapshots,
 		MaxUnsafe:         cfg.MaxUnsafe,
 		Clock:             cfg.Clock,
+		Hasher:            cfg.Hasher,
 		ExemptionConfig:   cfg.ExemptionConfig,
 		SuppressionConfig: cfg.SuppressionConfig,
 		ToolVersion:       cfg.ToolVersion,

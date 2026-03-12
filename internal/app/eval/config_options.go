@@ -67,3 +67,9 @@ func WithPredicateParser(fn func(any) (*policy.UnsafePredicate, error)) Option {
 		cfg.PredicateParser = fn
 	}
 }
+
+func WithHasher(h ports.Hasher) Option {
+	return func(cfg *EvaluateConfig) {
+		cfg.Hasher = h
+	}
+}
