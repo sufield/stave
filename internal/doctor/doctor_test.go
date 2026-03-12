@@ -25,7 +25,7 @@ func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
 }
 
 func TestWithDefaults(t *testing.T) {
-	ctx := withDefaults(Context{})
+	ctx := NewContext()
 	if ctx.LookPathFn == nil || ctx.GetenvFn == nil {
 		t.Fatal("expected default function pointers")
 	}

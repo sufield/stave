@@ -5,21 +5,32 @@ import (
 	"runtime"
 )
 
-func withDefaults(ctx Context) Context {
-	if ctx.LookPathFn == nil {
-		ctx.LookPathFn = LookPathInEnv
+// FillDefaults populates empty fields in the Context with standard system values.
+func (c *Context) FillDefaults() {
+	if c == nil {
+		return
 	}
-	if ctx.GetenvFn == nil {
-		ctx.GetenvFn = os.Getenv
+
+	if c.LookPathFn == nil {
+		c.LookPathFn = LookPathInEnv
 	}
-	if ctx.Goos == "" {
-		ctx.Goos = runtime.GOOS
+	if c.GetenvFn == nil {
+		c.GetenvFn = os.Getenv
 	}
-	if ctx.Goarch == "" {
-		ctx.Goarch = runtime.GOARCH
+	if c.Goos == "" {
+		c.Goos = runtime.GOOS
 	}
-	if ctx.GoVersion == "" {
-		ctx.GoVersion = runtime.Version()
+	if c.Goarch == "" {
+		c.Goarch = runtime.GOARCH
 	}
+	if c.GoVersion == "" {
+		c.GoVersion = runtime.Version()
+	}
+}
+
+// NewContext returns a Context initialized with system defaults.
+func NewContext() *Context {
+	ctx := &Context{}
+	ctx.FillDefaults()
 	return ctx
 }

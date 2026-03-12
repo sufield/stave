@@ -22,7 +22,7 @@ func RunWithRegistry(ctx Context, registry Registry) ([]Check, bool) {
 }
 
 func runChecks(ctx Context, checks []CheckFunc) ([]Check, bool) {
-	ctx = withDefaults(ctx)
+	ctx.FillDefaults()
 	results := lo.FilterMap(checks, func(fn CheckFunc, _ int) (Check, bool) {
 		c := fn(ctx)
 		return c, c.Name != ""
