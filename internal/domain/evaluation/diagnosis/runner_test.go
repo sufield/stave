@@ -22,13 +22,13 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		{
 			CapturedAt: baseTime,
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket"), Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(48 * time.Hour),
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket"), Properties: map[string]any{"public": true}},
 			},
 		},
 	}
@@ -75,13 +75,13 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		{
 			CapturedAt: baseTime,
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket"), Properties: map[string]any{"public": true}},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(24 * time.Hour),
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": true}},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket"), Properties: map[string]any{"public": true}},
 			},
 		},
 	}
@@ -123,13 +123,13 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		{
 			CapturedAt: baseTime,
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": false}},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket"), Properties: map[string]any{"public": false}},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(200 * time.Hour),
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket, Properties: map[string]any{"public": false}},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket"), Properties: map[string]any{"public": false}},
 			},
 		},
 	}
@@ -169,8 +169,8 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 	latestSnapshot := baseTime.Add(200 * time.Hour)
 
 	snapshots := []asset.Snapshot{
-		{CapturedAt: baseTime, Assets: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
-		{CapturedAt: latestSnapshot, Assets: []asset.Asset{{ID: "res:1", Type: kernel.TypeStorageBucket}}},
+		{CapturedAt: baseTime, Assets: []asset.Asset{{ID: "res:1", Type: kernel.AssetType("storage_bucket")}}},
+		{CapturedAt: latestSnapshot, Assets: []asset.Asset{{ID: "res:1", Type: kernel.AssetType("storage_bucket")}}},
 	}
 
 	findings := []evaluation.Finding{
@@ -211,15 +211,15 @@ func TestRun_Summary(t *testing.T) {
 		{
 			CapturedAt: baseTime,
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket},
-				{ID: "res:2", Type: kernel.TypeStorageBucket},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket")},
+				{ID: "res:2", Type: kernel.AssetType("storage_bucket")},
 			},
 		},
 		{
 			CapturedAt: baseTime.Add(240 * time.Hour),
 			Assets: []asset.Asset{
-				{ID: "res:1", Type: kernel.TypeStorageBucket},
-				{ID: "res:2", Type: kernel.TypeStorageBucket},
+				{ID: "res:1", Type: kernel.AssetType("storage_bucket")},
+				{ID: "res:2", Type: kernel.AssetType("storage_bucket")},
 			},
 		},
 	}

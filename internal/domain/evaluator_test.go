@@ -46,7 +46,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
-					Type:       kernel.TypeStorageBucket,
+					Type:       kernel.AssetType("storage_bucket"),
 					Vendor:     kernel.VendorAWS,
 					Properties: map[string]any{"public": true},
 				},
@@ -57,7 +57,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
-					Type:       kernel.TypeStorageBucket,
+					Type:       kernel.AssetType("storage_bucket"),
 					Vendor:     kernel.VendorAWS,
 					Properties: map[string]any{"public": true},
 				},
@@ -68,7 +68,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
-					Type:       kernel.TypeStorageBucket,
+					Type:       kernel.AssetType("storage_bucket"),
 					Vendor:     kernel.VendorAWS,
 					Properties: map[string]any{"public": true},
 				},
@@ -286,7 +286,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
-					Type:       kernel.TypeStorageBucket,
+					Type:       kernel.AssetType("storage_bucket"),
 					Vendor:     kernel.VendorAWS,
 					Properties: map[string]any{"public": true},
 				},
@@ -297,7 +297,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:         "public-bucket",
-					Type:       kernel.TypeStorageBucket,
+					Type:       kernel.AssetType("storage_bucket"),
 					Vendor:     kernel.VendorAWS,
 					Properties: map[string]any{"public": true},
 				},

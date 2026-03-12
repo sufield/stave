@@ -47,7 +47,7 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 				ControlName:        "No Public Bucket Access",
 				ControlDescription: "Bucket must not be public",
 				AssetID:            "secret-bucket",
-				AssetType:          kernel.TypeStorageBucket,
+				AssetType:          kernel.AssetType("storage_bucket"),
 				AssetVendor:        kernel.VendorAWS,
 				Evidence:           evaluation.Evidence{},
 			},

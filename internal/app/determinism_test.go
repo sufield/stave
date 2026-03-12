@@ -32,7 +32,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "my-bucket",
-					Type:   kernel.TypeStorageBucket,
+					Type:   kernel.AssetType("storage_bucket"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -44,7 +44,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 				},
 				{
 					ID:     "safe-bucket",
-					Type:   kernel.TypeStorageBucket,
+					Type:   kernel.AssetType("storage_bucket"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -62,7 +62,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 			Assets: []asset.Asset{
 				{
 					ID:     "my-bucket",
-					Type:   kernel.TypeStorageBucket,
+					Type:   kernel.AssetType("storage_bucket"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -74,7 +74,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 				},
 				{
 					ID:     "safe-bucket",
-					Type:   kernel.TypeStorageBucket,
+					Type:   kernel.AssetType("storage_bucket"),
 					Vendor: kernel.VendorAWS,
 					Properties: map[string]any{
 						"storage": map[string]any{
@@ -152,13 +152,13 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 	laterTime := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 
 	resources := []asset.Asset{
-		{ID: "bucket-z", Type: kernel.TypeStorageBucket, Vendor: kernel.VendorAWS, Properties: map[string]any{
+		{ID: "bucket-z", Type: kernel.AssetType("storage_bucket"), Vendor: kernel.VendorAWS, Properties: map[string]any{
 			"storage": map[string]any{"visibility": map[string]any{"public_read": true}},
 		}},
-		{ID: "bucket-a", Type: kernel.TypeStorageBucket, Vendor: kernel.VendorAWS, Properties: map[string]any{
+		{ID: "bucket-a", Type: kernel.AssetType("storage_bucket"), Vendor: kernel.VendorAWS, Properties: map[string]any{
 			"storage": map[string]any{"visibility": map[string]any{"public_read": true}},
 		}},
-		{ID: "bucket-m", Type: kernel.TypeStorageBucket, Vendor: kernel.VendorAWS, Properties: map[string]any{
+		{ID: "bucket-m", Type: kernel.AssetType("storage_bucket"), Vendor: kernel.VendorAWS, Properties: map[string]any{
 			"storage": map[string]any{"visibility": map[string]any{"public_read": false}},
 		}},
 	}

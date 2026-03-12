@@ -32,7 +32,7 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 				ControlName:        "Test Control",
 				ControlDescription: "test",
 				AssetID:            "resource-1",
-				AssetType:          kernel.TypeStorageBucket,
+				AssetType:          kernel.AssetType("storage_bucket"),
 				AssetVendor:        kernel.VendorAWS,
 				Evidence:           evaluation.Evidence{},
 			},

@@ -187,7 +187,7 @@ func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
 	dueWithin := 12 * time.Hour
 	criteria, err := newUpcomingFilter(UpcomingFilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.A"},
-		AssetTypes: []kernel.AssetType{kernel.TypeStorageBucket},
+		AssetTypes: []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		Statuses:   []string{"OVERDUE"},
 		DueWithin:  &dueWithin,
 	})

@@ -22,7 +22,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 	for i := range 100 {
 		resources[i] = asset.Asset{
 			ID:     asset.ID("aws:s3:::mvp-bucket-" + string(rune('a'+i%26)) + string(rune('0'+i/26))),
-			Type:   kernel.TypeStorageBucket,
+			Type:   kernel.AssetType("storage_bucket"),
 			Vendor: kernel.VendorAWS,
 			Properties: map[string]any{
 				"storage": map[string]any{
@@ -98,7 +98,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 	for i := range 100 {
 		resources[i] = asset.Asset{
 			ID:     asset.ID("aws:s3:::mvp-rules-bucket-" + string(rune('a'+i%26)) + string(rune('0'+i/26))),
-			Type:   kernel.TypeStorageBucket,
+			Type:   kernel.AssetType("storage_bucket"),
 			Vendor: kernel.VendorAWS,
 			Properties: map[string]any{
 				"storage": map[string]any{
@@ -179,7 +179,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	for i := range 1000 {
 		resources[i] = asset.Asset{
 			ID:     asset.ID("aws:s3:::large-snapshot-" + string(rune('a'+i%26)) + string(rune('0'+(i/26)%10)) + string(rune('0'+(i/260)%10))),
-			Type:   kernel.TypeStorageBucket,
+			Type:   kernel.AssetType("storage_bucket"),
 			Vendor: kernel.VendorAWS,
 			Properties: map[string]any{
 				"storage": map[string]any{

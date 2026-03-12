@@ -23,7 +23,7 @@ func writeScopePredicate() policy.UnsafePredicate {
 func uploadPolicyResource(keyMode string) asset.Asset {
 	return asset.Asset{
 		ID:     "upload-policy-test",
-		Type:   kernel.TypeUploadPolicy,
+		Type:   kernel.AssetType("upload_policy"),
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
 			"upload": map[string]any{
@@ -55,7 +55,7 @@ func TestWriteScope_DifferentResourceTypeDoesNotMatch(t *testing.T) {
 	pred := writeScopePredicate()
 	r := asset.Asset{
 		ID:     "some-container",
-		Type:   kernel.TypeStorageContainer,
+		Type:   kernel.AssetType("storage_container"),
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
 			"storage": map[string]any{
@@ -74,7 +74,7 @@ func TestWriteScope_ReadOperationDoesNotMatch(t *testing.T) {
 	pred := writeScopePredicate()
 	r := asset.Asset{
 		ID:     "upload-policy-read",
-		Type:   kernel.TypeUploadPolicy,
+		Type:   kernel.AssetType("upload_policy"),
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
 			"upload": map[string]any{
@@ -114,7 +114,7 @@ func TestWriteScope_MissingFieldsDoNotMatch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := asset.Asset{
 				ID:         "test",
-				Type:       kernel.TypeUploadPolicy,
+				Type:       kernel.AssetType("upload_policy"),
 				Vendor:     kernel.VendorAWS,
 				Properties: tt.props,
 			}

@@ -36,15 +36,15 @@ func TestSnapshotsCheckIdentityConsistency_DeterministicOrdering(t *testing.T) {
 		{
 			CapturedAt: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
 			Assets: []Asset{
-				{ID: "b", Type: kernel.TypeStorageBucket},
-				{ID: "a", Type: kernel.TypeStorageBucket},
+				{ID: "b", Type: kernel.AssetType("storage_bucket")},
+				{ID: "a", Type: kernel.AssetType("storage_bucket")},
 			},
 		},
 		{
 			CapturedAt: time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 			Assets: []Asset{
-				{ID: "b", Type: kernel.TypeIAMRole},
-				{ID: "c", Type: kernel.TypeStorageBucket},
+				{ID: "b", Type: kernel.AssetType("iam_role")},
+				{ID: "c", Type: kernel.AssetType("storage_bucket")},
 			},
 		},
 	}

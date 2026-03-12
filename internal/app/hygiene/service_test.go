@@ -27,7 +27,7 @@ func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
 		Now:              base.Add(1 * time.Hour),
 		DueSoonThreshold: 90 * time.Minute,
 		Statuses:         []risk.Status{risk.StatusUpcoming},
-		AssetTypes:       []kernel.AssetType{kernel.TypeStorageBucket},
+		AssetTypes:       []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		DueWithin:        &dueSoon,
 	})
 	if summary.Total != 1 || summary.DueSoon != 1 {
@@ -87,7 +87,7 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		Now:              base.Add(1 * time.Hour),
 		DueSoonThreshold: 90 * time.Minute,
 		Statuses:         []risk.Status{risk.StatusUpcoming},
-		AssetTypes:       []kernel.AssetType{kernel.TypeStorageBucket},
+		AssetTypes:       []kernel.AssetType{kernel.AssetType("storage_bucket")},
 	}
 
 	summary := computeUpcomingSummary(controls, snapshots, opts)
@@ -134,7 +134,7 @@ func testControl(id string, threshold string) policy.ControlDefinition {
 func testUnsafeResource(unsafe bool) asset.Asset {
 	return asset.Asset{
 		ID:     asset.ID("res-1"),
-		Type:   kernel.TypeStorageBucket,
+		Type:   kernel.AssetType("storage_bucket"),
 		Vendor: kernel.VendorAWS,
 		Properties: map[string]any{
 			"unsafe": unsafe,

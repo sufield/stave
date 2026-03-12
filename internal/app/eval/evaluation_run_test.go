@@ -94,7 +94,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 	_ = ctl.Prepare()
 	resource := asset.Asset{
 		ID:         "res-1",
-		Type:       kernel.TypeS3Bucket,
+		Type:       kernel.AssetType("aws_s3_bucket"),
 		Vendor:     kernel.VendorAWS,
 		Properties: map[string]any{"public": true},
 	}

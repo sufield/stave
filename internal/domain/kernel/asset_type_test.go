@@ -7,8 +7,8 @@ import (
 
 func TestNewAssetType_Normalizes(t *testing.T) {
 	got := NewAssetType("  AWS_S3_BUCKET ")
-	if got != TypeS3Bucket {
-		t.Fatalf("got %q, want %q", got, TypeS3Bucket)
+	if got != AssetType("aws_s3_bucket") {
+		t.Fatalf("got %q, want %q", got, "aws_s3_bucket")
 	}
 }
 
@@ -22,6 +22,7 @@ func TestAssetTypeValidate(t *testing.T) {
 		{name: "dotted", in: AssetType("k8s.clusterrolebinding"), ok: true},
 		{name: "hyphenated", in: AssetType("aws-s3-bucket"), ok: true},
 		{name: "empty", in: AssetType(""), ok: false},
+		{name: "unknown", in: UnknownAsset, ok: false},
 		{name: "invalid char", in: AssetType("aws$s3"), ok: false},
 		{name: "uppercase", in: AssetType("AWS_S3_BUCKET"), ok: false},
 	}
@@ -52,10 +53,10 @@ func TestAssetTypeDomain(t *testing.T) {
 		in   AssetType
 		want string
 	}{
-		{name: "aws s3", in: TypeS3Bucket, want: "aws_s3"},
-		{name: "storage bucket", in: TypeStorageBucket, want: "storage_bucket"},
-		{name: "one segment", in: AssetType("custom"), want: "unknown"},
-		{name: "empty", in: AssetType(""), want: "unknown"},
+		{name: "aws s3", in: AssetType("aws_s3_bucket"), want: "aws_s3"},
+		{name: "storage bucket", in: AssetType("storage_bucket"), want: "storage_bucket"},
+		{name: "one segment", in: AssetType("custom"), want: "custom"},
+		{name: "empty", in: AssetType(""), want: string(UnknownAsset)},
 	}
 
 	for _, tt := range tests {
@@ -73,8 +74,8 @@ func TestAssetTypeUnmarshalJSON_Validates(t *testing.T) {
 	if err := json.Unmarshal([]byte(`"AWS_S3_BUCKET"`), &rt); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if rt != TypeS3Bucket {
-		t.Fatalf("got %q, want %q", rt, TypeS3Bucket)
+	if rt != AssetType("aws_s3_bucket") {
+		t.Fatalf("got %q, want %q", rt, "aws_s3_bucket")
 	}
 
 	if err := json.Unmarshal([]byte(`"bad$type"`), &rt); err == nil {
@@ -87,7 +88,7 @@ func TestAssetTypeUnmarshalJSON_Validates(t *testing.T) {
 	if rt != "" {
 		t.Fatalf("expected empty type, got %q", rt)
 	}
-	if rt.String() != "unknown" {
-		t.Fatalf("expected empty type String() to return unknown, got %q", rt.String())
+	if rt.String() != string(UnknownAsset) {
+		t.Fatalf("expected empty type String() to return %q, got %q", UnknownAsset, rt.String())
 	}
 }

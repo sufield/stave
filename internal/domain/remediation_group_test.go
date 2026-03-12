@@ -25,13 +25,13 @@ func TestBuildRemediationGroups(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: ctlID,
 				AssetID:   resID,
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 		}
 		if actions != nil {
 			f.RemediationPlan = &evaluation.RemediationPlan{
 				ID:      remediation.StablePlanID(ctlID, resID),
-				Target:  evaluation.RemediationTarget{AssetID: resID, AssetType: kernel.TypeStorageBucket},
+				Target:  evaluation.RemediationTarget{AssetID: resID, AssetType: kernel.AssetType("storage_bucket")},
 				Actions: actions,
 			}
 		}
@@ -167,7 +167,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: "CTL.S3.PUBLIC.001",
 				AssetID:   "bucket-z",
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 			RemediationPlan: &evaluation.RemediationPlan{ID: "fix-z", Target: evaluation.RemediationTarget{AssetID: asset.ID("bucket-z")}, Actions: actions},
 		},
@@ -175,7 +175,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: "CTL.S3.PUBLIC.001",
 				AssetID:   "bucket-a",
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 			RemediationPlan: &evaluation.RemediationPlan{ID: "fix-a", Target: evaluation.RemediationTarget{AssetID: asset.ID("bucket-a")}, Actions: actions},
 		},
@@ -202,7 +202,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: "CTL.S3.PUBLIC.003",
 				AssetID:   "bucket-a",
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 			RemediationPlan: &evaluation.RemediationPlan{ID: "fix-1", Target: evaluation.RemediationTarget{AssetID: asset.ID("bucket-a")}, Actions: actions},
 		},
@@ -210,7 +210,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: "CTL.S3.PUBLIC.001",
 				AssetID:   "bucket-a",
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 			RemediationPlan: &evaluation.RemediationPlan{ID: "fix-2", Target: evaluation.RemediationTarget{AssetID: asset.ID("bucket-a")}, Actions: actions},
 		},
@@ -241,7 +241,7 @@ func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: "CTL.S3.PUBLIC.001",
 				AssetID:   "bucket-a",
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 			RemediationPlan: &evaluation.RemediationPlan{ID: "fix-original", Target: evaluation.RemediationTarget{AssetID: asset.ID("bucket-a")}, Actions: actions},
 		},
@@ -249,7 +249,7 @@ func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 			Finding: evaluation.Finding{
 				ControlID: "CTL.S3.PUBLIC.002",
 				AssetID:   "bucket-a",
-				AssetType: kernel.TypeStorageBucket,
+				AssetType: kernel.AssetType("storage_bucket"),
 			},
 			RemediationPlan: &evaluation.RemediationPlan{ID: "fix-other", Target: evaluation.RemediationTarget{AssetID: asset.ID("bucket-a")}, Actions: actions},
 		},

@@ -76,7 +76,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 				ControlName:        "No Public Bucket Access",
 				ControlDescription: "Bucket must not be public",
 				AssetID:            "res-secret",
-				AssetType:          kernel.TypeStorageBucket,
+				AssetType:          kernel.AssetType("storage_bucket"),
 				AssetVendor:        kernel.VendorAWS,
 				Source:             &asset.SourceRef{File: "/tmp/infra/main.tf", Line: 42},
 				Evidence: evaluation.Evidence{
@@ -95,7 +95,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 				ControlName:        "No Public Bucket Listing",
 				ControlDescription: "Bucket list must not be public",
 				AssetID:            "res-secret",
-				AssetType:          kernel.TypeStorageBucket,
+				AssetType:          kernel.AssetType("storage_bucket"),
 				AssetVendor:        kernel.VendorAWS,
 				Evidence:           evaluation.Evidence{},
 			},
@@ -165,7 +165,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 				ControlName:        "No Public Bucket Access",
 				ControlDescription: "Bucket must not be public",
 				AssetID:            "res-1",
-				AssetType:          kernel.TypeStorageBucket,
+				AssetType:          kernel.AssetType("storage_bucket"),
 				AssetVendor:        kernel.VendorAWS,
 			},
 			{
@@ -181,7 +181,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 			{
 				ControlID:   "CTL.S3.PUBLIC.001",
 				AssetID:     "res-1",
-				AssetType:   kernel.TypeStorageBucket,
+				AssetType:   kernel.AssetType("storage_bucket"),
 				AssetDomain: "aws_s3",
 				Decision:    evaluation.DecisionViolation,
 			},
