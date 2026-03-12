@@ -48,7 +48,7 @@ func BenchmarkEvaluate(b *testing.B) {
 	runner := &Runner{
 		Controls:  controls,
 		MaxUnsafe: 12 * time.Hour,
-		Clock:     ports.FixedClock{Time: now},
+		Clock:     ports.FixedClock(now),
 	}
 
 	b.ResetTimer()

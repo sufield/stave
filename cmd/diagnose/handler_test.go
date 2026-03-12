@@ -139,7 +139,7 @@ func TestDiagnoseOptionsParseHelpers(t *testing.T) {
 		t.Fatalf("parseClock() fixed error = %v", err)
 	}
 	fixed, ok := clock.(clockadp.FixedClock)
-	if !ok || !fixed.Time.Equal(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)) {
+	if !ok || !time.Time(fixed).Equal(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)) {
 		t.Fatalf("fixed clock = %#v", clock)
 	}
 

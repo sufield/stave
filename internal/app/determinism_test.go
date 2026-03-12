@@ -104,7 +104,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 	_ = ctl.Prepare()
 	controls := []policy.ControlDefinition{ctl}
 
-	clock := clockadp.FixedClock{Time: laterTime}
+	clock := clockadp.FixedClock(laterTime)
 	maxUnsafe := 0 * time.Hour
 	enricher := remediation.NewMapper(crypto.NewHasher())
 
@@ -187,7 +187,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 	_ = ctlA.Prepare()
 	controls := []policy.ControlDefinition{ctlZ, ctlA}
 
-	clock := clockadp.FixedClock{Time: laterTime}
+	clock := clockadp.FixedClock(laterTime)
 	maxUnsafe := 0 * time.Hour
 	enricher := remediation.NewMapper(crypto.NewHasher())
 

@@ -190,7 +190,7 @@ func validateApplyDomain(flags *applyFlagsType) (appeval.ParsedOptions, error) {
 // newClock returns a FixedClock if now is non-zero, otherwise a RealClock.
 func newClock(now time.Time) ports.Clock {
 	if !now.IsZero() {
-		return ports.FixedClock{Time: now}
+		return ports.FixedClock(now)
 	}
 	return ports.RealClock{}
 }

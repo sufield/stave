@@ -2,35 +2,34 @@ package ports
 
 import "time"
 
-// Clock provides the current time (injectable for testing).
+// Clock provides an abstraction for the system clock,
+// allowing for deterministic time in tests.
 type Clock interface {
 	Now() time.Time
 }
 
-var (
-	_ Clock = RealClock{}
-	_ Clock = FixedClock{}
-)
-
-// RealClock uses the system clock in UTC.
+// RealClock implements Clock using the standard time package.
 type RealClock struct{}
 
-// NewRealClock returns the default production clock implementation.
-func NewRealClock() RealClock {
+// NewRealClock returns a Clock backed by the system wall clock.
+func NewRealClock() Clock {
 	return RealClock{}
 }
 
-// Now returns the current wall-clock time in UTC.
+// Now returns the current time in UTC.
 func (RealClock) Now() time.Time {
 	return time.Now().UTC()
 }
 
-// FixedClock returns a fixed point in time for deterministic tests.
-type FixedClock struct {
-	Time time.Time
+// FixedClock provides a static time value for testing purposes.
+type FixedClock time.Time
+
+// NewFixedClock returns a Clock that always returns the provided time.
+func NewFixedClock(t time.Time) Clock {
+	return FixedClock(t)
 }
 
-// Now returns the fixed time.
-func (fc FixedClock) Now() time.Time {
-	return fc.Time
+// Now returns the underlying fixed time.
+func (f FixedClock) Now() time.Time {
+	return time.Time(f)
 }

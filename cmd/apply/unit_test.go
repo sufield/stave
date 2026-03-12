@@ -64,8 +64,8 @@ func TestValidateApplyFlags(t *testing.T) {
 			t.Fatalf("clock type = %T, want clockadp.FixedClock", params.clock)
 		}
 		expected := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-		if !fc.Time.Equal(expected) {
-			t.Errorf("clock time = %v, want %v", fc.Time, expected)
+		if !time.Time(fc).Equal(expected) {
+			t.Errorf("clock time = %v, want %v", time.Time(fc), expected)
 		}
 	})
 
@@ -205,7 +205,7 @@ func TestBuildApplyDeps(t *testing.T) {
 
 		params := applyParams{
 			maxDuration: 24 * time.Hour,
-			clock:       clockadp.FixedClock{Time: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
+			clock:       clockadp.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
 			source:      appeval.ObservationSource(flags.observationsDir),
 		}
 

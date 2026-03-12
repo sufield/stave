@@ -93,7 +93,7 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 			ObservationsDir: "obs",
 			OutputReader:    reader,
 			MaxUnsafe:       30 * time.Minute,
-			Clock:           clockadp.FixedClock{Time: now},
+			Clock:           clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -112,7 +112,7 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 			ObservationsDir: "obs",
 			OutputFile:      "out.json",
 			MaxUnsafe:       30 * time.Minute,
-			Clock:           clockadp.FixedClock{Time: now},
+			Clock:           clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -140,7 +140,7 @@ func TestDiagnoseExecute_EvaluationResultRepoErrors(t *testing.T) {
 		ObservationsDir: "obs",
 		OutputReader:    bytes.NewBufferString(`{bad}`),
 		MaxUnsafe:       time.Hour,
-		Clock:           clockadp.FixedClock{Time: now},
+		Clock:           clockadp.FixedClock(now),
 	})
 	if err == nil || !strings.Contains(err.Error(), "bad output") {
 		t.Fatalf("unexpected err: %v", err)

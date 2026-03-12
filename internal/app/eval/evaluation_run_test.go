@@ -132,7 +132,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 				ObservationsDir: "obs",
 			},
 			MaxUnsafe: 30 * time.Minute,
-			Clock:     clockadp.FixedClock{Time: now},
+			Clock:     clockadp.FixedClock(now),
 			Output:    &bytes.Buffer{},
 		})
 		if err != nil {
@@ -166,7 +166,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 				ObservationsDir: "obs",
 			},
 			MaxUnsafe: 30 * time.Minute,
-			Clock:     clockadp.FixedClock{Time: now},
+			Clock:     clockadp.FixedClock(now),
 			Output:    &bytes.Buffer{},
 		})
 		if err == nil || !strings.Contains(err.Error(), "failed to write findings") {

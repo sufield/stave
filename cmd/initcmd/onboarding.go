@@ -82,7 +82,7 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 		Controls:    controls,
 		Snapshots:   snapshots,
 		MaxUnsafe:   0,
-		Clock:       clockadp.FixedClock{Time: snapshots[len(snapshots)-1].CapturedAt},
+		Clock:       clockadp.FixedClock(snapshots[len(snapshots)-1].CapturedAt),
 		ToolVersion: GetVersion(),
 	})
 	if evalErr != nil {
@@ -306,7 +306,7 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 		Controls:    controls,
 		Snapshots:   snapshots,
 		MaxUnsafe:   0,
-		Clock:       clockadp.FixedClock{Time: lastSnap.CapturedAt},
+		Clock:       clockadp.FixedClock(lastSnap.CapturedAt),
 		ToolVersion: GetVersion(),
 	})
 	if evalErr != nil {
