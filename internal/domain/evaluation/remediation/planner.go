@@ -5,6 +5,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
 // Planner generates machine-readable remediation plans (Fix Plans) for violations.
@@ -26,10 +27,10 @@ type planner struct {
 }
 
 // NewPlanner creates a remediation planner populated with default specialists.
-func NewPlanner() Planner {
+func NewPlanner(h ports.Hasher) Planner {
 	return &planner{
 		specialists: []Specialist{
-			publicExposurePlanner{},
+			publicExposurePlanner{hasher: h},
 		},
 	}
 }
@@ -47,6 +48,6 @@ func (p *planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 
 // StablePlanID generates a deterministic ID for a remediation plan based on the
 // specific control and asset.
-func StablePlanID(controlID kernel.ControlID, assetID asset.ID) string {
-	return policy.StableRemediationPlanID(controlID.String(), assetID.String())
+func StablePlanID(h ports.Hasher, controlID kernel.ControlID, assetID asset.ID) string {
+	return policy.StableRemediationPlanID(h, controlID.String(), assetID.String())
 }

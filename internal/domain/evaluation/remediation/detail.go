@@ -49,7 +49,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 	}
 
 	// 4. Map and Plan Remediation
-	mapper := NewMapper()
+	mapper := NewMapper(req.Hasher)
 	spec := mapper.MapFinding(*violation)
 	detail.Remediation = &spec
 
@@ -57,7 +57,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 		Finding:         *violation,
 		RemediationSpec: spec,
 	}
-	detail.RemediationPlan = NewPlanner().PlanFor(enriched)
+	detail.RemediationPlan = NewPlanner(req.Hasher).PlanFor(enriched)
 
 	// 5. Generate Instructional Next Steps
 	detail.NextSteps = buildNextSteps(detail)

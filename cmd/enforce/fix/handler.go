@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -79,7 +80,7 @@ func withRemediationPlan(selected remediation.Finding) remediation.Finding {
 	if selected.RemediationPlan != nil {
 		return selected
 	}
-	selected.RemediationPlan = remediation.NewPlanner().PlanFor(selected)
+	selected.RemediationPlan = remediation.NewPlanner(crypto.NewHasher()).PlanFor(selected)
 	return selected
 }
 

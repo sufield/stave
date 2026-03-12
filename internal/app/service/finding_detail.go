@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
 // FindingDetailInput holds everything needed to build a FindingDetail.
@@ -16,6 +17,7 @@ type FindingDetailInput struct {
 	Snapshots    []asset.Snapshot
 	Result       *evaluation.Result
 	TraceBuilder evaluation.FindingTraceBuilder
+	Hasher       ports.Hasher
 }
 
 // BuildFindingDetail delegates to the Result aggregate, injecting the
@@ -27,5 +29,6 @@ func BuildFindingDetail(input FindingDetailInput) (*evaluation.FindingDetail, er
 		Controls:     input.Controls,
 		Snapshots:    input.Snapshots,
 		TraceBuilder: input.TraceBuilder,
+		Hasher:       input.Hasher,
 	})
 }

@@ -6,9 +6,12 @@ import (
 
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
-type publicExposurePlanner struct{}
+type publicExposurePlanner struct {
+	hasher ports.Hasher
+}
 
 func (p publicExposurePlanner) CanHandle(class kernel.ControlClass) bool {
 	return class == kernel.ClassPublicExposure
@@ -29,7 +32,7 @@ func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	})
 
 	return &evaluation.RemediationPlan{
-		ID: StablePlanID(f.ControlID, f.AssetID),
+		ID: StablePlanID(p.hasher, f.ControlID, f.AssetID),
 		Target: evaluation.RemediationTarget{
 			AssetID:   f.AssetID,
 			AssetType: f.AssetType,

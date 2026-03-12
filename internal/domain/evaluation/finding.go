@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
 // Finding represents a detected control violation.
@@ -154,6 +155,7 @@ type FindingDetailRequest struct {
 	Controls     ControlProvider
 	Snapshots    []asset.Snapshot
 	TraceBuilder FindingTraceBuilder
+	Hasher       ports.Hasher
 }
 
 // NewFindingFromMetadata creates a Finding pre-populated with control metadata.

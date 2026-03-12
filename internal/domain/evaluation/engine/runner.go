@@ -11,7 +11,6 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // Runner executes evaluation logic over snapshots.
@@ -22,6 +21,7 @@ type Runner struct {
 	// If zero, defaultRunnerMaxGapThreshold is used.
 	MaxGapThreshold time.Duration
 	Clock           ports.Clock
+	Hasher          ports.Hasher
 	Exemptions      *policy.ExemptionConfig
 	Suppressions    *policy.SuppressionConfig
 	ToolVersion     string
@@ -203,7 +203,7 @@ func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time)
 // control set, keyed on sorted control IDs. This enables auditability of
 // which controls were active during an evaluation run.
 func (e *Runner) computePackHash() kernel.Digest {
-	if len(e.Controls) == 0 {
+	if len(e.Controls) == 0 || e.Hasher == nil {
 		return ""
 	}
 	ids := make([]string, len(e.Controls))
@@ -211,5 +211,5 @@ func (e *Runner) computePackHash() kernel.Digest {
 		ids[i] = string(ctl.ID)
 	}
 	slices.Sort(ids)
-	return crypto.HashDelimited(ids, '\n')
+	return e.Hasher.HashDelimited(ids, '\n')
 }

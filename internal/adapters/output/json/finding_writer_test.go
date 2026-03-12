@@ -13,12 +13,13 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/env"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
 func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 	w := NewFindingWriterWithEnvelope(true)
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 	sanitizer := sanitize.New()
 
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
@@ -111,7 +112,7 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 
 func TestWriteFindings_WithoutEnvelope(t *testing.T) {
 	w := NewFindingWriter(false)
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			ToolVersion: "test",

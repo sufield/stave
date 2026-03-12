@@ -22,6 +22,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/version"
 )
@@ -109,7 +110,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		return writerErr
 	}
 
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewMapper(crypto.NewHasher())
 	san := cmdutil.GetSanitizer(cmd)
 	enrichFn := func(r evaluation.Result) appcontracts.EnrichedResult {
 		return output.Enrich(enricher, san, r)

@@ -11,7 +11,7 @@ import (
 )
 
 func TestBuildRemediationPlan_S3Public(t *testing.T) {
-	planner := remediation.NewPlanner()
+	planner := remediation.NewPlanner(testHasher())
 	finding := remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
@@ -25,7 +25,7 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 		t.Fatal("PlanFor() = nil, want non-nil plan")
 	}
 
-	wantID := remediation.StablePlanID(finding.ControlID, finding.AssetID)
+	wantID := remediation.StablePlanID(testHasher(), finding.ControlID, finding.AssetID)
 	if plan.ID != wantID {
 		t.Fatalf("plan.ID = %q, want %q", plan.ID, wantID)
 	}
@@ -49,7 +49,7 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 }
 
 func TestBuildRemediationPlan_UnknownClass(t *testing.T) {
-	planner := remediation.NewPlanner()
+	planner := remediation.NewPlanner(testHasher())
 	finding := remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID: kernel.ControlID("CTL.CUSTOM.001"),

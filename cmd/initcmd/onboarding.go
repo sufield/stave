@@ -27,6 +27,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -87,7 +88,7 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 	if evalErr != nil {
 		return onboardingCommandError(evalErr, "stave quickstart")
 	}
-	findings := remediation.NewMapper().EnrichFindings(result)
+	findings := remediation.NewMapper(crypto.NewHasher()).EnrichFindings(result)
 	latest := snapshots[len(snapshots)-1]
 	reportNow, err := resolveQuickstartReportTime(latest, flags)
 	if err != nil {
@@ -311,7 +312,7 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 	if evalErr != nil {
 		return onboardingCommandError(evalErr, "stave demo")
 	}
-	findings := remediation.NewMapper().EnrichFindings(result)
+	findings := remediation.NewMapper(crypto.NewHasher()).EnrichFindings(result)
 
 	reportNow := lastSnap.CapturedAt.UTC()
 	if strings.TrimSpace(flags.nowTime) != "" {

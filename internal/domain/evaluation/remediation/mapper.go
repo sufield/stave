@@ -5,6 +5,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
 // FindingEnricher enriches raw evaluation findings with remediation guidance.
@@ -21,9 +22,9 @@ type Mapper struct {
 }
 
 // NewMapper creates a new remediation mapper with a default planner.
-func NewMapper() *Mapper {
+func NewMapper(h ports.Hasher) *Mapper {
 	return &Mapper{
-		planner: NewPlanner(),
+		planner: NewPlanner(h),
 	}
 }
 
