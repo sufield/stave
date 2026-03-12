@@ -606,8 +606,8 @@ func TestBuildGrants_Empty(t *testing.T) {
 
 func TestBuildVisibilityResult_PublicRead(t *testing.T) {
 	result := BuildVisibilityResult(
-		true, Visibility{Public: Capabilities{Read: true}},
-		false, Visibility{},
+		Visibility{Public: Capabilities{Read: true}},
+		Visibility{},
 		GovernanceOverrides{},
 	)
 	if !result.PublicRead {
@@ -620,8 +620,8 @@ func TestBuildVisibilityResult_PublicRead(t *testing.T) {
 
 func TestBuildVisibilityResult_Blocked(t *testing.T) {
 	result := BuildVisibilityResult(
-		true, Visibility{Public: Capabilities{Read: true}},
-		false, Visibility{},
+		Visibility{Public: Capabilities{Read: true}},
+		Visibility{},
 		GovernanceOverrides{BlockIdentityBoundPublicAccess: true},
 	)
 	if result.PublicRead {
@@ -634,8 +634,8 @@ func TestBuildVisibilityResult_Blocked(t *testing.T) {
 
 func TestBuildVisibilityResult_AuthenticatedAccess(t *testing.T) {
 	result := BuildVisibilityResult(
-		true, Visibility{Authenticated: Capabilities{Read: true, Write: true, Admin: true}},
-		false, Visibility{},
+		Visibility{Authenticated: Capabilities{Read: true, Write: true, Admin: true}},
+		Visibility{},
 		GovernanceOverrides{},
 	)
 	if !result.AuthenticatedRead {
@@ -651,8 +651,8 @@ func TestBuildVisibilityResult_AuthenticatedAccess(t *testing.T) {
 
 func TestBuildVisibilityResult_ResourceFullAccess(t *testing.T) {
 	result := BuildVisibilityResult(
-		false, Visibility{},
-		true, Visibility{
+		Visibility{},
+		Visibility{
 			Public:        Capabilities{Read: true, Write: true, List: true, Delete: true, Admin: true},
 			Authenticated: Capabilities{Read: true, Write: true, List: true, Delete: true, Admin: true},
 		},

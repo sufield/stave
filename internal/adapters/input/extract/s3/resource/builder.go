@@ -15,9 +15,7 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 	effectivePAB := computeEffectivePAB(accountPAB, bucket.PublicAccessBlock)
 
 	visibility := s3exposure.BuildVisibilityResult(
-		analysis.HasPolicy,
 		ToIdentityVisibility(analysis.Policy),
-		analysis.HasACL,
 		ToResourceVisibility(analysis.ACL),
 		ToGovernanceOverrides(effectivePAB),
 	)
