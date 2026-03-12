@@ -17,12 +17,12 @@ func DoctorPrereqChecks() []validation.PrereqCheck {
 	})
 	out := make([]validation.PrereqCheck, 0, len(doctorChecks))
 	for _, c := range doctorChecks {
-		status := validation.PrereqPass
+		status := validation.StatusPass
 		switch c.Status {
 		case doctor.StatusFail:
-			status = validation.PrereqFail
+			status = validation.StatusFail
 		case doctor.StatusWarn:
-			status = validation.PrereqWarn
+			status = validation.StatusWarn
 		}
 		out = append(out, validation.PrereqCheck{
 			Name:    c.Name,

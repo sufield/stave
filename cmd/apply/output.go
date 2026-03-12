@@ -62,7 +62,7 @@ func writeReadinessSummary(w io.Writer, report validation.ReadinessReport) error
 	return err
 }
 
-func writeReadinessIssues(w io.Writer, issues []validation.ReadinessIssue) error {
+func writeReadinessIssues(w io.Writer, issues []validation.Issue) error {
 	if len(issues) == 0 {
 		return nil
 	}
@@ -77,7 +77,7 @@ func writeReadinessIssues(w io.Writer, issues []validation.ReadinessIssue) error
 	return nil
 }
 
-func writeReadinessIssue(w io.Writer, issue validation.ReadinessIssue) error {
+func writeReadinessIssue(w io.Writer, issue validation.Issue) error {
 	var err error
 	writef := func(format string, args ...any) {
 		if err != nil {

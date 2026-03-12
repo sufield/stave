@@ -73,15 +73,15 @@ func normalizeValidateKind(raw string) (string, error) {
 
 // NewReadinessValidateFn creates a validation function for readiness assessment.
 // This is used by the plan/apply commands.
-func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ReadinessValidationResult, error) {
-	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ReadinessValidationResult, error) {
+func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ValidationResult, error) {
+	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ValidationResult, error) {
 		obsLoader, err := compose.NewObservationRepository()
 		if err != nil {
-			return validation.ReadinessValidationResult{}, err
+			return validation.ValidationResult{}, err
 		}
 		ctlLoader, err := compose.NewControlRepository()
 		if err != nil {
-			return validation.ReadinessValidationResult{}, err
+			return validation.ValidationResult{}, err
 		}
 		validateRun := appvalidation.NewRun(obsLoader, ctlLoader)
 		valResult, err := validateRun.Execute(compose.CommandContext(cmd), appvalidation.Config{
@@ -92,16 +92,14 @@ func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time
 			SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
 		})
 		if err != nil {
-			return validation.ReadinessValidationResult{}, err
+			return validation.ValidationResult{}, err
 		}
 		valResult.Diagnostics.AddAll(PackConfigIssues())
-		return validation.ReadinessValidationResult{
-			Diagnostics: valResult.Diagnostics,
-			Summary: validation.ReadinessValidationSummary{
-				ControlsLoaded:          valResult.Summary.ControlsLoaded,
-				SnapshotsLoaded:         valResult.Summary.SnapshotsLoaded,
-				AssetObservationsLoaded: valResult.Summary.AssetObservationsLoaded,
-			},
-		}, nil
+		var vr validation.ValidationResult
+		vr.Diagnostics = valResult.Diagnostics
+		vr.Summary.ControlsLoaded = valResult.Summary.ControlsLoaded
+		vr.Summary.SnapshotsLoaded = valResult.Summary.SnapshotsLoaded
+		vr.Summary.AssetObservationsLoaded = valResult.Summary.AssetObservationsLoaded
+		return vr, nil
 	}
 }
