@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// PrincipalScope defines who can exploit an exposure.
+// PrincipalScope defines the identity boundary of an access grant or exposure.
 type PrincipalScope int
 
 const (
@@ -18,7 +18,7 @@ const (
 	ScopeAccount
 )
 
-// String returns the canonical wire-format label.
+// String returns the canonical wire-format label for the scope.
 func (s PrincipalScope) String() string {
 	switch s {
 	case ScopeNotApplicable:
@@ -36,14 +36,21 @@ func (s PrincipalScope) String() string {
 	}
 }
 
-// IsPublic reports whether the scope is globally public.
+// IsPublic reports whether the scope allows anonymous, unauthenticated access.
 func (s PrincipalScope) IsPublic() bool {
 	return s == ScopePublic
 }
 
-// ParsePrincipalScope converts a canonical wire label to PrincipalScope.
+// IsValid reports whether the integer value represents a known scope.
+func (s PrincipalScope) IsValid() bool {
+	return s >= ScopeNotApplicable && s <= ScopeAccount
+}
+
+// ParsePrincipalScope converts a string label into its typed PrincipalScope.
+// It is case-insensitive and handles leading/trailing whitespace.
 func ParsePrincipalScope(raw string) (PrincipalScope, error) {
-	switch strings.TrimSpace(strings.ToLower(raw)) {
+	norm := strings.TrimSpace(strings.ToLower(raw))
+	switch norm {
 	case "unknown", "":
 		return ScopeUnknown, nil
 	case "n/a":
@@ -57,40 +64,40 @@ func ParsePrincipalScope(raw string) (PrincipalScope, error) {
 	case "account":
 		return ScopeAccount, nil
 	default:
-		return ScopeUnknown, fmt.Errorf("unknown principal scope %q", raw)
+		return ScopeUnknown, fmt.Errorf("invalid principal scope: %q", raw)
 	}
 }
 
-// MarshalJSON writes the canonical string label.
+// MarshalJSON implements the json.Marshaler interface.
 func (s PrincipalScope) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-// UnmarshalJSON reads a scope string and validates it.
+// UnmarshalJSON implements the json.Unmarshaler interface.
 func (s *PrincipalScope) UnmarshalJSON(data []byte) error {
-	var raw string
-	if err := json.Unmarshal(data, &raw); err != nil {
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
 		return err
 	}
-	parsed, err := ParsePrincipalScope(raw)
-	if err != nil {
-		return err
-	}
-	*s = parsed
-	return nil
+	return s.assign(str)
 }
 
-// MarshalYAML writes the canonical string label.
+// MarshalYAML implements the yaml.Marshaler interface.
 func (s PrincipalScope) MarshalYAML() (any, error) {
 	return s.String(), nil
 }
 
-// UnmarshalYAML reads a scope string and validates it.
+// UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (s *PrincipalScope) UnmarshalYAML(unmarshal func(any) error) error {
-	var raw string
-	if err := unmarshal(&raw); err != nil {
+	var str string
+	if err := unmarshal(&str); err != nil {
 		return err
 	}
+	return s.assign(str)
+}
+
+// assign is a private helper to update the enum value from a string.
+func (s *PrincipalScope) assign(raw string) error {
 	parsed, err := ParsePrincipalScope(raw)
 	if err != nil {
 		return err

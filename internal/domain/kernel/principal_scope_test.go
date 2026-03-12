@@ -17,6 +17,8 @@ func TestParsePrincipalScope(t *testing.T) {
 		{in: "account", want: ScopeAccount},
 		{in: "n/a", want: ScopeNotApplicable},
 		{in: "unknown", want: ScopeUnknown},
+		{in: "", want: ScopeUnknown},
+		{in: "  Public  ", want: ScopePublic},
 		{in: "global", wantErr: true},
 		{in: "global_authenticated", wantErr: true},
 		{in: "private", wantErr: true},
@@ -55,5 +57,44 @@ func TestPrincipalScopeJSON(t *testing.T) {
 	}
 	if string(data) != `"authenticated"` {
 		t.Fatalf("json.Marshal = %s, want %q", data, `"authenticated"`)
+	}
+}
+
+func TestPrincipalScopeIsValid(t *testing.T) {
+	valid := []PrincipalScope{
+		ScopeNotApplicable, ScopePublic, ScopeAuthenticated,
+		ScopeCrossAccount, ScopeAccount,
+	}
+	for _, s := range valid {
+		if !s.IsValid() {
+			t.Errorf("expected %v to be valid", s)
+		}
+	}
+
+	invalid := []PrincipalScope{ScopeUnknown, PrincipalScope(99)}
+	for _, s := range invalid {
+		if s.IsValid() {
+			t.Errorf("expected %v to be invalid", s)
+		}
+	}
+}
+
+func TestPrincipalScopeString(t *testing.T) {
+	tests := []struct {
+		scope PrincipalScope
+		want  string
+	}{
+		{ScopeUnknown, "unknown"},
+		{ScopeNotApplicable, "n/a"},
+		{ScopePublic, "public"},
+		{ScopeAuthenticated, "authenticated"},
+		{ScopeCrossAccount, "cross_account"},
+		{ScopeAccount, "account"},
+		{PrincipalScope(99), "unknown"},
+	}
+	for _, tt := range tests {
+		if got := tt.scope.String(); got != tt.want {
+			t.Errorf("PrincipalScope(%d).String() = %q, want %q", tt.scope, got, tt.want)
+		}
 	}
 }
