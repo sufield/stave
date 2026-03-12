@@ -54,7 +54,7 @@ func TestCheckClipboard(t *testing.T) {
 			return "", os.ErrNotExist
 		},
 	})
-	if warn.Status != StatusWarn || !strings.Contains(warn.Message, "xclip/wl-copy") {
+	if warn.Status != StatusWarn || !strings.Contains(warn.Message, "xclip") {
 		t.Fatalf("linux clipboard warn = %+v", warn)
 	}
 
@@ -188,9 +188,9 @@ func TestLookPathInEnv(t *testing.T) {
 	}
 }
 
-func TestCheckWritableDir_Failure(t *testing.T) {
+func TestIsDirectoryWritable_Failure(t *testing.T) {
 	nonexistent := filepath.Join(t.TempDir(), "missing-dir")
-	if err := CheckWritableDir(nonexistent); err == nil {
+	if err := IsDirectoryWritable(nonexistent); err == nil {
 		t.Fatal("expected failure for missing directory")
 	}
 }
