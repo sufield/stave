@@ -6,37 +6,39 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// RecurrencePolicy holds the parsed recurrence parameters for an control.
-// Parsed once from ControlParams to avoid repeated untyped map lookups.
+const (
+	paramRecurrenceLimit = "recurrence_limit"
+	paramWindowDays      = "window_days"
+)
+
+// RecurrencePolicy defines the thresholds for frequency-based security violations.
+// Example: "Flag if an asset becomes unsafe 3 times within a 7-day window."
 type RecurrencePolicy struct {
 	Limit      int
 	WindowDays int
 }
 
-// ParseRecurrencePolicy extracts recurrence parameters from control params.
+// ParseRecurrencePolicy extracts recurrence settings from the raw control parameters.
 func ParseRecurrencePolicy(params ControlParams) RecurrencePolicy {
 	return RecurrencePolicy{
-		Limit:      params.Int("recurrence_limit"),
-		WindowDays: params.Int("window_days"),
+		Limit:      params.Int(paramRecurrenceLimit),
+		WindowDays: params.Int(paramWindowDays),
 	}
 }
 
-// Configured reports whether both recurrence parameters are defined and valid.
-func (rp RecurrencePolicy) Configured() bool {
-	return rp.Limit > 0 && rp.WindowDays > 0
+// Configured reports whether the policy has valid parameters to perform an evaluation.
+func (p RecurrencePolicy) Configured() bool {
+	return p.Limit > 0 && p.WindowDays > 0
 }
 
-// WindowDuration returns the recurrence window as a time.Duration.
-func (rp RecurrencePolicy) WindowDuration() time.Duration {
-	return time.Duration(rp.WindowDays) * 24 * time.Hour
+// WindowDuration converts the day-based window into a standard time.Duration.
+func (p RecurrencePolicy) WindowDuration() time.Duration {
+	return time.Duration(p.WindowDays) * 24 * time.Hour
 }
 
-// WindowStart returns the start of the recurrence window relative to now.
-func (rp RecurrencePolicy) WindowStart(now time.Time) time.Time {
-	return now.AddDate(0, 0, -rp.WindowDays)
-}
-
-// Window returns the recurrence time window ending at now.
-func (rp RecurrencePolicy) Window(now time.Time) kernel.TimeWindow {
-	return kernel.TimeWindow{Start: rp.WindowStart(now), End: now}
+// Window returns a TimeWindow representing the evaluation period ending at the provided time.
+func (p RecurrencePolicy) Window(now time.Time) kernel.TimeWindow {
+	// AddDate handles calendar complexities better than duration math for day units.
+	start := now.AddDate(0, 0, -p.WindowDays)
+	return kernel.NewTimeWindow(start, now)
 }

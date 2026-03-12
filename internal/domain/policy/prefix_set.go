@@ -3,126 +3,101 @@ package policy
 import (
 	"slices"
 	"strings"
-
-	"github.com/samber/lo"
 )
 
-// PrefixSet is a normalized, sorted collection of path prefixes.
+// PrefixSet represents a normalized, sorted, and non-redundant collection of path prefixes.
 type PrefixSet struct {
 	prefixes []string
 }
 
-// NewPrefixSet creates a PrefixSet from raw prefix strings.
-// Each prefix is trimmed, given a trailing slash, and the result is sorted.
+// NewPrefixSet constructs a PrefixSet.
+// It trims whitespace, ensures trailing slashes, deduplicates, and removes redundant sub-paths.
 func NewPrefixSet(raw []string) PrefixSet {
 	return PrefixSet{prefixes: normalizePrefixes(raw)}
 }
 
-// Empty reports whether the set contains no prefixes.
-func (ps PrefixSet) Empty() bool { return len(ps.prefixes) == 0 }
+// Empty reports whether the set contains no path prefixes.
+func (ps PrefixSet) Empty() bool {
+	return len(ps.prefixes) == 0
+}
 
 // Paths returns the sorted, normalized prefix strings.
-func (ps PrefixSet) Paths() []string { return ps.prefixes }
+func (ps PrefixSet) Paths() []string {
+	return ps.prefixes
+}
 
-// PrefixConflict describes an overlap between an allowed and protected prefix.
+// PrefixConflict identifies a path containment collision between an allowed and protected prefix.
 type PrefixConflict struct {
 	Allowed   string
 	Protected string
 }
 
-// DetectOverlap finds the first path containment between allowed and protected
-// prefix sets using a sorted merge cursor.
-//
-// Both sets are sorted. The algorithm merges them in order, tracking the most
-// general (shortest) active prefix from each set. When an entry from one set
-// falls under the active prefix of the other, that's a conflict.
+// DetectOverlap identifies the first instance where a prefix from the allowed set
+// contains or is contained by a prefix in the protected set.
 func DetectOverlap(allowed, protected PrefixSet) *PrefixConflict {
-	cursor := overlapCursorState{
-		allowed:   allowed.prefixes,
-		protected: protected.prefixes,
-	}
-	for cursor.hasNext() {
-		var conflict *PrefixConflict
-		if cursor.shouldPickAllowed() {
-			conflict = cursor.advanceAllowed()
+	aIdx, pIdx := 0, 0
+	aLen, pLen := len(allowed.prefixes), len(protected.prefixes)
+
+	for aIdx < aLen && pIdx < pLen {
+		a := allowed.prefixes[aIdx]
+		p := protected.prefixes[pIdx]
+
+		switch {
+		case strings.HasPrefix(a, p):
+			// Protected prefix is higher/equal (e.g., p="a/", a="a/b/")
+			return &PrefixConflict{Allowed: a, Protected: p}
+		case strings.HasPrefix(p, a):
+			// Allowed prefix is higher (e.g., a="a/", p="a/b/")
+			return &PrefixConflict{Allowed: a, Protected: p}
+		}
+
+		// Move the pointer that is lexicographically smaller
+		if a < p {
+			aIdx++
 		} else {
-			conflict = cursor.advanceProtected()
-		}
-		if conflict != nil {
-			return conflict
+			pIdx++
 		}
 	}
+
 	return nil
 }
 
-type overlapCursorState struct {
-	allowed         []string
-	protected       []string
-	allowedIndex    int
-	protectedIndex  int
-	activeAllowed   string
-	activeProtected string
-}
-
-func (s *overlapCursorState) hasNext() bool {
-	return s.allowedIndex < len(s.allowed) || s.protectedIndex < len(s.protected)
-}
-
-func (s *overlapCursorState) shouldPickAllowed() bool {
-	switch {
-	case s.allowedIndex < len(s.allowed) && s.protectedIndex < len(s.protected):
-		return s.allowed[s.allowedIndex] <= s.protected[s.protectedIndex]
-	case s.allowedIndex < len(s.allowed):
-		return true
-	default:
-		return false
-	}
-}
-
-func (s *overlapCursorState) advanceAllowed() *PrefixConflict {
-	current := s.allowed[s.allowedIndex]
-	s.allowedIndex++
-	if s.activeProtected != "" && strings.HasPrefix(current, s.activeProtected) {
-		return &PrefixConflict{Allowed: current, Protected: s.activeProtected}
-	}
-	if s.activeAllowed == "" || !strings.HasPrefix(current, s.activeAllowed) {
-		s.activeAllowed = current
-	}
-	return nil
-}
-
-func (s *overlapCursorState) advanceProtected() *PrefixConflict {
-	current := s.protected[s.protectedIndex]
-	s.protectedIndex++
-	if s.activeAllowed != "" && strings.HasPrefix(current, s.activeAllowed) {
-		return &PrefixConflict{Allowed: s.activeAllowed, Protected: current}
-	}
-	if s.activeProtected == "" || !strings.HasPrefix(current, s.activeProtected) {
-		s.activeProtected = current
-	}
-	return nil
-}
-
-// normalizePrefixes trims whitespace, adds trailing slashes, deduplicates, and
-// sorts the result.
-func normalizePrefixes(prefixes []string) []string {
-	if len(prefixes) == 0 {
+// normalizePrefixes cleanses input strings and removes logical redundancies.
+func normalizePrefixes(raw []string) []string {
+	if len(raw) == 0 {
 		return nil
 	}
 
-	result := lo.FilterMap(prefixes, func(p string, _ int) (string, bool) {
+	// 1. Basic normalization (Trim, trailing slash, skip empty)
+	out := make([]string, 0, len(raw))
+	for _, p := range raw {
 		p = strings.TrimSpace(p)
 		if p == "" {
-			return "", false
+			continue
 		}
 		if !strings.HasSuffix(p, "/") {
 			p += "/"
 		}
-		return p, true
-	})
-	if len(result) == 0 {
+		out = append(out, p)
+	}
+
+	if len(out) == 0 {
 		return nil
 	}
-	slices.Sort(result)
-	return result
+
+	// 2. Sort and Deduplicate
+	slices.Sort(out)
+	out = slices.Compact(out)
+
+	// 3. Remove redundant sub-paths (O(N))
+	// If we have ["a/", "a/b/"], "a/b/" is redundant because "a/" is more general.
+	clean := out[:0]
+	for _, p := range out {
+		if len(clean) > 0 && strings.HasPrefix(p, clean[len(clean)-1]) {
+			continue
+		}
+		clean = append(clean, p)
+	}
+
+	return clean
 }
