@@ -30,7 +30,7 @@ func (r *Registry) Run(ctx *Context) ([]Check, bool) {
 	success := true
 
 	for _, checkFn := range r.checks {
-		res := checkFn(*ctx)
+		res := checkFn(ctx)
 
 		if res.Name == "" {
 			continue

@@ -1,6 +1,8 @@
 package doctor
 
-// Status represents diagnostic health result levels.
+import "fmt"
+
+// Status represents the health level of a diagnostic check.
 type Status string
 
 const (
@@ -9,7 +11,7 @@ const (
 	StatusFail Status = "FAIL"
 )
 
-// Check is an environment/system diagnostic check result.
+// Check represents the result of an environmental or system diagnostic.
 type Check struct {
 	Name    string `json:"name"`
 	Status  Status `json:"status"`
@@ -17,17 +19,29 @@ type Check struct {
 	Fix     string `json:"fix,omitempty"`
 }
 
-// Context provides environment data for running checks.
+// IsFail reports whether the check represents a system failure.
+func (c Check) IsFail() bool {
+	return c.Status == StatusFail
+}
+
+// String implements fmt.Stringer for easy logging of check results.
+func (c Check) String() string {
+	return fmt.Sprintf("[%s] %s: %s", c.Status, c.Name, c.Message)
+}
+
+// Context encapsulates the system and environment data required to run diagnostics.
 type Context struct {
 	Cwd          string
 	BinaryPath   string
-	LookPathFn   func(file string) (string, error)
-	GetenvFn     func(key string) string
 	Goos         string
 	Goarch       string
 	GoVersion    string
 	StaveVersion string
+
+	// Dependencies (injectable for testing)
+	LookPathFn func(file string) (string, error)
+	GetenvFn   func(key string) string
 }
 
-// CheckFunc is a function that produces a single Check result.
-type CheckFunc func(ctx Context) Check
+// CheckFunc is the signature for an individual diagnostic probe.
+type CheckFunc func(ctx *Context) Check

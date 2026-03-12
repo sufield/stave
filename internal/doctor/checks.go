@@ -24,7 +24,7 @@ const (
 	CheckProxyEnv          = "offline-proxy-env"
 )
 
-func checkVersionInfo(ctx Context) Check {
+func checkVersionInfo(ctx *Context) Check {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "stave_version=%s go_version=%s os=%s arch=%s",
 		ctx.StaveVersion, ctx.GoVersion, ctx.Goos, ctx.Goarch)
@@ -40,35 +40,35 @@ func checkVersionInfo(ctx Context) Check {
 	}
 }
 
-func checkOSVersion(ctx Context) Check {
+func checkOSVersion(ctx *Context) Check {
 	if ver := detectOSVersion(ctx.Goos); ver != "" {
 		return Check{Name: CheckOSVersion, Status: StatusPass, Message: ver}
 	}
 	return Check{}
 }
 
-func checkShell(ctx Context) Check {
+func checkShell(ctx *Context) Check {
 	if shell := ctx.GetenvFn("SHELL"); shell != "" {
 		return Check{Name: CheckShell, Status: StatusPass, Message: shell}
 	}
 	return Check{}
 }
 
-func checkCI(ctx Context) Check {
+func checkCI(ctx *Context) Check {
 	if ci := detectCI(ctx.GetenvFn); ci != "" {
 		return Check{Name: CheckCIEnv, Status: StatusPass, Message: ci}
 	}
 	return Check{}
 }
 
-func checkContainer(_ Context) Check {
+func checkContainer(_ *Context) Check {
 	if container := detectContainer(); container != "" {
 		return Check{Name: CheckContainer, Status: StatusPass, Message: container}
 	}
 	return Check{}
 }
 
-func checkWorkspaceWritable(ctx Context) Check {
+func checkWorkspaceWritable(ctx *Context) Check {
 	if err := IsDirectoryWritable(ctx.Cwd); err != nil {
 		return Check{
 			Name:    CheckWorkspaceWritable,
@@ -84,7 +84,7 @@ func checkWorkspaceWritable(ctx Context) Check {
 	}
 }
 
-func checkGit(ctx Context) Check {
+func checkGit(ctx *Context) Check {
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "git",
 		Name:        CheckGit,
@@ -93,7 +93,7 @@ func checkGit(ctx Context) Check {
 	})
 }
 
-func checkAWS(ctx Context) Check {
+func checkAWS(ctx *Context) Check {
 	// #nosec G101 -- contains tool names/docs URLs; no credentials are embedded.
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "aws",
@@ -104,7 +104,7 @@ func checkAWS(ctx Context) Check {
 	})
 }
 
-func checkJQ(ctx Context) Check {
+func checkJQ(ctx *Context) Check {
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "jq",
 		Name:        CheckJQ,
@@ -113,7 +113,7 @@ func checkJQ(ctx Context) Check {
 	})
 }
 
-func checkGraphviz(ctx Context) Check {
+func checkGraphviz(ctx *Context) Check {
 	return checkBinary(ctx, BinaryRequest{
 		Binary:      "dot",
 		Name:        CheckGraphviz,
@@ -122,7 +122,7 @@ func checkGraphviz(ctx Context) Check {
 	})
 }
 
-func checkClipboard(ctx Context) Check {
+func checkClipboard(ctx *Context) Check {
 	switch ctx.Goos {
 	case "darwin":
 		return checkBinary(ctx, BinaryRequest{
@@ -152,7 +152,7 @@ func checkClipboard(ctx Context) Check {
 	}
 }
 
-func checkOfflineProxyEnv(ctx Context) Check {
+func checkOfflineProxyEnv(ctx *Context) Check {
 	var found []string
 	for _, env := range kernel.DefaultPolicy().ProxyEnvVars() {
 		if val := strings.TrimSpace(ctx.GetenvFn(env)); val != "" {
