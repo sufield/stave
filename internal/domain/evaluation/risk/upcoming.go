@@ -1,12 +1,12 @@
 package risk
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -16,41 +16,29 @@ import (
 type Status string
 
 const (
-	Overdue  Status = "OVERDUE"
-	DueNow   Status = "DUE_NOW"
-	Upcoming Status = "UPCOMING"
+	StatusOverdue  Status = "OVERDUE"
+	StatusDueNow   Status = "DUE_NOW"
+	StatusUpcoming Status = "UPCOMING"
 )
 
-var validStatuses = map[Status]struct{}{
-	Overdue:  {},
-	DueNow:   {},
-	Upcoming: {},
-}
-
-// ValidStatus reports whether s is a recognized risk status.
-func ValidStatus(s Status) bool {
-	_, ok := validStatuses[s]
-	return ok
-}
-
-// ValidateStatuses normalises and validates a slice of status strings.
-// Empty strings are skipped. Returns an error on the first invalid value.
+// ValidateStatuses normalizes and validates a slice of status strings.
 func ValidateStatuses(statuses []string) ([]Status, error) {
 	out := make([]Status, 0, len(statuses))
 	for _, raw := range statuses {
-		normalized := Status(strings.ToUpper(strings.TrimSpace(raw)))
-		if normalized == "" {
+		norm := Status(strings.ToUpper(strings.TrimSpace(raw)))
+		switch norm {
+		case "":
 			continue
+		case StatusOverdue, StatusDueNow, StatusUpcoming:
+			out = append(out, norm)
+		default:
+			return nil, fmt.Errorf("invalid status %q (expected: OVERDUE, DUE_NOW, UPCOMING)", raw)
 		}
-		if !ValidStatus(normalized) {
-			return nil, fmt.Errorf("invalid status %q (use: OVERDUE, DUE_NOW, UPCOMING)", raw)
-		}
-		out = append(out, normalized)
 	}
 	return out, nil
 }
 
-// Item captures one control/asset due threshold candidate.
+// Item captures one control/asset threshold approaching or exceeding its limit.
 type Item struct {
 	DueAt          time.Time
 	Status         Status
@@ -63,12 +51,18 @@ type Item struct {
 	Threshold      time.Duration
 }
 
-// Items is a collection of upcoming risk items with query methods.
+// Items is a collection of upcoming risk items.
 type Items []Item
 
 // CountOverdue returns the number of items with OVERDUE status.
 func (items Items) CountOverdue() int {
-	return lo.CountBy(items, func(item Item) bool { return item.Status == Overdue })
+	count := 0
+	for _, item := range items {
+		if item.Status == StatusOverdue {
+			count++
+		}
+	}
+	return count
 }
 
 // HasAnyRisk reports whether any item is overdue, due now, or upcoming.
@@ -85,25 +79,27 @@ type Summary struct {
 	Total   int
 }
 
-// FilterCriteria specifies which items to include.
-// Empty/nil maps and zero MaxRemaining mean no restriction on that dimension.
+// FilterCriteria specifies which items to include in a view.
 type FilterCriteria struct {
 	ControlIDs   map[kernel.ControlID]struct{}
 	AssetTypes   map[kernel.AssetType]struct{}
 	Statuses     map[Status]struct{}
-	MaxRemaining time.Duration // 0 means no limit
+	MaxRemaining time.Duration
 }
 
-// Filter returns items matching all non-empty criteria.
+// Filter returns items matching the criteria.
 func (items Items) Filter(c FilterCriteria) Items {
-	if !c.active() {
-		return items
+	if len(items) == 0 {
+		return nil
 	}
-	return lo.Filter(items, func(item Item, _ int) bool { return c.matches(item) })
-}
 
-func (c FilterCriteria) active() bool {
-	return len(c.ControlIDs) > 0 || len(c.AssetTypes) > 0 || len(c.Statuses) > 0 || c.MaxRemaining > 0
+	out := make(Items, 0, len(items))
+	for _, item := range items {
+		if c.matches(item) {
+			out = append(out, item)
+		}
+	}
+	return out
 }
 
 func (c FilterCriteria) matches(item Item) bool {
@@ -128,16 +124,15 @@ func (c FilterCriteria) matches(item Item) bool {
 	return true
 }
 
-// Summarize buckets items by urgency. Items with Remaining within
-// dueSoonThreshold are counted as DueSoon; others are Later.
+// Summarize buckets items by urgency relative to a "due soon" threshold.
 func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {
 	var s Summary
 	s.Total = len(items)
 	for _, item := range items {
 		switch item.Status {
-		case Overdue:
+		case StatusOverdue:
 			s.Overdue++
-		case DueNow:
+		case StatusDueNow:
 			s.DueNow++
 		default:
 			if item.Remaining > 0 && item.Remaining <= dueSoonThreshold {
@@ -150,7 +145,7 @@ func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {
 	return s
 }
 
-// Request provides the inputs required to compute upcoming risk items.
+// Request provides the inputs required to compute upcoming risk.
 type Request struct {
 	Controls        []policy.ControlDefinition
 	Snapshots       []asset.Snapshot
@@ -159,154 +154,127 @@ type Request struct {
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 }
 
-type state struct {
-	FirstUnsafeAt   *time.Time
-	LastSeenUnsafe  *time.Time
+type assetState struct {
+	FirstUnsafeAt   time.Time
+	LastSeenUnsafe  time.Time
 	CurrentlyUnsafe bool
 	AssetType       kernel.AssetType
 }
 
-// ComputeItems returns deterministic upcoming threshold items for
-// currently-unsafe assets across evaluatable controls.
+// ComputeItems returns deterministic upcoming threshold items for currently-unsafe assets.
 func ComputeItems(req Request) Items {
 	if len(req.Snapshots) == 0 || len(req.Controls) == 0 {
 		return nil
 	}
-	sorted := sortSnapshotsByCapturedAt(req.Snapshots)
-	riskControls := lo.Filter(req.Controls, func(ctl policy.ControlDefinition, _ int) bool { return isRiskControl(ctl) })
-	items := lo.FlatMap(riskControls, func(ctl policy.ControlDefinition, _ int) []Item {
-		threshold := resolveMaxUnsafe(ctl, req.GlobalMaxUnsafe)
-		states := computeStates(ctl, sorted, req.PredicateParser)
-		return itemsForControl(ctl, states, req.Now, threshold)
+
+	// 1. Prepare snapshots
+	sortedSnaps := slices.Clone(req.Snapshots)
+	slices.SortFunc(sortedSnaps, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
 	})
+
+	// 2. Identify relevant controls
+	var items Items
+	for _, ctl := range req.Controls {
+		if ctl.Type != policy.TypeUnsafeDuration && ctl.Type != policy.TypeUnsafeState {
+			continue
+		}
+
+		threshold := ctl.EffectiveMaxUnsafe(req.GlobalMaxUnsafe)
+		states := computeAssetStates(ctl, sortedSnaps, req.PredicateParser)
+
+		// 3. Convert states to risk items
+		for id, st := range states {
+			if !st.CurrentlyUnsafe || st.FirstUnsafeAt.IsZero() {
+				continue
+			}
+
+			dueAt := st.FirstUnsafeAt.Add(threshold).UTC()
+			items = append(items, Item{
+				DueAt:          dueAt,
+				Status:         classifyStatus(req.Now, dueAt),
+				Remaining:      dueAt.Sub(req.Now),
+				ControlID:      ctl.ID,
+				AssetID:        id,
+				AssetType:      st.AssetType,
+				FirstUnsafeAt:  st.FirstUnsafeAt.UTC(),
+				LastSeenUnsafe: st.LastSeenUnsafe.UTC(),
+				Threshold:      threshold,
+			})
+		}
+	}
+
+	// 4. Deterministic Sort
 	sortItems(items)
 	return items
 }
 
-func sortSnapshotsByCapturedAt(snapshots []asset.Snapshot) []asset.Snapshot {
-	sorted := append([]asset.Snapshot(nil), snapshots...)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].CapturedAt.Before(sorted[j].CapturedAt)
-	})
-	return sorted
-}
+func computeAssetStates(
+	ctl policy.ControlDefinition,
+	snapshots []asset.Snapshot,
+	parser func(any) (*policy.UnsafePredicate, error),
+) map[asset.ID]*assetState {
+	states := make(map[asset.ID]*assetState)
 
-func isRiskControl(ctl policy.ControlDefinition) bool {
-	return ctl.Type == policy.TypeUnsafeDuration || ctl.Type == policy.TypeUnsafeState
-}
-
-func computeStates(ctl policy.ControlDefinition, snapshots []asset.Snapshot, predicateParser func(any) (*policy.UnsafePredicate, error)) map[asset.ID]*state {
-	states := make(map[asset.ID]*state)
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			st := ensureState(states, a.ID, a.Type)
+			st, ok := states[a.ID]
+			if !ok {
+				st = &assetState{AssetType: a.Type}
+				states[a.ID] = st
+			}
+
 			ctx := policy.NewAssetEvalContextWithIdentities(a, policy.ControlParams(ctl.Params), snap.Identities)
-			ctx.PredicateParser = predicateParser
-			updateState(st, ctl.UnsafePredicate.EvaluateWithContext(ctx), snap.CapturedAt, a.Type)
+			ctx.PredicateParser = parser
+
+			isUnsafe := ctl.UnsafePredicate.EvaluateWithContext(ctx)
+
+			if isUnsafe {
+				if st.FirstUnsafeAt.IsZero() {
+					st.FirstUnsafeAt = snap.CapturedAt
+				}
+				st.LastSeenUnsafe = snap.CapturedAt
+				st.CurrentlyUnsafe = true
+			} else {
+				// Reset streak
+				st.FirstUnsafeAt = time.Time{}
+				st.LastSeenUnsafe = time.Time{}
+				st.CurrentlyUnsafe = false
+			}
 		}
 	}
 	return states
 }
 
-func ensureState(
-	states map[asset.ID]*state,
-	id asset.ID,
-	resourceType kernel.AssetType,
-) *state {
-	st, exists := states[id]
-	if exists {
-		return st
-	}
-	st = &state{AssetType: resourceType}
-	states[id] = st
-	return st
-}
-
-func updateState(
-	st *state,
-	isUnsafe bool,
-	capturedAt time.Time,
-	resourceType kernel.AssetType,
-) {
-	st.AssetType = resourceType
-	if !isUnsafe {
-		st.FirstUnsafeAt = nil
-		st.LastSeenUnsafe = nil
-		st.CurrentlyUnsafe = false
-		return
-	}
-	if st.FirstUnsafeAt == nil {
-		first := capturedAt
-		st.FirstUnsafeAt = &first
-	}
-	last := capturedAt
-	st.LastSeenUnsafe = &last
-	st.CurrentlyUnsafe = true
-}
-
-func itemsForControl(
-	ctl policy.ControlDefinition,
-	states map[asset.ID]*state,
-	now time.Time,
-	threshold time.Duration,
-) []Item {
-	items := make([]Item, 0)
-	for assetID, st := range states {
-		if !st.CurrentlyUnsafe || st.FirstUnsafeAt == nil || st.LastSeenUnsafe == nil {
-			continue
-		}
-		dueAt := st.FirstUnsafeAt.Add(threshold)
-		items = append(items, Item{
-			DueAt:          dueAt.UTC(),
-			Status:         classifyStatus(now, dueAt),
-			Remaining:      dueAt.Sub(now),
-			ControlID:      ctl.ID,
-			AssetID:        assetID,
-			AssetType:      st.AssetType,
-			FirstUnsafeAt:  st.FirstUnsafeAt.UTC(),
-			LastSeenUnsafe: st.LastSeenUnsafe.UTC(),
-			Threshold:      threshold,
-		})
-	}
-	return items
-}
-
 func classifyStatus(now, dueAt time.Time) Status {
 	if now.After(dueAt) {
-		return Overdue
+		return StatusOverdue
 	}
 	if now.Equal(dueAt) {
-		return DueNow
+		return StatusDueNow
 	}
-	return Upcoming
+	return StatusUpcoming
 }
 
-// statusRank maps status values to urgency order (lower = more urgent).
-// OVERDUE sorts before DUE_NOW, which sorts before UPCOMING.
-var statusRank = map[Status]int{
-	Overdue:  0,
-	DueNow:   1,
-	Upcoming: 2,
-}
+func sortItems(items Items) {
+	rank := func(s Status) int {
+		switch s {
+		case StatusOverdue:
+			return 0
+		case StatusDueNow:
+			return 1
+		default:
+			return 2
+		}
+	}
 
-func sortItems(items []Item) {
-	sort.Slice(items, func(i, j int) bool {
-		if !items[i].DueAt.Equal(items[j].DueAt) {
-			return items[i].DueAt.Before(items[j].DueAt)
-		}
-		if items[i].Status != items[j].Status {
-			return statusRank[items[i].Status] < statusRank[items[j].Status]
-		}
-		if items[i].ControlID != items[j].ControlID {
-			return items[i].ControlID < items[j].ControlID
-		}
-		if items[i].AssetID != items[j].AssetID {
-			return items[i].AssetID < items[j].AssetID
-		}
-		return items[i].AssetType < items[j].AssetType
+	slices.SortFunc(items, func(a, b Item) int {
+		return cmp.Or(
+			a.DueAt.Compare(b.DueAt),
+			cmp.Compare(rank(a.Status), rank(b.Status)),
+			cmp.Compare(string(a.ControlID), string(b.ControlID)),
+			cmp.Compare(string(a.AssetID), string(b.AssetID)),
+			cmp.Compare(string(a.AssetType), string(b.AssetType)),
+		)
 	})
-}
-
-func resolveMaxUnsafe(ctl policy.ControlDefinition, fallback time.Duration) time.Duration {
-	return ctl.EffectiveMaxUnsafe(fallback)
 }

@@ -28,25 +28,25 @@ func TestClassifySafetyStatus(t *testing.T) {
 		{
 			name:       "no violations upcoming risk",
 			violations: 0,
-			risks:      []risk.Item{{Status: risk.Upcoming}},
+			risks:      []risk.Item{{Status: risk.StatusUpcoming}},
 			want:       SafetyStatusBorderline,
 		},
 		{
 			name:       "no violations due now risk",
 			violations: 0,
-			risks:      []risk.Item{{Status: risk.DueNow}},
+			risks:      []risk.Item{{Status: risk.StatusDueNow}},
 			want:       SafetyStatusBorderline,
 		},
 		{
 			name:       "no violations overdue risk",
 			violations: 0,
-			risks:      []risk.Item{{Status: risk.Overdue}},
+			risks:      []risk.Item{{Status: risk.StatusOverdue}},
 			want:       SafetyStatusBorderline,
 		},
 		{
 			name:       "violations with risks",
 			violations: 3,
-			risks:      []risk.Item{{Status: risk.Upcoming}},
+			risks:      []risk.Item{{Status: risk.StatusUpcoming}},
 			want:       SafetyStatusUnsafe,
 		},
 		{

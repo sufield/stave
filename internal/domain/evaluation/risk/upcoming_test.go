@@ -82,8 +82,8 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 	if !items[0].DueAt.Equal(wantDueAt) {
 		t.Fatalf("dueAt = %s, want %s", items[0].DueAt, wantDueAt)
 	}
-	if items[0].Status != Upcoming {
-		t.Fatalf("status = %s, want %s", items[0].Status, Upcoming)
+	if items[0].Status != StatusUpcoming {
+		t.Fatalf("status = %s, want %s", items[0].Status, StatusUpcoming)
 	}
 }
 
@@ -126,14 +126,14 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 	due := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	items := []Item{
-		{DueAt: due, Status: Upcoming, ControlID: "CTL.A", AssetID: "r1"},
-		{DueAt: due, Status: DueNow, ControlID: "CTL.A", AssetID: "r1"},
-		{DueAt: due, Status: Overdue, ControlID: "CTL.A", AssetID: "r1"},
+		{DueAt: due, Status: StatusUpcoming, ControlID: "CTL.A", AssetID: "r1"},
+		{DueAt: due, Status: StatusDueNow, ControlID: "CTL.A", AssetID: "r1"},
+		{DueAt: due, Status: StatusOverdue, ControlID: "CTL.A", AssetID: "r1"},
 	}
 	sortItems(items)
 
 	// OVERDUE is most urgent, then DUE_NOW, then UPCOMING.
-	want := []Status{Overdue, DueNow, Upcoming}
+	want := []Status{StatusOverdue, StatusDueNow, StatusUpcoming}
 	for i, w := range want {
 		if items[i].Status != w {
 			t.Fatalf("items[%d].Status = %s, want %s", i, items[i].Status, w)
@@ -143,14 +143,14 @@ func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 
 func TestFilter_ByControlAndStatus(t *testing.T) {
 	items := Items{
-		{ControlID: "CTL.A", AssetType: kernel.TypeStorageBucket, Status: Overdue, Remaining: -1 * time.Hour},
-		{ControlID: "CTL.B", AssetType: kernel.TypeIAMRole, Status: Upcoming, Remaining: 4 * time.Hour},
-		{ControlID: "CTL.C", AssetType: kernel.TypeStorageBucket, Status: Upcoming, Remaining: 1 * time.Hour},
+		{ControlID: "CTL.A", AssetType: kernel.TypeStorageBucket, Status: StatusOverdue, Remaining: -1 * time.Hour},
+		{ControlID: "CTL.B", AssetType: kernel.TypeIAMRole, Status: StatusUpcoming, Remaining: 4 * time.Hour},
+		{ControlID: "CTL.C", AssetType: kernel.TypeStorageBucket, Status: StatusUpcoming, Remaining: 1 * time.Hour},
 	}
 
 	filtered := items.Filter(FilterCriteria{
 		AssetTypes:   map[kernel.AssetType]struct{}{kernel.TypeStorageBucket: {}},
-		Statuses:     map[Status]struct{}{Upcoming: {}},
+		Statuses:     map[Status]struct{}{StatusUpcoming: {}},
 		MaxRemaining: 2 * time.Hour,
 	})
 
@@ -164,8 +164,8 @@ func TestFilter_ByControlAndStatus(t *testing.T) {
 
 func TestFilter_EmptyPassesAll(t *testing.T) {
 	items := Items{
-		{ControlID: "CTL.A", Status: Overdue},
-		{ControlID: "CTL.B", Status: Upcoming},
+		{ControlID: "CTL.A", Status: StatusOverdue},
+		{ControlID: "CTL.B", Status: StatusUpcoming},
 	}
 	filtered := items.Filter(FilterCriteria{})
 	if len(filtered) != 2 {
