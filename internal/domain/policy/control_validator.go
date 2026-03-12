@@ -9,49 +9,52 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// ValidateControlDefinition checks a single control definition for errors and warnings.
+// ValidateControlDefinition performs a comprehensive check of a control's
+// configuration, returning a list of logical errors or configuration warnings.
 func ValidateControlDefinition(ctl *ControlDefinition) []diag.Issue {
 	if ctl == nil {
 		return nil
 	}
-	return validate(ctl)
-}
 
-// validate checks a single control definition for errors and warnings.
-func validate(ctl *ControlDefinition) []diag.Issue {
+	// Registry of validation rules to apply
+	rules := []func(*ControlDefinition) []diag.Issue{
+		validateRequiredMetadata,
+		validateIdentity,
+		validateSeverity,
+		validateLogicType,
+		validatePredicateRules,
+		validateParameterReferences,
+		validateDurationConstraints,
+	}
+
 	var issues []diag.Issue
-	issues = append(issues, validateRequiredFields(ctl)...)
-	issues = append(issues, validateIDFormat(ctl)...)
-	issues = append(issues, validateSeverity(ctl)...)
-	issues = append(issues, validateType(ctl)...)
-	issues = append(issues, validatePredicate(ctl)...)
-	issues = append(issues, validateParamReferences(ctl)...)
-	issues = append(issues, validateMaxUnsafeDuration(ctl)...)
+	for _, run := range rules {
+		issues = append(issues, run(ctl)...)
+	}
 	return issues
 }
 
-// controlCtx builds an evidence map with control_id and description,
-// plus any additional key-value pairs.
-func controlCtx(ctl *ControlDefinition, extra map[string]string) map[string]string {
+// buildCtx creates the standard diagnostic evidence map for a control.
+func buildCtx(ctl *ControlDefinition, extra map[string]string) map[string]string {
 	m := make(map[string]string, len(extra)+2)
 	if ctl.ID != "" {
 		m["control_id"] = ctl.ID.String()
 	}
-	if desc := strings.TrimSpace(ctl.Description); desc != "" {
-		m["description"] = desc
+	if d := strings.TrimSpace(ctl.Description); d != "" {
+		m["description"] = d
 	}
 	maps.Copy(m, extra)
 	return m
 }
 
-func validateRequiredFields(ctl *ControlDefinition) []diag.Issue {
-	issues := make([]diag.Issue, 0, 3)
-	ctx := controlCtx(ctl, nil)
+func validateRequiredMetadata(ctl *ControlDefinition) []diag.Issue {
+	var issues []diag.Issue
+	ctx := buildCtx(ctl, nil)
 
 	if ctl.ID == "" {
 		issues = append(issues, diag.New(diag.CodeControlMissingID).
 			Error().
-			Action("Add 'id: CTL.<DOMAIN>.<CATEGORY>.<SEQ>' to the control YAML").
+			Action("Add 'id: CTL.<PROVIDER>.<CATEGORY>.<SEQ>' to the control YAML").
 			WithMap(ctx).
 			Build())
 	}
@@ -59,7 +62,7 @@ func validateRequiredFields(ctl *ControlDefinition) []diag.Issue {
 	if strings.TrimSpace(ctl.Name) == "" {
 		issues = append(issues, diag.New(diag.CodeControlMissingName).
 			Error().
-			Action("Add 'name: <descriptive name>' to the control YAML").
+			Action("Provide a short, descriptive 'name' for the control").
 			WithMap(ctx).
 			Build())
 	}
@@ -67,12 +70,30 @@ func validateRequiredFields(ctl *ControlDefinition) []diag.Issue {
 	if strings.TrimSpace(ctl.Description) == "" {
 		issues = append(issues, diag.New(diag.CodeControlMissingDesc).
 			Error().
-			Action("Add 'description: <what this control checks>' to the control YAML").
+			Action("Provide a 'description' explaining the security impact of this control").
 			WithMap(ctx).
 			Build())
 	}
 
 	return issues
+}
+
+func validateIdentity(ctl *ControlDefinition) []diag.Issue {
+	if ctl.ID == "" {
+		return nil
+	}
+
+	if err := kernel.ValidateControlIDFormat(ctl.ID.String()); err != nil {
+		return []diag.Issue{
+			diag.New(diag.CodeControlBadIDFormat).
+				Warning().
+				Action("Use format CTL.<PROVIDER>.<CATEGORY>.<SEQ> (e.g., CTL.STORAGE.PUBLIC.001)").
+				WithMap(buildCtx(ctl, nil)).
+				WithSensitive("error", err.Error()).
+				Build(),
+		}
+	}
+	return nil
 }
 
 func validateSeverity(ctl *ControlDefinition) []diag.Issue {
@@ -83,35 +104,13 @@ func validateSeverity(ctl *ControlDefinition) []diag.Issue {
 	return []diag.Issue{
 		diag.New(diag.CodeControlBadSeverity).
 			Warning().
-			Action("Use a valid severity: info, low, medium, high, critical").
-			WithMap(controlCtx(ctl, map[string]string{
-				"severity": ctl.Severity.String(),
-			})).
+			Action("Assign a valid severity: info, low, medium, high, or critical").
+			WithMap(buildCtx(ctl, map[string]string{"severity": ctl.Severity.String()})).
 			Build(),
 	}
 }
 
-func validateIDFormat(ctl *ControlDefinition) []diag.Issue {
-	if ctl.ID == "" {
-		return nil
-	}
-
-	err := kernel.ValidateControlIDFormat(ctl.ID.String())
-	if err == nil {
-		return nil
-	}
-
-	return []diag.Issue{
-		diag.New(diag.CodeControlBadIDFormat).
-			Warning().
-			Action("Use format CTL.<DOMAIN>.<CATEGORY>.<SEQ> (e.g., CTL.S3.PUBLIC.001)").
-			WithMap(controlCtx(ctl, nil)).
-			WithSensitive("error", err.Error()).
-			Build(),
-	}
-}
-
-func validateType(ctl *ControlDefinition) []diag.Issue {
+func validateLogicType(ctl *ControlDefinition) []diag.Issue {
 	if ctl.Type == TypeUnknown || ctl.Type.IsValid() {
 		return nil
 	}
@@ -119,86 +118,74 @@ func validateType(ctl *ControlDefinition) []diag.Issue {
 	return []diag.Issue{
 		diag.New(diag.CodeControlBadType).
 			Warning().
-			Action("Use a canonical type: unsafe_state, unsafe_duration, unsafe_recurrence, authorization_boundary, audience_boundary, justification_required, ownership_required, visibility_required, prefix_exposure").
-			WithMap(controlCtx(ctl, map[string]string{
-				"type": ctl.Type.String(),
-			})).
+			Action("Specify a supported control type (e.g., unsafe_state, unsafe_duration)").
+			WithMap(buildCtx(ctl, map[string]string{"type": ctl.Type.String()})).
 			Build(),
 	}
 }
 
-func validatePredicate(ctl *ControlDefinition) []diag.Issue {
-	if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
-		return nil
+func validatePredicateRules(ctl *ControlDefinition) []diag.Issue {
+	if len(ctl.UnsafePredicate.Any) == 0 && len(ctl.UnsafePredicate.All) == 0 {
+		return []diag.Issue{
+			diag.New(diag.CodeControlEmptyPredicate).
+				Warning().
+				Action("Define logical rules under 'unsafe_predicate: any' or 'all'").
+				WithMap(buildCtx(ctl, nil)).
+				Build(),
+		}
 	}
-
-	return []diag.Issue{
-		diag.New(diag.CodeControlEmptyPredicate).
-			Warning().
-			Action("Add 'unsafe_predicate: any: [...]' or 'unsafe_predicate: all: [...]' rules").
-			WithMap(controlCtx(ctl, nil)).
-			Build(),
-	}
+	return nil
 }
 
-func validateParamReferences(ctl *ControlDefinition) []diag.Issue {
-	missingParams := FindMissingParamReferences(ctl.UnsafePredicate, ctl.Params)
-	if len(missingParams) == 0 {
+func validateParameterReferences(ctl *ControlDefinition) []diag.Issue {
+	missing := FindMissingParamReferences(ctl.UnsafePredicate, ctl.Params)
+	if len(missing) == 0 {
 		return nil
 	}
 
-	issues := make([]diag.Issue, 0, len(missingParams))
-	for _, param := range missingParams {
+	issues := make([]diag.Issue, 0, len(missing))
+	for _, p := range missing {
 		issues = append(issues, diag.New(diag.CodeControlUndefinedParam).
 			Error().
-			Action(fmt.Sprintf("Add '%s' to the control's params section", param)).
-			WithMap(controlCtx(ctl, map[string]string{
-				"param": param,
-			})).
+			Action(fmt.Sprintf("Add parameter '%s' to the control's 'params' section", p)).
+			WithMap(buildCtx(ctl, map[string]string{"param": p})).
 			Build())
 	}
 	return issues
 }
 
-func validateMaxUnsafeDuration(ctl *ControlDefinition) []diag.Issue {
-	const paramName = "max_unsafe_duration"
-	if !ctl.Params.HasKey(paramName) {
+func validateDurationConstraints(ctl *ControlDefinition) []diag.Issue {
+	const key = "max_unsafe_duration"
+	if !ctl.Params.HasKey(key) {
 		return nil
 	}
 
-	raw := ctl.Params.String(paramName)
-	if raw == "" {
-		return []diag.Issue{
-			diag.New(diag.CodeControlBadDurationParam).
-				Error().
-				Action("Set max_unsafe_duration to a valid duration string (e.g., '0h', '24h', '7d')").
-				WithMap(controlCtx(ctl, map[string]string{
-					"param": paramName,
-					"value": fmt.Sprintf("%v", ctl.Params[paramName]),
-				})).
-				Build(),
-		}
-	}
-
-	// If Prepare() already validated this parameter successfully, skip re-parse.
+	// If the control was successfully Prepared, it's already validated.
 	if ctl.Prepared.Ready && ctl.Prepared.HasMaxUnsafeDuration {
 		return nil
 	}
 
-	_, err := kernel.ParseDuration(raw)
-	if err == nil {
-		return nil
+	raw := ctl.Params.String(key)
+	if raw == "" {
+		return []diag.Issue{
+			diag.New(diag.CodeControlBadDurationParam).
+				Error().
+				Action("Provide a non-empty duration string (e.g., '24h', '7d')").
+				WithMap(buildCtx(ctl, map[string]string{"param": key, "value": "empty"})).
+				Build(),
+		}
 	}
 
-	return []diag.Issue{
-		diag.New(diag.CodeControlBadDurationParam).
-			Error().
-			Action("Fix max_unsafe_duration value (use format: 0h, 24h, 7d, 1d12h)").
-			WithMap(controlCtx(ctl, map[string]string{
-				"param": paramName,
-				"value": raw,
-			})).
-			WithSensitive("error", err.Error()).
-			Build(),
+	if _, err := kernel.ParseDuration(raw); err != nil {
+		return []diag.Issue{
+			diag.New(diag.CodeControlBadDurationParam).
+				Error().
+				Action("Ensure duration uses valid units: h (hours), d (days). Example: '1d12h'").
+				WithMap(buildCtx(ctl, map[string]string{"param": key, "value": raw})).
+				WithSensitive("error", err.Error()).
+				Build(),
+		}
 	}
+
+	return nil
 }

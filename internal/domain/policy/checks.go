@@ -44,7 +44,7 @@ func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.S
 			issues = append(issues, diag.New(diag.CodeControlNeverMatches).
 				Warning().
 				Action("Check predicate field paths or verify if all resources are currently safe.").
-				WithMap(controlCtx(&ctl, nil)).
+				WithMap(buildCtx(&ctl, nil)).
 				Build())
 		}
 	}
