@@ -7,52 +7,46 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// Planner generates machine-readable remediation plans.
+// Planner generates machine-readable remediation plans (Fix Plans) for violations.
 type Planner interface {
 	PlanFor(f Finding) *evaluation.RemediationPlan
 }
 
-type specializedPlanner interface {
+// Specialist defines the interface for logic that handles a specific class of security risk.
+type Specialist interface {
 	CanHandle(class kernel.ControlClass) bool
 	Plan(f Finding) *evaluation.RemediationPlan
 }
 
-type remediationPlanner struct {
-	specialists []specializedPlanner
+// Ensure the internal planner implements the Planner interface.
+var _ Planner = (*planner)(nil)
+
+type planner struct {
+	specialists []Specialist
 }
 
-// NewPlanner creates the default remediation planner.
+// NewPlanner creates a remediation planner populated with default specialists.
 func NewPlanner() Planner {
-	return &remediationPlanner{
-		specialists: defaultSpecializedPlanners(),
+	return &planner{
+		specialists: []Specialist{
+			publicExposurePlanner{},
+		},
 	}
 }
 
-func (rp *remediationPlanner) PlanFor(f Finding) *evaluation.RemediationPlan {
+// PlanFor identifies the appropriate specialist to generate a remediation plan.
+func (p *planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 	class := f.ControlID.Classify()
-	for _, specialist := range rp.planners() {
-		if specialist.CanHandle(class) {
-			return specialist.Plan(f)
+	for _, s := range p.specialists {
+		if s.CanHandle(class) {
+			return s.Plan(f)
 		}
 	}
 	return nil
 }
 
-func (rp *remediationPlanner) planners() []specializedPlanner {
-	if len(rp.specialists) > 0 {
-		return rp.specialists
-	}
-	// Guard for zero-value planner instances.
-	return defaultSpecializedPlanners()
-}
-
-func defaultSpecializedPlanners() []specializedPlanner {
-	return []specializedPlanner{
-		publicExposurePlanner{},
-	}
-}
-
-// StablePlanID returns a stable hash-derived fix-plan ID.
+// StablePlanID generates a deterministic ID for a remediation plan based on the
+// specific control and asset.
 func StablePlanID(controlID kernel.ControlID, assetID asset.ID) string {
 	return policy.StableRemediationPlanID(controlID.String(), assetID.String())
 }
