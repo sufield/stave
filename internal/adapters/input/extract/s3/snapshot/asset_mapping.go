@@ -53,9 +53,9 @@ func (e *SnapshotExtractor) observationToAsset(obs S3Observation) asset.Asset {
 	aclAnalysis, aclMissing := applyACLObservation(obs, &props)
 	effectivePAB := applyPABObservation(obs, &props)
 	effective := s3exposure.ResolveEffectiveVisibility(
-		s3resource.ToExposurePolicyAnalysis(policyAnalysis),
-		s3resource.ToExposureACLAnalysis(aclAnalysis),
-		s3resource.ToExposurePublicAccessBlock(effectivePAB),
+		s3resource.ToIdentityVisibility(policyAnalysis),
+		s3resource.ToResourceVisibility(aclAnalysis),
+		s3resource.ToGovernanceOverrides(effectivePAB),
 	)
 	props.Public = effective.IsPublic() || (hasPolicy && policyAnalysis.HasWildcardActions)
 	props.SafetyProvable = !policyMissing && !aclMissing
@@ -126,7 +126,7 @@ func applyPABObservation(obs S3Observation, props *snapshotResourceProperties) s
 		BlockPublicPolicy:     obs.PublicAccessBlock.BlockPublicPolicy,
 		RestrictPublicBuckets: obs.PublicAccessBlock.RestrictPublicBuckets,
 	}
-	allBlocked := s3resource.ToExposurePublicAccessBlock(effectivePAB).IsFullyBlocked()
+	allBlocked := s3resource.ToGovernanceOverrides(effectivePAB).IsHardened()
 	props.PublicAccessFullyBlocked = &allBlocked
 	return effectivePAB
 }
