@@ -2,10 +2,10 @@
   "findings": [
     {
       "id": "CTL.S3.ACL.PUBLIC.READ.001",
-      "bucket": "acl-read-bucket",
-      "exposure_type": "acl_public_read",
+      "resource": "acl-read-bucket",
+      "exposure_type": "public_read",
       "principal_scope": "public",
-      "actions": ["s3:GetObject"],
+      "actions": ["Read"],
       "evidence_path": [
         "bucket.acl.grants[0].grantee",
         "bucket.acl.grants[0].permission",

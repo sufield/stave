@@ -2,10 +2,10 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.READ.001",
-      "bucket": "public-read-bucket",
+      "resource": "public-read-bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
-      "actions": ["s3:GetObject"],
+      "actions": ["Read"],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
         "bucket.policy.statements[0].principal",

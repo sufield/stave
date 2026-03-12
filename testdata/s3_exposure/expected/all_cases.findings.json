@@ -2,11 +2,11 @@
   "findings": [
     {
       "id": "CTL.S3.ACL.PUBLIC.READ.001",
-      "bucket": "acl-public-bucket",
-      "exposure_type": "acl_public_read",
+      "resource": "acl-public-bucket",
+      "exposure_type": "public_read",
       "principal_scope": "public",
       "actions": [
-        "s3:GetObject"
+        "Read"
       ],
       "evidence_path": [
         "bucket.acl.grants[0].grantee",
@@ -16,7 +16,7 @@
     },
     {
       "id": "CTL.S3.PUBLIC.ACL.READ.001",
-      "bucket": "acl-readable-bucket",
+      "resource": "acl-readable-bucket",
       "exposure_type": "public_acl_read",
       "principal_scope": "public",
       "actions": [
@@ -30,7 +30,7 @@
     },
     {
       "id": "CTL.S3.PUBLIC.ACL.WRITE.001",
-      "bucket": "acl-writable-bucket",
+      "resource": "acl-writable-bucket",
       "exposure_type": "public_acl_write",
       "principal_scope": "public",
       "actions": [
@@ -44,11 +44,11 @@
     },
     {
       "id": "CTL.S3.GLOBAL.AUTHENTICATED.READ.001",
-      "bucket": "auth-users-bucket",
-      "exposure_type": "authenticated_read",
+      "resource": "auth-users-bucket",
+      "exposure_type": "authenticated_access",
       "principal_scope": "authenticated",
       "actions": [
-        "s3:GetObject"
+        "Read"
       ],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -58,7 +58,7 @@
     },
     {
       "id": "CTL.S3.PUBLIC.DELETE.001",
-      "bucket": "deletable-bucket",
+      "resource": "deletable-bucket",
       "exposure_type": "public_delete",
       "principal_scope": "public",
       "actions": [
@@ -72,7 +72,7 @@
     },
     {
       "id": "CTL.S3.BUCKET.TAKEOVER.001",
-      "bucket": "missing-bucket-ref",
+      "resource": "missing-bucket-ref",
       "exposure_type": "bucket_takeover",
       "principal_scope": "n/a",
       "actions": [],
@@ -83,12 +83,12 @@
     },
     {
       "id": "CTL.S3.PUBLIC.WRITE.001",
-      "bucket": "public-full-write-bucket",
+      "resource": "public-full-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
       "actions": [
-        "s3:GetObject",
-        "s3:PutObject"
+        "Read",
+        "Write"
       ],
       "write_scope": "full",
       "evidence_path": [
@@ -99,7 +99,7 @@
     },
     {
       "id": "CTL.S3.PUBLIC.LIST.001",
-      "bucket": "public-list-bucket",
+      "resource": "public-list-bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",
       "actions": [
@@ -113,11 +113,11 @@
     },
     {
       "id": "CTL.S3.PUBLIC.READ.001",
-      "bucket": "public-read-bucket",
+      "resource": "public-read-bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
       "actions": [
-        "s3:GetObject"
+        "Read"
       ],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -127,11 +127,11 @@
     },
     {
       "id": "CTL.S3.PUBLIC.WRITE.001",
-      "bucket": "public-write-bucket",
+      "resource": "public-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
       "actions": [
-        "s3:PutObject"
+        "Write"
       ],
       "write_scope": "blind",
       "evidence_path": [
@@ -142,14 +142,14 @@
     },
     {
       "id": "CTL.S3.WEBSITE.PUBLIC.001",
-      "bucket": "website-bucket",
-      "exposure_type": "website_public",
+      "resource": "website-bucket",
+      "exposure_type": "web_public",
       "principal_scope": "public",
       "actions": [
-        "s3:GetObject"
+        "Read"
       ],
       "evidence_path": [
-        "bucket.website.enabled",
+        "resource.web_hosting.enabled",
         "bucket.policy.statements[0].effect",
         "bucket.policy.statements[0].principal",
         "bucket.policy.statements[0].actions"

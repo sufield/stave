@@ -2,10 +2,10 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.WRITE.001",
-      "bucket": "authenticated_write_bucket",
+      "resource": "authenticated_write_bucket",
       "exposure_type": "public_write",
       "principal_scope": "authenticated",
-      "actions": ["s3:PutObject"],
+      "actions": ["Write"],
       "write_scope": "blind",
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -15,7 +15,7 @@
     },
     {
       "id": "CTL.S3.PUBLIC.LIST.001",
-      "bucket": "full_write_with_list_bucket",
+      "resource": "full_write_with_list_bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",
       "actions": ["s3:ListBucket"],
@@ -27,10 +27,10 @@
     },
     {
       "id": "CTL.S3.PUBLIC.WRITE.001",
-      "bucket": "full_write_with_list_bucket",
+      "resource": "full_write_with_list_bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
-      "actions": ["s3:ListBucket", "s3:PutObject"],
+      "actions": ["List", "Write"],
       "write_scope": "full",
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -40,10 +40,10 @@
     },
     {
       "id": "CTL.S3.PUBLIC.READ.001",
-      "bucket": "policy+acl_read_bucket",
+      "resource": "policy+acl_read_bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
-      "actions": ["s3:GetObject"],
+      "actions": ["Read"],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
         "bucket.policy.statements[0].principal",
@@ -52,10 +52,10 @@
     },
     {
       "id": "CTL.S3.ACL.PUBLIC.WRITE.001",
-      "bucket": "policy_read_acl_write_bucket",
-      "exposure_type": "acl_public_write",
+      "resource": "policy_read_acl_write_bucket",
+      "exposure_type": "public_write",
       "principal_scope": "public",
-      "actions": ["s3:PutObject"],
+      "actions": ["Write"],
       "write_scope": "full",
       "evidence_path": [
         "bucket.acl.grants[0].grantee",
@@ -65,10 +65,10 @@
     },
     {
       "id": "CTL.S3.PUBLIC.READ.001",
-      "bucket": "policy_read_acl_write_bucket",
+      "resource": "policy_read_acl_write_bucket",
       "exposure_type": "public_read",
       "principal_scope": "public",
-      "actions": ["s3:GetObject"],
+      "actions": ["Read"],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
         "bucket.policy.statements[0].principal",
@@ -77,12 +77,12 @@
     },
     {
       "id": "CTL.S3.WEBSITE.PUBLIC.001",
-      "bucket": "website_acl_read_bucket",
-      "exposure_type": "website_public",
+      "resource": "website_acl_read_bucket",
+      "exposure_type": "web_public",
       "principal_scope": "public",
-      "actions": ["s3:GetObject"],
+      "actions": ["Read"],
       "evidence_path": [
-        "bucket.website.enabled",
+        "resource.web_hosting.enabled",
         "bucket.acl.grants[0].grantee",
         "bucket.acl.grants[0].permission",
         "bucket.acl.grants[0].scope"

@@ -2,7 +2,7 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.LIST.001",
-      "bucket": "public-list-bucket",
+      "resource": "public-list-bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",
       "actions": ["s3:ListBucket"],

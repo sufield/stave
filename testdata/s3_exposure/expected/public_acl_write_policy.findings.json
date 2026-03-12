@@ -2,7 +2,7 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.ACL.WRITE.001",
-      "bucket": "acl-writable-bucket",
+      "resource": "acl-writable-bucket",
       "exposure_type": "public_acl_write",
       "principal_scope": "public",
       "actions": [
