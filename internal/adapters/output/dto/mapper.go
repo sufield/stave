@@ -103,8 +103,8 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 
 	if e.SourceEvidence != nil {
 		dto.SourceEvidence = &SourceEvidenceDTO{
-			PolicyPublicStatements: e.SourceEvidence.PolicyPublicStatements,
-			ACLPublicGrantees:      e.SourceEvidence.ACLPublicGrantees,
+			IdentityStatements: e.SourceEvidence.IdentityStatements,
+			ResourceGrantees:   e.SourceEvidence.ResourceGrantees,
 		}
 	}
 

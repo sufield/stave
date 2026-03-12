@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 57ms)
+Done:    apply controls against observations (2 files, 22ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-golden-path/controls --observations testdata/e2e/e2e-s3-golden-path/observations
 

@@ -35,8 +35,8 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 					{Property: "properties.storage.visibility.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
-					PolicyPublicStatements: stmts,
-					ACLPublicGrantees:      grantees,
+					IdentityStatements: stmts,
+					ResourceGrantees:   grantees,
 				},
 				WhyNow: "Unsafe for 24h, threshold is 0h",
 			},
@@ -61,14 +61,14 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	if s.Evidence.Misconfigurations[0].Property != "properties.storage.visibility.public_read" {
 		t.Errorf("Misconfigurations[0].Property changed")
 	}
-	for i, v := range s.Evidence.SourceEvidence.PolicyPublicStatements {
+	for i, v := range s.Evidence.SourceEvidence.IdentityStatements {
 		if v != "[SANITIZED]" {
-			t.Errorf("PolicyPublicStatements[%d] = %q, want [SANITIZED]", i, v)
+			t.Errorf("IdentityStatements[%d] = %q, want [SANITIZED]", i, v)
 		}
 	}
-	for i, v := range s.Evidence.SourceEvidence.ACLPublicGrantees {
+	for i, v := range s.Evidence.SourceEvidence.ResourceGrantees {
 		if v != "[SANITIZED]" {
-			t.Errorf("ACLPublicGrantees[%d] = %q, want [SANITIZED]", i, v)
+			t.Errorf("ResourceGrantees[%d] = %q, want [SANITIZED]", i, v)
 		}
 	}
 	if s.Evidence.WhyNow != findings[0].Evidence.WhyNow {
@@ -148,8 +148,8 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 					{Property: "properties.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
-					PolicyPublicStatements: []string{"AllowPublicRead"},
-					ACLPublicGrantees:      []string{"http://acs.amazonaws.com/groups/global/AllUsers"},
+					IdentityStatements: []string{"AllowPublicRead"},
+					ResourceGrantees:   []string{"http://acs.amazonaws.com/groups/global/AllUsers"},
 				},
 			},
 		},

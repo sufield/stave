@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "dev",
+    "tool_version": "0.0.3",
     "offline": true,
     "now": "2026-01-11T00:00:00Z",
     "max_unsafe": "1d",
@@ -33,7 +33,6 @@
         "first_unsafe_at": "2026-01-10T23:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 1,
-        "threshold_hours": 0,
         "misconfigurations": [
           {
             "property": "storage.visibility.public_read",
@@ -63,7 +62,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "4955da16ae6fdc53817d32ccb2f91e5a157cbbda",
+      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
       "dirty": false
     }
   }

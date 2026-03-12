@@ -17,12 +17,12 @@ func TestDeriveRootCauses(t *testing.T) {
 		{
 			name:  "identity only",
 			props: []policy.Misconfiguration{{Property: "storage.visibility.read_via_identity", ActualValue: true}},
-			want:  []evaluation.RootCause{evaluation.RootCausePolicy},
+			want:  []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},
 		{
 			name:  "resource only",
 			props: []policy.Misconfiguration{{Property: "storage.visibility.read_via_resource", ActualValue: true}},
-			want:  []evaluation.RootCause{evaluation.RootCauseACL},
+			want:  []evaluation.RootCause{evaluation.RootCauseResource},
 		},
 		{
 			name: "both identity and resource",
@@ -30,7 +30,7 @@ func TestDeriveRootCauses(t *testing.T) {
 				{Property: "storage.visibility.read_via_resource", ActualValue: true},
 				{Property: "storage.visibility.read_via_identity", ActualValue: true},
 			},
-			want: []evaluation.RootCause{evaluation.RootCausePolicy, evaluation.RootCauseACL},
+			want: []evaluation.RootCause{evaluation.RootCauseIdentity, evaluation.RootCauseResource},
 		},
 		{
 			name:  "no mechanism markers",
@@ -53,7 +53,7 @@ func TestDeriveRootCauses(t *testing.T) {
 				{Property: "storage.visibility.list_via_identity", ActualValue: true},
 				{Property: "storage.visibility.read_via_identity", ActualValue: true},
 			},
-			want: []evaluation.RootCause{evaluation.RootCausePolicy},
+			want: []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},
 	}
 

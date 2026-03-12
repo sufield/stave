@@ -7,127 +7,112 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// RootCause represents the mechanism causing a violation (e.g., "policy", "acl").
+// RootCause represents the high-level mechanism causing a violation.
 type RootCause string
 
 const (
-	// RootCausePolicy indicates a bucket policy is the root cause.
-	RootCausePolicy RootCause = "policy"
-	// RootCauseACL indicates an ACL grant is the root cause.
-	RootCauseACL RootCause = "acl"
+	// RootCauseIdentity indicates an identity-bound policy (e.g., IAM, RBAC) is the cause.
+	RootCauseIdentity RootCause = "identity"
+	// RootCauseResource indicates a resource-bound policy (e.g., Bucket Policy, ACL) is the cause.
+	RootCauseResource RootCause = "resource"
 )
 
-// String implements fmt.Stringer.
 func (rc RootCause) String() string {
 	return string(rc)
 }
 
-// Evidence contains the proof of the violation.
-// Fields are populated differently depending on the control type:
-//   - Duration controls: FirstUnsafeAt, LastSeenUnsafeAt, UnsafeDurationHours, ThresholdHours
-//   - Recurrence controls: EpisodeCount, WindowDays, RecurrenceLimit, FirstEpisodeAt, LastEpisodeAt
+// Evidence contains the audit-ready proof of a violation.
+//
+// Fields are conditionally populated based on the control type:
+//   - Duration: FirstUnsafeAt, LastSeenUnsafeAt, UnsafeDurationHours, ThresholdHours
+//   - Recurrence: EpisodeCount, WindowDays, RecurrenceLimit, FirstEpisodeAt, LastEpisodeAt
 type Evidence struct {
-	// FirstUnsafeAt is when the asset first entered the unsafe state (duration controls).
-	FirstUnsafeAt time.Time `json:"first_unsafe_at,omitzero"`
-	// LastSeenUnsafeAt is when the asset was last observed in an unsafe state.
-	LastSeenUnsafeAt time.Time `json:"last_seen_unsafe_at,omitzero"`
-	// UnsafeDurationHours is how long the asset has been continuously unsafe.
-	UnsafeDurationHours float64 `json:"unsafe_duration_hours"`
-	// ThresholdHours is the configured maximum allowed unsafe duration.
-	ThresholdHours float64 `json:"threshold_hours"`
+	// --- Duration Timing ---
+	FirstUnsafeAt       time.Time `json:"first_unsafe_at,omitzero"`
+	LastSeenUnsafeAt    time.Time `json:"last_seen_unsafe_at,omitzero"`
+	UnsafeDurationHours float64   `json:"unsafe_duration_hours,omitempty"`
+	ThresholdHours      float64   `json:"threshold_hours,omitempty"`
 
-	// EpisodeCount is the number of unsafe episodes within the window (recurrence controls).
-	EpisodeCount int `json:"episode_count,omitzero"`
-	// WindowDays is the rolling window for counting recurrence (recurrence controls).
-	WindowDays int `json:"window_days,omitzero"`
-	// RecurrenceLimit is the maximum allowed episodes before violation (recurrence controls).
-	RecurrenceLimit int `json:"recurrence_limit,omitzero"`
-	// FirstEpisodeAt is when the first unsafe episode started (recurrence controls).
-	FirstEpisodeAt time.Time `json:"first_episode_at,omitzero"`
-	// LastEpisodeAt is when the most recent unsafe episode ended (recurrence controls).
-	LastEpisodeAt time.Time `json:"last_episode_at,omitzero"`
+	// --- Recurrence Frequency ---
+	EpisodeCount    int       `json:"episode_count,omitempty"`
+	WindowDays      int       `json:"window_days,omitempty"`
+	RecurrenceLimit int       `json:"recurrence_limit,omitempty"`
+	FirstEpisodeAt  time.Time `json:"first_episode_at,omitzero"`
+	LastEpisodeAt   time.Time `json:"last_episode_at,omitzero"`
 
-	// Misconfigurations contains the specific property-level unsafe conditions
-	// detected by the control's predicate. Sorted by Property lexicographically.
+	// --- Logical Evidence ---
 	Misconfigurations []policy.Misconfiguration `json:"misconfigurations,omitempty"`
+	RootCauses        []RootCause               `json:"root_causes,omitempty"`
+	SourceEvidence    *SourceEvidence           `json:"source_evidence,omitempty"`
 
-	// RootCauses identifies the mechanism(s) causing the violation.
-	// Values come from {"policy", "acl"}, derived from misconfiguration property paths.
-	// Stable order: policy before acl.
-	RootCauses []RootCause `json:"root_causes,omitempty"`
-
-	// SourceEvidence contains pointers to the specific policy statements or ACL
-	// entries that caused the violation. Only populated when vendor evidence is
-	// available in the asset properties.
-	SourceEvidence *SourceEvidence `json:"source_evidence,omitempty"`
-
-	// WhyNow explains why this violation is being reported at this time.
-	// Combines timing information with threshold context.
+	// WhyNow is a human-readable summary of the current violation state.
 	WhyNow string `json:"why_now,omitempty"`
 }
 
-// RootCauseStrings returns root causes as string values in their existing order.
+// RootCauseStrings converts typed causes to a raw string slice.
 func (e Evidence) RootCauseStrings() []string {
 	if len(e.RootCauses) == 0 {
 		return nil
 	}
 	out := make([]string, len(e.RootCauses))
-	for i := range e.RootCauses {
-		out[i] = e.RootCauses[i].String()
+	for i, rc := range e.RootCauses {
+		out[i] = string(rc)
 	}
 	return out
 }
 
-// SourceEvidence contains pointers to the specific policy statements or ACL
-// entries that caused public exposure. Arrays are sorted lexicographically.
+// SourceEvidence provides pointers to specific configuration entries (e.g. SIDs, Grantees).
 type SourceEvidence struct {
-	// PolicyPublicStatements contains SIDs or numeric indices of policy statements
-	// that grant public access.
-	PolicyPublicStatements []string `json:"policy_public_statements,omitempty"`
-	// ACLPublicGrantees contains grantee URIs (e.g., AllUsers, AuthenticatedUsers)
-	// that grant public access.
-	ACLPublicGrantees []string `json:"acl_public_grantees,omitempty"`
+	// IdentityStatements lists IDs/indices of identity-bound policies (e.g., IAM SIDs).
+	IdentityStatements []string `json:"identity_statements,omitempty"`
+	// ResourceGrantees lists specific entities granted access via resource-bound policies (e.g., ACL URIs).
+	ResourceGrantees []string `json:"resource_grantees,omitempty"`
 }
 
 // DriftPattern classifies the temporal behavior of a violation.
 type DriftPattern string
 
-// Canonical drift pattern identifiers.
 const (
-	DriftPersistent   DriftPattern = "persistent"
-	DriftDegraded     DriftPattern = "degraded"
+	// DriftPersistent: Asset has been unsafe since the very first observation.
+	DriftPersistent DriftPattern = "persistent"
+	// DriftDegraded: Asset was safe initially but has since entered an unsafe state.
+	DriftDegraded DriftPattern = "degraded"
+	// DriftIntermittent: Asset has toggled between safe and unsafe multiple times.
 	DriftIntermittent DriftPattern = "intermittent"
 )
 
-// PostureDrift classifies the temporal behavior of a violation.
-// Computed from the asset.Timeline — not declared in control YAML.
+// PostureDrift describes how a violation has evolved over time.
 type PostureDrift struct {
-	// Pattern classifies the temporal behavior.
-	// "persistent" — unsafe since first observation, never seen safe.
-	// "degraded"   — was safe, now in first unsafe episode.
-	// "intermittent" — has toggled between safe and unsafe at least once.
-	Pattern DriftPattern `json:"pattern"`
-	// EpisodeCount is the total number of unsafe episodes (closed + open).
-	EpisodeCount int `json:"episode_count"`
+	Pattern      DriftPattern `json:"pattern"`
+	EpisodeCount int          `json:"episode_count"`
 }
 
-// ComputePostureDrift derives posture drift from an asset.Timeline.
-// Returns nil when the asset is not currently unsafe.
-func ComputePostureDrift(timeline *asset.Timeline) *PostureDrift {
-	if timeline.CurrentlySafe() {
+// ComputePostureDrift analyzes a timeline to classify the violation's drift pattern.
+// Returns nil if the asset is not currently in an unsafe state.
+func ComputePostureDrift(t *asset.Timeline) *PostureDrift {
+	if t.CurrentlySafe() {
 		return nil
 	}
 
-	closedEpisodes := timeline.History().Count()
-	totalEpisodes := closedEpisodes + 1 // +1 for the open episode
+	history := t.History()
+	closedCount := history.Count()
+	totalEpisodes := closedCount + 1 // Existing history + current open episode
 
 	var pattern DriftPattern
 	switch {
-	case closedEpisodes > 0:
+	case closedCount > 0:
+		// If there are any closed episodes in history, it means the asset was
+		// previously unsafe, then safe, and is now unsafe again.
 		pattern = DriftIntermittent
-	case timeline.HasOpenEpisode() && timeline.Stats().HasFirstObservation() &&
-		timeline.FirstUnsafeAt().After(timeline.Stats().FirstSeenAt()):
-		pattern = DriftDegraded
+
+	case t.HasOpenEpisode() && t.Stats().HasFirstObservation():
+		// Check if the asset was safe at the start of its known history.
+		if t.FirstUnsafeAt().After(t.Stats().FirstSeenAt()) {
+			pattern = DriftDegraded
+		} else {
+			pattern = DriftPersistent
+		}
+
 	default:
 		pattern = DriftPersistent
 	}

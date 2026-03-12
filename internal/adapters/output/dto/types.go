@@ -40,11 +40,11 @@ type SourceRefDTO struct {
 type EvidenceDTO struct {
 	FirstUnsafeAt       time.Time             `json:"first_unsafe_at,omitzero"`
 	LastSeenUnsafeAt    time.Time             `json:"last_seen_unsafe_at,omitzero"`
-	UnsafeDurationHours float64               `json:"unsafe_duration_hours"`
-	ThresholdHours      float64               `json:"threshold_hours"`
-	EpisodeCount        int                   `json:"episode_count,omitzero"`
-	WindowDays          int                   `json:"window_days,omitzero"`
-	RecurrenceLimit     int                   `json:"recurrence_limit,omitzero"`
+	UnsafeDurationHours float64               `json:"unsafe_duration_hours,omitempty"`
+	ThresholdHours      float64               `json:"threshold_hours,omitempty"`
+	EpisodeCount        int                   `json:"episode_count,omitempty"`
+	WindowDays          int                   `json:"window_days,omitempty"`
+	RecurrenceLimit     int                   `json:"recurrence_limit,omitempty"`
 	FirstEpisodeAt      time.Time             `json:"first_episode_at,omitzero"`
 	LastEpisodeAt       time.Time             `json:"last_episode_at,omitzero"`
 	Misconfigurations   []MisconfigurationDTO `json:"misconfigurations,omitempty"`
@@ -63,8 +63,8 @@ type MisconfigurationDTO struct {
 
 // SourceEvidenceDTO mirrors evaluation.SourceEvidence.
 type SourceEvidenceDTO struct {
-	PolicyPublicStatements []string `json:"policy_public_statements,omitempty"`
-	ACLPublicGrantees      []string `json:"acl_public_grantees,omitempty"`
+	IdentityStatements []string `json:"identity_statements,omitempty"`
+	ResourceGrantees   []string `json:"resource_grantees,omitempty"`
 }
 
 // PostureDriftDTO mirrors evaluation.PostureDrift.
