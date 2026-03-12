@@ -167,10 +167,10 @@ func SelectWriteExposure(in WriteExposureInput) *exposureCandidate {
 func buildEffectiveActions(base []string, canRead, canList bool) []string {
 	res := slices.Clone(base)
 	if canRead {
-		res = append(res, "Read")
+		res = append(res, ActionRead)
 	}
 	if canList {
-		res = append(res, "List")
+		res = append(res, ActionList)
 	}
 	slices.Sort(res)
 	return slices.Compact(res)

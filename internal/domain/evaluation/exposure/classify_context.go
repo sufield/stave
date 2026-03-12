@@ -22,14 +22,13 @@ func (p Permission) Has(target Permission) bool { return p&target != 0 }
 type EvidenceCategory string
 
 const (
-	EvIdentityRead  EvidenceCategory = "identity_read"
-	EvResourceRead  EvidenceCategory = "resource_read"
-	EvIdentityWrite EvidenceCategory = "identity_write"
-	EvResourceWrite EvidenceCategory = "resource_write"
-	EvDiscovery     EvidenceCategory = "discovery"
-	EvMetadataRead  EvidenceCategory = "metadata_read"
-	EvMetadataWrite EvidenceCategory = "metadata_write"
-	EvDelete        EvidenceCategory = "delete"
+	EvIdentityRead      EvidenceCategory = "identity_read"
+	EvResourceRead      EvidenceCategory = "resource_read"
+	EvIdentityWrite     EvidenceCategory = "identity_write"
+	EvResourceWrite     EvidenceCategory = "resource_write"
+	EvDiscovery         EvidenceCategory = "discovery"
+	EvResourceAdminRead EvidenceCategory = "resource_admin_read"
+	EvDelete            EvidenceCategory = "delete"
 )
 
 // EvidenceTracker manages the paths/reasons for discovered exposures.
@@ -57,11 +56,64 @@ func (t *EvidenceTracker) Get(cat EvidenceCategory) []string {
 	return t.sources[cat]
 }
 
-// HasAny reports whether any evidence has been recorded.
-func (t *EvidenceTracker) HasAny() bool {
-	return len(t.sources) > 0
+// capabilitySet represents individual permission flags with lossless
+// round-trip through the Permission bitmask.
+type capabilitySet struct {
+	Read          bool
+	Write         bool
+	List          bool
+	Delete        bool
+	MetadataRead  bool
+	MetadataWrite bool
+}
+
+// ToMask converts boolean flags into a Permission bitmask.
+func (cs capabilitySet) ToMask() Permission {
+	var m Permission
+	if cs.Read {
+		m |= PermRead
+	}
+	if cs.Write {
+		m |= PermWrite
+	}
+	if cs.List {
+		m |= PermList
+	}
+	if cs.Delete {
+		m |= PermDelete
+	}
+	if cs.MetadataRead {
+		m |= PermMetadataRead
+	}
+	if cs.MetadataWrite {
+		m |= PermMetadataWrite
+	}
+	return m
+}
+
+func capabilitySetFromMask(m Permission) capabilitySet {
+	return capabilitySet{
+		Read:          m.Has(PermRead),
+		Write:         m.Has(PermWrite),
+		List:          m.Has(PermList),
+		Delete:        m.Has(PermDelete),
+		MetadataRead:  m.Has(PermMetadataRead),
+		MetadataWrite: m.Has(PermMetadataWrite),
+	}
+}
+
+// writeSourceMetadata tracks which co-occurring permissions the first
+// write-granting source also provided.
+type writeSourceMetadata struct {
+	CanAlsoRead bool
+	CanAlsoList bool
 }
 
 type resolutionContext struct {
-	input NormalizedResourceInput
+	input           NormalizedResourceInput
+	identityPerms   capabilitySet
+	resourcePerms   capabilitySet
+	isAuthOnly      bool
+	evidence        *EvidenceTracker
+	writeSourceStat writeSourceMetadata
 }

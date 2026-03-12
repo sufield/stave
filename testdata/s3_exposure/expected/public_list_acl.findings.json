@@ -5,7 +5,7 @@
       "resource": "public-list-bucket",
       "exposure_type": "public_list",
       "principal_scope": "public",
-      "actions": ["s3:ListBucket"],
+      "actions": ["List"],
       "evidence_path": [
         "bucket.acl.grants[0].grantee",
         "bucket.acl.grants[0].permission",

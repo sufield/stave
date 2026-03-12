@@ -17,10 +17,10 @@
     {
       "id": "CTL.S3.PUBLIC.ACL.READ.001",
       "resource": "acl-readable-bucket",
-      "exposure_type": "public_acl_read",
+      "exposure_type": "public_metadata_read",
       "principal_scope": "public",
       "actions": [
-        "s3:GetBucketAcl"
+        "AdminRead"
       ],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -31,10 +31,10 @@
     {
       "id": "CTL.S3.PUBLIC.ACL.WRITE.001",
       "resource": "acl-writable-bucket",
-      "exposure_type": "public_acl_write",
+      "exposure_type": "public_metadata_write",
       "principal_scope": "public",
       "actions": [
-        "s3:PutBucketAcl"
+        "AdminWrite"
       ],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -62,7 +62,7 @@
       "exposure_type": "public_delete",
       "principal_scope": "public",
       "actions": [
-        "s3:DeleteObject"
+        "Delete"
       ],
       "evidence_path": [
         "bucket.policy.statements[0].effect",
@@ -103,7 +103,7 @@
       "exposure_type": "public_list",
       "principal_scope": "public",
       "actions": [
-        "s3:ListBucket"
+        "List"
       ],
       "evidence_path": [
         "bucket.acl.grants[0].grantee",

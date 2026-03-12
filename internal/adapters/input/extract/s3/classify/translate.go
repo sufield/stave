@@ -122,8 +122,8 @@ func recordPerms(
 		{exposure.PermRead, readCat},
 		{exposure.PermWrite, writeCat},
 		{exposure.PermList, exposure.EvDiscovery},
-		{exposure.PermMetadataRead, exposure.EvMetadataRead},
-		{exposure.PermMetadataWrite, exposure.EvMetadataWrite},
+		{exposure.PermMetadataRead, exposure.EvResourceAdminRead},
+		{exposure.PermMetadataWrite, exposure.EvResourceAdminRead},
 		{exposure.PermDelete, exposure.EvDelete},
 	} {
 		if perms.Has(m.bit) {

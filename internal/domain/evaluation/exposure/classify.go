@@ -8,12 +8,6 @@ import (
 )
 
 const (
-	// Output action labels (used by resolve logic for non-selection findings).
-	outputListBucket   = "s3:ListBucket"
-	outputGetBucketACL = "s3:GetBucketAcl"
-	outputPutBucketACL = "s3:PutBucketAcl"
-	outputDeleteObject = "s3:DeleteObject"
-
 	// Canonical exposure classification IDs.
 	idResourceTakeover    kernel.ControlID = "CTL.S3.BUCKET.TAKEOVER.001"
 	idWebPublic           kernel.ControlID = "CTL.S3.WEBSITE.PUBLIC.001"
@@ -83,12 +77,22 @@ func classifyResource(r NormalizedResourceInput) []ExposureClassification {
 		}}
 	}
 
-	ctx := resolutionContext{input: r}
+	ctx := resolutionContext{
+		input:         r,
+		identityPerms: capabilitySetFromMask(r.IdentityPerms),
+		resourcePerms: capabilitySetFromMask(r.ResourcePerms),
+		isAuthOnly:    r.IsAuthenticatedOnly,
+		evidence:      r.Evidence,
+		writeSourceStat: writeSourceMetadata{
+			CanAlsoRead: r.WriteSourceHasGet,
+			CanAlsoList: r.WriteSourceHasList,
+		},
+	}
 
 	var findings []ExposureClassification
 	findings = append(findings, ctx.resolveRead()...)
 	findings = append(findings, ctx.resolveList()...)
 	findings = append(findings, ctx.resolveWrite()...)
-	findings = append(findings, ctx.resolveManagement()...)
+	findings = append(findings, ctx.resolveAdministrative()...)
 	return findings
 }
