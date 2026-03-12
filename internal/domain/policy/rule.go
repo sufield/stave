@@ -230,12 +230,12 @@ func (r *PredicateRule) extractMisconfigurationFields(props map[string]any, resu
 	if r.Field == "" {
 		return
 	}
-	fieldPath := strings.TrimPrefix(r.Field, nsProperties+".")
+	fieldPath := strings.TrimPrefix(r.Field, propertiesPathPrefix)
 	val, _ := nestedPropertyValue(props, fieldPath)
 	*result = append(*result, Misconfiguration{
 		Property:    fieldPath,
 		ActualValue: val,
-		Operator:    PredicateOperator(r.Op),
+		Operator:    r.Op,
 		UnsafeValue: r.Value,
 	})
 }
