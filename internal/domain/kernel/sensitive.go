@@ -2,37 +2,57 @@ package kernel
 
 import "encoding/json"
 
-// SanitizedValue is the placeholder shown in place of sensitive data.
-const SanitizedValue = "[SANITIZED]"
+// Redacted is the placeholder shown in place of sensitive data in public outputs.
+const Redacted = "[SANITIZED]"
 
-// Sensitive wraps a string value that must never appear in output.
-// String(), GoString(), MarshalJSON(), and MarshalYAML() all return [SANITIZED].
-// Use .Value() to access the raw string - grep for ".Value()" to audit access.
+// SanitizedValue is an alias for Redacted, kept for backward compatibility.
+const SanitizedValue = Redacted
+
+// Sensitive wraps a string that must be shielded from logs, JSON, and YAML output.
+// It implements standard formatting and marshaling interfaces to prevent leaks.
+//
+// To access the raw data, use .Value(). Grep for ".Value()" to audit sensitive access.
 type Sensitive string
 
-// String returns [SANITIZED], preventing accidental printing via fmt.
-func (s Sensitive) String() string { return SanitizedValue }
-
-// GoString returns [SANITIZED], preventing accidental printing via %#v.
-func (s Sensitive) GoString() string { return SanitizedValue }
-
-// MarshalJSON returns "[SANITIZED]" as a JSON string.
-func (s Sensitive) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + SanitizedValue + `"`), nil
-}
-
-// MarshalYAML returns [SANITIZED] as the YAML value.
-func (s Sensitive) MarshalYAML() (any, error) {
-	return SanitizedValue, nil
-}
-
 // Value returns the raw underlying string. Grep ".Value()" to audit all access.
-func (s Sensitive) Value() string { return string(s) }
+func (s Sensitive) Value() string {
+	return string(s)
+}
 
-// UnmarshalJSON ensures that incoming data is wrapped immediately.
+// String satisfies fmt.Stringer, returning a redacted placeholder.
+func (s Sensitive) String() string {
+	return Redacted
+}
+
+// GoString satisfies fmt.GoStringer, returning a redacted placeholder for %#v.
+func (s Sensitive) GoString() string {
+	return Redacted
+}
+
+// MarshalJSON implements json.Marshaler, ensuring the value is redacted in JSON.
+func (s Sensitive) MarshalJSON() ([]byte, error) {
+	return json.Marshal(Redacted)
+}
+
+// UnmarshalJSON implements json.Unmarshaler, wrapping raw input into the type.
 func (s *Sensitive) UnmarshalJSON(b []byte) error {
 	var raw string
 	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	*s = Sensitive(raw)
+	return nil
+}
+
+// MarshalYAML implements the YAML marshaler interface.
+func (s Sensitive) MarshalYAML() (any, error) {
+	return Redacted, nil
+}
+
+// UnmarshalYAML allows sensitive strings to be read from YAML configuration.
+func (s *Sensitive) UnmarshalYAML(unmarshal func(any) error) error {
+	var raw string
+	if err := unmarshal(&raw); err != nil {
 		return err
 	}
 	*s = Sensitive(raw)
