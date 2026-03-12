@@ -1,22 +1,26 @@
 package doctor
 
 import (
+	"bufio"
+	"bytes"
 	"os"
 	"strings"
 )
 
+// detectOSVersion dispatches OS discovery based on the runtime environment.
 func detectOSVersion(goos string) string {
 	switch goos {
 	case "linux":
-		return detectLinuxOSVersion()
+		return detectLinux()
 	case "darwin":
-		return detectDarwinOSVersion()
+		return detectDarwin()
 	default:
 		return ""
 	}
 }
 
-func detectLinuxOSVersion() string {
+// detectLinux attempts to parse standard Linux distribution files.
+func detectLinux() string {
 	paths := []string{"/etc/os-release", "/usr/lib/os-release"}
 	for _, path := range paths {
 		// #nosec G304 -- path iterates over fixed trusted Linux os-release locations.
@@ -24,124 +28,141 @@ func detectLinuxOSVersion() string {
 		if err != nil {
 			continue
 		}
-		if v := parseLinuxOSRelease(data); v != "" {
+		if v := parseOSRelease(data); v != "" {
 			return v
 		}
 	}
 	return ""
 }
 
-func parseLinuxOSRelease(data []byte) string {
-	const (
-		fieldPrettyName = "PRETTY_NAME"
-		fieldName       = "NAME"
-		fieldVersionID  = "VERSION_ID"
-	)
+// parseOSRelease parses the shell-compatible key-value format of os-release files.
+func parseOSRelease(data []byte) string {
+	fields := make(map[string]string)
 
-	fields := map[string]string{}
-	for line := range strings.SplitSeq(string(data), "\n") {
-		line = strings.TrimSpace(line)
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		key, value, ok := strings.Cut(line, "=")
+
+		key, val, ok := strings.Cut(line, "=")
 		if !ok {
 			continue
 		}
+
 		key = strings.TrimSpace(key)
-		value = strings.Trim(strings.TrimSpace(value), `"'`)
-		fields[key] = value
+		val = strings.Trim(strings.TrimSpace(val), `"'`)
+		fields[key] = val
 	}
 
-	if v := strings.TrimSpace(fields[fieldPrettyName]); v != "" {
+	if v, ok := fields["PRETTY_NAME"]; ok && v != "" {
 		return v
 	}
 
-	name := strings.TrimSpace(fields[fieldName])
-	versionID := strings.TrimSpace(fields[fieldVersionID])
-	if name != "" && versionID != "" {
-		return name + " " + versionID
+	name := fields["NAME"]
+	version := fields["VERSION_ID"]
+	if name != "" && version != "" {
+		return name + " " + version
 	}
-	if name != "" {
-		return name
-	}
-	return ""
+
+	return name
 }
 
-func detectDarwinOSVersion() string {
+// detectDarwin reads the macOS system version Plist.
+func detectDarwin() string {
 	data, err := os.ReadFile("/System/Library/CoreServices/SystemVersion.plist")
 	if err != nil {
 		return ""
 	}
-	const key = "<key>ProductVersion</key>"
-	_, after, ok := strings.Cut(string(data), key)
+
+	_, after, ok := strings.Cut(string(data), "<key>ProductVersion</key>")
 	if !ok {
 		return ""
 	}
-	version, ok := plistStringValue(after)
+
+	val, ok := extractXMLTag(after, "string")
 	if !ok {
 		return ""
 	}
-	return "macOS " + version
+
+	return "macOS " + val
 }
 
-func plistStringValue(raw string) (string, bool) {
-	start := strings.Index(raw, "<string>")
-	end := strings.Index(raw, "</string>")
-	if start < 0 || end < 0 || end <= start {
+// extractXMLTag finds the content between <tag> and </tag>.
+func extractXMLTag(s, tag string) (string, bool) {
+	_, after, ok := strings.Cut(s, "<"+tag+">")
+	if !ok {
 		return "", false
 	}
-	return raw[start+len("<string>") : end], true
+
+	val, _, ok := strings.Cut(after, "</"+tag+">")
+	if !ok {
+		return "", false
+	}
+
+	return val, true
 }
 
+// detectCI uses environment variables to identify known CI providers.
 func detectCI(getenv func(string) string) string {
-	type provider struct {
+	providers := []struct {
 		name string
-		key  string
-		kind string // "eq" or "set"
-		val  string
+		env  string
+		want string // if empty, any non-empty value matches
+	}{
+		{"GitHub Actions", "GITHUB_ACTIONS", "true"},
+		{"GitLab CI", "GITLAB_CI", "true"},
+		{"CircleCI", "CIRCLECI", "true"},
+		{"Buildkite", "BUILDKITE", "true"},
+		{"Travis CI", "TRAVIS", "true"},
+		{"Jenkins", "JENKINS_URL", ""},
+		{"Azure Pipelines", "TF_BUILD", "True"},
 	}
 
-	providers := []provider{
-		{name: "GitHub Actions", key: "GITHUB_ACTIONS", kind: "eq", val: "true"},
-		{name: "GitLab CI", key: "GITLAB_CI", kind: "eq", val: "true"},
-		{name: "CircleCI", key: "CIRCLECI", kind: "eq", val: "true"},
-		{name: "Jenkins", key: "JENKINS_URL", kind: "set"},
-		{name: "Buildkite", key: "BUILDKITE", kind: "eq", val: "true"},
-		{name: "Travis CI", key: "TRAVIS", kind: "eq", val: "true"},
-	}
 	for _, p := range providers {
-		v := getenv(p.key)
-		if p.kind == "set" && v != "" {
-			return p.name
+		val := getenv(p.env)
+		if val == "" {
+			continue
 		}
-		if p.kind == "eq" && v == p.val {
+		if p.want == "" || val == p.want {
 			return p.name
 		}
 	}
-	if getenv("CI") == "true" || getenv("CI") == "1" {
+
+	if generic := getenv("CI"); generic == "true" || generic == "1" {
 		return "CI (unknown provider)"
 	}
+
 	return ""
 }
 
+// detectContainer checks for common containerization markers.
 func detectContainer() string {
 	if _, err := os.Stat("/.dockerenv"); err == nil {
 		return "Docker"
 	}
+
 	data, err := os.ReadFile("/proc/1/cgroup")
 	if err != nil {
 		return ""
 	}
-	s := string(data)
-	if strings.Contains(s, "docker") {
-		return "Docker"
+
+	heuristics := []struct {
+		pattern string
+		label   string
+	}{
+		{"docker", "Docker"},
+		{"kubepods", "Kubernetes"},
+		{"lxc", "LXC"},
 	}
-	if strings.Contains(s, "kubepods") {
-		return "Kubernetes"
+
+	content := string(data)
+	for _, h := range heuristics {
+		if strings.Contains(content, h.pattern) {
+			return h.label
+		}
 	}
-	if strings.Contains(s, "lxc") {
-		return "LXC"
-	}
+
 	return ""
 }

@@ -131,25 +131,25 @@ func TestCandidateExecutableNames(t *testing.T) {
 	}
 }
 
-func TestParseLinuxOSRelease(t *testing.T) {
+func TestParseOSRelease(t *testing.T) {
 	rawPretty := []byte("NAME=Ubuntu\nPRETTY_NAME=\"Ubuntu 24.04.2 LTS\"\nVERSION_ID=\"24.04\"\n")
-	if got := parseLinuxOSRelease(rawPretty); got != "Ubuntu 24.04.2 LTS" {
-		t.Fatalf("parseLinuxOSRelease(pretty) = %q", got)
+	if got := parseOSRelease(rawPretty); got != "Ubuntu 24.04.2 LTS" {
+		t.Fatalf("parseOSRelease(pretty) = %q", got)
 	}
 
 	rawFallback := []byte("NAME=Debian\nVERSION_ID=\"12\"\n")
-	if got := parseLinuxOSRelease(rawFallback); got != "Debian 12" {
-		t.Fatalf("parseLinuxOSRelease(fallback) = %q", got)
+	if got := parseOSRelease(rawFallback); got != "Debian 12" {
+		t.Fatalf("parseOSRelease(fallback) = %q", got)
 	}
 
 	rawNameOnly := []byte("NAME=\"Alpine Linux\"\n")
-	if got := parseLinuxOSRelease(rawNameOnly); got != "Alpine Linux" {
-		t.Fatalf("parseLinuxOSRelease(name-only) = %q", got)
+	if got := parseOSRelease(rawNameOnly); got != "Alpine Linux" {
+		t.Fatalf("parseOSRelease(name-only) = %q", got)
 	}
 
 	rawInvalid := []byte("# comment only\n")
-	if got := parseLinuxOSRelease(rawInvalid); got != "" {
-		t.Fatalf("parseLinuxOSRelease(invalid) = %q, want empty", got)
+	if got := parseOSRelease(rawInvalid); got != "" {
+		t.Fatalf("parseOSRelease(invalid) = %q, want empty", got)
 	}
 }
 
