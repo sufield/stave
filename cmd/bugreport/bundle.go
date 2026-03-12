@@ -85,12 +85,12 @@ func addZipFile(zw *zip.Writer, name string, data []byte) error {
 
 func addCoreArtifacts(bundle *bundleWriter, cwd string) error {
 	binaryPath, _ := os.Executable()
-	checks, hasFail := doctor.Run(&doctor.Context{
+	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:          cwd,
 		BinaryPath:   binaryPath,
 		StaveVersion: staveversion.Version,
 	})
-	if err := bundle.addJSON("doctor.json", doctorResult{Ready: !hasFail, Checks: checks}); err != nil {
+	if err := bundle.addJSON("doctor.json", doctorResult{Ready: ok, Checks: checks}); err != nil {
 		return fmt.Errorf("write doctor.json: %w", err)
 	}
 	if err := bundle.addJSON("build_info.json", collectBuildInfo()); err != nil {

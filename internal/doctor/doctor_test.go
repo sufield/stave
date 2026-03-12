@@ -15,9 +15,9 @@ func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
 		func(Context) Check { return Check{Name: "bad", Status: StatusFail} },
 	)
 
-	checks, hasFail := RunWithRegistry(Context{}, reg)
-	if !hasFail {
-		t.Fatal("expected hasFail=true")
+	checks, ok := RunWithRegistry(nil, reg)
+	if ok {
+		t.Fatal("expected success=false when FAIL present")
 	}
 	if len(checks) != 2 {
 		t.Fatalf("check count = %d, want 2", len(checks))

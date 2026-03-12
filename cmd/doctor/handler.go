@@ -25,7 +25,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 
 	binaryPath, _ := os.Executable()
 
-	checks, hasFail := doctor.Run(&doctor.Context{
+	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:          cwd,
 		BinaryPath:   binaryPath,
 		StaveVersion: staveversion.Version,
@@ -37,7 +37,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 	}
 
 	if cmdutil.QuietEnabled(cmd) {
-		if hasFail {
+		if !ok {
 			return ErrDoctorRequiredIssues
 		}
 		return nil
@@ -48,7 +48,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 			Ready  bool           `json:"ready"`
 			Checks []doctor.Check `json:"checks"`
 		}{
-			Ready:  !hasFail,
+			Ready:  ok,
 			Checks: checks,
 		})
 	}
@@ -60,7 +60,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 		}
 	}
 
-	if hasFail {
+	if !ok {
 		return ErrDoctorRequiredIssues
 	}
 	return nil
