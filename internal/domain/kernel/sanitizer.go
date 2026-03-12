@@ -1,22 +1,24 @@
 package kernel
 
-// Sanitizer provides primitive sanitization operations for output.
-// Domain types accept this interface to sanitize themselves without
-// importing the concrete sanitize package.
-type Sanitizer interface {
+// IDSanitizer defines the capability to mask identifiers with deterministic tokens.
+type IDSanitizer interface {
 	ID(id string) string
+}
+
+// PathSanitizer defines the capability to mask or shorten file paths in output.
+type PathSanitizer interface {
 	Path(p string) string
+}
+
+// ValueSanitizer defines the capability to mask general string values.
+type ValueSanitizer interface {
 	Value(v string) string
 }
 
-// IDSanitizer is the narrow interface for replacing identifiers with
-// deterministic tokens. Any Sanitizer implementation satisfies this.
-type IDSanitizer interface {
-	ID(string) string
-}
-
-// PathSanitizer is the narrow interface for shortening file paths in output.
-// Any Sanitizer implementation satisfies this.
-type PathSanitizer interface {
-	Path(string) string
+// Sanitizer aggregates all primitive sanitization operations.
+// Domain objects typically accept this interface to prepare themselves for public output.
+type Sanitizer interface {
+	IDSanitizer
+	PathSanitizer
+	ValueSanitizer
 }
