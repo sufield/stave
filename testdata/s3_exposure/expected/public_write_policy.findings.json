@@ -2,10 +2,10 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.WRITE.001",
-      "bucket": "public-write-bucket",
+      "resource": "public-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
-      "actions": ["s3:PutObject"],
+      "actions": ["Write"],
       "write_scope": "blind",
       "evidence_path": [
         "bucket.policy.statements[0].effect",

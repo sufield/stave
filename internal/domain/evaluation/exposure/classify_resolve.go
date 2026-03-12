@@ -38,18 +38,19 @@ func (c *bucketResolutionContext) writeAbsorbsRead() bool {
 
 func (c *bucketResolutionContext) resolveRead() []ExposureClassification {
 	perms := c.globalPerms()
-	selected := selectReadExposureCandidate(readExposureInput{
-		bucketName:           c.input.Name,
-		bucketWebsiteEnabled: c.input.WebsiteEnabled,
-		isGlobalGet:          perms.Has(PermRead),
-		writeAbsorbsRead:     c.writeAbsorbsRead(),
-		isAuthenticatedOnly:  c.input.IsAuthenticatedOnly,
-		isPolicyGet:          c.input.PolicyPerms.Has(PermRead),
-		isACLGet:             c.input.ACLPerms.Has(PermRead),
-		principalScope:       c.principalScope(),
-		readEvidence:         c.readEvidence(),
-		policyReadEvidence:   c.input.Evidence.Get(EvPolicyRead),
-		aclReadEvidence:      c.input.Evidence.Get(EvACLRead),
+	selected := SelectReadExposure(ReadExposureInput{
+		ResourceID:           c.input.Name,
+		WebHostingEnabled:    c.input.WebsiteEnabled,
+		IsExternallyReadable: perms.Has(PermRead),
+		WriteAbsorbsRead:     c.writeAbsorbsRead(),
+		IsAuthenticatedOnly:  c.input.IsAuthenticatedOnly,
+		HasIdentityRead:      c.input.PolicyPerms.Has(PermRead),
+		HasResourceRead:      c.input.ACLPerms.Has(PermRead),
+		PrincipalScope:       c.principalScope(),
+		EvidenceGeneral:      c.readEvidence(),
+		EvidenceIdentity:     c.input.Evidence.Get(EvPolicyRead),
+		EvidenceResource:     c.input.Evidence.Get(EvACLRead),
+		Actions:              []string{"Read"},
 	})
 	if selected == nil {
 		return nil
@@ -63,8 +64,8 @@ func (c *bucketResolutionContext) resolveList() []ExposureClassification {
 		return nil
 	}
 	return []ExposureClassification{{
-		ID:             exposureIDPublicList,
-		Bucket:         c.input.Name,
+		ID:             idPublicList,
+		Resource:       c.input.Name,
 		ExposureType:   "public_list",
 		PrincipalScope: c.principalScope(),
 		Actions:        []string{outputListBucket},
@@ -74,17 +75,18 @@ func (c *bucketResolutionContext) resolveList() []ExposureClassification {
 
 func (c *bucketResolutionContext) resolveWrite() []ExposureClassification {
 	perms := c.globalPerms()
-	selected := selectWriteExposureCandidate(writeExposureInput{
-		bucketName:          c.input.Name,
-		isGlobalPut:         perms.Has(PermWrite),
-		isPolicyPut:         c.input.PolicyPerms.Has(PermWrite),
-		isACLPut:            c.input.ACLPerms.Has(PermWrite),
-		principalScope:      c.principalScope(),
-		writeScope:          c.writeScope(),
-		policyWriteEvidence: c.input.Evidence.Get(EvPolicyWrite),
-		aclWriteEvidence:    c.input.Evidence.Get(EvACLWrite),
-		hasGetAction:        c.input.WriteSourceHasGet,
-		hasListAction:       c.input.WriteSourceHasList,
+	selected := SelectWriteExposure(WriteExposureInput{
+		ResourceID:       c.input.Name,
+		IsPubliclyWrite:  perms.Has(PermWrite),
+		HasIdentityWrite: c.input.PolicyPerms.Has(PermWrite),
+		HasResourceWrite: c.input.ACLPerms.Has(PermWrite),
+		PrincipalScope:   c.principalScope(),
+		WriteScope:       c.writeScope(),
+		EvidenceIdentity: c.input.Evidence.Get(EvPolicyWrite),
+		EvidenceResource: c.input.Evidence.Get(EvACLWrite),
+		CanAlsoRead:      c.input.WriteSourceHasGet,
+		CanAlsoList:      c.input.WriteSourceHasList,
+		BaseActions:      []string{"Write"},
 	})
 	if selected == nil {
 		return nil
@@ -97,8 +99,8 @@ func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
 	findings := make([]ExposureClassification, 0, 3)
 	if perms.Has(PermACLRead) {
 		findings = append(findings, ExposureClassification{
-			ID:             exposureIDPublicACLRead,
-			Bucket:         c.input.Name,
+			ID:             idPublicAdminRead,
+			Resource:       c.input.Name,
 			ExposureType:   "public_acl_read",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputGetBucketACL},
@@ -107,8 +109,8 @@ func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
 	}
 	if perms.Has(PermACLWrite) {
 		findings = append(findings, ExposureClassification{
-			ID:             exposureIDPublicACLWrite,
-			Bucket:         c.input.Name,
+			ID:             idPublicAdminWrite,
+			Resource:       c.input.Name,
 			ExposureType:   "public_acl_write",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputPutBucketACL},
@@ -117,8 +119,8 @@ func (c *bucketResolutionContext) resolveManagement() []ExposureClassification {
 	}
 	if perms.Has(PermDelete) {
 		findings = append(findings, ExposureClassification{
-			ID:             exposureIDPublicDelete,
-			Bucket:         c.input.Name,
+			ID:             idPublicDelete,
+			Resource:       c.input.Name,
 			ExposureType:   "public_delete",
 			PrincipalScope: c.principalScope(),
 			Actions:        []string{outputDeleteObject},

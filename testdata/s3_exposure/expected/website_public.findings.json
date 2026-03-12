@@ -2,12 +2,12 @@
   "findings": [
     {
       "id": "CTL.S3.WEBSITE.PUBLIC.001",
-      "bucket": "website-bucket",
-      "exposure_type": "website_public",
+      "resource": "website-bucket",
+      "exposure_type": "web_public",
       "principal_scope": "public",
-      "actions": ["s3:GetObject"],
+      "actions": ["Read"],
       "evidence_path": [
-        "bucket.website.enabled",
+        "resource.web_hosting.enabled",
         "bucket.policy.statements[0].effect",
         "bucket.policy.statements[0].principal",
         "bucket.policy.statements[0].actions"

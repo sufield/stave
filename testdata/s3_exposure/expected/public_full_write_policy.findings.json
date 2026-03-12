@@ -2,12 +2,12 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.WRITE.001",
-      "bucket": "public-full-write-bucket",
+      "resource": "public-full-write-bucket",
       "exposure_type": "public_write",
       "principal_scope": "public",
       "actions": [
-        "s3:GetObject",
-        "s3:PutObject"
+        "Read",
+        "Write"
       ],
       "write_scope": "full",
       "evidence_path": [

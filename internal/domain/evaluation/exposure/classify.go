@@ -8,26 +8,24 @@ import (
 )
 
 const (
-	// Output action labels.
-	outputGetObject    = "s3:GetObject"
-	outputPutObject    = "s3:PutObject"
+	// Output action labels (used by resolve logic for non-selection findings).
 	outputListBucket   = "s3:ListBucket"
 	outputGetBucketACL = "s3:GetBucketAcl"
 	outputPutBucketACL = "s3:PutBucketAcl"
 	outputDeleteObject = "s3:DeleteObject"
 
 	// Canonical exposure classification IDs.
-	exposureIDBucketTakeover          kernel.ControlID = "CTL.S3.BUCKET.TAKEOVER.001"
-	exposureIDWebsitePublic           kernel.ControlID = "CTL.S3.WEBSITE.PUBLIC.001"
-	exposureIDGlobalAuthenticatedRead kernel.ControlID = "CTL.S3.GLOBAL.AUTHENTICATED.READ.001"
-	exposureIDPublicRead              kernel.ControlID = "CTL.S3.PUBLIC.READ.001"
-	exposureIDACLPublicRead           kernel.ControlID = "CTL.S3.ACL.PUBLIC.READ.001"
-	exposureIDPublicList              kernel.ControlID = "CTL.S3.PUBLIC.LIST.001"
-	exposureIDPublicWrite             kernel.ControlID = "CTL.S3.PUBLIC.WRITE.001"
-	exposureIDACLPublicWrite          kernel.ControlID = "CTL.S3.ACL.PUBLIC.WRITE.001"
-	exposureIDPublicACLRead           kernel.ControlID = "CTL.S3.PUBLIC.ACL.READ.001"
-	exposureIDPublicACLWrite          kernel.ControlID = "CTL.S3.PUBLIC.ACL.WRITE.001"
-	exposureIDPublicDelete            kernel.ControlID = "CTL.S3.PUBLIC.DELETE.001"
+	idResourceTakeover    kernel.ControlID = "CTL.S3.BUCKET.TAKEOVER.001"
+	idWebPublic           kernel.ControlID = "CTL.S3.WEBSITE.PUBLIC.001"
+	idAuthenticatedRead   kernel.ControlID = "CTL.S3.GLOBAL.AUTHENTICATED.READ.001"
+	idPublicRead          kernel.ControlID = "CTL.S3.PUBLIC.READ.001"
+	idResourcePublicRead  kernel.ControlID = "CTL.S3.ACL.PUBLIC.READ.001"
+	idPublicList          kernel.ControlID = "CTL.S3.PUBLIC.LIST.001"
+	idPublicWrite         kernel.ControlID = "CTL.S3.PUBLIC.WRITE.001"
+	idResourcePublicWrite kernel.ControlID = "CTL.S3.ACL.PUBLIC.WRITE.001"
+	idPublicAdminRead     kernel.ControlID = "CTL.S3.PUBLIC.ACL.READ.001"
+	idPublicAdminWrite    kernel.ControlID = "CTL.S3.PUBLIC.ACL.WRITE.001"
+	idPublicDelete        kernel.ControlID = "CTL.S3.PUBLIC.DELETE.001"
 )
 
 func init() {
@@ -36,17 +34,17 @@ func init() {
 
 func validateExposureControlIDs() {
 	for _, id := range []kernel.ControlID{
-		exposureIDBucketTakeover,
-		exposureIDWebsitePublic,
-		exposureIDGlobalAuthenticatedRead,
-		exposureIDPublicRead,
-		exposureIDACLPublicRead,
-		exposureIDPublicList,
-		exposureIDPublicWrite,
-		exposureIDACLPublicWrite,
-		exposureIDPublicACLRead,
-		exposureIDPublicACLWrite,
-		exposureIDPublicDelete,
+		idResourceTakeover,
+		idWebPublic,
+		idAuthenticatedRead,
+		idPublicRead,
+		idResourcePublicRead,
+		idPublicList,
+		idPublicWrite,
+		idResourcePublicWrite,
+		idPublicAdminRead,
+		idPublicAdminWrite,
+		idPublicDelete,
 	} {
 		if err := kernel.ValidateControlIDFormat(id.String()); err != nil {
 			panic(fmt.Sprintf("invalid exposure control ID %q: %v", id, err))
@@ -64,8 +62,8 @@ func ClassifyExposure(buckets []NormalizedBucketInput) []ExposureClassification 
 	}
 
 	sort.Slice(findings, func(i, j int) bool {
-		if findings[i].Bucket != findings[j].Bucket {
-			return findings[i].Bucket < findings[j].Bucket
+		if findings[i].Resource != findings[j].Resource {
+			return findings[i].Resource < findings[j].Resource
 		}
 		return findings[i].ID < findings[j].ID
 	})
@@ -76,8 +74,8 @@ func ClassifyExposure(buckets []NormalizedBucketInput) []ExposureClassification 
 func classifyBucket(b NormalizedBucketInput) []ExposureClassification {
 	if !b.Exists && b.ExternalReference {
 		return []ExposureClassification{{
-			ID:             exposureIDBucketTakeover,
-			Bucket:         b.Name,
+			ID:             idResourceTakeover,
+			Resource:       b.Name,
 			ExposureType:   "bucket_takeover",
 			PrincipalScope: kernel.ScopeNotApplicable,
 			Actions:        []string{},

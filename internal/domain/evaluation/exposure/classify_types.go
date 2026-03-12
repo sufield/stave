@@ -19,10 +19,10 @@ type NormalizedBucketInput struct {
 	Evidence            *EvidenceTracker
 }
 
-// ExposureClassification represents a classified exposure vector for a bucket.
+// ExposureClassification represents a classified exposure vector for a resource.
 type ExposureClassification struct {
 	ID             kernel.ControlID      `json:"id"`
-	Bucket         string                `json:"bucket"`
+	Resource       string                `json:"resource"`
 	ExposureType   string                `json:"exposure_type"`
 	PrincipalScope kernel.PrincipalScope `json:"principal_scope"`
 	Actions        []string              `json:"actions"`

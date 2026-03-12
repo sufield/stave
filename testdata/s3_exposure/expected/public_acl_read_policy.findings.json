@@ -2,7 +2,7 @@
   "findings": [
     {
       "id": "CTL.S3.PUBLIC.ACL.READ.001",
-      "bucket": "acl-readable-bucket",
+      "resource": "acl-readable-bucket",
       "exposure_type": "public_acl_read",
       "principal_scope": "public",
       "actions": [
