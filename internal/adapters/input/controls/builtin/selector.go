@@ -33,8 +33,8 @@ func ParseSelector(s string) (BuiltinSelector, error) {
 		}
 		if after, ok := strings.CutPrefix(p, "severity:"); ok {
 			sevStr := strings.TrimSuffix(after, "+")
-			sev := policy.ParseSeverity(sevStr)
-			if sev == policy.SeverityNone {
+			sev, err := policy.ParseSeverity(sevStr)
+			if err != nil || sev == policy.SeverityNone {
 				return BuiltinSelector{}, fmt.Errorf("invalid severity %q (use: critical, high, medium, low, info)", sevStr)
 			}
 			sel.MinSeverity = sev

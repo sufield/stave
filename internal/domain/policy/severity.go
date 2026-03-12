@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Severity represents the severity level of an control or finding.
+// Severity represents the criticality level of a security control or finding.
 // Constants are ordered by iota so that Gte is a simple integer comparison.
 type Severity int
 
@@ -19,7 +19,7 @@ const (
 	SeverityCritical          // 5
 )
 
-// String provides the wire-format name.
+// String returns the canonical lowercase name of the severity.
 func (s Severity) String() string {
 	switch s {
 	case SeverityInfo:
@@ -33,11 +33,11 @@ func (s Severity) String() string {
 	case SeverityCritical:
 		return "critical"
 	default:
-		return ""
+		return "none"
 	}
 }
 
-// IsValid reports whether s is a recognized severity level.
+// IsValid reports whether s is a recognized severity level (excluding None).
 func (s Severity) IsValid() bool {
 	return s >= SeverityInfo && s <= SeverityCritical
 }
@@ -47,58 +47,72 @@ func (s Severity) Gte(other Severity) bool {
 	return s >= other
 }
 
-// ParseSeverity converts a string to a Severity value.
-func ParseSeverity(s string) Severity {
-	switch strings.ToLower(s) {
+// ParseSeverity converts a string into a Severity level.
+// It is case-insensitive and returns an error for unrecognized strings.
+func ParseSeverity(s string) (Severity, error) {
+	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "info":
-		return SeverityInfo
+		return SeverityInfo, nil
 	case "low":
-		return SeverityLow
+		return SeverityLow, nil
 	case "medium":
-		return SeverityMedium
+		return SeverityMedium, nil
 	case "high":
-		return SeverityHigh
+		return SeverityHigh, nil
 	case "critical":
-		return SeverityCritical
+		return SeverityCritical, nil
+	case "none", "":
+		return SeverityNone, nil
 	default:
-		return SeverityNone
+		return SeverityNone, fmt.Errorf("invalid severity level %q", s)
 	}
 }
 
-// MarshalJSON writes the severity as its string name.
+// --- Serialization Primitives ---
+
+// MarshalText implements encoding.TextMarshaler for consistent output
+// across all text-based serialization formats.
+func (s Severity) MarshalText() ([]byte, error) {
+	return []byte(s.String()), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler for consistent input
+// across all text-based serialization formats.
+func (s *Severity) UnmarshalText(text []byte) error {
+	parsed, err := ParseSeverity(string(text))
+	if err != nil {
+		return err
+	}
+	*s = parsed
+	return nil
+}
+
+// --- Format-Specific Overrides ---
+
+// MarshalJSON ensures the string representation is used in JSON.
 func (s Severity) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-// UnmarshalJSON reads a severity string into the ordinal value.
+// UnmarshalJSON parses a JSON string into the ordinal value.
 func (s *Severity) UnmarshalJSON(data []byte) error {
 	var str string
 	if err := json.Unmarshal(data, &str); err != nil {
 		return err
 	}
-	parsed := ParseSeverity(str)
-	if str != "" && parsed == SeverityNone {
-		return fmt.Errorf("unknown severity %q", str)
-	}
-	*s = parsed
-	return nil
+	return s.UnmarshalText([]byte(str))
 }
 
-// MarshalYAML writes the severity as its string name.
+// MarshalYAML returns the string representation for YAML output.
 func (s Severity) MarshalYAML() (any, error) {
 	return s.String(), nil
 }
 
-// UnmarshalYAML reads a severity string into the ordinal value.
+// UnmarshalYAML parses a YAML string into the ordinal value.
 func (s *Severity) UnmarshalYAML(unmarshal func(any) error) error {
 	var str string
 	if err := unmarshal(&str); err != nil {
 		return err
 	}
-	parsed := ParseSeverity(str)
-	if str != "" && parsed == SeverityNone {
-		return fmt.Errorf("unknown severity %q", str)
-	}
-	*s = parsed
-	return nil
+	return s.UnmarshalText([]byte(str))
 }
