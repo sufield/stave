@@ -37,10 +37,10 @@ func TestRemediationMapper_MapFinding(t *testing.T) {
 			wantDescSubstr: "deviates from security baseline",
 		},
 		{
-			name:           "unknown control pattern",
+			name:           "CTL prefix baseline fallback",
 			controlID:      "CTL.UNKNOWN.001",
-			wantAction:     "Review the finding evidence and remediate the configuration.",
-			wantDescSubstr: "violation detected",
+			wantAction:     "Review the misconfigured properties and revert to compliant values.",
+			wantDescSubstr: "deviates from security baseline",
 		},
 	}
 
