@@ -1,11 +1,10 @@
 package evaluation
 
 import (
+	"cmp"
 	"slices"
-	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -29,7 +28,7 @@ func (e BaselineEntry) Key() BaselineEntryKey {
 	return BaselineEntryKey{ControlID: e.ControlID, AssetID: e.AssetID}
 }
 
-// Baseline is the baseline.v0.1 output file.
+// Baseline represents the persistent state of known/accepted violations.
 type Baseline struct {
 	SchemaVersion    kernel.Schema     `json:"schema_version"`
 	Kind             kernel.OutputKind `json:"kind"`
@@ -46,7 +45,7 @@ type BaselineComparisonSummary struct {
 	ResolvedFindings int `json:"resolved_findings"`
 }
 
-// BaselineComparison is the baseline_check output.
+// BaselineComparison represents the result of checking current findings against a baseline.
 type BaselineComparison struct {
 	SchemaVersion kernel.Schema             `json:"schema_version"`
 	Kind          kernel.OutputKind         `json:"kind"`
@@ -58,17 +57,7 @@ type BaselineComparison struct {
 	Resolved      []BaselineEntry           `json:"resolved"`
 }
 
-// BaselineEntryFromFinding creates a BaselineEntry from a Finding.
-func BaselineEntryFromFinding(f Finding) BaselineEntry {
-	return BaselineEntry{
-		ControlID:   f.ControlID,
-		ControlName: f.ControlName,
-		AssetID:     f.AssetID,
-		AssetType:   f.AssetType,
-	}
-}
-
-// BaselineComparisonResult holds the output of a baseline comparison.
+// BaselineComparisonResult holds the diff output between two sets of entries.
 type BaselineComparisonResult struct {
 	New      []BaselineEntry
 	Resolved []BaselineEntry
@@ -79,33 +68,61 @@ func (r BaselineComparisonResult) HasNewFindings() bool {
 	return len(r.New) > 0
 }
 
-// CompareBaseline compares base and current entries, returning newly introduced and resolved entries.
-func CompareBaseline(base, current []BaselineEntry) BaselineComparisonResult {
-	baseSet := lo.KeyBy(base, BaselineEntry.Key)
-	curSet := lo.KeyBy(current, BaselineEntry.Key)
-
-	var newEntries, resolved []BaselineEntry
-	for k, e := range curSet {
-		if _, ok := baseSet[k]; !ok {
-			newEntries = append(newEntries, e)
-		}
+// BaselineEntryFromFinding converts a detailed Finding into a simplified BaselineEntry.
+func BaselineEntryFromFinding(f Finding) BaselineEntry {
+	return BaselineEntry{
+		ControlID:   f.ControlID,
+		ControlName: f.ControlName,
+		AssetID:     f.AssetID,
+		AssetType:   f.AssetType,
 	}
-	for k, e := range baseSet {
-		if _, ok := curSet[k]; !ok {
-			resolved = append(resolved, e)
-		}
-	}
-	SortBaselineEntries(newEntries)
-	SortBaselineEntries(resolved)
-	return BaselineComparisonResult{New: newEntries, Resolved: resolved}
 }
 
-// SortBaselineEntries sorts entries by control ID then asset ID.
+// CompareBaseline compares baseline and current entries, identifying introduced (new)
+// and resolved (removed) violations.
+func CompareBaseline(baseEntries, curEntries []BaselineEntry) BaselineComparisonResult {
+	// Pre-allocate maps for lookups to ensure O(N+M) complexity
+	baseMap := make(map[BaselineEntryKey]BaselineEntry, len(baseEntries))
+	for _, b := range baseEntries {
+		baseMap[b.Key()] = b
+	}
+
+	curMap := make(map[BaselineEntryKey]BaselineEntry, len(curEntries))
+	for _, c := range curEntries {
+		curMap[c.Key()] = c
+	}
+
+	var newFindings, resolvedFindings []BaselineEntry
+
+	// Find items in current that are not in base (New)
+	for key, entry := range curMap {
+		if _, exists := baseMap[key]; !exists {
+			newFindings = append(newFindings, entry)
+		}
+	}
+
+	// Find items in base that are not in current (Resolved)
+	for key, entry := range baseMap {
+		if _, exists := curMap[key]; !exists {
+			resolvedFindings = append(resolvedFindings, entry)
+		}
+	}
+
+	SortBaselineEntries(newFindings)
+	SortBaselineEntries(resolvedFindings)
+
+	return BaselineComparisonResult{
+		New:      newFindings,
+		Resolved: resolvedFindings,
+	}
+}
+
+// SortBaselineEntries sorts entries deterministically by ControlID then AssetID.
 func SortBaselineEntries(entries []BaselineEntry) {
 	slices.SortFunc(entries, func(a, b BaselineEntry) int {
-		if a.ControlID != b.ControlID {
-			return strings.Compare(string(a.ControlID), string(b.ControlID))
-		}
-		return strings.Compare(string(a.AssetID), string(b.AssetID))
+		return cmp.Or(
+			cmp.Compare(a.ControlID, b.ControlID),
+			cmp.Compare(a.AssetID, b.AssetID),
+		)
 	})
 }
