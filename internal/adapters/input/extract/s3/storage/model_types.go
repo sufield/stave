@@ -18,13 +18,13 @@ type S3ObjectLock struct {
 }
 
 type S3PrefixExposure struct {
-	HasPolicyEvidence       bool              `json:"has_policy_evidence"`
-	HasACLEvidence          bool              `json:"has_acl_evidence"`
-	PolicyPublicReadScopes  []string          `json:"policy_public_read_scopes"`
-	PolicySourceByScope     map[string]string `json:"policy_source_by_scope"`
-	PolicyPublicReadBlocked bool              `json:"policy_public_read_blocked"`
-	ACLPublicReadAll        bool              `json:"acl_public_read_all"`
-	ACLPublicReadBlocked    bool              `json:"acl_public_read_blocked"`
+	HasIdentityEvidence   bool              `json:"has_identity_evidence"`
+	HasResourceEvidence   bool              `json:"has_resource_evidence"`
+	IdentityReadScopes    []string          `json:"identity_read_scopes"`
+	IdentitySourceByScope map[string]string `json:"identity_source_by_scope"`
+	IdentityReadBlocked   bool              `json:"identity_read_blocked"`
+	ResourceReadAll       bool              `json:"resource_read_all"`
+	ResourceReadBlocked   bool              `json:"resource_read_blocked"`
 }
 
 // Canonical returns a stable lifecycle model.

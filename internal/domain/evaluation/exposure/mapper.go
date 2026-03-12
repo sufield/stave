@@ -10,27 +10,32 @@ func FactsFromStorage(props map[string]any) Facts {
 	}
 
 	return Facts{
-		HasPolicyEvidence:       pe.Get("has_policy_evidence").Bool(),
-		HasACLEvidence:          pe.Get("has_acl_evidence").Bool(),
-		PolicyGrants:            BuildGrants(pe.Get("policy_public_read_scopes").StringSlice(), pe.Get("policy_source_by_scope").StringMap()),
-		PolicyPublicReadBlocked: pe.Get("policy_public_read_blocked").Bool(),
-		ACLPublicReadAll:        pe.Get("acl_public_read_all").Bool(),
-		ACLPublicReadBlocked:    pe.Get("acl_public_read_blocked").Bool(),
+		HasIdentityEvidence: pe.Get("has_identity_evidence").Bool(),
+		HasResourceEvidence: pe.Get("has_resource_evidence").Bool(),
+
+		IdentityGrants:      buildGrants(pe),
+		IdentityReadBlocked: pe.Get("identity_read_blocked").Bool(),
+
+		ResourceReadAll:     pe.Get("resource_read_all").Bool(),
+		ResourceReadBlocked: pe.Get("resource_read_blocked").Bool(),
 	}
 }
 
-// BuildGrants constructs policy grants from raw scopes and source IDs.
-func BuildGrants(scopes []string, sourceByScope map[string]string) Grants {
+// buildGrants maps parallel property structures into a slice of Grant objects.
+func buildGrants(pe maps.Value) Grants {
+	scopes := pe.Get("identity_read_scopes").StringSlice()
+	sources := pe.Get("identity_source_by_scope").StringMap()
+
 	if len(scopes) == 0 {
 		return nil
 	}
 
-	grants := make(Grants, len(scopes))
-	for i, scope := range scopes {
-		grants[i] = Grant{
+	grants := make(Grants, 0, len(scopes))
+	for _, scope := range scopes {
+		grants = append(grants, Grant{
 			Scope:    scope,
-			SourceID: sourceByScope[scope],
-		}
+			SourceID: sources[scope],
+		})
 	}
 	return grants
 }

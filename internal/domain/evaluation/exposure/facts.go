@@ -8,12 +8,12 @@ type Source struct {
 	ID   string
 }
 
-// Kind identifies the evidence mechanism (for example, policy or ACL).
+// Kind identifies the evidence mechanism (for example, identity or resource).
 type Kind string
 
 const (
-	SourcePolicy          Kind = "policy"
-	SourceACL             Kind = "acl"
+	SourceIdentity        Kind = "identity"
+	SourceResource        Kind = "resource"
 	SourceMissingEvidence Kind = "missing_evidence"
 )
 
@@ -56,7 +56,7 @@ func (g Grant) Covers(prefix string) bool {
 
 // Evidence returns the evidence source for this grant, qualified by SourceID.
 func (g Grant) Evidence() Source {
-	return NewSource(SourcePolicy, g.SourceID)
+	return NewSource(SourceIdentity, g.SourceID)
 }
 
 // Grants is an ordered list of policy grants.
@@ -74,41 +74,45 @@ func (gs Grants) FindMatch(prefix string) *Grant {
 
 // Facts contains normalized evidence used for prefix exposure checks.
 type Facts struct {
-	HasPolicyEvidence       bool
-	HasACLEvidence          bool
-	PolicyGrants            Grants
-	PolicyPublicReadBlocked bool
-	ACLPublicReadAll        bool
-	ACLPublicReadBlocked    bool
+	HasIdentityEvidence bool
+	HasResourceEvidence bool
+
+	// Identity-bound access (e.g., IAM, Service Policies)
+	IdentityGrants      Grants
+	IdentityReadBlocked bool
+
+	// Resource-bound access (e.g., Bucket Policies, ACLs)
+	ResourceReadAll     bool
+	ResourceReadBlocked bool
 }
 
-// PolicyAllowsPublicRead reports whether policy evidence permits public read.
-func (facts Facts) PolicyAllowsPublicRead() bool {
-	return facts.HasPolicyEvidence && !facts.PolicyPublicReadBlocked
+// IdentityAllowsPublicRead reports whether identity-bound evidence permits public read.
+func (facts Facts) IdentityAllowsPublicRead() bool {
+	return facts.HasIdentityEvidence && !facts.IdentityReadBlocked
 }
 
-// ACLAllowsPublicRead reports whether ACL evidence permits public read.
-func (facts Facts) ACLAllowsPublicRead() bool {
-	return facts.HasACLEvidence && facts.ACLPublicReadAll && !facts.ACLPublicReadBlocked
+// ResourceAllowsPublicRead reports whether resource-bound evidence permits public read.
+func (facts Facts) ResourceAllowsPublicRead() bool {
+	return facts.HasResourceEvidence && facts.ResourceReadAll && !facts.ResourceReadBlocked
 }
 
-// LacksEvidence reports whether neither policy nor ACL evidence is available.
+// LacksEvidence reports whether neither identity nor resource evidence is available.
 func (facts Facts) LacksEvidence() bool {
-	return !facts.HasPolicyEvidence && !facts.HasACLEvidence
+	return !facts.HasIdentityEvidence && !facts.HasResourceEvidence
 }
 
 // CheckExposure determines whether a protected prefix is effectively publicly readable.
 func (facts Facts) CheckExposure(prefix string) Result {
-	// Rule 1: Explicit policy grants take precedence.
-	if facts.PolicyAllowsPublicRead() {
-		if grant := facts.PolicyGrants.FindMatch(prefix); grant != nil {
+	// Rule 1: Explicit identity grants take precedence.
+	if facts.IdentityAllowsPublicRead() {
+		if grant := facts.IdentityGrants.FindMatch(prefix); grant != nil {
 			return Result{Exposed: true, Source: grant.Evidence()}
 		}
 	}
 
-	// Rule 2: ACLs can expose the entire asset.
-	if facts.ACLAllowsPublicRead() {
-		return Result{Exposed: true, Source: NewSource(SourceACL, "")}
+	// Rule 2: Resource-bound access can expose the entire asset.
+	if facts.ResourceAllowsPublicRead() {
+		return Result{Exposed: true, Source: NewSource(SourceResource, "")}
 	}
 
 	// Rule 3: Fail closed on missing evidence.

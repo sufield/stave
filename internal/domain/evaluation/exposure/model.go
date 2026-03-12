@@ -1,13 +1,5 @@
 package exposure
 
-// AccessSource defines where a permission originated.
-type AccessSource int
-
-const (
-	SourceIdentity AccessSource = iota // e.g., IAM Policy, Identity Policy
-	SourceResource                     // e.g., ACL, Bucket Policy, File Perms
-)
-
 // Capabilities represents a normalized set of actions an external
 // entity can perform on a resource.
 type Capabilities struct {

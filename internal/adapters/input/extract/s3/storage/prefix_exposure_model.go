@@ -23,13 +23,13 @@ func buildPrefixExposureModel(in prefixExposureModelInput) S3PrefixExposure {
 	aclPublicReadAll := in.HasACLAnalysis && in.ACLAnalysis.AllowsPublicRead
 
 	out := S3PrefixExposure{
-		HasPolicyEvidence:       hasPolicyEvidence,
-		HasACLEvidence:          in.HasACLAnalysis,
-		PolicyPublicReadScopes:  scopes,
-		PolicySourceByScope:     sourceByScope,
-		PolicyPublicReadBlocked: in.PolicyBlocked,
-		ACLPublicReadAll:        aclPublicReadAll,
-		ACLPublicReadBlocked:    in.ACLBlocked,
+		HasIdentityEvidence:   hasPolicyEvidence,
+		HasResourceEvidence:   in.HasACLAnalysis,
+		IdentityReadScopes:    scopes,
+		IdentitySourceByScope: sourceByScope,
+		IdentityReadBlocked:   in.PolicyBlocked,
+		ResourceReadAll:       aclPublicReadAll,
+		ResourceReadBlocked:   in.ACLBlocked,
 	}
 	return out
 }

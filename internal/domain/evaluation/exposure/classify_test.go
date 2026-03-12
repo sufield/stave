@@ -435,31 +435,31 @@ func TestEffectiveVisibility_ToPermission(t *testing.T) {
 
 // --- Facts tests ---
 
-func TestFacts_CheckExposure_PolicyGrant(t *testing.T) {
+func TestFacts_CheckExposure_IdentityGrant(t *testing.T) {
 	facts := Facts{
-		HasPolicyEvidence: true,
-		PolicyGrants:      Grants{{Scope: "*", SourceID: "stmt-1"}},
+		HasIdentityEvidence: true,
+		IdentityGrants:      Grants{{Scope: "*", SourceID: "stmt-1"}},
 	}
 	result := facts.CheckExposure("any-prefix")
 	if !result.Exposed {
-		t.Error("expected exposed via policy")
+		t.Error("expected exposed via identity")
 	}
-	if result.Source.Kind != SourcePolicy {
-		t.Errorf("expected policy source, got %s", result.Source.Kind)
+	if result.Source.Kind != SourceIdentity {
+		t.Errorf("expected identity source, got %s", result.Source.Kind)
 	}
 }
 
-func TestFacts_CheckExposure_ACL(t *testing.T) {
+func TestFacts_CheckExposure_Resource(t *testing.T) {
 	facts := Facts{
-		HasACLEvidence:   true,
-		ACLPublicReadAll: true,
+		HasResourceEvidence: true,
+		ResourceReadAll:     true,
 	}
 	result := facts.CheckExposure("any-prefix")
 	if !result.Exposed {
-		t.Error("expected exposed via ACL")
+		t.Error("expected exposed via resource")
 	}
-	if result.Source.Kind != SourceACL {
-		t.Errorf("expected ACL source, got %s", result.Source.Kind)
+	if result.Source.Kind != SourceResource {
+		t.Errorf("expected resource source, got %s", result.Source.Kind)
 	}
 }
 
@@ -474,34 +474,34 @@ func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_Safe(t *testing.T) {
-	facts := Facts{HasPolicyEvidence: true}
+	facts := Facts{HasIdentityEvidence: true}
 	result := facts.CheckExposure("no-matching-prefix")
 	if result.Exposed {
 		t.Error("expected safe when no grants match")
 	}
 }
 
-func TestFacts_CheckExposure_PolicyBlocked(t *testing.T) {
+func TestFacts_CheckExposure_IdentityBlocked(t *testing.T) {
 	facts := Facts{
-		HasPolicyEvidence:       true,
-		PolicyPublicReadBlocked: true,
-		PolicyGrants:            Grants{{Scope: "*", SourceID: "stmt-1"}},
+		HasIdentityEvidence: true,
+		IdentityReadBlocked: true,
+		IdentityGrants:      Grants{{Scope: "*", SourceID: "stmt-1"}},
 	}
 	result := facts.CheckExposure("any-prefix")
 	if result.Exposed {
-		t.Error("expected safe when policy is blocked")
+		t.Error("expected safe when identity is blocked")
 	}
 }
 
-func TestFacts_CheckExposure_ACLBlocked(t *testing.T) {
+func TestFacts_CheckExposure_ResourceBlocked(t *testing.T) {
 	facts := Facts{
-		HasACLEvidence:       true,
-		ACLPublicReadAll:     true,
-		ACLPublicReadBlocked: true,
+		HasResourceEvidence: true,
+		ResourceReadAll:     true,
+		ResourceReadBlocked: true,
 	}
 	result := facts.CheckExposure("any-prefix")
 	if result.Exposed {
-		t.Error("expected safe when ACL is blocked")
+		t.Error("expected safe when resource is blocked")
 	}
 }
 
@@ -509,7 +509,7 @@ func TestFacts_LacksEvidence(t *testing.T) {
 	if !(Facts{}).LacksEvidence() {
 		t.Error("expected lacks evidence")
 	}
-	if (Facts{HasPolicyEvidence: true}).LacksEvidence() {
+	if (Facts{HasIdentityEvidence: true}).LacksEvidence() {
 		t.Error("expected has evidence")
 	}
 }
@@ -530,20 +530,20 @@ func TestScopeMatchesPrefix(t *testing.T) {
 }
 
 func TestSource_String(t *testing.T) {
-	s := NewSource(SourcePolicy, "stmt-1")
-	if s.String() != "policy:stmt-1" {
-		t.Errorf("expected policy:stmt-1, got %s", s.String())
+	s := NewSource(SourceIdentity, "stmt-1")
+	if s.String() != "identity:stmt-1" {
+		t.Errorf("expected identity:stmt-1, got %s", s.String())
 	}
-	s2 := NewSource(SourceACL, "")
-	if s2.String() != "acl" {
-		t.Errorf("expected acl, got %s", s2.String())
+	s2 := NewSource(SourceResource, "")
+	if s2.String() != "resource" {
+		t.Errorf("expected resource, got %s", s2.String())
 	}
 }
 
 func TestResult_String(t *testing.T) {
-	r := Result{Exposed: true, Source: NewSource(SourceACL, "")}
-	if r.String() != "acl" {
-		t.Errorf("expected acl, got %s", r.String())
+	r := Result{Exposed: true, Source: NewSource(SourceResource, "")}
+	if r.String() != "resource" {
+		t.Errorf("expected resource, got %s", r.String())
 	}
 }
 
@@ -557,7 +557,7 @@ func TestGrant_Covers(t *testing.T) {
 func TestGrant_Evidence(t *testing.T) {
 	g := Grant{Scope: "*", SourceID: "s1"}
 	ev := g.Evidence()
-	if ev.Kind != SourcePolicy || ev.ID != "s1" {
+	if ev.Kind != SourceIdentity || ev.ID != "s1" {
 		t.Errorf("unexpected evidence: %v", ev)
 	}
 }
@@ -586,19 +586,29 @@ func TestGrants_FindMatch_NoMatch(t *testing.T) {
 
 // --- Mapper tests ---
 
-func TestBuildGrants(t *testing.T) {
-	grants := BuildGrants([]string{"*", "invoices/"}, map[string]string{"*": "s1", "invoices/": "s2"})
-	if len(grants) != 2 {
-		t.Fatalf("expected 2 grants, got %d", len(grants))
+func TestFactsFromStorage_Grants(t *testing.T) {
+	props := map[string]any{
+		"storage": map[string]any{
+			"prefix_exposure": map[string]any{
+				"has_identity_evidence":    true,
+				"identity_read_scopes":     []any{"*", "invoices/"},
+				"identity_source_by_scope": map[string]any{"*": "s1", "invoices/": "s2"},
+			},
+		},
 	}
-	if grants[0].SourceID != "s1" || grants[1].SourceID != "s2" {
+	facts := FactsFromStorage(props)
+	if len(facts.IdentityGrants) != 2 {
+		t.Fatalf("expected 2 grants, got %d", len(facts.IdentityGrants))
+	}
+	if facts.IdentityGrants[0].SourceID != "s1" || facts.IdentityGrants[1].SourceID != "s2" {
 		t.Error("unexpected source IDs")
 	}
 }
 
-func TestBuildGrants_Empty(t *testing.T) {
-	if BuildGrants(nil, nil) != nil {
-		t.Error("expected nil for empty scopes")
+func TestFactsFromStorage_Empty(t *testing.T) {
+	facts := FactsFromStorage(map[string]any{})
+	if facts.IdentityGrants != nil {
+		t.Error("expected nil grants for missing storage")
 	}
 }
 
