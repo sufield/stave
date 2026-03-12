@@ -33,7 +33,7 @@ func (s Severity) String() string {
 	case SeverityCritical:
 		return "critical"
 	default:
-		return "none"
+		return ""
 	}
 }
 
