@@ -3,7 +3,6 @@ package exposure
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -55,9 +54,9 @@ func validateExposureControlIDs() {
 	}
 }
 
-// ClassifyExposure processes a list of buckets and returns merged, deduplicated
-// exposure classifications.
-func ClassifyExposure(buckets []ExposureBucketInput) []ExposureClassification {
+// ClassifyExposure processes normalized bucket inputs and returns merged,
+// deduplicated exposure classifications.
+func ClassifyExposure(buckets []NormalizedBucketInput) []ExposureClassification {
 	var findings []ExposureClassification
 
 	for _, b := range buckets {
@@ -74,7 +73,7 @@ func ClassifyExposure(buckets []ExposureBucketInput) []ExposureClassification {
 	return findings
 }
 
-func classifyBucket(b ExposureBucketInput) []ExposureClassification {
+func classifyBucket(b NormalizedBucketInput) []ExposureClassification {
 	if !b.Exists && b.ExternalReference {
 		return []ExposureClassification{{
 			ID:             exposureIDBucketTakeover,
@@ -86,7 +85,7 @@ func classifyBucket(b ExposureBucketInput) []ExposureClassification {
 		}}
 	}
 
-	ctx := newBucketResolutionContext(b)
+	ctx := bucketResolutionContext{input: b}
 
 	var findings []ExposureClassification
 	findings = append(findings, ctx.resolveRead()...)
@@ -94,16 +93,4 @@ func classifyBucket(b ExposureBucketInput) []ExposureClassification {
 	findings = append(findings, ctx.resolveWrite()...)
 	findings = append(findings, ctx.resolveManagement()...)
 	return findings
-}
-
-// classifyPrincipal returns (isGlobal, isAuthenticated) for a policy principal string.
-func classifyPrincipal(principal string) (bool, bool) {
-	p := strings.TrimSpace(principal)
-	if p == policyWildcard {
-		return true, false
-	}
-	if isAuthenticatedUsersPrincipalToken(p) {
-		return false, true
-	}
-	return false, false
 }
