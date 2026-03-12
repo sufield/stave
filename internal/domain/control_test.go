@@ -1394,7 +1394,7 @@ func TestAnyMatchOperator(t *testing.T) {
 				{
 					ID:     "appsigner:s3:safe",
 					Type:   kernel.AssetType("app_signer"),
-					Vendor: kernel.VendorAWS,
+					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"purpose": "signs_downloads;enforce_prefix=true;allow_traversal=false",
 					},
@@ -1402,7 +1402,7 @@ func TestAnyMatchOperator(t *testing.T) {
 				{
 					ID:     "appsigner:s3:unsafe",
 					Type:   kernel.AssetType("app_signer"),
-					Vendor: kernel.VendorAWS,
+					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"purpose": "signs_downloads;enforce_prefix=false;allow_traversal=true",
 					},
@@ -1436,7 +1436,7 @@ func TestAnyMatchOperator(t *testing.T) {
 				{
 					ID:     "appsigner:s3:safe",
 					Type:   kernel.AssetType("app_signer"),
-					Vendor: kernel.VendorAWS,
+					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"purpose": "signs_downloads;enforce_prefix=true;allow_traversal=false",
 					},
@@ -1512,7 +1512,7 @@ func TestAnyMatchOperator(t *testing.T) {
 				{
 					ID:     "appsigner:s3:vuln",
 					Type:   kernel.AssetType("app_signer"),
-					Vendor: kernel.VendorAWS,
+					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"purpose": "signs_downloads;enforce_prefix=false;allow_traversal=true",
 					},

@@ -7,21 +7,21 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-func TestParseVendor_NormalizesCaseAndWhitespace(t *testing.T) {
-	got, err := kernel.ParseVendor("  AWS  ")
+func TestNewVendor_NormalizesCaseAndWhitespace(t *testing.T) {
+	got, err := kernel.NewVendor("  AWS  ")
 	if err != nil {
-		t.Fatalf("ParseVendor returned error: %v", err)
+		t.Fatalf("NewVendor returned error: %v", err)
 	}
-	if got != kernel.VendorAWS {
-		t.Fatalf("vendor = %q, want %q", got, kernel.VendorAWS)
+	if got != kernel.Vendor("aws") {
+		t.Fatalf("vendor = %q, want %q", got, "aws")
 	}
 }
 
-func TestParseVendor_AcceptsAnyNonEmptyVendor(t *testing.T) {
+func TestNewVendor_AcceptsAnyNonEmptyVendor(t *testing.T) {
 	for _, input := range []string{"Kubernetes", "google", "internal", "azure"} {
-		got, err := kernel.ParseVendor(input)
+		got, err := kernel.NewVendor(input)
 		if err != nil {
-			t.Fatalf("ParseVendor(%q) returned error: %v", input, err)
+			t.Fatalf("NewVendor(%q) returned error: %v", input, err)
 		}
 		if got != kernel.Vendor(strings.ToLower(input)) {
 			t.Fatalf("vendor = %q, want %q", got, strings.ToLower(input))
@@ -29,8 +29,15 @@ func TestParseVendor_AcceptsAnyNonEmptyVendor(t *testing.T) {
 	}
 }
 
-func TestParseVendor_RejectsEmpty(t *testing.T) {
-	if _, err := kernel.ParseVendor("   "); err == nil {
+func TestNewVendor_RejectsEmpty(t *testing.T) {
+	if _, err := kernel.NewVendor("   "); err == nil {
 		t.Fatal("expected error for empty vendor")
+	}
+}
+
+func TestVendor_String_ZeroValue(t *testing.T) {
+	var v kernel.Vendor
+	if got := v.String(); got != "unknown" {
+		t.Fatalf("zero-value Vendor.String() = %q, want %q", got, "unknown")
 	}
 }

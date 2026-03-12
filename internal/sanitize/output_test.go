@@ -56,7 +56,7 @@ func makeTestResult() evaluation.Result {
 				ControlName: "S3 Public Read",
 				AssetID:     "my-phi-bucket",
 				AssetType:   kernel.AssetType("storage_bucket"),
-				AssetVendor: kernel.VendorAWS,
+				AssetVendor: kernel.Vendor("aws"),
 				Source: &asset.SourceRef{
 					File: "/home/user/ctl/public.yaml",
 					Line: 10,

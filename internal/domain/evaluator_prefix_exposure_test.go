@@ -232,7 +232,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		resource := asset.Asset{
 			ID:     "res:aws:s3:bucket:example-bucket",
 			Type:   kernel.AssetType("storage_bucket"),
-			Vendor: kernel.VendorAWS,
+			Vendor: kernel.Vendor("aws"),
 			Properties: map[string]any{
 				"storage": storage,
 			},

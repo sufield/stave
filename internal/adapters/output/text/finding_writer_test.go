@@ -77,7 +77,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 				ControlDescription: "Bucket must not be public",
 				AssetID:            "res-secret",
 				AssetType:          kernel.AssetType("storage_bucket"),
-				AssetVendor:        kernel.VendorAWS,
+				AssetVendor:        kernel.Vendor("aws"),
 				Source:             &asset.SourceRef{File: "/tmp/infra/main.tf", Line: 42},
 				Evidence: evaluation.Evidence{
 					FirstUnsafeAt:       now.Add(-48 * time.Hour),
@@ -96,7 +96,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 				ControlDescription: "Bucket list must not be public",
 				AssetID:            "res-secret",
 				AssetType:          kernel.AssetType("storage_bucket"),
-				AssetVendor:        kernel.VendorAWS,
+				AssetVendor:        kernel.Vendor("aws"),
 				Evidence:           evaluation.Evidence{},
 			},
 		},
@@ -166,7 +166,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 				ControlDescription: "Bucket must not be public",
 				AssetID:            "res-1",
 				AssetType:          kernel.AssetType("storage_bucket"),
-				AssetVendor:        kernel.VendorAWS,
+				AssetVendor:        kernel.Vendor("aws"),
 			},
 			{
 				ControlID:          "CTL.UNKNOWN.001",
@@ -174,7 +174,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 				ControlDescription: "Test unknown domain fallback",
 				AssetID:            "res-2",
 				AssetType:          kernel.AssetType(""),
-				AssetVendor:        kernel.VendorAWS,
+				AssetVendor:        kernel.Vendor("aws"),
 			},
 		},
 		Rows: []evaluation.Row{

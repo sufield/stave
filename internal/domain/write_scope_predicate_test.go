@@ -24,7 +24,7 @@ func uploadPolicyResource(keyMode string) asset.Asset {
 	return asset.Asset{
 		ID:     "upload-policy-test",
 		Type:   kernel.AssetType("upload_policy"),
-		Vendor: kernel.VendorAWS,
+		Vendor: kernel.Vendor("aws"),
 		Properties: map[string]any{
 			"upload": map[string]any{
 				"container":        "test-container",
@@ -56,7 +56,7 @@ func TestWriteScope_DifferentResourceTypeDoesNotMatch(t *testing.T) {
 	r := asset.Asset{
 		ID:     "some-container",
 		Type:   kernel.AssetType("storage_container"),
-		Vendor: kernel.VendorAWS,
+		Vendor: kernel.Vendor("aws"),
 		Properties: map[string]any{
 			"storage": map[string]any{
 				"visibility": map[string]any{
@@ -75,7 +75,7 @@ func TestWriteScope_ReadOperationDoesNotMatch(t *testing.T) {
 	r := asset.Asset{
 		ID:     "upload-policy-read",
 		Type:   kernel.AssetType("upload_policy"),
-		Vendor: kernel.VendorAWS,
+		Vendor: kernel.Vendor("aws"),
 		Properties: map[string]any{
 			"upload": map[string]any{
 				"container":        "test-container",
@@ -115,7 +115,7 @@ func TestWriteScope_MissingFieldsDoNotMatch(t *testing.T) {
 			r := asset.Asset{
 				ID:         "test",
 				Type:       kernel.AssetType("upload_policy"),
-				Vendor:     kernel.VendorAWS,
+				Vendor:     kernel.Vendor("aws"),
 				Properties: tt.props,
 			}
 			if pred.Evaluate(r, nil) {

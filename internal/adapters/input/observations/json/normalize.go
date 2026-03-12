@@ -44,7 +44,7 @@ func normalizeTypeAndVendor(t *kernel.AssetType, v *kernel.Vendor, label string,
 	if err := rt.Validate(); err != nil {
 		return fmt.Errorf("%s[%d].type: %w", label, index, err)
 	}
-	vendor, err := kernel.ParseVendor(v.String())
+	vendor, err := kernel.NewVendor(v.String())
 	if err != nil {
 		return fmt.Errorf("%s[%d].vendor: %w", label, index, err)
 	}
