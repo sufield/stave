@@ -16,6 +16,7 @@ type EvaluationRequest struct {
 	Snapshots       []asset.Snapshot
 	MaxUnsafe       time.Duration
 	Clock           ports.Clock
+	Hasher          ports.Hasher
 	ToolVersion     string
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 }
@@ -32,6 +33,7 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 		Snapshots:       req.Snapshots,
 		MaxUnsafe:       req.MaxUnsafe,
 		Clock:           req.Clock,
+		Hasher:          req.Hasher,
 		ToolVersion:     req.ToolVersion,
 		PredicateParser: req.PredicateParser,
 	})

@@ -176,6 +176,7 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 		Runtime: appeval.RuntimeConfig{
 			MaxUnsafe:         f.params.maxDuration,
 			Clock:             f.params.clock,
+			Hasher:            crypto.NewHasher(),
 			ToolVersion:       version.Version,
 			AllowUnknownInput: f.flags.allowUnknownInput,
 			ExemptionConfig:   res.exemptionCfg,

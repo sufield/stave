@@ -40,6 +40,7 @@ type Adapters struct {
 type RuntimeConfig struct {
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
+	Hasher            ports.Hasher
 	ToolVersion       string
 	AllowUnknownInput bool
 	ExemptionConfig   *policy.ExemptionConfig
@@ -94,6 +95,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	opts := []Option{
 		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.ToolVersion),
 		WithMaxUnsafe(in.Runtime.MaxUnsafe),
+		WithHasher(in.Runtime.Hasher),
 		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
 		WithExemptionConfig(in.Runtime.ExemptionConfig),
 		WithSuppressionConfig(resolved.SuppressionConfig),

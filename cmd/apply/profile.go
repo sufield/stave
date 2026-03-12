@@ -91,6 +91,7 @@ func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) er
 		Snapshots:       filteredSnapshots,
 		MaxUnsafe:       0,
 		Clock:           clock,
+		Hasher:          crypto.NewHasher(),
 		ToolVersion:     version.Version,
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
