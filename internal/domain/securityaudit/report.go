@@ -72,7 +72,7 @@ func (r *Report) RecomputeSummary() {
 
 		s.BySeverity[f.Severity]++
 
-		if f.Status != StatusPass && AtOrAbove(f.Severity, s.FailOn) {
+		if f.Status != StatusPass && f.Severity.Gte(s.FailOn) {
 			s.GatedFindingCount++
 		}
 	}
@@ -113,7 +113,7 @@ func (r *Report) Normalize() {
 	// Sort Findings: Severity (highest first), then Status, then ID
 	slices.SortFunc(r.Findings, func(a, b Finding) int {
 		return cmp.Or(
-			cmp.Compare(SeverityRank(b.Severity), SeverityRank(a.Severity)),
+			cmp.Compare(b.Severity.Rank(), a.Severity.Rank()),
 			cmp.Compare(a.Status, b.Status),
 			cmp.Compare(a.ID, b.ID),
 		)

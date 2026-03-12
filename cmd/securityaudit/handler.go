@@ -46,7 +46,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return &ui.InputError{Err: fmt.Errorf("invalid --severity: %w", err)}
 	}
-	failOn, err := domainsecurityaudit.ParseFailOnSeverity(c.flags.failOn)
+	failOn, err := domainsecurityaudit.ParseSeverity(c.flags.failOn)
 	if err != nil {
 		return &ui.InputError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
 	}
