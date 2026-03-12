@@ -22,15 +22,11 @@ func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, 
 		return validation.ReadinessReport{}, err
 	}
 
-	report := validation.ReadinessReport{
-		Ready:           true,
-		ControlsDir:     in.ControlsDir,
-		ObservationsDir: in.ObservationsDir,
-	}
-	recordPrereqIssues(&report, in.PrereqChecks)
-	recordControlSourceIssue(&report, in)
+	report := validation.NewReadinessReport(in.ControlsDir, in.ObservationsDir)
+	recordPrereqIssues(report, in.PrereqChecks)
+	recordControlSourceIssue(report, in)
 	if err := recordValidationIssues(readinessValidationRequest{
-		Report:    &report,
+		Report:    report,
 		Input:     in,
 		MaxUnsafe: maxDur,
 		Now:       now,
@@ -38,15 +34,15 @@ func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, 
 		return validation.ReadinessReport{}, err
 	}
 	report.Finalize()
-	return report, nil
+	return *report, nil
 }
 
 func recordPrereqIssues(report *validation.ReadinessReport, checks []validation.PrereqCheck) {
 	for _, check := range checks {
-		if check.Status == validation.PrereqPass {
+		if check.Status == validation.StatusPass {
 			continue
 		}
-		report.RecordIssue(validation.ReadinessIssue{
+		report.RecordIssue(validation.Issue{
 			Name:    check.Name,
 			Status:  check.Status,
 			Message: check.Message,
@@ -59,9 +55,9 @@ func recordControlSourceIssue(report *validation.ReadinessReport, in validation.
 	if !in.HasEnabledControlPack || !in.ControlsFlagSet {
 		return
 	}
-	report.RecordIssue(validation.ReadinessIssue{
+	report.RecordIssue(validation.Issue{
 		Name:    "control-source-selection",
-		Status:  validation.PrereqFail,
+		Status:  validation.StatusFail,
 		Message: "cannot combine explicit --controls with enabled_control_packs",
 		Fix:     "remove --controls or clear enabled_control_packs in stave.yaml",
 		Command: "stave status",
@@ -89,7 +85,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	req.Report.Summary.AssetObservationsChecked = val.Summary.AssetObservationsLoaded
 
 	for _, issue := range readinessDiagnostics(val).Issues {
-		req.Report.RecordIssue(validation.ReadinessIssue{
+		req.Report.RecordIssue(validation.Issue{
 			Name:    string(issue.Code),
 			Status:  readinessIssueStatus(issue),
 			Message: issue.Action,
@@ -100,18 +96,18 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	return nil
 }
 
-func readinessDiagnostics(val validation.ReadinessValidationResult) *diag.Result {
+func readinessDiagnostics(val validation.ValidationResult) *diag.Result {
 	if val.Diagnostics != nil {
 		return val.Diagnostics
 	}
 	return diag.NewResult()
 }
 
-func readinessIssueStatus(issue diag.Issue) validation.PrereqStatus {
+func readinessIssueStatus(issue diag.Issue) validation.Status {
 	if issue.Signal == diag.SignalError {
-		return validation.PrereqFail
+		return validation.StatusFail
 	}
-	return validation.PrereqWarn
+	return validation.StatusWarn
 }
 
 func parseReadinessInputs(maxUnsafeStr, nowStr string) (time.Duration, time.Time, error) {
