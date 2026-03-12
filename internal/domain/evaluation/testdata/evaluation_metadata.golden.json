@@ -8,6 +8,8 @@
   "enabled_control_packs": [
     "cis-aws-v1"
   ],
-  "git_repo_root": "/work/stave",
-  "git_dirty": true
+  "git": {
+    "repo_root": "/work/stave",
+    "dirty": true
+  }
 }
