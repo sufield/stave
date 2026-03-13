@@ -1,13 +1,15 @@
 package apply
 
 import (
+	"context"
+	"io"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/testutil"
 )
 
@@ -178,9 +180,19 @@ func TestValidateApplyFlags(t *testing.T) {
 	})
 }
 
+func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
+	return &Builder{
+		Ctx:       context.Background(),
+		Stdout:    io.Discard,
+		Stderr:    io.Discard,
+		Sanitizer: sanitize.New(),
+		Opts:      opts,
+		Params:    params,
+	}
+}
+
 func TestBuildApplyDeps(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
-	dummyCmd := &cobra.Command{Use: "test"}
 
 	t.Run("json format produces deps", func(t *testing.T) {
 		opts := &ApplyOptions{
@@ -197,7 +209,7 @@ func TestBuildApplyDeps(t *testing.T) {
 			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		deps, err := NewFactory(dummyCmd, opts, params).BuildWithNewPlan()
+		deps, err := testBuilder(opts, params).BuildWithNewPlan()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -229,7 +241,7 @@ func TestBuildApplyDeps(t *testing.T) {
 			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		deps, err := NewFactory(dummyCmd, opts, params).BuildWithNewPlan()
+		deps, err := testBuilder(opts, params).BuildWithNewPlan()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -255,7 +267,7 @@ func TestBuildApplyDeps(t *testing.T) {
 			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		_, err := NewFactory(dummyCmd, opts, params).BuildWithNewPlan()
+		_, err := testBuilder(opts, params).BuildWithNewPlan()
 		if err == nil {
 			t.Fatal("expected error for invalid output format")
 		}
