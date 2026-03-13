@@ -99,7 +99,7 @@ func executeEvaluation(
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
 	gf := cmdutil.GetGlobalFlags(cmd)
-	rt := cmdutil.NewRuntime(cmd)
+	rt := cmdutil.NewRuntimeFromFlags(cmd.OutOrStdout(), cmd.ErrOrStderr(), gf)
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
@@ -139,7 +139,7 @@ func runStrictIntegrityCheck(cmd *cobra.Command) error {
 		return nil
 	}
 
-	rt := cmdutil.NewRuntime(cmd)
+	rt := cmdutil.NewRuntimeFromFlags(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmdutil.GetGlobalFlags(cmd))
 	done := rt.BeginProgress("perform strict integrity checks")
 	defer done()
 

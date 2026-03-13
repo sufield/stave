@@ -26,7 +26,7 @@ func run(cmd *cobra.Command, opts *options) error {
 		return err
 	}
 
-	rt := cmdutil.NewRuntime(cmd)
+	rt := cmdutil.NewRuntimeFromFlags(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmdutil.GetGlobalFlags(cmd))
 	stop := rt.BeginProgress("Computing observation delta")
 	out, err := compute(cmd.Context(), opts.ObservationsDir, filter)
 	stop()
