@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -36,9 +35,9 @@ unsafe_predicate:
 	opts.StrictMode = true
 	opts.Format = "text"
 
-	format, _ := ui.ParseOutputFormat(opts.Format)
 	var buf bytes.Buffer
-	if err := runValidateSingleFileWithOptions(&cobra.Command{Use: "test"}, &buf, opts, format); err != nil {
+	r := testReporter(&buf, false, opts)
+	if err := runValidateSingleFile(r, opts); err != nil {
 		t.Fatalf("expected contract validate success, got %v", err)
 	}
 	if !strings.Contains(buf.String(), "Validation passed") {
@@ -72,9 +71,9 @@ unexpected: true
 	opts.StrictMode = true
 	opts.Format = "text"
 
-	format, _ := ui.ParseOutputFormat(opts.Format)
 	var buf bytes.Buffer
-	err := runValidateSingleFileWithOptions(&cobra.Command{Use: "test"}, &buf, opts, format)
+	r := testReporter(&buf, false, opts)
+	err := runValidateSingleFile(r, opts)
 	if err == nil {
 		t.Fatal("expected strict contract validation failure")
 	}
@@ -104,9 +103,9 @@ expect: disabled
 	opts.StrictMode = true
 	opts.Format = "text"
 
-	format, _ := ui.ParseOutputFormat(opts.Format)
 	var buf bytes.Buffer
-	err := runValidateSingleFileWithOptions(&cobra.Command{Use: "test"}, &buf, opts, format)
+	r := testReporter(&buf, false, opts)
+	err := runValidateSingleFile(r, opts)
 	if err == nil {
 		t.Fatal("expected contract validation failure for invalid shape")
 	}

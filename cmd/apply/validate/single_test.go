@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNormalizeValidateKind_AcceptsAliases(t *testing.T) {
+func TestNormalizeKind_AcceptsAliases(t *testing.T) {
 	cases := map[string]string{
 		"control":   "control",
 		"controls":  "control",
@@ -16,18 +16,18 @@ func TestNormalizeValidateKind_AcceptsAliases(t *testing.T) {
 	}
 
 	for input, want := range cases {
-		got, err := normalizeValidateKind(input)
+		got, err := normalizeKind(input)
 		if err != nil {
-			t.Fatalf("normalizeValidateKind(%q) returned error: %v", input, err)
+			t.Fatalf("normalizeKind(%q) returned error: %v", input, err)
 		}
 		if got != want {
-			t.Fatalf("normalizeValidateKind(%q)=%q, want %q", input, got, want)
+			t.Fatalf("normalizeKind(%q)=%q, want %q", input, got, want)
 		}
 	}
 }
 
-func TestNormalizeValidateKind_SuggestsClosestValue(t *testing.T) {
-	_, err := normalizeValidateKind("contrl")
+func TestNormalizeKind_SuggestsClosestValue(t *testing.T) {
+	_, err := normalizeKind("contrl")
 	if err == nil {
 		t.Fatal("expected error for invalid kind")
 	}
