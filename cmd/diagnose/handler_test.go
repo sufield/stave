@@ -106,13 +106,15 @@ func TestDiagnoseParseHelpers(t *testing.T) {
 func TestRunnerBuildAppConfig(t *testing.T) {
 	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
 
+	fakeStdin := strings.NewReader("{}")
 	cfg := Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
 		PreviousOutput:  "-",
+		Stdin:           fakeStdin,
 	}
 	appCfg := runner.buildAppConfig(cfg, 24*time.Hour)
-	if appCfg.OutputReader != os.Stdin || appCfg.OutputFile != "" {
+	if appCfg.OutputReader != fakeStdin || appCfg.OutputFile != "" {
 		t.Fatalf("stdin config mismatch: %#v", appCfg)
 	}
 

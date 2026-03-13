@@ -2,13 +2,17 @@ package diagnose
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func TestExplainCommandText(t *testing.T) {
+func TestExplainText(t *testing.T) {
 	ctlDir := filepath.Join(t.TempDir(), "controls")
 	if err := os.MkdirAll(ctlDir, 0o755); err != nil {
 		t.Fatalf("mkdir controls: %v", err)
@@ -33,14 +37,16 @@ unsafe_predicate:
 		t.Fatalf("write control: %v", err)
 	}
 
-	root := GetRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
-	root.SetArgs([]string{"explain", "CTL.S3.PUBLIC.001", "--controls", ctlDir})
-
-	if err := root.Execute(); err != nil {
-		t.Fatalf("explain command failed: %v", err)
+	var buf bytes.Buffer
+	explainer := NewExplainer(compose.NewDefaultProvider())
+	err := explainer.Run(context.Background(), ExplainRequest{
+		ControlID:   "CTL.S3.PUBLIC.001",
+		ControlsDir: ctlDir,
+		Format:      ui.OutputFormatText,
+		Stdout:      &buf,
+	})
+	if err != nil {
+		t.Fatalf("explain failed: %v", err)
 	}
 
 	out := buf.String()
@@ -55,19 +61,20 @@ unsafe_predicate:
 	}
 }
 
-func TestExplainCommandNotFound(t *testing.T) {
+func TestExplainNotFound(t *testing.T) {
 	ctlDir := filepath.Join(t.TempDir(), "controls")
 	if err := os.MkdirAll(ctlDir, 0o755); err != nil {
 		t.Fatalf("mkdir controls: %v", err)
 	}
 
-	root := GetRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
-	root.SetArgs([]string{"explain", "CTL.MISSING.001", "--controls", ctlDir})
-
-	err := root.Execute()
+	var buf bytes.Buffer
+	explainer := NewExplainer(compose.NewDefaultProvider())
+	err := explainer.Run(context.Background(), ExplainRequest{
+		ControlID:   "CTL.MISSING.001",
+		ControlsDir: ctlDir,
+		Format:      ui.OutputFormatText,
+		Stdout:      &buf,
+	})
 	if err == nil {
 		t.Fatal("expected error for missing control")
 	}
