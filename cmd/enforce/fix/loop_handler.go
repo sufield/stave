@@ -14,7 +14,6 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/version"
 )
@@ -36,10 +35,10 @@ type LoopRequest struct {
 type evaluationState struct {
 	Result    *evaluation.Result
 	Snapshots int
-	Envelope  safetyenvelope.Evaluation
 }
 
-type loopReport struct {
+// LoopReport is the structured output of a fix-loop run.
+type LoopReport struct {
 	SchemaVersion kernel.Schema                      `json:"schema_version"`
 	Kind          kernel.OutputKind                  `json:"kind"`
 	CheckedAt     time.Time                          `json:"checked_at"`
@@ -49,6 +48,7 @@ type loopReport struct {
 	Before        observationSummary                 `json:"before"`
 	After         observationSummary                 `json:"after"`
 	Verification  safetyenvelope.VerificationSummary `json:"verification"`
+	Artifacts     LoopArtifacts                      `json:"artifacts,omitzero"`
 }
 
 type observationSummary struct {
@@ -90,16 +90,31 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		return err
 	}
 
-	// 6. Build report and persist artifacts
-	report := r.buildReport(req, verification)
-	if req.OutDir != "" {
-		if err := r.persist(req.OutDir, before.Envelope, after.Envelope, verification, &report); err != nil {
-			return err
-		}
+	// 6. Build envelopes
+	eb := NewEnvelopeBuilder(r.Sanitizer)
+	beforeEnv, afterEnv := eb.BuildEvaluation(*before.Result), eb.BuildEvaluation(*after.Result)
+	if err = safetyenvelope.ValidateEvaluation(beforeEnv); err != nil {
+		return fmt.Errorf("before envelope invalid: %w", err)
+	}
+	if err = safetyenvelope.ValidateEvaluation(afterEnv); err != nil {
+		return fmt.Errorf("after envelope invalid: %w", err)
 	}
 
-	if err := jsonutil.WriteIndented(req.Stdout, &report); err != nil {
-		return fmt.Errorf("write remediation report: %w", err)
+	// 7. Persist artifacts
+	am := &ArtifactManager{
+		OutDir:    req.OutDir,
+		IOOptions: r.FileOptions,
+		Stdout:    req.Stdout,
+	}
+	artifacts, err := am.PersistVerification(beforeEnv, afterEnv, verification)
+	if err != nil {
+		return err
+	}
+
+	// 8. Build and emit report
+	report := r.buildReport(req, verification, artifacts)
+	if err := am.PersistReport(&report); err != nil {
+		return err
 	}
 	if !report.Pass {
 		return ui.ErrViolationsFound
@@ -157,11 +172,7 @@ func (r *Runner) evaluateState(
 	if err != nil {
 		return evaluationState{}, fmt.Errorf("%s evaluation: %w", label, err)
 	}
-	envelope := r.buildEvaluationEnvelope(*result)
-	if err := safetyenvelope.ValidateEvaluation(envelope); err != nil {
-		return evaluationState{}, fmt.Errorf("%s envelope invalid: %w", label, err)
-	}
-	return evaluationState{Result: result, Snapshots: snaps, Envelope: envelope}, nil
+	return evaluationState{Result: result, Snapshots: snaps}, nil
 }
 
 func (r *Runner) verify(before, after evaluationState, maxUnsafe time.Duration) (safetyenvelope.Verification, error) {
@@ -193,13 +204,13 @@ func (r *Runner) verify(before, after evaluationState, maxUnsafe time.Duration) 
 	return v, safetyenvelope.ValidateVerification(v)
 }
 
-func (r *Runner) buildReport(req LoopRequest, v safetyenvelope.Verification) loopReport {
+func (r *Runner) buildReport(req LoopRequest, v safetyenvelope.Verification, artifacts LoopArtifacts) LoopReport {
 	pass := v.Summary.Remaining == 0 && v.Summary.Introduced == 0
 	reason := "all previously violating resources are now resolved"
 	if !pass {
 		reason = fmt.Sprintf("remaining=%d introduced=%d", v.Summary.Remaining, v.Summary.Introduced)
 	}
-	return loopReport{
+	return LoopReport{
 		SchemaVersion: kernel.SchemaFixLoop,
 		Kind:          kernel.KindRemediationReport,
 		CheckedAt:     v.Run.Now,
@@ -209,5 +220,6 @@ func (r *Runner) buildReport(req LoopRequest, v safetyenvelope.Verification) loo
 		Before:        observationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.BeforeViolations},
 		After:         observationSummary{Directory: req.AfterDir, Snapshots: v.Run.AfterSnapshots, Violations: v.Summary.AfterViolations},
 		Verification:  v.Summary,
+		Artifacts:     artifacts,
 	}
 }
