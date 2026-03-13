@@ -27,15 +27,14 @@ type Config struct {
 	MaxUnsafe       time.Duration
 	Format          ui.OutputFormat
 	Quiet           bool
-	Stdout          io.Writer
-	Stderr          io.Writer
 }
 
-// Runner orchestrates the evaluation of compliance gates.
+// Runner orchestrates CI policy enforcement.
 type Runner struct {
 	Provider  *compose.Provider
 	Clock     ports.Clock
 	Sanitizer kernel.Sanitizer
+	Stdout    io.Writer
 }
 
 // NewRunner initializes a gate runner with required dependencies.
@@ -46,7 +45,8 @@ func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
 	}
 }
 
-type gateResult struct {
+// Result represents the structured output of a gate evaluation.
+type Result struct {
 	SchemaVersion kernel.Schema         `json:"schema_version"`
 	Kind          kernel.OutputKind     `json:"kind"`
 	CheckedAt     time.Time             `json:"checked_at"`
@@ -64,61 +64,47 @@ type gateResult struct {
 	OverdueUpcoming   int `json:"overdue_upcoming,omitempty"`
 }
 
-// Run executes the gating logic and returns ui.ErrViolationsFound if the policy fails.
+// Run executes the configured gate policy.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	now := r.Clock.Now().UTC()
+	var (
+		res Result
+		err error
+	)
 
-	result, err := r.executePolicy(ctx, cfg, now)
+	switch cfg.Policy {
+	case projconfig.GatePolicyAny:
+		res, err = r.runPolicyAny(cfg.InPath)
+	case projconfig.GatePolicyNew:
+		res, err = r.runPolicyNew(cfg.InPath, cfg.BaselinePath)
+	case projconfig.GatePolicyOverdue:
+		res, err = r.runPolicyOverdue(ctx, cfg.ControlsDir, cfg.ObservationsDir, cfg.MaxUnsafe)
+	default:
+		return fmt.Errorf("unsupported gate policy: %q", cfg.Policy)
+	}
 	if err != nil {
 		return err
 	}
 
-	result = sanitizeGateResult(r.Sanitizer, result)
+	if r.Sanitizer != nil {
+		res.EvaluationPath = r.Sanitizer.Path(res.EvaluationPath)
+		res.BaselinePath = r.Sanitizer.Path(res.BaselinePath)
+		res.ControlsPath = r.Sanitizer.Path(res.ControlsPath)
+		res.ObservationsPath = r.Sanitizer.Path(res.ObservationsPath)
+	}
 
-	if err := writeOutput(cfg, result); err != nil {
+	if err := r.report(cfg, res); err != nil {
 		return err
 	}
-	if !result.Pass {
+	if !res.Pass {
 		return ui.ErrViolationsFound
 	}
 	return nil
 }
 
-func (r *Runner) executePolicy(ctx context.Context, cfg Config, now time.Time) (gateResult, error) {
-	switch cfg.Policy {
-	case projconfig.GatePolicyAny:
-		return runPolicyAny(now, cfg.InPath)
-	case projconfig.GatePolicyNew:
-		return runPolicyNew(now, cfg.InPath, cfg.BaselinePath)
-	case projconfig.GatePolicyOverdue:
-		return r.runPolicyOverdue(ctx, now, cfg.ControlsDir, cfg.ObservationsDir, cfg.MaxUnsafe)
-	default:
-		return gateResult{}, fmt.Errorf("unsupported --policy %q", cfg.Policy)
-	}
-}
-
-func writeOutput(cfg Config, result gateResult) error {
-	if cfg.Format.IsJSON() {
-		if err := jsonutil.WriteIndented(cfg.Stdout, result); err != nil {
-			return fmt.Errorf("write gate output: %w", err)
-		}
-		return nil
-	}
-	if cfg.Quiet {
-		return nil
-	}
-	if result.Pass {
-		_, err := fmt.Fprintf(cfg.Stdout, "Gate PASS (%s): %s\n", result.Policy, result.Reason)
-		return err
-	}
-	_, err := fmt.Fprintf(cfg.Stdout, "Gate FAIL (%s): %s\n", result.Policy, result.Reason)
-	return err
-}
-
-func runPolicyAny(now time.Time, evaluationPath string) (gateResult, error) {
+func (r *Runner) runPolicyAny(evaluationPath string) (Result, error) {
 	eval, err := shared.LoadEvaluationEnvelope(evaluationPath)
 	if err != nil {
-		return gateResult{}, err
+		return Result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
 	count := len(eval.Findings)
 	pass := count == 0
@@ -126,10 +112,10 @@ func runPolicyAny(now time.Time, evaluationPath string) (gateResult, error) {
 	if pass {
 		reason = "no current findings"
 	}
-	return gateResult{
+	return Result{
 		SchemaVersion:     kernel.SchemaGate,
 		Kind:              kernel.KindGateCheck,
-		CheckedAt:         now,
+		CheckedAt:         r.Clock.Now().UTC(),
 		Policy:            projconfig.GatePolicyAny,
 		Pass:              pass,
 		Reason:            reason,
@@ -138,51 +124,42 @@ func runPolicyAny(now time.Time, evaluationPath string) (gateResult, error) {
 	}, nil
 }
 
-func runPolicyNew(now time.Time, evaluationPath, baselinePath string) (gateResult, error) {
+func (r *Runner) runPolicyNew(evaluationPath, baselinePath string) (Result, error) {
 	eval, err := shared.LoadEvaluationEnvelope(evaluationPath)
 	if err != nil {
-		return gateResult{}, err
+		return Result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
-	base, err := shared.LoadBaselineFile(baselinePath, "baseline")
+	base, err := shared.LoadBaselineFile(baselinePath, kernel.KindBaseline)
 	if err != nil {
-		return gateResult{}, err
+		return Result{}, fmt.Errorf("loading baseline: %w", err)
 	}
 	bc := shared.CompareBaseline(base.Findings, eval.Findings)
-	pass := !bc.Comparison.HasNewFindings()
-	reason := fmt.Sprintf("new findings=%d", len(bc.Comparison.New))
+	newCount := len(bc.Comparison.New)
+	pass := newCount == 0
+	reason := fmt.Sprintf("new findings=%d", newCount)
 	if pass {
 		reason = "no new findings compared to baseline"
 	}
-	return gateResult{
+	return Result{
 		SchemaVersion:     kernel.SchemaGate,
 		Kind:              kernel.KindGateCheck,
-		CheckedAt:         now,
+		CheckedAt:         r.Clock.Now().UTC(),
 		Policy:            projconfig.GatePolicyNew,
 		Pass:              pass,
 		Reason:            reason,
 		EvaluationPath:    evaluationPath,
 		BaselinePath:      baselinePath,
 		CurrentViolations: len(bc.Current),
-		NewViolations:     len(bc.Comparison.New),
+		NewViolations:     newCount,
 	}, nil
 }
 
-func sanitizeGateResult(s kernel.Sanitizer, r gateResult) gateResult {
-	if s == nil {
-		return r
-	}
-	r.EvaluationPath = s.Path(r.EvaluationPath)
-	r.BaselinePath = s.Path(r.BaselinePath)
-	r.ControlsPath = s.Path(r.ControlsPath)
-	r.ObservationsPath = s.Path(r.ObservationsPath)
-	return r
-}
-
-func (r *Runner) runPolicyOverdue(ctx context.Context, now time.Time, controlsDir, observationsDir string, maxUnsafe time.Duration) (gateResult, error) {
+func (r *Runner) runPolicyOverdue(ctx context.Context, controlsDir, observationsDir string, maxUnsafe time.Duration) (Result, error) {
 	loaded, err := r.Provider.LoadAssets(ctx, observationsDir, controlsDir)
 	if err != nil {
-		return gateResult{}, err
+		return Result{}, err
 	}
+	now := r.Clock.Now().UTC()
 	items := risk.ComputeItems(risk.Request{
 		Controls:        loaded.Controls,
 		Snapshots:       loaded.Snapshots,
@@ -190,13 +167,13 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, now time.Time, controlsDi
 		Now:             now,
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
-	overdue := items.CountOverdue()
-	pass := overdue == 0
-	reason := fmt.Sprintf("overdue upcoming actions=%d", overdue)
+	overdueCount := items.CountOverdue()
+	pass := overdueCount == 0
+	reason := fmt.Sprintf("overdue upcoming actions=%d", overdueCount)
 	if pass {
 		reason = "no overdue upcoming actions"
 	}
-	return gateResult{
+	return Result{
 		SchemaVersion:    kernel.SchemaGate,
 		Kind:             kernel.KindGateCheck,
 		CheckedAt:        now,
@@ -205,6 +182,21 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, now time.Time, controlsDi
 		Reason:           reason,
 		ControlsPath:     controlsDir,
 		ObservationsPath: observationsDir,
-		OverdueUpcoming:  overdue,
+		OverdueUpcoming:  overdueCount,
 	}, nil
+}
+
+func (r *Runner) report(cfg Config, res Result) error {
+	if cfg.Format.IsJSON() {
+		return jsonutil.WriteIndented(r.Stdout, res)
+	}
+	if cfg.Quiet {
+		return nil
+	}
+	status := "PASS"
+	if !res.Pass {
+		status = "FAIL"
+	}
+	_, err := fmt.Fprintf(r.Stdout, "Gate %s (%s): %s\n", status, res.Policy, res.Reason)
+	return err
 }

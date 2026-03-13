@@ -76,6 +76,7 @@ Examples:
 
 			runner := NewRunner(compose.ActiveProvider(), clock)
 			runner.Sanitizer = gf.GetSanitizer()
+			runner.Stdout = cmd.OutOrStdout()
 
 			return runner.Run(cmd.Context(), Config{
 				Policy:          policy,
@@ -86,8 +87,6 @@ Examples:
 				MaxUnsafe:       maxUnsafeDur,
 				Format:          format,
 				Quiet:           gf.Quiet,
-				Stdout:          cmd.OutOrStdout(),
-				Stderr:          cmd.ErrOrStderr(),
 			})
 		},
 		SilenceUsage:  true,
