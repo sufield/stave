@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
@@ -20,6 +19,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -27,161 +27,147 @@ import (
 	"github.com/sufield/stave/internal/version"
 )
 
-// ApplyProfile represents a validated evaluation profile.
-type ApplyProfile string
+// Profile represents a validated evaluation profile.
+type Profile string
 
 const (
-	// ApplyProfileAWSS3 selects the AWS S3 evaluation profile.
-	ApplyProfileAWSS3 ApplyProfile = "aws-s3"
+	// ProfileAWSS3 selects the AWS S3 evaluation profile.
+	ProfileAWSS3 Profile = "aws-s3"
 )
 
-// ParseApplyProfile validates and returns an ApplyProfile value.
-func ParseApplyProfile(s string) (ApplyProfile, error) {
-	switch ApplyProfile(s) {
-	case ApplyProfileAWSS3:
-		return ApplyProfileAWSS3, nil
+// ParseProfile validates and returns a Profile value.
+func ParseProfile(s string) (Profile, error) {
+	switch Profile(s) {
+	case ProfileAWSS3:
+		return ProfileAWSS3, nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3)", s)
+		return "", fmt.Errorf("unsupported --profile %q (supported: %s)", s, ProfileAWSS3)
 	}
 }
 
-// applyProfileOptions holds profile-compatible options for evaluation.
-type applyProfileOptions struct {
-	inputFile       string
-	bucketAllowlist []string
-	includeAll      bool
-	outputFormat    string
-	nowTime         string
-	quiet           bool
+// Config holds the parameters for a profile-based apply operation.
+type Config struct {
+	InputFile       string
+	BucketAllowlist []string
+	IncludeAll      bool
+	OutputFormat    string
+	NowTime         string
+	Quiet           bool
+	Stdout          io.Writer
+	Stderr          io.Writer
+	IsJSONMode      bool
+	Sanitizer       kernel.Sanitizer
 }
 
-func runApplyProfileWithOptions(cmd *cobra.Command, opts applyProfileOptions) error {
-	if err := validateApplyProfileInput(opts.inputFile); err != nil {
+// Runner handles the execution of the profile apply logic.
+type Runner struct {
+	Clock  ports.Clock
+	Hasher ports.Digester
+	UI     *ui.Runtime
+}
+
+// NewRunner initializes a runner with default dependencies.
+func NewRunner(clock ports.Clock, quiet bool) *Runner {
+	progress := ui.DefaultRuntime()
+	progress.Quiet = quiet
+	return &Runner{
+		Clock:  clock,
+		Hasher: crypto.NewHasher(),
+		UI:     progress,
+	}
+}
+
+// Run executes the profile evaluation workflow.
+func (r *Runner) Run(ctx context.Context, cfg Config) error {
+	if err := r.validateInput(cfg.InputFile); err != nil {
 		return err
 	}
-	clock, err := resolveApplyProfileClock(opts.nowTime)
+
+	snapshots, err := obsjson.LoadBundle(cfg.InputFile)
 	if err != nil {
 		return err
 	}
-	scopeFilter := resolveApplyProfileScopeFilter(opts)
-	snapshots, err := obsjson.LoadBundle(opts.inputFile)
-	if err != nil {
-		return err
-	}
-	filteredSnapshots, err := filterProfileSnapshots(cmd.ErrOrStderr(), snapshots, scopeFilter, opts.quiet)
-	if err != nil {
-		return err
-	}
-	if len(filteredSnapshots) == 0 {
+
+	filtered := r.filterSnapshots(cfg, snapshots)
+	if len(filtered) == 0 {
 		return nil
 	}
 
-	ctlDir, controls, err := loadProfileControls(cmd.Context(), opts.inputFile)
+	ctlDir, controls, err := r.loadControls(ctx, cfg.InputFile)
 	if err != nil {
 		return err
 	}
 
-	progress := ui.DefaultRuntime()
-	progress.Quiet = opts.quiet
-	done := progress.BeginProgress("apply profile observations")
-	defer done()
-
-	result, evalErr := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	done := r.UI.BeginProgress("apply profile observations")
+	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:        controls,
-		Snapshots:       filteredSnapshots,
+		Snapshots:       filtered,
 		MaxUnsafe:       0,
-		Clock:           clock,
-		Hasher:          crypto.NewHasher(),
+		Clock:           r.Clock,
+		Hasher:          r.Hasher,
 		ToolVersion:     version.Version,
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
-	if evalErr != nil {
-		return evalErr
+	done()
+	if err != nil {
+		return err
 	}
 
-	cannotProveSafeCount := asset.CountUnprovablySafe(filteredSnapshots)
-
-	format, formatErr := compose.ResolveFormatValue(cmd, opts.outputFormat)
-	if formatErr != nil {
-		return formatErr
+	if err := r.writeResults(ctx, cfg, result); err != nil {
+		return fmt.Errorf("write findings: %w", err)
 	}
 
-	marshaler, writerErr := compose.NewFindingWriter(format.String(), cmdutil.IsJSONMode(cmd))
-	if writerErr != nil {
-		return writerErr
-	}
-
-	enricher := remediation.NewMapper(crypto.NewHasher())
-	san := cmdutil.GetSanitizer(cmd)
-	enrichFn := func(r evaluation.Result) appcontracts.EnrichedResult {
-		return output.Enrich(enricher, san, r)
-	}
-
-	pipeOut := compose.ResolveStdout(cmd, opts.quiet, format)
-	pipeErr := appeval.NewPipeline(cmd.Context(), &appeval.PipelineData{
-		Result: result,
-		Output: pipeOut,
-	}).
-		Then(appeval.EnrichStep(enrichFn)).
-		Then(appeval.MarshalStep(marshaler)).
-		Then(appeval.WriteStep()).
-		Error()
-	if pipeErr != nil {
-		return fmt.Errorf("write findings: %w", pipeErr)
-	}
-
-	return finalizeApplyProfileRun(cmd.ErrOrStderr(), len(result.Findings), cannotProveSafeCount, opts.quiet, ctlDir, opts.inputFile)
+	return r.finalize(cfg, result, filtered, ctlDir)
 }
 
-func validateApplyProfileInput(inputFile string) error {
-	fi, err := os.Stat(inputFile)
+func (r *Runner) validateInput(path string) error {
+	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("--input not found: %s", inputFile)
+			return fmt.Errorf("--input not found: %s", path)
 		}
 		if os.IsPermission(err) {
-			return fmt.Errorf("--input not readable: %s (check file permissions)", inputFile)
+			return fmt.Errorf("--input not readable: %s (check file permissions)", path)
 		}
-		return fmt.Errorf("cannot access --input %q: %w", inputFile, err)
+		return fmt.Errorf("cannot access --input %q: %w", path, err)
 	}
 	if fi.IsDir() {
-		return fmt.Errorf("--input must be a file, got directory: %s", inputFile)
+		return fmt.Errorf("--input must be a file, got directory: %s", path)
 	}
 	return nil
 }
 
-func resolveApplyProfileClock(nowTime string) (ports.Clock, error) {
-	return compose.ResolveClock(nowTime)
-}
-
-func resolveApplyProfileScopeFilter(opts applyProfileOptions) asset.AssetPredicate {
-	if opts.includeAll {
+func (r *Runner) resolveScopeFilter(cfg Config) asset.AssetPredicate {
+	if cfg.IncludeAll {
 		return asset.UniversalFilter
 	}
-	if len(opts.bucketAllowlist) > 0 {
-		return asset.NewScopeFilterFromAllowlist(opts.bucketAllowlist)
+	if len(cfg.BucketAllowlist) > 0 {
+		return asset.NewScopeFilterFromAllowlist(cfg.BucketAllowlist)
 	}
 	return asset.DefaultHealthcareScopeFilter()
 }
 
-func filterProfileSnapshots(stderr io.Writer, snapshots []asset.Snapshot, scopeFilter asset.AssetPredicate, quiet bool) ([]asset.Snapshot, error) {
+func (r *Runner) filterSnapshots(cfg Config, snapshots []asset.Snapshot) []asset.Snapshot {
 	if len(snapshots) == 0 {
-		if !quiet {
-			fmt.Fprintln(stderr, "No snapshots in observations file")
+		if !cfg.Quiet {
+			fmt.Fprintln(cfg.Stderr, "No snapshots in observations file")
 		}
-		return nil, nil
+		return nil
 	}
-	filteredSnapshots := asset.FilterSnapshots(scopeFilter, snapshots)
-	if len(filteredSnapshots) == 0 {
-		if !quiet {
-			fmt.Fprintln(stderr, "No S3 buckets matching health scope found in observations")
+
+	scopeFilter := r.resolveScopeFilter(cfg)
+	filtered := asset.FilterSnapshots(scopeFilter, snapshots)
+	if len(filtered) == 0 {
+		if !cfg.Quiet {
+			fmt.Fprintln(cfg.Stderr, "No S3 buckets matching health scope found in observations")
 		}
-		return nil, nil
+		return nil
 	}
-	return filteredSnapshots, nil
+
+	return filtered
 }
 
-func loadProfileControls(ctx context.Context, inputFile string) (string, []policy.ControlDefinition, error) {
+func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 
 	controls, err := compose.LoadControls(ctx, ctlDir)
@@ -192,37 +178,49 @@ func loadProfileControls(ctx context.Context, inputFile string) (string, []polic
 		return "", nil, fmt.Errorf("%w: no S3 controls found in %s", appeval.ErrNoControls, ctlDir)
 	}
 
-	attachProfileRunID(inputFile, ctlDir)
-	return ctlDir, controls, nil
-}
-
-// attachProfileRunID computes and attaches a deterministic run ID from input
-// hashes. Best-effort: hash failures produce empty strings, which is harmless.
-func attachProfileRunID(inputFile, ctlDir string) {
 	inputsHash, _ := fsutil.HashFile(inputFile)
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
 	cmdutil.AttachRunID(inputsHash.String(), controlsHash.String())
+
+	return ctlDir, controls, nil
 }
 
-func finalizeApplyProfileRun(
-	stderr io.Writer,
-	findingsCount int,
-	cannotProveSafeCount int,
-	quiet bool,
-	ctlDir string,
-	inputFile string,
-) error {
-	if cannotProveSafeCount > 0 && !quiet {
-		fmt.Fprintf(stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", cannotProveSafeCount)
+func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
+	marshaler, err := compose.NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
+	if err != nil {
+		return err
 	}
-	if findingsCount > 0 {
-		if !quiet {
-			ui.WriteHint(stderr, fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, inputFile))
+
+	enricher := remediation.NewMapper(crypto.NewHasher())
+	enrichFn := func(res evaluation.Result) appcontracts.EnrichedResult {
+		return output.Enrich(enricher, cfg.Sanitizer, res)
+	}
+
+	return appeval.NewPipeline(ctx, &appeval.PipelineData{
+		Result: result,
+		Output: cfg.Stdout,
+	}).
+		Then(appeval.EnrichStep(enrichFn)).
+		Then(appeval.MarshalStep(marshaler)).
+		Then(appeval.WriteStep()).
+		Error()
+}
+
+func (r *Runner) finalize(cfg Config, results evaluation.Result, snapshots []asset.Snapshot, ctlDir string) error {
+	unprovable := asset.CountUnprovablySafe(snapshots)
+	if unprovable > 0 && !cfg.Quiet {
+		fmt.Fprintf(cfg.Stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", unprovable)
+	}
+
+	if len(results.Findings) > 0 {
+		if !cfg.Quiet {
+			ui.WriteHint(cfg.Stderr, fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, cfg.InputFile))
 		}
 		return ui.ErrViolationsFound
 	}
-	if !quiet {
-		fmt.Fprintln(stderr, "Evaluation complete. No violations found.")
+
+	if !cfg.Quiet {
+		fmt.Fprintln(cfg.Stderr, "Evaluation complete. No violations found.")
 	}
 	return nil
 }

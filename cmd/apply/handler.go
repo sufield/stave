@@ -31,10 +31,32 @@ func runApply(cmd *cobra.Command, _ []string, opts *ApplyOptions) error {
 	}
 
 	if cfg.Mode == runModeProfile {
-		return runApplyProfileWithOptions(cmd, cfg.Profile)
+		return runProfileApply(cmd, cfg.Profile)
 	}
 
 	return runStandardApply(cmd, opts, cfg.Params)
+}
+
+// runProfileApply bridges the Cobra layer into the Runner/Config pattern.
+func runProfileApply(cmd *cobra.Command, cfg Config) error {
+	clock, err := compose.ResolveClock(cfg.NowTime)
+	if err != nil {
+		return err
+	}
+
+	format, err := compose.ResolveFormatValue(cmd, cfg.OutputFormat)
+	if err != nil {
+		return err
+	}
+
+	cfg.Stdout = compose.ResolveStdout(cmd, cfg.Quiet, format)
+	cfg.Stderr = cmd.ErrOrStderr()
+	cfg.IsJSONMode = cmdutil.IsJSONMode(cmd)
+	cfg.Sanitizer = cmdutil.GetSanitizer(cmd)
+	cfg.OutputFormat = format.String()
+
+	runner := NewRunner(clock, cfg.Quiet)
+	return runner.Run(cmd.Context(), cfg)
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
