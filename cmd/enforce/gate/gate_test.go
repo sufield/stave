@@ -45,6 +45,7 @@ func TestParseGatePolicy(t *testing.T) {
 func TestRunGatePolicyAny(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	tmp := t.TempDir()
+	runner := NewRunner(compose.ActiveProvider(), ports.FixedClock(now))
 
 	withFindings := filepath.Join(tmp, "with-findings.json")
 	if err := os.WriteFile(withFindings, []byte(`{
@@ -60,7 +61,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 }`), 0o644); err != nil {
 		t.Fatalf("write eval file: %v", err)
 	}
-	result, err := runPolicyAny(now, withFindings)
+	result, err := runner.runPolicyAny(withFindings)
 	if err != nil {
 		t.Fatalf("runPolicyAny: %v", err)
 	}
@@ -75,7 +76,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 	if writeErr := os.WriteFile(noFindings, []byte(`{"kind":"evaluation","findings":[]}`), 0o644); writeErr != nil {
 		t.Fatalf("write eval file: %v", writeErr)
 	}
-	result, err = runPolicyAny(now, noFindings)
+	result, err = runner.runPolicyAny(noFindings)
 	if err != nil {
 		t.Fatalf("runPolicyAny: %v", err)
 	}
@@ -87,6 +88,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 func TestRunGatePolicyNew(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	tmp := t.TempDir()
+	runner := NewRunner(compose.ActiveProvider(), ports.FixedClock(now))
 
 	evalPath := filepath.Join(tmp, "evaluation.json")
 	basePath := filepath.Join(tmp, "baseline.json")
@@ -125,7 +127,7 @@ func TestRunGatePolicyNew(t *testing.T) {
 		t.Fatalf("write baseline file: %v", err)
 	}
 
-	result, err := runPolicyNew(now, evalPath, basePath)
+	result, err := runner.runPolicyNew(evalPath, basePath)
 	if err != nil {
 		t.Fatalf("runPolicyNew: %v", err)
 	}
@@ -158,7 +160,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 	runner := NewRunner(compose.ActiveProvider(), ports.FixedClock(now))
 
-	result, err := runner.runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 500*time.Hour)
+	result, err := runner.runPolicyOverdue(context.Background(), controlsDir, observationsDir, 500*time.Hour)
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
@@ -166,7 +168,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 		t.Fatalf("expected pass at high threshold before overdue, got fail with reason: %s", result.Reason)
 	}
 
-	result, err = runner.runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 24*time.Hour)
+	result, err = runner.runPolicyOverdue(context.Background(), controlsDir, observationsDir, 24*time.Hour)
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
