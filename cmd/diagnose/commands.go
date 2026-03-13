@@ -16,7 +16,6 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/adapters/output"
-	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -27,7 +26,6 @@ import (
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/trace"
 )
 
@@ -117,10 +115,14 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 		SignalContains: cfg.SignalContains,
 	})
 
-	if cfg.Template != "" {
-		return r.renderTemplate(cfg, report)
+	p := r.newPresenter(cfg)
+	if err := p.RenderReport(report); err != nil {
+		return err
 	}
-	return r.renderReport(cfg, report)
+	if len(report.Issues) > 0 {
+		return ui.ErrDiagnosticsFound
+	}
+	return nil
 }
 
 func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
@@ -146,14 +148,14 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	out := compose.ResolveStdout(cfg.Stdout, cfg.Quiet, cfg.Format)
-	if cfg.Format.IsJSON() {
-		return writeFindingDetailJSON(out, detail)
-	}
-	if err := outtext.WriteFindingDetail(out, detail); err != nil {
+	p := r.newPresenter(cfg)
+	if err := p.RenderDetail(detail); err != nil {
 		return err
 	}
-	return ui.ErrViolationsFound
+	if !cfg.Format.IsJSON() {
+		return ui.ErrViolationsFound
+	}
+	return nil
 }
 
 func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
@@ -185,35 +187,14 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) appdiagno
 	return appCfg
 }
 
-func (r *Runner) renderTemplate(cfg Config, report *diagnosis.Report) error {
-	out := compose.ResolveStdout(cfg.Stdout, cfg.Quiet, "text")
-	if err := ui.ExecuteTemplate(out, cfg.Template, safetyenvelope.NewDiagnose(report)); err != nil {
-		return err
+func (r *Runner) newPresenter(cfg Config) *Presenter {
+	return &Presenter{
+		Stdout:       cfg.Stdout,
+		Format:       cfg.Format,
+		Quiet:        cfg.Quiet,
+		Template:     cfg.Template,
+		EnvelopeMode: cfg.EnvelopeMode,
 	}
-	return diagnosisExit(report)
-}
-
-func (r *Runner) renderReport(cfg Config, report *diagnosis.Report) error {
-	out := compose.ResolveStdout(cfg.Stdout, cfg.Quiet, cfg.Format)
-	if cfg.Format.IsJSON() {
-		if err := writeDiagnoseJSON(out, report, cfg.EnvelopeMode); err != nil {
-			return err
-		}
-	} else {
-		if err := outtext.WriteDiagnosisReport(out, report, func(level, msg string) string {
-			return ui.SeverityLabel(level, msg, out)
-		}); err != nil {
-			return err
-		}
-	}
-	return diagnosisExit(report)
-}
-
-func diagnosisExit(report *diagnosis.Report) error {
-	if len(report.Issues) > 0 {
-		return ui.ErrDiagnosticsFound
-	}
-	return nil
 }
 
 // --- Internal Helper: CLI Options ---
