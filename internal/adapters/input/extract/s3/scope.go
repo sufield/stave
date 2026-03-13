@@ -4,25 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
-
-const s3ARNPrefix = "arn:aws:s3:::"
-
-// AssetID is a bucket identifier that can be bucket name or S3 ARN.
-type AssetID string
-
-// Normalize converts an asset id into canonical bucket-name form.
-func (r AssetID) Normalize() string {
-	s := strings.ToLower(strings.TrimSpace(string(r)))
-	return strings.TrimPrefix(s, s3ARNPrefix)
-}
-
-// Equals compares two asset ids after normalization.
-func (r AssetID) Equals(other string) bool {
-	return r.Normalize() == AssetID(other).Normalize()
-}
 
 // ScopeOption configures ScopeConfig construction.
 type ScopeOption func(*ScopeConfig)
@@ -114,7 +99,7 @@ func (c *ScopeConfig) indexAllowlist() {
 	}
 	idx := make(map[string]struct{}, len(c.BucketAllowlist))
 	for _, allowed := range c.BucketAllowlist {
-		normalized := AssetID(allowed).Normalize()
+		normalized := kernel.NewBucketRef(allowed).Name()
 		if normalized == "" {
 			continue
 		}
@@ -130,7 +115,7 @@ func (c *ScopeConfig) hasAllowlistMatch(bucketNameOrARN string) bool {
 	if len(c.allowlistIndex) == 0 {
 		return false
 	}
-	_, ok := c.allowlistIndex[AssetID(bucketNameOrARN).Normalize()]
+	_, ok := c.allowlistIndex[kernel.NewBucketRef(bucketNameOrARN).Name()]
 	return ok
 }
 
@@ -170,9 +155,4 @@ func (c *ScopeConfig) Matches(tags map[string]string, bucketNameOrARN string) bo
 // IsHealthBucket checks if a bucket matches the health scope criteria.
 func (c *ScopeConfig) IsHealthBucket(tags map[string]string, bucketNameOrARN string) bool {
 	return c.Matches(tags, bucketNameOrARN)
-}
-
-// matchesBucket checks if a bucket name or ARN matches the pattern.
-func matchesBucket(pattern, bucketNameOrARN string) bool {
-	return AssetID(pattern).Equals(bucketNameOrARN)
 }

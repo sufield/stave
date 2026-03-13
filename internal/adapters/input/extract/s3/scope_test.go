@@ -1,6 +1,10 @@
 package s3
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 func TestScopeConfigHealthTags(t *testing.T) {
 	cfg := DefaultScopeConfig()
@@ -92,7 +96,7 @@ func TestMatchesBucket(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		result := matchesBucket(tc.pattern, tc.bucket)
+		result := kernel.NewBucketRef(tc.pattern).Equals(kernel.NewBucketRef(tc.bucket))
 		if result != tc.expected {
 			t.Errorf("matchesBucket(%q, %q) = %v, want %v", tc.pattern, tc.bucket, result, tc.expected)
 		}

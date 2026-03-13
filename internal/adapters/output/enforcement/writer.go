@@ -100,25 +100,11 @@ func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
 		if assetID == "" {
 			return BucketTarget{}, false
 		}
-		return BucketTarget{AssetID: assetID, BucketName: extractBucketName(assetID)}, true
+		return BucketTarget{AssetID: assetID, BucketName: kernel.NewBucketRef(assetID).Name()}, true
 	})
 	targets = lo.UniqBy(targets, func(t BucketTarget) string { return t.AssetID })
 	SortTargets(targets)
 	return targets
-}
-
-func extractBucketName(assetID string) string {
-	s := strings.TrimSpace(assetID)
-	s = strings.TrimPrefix(s, "arn:aws:s3:::")
-	s = strings.TrimPrefix(s, "aws:s3:::")
-	s = strings.TrimPrefix(s, "s3://")
-	if i := strings.IndexByte(s, '/'); i >= 0 {
-		s = s[:i]
-	}
-	if s == "" {
-		return assetID
-	}
-	return s
 }
 
 func terraformResourceName(bucket string) string {
