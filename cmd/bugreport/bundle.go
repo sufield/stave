@@ -18,6 +18,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/scrub"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -129,7 +130,7 @@ func (g *Generator) addLogArtifact(bundle *bundleWriter, path string, tailCount 
 		return nil
 	}
 	tail := TailBytesByLine(logBytes, tailCount)
-	tail = redactCredentialFormats(tail)
+	tail = scrub.Credentials(tail)
 	if err := bundle.addText("logs/stave.log.tail.txt", tail); err != nil {
 		return fmt.Errorf("write logs/stave.log.tail.txt: %w", err)
 	}
