@@ -54,7 +54,7 @@ type Builder struct {
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
 func (b *Builder) BuildWithNewPlan() (*ApplyDeps, error) {
-	plan, err := appeval.NewPlan(buildEvaluatorOptions(b.Opts))
+	plan, err := appeval.NewPlan(b.Opts.buildEvaluatorInput())
 	if err != nil {
 		return nil, err
 	}

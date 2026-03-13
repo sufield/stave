@@ -14,13 +14,6 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// applyParams holds validated and parsed flag values for the apply command.
-type applyParams struct {
-	maxDuration time.Duration
-	clock       ports.Clock
-	source      appeval.ObservationSource
-}
-
 type runMode string
 
 const (
@@ -28,132 +21,112 @@ const (
 	runModeProfile  runMode = "profile"
 )
 
-func gatherRunOptions(cmd *cobra.Command, opts *ApplyOptions) (applyParams, runMode, error) {
-	if opts.Profile != "" {
-		profile, err := ParseApplyProfile(opts.Profile)
-		if err != nil {
-			return applyParams{}, "", err
-		}
-		if profile == ApplyProfileAWSS3 && opts.InputFile == "" {
-			return applyParams{}, "", fmt.Errorf("--input is required when using --profile aws-s3")
-		}
-		return applyParams{}, runModeProfile, nil
+// RunConfig holds the fully resolved execution state.
+type RunConfig struct {
+	Mode    runMode
+	Params  applyParams
+	Profile applyProfileOptions
+}
+
+// applyParams holds validated and parsed domain types.
+type applyParams struct {
+	maxDuration time.Duration
+	clock       ports.Clock
+	source      appeval.ObservationSource
+}
+
+// Resolve transforms raw CLI options into a RunConfig.
+func (o *ApplyOptions) Resolve(cmd *cobra.Command) (RunConfig, error) {
+	if o.Profile != "" {
+		return o.resolveProfileMode(cmd)
 	}
 
-	params, err := validateApplyFlags(cmd, opts)
+	o.normalizeApplyPaths(cmd)
+
+	parsed, err := o.parseDomain()
 	if err != nil {
-		return applyParams{}, "", err
+		return RunConfig{}, err
 	}
 
-	return params, runModeStandard, nil
-}
-
-// toProfileOptions converts ApplyOptions to profile-specific options.
-func (o *ApplyOptions) toProfileOptions(cmd *cobra.Command) applyProfileOptions {
-	return applyProfileOptions{
-		inputFile:       o.InputFile,
-		bucketAllowlist: o.BucketAllowlist,
-		includeAll:      o.IncludeAll,
-		outputFormat:    o.Format,
-		nowTime:         o.NowTime,
-		quiet:           cmdutil.QuietEnabled(cmd),
+	if err := o.validateDirs(); err != nil {
+		return RunConfig{}, err
 	}
+
+	return RunConfig{
+		Mode: runModeStandard,
+		Params: applyParams{
+			maxDuration: parsed.MaxDuration,
+			clock:       o.buildClock(parsed.Now),
+			source:      parsed.Source,
+		},
+	}, nil
 }
 
-func buildEvaluatorOptions(opts *ApplyOptions) appeval.Options {
+func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error) {
+	prof, err := ParseApplyProfile(o.Profile)
+	if err != nil {
+		return RunConfig{}, err
+	}
+
+	if prof == ApplyProfileAWSS3 && o.InputFile == "" {
+		return RunConfig{}, fmt.Errorf("--input is required when using --profile %s", o.Profile)
+	}
+
+	return RunConfig{
+		Mode: runModeProfile,
+		Profile: applyProfileOptions{
+			inputFile:       o.InputFile,
+			bucketAllowlist: o.BucketAllowlist,
+			includeAll:      o.IncludeAll,
+			outputFormat:    o.Format,
+			nowTime:         o.NowTime,
+			quiet:           cmdutil.QuietEnabled(cmd),
+		},
+	}, nil
+}
+
+// buildEvaluatorInput bridges CLI flags to the internal application layer options.
+func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 	root := projctx.RootForContextName()
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
 	_, userPath, _ := projconfig.FindUserConfigWithPath()
+
 	return appeval.Options{
 		ContextName:        resolveApplyContextName(root),
 		ProjectRoot:        root,
-		ControlsDir:        opts.ControlsDir,
+		ControlsDir:        o.ControlsDir,
 		ConfigPath:         cfgPath,
 		UserConfigPath:     userPath,
-		MaxUnsafe:          opts.MaxUnsafe,
-		NowTime:            opts.NowTime,
-		ObservationsSource: appeval.ObservationSource(opts.ObservationsDir),
-		IntegrityManifest:  opts.IntegrityManifest,
-		IntegrityPublicKey: opts.IntegrityPublicKey,
+		MaxUnsafe:          o.MaxUnsafe,
+		NowTime:            o.NowTime,
+		ObservationsSource: appeval.ObservationSource(o.ObservationsDir),
+		IntegrityManifest:  o.IntegrityManifest,
+		IntegrityPublicKey: o.IntegrityPublicKey,
 		Hasher:             fsutil.FSContentHasher{},
 	}
 }
 
-// checkDirsExist verifies that the controls and observations directories
-// exist and are accessible. When the source is stdin the observations
-// directory check is skipped.
-func checkDirsExist(opts *ApplyOptions, source appeval.ObservationSource, log *projctx.InferenceLog) error {
-	usePackMode := shouldUseConfiguredPacks(opts)
-	if !usePackMode {
-		if err := cmdutil.ValidateDirWithInference("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
-			return err
-		}
-	}
-	if !source.IsStdin() {
-		if err := cmdutil.ValidateDirWithInference("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func shouldUseConfiguredPacks(opts *ApplyOptions) bool {
-	if opts.ControlsSet {
-		return false
-	}
-	cfg, ok := projconfig.FindProjectConfig()
-	if !ok {
-		return false
-	}
-	return len(cfg.EnabledControlPacks) > 0
-}
-
-// validateApplyFlags validates command-line flags and returns parsed parameters.
-// It normalizes paths, validates domain constraints, and checks directory
-// existence. Returns an error for any invalid or inaccessible input.
-func validateApplyFlags(cmd *cobra.Command, opts *ApplyOptions) (applyParams, error) {
-	log := normalizeApplyFlags(cmd, opts)
-
-	parsed, err := validateApplyDomain(opts)
-	if err != nil {
-		return applyParams{}, err
-	}
-
-	if err := checkDirsExist(opts, parsed.Source, log); err != nil {
-		return applyParams{}, err
-	}
-
-	return applyParams{
-		maxDuration: parsed.MaxDuration,
-		clock:       newClock(parsed.Now),
-		source:      parsed.Source,
-	}, nil
-}
-
-// normalizeApplyFlags cleans user-supplied paths and applies project-root
+// normalizeApplyPaths cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
-func normalizeApplyFlags(cmd *cobra.Command, opts *ApplyOptions) *projctx.InferenceLog {
+func (o *ApplyOptions) normalizeApplyPaths(cmd *cobra.Command) {
+	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
+	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
+
 	log := projctx.NewInferenceLog()
-
-	opts.IntegrityManifest = fsutil.CleanUserPath(opts.IntegrityManifest)
-	opts.IntegrityPublicKey = fsutil.CleanUserPath(opts.IntegrityPublicKey)
-
-	opts.ControlsDir = log.InferControlsDir(cmd, opts.ControlsDir)
-	if opts.ObservationsDir != "-" {
-		opts.ObservationsDir = log.InferObservationsDir(cmd, opts.ObservationsDir)
+	o.ControlsDir = log.InferControlsDir(cmd, o.ControlsDir)
+	if o.ObservationsDir != "-" {
+		o.ObservationsDir = log.InferObservationsDir(cmd, o.ObservationsDir)
 	}
-	return log
 }
 
-// validateApplyDomain validates parsed flag values against domain constraints
-// (duration format, time format, integrity key pairing).
-func validateApplyDomain(opts *ApplyOptions) (appeval.ParsedOptions, error) {
+// parseDomain handles the conversion of strings to domain-specific types.
+func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 	parsed, err := (appeval.Options{
-		MaxUnsafe:          opts.MaxUnsafe,
-		NowTime:            opts.NowTime,
-		ObservationsSource: appeval.ObservationSource(opts.ObservationsDir),
-		IntegrityManifest:  opts.IntegrityManifest,
-		IntegrityPublicKey: opts.IntegrityPublicKey,
+		MaxUnsafe:          o.MaxUnsafe,
+		NowTime:            o.NowTime,
+		ObservationsSource: appeval.ObservationSource(o.ObservationsDir),
+		IntegrityManifest:  o.IntegrityManifest,
+		IntegrityPublicKey: o.IntegrityPublicKey,
 	}).Validate()
 	if err != nil {
 		return appeval.ParsedOptions{}, &ui.InputError{Err: err}
@@ -161,8 +134,34 @@ func validateApplyDomain(opts *ApplyOptions) (appeval.ParsedOptions, error) {
 	return parsed, nil
 }
 
-// newClock returns a FixedClock if now is non-zero, otherwise a RealClock.
-func newClock(now time.Time) ports.Clock {
+// validateDirs ensures directories exist unless using packs or stdin.
+func (o *ApplyOptions) validateDirs() error {
+	log := projctx.NewInferenceLog()
+
+	if !o.isUsingPacks() {
+		if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
+			return err
+		}
+	}
+
+	if o.ObservationsDir != "-" {
+		if err := cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *ApplyOptions) isUsingPacks() bool {
+	if o.ControlsSet {
+		return false
+	}
+	cfg, ok := projconfig.FindProjectConfig()
+	return ok && len(cfg.EnabledControlPacks) > 0
+}
+
+func (o *ApplyOptions) buildClock(now time.Time) ports.Clock {
 	if !now.IsZero() {
 		return ports.FixedClock(now)
 	}
