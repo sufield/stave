@@ -3,9 +3,9 @@ package fix
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/shared"
@@ -14,21 +14,20 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/version"
 )
 
-type fixLoopFlagsType struct {
-	beforeDir    string
-	afterDir     string
-	controlsDir  string
-	maxUnsafe    string
-	now          string
-	allowUnknown bool
-	outDir       string
+// LoopRequest defines the parameters for a remediation verification lifecycle.
+type LoopRequest struct {
+	BeforeDir    string
+	AfterDir     string
+	ControlsDir  string
+	OutDir       string
+	MaxUnsafe    time.Duration
+	AllowUnknown bool
+	Stdout       io.Writer
+	Stderr       io.Writer
 }
 
 type fixLoopObservationSummary struct {
@@ -57,35 +56,36 @@ type fixLoopReport struct {
 	Artifacts     fixLoopArtifacts                   `json:"artifacts"`
 }
 
-func runFixLoop(cmd *cobra.Command, flags *fixLoopFlagsType) error {
-	execCtx, err := prepareFixLoopExecution(cmd, flags)
+// Loop executes the apply-before, apply-after, and verify sequence.
+func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
+	execCtx, err := r.prepareLoopExecution(ctx, req)
 	if err != nil {
 		return err
 	}
-	controls, err := loadFixLoopControls(execCtx)
+	controls, err := loadFixLoopControls(ctx, execCtx.controlsDir)
 	if err != nil {
 		return err
 	}
-	beforeEval, err := evaluateFixLoopState(cmd, execCtx, controls, execCtx.beforeDir, "before")
+	beforeEval, err := r.evaluateFixLoopState(ctx, execCtx, controls, execCtx.beforeDir, "before")
 	if err != nil {
 		return err
 	}
-	afterEval, err := evaluateFixLoopState(cmd, execCtx, controls, execCtx.afterDir, "after")
+	afterEval, err := r.evaluateFixLoopState(ctx, execCtx, controls, execCtx.afterDir, "after")
 	if err != nil {
 		return err
 	}
 
-	verification, err := buildFixLoopVerification(execCtx, beforeEval, afterEval)
+	verification, err := r.buildFixLoopVerification(execCtx, beforeEval, afterEval)
 	if err != nil {
 		return err
 	}
-	artifacts, err := writeFixLoopArtifacts(cmd, execCtx, beforeEval.envelope, afterEval.envelope, verification)
+	artifacts, err := r.writeFixLoopArtifacts(execCtx, beforeEval.envelope, afterEval.envelope, verification)
 	if err != nil {
 		return err
 	}
 
 	report := buildFixLoopReport(verification, execCtx.maxUnsafe, execCtx.beforeDir, execCtx.afterDir, artifacts)
-	if err := writeFixLoopReport(cmd, execCtx, &report); err != nil {
+	if err := r.writeFixLoopReport(execCtx, &report); err != nil {
 		return err
 	}
 	if !report.Pass {
@@ -95,14 +95,13 @@ func runFixLoop(cmd *cobra.Command, flags *fixLoopFlagsType) error {
 }
 
 type fixLoopExecution struct {
-	ctx          context.Context
 	beforeDir    string
 	afterDir     string
 	controlsDir  string
 	outDir       string
 	maxUnsafe    time.Duration
-	clock        ports.Clock
 	allowUnknown bool
+	stdout       io.Writer
 }
 
 type fixLoopEvaluation struct {
@@ -111,36 +110,27 @@ type fixLoopEvaluation struct {
 	envelope  safetyenvelope.Evaluation
 }
 
-func prepareFixLoopExecution(cmd *cobra.Command, flags *fixLoopFlagsType) (fixLoopExecution, error) {
-	flags.beforeDir = fsutil.CleanUserPath(flags.beforeDir)
-	flags.afterDir = fsutil.CleanUserPath(flags.afterDir)
-	flags.controlsDir = fsutil.CleanUserPath(flags.controlsDir)
-	flags.outDir = fsutil.CleanUserPath(flags.outDir)
-	if err := validateFixLoopDirs(flags); err != nil {
-		return fixLoopExecution{}, err
-	}
-	maxDuration, err := timeutil.ParseDurationFlag(flags.maxUnsafe, "--max-unsafe")
-	if err != nil {
-		return fixLoopExecution{}, err
-	}
-	clock, err := compose.ResolveClock(flags.now)
-	if err != nil {
+func (r *Runner) prepareLoopExecution(_ context.Context, req LoopRequest) (fixLoopExecution, error) {
+	if err := validateFixLoopDirs(req); err != nil {
 		return fixLoopExecution{}, err
 	}
 	return fixLoopExecution{
-		ctx:          cmd.Context(),
-		beforeDir:    flags.beforeDir,
-		afterDir:     flags.afterDir,
-		controlsDir:  flags.controlsDir,
-		outDir:       flags.outDir,
-		maxUnsafe:    maxDuration,
-		clock:        clock,
-		allowUnknown: flags.allowUnknown,
+		beforeDir:    req.BeforeDir,
+		afterDir:     req.AfterDir,
+		controlsDir:  req.ControlsDir,
+		outDir:       req.OutDir,
+		maxUnsafe:    req.MaxUnsafe,
+		allowUnknown: req.AllowUnknown,
+		stdout:       req.Stdout,
 	}, nil
 }
 
-func validateFixLoopDirs(flags *fixLoopFlagsType) error {
-	for _, dir := range []struct{ flag, path string }{{"--before", flags.beforeDir}, {"--after", flags.afterDir}, {"--controls", flags.controlsDir}} {
+func validateFixLoopDirs(req LoopRequest) error {
+	for _, dir := range []struct{ flag, path string }{
+		{"--before", req.BeforeDir},
+		{"--after", req.AfterDir},
+		{"--controls", req.ControlsDir},
+	} {
 		if err := cmdutil.ValidateFlagDir(dir.flag, dir.path, "", nil, nil); err != nil {
 			return err
 		}
@@ -148,34 +138,34 @@ func validateFixLoopDirs(flags *fixLoopFlagsType) error {
 	return nil
 }
 
-func loadFixLoopControls(execCtx fixLoopExecution) ([]policy.ControlDefinition, error) {
-	controls, err := compose.LoadControls(execCtx.ctx, execCtx.controlsDir)
+func loadFixLoopControls(ctx context.Context, controlsDir string) ([]policy.ControlDefinition, error) {
+	controls, err := compose.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, err
 	}
 	if len(controls) == 0 {
-		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, execCtx.controlsDir)
+		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, controlsDir)
 	}
 	return controls, nil
 }
 
-func evaluateFixLoopState(
-	cmd *cobra.Command,
+func (r *Runner) evaluateFixLoopState(
+	ctx context.Context,
 	execCtx fixLoopExecution,
 	controls []policy.ControlDefinition,
 	observationsDir string,
 	label string,
 ) (fixLoopEvaluation, error) {
-	loader, err := compose.ActiveProvider().NewObservationRepo()
+	loader, err := r.Provider.NewObservationRepo()
 	if err != nil {
 		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation: create observation loader: %w", label, err)
 	}
 	result, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
-		Context:           execCtx.ctx,
+		Context:           ctx,
 		ObservationsDir:   observationsDir,
 		Controls:          controls,
 		MaxUnsafe:         execCtx.maxUnsafe,
-		Clock:             execCtx.clock,
+		Clock:             r.Clock,
 		AllowUnknownType:  execCtx.allowUnknown,
 		ToolVersion:       version.Version,
 		ObservationLoader: loader,
@@ -183,21 +173,21 @@ func evaluateFixLoopState(
 	if err != nil {
 		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation: %w", label, err)
 	}
-	env := buildEvaluationEnvelope(cmd, *result)
+	env := r.buildEvaluationEnvelope(*result)
 	if err := safetyenvelope.ValidateEvaluation(env); err != nil {
 		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation schema validation: %w", label, err)
 	}
 	return fixLoopEvaluation{result: result, snapshots: snaps, envelope: env}, nil
 }
 
-func buildFixLoopVerification(
+func (r *Runner) buildFixLoopVerification(
 	execCtx fixLoopExecution,
 	beforeEval fixLoopEvaluation,
 	afterEval fixLoopEvaluation,
 ) (safetyenvelope.Verification, error) {
 	beforeResult := beforeEval.result
 	afterResult := afterEval.result
-	now := execCtx.clock.Now()
+	now := r.Clock.Now()
 	diff := evaluation.CompareVerificationFindings(beforeResult.Findings, afterResult.Findings)
 	resolved := shared.FindingsToVerificationEntries(diff.Resolved)
 	remaining := shared.FindingsToVerificationEntries(diff.Remaining)
