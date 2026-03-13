@@ -2,8 +2,6 @@ package validate
 
 import (
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -15,72 +13,96 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
-// newReporter builds a Reporter from the resolved format and options.
-func newReporter(out io.Writer, format ui.OutputFormat, opts *options) *Reporter {
-	f := string(format)
-	if opts.Template != "" {
-		f = opts.Template
-	}
-	return &Reporter{
-		Writer:   out,
-		Format:   f,
-		Strict:   opts.StrictMode,
-		FixHints: opts.FixHints,
-		IsJSON:   format.IsJSON(),
-	}
-}
-
-// runValidateWithOptions parses flags, calls app layer, prints results, and sets exit code.
-func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
+// runValidate is the primary entry point for the cobra command.
+func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
+	// 1. Prepare: resolve format, normalize paths, check context
 	format, err := prepareValidateCommand(cmd, opts)
 	if err != nil {
 		return err
 	}
 
+	// 2. Initialize Reporter
 	quiet := opts.QuietMode || cmdutil.QuietEnabled(cmd)
 	rt.Quiet = quiet
 	out := compose.ResolveStdout(cmd, quiet, format)
-	if opts.InFile != "" {
-		r := newReporter(out, format, opts)
-		return runValidateSingleFile(r, opts)
+
+	f := string(format)
+	if opts.Template != "" {
+		f = opts.Template
 	}
+	rep := &Reporter{
+		Writer:   out,
+		Format:   f,
+		Strict:   opts.StrictMode,
+		FixHints: opts.FixHints,
+		IsJSON:   cmdutil.IsJSONMode(cmd),
+	}
+
+	// 3. Branch: Single File vs. Full Project
+	if opts.InFile != "" {
+		return runValidateSingleFile(rep, opts)
+	}
+
+	return runValidateProject(cmd, rt, rep, opts)
+}
+
+func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts *options) error {
+	// Check for mode-specific flag errors before starting
 	if err := ensureValidateModeFlags(opts); err != nil {
 		return err
 	}
 
-	r := newReporter(out, format, opts)
-
+	// Prepare parameters (MaxUnsafe, Time, etc)
 	params := parseValidateParams(opts)
 	if len(params.issues) > 0 {
+		// If flag parsing itself generated diagnostic issues
 		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
-		if err := r.Write(result, opts); err != nil {
-			return err
-		}
-		return r.ExitStatus(result)
+		_ = rep.Write(result, opts)
+		return rep.ExitStatus(result)
 	}
 
+	// Start progress UI
 	done := rt.BeginProgress("validate artifacts")
-	result, runErr := executeValidateRun(cmd, params, opts)
+	result, err := executeValidateRun(cmd, params, opts)
 	done()
-	if runErr != nil {
-		return runErr
+
+	if err != nil {
+		return err
 	}
+
+	// Add dynamic issues (e.g. checking project config packs)
 	result.Diagnostics.AddAll(PackConfigIssues())
 
-	return outputValidateResult(cmd, r, result, opts)
+	// Write Output
+	if err := rep.Write(result, opts); err != nil {
+		return err
+	}
+
+	// Print a helpful hint for the next step on success (if not quiet)
+	exitErr := rep.ExitStatus(result)
+	if exitErr == nil && !rt.Quiet {
+		ui.WriteHint(cmd.ErrOrStderr(), fmt.Sprintf(
+			"stave apply --controls %s --observations %s",
+			opts.ControlsDir, opts.ObservationsDir,
+		))
+	}
+
+	return exitErr
 }
 
 func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
+	// Setup Repositories
 	obsLoader, err := compose.NewObservationRepository()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to init observation repository: %w", err)
 	}
 	ctlLoader, err := compose.NewControlRepository()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}
 
-	validateRun := appvalidation.NewRun(obsLoader, ctlLoader)
+	// Execute Domain Logic
+	runner := appvalidation.NewRun(obsLoader, ctlLoader)
 	cfg := appvalidation.Config{
 		ControlsDir:     opts.ControlsDir,
 		ObservationsDir: opts.ObservationsDir,
@@ -89,22 +111,5 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
 	}
 
-	ctx := compose.CommandContext(cmd)
-	return validateRun.Execute(ctx, cfg)
-}
-
-func outputValidateResult(cmd *cobra.Command, r *Reporter, result *appservice.ValidationResult, opts *options) error {
-	if err := r.Write(result, opts); err != nil {
-		return err
-	}
-	exitErr := r.ExitStatus(result)
-	if exitErr == nil && !opts.QuietMode && !cmdutil.QuietEnabled(cmd) {
-		stderr := io.Writer(os.Stderr)
-		if cmd != nil {
-			stderr = cmd.ErrOrStderr()
-		}
-		ui.WriteHint(stderr, fmt.Sprintf("stave apply --controls %s --observations %s",
-			opts.ControlsDir, opts.ObservationsDir))
-	}
-	return exitErr
+	return runner.Execute(compose.CommandContext(cmd), cfg)
 }
