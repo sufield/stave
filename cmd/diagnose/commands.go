@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -38,7 +37,6 @@ type Config struct {
 	ObservationsDir string
 	PreviousOutput  string
 	MaxUnsafe       string
-	NowTime         string
 	Format          ui.OutputFormat
 	Quiet           bool
 	Cases           []string
@@ -49,8 +47,10 @@ type Config struct {
 	ControlID string
 	AssetID   string
 
+	// IO streams
 	Stdout io.Writer
 	Stderr io.Writer
+	Stdin  io.Reader
 
 	// Global flag state passed through from the CLI layer.
 	Sanitizer    kernel.Sanitizer
@@ -182,7 +182,7 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) appdiagno
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	}
 	if cfg.PreviousOutput == "-" {
-		appCfg.OutputReader = os.Stdin
+		appCfg.OutputReader = cfg.Stdin
 	} else {
 		appCfg.OutputFile = cfg.PreviousOutput
 	}
@@ -363,6 +363,7 @@ Examples:
 				AssetID:         strings.TrimSpace(opts.AssetID),
 				Stdout:          cmd.OutOrStdout(),
 				Stderr:          cmd.ErrOrStderr(),
+				Stdin:           cmd.InOrStdin(),
 				Sanitizer:       flags.GetSanitizer(),
 				EnvelopeMode:    flags.IsJSONMode(),
 			}
