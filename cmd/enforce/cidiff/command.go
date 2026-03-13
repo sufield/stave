@@ -2,11 +2,17 @@ package cidiff
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/metadata"
 )
 
+// NewCmd constructs the diff command.
 func NewCmd() *cobra.Command {
-	opts := &options{FailOnNew: true}
+	cfg := Config{
+		FailOnNew: true,
+	}
 
 	cmd := &cobra.Command{
 		Use:   "diff",
@@ -19,16 +25,25 @@ Use this in CI to fail PRs only when new violations are introduced.
 Example:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new` + metadata.OfflineHelpSuffix,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, opts) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := NewRunner(
+				ports.RealClock{},
+				gf.GetSanitizer(),
+				cmd.OutOrStdout(),
+			)
+			return runner.Run(cmd.Context(), cfg)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&opts.CurrentPath, "current", "", "Path to current evaluation JSON (required)")
-	cmd.Flags().StringVar(&opts.BaselinePath, "baseline", "", "Path to baseline evaluation JSON (required)")
-	cmd.Flags().BoolVar(&opts.FailOnNew, "fail-on-new", opts.FailOnNew, "Return exit code 3 when new findings are detected")
+	cmd.Flags().StringVar(&cfg.CurrentPath, "current", "", "Path to current evaluation JSON (required)")
+	cmd.Flags().StringVar(&cfg.BaselinePath, "baseline", "", "Path to baseline evaluation JSON (required)")
+	cmd.Flags().BoolVar(&cfg.FailOnNew, "fail-on-new", cfg.FailOnNew, "Return exit code 3 when new findings are detected")
 	_ = cmd.MarkFlagRequired("current")
 	_ = cmd.MarkFlagRequired("baseline")
+
 	return cmd
 }

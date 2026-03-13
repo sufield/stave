@@ -1,50 +1,66 @@
 package cidiff
 
 import (
+	"context"
 	"fmt"
-	"time"
+	"io"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-const kind = kernel.KindCIDiff
-
-type options struct {
+// Config defines the parameters for the CI diff operation.
+type Config struct {
 	CurrentPath  string
 	BaselinePath string
 	FailOnNew    bool
 }
 
-type summary struct {
+// Runner orchestrates the comparison of two evaluation results.
+type Runner struct {
+	Clock     ports.Clock
+	Sanitizer kernel.Sanitizer
+	Stdout    io.Writer
+}
+
+// NewRunner initializes a diff runner with required dependencies.
+func NewRunner(clock ports.Clock, san kernel.Sanitizer, stdout io.Writer) *Runner {
+	return &Runner{
+		Clock:     clock,
+		Sanitizer: san,
+		Stdout:    stdout,
+	}
+}
+
+type diffSummary struct {
 	BaselineFindings int `json:"baseline_findings"`
 	CurrentFindings  int `json:"current_findings"`
 	NewFindings      int `json:"new_findings"`
 	ResolvedFindings int `json:"resolved_findings"`
 }
 
-type result struct {
+type diffResult struct {
 	SchemaVersion      kernel.Schema              `json:"schema_version"`
 	Kind               kernel.OutputKind          `json:"kind"`
-	ComparedAt         time.Time                  `json:"compared_at"`
+	ComparedAt         any                        `json:"compared_at"`
 	CurrentEvaluation  string                     `json:"current_evaluation"`
 	BaselineEvaluation string                     `json:"baseline_evaluation"`
-	Summary            summary                    `json:"summary"`
+	Summary            diffSummary                `json:"summary"`
 	New                []evaluation.BaselineEntry `json:"new"`
 	Resolved           []evaluation.BaselineEntry `json:"resolved"`
 }
 
-func run(cmd *cobra.Command, opts *options) error {
-	currentPath := fsutil.CleanUserPath(opts.CurrentPath)
-	baselinePath := fsutil.CleanUserPath(opts.BaselinePath)
+// Run executes the comparison workflow.
+func (r *Runner) Run(_ context.Context, cfg Config) error {
+	currentPath := fsutil.CleanUserPath(cfg.CurrentPath)
+	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
 	currentEval, err := shared.LoadEvaluationEnvelope(currentPath)
 	if err != nil {
@@ -58,18 +74,17 @@ func run(cmd *cobra.Command, opts *options) error {
 	}
 	baselineEntries := remediation.BaselineEntriesFromFindings(baselineEval.Findings)
 
-	sanitizer := cmdutil.GetGlobalFlags(cmd).GetSanitizer()
-	currentEntries = output.SanitizeBaselineEntries(sanitizer, currentEntries)
-	baselineEntries = output.SanitizeBaselineEntries(sanitizer, baselineEntries)
+	currentEntries = output.SanitizeBaselineEntries(r.Sanitizer, currentEntries)
+	baselineEntries = output.SanitizeBaselineEntries(r.Sanitizer, baselineEntries)
 
 	comparison := evaluation.CompareBaseline(baselineEntries, currentEntries)
-	res := result{
+	res := diffResult{
 		SchemaVersion:      kernel.SchemaCIDiff,
-		Kind:               kind,
-		ComparedAt:         time.Now().UTC(),
-		CurrentEvaluation:  sanitizePath(sanitizer, currentPath),
-		BaselineEvaluation: sanitizePath(sanitizer, baselinePath),
-		Summary: summary{
+		Kind:               kernel.KindCIDiff,
+		ComparedAt:         r.Clock.Now().UTC(),
+		CurrentEvaluation:  sanitizePath(r.Sanitizer, currentPath),
+		BaselineEvaluation: sanitizePath(r.Sanitizer, baselinePath),
+		Summary: diffSummary{
 			BaselineFindings: len(baselineEntries),
 			CurrentFindings:  len(currentEntries),
 			NewFindings:      len(comparison.New),
@@ -86,11 +101,11 @@ func run(cmd *cobra.Command, opts *options) error {
 		res.Resolved = []evaluation.BaselineEntry{}
 	}
 
-	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), res); err != nil {
+	if err := jsonutil.WriteIndented(r.Stdout, res); err != nil {
 		return fmt.Errorf("write diff output: %w", err)
 	}
 
-	if opts.FailOnNew && comparison.HasNewFindings() {
+	if cfg.FailOnNew && comparison.HasNewFindings() {
 		return ui.ErrViolationsFound
 	}
 	return nil
