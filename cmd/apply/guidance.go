@@ -7,42 +7,51 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
-// EvaluateResult provides structured execution outcomes for CLI orchestration.
+// EvaluateResult provides structured execution outcomes and user guidance.
 type EvaluateResult struct {
 	SafetyStatus evaluation.SafetyStatus
 	DiagnoseHint string
 	NextSteps    []string
 }
 
-// BuildEvaluateResult converts a safety status into user guidance.
+// BuildEvaluateResult maps a domain safety status into actionable CLI guidance.
 func BuildEvaluateResult(status evaluation.SafetyStatus, controlsDir, observationsDir string) EvaluateResult {
-	result := EvaluateResult{
+	res := EvaluateResult{
 		SafetyStatus: status,
 		NextSteps:    []string{},
 	}
+
 	if status == evaluation.StatusSafe {
-		return result
+		return res
 	}
 
-	result.DiagnoseHint = buildDiagnoseHint(controlsDir, observationsDir)
-	result.NextSteps = []string{
-		fmt.Sprintf("Identify the root cause: `%s`", result.DiagnoseHint),
+	res.DiagnoseHint = buildDiagnoseHint(controlsDir, observationsDir)
+	res.NextSteps = []string{
+		fmt.Sprintf("Identify the root cause: `%s`", res.DiagnoseHint),
 		"View a summary: `stave apply --format text`",
-		"Export findings for S3: `stave apply --format json > findings.json`",
+		"Export findings to a file: `stave apply --format json > findings.json`",
 	}
-	return result
+
+	return res
 }
 
+// buildDiagnoseHint constructs a CLI command string with the appropriate flags.
 func buildDiagnoseHint(controlsDir, observationsDir string) string {
-	var parts []string
-	if controlsDir = strings.TrimSpace(controlsDir); controlsDir != "" {
-		parts = append(parts, "--controls "+controlsDir)
+	const base = "stave diagnose"
+
+	args := make([]string, 0, 4)
+
+	if c := strings.TrimSpace(controlsDir); c != "" {
+		args = append(args, "--controls", c)
 	}
-	if observationsDir = strings.TrimSpace(observationsDir); observationsDir != "" {
-		parts = append(parts, "--observations "+observationsDir)
+
+	if o := strings.TrimSpace(observationsDir); o != "" {
+		args = append(args, "--observations", o)
 	}
-	if len(parts) == 0 {
-		return "stave diagnose"
+
+	if len(args) == 0 {
+		return base
 	}
-	return "stave diagnose " + strings.Join(parts, " ")
+
+	return base + " " + strings.Join(args, " ")
 }
