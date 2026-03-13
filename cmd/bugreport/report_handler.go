@@ -16,20 +16,14 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type reportFlags struct {
-	out           string
-	tailLines     int
-	includeConfig bool
-}
-
 type preparedOutput struct {
 	cwd     string
 	outPath string
 	file    io.WriteCloser
 }
 
-func runReport(cmd *cobra.Command, flags *reportFlags) error {
-	prepared, err := prepareOutputFile(cmd, flags)
+func runReport(cmd *cobra.Command, opts reportOptions) error {
+	prepared, err := prepareOutputFile(cmd, opts)
 	if err != nil {
 		return err
 	}
@@ -38,7 +32,7 @@ func runReport(cmd *cobra.Command, flags *reportFlags) error {
 	binaryPath, _ := os.Executable()
 
 	var configPath string
-	if flags.includeConfig {
+	if opts.includeConfig {
 		if p, ok := findConfigPath(); ok {
 			configPath = p
 		}
@@ -62,7 +56,7 @@ func runReport(cmd *cobra.Command, flags *reportFlags) error {
 		BinaryPath:   binaryPath,
 		ConfigPath:   configPath,
 		LogPath:      logPath,
-		LogTailLines: flags.tailLines,
+		LogTailLines: opts.tailLines,
 		Args:         os.Args,
 		Env:          os.Environ(),
 	}); err != nil {
@@ -71,15 +65,15 @@ func runReport(cmd *cobra.Command, flags *reportFlags) error {
 	return writeSummary(cmd, prepared.outPath)
 }
 
-func prepareOutputFile(cmd *cobra.Command, flags *reportFlags) (preparedOutput, error) {
-	if flags.tailLines < 0 {
-		return preparedOutput{}, &ui.UserError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", flags.tailLines)}
+func prepareOutputFile(cmd *cobra.Command, opts reportOptions) (preparedOutput, error) {
+	if opts.tailLines < 0 {
+		return preparedOutput{}, &ui.UserError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", opts.tailLines)}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
 		return preparedOutput{}, fmt.Errorf("resolve current directory: %w", err)
 	}
-	outPath := fsutil.CleanUserPath(resolveOutPath(cwd, flags.out))
+	outPath := fsutil.CleanUserPath(resolveOutPath(cwd, opts.out))
 	zipFile, err := cmdutil.CreateOutputFile(cmd, outPath)
 	if err != nil {
 		return preparedOutput{}, err

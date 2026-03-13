@@ -3,12 +3,11 @@ package bugreport
 import (
 	"archive/zip"
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/spf13/cobra"
 )
 
 func TestRunInspect_DumpsEntries(t *testing.T) {
@@ -18,10 +17,7 @@ func TestRunInspect_DumpsEntries(t *testing.T) {
 	})
 
 	var buf bytes.Buffer
-	cmd := &cobra.Command{}
-	cmd.SetOut(&buf)
-
-	if err := runInspect(cmd, []string{zipPath}); err != nil {
+	if err := dumpBundle(&buf, io.Discard, zipPath, inspectMaxFileSize); err != nil {
 		t.Fatalf("inspect failed: %v", err)
 	}
 

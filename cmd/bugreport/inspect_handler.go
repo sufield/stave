@@ -6,15 +6,9 @@ import (
 	"io"
 	"sort"
 	"strings"
-
-	"github.com/spf13/cobra"
 )
 
 const inspectMaxFileSize int64 = 10 << 20 // 10 MB
-
-func runInspect(cmd *cobra.Command, args []string) error {
-	return dumpBundle(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], inspectMaxFileSize)
-}
 
 func dumpBundle(out io.Writer, errOut io.Writer, path string, maxSize int64) error {
 	zr, err := zip.OpenReader(path)

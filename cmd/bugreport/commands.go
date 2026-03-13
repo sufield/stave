@@ -6,9 +6,16 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// NewCmd constructs the bug-report command with closure-scoped flags.
+// reportOptions maps CLI flags to the report logic.
+type reportOptions struct {
+	out           string
+	tailLines     int
+	includeConfig bool
+}
+
+// NewCmd constructs the bug-report command.
 func NewCmd() *cobra.Command {
-	var flags reportFlags
+	opts := reportOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "bug-report",
@@ -28,15 +35,15 @@ Examples:
   stave bug-report --tail-lines 200` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runReport(cmd, &flags)
+			return runReport(cmd, opts)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&flags.out, "out", "", "Path to output bundle zip (default: ./stave-diag-<timestamp>.zip)")
-	cmd.Flags().IntVar(&flags.tailLines, "tail-lines", 1000, "Number of trailing log lines to include")
-	cmd.Flags().BoolVar(&flags.includeConfig, "include-config", true, "Include project stave.yaml with sensitive values sanitized")
+	cmd.Flags().StringVar(&opts.out, "out", "", "Path to output bundle zip (default: ./stave-diag-<timestamp>.zip)")
+	cmd.Flags().IntVar(&opts.tailLines, "tail-lines", 1000, "Number of trailing log lines to include")
+	cmd.Flags().BoolVar(&opts.includeConfig, "include-config", true, "Include project stave.yaml with sensitive values sanitized")
 	cmd.AddCommand(newInspectCmd())
 
 	return cmd
@@ -53,8 +60,10 @@ Examples:
   stave bug-report inspect stave-diag-20260306T120000Z.zip
   stave bug-report inspect bundle.zip | grep -A5 manifest
   stave bug-report inspect bundle.zip | less` + metadata.OfflineHelpSuffix,
-		Args:          cobra.ExactArgs(1),
-		RunE:          runInspect,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return dumpBundle(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], inspectMaxFileSize)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
