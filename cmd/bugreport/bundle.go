@@ -78,16 +78,16 @@ func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
 		BinaryPath:   cfg.BinaryPath,
 		StaveVersion: staveversion.Version,
 	})
-	if err := bundle.addJSON("doctor.json", doctorResult{Ready: ok, Checks: checks}); err != nil {
+	if err := bundle.addJSON("doctor.json", DoctorResult{Ready: ok, Checks: checks}); err != nil {
 		return fmt.Errorf("write doctor.json: %w", err)
 	}
-	if err := bundle.addJSON("build_info.json", collectBuildInfo()); err != nil {
+	if err := bundle.addJSON("build_info.json", CollectBuildInfo()); err != nil {
 		return fmt.Errorf("write build_info.json: %w", err)
 	}
-	if err := bundle.addJSON("env.json", collectEnv(cfg.Env)); err != nil {
+	if err := bundle.addJSON("env.json", FilterEnv(cfg.Env)); err != nil {
 		return fmt.Errorf("write env.json: %w", err)
 	}
-	if err := bundle.addJSON("args.json", collectArgs(cfg.Args)); err != nil {
+	if err := bundle.addJSON("args.json", SanitizeArgs(cfg.Args)); err != nil {
 		return fmt.Errorf("write args.json: %w", err)
 	}
 	return nil
@@ -127,7 +127,7 @@ func (g *Generator) addLogArtifact(bundle *bundleWriter, path string, tailCount 
 		bundle.addWarning("skipped log tail (%s): %v", path, err)
 		return nil
 	}
-	tail := tailBytesByLine(logBytes, tailCount)
+	tail := TailBytesByLine(logBytes, tailCount)
 	tail = redactCredentialFormats(tail)
 	if err := bundle.addText("logs/stave.log.tail.txt", tail); err != nil {
 		return fmt.Errorf("write logs/stave.log.tail.txt: %w", err)
