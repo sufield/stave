@@ -109,7 +109,7 @@ func NewApplyCmd() *cobra.Command {
 		Short: "Run control evaluation after plan checks pass",
 		Long: `Apply executes control evaluation only after readiness checks pass.
 Run stave plan first to preview what will be evaluated.` + metadata.OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			opts.ControlsSet = cmdutil.ControlsFlagChanged(cmd)
 			opts.normalize()
