@@ -39,7 +39,7 @@ func TestBuildFixLoopReport(t *testing.T) {
 		},
 	}
 
-	report := r.buildReport(req, v)
+	report := r.buildReport(req, v, LoopArtifacts{})
 	if report.Pass {
 		t.Fatalf("expected report to fail when remaining findings exist")
 	}
@@ -93,7 +93,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read remediation report: %v", err)
 	}
-	var report loopReport
+	var report LoopReport
 	if err := json.Unmarshal(data, &report); err != nil {
 		t.Fatalf("parse remediation report: %v", err)
 	}
