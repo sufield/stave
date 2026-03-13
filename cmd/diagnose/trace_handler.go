@@ -101,7 +101,7 @@ func runTrace(cmd *cobra.Command, flags *traceFlagsType) error {
 	if err != nil {
 		return err
 	}
-	result := buildTraceResult(control, found, snapshot)
+	result := buildTraceResult(&control, found, snapshot)
 
 	// Render
 	w := cmd.OutOrStdout()
@@ -111,10 +111,10 @@ func runTrace(cmd *cobra.Command, flags *traceFlagsType) error {
 	return trace.WriteText(w, result)
 }
 
-func loadTraceControl(ctx context.Context, controlsDir, controlID string) (*policy.ControlDefinition, error) {
+func loadTraceControl(ctx context.Context, controlsDir, controlID string) (policy.ControlDefinition, error) {
 	ctl, err := compose.LoadControlByID(ctx, controlsDir, controlID)
 	if err != nil {
-		return nil, ui.WithNextCommand(err,
+		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave explain --controls %s <control-id>", controlsDir))
 	}
 	return ctl, nil

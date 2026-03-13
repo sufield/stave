@@ -97,7 +97,7 @@ func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.Con
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave validate --controls %s", controlsDir))
 	}
-	return *ctl, nil
+	return ctl, nil
 }
 
 func buildExplainOutput(ctl policy.ControlDefinition) explainOutput {
