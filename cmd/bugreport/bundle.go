@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -21,7 +23,6 @@ import (
 
 // Config defines the inputs required to generate a bug report.
 type Config struct {
-	Output       io.Writer
 	Cwd          string
 	BinaryPath   string
 	ConfigPath   string
@@ -44,8 +45,8 @@ func NewGenerator() *Generator {
 }
 
 // Generate orchestrates the collection of artifacts into a zip archive.
-func (g *Generator) Generate(_ context.Context, cfg Config) error {
-	zw := zip.NewWriter(cfg.Output)
+func (g *Generator) Generate(_ context.Context, w io.Writer, cfg Config) error {
+	zw := zip.NewWriter(w)
 
 	bundle := &bundleWriter{
 		zip:      zw,
@@ -200,4 +201,20 @@ type manifest struct {
 	Files         []string      `json:"files"`
 	Warnings      []string      `json:"warnings,omitempty"`
 	IssueURL      string        `json:"issue_url"`
+}
+
+// ResolveDefaultOutPath generates a timestamped filename for the diagnostic bundle.
+func ResolveDefaultOutPath(cwd, override string) string {
+	if strings.TrimSpace(override) != "" {
+		return override
+	}
+	name := fmt.Sprintf("stave-diag-%s.zip", time.Now().UTC().Format("20060102T150405Z"))
+	return filepath.Join(cwd, name)
+}
+
+// WriteSummary outputs a user-friendly completion message to the provided writer.
+func WriteSummary(w io.Writer, outPath string) {
+	fmt.Fprintf(w, "Created diagnostic bundle: %s\n", outPath)
+	fmt.Fprintf(w, "Attach this file when filing an issue: %s\n", metadata.IssuesRef())
+	fmt.Fprintf(w, "\nTo view bundle contents:\n  stave bug-report inspect %s\n", outPath)
 }
