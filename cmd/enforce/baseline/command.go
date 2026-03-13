@@ -1,7 +1,12 @@
 package baseline
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -29,6 +34,24 @@ Example:
 	return cmd
 }
 
+func newRunner(cmd *cobra.Command) *Runner {
+	gf := cmdutil.GetGlobalFlags(cmd)
+	stdout := cmd.OutOrStdout()
+	if !gf.TextOutputEnabled() {
+		stdout = io.Discard
+	}
+	return NewRunner(
+		ports.RealClock{},
+		gf.GetSanitizer(),
+		cmdutil.FileOptions{
+			Overwrite:     gf.Force,
+			AllowSymlinks: gf.AllowSymlinkOut,
+			DirPerms:      0o700,
+		},
+		stdout,
+	)
+}
+
 // --- Save Subcommand ---
 
 func newSaveCmd() *cobra.Command {
@@ -40,7 +63,9 @@ func newSaveCmd() *cobra.Command {
 		Use:   "save",
 		Short: "Save evaluation findings as baseline",
 		Args:  cobra.NoArgs,
-		RunE:  func(cmd *cobra.Command, _ []string) error { return runSave(cmd, cfg) },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return newRunner(cmd).Save(cmd.Context(), cfg)
+		},
 	}
 
 	cmd.Flags().StringVar(&cfg.InPath, "in", "", "Path to evaluation JSON (required)")
@@ -61,7 +86,14 @@ func newCheckCmd() *cobra.Command {
 		Use:   "check",
 		Short: "Compare evaluation findings against baseline and detect new findings",
 		Args:  cobra.NoArgs,
-		RunE:  func(cmd *cobra.Command, _ []string) error { return runCheck(cmd, cfg) },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return NewRunner(
+				ports.RealClock{},
+				cmdutil.GetGlobalFlags(cmd).GetSanitizer(),
+				cmdutil.FileOptions{},
+				cmd.OutOrStdout(),
+			).Check(cmd.Context(), cfg)
+		},
 	}
 
 	cmd.Flags().StringVar(&cfg.InPath, "in", "", "Path to evaluation JSON (required)")

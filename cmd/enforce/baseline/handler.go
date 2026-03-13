@@ -1,10 +1,10 @@
 package baseline
 
 import (
+	"context"
 	"fmt"
-	"time"
+	"io"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -12,13 +12,9 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
-)
-
-const (
-	baselineKind      = kernel.KindBaseline
-	baselineCheckKind = kernel.KindBaselineCheck
 )
 
 // SaveConfig holds the parameters for the baseline save subcommand.
@@ -34,8 +30,26 @@ type CheckConfig struct {
 	FailOnNew    bool
 }
 
-func runSave(cmd *cobra.Command, cfg SaveConfig) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
+// Runner orchestrates the creation and validation of baseline findings.
+type Runner struct {
+	Clock       ports.Clock
+	Sanitizer   kernel.Sanitizer
+	FileOptions cmdutil.FileOptions
+	Stdout      io.Writer
+}
+
+// NewRunner initializes a baseline runner with required dependencies.
+func NewRunner(clock ports.Clock, san kernel.Sanitizer, fileOpts cmdutil.FileOptions, stdout io.Writer) *Runner {
+	return &Runner{
+		Clock:       clock,
+		Sanitizer:   san,
+		FileOptions: fileOpts,
+		Stdout:      stdout,
+	}
+}
+
+// Save captures current evaluation findings into a baseline file.
+func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	outPath := fsutil.CleanUserPath(cfg.OutPath)
 
@@ -44,32 +58,31 @@ func runSave(cmd *cobra.Command, cfg SaveConfig) error {
 		return err
 	}
 	entries := remediation.BaselineEntriesFromFindings(eval.Findings)
-	entries = output.SanitizeBaselineEntries(gf.GetSanitizer(), entries)
+	entries = output.SanitizeBaselineEntries(r.Sanitizer, entries)
 
-	out := evaluation.Baseline{
+	baseline := evaluation.Baseline{
 		SchemaVersion:    kernel.SchemaBaseline,
-		Kind:             baselineKind,
-		CreatedAt:        time.Now().UTC(),
+		Kind:             kernel.KindBaseline,
+		CreatedAt:        r.Clock.Now().UTC(),
 		SourceEvaluation: inPath,
 		Findings:         entries,
 	}
 
-	f, err := cmdutil.PrepareOutputFile(outPath, gf)
+	f, err := cmdutil.OpenOutputFile(outPath, r.FileOptions)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", outPath, err)
 	}
 	defer f.Close()
-	if err := jsonutil.WriteIndented(f, out); err != nil {
+	if err := jsonutil.WriteIndented(f, baseline); err != nil {
 		return fmt.Errorf("write baseline file: %w", err)
 	}
 
-	if gf.TextOutputEnabled() {
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Saved baseline: %s (findings=%d)\n", outPath, len(entries))
-	}
+	_, _ = fmt.Fprintf(r.Stdout, "Saved baseline: %s (findings=%d)\n", outPath, len(entries))
 	return nil
 }
 
-func runCheck(cmd *cobra.Command, cfg CheckConfig) error {
+// Check compares evaluation findings against an existing baseline.
+func (r *Runner) Check(_ context.Context, cfg CheckConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
@@ -78,9 +91,9 @@ func runCheck(cmd *cobra.Command, cfg CheckConfig) error {
 		return err
 	}
 	current := remediation.BaselineEntriesFromFindings(eval.Findings)
-	current = output.SanitizeBaselineEntries(cmdutil.GetGlobalFlags(cmd).GetSanitizer(), current)
+	current = output.SanitizeBaselineEntries(r.Sanitizer, current)
 
-	base, err := shared.LoadBaselineFile(baselinePath, baselineKind)
+	base, err := shared.LoadBaselineFile(baselinePath, kernel.KindBaseline)
 	if err != nil {
 		return err
 	}
@@ -88,8 +101,8 @@ func runCheck(cmd *cobra.Command, cfg CheckConfig) error {
 	comparison := evaluation.CompareBaseline(base.Findings, current)
 	result := evaluation.BaselineComparison{
 		SchemaVersion: kernel.SchemaBaseline,
-		Kind:          baselineCheckKind,
-		CheckedAt:     time.Now().UTC(),
+		Kind:          kernel.KindBaselineCheck,
+		CheckedAt:     r.Clock.Now().UTC(),
 		BaselineFile:  baselinePath,
 		Evaluation:    inPath,
 		Summary: evaluation.BaselineComparisonSummary{
@@ -102,7 +115,7 @@ func runCheck(cmd *cobra.Command, cfg CheckConfig) error {
 		Resolved: comparison.Resolved,
 	}
 
-	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), result); err != nil {
+	if err := jsonutil.WriteIndented(r.Stdout, result); err != nil {
 		return fmt.Errorf("write baseline check output: %w", err)
 	}
 
