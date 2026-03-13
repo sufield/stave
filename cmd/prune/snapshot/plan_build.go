@@ -15,7 +15,7 @@ type planBuildParams struct {
 	ArchiveDir  string
 	DefaultTier string
 	TierRules   []projconfig.TierMappingRule
-	Tiers       projconfig.RetentionTiersMap
+	Tiers       map[string]projconfig.RetentionTierConfig
 	Files       []snapshotFile
 	Apply       bool
 	Force       bool
@@ -61,7 +61,7 @@ func toPrunerTierRules(in []projconfig.TierMappingRule) []pruner.TierMappingRule
 	return out
 }
 
-func toPrunerRetentionTiers(in projconfig.RetentionTiersMap) map[string]pruner.RetentionTier {
+func toPrunerRetentionTiers(in map[string]projconfig.RetentionTierConfig) map[string]pruner.RetentionTier {
 	out := make(map[string]pruner.RetentionTier, len(in))
 	for name, tier := range in {
 		out[name] = pruner.RetentionTier{

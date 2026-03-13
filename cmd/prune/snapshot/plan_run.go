@@ -51,7 +51,7 @@ type planRunInput struct {
 	archiveDir       string
 	now              time.Time
 	defaultTier      string
-	tiers            projconfig.RetentionTiersMap
+	tiers            map[string]projconfig.RetentionTierConfig
 	tierRules        []projconfig.TierMappingRule
 }
 
@@ -77,17 +77,17 @@ func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
 	}, nil
 }
 
-func resolvePlanRetentionConfig() (projconfig.RetentionTiersMap, []projconfig.TierMappingRule, string) {
+func resolvePlanRetentionConfig() (map[string]projconfig.RetentionTierConfig, []projconfig.TierMappingRule, string) {
 	cfg, _, _ := projconfig.FindProjectConfigWithPath("")
 	defaultTier := projconfig.ResolveRetentionTierDefault()
-	var tiers projconfig.RetentionTiersMap
+	var tiers map[string]projconfig.RetentionTierConfig
 	var tierRules []projconfig.TierMappingRule
 	if cfg != nil {
 		tiers = cfg.RetentionTiers
 		tierRules = cfg.ObservationTierMapping
 	}
 	if tiers == nil {
-		tiers = projconfig.RetentionTiersMap{
+		tiers = map[string]projconfig.RetentionTierConfig{
 			projconfig.DefaultRetentionTier: {
 				OlderThan: projconfig.DefaultSnapshotRetention,
 				KeepMin:   projconfig.DefaultTierKeepMin,

@@ -118,7 +118,7 @@ func prepareRunInput(opts *options) (runInput, error) {
 	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
 	observationsDir := fsutil.CleanUserPath(opts.ObservationsDir)
 
-	policy, err := projconfig.NormalizeGatePolicy(opts.Policy)
+	policy, err := projconfig.ParseGatePolicy(opts.Policy)
 	if err != nil {
 		return runInput{}, err
 	}

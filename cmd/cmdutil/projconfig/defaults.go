@@ -30,7 +30,7 @@ func HasConfiguredRetentionTier(tier string) bool {
 	if !ok || len(cfg.RetentionTiers) == 0 {
 		return false
 	}
-	_, exists := cfg.RetentionTiers[NormalizeRetentionTier(tier)]
+	_, exists := cfg.RetentionTiers[NormalizeTier(tier)]
 	return exists
 }
 
@@ -46,12 +46,12 @@ func ResolveOutputModeDefault() string {
 
 // ResolveQuietDefault returns the quiet default.
 func ResolveQuietDefault() bool {
-	return defaultEvaluator().CLIQuiet().AsBool()
+	return defaultEvaluator().CLIQuiet().Value
 }
 
 // ResolveSanitizeDefault returns the sanitize default.
 func ResolveSanitizeDefault() bool {
-	return defaultEvaluator().CLISanitize().AsBool()
+	return defaultEvaluator().CLISanitize().Value
 }
 
 // ResolvePathModeDefault returns the path-mode default.
@@ -61,5 +61,5 @@ func ResolvePathModeDefault() string {
 
 // ResolveAllowUnknownInputDefault returns the allow-unknown-input default.
 func ResolveAllowUnknownInputDefault() bool {
-	return defaultEvaluator().CLIAllowUnknownInput().AsBool()
+	return defaultEvaluator().CLIAllowUnknownInput().Value
 }

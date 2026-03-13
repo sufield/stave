@@ -57,21 +57,21 @@ func (e *Evaluator) resolve(
 	userField func(*UserConfig) string,
 	defaultValue string,
 	normalize func(string) string,
-) Value {
+) Value[string] {
 	if v := strings.TrimSpace(os.Getenv(entry.Name)); v != "" {
-		return Value{Value: normalize(v), Source: "env:" + entry.Name, Layer: LayerEnvironment}
+		return Value[string]{Value: normalize(v), Source: "env:" + entry.Name, Layer: LayerEnvironment}
 	}
 	if e.Project != nil {
 		if v := strings.TrimSpace(projectField(e.Project)); v != "" {
-			return Value{Value: normalize(v), Source: e.ProjectPath + ":" + configKey, Layer: LayerProjectConfig}
+			return Value[string]{Value: normalize(v), Source: e.ProjectPath + ":" + configKey, Layer: LayerProjectConfig}
 		}
 	}
 	if e.User != nil {
 		if v := strings.TrimSpace(userField(e.User)); v != "" {
-			return Value{Value: normalize(v), Source: e.UserPath + ":" + configKey, Layer: LayerUserConfig}
+			return Value[string]{Value: normalize(v), Source: e.UserPath + ":" + configKey, Layer: LayerUserConfig}
 		}
 	}
-	return Value{Value: defaultValue, Source: "default", Layer: LayerDefault}
+	return Value[string]{Value: defaultValue, Source: "default", Layer: LayerDefault}
 }
 
 func passthrough(v string) string { return v }
@@ -79,7 +79,7 @@ func passthrough(v string) string { return v }
 // --- High-Level Resolvers ---
 
 // MaxUnsafe returns max-unsafe and its source.
-func (e *Evaluator) MaxUnsafe() Value {
+func (e *Evaluator) MaxUnsafe() Value[string] {
 	return e.resolve(env.MaxUnsafe, "max_unsafe",
 		func(c *ProjectConfig) string { return c.MaxUnsafe },
 		func(c *UserConfig) string { return c.MaxUnsafe },
@@ -88,38 +88,38 @@ func (e *Evaluator) MaxUnsafe() Value {
 }
 
 // RetentionTier returns the retention tier and its source.
-func (e *Evaluator) RetentionTier() Value {
+func (e *Evaluator) RetentionTier() Value[string] {
 	return e.resolve(env.RetentionTier, "default_retention_tier",
 		func(c *ProjectConfig) string { return c.RetentionTier },
 		func(c *UserConfig) string { return c.RetentionTier },
-		DefaultRetentionTier, NormalizeRetentionTier,
+		DefaultRetentionTier, NormalizeTier,
 	)
 }
 
 // SnapshotRetention returns retention value and source for a tier.
-func (e *Evaluator) SnapshotRetention(tier string) Value {
+func (e *Evaluator) SnapshotRetention(tier string) Value[string] {
 	if v := strings.TrimSpace(os.Getenv(env.SnapshotRetention.Name)); v != "" {
-		return Value{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
+		return Value[string]{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
 	}
 	if v, ok := e.retentionFromProject(tier); ok {
 		return v
 	}
 	if e.User != nil {
 		if v := strings.TrimSpace(e.User.SnapshotRetention); v != "" {
-			return Value{Value: v, Source: e.UserPath + ":snapshot_retention", Layer: LayerUserConfig}
+			return Value[string]{Value: v, Source: e.UserPath + ":snapshot_retention", Layer: LayerUserConfig}
 		}
 	}
-	return Value{Value: DefaultSnapshotRetention, Source: "default", Layer: LayerDefault}
+	return Value[string]{Value: DefaultSnapshotRetention, Source: "default", Layer: LayerDefault}
 }
 
-func (e *Evaluator) retentionFromProject(tier string) (Value, bool) {
+func (e *Evaluator) retentionFromProject(tier string) (Value[string], bool) {
 	if e.Project == nil {
-		return Value{}, false
+		return Value[string]{}, false
 	}
-	normalizedTier := NormalizeRetentionTier(tier)
+	normalizedTier := NormalizeTier(tier)
 	if tc, exists := e.Project.RetentionTiers[normalizedTier]; exists {
 		if v := strings.TrimSpace(tc.OlderThan); v != "" {
-			return Value{
+			return Value[string]{
 				Value:  v,
 				Source: e.ProjectPath + ":snapshot_retention_tiers." + normalizedTier,
 				Layer:  LayerProjectConfig,
@@ -127,66 +127,66 @@ func (e *Evaluator) retentionFromProject(tier string) (Value, bool) {
 		}
 	}
 	if v := strings.TrimSpace(e.Project.SnapshotRetention); v != "" {
-		return Value{Value: v, Source: e.ProjectPath + ":snapshot_retention", Layer: LayerProjectConfig}, true
+		return Value[string]{Value: v, Source: e.ProjectPath + ":snapshot_retention", Layer: LayerProjectConfig}, true
 	}
-	return Value{}, false
+	return Value[string]{}, false
 }
 
 // CIFailurePolicy returns CI failure policy and source.
-func (e *Evaluator) CIFailurePolicy() Value {
+func (e *Evaluator) CIFailurePolicy() Value[string] {
 	return e.resolve(env.CIFailurePolicy, "ci_failure_policy",
 		func(c *ProjectConfig) string { return c.CIFailurePolicy },
 		func(c *UserConfig) string { return c.CIFailurePolicy },
-		string(DefaultCIFailurePolicy), passthrough,
+		string(GatePolicyAny), passthrough,
 	)
 }
 
 // --- CLI Default Resolvers ---
 
 // CLIOutput returns output mode and source.
-func (e *Evaluator) CLIOutput() Value {
+func (e *Evaluator) CLIOutput() Value[string] {
 	if e.User != nil {
 		v := strings.ToLower(strings.TrimSpace(e.User.CLIDefaults.Output))
 		if v == "json" || v == "text" {
-			return Value{Value: v, Source: e.UserPath + ":cli_defaults.output", Layer: LayerUserConfig}
+			return Value[string]{Value: v, Source: e.UserPath + ":cli_defaults.output", Layer: LayerUserConfig}
 		}
 	}
-	return Value{Value: "text", Source: "default", Layer: LayerDefault}
+	return Value[string]{Value: "text", Source: "default", Layer: LayerDefault}
 }
 
 // CLIQuiet returns quiet mode and source.
-func (e *Evaluator) CLIQuiet() Value {
+func (e *Evaluator) CLIQuiet() Value[bool] {
 	if e.User != nil && e.User.CLIDefaults.Quiet != nil {
-		return boolValue(*e.User.CLIDefaults.Quiet, e.UserPath+":cli_defaults.quiet", LayerUserConfig)
+		return Value[bool]{Value: *e.User.CLIDefaults.Quiet, Source: e.UserPath + ":cli_defaults.quiet", Layer: LayerUserConfig}
 	}
-	return boolValue(false, "default", LayerDefault)
+	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
 // CLISanitize returns sanitize mode and source.
-func (e *Evaluator) CLISanitize() Value {
+func (e *Evaluator) CLISanitize() Value[bool] {
 	if e.User != nil && e.User.CLIDefaults.Sanitize != nil {
-		return boolValue(*e.User.CLIDefaults.Sanitize, e.UserPath+":cli_defaults.sanitize", LayerUserConfig)
+		return Value[bool]{Value: *e.User.CLIDefaults.Sanitize, Source: e.UserPath + ":cli_defaults.sanitize", Layer: LayerUserConfig}
 	}
-	return boolValue(false, "default", LayerDefault)
+	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
 // CLIPathMode returns path mode and source.
-func (e *Evaluator) CLIPathMode() Value {
+func (e *Evaluator) CLIPathMode() Value[string] {
 	if e.User != nil {
 		v := strings.ToLower(strings.TrimSpace(e.User.CLIDefaults.PathMode))
 		if v == "base" || v == "full" {
-			return Value{Value: v, Source: e.UserPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
+			return Value[string]{Value: v, Source: e.UserPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
 		}
 	}
-	return Value{Value: "base", Source: "default", Layer: LayerDefault}
+	return Value[string]{Value: "base", Source: "default", Layer: LayerDefault}
 }
 
 // CLIAllowUnknownInput returns allow-unknown-input and source.
-func (e *Evaluator) CLIAllowUnknownInput() Value {
+func (e *Evaluator) CLIAllowUnknownInput() Value[bool] {
 	if e.User != nil && e.User.CLIDefaults.AllowUnknownInput != nil {
-		return boolValue(*e.User.CLIDefaults.AllowUnknownInput, e.UserPath+":cli_defaults.allow_unknown_input", LayerUserConfig)
+		return Value[bool]{Value: *e.User.CLIDefaults.AllowUnknownInput, Source: e.UserPath + ":cli_defaults.allow_unknown_input", Layer: LayerUserConfig}
 	}
-	return boolValue(false, "default", LayerDefault)
+	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
 // --- Static Helpers ---
@@ -198,7 +198,7 @@ func ResolveDefinedRetentionTiers(cfg *ProjectConfig) map[string]RetentionTierCo
 	}
 	out := make(map[string]RetentionTierConfig, len(cfg.RetentionTiers))
 	for name, tc := range cfg.RetentionTiers {
-		out[NormalizeRetentionTier(name)] = tc
+		out[NormalizeTier(name)] = tc
 	}
 	return out
 }
@@ -241,7 +241,7 @@ func ToProjectConfig(cfg *configservice.Config) *ProjectConfig {
 		SnapshotFilenameTemplate: cfg.SnapshotFilenameTemplate,
 	}
 	if len(cfg.RetentionTiers) > 0 {
-		out.RetentionTiers = make(RetentionTiersMap, len(cfg.RetentionTiers))
+		out.RetentionTiers = make(map[string]RetentionTierConfig, len(cfg.RetentionTiers))
 		for tier, tc := range cfg.RetentionTiers {
 			out.RetentionTiers[tier] = RetentionTierConfig{OlderThan: tc.OlderThan, KeepMin: tc.KeepMin}
 		}
@@ -265,7 +265,7 @@ func CopyProjectConfig(dst *ProjectConfig, src *configservice.Config) {
 		dst.RetentionTiers = nil
 		return
 	}
-	dst.RetentionTiers = make(RetentionTiersMap, len(src.RetentionTiers))
+	dst.RetentionTiers = make(map[string]RetentionTierConfig, len(src.RetentionTiers))
 	for tier, tc := range src.RetentionTiers {
 		dst.RetentionTiers[tier] = RetentionTierConfig{OlderThan: tc.OlderThan, KeepMin: tc.KeepMin}
 	}
@@ -289,11 +289,11 @@ func (staveConfigValidator) ParseDuration(value string) error {
 }
 
 func (staveConfigValidator) NormalizeTier(value string) string {
-	return NormalizeRetentionTier(value)
+	return NormalizeTier(value)
 }
 
 func (staveConfigValidator) NormalizePolicy(value string) (configservice.CIFailurePolicy, error) {
-	policy, err := NormalizeGatePolicy(value)
+	policy, err := ParseGatePolicy(value)
 	if err != nil {
 		return "", err
 	}
@@ -349,11 +349,11 @@ func ConfigKeyCompletionsFrom(svc *configservice.Service) []string {
 	tiers := []string{DefaultRetentionTier}
 
 	if cfg, ok := FindProjectConfig(); ok {
-		if t := NormalizeRetentionTier(cfg.RetentionTier); t != "" {
+		if t := NormalizeTier(cfg.RetentionTier); t != "" {
 			tiers = append(tiers, t)
 		}
 		for tier := range cfg.RetentionTiers {
-			if t := NormalizeRetentionTier(tier); t != "" {
+			if t := NormalizeTier(tier); t != "" {
 				tiers = append(tiers, t)
 			}
 		}
