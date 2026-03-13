@@ -155,13 +155,13 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 // validateDirs ensures directories exist unless using packs or stdin.
 func (o *ApplyOptions) validateDirs() error {
 	if !o.isUsingPacks() {
-		if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
+		if err := cmdutil.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
 	}
 
 	if o.ObservationsDir != "-" {
-		if err := cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
+		if err := cmdutil.ValidateFlagDir("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
 			return err
 		}
 	}

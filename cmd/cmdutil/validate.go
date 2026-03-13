@@ -8,28 +8,33 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-// ValidateDir checks that path exists and is a directory.
-// hint is passed to ui.DirectoryAccessError (may be nil).
-func ValidateDir(flag, path string, hint error) error {
+// CheckDir verifies that the given path exists and is a directory.
+// It returns a standard error without CLI-specific formatting, making it
+// suitable for use in internal packages.
+func CheckDir(path string) error {
 	fi, err := os.Stat(path)
 	if err != nil {
-		return ui.DirectoryAccessError(flag, path, err, hint)
+		return err
 	}
 	if !fi.IsDir() {
-		return fmt.Errorf("%s must be a directory: %s", flag, path)
+		return fmt.Errorf("path is not a directory: %s", path)
 	}
 	return nil
 }
 
-// ValidateDirWithInference validates a directory and, on failure, appends any
-// inference-failure explanation for the given inferKey (e.g. "controls" or
-// "observations"). This pattern was previously duplicated across apply,
-// diagnose, and validate command packages.
-func ValidateDirWithInference(flag, path, inferKey string, hint error, log *projctx.InferenceLog) error {
-	if err := ValidateDir(flag, path, hint); err != nil {
-		if detail := log.Explain(inferKey); detail != "" {
-			return fmt.Errorf("%w\n%s", err, detail)
+// ValidateFlagDir is a CLI helper that validates a directory path associated
+// with a flag. If validation fails, it enriches the error with UI-specific
+// hints and any available path-inference diagnostics.
+func ValidateFlagDir(flag, path, inferKey string, hint error, log *projctx.InferenceLog) error {
+	if err := CheckDir(path); err != nil {
+		err = ui.DirectoryAccessError(flag, path, err, hint)
+
+		if log != nil {
+			if detail := log.Explain(inferKey); detail != "" {
+				return fmt.Errorf("%w\n%s", err, detail)
+			}
 		}
+
 		return err
 	}
 	return nil

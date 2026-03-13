@@ -174,8 +174,8 @@ func TestResolveApplyOptions(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected error when controls is a file")
 		}
-		if got := err.Error(); !contains(got, "--controls must be a directory") {
-			t.Errorf("error = %q, want to contain %q", got, "--controls must be a directory")
+		if got := err.Error(); !contains(got, "is not a directory") {
+			t.Errorf("error = %q, want to contain %q", got, "is not a directory")
 		}
 	})
 }
