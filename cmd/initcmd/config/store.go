@@ -72,7 +72,7 @@ func (s projectConfigStore) Write(path string, cfg *projconfig.ProjectConfig) er
 }
 
 func resolveServiceConfigKeyValue(svc *configservice.Service, key string, cfg *projconfig.ProjectConfig, cfgPath, fallbackTier string) (configservice.KeyValueOutput, error) {
-	parsed, err := configservice.ParseConfigKey(key)
+	parsed, err := svc.ParseConfigKey(key)
 	if err != nil {
 		return configservice.KeyValueOutput{}, err
 	}
@@ -80,7 +80,7 @@ func resolveServiceConfigKeyValue(svc *configservice.Service, key string, cfg *p
 }
 
 func deleteConfigKeyValue(svc *configservice.Service, cfg *projconfig.ProjectConfig, key string) error {
-	parsed, err := configservice.ParseConfigKey(key)
+	parsed, err := svc.ParseConfigKey(key)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func deleteConfigKeyValue(svc *configservice.Service, cfg *projconfig.ProjectCon
 }
 
 func setConfigKeyValue(svc *configservice.Service, cfg *projconfig.ProjectConfig, key, value string) error {
-	parsed, err := configservice.ParseConfigKey(key)
+	parsed, err := svc.ParseConfigKey(key)
 	if err != nil {
 		return err
 	}

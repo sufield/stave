@@ -1,18 +1,19 @@
 package configservice
 
 import (
-	"sort"
-
-	"github.com/samber/lo"
+	"slices"
+	"strings"
 )
 
-// ResolvedField is a value annotated with its source.
+// ResolvedField pairs a configuration value with its originating source
+// (e.g., environment variable, file path, or hardcoded default).
 type ResolvedField struct {
 	Value  string `json:"value"`
 	Source string `json:"source"`
 }
 
-// EffectiveConfig is the CLI-facing shape of resolved config values.
+// EffectiveConfig represents the fully resolved, merged configuration state
+// as seen by the CLI.
 type EffectiveConfig struct {
 	ConfigFile               string                         `json:"config_file,omitempty"`
 	UserConfigFile           string                         `json:"user_config_file,omitempty"`
@@ -30,19 +31,26 @@ type EffectiveConfig struct {
 	EffectiveRetentionByTier map[string]ResolvedField       `json:"effective_retention_by_tier"`
 }
 
-// BuildKeyCompletions builds stable config key completions including tier paths.
+// BuildKeyCompletions generates a deterministic list of valid configuration keys
+// for shell completion or validation, including hierarchical retention tier paths.
 func BuildKeyCompletions(baseKeys []string, tiers []string) []string {
-	keys := make([]string, 0, len(baseKeys)+len(tiers)*3)
+	keys := make([]string, 0, len(baseKeys)+(len(tiers)*3))
 	keys = append(keys, baseKeys...)
 
-	normalizedTiers := lo.Uniq(lo.Compact(tiers))
-	sort.Strings(normalizedTiers)
-	for _, tier := range normalizedTiers {
-		keys = append(keys, "snapshot_retention_tiers."+tier)
-		keys = append(keys, "snapshot_retention_tiers."+tier+".older_than")
-		keys = append(keys, "snapshot_retention_tiers."+tier+".keep_min")
+	t := slices.Clone(tiers)
+	t = slices.DeleteFunc(t, func(s string) bool {
+		return strings.TrimSpace(s) == ""
+	})
+	slices.Sort(t)
+	t = slices.Compact(t)
+
+	for _, tier := range t {
+		prefix := "snapshot_retention_tiers." + tier
+		keys = append(keys, prefix)
+		keys = append(keys, prefix+".older_than")
+		keys = append(keys, prefix+".keep_min")
 	}
 
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys
 }

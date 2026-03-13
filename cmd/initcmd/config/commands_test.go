@@ -147,7 +147,7 @@ func TestConfigSetRejectsInvalidValue(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid duration error")
 	}
-	if !strings.Contains(err.Error(), "invalid value for max_unsafe") {
+	if !strings.Contains(err.Error(), "invalid duration") || !strings.Contains(err.Error(), "max_unsafe") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
