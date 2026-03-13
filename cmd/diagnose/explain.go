@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,12 +18,27 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-type explainFlagsType struct {
-	controlsDir string
-	format      string
+// ExplainRequest holds the inputs for the explain workflow.
+type ExplainRequest struct {
+	ControlID   string
+	ControlsDir string
+	Format      ui.OutputFormat
+	Stdout      io.Writer
 }
 
-type explainRule struct {
+// ExplainResult holds the structured output of an explain analysis.
+type ExplainResult struct {
+	ControlID          string        `json:"control_id"`
+	Name               string        `json:"name"`
+	Description        string        `json:"description"`
+	Type               string        `json:"type"`
+	MatchedFields      []string      `json:"matched_fields"`
+	Rules              []ExplainRule `json:"rules"`
+	MinimalObservation any           `json:"minimal_observation"`
+}
+
+// ExplainRule describes a single predicate rule.
+type ExplainRule struct {
 	Path    string             `json:"path"`
 	Op      predicate.Operator `json:"op"`
 	Value   any                `json:"value,omitempty"`
@@ -31,67 +46,32 @@ type explainRule struct {
 	Comment string             `json:"comment,omitempty"`
 }
 
-type explainOutput struct {
-	ControlID          string        `json:"control_id"`
-	Name               string        `json:"name"`
-	Description        string        `json:"description"`
-	Type               string        `json:"type"`
-	MatchedFields      []string      `json:"matched_fields"`
-	Rules              []explainRule `json:"rules"`
-	MinimalObservation any           `json:"minimal_observation"`
+// Explainer analyzes a control and explains its predicate structure.
+type Explainer struct {
+	Provider *compose.Provider
 }
 
-// NewExplainCmd constructs the explain command with closure-scoped flags.
-func NewExplainCmd() *cobra.Command {
-	var flags explainFlagsType
-
-	cmd := &cobra.Command{
-		Use:   "explain <control-id>",
-		Short: "Explain how a control evaluates and which fields it needs",
-		Long: `Explain loads a single control and prints:
-  - matched field paths used by predicates
-  - operator/value expectations
-  - a minimal obs.v0.1 snippet you can start from
-
-Examples:
-  stave explain CTL.S3.PUBLIC.001
-  stave explain CTL.S3.PUBLIC.001 --controls ./controls
-  stave explain CTL.S3.PUBLIC.001 --format json` + metadata.OfflineHelpSuffix,
-		Args:          cobra.ExactArgs(1),
-		SilenceUsage:  true,
-		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return RunExplain(cmd, args, flags.controlsDir, flags.format)
-		},
-	}
-
-	cmd.Flags().StringVar(&flags.controlsDir, "controls", "controls/s3", "Path to control definitions directory")
-	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-
-	return cmd
+// NewExplainer creates an Explainer with the given provider.
+func NewExplainer(p *compose.Provider) *Explainer {
+	return &Explainer{Provider: p}
 }
 
-// RunExplain implements the explain logic shared between the top-level
-// explain command and the controls explain sub-command.
-func RunExplain(cmd *cobra.Command, args []string, controlsDir, format string) error {
-	id := strings.TrimSpace(args[0])
+// Run executes the explain workflow.
+func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
+	id := strings.TrimSpace(req.ControlID)
 	if id == "" {
 		return &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
 	}
-	controlPath := strings.TrimSpace(controlsDir)
-	control, err := loadExplainControl(compose.CommandContext(cmd), id, controlPath)
+	controlsDir := strings.TrimSpace(req.ControlsDir)
+	ctl, err := e.loadControl(ctx, id, controlsDir)
 	if err != nil {
 		return err
 	}
-	out := buildExplainOutput(control)
-	resolvedFormat, err := compose.ResolveFormatValue(cmd, format)
-	if err != nil {
-		return err
-	}
-	return writeExplainOutput(cmd.OutOrStdout(), resolvedFormat, out)
+	result := e.analyze(ctl)
+	return e.write(req.Stdout, req.Format, result)
 }
 
-func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
+func (e *Explainer) loadControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
 	ctl, err := compose.LoadControlByID(ctx, controlsDir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
@@ -100,30 +80,30 @@ func loadExplainControl(ctx context.Context, id, controlsDir string) (policy.Con
 	return ctl, nil
 }
 
-func buildExplainOutput(ctl policy.ControlDefinition) explainOutput {
-	fields, rules := explainPredicate(ctl.UnsafePredicate, ctl.Params)
-	sort.Strings(fields)
-	return explainOutput{
+func (e *Explainer) analyze(ctl policy.ControlDefinition) ExplainResult {
+	fields, rules := e.walkPredicate(ctl.UnsafePredicate, ctl.Params)
+	slices.Sort(fields)
+	return ExplainResult{
 		ControlID:          ctl.ID.String(),
 		Name:               ctl.Name,
 		Description:        ctl.Description,
 		Type:               ctl.Type.String(),
 		MatchedFields:      fields,
 		Rules:              rules,
-		MinimalObservation: buildMinimalObservation(fields, rules),
+		MinimalObservation: e.buildMinimalObservation(fields, rules),
 	}
 }
 
-func writeExplainOutput(w io.Writer, format ui.OutputFormat, out explainOutput) error {
+func (e *Explainer) write(w io.Writer, format ui.OutputFormat, result ExplainResult) error {
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(w, out)
+		return jsonutil.WriteIndented(w, result)
 	}
-	return writeExplainText(w, out)
+	return writeExplainText(w, result)
 }
 
-func explainPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]string, []explainRule) {
-	rules, fieldSet := walkPredicateRules("any", pred.Any, params)
-	allRules, allFields := walkPredicateRules("all", pred.All, params)
+func (e *Explainer) walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]string, []ExplainRule) {
+	rules, fieldSet := walkRules("any", pred.Any, params)
+	allRules, allFields := walkRules("all", pred.All, params)
 	rules = append(rules, allRules...)
 	for f := range allFields {
 		fieldSet[f] = true
@@ -133,27 +113,35 @@ func explainPredicate(pred policy.UnsafePredicate, params policy.ControlParams) 
 	for f := range fieldSet {
 		fields = append(fields, f)
 	}
-	sort.Strings(fields)
+	slices.Sort(fields)
 	return fields, rules
 }
 
-func walkPredicateRules(from string, prs []policy.PredicateRule, params policy.ControlParams) ([]explainRule, map[string]bool) {
-	var rules []explainRule
+func walkRules(from string, prs []policy.PredicateRule, params policy.ControlParams) ([]ExplainRule, map[string]bool) {
+	var rules []ExplainRule
 	fieldSet := map[string]bool{}
 	for i := range prs {
 		r := prs[i]
 		loc := fmt.Sprintf("%s[%d]", from, i)
 		if len(r.Any) > 0 {
-			rules, fieldSet = mergeNestedRules(rules, fieldSet, loc+".any", r.Any, params)
+			sub, nf := walkRules(loc+".any", r.Any, params)
+			rules = append(rules, sub...)
+			for f := range nf {
+				fieldSet[f] = true
+			}
 		}
 		if len(r.All) > 0 {
-			rules, fieldSet = mergeNestedRules(rules, fieldSet, loc+".all", r.All, params)
+			sub, nf := walkRules(loc+".all", r.All, params)
+			rules = append(rules, sub...)
+			for f := range nf {
+				fieldSet[f] = true
+			}
 		}
 		if r.Field == "" {
 			continue
 		}
 		value, comment := resolveRuleValue(r, params)
-		rules = append(rules, explainRule{
+		rules = append(rules, ExplainRule{
 			Path:    r.Field,
 			Op:      r.Op,
 			Value:   value,
@@ -161,18 +149,6 @@ func walkPredicateRules(from string, prs []policy.PredicateRule, params policy.C
 			Comment: comment,
 		})
 		fieldSet[r.Field] = true
-	}
-	return rules, fieldSet
-}
-
-func mergeNestedRules(
-	rules []explainRule, fieldSet map[string]bool,
-	loc string, nested []policy.PredicateRule, params policy.ControlParams,
-) ([]explainRule, map[string]bool) {
-	sub, nf := walkPredicateRules(loc, nested, params)
-	rules = append(rules, sub...)
-	for f := range nf {
-		fieldSet[f] = true
 	}
 	return rules, fieldSet
 }
@@ -188,14 +164,14 @@ func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (valu
 	return value, comment
 }
 
-func buildMinimalObservation(fields []string, rules []explainRule) map[string]any {
+func (e *Explainer) buildMinimalObservation(fields []string, rules []ExplainRule) map[string]any {
 	props := map[string]any{}
 	valueByPath := map[string]any{}
 	for _, r := range rules {
 		if r.Path == "" {
 			continue
 		}
-		valueByPath[r.Path] = sampleValueForRule(r)
+		valueByPath[r.Path] = sampleValue(r)
 	}
 
 	for _, fullPath := range fields {
@@ -224,7 +200,7 @@ func buildMinimalObservation(fields []string, rules []explainRule) map[string]an
 	}
 }
 
-func sampleValueForRule(r explainRule) any {
+func sampleValue(r ExplainRule) any {
 	if r.Op == predicate.OpMissing {
 		return nil
 	}
@@ -265,7 +241,9 @@ func setNested(root map[string]any, dotted string, val any) {
 	}
 }
 
-func writeExplainText(w io.Writer, out explainOutput) error {
+// --- Text rendering ---
+
+func writeExplainText(w io.Writer, out ExplainResult) error {
 	if err := writeExplainHeader(w, out); err != nil {
 		return err
 	}
@@ -282,7 +260,7 @@ func writeExplainText(w io.Writer, out explainOutput) error {
 	return err
 }
 
-func writeExplainHeader(w io.Writer, out explainOutput) error {
+func writeExplainHeader(w io.Writer, out ExplainResult) error {
 	lines := []string{
 		fmt.Sprintf("Control: %s", out.ControlID),
 		fmt.Sprintf("Name: %s", out.Name),
@@ -310,7 +288,7 @@ func writeExplainMatchedFields(w io.Writer, fields []string) error {
 	return nil
 }
 
-func writeExplainRules(w io.Writer, rules []explainRule) error {
+func writeExplainRules(w io.Writer, rules []ExplainRule) error {
 	if _, err := fmt.Fprintln(w, "\nRules:"); err != nil {
 		return err
 	}
@@ -327,4 +305,49 @@ func writeExplainMinimalObservation(w io.Writer, observation any) error {
 		return err
 	}
 	return jsonutil.WriteIndented(w, observation)
+}
+
+// --- CLI bridge ---
+
+// NewExplainCmd constructs the explain command.
+func NewExplainCmd() *cobra.Command {
+	var (
+		controlsDir string
+		format      string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "explain <control-id>",
+		Short: "Explain how a control evaluates and which fields it needs",
+		Long: `Explain loads a single control and prints:
+  - matched field paths used by predicates
+  - operator/value expectations
+  - a minimal obs.v0.1 snippet you can start from
+
+Examples:
+  stave explain CTL.S3.PUBLIC.001
+  stave explain CTL.S3.PUBLIC.001 --controls ./controls
+  stave explain CTL.S3.PUBLIC.001 --format json` + metadata.OfflineHelpSuffix,
+		Args:          cobra.ExactArgs(1),
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
+			if fmtErr != nil {
+				return fmtErr
+			}
+			explainer := NewExplainer(compose.ActiveProvider())
+			return explainer.Run(cmd.Context(), ExplainRequest{
+				ControlID:   args[0],
+				ControlsDir: controlsDir,
+				Format:      fmtValue,
+				Stdout:      cmd.OutOrStdout(),
+			})
+		},
+	}
+
+	cmd.Flags().StringVar(&controlsDir, "controls", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+
+	return cmd
 }
