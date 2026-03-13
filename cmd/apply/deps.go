@@ -84,7 +84,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	}
 
 	// 2. Build Metadata & Policy
-	exemptionCfg, err := loadExemptionConfig(b.Opts.IgnoreFile)
+	exemptionCfg, err := LoadExemptionConfig(b.Opts.IgnoreFile)
 	if err != nil {
 		return nil, err
 	}

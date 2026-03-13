@@ -91,8 +91,13 @@ func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
 	_, userPath, _ := projconfig.FindUserConfigWithPath()
 
+	selectedContext := ""
+	if sc, err := projctx.ResolveSelectedGlobalContext(); err == nil && sc.Active {
+		selectedContext = sc.Name
+	}
+
 	return appeval.Options{
-		ContextName:        resolveApplyContextName(root),
+		ContextName:        ResolveContextName(root, selectedContext),
 		ProjectRoot:        root,
 		ControlsDir:        o.ControlsDir,
 		ConfigPath:         cfgPath,
