@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -348,7 +349,13 @@ Examples:
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls --format json` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return diagnose.RunExplain(cmd, args, controlsDir, "text")
+			explainer := diagnose.NewExplainer(compose.ActiveProvider())
+			return explainer.Run(cmd.Context(), diagnose.ExplainRequest{
+				ControlID:   args[0],
+				ControlsDir: controlsDir,
+				Format:      ui.OutputFormatText,
+				Stdout:      cmd.OutOrStdout(),
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
