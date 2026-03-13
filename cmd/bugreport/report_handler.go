@@ -1,7 +1,6 @@
 package bugreport
 
 import (
-	"archive/zip"
 	"fmt"
 	"io"
 	"os"
@@ -36,12 +35,32 @@ func runReport(cmd *cobra.Command, flags *reportFlags) error {
 	}
 	defer prepared.file.Close()
 
-	zw := zip.NewWriter(prepared.file)
-	if err := populateBundle(cmd, zw, prepared.cwd, flags); err != nil {
-		return err
+	binaryPath, _ := os.Executable()
+
+	var configPath string
+	if flags.includeConfig {
+		if p, ok := findConfigPath(); ok {
+			configPath = p
+		}
 	}
-	if err := zw.Close(); err != nil {
-		return fmt.Errorf("finalize bundle: %w", err)
+
+	var logPath string
+	if p, ok := findLogPath(cmd, prepared.cwd); ok {
+		logPath = p
+	}
+
+	gen := NewGenerator()
+	if err := gen.Generate(cmd.Context(), Config{
+		Output:       prepared.file,
+		Cwd:          prepared.cwd,
+		BinaryPath:   binaryPath,
+		ConfigPath:   configPath,
+		LogPath:      logPath,
+		LogTailLines: flags.tailLines,
+		Args:         os.Args,
+		Env:          os.Environ(),
+	}); err != nil {
+		return err
 	}
 	return writeSummary(cmd, prepared.outPath)
 }
@@ -60,22 +79,6 @@ func prepareOutputFile(cmd *cobra.Command, flags *reportFlags) (preparedOutput, 
 		return preparedOutput{}, err
 	}
 	return preparedOutput{cwd: cwd, outPath: outPath, file: zipFile}, nil
-}
-
-func populateBundle(cmd *cobra.Command, zw *zip.Writer, cwd string, flags *reportFlags) error {
-	bundle := newBundleWriter(zw)
-	if err := addCoreArtifacts(bundle, cwd); err != nil {
-		return err
-	}
-	if flags.includeConfig {
-		if err := addConfigArtifact(bundle); err != nil {
-			return err
-		}
-	}
-	if err := addLogArtifact(cmd, bundle, cwd, flags.tailLines); err != nil {
-		return err
-	}
-	return addManifest(bundle)
 }
 
 func writeSummary(cmd *cobra.Command, outPath string) error {

@@ -88,9 +88,9 @@ func toBuildModule(in debug.Module) buildModule {
 	return out
 }
 
-func collectEnv() []envEntry {
+func collectEnv(environ []string) []envEntry {
 	entries := make([]envEntry, 0, 32)
-	for _, kv := range os.Environ() {
+	for _, kv := range environ {
 		key, value, ok := strings.Cut(kv, "=")
 		if !ok || !shouldCollectEnvKey(key) {
 			continue
@@ -107,9 +107,8 @@ func collectEnv() []envEntry {
 	return entries
 }
 
-func collectArgs() []string {
-	args := append([]string(nil), os.Args...)
-	return logging.SanitizeArgs(args)
+func collectArgs(args []string) []string {
+	return logging.SanitizeArgs(append([]string(nil), args...))
 }
 
 func shouldCollectEnvKey(key string) bool {
