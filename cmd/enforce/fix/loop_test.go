@@ -16,25 +16,30 @@ import (
 )
 
 func TestBuildFixLoopReport(t *testing.T) {
-	report := buildFixLoopReport(
-		safetyenvelope.Verification{
-			Run: safetyenvelope.VerificationRunInfo{
-				Now:             time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-				BeforeSnapshots: 2,
-				AfterSnapshots:  2,
-			},
-			Summary: safetyenvelope.VerificationSummary{
-				BeforeViolations: 2,
-				AfterViolations:  1,
-				Resolved:         1,
-				Remaining:        1,
-				Introduced:       0,
-			},
+	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
+	r := NewRunner(compose.ActiveProvider(), clock)
+
+	req := LoopRequest{
+		BeforeDir: "./before",
+		AfterDir:  "./after",
+		MaxUnsafe: 7 * 24 * time.Hour,
+	}
+	v := safetyenvelope.Verification{
+		Run: safetyenvelope.VerificationRunInfo{
+			Now:             time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+			BeforeSnapshots: 2,
+			AfterSnapshots:  2,
 		},
-		7*24*time.Hour,
-		"./before", "./after",
-		fixLoopArtifacts{},
-	)
+		Summary: safetyenvelope.VerificationSummary{
+			BeforeViolations: 2,
+			AfterViolations:  1,
+			Resolved:         1,
+			Remaining:        1,
+			Introduced:       0,
+		},
+	}
+
+	report := r.buildReport(req, v)
 	if report.Pass {
 		t.Fatalf("expected report to fail when remaining findings exist")
 	}
@@ -88,7 +93,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read remediation report: %v", err)
 	}
-	var report fixLoopReport
+	var report loopReport
 	if err := json.Unmarshal(data, &report); err != nil {
 		t.Fatalf("parse remediation report: %v", err)
 	}

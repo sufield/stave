@@ -14,11 +14,12 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/version"
 )
 
-// LoopRequest defines the parameters for a remediation verification lifecycle.
+// LoopRequest defines the inputs for the fix-loop workflow.
 type LoopRequest struct {
 	BeforeDir    string
 	AfterDir     string
@@ -30,63 +31,75 @@ type LoopRequest struct {
 	Stderr       io.Writer
 }
 
-type fixLoopObservationSummary struct {
-	Directory  string `json:"directory"`
-	Snapshots  int    `json:"snapshots"`
-	Violations int    `json:"violations"`
+// --- Data Models ---
+
+type evaluationState struct {
+	Result    *evaluation.Result
+	Snapshots int
+	Envelope  safetyenvelope.Evaluation
 }
 
-type fixLoopArtifacts struct {
-	BeforeEvaluation string `json:"before_evaluation,omitempty"`
-	AfterEvaluation  string `json:"after_evaluation,omitempty"`
-	Verification     string `json:"verification,omitempty"`
-	Report           string `json:"report,omitempty"`
-}
-
-type fixLoopReport struct {
+type loopReport struct {
 	SchemaVersion kernel.Schema                      `json:"schema_version"`
 	Kind          kernel.OutputKind                  `json:"kind"`
 	CheckedAt     time.Time                          `json:"checked_at"`
 	Pass          bool                               `json:"pass"`
 	Reason        string                             `json:"reason"`
 	MaxUnsafe     string                             `json:"max_unsafe"`
-	Before        fixLoopObservationSummary          `json:"before"`
-	After         fixLoopObservationSummary          `json:"after"`
+	Before        observationSummary                 `json:"before"`
+	After         observationSummary                 `json:"after"`
 	Verification  safetyenvelope.VerificationSummary `json:"verification"`
-	Artifacts     fixLoopArtifacts                   `json:"artifacts"`
 }
+
+type observationSummary struct {
+	Directory  string `json:"directory"`
+	Snapshots  int    `json:"snapshots"`
+	Violations int    `json:"violations"`
+}
+
+// --- Orchestration ---
 
 // Loop executes the apply-before, apply-after, and verify sequence.
 func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
-	execCtx, err := r.prepareLoopExecution(ctx, req)
-	if err != nil {
+	// 1. Validate directories
+	if err := validateLoopDirs(req); err != nil {
 		return err
 	}
-	controls, err := loadFixLoopControls(ctx, execCtx.controlsDir)
-	if err != nil {
-		return err
-	}
-	beforeEval, err := r.evaluateFixLoopState(ctx, execCtx, controls, execCtx.beforeDir, "before")
-	if err != nil {
-		return err
-	}
-	afterEval, err := r.evaluateFixLoopState(ctx, execCtx, controls, execCtx.afterDir, "after")
+
+	// 2. Load controls once for both runs
+	controls, err := loadControls(ctx, req.ControlsDir)
 	if err != nil {
 		return err
 	}
 
-	verification, err := r.buildFixLoopVerification(execCtx, beforeEval, afterEval)
-	if err != nil {
-		return err
-	}
-	artifacts, err := r.writeFixLoopArtifacts(execCtx, beforeEval.envelope, afterEval.envelope, verification)
+	// 3. Evaluate "before" state
+	before, err := r.evaluateState(ctx, req, controls, req.BeforeDir, "before")
 	if err != nil {
 		return err
 	}
 
-	report := buildFixLoopReport(verification, execCtx.maxUnsafe, execCtx.beforeDir, execCtx.afterDir, artifacts)
-	if err := r.writeFixLoopReport(execCtx, &report); err != nil {
+	// 4. Evaluate "after" state
+	after, err := r.evaluateState(ctx, req, controls, req.AfterDir, "after")
+	if err != nil {
 		return err
+	}
+
+	// 5. Verify (compare before/after)
+	verification, err := r.verify(before, after, req.MaxUnsafe)
+	if err != nil {
+		return err
+	}
+
+	// 6. Build report and persist artifacts
+	report := r.buildReport(req, verification)
+	if req.OutDir != "" {
+		if err := r.persist(req.OutDir, before.Envelope, after.Envelope, verification, &report); err != nil {
+			return err
+		}
+	}
+
+	if err := jsonutil.WriteIndented(req.Stdout, &report); err != nil {
+		return fmt.Errorf("write remediation report: %w", err)
 	}
 	if !report.Pass {
 		return ui.ErrViolationsFound
@@ -94,38 +107,9 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 	return nil
 }
 
-type fixLoopExecution struct {
-	beforeDir    string
-	afterDir     string
-	controlsDir  string
-	outDir       string
-	maxUnsafe    time.Duration
-	allowUnknown bool
-	stdout       io.Writer
-}
+// --- Internal Workflow Steps ---
 
-type fixLoopEvaluation struct {
-	result    *evaluation.Result
-	snapshots int
-	envelope  safetyenvelope.Evaluation
-}
-
-func (r *Runner) prepareLoopExecution(_ context.Context, req LoopRequest) (fixLoopExecution, error) {
-	if err := validateFixLoopDirs(req); err != nil {
-		return fixLoopExecution{}, err
-	}
-	return fixLoopExecution{
-		beforeDir:    req.BeforeDir,
-		afterDir:     req.AfterDir,
-		controlsDir:  req.ControlsDir,
-		outDir:       req.OutDir,
-		maxUnsafe:    req.MaxUnsafe,
-		allowUnknown: req.AllowUnknown,
-		stdout:       req.Stdout,
-	}, nil
-}
-
-func validateFixLoopDirs(req LoopRequest) error {
+func validateLoopDirs(req LoopRequest) error {
 	for _, dir := range []struct{ flag, path string }{
 		{"--before", req.BeforeDir},
 		{"--after", req.AfterDir},
@@ -138,72 +122,66 @@ func validateFixLoopDirs(req LoopRequest) error {
 	return nil
 }
 
-func loadFixLoopControls(ctx context.Context, controlsDir string) ([]policy.ControlDefinition, error) {
-	controls, err := compose.LoadControls(ctx, controlsDir)
+func loadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+	controls, err := compose.LoadControls(ctx, dir)
 	if err != nil {
 		return nil, err
 	}
 	if len(controls) == 0 {
-		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, controlsDir)
+		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, dir)
 	}
 	return controls, nil
 }
 
-func (r *Runner) evaluateFixLoopState(
+func (r *Runner) evaluateState(
 	ctx context.Context,
-	execCtx fixLoopExecution,
+	req LoopRequest,
 	controls []policy.ControlDefinition,
-	observationsDir string,
+	dir string,
 	label string,
-) (fixLoopEvaluation, error) {
+) (evaluationState, error) {
 	loader, err := r.Provider.NewObservationRepo()
 	if err != nil {
-		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation: create observation loader: %w", label, err)
+		return evaluationState{}, fmt.Errorf("%s evaluation: create observation loader: %w", label, err)
 	}
 	result, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
 		Context:           ctx,
-		ObservationsDir:   observationsDir,
+		ObservationsDir:   dir,
 		Controls:          controls,
-		MaxUnsafe:         execCtx.maxUnsafe,
+		MaxUnsafe:         req.MaxUnsafe,
 		Clock:             r.Clock,
-		AllowUnknownType:  execCtx.allowUnknown,
+		AllowUnknownType:  req.AllowUnknown,
 		ToolVersion:       version.Version,
 		ObservationLoader: loader,
 	})
 	if err != nil {
-		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation: %w", label, err)
+		return evaluationState{}, fmt.Errorf("%s evaluation: %w", label, err)
 	}
-	env := r.buildEvaluationEnvelope(*result)
-	if err := safetyenvelope.ValidateEvaluation(env); err != nil {
-		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation schema validation: %w", label, err)
+	envelope := r.buildEvaluationEnvelope(*result)
+	if err := safetyenvelope.ValidateEvaluation(envelope); err != nil {
+		return evaluationState{}, fmt.Errorf("%s envelope invalid: %w", label, err)
 	}
-	return fixLoopEvaluation{result: result, snapshots: snaps, envelope: env}, nil
+	return evaluationState{Result: result, Snapshots: snaps, Envelope: envelope}, nil
 }
 
-func (r *Runner) buildFixLoopVerification(
-	execCtx fixLoopExecution,
-	beforeEval fixLoopEvaluation,
-	afterEval fixLoopEvaluation,
-) (safetyenvelope.Verification, error) {
-	beforeResult := beforeEval.result
-	afterResult := afterEval.result
-	now := r.Clock.Now()
-	diff := evaluation.CompareVerificationFindings(beforeResult.Findings, afterResult.Findings)
+func (r *Runner) verify(before, after evaluationState, maxUnsafe time.Duration) (safetyenvelope.Verification, error) {
+	diff := evaluation.CompareVerificationFindings(before.Result.Findings, after.Result.Findings)
 	resolved := shared.FindingsToVerificationEntries(diff.Resolved)
 	remaining := shared.FindingsToVerificationEntries(diff.Remaining)
 	introduced := shared.FindingsToVerificationEntries(diff.Introduced)
-	verification := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
+
+	v := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
 			ToolVersion:     version.Version,
 			Offline:         true,
-			Now:             now,
-			MaxUnsafe:       execCtx.maxUnsafe,
-			BeforeSnapshots: beforeEval.snapshots,
-			AfterSnapshots:  afterEval.snapshots,
+			Now:             r.Clock.Now().UTC(),
+			MaxUnsafe:       maxUnsafe,
+			BeforeSnapshots: before.Snapshots,
+			AfterSnapshots:  after.Snapshots,
 		},
 		Summary: safetyenvelope.VerificationSummary{
-			BeforeViolations: len(beforeResult.Findings),
-			AfterViolations:  len(afterResult.Findings),
+			BeforeViolations: len(before.Result.Findings),
+			AfterViolations:  len(after.Result.Findings),
 			Resolved:         len(resolved),
 			Remaining:        len(remaining),
 			Introduced:       len(introduced),
@@ -212,35 +190,24 @@ func (r *Runner) buildFixLoopVerification(
 		Remaining:  remaining,
 		Introduced: introduced,
 	})
-	if err := safetyenvelope.ValidateVerification(verification); err != nil {
-		return safetyenvelope.Verification{}, fmt.Errorf("verification schema validation: %w", err)
-	}
-	return verification, nil
+	return v, safetyenvelope.ValidateVerification(v)
 }
 
-func buildFixLoopReport(
-	verification safetyenvelope.Verification,
-	maxUnsafe time.Duration,
-	beforeDir, afterDir string,
-	artifacts fixLoopArtifacts,
-) fixLoopReport {
-	summary := verification.Summary
-	run := verification.Run
-	pass := summary.Remaining == 0 && summary.Introduced == 0
+func (r *Runner) buildReport(req LoopRequest, v safetyenvelope.Verification) loopReport {
+	pass := v.Summary.Remaining == 0 && v.Summary.Introduced == 0
 	reason := "all previously violating resources are now resolved"
 	if !pass {
-		reason = fmt.Sprintf("remaining=%d introduced=%d", summary.Remaining, summary.Introduced)
+		reason = fmt.Sprintf("remaining=%d introduced=%d", v.Summary.Remaining, v.Summary.Introduced)
 	}
-	return fixLoopReport{
+	return loopReport{
 		SchemaVersion: kernel.SchemaFixLoop,
 		Kind:          kernel.KindRemediationReport,
-		CheckedAt:     run.Now,
+		CheckedAt:     v.Run.Now,
 		Pass:          pass,
 		Reason:        reason,
-		MaxUnsafe:     maxUnsafe.String(),
-		Before:        fixLoopObservationSummary{Directory: beforeDir, Snapshots: run.BeforeSnapshots, Violations: summary.BeforeViolations},
-		After:         fixLoopObservationSummary{Directory: afterDir, Snapshots: run.AfterSnapshots, Violations: summary.AfterViolations},
-		Verification:  summary,
-		Artifacts:     artifacts,
+		MaxUnsafe:     req.MaxUnsafe.String(),
+		Before:        observationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.BeforeViolations},
+		After:         observationSummary{Directory: req.AfterDir, Snapshots: v.Run.AfterSnapshots, Violations: v.Summary.AfterViolations},
+		Verification:  v.Summary,
 	}
 }
