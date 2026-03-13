@@ -1,35 +1,42 @@
 package cmdutil
 
 import (
-	"os"
-
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/domain/validation"
 )
 
-// DoctorPrereqChecks runs doctor checks and maps them to readiness prereq checks.
-func DoctorPrereqChecks() []validation.PrereqCheck {
-	cwd, _ := os.Getwd()
-	binaryPath, _ := os.Executable()
+// DoctorPrereqChecks runs system health checks and transforms them into domain-level
+// prerequisite checks. It requires explicit paths to ensure testability and
+// environment awareness.
+func DoctorPrereqChecks(cwd, binaryPath string) []validation.PrereqCheck {
 	doctorChecks, _ := doctor.Run(&doctor.Context{
 		Cwd:        cwd,
 		BinaryPath: binaryPath,
 	})
+
 	out := make([]validation.PrereqCheck, 0, len(doctorChecks))
 	for _, c := range doctorChecks {
-		status := validation.StatusPass
-		switch c.Status {
-		case doctor.StatusFail:
-			status = validation.StatusFail
-		case doctor.StatusWarn:
-			status = validation.StatusWarn
-		}
 		out = append(out, validation.PrereqCheck{
 			Name:    c.Name,
-			Status:  status,
+			Status:  mapDoctorStatus(c.Status),
 			Message: c.Message,
 			Fix:     c.Fix,
 		})
 	}
 	return out
+}
+
+// mapDoctorStatus performs a clean translation between the system-health layer
+// and the domain-validation layer.
+func mapDoctorStatus(s doctor.Status) validation.Status {
+	switch s {
+	case doctor.StatusFail:
+		return validation.StatusFail
+	case doctor.StatusWarn:
+		return validation.StatusWarn
+	case doctor.StatusPass:
+		return validation.StatusPass
+	default:
+		return validation.StatusFail
+	}
 }

@@ -3,6 +3,7 @@ package apply
 import (
 	"errors"
 	"io"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -141,6 +142,12 @@ func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 		Stderr:          cmd.ErrOrStderr(),
 		ControlsFlagSet: opts.ControlsSet,
 		HasEnabledPacks: hasPacks,
-		PrereqChecks:    cmdutil.DoctorPrereqChecks(),
+		PrereqChecks:    doctorPrereqs(),
 	})
+}
+
+func doctorPrereqs() []validation.PrereqCheck {
+	cwd, _ := os.Getwd()
+	exe, _ := os.Executable()
+	return cmdutil.DoctorPrereqChecks(cwd, exe)
 }
