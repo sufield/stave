@@ -107,7 +107,7 @@ func TestResolveApplyOptions(t *testing.T) {
 					MaxUnsafe:       "168h",
 				},
 			},
-			wantContain: "--controls not accessible",
+			wantContain: "--controls path",
 		},
 		{
 			name: "observations dir not found",
@@ -118,7 +118,7 @@ func TestResolveApplyOptions(t *testing.T) {
 					MaxUnsafe:       "168h",
 				},
 			},
-			wantContain: "--observations not accessible",
+			wantContain: "--observations path",
 		},
 		{
 			name: "invalid max-unsafe",
