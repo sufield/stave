@@ -1,6 +1,9 @@
 package bugreport
 
 import (
+	"archive/zip"
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/metadata"
@@ -62,7 +65,18 @@ Examples:
   stave bug-report inspect bundle.zip | less` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return dumpBundle(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], inspectMaxFileSize)
+			zr, err := zip.OpenReader(args[0])
+			if err != nil {
+				return fmt.Errorf("open bundle: %w", err)
+			}
+			defer func() { _ = zr.Close() }()
+
+			ins := NewInspector(InspectConfig{
+				Stdout:  cmd.OutOrStdout(),
+				Stderr:  cmd.ErrOrStderr(),
+				MaxSize: DefaultMaxInspectSize,
+			})
+			return ins.Inspect(&zr.Reader)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

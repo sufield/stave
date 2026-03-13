@@ -8,57 +8,74 @@ import (
 	"strings"
 )
 
-const inspectMaxFileSize int64 = 10 << 20 // 10 MB
+// DefaultMaxInspectSize is the safety limit for decompressing files during inspection (10 MB).
+const DefaultMaxInspectSize int64 = 10 << 20
 
-func dumpBundle(out io.Writer, errOut io.Writer, path string, maxSize int64) error {
-	zr, err := zip.OpenReader(path)
-	if err != nil {
-		return fmt.Errorf("open bundle: %w", err)
+// InspectConfig defines how the bundle should be dumped.
+type InspectConfig struct {
+	Stdout  io.Writer
+	Stderr  io.Writer
+	MaxSize int64
+}
+
+// Inspector handles the extraction and display of diagnostic bundles.
+type Inspector struct {
+	cfg InspectConfig
+}
+
+// NewInspector creates an inspector with the provided configuration.
+func NewInspector(cfg InspectConfig) *Inspector {
+	if cfg.MaxSize <= 0 {
+		cfg.MaxSize = DefaultMaxInspectSize
 	}
-	defer func() { _ = zr.Close() }()
+	return &Inspector{cfg: cfg}
+}
 
-	// Sort entries by name for deterministic output.
+// Inspect reads a zip archive and writes its contents to the configured Stdout.
+func (ins *Inspector) Inspect(zr *zip.Reader) error {
 	entries := make([]*zip.File, len(zr.File))
 	copy(entries, zr.File)
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i].Name < entries[j].Name
 	})
 
-	if maxSize < 0 {
-		return fmt.Errorf("maxSize cannot be negative")
-	}
-
 	for _, f := range entries {
-		if strings.Contains(f.Name, "..") {
-			_, _ = fmt.Fprintf(errOut, "warning: skipping suspicious entry %q\n", f.Name)
-			continue
-		}
-		if f.UncompressedSize64 > uint64(maxSize) {
-			_, _ = fmt.Fprintf(errOut, "warning: skipping %s (%d bytes exceeds %dMB limit)\n", f.Name, f.UncompressedSize64, maxSize>>20)
-			continue
-		}
-		if _, err := fmt.Fprintf(out, "=== %s ===\n", f.Name); err != nil {
-			return fmt.Errorf("%s: %w", f.Name, err)
-		}
-		if err := copyZipEntry(out, f, maxSize); err != nil {
-			return fmt.Errorf("%s: %w", f.Name, err)
-		}
-		if _, err := fmt.Fprintln(out); err != nil {
-			return fmt.Errorf("%s: %w", f.Name, err)
+		if err := ins.inspectFile(f); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func copyZipEntry(w io.Writer, f *zip.File, maxSize int64) error {
+func (ins *Inspector) inspectFile(f *zip.File) error {
+	if strings.Contains(f.Name, "..") {
+		_, _ = fmt.Fprintf(ins.cfg.Stderr, "warning: skipping suspicious entry %q\n", f.Name)
+		return nil
+	}
+	if ins.cfg.MaxSize > 0 && f.UncompressedSize64 > uint64(ins.cfg.MaxSize) { //nolint:gosec // MaxSize is validated positive by NewInspector
+		_, _ = fmt.Fprintf(ins.cfg.Stderr, "warning: skipping %s (%d bytes exceeds %dMB limit)\n",
+			f.Name, f.UncompressedSize64, ins.cfg.MaxSize>>20)
+		return nil
+	}
+	if _, err := fmt.Fprintf(ins.cfg.Stdout, "=== %s ===\n", f.Name); err != nil {
+		return fmt.Errorf("%s: %w", f.Name, err)
+	}
+	if err := ins.copyEntry(f); err != nil {
+		return fmt.Errorf("%s: %w", f.Name, err)
+	}
+	if _, err := fmt.Fprintln(ins.cfg.Stdout); err != nil {
+		return fmt.Errorf("%s: %w", f.Name, err)
+	}
+	return nil
+}
+
+func (ins *Inspector) copyEntry(f *zip.File) error {
 	rc, err := f.Open()
 	if err != nil {
-		return fmt.Errorf("open: %w", err)
+		return err
 	}
 	defer func() { _ = rc.Close() }()
 
-	// Cap read to maxSize+1 to guard against decompression bombs
-	// (entry size is pre-checked, but LimitReader provides defense in depth).
-	_, err = io.Copy(w, io.LimitReader(rc, maxSize+1))
+	_, err = io.Copy(ins.cfg.Stdout, io.LimitReader(rc, ins.cfg.MaxSize+1))
 	return err
 }

@@ -16,8 +16,18 @@ func TestRunInspect_DumpsEntries(t *testing.T) {
 		{"doctor.json", `{"ready":true}` + "\n"},
 	})
 
+	zr, err := zip.OpenReader(zipPath)
+	if err != nil {
+		t.Fatalf("open zip: %v", err)
+	}
+	defer zr.Close()
+
 	var buf bytes.Buffer
-	if err := dumpBundle(&buf, io.Discard, zipPath, inspectMaxFileSize); err != nil {
+	ins := NewInspector(InspectConfig{
+		Stdout: &buf,
+		Stderr: io.Discard,
+	})
+	if err := ins.Inspect(&zr.Reader); err != nil {
 		t.Fatalf("inspect failed: %v", err)
 	}
 
@@ -45,10 +55,19 @@ func TestRunInspect_SkipsLargeFiles(t *testing.T) {
 		{"big.txt", strings.Repeat("x", 200)},
 	})
 
-	var stdout, stderr bytes.Buffer
+	zr, err := zip.OpenReader(zipPath)
+	if err != nil {
+		t.Fatalf("open zip: %v", err)
+	}
+	defer zr.Close()
 
-	// Use a limit of 100 bytes so big.txt (200 bytes) gets skipped.
-	if err := dumpBundle(&stdout, &stderr, zipPath, int64(100)); err != nil {
+	var stdout, stderr bytes.Buffer
+	ins := NewInspector(InspectConfig{
+		Stdout:  &stdout,
+		Stderr:  &stderr,
+		MaxSize: 100,
+	})
+	if err := ins.Inspect(&zr.Reader); err != nil {
 		t.Fatalf("inspect failed: %v", err)
 	}
 
