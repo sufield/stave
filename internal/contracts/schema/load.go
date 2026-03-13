@@ -3,148 +3,110 @@ package schema
 import (
 	"embed"
 	"fmt"
-	"path"
 	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
+// Kind identifies the functional category of a schema.
+type Kind string
+
 const (
-	KindControl     = "control"
-	KindObservation = "observation"
-	KindFinding     = "finding"
-	KindOutput      = "output"
-	KindDiagnose    = "diagnose"
+	KindControl     Kind = "control"
+	KindObservation Kind = "observation"
+	KindFinding     Kind = "finding"
+	KindOutput      Kind = "output"
+	KindDiagnose    Kind = "diagnose"
 )
 
 //go:embed embedded/*/*/*.json
-var embeddedSchemas embed.FS
+var embeddedFS embed.FS
 
-type schemaKind string
-
-const (
-	schemaKindControl     schemaKind = KindControl
-	schemaKindObservation schemaKind = KindObservation
-	schemaKindFinding     schemaKind = KindFinding
-	schemaKindOutput      schemaKind = KindOutput
-	schemaKindDiagnose    schemaKind = KindDiagnose
-)
-
-type schemaDescriptor struct {
-	kind      schemaKind
-	version   string
-	path      string
-	isDefault bool
-}
-
-// schemaRegistry is the single source of truth for embedded contract schemas.
-var schemaRegistry = []schemaDescriptor{
-	{
-		kind:      schemaKindControl,
-		version:   kernel.RegistryLayoutStandard,
-		path:      "embedded/control/v1/control.schema.json",
-		isDefault: true,
+// registry maps (Kind -> Version) to the internal filesystem path.
+var registry = map[Kind]map[string]string{
+	KindControl: {
+		kernel.RegistryLayoutStandard: "embedded/control/v1/control.schema.json",
 	},
-	{
-		kind:      schemaKindObservation,
-		version:   kernel.RegistryLayoutStandard,
-		path:      "embedded/observation/v1/observation.schema.json",
-		isDefault: true,
+	KindObservation: {
+		kernel.RegistryLayoutStandard: "embedded/observation/v1/observation.schema.json",
 	},
-	{
-		kind:      schemaKindFinding,
-		version:   kernel.RegistryLayoutStandard,
-		path:      "embedded/finding/v1/finding.schema.json",
-		isDefault: true,
+	KindFinding: {
+		kernel.RegistryLayoutStandard: "embedded/finding/v1/finding.schema.json",
 	},
-	{
-		kind:      schemaKindOutput,
-		version:   kernel.RegistryLayoutLegacyOutput,
-		path:      "embedded/output/v0.1/output.schema.json",
-		isDefault: true,
+	KindOutput: {
+		kernel.RegistryLayoutLegacyOutput: "embedded/output/v0.1/output.schema.json",
 	},
-	{
-		kind:      schemaKindDiagnose,
-		version:   kernel.RegistryLayoutStandard,
-		path:      "embedded/diagnose/v1/diagnose.schema.json",
-		isDefault: true,
+	KindDiagnose: {
+		kernel.RegistryLayoutStandard: "embedded/diagnose/v1/diagnose.schema.json",
 	},
 }
 
-func parseKind(raw string) (schemaKind, error) {
-	kind := schemaKind(strings.TrimSpace(raw))
-	switch kind {
-	case schemaKindControl, schemaKindObservation, schemaKindFinding, schemaKindOutput, schemaKindDiagnose:
-		return kind, nil
-	default:
-		return "", fmt.Errorf("unsupported schema kind %q", strings.TrimSpace(raw))
-	}
+// defaultVersions maps a Kind to its preferred/default version key.
+var defaultVersions = map[Kind]string{
+	KindControl:     kernel.RegistryLayoutStandard,
+	KindObservation: kernel.RegistryLayoutStandard,
+	KindFinding:     kernel.RegistryLayoutStandard,
+	KindOutput:      kernel.RegistryLayoutLegacyOutput,
+	KindDiagnose:    kernel.RegistryLayoutStandard,
 }
 
-func supportedVersions(kind schemaKind) []string {
-	versions := make([]string, 0, len(schemaRegistry))
-	for _, desc := range schemaRegistry {
-		if desc.kind != kind {
-			continue
-		}
-		versions = append(versions, desc.version)
-	}
-	slices.Sort(versions)
-	return versions
-}
-
-func resolveDescriptor(kind schemaKind, version string) (schemaDescriptor, error) {
-	version = strings.TrimSpace(version)
-	if version == "" {
-		for _, desc := range schemaRegistry {
-			if desc.kind == kind && desc.isDefault {
-				return desc, nil
-			}
-		}
-		return schemaDescriptor{}, fmt.Errorf("no default schema version configured for kind %q", kind)
-	}
-	for _, desc := range schemaRegistry {
-		if desc.kind == kind && desc.version == version {
-			return desc, nil
-		}
-	}
-	return schemaDescriptor{}, fmt.Errorf(
-		"unsupported schema version %q for kind %q (supported: %s)",
-		version, kind, strings.Join(supportedVersions(kind), ", "),
-	)
-}
-
-// ResolveVersion returns the effective schema version for a kind.
+// ResolveVersion determines the effective version for a kind,
+// falling back to the default if the version is empty.
 func ResolveVersion(kind string, version string) (string, error) {
-	parsedKind, err := parseKind(kind)
-	if err != nil {
-		return "", err
+	k := Kind(strings.TrimSpace(kind))
+	v := strings.TrimSpace(version)
+
+	if v == "" {
+		def, ok := defaultVersions[k]
+		if !ok {
+			return "", fmt.Errorf("no default version defined for schema kind %q", kind)
+		}
+		return def, nil
 	}
-	desc, err := resolveDescriptor(parsedKind, version)
-	if err != nil {
-		return "", err
+
+	if _, ok := registry[k][v]; !ok {
+		return "", fmt.Errorf("unsupported version %q for kind %q (available: %s)",
+			v, kind, strings.Join(SupportedVersions(kind), ", "))
 	}
-	return desc.version, nil
+
+	return v, nil
 }
 
-// LoadSchema loads an embedded schema by kind and version.
+// LoadSchema retrieves the raw JSON bytes for a specific schema definition.
 func LoadSchema(kind string, version string) ([]byte, error) {
-	parsedKind, err := parseKind(kind)
+	k := Kind(strings.TrimSpace(kind))
+
+	v, err := ResolveVersion(kind, version)
 	if err != nil {
 		return nil, err
 	}
-	desc, err := resolveDescriptor(parsedKind, version)
+
+	path, ok := registry[k][v]
+	if !ok {
+		return nil, fmt.Errorf("schema path mapping missing for %s:%s", k, v)
+	}
+
+	data, err := embeddedFS.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read embedded schema at %q: %w", path, err)
 	}
-	schemaPath := desc.path
-	if !path.IsAbs(schemaPath) && strings.Contains(schemaPath, "..") {
-		return nil, fmt.Errorf("invalid embedded schema path %q", schemaPath)
+
+	return data, nil
+}
+
+// SupportedVersions returns all registered versions for a specific kind.
+func SupportedVersions(kind string) []string {
+	k := Kind(strings.TrimSpace(kind))
+	versions, ok := registry[k]
+	if !ok {
+		return nil
 	}
-	b, err := embeddedSchemas.ReadFile(schemaPath)
-	if err != nil {
-		return nil, fmt.Errorf("read embedded schema %q: %w", schemaPath, err)
+
+	out := make([]string, 0, len(versions))
+	for v := range versions {
+		out = append(out, v)
 	}
-	return b, nil
+	slices.Sort(out)
+	return out
 }
