@@ -139,8 +139,8 @@ func TestResolveCIFailurePolicyDefault_Fallback(t *testing.T) {
 	chdirForTest(t, tmp)
 
 	got := projconfig.ResolveCIFailurePolicyDefault()
-	if got != projconfig.DefaultCIFailurePolicy {
-		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.DefaultCIFailurePolicy)
+	if got != projconfig.GatePolicyAny {
+		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyAny)
 	}
 }
 

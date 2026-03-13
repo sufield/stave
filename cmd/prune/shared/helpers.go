@@ -84,13 +84,13 @@ func PlanPrune(files []SnapshotFile, criteria PruningCriteria) []SnapshotFile {
 
 // ValidateRetentionTier normalizes and validates a retention tier name.
 func ValidateRetentionTier(rawTier string) (string, error) {
-	tier := projconfig.NormalizeRetentionTier(rawTier)
+	tier := projconfig.NormalizeTier(rawTier)
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
 	if !projconfig.HasConfiguredRetentionTier(tier) {
 		if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
-			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(projconfig.SortedRetentionTierNames(cfg.RetentionTiers), ", "))
+			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(projconfig.SortedTierNames(cfg.RetentionTiers), ", "))
 		}
 	}
 	return tier, nil

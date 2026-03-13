@@ -76,8 +76,8 @@ func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
 	return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 }
 
-func toConfigField(v projconfig.Value) configResolvedField {
-	return configResolvedField{Value: v.Value, Source: v.Source}
+func toConfigField[T any](v projconfig.Value[T]) configResolvedField {
+	return configResolvedField{Value: v.String(), Source: v.Source}
 }
 
 func writeConfigShowText(cmd *cobra.Command, out configShowOutput) error {

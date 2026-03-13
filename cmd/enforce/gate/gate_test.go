@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/internal/testutil"
 )
 
-func TestNormalizeGatePolicy(t *testing.T) {
+func TestParseGatePolicy(t *testing.T) {
 	tests := []struct {
 		in      string
 		want    projconfig.GatePolicy
@@ -24,7 +24,7 @@ func TestNormalizeGatePolicy(t *testing.T) {
 		{in: "unknown", wantErr: true},
 	}
 	for _, tc := range tests {
-		got, err := projconfig.NormalizeGatePolicy(tc.in)
+		got, err := projconfig.ParseGatePolicy(tc.in)
 		if tc.wantErr {
 			if err == nil {
 				t.Fatalf("normalizeGatePolicy(%q): expected error", tc.in)

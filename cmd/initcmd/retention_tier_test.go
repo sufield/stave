@@ -57,7 +57,7 @@ func TestRetentionTiersMap_StructuredForm(t *testing.T) {
 non_critical:
   older_than: 14d
 `
-	var m projconfig.RetentionTiersMap
+	var m map[string]projconfig.RetentionTierConfig
 	if err := yaml.Unmarshal([]byte(input), &m); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
@@ -77,20 +77,20 @@ non_critical:
 	}
 }
 
-func TestRetentionTierConfig_OlderThanDuration(t *testing.T) {
+func TestRetentionTierConfig_ParseDuration(t *testing.T) {
 	c := projconfig.RetentionTierConfig{OlderThan: "14d"}
-	d, err := c.OlderThanDuration()
+	d, err := c.ParseDuration()
 	if err != nil {
-		t.Fatalf("OlderThanDuration: %v", err)
+		t.Fatalf("ParseDuration: %v", err)
 	}
 	if d != 14*24*60*60*1e9 {
 		t.Fatalf("duration=%v, want 14 days", d)
 	}
 }
 
-func TestRetentionTierConfig_OlderThanDurationEmpty(t *testing.T) {
+func TestRetentionTierConfig_ParseDurationEmpty(t *testing.T) {
 	c := projconfig.RetentionTierConfig{}
-	_, err := c.OlderThanDuration()
+	_, err := c.ParseDuration()
 	if err == nil {
 		t.Fatal("expected error for empty older_than")
 	}

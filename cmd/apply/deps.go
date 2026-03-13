@@ -194,7 +194,7 @@ func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
 	}
 }
 
-func (b *Builder) mapSuppressions(in []projconfig.ProjectSuppressionRule) []appeval.SuppressionInput {
+func (b *Builder) mapSuppressions(in []projconfig.SuppressionRule) []appeval.SuppressionInput {
 	if len(in) == 0 {
 		return nil
 	}

@@ -34,7 +34,7 @@ func TestResolveTierForPath_NoRules(t *testing.T) {
 	}
 }
 
-func TestMatchGlobPattern_PrefixStarStar(t *testing.T) {
+func TestMatchGlob_PrefixStarStar(t *testing.T) {
 	tests := []struct {
 		pattern string
 		path    string
@@ -48,19 +48,19 @@ func TestMatchGlobPattern_PrefixStarStar(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.path, func(t *testing.T) {
-			got, err := projconfig.MatchGlobPattern(tt.pattern, tt.path)
+			got, err := projconfig.MatchGlob(tt.pattern, tt.path)
 			if err != nil {
 				t.Fatalf("error: %v", err)
 			}
 			if got != tt.want {
-				t.Fatalf("projconfig.MatchGlobPattern(%q, %q) = %v, want %v", tt.pattern, tt.path, got, tt.want)
+				t.Fatalf("projconfig.MatchGlob(%q, %q) = %v, want %v", tt.pattern, tt.path, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestMatchGlobPattern_ExactFile(t *testing.T) {
-	got, err := projconfig.MatchGlobPattern("special.json", "special.json")
+func TestMatchGlob_ExactFile(t *testing.T) {
+	got, err := projconfig.MatchGlob("special.json", "special.json")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
@@ -69,8 +69,8 @@ func TestMatchGlobPattern_ExactFile(t *testing.T) {
 	}
 }
 
-func TestMatchGlobPattern_SimpleWildcard(t *testing.T) {
-	got, err := projconfig.MatchGlobPattern("*.json", "snapshot.json")
+func TestMatchGlob_SimpleWildcard(t *testing.T) {
+	got, err := projconfig.MatchGlob("*.json", "snapshot.json")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestMatchGlobPattern_SimpleWildcard(t *testing.T) {
 		t.Fatal("expected match for *.json")
 	}
 
-	got2, err := projconfig.MatchGlobPattern("*.json", "sub/snapshot.json")
+	got2, err := projconfig.MatchGlob("*.json", "sub/snapshot.json")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
