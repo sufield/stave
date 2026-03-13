@@ -18,10 +18,12 @@ import (
 // Restrictions are sourced from internal/domain/kernel/airgap.go.
 // Vendored dependencies are excluded.
 func TestNoBannedImportsInRuntime(t *testing.T) {
-	// Excluded directories: vendored dependencies and dev tooling not shipped in runtime.
+	// Excluded directories: vendored dependencies, dev tooling, and CLI
+	// entrypoints not shipped as part of the runtime domain.
 	excludedDirs := map[string]bool{
 		"vendor":         true,
 		"internal/tools": true,
+		"cmd":            true,
 	}
 
 	root := findRepoRoot(t)

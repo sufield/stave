@@ -171,6 +171,11 @@ func parseValidateParams(opts *options) validateParams {
 	return params
 }
 
+func (o *options) validate() error {
+	// Add cross-flag validation here (e.g., ensuring --kind is valid if provided)
+	return nil
+}
+
 func ensureValidateModeFlags(opts *options) error {
 	if opts.Kind != "" {
 		return fmt.Errorf("--kind requires --in <file|->")
