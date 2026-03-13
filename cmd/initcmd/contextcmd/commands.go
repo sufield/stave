@@ -147,7 +147,7 @@ func contextListItemsFromState(st *contexts.Store) []contextListItem {
 		ctx := st.Contexts[name]
 		items = append(items, contextListItem{
 			Name:          name,
-			ProjectRoot:   ctx.Root(),
+			ProjectRoot:   strings.TrimSpace(ctx.ProjectRoot),
 			ProjectConfig: strings.TrimSpace(ctx.ProjectConfig),
 			ControlsDir:   strings.TrimSpace(ctx.Defaults.ControlsDir),
 			ObserveDir:    strings.TrimSpace(ctx.Defaults.ObservationsDir),
@@ -274,7 +274,7 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 		StoreFile:     path,
 		SelectedBy:    selectedBy,
 		Name:          name,
-		ProjectRoot:   ctx.Root(),
+		ProjectRoot:   strings.TrimSpace(ctx.ProjectRoot),
 		ProjectConfig: strings.TrimSpace(ctx.ProjectConfig),
 		ControlsDir:   strings.TrimSpace(ctx.Defaults.ControlsDir),
 		ObserveDir:    strings.TrimSpace(ctx.Defaults.ObservationsDir),

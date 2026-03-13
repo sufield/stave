@@ -153,8 +153,8 @@ func ResolveSelectedGlobalContext() (SelectedContext, error) {
 // RootForContextName returns the project root for the current context.
 func RootForContextName() string {
 	if sc, err := ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
-		root := sc.Context.Root()
-		if strings.TrimSpace(root) != "" {
+		root := strings.TrimSpace(sc.Context.ProjectRoot)
+		if root != "" {
 			return root
 		}
 	}
