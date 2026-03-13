@@ -5,114 +5,175 @@ import (
 	"io"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
+	appservice "github.com/sufield/stave/internal/app/service"
 	packs "github.com/sufield/stave/internal/builtin/pack"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/kernel"
-
-	appservice "github.com/sufield/stave/internal/app/service"
 )
 
-func writeFixHints(w io.Writer, issues []diag.Issue, opts *options) error {
-	hints := collectFixHints(issues, opts)
-	if len(hints) == 0 {
-		return nil
+// Reporter handles the formatting and writing of validation results.
+type Reporter struct {
+	Writer   io.Writer
+	Format   string // "text", "json", or path to template
+	Strict   bool
+	FixHints bool
+	IsJSON   bool // Global CLI --json mode
+}
+
+// Write outputs the validation result based on reporter configuration.
+func (r *Reporter) Write(result *appservice.ValidationResult, opts *options) error {
+	// 1. Build the portable report DTO
+	report := buildReport(result, r.FixHints, opts)
+
+	// 2. Route to correct formatter
+	switch {
+	case r.Format == "json":
+		return outjson.WriteValidation(r.Writer, report, r.IsJSON, result.Valid())
+	case r.Format != "" && r.Format != "text":
+		return ui.ExecuteTemplate(r.Writer, r.Format, report)
+	default:
+		return r.writeText(result, report)
 	}
-	if _, err := fmt.Fprintf(w, "\nSuggested next commands:\n"); err != nil {
+}
+
+// ExitStatus determines if the validation should result in a CLI error.
+func (r *Reporter) ExitStatus(result *appservice.ValidationResult) error {
+	if !result.Valid() {
+		return ui.ErrValidationFailed
+	}
+	if result.HasWarnings() && r.Strict {
+		return ui.ErrValidationFailed
+	}
+	if result.HasWarnings() {
+		return ui.ErrValidationWarnings
+	}
+	return nil
+}
+
+// --- Internal Presentation Logic ---
+
+func (r *Reporter) writeText(res *appservice.ValidationResult, report Report) error {
+	diagnostics := diagnosticsOf(res)
+
+	// Header
+	if err := r.printHeader(res.Valid(), len(report.Errors), len(report.Warnings)); err != nil {
 		return err
 	}
-	for _, h := range hints {
-		if _, err := fmt.Fprintf(w, "  - %s\n", h); err != nil {
-			return err
+
+	// Issues
+	for _, issue := range diagnostics.Issues {
+		r.printIssue(issue)
+	}
+
+	// Summary
+	fmt.Fprintf(r.Writer, "---\nChecked: %d controls, %d snapshots, %d asset observations",
+		res.Summary.ControlsLoaded,
+		res.Summary.SnapshotsLoaded,
+		res.Summary.AssetObservationsLoaded)
+
+	if res.Summary.IdentityObservationsLoaded > 0 {
+		fmt.Fprintf(r.Writer, ", %d identity observations", res.Summary.IdentityObservationsLoaded)
+	}
+	fmt.Fprintln(r.Writer)
+
+	// Fix Hints
+	if r.FixHints && len(report.FixHints) > 0 {
+		fmt.Fprintln(r.Writer, "\nSuggested next commands:")
+		for _, h := range report.FixHints {
+			fmt.Fprintf(r.Writer, "  - %s\n", h)
 		}
 	}
 	return nil
 }
 
-func collectFixHints(issues []diag.Issue, opts *options) []string {
-	return collectHints(
-		&diag.Result{Issues: issues},
-		hintContext{
-			ControlsDir:     opts.ControlsDir,
-			ObservationsDir: opts.ObservationsDir,
-		},
-	)
+func (r *Reporter) printHeader(valid bool, eCount, wCount int) error {
+	if valid && wCount == 0 {
+		_, err := fmt.Fprintln(r.Writer, "Validation passed")
+		return err
+	}
+
+	status := "passed"
+	if !valid {
+		status = "failed"
+	}
+
+	msg := fmt.Sprintf("Validation %s (%d error%s", status, eCount, plural(eCount))
+	if wCount > 0 {
+		msg += fmt.Sprintf(", %d warning%s", wCount, plural(wCount))
+	}
+	msg += ")\n"
+	_, err := fmt.Fprint(r.Writer, msg)
+	return err
 }
 
-// ValidateSchemaVersion is the schema version for validate output.
-const ValidateSchemaVersion = kernel.SchemaValidate
+func (r *Reporter) printIssue(issue diag.Issue) {
+	level := "WARNING"
+	if issue.Signal == diag.SignalError {
+		level = "ERROR"
+	}
 
-// JSONValidationReport is the JSON output structure.
-type JSONValidationReport struct {
-	SchemaVersion kernel.Schema         `json:"schema_version"`
-	Valid         bool                  `json:"valid"`
-	Errors        []diag.Issue          `json:"errors,omitempty"`
-	Warnings      []diag.Issue          `json:"warnings,omitempty"`
-	FixHints      []string              `json:"fix_hints,omitempty"`
-	Summary       JSONValidationSummary `json:"summary"`
+	fmt.Fprintln(r.Writer, ui.SeverityLabel(level, string(issue.Code), r.Writer))
+
+	for _, key := range issue.Evidence.Keys() {
+		fmt.Fprintf(r.Writer, "  %s=%s\n", key, issue.Evidence.Sanitized(key))
+	}
+	if issue.Action != "" {
+		fmt.Fprintf(r.Writer, "  Fix: %s\n", issue.Action)
+	}
+	if issue.Command != "" {
+		fmt.Fprintf(r.Writer, "  Example: %s\n", issue.Command)
+	}
+	fmt.Fprintln(r.Writer)
 }
 
-// JSONValidationSummary is the JSON summary structure.
-type JSONValidationSummary struct {
+// --- Data Models (DTOs) ---
+
+// Report is a clean DTO that maps the internal service result to the external output format.
+type Report struct {
+	SchemaVersion kernel.Schema `json:"schema_version"`
+	Valid         bool          `json:"valid"`
+	Errors        []diag.Issue  `json:"errors,omitempty"`
+	Warnings      []diag.Issue  `json:"warnings,omitempty"`
+	FixHints      []string      `json:"fix_hints,omitempty"`
+	Summary       ReportSummary `json:"summary"`
+}
+
+// ReportSummary is the summary section of the validation report.
+type ReportSummary struct {
 	ControlsChecked             int `json:"controls_checked"`
 	SnapshotsChecked            int `json:"snapshots_checked"`
 	AssetObservationsChecked    int `json:"asset_observations_checked"`
 	IdentityObservationsChecked int `json:"identity_observations_checked"`
 }
 
-// ValidationEnvelope wraps validation results in ok/data structure.
-type ValidationEnvelope struct {
-	OK   bool                 `json:"ok"`
-	Data JSONValidationReport `json:"data"`
+func buildReport(res *appservice.ValidationResult, includeHints bool, opts *options) Report {
+	d := diagnosticsOf(res)
+	report := Report{
+		SchemaVersion: kernel.SchemaValidate,
+		Valid:         res.Valid(),
+		Errors:        d.Errors(),
+		Warnings:      d.Warnings(),
+		Summary: ReportSummary{
+			ControlsChecked:             res.Summary.ControlsLoaded,
+			SnapshotsChecked:            res.Summary.SnapshotsLoaded,
+			AssetObservationsChecked:    res.Summary.AssetObservationsLoaded,
+			IdentityObservationsChecked: res.Summary.IdentityObservationsLoaded,
+		},
+	}
+
+	if includeHints {
+		report.FixHints = collectHints(d, hintContext{
+			ControlsDir:     opts.ControlsDir,
+			ObservationsDir: opts.ObservationsDir,
+		})
+	}
+	return report
 }
 
-func outputAndExitWithOptions(cmd *cobra.Command, w io.Writer, result *appservice.ValidationResult, jsonOutput bool, opts *options) error {
-	if opts.Template != "" {
-		return outputTemplateAndExit(w, result, opts)
-	}
-	if err := writeValidationOutput(cmd, w, result, jsonOutput, opts); err != nil {
-		return err
-	}
-	return validationExitError(result, opts)
-}
-
-func outputTemplateAndExit(w io.Writer, result *appservice.ValidationResult, opts *options) error {
-	report := buildJSONValidationReport(result, opts)
-	if err := ui.ExecuteTemplate(w, opts.Template, report); err != nil {
-		return err
-	}
-	if !result.Valid() {
-		return ui.ErrValidationFailed
-	}
-	if result.HasWarnings() && opts.StrictMode {
-		return ui.ErrValidationFailed
-	}
-	return nil
-}
-
-func writeValidationOutput(cmd *cobra.Command, w io.Writer, result *appservice.ValidationResult, jsonOutput bool, opts *options) error {
-	if jsonOutput {
-		return writeValidationJSON(cmd, w, result, opts)
-	}
-	return writeValidationTextWithOptions(w, result, opts)
-}
-
-func validationExitError(result *appservice.ValidationResult, opts *options) error {
-	if !result.Valid() {
-		return ui.ErrValidationFailed
-	}
-	if !result.HasWarnings() {
-		return nil
-	}
-	if opts.StrictMode {
-		return ui.ErrValidationFailed
-	}
-	return ui.ErrValidationWarnings
-}
+// --- Helpers ---
 
 func diagnosticsOf(result *appservice.ValidationResult) *diag.Result {
 	if result == nil || result.Diagnostics == nil {
@@ -121,153 +182,6 @@ func diagnosticsOf(result *appservice.ValidationResult) *diag.Result {
 	return result.Diagnostics
 }
 
-func writeValidationTextWithOptions(w io.Writer, result *appservice.ValidationResult, opts *options) error {
-	diagnostics := diagnosticsOf(result)
-	counts := issueCounts{errors: len(diagnostics.Errors()), warnings: len(diagnostics.Warnings())}
-
-	if err := writeValidationHeader(w, result.Valid(), counts); err != nil {
-		return err
-	}
-	if err := writeValidationIssues(w, diagnostics.Issues); err != nil {
-		return err
-	}
-	if err := writeValidationSummary(w, result.Summary); err != nil {
-		return err
-	}
-	if opts.FixHints && len(diagnostics.Issues) > 0 {
-		if err := writeFixHints(w, diagnostics.Issues, opts); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type issueCounts struct {
-	errors   int
-	warnings int
-}
-
-func writeValidationHeader(w io.Writer, valid bool, counts issueCounts) error {
-	switch {
-	case valid && counts.warnings == 0:
-		_, err := fmt.Fprintln(w, "Validation passed")
-		return err
-	case valid:
-		_, err := fmt.Fprintf(w, "Validation passed (%d warning%s)\n", counts.warnings, plural(counts.warnings))
-		return err
-	default:
-		return writeValidationFailedHeader(w, counts)
-	}
-}
-
-func writeValidationFailedHeader(w io.Writer, counts issueCounts) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
-	}
-
-	writef("Validation failed (%d error%s", counts.errors, plural(counts.errors))
-	if counts.warnings > 0 {
-		writef(", %d warning%s", counts.warnings, plural(counts.warnings))
-	}
-	writef(")\n")
-	return err
-}
-
-func writeValidationIssues(w io.Writer, issues []diag.Issue) error {
-	for _, issue := range issues {
-		if err := writeIssue(w, issue); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func writeValidationSummary(w io.Writer, summary appservice.ValidationSummary) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
-	}
-
-	writef("---\n")
-	writef("Checked: %d controls, %d snapshots, %d asset observations",
-		summary.ControlsLoaded,
-		summary.SnapshotsLoaded,
-		summary.AssetObservationsLoaded)
-	if summary.IdentityObservationsLoaded > 0 {
-		writef(", %d identity observations", summary.IdentityObservationsLoaded)
-	}
-	writef("\n")
-	return err
-}
-
-// writeIssue writes a single validation issue.
-// Returns an error if writing to the output fails.
-func writeIssue(w io.Writer, issue diag.Issue) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
-	}
-
-	level := "WARNING"
-	if issue.Signal == diag.SignalError {
-		level = "ERROR"
-	}
-	writef("%s\n", ui.SeverityLabel(level, string(issue.Code), w))
-
-	for _, key := range issue.Evidence.Keys() {
-		writef("  %s=%s\n", key, issue.Evidence.Sanitized(key))
-	}
-	if issue.Action != "" {
-		writef("  Fix: %s\n", issue.Action)
-	}
-	if issue.Command != "" {
-		writef("  Example: %s\n", issue.Command)
-	}
-	writef("\n")
-	return err
-}
-
-// buildJSONValidationReport constructs a JSONValidationReport from a ValidateResult.
-func buildJSONValidationReport(result *appservice.ValidationResult, opts *options) JSONValidationReport {
-	diagnostics := diagnosticsOf(result)
-	report := JSONValidationReport{
-		SchemaVersion: ValidateSchemaVersion,
-		Valid:         result.Valid(),
-		Summary: JSONValidationSummary{
-			ControlsChecked:             result.Summary.ControlsLoaded,
-			SnapshotsChecked:            result.Summary.SnapshotsLoaded,
-			AssetObservationsChecked:    result.Summary.AssetObservationsLoaded,
-			IdentityObservationsChecked: result.Summary.IdentityObservationsLoaded,
-		},
-	}
-
-	report.Errors = diagnostics.Errors()
-	report.Warnings = diagnostics.Warnings()
-	if opts.FixHints {
-		report.FixHints = collectFixHints(diagnostics.Issues, opts)
-	}
-	return report
-}
-
-// writeValidationJSON outputs JSON validation results.
-// Returns an error if encoding or writing fails.
-// If global JSON mode is set, wraps output in {"ok": true, "data": ...}.
-func writeValidationJSON(cmd *cobra.Command, w io.Writer, result *appservice.ValidationResult, opts *options) error {
-	report := buildJSONValidationReport(result, opts)
-	return outjson.WriteValidation(w, report, cmdutil.IsJSONMode(cmd), result.Valid())
-}
-
-// plural returns "s" for plural forms when count is not 1.
 func plural(n int) string {
 	if n == 1 {
 		return ""

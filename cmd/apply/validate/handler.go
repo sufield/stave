@@ -15,6 +15,21 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
+// newReporter builds a Reporter from the resolved format and options.
+func newReporter(out io.Writer, format ui.OutputFormat, opts *options) *Reporter {
+	f := string(format)
+	if opts.Template != "" {
+		f = opts.Template
+	}
+	return &Reporter{
+		Writer:   out,
+		Format:   f,
+		Strict:   opts.StrictMode,
+		FixHints: opts.FixHints,
+		IsJSON:   format.IsJSON(),
+	}
+}
+
 // runValidateWithOptions parses flags, calls app layer, prints results, and sets exit code.
 func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	format, err := prepareValidateCommand(cmd, opts)
@@ -32,10 +47,15 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 		return err
 	}
 
+	r := newReporter(out, format, opts)
+
 	params := parseValidateParams(opts)
 	if len(params.issues) > 0 {
 		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
-		return outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
+		if err := r.Write(result, opts); err != nil {
+			return err
+		}
+		return r.ExitStatus(result)
 	}
 
 	done := rt.BeginProgress("validate artifacts")
@@ -46,7 +66,7 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 	}
 	result.Diagnostics.AddAll(PackConfigIssues())
 
-	return outputValidateResult(cmd, out, result, format, opts)
+	return outputValidateResult(cmd, r, result, opts)
 }
 
 func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
@@ -72,8 +92,11 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 	return validateRun.Execute(ctx, cfg)
 }
 
-func outputValidateResult(cmd *cobra.Command, out io.Writer, result *appservice.ValidationResult, format ui.OutputFormat, opts *options) error {
-	exitErr := outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
+func outputValidateResult(cmd *cobra.Command, r *Reporter, result *appservice.ValidationResult, opts *options) error {
+	if err := r.Write(result, opts); err != nil {
+		return err
+	}
+	exitErr := r.ExitStatus(result)
 	if exitErr == nil && !opts.QuietMode && !cmdutil.QuietEnabled(cmd) {
 		stderr := io.Writer(os.Stderr)
 		if cmd != nil {
