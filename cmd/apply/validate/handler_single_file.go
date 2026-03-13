@@ -1,14 +1,11 @@
 package validate
 
 import (
+	"context"
 	"fmt"
-	"io"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
@@ -17,93 +14,101 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
-func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *options, format ui.OutputFormat) error {
-	data, sourceName, err := ui.ReadInput(os.Stdin, opts.InFile)
+// runValidateSingleFile handles the orchestration of validating a single input.
+func runValidateSingleFile(reporter *Reporter, opts *options) error {
+	// 1. Read Input
+	data, source, err := ui.ReadInput(os.Stdin, opts.InFile)
 	if err != nil {
-		return fmt.Errorf("cannot read --in: %s: %w", sourceName, err)
+		return fmt.Errorf("failed to read input %q: %w", source, err)
 	}
 
-	kind := strings.TrimSpace(opts.Kind)
-	if kind != "" {
-		normalizedKind, normErr := normalizeValidateKind(kind)
-		if normErr != nil {
-			return normErr
-		}
-		kind = normalizedKind
-	}
-
-	var req appvalidation.ContentValidator
-	if kind != "" {
-		req = appvalidation.ExplicitRequest{
-			Data:          data,
-			Kind:          kind,
-			SchemaVersion: opts.SchemaVersion,
-			Strict:        opts.StrictMode,
-		}
-	} else {
-		req = appvalidation.AutoRequest{Data: data}
-	}
-
-	result, err := appvalidation.NewContentService(func() appvalidation.SchemaValidator {
-		return contractvalidator.New()
-	}).Validate(req)
+	// 2. Prepare Request
+	req, err := buildValidationRequest(data, opts)
 	if err != nil {
-		if kind != "" {
-			return fmt.Errorf("validate %s %s: %w", kind, sourceName, err)
-		}
-		return fmt.Errorf("validate %s: %w", sourceName, err)
-	}
-
-	r := newReporter(out, format, opts)
-	if err := r.Write(result, opts); err != nil {
 		return err
 	}
-	return r.ExitStatus(result)
+
+	// 3. Execute Service
+	service := appvalidation.NewContentService(func() appvalidation.SchemaValidator {
+		return contractvalidator.New()
+	})
+	result, err := service.Validate(req)
+	if err != nil {
+		return fmt.Errorf("validation failed for %q: %w", source, err)
+	}
+
+	// 4. Report Results
+	if err := reporter.Write(result, opts); err != nil {
+		return err
+	}
+	return reporter.ExitStatus(result)
 }
 
-func normalizeValidateKind(raw string) (string, error) {
-	normalized := ui.NormalizeToken(raw)
-	switch normalized {
+// buildValidationRequest creates the appropriate request based on options.
+func buildValidationRequest(data []byte, opts *options) (appvalidation.ContentValidator, error) {
+	if opts.Kind == "" {
+		return appvalidation.AutoRequest{Data: data}, nil
+	}
+
+	normalizedKind, err := normalizeKind(opts.Kind)
+	if err != nil {
+		return nil, err
+	}
+
+	return appvalidation.ExplicitRequest{
+		Data:          data,
+		Kind:          normalizedKind,
+		SchemaVersion: opts.SchemaVersion,
+		Strict:        opts.StrictMode,
+	}, nil
+}
+
+// normalizeKind converts various CLI aliases into canonical domain kinds.
+func normalizeKind(raw string) (string, error) {
+	switch ui.NormalizeToken(raw) {
 	case "control", "controls":
 		return "control", nil
 	case "observation", "obs", "snapshot", "snapshots":
 		return "observation", nil
 	case "finding", "findings":
 		return "finding", nil
+	default:
+		return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
 	}
-
-	return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
 }
 
-// NewReadinessValidateFn creates a validation function for readiness assessment.
-// This is used by the plan/apply commands.
-func NewReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ValidationResult, error) {
+// NewReadinessValidator creates a validation function for plan/apply commands.
+// It removes the dependency on cobra.Command by accepting the sanitize flag directly.
+func NewReadinessValidator(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
 	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ValidationResult, error) {
-		obsLoader, err := compose.NewObservationRepository()
+		obsRepo, err := compose.NewObservationRepository()
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}
-		ctlLoader, err := compose.NewControlRepository()
+		ctlRepo, err := compose.NewControlRepository()
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}
-		validateRun := appvalidation.NewRun(obsLoader, ctlLoader)
-		valResult, err := validateRun.Execute(compose.CommandContext(cmd), appvalidation.Config{
+
+		runner := appvalidation.NewRun(obsRepo, ctlRepo)
+		result, err := runner.Execute(context.Background(), appvalidation.Config{
 			ControlsDir:     ctlDir,
 			ObservationsDir: obsDir,
 			MaxUnsafe:       maxUnsafeDur,
 			NowTime:         now,
-			SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
+			SanitizePaths:   sanitize,
 		})
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}
-		valResult.Diagnostics.AddAll(PackConfigIssues())
+
+		result.Diagnostics.AddAll(PackConfigIssues())
+
 		var vr validation.ValidationResult
-		vr.Diagnostics = valResult.Diagnostics
-		vr.Summary.ControlsLoaded = valResult.Summary.ControlsLoaded
-		vr.Summary.SnapshotsLoaded = valResult.Summary.SnapshotsLoaded
-		vr.Summary.AssetObservationsLoaded = valResult.Summary.AssetObservationsLoaded
+		vr.Diagnostics = result.Diagnostics
+		vr.Summary.ControlsLoaded = result.Summary.ControlsLoaded
+		vr.Summary.SnapshotsLoaded = result.Summary.SnapshotsLoaded
+		vr.Summary.AssetObservationsLoaded = result.Summary.AssetObservationsLoaded
 		return vr, nil
 	}
 }

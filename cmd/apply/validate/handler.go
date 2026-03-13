@@ -41,7 +41,8 @@ func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) e
 	rt.Quiet = quiet
 	out := compose.ResolveStdout(cmd, quiet, format)
 	if opts.InFile != "" {
-		return runValidateSingleFileWithOptions(cmd, out, opts, format)
+		r := newReporter(out, format, opts)
+		return runValidateSingleFile(r, opts)
 	}
 	if err := ensureValidateModeFlags(opts); err != nil {
 		return err

@@ -134,5 +134,5 @@ func readinessHasEnabledPacks() bool {
 }
 
 func buildReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ValidationResult, error) {
-	return applyvalidate.NewReadinessValidateFn(cmd, ctlDir, obsDir)
+	return applyvalidate.NewReadinessValidator(ctlDir, obsDir, cmdutil.SanitizeEnabled(cmd))
 }
