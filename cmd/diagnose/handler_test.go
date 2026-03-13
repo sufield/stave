@@ -137,7 +137,7 @@ func TestRunnerBuildAppConfig(t *testing.T) {
 	}
 }
 
-func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
+func TestPresenterRenderReport_EnvelopeMode(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{Case: diagnosis.ScenarioEmptyFindings, Signal: "s", Evidence: "e", Action: "a"},
@@ -157,8 +157,9 @@ func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := writeDiagnoseJSON(&buf, report, true); err != nil {
-		t.Fatalf("writeDiagnoseJSON() error = %v", err)
+	p := &Presenter{Stdout: &buf, Format: ui.OutputFormatJSON, EnvelopeMode: true}
+	if err := p.RenderReport(report); err != nil {
+		t.Fatalf("RenderReport() error = %v", err)
 	}
 
 	var out map[string]any
@@ -170,11 +171,12 @@ func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 	}
 
 	buf.Reset()
-	if err := writeDiagnoseJSON(&buf, report, false); err != nil {
-		t.Fatalf("writeDiagnoseJSON() text mode error = %v", err)
+	p.EnvelopeMode = false
+	if err := p.RenderReport(report); err != nil {
+		t.Fatalf("RenderReport() no-envelope error = %v", err)
 	}
 	if strings.Contains(buf.String(), "\"ok\"") {
-		t.Fatalf("did not expect envelope in text mode json output: %s", buf.String())
+		t.Fatalf("did not expect envelope in non-envelope mode: %s", buf.String())
 	}
 }
 
@@ -218,7 +220,7 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	}
 }
 
-func TestRunnerRenderReport_Branches(t *testing.T) {
+func TestPresenterRenderReport_Branches(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{},
 		Summary: diagnosis.Summary{
@@ -233,13 +235,9 @@ func TestRunnerRenderReport_Branches(t *testing.T) {
 		},
 	}
 
-	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
-
 	var out bytes.Buffer
-	if err := runner.renderReport(Config{
-		Format: ui.OutputFormatText,
-		Stdout: &out,
-	}, report); err != nil {
+	p := &Presenter{Stdout: &out, Format: ui.OutputFormatText}
+	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("text report error = %v", err)
 	}
 	if !strings.Contains(out.String(), "Summary") {
@@ -247,10 +245,8 @@ func TestRunnerRenderReport_Branches(t *testing.T) {
 	}
 
 	out.Reset()
-	if err := runner.renderReport(Config{
-		Format: ui.OutputFormatJSON,
-		Stdout: &out,
-	}, report); err != nil {
+	p.Format = ui.OutputFormatJSON
+	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("json report error = %v", err)
 	}
 	if !strings.Contains(out.String(), "\"schema_version\"") {

@@ -37,7 +37,7 @@ func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
 	}
 }
 
-func TestWriteFindingDetailJSON_IncludesTrace(t *testing.T) {
+func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 	detail := &evaluation.FindingDetail{
 		Control:  evaluation.FindingControlSummary{ID: "CTL.TEST.A.001", Name: "A"},
 		Asset:    evaluation.FindingAssetSummary{ID: "res-1", Type: "storage_bucket"},
@@ -63,8 +63,9 @@ func TestWriteFindingDetailJSON_IncludesTrace(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := writeFindingDetailJSON(&buf, detail); err != nil {
-		t.Fatalf("writeFindingDetailJSON() error = %v", err)
+	p := &Presenter{Stdout: &buf, Format: ui.OutputFormatJSON}
+	if err := p.RenderDetail(detail); err != nil {
+		t.Fatalf("RenderDetail() error = %v", err)
 	}
 
 	var out map[string]any
