@@ -17,9 +17,6 @@ import (
 
 // runValidateWithOptions parses flags, calls app layer, prints results, and sets exit code.
 func runValidateWithOptions(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	if opts == nil {
-		opts = defaultOptions()
-	}
 	format, err := prepareValidateCommand(cmd, opts)
 	if err != nil {
 		return err
