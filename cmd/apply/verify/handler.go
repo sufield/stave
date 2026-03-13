@@ -3,7 +3,6 @@ package verify
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -14,63 +13,45 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/sanitize"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-// verifyExecution holds parsed runtime parameters for the verification run.
-type verifyExecution struct {
-	ctx          context.Context
-	maxUnsafe    time.Duration
-	clock        ports.Clock
-	allowUnknown bool
-}
-
 // runVerify is the top-level CLI orchestrator.
 func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	// 1. Prepare environment and dependencies
-	maxUnsafe, clock, err := parseRuntime(opts)
+	exec, err := opts.Complete(compose.CommandContext(cmd))
 	if err != nil {
 		return err
 	}
 
-	ctx := compose.CommandContext(cmd)
 	sanitizer := cmdutil.GetSanitizer(cmd)
-	rt.Quiet = opts.Quiet || cmdutil.QuietEnabled(cmd)
+	rt.Quiet = cmdutil.QuietEnabled(cmd)
 
 	// 2. Load Control Definitions
-	controls, err := loadVerifyControls(ctx, opts.ControlsDir)
+	controls, err := loadVerifyControls(exec.Context, exec.ControlsDir)
 	if err != nil {
 		return err
-	}
-
-	execCtx := verifyExecution{
-		ctx:          ctx,
-		maxUnsafe:    maxUnsafe,
-		clock:        clock,
-		allowUnknown: opts.AllowUnknown,
 	}
 
 	// 3. Run Evaluations
 	before, err := runStep(rt, "apply before observations", func() (evalResult, error) {
-		return runVerifyEvaluation(execCtx, controls, opts.BeforeDir)
+		return runVerifyEvaluation(exec, controls, exec.BeforeDir)
 	})
 	if err != nil {
 		return fmt.Errorf("before evaluation: %w", err)
 	}
 
 	after, err := runStep(rt, "apply after observations", func() (evalResult, error) {
-		return runVerifyEvaluation(execCtx, controls, opts.AfterDir)
+		return runVerifyEvaluation(exec, controls, exec.AfterDir)
 	})
 	if err != nil {
 		return fmt.Errorf("after evaluation: %w", err)
 	}
 
 	// 4. Compare and Construct Outcome
-	outcome := compareEvaluations(execCtx, before, after, sanitizer)
+	outcome := compareEvaluations(exec, before, after, sanitizer)
 
 	// 5. Report Results
 	if err := outjson.WriteVerification(cmd.OutOrStdout(), outcome.Envelope); err != nil {
@@ -78,19 +59,6 @@ func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	}
 
 	return handleVerifyExit(rt, outcome)
-}
-
-// parseRuntime converts raw option strings into structured runtime values.
-func parseRuntime(opts *options) (time.Duration, ports.Clock, error) {
-	maxDuration, err := timeutil.ParseDurationFlag(opts.MaxUnsafe, "--max-unsafe")
-	if err != nil {
-		return 0, nil, err
-	}
-	clock, err := compose.ResolveClock(opts.NowTime)
-	if err != nil {
-		return 0, nil, err
-	}
-	return maxDuration, clock, nil
 }
 
 // --- Internal Business Logic ---
@@ -118,7 +86,7 @@ func loadVerifyControls(ctx context.Context, dir string) ([]policy.ControlDefini
 }
 
 func compareEvaluations(
-	exec verifyExecution,
+	exec Execution,
 	before, after evalResult,
 	sz *sanitize.Sanitizer,
 ) verificationOutcome {
@@ -132,8 +100,8 @@ func compareEvaluations(
 		Run: safetyenvelope.VerificationRunInfo{
 			ToolVersion:     staveversion.Version,
 			Offline:         true,
-			Now:             exec.clock.Now(),
-			MaxUnsafe:       exec.maxUnsafe,
+			Now:             exec.Clock.Now(),
+			MaxUnsafe:       exec.MaxUnsafe,
 			BeforeSnapshots: before.snapshotCount,
 			AfterSnapshots:  after.snapshotCount,
 		},
@@ -189,19 +157,19 @@ func runStep[T any](rt *ui.Runtime, label string, fn func() (T, error)) (T, erro
 	return res, err
 }
 
-func runVerifyEvaluation(exec verifyExecution, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
+func runVerifyEvaluation(exec Execution, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
 	loader, err := compose.NewObservationRepository()
 	if err != nil {
 		return evalResult{}, err
 	}
 
 	res, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
-		Context:           exec.ctx,
+		Context:           exec.Context,
 		ObservationsDir:   obsDir,
 		Controls:          controls,
-		MaxUnsafe:         exec.maxUnsafe,
-		Clock:             exec.clock,
-		AllowUnknownType:  exec.allowUnknown,
+		MaxUnsafe:         exec.MaxUnsafe,
+		Clock:             exec.Clock,
+		AllowUnknownType:  exec.AllowUnknown,
 		ToolVersion:       staveversion.Version,
 		ObservationLoader: loader,
 	})
