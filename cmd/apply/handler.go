@@ -50,7 +50,12 @@ func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, params applyParams
 		return decorateError(err)
 	}
 
-	return outputResults(cmd, results)
+	rep := &Reporter{
+		Stdout: cmd.OutOrStdout(),
+		Stderr: cmd.ErrOrStderr(),
+		Quiet:  cmdutil.QuietEnabled(cmd),
+	}
+	return rep.ReportApply(results)
 }
 
 func executeEvaluation(

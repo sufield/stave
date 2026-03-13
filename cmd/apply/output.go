@@ -5,93 +5,73 @@ import (
 	"io"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/validation"
 )
 
-func handleApplyResult(cmd *cobra.Command, result EvaluateResult) error {
-	if result.SafetyStatus != evaluation.StatusSafe {
-		if !cmdutil.QuietEnabled(cmd) {
-			ui.WriteHint(cmd.ErrOrStderr(), result.DiagnoseHint)
-			rt := cmdutil.NewRuntime(cmd)
-			rt.PrintNextSteps(result.NextSteps...)
+// Reporter handles the visual presentation of results to the user.
+type Reporter struct {
+	Stdout io.Writer
+	Stderr io.Writer
+	Quiet  bool
+}
+
+// ReportApply prints the outcome of an evaluation.
+// Returns ui.ErrViolationsFound if the status is Unsafe.
+func (r *Reporter) ReportApply(res EvaluateResult) error {
+	if res.SafetyStatus == evaluation.StatusSafe {
+		if !r.Quiet {
+			fmt.Fprintln(r.Stderr, "Evaluation complete. No violations found.")
 		}
-		return ui.ErrViolationsFound
+		return nil
 	}
-	if !cmdutil.QuietEnabled(cmd) {
-		fmt.Fprintln(cmd.ErrOrStderr(), "Evaluation complete. No violations found.")
+
+	if !r.Quiet {
+		ui.WriteHint(r.Stderr, res.DiagnoseHint)
+		rt := ui.NewRuntime(r.Stdout, r.Stderr)
+		rt.PrintNextSteps(res.NextSteps...)
 	}
-	return nil
+
+	return ui.ErrViolationsFound
 }
 
-func outputResults(cmd *cobra.Command, results EvaluateResult) error {
-	return handleApplyResult(cmd, results)
-}
-
-func writeReadinessText(w io.Writer, report validation.ReadinessReport) error {
-	if err := writeReadinessSummary(w, report); err != nil {
-		return err
-	}
-	if err := writeReadinessIssues(w, report.Issues()); err != nil {
-		return err
-	}
-	_, err := fmt.Fprintf(w, "\nNext: %s\n", report.NextCommand)
-	return err
-}
-
-func writeReadinessSummary(w io.Writer, report validation.ReadinessReport) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
+// ReportPlan prints the readiness report (used by the plan command).
+func (r *Reporter) ReportPlan(report validation.ReadinessReport) error {
+	if r.Quiet {
+		return nil
 	}
 
-	writef("Plan Summary\n------------\n")
-	writef("Ready: %t\n", report.Ready)
-	writef("Controls: %s\n", report.ControlsDir)
-	writef("Observations: %s\n", report.ObservationsDir)
-	writef("Checked: %d controls, %d snapshots, %d asset observations\n",
+	fmt.Fprintf(r.Stdout, "Plan Summary\n------------\n")
+	fmt.Fprintf(r.Stdout, "Ready:        %t\n", report.Ready)
+	fmt.Fprintf(r.Stdout, "Controls:     %s\n", report.ControlsDir)
+	fmt.Fprintf(r.Stdout, "Observations: %s\n", report.ObservationsDir)
+	fmt.Fprintf(r.Stdout, "Checked:      %d controls, %d snapshots, %d asset observations\n",
 		report.Summary.ControlsChecked,
 		report.Summary.SnapshotsChecked,
 		report.Summary.AssetObservationsChecked)
-	return err
-}
 
-func writeReadinessIssues(w io.Writer, issues []validation.Issue) error {
-	if len(issues) == 0 {
-		return nil
-	}
-	if _, err := fmt.Fprintln(w, "\nIssues:"); err != nil {
-		return err
-	}
-	for _, issue := range issues {
-		if err := writeReadinessIssue(w, issue); err != nil {
-			return err
+	issues := report.Issues()
+	if len(issues) > 0 {
+		fmt.Fprintln(r.Stdout, "\nIssues:")
+		for _, issue := range issues {
+			r.printReadinessIssue(issue)
 		}
 	}
+
+	fmt.Fprintf(r.Stdout, "\nNext: %s\n", report.NextCommand)
 	return nil
 }
 
-func writeReadinessIssue(w io.Writer, issue validation.Issue) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
+func (r *Reporter) printReadinessIssue(issue validation.Issue) {
+	level := strings.ToUpper(string(issue.Status))
+	fmt.Fprintf(r.Stdout, "  [%s] %s: %s\n", level, issue.Name, issue.Message)
+
+	if fix := strings.TrimSpace(issue.Fix); fix != "" {
+		fmt.Fprintf(r.Stdout, "    Fix: %s\n", fix)
 	}
 
-	writef("  [%s] %s: %s\n", strings.ToUpper(string(issue.Status)), issue.Name, issue.Message)
-	if strings.TrimSpace(issue.Fix) != "" {
-		writef("    Fix: %s\n", issue.Fix)
+	if cmd := strings.TrimSpace(issue.Command); cmd != "" {
+		fmt.Fprintf(r.Stdout, "    Command: %s\n", cmd)
 	}
-	if strings.TrimSpace(issue.Command) != "" {
-		writef("    Command: %s\n", issue.Command)
-	}
-	return err
 }
