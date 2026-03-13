@@ -51,7 +51,7 @@ type PruningCriteria = pruner.Criteria
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
 func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) ([]SnapshotFile, error) {
-	loader, err := compose.NewSnapshotObservationRepository()
+	loader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

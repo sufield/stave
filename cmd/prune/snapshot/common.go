@@ -16,7 +16,7 @@ type RetentionTiersMap = projconfig.RetentionTiersMap
 type TierMappingRule = projconfig.TierMappingRule
 
 func listObservationSnapshotFilesRecursive(ctx context.Context, observationsDir string, excludeDirs []string) ([]snapshotFile, error) {
-	loader, err := compose.NewSnapshotObservationRepository()
+	loader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

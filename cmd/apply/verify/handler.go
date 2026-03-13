@@ -158,7 +158,7 @@ func runStep[T any](rt *ui.Runtime, label string, fn func() (T, error)) (T, erro
 }
 
 func runVerifyEvaluation(exec Execution, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
-	loader, err := compose.NewObservationRepository()
+	loader, err := compose.ActiveProvider().NewObservationRepo()
 	if err != nil {
 		return evalResult{}, err
 	}

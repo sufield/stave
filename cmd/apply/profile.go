@@ -186,7 +186,7 @@ func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []
 }
 
 func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
-	marshaler, err := compose.NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
+	marshaler, err := compose.ActiveProvider().NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
 	if err != nil {
 		return err
 	}

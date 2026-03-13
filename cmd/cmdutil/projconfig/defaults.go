@@ -8,7 +8,7 @@ package projconfig
 // projectConfigPtrAndPath returns a pointer to the project config and its
 // path, or (nil, "") if no project config is found.
 func projectConfigPtrAndPath() (*ProjectConfig, string) {
-	cfg, path, ok := FindProjectConfigWithPath()
+	cfg, path, ok := FindProjectConfigWithPath("")
 	if !ok {
 		return nil, ""
 	}

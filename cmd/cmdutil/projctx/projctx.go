@@ -189,24 +189,6 @@ func ResolveContextDefaultDir(_ string, dirName string) (string, bool) {
 	}
 }
 
-// ResolveContextConfigFilePath resolves the project config path from context.
-func ResolveContextConfigFilePath(_ string) (string, bool) {
-	sc, err := ResolveSelectedGlobalContext()
-	if err != nil || !sc.Active || sc.Context == nil {
-		return "", false
-	}
-	p := strings.TrimSpace(sc.Context.ProjectConfig)
-	if p == "" {
-		return "", false
-	}
-	path := sc.Context.AbsPath(p)
-	fi, statErr := os.Stat(path)
-	if statErr != nil || fi.IsDir() {
-		return "", false
-	}
-	return path, true
-}
-
 // DetectProjectRoot walks up from start looking for a Stave project root.
 func DetectProjectRoot(start string) (string, error) {
 	curr, err := filepath.Abs(start)

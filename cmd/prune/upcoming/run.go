@@ -30,7 +30,7 @@ func runUpcoming(cmd *cobra.Command, flags *upcomingFlagsType) error {
 	}
 
 	ctx := compose.CommandContext(cmd)
-	loaded, err := compose.LoadObsAndInv(ctx, opts.ObservationsDir, opts.ControlsDir)
+	loaded, err := compose.ActiveProvider().LoadAssets(ctx, opts.ObservationsDir, opts.ControlsDir)
 	if err != nil {
 		return err
 	}

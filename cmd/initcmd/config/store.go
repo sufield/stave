@@ -20,11 +20,11 @@ type projectConfigStore struct {
 }
 
 func (s projectConfigStore) Find() (*projconfig.ProjectConfig, string, bool) {
-	return projconfig.FindProjectConfigWithPath()
+	return projconfig.FindProjectConfigWithPath("")
 }
 
 func (s projectConfigStore) LoadOrCreate() (*projconfig.ProjectConfig, string, error) {
-	cfg, cfgPath, existed := projconfig.FindProjectConfigWithPath()
+	cfg, cfgPath, existed := projconfig.FindProjectConfigWithPath("")
 	if existed {
 		if cfg == nil {
 			cfg = &projconfig.ProjectConfig{}

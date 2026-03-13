@@ -68,7 +68,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	}
 
 	// 1. Build Adapters
-	marshaler, err := compose.NewFindingWriter(b.Opts.Format, b.IsJSON)
+	marshaler, err := compose.ActiveProvider().NewFindingWriter(b.Opts.Format, b.IsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return nil, err
 	}
 
-	ctlLoader, err := compose.NewControlRepository()
+	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
@@ -89,7 +89,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return nil, err
 	}
 
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
 	// 3. Assemble Enrichment Logic
@@ -151,10 +151,10 @@ func (b *Builder) mapToBuildInput(
 // selecting stdin or file mode and applying integrity checks if configured.
 func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
 	if source.IsStdin() {
-		return compose.NewStdinObservationRepository(os.Stdin)
+		return compose.ActiveProvider().NewStdinObsRepo(os.Stdin)
 	}
 
-	loader, err := compose.NewObservationRepository()
+	loader, err := compose.ActiveProvider().NewObservationRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
