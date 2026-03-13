@@ -112,7 +112,10 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 	}
 
 	report = output.SanitizeReport(cfg.Sanitizer, report)
-	report = filterDiagnosisReport(report, cfg.Cases, cfg.SignalContains)
+	report = FilterReport(report, Filter{
+		Cases:          cfg.Cases,
+		SignalContains: cfg.SignalContains,
+	})
 
 	if cfg.Template != "" {
 		return r.renderTemplate(cfg, report)
