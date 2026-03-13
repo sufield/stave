@@ -148,16 +148,16 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 }
 
 func persistSessionStateIfApplicable(args []string) string {
-	cwd, err := os.Getwd()
+	resolver, err := projctx.NewResolver()
 	if err != nil {
 		return ""
 	}
-	projectRoot, detectErr := projctx.DetectProjectRoot(cwd)
+	projectRoot, detectErr := resolver.DetectProjectRoot(resolver.WorkingDir)
 	if detectErr != nil {
 		return ""
 	}
 	// Best-effort: session state is advisory; failure doesn't affect the command result.
-	_ = projctx.SaveSessionState(projectRoot, args)
+	_ = projctx.SaveSession(projectRoot, args)
 	return projectRoot
 }
 

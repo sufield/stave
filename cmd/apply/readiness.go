@@ -94,7 +94,11 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 
 // runPlan bridges the Cobra layer into the Planner/PlanConfig pattern.
 func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
-	if err := projctx.EnsureContextSelectionValid(); err != nil {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
+	if _, err = resolver.ResolveSelected(); err != nil {
 		return err
 	}
 
@@ -103,9 +107,19 @@ func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 		return err
 	}
 
-	log := projctx.NewInferenceLog()
-	ctlDir := log.InferControlsDir(cmd, fsutil.CleanUserPath(opts.ControlsDir))
-	obsDir := log.InferObservationsDir(cmd, fsutil.CleanUserPath(opts.ObservationsDir))
+	engine := projctx.NewInferenceEngine(resolver)
+	ctlDir := fsutil.CleanUserPath(opts.ControlsDir)
+	if !cmd.Flags().Changed("controls") {
+		if inferred := engine.InferDir("controls", ""); inferred != "" {
+			ctlDir = inferred
+		}
+	}
+	obsDir := fsutil.CleanUserPath(opts.ObservationsDir)
+	if !cmd.Flags().Changed("observations") {
+		if inferred := engine.InferDir("observations", ""); inferred != "" {
+			obsDir = inferred
+		}
+	}
 
 	hasPacks := false
 	if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {

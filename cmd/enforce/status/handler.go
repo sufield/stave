@@ -140,7 +140,11 @@ func (s ProjectState) needsReevaluation() bool {
 }
 
 func run(cmd *cobra.Command, opts *options) error {
-	root, err := projctx.DetectProjectRoot(opts.Dir)
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
+	root, err := resolver.DetectProjectRoot(opts.Dir)
 	if err != nil {
 		return ui.WithNextCommand(err, "stave init")
 	}
@@ -175,7 +179,7 @@ func buildOutput(root string) (statusOutput, error) {
 	evalPath := filepath.Join(root, "output", "evaluation.json")
 	evalTime, hasEval := latestFileTime(evalPath)
 
-	last, err := projctx.LoadSessionState(root)
+	last, err := projctx.LoadSession(root)
 	if err != nil {
 		return statusOutput{}, err
 	}

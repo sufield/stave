@@ -17,11 +17,15 @@ import (
 
 // runApply is the main entry point for the apply command.
 func runApply(cmd *cobra.Command, _ []string, opts *ApplyOptions) error {
-	if err := projctx.EnsureContextSelectionValid(); err != nil {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
+	if _, err = resolver.ResolveSelected(); err != nil {
 		return err
 	}
 
-	if err := runStrictIntegrityCheck(cmd); err != nil {
+	if err = runStrictIntegrityCheck(cmd); err != nil {
 		return err
 	}
 

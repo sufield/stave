@@ -11,123 +11,33 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/pathinfer"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-const SessionFileRel = ".stave/session.json"
+const (
+	SessionFileRel = ".stave/session.json"
+	InferMaxDepth  = 3
+)
 
 // ErrNotInProject is returned when the current directory is not inside a Stave project.
 var ErrNotInProject = errors.New("not inside a Stave project; run `stave init` first")
 
-const InferMaxDepth = 3
+// --- Context Resolver ---
 
-// SessionState holds the last command and time for session persistence.
-type SessionState struct {
-	LastCommand string    `json:"last_command"`
-	WhenUTC     time.Time `json:"when_utc"`
+// Resolver handles the discovery of the active project and global context settings.
+type Resolver struct {
+	WorkingDir string
 }
 
-// InferAttempt records a path inference attempt for diagnostics.
-type InferAttempt struct {
-	FlagName   string
-	DirName    string
-	Base       string
-	Searched   string
-	Candidates []string
-	Error      string
-	Resolved   string
-}
-
-// InferenceLog records path inference attempts for diagnostics.
-// Create one per command invocation; it replaces the former package-level map.
-type InferenceLog struct {
-	attempts map[string]InferAttempt
-}
-
-// NewInferenceLog creates an empty inference log.
-func NewInferenceLog() *InferenceLog {
-	return &InferenceLog{attempts: map[string]InferAttempt{}}
-}
-
-// InferControlsDir attempts path inference for the --controls flag.
-func (l *InferenceLog) InferControlsDir(cmd *cobra.Command, current string) string {
-	return l.inferDir(cmd, "controls", current)
-}
-
-// InferObservationsDir attempts path inference for the --observations flag.
-func (l *InferenceLog) InferObservationsDir(cmd *cobra.Command, current string) string {
-	return l.inferDir(cmd, "observations", current)
-}
-
-// inferDir attempts path inference for a flag if the user didn't
-// explicitly set it. The flag name doubles as the directory name to search for.
-func (l *InferenceLog) inferDir(cmd *cobra.Command, name, current string) string {
-	if cmd == nil || cmd.Flags().Changed(name) {
-		return current
-	}
-
-	record := func(a InferAttempt) {
-		a.FlagName = name
-		a.DirName = name
-		l.attempts[name] = a
-	}
-
-	if _, err := ResolveSelectedGlobalContext(); err != nil {
-		record(InferAttempt{Error: err.Error()})
-		return current
-	}
-
-	if ctxDir, ok := ResolveContextDefaultDir("", name); ok {
-		record(InferAttempt{Searched: "context default", Resolved: ctxDir})
-		return ctxDir
-	}
-
-	base, err := pathinfer.BaseDir()
+// NewResolver creates a Resolver anchored at the current working directory.
+func NewResolver() (*Resolver, error) {
+	wd, err := os.Getwd()
 	if err != nil {
-		record(InferAttempt{Error: err.Error()})
-		return current
+		return nil, fmt.Errorf("resolve working directory: %w", err)
 	}
-	dir, candidates, err := pathinfer.Unique(base, name, InferMaxDepth)
-	searched := fmt.Sprintf("%s/%s and nested %s/ within %d levels", base, name, name, InferMaxDepth)
-	if err != nil {
-		record(InferAttempt{Base: base, Searched: searched, Candidates: candidates, Error: err.Error()})
-		return current
-	}
-	record(InferAttempt{Base: base, Searched: searched, Resolved: dir})
-	return dir
-}
-
-// ExplainFailure returns a human-readable explanation of a failed inference.
-func (l *InferenceLog) ExplainFailure(name string) string {
-	if l == nil {
-		return ""
-	}
-	attempt, ok := l.attempts[name]
-	if !ok || strings.TrimSpace(attempt.Error) == "" {
-		return ""
-	}
-	candidates := "(none)"
-	if len(attempt.Candidates) > 0 {
-		candidates = strings.Join(attempt.Candidates, ", ")
-	}
-	return fmt.Sprintf(
-		"Inference details for --%s:\n  missing: could not infer %q directory\n  searched: %s\n  candidates found: %s\n  fix: pass --%s <path> or run `stave context use <name> --%s <path>`",
-		name,
-		name,
-		attempt.Searched,
-		candidates,
-		name,
-		name,
-	)
-}
-
-// EnsureContextSelectionValid validates the global context selection.
-func EnsureContextSelectionValid() error {
-	_, err := ResolveSelectedGlobalContext()
-	return err
+	return &Resolver{WorkingDir: wd}, nil
 }
 
 // SelectedContext holds the result of resolving the active global context.
@@ -137,8 +47,8 @@ type SelectedContext struct {
 	Active  bool
 }
 
-// ResolveSelectedGlobalContext returns the selected context name, context, and active flag.
-func ResolveSelectedGlobalContext() (SelectedContext, error) {
+// ResolveSelected returns the currently selected global context.
+func (r *Resolver) ResolveSelected() (SelectedContext, error) {
 	st, _, err := contexts.Load()
 	if err != nil {
 		return SelectedContext{}, err
@@ -150,53 +60,28 @@ func ResolveSelectedGlobalContext() (SelectedContext, error) {
 	return SelectedContext{Name: name, Context: ctx, Active: ok}, nil
 }
 
-// RootForContextName returns the project root for the current context.
-func RootForContextName() string {
-	if sc, err := ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
-		root := strings.TrimSpace(sc.Context.ProjectRoot)
-		if root != "" {
+// ProjectRoot determines the root of the current project.
+// Priority: Active Context -> Discovery from WorkingDir -> WorkingDir fallback.
+func (r *Resolver) ProjectRoot() string {
+	if sc, err := r.ResolveSelected(); err == nil && sc.Active && sc.Context != nil {
+		if root := strings.TrimSpace(sc.Context.ProjectRoot); root != "" {
 			return root
 		}
 	}
-	if root, err := DetectProjectRoot("."); err == nil {
+	if root, err := r.DetectProjectRoot(r.WorkingDir); err == nil {
 		return root
 	}
-	wd, _ := os.Getwd()
-	return wd
+	return r.WorkingDir
 }
 
-// ResolveContextDefaultDir resolves a directory from the active context.
-func ResolveContextDefaultDir(_ string, dirName string) (string, bool) {
-	sc, err := ResolveSelectedGlobalContext()
-	if err != nil || !sc.Active || sc.Context == nil {
-		return "", false
-	}
-	switch dirName {
-	case "controls":
-		p := strings.TrimSpace(sc.Context.Defaults.ControlsDir)
-		if p == "" {
-			return "", false
-		}
-		return sc.Context.AbsPath(p), true
-	case "observations":
-		p := strings.TrimSpace(sc.Context.Defaults.ObservationsDir)
-		if p == "" {
-			return "", false
-		}
-		return sc.Context.AbsPath(p), true
-	default:
-		return "", false
-	}
-}
-
-// DetectProjectRoot walks up from start looking for a Stave project root.
-func DetectProjectRoot(start string) (string, error) {
+// DetectProjectRoot walks up from start looking for a Stave project root indicator.
+func (r *Resolver) DetectProjectRoot(start string) (string, error) {
 	curr, err := filepath.Abs(start)
 	if err != nil {
 		return "", err
 	}
 	for {
-		if IsProjectRoot(curr) {
+		if r.IsProjectRoot(curr) {
 			return curr, nil
 		}
 		parent := filepath.Dir(curr)
@@ -207,8 +92,8 @@ func DetectProjectRoot(start string) (string, error) {
 	}
 }
 
-// IsProjectRoot checks if a directory is a Stave project root.
-func IsProjectRoot(dir string) bool {
+// IsProjectRoot checks if a directory contains Stave project indicators.
+func (r *Resolver) IsProjectRoot(dir string) bool {
 	if _, err := os.Stat(filepath.Join(dir, SessionFileRel)); err == nil {
 		return true
 	}
@@ -222,16 +107,92 @@ func IsProjectRoot(dir string) bool {
 	return true
 }
 
-// SaveSessionState persists session state to disk.
-func SaveSessionState(projectRoot string, argv []string) error {
+// --- Path Inference Engine ---
+
+// InferenceEngine manages the "best effort" discovery of project directories.
+type InferenceEngine struct {
+	resolver *Resolver
+	Log      *InferenceLog
+}
+
+// NewInferenceEngine creates an engine backed by the given Resolver.
+func NewInferenceEngine(r *Resolver) *InferenceEngine {
+	return &InferenceEngine{
+		resolver: r,
+		Log:      &InferenceLog{attempts: make(map[string]InferAttempt)},
+	}
+}
+
+// InferDir attempts to find a directory (like "controls" or "observations")
+// using context defaults first, then filesystem searching.
+// If currentInput is non-empty, it is returned as-is (no inference needed).
+func (e *InferenceEngine) InferDir(name, currentInput string) string {
+	if currentInput != "" {
+		return currentInput
+	}
+
+	record := func(a InferAttempt) {
+		a.FlagName = name
+		e.Log.attempts[name] = a
+	}
+
+	// 1. Try Context Defaults
+	if e.resolver != nil {
+		sc, err := e.resolver.ResolveSelected()
+		if err == nil && sc.Active && sc.Context != nil {
+			var ctxPath string
+			switch name {
+			case "controls":
+				ctxPath = sc.Context.Defaults.ControlsDir
+			case "observations":
+				ctxPath = sc.Context.Defaults.ObservationsDir
+			}
+
+			if p := strings.TrimSpace(ctxPath); p != "" {
+				resolved := sc.Context.AbsPath(p)
+				record(InferAttempt{Searched: "context default", Resolved: resolved})
+				return resolved
+			}
+		}
+	}
+
+	// 2. Try Filesystem Inference
+	base, err := pathinfer.BaseDir()
+	if err != nil {
+		record(InferAttempt{Error: err.Error()})
+		return ""
+	}
+
+	dir, candidates, err := pathinfer.Unique(base, name, InferMaxDepth)
+	searchDesc := fmt.Sprintf("%s/%s (nested to %d levels)", base, name, InferMaxDepth)
+
+	if err != nil {
+		record(InferAttempt{Base: base, Searched: searchDesc, Candidates: candidates, Error: err.Error()})
+		return ""
+	}
+
+	record(InferAttempt{Base: base, Searched: searchDesc, Resolved: dir})
+	return dir
+}
+
+// --- Session Management ---
+
+// SessionState holds the last command and time for session persistence.
+type SessionState struct {
+	LastCommand string    `json:"last_command"`
+	WhenUTC     time.Time `json:"when_utc"`
+}
+
+// SaveSession persists session state to disk.
+func SaveSession(projectRoot string, argv []string) error {
 	if projectRoot == "" || len(argv) == 0 {
 		return nil
 	}
-	st := SessionState{
+	state := SessionState{
 		LastCommand: strings.Join(argv, " "),
 		WhenUTC:     time.Now().UTC(),
 	}
-	data, err := json.MarshalIndent(st, "", "  ")
+	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -242,8 +203,8 @@ func SaveSessionState(projectRoot string, argv []string) error {
 	return fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts())
 }
 
-// LoadSessionState reads session state from disk.
-func LoadSessionState(projectRoot string) (*SessionState, error) {
+// LoadSession reads session state from disk.
+func LoadSession(projectRoot string) (*SessionState, error) {
 	path := filepath.Join(projectRoot, SessionFileRel)
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
@@ -252,9 +213,45 @@ func LoadSessionState(projectRoot string) (*SessionState, error) {
 		}
 		return nil, err
 	}
-	var st SessionState
-	if err := json.Unmarshal(data, &st); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
+	var state SessionState
+	if err := json.Unmarshal(data, &state); err != nil {
+		return nil, fmt.Errorf("parse session %s: %w", path, err)
 	}
-	return &st, nil
+	return &state, nil
+}
+
+// --- Diagnostics ---
+
+// InferenceLog records path inference attempts for diagnostics.
+type InferenceLog struct {
+	attempts map[string]InferAttempt
+}
+
+// InferAttempt records a path inference attempt for diagnostics.
+type InferAttempt struct {
+	FlagName   string
+	Base       string
+	Searched   string
+	Candidates []string
+	Error      string
+	Resolved   string
+}
+
+// Explain returns a human-readable explanation of a failed inference.
+func (l *InferenceLog) Explain(name string) string {
+	if l == nil {
+		return ""
+	}
+	attempt, ok := l.attempts[name]
+	if !ok || attempt.Error == "" {
+		return ""
+	}
+	candidates := "(none)"
+	if len(attempt.Candidates) > 0 {
+		candidates = strings.Join(attempt.Candidates, ", ")
+	}
+	return fmt.Sprintf(
+		"Inference failed for --%s:\n  searched: %s\n  candidates: %s\n  hint: pass --%s <path> or use `stave context` to set a default",
+		name, attempt.Searched, candidates, name,
+	)
 }

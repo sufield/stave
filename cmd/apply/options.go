@@ -87,13 +87,19 @@ func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error)
 
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
 func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
-	root := projctx.RootForContextName()
+	resolver, _ := projctx.NewResolver()
+	root := ""
+	if resolver != nil {
+		root = resolver.ProjectRoot()
+	}
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 	_, userPath, _ := projconfig.FindUserConfigWithPath()
 
 	selectedContext := ""
-	if sc, err := projctx.ResolveSelectedGlobalContext(); err == nil && sc.Active {
-		selectedContext = sc.Name
+	if resolver != nil {
+		if sc, err := resolver.ResolveSelected(); err == nil && sc.Active {
+			selectedContext = sc.Name
+		}
 	}
 
 	return appeval.Options{
@@ -117,10 +123,17 @@ func (o *ApplyOptions) normalizeApplyPaths(cmd *cobra.Command) {
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 
-	log := projctx.NewInferenceLog()
-	o.ControlsDir = log.InferControlsDir(cmd, o.ControlsDir)
-	if o.ObservationsDir != "-" {
-		o.ObservationsDir = log.InferObservationsDir(cmd, o.ObservationsDir)
+	resolver, _ := projctx.NewResolver()
+	engine := projctx.NewInferenceEngine(resolver)
+	if !cmd.Flags().Changed("controls") {
+		if inferred := engine.InferDir("controls", ""); inferred != "" {
+			o.ControlsDir = inferred
+		}
+	}
+	if o.ObservationsDir != "-" && !cmd.Flags().Changed("observations") {
+		if inferred := engine.InferDir("observations", ""); inferred != "" {
+			o.ObservationsDir = inferred
+		}
 	}
 }
 
@@ -141,16 +154,14 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 
 // validateDirs ensures directories exist unless using packs or stdin.
 func (o *ApplyOptions) validateDirs() error {
-	log := projctx.NewInferenceLog()
-
 	if !o.isUsingPacks() {
-		if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
+		if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
 	}
 
 	if o.ObservationsDir != "-" {
-		if err := cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log); err != nil {
+		if err := cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
 			return err
 		}
 	}

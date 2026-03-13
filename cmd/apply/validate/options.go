@@ -75,15 +75,28 @@ func (o *options) normalize(cmd *cobra.Command) {
 
 	// Apply inference if we are not in single-file mode
 	if o.InputPath == "" {
-		log := projctx.NewInferenceLog()
-		o.Controls = log.InferControlsDir(cmd, o.Controls)
-		o.Observations = log.InferObservationsDir(cmd, o.Observations)
+		resolver, _ := projctx.NewResolver()
+		engine := projctx.NewInferenceEngine(resolver)
+		if !cmd.Flags().Changed("controls") {
+			if inferred := engine.InferDir("controls", ""); inferred != "" {
+				o.Controls = inferred
+			}
+		}
+		if !cmd.Flags().Changed("observations") {
+			if inferred := engine.InferDir("observations", ""); inferred != "" {
+				o.Observations = inferred
+			}
+		}
 	}
 }
 
 // validate performs logical checks on flag combinations.
 func (o *options) validate() error {
-	if err := projctx.EnsureContextSelectionValid(); err != nil {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
+	if _, err = resolver.ResolveSelected(); err != nil {
 		return err
 	}
 
@@ -106,8 +119,14 @@ func (o *options) validate() error {
 
 // prepareEnvironment handles Git audits and verbose context logging.
 func (o *options) prepareEnvironment(cmd *cobra.Command) {
+	resolver, _ := projctx.NewResolver()
+
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
-	gitMeta := compose.AuditGitStatus(projctx.RootForContextName(), []string{o.Controls, cfgPath})
+	root := ""
+	if resolver != nil {
+		root = resolver.ProjectRoot()
+	}
+	gitMeta := compose.AuditGitStatus(root, []string{o.Controls, cfgPath})
 	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", o.Quiet || cmdutil.QuietEnabled(cmd))
 
 	verbosity := 0
@@ -115,10 +134,11 @@ func (o *options) prepareEnvironment(cmd *cobra.Command) {
 		verbosity, _ = cmd.Root().PersistentFlags().GetCount("verbose")
 	}
 	if verbosity > 0 && !o.Quiet && !cmdutil.QuietEnabled(cmd) {
-		sc, _ := projctx.ResolveSelectedGlobalContext()
 		ctxName := "none"
-		if sc.Active && strings.TrimSpace(sc.Name) != "" {
-			ctxName = sc.Name
+		if resolver != nil {
+			if sc, err := resolver.ResolveSelected(); err == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
+				ctxName = sc.Name
+			}
 		}
 		fmt.Fprintf(cmd.ErrOrStderr(), "context=%s config=%s controls=%s observations=%s\n",
 			ctxName, compose.EmptyDash(cfgPath), o.Controls, o.Observations)
