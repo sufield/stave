@@ -11,7 +11,7 @@ import (
 // AddGlobalFlags wires persistent global flags onto the provided root command.
 func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	root.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
-		return &ui.InputError{Err: ui.SuggestFlagParseError(err, cmdutil.CollectVisibleFlags(cmd))}
+		return &ui.UserError{Err: ui.SuggestFlagParseError(err, cmdutil.CollectVisibleFlags(cmd))}
 	})
 
 	// Global persistent flags available to all commands

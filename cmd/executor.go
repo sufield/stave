@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -223,7 +224,7 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 			WithTitle("Input validation failed").
 			WithAction(suggested + "Run `stave validate` with the same inputs to get actionable fix hints.").
 			WithURL(docsRef)
-	case ui.IsInputError(err):
+	case errors.As(err, new(*ui.UserError)):
 		return ui.NewErrorInfo(ui.CodeInvalidInput, message).
 			WithTitle("Input validation failed").
 			WithAction(suggested + "Check the command arguments and rerun with -v or -vv for additional context.").

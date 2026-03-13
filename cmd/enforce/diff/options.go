@@ -55,7 +55,7 @@ func (o *options) buildFilter() (asset.FilterOptions, error) {
 		case "added", "removed", "modified":
 			filter.ChangeTypes = append(filter.ChangeTypes, asset.ChangeType(ct))
 		default:
-			return asset.FilterOptions{}, &ui.InputError{Err: fmt.Errorf("invalid --change-type %q (use: added, removed, modified)", raw)}
+			return asset.FilterOptions{}, &ui.UserError{Err: fmt.Errorf("invalid --change-type %q (use: added, removed, modified)", raw)}
 		}
 	}
 	for _, raw := range o.AssetTypes {

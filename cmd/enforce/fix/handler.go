@@ -28,7 +28,7 @@ func runFix(cmd *cobra.Command, flags *fixFlagsType) error {
 	}
 	needle := strings.TrimSpace(flags.findingRef)
 	if needle == "" {
-		return &ui.InputError{Err: fmt.Errorf("--finding cannot be empty")}
+		return &ui.UserError{Err: fmt.Errorf("--finding cannot be empty")}
 	}
 	selected, err := selectFixFinding(findings, needle)
 	if err != nil {

@@ -44,11 +44,11 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	}
 	severityFilter, err := domainsecurityaudit.ParseSeverityList(c.flags.severity)
 	if err != nil {
-		return &ui.InputError{Err: fmt.Errorf("invalid --severity: %w", err)}
+		return &ui.UserError{Err: fmt.Errorf("invalid --severity: %w", err)}
 	}
 	failOn, err := domainsecurityaudit.ParseSeverity(c.flags.failOn)
 	if err != nil {
-		return &ui.InputError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
+		return &ui.UserError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
 	}
 
 	cwd, err := os.Getwd()
@@ -61,7 +61,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	}
 	now, err := compose.ResolveNow(c.flags.nowTime)
 	if err != nil {
-		return &ui.InputError{Err: err}
+		return &ui.UserError{Err: err}
 	}
 	bundleDir := c.resolveOutDir(now)
 
@@ -158,7 +158,7 @@ func parseFormat(raw string) (string, error) {
 	case "json", "markdown", "sarif":
 		return normalized, nil
 	default:
-		return "", &ui.InputError{Err: ui.EnumError("--format", raw, []string{"json", "markdown", "sarif"})}
+		return "", &ui.UserError{Err: ui.EnumError("--format", raw, []string{"json", "markdown", "sarif"})}
 	}
 }
 

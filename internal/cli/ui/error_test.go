@@ -115,6 +115,7 @@ func TestIsSentinel(t *testing.T) {
 		{"security audit findings", ErrSecurityAuditFindings, true},
 		{"diagnostics found", ErrDiagnosticsFound, true},
 		{"interrupted", ErrInterrupted, true},
+		{"internal error", ErrInternal, true},
 		{"other error", errors.New("other"), false},
 		{"nil", nil, false},
 	}
@@ -181,13 +182,13 @@ func TestWriteErrorText(t *testing.T) {
 	if !strings.Contains(out, "[ERR] Input validation failed (INVALID_INPUT)") {
 		t.Fatalf("unexpected output: %s", out)
 	}
-	if !strings.Contains(out, "Description: invalid --max-unsafe value") {
-		t.Fatalf("missing description: %s", out)
+	if !strings.Contains(out, "  Message: invalid --max-unsafe value") {
+		t.Fatalf("missing message: %s", out)
 	}
-	if !strings.Contains(out, "Fix: Use values like 168h, 7d, or 1d12h.") {
+	if !strings.Contains(out, "  Fix:     Use values like 168h, 7d, or 1d12h.") {
 		t.Fatalf("missing fix: %s", out)
 	}
-	if !strings.Contains(out, "More info: https://github.com/sufield/stave/blob/main/docs/user-docs.md") {
+	if !strings.Contains(out, "  Help:    https://github.com/sufield/stave/blob/main/docs/user-docs.md") {
 		t.Fatalf("missing url: %s", out)
 	}
 }
