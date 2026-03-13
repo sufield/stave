@@ -2,6 +2,7 @@ package extractor
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,80 +13,106 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+// scaffoldResult tracks what happened during the operation for the UI.
+type scaffoldResult struct {
+	baseDir string
+	created []string
+	skipped []string
+}
+
 func runScaffold(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	baseDir := filepath.Join(opts.Dir, opts.Name)
-	if err := fsutil.SafeMkdirAll(baseDir, fsutil.WriteOptions{
-		Perm:         0o700,
-		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
-	}); err != nil {
-		return fmt.Errorf("create directory %s: %w", baseDir, err)
-	}
-
+	// 1. Extract environment/flag state from cmd once
+	force := cmdutil.ForceEnabled(cmd)
+	allowSymlinks := cmdutil.AllowSymlinkOutEnabled(cmd)
 	rt.Quiet = cmdutil.QuietEnabled(cmd)
+
+	// 2. Setup directory
+	baseDir := filepath.Join(opts.Dir, opts.Name)
+	err := fsutil.SafeMkdirAll(baseDir, fsutil.WriteOptions{
+		Perm:         0o755,
+		AllowSymlink: allowSymlinks,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", baseDir, err)
+	}
+
+	// 3. Define scaffold files (Slice ensures deterministic order)
+	files := []struct {
+		name    string
+		content string
+	}{
+		{"README.md", extractorReadme(opts.Name)},
+		{"extractor.yaml", extractorMetadata(opts.Name)},
+		{"transform.go", extractorTransformGo(opts.Name)},
+		{"transform_test.go", extractorTransformTestGo(opts.Name)},
+		{"Makefile", extractorMakefile(opts.Name)},
+	}
+
+	// 4. Perform operations
 	done := rt.BeginProgress("scaffold extractor")
-	defer done()
+	res := &scaffoldResult{baseDir: baseDir}
 
-	files := map[string]string{
-		"README.md":         extractorReadme(opts.Name),
-		"extractor.yaml":    extractorMetadata(opts.Name),
-		"transform.go":      extractorTransformGo(opts.Name),
-		"transform_test.go": extractorTransformTestGo(opts.Name),
-		"Makefile":          extractorMakefile(opts.Name),
-	}
+	for _, f := range files {
+		path := filepath.Join(baseDir, f.name)
 
-	var created []string
-	var skipped []string
-	for rel, content := range files {
-		full := filepath.Join(baseDir, rel)
-		wrote, err := writeScaffoldFile(full, []byte(content), cmdutil.ForceEnabled(cmd))
+		wrote, err := writeScaffoldFile(path, []byte(f.content), force)
 		if err != nil {
-			return fmt.Errorf("write %s: %w", full, err)
+			done()
+			return fmt.Errorf("could not write %s: %w", f.name, err)
 		}
+
 		if wrote {
-			created = append(created, rel)
-			continue
-		}
-		skipped = append(skipped, rel)
-	}
-
-	if rt.Quiet {
-		return nil
-	}
-
-	out := cmd.OutOrStdout()
-	_, _ = fmt.Fprintf(out, "Scaffolded extractor %q at %s\n", opts.Name, baseDir)
-	for _, rel := range created {
-		_, _ = fmt.Fprintf(out, "  - %s\n", rel)
-	}
-	if len(skipped) > 0 {
-		_, _ = fmt.Fprintln(out, "\nSkipped existing files (use --force to overwrite):")
-		for _, rel := range skipped {
-			_, _ = fmt.Fprintf(out, "  - %s\n", rel)
+			res.created = append(res.created, f.name)
+		} else {
+			res.skipped = append(res.skipped, f.name)
 		}
 	}
+	done()
+
+	// 5. UI Reporting
+	if !rt.Quiet {
+		printReport(cmd.OutOrStdout(), opts.Name, res)
+	}
+
 	return nil
 }
 
-// writeScaffoldFile writes a file only if it doesn't already exist (or force is true).
+// writeScaffoldFile returns (true, nil) if written, (false, nil) if skipped, or an error.
 func writeScaffoldFile(path string, data []byte, force bool) (bool, error) {
 	if !force {
 		if _, err := os.Stat(path); err == nil {
 			return false, nil
 		}
 	}
+
 	opts := fsutil.ConfigWriteOpts()
 	opts.Overwrite = force
+
 	if err := fsutil.SafeWriteFile(path, data, opts); err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
-// normalizeTemplate trims a leading newline and ensures a trailing newline.
-func normalizeTemplate(s string) string {
-	s = strings.TrimLeft(s, "\n")
-	if !strings.HasSuffix(s, "\n") {
-		s += "\n"
+func printReport(out io.Writer, name string, res *scaffoldResult) {
+	fmt.Fprintf(out, "Scaffolded extractor %q at %s\n", name, res.baseDir)
+	for _, rel := range res.created {
+		fmt.Fprintf(out, "  - %s\n", rel)
 	}
-	return s
+
+	if len(res.skipped) > 0 {
+		fmt.Fprintln(out, "\nSkipped existing files (use --force to overwrite):")
+		for _, rel := range res.skipped {
+			fmt.Fprintf(out, "  - %s\n", rel)
+		}
+	}
+}
+
+// normalizeTemplate ensures consistent formatting for generated file strings.
+func normalizeTemplate(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	return s + "\n"
 }
