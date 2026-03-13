@@ -21,21 +21,23 @@ const (
 	baselineCheckKind = kernel.KindBaselineCheck
 )
 
-type saveOptions struct {
+// SaveConfig holds the parameters for the baseline save subcommand.
+type SaveConfig struct {
 	InPath  string
 	OutPath string
 }
 
-type checkOptions struct {
+// CheckConfig holds the parameters for the baseline check subcommand.
+type CheckConfig struct {
 	InPath       string
 	BaselinePath string
 	FailOnNew    bool
 }
 
-func runSave(cmd *cobra.Command, opts *saveOptions) error {
+func runSave(cmd *cobra.Command, cfg SaveConfig) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
-	inPath := fsutil.CleanUserPath(opts.InPath)
-	outPath := fsutil.CleanUserPath(opts.OutPath)
+	inPath := fsutil.CleanUserPath(cfg.InPath)
+	outPath := fsutil.CleanUserPath(cfg.OutPath)
 
 	eval, err := shared.LoadEvaluationEnvelope(inPath)
 	if err != nil {
@@ -67,9 +69,9 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 	return nil
 }
 
-func runCheck(cmd *cobra.Command, opts *checkOptions) error {
-	inPath := fsutil.CleanUserPath(opts.InPath)
-	baselinePath := fsutil.CleanUserPath(opts.BaselinePath)
+func runCheck(cmd *cobra.Command, cfg CheckConfig) error {
+	inPath := fsutil.CleanUserPath(cfg.InPath)
+	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
 	eval, err := shared.LoadEvaluationEnvelope(inPath)
 	if err != nil {
@@ -104,7 +106,7 @@ func runCheck(cmd *cobra.Command, opts *checkOptions) error {
 		return fmt.Errorf("write baseline check output: %w", err)
 	}
 
-	if opts.FailOnNew && comparison.HasNewFindings() {
+	if cfg.FailOnNew && comparison.HasNewFindings() {
 		return ui.ErrViolationsFound
 	}
 	return nil
