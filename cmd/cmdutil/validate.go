@@ -27,7 +27,7 @@ func ValidateDir(flag, path string, hint error) error {
 // diagnose, and validate command packages.
 func ValidateDirWithInference(flag, path, inferKey string, hint error, log *projctx.InferenceLog) error {
 	if err := ValidateDir(flag, path, hint); err != nil {
-		if detail := log.ExplainFailure(inferKey); detail != "" {
+		if detail := log.Explain(inferKey); detail != "" {
 			return fmt.Errorf("%w\n%s", err, detail)
 		}
 		return err

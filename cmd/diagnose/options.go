@@ -43,12 +43,21 @@ func (o diagnoseOptions) normalizePaths(cmd *cobra.Command) (diagnoseOptions, *p
 	out.ControlsDir = fsutil.CleanUserPath(out.ControlsDir)
 	out.ObservationsDir = fsutil.CleanUserPath(out.ObservationsDir)
 	out.PreviousOutput = fsutil.CleanUserPath(out.PreviousOutput)
-	log := projctx.NewInferenceLog()
 
-	out.ControlsDir = log.InferControlsDir(cmd, out.ControlsDir)
-	out.ObservationsDir = log.InferObservationsDir(cmd, out.ObservationsDir)
+	resolver, _ := projctx.NewResolver()
+	engine := projctx.NewInferenceEngine(resolver)
+	if !cmd.Flags().Changed("controls") {
+		if inferred := engine.InferDir("controls", ""); inferred != "" {
+			out.ControlsDir = inferred
+		}
+	}
+	if !cmd.Flags().Changed("observations") {
+		if inferred := engine.InferDir("observations", ""); inferred != "" {
+			out.ObservationsDir = inferred
+		}
+	}
 
-	return out, log
+	return out, engine.Log
 }
 
 func (o diagnoseOptions) validateDirs(log *projctx.InferenceLog) error {

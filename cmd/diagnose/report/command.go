@@ -70,7 +70,11 @@ Supported template syntax:
 }
 
 func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
-	if err := projctx.EnsureContextSelectionValid(); err != nil {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
+	if _, err = resolver.ResolveSelected(); err != nil {
 		return err
 	}
 	inputFile := fsutil.CleanUserPath(flags.inputFile)
@@ -102,26 +106,34 @@ func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 }
 
 func collectReportGitAudit() *evaluation.GitInfo {
-	cfg, _ := selectedContextConfigPath()
-	ctl := selectedContextControlsPath()
-	base := projctx.RootForContextName()
+	resolver, _ := projctx.NewResolver()
+	cfg, _ := selectedContextConfigPath(resolver)
+	ctl := selectedContextControlsPath(resolver)
+	base := ""
+	if resolver != nil {
+		base = resolver.ProjectRoot()
+	}
 	return compose.AuditGitStatus(base, []string{ctl, cfg})
 }
 
-func selectedContextConfigPath() (string, bool) {
-	if sc, err := projctx.ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
-		if p := strings.TrimSpace(sc.Context.ProjectConfig); p != "" {
-			return sc.Context.AbsPath(p), true
+func selectedContextConfigPath(resolver *projctx.Resolver) (string, bool) {
+	if resolver != nil {
+		if sc, err := resolver.ResolveSelected(); err == nil && sc.Active && sc.Context != nil {
+			if p := strings.TrimSpace(sc.Context.ProjectConfig); p != "" {
+				return sc.Context.AbsPath(p), true
+			}
 		}
 	}
 	_, path, ok := projconfig.FindProjectConfigWithPath("")
 	return path, ok
 }
 
-func selectedContextControlsPath() string {
-	if sc, err := projctx.ResolveSelectedGlobalContext(); err == nil && sc.Active && sc.Context != nil {
-		if p := strings.TrimSpace(sc.Context.Defaults.ControlsDir); p != "" {
-			return sc.Context.AbsPath(p)
+func selectedContextControlsPath(resolver *projctx.Resolver) string {
+	if resolver != nil {
+		if sc, err := resolver.ResolveSelected(); err == nil && sc.Active && sc.Context != nil {
+			if p := strings.TrimSpace(sc.Context.Defaults.ControlsDir); p != "" {
+				return sc.Context.AbsPath(p)
+			}
 		}
 	}
 	return "controls"

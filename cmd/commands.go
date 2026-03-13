@@ -105,16 +105,18 @@ func newVersionCmd() *cobra.Command {
 				SchemaOutput:      kernel.SchemaOutput,
 			}
 			if verbose {
-				root, err := projctx.DetectProjectRoot(".")
-				if err == nil {
-					out.ProjectRoot = root
-					lockPath := filepath.Join(root, CLILockfile)
-					if _, statErr := os.Stat(lockPath); statErr == nil {
-						out.LockPresent = true
-						out.LockFile = lockPath
-						if data, readErr := fsutil.ReadFileLimited(lockPath); readErr == nil {
-							sum := sha256.Sum256(data)
-							out.LockHash = hex.EncodeToString(sum[:])
+				if resolver, resolverErr := projctx.NewResolver(); resolverErr == nil {
+					root, err := resolver.DetectProjectRoot(".")
+					if err == nil {
+						out.ProjectRoot = root
+						lockPath := filepath.Join(root, CLILockfile)
+						if _, statErr := os.Stat(lockPath); statErr == nil {
+							out.LockPresent = true
+							out.LockFile = lockPath
+							if data, readErr := fsutil.ReadFileLimited(lockPath); readErr == nil {
+								sum := sha256.Sum256(data)
+								out.LockHash = hex.EncodeToString(sum[:])
+							}
 						}
 					}
 				}

@@ -56,10 +56,10 @@ func TestSaveAndLoadSessionState(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(project, "observations"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := projctx.SaveSessionState(project, []string{"apply", "--controls", "./controls"}); err != nil {
+	if err := projctx.SaveSession(project, []string{"apply", "--controls", "./controls"}); err != nil {
 		t.Fatalf("saveSessionState: %v", err)
 	}
-	st, err := projctx.LoadSessionState(project)
+	st, err := projctx.LoadSession(project)
 	if err != nil {
 		t.Fatalf("loadSessionState: %v", err)
 	}
