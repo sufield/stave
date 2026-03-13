@@ -3,7 +3,6 @@ package verify
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -30,14 +29,19 @@ type verifyExecution struct {
 	allowUnknown bool
 }
 
+// runVerify is the top-level CLI orchestrator.
 func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	// 1. Parse runtime parameters
+	// 1. Prepare environment and dependencies
 	maxUnsafe, clock, err := parseRuntime(opts)
 	if err != nil {
 		return err
 	}
 
 	ctx := compose.CommandContext(cmd)
+	sanitizer := cmdutil.GetSanitizer(cmd)
+	rt.Quiet = opts.Quiet || cmdutil.QuietEnabled(cmd)
+
+	// 2. Load Control Definitions
 	controls, err := loadVerifyControls(ctx, opts.ControlsDir)
 	if err != nil {
 		return err
@@ -50,29 +54,30 @@ func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 		allowUnknown: opts.AllowUnknown,
 	}
 
-	// 2. Run evaluations
-	rt.Quiet = opts.Quiet || cmdutil.QuietEnabled(cmd)
-
-	beforeDone := rt.BeginProgress("apply before observations")
-	beforeEval, err := runVerifyEvaluation(execCtx, controls, opts.BeforeDir)
-	beforeDone()
+	// 3. Run Evaluations
+	before, err := runStep(rt, "apply before observations", func() (evalResult, error) {
+		return runVerifyEvaluation(execCtx, controls, opts.BeforeDir)
+	})
 	if err != nil {
 		return fmt.Errorf("before evaluation: %w", err)
 	}
 
-	afterDone := rt.BeginProgress("apply after observations")
-	afterEval, err := runVerifyEvaluation(execCtx, controls, opts.AfterDir)
-	afterDone()
+	after, err := runStep(rt, "apply after observations", func() (evalResult, error) {
+		return runVerifyEvaluation(execCtx, controls, opts.AfterDir)
+	})
 	if err != nil {
 		return fmt.Errorf("after evaluation: %w", err)
 	}
 
-	// 3. Build and write output
-	outcome := buildVerificationOutcome(cmd, execCtx, beforeEval, afterEval)
-	if err := writeVerificationJSON(cmd.OutOrStdout(), outcome.result); err != nil {
-		return fmt.Errorf("write output: %w", err)
+	// 4. Compare and Construct Outcome
+	outcome := compareEvaluations(execCtx, before, after, sanitizer)
+
+	// 5. Report Results
+	if err := outjson.WriteVerification(cmd.OutOrStdout(), outcome.Envelope); err != nil {
+		return fmt.Errorf("failed to write JSON output: %w", err)
 	}
-	return verifyOutcomeExit(rt, outcome)
+
+	return handleVerifyExit(rt, outcome)
 }
 
 // parseRuntime converts raw option strings into structured runtime values.
@@ -88,56 +93,47 @@ func parseRuntime(opts *options) (time.Duration, ports.Clock, error) {
 	return maxDuration, clock, nil
 }
 
-type verifyEvaluation struct {
+// --- Internal Business Logic ---
+
+type evalResult struct {
 	result        *evaluation.Result
 	snapshotCount int
 }
 
-type verifyOutcome struct {
-	result          safetyenvelope.Verification
-	remainingCount  int
-	introducedCount int
+type verificationOutcome struct {
+	Envelope        safetyenvelope.Verification
+	RemainingCount  int
+	IntroducedCount int
 }
 
-func loadVerifyControls(ctx context.Context, controlsDir string) ([]policy.ControlDefinition, error) {
-	controls, err := compose.LoadControls(ctx, controlsDir)
+func loadVerifyControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+	controls, err := compose.LoadControls(ctx, dir)
 	if err != nil {
 		return nil, err
 	}
 	if len(controls) == 0 {
-		return nil, fmt.Errorf("%w: no controls in %s", appeval.ErrNoControls, controlsDir)
+		return nil, fmt.Errorf("%w: no controls found in %s", appeval.ErrNoControls, dir)
 	}
 	return controls, nil
 }
 
-func runVerifyEvaluation(execCtx verifyExecution, controls []policy.ControlDefinition, observationsDir string) (verifyEvaluation, error) {
-	result, snaps, err := runEvaluation(runEvaluationRequest{
-		Context:          execCtx.ctx,
-		ObservationsDir:  observationsDir,
-		Controls:         controls,
-		MaxUnsafe:        execCtx.maxUnsafe,
-		Clock:            execCtx.clock,
-		AllowUnknownType: execCtx.allowUnknown,
-	})
-	if err != nil {
-		return verifyEvaluation{}, err
-	}
-	return verifyEvaluation{result: result, snapshotCount: snaps}, nil
-}
-
-func buildVerificationOutcome(cmd *cobra.Command, execCtx verifyExecution, before, after verifyEvaluation) verifyOutcome {
+func compareEvaluations(
+	exec verifyExecution,
+	before, after evalResult,
+	sz *sanitize.Sanitizer,
+) verificationOutcome {
 	diff := evaluation.CompareVerificationFindings(before.result.Findings, after.result.Findings)
-	sanitizer := cmdutil.GetSanitizer(cmd)
-	resolved := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Resolved))
-	remaining := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Remaining))
-	introduced := redactVerificationEntries(sanitizer, shared.FindingsToVerificationEntries(diff.Introduced))
 
-	result := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
+	resolved := redactEntries(sz, shared.FindingsToVerificationEntries(diff.Resolved))
+	remaining := redactEntries(sz, shared.FindingsToVerificationEntries(diff.Remaining))
+	introduced := redactEntries(sz, shared.FindingsToVerificationEntries(diff.Introduced))
+
+	envelope := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
 			ToolVersion:     staveversion.Version,
 			Offline:         true,
-			Now:             execCtx.clock.Now(),
-			MaxUnsafe:       execCtx.maxUnsafe,
+			Now:             exec.clock.Now(),
+			MaxUnsafe:       exec.maxUnsafe,
 			BeforeSnapshots: before.snapshotCount,
 			AfterSnapshots:  after.snapshotCount,
 		},
@@ -152,59 +148,65 @@ func buildVerificationOutcome(cmd *cobra.Command, execCtx verifyExecution, befor
 		Remaining:  remaining,
 		Introduced: introduced,
 	})
-	return verifyOutcome{
-		result:          result,
-		remainingCount:  len(remaining),
-		introducedCount: len(introduced),
+
+	return verificationOutcome{
+		Envelope:        envelope,
+		RemainingCount:  len(remaining),
+		IntroducedCount: len(introduced),
 	}
 }
 
-func redactVerificationEntries(sanitizer *sanitize.Sanitizer, entries []safetyenvelope.VerificationEntry) []safetyenvelope.VerificationEntry {
+// redactEntries returns a new slice with sensitive fields (AssetID) sanitized.
+func redactEntries(sz *sanitize.Sanitizer, entries []safetyenvelope.VerificationEntry) []safetyenvelope.VerificationEntry {
 	out := make([]safetyenvelope.VerificationEntry, len(entries))
 	for i, e := range entries {
+		e.AssetID = sz.Verification(e.AssetID)
 		out[i] = e
-		out[i].AssetID = sanitizer.Verification(e.AssetID)
 	}
 	return out
 }
 
-func verifyOutcomeExit(rt *ui.Runtime, outcome verifyOutcome) error {
-	if outcome.remainingCount > 0 || outcome.introducedCount > 0 {
-		rt.PrintNextSteps(
-			"Run `stave diagnose` against the after observations to understand remaining violations.",
-			"Run `stave ci fix-loop` for automated before/after comparison with detailed reports.",
-		)
-		return ui.ErrViolationsFound
+func handleVerifyExit(rt *ui.Runtime, outcome verificationOutcome) error {
+	if outcome.RemainingCount == 0 && outcome.IntroducedCount == 0 {
+		return nil
 	}
-	return nil
+
+	rt.PrintNextSteps(
+		"Run `stave diagnose` against the after observations to investigate remaining violations.",
+		"Check `introduced` findings to ensure remediation didn't create new security gaps.",
+	)
+
+	return ui.ErrViolationsFound
 }
 
-type runEvaluationRequest struct {
-	Context          context.Context
-	ObservationsDir  string
-	Controls         []policy.ControlDefinition
-	MaxUnsafe        time.Duration
-	Clock            ports.Clock
-	AllowUnknownType bool
+// --- Helpers ---
+
+// runStep wraps a task with a progress indicator.
+func runStep[T any](rt *ui.Runtime, label string, fn func() (T, error)) (T, error) {
+	done := rt.BeginProgress(label)
+	res, err := fn()
+	done()
+	return res, err
 }
 
-func runEvaluation(req runEvaluationRequest) (*evaluation.Result, int, error) {
+func runVerifyEvaluation(exec verifyExecution, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
 	loader, err := compose.NewObservationRepository()
 	if err != nil {
-		return nil, 0, fmt.Errorf("create observation loader: %w", err)
+		return evalResult{}, err
 	}
-	return appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
-		Context:           req.Context,
-		ObservationsDir:   req.ObservationsDir,
-		Controls:          req.Controls,
-		MaxUnsafe:         req.MaxUnsafe,
-		Clock:             req.Clock,
-		AllowUnknownType:  req.AllowUnknownType,
+
+	res, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
+		Context:           exec.ctx,
+		ObservationsDir:   obsDir,
+		Controls:          controls,
+		MaxUnsafe:         exec.maxUnsafe,
+		Clock:             exec.clock,
+		AllowUnknownType:  exec.allowUnknown,
 		ToolVersion:       staveversion.Version,
 		ObservationLoader: loader,
 	})
-}
-
-func writeVerificationJSON(w io.Writer, result safetyenvelope.Verification) error {
-	return outjson.WriteVerification(w, result)
+	if err != nil {
+		return evalResult{}, err
+	}
+	return evalResult{result: res, snapshotCount: snaps}, nil
 }
