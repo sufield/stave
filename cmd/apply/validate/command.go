@@ -2,7 +2,6 @@ package validate
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -13,13 +12,7 @@ func NewCmd(rt *ui.Runtime) *cobra.Command {
 		rt = ui.DefaultRuntime()
 	}
 
-	opts := &options{
-		ControlsDir:     "controls/s3",
-		ObservationsDir: "observations",
-		MaxUnsafe:       projconfig.ResolveMaxUnsafeDefault(),
-		Format:          "text",
-		QuietMode:       projconfig.ResolveQuietDefault(),
-	}
+	opts := newOptions()
 
 	cmd := &cobra.Command{
 		Use:   "validate",
@@ -34,6 +27,7 @@ What it checks:
   - Duration format and feasibility` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			opts.normalize(cmd)
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {

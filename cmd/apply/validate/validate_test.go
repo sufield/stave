@@ -33,7 +33,7 @@ func testReporter(buf *bytes.Buffer, jsonOutput bool, opts *options) *Reporter {
 	return &Reporter{
 		Writer:   buf,
 		Format:   format,
-		Strict:   opts.StrictMode,
+		Strict:   opts.Strict,
 		FixHints: opts.FixHints,
 		IsJSON:   jsonOutput,
 	}
@@ -92,11 +92,11 @@ func TestExitCode(t *testing.T) {
 func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 	opts := &options{
-		ControlsDir:     filepath.Join(fixture, "controls"),
-		ObservationsDir: filepath.Join(fixture, "observations"),
-		MaxUnsafe:       "168h",
-		NowTime:         "2026-01-15T00:00:00Z",
-		Format:          "text",
+		Controls:     filepath.Join(fixture, "controls"),
+		Observations: filepath.Join(fixture, "observations"),
+		MaxUnsafe:    "168h",
+		NowTime:      "2026-01-15T00:00:00Z",
+		Format:       "text",
 	}
 
 	cmd := &cobra.Command{Use: "test"}
@@ -132,7 +132,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	opts := defaultOptions()
+	opts := newOptions()
 	r := testReporter(&buf, false, opts)
 	if err := r.Write(result, opts); err != nil {
 		t.Fatalf("Write failed: %v", err)
@@ -164,7 +164,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	opts := defaultOptions()
+	opts := newOptions()
 	r := testReporter(&buf, false, opts)
 	if err := r.Write(result, opts); err != nil {
 		t.Fatalf("Write failed: %v", err)
@@ -201,7 +201,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	opts := defaultOptions()
+	opts := newOptions()
 	r := testReporter(&buf, false, opts)
 	if err := r.Write(result, opts); err != nil {
 		t.Fatalf("Write failed: %v", err)
@@ -239,7 +239,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	opts := defaultOptions()
+	opts := newOptions()
 	r := testReporter(&buf, false, opts)
 	if err := r.Write(result, opts); err != nil {
 		t.Fatalf("Write failed: %v", err)
@@ -256,7 +256,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 
 // TestOutputAndExit_JSONOutput tests Reporter with JSON output format.
 func TestOutputAndExit_JSONOutput(t *testing.T) {
-	opts := defaultOptions()
+	opts := newOptions()
 	opts.FixHints = false
 	result := &appservice.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
@@ -300,10 +300,10 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 }
 
 func TestWriteValidationText_WithFixHints(t *testing.T) {
-	opts := defaultOptions()
+	opts := newOptions()
 	opts.FixHints = true
-	opts.ControlsDir = "./controls"
-	opts.ObservationsDir = "./observations"
+	opts.Controls = "./controls"
+	opts.Observations = "./observations"
 
 	result := &appservice.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
@@ -333,7 +333,7 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 }
 
 func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
-	opts := defaultOptions()
+	opts := newOptions()
 	opts.FixHints = true
 
 	result := &appservice.ValidationResult{
