@@ -21,18 +21,6 @@ import (
 	"github.com/sufield/stave/internal/trace"
 )
 
-func TestValidateFindingDetailArgs(t *testing.T) {
-	if err := validateFindingDetailArgs("", "res-1"); err == nil {
-		t.Fatal("expected control-id error")
-	}
-	if err := validateFindingDetailArgs("CTL.TEST.A.001", ""); err == nil {
-		t.Fatal("expected resource-id error")
-	}
-	if err := validateFindingDetailArgs("CTL.TEST.A.001", "res-1"); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
 func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
 	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
 	cfg := Config{

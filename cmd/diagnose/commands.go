@@ -124,10 +124,6 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
-	if err := validateFindingDetailArgs(cfg.ControlID, cfg.AssetID); err != nil {
-		return err
-	}
-
 	maxDuration, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
 	if err != nil {
 		return err
