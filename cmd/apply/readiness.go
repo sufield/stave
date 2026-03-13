@@ -78,7 +78,8 @@ func writeReadinessReport(w io.Writer, report validation.ReadinessReport, format
 	if format.IsJSON() {
 		return jsonout.WriteReadinessJSON(w, report)
 	}
-	return writeReadinessText(w, report)
+	rep := &Reporter{Stdout: w, Stderr: w}
+	return rep.ReportPlan(report)
 }
 
 // readinessExitError returns an error if the readiness report indicates failure.
