@@ -88,7 +88,7 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
-	if !projconfig.HasConfiguredRetentionTier(tier) {
+	if !projconfig.Global().HasConfiguredTier(tier) {
 		if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
 			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(projconfig.SortedTierNames(cfg.RetentionTiers), ", "))
 		}
@@ -100,7 +100,7 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 func ResolveOlderThan(cmd *cobra.Command, raw, tier string) (time.Duration, error) {
 	olderThanRaw := raw
 	if !cmd.Flags().Changed("older-than") {
-		olderThanRaw = projconfig.ResolveSnapshotRetentionForTier(tier)
+		olderThanRaw = projconfig.Global().SnapshotRetentionForTier(tier)
 	}
 	olderThan, err := timeutil.ParseDuration(olderThanRaw)
 	if err != nil {

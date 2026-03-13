@@ -1,65 +1,68 @@
 package projconfig
 
-// defaults.go provides simple default-value accessors that delegate to the
-// Evaluator in config_resolution.go. Each function creates a default evaluator
-// (env → project → user → built-in) and returns the scalar value.
+// This file provides simple value accessors for the Evaluator.
+// It separates the "Value" (what the code needs) from the "Provenance"
+// (where the value came from), which is handled by the Evaluator's resolve methods.
 
-// ResolveMaxUnsafeDefault returns the max-unsafe default from env/config/built-in.
-func ResolveMaxUnsafeDefault() string {
-	return defaultEvaluator().MaxUnsafe().Value
+// --- Value-Only Accessors ---
+
+// MaxUnsafe returns the effective max-unsafe duration string.
+func (e *Evaluator) MaxUnsafe() string {
+	return e.resolveMaxUnsafe().Value
 }
 
-// ResolveSnapshotRetentionDefault returns snapshot retention default.
-func ResolveSnapshotRetentionDefault() string {
-	return defaultEvaluator().SnapshotRetention(ResolveRetentionTierDefault()).Value
+// SnapshotRetention returns the retention for the current default tier.
+func (e *Evaluator) SnapshotRetention() string {
+	return e.SnapshotRetentionForTier(e.RetentionTier())
 }
 
-// ResolveSnapshotRetentionForTier returns retention for a specific tier.
-func ResolveSnapshotRetentionForTier(tier string) string {
-	return defaultEvaluator().SnapshotRetention(tier).Value
+// SnapshotRetentionForTier returns the retention duration for a specific tier.
+func (e *Evaluator) SnapshotRetentionForTier(tier string) string {
+	return e.resolveSnapshotRetention(tier).Value
 }
 
-// ResolveRetentionTierDefault returns the default retention tier.
-func ResolveRetentionTierDefault() string {
-	return defaultEvaluator().RetentionTier().Value
+// RetentionTier returns the default retention tier name.
+func (e *Evaluator) RetentionTier() string {
+	return e.resolveRetentionTier().Value
 }
 
-// HasConfiguredRetentionTier returns true if the project config has a tier defined.
-func HasConfiguredRetentionTier(tier string) bool {
-	cfg, ok := FindProjectConfig()
-	if !ok || len(cfg.RetentionTiers) == 0 {
+// HasConfiguredTier checks if a specific tier exists in the project configuration.
+func (e *Evaluator) HasConfiguredTier(tier string) bool {
+	if e.Project == nil || len(e.Project.RetentionTiers) == 0 {
 		return false
 	}
-	_, exists := cfg.RetentionTiers[NormalizeTier(tier)]
+	_, exists := e.Project.RetentionTiers[NormalizeTier(tier)]
 	return exists
 }
 
-// ResolveCIFailurePolicyDefault returns the CI failure policy default.
-func ResolveCIFailurePolicyDefault() GatePolicy {
-	return GatePolicy(defaultEvaluator().CIFailurePolicy().Value)
+// CIFailurePolicy returns the failure policy as a typed GatePolicy.
+func (e *Evaluator) CIFailurePolicy() GatePolicy {
+	return GatePolicy(e.resolveCIFailurePolicy().Value)
 }
 
-// ResolveOutputModeDefault returns the output mode default.
-func ResolveOutputModeDefault() string {
-	return defaultEvaluator().CLIOutput().Value
+// --- CLI Default Accessors ---
+
+// OutputMode returns the preferred CLI output format ("text" or "json").
+func (e *Evaluator) OutputMode() string {
+	return e.resolveCLIOutput().Value
 }
 
-// ResolveQuietDefault returns the quiet default.
-func ResolveQuietDefault() bool {
-	return defaultEvaluator().CLIQuiet().Value
+// Quiet returns whether quiet mode is enabled by default.
+func (e *Evaluator) Quiet() bool {
+	return e.resolveCLIQuiet().Value
 }
 
-// ResolveSanitizeDefault returns the sanitize default.
-func ResolveSanitizeDefault() bool {
-	return defaultEvaluator().CLISanitize().Value
+// Sanitize returns whether output sanitization is enabled by default.
+func (e *Evaluator) Sanitize() bool {
+	return e.resolveCLISanitize().Value
 }
 
-// ResolvePathModeDefault returns the path-mode default.
-func ResolvePathModeDefault() string {
-	return defaultEvaluator().CLIPathMode().Value
+// PathMode returns the preferred path display mode ("base" or "full").
+func (e *Evaluator) PathMode() string {
+	return e.resolveCLIPathMode().Value
 }
 
-// ResolveAllowUnknownInputDefault returns the allow-unknown-input default.
-func ResolveAllowUnknownInputDefault() bool {
-	return defaultEvaluator().CLIAllowUnknownInput().Value
+// AllowUnknownInput returns whether to allow unknown snapshots.
+func (e *Evaluator) AllowUnknownInput() bool {
+	return e.resolveCLIAllowUnknownInput().Value
 }

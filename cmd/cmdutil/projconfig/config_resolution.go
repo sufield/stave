@@ -2,6 +2,7 @@ package projconfig
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sufield/stave/internal/configservice"
@@ -29,8 +30,20 @@ func NewEvaluator(proj *ProjectConfig, projPath string, user *UserConfig, userPa
 	}
 }
 
-// defaultEvaluator returns a lazily-initialized evaluator using the default
-// filesystem resolver. Used by package-level convenience functions.
+// DefaultEvaluator is the package-level evaluator set during initialization.
+// Use Global() to access it safely.
+var DefaultEvaluator *Evaluator
+
+// Global returns the package-level evaluator. Use of this should be minimized
+// in favor of passing a local Evaluator instance where possible.
+func Global() *Evaluator {
+	if DefaultEvaluator == nil {
+		return defaultEvaluator()
+	}
+	return DefaultEvaluator
+}
+
+// defaultEvaluator creates a fresh evaluator from the filesystem.
 func defaultEvaluator() *Evaluator {
 	pCfg, pPath, _ := FindProjectConfigWithPath("")
 	uCfg, uPath, _ := FindUserConfigWithPath()
@@ -48,7 +61,7 @@ func (e *Evaluator) withProject(proj *ProjectConfig, projPath string) *Evaluator
 	}
 }
 
-// --- Cascading Logic ---
+// --- Cascading Logic (private — return Value[T] with provenance) ---
 
 func (e *Evaluator) resolve(
 	entry env.Entry,
@@ -76,10 +89,7 @@ func (e *Evaluator) resolve(
 
 func passthrough(v string) string { return v }
 
-// --- High-Level Resolvers ---
-
-// MaxUnsafe returns max-unsafe and its source.
-func (e *Evaluator) MaxUnsafe() Value[string] {
+func (e *Evaluator) resolveMaxUnsafe() Value[string] {
 	return e.resolve(env.MaxUnsafe, "max_unsafe",
 		func(c *ProjectConfig) string { return c.MaxUnsafe },
 		func(c *UserConfig) string { return c.MaxUnsafe },
@@ -87,8 +97,7 @@ func (e *Evaluator) MaxUnsafe() Value[string] {
 	)
 }
 
-// RetentionTier returns the retention tier and its source.
-func (e *Evaluator) RetentionTier() Value[string] {
+func (e *Evaluator) resolveRetentionTier() Value[string] {
 	return e.resolve(env.RetentionTier, "default_retention_tier",
 		func(c *ProjectConfig) string { return c.RetentionTier },
 		func(c *UserConfig) string { return c.RetentionTier },
@@ -96,8 +105,7 @@ func (e *Evaluator) RetentionTier() Value[string] {
 	)
 }
 
-// SnapshotRetention returns retention value and source for a tier.
-func (e *Evaluator) SnapshotRetention(tier string) Value[string] {
+func (e *Evaluator) resolveSnapshotRetention(tier string) Value[string] {
 	if v := strings.TrimSpace(os.Getenv(env.SnapshotRetention.Name)); v != "" {
 		return Value[string]{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
 	}
@@ -132,8 +140,7 @@ func (e *Evaluator) retentionFromProject(tier string) (Value[string], bool) {
 	return Value[string]{}, false
 }
 
-// CIFailurePolicy returns CI failure policy and source.
-func (e *Evaluator) CIFailurePolicy() Value[string] {
+func (e *Evaluator) resolveCIFailurePolicy() Value[string] {
 	return e.resolve(env.CIFailurePolicy, "ci_failure_policy",
 		func(c *ProjectConfig) string { return c.CIFailurePolicy },
 		func(c *UserConfig) string { return c.CIFailurePolicy },
@@ -141,10 +148,7 @@ func (e *Evaluator) CIFailurePolicy() Value[string] {
 	)
 }
 
-// --- CLI Default Resolvers ---
-
-// CLIOutput returns output mode and source.
-func (e *Evaluator) CLIOutput() Value[string] {
+func (e *Evaluator) resolveCLIOutput() Value[string] {
 	if e.User != nil {
 		v := strings.ToLower(strings.TrimSpace(e.User.CLIDefaults.Output))
 		if v == "json" || v == "text" {
@@ -154,24 +158,21 @@ func (e *Evaluator) CLIOutput() Value[string] {
 	return Value[string]{Value: "text", Source: "default", Layer: LayerDefault}
 }
 
-// CLIQuiet returns quiet mode and source.
-func (e *Evaluator) CLIQuiet() Value[bool] {
+func (e *Evaluator) resolveCLIQuiet() Value[bool] {
 	if e.User != nil && e.User.CLIDefaults.Quiet != nil {
 		return Value[bool]{Value: *e.User.CLIDefaults.Quiet, Source: e.UserPath + ":cli_defaults.quiet", Layer: LayerUserConfig}
 	}
 	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
-// CLISanitize returns sanitize mode and source.
-func (e *Evaluator) CLISanitize() Value[bool] {
+func (e *Evaluator) resolveCLISanitize() Value[bool] {
 	if e.User != nil && e.User.CLIDefaults.Sanitize != nil {
 		return Value[bool]{Value: *e.User.CLIDefaults.Sanitize, Source: e.UserPath + ":cli_defaults.sanitize", Layer: LayerUserConfig}
 	}
 	return Value[bool]{Value: false, Source: "default", Layer: LayerDefault}
 }
 
-// CLIPathMode returns path mode and source.
-func (e *Evaluator) CLIPathMode() Value[string] {
+func (e *Evaluator) resolveCLIPathMode() Value[string] {
 	if e.User != nil {
 		v := strings.ToLower(strings.TrimSpace(e.User.CLIDefaults.PathMode))
 		if v == "base" || v == "full" {
@@ -181,8 +182,7 @@ func (e *Evaluator) CLIPathMode() Value[string] {
 	return Value[string]{Value: "base", Source: "default", Layer: LayerDefault}
 }
 
-// CLIAllowUnknownInput returns allow-unknown-input and source.
-func (e *Evaluator) CLIAllowUnknownInput() Value[bool] {
+func (e *Evaluator) resolveCLIAllowUnknownInput() Value[bool] {
 	if e.User != nil && e.User.CLIDefaults.AllowUnknownInput != nil {
 		return Value[bool]{Value: *e.User.CLIDefaults.AllowUnknownInput, Source: e.UserPath + ":cli_defaults.allow_unknown_input", Layer: LayerUserConfig}
 	}
@@ -201,6 +201,58 @@ func ResolveDefinedRetentionTiers(cfg *ProjectConfig) map[string]RetentionTierCo
 		out[NormalizeTier(name)] = tc
 	}
 	return out
+}
+
+// --- Effective Config Output ---
+
+// toResolvedField converts a Value[T] to a configservice.ResolvedField.
+func toResolvedField[T any](v Value[T]) configservice.ResolvedField {
+	return configservice.ResolvedField{Value: v.String(), Source: v.Source}
+}
+
+// BuildEffectiveConfig assembles the fully resolved configuration with provenance,
+// suitable for `stave config show` output.
+func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
+	retTier := e.resolveRetentionTier()
+	out := configservice.EffectiveConfig{
+		DefaultRetentionTier:     toResolvedField(retTier),
+		MaxUnsafe:                toResolvedField(e.resolveMaxUnsafe()),
+		SnapshotRetention:        toResolvedField(e.resolveSnapshotRetention(retTier.Value)),
+		CIFailurePolicy:          toResolvedField(e.resolveCIFailurePolicy()),
+		CLIOutput:                toResolvedField(e.resolveCLIOutput()),
+		CLIQuiet:                 toResolvedField(e.resolveCLIQuiet()),
+		CLISanitize:              toResolvedField(e.resolveCLISanitize()),
+		CLIPathMode:              toResolvedField(e.resolveCLIPathMode()),
+		CLIAllowUnknownInput:     toResolvedField(e.resolveCLIAllowUnknownInput()),
+		DefinedRetentionTiers:    e.buildDefinedRetentionTiers(),
+		EffectiveRetentionByTier: map[string]configservice.ResolvedField{},
+	}
+	if e.ProjectPath != "" {
+		out.ConfigFile = e.ProjectPath
+		out.ProjectRoot = filepath.Dir(e.ProjectPath)
+	}
+	if e.UserPath != "" {
+		out.UserConfigFile = e.UserPath
+	}
+	for tier := range out.DefinedRetentionTiers {
+		out.EffectiveRetentionByTier[tier] = toResolvedField(e.resolveSnapshotRetention(tier))
+	}
+	return out
+}
+
+func (e *Evaluator) buildDefinedRetentionTiers() map[string]configservice.RetentionTierConfig {
+	if e.Project != nil {
+		if tiers := ResolveDefinedRetentionTiers(e.Project); len(tiers) > 0 {
+			out := make(map[string]configservice.RetentionTierConfig, len(tiers))
+			for name, tier := range tiers {
+				out[name] = configservice.RetentionTierConfig{OlderThan: tier.OlderThan, KeepMin: tier.KeepMin}
+			}
+			return out
+		}
+	}
+	return map[string]configservice.RetentionTierConfig{
+		DefaultRetentionTier: {OlderThan: DefaultSnapshotRetention, KeepMin: DefaultTierKeepMin},
+	}
 }
 
 // --- Config Service Integration ---
@@ -307,27 +359,25 @@ func (staveKeepMinResolver) EffectiveKeepMin(keepMin int) int {
 }
 
 // staveConfigResolver bridges the Evaluator to the configservice.Resolver interface.
-// It creates a temporary evaluator with the service-provided project config,
-// preserving the user config from the default evaluator.
 type staveConfigResolver struct{}
 
 func (staveConfigResolver) MaxUnsafe(cfg *configservice.Config, cfgPath string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).MaxUnsafe()
+	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveMaxUnsafe()
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 func (staveConfigResolver) SnapshotRetention(cfg *configservice.Config, cfgPath, fallbackTier string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).SnapshotRetention(fallbackTier)
+	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveSnapshotRetention(fallbackTier)
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 func (staveConfigResolver) RetentionTier(cfg *configservice.Config, cfgPath string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).RetentionTier()
+	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveRetentionTier()
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 func (staveConfigResolver) CIFailurePolicy(cfg *configservice.Config, cfgPath string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).CIFailurePolicy()
+	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveCIFailurePolicy()
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 

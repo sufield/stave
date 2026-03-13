@@ -79,7 +79,7 @@ func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
 
 func resolvePlanRetentionConfig() (map[string]projconfig.RetentionTierConfig, []projconfig.TierMappingRule, string) {
 	cfg, _, _ := projconfig.FindProjectConfigWithPath("")
-	defaultTier := projconfig.ResolveRetentionTierDefault()
+	defaultTier := projconfig.Global().RetentionTier()
 	var tiers map[string]projconfig.RetentionTierConfig
 	var tierRules []projconfig.TierMappingRule
 	if cfg != nil {

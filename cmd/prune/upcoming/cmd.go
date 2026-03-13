@@ -38,7 +38,7 @@ Examples:
 
 	cmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	cmd.Flags().StringVar(&flags.now, "now", "", "Override current time (RFC3339). If omitted, uses wall clock")
 	cmd.Flags().StringVar(&flags.dueSoon, "due-soon", "24h", "Threshold for 'due soon' reminders (e.g., 4h, 1d)")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")

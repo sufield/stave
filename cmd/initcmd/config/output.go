@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -23,61 +22,11 @@ type configResolvedField = configservice.ResolvedField
 type configShowOutput = configservice.EffectiveConfig
 
 func buildConfigShowOutput() configShowOutput {
-	cfg, cfgPath, hasCfg := projconfig.FindProjectConfigWithPath("")
-	uCfg, uPath, _ := projconfig.FindUserConfigWithPath()
-	eval := projconfig.NewEvaluator(cfg, cfgPath, uCfg, uPath)
-
-	retTier := eval.RetentionTier()
-	out := configShowOutput{
-		DefaultRetentionTier:     toConfigField(retTier),
-		MaxUnsafe:                toConfigField(eval.MaxUnsafe()),
-		SnapshotRetention:        toConfigField(eval.SnapshotRetention(retTier.Value)),
-		CIFailurePolicy:          toConfigField(eval.CIFailurePolicy()),
-		CLIOutput:                toConfigField(eval.CLIOutput()),
-		CLIQuiet:                 toConfigField(eval.CLIQuiet()),
-		CLISanitize:              toConfigField(eval.CLISanitize()),
-		CLIPathMode:              toConfigField(eval.CLIPathMode()),
-		CLIAllowUnknownInput:     toConfigField(eval.CLIAllowUnknownInput()),
-		DefinedRetentionTiers:    resolveDefinedRetentionTiers(cfg),
-		EffectiveRetentionByTier: map[string]configResolvedField{},
-	}
-	applyProjectConfigLocation(&out, hasCfg, cfgPath)
-	if uPath != "" {
-		out.UserConfigFile = uPath
-	}
-	for tier := range out.DefinedRetentionTiers {
-		out.EffectiveRetentionByTier[tier] = toConfigField(eval.SnapshotRetention(tier))
-	}
-	return out
-}
-
-func applyProjectConfigLocation(out *configShowOutput, hasCfg bool, cfgPath string) {
-	if !hasCfg {
-		return
-	}
-	out.ConfigFile = cfgPath
-	out.ProjectRoot = filepath.Dir(cfgPath)
-}
-
-func resolveDefinedRetentionTiers(cfg *projconfig.ProjectConfig) map[string]configservice.RetentionTierConfig {
-	if tiers := projconfig.ResolveDefinedRetentionTiers(cfg); len(tiers) > 0 {
-		out := make(map[string]configservice.RetentionTierConfig, len(tiers))
-		for name, tier := range tiers {
-			out[name] = configservice.RetentionTierConfig{OlderThan: tier.OlderThan, KeepMin: tier.KeepMin}
-		}
-		return out
-	}
-	return map[string]configservice.RetentionTierConfig{
-		projconfig.DefaultRetentionTier: {OlderThan: projconfig.DefaultSnapshotRetention, KeepMin: projconfig.DefaultTierKeepMin},
-	}
+	return projconfig.Global().BuildEffectiveConfig()
 }
 
 func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
 	return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
-}
-
-func toConfigField[T any](v projconfig.Value[T]) configResolvedField {
-	return configResolvedField{Value: v.String(), Source: v.Source}
 }
 
 func writeConfigShowText(cmd *cobra.Command, out configShowOutput) error {

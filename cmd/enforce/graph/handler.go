@@ -29,12 +29,11 @@ type options struct {
 }
 
 func defaultOptions() *options {
-	allowUnknown := projconfig.ResolveAllowUnknownInputDefault()
 	return &options{
 		ControlsDir:     "controls/s3",
 		ObservationsDir: "observations",
 		Format:          "dot",
-		AllowUnknown:    allowUnknown,
+		AllowUnknown:    projconfig.Global().AllowUnknownInput(),
 	}
 }
 
