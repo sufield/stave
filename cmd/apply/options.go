@@ -25,7 +25,7 @@ const (
 type RunConfig struct {
 	Mode    runMode
 	Params  applyParams
-	Profile applyProfileOptions
+	Profile Config
 }
 
 // applyParams holds validated and parsed domain types.
@@ -63,24 +63,24 @@ func (o *ApplyOptions) Resolve(cmd *cobra.Command) (RunConfig, error) {
 }
 
 func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error) {
-	prof, err := ParseApplyProfile(o.Profile)
+	prof, err := ParseProfile(o.Profile)
 	if err != nil {
 		return RunConfig{}, err
 	}
 
-	if prof == ApplyProfileAWSS3 && o.InputFile == "" {
+	if prof == ProfileAWSS3 && o.InputFile == "" {
 		return RunConfig{}, fmt.Errorf("--input is required when using --profile %s", o.Profile)
 	}
 
 	return RunConfig{
 		Mode: runModeProfile,
-		Profile: applyProfileOptions{
-			inputFile:       o.InputFile,
-			bucketAllowlist: o.BucketAllowlist,
-			includeAll:      o.IncludeAll,
-			outputFormat:    o.Format,
-			nowTime:         o.NowTime,
-			quiet:           cmdutil.QuietEnabled(cmd),
+		Profile: Config{
+			InputFile:       o.InputFile,
+			BucketAllowlist: o.BucketAllowlist,
+			IncludeAll:      o.IncludeAll,
+			OutputFormat:    o.Format,
+			NowTime:         o.NowTime,
+			Quiet:           cmdutil.QuietEnabled(cmd),
 		},
 	}, nil
 }
