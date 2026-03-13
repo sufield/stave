@@ -8,7 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/testutil"
 )
 
@@ -18,24 +20,24 @@ func TestParseGatePolicy(t *testing.T) {
 		want    projconfig.GatePolicy
 		wantErr bool
 	}{
-		{in: string(gatePolicyAny), want: gatePolicyAny},
-		{in: "  FAIL_ON_NEW_VIOLATION  ", want: gatePolicyNew},
-		{in: string(gatePolicyOverdue), want: gatePolicyOverdue},
+		{in: string(projconfig.GatePolicyAny), want: projconfig.GatePolicyAny},
+		{in: "  FAIL_ON_NEW_VIOLATION  ", want: projconfig.GatePolicyNew},
+		{in: string(projconfig.GatePolicyOverdue), want: projconfig.GatePolicyOverdue},
 		{in: "unknown", wantErr: true},
 	}
 	for _, tc := range tests {
 		got, err := projconfig.ParseGatePolicy(tc.in)
 		if tc.wantErr {
 			if err == nil {
-				t.Fatalf("normalizeGatePolicy(%q): expected error", tc.in)
+				t.Fatalf("ParseGatePolicy(%q): expected error", tc.in)
 			}
 			continue
 		}
 		if err != nil {
-			t.Fatalf("normalizeGatePolicy(%q): %v", tc.in, err)
+			t.Fatalf("ParseGatePolicy(%q): %v", tc.in, err)
 		}
 		if got != tc.want {
-			t.Fatalf("normalizeGatePolicy(%q) = %q, want %q", tc.in, got, tc.want)
+			t.Fatalf("ParseGatePolicy(%q) = %q, want %q", tc.in, got, tc.want)
 		}
 	}
 }
@@ -154,7 +156,9 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	observationsDir := filepath.Join(fixture, "observations")
 
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
-	result, err := runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 500*time.Hour)
+	runner := NewRunner(compose.ActiveProvider(), ports.FixedClock(now))
+
+	result, err := runner.runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 500*time.Hour)
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
@@ -162,7 +166,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 		t.Fatalf("expected pass at high threshold before overdue, got fail with reason: %s", result.Reason)
 	}
 
-	result, err = runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 24*time.Hour)
+	result, err = runner.runPolicyOverdue(context.Background(), now, controlsDir, observationsDir, 24*time.Hour)
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
