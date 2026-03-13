@@ -72,7 +72,8 @@ func (cc *configCommand) writeConfigMutationResult(
 func (cc *configCommand) runConfigGet(cmd *cobra.Command, key string) error {
 	key = strings.TrimSpace(key)
 	cfg, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
-	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
+	eval := projconfig.NewEvaluator(cfg, cfgPath, nil, "")
+	retTier := eval.RetentionTier()
 
 	kv, err := resolveServiceConfigKeyValue(cc.svc, key, cfg, cfgPath, retTier.Value)
 	if err != nil {
