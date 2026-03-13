@@ -26,15 +26,15 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
-	// Activate the composition owned by this App instance so that all
+	// Activate the provider owned by this App instance so that all
 	// package-level convenience functions (compose.NewObservationRepository,
-	// compose.NewControlRepository, etc.) delegate through App.Composition
+	// compose.NewControlRepository, etc.) delegate through App.Provider
 	// rather than the package initialiser default.
 	//
 	// CLI commands execute sequentially, so replacing the package-level
 	// variable here is safe. For parallel test isolation, use
-	// compose.OverrideForTest instead.
-	compose.UseComposition(a.Composition)
+	// compose.OverrideProviderForTest instead.
+	compose.UseProvider(a.Provider)
 	a.initSanitizer()
 	return a.initLogger()
 }

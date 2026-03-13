@@ -132,7 +132,11 @@ func buildHygieneOutputs(execCtx hygieneExecution) (appcontracts.ReportRequest, 
 	activeSnapshots := loaded.Snapshots
 	controls := loaded.Controls
 
-	archiveSnapshots, err := loadSnapshotsIfDirExists(ctx, loaded.ObsRepo, req.ArchiveDir)
+	obsRepo, err := compose.NewObservationRepository()
+	if err != nil {
+		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
+	}
+	archiveSnapshots, err := loadSnapshotsIfDirExists(ctx, obsRepo, req.ArchiveDir)
 	if err != nil {
 		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}

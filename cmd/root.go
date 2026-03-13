@@ -48,16 +48,12 @@ type App struct {
 	Root           *cobra.Command
 	cpuProfileFile *os.File // held open during execution, closed in postRun
 
-	// Composition holds the adapter constructor wiring used by command handlers.
-	// It is initialised from compose.DefaultComposition() and activated via
-	// compose.UseComposition in App.bootstrap before any command runs.
+	// Provider holds the adapter constructor wiring used by command handlers.
+	// It is initialised from compose.NewDefaultProvider() and activated via
+	// compose.UseProvider in App.bootstrap before any command runs.
 	// Replace it before calling Root.Execute() to swap adapters in tests or
 	// custom entry points without touching the package-level global directly.
-	//
-	// TODO: thread Composition through individual command constructors so each
-	// handler receives it explicitly rather than through the package global.
-	// See KNOWN_LIMITATIONS.md – "defaultComposition is an unexported package-level variable".
-	Composition compose.Composition
+	Provider *compose.Provider
 
 	// ConfigKeyService is the config-key resolution service used by the
 	// "stave config" command tree. It is passed explicitly to NewConfigCmd so
@@ -73,7 +69,7 @@ type App struct {
 func NewApp() *App {
 	app := &App{
 		ExitFunc:         os.Exit,
-		Composition:      compose.DefaultComposition(),
+		Provider:         compose.NewDefaultProvider(),
 		ConfigKeyService: projconfig.ConfigKeyService,
 	}
 	app.Root = &cobra.Command{

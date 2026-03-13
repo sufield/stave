@@ -81,7 +81,7 @@ func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 		return err
 	}
 
-	compose.WarnIfGitDirty(cmd, collectReportGitAudit(), "report")
+	compose.WarnGitDirty(cmd.ErrOrStderr(), collectReportGitAudit(), "report", cmdutil.QuietEnabled(cmd))
 
 	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
@@ -105,7 +105,7 @@ func collectReportGitAudit() *evaluation.GitInfo {
 	cfg, _ := selectedContextConfigPath()
 	ctl := selectedContextControlsPath()
 	base := projctx.RootForContextName()
-	return compose.CollectGitAudit(base, []string{ctl, cfg})
+	return compose.AuditGitStatus(base, []string{ctl, cfg})
 }
 
 func selectedContextConfigPath() (string, bool) {

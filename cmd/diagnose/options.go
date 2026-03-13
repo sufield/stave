@@ -140,7 +140,7 @@ func runDiagnoseFindingDetail(req diagnoseFindingDetailRequest) error {
 		return fmtErr
 	}
 
-	out := compose.ResolveStdout(req.cmd, req.quiet, format)
+	out := compose.ResolveStdout(req.cmd.OutOrStdout(), req.quiet, format)
 	if format.IsJSON() {
 		return writeFindingDetailJSON(out, detail)
 	}

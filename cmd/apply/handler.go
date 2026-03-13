@@ -49,7 +49,7 @@ func runProfileApply(cmd *cobra.Command, cfg Config) error {
 		return err
 	}
 
-	cfg.Stdout = compose.ResolveStdout(cmd, cfg.Quiet, format)
+	cfg.Stdout = compose.ResolveStdout(cmd.OutOrStdout(), cfg.Quiet, format)
 	cfg.Stderr = cmd.ErrOrStderr()
 	cfg.IsJSONMode = cmdutil.IsJSONMode(cmd)
 	cfg.Sanitizer = cmdutil.GetSanitizer(cmd)
@@ -94,7 +94,7 @@ func executeEvaluation(
 
 	builder := &Builder{
 		Ctx:           cmd.Context(),
-		Stdout:        compose.ResolveStdout(cmd, cmdutil.QuietEnabled(cmd), format),
+		Stdout:        compose.ResolveStdout(cmd.OutOrStdout(), cmdutil.QuietEnabled(cmd), format),
 		Stderr:        cmd.ErrOrStderr(),
 		Sanitizer:     cmdutil.GetSanitizer(cmd),
 		IsJSON:        cmdutil.IsJSONMode(cmd),

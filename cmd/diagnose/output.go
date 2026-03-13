@@ -26,7 +26,7 @@ func renderDiagnoseOutput(cmd *cobra.Command, opts diagnoseOptions, report *diag
 	if err != nil {
 		return err
 	}
-	out := compose.ResolveStdout(cmd, opts.Quiet, format)
+	out := compose.ResolveStdout(cmd.OutOrStdout(), opts.Quiet, format)
 	if err := writeDiagnoseReport(cmd, out, format, report); err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func renderDiagnoseOutput(cmd *cobra.Command, opts diagnoseOptions, report *diag
 }
 
 func renderDiagnoseTemplate(cmd *cobra.Command, opts diagnoseOptions, report *diagnosis.Report) error {
-	out := compose.ResolveStdout(cmd, opts.Quiet, "text")
+	out := compose.ResolveStdout(cmd.OutOrStdout(), opts.Quiet, "text")
 	if err := ui.ExecuteTemplate(out, opts.Template, safetyenvelope.NewDiagnose(report)); err != nil {
 		return err
 	}
