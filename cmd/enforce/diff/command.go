@@ -42,7 +42,7 @@ Examples:
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner()
+			runner := NewRunner(compose.ActiveProvider())
 			return runner.Run(cmd.Context(), Config{
 				ObservationsDir: obsDir,
 				Format:          fmtValue,
