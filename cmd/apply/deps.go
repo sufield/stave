@@ -37,7 +37,7 @@ func (d *ApplyDeps) Close() {}
 // Factory encapsulates the construction of ApplyDeps.
 type Factory struct {
 	cmd    *cobra.Command
-	flags  *applyFlagsType
+	opts   *ApplyOptions
 	params applyParams
 	// OnObsProgress is called by the observation loader after each file
 	// with (processed, total) counts. Optional.
@@ -45,8 +45,8 @@ type Factory struct {
 }
 
 // NewFactory creates a Factory for building apply dependencies.
-func NewFactory(cmd *cobra.Command, flags *applyFlagsType, params applyParams) *Factory {
-	return &Factory{cmd: cmd, flags: flags, params: params}
+func NewFactory(cmd *cobra.Command, opts *ApplyOptions, params applyParams) *Factory {
+	return &Factory{cmd: cmd, opts: opts, params: params}
 }
 
 // resourceStack groups the intermediate assets created during dependency assembly.
@@ -61,7 +61,7 @@ type resourceStack struct {
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
 func (f *Factory) BuildWithNewPlan() (*ApplyDeps, error) {
-	plan, err := appeval.NewPlan(buildEvaluatorOptions(f.flags))
+	plan, err := appeval.NewPlan(buildEvaluatorOptions(f.opts))
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (f *Factory) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 
 // assembleResources creates the intermediate assets needed for dependency building.
 func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack, error) {
-	marshaler, err := compose.NewFindingWriter(f.flags.outputFormat, cmdutil.IsJSONMode(f.cmd))
+	marshaler, err := compose.NewFindingWriter(f.opts.Format, cmdutil.IsJSONMode(f.cmd))
 	if err != nil {
 		return resourceStack{}, err
 	}
@@ -105,13 +105,13 @@ func (f *Factory) assembleResources(plan *appeval.EvaluationPlan) (resourceStack
 	if err != nil {
 		return resourceStack{}, fmt.Errorf("create control loader: %w", err)
 	}
-	exemptionCfg, err := loadExemptionConfig(f.flags.ignoreFile)
+	exemptionCfg, err := loadExemptionConfig(f.opts.IgnoreFile)
 	if err != nil {
 		return resourceStack{}, err
 	}
 
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
-	gitMeta := compose.CollectGitAudit(plan.ProjectRoot, []string{f.flags.controlsDir, cfgPath})
+	gitMeta := compose.CollectGitAudit(plan.ProjectRoot, []string{f.opts.ControlsDir, cfgPath})
 
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	san := cmdutil.GetSanitizer(f.cmd)
@@ -144,12 +144,12 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	if f.flags.applyIntegrityManifest != "" {
+	if f.opts.IntegrityManifest != "" {
 		cfg, ok := loader.(appcontracts.IntegrityCheckConfigurer)
 		if !ok {
 			return nil, fmt.Errorf("observation loader %T does not support integrity verification", loader)
 		}
-		cfg.ConfigureIntegrityCheck(f.flags.applyIntegrityManifest, f.flags.applyIntegrityPublicKey)
+		cfg.ConfigureIntegrityCheck(f.opts.IntegrityManifest, f.opts.IntegrityPublicKey)
 	}
 	if f.OnObsProgress != nil {
 		if pc, ok := loader.(progressConfigurer); ok {
@@ -161,7 +161,7 @@ func (f *Factory) buildObservationLoader(source appeval.ObservationSource) (appc
 
 // mapToBuildInput converts the plan and assets into the input struct for BuildDependencies.
 func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStack) appeval.BuildDependenciesInput {
-	format, _ := compose.ResolveFormatValue(f.cmd, f.flags.outputFormat)
+	format, _ := compose.ResolveFormatValue(f.cmd, f.opts.Format)
 	output := compose.ResolveStdout(f.cmd, cmdutil.QuietEnabled(f.cmd), format)
 
 	return appeval.BuildDependenciesInput{
@@ -178,7 +178,7 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 			Clock:             f.params.clock,
 			Hasher:            crypto.NewHasher(),
 			ToolVersion:       version.Version,
-			AllowUnknownInput: f.flags.allowUnknownInput,
+			AllowUnknownInput: f.opts.AllowUnknown,
 			ExemptionConfig:   res.exemptionCfg,
 			PredicateParser:   ctlyaml.YAMLPredicateParser,
 		},
@@ -190,7 +190,7 @@ func (f *Factory) mapToBuildInput(plan *appeval.EvaluationPlan, res resourceStac
 			Config:      f.buildProjectConfig(),
 			GitMetadata: res.gitMeta,
 			Filters:     f.buildFilter(),
-			ControlsDir: f.flags.controlsDir,
+			ControlsDir: f.opts.ControlsDir,
 		},
 	}
 }
@@ -206,7 +206,7 @@ func (f *Factory) buildProjectConfig() appeval.ProjectConfigInput {
 		Suppressions:        f.toSuppressions(projCfg.Suppressions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
-		ControlsFlagSet:     f.flags.applyControlsFlagSet,
+		ControlsFlagSet:     f.opts.ControlsSet,
 		BuiltinLoader:       ctlbuiltin.LoadAll,
 		PackRegistry:        reg,
 	}

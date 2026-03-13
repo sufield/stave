@@ -22,13 +22,15 @@ func TestValidateApplyFlags(t *testing.T) {
 	cmd := NewApplyCmd()
 
 	t.Run("valid flags with defaults", func(t *testing.T) {
-		flags := &applyFlagsType{
-			controlsDir:     filepath.Join(fixture, "controls"),
-			observationsDir: filepath.Join(fixture, "observations"),
-			maxUnsafe:       "168h",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     filepath.Join(fixture, "controls"),
+				ObservationsDir: filepath.Join(fixture, "observations"),
+				MaxUnsafe:       "168h",
+			},
 		}
 
-		params, err := validateApplyFlags(cmd, flags)
+		params, err := validateApplyFlags(cmd, opts)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -45,14 +47,16 @@ func TestValidateApplyFlags(t *testing.T) {
 	})
 
 	t.Run("valid flags with --now", func(t *testing.T) {
-		flags := &applyFlagsType{
-			controlsDir:     filepath.Join(fixture, "controls"),
-			observationsDir: filepath.Join(fixture, "observations"),
-			maxUnsafe:       "7d",
-			nowTime:         "2026-01-15T00:00:00Z",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     filepath.Join(fixture, "controls"),
+				ObservationsDir: filepath.Join(fixture, "observations"),
+				MaxUnsafe:       "7d",
+				NowTime:         "2026-01-15T00:00:00Z",
+			},
 		}
 
-		params, err := validateApplyFlags(cmd, flags)
+		params, err := validateApplyFlags(cmd, opts)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -70,13 +74,15 @@ func TestValidateApplyFlags(t *testing.T) {
 	})
 
 	t.Run("stdin mode", func(t *testing.T) {
-		flags := &applyFlagsType{
-			controlsDir:     filepath.Join(fixture, "controls"),
-			observationsDir: "-",
-			maxUnsafe:       "168h",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     filepath.Join(fixture, "controls"),
+				ObservationsDir: "-",
+				MaxUnsafe:       "168h",
+			},
 		}
 
-		params, err := validateApplyFlags(cmd, flags)
+		params, err := validateApplyFlags(cmd, opts)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -87,51 +93,59 @@ func TestValidateApplyFlags(t *testing.T) {
 
 	errorCases := []struct {
 		name        string
-		flags       applyFlagsType
+		opts        ApplyOptions
 		wantContain string
 	}{
 		{
 			name: "controls dir not found",
-			flags: applyFlagsType{
-				controlsDir:     "/nonexistent/path",
-				observationsDir: filepath.Join(fixture, "observations"),
-				maxUnsafe:       "168h",
+			opts: ApplyOptions{
+				SharedOptions: SharedOptions{
+					ControlsDir:     "/nonexistent/path",
+					ObservationsDir: filepath.Join(fixture, "observations"),
+					MaxUnsafe:       "168h",
+				},
 			},
 			wantContain: "--controls not accessible",
 		},
 		{
 			name: "observations dir not found",
-			flags: applyFlagsType{
-				controlsDir:     filepath.Join(fixture, "controls"),
-				observationsDir: "/nonexistent/path",
-				maxUnsafe:       "168h",
+			opts: ApplyOptions{
+				SharedOptions: SharedOptions{
+					ControlsDir:     filepath.Join(fixture, "controls"),
+					ObservationsDir: "/nonexistent/path",
+					MaxUnsafe:       "168h",
+				},
 			},
 			wantContain: "--observations not accessible",
 		},
 		{
 			name: "invalid max-unsafe",
-			flags: applyFlagsType{
-				controlsDir:     filepath.Join(fixture, "controls"),
-				observationsDir: filepath.Join(fixture, "observations"),
-				maxUnsafe:       "not-a-duration",
+			opts: ApplyOptions{
+				SharedOptions: SharedOptions{
+					ControlsDir:     filepath.Join(fixture, "controls"),
+					ObservationsDir: filepath.Join(fixture, "observations"),
+					MaxUnsafe:       "not-a-duration",
+				},
 			},
 			wantContain: "invalid --max-unsafe",
 		},
 		{
 			name: "invalid --now format",
-			flags: applyFlagsType{
-				controlsDir:     filepath.Join(fixture, "controls"),
-				observationsDir: filepath.Join(fixture, "observations"),
-				maxUnsafe:       "168h",
-				nowTime:         "not-a-time",
+			opts: ApplyOptions{
+				SharedOptions: SharedOptions{
+					ControlsDir:     filepath.Join(fixture, "controls"),
+					ObservationsDir: filepath.Join(fixture, "observations"),
+					MaxUnsafe:       "168h",
+					NowTime:         "not-a-time",
+				},
 			},
 			wantContain: "invalid timestamp",
 		},
 	}
 	for _, tc := range errorCases {
 		t.Run(tc.name, func(t *testing.T) {
-			f := tc.flags
-			_, err := validateApplyFlags(cmd, &f)
+			o := tc.opts
+			_, err := validateApplyFlags(cmd, &o)
 			if err == nil {
 				t.Fatalf("expected error containing %q", tc.wantContain)
 			}
@@ -146,13 +160,15 @@ func TestValidateApplyFlags(t *testing.T) {
 		if len(files) == 0 {
 			t.Fatal("no control YAML files in fixture: e2e-01-violation/controls must contain at least one *.yaml file")
 		}
-		flags := &applyFlagsType{
-			controlsDir:     files[0],
-			observationsDir: filepath.Join(fixture, "observations"),
-			maxUnsafe:       "168h",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     files[0],
+				ObservationsDir: filepath.Join(fixture, "observations"),
+				MaxUnsafe:       "168h",
+			},
 		}
 
-		_, err := validateApplyFlags(cmd, flags)
+		_, err := validateApplyFlags(cmd, opts)
 		if err == nil {
 			t.Fatal("expected error when controls is a file")
 		}
@@ -167,26 +183,28 @@ func TestBuildApplyDeps(t *testing.T) {
 	dummyCmd := &cobra.Command{Use: "test"}
 
 	t.Run("json format produces deps", func(t *testing.T) {
-		flags := &applyFlagsType{
-			controlsDir:     filepath.Join(fixture, "controls"),
-			observationsDir: filepath.Join(fixture, "observations"),
-			outputFormat:    "json",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     filepath.Join(fixture, "controls"),
+				ObservationsDir: filepath.Join(fixture, "observations"),
+				Format:          "json",
+			},
 		}
 
 		params := applyParams{
 			maxDuration: 168 * time.Hour,
 			clock:       clockadp.RealClock{},
-			source:      appeval.ObservationSource(flags.observationsDir),
+			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		deps, err := NewFactory(dummyCmd, flags, params).BuildWithNewPlan()
+		deps, err := NewFactory(dummyCmd, opts, params).BuildWithNewPlan()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		defer deps.Close()
 
-		if deps.Config.ControlsDir != flags.controlsDir {
-			t.Errorf("ControlsDir = %q, want %q", deps.Config.ControlsDir, flags.controlsDir)
+		if deps.Config.ControlsDir != opts.ControlsDir {
+			t.Errorf("ControlsDir = %q, want %q", deps.Config.ControlsDir, opts.ControlsDir)
 		}
 		if deps.Config.MaxUnsafe != 168*time.Hour {
 			t.Errorf("MaxUnsafe = %v, want 168h", deps.Config.MaxUnsafe)
@@ -197,19 +215,21 @@ func TestBuildApplyDeps(t *testing.T) {
 	})
 
 	t.Run("text format produces deps", func(t *testing.T) {
-		flags := &applyFlagsType{
-			controlsDir:     filepath.Join(fixture, "controls"),
-			observationsDir: filepath.Join(fixture, "observations"),
-			outputFormat:    "text",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     filepath.Join(fixture, "controls"),
+				ObservationsDir: filepath.Join(fixture, "observations"),
+				Format:          "text",
+			},
 		}
 
 		params := applyParams{
 			maxDuration: 24 * time.Hour,
 			clock:       clockadp.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
-			source:      appeval.ObservationSource(flags.observationsDir),
+			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		deps, err := NewFactory(dummyCmd, flags, params).BuildWithNewPlan()
+		deps, err := NewFactory(dummyCmd, opts, params).BuildWithNewPlan()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -221,19 +241,21 @@ func TestBuildApplyDeps(t *testing.T) {
 	})
 
 	t.Run("invalid output format", func(t *testing.T) {
-		flags := &applyFlagsType{
-			controlsDir:     filepath.Join(fixture, "controls"),
-			observationsDir: filepath.Join(fixture, "observations"),
-			outputFormat:    "csv",
+		opts := &ApplyOptions{
+			SharedOptions: SharedOptions{
+				ControlsDir:     filepath.Join(fixture, "controls"),
+				ObservationsDir: filepath.Join(fixture, "observations"),
+				Format:          "csv",
+			},
 		}
 
 		params := applyParams{
 			maxDuration: 168 * time.Hour,
 			clock:       clockadp.RealClock{},
-			source:      appeval.ObservationSource(flags.observationsDir),
+			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		_, err := NewFactory(dummyCmd, flags, params).BuildWithNewPlan()
+		_, err := NewFactory(dummyCmd, opts, params).BuildWithNewPlan()
 		if err == nil {
 			t.Fatal("expected error for invalid output format")
 		}

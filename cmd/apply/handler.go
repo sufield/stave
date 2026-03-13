@@ -16,33 +16,33 @@ import (
 )
 
 // runApplyCore gathers validated options, then dispatches by mode.
-func runApplyCore(cmd *cobra.Command, flags *applyFlagsType) error {
+func runApplyCore(cmd *cobra.Command, opts *ApplyOptions) error {
 	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return err
 	}
 
-	opts, err := gatherRunOptions(cmd, flags)
+	runOpts, err := gatherRunOptions(cmd, opts)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(attachDomainHints(err))
 	}
 
-	switch opts.mode {
+	switch runOpts.mode {
 	case runModeProfile:
-		return runApplyProfileWithOptions(cmd, opts.profile)
+		return runApplyProfileWithOptions(cmd, runOpts.profile)
 	default:
-		return runStandardApply(cmd, flags, opts)
+		return runStandardApply(cmd, opts, runOpts)
 	}
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(cmd *cobra.Command, flags *applyFlagsType, opts runOptions) error {
-	plan, err := appeval.NewPlan(opts.evaluatorInput)
+func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, runOpts runOptions) error {
+	plan, err := appeval.NewPlan(runOpts.evaluatorInput)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(attachDomainHints(fmt.Errorf("failed to resolve evaluation plan: %w", err)))
 	}
 	cmdutil.AttachRunIDFromPlan(plan)
 
-	results, err := executeApply(cmd, cmd.Context(), flags, opts, plan)
+	results, err := executeApply(cmd, cmd.Context(), opts, runOpts, plan)
 	if err != nil {
 		return ui.EvaluateErrorWithHint(attachDomainHints(err))
 	}
@@ -91,15 +91,15 @@ func attachDomainHints(err error) error {
 func executeApply(
 	cmd *cobra.Command,
 	ctx context.Context,
-	flags *applyFlagsType,
-	opts runOptions,
+	opts *ApplyOptions,
+	runOpts runOptions,
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
 	rt := cmdutil.NewRuntime(cmd)
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	factory := NewFactory(cmd, flags, opts.params)
+	factory := NewFactory(cmd, opts, runOpts.params)
 	factory.OnObsProgress = progress.Update
 
 	deps, err := factory.Build(plan)

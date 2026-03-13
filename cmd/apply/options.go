@@ -37,25 +37,25 @@ type runOptions struct {
 	evaluatorInput appeval.Options
 }
 
-func gatherRunOptions(cmd *cobra.Command, flags *applyFlagsType) (runOptions, error) {
-	if flags.applyProfile != "" {
-		profile, err := ParseApplyProfile(flags.applyProfile)
+func gatherRunOptions(cmd *cobra.Command, opts *ApplyOptions) (runOptions, error) {
+	if opts.Profile != "" {
+		profile, err := ParseApplyProfile(opts.Profile)
 		if err != nil {
 			return runOptions{}, err
 		}
 		switch profile {
 		case ApplyProfileAWSS3:
-			if flags.profileInputFile == "" {
+			if opts.InputFile == "" {
 				return runOptions{}, fmt.Errorf("--input is required when using --profile aws-s3")
 			}
 			return runOptions{
 				mode: runModeProfile,
 				profile: applyProfileOptions{
-					inputFile:       flags.profileInputFile,
-					bucketAllowlist: flags.profileBucketAllowlist,
-					includeAll:      flags.profileIncludeAll,
-					outputFormat:    flags.outputFormat,
-					nowTime:         flags.nowTime,
+					inputFile:       opts.InputFile,
+					bucketAllowlist: opts.BucketAllowlist,
+					includeAll:      opts.IncludeAll,
+					outputFormat:    opts.Format,
+					nowTime:         opts.NowTime,
 					quiet:           cmdutil.QuietEnabled(cmd),
 				},
 			}, nil
@@ -66,11 +66,11 @@ func gatherRunOptions(cmd *cobra.Command, flags *applyFlagsType) (runOptions, er
 		return runOptions{}, strictErr
 	}
 
-	params, err := validateApplyFlags(cmd, flags)
+	params, err := validateApplyFlags(cmd, opts)
 	if err != nil {
 		return runOptions{}, err
 	}
-	format, err := compose.ResolveFormatValue(cmd, flags.outputFormat)
+	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return runOptions{}, err
 	}
@@ -79,25 +79,25 @@ func gatherRunOptions(cmd *cobra.Command, flags *applyFlagsType) (runOptions, er
 		mode:           runModeStandard,
 		params:         params,
 		format:         format,
-		evaluatorInput: buildEvaluatorOptions(flags),
+		evaluatorInput: buildEvaluatorOptions(opts),
 	}, nil
 }
 
-func buildEvaluatorOptions(flags *applyFlagsType) appeval.Options {
+func buildEvaluatorOptions(opts *ApplyOptions) appeval.Options {
 	root := projctx.RootForContextName()
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
 	_, userPath, _ := projconfig.FindUserConfigWithPath()
 	return appeval.Options{
 		ContextName:        resolveApplyContextName(root),
 		ProjectRoot:        root,
-		ControlsDir:        flags.controlsDir,
+		ControlsDir:        opts.ControlsDir,
 		ConfigPath:         cfgPath,
 		UserConfigPath:     userPath,
-		MaxUnsafe:          flags.maxUnsafe,
-		NowTime:            flags.nowTime,
-		ObservationsSource: appeval.ObservationSource(flags.observationsDir),
-		IntegrityManifest:  flags.applyIntegrityManifest,
-		IntegrityPublicKey: flags.applyIntegrityPublicKey,
+		MaxUnsafe:          opts.MaxUnsafe,
+		NowTime:            opts.NowTime,
+		ObservationsSource: appeval.ObservationSource(opts.ObservationsDir),
+		IntegrityManifest:  opts.IntegrityManifest,
+		IntegrityPublicKey: opts.IntegrityPublicKey,
 		Hasher:             fsutil.FSContentHasher{},
 	}
 }
@@ -105,23 +105,23 @@ func buildEvaluatorOptions(flags *applyFlagsType) appeval.Options {
 // checkDirsExist verifies that the controls and observations directories
 // exist and are accessible. When the source is stdin the observations
 // directory check is skipped.
-func checkDirsExist(flags *applyFlagsType, source appeval.ObservationSource, log *projctx.InferenceLog) error {
-	usePackMode := shouldUseConfiguredPacks(flags)
+func checkDirsExist(opts *ApplyOptions, source appeval.ObservationSource, log *projctx.InferenceLog) error {
+	usePackMode := shouldUseConfiguredPacks(opts)
 	if !usePackMode {
-		if err := cmdutil.ValidateDirWithInference("--controls", flags.controlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
+		if err := cmdutil.ValidateDirWithInference("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
 			return err
 		}
 	}
 	if !source.IsStdin() {
-		if err := cmdutil.ValidateDirWithInference("--observations", flags.observationsDir, "observations", ui.ErrHintObservationsNotAccessible, log); err != nil {
+		if err := cmdutil.ValidateDirWithInference("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func shouldUseConfiguredPacks(flags *applyFlagsType) bool {
-	if flags.applyControlsFlagSet {
+func shouldUseConfiguredPacks(opts *ApplyOptions) bool {
+	if opts.ControlsSet {
 		return false
 	}
 	cfg, ok := projconfig.FindProjectConfig()
@@ -134,15 +134,15 @@ func shouldUseConfiguredPacks(flags *applyFlagsType) bool {
 // validateApplyFlags validates command-line flags and returns parsed parameters.
 // It normalizes paths, validates domain constraints, and checks directory
 // existence. Returns an error for any invalid or inaccessible input.
-func validateApplyFlags(cmd *cobra.Command, flags *applyFlagsType) (applyParams, error) {
-	log := normalizeApplyFlags(cmd, flags)
+func validateApplyFlags(cmd *cobra.Command, opts *ApplyOptions) (applyParams, error) {
+	log := normalizeApplyFlags(cmd, opts)
 
-	parsed, err := validateApplyDomain(flags)
+	parsed, err := validateApplyDomain(opts)
 	if err != nil {
 		return applyParams{}, err
 	}
 
-	if err := checkDirsExist(flags, parsed.Source, log); err != nil {
+	if err := checkDirsExist(opts, parsed.Source, log); err != nil {
 		return applyParams{}, err
 	}
 
@@ -155,31 +155,28 @@ func validateApplyFlags(cmd *cobra.Command, flags *applyFlagsType) (applyParams,
 
 // normalizeApplyFlags cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
-func normalizeApplyFlags(cmd *cobra.Command, flags *applyFlagsType) *projctx.InferenceLog {
+func normalizeApplyFlags(cmd *cobra.Command, opts *ApplyOptions) *projctx.InferenceLog {
 	log := projctx.NewInferenceLog()
-	flags.applyControlsFlagSet = cmdutil.ControlsFlagChanged(cmd)
 
-	flags.controlsDir = fsutil.CleanUserPath(flags.controlsDir)
-	flags.observationsDir = fsutil.CleanUserPath(flags.observationsDir)
-	flags.applyIntegrityManifest = fsutil.CleanUserPath(flags.applyIntegrityManifest)
-	flags.applyIntegrityPublicKey = fsutil.CleanUserPath(flags.applyIntegrityPublicKey)
+	opts.IntegrityManifest = fsutil.CleanUserPath(opts.IntegrityManifest)
+	opts.IntegrityPublicKey = fsutil.CleanUserPath(opts.IntegrityPublicKey)
 
-	flags.controlsDir = log.InferControlsDir(cmd, flags.controlsDir)
-	if flags.observationsDir != "-" {
-		flags.observationsDir = log.InferObservationsDir(cmd, flags.observationsDir)
+	opts.ControlsDir = log.InferControlsDir(cmd, opts.ControlsDir)
+	if opts.ObservationsDir != "-" {
+		opts.ObservationsDir = log.InferObservationsDir(cmd, opts.ObservationsDir)
 	}
 	return log
 }
 
 // validateApplyDomain validates parsed flag values against domain constraints
 // (duration format, time format, integrity key pairing).
-func validateApplyDomain(flags *applyFlagsType) (appeval.ParsedOptions, error) {
+func validateApplyDomain(opts *ApplyOptions) (appeval.ParsedOptions, error) {
 	parsed, err := (appeval.Options{
-		MaxUnsafe:          flags.maxUnsafe,
-		NowTime:            flags.nowTime,
-		ObservationsSource: appeval.ObservationSource(flags.observationsDir),
-		IntegrityManifest:  flags.applyIntegrityManifest,
-		IntegrityPublicKey: flags.applyIntegrityPublicKey,
+		MaxUnsafe:          opts.MaxUnsafe,
+		NowTime:            opts.NowTime,
+		ObservationsSource: appeval.ObservationSource(opts.ObservationsDir),
+		IntegrityManifest:  opts.IntegrityManifest,
+		IntegrityPublicKey: opts.IntegrityPublicKey,
 	}).Validate()
 	if err != nil {
 		return appeval.ParsedOptions{}, &ui.InputError{Err: err}
