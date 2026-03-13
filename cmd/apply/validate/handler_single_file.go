@@ -54,7 +54,11 @@ func runValidateSingleFileWithOptions(cmd *cobra.Command, out io.Writer, opts *o
 		return fmt.Errorf("validate %s: %w", sourceName, err)
 	}
 
-	return outputAndExitWithOptions(cmd, out, result, format.IsJSON(), opts)
+	r := newReporter(out, format, opts)
+	if err := r.Write(result, opts); err != nil {
+		return err
+	}
+	return r.ExitStatus(result)
 }
 
 func normalizeValidateKind(raw string) (string, error) {

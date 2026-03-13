@@ -24,6 +24,21 @@ func testdataDir(t *testing.T, name string) string {
 	return testutil.E2EDir(t, name)
 }
 
+// testReporter creates a Reporter writing to buf with the given options.
+func testReporter(buf *bytes.Buffer, jsonOutput bool, opts *options) *Reporter {
+	format := "text"
+	if jsonOutput {
+		format = "json"
+	}
+	return &Reporter{
+		Writer:   buf,
+		Format:   format,
+		Strict:   opts.StrictMode,
+		FixHints: opts.FixHints,
+		IsJSON:   jsonOutput,
+	}
+}
+
 // TestExitCode tests the ExitCode function with various error conditions.
 // Exit code contract:
 //
@@ -104,7 +119,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	}
 }
 
-// TestOutputAndExit_Clean tests outputAndExit with a clean validation result (no errors or warnings).
+// TestOutputAndExit_Clean tests Reporter with a clean validation result (no errors or warnings).
 func TestOutputAndExit_Clean(t *testing.T) {
 	// No errors, no warnings → exit 0
 	result := &appservice.ValidationResult{
@@ -117,7 +132,12 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
+	opts := defaultOptions()
+	r := testReporter(&buf, false, opts)
+	if err := r.Write(result, opts); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	err := r.ExitStatus(result)
 
 	if err != nil {
 		t.Errorf("expected nil error for clean validation, got %v", err)
@@ -127,7 +147,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	}
 }
 
-// TestOutputAndExit_Errors tests outputAndExit with validation errors (should return exit code 2).
+// TestOutputAndExit_Errors tests Reporter with validation errors (should return exit code 2).
 func TestOutputAndExit_Errors(t *testing.T) {
 	// Has errors → exit 2
 	result := &appservice.ValidationResult{
@@ -144,7 +164,12 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
+	opts := defaultOptions()
+	r := testReporter(&buf, false, opts)
+	if err := r.Write(result, opts); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	err := r.ExitStatus(result)
 
 	if err == nil {
 		t.Error("expected error for validation with errors")
@@ -154,7 +179,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	}
 }
 
-// TestOutputAndExit_WarningsOnly tests outputAndExit with only warnings (should return exit code 2).
+// TestOutputAndExit_WarningsOnly tests Reporter with only warnings (should return exit code 2).
 func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	// Warnings only, no errors → exit 2
 	result := &appservice.ValidationResult{
@@ -176,7 +201,12 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
+	opts := defaultOptions()
+	r := testReporter(&buf, false, opts)
+	if err := r.Write(result, opts); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	err := r.ExitStatus(result)
 
 	if err == nil {
 		t.Error("expected error for validation with warnings")
@@ -186,7 +216,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	}
 }
 
-// TestOutputAndExit_ErrorsAndWarnings tests outputAndExit with both errors and warnings (errors take precedence, exit code 2).
+// TestOutputAndExit_ErrorsAndWarnings tests Reporter with both errors and warnings (errors take precedence, exit code 2).
 func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	// Has both errors and warnings → exit 2 (errors take precedence)
 	result := &appservice.ValidationResult{
@@ -209,7 +239,12 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, false, defaultOptions())
+	opts := defaultOptions()
+	r := testReporter(&buf, false, opts)
+	if err := r.Write(result, opts); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	err := r.ExitStatus(result)
 
 	if err == nil {
 		t.Error("expected error for validation with errors")
@@ -219,7 +254,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	}
 }
 
-// TestOutputAndExit_JSONOutput tests outputAndExit with JSON output format.
+// TestOutputAndExit_JSONOutput tests Reporter with JSON output format.
 func TestOutputAndExit_JSONOutput(t *testing.T) {
 	opts := defaultOptions()
 	opts.FixHints = false
@@ -240,7 +275,11 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, opts)
+	r := testReporter(&buf, true, opts)
+	if err := r.Write(result, opts); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	err := r.ExitStatus(result)
 
 	// Check JSON output contains expected fields
 	output := buf.String()
@@ -280,8 +319,9 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := writeValidationTextWithOptions(&buf, result, opts); err != nil {
-		t.Fatalf("writeValidationText failed: %v", err)
+	r := testReporter(&buf, false, opts)
+	if err := r.Write(result, opts); err != nil {
+		t.Fatalf("Write failed: %v", err)
 	}
 	out := buf.String()
 	if !strings.Contains(out, "Suggested next commands:") {
@@ -308,7 +348,8 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	_ = outputAndExitWithOptions(&cobra.Command{Use: "test"}, &buf, result, true, opts)
+	r := testReporter(&buf, true, opts)
+	_ = r.Write(result, opts)
 	out := buf.String()
 	if !strings.Contains(out, `"fix_hints"`) {
 		t.Fatalf("expected fix_hints in json output, got: %s", out)
