@@ -116,7 +116,11 @@ func validateFindings(v *contractvalidator.Validator, findings []remediation.Fin
 			continue
 		}
 
-		diags, err := v.Validate(string(schemas.KindFinding), kernel.RegistryLayoutStandard, raw, false)
+		diags, err := v.Validate(contractvalidator.Request{
+			Kind:          schemas.KindFinding,
+			ActualVersion: kernel.RegistryLayoutStandard,
+			Data:          raw,
+		})
 		if err != nil {
 			return fmt.Errorf("schema error: %w", err)
 		}

@@ -1,10 +1,16 @@
 package validator
 
-import "testing"
+import (
+	"testing"
+
+	schemas "github.com/sufield/stave/internal/contracts/schema"
+)
 
 func TestValidateControlV1Valid(t *testing.T) {
 	v := New()
-	diags, err := v.Validate("control", "v1", []byte(`
+	diags, err := v.Validate(Request{
+		Kind: schemas.KindControl, ActualVersion: "v1", IsYAML: true,
+		Data: []byte(`
 dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.001
 name: Buckets should stay private
@@ -15,7 +21,8 @@ unsafe_predicate:
     - field: properties.storage.visibility.public_read
       op: eq
       value: true
-`), true)
+`),
+	})
 	if err != nil {
 		t.Fatalf("validate control failed: %v", err)
 	}
@@ -26,7 +33,9 @@ unsafe_predicate:
 
 func TestValidateControlV1UnknownField(t *testing.T) {
 	v := New()
-	diags, err := v.Validate("control", "v1", []byte(`
+	diags, err := v.Validate(Request{
+		Kind: schemas.KindControl, ActualVersion: "v1", IsYAML: true,
+		Data: []byte(`
 dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.001
 name: Buckets should stay private
@@ -38,7 +47,8 @@ unsafe_predicate:
       op: eq
       value: true
 unknown_field: true
-`), true)
+`),
+	})
 	if err != nil {
 		t.Fatalf("validate control failed: %v", err)
 	}
@@ -49,14 +59,17 @@ unknown_field: true
 
 func TestValidateControlV1RejectsInvalidShape(t *testing.T) {
 	v := New()
-	diags, err := v.Validate("control", "v1", []byte(`
+	diags, err := v.Validate(Request{
+		Kind: schemas.KindControl, ActualVersion: "v1", IsYAML: true,
+		Data: []byte(`
 dsl_version: ctrl.v1
 id: CTL.S3.PUBLIC.001
 name: Bad shape
 description: Invalid metadata shape
 control: public_access
 expect: disabled
-`), true)
+`),
+	})
 	if err != nil {
 		t.Fatalf("validate control failed: %v", err)
 	}
@@ -85,7 +98,7 @@ func TestValidateFindingV1Pass(t *testing.T) {
     "action":"disable public access"
   }
 }`)
-	diags, err := v.Validate("finding", "v1", payload, false)
+	diags, err := v.Validate(Request{Kind: schemas.KindFinding, ActualVersion: "v1", Data: payload})
 	if err != nil {
 		t.Fatalf("validate finding failed: %v", err)
 	}
@@ -96,7 +109,9 @@ func TestValidateFindingV1Pass(t *testing.T) {
 
 func TestValidator_ZeroValueUsable(t *testing.T) {
 	v := New()
-	diags, err := v.Validate("finding", "v1", []byte(`{
+	diags, err := v.Validate(Request{
+		Kind: schemas.KindFinding, ActualVersion: "v1",
+		Data: []byte(`{
   "control_id":"CTL.S3.PUBLIC.001",
   "control_name":"Public bucket",
   "control_description":"Bucket is public.",
@@ -113,7 +128,8 @@ func TestValidator_ZeroValueUsable(t *testing.T) {
     "description":"remove public access",
     "action":"disable public access"
   }
-}`), false)
+}`),
+	})
 	if err != nil {
 		t.Fatalf("zero-value validator failed: %v", err)
 	}
