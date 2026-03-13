@@ -1,14 +1,21 @@
 package cmdutil
 
 import (
-	"github.com/spf13/cobra"
+	"io"
+
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-// NewRuntime creates a ui.Runtime wired to the command's output streams
-// with Quiet resolved from the --quiet flag.
-func NewRuntime(cmd *cobra.Command) *ui.Runtime {
-	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-	rt.Quiet = GetGlobalFlags(cmd).Quiet
+// NewRuntime initializes a UI runtime using explicit output streams.
+// This allows the UI logic to remain independent of the CLI framework.
+func NewRuntime(stdout, stderr io.Writer, quiet bool) *ui.Runtime {
+	rt := ui.NewRuntime(stdout, stderr)
+	rt.Quiet = quiet
 	return rt
+}
+
+// NewRuntimeFromFlags is a convenience helper that bridges CLI state to the UI.
+// It uses the GlobalFlags struct refactored in previous steps.
+func NewRuntimeFromFlags(stdout, stderr io.Writer, flags GlobalFlags) *ui.Runtime {
+	return NewRuntime(stdout, stderr, flags.Quiet)
 }
