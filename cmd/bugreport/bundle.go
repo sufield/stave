@@ -2,13 +2,13 @@ package bugreport
 
 import (
 	"archive/zip"
+	"context"
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"sort"
 	"time"
 
-	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -19,75 +19,63 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-type manifest struct {
-	BundleVersion kernel.Schema `json:"bundle_version"`
-	GeneratedAt   string        `json:"generated_at"`
-	StaveVersion  string        `json:"stave_version"`
-	Sanitized     bool          `json:"sanitized"`
-	Files         []string      `json:"files"`
-	Warnings      []string      `json:"warnings,omitempty"`
-	IssueURL      string        `json:"issue_url"`
+// Config defines the inputs required to generate a bug report.
+type Config struct {
+	Output       io.Writer
+	Cwd          string
+	BinaryPath   string
+	ConfigPath   string
+	LogPath      string
+	LogTailLines int
+	Args         []string
+	Env          []string
 }
 
-type bundleWriter struct {
-	zip      *zip.Writer
-	files    []string
-	warnings []string
+// Generator handles the creation of the diagnostic bundle.
+type Generator struct {
+	now func() time.Time
 }
 
-func newBundleWriter(zw *zip.Writer) *bundleWriter {
-	return &bundleWriter{
+// NewGenerator returns a generator with default dependencies.
+func NewGenerator() *Generator {
+	return &Generator{
+		now: func() time.Time { return time.Now().UTC() },
+	}
+}
+
+// Generate orchestrates the collection of artifacts into a zip archive.
+func (g *Generator) Generate(_ context.Context, cfg Config) error {
+	zw := zip.NewWriter(cfg.Output)
+
+	bundle := &bundleWriter{
 		zip:      zw,
 		files:    make([]string, 0, 8),
 		warnings: make([]string, 0, 4),
+		now:      g.now,
 	}
-}
 
-func (w *bundleWriter) addJSON(name string, payload any) error {
-	data, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
+	if err := g.addCoreArtifacts(bundle, cfg); err != nil {
 		return err
 	}
-	data = append(data, '\n')
-	if err := addZipFile(w.zip, name, data); err != nil {
+	if err := g.addConfigArtifact(bundle, cfg.ConfigPath); err != nil {
 		return err
 	}
-	w.files = append(w.files, name)
+	if err := g.addLogArtifact(bundle, cfg.LogPath, cfg.LogTailLines); err != nil {
+		return err
+	}
+	if err := g.addManifest(bundle); err != nil {
+		return err
+	}
+	if err := zw.Close(); err != nil {
+		return fmt.Errorf("finalize bundle: %w", err)
+	}
 	return nil
 }
 
-func (w *bundleWriter) addText(name string, data []byte) error {
-	if err := addZipFile(w.zip, name, data); err != nil {
-		return err
-	}
-	w.files = append(w.files, name)
-	return nil
-}
-
-func (w *bundleWriter) addWarning(format string, args ...any) {
-	w.warnings = append(w.warnings, fmt.Sprintf(format, args...))
-}
-
-func addZipFile(zw *zip.Writer, name string, data []byte) error {
-	h := &zip.FileHeader{
-		Name:     name,
-		Method:   zip.Deflate,
-		Modified: time.Now().UTC(),
-	}
-	h.SetMode(0o600)
-	w, err := zw.CreateHeader(h)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(data)
-	return err
-}
-
-func addCoreArtifacts(bundle *bundleWriter, cwd string) error {
-	binaryPath, _ := os.Executable()
+func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
 	checks, ok := doctor.Run(&doctor.Context{
-		Cwd:          cwd,
-		BinaryPath:   binaryPath,
+		Cwd:          cfg.Cwd,
+		BinaryPath:   cfg.BinaryPath,
 		StaveVersion: staveversion.Version,
 	})
 	if err := bundle.addJSON("doctor.json", doctorResult{Ready: ok, Checks: checks}); err != nil {
@@ -96,36 +84,32 @@ func addCoreArtifacts(bundle *bundleWriter, cwd string) error {
 	if err := bundle.addJSON("build_info.json", collectBuildInfo()); err != nil {
 		return fmt.Errorf("write build_info.json: %w", err)
 	}
-	if err := bundle.addJSON("env.json", collectEnv()); err != nil {
+	if err := bundle.addJSON("env.json", collectEnv(cfg.Env)); err != nil {
 		return fmt.Errorf("write env.json: %w", err)
 	}
-	if err := bundle.addJSON("args.json", collectArgs()); err != nil {
+	if err := bundle.addJSON("args.json", collectArgs(cfg.Args)); err != nil {
 		return fmt.Errorf("write args.json: %w", err)
 	}
 	return nil
 }
 
-func addConfigArtifact(bundle *bundleWriter) error {
-	cfgPath, ok := findConfigPath()
-	if !ok {
+func (g *Generator) addConfigArtifact(bundle *bundleWriter, path string) error {
+	if path == "" {
 		return nil
 	}
-	cfgBytes, err := fsutil.ReadFileLimited(cfgPath)
+	cfgBytes, err := fsutil.ReadFileLimited(path)
 	if err != nil {
-		bundle.addWarning("skipped project config (%s): %v", cfgPath, err)
+		bundle.addWarning("skipped project config (%s): %v", path, err)
 		return nil
 	}
-	// Parse into the known ProjectConfig struct and re-serialize.
-	// Only recognized fields appear in the output — unknown fields
-	// (which might contain secrets) are dropped entirely.
 	var cfg projconfig.ProjectConfig
-	if err = yaml.Unmarshal(cfgBytes, &cfg); err != nil {
-		bundle.addWarning("skipped project config (%s): parse error: %v", cfgPath, err)
+	if unmarshalErr := yaml.Unmarshal(cfgBytes, &cfg); unmarshalErr != nil {
+		bundle.addWarning("skipped project config (%s): parse error: %v", path, unmarshalErr)
 		return nil
 	}
-	sanitized, err := yaml.Marshal(&cfg)
-	if err != nil {
-		bundle.addWarning("skipped project config (%s): marshal error: %v", cfgPath, err)
+	sanitized, marshalErr := yaml.Marshal(&cfg)
+	if marshalErr != nil {
+		bundle.addWarning("skipped project config (%s): marshal error: %v", path, marshalErr)
 		return nil
 	}
 	if err := bundle.addText("config/stave.yaml", sanitized); err != nil {
@@ -134,17 +118,16 @@ func addConfigArtifact(bundle *bundleWriter) error {
 	return nil
 }
 
-func addLogArtifact(cmd *cobra.Command, bundle *bundleWriter, cwd string, tailLineCount int) error {
-	logPath, ok := findLogPath(cmd, cwd)
-	if !ok {
+func (g *Generator) addLogArtifact(bundle *bundleWriter, path string, tailCount int) error {
+	if path == "" {
 		return nil
 	}
-	logBytes, err := fsutil.ReadFileLimited(logPath)
+	logBytes, err := fsutil.ReadFileLimited(path)
 	if err != nil {
-		bundle.addWarning("skipped log tail (%s): %v", logPath, err)
+		bundle.addWarning("skipped log tail (%s): %v", path, err)
 		return nil
 	}
-	tail := tailBytesByLine(logBytes, tailLineCount)
+	tail := tailBytesByLine(logBytes, tailCount)
 	tail = redactCredentialFormats(tail)
 	if err := bundle.addText("logs/stave.log.tail.txt", tail); err != nil {
 		return fmt.Errorf("write logs/stave.log.tail.txt: %w", err)
@@ -152,12 +135,12 @@ func addLogArtifact(cmd *cobra.Command, bundle *bundleWriter, cwd string, tailLi
 	return nil
 }
 
-func addManifest(bundle *bundleWriter) error {
+func (g *Generator) addManifest(bundle *bundleWriter) error {
 	sort.Strings(bundle.files)
 	manifestFiles := append([]string(nil), bundle.files...)
 	m := manifest{
 		BundleVersion: kernel.SchemaBugReport,
-		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
+		GeneratedAt:   g.now().Format(time.RFC3339),
 		StaveVersion:  staveversion.Version,
 		Sanitized:     true,
 		Files:         manifestFiles,
@@ -168,4 +151,53 @@ func addManifest(bundle *bundleWriter) error {
 		return fmt.Errorf("write manifest.json: %w", err)
 	}
 	return nil
+}
+
+// --- Internal helpers ---
+
+type bundleWriter struct {
+	zip      *zip.Writer
+	files    []string
+	warnings []string
+	now      func() time.Time
+}
+
+func (w *bundleWriter) addJSON(name string, payload any) error {
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return err
+	}
+	return w.addText(name, append(data, '\n'))
+}
+
+func (w *bundleWriter) addText(name string, data []byte) error {
+	h := &zip.FileHeader{
+		Name:     name,
+		Method:   zip.Deflate,
+		Modified: w.now(),
+	}
+	h.SetMode(0o600)
+	f, err := w.zip.CreateHeader(h)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		return err
+	}
+	w.files = append(w.files, name)
+	return nil
+}
+
+func (w *bundleWriter) addWarning(format string, args ...any) {
+	w.warnings = append(w.warnings, fmt.Sprintf(format, args...))
+}
+
+type manifest struct {
+	BundleVersion kernel.Schema `json:"bundle_version"`
+	GeneratedAt   string        `json:"generated_at"`
+	StaveVersion  string        `json:"stave_version"`
+	Sanitized     bool          `json:"sanitized"`
+	Files         []string      `json:"files"`
+	Warnings      []string      `json:"warnings,omitempty"`
+	IssueURL      string        `json:"issue_url"`
 }

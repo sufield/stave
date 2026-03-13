@@ -27,7 +27,7 @@ func TestCollectBugReportEnv_RedactsSensitive(t *testing.T) {
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "super-secret")
 	t.Setenv("STAVE_DEBUG", "1")
 
-	entries := collectEnv()
+	entries := collectEnv(os.Environ())
 	got := make(map[string]string, len(entries))
 	for _, e := range entries {
 		got[e.Key] = e.Value
