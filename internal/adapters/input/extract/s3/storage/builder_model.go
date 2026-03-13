@@ -1,13 +1,13 @@
 package storage
 
-import "fmt"
+import "github.com/sufield/stave/internal/domain/kernel"
 
 func BuildModel(in BuildModelInput) S3StorageModel {
 	bucket := in.Bucket
 
 	model := S3StorageModel{
 		Kind:       "bucket",
-		ID:         fmt.Sprintf("aws:s3:::%s", bucket.Name),
+		ID:         kernel.NewBucketRef(bucket.Name).ModelID(),
 		Name:       bucket.Name,
 		Visibility: in.Visibility,
 		ACL: ACLSummary{

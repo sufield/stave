@@ -119,7 +119,7 @@ func (e *SnapshotExtractor) wrapSnapshots(resources []asset.Asset, now time.Time
 func (e *SnapshotExtractor) extractBucketObservation(snapshotDir, bucketName string) S3Observation {
 	obs := S3Observation{
 		BucketName: bucketName,
-		BucketARN:  fmt.Sprintf("arn:aws:s3:::%s", bucketName),
+		BucketARN:  kernel.NewBucketRef(bucketName).ARN(),
 		Tags:       make(map[string]string),
 		Evidence:   []string{},
 	}
