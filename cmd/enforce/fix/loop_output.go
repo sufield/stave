@@ -14,48 +14,30 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-func (r *Runner) writeFixLoopArtifacts(
-	execCtx fixLoopExecution,
-	beforeEval safetyenvelope.Evaluation,
-	afterEval safetyenvelope.Evaluation,
+func (r *Runner) persist(
+	outDir string,
+	before safetyenvelope.Evaluation,
+	after safetyenvelope.Evaluation,
 	verification safetyenvelope.Verification,
-) (fixLoopArtifacts, error) {
-	artifacts := fixLoopArtifacts{}
-	if execCtx.outDir == "" {
-		return artifacts, nil
+	report *loopReport,
+) error {
+	if err := fsutil.SafeMkdirAll(outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: r.FileOptions.AllowSymlinks}); err != nil {
+		return fmt.Errorf("--out directory not writable: %s: %w", outDir, err)
 	}
-	if err := fsutil.SafeMkdirAll(execCtx.outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: r.FileOptions.AllowSymlinks}); err != nil {
-		return fixLoopArtifacts{}, fmt.Errorf("--out directory not writable: %s: %w", execCtx.outDir, err)
-	}
-	beforePath := filepath.Join(execCtx.outDir, "evaluation.before.json")
-	if err := r.writeOutputJSONFile(beforePath, beforeEval); err != nil {
-		return fixLoopArtifacts{}, err
-	}
-	artifacts.BeforeEvaluation = beforePath
 
-	afterPath := filepath.Join(execCtx.outDir, "evaluation.after.json")
-	if err := r.writeOutputJSONFile(afterPath, afterEval); err != nil {
-		return fixLoopArtifacts{}, err
+	artifacts := []struct {
+		name  string
+		value any
+	}{
+		{"evaluation.before.json", before},
+		{"evaluation.after.json", after},
+		{"verification.json", verification},
+		{"remediation-report.json", report},
 	}
-	artifacts.AfterEvaluation = afterPath
-
-	verifyPath := filepath.Join(execCtx.outDir, "verification.json")
-	if err := r.writeOutputJSONFile(verifyPath, verification); err != nil {
-		return fixLoopArtifacts{}, err
-	}
-	artifacts.Verification = verifyPath
-	return artifacts, nil
-}
-
-func (r *Runner) writeFixLoopReport(execCtx fixLoopExecution, report *fixLoopReport) error {
-	if execCtx.outDir != "" {
-		report.Artifacts.Report = filepath.Join(execCtx.outDir, "remediation-report.json")
-		if err := r.writeOutputJSONFile(report.Artifacts.Report, report); err != nil {
+	for _, a := range artifacts {
+		if err := r.writeOutputJSONFile(filepath.Join(outDir, a.name), a.value); err != nil {
 			return err
 		}
-	}
-	if err := jsonutil.WriteIndented(execCtx.stdout, report); err != nil {
-		return fmt.Errorf("write remediation report: %w", err)
 	}
 	return nil
 }
