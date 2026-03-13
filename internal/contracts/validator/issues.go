@@ -122,7 +122,12 @@ func (v *Validator) validateDocument(
 		return unsupportedVersionResult(actual, accepted, "Use a supported schema version"), nil
 	}
 
-	diags, err := v.Validate(kind, kernel.RegistryLayoutStandard, raw, isYAML)
+	diags, err := v.Validate(Request{
+		Kind:          schemas.Kind(kind),
+		ActualVersion: kernel.RegistryLayoutStandard,
+		Data:          raw,
+		IsYAML:        isYAML,
+	})
 	if err != nil {
 		return nil, err
 	}

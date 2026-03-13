@@ -11,7 +11,7 @@ import (
 
 // SchemaValidator defines the schema validation operations needed by content validators.
 type SchemaValidator interface {
-	Validate(kind, version string, raw []byte, isYAML bool) ([]contractvalidator.Diagnostic, error)
+	Validate(req contractvalidator.Request) ([]contractvalidator.Diagnostic, error)
 	ValidateObservationJSON(raw []byte, opts ...contractvalidator.Option) (*diag.Result, error)
 	ValidateControlYAML(raw []byte, opts ...contractvalidator.Option) (*diag.Result, error)
 }
@@ -36,7 +36,12 @@ func (r ExplicitRequest) Validate(v SchemaValidator) (*service.ValidationResult,
 	if err != nil {
 		return nil, err
 	}
-	diags, err := v.Validate(r.Kind, version, r.Data, contractvalidator.IsLikelyYAML(r.Data))
+	diags, err := v.Validate(contractvalidator.Request{
+		Kind:          schemas.Kind(r.Kind),
+		ActualVersion: version,
+		Data:          r.Data,
+		IsYAML:        contractvalidator.IsLikelyYAML(r.Data),
+	})
 	if err != nil {
 		return nil, err
 	}

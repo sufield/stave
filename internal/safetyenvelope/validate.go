@@ -23,14 +23,16 @@ func ValidateDiagnose(payload Diagnose) error {
 }
 
 func validate(kind string, version string, payload any, label string) error {
-	const payloadIsYAML = false
-
 	raw, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("marshal %s: %w", label, err)
 	}
 	validator := contractvalidator.New()
-	diags, err := validator.Validate(kind, version, raw, payloadIsYAML)
+	diags, err := validator.Validate(contractvalidator.Request{
+		Kind:          schemas.Kind(kind),
+		ActualVersion: version,
+		Data:          raw,
+	})
 	if err != nil {
 		return fmt.Errorf("validate %s schema: %w", label, err)
 	}
