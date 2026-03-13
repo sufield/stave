@@ -42,7 +42,13 @@ func (a *App) expandAliasIfMatch() {
 }
 
 func (a *App) attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
+	if plan == nil {
+		return
+	}
+	a.Logger = cmdutil.SetupLoggingWithRunID(
+		a.Logger,
+		plan.ObservationsHash.String(),
+		plan.ControlsHash.String(),
+	)
 	logging.SetDefaultLogger(a.Logger)
-	cmdutil.AttachRunIDFromPlan(plan)
-	a.Logger = logging.DefaultLogger()
 }

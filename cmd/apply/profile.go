@@ -24,6 +24,7 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -180,7 +181,11 @@ func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []
 
 	inputsHash, _ := fsutil.HashFile(inputFile)
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
-	cmdutil.AttachRunID(inputsHash.String(), controlsHash.String())
+	logging.SetDefaultLogger(cmdutil.SetupLoggingWithRunID(
+		logging.DefaultLogger(),
+		inputsHash.String(),
+		controlsHash.String(),
+	))
 
 	return ctlDir, controls, nil
 }
