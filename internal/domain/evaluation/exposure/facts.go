@@ -1,6 +1,10 @@
 package exposure
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // Source identifies what mechanism exposed a prefix as publicly readable.
 type Source struct {
@@ -45,13 +49,13 @@ var SafeResult = Result{Exposed: false}
 
 // Grant pairs a scope (e.g. "*", "invoices/") with the statement ID that granted it.
 type Grant struct {
-	Scope    string
+	Scope    kernel.ObjectPrefix
 	SourceID string
 }
 
 // Covers reports whether this grant's scope matches the given prefix.
-func (g Grant) Covers(prefix string) bool {
-	return prefixScope(g.Scope).Matches(prefix)
+func (g Grant) Covers(prefix kernel.ObjectPrefix) bool {
+	return g.Scope.Matches(prefix)
 }
 
 // Evidence returns the evidence source for this grant, qualified by SourceID.
@@ -63,7 +67,7 @@ func (g Grant) Evidence() Source {
 type Grants []Grant
 
 // FindMatch returns the first grant whose scope covers prefix, or nil.
-func (gs Grants) FindMatch(prefix string) *Grant {
+func (gs Grants) FindMatch(prefix kernel.ObjectPrefix) *Grant {
 	for i := range gs {
 		if gs[i].Covers(prefix) {
 			return &gs[i]
@@ -102,7 +106,7 @@ func (facts Facts) LacksEvidence() bool {
 }
 
 // CheckExposure determines whether a protected prefix is effectively publicly readable.
-func (facts Facts) CheckExposure(prefix string) Result {
+func (facts Facts) CheckExposure(prefix kernel.ObjectPrefix) Result {
 	// Rule 1: Explicit identity grants take precedence.
 	if facts.IdentityAllowsPublicRead() {
 		if grant := facts.IdentityGrants.FindMatch(prefix); grant != nil {
@@ -124,25 +128,6 @@ func (facts Facts) CheckExposure(prefix string) Result {
 }
 
 // ScopeMatchesPrefix reports whether scope covers prefix.
-func ScopeMatchesPrefix(scope, prefix string) bool {
-	return prefixScope(scope).Matches(prefix)
-}
-
-type prefixScope string
-
-func (s prefixScope) Matches(prefix string) bool {
-	scopeValue := strings.TrimSpace(string(s))
-	if scopeValue == "" {
-		return false
-	}
-	if scopeValue == "*" {
-		return true
-	}
-	if !strings.HasSuffix(scopeValue, "/") {
-		scopeValue += "/"
-	}
-	if !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
-	}
-	return strings.HasPrefix(prefix, scopeValue)
+func ScopeMatchesPrefix(scope, prefix kernel.ObjectPrefix) bool {
+	return scope.Matches(prefix)
 }

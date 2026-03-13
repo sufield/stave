@@ -7,6 +7,7 @@ import (
 
 	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 	s3policy "github.com/sufield/stave/internal/adapters/input/extract/s3/policy"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 type prefixExposureModelInput struct {
@@ -36,9 +37,9 @@ func buildPrefixExposureModel(in prefixExposureModelInput) S3PrefixExposure {
 
 // extractPublicReadScopesFromPolicy normalizes policy public-read grants to generic scopes.
 // Scope "*" means all prefixes; otherwise values are normalized to "prefix/".
-func extractPublicReadScopesFromPolicy(policyJSON string) ([]string, map[string]string) {
-	var scopes []string
-	sourceByScope := make(map[string]string)
+func extractPublicReadScopesFromPolicy(policyJSON string) ([]kernel.ObjectPrefix, map[kernel.ObjectPrefix]string) {
+	var scopes []kernel.ObjectPrefix
+	sourceByScope := make(map[kernel.ObjectPrefix]string)
 	if strings.TrimSpace(policyJSON) == "" {
 		return scopes, sourceByScope
 	}
@@ -48,7 +49,7 @@ func extractPublicReadScopesFromPolicy(policyJSON string) ([]string, map[string]
 		return scopes, sourceByScope
 	}
 
-	seen := make(map[string]bool)
+	seen := make(map[kernel.ObjectPrefix]bool)
 	for i, stmt := range policy.Statement {
 		if !stmt.Effect.IsAllow() {
 			continue
@@ -63,7 +64,7 @@ func extractPublicReadScopesFromPolicy(policyJSON string) ([]string, map[string]
 		}
 
 		resources := []string(stmt.Resource)
-		scope := publicReadScopeFromResources(resources)
+		scope := scopeFromResources(resources)
 		if scope == "" || seen[scope] {
 			continue
 		}
@@ -90,7 +91,7 @@ func hasPublicReadAction(actions []string) bool {
 	return false
 }
 
-func publicReadScopeFromResources(resources []string) string {
+func scopeFromResources(resources []string) kernel.ObjectPrefix {
 	for _, res := range resources {
 		scope := scopeFromResourcePattern(res)
 		if scope != "" {
@@ -100,7 +101,7 @@ func publicReadScopeFromResources(resources []string) string {
 	return ""
 }
 
-func scopeFromResourcePattern(resource string) string {
+func scopeFromResourcePattern(resource string) kernel.ObjectPrefix {
 	parts := strings.SplitN(strings.TrimSpace(resource), ":::", 2)
 	if len(parts) != 2 {
 		return ""
@@ -111,17 +112,17 @@ func scopeFromResourcePattern(resource string) string {
 		return ""
 	}
 	if path == "*" {
-		return "*"
+		return kernel.WildcardPrefix
 	}
 	if before, ok := strings.CutSuffix(path, "/*"); ok {
 		scope := before
 		if scope == "" {
-			return "*"
+			return kernel.WildcardPrefix
 		}
 		if !strings.HasSuffix(scope, "/") {
 			scope += "/"
 		}
-		return scope
+		return kernel.ObjectPrefix(scope)
 	}
 	return ""
 }

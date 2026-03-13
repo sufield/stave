@@ -73,9 +73,20 @@ func (ctl *ControlDefinition) Prepare() error {
 func (ctl *ControlDefinition) initializePreparedParams() {
 	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
 	ctl.Prepared.PrefixExposure = PrefixExposureParams{
-		AllowedPublicPrefixes: ctl.Params.StringSlice("allowed_public_prefixes"),
-		ProtectedPrefixes:     ctl.Params.StringSlice("protected_prefixes"),
+		AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.StringSlice("allowed_public_prefixes")),
+		ProtectedPrefixes:     toObjectPrefixes(ctl.Params.StringSlice("protected_prefixes")),
 	}
+}
+
+func toObjectPrefixes(raw []string) []kernel.ObjectPrefix {
+	if raw == nil {
+		return nil
+	}
+	out := make([]kernel.ObjectPrefix, len(raw))
+	for i, s := range raw {
+		out[i] = kernel.ObjectPrefix(s)
+	}
+	return out
 }
 
 // --- Accessors (Require Prepare) ---
@@ -193,8 +204,8 @@ type PreparedParams struct {
 
 // PrefixExposureParams holds the typed prefix lists for prefix_exposure controls.
 type PrefixExposureParams struct {
-	AllowedPublicPrefixes []string
-	ProtectedPrefixes     []string
+	AllowedPublicPrefixes []kernel.ObjectPrefix
+	ProtectedPrefixes     []kernel.ObjectPrefix
 }
 
 // EvaluatableTypes defines which control types the engine currently supports.

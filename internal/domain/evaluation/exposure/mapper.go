@@ -1,6 +1,9 @@
 package exposure
 
-import "github.com/sufield/stave/internal/pkg/maps"
+import (
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/pkg/maps"
+)
 
 // FactsFromStorage extracts prefix exposure facts from storage properties.
 func FactsFromStorage(props map[string]any) Facts {
@@ -33,7 +36,7 @@ func buildGrants(pe maps.Value) Grants {
 	grants := make(Grants, 0, len(scopes))
 	for _, scope := range scopes {
 		grants = append(grants, Grant{
-			Scope:    scope,
+			Scope:    kernel.ObjectPrefix(scope),
 			SourceID: sources[scope],
 		})
 	}
