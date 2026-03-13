@@ -1,18 +1,26 @@
 package ui
 
-// FirstRunHintMessage is the hint shown on the first CLI invocation.
-const FirstRunHintMessage = "Tip: run `stave init` to scaffold a starter project."
+const (
+	// FirstRunHintMessage is the actionable tip shown to new users.
+	FirstRunHintMessage = "Tip: run `stave init` to scaffold a starter project."
+)
 
-var metaCommands = map[string]bool{
-	"-h": true, "--help": true, "help": true,
-	"--version": true, "version": true, "completion": true,
+// hintSuppressors defines the set of CLI arguments that, if present,
+// will prevent the first-run hint from being displayed.
+var hintSuppressors = map[string]struct{}{
+	"-h":         {},
+	"--help":     {},
+	"help":       {},
+	"--version":  {},
+	"version":    {},
+	"completion": {},
 }
 
-// ShouldSkipFirstRunHint reports whether args contain a meta command
-// (help, version, completion) that should suppress the first-run hint.
+// ShouldSkipFirstRunHint returns true if any of the provided arguments
+// match a known meta-command (e.g., help, version).
 func ShouldSkipFirstRunHint(args []string) bool {
-	for _, a := range args {
-		if metaCommands[a] {
+	for _, arg := range args {
+		if _, suppressed := hintSuppressors[arg]; suppressed {
 			return true
 		}
 	}
