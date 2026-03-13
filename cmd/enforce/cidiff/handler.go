@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -39,20 +40,22 @@ func NewRunner(clock ports.Clock, san kernel.Sanitizer, stdout io.Writer) *Runne
 	}
 }
 
-type diffSummary struct {
+// DiffSummary contains the counts for the comparison result.
+type DiffSummary struct {
 	BaselineFindings int `json:"baseline_findings"`
 	CurrentFindings  int `json:"current_findings"`
 	NewFindings      int `json:"new_findings"`
 	ResolvedFindings int `json:"resolved_findings"`
 }
 
-type diffResult struct {
+// DiffReport represents the structured JSON output of the comparison.
+type DiffReport struct {
 	SchemaVersion      kernel.Schema              `json:"schema_version"`
 	Kind               kernel.OutputKind          `json:"kind"`
-	ComparedAt         any                        `json:"compared_at"`
+	ComparedAt         time.Time                  `json:"compared_at"`
 	CurrentEvaluation  string                     `json:"current_evaluation"`
 	BaselineEvaluation string                     `json:"baseline_evaluation"`
-	Summary            diffSummary                `json:"summary"`
+	Summary            DiffSummary                `json:"summary"`
 	New                []evaluation.BaselineEntry `json:"new"`
 	Resolved           []evaluation.BaselineEntry `json:"resolved"`
 }
@@ -78,13 +81,13 @@ func (r *Runner) Run(_ context.Context, cfg Config) error {
 	baselineEntries = output.SanitizeBaselineEntries(r.Sanitizer, baselineEntries)
 
 	comparison := evaluation.CompareBaseline(baselineEntries, currentEntries)
-	res := diffResult{
+	report := DiffReport{
 		SchemaVersion:      kernel.SchemaCIDiff,
 		Kind:               kernel.KindCIDiff,
 		ComparedAt:         r.Clock.Now().UTC(),
 		CurrentEvaluation:  sanitizePath(r.Sanitizer, currentPath),
 		BaselineEvaluation: sanitizePath(r.Sanitizer, baselinePath),
-		Summary: diffSummary{
+		Summary: DiffSummary{
 			BaselineFindings: len(baselineEntries),
 			CurrentFindings:  len(currentEntries),
 			NewFindings:      len(comparison.New),
@@ -94,14 +97,14 @@ func (r *Runner) Run(_ context.Context, cfg Config) error {
 		Resolved: comparison.Resolved,
 	}
 
-	if res.New == nil {
-		res.New = []evaluation.BaselineEntry{}
+	if report.New == nil {
+		report.New = []evaluation.BaselineEntry{}
 	}
-	if res.Resolved == nil {
-		res.Resolved = []evaluation.BaselineEntry{}
+	if report.Resolved == nil {
+		report.Resolved = []evaluation.BaselineEntry{}
 	}
 
-	if err := jsonutil.WriteIndented(r.Stdout, res); err != nil {
+	if err := jsonutil.WriteIndented(r.Stdout, report); err != nil {
 		return fmt.Errorf("write diff output: %w", err)
 	}
 
