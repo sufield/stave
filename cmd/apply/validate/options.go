@@ -106,10 +106,10 @@ func (o *options) validate() error {
 
 	// Ensure directories exist if in project mode
 	if o.InputPath == "" {
-		if err := cmdutil.ValidateDir("--controls", o.Controls, ui.ErrHintControlsNotAccessible); err != nil {
+		if err := cmdutil.ValidateFlagDir("--controls", o.Controls, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
-		if err := cmdutil.ValidateDir("--observations", o.Observations, ui.ErrHintObservationsNotAccessible); err != nil {
+		if err := cmdutil.ValidateFlagDir("--observations", o.Observations, "", ui.ErrHintObservationsNotAccessible, nil); err != nil {
 			return err
 		}
 	}

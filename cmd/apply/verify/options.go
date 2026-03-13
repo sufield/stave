@@ -57,13 +57,13 @@ func (o *options) normalize() {
 
 // validate ensures all required paths exist and are accessible.
 func (o *options) validate() error {
-	if err := cmdutil.ValidateDir("--before", o.BeforeDir, nil); err != nil {
+	if err := cmdutil.ValidateFlagDir("--before", o.BeforeDir, "", nil, nil); err != nil {
 		return err
 	}
-	if err := cmdutil.ValidateDir("--after", o.AfterDir, nil); err != nil {
+	if err := cmdutil.ValidateFlagDir("--after", o.AfterDir, "", nil, nil); err != nil {
 		return err
 	}
-	if err := cmdutil.ValidateDir("--controls", o.ControlsDir, ui.ErrHintControlsNotAccessible); err != nil {
+	if err := cmdutil.ValidateFlagDir("--controls", o.ControlsDir, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
 		return err
 	}
 	return nil

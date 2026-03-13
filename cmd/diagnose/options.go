@@ -61,10 +61,10 @@ func (o diagnoseOptions) normalizePaths(cmd *cobra.Command) (diagnoseOptions, *p
 }
 
 func (o diagnoseOptions) validateDirs(log *projctx.InferenceLog) error {
-	if err := cmdutil.ValidateDirWithInference("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
+	if err := cmdutil.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
 		return err
 	}
-	return cmdutil.ValidateDirWithInference("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log)
+	return cmdutil.ValidateFlagDir("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log)
 }
 
 func (o diagnoseOptions) parseMaxUnsafe() (time.Duration, error) {

@@ -141,7 +141,7 @@ func prepareFixLoopExecution(cmd *cobra.Command, flags *fixLoopFlagsType) (fixLo
 
 func validateFixLoopDirs(flags *fixLoopFlagsType) error {
 	for _, dir := range []struct{ flag, path string }{{"--before", flags.beforeDir}, {"--after", flags.afterDir}, {"--controls", flags.controlsDir}} {
-		if err := cmdutil.ValidateDir(dir.flag, dir.path, nil); err != nil {
+		if err := cmdutil.ValidateFlagDir(dir.flag, dir.path, "", nil, nil); err != nil {
 			return err
 		}
 	}

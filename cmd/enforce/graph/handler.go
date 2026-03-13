@@ -80,10 +80,10 @@ type input struct {
 func prepareInput(opts *options) (input, error) {
 	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
 	observationsDir := fsutil.CleanUserPath(opts.ObservationsDir)
-	if err := cmdutil.ValidateDir("--controls", controlsDir, nil); err != nil {
+	if err := cmdutil.ValidateFlagDir("--controls", controlsDir, "", nil, nil); err != nil {
 		return input{}, err
 	}
-	if err := cmdutil.ValidateDir("--observations", observationsDir, nil); err != nil {
+	if err := cmdutil.ValidateFlagDir("--observations", observationsDir, "", nil, nil); err != nil {
 		return input{}, err
 	}
 	if err := validateFormat(opts.Format); err != nil {

@@ -112,7 +112,7 @@ func TestDiagnoseOptionsNormalizeAndValidate_DirErrors(t *testing.T) {
 		ControlsDir:     notDir,
 		ObservationsDir: notDir,
 	}).normalizePaths(cmd)
-	if err := opts.validateDirs(inferLog); err == nil || !strings.Contains(err.Error(), "--controls must be a directory") {
+	if err := opts.validateDirs(inferLog); err == nil || !strings.Contains(err.Error(), "is not a directory") {
 		t.Fatalf("expected controls directory error, got %v", err)
 	}
 }
