@@ -1,17 +1,76 @@
 package extractor
 
-import "github.com/sufield/stave/internal/domain/kernel"
+import (
+	"bytes"
+	"fmt"
+	"text/template"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
+
+// templateData holds the variables used across all scaffolded files.
+type templateData struct {
+	Name          string
+	SchemaVersion string
+}
+
+func newTemplateData(name string) templateData {
+	return templateData{
+		Name:          name,
+		SchemaVersion: string(kernel.SchemaObservation),
+	}
+}
+
+// --- File Generators ---
 
 func extractorReadme(name string) string {
-	return normalizeTemplate(`# ` + name + ` Extractor
+	return render("readme", readmeTmpl, newTemplateData(name))
+}
+
+func extractorMetadata(name string) string {
+	return render("metadata", metadataTmpl, newTemplateData(name))
+}
+
+func extractorTransformGo(name string) string {
+	return render("transform", transformTmpl, newTemplateData(name))
+}
+
+func extractorTransformTestGo(name string) string {
+	return render("test", testTmpl, newTemplateData(name))
+}
+
+func extractorMakefile(name string) string {
+	return render("makefile", makefileTmpl, newTemplateData(name))
+}
+
+// --- Helper ---
+
+func render(name, tpl string, data templateData) string {
+	// Create template and add a helper for backticks in generated code
+	t := template.Must(template.New(name).Funcs(template.FuncMap{
+		"tick": func() string { return "`" },
+	}).Parse(tpl))
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		// This should only happen during development (syntax error in template)
+		panic(fmt.Sprintf("failed to render template %s: %v", name, err))
+	}
+
+	return normalizeTemplate(buf.String())
+}
+
+// --- Templates ---
+
+const readmeTmpl = `# {{ .Name }} Extractor
 
 Custom Stave extractor for transforming raw input into observation snapshots.
 
 ## Usage
 
-1. Edit ` + "`transform.go`" + ` to implement your extraction logic.
-2. Run tests: ` + "`make test`" + `
-3. Build: ` + "`make build`" + `
+1. Edit {{ tick }}transform.go{{ tick }} to implement your extraction logic.
+2. Run tests: {{ tick }}make test{{ tick }}
+3. Build: {{ tick }}make build{{ tick }}
 
 ## Workflow
 
@@ -25,30 +84,17 @@ stave validate --in observations/snapshot.json
 
 ## Metadata
 
-See ` + "`extractor.yaml`" + ` for extractor name, version, and source type.
-`)
-}
+See {{ tick }}extractor.yaml{{ tick }} for extractor name, version, and source type.
+`
 
-func extractorMetadata(name string) string {
-	return normalizeTemplate(`name: ` + name + `
+const metadataTmpl = `
+name: {{ .Name }}
 version: "0.1.0"
-source_type: ` + name + `
-description: "Custom extractor for ` + name + ` data sources"
-`)
-}
+source_type: {{ .Name }}
+description: "Custom extractor for {{ .Name }} data sources"
+`
 
-func extractorTransformGo(name string) string {
-	return normalizeTemplate(extractorTransformProgram(name))
-}
-
-func extractorTransformProgram(name string) string {
-	return extractorTransformTypes() +
-		extractorTransformFunction(name) +
-		extractorTransformMain(name)
-}
-
-func extractorTransformTypes() string {
-	return `package main
+const transformTmpl = `package main
 
 import (
 	"encoding/json"
@@ -57,32 +103,28 @@ import (
 	"time"
 )
 
-// Observation represents a Stave observation snapshot (obs.v0.1).
+// Observation represents a Stave observation snapshot.
 type Observation struct {
-	SchemaVersion string    ` + "`json:\"schema_version\"`" + `
-	CapturedAt    time.Time ` + "`json:\"captured_at\"`" + `
-	GeneratedBy   Generated ` + "`json:\"generated_by\"`" + `
-	Assets     []Asset ` + "`json:\"assets\"`" + `
+	SchemaVersion string    {{ tick }}json:"schema_version"{{ tick }}
+	CapturedAt    time.Time {{ tick }}json:"captured_at"{{ tick }}
+	GeneratedBy   Generated {{ tick }}json:"generated_by"{{ tick }}
+	Assets        []Asset   {{ tick }}json:"assets"{{ tick }}
 }
 
 // Generated describes the tool that produced this observation.
 type Generated struct {
-	Tool       string ` + "`json:\"tool\"`" + `
-	Version    string ` + "`json:\"version\"`" + `
-	SourceType string ` + "`json:\"source_type\"`" + `
+	Tool       string {{ tick }}json:"tool"{{ tick }}
+	Version    string {{ tick }}json:"version"{{ tick }}
+	SourceType string {{ tick }}json:"source_type"{{ tick }}
 }
 
 // Asset represents a single observed asset.
 type Asset struct {
-	ID         string         ` + "`json:\"id\"`" + `
-	Type       string         ` + "`json:\"type\"`" + `
-	Properties map[string]any ` + "`json:\"properties\"`" + `
-}
-`
+	ID         string         {{ tick }}json:"id"{{ tick }}
+	Type       string         {{ tick }}json:"type"{{ tick }}
+	Properties map[string]any {{ tick }}json:"properties"{{ tick }}
 }
 
-func extractorTransformFunction(name string) string {
-	return `
 // Transform reads raw input and produces a Stave observation snapshot.
 func Transform(inputPath string) (*Observation, error) {
 	data, err := os.ReadFile(inputPath)
@@ -94,12 +136,12 @@ func Transform(inputPath string) (*Observation, error) {
 	_ = data
 
 	obs := &Observation{
-		SchemaVersion: "` + string(kernel.SchemaObservation) + `",
+		SchemaVersion: "{{ .SchemaVersion }}",
 		CapturedAt:    time.Now().UTC(),
 		GeneratedBy: Generated{
-			Tool:       "` + name + `",
+			Tool:       "{{ .Name }}",
 			Version:    "0.1.0",
-			SourceType: "` + name + `",
+			SourceType: "{{ .Name }}",
 		},
 		Assets: []Asset{
 			{
@@ -113,13 +155,10 @@ func Transform(inputPath string) (*Observation, error) {
 	}
 	return obs, nil
 }
-`
-}
 
-func extractorTransformMain(name string) string {
-	return `func main() {
+func main() {
 	if len(os.Args) < 3 || os.Args[1] != "--input" {
-		fmt.Fprintln(os.Stderr, "Usage: ` + name + ` --input <file> [--output <file>]")
+		fmt.Fprintln(os.Stderr, "Usage: {{ .Name }} --input <file> [--output <file>]")
 		os.Exit(2)
 	}
 
@@ -149,10 +188,8 @@ func extractorTransformMain(name string) string {
 	}
 }
 `
-}
 
-func extractorTransformTestGo(name string) string {
-	return normalizeTemplate(`package main
+const testTmpl = `package main
 
 import (
 	"os"
@@ -165,7 +202,7 @@ func TestTransform(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	if _, err := tmpFile.WriteString(` + "`{}`" + `); err != nil {
+	if _, err := tmpFile.WriteString("{}"); err != nil {
 		t.Fatalf("write temp file: %v", err)
 	}
 	tmpFile.Close()
@@ -174,29 +211,26 @@ func TestTransform(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Transform() error: %v", err)
 	}
-	if obs.SchemaVersion != "` + string(kernel.SchemaObservation) + `" {
-		t.Errorf("SchemaVersion = %q, want ` + string(kernel.SchemaObservation) + `", obs.SchemaVersion)
+	if obs.SchemaVersion != "{{ .SchemaVersion }}" {
+		t.Errorf("SchemaVersion = %q, want {{ .SchemaVersion }}", obs.SchemaVersion)
 	}
-	if obs.GeneratedBy.SourceType != "` + name + `" {
-		t.Errorf("SourceType = %q, want ` + name + `", obs.GeneratedBy.SourceType)
+	if obs.GeneratedBy.SourceType != "{{ .Name }}" {
+		t.Errorf("SourceType = %q, want {{ .Name }}", obs.GeneratedBy.SourceType)
 	}
 	if len(obs.Assets) == 0 {
 		t.Error("expected at least one asset")
 	}
 }
-`)
-}
+`
 
-func extractorMakefile(name string) string {
-	return normalizeTemplate(`.PHONY: build test clean
+const makefileTmpl = `.PHONY: build test clean
 
 build:
-	go build -o ` + name + ` .
+	go build -o {{ .Name }} .
 
 test:
 	go test -v ./...
 
 clean:
-	rm -f ` + name + `
-`)
-}
+	rm -f {{ .Name }}
+`
