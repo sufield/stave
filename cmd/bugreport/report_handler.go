@@ -44,8 +44,14 @@ func runReport(cmd *cobra.Command, flags *reportFlags) error {
 		}
 	}
 
+	logCandidates := make([]string, 0, 2)
+	if p := strings.TrimSpace(cmdutil.LogFilePath(cmd)); p != "" {
+		logCandidates = append(logCandidates, fsutil.CleanUserPath(p))
+	}
+	logCandidates = append(logCandidates, filepath.Join(prepared.cwd, "stave.log"))
+
 	var logPath string
-	if p, ok := findLogPath(cmd, prepared.cwd); ok {
+	if p, ok := FindLogPath(logCandidates...); ok {
 		logPath = p
 	}
 

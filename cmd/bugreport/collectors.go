@@ -2,50 +2,50 @@ package bugreport
 
 import (
 	"os"
-	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"sort"
 	"strings"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/doctor"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
-type doctorResult struct {
+// DoctorResult represents the output of the internal health check.
+type DoctorResult struct {
 	Ready  bool           `json:"ready"`
 	Checks []doctor.Check `json:"checks"`
 }
 
-type buildInfo struct {
+// BuildInfo contains details about the compiled binary and runtime environment.
+type BuildInfo struct {
 	Available bool              `json:"available"`
 	GoVersion string            `json:"go_version,omitempty"`
 	Path      string            `json:"path,omitempty"`
-	Main      buildModule       `json:"main"`
-	Deps      []buildModule     `json:"deps,omitempty"`
+	Main      BuildModule       `json:"main"`
+	Deps      []BuildModule     `json:"deps,omitempty"`
 	Settings  map[string]string `json:"settings,omitempty"`
 	Runtime   map[string]string `json:"runtime"`
 }
 
-type buildModule struct {
+// BuildModule describes a single Go module dependency.
+type BuildModule struct {
 	Path    string       `json:"path,omitempty"`
 	Version string       `json:"version,omitempty"`
 	Sum     string       `json:"sum,omitempty"`
-	Replace *buildModule `json:"replace,omitempty"`
+	Replace *BuildModule `json:"replace,omitempty"`
 }
 
-type envEntry struct {
+// EnvEntry is a key-value pair from the process environment.
+type EnvEntry struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-func collectBuildInfo() buildInfo {
-	out := buildInfo{
+// CollectBuildInfo gathers versioning and build metadata.
+func CollectBuildInfo() BuildInfo {
+	out := BuildInfo{
 		Runtime: map[string]string{
 			"goos":   runtime.GOOS,
 			"goarch": runtime.GOARCH,
@@ -59,12 +59,11 @@ func collectBuildInfo() buildInfo {
 	out.GoVersion = info.GoVersion
 	out.Path = info.Path
 	out.Main = toBuildModule(info.Main)
-	out.Deps = make([]buildModule, 0, len(info.Deps))
+	out.Deps = make([]BuildModule, 0, len(info.Deps))
 	for _, dep := range info.Deps {
-		if dep == nil {
-			continue
+		if dep != nil {
+			out.Deps = append(out.Deps, toBuildModule(*dep))
 		}
-		out.Deps = append(out.Deps, toBuildModule(*dep))
 	}
 	if len(info.Settings) > 0 {
 		out.Settings = make(map[string]string, len(info.Settings))
@@ -75,8 +74,8 @@ func collectBuildInfo() buildInfo {
 	return out
 }
 
-func toBuildModule(in debug.Module) buildModule {
-	out := buildModule{
+func toBuildModule(in debug.Module) BuildModule {
+	out := BuildModule{
 		Path:    in.Path,
 		Version: in.Version,
 		Sum:     in.Sum,
@@ -88,8 +87,10 @@ func toBuildModule(in debug.Module) buildModule {
 	return out
 }
 
-func collectEnv(environ []string) []envEntry {
-	entries := make([]envEntry, 0, 32)
+// FilterEnv processes a raw environment slice, filtering for relevant
+// keys and sanitizing secrets.
+func FilterEnv(environ []string) []EnvEntry {
+	entries := make([]EnvEntry, 0, 16)
 	for _, kv := range environ {
 		key, value, ok := strings.Cut(kv, "=")
 		if !ok || !shouldCollectEnvKey(key) {
@@ -101,17 +102,23 @@ func collectEnv(environ []string) []envEntry {
 		if isSensitiveEnvKey(key) {
 			value = "[SANITIZED]"
 		}
-		entries = append(entries, envEntry{Key: key, Value: value})
+		entries = append(entries, EnvEntry{Key: key, Value: value})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Key < entries[j].Key })
 	return entries
 }
 
-func collectArgs(args []string) []string {
-	return logging.SanitizeArgs(append([]string(nil), args...))
+// SanitizeArgs cleans CLI arguments to remove potential credentials.
+func SanitizeArgs(args []string) []string {
+	if len(args) == 0 {
+		return nil
+	}
+	cp := append([]string(nil), args...)
+	return logging.SanitizeArgs(cp)
 }
 
 func shouldCollectEnvKey(key string) bool {
+	key = strings.ToUpper(key)
 	if strings.HasPrefix(key, "STAVE_") || strings.HasPrefix(key, "AWS_") {
 		return true
 	}
@@ -147,46 +154,39 @@ func findConfigPath() (string, bool) {
 	return path, true
 }
 
-func findLogPath(cmd *cobra.Command, cwd string) (string, bool) {
-	candidates := make([]string, 0, 2)
-	if p := strings.TrimSpace(cmdutil.LogFilePath(cmd)); p != "" {
-		candidates = append(candidates, fsutil.CleanUserPath(p))
-	}
-	candidates = append(candidates, filepath.Join(cwd, "stave.log"))
-
+// FindLogPath returns the first existing file from the given candidates.
+func FindLogPath(candidates ...string) (string, bool) {
 	for _, c := range candidates {
-		if strings.TrimSpace(c) == "" {
+		c = strings.TrimSpace(c)
+		if c == "" {
 			continue
 		}
 		info, err := os.Stat(c)
-		if err != nil || info.IsDir() {
-			continue
+		if err == nil && !info.IsDir() {
+			return c, true
 		}
-		return c, true
 	}
 	return "", false
 }
 
-func tailBytesByLine(data []byte, maxLines int) []byte {
+// TailBytesByLine returns the last N lines of a byte slice.
+func TailBytesByLine(data []byte, maxLines int) []byte {
 	if maxLines <= 0 || len(data) == 0 {
 		return nil
 	}
-	// Trim trailing newline so it doesn't count as an extra empty line.
+	// Handle trailing newline so it doesn't count as an extra empty line.
 	trimmed := data
 	if trimmed[len(trimmed)-1] == '\n' {
 		trimmed = trimmed[:len(trimmed)-1]
 	}
-	// Scan backward counting newlines.
 	count := 0
-	i := len(trimmed) - 1
-	for i >= 0 {
+	for i := len(trimmed) - 1; i >= 0; i-- {
 		if trimmed[i] == '\n' {
 			count++
 			if count == maxLines {
 				return trimmed[i+1:]
 			}
 		}
-		i--
 	}
 	// Fewer lines than maxLines — return original data.
 	return data

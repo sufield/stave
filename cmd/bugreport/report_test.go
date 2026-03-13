@@ -27,7 +27,7 @@ func TestCollectBugReportEnv_RedactsSensitive(t *testing.T) {
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "super-secret")
 	t.Setenv("STAVE_DEBUG", "1")
 
-	entries := collectEnv(os.Environ())
+	entries := FilterEnv(os.Environ())
 	got := make(map[string]string, len(entries))
 	for _, e := range entries {
 		got[e.Key] = e.Value
@@ -140,7 +140,7 @@ func TestRunBugReport_CreatesBundle(t *testing.T) {
 		t.Fatal("config should be sanitized")
 	}
 
-	var envEntries []envEntry
+	var envEntries []EnvEntry
 	if err := json.Unmarshal(files["env.json"], &envEntries); err != nil {
 		t.Fatalf("unmarshal env.json: %v", err)
 	}
