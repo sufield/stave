@@ -11,29 +11,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-// testCmdWithOutputMode builds a cobra command tree where the root has an
-// --output persistent flag set to mode ("json" or "text"). This mirrors the
-// real root command setup that cmdutil.IsJSONMode inspects.
-func testCmdWithOutputMode(mode string) *cobra.Command {
-	root := &cobra.Command{Use: "root"}
-	root.PersistentFlags().String("output", "text", "")
-	_ = root.PersistentFlags().Set("output", mode)
-	child := &cobra.Command{Use: "diagnose-test"}
-	root.AddCommand(child)
-	return child
-}
 
 type diagnoseObsRepoStub struct {
 	snapshots []asset.Snapshot
@@ -51,19 +40,7 @@ func (s diagnoseInvRepoStub) LoadControls(context.Context, string) ([]policy.Con
 	return s.controls, nil
 }
 
-type diagnoseEvalRepoStub struct {
-	result *evaluation.Result
-}
-
-func (s diagnoseEvalRepoStub) LoadFromFile(string) (*evaluation.Result, error) {
-	return s.result, nil
-}
-
-func (s diagnoseEvalRepoStub) LoadFromReader(_ io.Reader, _ string) (*evaluation.Result, error) {
-	return s.result, nil
-}
-
-func TestDiagnoseOptionsNormalizeAndValidate(t *testing.T) {
+func TestDiagnosePathNormalization(t *testing.T) {
 	ctlDir := filepath.Join(t.TempDir(), "ctl")
 	obsDir := filepath.Join(t.TempDir(), "obs")
 	if err := os.MkdirAll(ctlDir, 0o755); err != nil {
@@ -73,99 +50,80 @@ func TestDiagnoseOptionsNormalizeAndValidate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := &cobra.Command{Use: "test"}
-	cmd.Flags().String("controls", "", "")
-	cmd.Flags().String("observations", "", "")
-	if err := cmd.Flags().Set("controls", ctlDir); err != nil {
-		t.Fatal(err)
-	}
-	if err := cmd.Flags().Set("observations", obsDir); err != nil {
-		t.Fatal(err)
+	cleaned := fsutil.CleanUserPath(ctlDir + string(os.PathSeparator) + ".")
+	if cleaned != ctlDir {
+		t.Fatalf("CleanUserPath = %q, want %q", cleaned, ctlDir)
 	}
 
-	opts, inferLog := (diagnoseOptions{
-		ControlsDir:     ctlDir + string(os.PathSeparator) + ".",
-		ObservationsDir: obsDir + string(os.PathSeparator) + ".",
-	}).normalizePaths(cmd)
-	if err := opts.validateDirs(inferLog); err != nil {
-		t.Fatalf("normalizePaths+validateDirs() error = %v", err)
-	}
-	if opts.ControlsDir != ctlDir || opts.ObservationsDir != obsDir {
-		t.Fatalf("normalized dirs = (%q, %q), want (%q, %q)", opts.ControlsDir, opts.ObservationsDir, ctlDir, obsDir)
+	if err := cmdutil.CheckDir(ctlDir); err != nil {
+		t.Fatalf("CheckDir(%q) error = %v", ctlDir, err)
 	}
 }
 
-func TestDiagnoseOptionsNormalizeAndValidate_DirErrors(t *testing.T) {
+func TestDiagnosePathNormalization_DirErrors(t *testing.T) {
 	tmp := t.TempDir()
 	notDir := filepath.Join(tmp, "file.txt")
 	if err := os.WriteFile(notDir, []byte("x"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
-	cmd := &cobra.Command{Use: "test"}
-	cmd.Flags().String("controls", "", "")
-	cmd.Flags().String("observations", "", "")
-	_ = cmd.Flags().Set("controls", notDir)
-	_ = cmd.Flags().Set("observations", notDir)
-
-	opts, inferLog := (diagnoseOptions{
-		ControlsDir:     notDir,
-		ObservationsDir: notDir,
-	}).normalizePaths(cmd)
-	if err := opts.validateDirs(inferLog); err == nil || !strings.Contains(err.Error(), "is not a directory") {
-		t.Fatalf("expected controls directory error, got %v", err)
+	if err := cmdutil.CheckDir(notDir); err == nil || !strings.Contains(err.Error(), "is not a directory") {
+		t.Fatalf("expected directory error, got %v", err)
 	}
 }
 
-func TestDiagnoseOptionsParseHelpers(t *testing.T) {
-	maxDur, err := (diagnoseOptions{MaxUnsafe: "7d"}).parseMaxUnsafe()
+func TestDiagnoseParseHelpers(t *testing.T) {
+	maxDur, err := timeutil.ParseDurationFlag("7d", "--max-unsafe")
 	if err != nil || maxDur != 7*24*time.Hour {
-		t.Fatalf("parseMaxUnsafe() = (%s, %v), want (168h, nil)", maxDur, err)
+		t.Fatalf("ParseDurationFlag() = (%s, %v), want (168h, nil)", maxDur, err)
 	}
-	if _, parseErr := (diagnoseOptions{MaxUnsafe: "bad"}).parseMaxUnsafe(); parseErr == nil {
+	if _, parseErr := timeutil.ParseDurationFlag("bad", "--max-unsafe"); parseErr == nil {
 		t.Fatal("expected max-unsafe parse error")
 	}
 
-	clock, err := (diagnoseOptions{}).parseClock()
+	clock, err := compose.ResolveClock("")
 	if err != nil {
-		t.Fatalf("parseClock() default error = %v", err)
+		t.Fatalf("ResolveClock() default error = %v", err)
 	}
 	if _, ok := clock.(clockadp.RealClock); !ok {
 		t.Fatalf("default clock type = %T, want clockadp.RealClock", clock)
 	}
 
-	clock, err = (diagnoseOptions{NowTime: "2026-01-15T00:00:00Z"}).parseClock()
+	clock, err = compose.ResolveClock("2026-01-15T00:00:00Z")
 	if err != nil {
-		t.Fatalf("parseClock() fixed error = %v", err)
+		t.Fatalf("ResolveClock() fixed error = %v", err)
 	}
 	fixed, ok := clock.(clockadp.FixedClock)
 	if !ok || !time.Time(fixed).Equal(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)) {
 		t.Fatalf("fixed clock = %#v", clock)
 	}
 
-	if _, err := (diagnoseOptions{NowTime: "bad"}).parseClock(); err == nil {
+	if _, err := compose.ResolveClock("bad"); err == nil {
 		t.Fatal("expected now parse error")
 	}
 }
 
-func TestBuildDiagnoseConfigAndOutputHelpers(t *testing.T) {
-	opts := diagnoseOptions{
+func TestRunnerBuildAppConfig(t *testing.T) {
+	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
+
+	cfg := Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
 		PreviousOutput:  "-",
 	}
-	cfg := buildDiagnoseConfig(opts, 24*time.Hour, clockadp.RealClock{})
-	if cfg.OutputReader != os.Stdin || cfg.OutputFile != "" {
-		t.Fatalf("stdin config mismatch: %#v", cfg)
+	appCfg := runner.buildAppConfig(cfg, 24*time.Hour)
+	if appCfg.OutputReader != os.Stdin || appCfg.OutputFile != "" {
+		t.Fatalf("stdin config mismatch: %#v", appCfg)
 	}
 
-	cfg = buildDiagnoseConfig(diagnoseOptions{
+	cfg = Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
 		PreviousOutput:  "out.json",
-	}, 24*time.Hour, clockadp.RealClock{})
-	if cfg.OutputFile != "out.json" || cfg.OutputReader != nil {
-		t.Fatalf("file config mismatch: %#v", cfg)
+	}
+	appCfg = runner.buildAppConfig(cfg, 24*time.Hour)
+	if appCfg.OutputFile != "out.json" || appCfg.OutputReader != nil {
+		t.Fatalf("file config mismatch: %#v", appCfg)
 	}
 
 	var buf bytes.Buffer
@@ -196,10 +154,8 @@ func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 		},
 	}
 
-	jsonCmd := testCmdWithOutputMode("json")
-
 	var buf bytes.Buffer
-	if err := writeDiagnoseJSON(jsonCmd, &buf, report); err != nil {
+	if err := writeDiagnoseJSON(&buf, report, true); err != nil {
 		t.Fatalf("writeDiagnoseJSON() error = %v", err)
 	}
 
@@ -211,9 +167,8 @@ func TestWriteDiagnoseJSON_EnvelopeMode(t *testing.T) {
 		t.Fatalf("expected envelope output, got %s", buf.String())
 	}
 
-	textCmd := testCmdWithOutputMode("text")
 	buf.Reset()
-	if err := writeDiagnoseJSON(textCmd, &buf, report); err != nil {
+	if err := writeDiagnoseJSON(&buf, report, false); err != nil {
 		t.Fatalf("writeDiagnoseJSON() text mode error = %v", err)
 	}
 	if strings.Contains(buf.String(), "\"ok\"") {
@@ -231,37 +186,37 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := &cobra.Command{Use: "diagnose-test"}
-	cmd.Flags().String("controls", "", "")
-	cmd.Flags().String("observations", "", "")
-	_ = cmd.Flags().Set("controls", ctlDir)
-	_ = cmd.Flags().Set("observations", obsDir)
-
-	opts := &diagnoseOptions{
+	// Test max-unsafe validation error via Runner.
+	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
+	cfg := Config{
 		ControlsDir:     ctlDir,
 		ObservationsDir: obsDir,
 		MaxUnsafe:       "bad-duration",
-		Format:          "text",
+		Format:          ui.OutputFormatText,
+		Stdout:          &bytes.Buffer{},
+		Stderr:          &bytes.Buffer{},
 	}
-	if err := runDiagnose(cmd, opts); err == nil || !strings.Contains(err.Error(), "invalid --max-unsafe") {
+	if err := runner.Run(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "invalid --max-unsafe") {
 		t.Fatalf("expected max-unsafe validation error, got %v", err)
 	}
 
-	opts.MaxUnsafe = "24h"
-	compose.OverrideProviderForTest(t, &compose.Provider{
+	// Test observation loader error.
+	cfg.MaxUnsafe = "24h"
+	badProvider := &compose.Provider{
 		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
 			return nil, os.ErrPermission
 		},
 		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
 			return nil, nil
 		},
-	})
-	if err := runDiagnose(cmd, opts); err == nil || !strings.Contains(err.Error(), "create observation loader") {
+	}
+	runner = NewRunner(badProvider, clockadp.RealClock{})
+	if err := runner.Run(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "create observation loader") {
 		t.Fatalf("expected observation loader error, got %v", err)
 	}
 }
 
-func TestWriteDiagnoseReport_Branches(t *testing.T) {
+func TestRunnerRenderReport_Branches(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{},
 		Summary: diagnosis.Summary{
@@ -276,10 +231,13 @@ func TestWriteDiagnoseReport_Branches(t *testing.T) {
 		},
 	}
 
-	cmd := testCmdWithOutputMode("text")
+	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
 
 	var out bytes.Buffer
-	if err := writeDiagnoseReport(cmd, &out, ui.OutputFormatText, report); err != nil {
+	if err := runner.renderReport(Config{
+		Format: ui.OutputFormatText,
+		Stdout: &out,
+	}, report); err != nil {
 		t.Fatalf("text report error = %v", err)
 	}
 	if !strings.Contains(out.String(), "Summary") {
@@ -287,7 +245,10 @@ func TestWriteDiagnoseReport_Branches(t *testing.T) {
 	}
 
 	out.Reset()
-	if err := writeDiagnoseReport(cmd, &out, ui.OutputFormatJSON, report); err != nil {
+	if err := runner.renderReport(Config{
+		Format: ui.OutputFormatJSON,
+		Stdout: &out,
+	}, report); err != nil {
 		t.Fatalf("json report error = %v", err)
 	}
 	if !strings.Contains(out.String(), "\"schema_version\"") {

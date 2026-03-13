@@ -1,14 +1,240 @@
 package diagnose
 
 import (
+	"context"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	"github.com/sufield/stave/internal/adapters/output"
+	outtext "github.com/sufield/stave/internal/adapters/output/text"
+	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/trace"
 )
 
-// NewDiagnoseCmd constructs the diagnose command with closure-scoped flags.
+// Config holds the inputs for the diagnostic engine.
+type Config struct {
+	ControlsDir     string
+	ObservationsDir string
+	PreviousOutput  string
+	MaxUnsafe       string
+	NowTime         string
+	Format          ui.OutputFormat
+	Quiet           bool
+	Cases           []string
+	SignalContains  string
+	Template        string
+
+	// Detail Mode (single-finding deep dive)
+	ControlID string
+	AssetID   string
+
+	Stdout io.Writer
+	Stderr io.Writer
+
+	// Global flag state passed through from the CLI layer.
+	Sanitizer    kernel.Sanitizer
+	EnvelopeMode bool
+}
+
+// IsDetailMode returns true if both IDs are provided for a deep-dive analysis.
+func (c Config) IsDetailMode() bool {
+	return c.ControlID != "" && c.AssetID != ""
+}
+
+// Runner orchestrates the diagnostic analysis.
+type Runner struct {
+	Provider *compose.Provider
+	Clock    ports.Clock
+}
+
+// NewRunner initializes a runner with the required dependencies.
+func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
+	return &Runner{
+		Provider: p,
+		Clock:    clock,
+	}
+}
+
+// Run executes the diagnostic workflow.
+func (r *Runner) Run(ctx context.Context, cfg Config) error {
+	if err := r.validate(cfg); err != nil {
+		return err
+	}
+	if cfg.IsDetailMode() {
+		return r.runDetailMode(ctx, cfg)
+	}
+	return r.runStandardDiagnosis(ctx, cfg)
+}
+
+func (r *Runner) validate(cfg Config) error {
+	if (cfg.ControlID != "" && cfg.AssetID == "") || (cfg.ControlID == "" && cfg.AssetID != "") {
+		return fmt.Errorf("detail mode requires both --control-id AND --asset-id")
+	}
+	return nil
+}
+
+func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
+	maxDuration, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
+	if err != nil {
+		return err
+	}
+
+	diagnoseRun, err := r.newDiagnoseRun()
+	if err != nil {
+		return err
+	}
+
+	baseCfg := r.buildAppConfig(cfg, maxDuration)
+	report, err := diagnoseRun.Execute(ctx, baseCfg)
+	if err != nil {
+		return err
+	}
+
+	report = output.SanitizeReport(cfg.Sanitizer, report)
+	report = filterDiagnosisReport(report, cfg.Cases, cfg.SignalContains)
+
+	if cfg.Template != "" {
+		return r.renderTemplate(cfg, report)
+	}
+	return r.renderReport(cfg, report)
+}
+
+func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
+	if err := validateFindingDetailArgs(cfg.ControlID, cfg.AssetID); err != nil {
+		return err
+	}
+
+	maxDuration, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
+	if err != nil {
+		return err
+	}
+
+	diagnoseRun, err := r.newDiagnoseRun()
+	if err != nil {
+		return err
+	}
+
+	baseCfg := r.buildAppConfig(cfg, maxDuration)
+	detail, err := diagnoseRun.ExecuteFindingDetail(ctx, appdiagnose.FindingDetailConfig{
+		DiagnoseConfig: baseCfg,
+		ControlID:      kernel.ControlID(cfg.ControlID),
+		AssetID:        asset.ID(cfg.AssetID),
+		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.YAMLPredicateParser),
+		IDGen:          crypto.NewHasher(),
+	})
+	if err != nil {
+		return err
+	}
+
+	out := compose.ResolveStdout(cfg.Stdout, cfg.Quiet, cfg.Format)
+	if cfg.Format.IsJSON() {
+		return writeFindingDetailJSON(out, detail)
+	}
+	if err := outtext.WriteFindingDetail(out, detail); err != nil {
+		return err
+	}
+	return ui.ErrViolationsFound
+}
+
+func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
+	obsLoader, err := r.Provider.NewObservationRepo()
+	if err != nil {
+		return nil, fmt.Errorf("create observation loader: %w", err)
+	}
+	ctlLoader, err := r.Provider.NewControlRepo()
+	if err != nil {
+		return nil, fmt.Errorf("create control loader: %w", err)
+	}
+	evalLoader := evaljson.NewLoader()
+	return appdiagnose.NewRun(obsLoader, ctlLoader, evalLoader)
+}
+
+func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) appdiagnose.Config {
+	appCfg := appdiagnose.Config{
+		ControlsDir:     cfg.ControlsDir,
+		ObservationsDir: cfg.ObservationsDir,
+		MaxUnsafe:       maxDuration,
+		Clock:           r.Clock,
+		PredicateParser: ctlyaml.YAMLPredicateParser,
+	}
+	if cfg.PreviousOutput == "-" {
+		appCfg.OutputReader = os.Stdin
+	} else {
+		appCfg.OutputFile = cfg.PreviousOutput
+	}
+	return appCfg
+}
+
+func (r *Runner) renderTemplate(cfg Config, report *diagnosis.Report) error {
+	out := compose.ResolveStdout(cfg.Stdout, cfg.Quiet, "text")
+	if err := ui.ExecuteTemplate(out, cfg.Template, safetyenvelope.NewDiagnose(report)); err != nil {
+		return err
+	}
+	return diagnosisExit(report)
+}
+
+func (r *Runner) renderReport(cfg Config, report *diagnosis.Report) error {
+	out := compose.ResolveStdout(cfg.Stdout, cfg.Quiet, cfg.Format)
+	if cfg.Format.IsJSON() {
+		if err := writeDiagnoseJSON(out, report, cfg.EnvelopeMode); err != nil {
+			return err
+		}
+	} else {
+		if err := outtext.WriteDiagnosisReport(out, report, func(level, msg string) string {
+			return ui.SeverityLabel(level, msg, out)
+		}); err != nil {
+			return err
+		}
+	}
+	return diagnosisExit(report)
+}
+
+func diagnosisExit(report *diagnosis.Report) error {
+	if len(report.Issues) > 0 {
+		return ui.ErrDiagnosticsFound
+	}
+	return nil
+}
+
+// --- Internal Helper: CLI Options ---
+
+type diagnoseOptions struct {
+	ControlsDir     string
+	ObservationsDir string
+	PreviousOutput  string
+	MaxUnsafe       string
+	NowTime         string
+	Format          string
+	Quiet           bool
+	Cases           []string
+	SignalContains  string
+	Template        string
+	ControlID       string
+	AssetID         string
+}
+
+// NewDiagnoseCmd constructs the diagnose command.
 func NewDiagnoseCmd() *cobra.Command {
 	var opts diagnoseOptions
 
@@ -81,7 +307,66 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runDiagnose(cmd, &opts)
+			// 1. Resolve environment and defaults
+			resolver, _ := projctx.NewResolver()
+			engine := projctx.NewInferenceEngine(resolver)
+			clock, err := compose.ResolveClock(opts.NowTime)
+			if err != nil {
+				return err
+			}
+
+			// 2. Resolve paths with inference
+			controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
+			obsDir := fsutil.CleanUserPath(opts.ObservationsDir)
+			if !cmd.Flags().Changed("controls") {
+				if inferred := engine.InferDir("controls", ""); inferred != "" {
+					controlsDir = inferred
+				}
+			}
+			if !cmd.Flags().Changed("observations") {
+				if inferred := engine.InferDir("observations", ""); inferred != "" {
+					obsDir = inferred
+				}
+			}
+
+			// 3. Validate directories
+			if dirErr := cmdutil.ValidateFlagDir("--controls", controlsDir, "controls", ui.ErrHintControlsNotAccessible, engine.Log); dirErr != nil {
+				return dirErr
+			}
+			if dirErr := cmdutil.ValidateFlagDir("--observations", obsDir, "observations", ui.ErrHintObservationsNotAccessible, engine.Log); dirErr != nil {
+				return dirErr
+			}
+
+			// 4. Resolve formatting
+			fmtValue, err := compose.ResolveFormatValue(cmd, opts.Format)
+			if err != nil {
+				return err
+			}
+
+			flags := cmdutil.GetGlobalFlags(cmd)
+
+			// 5. Build Config
+			cfg := Config{
+				ControlsDir:     controlsDir,
+				ObservationsDir: obsDir,
+				PreviousOutput:  fsutil.CleanUserPath(opts.PreviousOutput),
+				MaxUnsafe:       opts.MaxUnsafe,
+				Format:          fmtValue,
+				Quiet:           opts.Quiet,
+				Cases:           opts.Cases,
+				SignalContains:  opts.SignalContains,
+				Template:        opts.Template,
+				ControlID:       strings.TrimSpace(opts.ControlID),
+				AssetID:         strings.TrimSpace(opts.AssetID),
+				Stdout:          cmd.OutOrStdout(),
+				Stderr:          cmd.ErrOrStderr(),
+				Sanitizer:       flags.GetSanitizer(),
+				EnvelopeMode:    flags.IsJSONMode(),
+			}
+
+			// 6. Execute
+			runner := NewRunner(compose.ActiveProvider(), clock)
+			return runner.Run(cmd.Context(), cfg)
 		},
 	}
 
