@@ -53,8 +53,9 @@ func TestTopLevelKeys(t *testing.T) {
 }
 
 func TestParseConfigKey(t *testing.T) {
-	for _, key := range topLevelKeys {
-		k, err := ParseConfigKey(key)
+	svc := newTestService()
+	for _, key := range svc.TopLevelKeys() {
+		k, err := svc.ParseConfigKey(key)
 		if err != nil {
 			t.Errorf("ParseConfigKey(%q) error = %v", key, err)
 		}
@@ -63,7 +64,7 @@ func TestParseConfigKey(t *testing.T) {
 		}
 	}
 
-	k, err := ParseConfigKey("snapshot_retention_tiers.staging")
+	k, err := svc.ParseConfigKey("snapshot_retention_tiers.staging")
 	if err != nil {
 		t.Fatalf("ParseConfigKey(tier) error = %v", err)
 	}
@@ -71,15 +72,15 @@ func TestParseConfigKey(t *testing.T) {
 		t.Errorf("String() = %q, want tier key", k.String())
 	}
 
-	_, err = ParseConfigKey("unknown_key")
+	_, err = svc.ParseConfigKey("unknown_key")
 	if err == nil {
 		t.Fatal("expected error for unsupported key")
 	}
 }
 
-func mustParseKey(t *testing.T, raw string) ParsedKey {
+func mustParseKey(t *testing.T, svc *Service, raw string) ParsedKey {
 	t.Helper()
-	k, err := ParseConfigKey(raw)
+	k, err := svc.ParseConfigKey(raw)
 	if err != nil {
 		t.Fatalf("ParseConfigKey(%q) error = %v", raw, err)
 	}
@@ -109,7 +110,7 @@ func TestDeleteConfigKeyValue(t *testing.T) {
 		"snapshot_filename_template",
 	}
 	for _, key := range keys {
-		if err := svc.DeleteConfigKeyValue(cfg, mustParseKey(t, key)); err != nil {
+		if err := svc.DeleteConfigKeyValue(cfg, mustParseKey(t, svc, key)); err != nil {
 			t.Fatalf("DeleteConfigKeyValue(%q) error = %v", key, err)
 		}
 	}
@@ -123,7 +124,7 @@ func TestDeleteConfigKeyValue(t *testing.T) {
 		t.Fatalf("top-level delete did not clear config: %#v", cfg)
 	}
 
-	if err := svc.DeleteConfigKeyValue(cfg, mustParseKey(t, "snapshot_retention_tiers.critical")); err != nil {
+	if err := svc.DeleteConfigKeyValue(cfg, mustParseKey(t, svc, "snapshot_retention_tiers.critical")); err != nil {
 		t.Fatalf("DeleteConfigKeyValue(tier) error = %v", err)
 	}
 	if _, ok := cfg.RetentionTiers["critical"]; ok {
