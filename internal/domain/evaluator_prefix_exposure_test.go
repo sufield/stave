@@ -17,18 +17,18 @@ func TestNewPrefixSet(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  []string
-		expect []string
+		expect []kernel.ObjectPrefix
 	}{
 		{"nil input", nil, nil},
 		{"empty slice", []string{}, nil},
-		{"already normalized", []string{"images/", "docs/"}, []string{"docs/", "images/"}},
-		{"missing trailing slash", []string{"images", "docs"}, []string{"docs/", "images/"}},
-		{"mixed", []string{"images/", "docs"}, []string{"docs/", "images/"}},
+		{"already normalized", []string{"images/", "docs/"}, []kernel.ObjectPrefix{"docs/", "images/"}},
+		{"missing trailing slash", []string{"images", "docs"}, []kernel.ObjectPrefix{"docs/", "images/"}},
+		{"mixed", []string{"images/", "docs"}, []kernel.ObjectPrefix{"docs/", "images/"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ps := policy.NewPrefixSet(tt.input)
-			got := ps.Paths()
+			got := ps.Prefixes()
 			if len(got) != len(tt.expect) {
 				t.Fatalf("len=%d, want %d", len(got), len(tt.expect))
 			}
@@ -50,8 +50,8 @@ func TestDetectOverlap(t *testing.T) {
 		name      string
 		allowed   []string
 		protected []string
-		wantA     string
-		wantP     string
+		wantA     kernel.ObjectPrefix
+		wantP     kernel.ObjectPrefix
 	}{
 		{name: "no overlap", allowed: []string{"images/"}, protected: []string{"invoices/"}},
 		{name: "protected inside allowed", allowed: []string{"data/"}, protected: []string{"data/secrets/"}, wantA: "data/", wantP: "data/secrets/"},
@@ -86,8 +86,8 @@ func TestDetectOverlap(t *testing.T) {
 func TestScopeMatchesPrefix(t *testing.T) {
 	tests := []struct {
 		name   string
-		scope  string
-		prefix string
+		scope  kernel.ObjectPrefix
+		prefix kernel.ObjectPrefix
 		want   bool
 	}{
 		{name: "wildcard scope", scope: "*", prefix: "invoices/", want: true},
@@ -108,7 +108,7 @@ func TestScopeMatchesPrefix(t *testing.T) {
 func TestCheckExposure(t *testing.T) {
 	tests := []struct {
 		name     string
-		prefix   string
+		prefix   kernel.ObjectPrefix
 		facts    exposure.Facts
 		wantPub  bool
 		wantEvid string
@@ -118,7 +118,7 @@ func TestCheckExposure(t *testing.T) {
 			prefix: "invoices/",
 			facts: exposure.Facts{
 				HasIdentityEvidence: true,
-				IdentityGrants:      exposure.Grants{{Scope: "invoices/", SourceID: "AllowPublic"}},
+				IdentityGrants:      exposure.Grants{{Scope: kernel.ObjectPrefix("invoices/"), SourceID: "AllowPublic"}},
 			},
 			wantPub:  true,
 			wantEvid: "identity:AllowPublic",
@@ -128,7 +128,7 @@ func TestCheckExposure(t *testing.T) {
 			prefix: "invoices/",
 			facts: exposure.Facts{
 				HasIdentityEvidence: true,
-				IdentityGrants:      exposure.Grants{{Scope: "*"}},
+				IdentityGrants:      exposure.Grants{{Scope: kernel.WildcardPrefix}},
 				IdentityReadBlocked: true,
 			},
 			wantPub: false,
@@ -182,17 +182,17 @@ func TestGrantEvidence(t *testing.T) {
 	}{
 		{
 			name: "with statement ID",
-			g:    exposure.Grant{Scope: "*", SourceID: "AllowPublic"},
+			g:    exposure.Grant{Scope: kernel.WildcardPrefix, SourceID: "AllowPublic"},
 			want: "identity:AllowPublic",
 		},
 		{
 			name: "without statement ID",
-			g:    exposure.Grant{Scope: "*", SourceID: ""},
+			g:    exposure.Grant{Scope: kernel.WildcardPrefix, SourceID: ""},
 			want: "identity",
 		},
 		{
 			name: "whitespace-only statement ID",
-			g:    exposure.Grant{Scope: "*", SourceID: "   "},
+			g:    exposure.Grant{Scope: kernel.WildcardPrefix, SourceID: "   "},
 			want: "identity",
 		},
 	}

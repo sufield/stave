@@ -61,7 +61,7 @@ func evaluateAssetExposure(
 	facts := exposure.FactsFromStorage(t.Asset().Properties)
 	var findings []evaluation.Finding
 
-	for _, prefix := range protected.Paths() {
+	for _, prefix := range protected.Prefixes() {
 		res := facts.CheckExposure(prefix)
 		if !res.Exposed {
 			continue
@@ -72,7 +72,7 @@ func evaluateAssetExposure(
 			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{
 				{Property: propExposureSource, ActualValue: evidence, Operator: "eq", UnsafeValue: evidence},
-				{Property: propProtectedPrefix, ActualValue: prefix, Operator: "eq", UnsafeValue: prefix},
+				{Property: propProtectedPrefix, ActualValue: string(prefix), Operator: "eq", UnsafeValue: string(prefix)},
 			},
 		}))
 	}
@@ -114,8 +114,8 @@ func buildOverlapIssue(
 		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
 		Misconfigs: []policy.Misconfiguration{
 			{Property: propExposureSource, ActualValue: valConfigOverlap, Operator: "eq", UnsafeValue: valConfigOverlap},
-			{Property: "overlap_with", ActualValue: c.Allowed, Operator: "eq", UnsafeValue: c.Allowed},
-			{Property: propProtectedPrefix, ActualValue: c.Protected, Operator: "eq", UnsafeValue: c.Protected},
+			{Property: "overlap_with", ActualValue: string(c.Allowed), Operator: "eq", UnsafeValue: string(c.Allowed)},
+			{Property: propProtectedPrefix, ActualValue: string(c.Protected), Operator: "eq", UnsafeValue: string(c.Protected)},
 		},
 	})
 	return row, []evaluation.Finding{*f}
@@ -123,8 +123,8 @@ func buildOverlapIssue(
 
 func prefixExposureSets(ctl *policy.ControlDefinition) (allowed, protected policy.PrefixSet) {
 	p := ctl.ExposurePrefixes()
-	return policy.NewPrefixSet(p.AllowedPublicPrefixes),
-		policy.NewPrefixSet(p.ProtectedPrefixes)
+	return policy.NewPrefixSetFromPrefixes(p.AllowedPublicPrefixes),
+		policy.NewPrefixSetFromPrefixes(p.ProtectedPrefixes)
 }
 
 func msgMissingProtectedPrefixes() string {

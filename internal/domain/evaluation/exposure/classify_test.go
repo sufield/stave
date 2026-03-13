@@ -438,9 +438,9 @@ func TestEffectiveVisibility_ToPermission(t *testing.T) {
 func TestFacts_CheckExposure_IdentityGrant(t *testing.T) {
 	facts := Facts{
 		HasIdentityEvidence: true,
-		IdentityGrants:      Grants{{Scope: "*", SourceID: "stmt-1"}},
+		IdentityGrants:      Grants{{Scope: kernel.WildcardPrefix, SourceID: "stmt-1"}},
 	}
-	result := facts.CheckExposure("any-prefix")
+	result := facts.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if !result.Exposed {
 		t.Error("expected exposed via identity")
 	}
@@ -454,7 +454,7 @@ func TestFacts_CheckExposure_Resource(t *testing.T) {
 		HasResourceEvidence: true,
 		ResourceReadAll:     true,
 	}
-	result := facts.CheckExposure("any-prefix")
+	result := facts.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if !result.Exposed {
 		t.Error("expected exposed via resource")
 	}
@@ -464,7 +464,7 @@ func TestFacts_CheckExposure_Resource(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
-	result := Facts{}.CheckExposure("any-prefix")
+	result := Facts{}.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if !result.Exposed {
 		t.Error("expected exposed when missing evidence")
 	}
@@ -475,7 +475,7 @@ func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
 
 func TestFacts_CheckExposure_Safe(t *testing.T) {
 	facts := Facts{HasIdentityEvidence: true}
-	result := facts.CheckExposure("no-matching-prefix")
+	result := facts.CheckExposure(kernel.ObjectPrefix("no-matching-prefix"))
 	if result.Exposed {
 		t.Error("expected safe when no grants match")
 	}
@@ -485,9 +485,9 @@ func TestFacts_CheckExposure_IdentityBlocked(t *testing.T) {
 	facts := Facts{
 		HasIdentityEvidence: true,
 		IdentityReadBlocked: true,
-		IdentityGrants:      Grants{{Scope: "*", SourceID: "stmt-1"}},
+		IdentityGrants:      Grants{{Scope: kernel.WildcardPrefix, SourceID: "stmt-1"}},
 	}
-	result := facts.CheckExposure("any-prefix")
+	result := facts.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if result.Exposed {
 		t.Error("expected safe when identity is blocked")
 	}
@@ -499,7 +499,7 @@ func TestFacts_CheckExposure_ResourceBlocked(t *testing.T) {
 		ResourceReadAll:     true,
 		ResourceReadBlocked: true,
 	}
-	result := facts.CheckExposure("any-prefix")
+	result := facts.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if result.Exposed {
 		t.Error("expected safe when resource is blocked")
 	}
@@ -515,7 +515,7 @@ func TestFacts_LacksEvidence(t *testing.T) {
 }
 
 func TestScopeMatchesPrefix(t *testing.T) {
-	if !ScopeMatchesPrefix("*", "anything") {
+	if !ScopeMatchesPrefix(kernel.WildcardPrefix, "anything") {
 		t.Error("wildcard should match")
 	}
 	if !ScopeMatchesPrefix("invoices", "invoices/2026") {
@@ -548,14 +548,14 @@ func TestResult_String(t *testing.T) {
 }
 
 func TestGrant_Covers(t *testing.T) {
-	g := Grant{Scope: "*", SourceID: "s1"}
+	g := Grant{Scope: kernel.WildcardPrefix, SourceID: "s1"}
 	if !g.Covers("anything") {
 		t.Error("wildcard grant should cover anything")
 	}
 }
 
 func TestGrant_Evidence(t *testing.T) {
-	g := Grant{Scope: "*", SourceID: "s1"}
+	g := Grant{Scope: kernel.WildcardPrefix, SourceID: "s1"}
 	ev := g.Evidence()
 	if ev.Kind != SourceIdentity || ev.ID != "s1" {
 		t.Errorf("unexpected evidence: %v", ev)
@@ -564,8 +564,8 @@ func TestGrant_Evidence(t *testing.T) {
 
 func TestGrants_FindMatch(t *testing.T) {
 	gs := Grants{
-		{Scope: "invoices", SourceID: "s1"},
-		{Scope: "*", SourceID: "s2"},
+		{Scope: kernel.ObjectPrefix("invoices"), SourceID: "s1"},
+		{Scope: kernel.WildcardPrefix, SourceID: "s2"},
 	}
 	match := gs.FindMatch("invoices/2026")
 	if match == nil || match.SourceID != "s1" {
@@ -578,7 +578,7 @@ func TestGrants_FindMatch(t *testing.T) {
 }
 
 func TestGrants_FindMatch_NoMatch(t *testing.T) {
-	gs := Grants{{Scope: "invoices", SourceID: "s1"}}
+	gs := Grants{{Scope: kernel.ObjectPrefix("invoices"), SourceID: "s1"}}
 	if gs.FindMatch("reports") != nil {
 		t.Error("expected no match")
 	}
