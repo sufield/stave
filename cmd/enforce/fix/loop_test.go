@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -48,21 +50,25 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	fixture := testdataDir(t, "e2e-s3-verify")
 	outDir := t.TempDir()
 
-	flags := &fixLoopFlagsType{
-		beforeDir:    filepath.Join(fixture, "before"),
-		afterDir:     filepath.Join(fixture, "after"),
-		controlsDir:  filepath.Join(fixture, "controls"),
-		maxUnsafe:    "168h",
-		now:          "2026-01-11T00:00:00Z",
-		outDir:       outDir,
-		allowUnknown: false,
+	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
+	runner := NewRunner(compose.ActiveProvider(), clock)
+	runner.FileOptions = cmdutil.FileOptions{
+		Overwrite: true,
+		DirPerms:  0o700,
 	}
 
-	cmd := &cobra.Command{}
-	cmd.SetContext(context.Background())
-	cmd.SetOut(&bytes.Buffer{})
-	if err := runFixLoop(cmd, flags); err != nil {
-		t.Fatalf("runFixLoop returned error: %v", err)
+	loopErr := runner.Loop(context.Background(), LoopRequest{
+		BeforeDir:    filepath.Join(fixture, "before"),
+		AfterDir:     filepath.Join(fixture, "after"),
+		ControlsDir:  filepath.Join(fixture, "controls"),
+		OutDir:       outDir,
+		MaxUnsafe:    168 * time.Hour,
+		AllowUnknown: false,
+		Stdout:       &bytes.Buffer{},
+		Stderr:       &bytes.Buffer{},
+	})
+	if loopErr != nil {
+		t.Fatalf("Loop returned error: %v", loopErr)
 	}
 
 	files := []string{
@@ -73,8 +79,8 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	}
 	for _, name := range files {
 		path := filepath.Join(outDir, name)
-		if _, err := os.Stat(path); err != nil {
-			t.Fatalf("expected %s to exist: %v", path, err)
+		if _, statErr := os.Stat(path); statErr != nil {
+			t.Fatalf("expected %s to exist: %v", path, statErr)
 		}
 	}
 

@@ -1,32 +1,55 @@
 package fix
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"slices"
 	"strings"
 
-	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type fixFlagsType struct {
-	inputPath  string
-	findingRef string
+// Request defines the parameters for a single finding fix plan.
+type Request struct {
+	InputPath  string
+	FindingRef string
+	Stdout     io.Writer
 }
 
-func runFix(cmd *cobra.Command, flags *fixFlagsType) error {
-	inputPath := fsutil.CleanUserPath(flags.inputPath)
+// Runner handles finding remediation and fix-loop orchestration.
+type Runner struct {
+	Provider    *compose.Provider
+	Clock       ports.Clock
+	Sanitizer   kernel.Sanitizer
+	FileOptions cmdutil.FileOptions
+}
+
+// NewRunner initializes a runner with required dependencies.
+func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
+	return &Runner{
+		Provider: p,
+		Clock:    clock,
+	}
+}
+
+// Fix generates a machine-readable fix plan for a specific finding.
+func (r *Runner) Fix(_ context.Context, req Request) error {
+	inputPath := fsutil.CleanUserPath(req.InputPath)
 	findings, err := loadFixFindings(inputPath)
 	if err != nil {
 		return err
 	}
-	needle := strings.TrimSpace(flags.findingRef)
+	needle := strings.TrimSpace(req.FindingRef)
 	if needle == "" {
 		return &ui.UserError{Err: fmt.Errorf("--finding cannot be empty")}
 	}
@@ -35,7 +58,7 @@ func runFix(cmd *cobra.Command, flags *fixFlagsType) error {
 		return err
 	}
 	selected = withRemediationPlan(selected)
-	return writeFixResult(cmd.OutOrStdout(), selected)
+	return writeFixResult(req.Stdout, selected)
 }
 
 func loadFixFindings(inputPath string) ([]remediation.Finding, error) {

@@ -2,15 +2,18 @@ package fix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
 )
 
 func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
@@ -43,11 +46,13 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 	}
 
 	buf := &bytes.Buffer{}
-	cmd := NewFixCmd()
-	cmd.SetOut(buf)
-	flags := &fixFlagsType{inputPath: in, findingRef: "CTL.S3.PUBLIC.001@bucket-a"}
-	if err := runFix(cmd, flags); err != nil {
-		t.Fatalf("runFix error: %v", err)
+	runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
+	if err := runner.Fix(context.Background(), Request{
+		InputPath:  in,
+		FindingRef: "CTL.S3.PUBLIC.001@bucket-a",
+		Stdout:     buf,
+	}); err != nil {
+		t.Fatalf("Fix error: %v", err)
 	}
 	out := buf.String()
 	if !strings.Contains(out, "Fix Plan") {
@@ -71,10 +76,12 @@ func TestRunFix_MissingFinding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := NewFixCmd()
-	cmd.SetOut(&bytes.Buffer{})
-	flags := &fixFlagsType{inputPath: in, findingRef: "CTL.S3.PUBLIC.001@missing"}
-	err := runFix(cmd, flags)
+	runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
+	err := runner.Fix(context.Background(), Request{
+		InputPath:  in,
+		FindingRef: "CTL.S3.PUBLIC.001@missing",
+		Stdout:     &bytes.Buffer{},
+	})
 	if err == nil {
 		t.Fatal("expected missing finding error")
 	}
