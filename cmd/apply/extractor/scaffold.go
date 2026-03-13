@@ -13,15 +13,6 @@ import (
 )
 
 func runScaffold(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	if opts == nil {
-		opts = defaultOptions()
-	}
-
-	opts.normalize()
-	if err := opts.validate(); err != nil {
-		return err
-	}
-
 	baseDir := filepath.Join(opts.Dir, opts.Name)
 	if err := fsutil.SafeMkdirAll(baseDir, fsutil.WriteOptions{
 		Perm:         0o700,
