@@ -65,7 +65,7 @@ Examples:
 	cmd.Flags().StringVar(&flags.observation, "observation", "", "Path to single observation JSON file (required)")
 	cmd.Flags().StringVar(&flags.assetID, "asset-id", "", "Asset ID to trace against (required)")
 	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&flags.quiet, "quiet", projconfig.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	cmd.Flags().BoolVar(&flags.quiet, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = cmd.MarkFlagRequired("control")
 	_ = cmd.MarkFlagRequired("observation")

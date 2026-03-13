@@ -15,10 +15,10 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	})
 
 	// Global persistent flags available to all commands
-	flags.OutputMode = projconfig.ResolveOutputModeDefault()
-	flags.Quiet = projconfig.ResolveQuietDefault()
-	flags.Sanitize = projconfig.ResolveSanitizeDefault()
-	flags.PathMode = projconfig.ResolvePathModeDefault()
+	flags.OutputMode = projconfig.Global().OutputMode()
+	flags.Quiet = projconfig.Global().Quiet()
+	flags.Sanitize = projconfig.Global().Sanitize()
+	flags.PathMode = projconfig.Global().PathMode()
 
 	// Output flags
 	root.PersistentFlags().StringVar(&flags.OutputMode, "output", flags.OutputMode, cmdutil.WithDynamicDefaultHelp("Output format: json or text"))

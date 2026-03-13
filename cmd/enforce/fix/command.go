@@ -31,7 +31,7 @@ for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffi
 
 func NewFixLoopCmd() *cobra.Command {
 	var flags fixLoopFlagsType
-	flags.allowUnknown = projconfig.ResolveAllowUnknownInputDefault()
+	flags.allowUnknown = projconfig.Global().AllowUnknownInput()
 
 	cmd := &cobra.Command{
 		Use:   "fix-loop",
@@ -77,7 +77,7 @@ Examples:
 	cmd.Flags().StringVarP(&flags.beforeDir, "before", "b", "", "Path to before-remediation observations (required)")
 	cmd.Flags().StringVarP(&flags.afterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	cmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls", "Path to control definitions directory")
-	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	cmd.Flags().StringVar(&flags.now, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	cmd.Flags().BoolVar(&flags.allowUnknown, "allow-unknown-input", flags.allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 	cmd.Flags().StringVar(&flags.outDir, "out", "", "Write remediation artifacts to this directory")

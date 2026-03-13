@@ -28,8 +28,8 @@ type options struct {
 func newOptions() *options {
 	return &options{
 		ControlsDir:  "controls",
-		MaxUnsafe:    projconfig.ResolveMaxUnsafeDefault(),
-		AllowUnknown: projconfig.ResolveAllowUnknownInputDefault(),
+		MaxUnsafe:    projconfig.Global().MaxUnsafe(),
+		AllowUnknown: projconfig.Global().AllowUnknownInput(),
 	}
 }
 

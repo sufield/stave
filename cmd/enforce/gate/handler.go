@@ -38,12 +38,12 @@ type options struct {
 
 func defaultOptions() *options {
 	return &options{
-		Policy:          string(projconfig.ResolveCIFailurePolicyDefault()),
+		Policy:          string(projconfig.Global().CIFailurePolicy()),
 		InPath:          "output/evaluation.json",
 		BaselinePath:    "output/baseline.json",
 		ControlsDir:     "controls/s3",
 		ObservationsDir: "observations",
-		MaxUnsafe:       projconfig.ResolveMaxUnsafeDefault(),
+		MaxUnsafe:       projconfig.Global().MaxUnsafe(),
 		Format:          "text",
 	}
 }

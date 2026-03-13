@@ -43,8 +43,7 @@ func (s projectConfigStore) CurrentValue(cfg *projconfig.ProjectConfig, key, cfg
 		return "(not set)"
 	}
 	eval := projconfig.NewEvaluator(cfg, cfgPath, nil, "")
-	retTier := eval.RetentionTier()
-	kv, err := resolveServiceConfigKeyValue(s.svc, key, cfg, cfgPath, retTier.Value)
+	kv, err := resolveServiceConfigKeyValue(s.svc, key, cfg, cfgPath, eval.RetentionTier())
 	if err != nil || kv.Value == "" {
 		return "(not set)"
 	}

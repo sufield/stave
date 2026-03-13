@@ -27,7 +27,7 @@ func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
 	cmdutil.RegisterControlsFlag(cmd, &o.ControlsDir, "controls/s3", "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", projconfig.ResolveMaxUnsafeDefault(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", defaultFormat, "Output format (text, json, or sarif)")
 }
@@ -114,7 +114,7 @@ Run stave plan first to preview what will be evaluated.` + metadata.OfflineHelpS
 
 func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", projconfig.ResolveAllowUnknownInputDefault(), cmdutil.WithDynamicDefaultHelp("Allow unknown source types"))
+	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", projconfig.Global().AllowUnknownInput(), cmdutil.WithDynamicDefaultHelp("Allow unknown source types"))
 	f.StringVar(&o.IgnoreFile, "ignore", "", "Path to asset ignore list YAML file")
 	f.StringVar(&o.IntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected hashes")
 	f.StringVar(&o.IntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")

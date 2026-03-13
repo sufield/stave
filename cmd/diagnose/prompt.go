@@ -108,7 +108,7 @@ Examples:
 	fromFindingCmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	fromFindingCmd.Flags().StringVarP(&flags.obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	fromFindingCmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	fromFindingCmd.Flags().BoolVar(&flags.quietMode, "quiet", projconfig.ResolveQuietDefault(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	fromFindingCmd.Flags().BoolVar(&flags.quietMode, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = fromFindingCmd.MarkFlagRequired("evaluation-file")
 	_ = fromFindingCmd.MarkFlagRequired("asset-id")

@@ -73,9 +73,8 @@ func (cc *configCommand) runConfigGet(cmd *cobra.Command, key string) error {
 	key = strings.TrimSpace(key)
 	cfg, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 	eval := projconfig.NewEvaluator(cfg, cfgPath, nil, "")
-	retTier := eval.RetentionTier()
 
-	kv, err := resolveServiceConfigKeyValue(cc.svc, key, cfg, cfgPath, retTier.Value)
+	kv, err := resolveServiceConfigKeyValue(cc.svc, key, cfg, cfgPath, eval.RetentionTier())
 	if err != nil {
 		return err
 	}

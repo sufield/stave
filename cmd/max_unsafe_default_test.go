@@ -15,7 +15,7 @@ func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveMaxUnsafeDefault()
+	got := projconfig.Global().MaxUnsafe()
 	if got != projconfig.DefaultMaxUnsafeDuration {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, projconfig.DefaultMaxUnsafeDuration)
 	}
@@ -30,7 +30,7 @@ func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveMaxUnsafeDefault()
+	got := projconfig.Global().MaxUnsafe()
 	if got != "24h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "24h")
 	}
@@ -50,7 +50,7 @@ func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, nested)
 
-	got := projconfig.ResolveMaxUnsafeDefault()
+	got := projconfig.Global().MaxUnsafe()
 	if got != "36h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "36h")
 	}
@@ -67,7 +67,7 @@ func TestResolveMaxUnsafeDefault_UserConfigFallback(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveMaxUnsafeDefault()
+	got := projconfig.Global().MaxUnsafe()
 	if got != "60h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "60h")
 	}
@@ -78,7 +78,7 @@ func TestResolveSnapshotRetentionDefault_Fallback(t *testing.T) {
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveSnapshotRetentionDefault()
+	got := projconfig.Global().SnapshotRetention()
 	if got != projconfig.DefaultSnapshotRetention {
 		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, projconfig.DefaultSnapshotRetention)
 	}
@@ -92,7 +92,7 @@ func TestResolveSnapshotRetentionDefault_EnvOverridesProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveSnapshotRetentionDefault()
+	got := projconfig.Global().SnapshotRetention()
 	if got != "10d" {
 		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, "10d")
 	}
@@ -111,7 +111,7 @@ func TestResolveSnapshotRetentionDefault_ProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, nested)
 
-	got := projconfig.ResolveSnapshotRetentionDefault()
+	got := projconfig.Global().SnapshotRetention()
 	if got != "21d" {
 		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, "21d")
 	}
@@ -127,7 +127,7 @@ func TestResolveSnapshotRetentionDefault_UserConfigFallback(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveSnapshotRetentionDefault()
+	got := projconfig.Global().SnapshotRetention()
 	if got != "21d" {
 		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, "21d")
 	}
@@ -138,7 +138,7 @@ func TestResolveCIFailurePolicyDefault_Fallback(t *testing.T) {
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveCIFailurePolicyDefault()
+	got := projconfig.Global().CIFailurePolicy()
 	if got != projconfig.GatePolicyAny {
 		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyAny)
 	}
@@ -152,7 +152,7 @@ func TestResolveCIFailurePolicyDefault_EnvOverridesProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveCIFailurePolicyDefault()
+	got := projconfig.Global().CIFailurePolicy()
 	if got != projconfig.GatePolicyOverdue {
 		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyOverdue)
 	}
@@ -171,7 +171,7 @@ func TestResolveCIFailurePolicyDefault_ProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, nested)
 
-	got := projconfig.ResolveCIFailurePolicyDefault()
+	got := projconfig.Global().CIFailurePolicy()
 	if got != projconfig.GatePolicyNew {
 		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyNew)
 	}
@@ -187,7 +187,7 @@ func TestResolveCIFailurePolicyDefault_UserConfigFallback(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveCIFailurePolicyDefault()
+	got := projconfig.Global().CIFailurePolicy()
 	if got != projconfig.GatePolicyOverdue {
 		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyOverdue)
 	}
@@ -202,7 +202,7 @@ func TestResolveAllowUnknownInputDefault_FromUserConfig(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	if !projconfig.ResolveAllowUnknownInputDefault() {
+	if !projconfig.Global().AllowUnknownInput() {
 		t.Fatal("ResolveAllowUnknownInputDefault() = false, want true")
 	}
 }
@@ -216,7 +216,7 @@ func TestResolveCLIPathModeDefault_FromUserConfig(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	if got := projconfig.ResolvePathModeDefault(); got != "full" {
+	if got := projconfig.Global().PathMode(); got != "full" {
 		t.Fatalf("ResolvePathModeDefault() = %q, want %q", got, "full")
 	}
 }
@@ -226,7 +226,7 @@ func TestResolveRetentionTierDefault_Fallback(t *testing.T) {
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveRetentionTierDefault()
+	got := projconfig.Global().RetentionTier()
 	if got != projconfig.DefaultRetentionTier {
 		t.Fatalf("ResolveRetentionTierDefault() = %q, want %q", got, projconfig.DefaultRetentionTier)
 	}
@@ -242,7 +242,7 @@ func TestResolveSnapshotRetentionForTier_FromProjectTiers(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveSnapshotRetentionForTier("non_critical")
+	got := projconfig.Global().SnapshotRetentionForTier("non_critical")
 	if got != "14d" {
 		t.Fatalf("ResolveSnapshotRetentionForTier(non_critical) = %q, want %q", got, "14d")
 	}
@@ -258,7 +258,7 @@ func TestResolveSnapshotRetentionForTier_FallsBackToGlobal(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.ResolveSnapshotRetentionForTier("non_critical")
+	got := projconfig.Global().SnapshotRetentionForTier("non_critical")
 	if got != "45d" {
 		t.Fatalf("ResolveSnapshotRetentionForTier(non_critical) = %q, want %q", got, "45d")
 	}

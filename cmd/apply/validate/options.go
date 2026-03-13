@@ -43,9 +43,9 @@ func newOptions() *options {
 	return &options{
 		Controls:     "controls/s3",
 		Observations: "observations",
-		MaxUnsafe:    projconfig.ResolveMaxUnsafeDefault(),
+		MaxUnsafe:    projconfig.Global().MaxUnsafe(),
 		Format:       "text",
-		Quiet:        projconfig.ResolveQuietDefault(),
+		Quiet:        projconfig.Global().Quiet(),
 	}
 }
 
