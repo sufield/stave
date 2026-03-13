@@ -18,6 +18,81 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+// PlanConfig defines the parameters for assessing readiness.
+type PlanConfig struct {
+	ControlsDir     string
+	ObservationsDir string
+	MaxUnsafe       string
+	Now             string
+	Format          ui.OutputFormat
+	Quiet           bool
+	Sanitize        bool
+	Stdout          io.Writer
+	Stderr          io.Writer
+
+	ControlsFlagSet bool
+	HasEnabledPacks bool
+	PrereqChecks    []validation.PrereqCheck
+}
+
+// ValidatorFactory creates the validation function used during assessment.
+type ValidatorFactory func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error)
+
+// Planner orchestrates the "plan/readiness" workflow.
+type Planner struct {
+	CreateValidator ValidatorFactory
+}
+
+// NewPlanner returns a planner with default dependencies.
+func NewPlanner(factory ValidatorFactory) *Planner {
+	return &Planner{
+		CreateValidator: factory,
+	}
+}
+
+// Execute performs the readiness assessment and writes the report.
+func (p *Planner) Execute(cfg PlanConfig) error {
+	ctlDir := fsutil.CleanUserPath(cfg.ControlsDir)
+	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
+
+	report, err := service.AssessReadiness(validation.ReadinessInput{
+		ControlsDir:           ctlDir,
+		ObservationsDir:       obsDir,
+		MaxUnsafe:             cfg.MaxUnsafe,
+		Now:                   cfg.Now,
+		ControlsFlagSet:       cfg.ControlsFlagSet,
+		HasEnabledControlPack: cfg.HasEnabledPacks,
+		PrereqChecks:          cfg.PrereqChecks,
+		Validate:              p.CreateValidator(ctlDir, obsDir, cfg.Sanitize),
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidMaxUnsafe) {
+			return ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
+		}
+		return err
+	}
+
+	if !cfg.Quiet {
+		if err := p.writeReport(cfg, report); err != nil {
+			return err
+		}
+	}
+
+	if !report.Ready {
+		return ui.ErrValidationFailed
+	}
+	return nil
+}
+
+func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport) error {
+	if cfg.Format.IsJSON() {
+		return jsonout.WriteReadinessJSON(cfg.Stdout, report)
+	}
+	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}
+	return rep.ReportPlan(report)
+}
+
+// runPlan bridges the Cobra layer into the Planner/PlanConfig pattern.
 func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 	if err := projctx.EnsureContextSelectionValid(); err != nil {
 		return err
@@ -28,75 +103,29 @@ func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 		return err
 	}
 
-	report, err := assessReadiness(cmd, opts.toReadinessInput())
-	if err != nil {
-		return err
-	}
-
-	if !cmdutil.QuietEnabled(cmd) {
-		if err := writeReadinessReport(cmd.OutOrStdout(), report, format); err != nil {
-			return err
-		}
-	}
-
-	return readinessExitError(report)
-}
-
-func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {
-	ctlDir, obsDir := resolveReadinessDirs(cmd, in)
-
-	report, err := service.AssessReadiness(validation.ReadinessInput{
-		ControlsDir:           ctlDir,
-		ObservationsDir:       obsDir,
-		MaxUnsafe:             in.MaxUnsafe,
-		Now:                   in.Now,
-		ControlsFlagSet:       in.ControlsFlagSet,
-		HasEnabledControlPack: readinessHasEnabledPacks(),
-		PrereqChecks:          cmdutil.DoctorPrereqChecks(),
-		Validate:              buildReadinessValidateFn(cmd, ctlDir, obsDir),
-	})
-	if err != nil {
-		if errors.Is(err, service.ErrInvalidMaxUnsafe) {
-			return validation.ReadinessReport{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
-		}
-		return validation.ReadinessReport{}, err
-	}
-	return report, nil
-}
-
-func resolveReadinessDirs(cmd *cobra.Command, in readinessInput) (string, string) {
 	log := projctx.NewInferenceLog()
-	ctlDir := fsutil.CleanUserPath(in.ControlsDir)
-	obsDir := fsutil.CleanUserPath(in.ObservationsDir)
-	ctlDir = log.InferControlsDir(cmd, ctlDir)
-	obsDir = log.InferObservationsDir(cmd, obsDir)
-	return ctlDir, obsDir
-}
+	ctlDir := log.InferControlsDir(cmd, fsutil.CleanUserPath(opts.ControlsDir))
+	obsDir := log.InferObservationsDir(cmd, fsutil.CleanUserPath(opts.ObservationsDir))
 
-// writeReadinessReport writes the readiness report in the requested format.
-func writeReadinessReport(w io.Writer, report validation.ReadinessReport, format ui.OutputFormat) error {
-	if format.IsJSON() {
-		return jsonout.WriteReadinessJSON(w, report)
-	}
-	rep := &Reporter{Stdout: w, Stderr: w}
-	return rep.ReportPlan(report)
-}
-
-// readinessExitError returns an error if the readiness report indicates failure.
-func readinessExitError(report validation.ReadinessReport) error {
-	if !report.Ready {
-		return ui.ErrValidationFailed
-	}
-	return nil
-}
-
-func readinessHasEnabledPacks() bool {
+	hasPacks := false
 	if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
-		return true
+		hasPacks = true
 	}
-	return false
-}
 
-func buildReadinessValidateFn(cmd *cobra.Command, ctlDir, obsDir string) func(time.Duration, time.Time) (validation.ValidationResult, error) {
-	return applyvalidate.NewReadinessValidator(ctlDir, obsDir, cmdutil.SanitizeEnabled(cmd))
+	planner := NewPlanner(applyvalidate.NewReadinessValidator)
+
+	return planner.Execute(PlanConfig{
+		ControlsDir:     ctlDir,
+		ObservationsDir: obsDir,
+		MaxUnsafe:       opts.MaxUnsafe,
+		Now:             opts.NowTime,
+		Format:          format,
+		Quiet:           cmdutil.QuietEnabled(cmd),
+		Sanitize:        cmdutil.SanitizeEnabled(cmd),
+		Stdout:          cmd.OutOrStdout(),
+		Stderr:          cmd.ErrOrStderr(),
+		ControlsFlagSet: opts.ControlsSet,
+		HasEnabledPacks: hasPacks,
+		PrereqChecks:    cmdutil.DoctorPrereqChecks(),
+	})
 }

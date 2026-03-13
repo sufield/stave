@@ -37,25 +37,6 @@ func (o *SharedOptions) normalize() {
 	o.ObservationsDir = fsutil.CleanUserPath(o.ObservationsDir)
 }
 
-// toReadinessInput converts shared options into the readiness assessment input.
-func (o *SharedOptions) toReadinessInput() readinessInput {
-	return readinessInput{
-		ControlsDir:     o.ControlsDir,
-		ObservationsDir: o.ObservationsDir,
-		MaxUnsafe:       o.MaxUnsafe,
-		Now:             o.NowTime,
-		ControlsFlagSet: o.ControlsSet,
-	}
-}
-
-type readinessInput struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       string
-	Now             string
-	ControlsFlagSet bool
-}
-
 // PlanOptions configuration for the plan command.
 type PlanOptions struct {
 	SharedOptions
