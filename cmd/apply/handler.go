@@ -25,21 +25,21 @@ func runApply(cmd *cobra.Command, _ []string, opts *ApplyOptions) error {
 		return err
 	}
 
-	params, mode, err := gatherRunOptions(cmd, opts)
+	cfg, err := opts.Resolve(cmd)
 	if err != nil {
 		return decorateError(err)
 	}
 
-	if mode == runModeProfile {
-		return runApplyProfileWithOptions(cmd, opts.toProfileOptions(cmd))
+	if cfg.Mode == runModeProfile {
+		return runApplyProfileWithOptions(cmd, cfg.Profile)
 	}
 
-	return runStandardApply(cmd, opts, params)
+	return runStandardApply(cmd, opts, cfg.Params)
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
 func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, params applyParams) error {
-	plan, err := appeval.NewPlan(buildEvaluatorOptions(opts))
+	plan, err := appeval.NewPlan(opts.buildEvaluatorInput())
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}

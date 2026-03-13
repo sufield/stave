@@ -19,7 +19,7 @@ func testdataDir(t *testing.T, name string) string {
 	return testutil.E2EDir(t, name)
 }
 
-func TestValidateApplyFlags(t *testing.T) {
+func TestResolveApplyOptions(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 	cmd := NewApplyCmd()
 
@@ -32,19 +32,19 @@ func TestValidateApplyFlags(t *testing.T) {
 			},
 		}
 
-		params, err := validateApplyFlags(cmd, opts)
+		cfg, err := opts.Resolve(cmd)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if params.maxDuration != 168*time.Hour {
-			t.Errorf("maxDuration = %v, want 168h", params.maxDuration)
+		if cfg.Params.maxDuration != 168*time.Hour {
+			t.Errorf("maxDuration = %v, want 168h", cfg.Params.maxDuration)
 		}
-		if params.source.IsStdin() {
+		if cfg.Params.source.IsStdin() {
 			t.Error("source should not be stdin")
 		}
 		// Clock should be RealClock when --now is empty
-		if _, ok := params.clock.(clockadp.RealClock); !ok {
-			t.Errorf("clock type = %T, want clockadp.RealClock", params.clock)
+		if _, ok := cfg.Params.clock.(clockadp.RealClock); !ok {
+			t.Errorf("clock type = %T, want clockadp.RealClock", cfg.Params.clock)
 		}
 	})
 
@@ -58,16 +58,16 @@ func TestValidateApplyFlags(t *testing.T) {
 			},
 		}
 
-		params, err := validateApplyFlags(cmd, opts)
+		cfg, err := opts.Resolve(cmd)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if params.maxDuration != 7*24*time.Hour {
-			t.Errorf("maxDuration = %v, want 168h (7d)", params.maxDuration)
+		if cfg.Params.maxDuration != 7*24*time.Hour {
+			t.Errorf("maxDuration = %v, want 168h (7d)", cfg.Params.maxDuration)
 		}
-		fc, ok := params.clock.(clockadp.FixedClock)
+		fc, ok := cfg.Params.clock.(clockadp.FixedClock)
 		if !ok {
-			t.Fatalf("clock type = %T, want clockadp.FixedClock", params.clock)
+			t.Fatalf("clock type = %T, want clockadp.FixedClock", cfg.Params.clock)
 		}
 		expected := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 		if !time.Time(fc).Equal(expected) {
@@ -84,11 +84,11 @@ func TestValidateApplyFlags(t *testing.T) {
 			},
 		}
 
-		params, err := validateApplyFlags(cmd, opts)
+		cfg, err := opts.Resolve(cmd)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if !params.source.IsStdin() {
+		if !cfg.Params.source.IsStdin() {
 			t.Error("source should be stdin")
 		}
 	})
@@ -147,7 +147,7 @@ func TestValidateApplyFlags(t *testing.T) {
 	for _, tc := range errorCases {
 		t.Run(tc.name, func(t *testing.T) {
 			o := tc.opts
-			_, err := validateApplyFlags(cmd, &o)
+			_, err := o.Resolve(cmd)
 			if err == nil {
 				t.Fatalf("expected error containing %q", tc.wantContain)
 			}
@@ -170,7 +170,7 @@ func TestValidateApplyFlags(t *testing.T) {
 			},
 		}
 
-		_, err := validateApplyFlags(cmd, opts)
+		_, err := opts.Resolve(cmd)
 		if err == nil {
 			t.Fatal("expected error when controls is a file")
 		}
