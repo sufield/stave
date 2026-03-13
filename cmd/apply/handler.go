@@ -13,6 +13,7 @@ import (
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	"github.com/sufield/stave/internal/platform/logging"
 )
 
 // runApply is the main entry point for the apply command.
@@ -70,7 +71,13 @@ func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, params applyParams
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
-	cmdutil.AttachRunIDFromPlan(plan)
+	if plan != nil {
+		logging.SetDefaultLogger(cmdutil.SetupLoggingWithRunID(
+			logging.DefaultLogger(),
+			plan.ObservationsHash.String(),
+			plan.ControlsHash.String(),
+		))
+	}
 
 	results, err := executeEvaluation(cmd, opts, params, plan)
 	if err != nil {
