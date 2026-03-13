@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/internal/platform/shlex"
 )
 
 // expandAliasIfMatch checks if os.Args[1] matches a user-defined alias.
@@ -29,7 +30,7 @@ func (a *App) expandAliasIfMatch() {
 	if !ok {
 		return
 	}
-	tokens, err := cmdutil.ParseShellTokens(expanded)
+	tokens, err := shlex.Split(expanded)
 	if err != nil {
 		// Malformed alias value: surface the error via stderr and leave
 		// os.Args unchanged so the CLI produces a "command not found" error
