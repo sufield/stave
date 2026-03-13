@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // Config defines the parameters for comparing observation snapshots.
@@ -49,13 +47,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	delta = output.SanitizeObservationDelta(cfg.Sanitizer, delta)
 
-	if cfg.Quiet {
-		return nil
-	}
-	if cfg.Format.IsJSON() {
-		return jsonutil.WriteIndented(cfg.Stdout, delta)
-	}
-	return writeText(cfg.Stdout, delta)
+	return writeOutput(cfg.Stdout, cfg.Format, cfg.Quiet, delta)
 }
 
 func (r *Runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
@@ -72,32 +64,4 @@ func (r *Runner) computeDelta(ctx context.Context, dir string, filter asset.Filt
 		return asset.ObservationDelta{}, fmt.Errorf("select latest snapshots: %w", err)
 	}
 	return asset.ComputeObservationDelta(prev, curr).ApplyFilter(filter), nil
-}
-
-func writeText(w io.Writer, out asset.ObservationDelta) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
-	}
-
-	writef("Observation delta: %s -> %s\n", out.FromCaptured.Format(time.RFC3339), out.ToCaptured.Format(time.RFC3339))
-	writef("Summary: added=%d removed=%d modified=%d total=%d\n\n",
-		out.Summary.Added(), out.Summary.Removed(), out.Summary.Modified(), out.Summary.Total())
-	if err != nil {
-		return err
-	}
-	if len(out.Changes) == 0 {
-		writef("No asset changes detected.\n")
-		return err
-	}
-	for _, c := range out.Changes {
-		writef("- %s [%s]\n", c.AssetID, c.ChangeType)
-		for _, p := range c.PropertyChanges {
-			writef("  * %s: %v -> %v\n", p.Path, p.From, p.To)
-		}
-	}
-	return err
 }
