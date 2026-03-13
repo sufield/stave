@@ -86,7 +86,7 @@ func TestRunBugReport_CreatesBundle(t *testing.T) {
 	t.Setenv("AWS_REGION", "us-west-2")
 
 	bundlePath := filepath.Join(tmpDir, "diag.zip")
-	flags := &reportFlags{
+	opts := reportOptions{
 		out:           bundlePath,
 		tailLines:     2,
 		includeConfig: true,
@@ -98,7 +98,7 @@ func TestRunBugReport_CreatesBundle(t *testing.T) {
 	root.AddCommand(cmd)
 	cmd.SetOut(io.Discard)
 
-	require(runReport(cmd, flags))
+	require(runReport(cmd, opts))
 
 	zr, err := zip.OpenReader(bundlePath)
 	if err != nil {
