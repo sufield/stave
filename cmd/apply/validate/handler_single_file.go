@@ -17,7 +17,7 @@ import (
 // runValidateSingleFile handles the orchestration of validating a single input.
 func runValidateSingleFile(reporter *Reporter, opts *options) error {
 	// 1. Read Input
-	data, source, err := ui.ReadInput(os.Stdin, opts.InFile)
+	data, source, err := ui.ReadInput(os.Stdin, opts.InputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input %q: %w", source, err)
 	}
@@ -59,7 +59,7 @@ func buildValidationRequest(data []byte, opts *options) (appvalidation.ContentVa
 		Data:          data,
 		Kind:          normalizedKind,
 		SchemaVersion: opts.SchemaVersion,
-		Strict:        opts.StrictMode,
+		Strict:        opts.Strict,
 	}, nil
 }
 

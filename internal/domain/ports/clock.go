@@ -24,11 +24,6 @@ func (RealClock) Now() time.Time {
 // FixedClock provides a static time value for testing purposes.
 type FixedClock time.Time
 
-// NewFixedClock returns a Clock that always returns the provided time.
-func NewFixedClock(t time.Time) Clock {
-	return FixedClock(t)
-}
-
 // Now returns the underlying fixed time.
 func (f FixedClock) Now() time.Time {
 	return time.Time(f)

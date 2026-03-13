@@ -28,11 +28,11 @@ unsafe_predicate:
 		t.Fatalf("write control: %v", err)
 	}
 
-	opts := defaultOptions()
-	opts.InFile = inFile
+	opts := newOptions()
+	opts.InputPath = inFile
 	opts.Kind = "control"
 	opts.SchemaVersion = "v1"
-	opts.StrictMode = true
+	opts.Strict = true
 	opts.Format = "text"
 
 	var buf bytes.Buffer
@@ -64,11 +64,11 @@ unexpected: true
 		t.Fatalf("write control: %v", err)
 	}
 
-	opts := defaultOptions()
-	opts.InFile = inFile
+	opts := newOptions()
+	opts.InputPath = inFile
 	opts.Kind = "control"
 	opts.SchemaVersion = "v1"
-	opts.StrictMode = true
+	opts.Strict = true
 	opts.Format = "text"
 
 	var buf bytes.Buffer
@@ -96,11 +96,11 @@ expect: disabled
 		t.Fatalf("write invalid control: %v", err)
 	}
 
-	opts := defaultOptions()
-	opts.InFile = inFile
+	opts := newOptions()
+	opts.InputPath = inFile
 	opts.Kind = "control"
 	opts.SchemaVersion = "v1"
-	opts.StrictMode = true
+	opts.Strict = true
 	opts.Format = "text"
 
 	var buf bytes.Buffer

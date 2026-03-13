@@ -15,31 +15,34 @@ import (
 
 // runValidate is the primary entry point for the cobra command.
 func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	// 1. Prepare: resolve format, normalize paths, check context
-	format, err := prepareValidateCommand(cmd, opts)
-	if err != nil {
-		return err
+	// 1. Prepare environment (git audit, verbose logging)
+	opts.prepareEnvironment(cmd)
+
+	// 2. Resolve format
+	format := opts.Format
+	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
+		format = "json"
 	}
 
-	// 2. Initialize Reporter
-	quiet := opts.QuietMode || cmdutil.QuietEnabled(cmd)
+	// 3. Initialize Reporter
+	quiet := opts.Quiet || cmdutil.QuietEnabled(cmd)
 	rt.Quiet = quiet
-	out := compose.ResolveStdout(cmd, quiet, format)
+	out := compose.ResolveStdout(cmd, quiet, ui.OutputFormat(format))
 
-	f := string(format)
+	f := format
 	if opts.Template != "" {
 		f = opts.Template
 	}
 	rep := &Reporter{
 		Writer:   out,
 		Format:   f,
-		Strict:   opts.StrictMode,
+		Strict:   opts.Strict,
 		FixHints: opts.FixHints,
 		IsJSON:   cmdutil.IsJSONMode(cmd),
 	}
 
-	// 3. Branch: Single File vs. Full Project
-	if opts.InFile != "" {
+	// 4. Branch: Single File vs. Full Project
+	if opts.InputPath != "" {
 		return runValidateSingleFile(rep, opts)
 	}
 
@@ -47,13 +50,8 @@ func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 }
 
 func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts *options) error {
-	// Check for mode-specific flag errors before starting
-	if err := ensureValidateModeFlags(opts); err != nil {
-		return err
-	}
-
 	// Prepare parameters (MaxUnsafe, Time, etc)
-	params := parseValidateParams(opts)
+	params := opts.parseParams()
 	if len(params.issues) > 0 {
 		// If flag parsing itself generated diagnostic issues
 		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
@@ -83,7 +81,7 @@ func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts 
 	if exitErr == nil && !rt.Quiet {
 		ui.WriteHint(cmd.ErrOrStderr(), fmt.Sprintf(
 			"stave apply --controls %s --observations %s",
-			opts.ControlsDir, opts.ObservationsDir,
+			opts.Controls, opts.Observations,
 		))
 	}
 
@@ -104,8 +102,8 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 	// Execute Domain Logic
 	runner := appvalidation.NewRun(obsLoader, ctlLoader)
 	cfg := appvalidation.Config{
-		ControlsDir:     opts.ControlsDir,
-		ObservationsDir: opts.ObservationsDir,
+		ControlsDir:     opts.Controls,
+		ObservationsDir: opts.Observations,
 		MaxUnsafe:       *params.maxUnsafe,
 		NowTime:         params.nowTime,
 		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),

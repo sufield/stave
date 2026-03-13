@@ -5,10 +5,10 @@ import (
 	"io"
 	"strings"
 
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appservice "github.com/sufield/stave/internal/app/service"
 	packs "github.com/sufield/stave/internal/builtin/pack"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -166,8 +166,8 @@ func buildReport(res *appservice.ValidationResult, includeHints bool, opts *opti
 
 	if includeHints {
 		report.FixHints = collectHints(d, hintContext{
-			ControlsDir:     opts.ControlsDir,
-			ObservationsDir: opts.ObservationsDir,
+			ControlsDir:     opts.Controls,
+			ObservationsDir: opts.Observations,
 		})
 	}
 	return report

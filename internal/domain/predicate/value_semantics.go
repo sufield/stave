@@ -1,7 +1,6 @@
 package predicate
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -17,18 +16,6 @@ func StringContains(val, substring any) bool {
 		return false
 	}
 	return strings.Contains(s, sub)
-}
-
-// StringMatches checks if the string representation of val matches
-// the regex pattern provided in pattern.
-func StringMatches(val, pattern any) bool {
-	s, ok1 := toString(val)
-	p, ok2 := toString(pattern)
-	if !ok1 || !ok2 {
-		return false
-	}
-	matched, err := regexp.MatchString(p, s)
-	return err == nil && matched
 }
 
 // IsEmptyValue checks if a value is semantically "empty".

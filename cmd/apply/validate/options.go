@@ -17,168 +17,154 @@ import (
 )
 
 type options struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       string
-	NowTime         string
-	Format          string
-	StrictMode      bool
-	FixHints        bool
-	QuietMode       bool
-	InFile          string
-	SchemaVersion   string
-	Kind            string
-	Template        string
+	// Paths
+	Controls     string
+	Observations string
+	InputPath    string // --in
+
+	// Configuration
+	MaxUnsafe string
+	NowTime   string
+	Strict    bool
+
+	// Metadata Overrides
+	Kind          string
+	SchemaVersion string
+
+	// Output/UI
+	Format   string
+	Template string
+	FixHints bool
+	Quiet    bool
 }
 
-func defaultOptions() *options {
+// newOptions initializes defaults from project configuration.
+func newOptions() *options {
 	return &options{
-		ControlsDir:     "controls/s3",
-		ObservationsDir: "observations",
-		MaxUnsafe:       projconfig.ResolveMaxUnsafeDefault(),
-		Format:          "text",
-		QuietMode:       projconfig.ResolveQuietDefault(),
+		Controls:     "controls/s3",
+		Observations: "observations",
+		MaxUnsafe:    projconfig.ResolveMaxUnsafeDefault(),
+		Format:       "text",
+		Quiet:        projconfig.ResolveQuietDefault(),
 	}
 }
 
 func (o *options) BindFlags(cmd *cobra.Command) {
-	flags := cmd.Flags()
-	flags.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory (inferred from project root if omitted)")
-	flags.StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory (inferred from project root if omitted)")
-	flags.StringVar(&o.MaxUnsafe, "max-unsafe", o.MaxUnsafe, cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
-	flags.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	flags.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
-	flags.BoolVar(&o.StrictMode, "strict", false, "Treat warnings as errors (exit 2)")
-	flags.BoolVar(&o.FixHints, "fix-hints", false, "Print command-level remediation hints after validation issues")
-	flags.BoolVar(&o.QuietMode, "quiet", o.QuietMode, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
-	flags.StringVar(&o.InFile, "in", "", "Path to single input file (use - for stdin). Detection: leading '{'/'[' => observation JSON; otherwise control YAML")
-	flags.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version for --kind mode (defaults by kind)")
-	flags.StringVar(&o.Kind, "kind", "", "Contract kind for --in mode: control|observation|finding")
-	flags.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
+	f := cmd.Flags()
+	f.StringVarP(&o.Controls, "controls", "i", o.Controls, "Path to control definitions (inferred if omitted)")
+	f.StringVarP(&o.Observations, "observations", "o", o.Observations, "Path to observation snapshots (inferred if omitted)")
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", o.MaxUnsafe, cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
+	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
+	f.BoolVar(&o.Strict, "strict", false, "Treat warnings as errors (exit 2)")
+	f.BoolVar(&o.FixHints, "fix-hints", false, "Print remediation hints after issues")
+	f.BoolVar(&o.Quiet, "quiet", o.Quiet, cmdutil.WithDynamicDefaultHelp("Suppress output"))
+	f.StringVar(&o.InputPath, "in", "", "Single input file or '-' for stdin")
+	f.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version override")
+	f.StringVar(&o.Kind, "kind", "", "Contract kind: control|observation|finding")
+	f.StringVar(&o.Template, "template", "", "Custom output template")
 }
 
-func prepareValidateCommand(cmd *cobra.Command, opts *options) (ui.OutputFormat, error) {
+// normalize cleans user input and applies project-root inference.
+func (o *options) normalize(cmd *cobra.Command) {
+	o.Controls = fsutil.CleanUserPath(o.Controls)
+	o.Observations = fsutil.CleanUserPath(o.Observations)
+	o.InputPath = fsutil.CleanUserPath(o.InputPath)
+	o.Kind = strings.TrimSpace(o.Kind)
+	o.SchemaVersion = strings.TrimSpace(o.SchemaVersion)
+
+	// Apply inference if we are not in single-file mode
+	if o.InputPath == "" {
+		log := projctx.NewInferenceLog()
+		o.Controls = log.InferControlsDir(cmd, o.Controls)
+		o.Observations = log.InferObservationsDir(cmd, o.Observations)
+	}
+}
+
+// validate performs logical checks on flag combinations.
+func (o *options) validate() error {
 	if err := projctx.EnsureContextSelectionValid(); err != nil {
-		return "", err
-	}
-
-	format, err := compose.ResolveFormatValue(cmd, opts.Format)
-	if err != nil {
-		return "", err
-	}
-
-	if err := prepareValidatePaths(cmd, opts); err != nil {
-		return "", err
-	}
-
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
-	gitMeta := compose.CollectGitAudit(projctx.RootForContextName(), []string{opts.ControlsDir, cfgPath})
-	if !opts.QuietMode {
-		compose.WarnIfGitDirty(cmd, gitMeta, "validate")
-	}
-	logVerboseContext(cmd, opts)
-
-	return format, nil
-}
-
-func prepareValidatePaths(cmd *cobra.Command, opts *options) error {
-	log := normalizeValidatePaths(cmd, opts)
-	return validateValidateDirs(opts, log)
-}
-
-// normalizeValidatePaths cleans user-supplied paths, trims string fields,
-// and applies project-root inference for controls and observations dirs.
-func normalizeValidatePaths(cmd *cobra.Command, opts *options) *projctx.InferenceLog {
-	opts.ControlsDir = fsutil.CleanUserPath(opts.ControlsDir)
-	opts.ObservationsDir = fsutil.CleanUserPath(opts.ObservationsDir)
-	opts.InFile = fsutil.CleanUserPath(opts.InFile)
-	opts.Kind = strings.TrimSpace(opts.Kind)
-	opts.SchemaVersion = strings.TrimSpace(opts.SchemaVersion)
-	log := projctx.NewInferenceLog()
-
-	opts.ControlsDir = log.InferControlsDir(cmd, opts.ControlsDir)
-	opts.ObservationsDir = log.InferObservationsDir(cmd, opts.ObservationsDir)
-	return log
-}
-
-// validateValidateDirs checks that controls and observations directories
-// exist and are accessible. Skipped when --in is set (single file mode).
-func validateValidateDirs(opts *options, log *projctx.InferenceLog) error {
-	if opts.InFile != "" {
-		return nil
-	}
-	if err := cmdutil.ValidateDirWithInference("--controls", opts.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, log); err != nil {
 		return err
 	}
-	return cmdutil.ValidateDirWithInference("--observations", opts.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, log)
+
+	if o.Kind != "" && o.InputPath == "" {
+		return fmt.Errorf("flag --kind requires --in <file>")
+	}
+
+	// Ensure directories exist if in project mode
+	if o.InputPath == "" {
+		if err := cmdutil.ValidateDir("--controls", o.Controls, ui.ErrHintControlsNotAccessible); err != nil {
+			return err
+		}
+		if err := cmdutil.ValidateDir("--observations", o.Observations, ui.ErrHintObservationsNotAccessible); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// logVerboseContext prints context details to stderr when verbose mode is enabled.
-func logVerboseContext(cmd *cobra.Command, opts *options) {
+// prepareEnvironment handles Git audits and verbose context logging.
+func (o *options) prepareEnvironment(cmd *cobra.Command) {
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	gitMeta := compose.CollectGitAudit(projctx.RootForContextName(), []string{o.Controls, cfgPath})
+	if !o.Quiet && !cmdutil.QuietEnabled(cmd) {
+		compose.WarnIfGitDirty(cmd, gitMeta, "validate")
+	}
+
 	verbosity := 0
 	if cmd != nil {
 		verbosity, _ = cmd.Root().PersistentFlags().GetCount("verbose")
 	}
-	if verbosity == 0 || opts.QuietMode || cmdutil.QuietEnabled(cmd) {
-		return
+	if verbosity > 0 && !o.Quiet && !cmdutil.QuietEnabled(cmd) {
+		sc, _ := projctx.ResolveSelectedGlobalContext()
+		ctxName := "none"
+		if sc.Active && strings.TrimSpace(sc.Name) != "" {
+			ctxName = sc.Name
+		}
+		fmt.Fprintf(cmd.ErrOrStderr(), "context=%s config=%s controls=%s observations=%s\n",
+			ctxName, compose.EmptyDash(cfgPath), o.Controls, o.Observations)
 	}
-	sc, _ := projctx.ResolveSelectedGlobalContext()
-	ctxName := sc.Name
-	if !sc.Active || strings.TrimSpace(ctxName) == "" {
-		ctxName = "none"
-	}
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
-	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "context=%s project_config=%s controls=%s observations=%s\n", ctxName, compose.EmptyDash(cfgPath), opts.ControlsDir, opts.ObservationsDir)
 }
 
+// validateParams holds the fully parsed domain types.
 type validateParams struct {
 	maxUnsafe *time.Duration
 	nowTime   time.Time
 	issues    []diag.Issue
 }
 
-func parseValidateParams(opts *options) validateParams {
-	var params validateParams
+// parseParams converts raw strings from options into structured domain values.
+func (o *options) parseParams() validateParams {
+	var p validateParams
 
-	maxDuration, err := timeutil.ParseDuration(opts.MaxUnsafe)
+	dur, err := timeutil.ParseDuration(o.MaxUnsafe)
 	if err != nil {
-		params.issues = append(params.issues, diag.New(diag.CodeInvalidMaxUnsafe).
+		p.issues = append(p.issues, diag.New(diag.CodeInvalidMaxUnsafe).
 			Error().
 			Action("Use format like 168h, 7d, or 1d12h").
 			Command("stave validate --max-unsafe 168h").
-			With("value", opts.MaxUnsafe).
+			With("value", o.MaxUnsafe).
 			WithSensitive("error", err.Error()).
 			Build())
 	} else {
-		params.maxUnsafe = &maxDuration
+		p.maxUnsafe = &dur
 	}
 
-	if opts.NowTime != "" {
-		t, parseErr := timeutil.ParseRFC3339(opts.NowTime, "--now")
+	if o.NowTime != "" {
+		t, parseErr := timeutil.ParseRFC3339(o.NowTime, "--now")
 		if parseErr != nil {
-			params.issues = append(params.issues, diag.New(diag.CodeInvalidNowTime).
+			p.issues = append(p.issues, diag.New(diag.CodeInvalidNowTime).
 				Error().
 				Action("Use RFC3339 format").
 				Command("stave validate --now 2026-01-15T00:00:00Z").
-				With("value", opts.NowTime).
+				With("value", o.NowTime).
 				WithSensitive("error", parseErr.Error()).
 				Build())
 		} else {
-			params.nowTime = t
+			p.nowTime = t
 		}
 	}
 
-	return params
-}
-
-func (o *options) validate() error {
-	// Add cross-flag validation here (e.g., ensuring --kind is valid if provided)
-	return nil
-}
-
-func ensureValidateModeFlags(opts *options) error {
-	if opts.Kind != "" {
-		return fmt.Errorf("--kind requires --in <file|->")
-	}
-	return nil
+	return p
 }
