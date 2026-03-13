@@ -59,7 +59,7 @@ func TestDocsOpenCommand_JSONOutput(t *testing.T) {
 		t.Fatalf("docs open command failed: %v", err)
 	}
 
-	var out docsOpenOutput
+	var out OpenResult
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("failed to decode json output: %v\noutput=%s", err, buf.String())
 	}
