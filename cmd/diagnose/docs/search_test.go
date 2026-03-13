@@ -42,7 +42,7 @@ func TestDocsSearchCommand_JSONOutput(t *testing.T) {
 		"--format", "json",
 	)
 
-	var out docsSearchOutput
+	var out SearchResult
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
 		t.Fatalf("failed to decode json output: %v\noutput=%s", err, raw)
 	}
