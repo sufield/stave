@@ -19,13 +19,14 @@ func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	opts.prepareEnvironment(cmd)
 
 	// 2. Resolve format
+	gf := cmdutil.GetGlobalFlags(cmd)
 	format := opts.Format
-	if !cmd.Flags().Changed("format") && cmdutil.IsJSONMode(cmd) {
+	if !cmd.Flags().Changed("format") && gf.IsJSONMode() {
 		format = "json"
 	}
 
 	// 3. Initialize Reporter
-	quiet := opts.Quiet || cmdutil.QuietEnabled(cmd)
+	quiet := opts.Quiet || gf.Quiet
 	rt.Quiet = quiet
 	out := compose.ResolveStdout(cmd.OutOrStdout(), quiet, ui.OutputFormat(format))
 
@@ -38,7 +39,7 @@ func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 		Format:   f,
 		Strict:   opts.Strict,
 		FixHints: opts.FixHints,
-		IsJSON:   cmdutil.IsJSONMode(cmd),
+		IsJSON:   gf.IsJSONMode(),
 	}
 
 	// 4. Branch: Single File vs. Full Project
@@ -106,7 +107,7 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 		ObservationsDir: opts.Observations,
 		MaxUnsafe:       *params.maxUnsafe,
 		NowTime:         params.nowTime,
-		SanitizePaths:   cmdutil.SanitizeEnabled(cmd),
+		SanitizePaths:   cmdutil.GetGlobalFlags(cmd).Sanitize,
 	}
 
 	return runner.Execute(compose.CommandContext(cmd), cfg)

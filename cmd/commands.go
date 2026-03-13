@@ -121,7 +121,7 @@ func newVersionCmd() *cobra.Command {
 					}
 				}
 			}
-			if cmdutil.IsJSONMode(cmd) {
+			if cmdutil.GetGlobalFlags(cmd).IsJSONMode() {
 				return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 			}
 			if !verbose {

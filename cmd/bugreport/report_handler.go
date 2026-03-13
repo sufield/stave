@@ -14,6 +14,8 @@ import (
 )
 
 func runReport(cmd *cobra.Command, opts reportOptions) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
+
 	if opts.tailLines < 0 {
 		return &ui.UserError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", opts.tailLines)}
 	}
@@ -40,7 +42,7 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 	}
 
 	logCandidates := make([]string, 0, 2)
-	if p := strings.TrimSpace(cmdutil.LogFilePath(cmd)); p != "" {
+	if p := strings.TrimSpace(gf.LogFile); p != "" {
 		logCandidates = append(logCandidates, fsutil.CleanUserPath(p))
 	}
 	logCandidates = append(logCandidates, filepath.Join(cwd, "stave.log"))
@@ -63,7 +65,7 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 		return err
 	}
 
-	if !cmdutil.QuietEnabled(cmd) {
+	if !gf.Quiet {
 		WriteSummary(cmd.OutOrStdout(), outPath)
 	}
 	return nil

@@ -88,7 +88,7 @@ func executeDiagnoseReport(execCtx diagnoseExecution) (*diagnosis.Report, error)
 	if err != nil {
 		return nil, err
 	}
-	report = output.SanitizeReport(cmdutil.GetSanitizer(execCtx.cmd), report)
+	report = output.SanitizeReport(cmdutil.GetGlobalFlags(execCtx.cmd).GetSanitizer(), report)
 	return filterDiagnosisReport(report, execCtx.opts.Cases, execCtx.opts.SignalContains), nil
 }
 

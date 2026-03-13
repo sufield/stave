@@ -14,18 +14,20 @@ import (
 // CreateOutputFile creates parent directories and opens a file for writing,
 // respecting --force and --allow-symlink-output flags.
 func CreateOutputFile(cmd *cobra.Command, path string) (*os.File, error) {
+	gf := GetGlobalFlags(cmd)
+
 	parent := filepath.Dir(path)
 	if strings.TrimSpace(parent) != "" && parent != "." {
 		if err := fsutil.SafeMkdirAll(parent, fsutil.WriteOptions{
 			Perm:         0o700,
-			AllowSymlink: AllowSymlinkOutEnabled(cmd),
+			AllowSymlink: gf.AllowSymlinkOut,
 		}); err != nil {
 			return nil, fmt.Errorf("create output directory: %w", err)
 		}
 	}
 	opts := fsutil.DefaultWriteOpts()
-	opts.Overwrite = ForceEnabled(cmd)
-	opts.AllowSymlink = AllowSymlinkOutEnabled(cmd)
+	opts.Overwrite = gf.Force
+	opts.AllowSymlink = gf.AllowSymlinkOut
 	f, err := fsutil.SafeCreateFile(path, opts)
 	if err != nil {
 		return nil, fmt.Errorf("create output file: %w", err)

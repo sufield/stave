@@ -36,7 +36,7 @@ func runDoctor(cmd *cobra.Command, format string) error {
 		return err
 	}
 
-	if cmdutil.QuietEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).Quiet {
 		if !ok {
 			return ErrDoctorRequiredIssues
 		}

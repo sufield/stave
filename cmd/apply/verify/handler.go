@@ -26,8 +26,9 @@ func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 		return err
 	}
 
-	sanitizer := cmdutil.GetSanitizer(cmd)
-	rt.Quiet = cmdutil.QuietEnabled(cmd)
+	gf := cmdutil.GetGlobalFlags(cmd)
+	sanitizer := gf.GetSanitizer()
+	rt.Quiet = gf.Quiet
 
 	// 2. Load Control Definitions
 	controls, err := loadVerifyControls(exec.Context, exec.ControlsDir)

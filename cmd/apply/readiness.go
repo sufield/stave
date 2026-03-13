@@ -126,6 +126,7 @@ func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 		hasPacks = true
 	}
 
+	gf := cmdutil.GetGlobalFlags(cmd)
 	planner := NewPlanner(applyvalidate.NewReadinessValidator)
 
 	return planner.Execute(PlanConfig{
@@ -134,8 +135,8 @@ func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 		MaxUnsafe:       opts.MaxUnsafe,
 		Now:             opts.NowTime,
 		Format:          format,
-		Quiet:           cmdutil.QuietEnabled(cmd),
-		Sanitize:        cmdutil.SanitizeEnabled(cmd),
+		Quiet:           gf.Quiet,
+		Sanitize:        gf.Sanitize,
 		Stdout:          cmd.OutOrStdout(),
 		Stderr:          cmd.ErrOrStderr(),
 		ControlsFlagSet: opts.ControlsSet,

@@ -68,7 +68,7 @@ func runCoverage(cmd *cobra.Command, opts *options) error {
 		return err
 	}
 	result := buildResult(controls, latestSnapshot)
-	return writeResult(cmd.OutOrStdout(), input.format, result, cmdutil.GetSanitizer(cmd))
+	return writeResult(cmd.OutOrStdout(), input.format, result, cmdutil.GetGlobalFlags(cmd).GetSanitizer())
 }
 
 type input struct {

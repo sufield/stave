@@ -33,6 +33,7 @@ type checkOptions struct {
 }
 
 func runSave(cmd *cobra.Command, opts *saveOptions) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
 	inPath := fsutil.CleanUserPath(opts.InPath)
 	outPath := fsutil.CleanUserPath(opts.OutPath)
 
@@ -41,7 +42,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		return err
 	}
 	entries := remediation.BaselineEntriesFromFindings(eval.Findings)
-	entries = output.SanitizeBaselineEntries(cmdutil.GetSanitizer(cmd), entries)
+	entries = output.SanitizeBaselineEntries(gf.GetSanitizer(), entries)
 
 	out := evaluation.Baseline{
 		SchemaVersion:    kernel.SchemaBaseline,
@@ -60,7 +61,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		return fmt.Errorf("write baseline file: %w", err)
 	}
 
-	if cmdutil.TextOutputEnabled(cmd) {
+	if gf.TextOutputEnabled() {
 		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Saved baseline: %s (findings=%d)\n", outPath, len(entries))
 	}
 	return nil
@@ -75,7 +76,7 @@ func runCheck(cmd *cobra.Command, opts *checkOptions) error {
 		return err
 	}
 	current := remediation.BaselineEntriesFromFindings(eval.Findings)
-	current = output.SanitizeBaselineEntries(cmdutil.GetSanitizer(cmd), current)
+	current = output.SanitizeBaselineEntries(cmdutil.GetGlobalFlags(cmd).GetSanitizer(), current)
 
 	base, err := shared.LoadBaselineFile(baselinePath, baselineKind)
 	if err != nil {

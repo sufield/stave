@@ -13,7 +13,7 @@ import (
 )
 
 func writeOutput(cmd *cobra.Command, w io.Writer, format ui.OutputFormat, out asset.ObservationDelta) error {
-	if cmdutil.QuietEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).Quiet {
 		return nil
 	}
 	if format.IsJSON() {

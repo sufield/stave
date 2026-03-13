@@ -9,6 +9,6 @@ import (
 // with Quiet resolved from the --quiet flag.
 func NewRuntime(cmd *cobra.Command) *ui.Runtime {
 	rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
-	rt.Quiet = QuietEnabled(cmd)
+	rt.Quiet = GetGlobalFlags(cmd).Quiet
 	return rt
 }

@@ -41,7 +41,7 @@ func runQuality(cmd *cobra.Command, flags *qualityFlagsType) error {
 		Strict:            runInput.strict,
 	})
 
-	if err := writeQualityOutput(cmd.OutOrStdout(), runInput.format, report, cmdutil.QuietEnabled(cmd)); err != nil {
+	if err := writeQualityOutput(cmd.OutOrStdout(), runInput.format, report, cmdutil.GetGlobalFlags(cmd).Quiet); err != nil {
 		return err
 	}
 	if !report.Pass {

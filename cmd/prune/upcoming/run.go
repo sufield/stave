@@ -45,8 +45,9 @@ func runUpcoming(cmd *cobra.Command, flags *upcomingFlagsType) error {
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
 	riskItems = riskItems.Filter(opts.Filter)
+	gf := cmdutil.GetGlobalFlags(cmd)
 	items := mapRiskItems(riskItems)
-	if san := cmdutil.GetSanitizer(cmd); san != nil {
+	if san := gf.GetSanitizer(); san != nil {
 		items = sanitizeUpcomingItems(san, items)
 	}
 	summary := summarizeUpcoming(items, opts.DueSoon)
@@ -56,7 +57,7 @@ func runUpcoming(cmd *cobra.Command, flags *upcomingFlagsType) error {
 	})
 	jsonOut := buildUpcomingOutput(opts, summary, items)
 
-	if !cmdutil.QuietEnabled(cmd) {
+	if !gf.Quiet {
 		return writeUpcomingOutput(opts.Format, cmd.OutOrStdout(), report, jsonOut)
 	}
 	return nil

@@ -69,7 +69,7 @@ func (a *archiveOrchestrator) Apply(_ appeval.CleanupPlan) error {
 	if err := applyArchiveExecutionPlan(a.plan); err != nil {
 		return err
 	}
-	if !cmdutil.QuietEnabled(a.cmd) && !a.plan.Format.IsJSON() {
+	if !cmdutil.GetGlobalFlags(a.cmd).Quiet && !a.plan.Format.IsJSON() {
 		fmt.Fprintf(a.cmd.OutOrStdout(), "Archived %d snapshot(s) to %s.\n", len(a.plan.CandidateFiles), a.plan.archiveDir)
 	}
 	return nil
@@ -149,7 +149,8 @@ func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResol
 		return archiveResolvedInput{}, err
 	}
 
-	overwrite := cmdutil.ForceEnabled(cmd)
+	gf := cmdutil.GetGlobalFlags(cmd)
+	overwrite := gf.Force
 	dryRun := opts.DryRun || !overwrite
 
 	return archiveResolvedInput{
@@ -161,12 +162,12 @@ func resolveArchiveInput(cmd *cobra.Command, opts *archiveOptions) (archiveResol
 			Format:    format,
 			KeepMin:   opts.KeepMin,
 			DryRun:    dryRun,
-			Quiet:     cmdutil.QuietEnabled(cmd),
+			Quiet:     gf.Quiet,
 			Action:    pruner.ActionMove,
 		},
 		ArchiveDir: destArchiveDir,
 		Overwrite:  overwrite,
-		AllowSym:   cmdutil.AllowSymlinkOutEnabled(cmd),
+		AllowSym:   gf.AllowSymlinkOut,
 	}, nil
 }
 

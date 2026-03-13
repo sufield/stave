@@ -16,17 +16,19 @@ import (
 )
 
 func (cc *configCommand) newProjectConfigEditor(cmd *cobra.Command) *cliconfig.Editor[projconfig.ProjectConfig] {
+	gf := cmdutil.GetGlobalFlags(cmd)
+
 	var stderr io.Writer = os.Stderr
 	if cc.rt != nil && cc.rt.Stderr != nil {
 		stderr = cc.rt.Stderr
 	}
 
-	store := projectConfigStore{allowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd), svc: cc.svc}
+	store := projectConfigStore{allowSymlink: gf.AllowSymlinkOut, svc: cc.svc}
 	return &cliconfig.Editor[projconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
 		Stderr:      stderr,
-		Force:       cmdutil.ForceEnabled(cmd),
+		Force:       gf.Force,
 		IsTTY:       cc.isTTY,
 		Confirm:     ui.Confirm,
 	}
@@ -63,7 +65,7 @@ func (cc *configCommand) writeConfigMutationResult(
 	if _, err := fmt.Fprintln(cmd.OutOrStdout(), textLine); err != nil {
 		return err
 	}
-	if showHint && !cmdutil.QuietEnabled(cmd) {
+	if showHint && !cmdutil.GetGlobalFlags(cmd).Quiet {
 		ui.WriteHint(cc.stderrWriter(), "stave config show")
 	}
 	return nil

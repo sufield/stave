@@ -54,7 +54,7 @@ func runSnapshotManifestSign(cmd *cobra.Command, inFile, keyPath, outFile string
 		return fmt.Errorf("write signed manifest %q: %w", out, err)
 	}
 
-	if cmdutil.TextOutputEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).TextOutputEnabled() {
 		fmt.Fprintf(cmd.OutOrStdout(), "Wrote signed manifest: %s\n", out)
 	}
 	return nil

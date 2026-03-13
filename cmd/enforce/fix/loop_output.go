@@ -26,7 +26,7 @@ func writeFixLoopArtifacts(
 	if execCtx.outDir == "" {
 		return artifacts, nil
 	}
-	if err := fsutil.SafeMkdirAll(execCtx.outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)}); err != nil {
+	if err := fsutil.SafeMkdirAll(execCtx.outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: cmdutil.GetGlobalFlags(cmd).AllowSymlinkOut}); err != nil {
 		return fixLoopArtifacts{}, fmt.Errorf("--out directory not writable: %s: %w", execCtx.outDir, err)
 	}
 	beforePath := filepath.Join(execCtx.outDir, "evaluation.before.json")
@@ -64,7 +64,7 @@ func writeFixLoopReport(cmd *cobra.Command, execCtx fixLoopExecution, report *fi
 
 func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safetyenvelope.Evaluation {
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	sanitizer := cmdutil.GetSanitizer(cmd)
+	sanitizer := cmdutil.GetGlobalFlags(cmd).GetSanitizer()
 	enriched := output.Enrich(enricher, sanitizer, result)
 	return output.BuildSafetyEnvelopeFromEnriched(enriched)
 }

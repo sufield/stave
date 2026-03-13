@@ -85,14 +85,14 @@ func runReport(cmd *cobra.Command, flags *reportFlagsType) error {
 		return err
 	}
 
-	compose.WarnGitDirty(cmd.ErrOrStderr(), collectReportGitAudit(), "report", cmdutil.QuietEnabled(cmd))
+	compose.WarnGitDirty(cmd.ErrOrStderr(), collectReportGitAudit(), "report", cmdutil.GetGlobalFlags(cmd).Quiet)
 
 	format, err := compose.ResolveFormatValue(cmd, flags.format)
 	if err != nil {
 		return err
 	}
 
-	quiet := cmdutil.QuietEnabled(cmd)
+	quiet := cmdutil.GetGlobalFlags(cmd).Quiet
 	if format.IsJSON() {
 		return reportrender.RenderJSON(*eval, staveversion.Version, cmd.OutOrStdout(), quiet)
 	}

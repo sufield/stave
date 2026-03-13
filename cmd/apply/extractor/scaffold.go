@@ -22,9 +22,10 @@ type scaffoldResult struct {
 
 func runScaffold(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	// 1. Extract environment/flag state from cmd once
-	force := cmdutil.ForceEnabled(cmd)
-	allowSymlinks := cmdutil.AllowSymlinkOutEnabled(cmd)
-	rt.Quiet = cmdutil.QuietEnabled(cmd)
+	gf := cmdutil.GetGlobalFlags(cmd)
+	force := gf.Force
+	allowSymlinks := gf.AllowSymlinkOut
+	rt.Quiet = gf.Quiet
 
 	// 2. Setup directory
 	baseDir := filepath.Join(opts.Dir, opts.Name)

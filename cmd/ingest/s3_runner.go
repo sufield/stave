@@ -67,15 +67,16 @@ func (r *s3Runner) prepareRun(cmd *cobra.Command) (s3RunConfig, error) {
 		return s3RunConfig{}, parseErr
 	}
 
+	gf := cmdutil.GetGlobalFlags(cmd)
 	if outDir != "" {
-		mkdirErr := fsutil.SafeMkdirAll(outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd)})
+		mkdirErr := fsutil.SafeMkdirAll(outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: gf.AllowSymlinkOut})
 		if mkdirErr != nil {
 			return s3RunConfig{}, fmt.Errorf("create --out-dir: %w", mkdirErr)
 		}
 		outFile = filepath.Join(outDir, now.UTC().Format(time.RFC3339)+".json")
 	}
 
-	writableErr := ensureOutputWritable(outFile, r.opts.Force || cmdutil.ForceEnabled(cmd), r.opts.DryRun)
+	writableErr := ensureOutputWritable(outFile, r.opts.Force || gf.Force, r.opts.DryRun)
 	if writableErr != nil {
 		return s3RunConfig{}, writableErr
 	}
@@ -155,8 +156,9 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 		return r.handleEmptySnapshot(cmd, cfg)
 	}
 
+	gf := cmdutil.GetGlobalFlags(cmd)
 	if r.opts.DryRun {
-		if cmdutil.TextOutputEnabled(cmd) {
+		if gf.TextOutputEnabled() {
 			fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
 		}
 		return nil
@@ -166,7 +168,7 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 		return err
 	}
 
-	if cmdutil.TextOutputEnabled(cmd) {
+	if gf.TextOutputEnabled() {
 		fmt.Fprintf(cmd.OutOrStdout(), "Extracted %d bucket(s) to %s\n", len(snapshots[0].Assets), cfg.outFile)
 		printIngestCoverage(cmd.OutOrStdout(), snapshots[len(snapshots)-1].Assets)
 	}
@@ -174,11 +176,12 @@ func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots 
 }
 
 func (r *s3Runner) handleEmptySnapshot(cmd *cobra.Command, cfg s3RunConfig) error {
-	if cmdutil.TextOutputEnabled(cmd) {
+	gf := cmdutil.GetGlobalFlags(cmd)
+	if gf.TextOutputEnabled() {
 		fmt.Fprintln(cmd.OutOrStdout(), "No S3 buckets matching health scope found in snapshot")
 	}
 	if r.opts.DryRun {
-		if cmdutil.TextOutputEnabled(cmd) {
+		if gf.TextOutputEnabled() {
 			fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
 		}
 		return nil
@@ -187,11 +190,12 @@ func (r *s3Runner) handleEmptySnapshot(cmd *cobra.Command, cfg s3RunConfig) erro
 }
 
 func (r *s3Runner) writeObservationsFile(cmd *cobra.Command, path string, snapshots []asset.Snapshot) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
 	req := appingest.ObservationsWriteRequest{
 		Path:         path,
 		Snapshots:    snapshots,
-		Overwrite:    r.opts.Force || cmdutil.ForceEnabled(cmd),
-		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
+		Overwrite:    r.opts.Force || gf.Force,
+		AllowSymlink: gf.AllowSymlinkOut,
 		Writer:       observations.JSONWriter{},
 	}
 	if r.opts.Scrub {

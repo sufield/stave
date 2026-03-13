@@ -49,7 +49,7 @@ func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile st
 		return fmt.Errorf("write manifest %q: %w", out, err)
 	}
 
-	if cmdutil.TextOutputEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).TextOutputEnabled() {
 		fmt.Fprintf(cmd.OutOrStdout(), "Wrote manifest with %d files: %s\n", len(files), out)
 		if skipped > 0 {
 			fmt.Fprintf(cmd.OutOrStdout(), "Skipped %d non-observation JSON file(s)\n", skipped)

@@ -80,7 +80,7 @@ func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error)
 			IncludeAll:      o.IncludeAll,
 			OutputFormat:    o.Format,
 			NowTime:         o.NowTime,
-			Quiet:           cmdutil.QuietEnabled(cmd),
+			Quiet:           cmdutil.GetGlobalFlags(cmd).Quiet,
 		},
 	}, nil
 }
