@@ -16,40 +16,76 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/sanitize"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
+// verifyExecution holds parsed runtime parameters for the verification run.
+type verifyExecution struct {
+	ctx          context.Context
+	maxUnsafe    time.Duration
+	clock        ports.Clock
+	allowUnknown bool
+}
+
 func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	execCtx, err := opts.prepareExecution(compose.CommandContext(cmd))
-	if err != nil {
-		return err
-	}
-	controls, err := loadVerifyControls(execCtx.ctx, execCtx.controlsDir)
+	// 1. Parse runtime parameters
+	maxUnsafe, clock, err := parseRuntime(opts)
 	if err != nil {
 		return err
 	}
 
+	ctx := compose.CommandContext(cmd)
+	controls, err := loadVerifyControls(ctx, opts.ControlsDir)
+	if err != nil {
+		return err
+	}
+
+	execCtx := verifyExecution{
+		ctx:          ctx,
+		maxUnsafe:    maxUnsafe,
+		clock:        clock,
+		allowUnknown: opts.AllowUnknown,
+	}
+
+	// 2. Run evaluations
+	rt.Quiet = opts.Quiet || cmdutil.QuietEnabled(cmd)
+
 	beforeDone := rt.BeginProgress("apply before observations")
-	beforeEval, err := runVerifyEvaluation(execCtx, controls, execCtx.beforeDir)
+	beforeEval, err := runVerifyEvaluation(execCtx, controls, opts.BeforeDir)
 	beforeDone()
 	if err != nil {
 		return fmt.Errorf("before evaluation: %w", err)
 	}
 
 	afterDone := rt.BeginProgress("apply after observations")
-	afterEval, err := runVerifyEvaluation(execCtx, controls, execCtx.afterDir)
+	afterEval, err := runVerifyEvaluation(execCtx, controls, opts.AfterDir)
 	afterDone()
 	if err != nil {
 		return fmt.Errorf("after evaluation: %w", err)
 	}
 
+	// 3. Build and write output
 	outcome := buildVerificationOutcome(cmd, execCtx, beforeEval, afterEval)
 	if err := writeVerificationJSON(cmd.OutOrStdout(), outcome.result); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
-	return verifyOutcomeExit(cmd, rt, outcome)
+	return verifyOutcomeExit(rt, outcome)
+}
+
+// parseRuntime converts raw option strings into structured runtime values.
+func parseRuntime(opts *options) (time.Duration, ports.Clock, error) {
+	maxDuration, err := timeutil.ParseDurationFlag(opts.MaxUnsafe, "--max-unsafe")
+	if err != nil {
+		return 0, nil, err
+	}
+	clock, err := compose.ResolveClock(opts.NowTime)
+	if err != nil {
+		return 0, nil, err
+	}
+	return maxDuration, clock, nil
 }
 
 type verifyEvaluation struct {
@@ -132,9 +168,8 @@ func redactVerificationEntries(sanitizer *sanitize.Sanitizer, entries []safetyen
 	return out
 }
 
-func verifyOutcomeExit(cmd *cobra.Command, rt *ui.Runtime, outcome verifyOutcome) error {
+func verifyOutcomeExit(rt *ui.Runtime, outcome verifyOutcome) error {
 	if outcome.remainingCount > 0 || outcome.introducedCount > 0 {
-		rt.Quiet = cmdutil.QuietEnabled(cmd)
 		rt.PrintNextSteps(
 			"Run `stave diagnose` against the after observations to understand remaining violations.",
 			"Run `stave ci fix-loop` for automated before/after comparison with detailed reports.",
@@ -144,7 +179,6 @@ func verifyOutcomeExit(cmd *cobra.Command, rt *ui.Runtime, outcome verifyOutcome
 	return nil
 }
 
-// runEvaluation evaluates observations against controls and returns the result.
 type runEvaluationRequest struct {
 	Context          context.Context
 	ObservationsDir  string
