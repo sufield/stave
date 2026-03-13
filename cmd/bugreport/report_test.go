@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/internal/platform/scrub"
 )
 
 func newTestRootCmd() *cobra.Command {
@@ -51,7 +53,7 @@ func TestRedactCredentialFormats(t *testing.T) {
 		"url: https://user:pass@example.com/path",
 	}, "\n"))
 
-	out := string(redactCredentialFormats(in))
+	out := string(scrub.Credentials(in))
 	if strings.Contains(out, "AKIAABCDEFGHIJKLMNOP") {
 		t.Fatalf("AKIA key should be redacted, got:\n%s", out)
 	}
