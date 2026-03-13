@@ -154,27 +154,25 @@ const (
 	LayerEnvironment                      // environment variable
 )
 
-// ResolvedConfigValue holds a resolved value, its source, and the layer it came from.
-type ResolvedConfigValue struct {
+// Value holds a resolved configuration value, its source, and the layer it came from.
+type Value struct {
 	Value  string
 	Source string
 	Layer  ConfigLayer
 }
 
-// ResolvedBoolValue holds a resolved boolean, its source, and the layer it came from.
-type ResolvedBoolValue struct {
-	Bool   bool
-	Source string
-	Layer  ConfigLayer
+// AsBool interprets the value as a boolean ("true" → true, anything else → false).
+func (v Value) AsBool() bool {
+	return v.Value == "true"
 }
 
-// ToConfigValue converts to ResolvedConfigValue for display.
-func (v ResolvedBoolValue) ToConfigValue() ResolvedConfigValue {
+// boolValue constructs a Value from a boolean.
+func boolValue(b bool, source string, layer ConfigLayer) Value {
 	s := "false"
-	if v.Bool {
+	if b {
 		s = "true"
 	}
-	return ResolvedConfigValue{Value: s, Source: v.Source, Layer: v.Layer}
+	return Value{Value: s, Source: source, Layer: layer}
 }
 
 // NormalizeRetentionTier normalizes a tier name.

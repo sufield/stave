@@ -24,27 +24,29 @@ type configShowOutput = configservice.EffectiveConfig
 
 func buildConfigShowOutput() configShowOutput {
 	cfg, cfgPath, hasCfg := projconfig.FindProjectConfigWithPath("")
+	uCfg, uPath, _ := projconfig.FindUserConfigWithPath()
+	eval := projconfig.NewEvaluator(cfg, cfgPath, uCfg, uPath)
 
-	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
+	retTier := eval.RetentionTier()
 	out := configShowOutput{
 		DefaultRetentionTier:     toConfigField(retTier),
-		MaxUnsafe:                toConfigField(projconfig.ResolveMaxUnsafeWithSource(cfg, cfgPath)),
-		SnapshotRetention:        toConfigField(projconfig.ResolveSnapshotRetentionWithSource(cfg, cfgPath, retTier.Value)),
-		CIFailurePolicy:          toConfigField(projconfig.ResolveCIFailurePolicyWithSource(cfg, cfgPath)),
-		CLIOutput:                toConfigField(projconfig.ResolveCLIOutputWithSource()),
-		CLIQuiet:                 toConfigField(projconfig.ResolveCLIQuietWithSource().ToConfigValue()),
-		CLISanitize:              toConfigField(projconfig.ResolveCLISanitizeWithSource().ToConfigValue()),
-		CLIPathMode:              toConfigField(projconfig.ResolveCLIPathModeWithSource()),
-		CLIAllowUnknownInput:     toConfigField(projconfig.ResolveCLIAllowUnknownInputWithSource().ToConfigValue()),
+		MaxUnsafe:                toConfigField(eval.MaxUnsafe()),
+		SnapshotRetention:        toConfigField(eval.SnapshotRetention(retTier.Value)),
+		CIFailurePolicy:          toConfigField(eval.CIFailurePolicy()),
+		CLIOutput:                toConfigField(eval.CLIOutput()),
+		CLIQuiet:                 toConfigField(eval.CLIQuiet()),
+		CLISanitize:              toConfigField(eval.CLISanitize()),
+		CLIPathMode:              toConfigField(eval.CLIPathMode()),
+		CLIAllowUnknownInput:     toConfigField(eval.CLIAllowUnknownInput()),
 		DefinedRetentionTiers:    resolveDefinedRetentionTiers(cfg),
 		EffectiveRetentionByTier: map[string]configResolvedField{},
 	}
 	applyProjectConfigLocation(&out, hasCfg, cfgPath)
-	if _, userPath, ok := projconfig.FindUserConfigWithPath(); ok {
-		out.UserConfigFile = userPath
+	if uPath != "" {
+		out.UserConfigFile = uPath
 	}
 	for tier := range out.DefinedRetentionTiers {
-		out.EffectiveRetentionByTier[tier] = toConfigField(projconfig.ResolveSnapshotRetentionWithSource(cfg, cfgPath, tier))
+		out.EffectiveRetentionByTier[tier] = toConfigField(eval.SnapshotRetention(tier))
 	}
 	return out
 }
@@ -74,7 +76,7 @@ func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
 	return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
 }
 
-func toConfigField(v projconfig.ResolvedConfigValue) configResolvedField {
+func toConfigField(v projconfig.Value) configResolvedField {
 	return configResolvedField{Value: v.Value, Source: v.Source}
 }
 
