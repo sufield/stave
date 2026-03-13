@@ -16,7 +16,8 @@ func BuildModel(in BuildModelInput) S3StorageModel {
 		},
 		Controls: buildS3Controls(in),
 		PrefixExposure: buildPrefixExposureModel(prefixExposureModelInput{
-			PolicyJSON:     bucket.PolicyJSON,
+			PrefixScopes:   in.Analysis.PrefixScopes,
+			HasPolicy:      in.Analysis.HasPolicy,
 			ACLAnalysis:    in.Analysis.ACL,
 			HasACLAnalysis: in.Analysis.HasACL,
 			PolicyBlocked:  in.Visibility.IdentityExposureBlocked,

@@ -12,6 +12,7 @@ type S3AnalysisResult struct {
 	ACL          s3acl.Analysis
 	Transport    s3policy.TransportEncryptionAnalysis
 	CrossAccount s3policy.CrossAccountAnalysis
+	PrefixScopes s3policy.PrefixScopeAnalysis
 }
 
 func (b *S3Bucket) Analyze() S3AnalysisResult {
@@ -26,6 +27,7 @@ func (b *S3Bucket) Analyze() S3AnalysisResult {
 			result.Policy = engine.FullAnalysis()
 			result.Transport = engine.TransportEncryptionAnalysis()
 			result.CrossAccount = engine.CrossAccountAnalysis()
+			result.PrefixScopes = engine.PrefixScopeAnalysis()
 		}
 	}
 	if len(b.ACLGrants) > 0 {

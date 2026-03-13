@@ -1,0 +1,247 @@
+package policy
+
+import (
+	"testing"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
+
+func TestPrefixScopeAnalysisWildcardResource(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Sid": "PublicRead",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
+	}
+	if result.Scopes[0] != kernel.WildcardPrefix {
+		t.Errorf("expected WildcardPrefix, got %q", result.Scopes[0])
+	}
+	if result.SourceByScope[kernel.WildcardPrefix] != "PublicRead" {
+		t.Errorf("expected source 'PublicRead', got %q", result.SourceByScope[kernel.WildcardPrefix])
+	}
+}
+
+func TestPrefixScopeAnalysisPrefixedResource(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Sid": "InvoiceAccess",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::bucket/invoices/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
+	}
+	expected := kernel.ObjectPrefix("invoices/")
+	if result.Scopes[0] != expected {
+		t.Errorf("expected %q, got %q", expected, result.Scopes[0])
+	}
+	if result.SourceByScope[expected] != "InvoiceAccess" {
+		t.Errorf("expected source 'InvoiceAccess', got %q", result.SourceByScope[expected])
+	}
+}
+
+func TestPrefixScopeAnalysisNonAllowSkipped(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Deny",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 0 {
+		t.Errorf("expected 0 scopes for Deny, got %d", len(result.Scopes))
+	}
+}
+
+func TestPrefixScopeAnalysisNonPublicPrincipalSkipped(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 0 {
+		t.Errorf("expected 0 scopes for specific account principal, got %d", len(result.Scopes))
+	}
+}
+
+func TestPrefixScopeAnalysisNonReadActionsSkipped(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 0 {
+		t.Errorf("expected 0 scopes for PutObject, got %d", len(result.Scopes))
+	}
+}
+
+func TestPrefixScopeAnalysisSidAbsentUsesIndex(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
+	}
+	if result.SourceByScope[kernel.WildcardPrefix] != "stmt-0" {
+		t.Errorf("expected source 'stmt-0', got %q", result.SourceByScope[kernel.WildcardPrefix])
+	}
+}
+
+func TestPrefixScopeAnalysisS3WildcardAction(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:*",
+			"Resource": "arn:aws:s3:::bucket/data/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
+	}
+	expected := kernel.ObjectPrefix("data/")
+	if result.Scopes[0] != expected {
+		t.Errorf("expected %q, got %q", expected, result.Scopes[0])
+	}
+}
+
+func TestPrefixScopeAnalysisFullWildcardAction(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "*",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
+	}
+	if result.Scopes[0] != kernel.WildcardPrefix {
+		t.Errorf("expected WildcardPrefix, got %q", result.Scopes[0])
+	}
+}
+
+func TestPrefixScopeAnalysisAWSPrincipalWildcard(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": {"AWS": "*"},
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::bucket/*"
+		}]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Fatalf("expected 1 scope for AWS:* principal, got %d", len(result.Scopes))
+	}
+}
+
+func TestPrefixScopeAnalysisDeduplicatesScopes(t *testing.T) {
+	engine := mustEngine(t, `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Sid": "First",
+				"Effect": "Allow",
+				"Principal": "*",
+				"Action": "s3:GetObject",
+				"Resource": "arn:aws:s3:::bucket/*"
+			},
+			{
+				"Sid": "Second",
+				"Effect": "Allow",
+				"Principal": "*",
+				"Action": "s3:GetObject",
+				"Resource": "arn:aws:s3:::bucket/*"
+			}
+		]
+	}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 1 {
+		t.Errorf("expected 1 deduplicated scope, got %d", len(result.Scopes))
+	}
+	if result.SourceByScope[kernel.WildcardPrefix] != "First" {
+		t.Errorf("expected first Sid to win, got %q", result.SourceByScope[kernel.WildcardPrefix])
+	}
+}
+
+func TestPrefixScopeAnalysisEmptyPolicy(t *testing.T) {
+	engine := mustEngine(t, `{"Version": "2012-10-17", "Statement": []}`)
+
+	result := engine.PrefixScopeAnalysis()
+
+	if len(result.Scopes) != 0 {
+		t.Errorf("expected 0 scopes for empty statement list, got %d", len(result.Scopes))
+	}
+	if result.SourceByScope == nil {
+		t.Error("expected non-nil SourceByScope map")
+	}
+}
+
+func mustEngine(t *testing.T, policyJSON string) *Engine {
+	t.Helper()
+	engine, err := NewEngine(policyJSON)
+	if err != nil {
+		t.Fatalf("NewEngine: %v", err)
+	}
+	return engine
+}
