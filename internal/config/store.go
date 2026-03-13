@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -14,11 +14,13 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// ErrContextNotFound is returned when a named context does not exist in the store.
-var ErrContextNotFound = errors.New("context not found")
+var (
+	// ErrContextNotFound is returned when a requested context name doesn't exist.
+	ErrContextNotFound = errors.New("context not found")
 
-// ErrNoConfigDir is returned when neither config dir nor home dir can be resolved.
-var ErrNoConfigDir = errors.New("could not resolve a config directory or user home")
+	// ErrNoConfigDir is returned when standard system config locations cannot be found.
+	ErrNoConfigDir = errors.New("could not resolve a config directory or user home")
+)
 
 type Defaults struct {
 	ControlsDir     string `yaml:"controls_dir,omitempty"`
@@ -31,90 +33,78 @@ type Context struct {
 	Defaults      Defaults `yaml:"defaults,omitempty"`
 }
 
+// Store represents the persistent collection of named stave contexts.
 type Store struct {
 	Active   string             `yaml:"active,omitempty"`
 	Contexts map[string]Context `yaml:"contexts,omitempty"`
 	path     string             `yaml:"-"`
 }
 
-// NewStore initializes a Store with a ready-to-use context map.
+// NewStore initializes an empty Store.
 func NewStore() *Store {
 	return &Store{
 		Contexts: make(map[string]Context),
 	}
 }
 
-// UnmarshalYAML ensures a decoded Store always has a non-nil Contexts map.
+// UnmarshalYAML handles custom decoding to ensure maps are always initialized.
 func (s *Store) UnmarshalYAML(value *yaml.Node) error {
-	type alias Store
-	var tmp alias
-	if err := value.Decode(&tmp); err != nil {
+	type rawStore Store
+	var aux rawStore
+	if err := value.Decode(&aux); err != nil {
 		return err
 	}
-	*s = Store(tmp)
+	*s = Store(aux)
 	if s.Contexts == nil {
 		s.Contexts = make(map[string]Context)
 	}
 	return nil
 }
 
-func resolveStorePath() (string, error) {
-	if v := strings.TrimSpace(os.Getenv(env.ContextsFile.Name)); v != "" {
-		return v, nil
-	}
-	if cfgDir, err := os.UserConfigDir(); err == nil && strings.TrimSpace(cfgDir) != "" {
-		return filepath.Join(cfgDir, "stave", "contexts.yaml"), nil
-	}
-	home, err := os.UserHomeDir()
-	if err != nil || strings.TrimSpace(home) == "" {
-		return "", ErrNoConfigDir
-	}
-	return filepath.Join(home, ".config", "stave", "contexts.yaml"), nil
-}
-
-// Load reads the context store from disk.
+// Load reads the context store from the standard or overridden filesystem path.
 func Load() (*Store, string, error) {
 	path, err := resolveStorePath()
 	if err != nil {
 		return nil, "", err
 	}
 
-	st := NewStore()
-	st.path = path
+	store := NewStore()
+	store.path = path
 
 	// #nosec G304 -- path comes from a local config location or explicit STAVE_CONTEXTS_FILE override.
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return st, path, nil
+			return store, path, nil
 		}
-		return nil, "", fmt.Errorf("read config: %w", err)
+		return nil, "", fmt.Errorf("failed to read context file: %w", err)
 	}
 
-	if err := yaml.Unmarshal(data, st); err != nil {
-		return nil, "", fmt.Errorf("parse yaml at %s: %w", path, err)
+	if err := yaml.Unmarshal(data, store); err != nil {
+		return nil, "", fmt.Errorf("failed to parse context YAML at %q: %w", path, err)
 	}
 
-	return st, path, nil
+	return store, path, nil
 }
 
-// Save persists the context store to disk.
+// Save persists the current state of the store to disk.
 func (s *Store) Save() error {
-	if strings.TrimSpace(s.path) == "" {
-		path, err := resolveStorePath()
+	if s.path == "" {
+		p, err := resolveStorePath()
 		if err != nil {
 			return err
 		}
-		s.path = path
+		s.path = p
 	}
 
-	if err := fsutil.SafeMkdirAll(filepath.Dir(s.path), fsutil.WriteOptions{Perm: 0o700}); err != nil {
-		return fmt.Errorf("create config directory: %w", err)
+	dir := filepath.Dir(s.path)
+	if err := fsutil.SafeMkdirAll(dir, fsutil.WriteOptions{Perm: 0o700}); err != nil {
+		return fmt.Errorf("failed to create config directory %q: %w", dir, err)
 	}
 
 	out, err := yaml.Marshal(s)
 	if err != nil {
-		return fmt.Errorf("marshal config: %w", err)
+		return fmt.Errorf("failed to marshal context config: %w", err)
 	}
 
 	return fsutil.SafeWriteFile(s.path, out, fsutil.WriteOptions{
@@ -123,60 +113,81 @@ func (s *Store) Save() error {
 	})
 }
 
+// NormalizeName trims whitespace from a context name.
 func NormalizeName(name string) string {
 	return strings.TrimSpace(name)
 }
 
+// Names returns a sorted list of all available context names.
 func (s *Store) Names() []string {
 	if len(s.Contexts) == 0 {
 		return nil
 	}
-	out := make([]string, 0, len(s.Contexts))
-	for name := range s.Contexts {
-		out = append(out, name)
+	names := make([]string, 0, len(s.Contexts))
+	for n := range s.Contexts {
+		names = append(names, n)
 	}
-	sort.Strings(out)
-	return out
+	slices.Sort(names)
+	return names
 }
 
-// ResolveSelected identifies the selected context.
-// Precedence is environment variable first, then active context in store.
-func (s *Store) ResolveSelected() (name string, ctx *Context, exists bool, err error) {
-	name = strings.TrimSpace(os.Getenv(env.Context.Name))
+// ResolveSelected identifies which context is currently active.
+// Precedence: STAVE_CONTEXT env var > active field in contexts.yaml.
+func (s *Store) ResolveSelected() (string, *Context, bool, error) {
+	name := strings.TrimSpace(os.Getenv(env.Context.Name))
 	source := "environment variable"
+
 	if name == "" {
 		name = strings.TrimSpace(s.Active)
 		source = "active config"
 	}
+
 	if name == "" {
 		return "", nil, false, nil
 	}
 
 	selected, ok := s.Contexts[name]
 	if !ok {
-		return "", nil, false, fmt.Errorf("%w: %q from %s (available: %s)", ErrContextNotFound, name, source, strings.Join(s.Names(), ", "))
+		available := strings.Join(s.Names(), ", ")
+		return "", nil, false, fmt.Errorf("%w: %q (from %s); available: [%s]",
+			ErrContextNotFound, name, source, available)
 	}
 
 	return name, &selected, true, nil
 }
 
-// Root returns the trimmed project root for this context.
-func (c Context) Root() string {
-	return strings.TrimSpace(c.ProjectRoot)
-}
-
-// AbsPath resolves p against the context's project root.
+// AbsPath joins the provided path with the context's project root if the path is relative.
 func (c Context) AbsPath(p string) string {
-	clean := strings.TrimSpace(p)
-	if clean == "" {
+	p = strings.TrimSpace(p)
+	if p == "" {
 		return ""
 	}
-	if filepath.IsAbs(clean) {
-		return filepath.Clean(clean)
+
+	if filepath.IsAbs(p) {
+		return filepath.Clean(p)
 	}
-	root := c.Root()
+
+	root := strings.TrimSpace(c.ProjectRoot)
 	if root == "" {
-		return filepath.Clean(clean)
+		return filepath.Clean(p)
 	}
-	return filepath.Clean(filepath.Join(root, clean))
+
+	return filepath.Clean(filepath.Join(root, p))
+}
+
+// resolveStorePath determines where the context file should be stored.
+func resolveStorePath() (string, error) {
+	if v := strings.TrimSpace(os.Getenv(env.ContextsFile.Name)); v != "" {
+		return v, nil
+	}
+
+	if cfgDir, err := os.UserConfigDir(); err == nil && cfgDir != "" {
+		return filepath.Join(cfgDir, "stave", "contexts.yaml"), nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return "", ErrNoConfigDir
+	}
+	return filepath.Join(home, ".config", "stave", "contexts.yaml"), nil
 }
