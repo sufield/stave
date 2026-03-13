@@ -48,7 +48,7 @@ func runReport(cmd *cobra.Command, flags *reportFlags) error {
 
 func prepareOutputFile(cmd *cobra.Command, flags *reportFlags) (preparedOutput, error) {
 	if flags.tailLines < 0 {
-		return preparedOutput{}, &ui.InputError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", flags.tailLines)}
+		return preparedOutput{}, &ui.UserError{Err: fmt.Errorf("invalid --tail-lines %d: must be >= 0", flags.tailLines)}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {

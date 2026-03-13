@@ -9,37 +9,19 @@ import (
 	"strings"
 )
 
-// ErrorEnvelope is the standard JSON error format for all commands.
-type ErrorEnvelope struct {
-	OK    bool       `json:"ok"`
-	Error *ErrorInfo `json:"error,omitempty"`
-}
+// Exit codes following the platform contract.
+const (
+	ExitSuccess     = 0   // No issues
+	ExitSecurity    = 1   // Security-audit gating failure
+	ExitInputError  = 2   // Invalid input, flags, or schema validation failure
+	ExitViolations  = 3   // Evaluation completed with findings/diagnostics
+	ExitInternal    = 4   // Unexpected internal error
+	ExitInterrupted = 130 // Interrupted by SIGINT (Ctrl+C)
+)
 
-// ErrorCode is a typed error code for structured CLI error envelopes.
+// ErrorCode is a stable string identifier for categories of failures.
 type ErrorCode string
 
-// ErrorInfo contains structured error details.
-type ErrorInfo struct {
-	Code     ErrorCode         `json:"code"`
-	Title    string            `json:"title,omitempty"`
-	Message  string            `json:"message"`
-	Action   string            `json:"action,omitempty"`
-	URL      string            `json:"url,omitempty"`
-	Evidence map[string]string `json:"evidence,omitempty"`
-}
-
-// Error returns a concise string representation for ErrorInfo.
-func (e *ErrorInfo) Error() string {
-	if e == nil {
-		return ""
-	}
-	if e.Title != "" {
-		return fmt.Sprintf("[%s] %s: %s", e.Code, e.Title, e.Message)
-	}
-	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
-}
-
-// Common error codes.
 const (
 	CodeIOError               ErrorCode = "IO_ERROR"
 	CodeParseError            ErrorCode = "PARSE_ERROR"
@@ -52,26 +34,7 @@ const (
 	CodeSecurityAuditFindings ErrorCode = "SECURITY_AUDIT_FINDINGS"
 )
 
-// Exit codes following the contract.
-// These are stable for CI/CD integration.
-const (
-	ExitSuccess     = 0   // No issues, clean run
-	ExitSecurity    = 1   // Security-audit gating failure
-	ExitInputError  = 2   // Invalid input, schema validation failure
-	ExitViolations  = 3   // Evaluation completed with violations found
-	ExitInternal    = 4   // Unexpected internal error
-	ExitInterrupted = 130 // Interrupted by SIGINT
-)
-
-// InputError wraps an error that should exit with ExitInputError (2).
-// Unlike sentinel errors, InputError is not suppressed by writeCommandError,
-// so the error message (including flag suggestions) is still printed.
-type InputError struct{ Err error }
-
-func (e *InputError) Error() string { return e.Err.Error() }
-func (e *InputError) Unwrap() error { return e.Err }
-
-// Sentinel errors for exit code mapping.
+// Sentinel errors used for logic-based exit code mapping.
 var (
 	ErrViolationsFound       = errors.New("violations found")
 	ErrValidationWarnings    = errors.New("validation warnings")
@@ -82,14 +45,40 @@ var (
 	ErrInternal              = errors.New("internal error")
 )
 
-// ExitCode returns the appropriate exit code for an error.
-// Exit code contract:
-//   - 0: Success, no issues
-//   - 1: Security-audit gating failure
-//   - 2: Invalid input, schema validation failure
-//   - 3: Violations found (apply) or diagnostics found (diagnose)
-//   - 4: Unexpected internal error
-//   - 130: Interrupted by SIGINT
+// ErrorEnvelope is the standard JSON structure for error responses.
+type ErrorEnvelope struct {
+	OK    bool       `json:"ok"`
+	Error *ErrorInfo `json:"error,omitempty"`
+}
+
+// ErrorInfo contains human-readable and machine-readable error details.
+type ErrorInfo struct {
+	Code     ErrorCode         `json:"code"`
+	Title    string            `json:"title,omitempty"`
+	Message  string            `json:"message"`
+	Action   string            `json:"action,omitempty"`
+	URL      string            `json:"url,omitempty"`
+	Evidence map[string]string `json:"evidence,omitempty"`
+}
+
+// Error implements the standard error interface.
+func (e *ErrorInfo) Error() string {
+	if e == nil {
+		return ""
+	}
+	if e.Title != "" {
+		return fmt.Sprintf("[%s] %s: %s", e.Code, e.Title, e.Message)
+	}
+	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
+}
+
+// UserError wraps an error caused by user input that should exit with code 2.
+type UserError struct{ Err error }
+
+func (e *UserError) Error() string { return e.Err.Error() }
+func (e *UserError) Unwrap() error { return e.Err }
+
+// ExitCode derives the standard exit code from an error chain.
 func ExitCode(err error) int {
 	if err == nil {
 		return ExitSuccess
@@ -106,26 +95,15 @@ func ExitCode(err error) int {
 		return ExitSecurity
 	case errors.Is(err, ErrInternal):
 		return ExitInternal
-	default:
-		var inputErr *InputError
-		if errors.As(err, &inputErr) {
-			return ExitInputError
-		}
-		// Unrecognized errors default to exit 2 (input error).
-		// True internal errors are caught by the panic handler or ErrInternal.
+	}
+
+	var uErr *UserError
+	if errors.As(err, &uErr) {
 		return ExitInputError
 	}
-}
 
-// WriteErrorJSON writes an error envelope to the writer.
-func WriteErrorJSON(w io.Writer, info *ErrorInfo) error {
-	envelope := ErrorEnvelope{
-		OK:    false,
-		Error: info,
-	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(envelope)
+	// Unknown errors default to ExitInputError (2) in CLI contexts.
+	return ExitInputError
 }
 
 // NewErrorInfo creates an ErrorInfo with the given code and message.
@@ -136,83 +114,98 @@ func NewErrorInfo(code ErrorCode, message string) *ErrorInfo {
 	}
 }
 
+// --- Builder Methods ---
+
 // WithTitle adds a short error title.
-func (e *ErrorInfo) WithTitle(title string) *ErrorInfo {
-	e.Title = title
+func (e *ErrorInfo) WithTitle(t string) *ErrorInfo {
+	if e != nil {
+		e.Title = t
+	}
 	return e
 }
 
 // WithAction adds an action suggestion to the error.
-func (e *ErrorInfo) WithAction(action string) *ErrorInfo {
-	e.Action = action
+func (e *ErrorInfo) WithAction(a string) *ErrorInfo {
+	if e != nil {
+		e.Action = a
+	}
 	return e
 }
 
 // WithURL adds a URL with more information.
-func (e *ErrorInfo) WithURL(url string) *ErrorInfo {
-	e.URL = url
+func (e *ErrorInfo) WithURL(u string) *ErrorInfo {
+	if e != nil {
+		e.URL = u
+	}
 	return e
 }
 
 // WithEvidence adds evidence to the error.
-func (e *ErrorInfo) WithEvidence(key, value string) *ErrorInfo {
+func (e *ErrorInfo) WithEvidence(k, v string) *ErrorInfo {
+	if e == nil {
+		return nil
+	}
 	if e.Evidence == nil {
 		e.Evidence = make(map[string]string)
 	}
-	e.Evidence[key] = value
+	e.Evidence[k] = v
 	return e
 }
 
-// IsInputError returns true if the error wraps an InputError.
-func IsInputError(err error) bool {
-	var inputErr *InputError
-	return errors.As(err, &inputErr)
+// --- Rendering Logic ---
+
+// WriteErrorJSON serializes the ErrorInfo as a standard JSON envelope.
+func WriteErrorJSON(w io.Writer, info *ErrorInfo) error {
+	envelope := ErrorEnvelope{OK: false, Error: info}
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(envelope)
 }
 
-// IsSentinel returns true if the error has explicit exit-code mapping.
-// These errors produce specific exit codes rather than the default exit 2.
-func IsSentinel(err error) bool {
-	if err == nil {
-		return false
-	}
-	switch {
-	case errors.Is(err, ErrViolationsFound),
-		errors.Is(err, ErrValidationWarnings),
-		errors.Is(err, ErrValidationFailed),
-		errors.Is(err, ErrSecurityAuditFindings),
-		errors.Is(err, ErrDiagnosticsFound),
-		errors.Is(err, ErrInterrupted),
-		errors.Is(err, ErrInternal):
-		return true
-	default:
-		return false
-	}
-}
-
-// WriteErrorText writes a standardized human-readable error structure.
+// WriteErrorText prints a formatted, human-readable block describing the error.
 func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 	if info == nil {
 		return nil
 	}
+
 	title := info.Title
 	if title == "" {
-		title = "Command failed"
+		title = "Execution failed"
 	}
+
 	header := SeverityLabel("error", fmt.Sprintf("%s (%s)", title, info.Code), w)
 
-	var out strings.Builder
-	out.WriteString(header)
-	out.WriteByte('\n')
+	var sb strings.Builder
+	sb.WriteString(header)
+	sb.WriteByte('\n')
 
 	if info.Message != "" {
-		_, _ = fmt.Fprintf(&out, "Description: %s\n", info.Message)
+		fmt.Fprintf(&sb, "  Message: %s\n", info.Message)
 	}
 	if info.Action != "" {
-		_, _ = fmt.Fprintf(&out, "Fix: %s\n", info.Action)
+		fmt.Fprintf(&sb, "  Fix:     %s\n", info.Action)
 	}
 	if info.URL != "" {
-		_, _ = fmt.Fprintf(&out, "More info: %s\n", info.URL)
+		fmt.Fprintf(&sb, "  Help:    %s\n", info.URL)
 	}
-	_, err := io.WriteString(w, out.String())
+
+	if len(info.Evidence) > 0 {
+		sb.WriteString("  Evidence:\n")
+		for k, v := range info.Evidence {
+			fmt.Fprintf(&sb, "    - %s: %s\n", k, v)
+		}
+	}
+
+	_, err := io.WriteString(w, sb.String())
 	return err
+}
+
+// IsSentinel returns true if the error matches a defined platform sentinel.
+func IsSentinel(err error) bool {
+	if err == nil {
+		return false
+	}
+	return ExitCode(err) != ExitInputError ||
+		errors.Is(err, ErrValidationWarnings) ||
+		errors.Is(err, ErrValidationFailed)
 }

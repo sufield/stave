@@ -129,7 +129,7 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 		IntegrityPublicKey: o.IntegrityPublicKey,
 	}).Validate()
 	if err != nil {
-		return appeval.ParsedOptions{}, &ui.InputError{Err: err}
+		return appeval.ParsedOptions{}, &ui.UserError{Err: err}
 	}
 	return parsed, nil
 }
