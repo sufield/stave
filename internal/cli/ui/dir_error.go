@@ -1,24 +1,32 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
 
-// DirectoryAccessError returns a user-facing error for missing or inaccessible
-// directories. The hint parameter associates a remediation hint sentinel for
-// downstream suggestion matching; pass nil when no specific hint applies.
+// DirectoryAccessError returns a structured, user-friendly error explaining why
+// a directory is inaccessible. It associates the error with a remediation hint.
 func DirectoryAccessError(flagName, path string, err error, hint error) error {
-	prefix := fmt.Sprintf("%s not accessible: %s", flagName, path)
-
-	switch {
-	case os.IsNotExist(err):
-		msg := fmt.Errorf("%s: directory does not exist (check the path or create it)", prefix)
-		return WithHint(msg, hint)
-	case os.IsPermission(err):
-		msg := fmt.Errorf("%s: permission denied (check directory read/execute bits)", prefix)
-		return WithHint(msg, hint)
-	default:
-		return WithHint(fmt.Errorf("%s: %w", prefix, err), hint)
+	if err == nil {
+		return nil
 	}
+
+	var msg error
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		msg = fmt.Errorf("%s path %q does not exist: verify the path or create the directory",
+			flagName, path)
+	case errors.Is(err, os.ErrPermission):
+		msg = fmt.Errorf("%s path %q permission denied: check directory read and execute bits",
+			flagName, path)
+	default:
+		// Wrap the original error to preserve the underlying cause for debugging.
+		msg = fmt.Errorf("%s path %q is not accessible: %w",
+			flagName, path, err)
+	}
+
+	// WithHint attaches remediation sentinels to the error chain.
+	return WithHint(msg, hint)
 }
