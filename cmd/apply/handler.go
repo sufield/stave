@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -99,10 +100,18 @@ func executeApply(
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	factory := NewFactory(cmd, opts, runOpts.params)
-	factory.OnObsProgress = progress.Update
+	builder := &Builder{
+		Ctx:           ctx,
+		Stdout:        compose.ResolveStdout(cmd, cmdutil.QuietEnabled(cmd), runOpts.format),
+		Stderr:        cmd.ErrOrStderr(),
+		Sanitizer:     cmdutil.GetSanitizer(cmd),
+		IsJSON:        cmdutil.IsJSONMode(cmd),
+		Opts:          opts,
+		Params:        runOpts.params,
+		OnObsProgress: progress.Update,
+	}
 
-	deps, err := factory.Build(plan)
+	deps, err := builder.Build(plan)
 	if err != nil {
 		return EvaluateResult{}, err
 	}
