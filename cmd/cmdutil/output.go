@@ -6,31 +6,49 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// CreateOutputFile creates parent directories and opens a file for writing,
-// respecting --force and --allow-symlink-output flags.
-func CreateOutputFile(cmd *cobra.Command, path string) (*os.File, error) {
-	gf := GetGlobalFlags(cmd)
+// FileOptions configures the behavior of output file creation.
+type FileOptions struct {
+	Overwrite     bool
+	AllowSymlinks bool
+	DirPerms      os.FileMode
+}
 
+// OpenOutputFile ensures the destination directory exists and opens the file
+// for writing. It applies safety checks for symlinks and existing files.
+func OpenOutputFile(path string, opts FileOptions) (*os.File, error) {
 	parent := filepath.Dir(path)
 	if strings.TrimSpace(parent) != "" && parent != "." {
-		if err := fsutil.SafeMkdirAll(parent, fsutil.WriteOptions{
-			Perm:         0o700,
-			AllowSymlink: gf.AllowSymlinkOut,
-		}); err != nil {
-			return nil, fmt.Errorf("create output directory: %w", err)
+		mkdirOpts := fsutil.WriteOptions{
+			Perm:         opts.DirPerms,
+			AllowSymlink: opts.AllowSymlinks,
+		}
+		if err := fsutil.SafeMkdirAll(parent, mkdirOpts); err != nil {
+			return nil, fmt.Errorf("creating directory %q: %w", parent, err)
 		}
 	}
-	opts := fsutil.DefaultWriteOpts()
-	opts.Overwrite = gf.Force
-	opts.AllowSymlink = gf.AllowSymlinkOut
-	f, err := fsutil.SafeCreateFile(path, opts)
+
+	writeOpts := fsutil.DefaultWriteOpts()
+	writeOpts.Overwrite = opts.Overwrite
+	writeOpts.AllowSymlink = opts.AllowSymlinks
+
+	f, err := fsutil.SafeCreateFile(path, writeOpts)
 	if err != nil {
-		return nil, fmt.Errorf("create output file: %w", err)
+		return nil, fmt.Errorf("creating file %q: %w", path, err)
 	}
+
 	return f, nil
+}
+
+// PrepareOutputFile is a convenience wrapper that maps GlobalFlags to FileOptions.
+// This is used by Cobra RunE functions.
+func PrepareOutputFile(path string, flags GlobalFlags) (*os.File, error) {
+	opts := FileOptions{
+		Overwrite:     flags.Force,
+		AllowSymlinks: flags.AllowSymlinkOut,
+		DirPerms:      0o700,
+	}
+	return OpenOutputFile(path, opts)
 }

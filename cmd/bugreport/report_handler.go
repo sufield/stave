@@ -26,7 +26,7 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 	}
 
 	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out))
-	f, err := cmdutil.CreateOutputFile(cmd, outPath)
+	f, err := cmdutil.PrepareOutputFile(outPath, gf)
 	if err != nil {
 		return err
 	}
