@@ -6,19 +6,19 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 )
 
-func TestFilterDiagnosisReport_NoFiltersReturnsOriginal(t *testing.T) {
+func TestFilterReport_NoFiltersReturnsOriginal(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
 		},
 	}
-	filtered := filterDiagnosisReport(report, nil, "")
+	filtered := FilterReport(report, Filter{})
 	if len(filtered.Issues) != 1 {
 		t.Fatalf("expected 1 diagnostic, got %d", len(filtered.Issues))
 	}
 }
 
-func TestFilterDiagnosisReport_ByCaseAndSignal(t *testing.T) {
+func TestFilterReport_ByCaseAndSignal(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
@@ -26,11 +26,10 @@ func TestFilterDiagnosisReport_ByCaseAndSignal(t *testing.T) {
 			{Case: diagnosis.ScenarioViolationEvidence, Signal: "streak evidence available"},
 		},
 	}
-	filtered := filterDiagnosisReport(
-		report,
-		[]string{string(diagnosis.ScenarioExpectedNone), string(diagnosis.ScenarioEmptyFindings)},
-		"threshold",
-	)
+	filtered := FilterReport(report, Filter{
+		Cases:          []string{string(diagnosis.ScenarioExpectedNone), string(diagnosis.ScenarioEmptyFindings)},
+		SignalContains: "threshold",
+	})
 	if len(filtered.Issues) != 1 {
 		t.Fatalf("expected 1 diagnostic after filters, got %d", len(filtered.Issues))
 	}
