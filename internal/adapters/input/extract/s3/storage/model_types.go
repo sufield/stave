@@ -62,6 +62,10 @@ type BuildModelInput struct {
 	Visibility   s3exposure.VisibilityResult
 }
 
+// S3StorageModel is the projected storage representation of an S3 bucket.
+// The JSON field paths (e.g., "visibility.effective_exposure", "lifecycle.rules_configured",
+// "object_lock.enabled") form the projection contract consumed by control YAML
+// `field:` expressions. Changes to field names or nesting here break control evaluation.
 type S3StorageModel struct {
 	// Identity
 	Kind string `json:"kind"`

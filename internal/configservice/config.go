@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/sufield/stave/internal/domain/retention"
 )
 
 // ConfigKey identifies a supported top-level configuration key.
@@ -34,11 +36,10 @@ const (
 	CadenceHourly CaptureCadence = "hourly"
 )
 
-type RetentionTierConfig struct {
-	OlderThan string
-	KeepMin   int
-}
+// RetentionTierConfig is a type alias for the canonical retention.TierConfig.
+type RetentionTierConfig = retention.TierConfig
 
+// RetentionTiers maps tier names to their retention configuration.
 type RetentionTiers map[string]RetentionTierConfig
 
 type Config struct {

@@ -86,7 +86,7 @@ func writeDefinedRetentionTierText(w io.Writer, tiers map[string]configservice.R
 	}
 	for _, name := range sortedConfigKeys(tiers) {
 		tier := tiers[name]
-		keepMin := projconfig.RetentionTierConfig{KeepMin: tier.KeepMin}.EffectiveKeepMin()
+		keepMin := tier.EffectiveKeepMin()
 		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, keepMin); err != nil {
 			return err
 		}

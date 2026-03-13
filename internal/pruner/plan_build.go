@@ -7,6 +7,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/fp"
 )
 
@@ -29,16 +30,10 @@ const (
 )
 
 // TierMappingRule assigns a relative snapshot path pattern to a retention tier.
-type TierMappingRule struct {
-	Pattern string
-	Tier    string
-}
+type TierMappingRule = retention.MappingRule
 
 // RetentionTier configures retention behavior for a tier.
-type RetentionTier struct {
-	OlderThan string
-	KeepMin   int
-}
+type RetentionTier = retention.TierConfig
 
 // SnapshotPlanFile is one file row in the generated snapshot plan.
 type SnapshotPlanFile struct {

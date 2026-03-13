@@ -1,6 +1,7 @@
 package projconfig
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -243,11 +244,7 @@ func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
 func (e *Evaluator) buildDefinedRetentionTiers() map[string]configservice.RetentionTierConfig {
 	if e.Project != nil {
 		if tiers := ResolveDefinedRetentionTiers(e.Project); len(tiers) > 0 {
-			out := make(map[string]configservice.RetentionTierConfig, len(tiers))
-			for name, tier := range tiers {
-				out[name] = configservice.RetentionTierConfig{OlderThan: tier.OlderThan, KeepMin: tier.KeepMin}
-			}
-			return out
+			return tiers
 		}
 	}
 	return map[string]configservice.RetentionTierConfig{
@@ -272,9 +269,7 @@ func FromProjectConfig(cfg *ProjectConfig) *configservice.Config {
 	}
 	if len(cfg.RetentionTiers) > 0 {
 		out.RetentionTiers = make(configservice.RetentionTiers, len(cfg.RetentionTiers))
-		for tier, tc := range cfg.RetentionTiers {
-			out.RetentionTiers[tier] = configservice.RetentionTierConfig{OlderThan: tc.OlderThan, KeepMin: tc.KeepMin}
-		}
+		maps.Copy(out.RetentionTiers, cfg.RetentionTiers)
 	}
 	return out
 }
@@ -294,9 +289,7 @@ func ToProjectConfig(cfg *configservice.Config) *ProjectConfig {
 	}
 	if len(cfg.RetentionTiers) > 0 {
 		out.RetentionTiers = make(map[string]RetentionTierConfig, len(cfg.RetentionTiers))
-		for tier, tc := range cfg.RetentionTiers {
-			out.RetentionTiers[tier] = RetentionTierConfig{OlderThan: tc.OlderThan, KeepMin: tc.KeepMin}
-		}
+		maps.Copy(out.RetentionTiers, cfg.RetentionTiers)
 	}
 	return out
 }
@@ -318,9 +311,7 @@ func CopyProjectConfig(dst *ProjectConfig, src *configservice.Config) {
 		return
 	}
 	dst.RetentionTiers = make(map[string]RetentionTierConfig, len(src.RetentionTiers))
-	for tier, tc := range src.RetentionTiers {
-		dst.RetentionTiers[tier] = RetentionTierConfig{OlderThan: tc.OlderThan, KeepMin: tc.KeepMin}
-	}
+	maps.Copy(dst.RetentionTiers, src.RetentionTiers)
 }
 
 // MutateProjectConfig applies a mutation function via configservice.Config translation.

@@ -114,14 +114,13 @@ func (e *Extractor) buildResourceSlices(state *s3terraform.State) []asset.Asset 
 	bucketNames := lo.Keys(state.Buckets)
 	sort.Strings(bucketNames)
 
-	accountPAB := fromTerraformPublicAccessBlock(state.AccountPAB)
 	resources := make([]asset.Asset, 0, len(bucketNames))
 	for _, name := range bucketNames {
 		bucket := fromTerraformBucket(state.Buckets[name])
 		if e.ScopeConfig != nil && !e.ScopeConfig.IsHealthBucket(bucket.Tags, bucket.Name) {
 			continue
 		}
-		resources = append(resources, s3resource.BuildBucketAsset(bucket, accountPAB))
+		resources = append(resources, s3resource.BuildBucketAsset(bucket, state.AccountPAB))
 	}
 	return resources
 }
@@ -136,13 +135,13 @@ func fromTerraformBucket(bucket *s3terraform.Bucket) *s3storage.S3Bucket {
 		Tags:              cloneStringMap(bucket.Tags),
 		PolicyJSON:        bucket.PolicyJSON,
 		ACLGrants:         make([]s3acl.Grant, 0, len(bucket.ACLGrants)),
-		PublicAccessBlock: fromTerraformPublicAccessBlock(bucket.PublicAccessBlock),
-		Encryption:        fromTerraformEncryptionConfig(bucket.Encryption),
-		Versioning:        fromTerraformVersioningConfig(bucket.Versioning),
-		Logging:           fromTerraformLoggingConfig(bucket.Logging),
-		Lifecycle:         fromTerraformLifecycleConfig(bucket.Lifecycle),
-		ObjectLock:        fromTerraformObjectLockConfig(bucket.ObjectLock),
-		Website:           fromTerraformWebsiteConfig(bucket.Website),
+		PublicAccessBlock: bucket.PublicAccessBlock,
+		Encryption:        bucket.Encryption,
+		Versioning:        bucket.Versioning,
+		Logging:           bucket.Logging,
+		Lifecycle:         bucket.Lifecycle,
+		ObjectLock:        bucket.ObjectLock,
+		Website:           bucket.Website,
 	}
 	for _, grant := range bucket.ACLGrants {
 		converted.ACLGrants = append(converted.ACLGrants, s3acl.Grant{
@@ -160,80 +159,6 @@ func cloneStringMap(input map[string]string) map[string]string {
 	out := make(map[string]string, len(input))
 	maps.Copy(out, input)
 	return out
-}
-
-func fromTerraformPublicAccessBlock(pab *s3terraform.PublicAccessBlock) *s3storage.PublicAccessBlock {
-	if pab == nil {
-		return nil
-	}
-	return &s3storage.PublicAccessBlock{
-		BlockPublicAcls:       pab.BlockPublicAcls,
-		IgnorePublicAcls:      pab.IgnorePublicAcls,
-		BlockPublicPolicy:     pab.BlockPublicPolicy,
-		RestrictPublicBuckets: pab.RestrictPublicBuckets,
-	}
-}
-
-func fromTerraformEncryptionConfig(cfg *s3terraform.EncryptionConfig) *s3storage.EncryptionConfig {
-	if cfg == nil {
-		return nil
-	}
-	return &s3storage.EncryptionConfig{
-		Algorithm: s3storage.EncryptionAlgorithm(cfg.Algorithm),
-		KMSKeyARN: cfg.KMSKeyARN,
-	}
-}
-
-func fromTerraformVersioningConfig(cfg *s3terraform.VersioningConfig) *s3storage.VersioningConfig {
-	if cfg == nil {
-		return nil
-	}
-	return &s3storage.VersioningConfig{
-		Status:    s3storage.VersioningStatus(cfg.Status),
-		MFADelete: s3storage.MFADeleteStatus(cfg.MFADelete),
-	}
-}
-
-func fromTerraformLoggingConfig(cfg *s3terraform.LoggingConfig) *s3storage.LoggingConfig {
-	if cfg == nil {
-		return nil
-	}
-	return &s3storage.LoggingConfig{
-		TargetBucket: cfg.TargetBucket,
-		TargetPrefix: cfg.TargetPrefix,
-	}
-}
-
-func fromTerraformLifecycleConfig(cfg *s3terraform.LifecycleConfig) *s3storage.LifecycleConfig {
-	if cfg == nil {
-		return nil
-	}
-	return &s3storage.LifecycleConfig{
-		RulesConfigured:                cfg.RulesConfigured,
-		RuleCount:                      cfg.RuleCount,
-		HasExpiration:                  cfg.HasExpiration,
-		HasTransition:                  cfg.HasTransition,
-		MinExpirationDays:              cfg.MinExpirationDays,
-		HasNoncurrentVersionExpiration: cfg.HasNoncurrentVersionExpiration,
-	}
-}
-
-func fromTerraformWebsiteConfig(cfg *s3terraform.WebsiteConfig) *s3storage.WebsiteConfig {
-	if cfg == nil {
-		return nil
-	}
-	return &s3storage.WebsiteConfig{}
-}
-
-func fromTerraformObjectLockConfig(cfg *s3terraform.ObjectLockConfig) *s3storage.ObjectLockConfig {
-	if cfg == nil {
-		return nil
-	}
-	return &s3storage.ObjectLockConfig{
-		Enabled:       cfg.Enabled,
-		Mode:          s3storage.ObjectLockMode(cfg.Mode),
-		RetentionDays: cfg.RetentionDays,
-	}
 }
 
 func (e *Extractor) wrapSnapshots(resources []asset.Asset, now time.Time) []asset.Snapshot {
