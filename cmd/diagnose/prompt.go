@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -24,19 +23,163 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type promptFlagsType struct {
-	evalFile    string
-	assetID     string
-	controlsDir string
-	obsDir      string
-	format      string
-	quietMode   bool
+// PromptConfig defines the parameters for generating an LLM prompt.
+type PromptConfig struct {
+	EvalFile        string
+	AssetID         string
+	ControlsDir     string
+	ObservationsDir string
+	Format          ui.OutputFormat
+	Quiet           bool
+	Stdout          io.Writer
+	Stderr          io.Writer
 }
 
-// NewPromptCmd constructs the prompt command group with closure-scoped flags.
-func NewPromptCmd() *cobra.Command {
-	var flags promptFlagsType
+// PromptResult represents the structured JSON output for a prompt.
+type PromptResult struct {
+	Prompt     string   `json:"prompt"`
+	FindingIDs []string `json:"finding_ids"`
+	AssetID    string   `json:"asset_id"`
+}
 
+// PromptRunner orchestrates collection of context and generation of prompts.
+type PromptRunner struct {
+	Provider *compose.Provider
+}
+
+// NewPromptRunner creates a runner with the provided dependency provider.
+func NewPromptRunner(p *compose.Provider) *PromptRunner {
+	return &PromptRunner{Provider: p}
+}
+
+// Run generates an LLM prompt based on evaluation findings.
+func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
+	if cfg.EvalFile == "" {
+		return fmt.Errorf("--evaluation-file is required")
+	}
+	if cfg.AssetID == "" {
+		return fmt.Errorf("--asset-id is required")
+	}
+
+	evalResult, err := evaljson.NewLoader().LoadFromFile(cfg.EvalFile)
+	if err != nil {
+		return fmt.Errorf("load evaluation file: %w", err)
+	}
+
+	matched := appdiagnose.FilterFindings(evalResult.Findings, asset.ID(cfg.AssetID))
+	if len(matched) == 0 {
+		return fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
+	}
+
+	ctlByID, err := r.loadControlsMap(ctx, cfg.ControlsDir)
+	if err != nil {
+		return err
+	}
+
+	var assetPropsJSON string
+	if cfg.ObservationsDir != "" {
+		assetPropsJSON, err = r.loadAssetProperties(ctx, cfg.ObservationsDir, cfg.AssetID)
+		if err != nil {
+			return err
+		}
+	}
+
+	builder := &appdiagnose.PromptBuilder{
+		AssetID:        cfg.AssetID,
+		ControlsByID:   ctlByID,
+		AssetPropsJSON: assetPropsJSON,
+	}
+	data := builder.Build(matched)
+	rendered := appdiagnose.RenderPrompt(data)
+
+	return r.write(cfg, rendered, data)
+}
+
+func (r *PromptRunner) loadControlsMap(ctx context.Context, dir string) (map[string]*policy.ControlDefinition, error) {
+	repo, err := r.Provider.NewControlRepo()
+	if err != nil {
+		return nil, err
+	}
+	controls, err := repo.LoadControls(ctx, dir)
+	if err != nil {
+		return nil, fmt.Errorf("loading controls: %w", err)
+	}
+
+	ctlByID := make(map[string]*policy.ControlDefinition, len(controls))
+	for i := range controls {
+		ctlByID[controls[i].ID.String()] = &controls[i]
+	}
+	return ctlByID, nil
+}
+
+func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir, assetID string) (string, error) {
+	snapshots, err := r.Provider.LoadSnapshots(ctx, dir)
+	if err != nil {
+		return "", err
+	}
+	if len(snapshots) == 0 {
+		return "", nil
+	}
+
+	latest := asset.LatestSnapshot(snapshots)
+	for _, a := range latest.Assets {
+		if a.ID.String() == assetID {
+			propsJSON, marshalErr := json.MarshalIndent(a.Properties, "", "  ")
+			if marshalErr != nil {
+				return "", fmt.Errorf("marshal asset properties: %w", marshalErr)
+			}
+			return string(propsJSON), nil
+		}
+	}
+	return "", nil
+}
+
+func (r *PromptRunner) write(cfg PromptConfig, rendered string, data appdiagnose.PromptData) error {
+	out := cfg.Stdout
+	if cfg.Quiet && !cfg.Format.IsJSON() {
+		out = io.Discard
+	}
+
+	if cfg.Format.IsJSON() {
+		findingIDs := make([]string, len(data.Findings))
+		for i, f := range data.Findings {
+			findingIDs[i] = string(f.ControlID)
+		}
+		res := PromptResult{
+			Prompt:     rendered,
+			FindingIDs: findingIDs,
+			AssetID:    data.AssetID,
+		}
+		return jsonutil.WriteIndented(out, res)
+	}
+
+	if _, err := fmt.Fprint(out, rendered); err != nil {
+		return err
+	}
+	writeClipboardHint(cfg.Stderr, cfg.Quiet)
+	return nil
+}
+
+func writeClipboardHint(w io.Writer, quiet bool) {
+	if quiet {
+		return
+	}
+	var tool string
+	switch runtime.GOOS {
+	case "darwin":
+		tool = "pbcopy"
+	case "linux":
+		tool = "xclip -selection clipboard"
+	default:
+		return
+	}
+	fmt.Fprintf(w, "Hint: pipe to clipboard with:\n  stave prompt from-finding ... | %s\n", tool)
+}
+
+// --- CLI bridge ---
+
+// NewPromptCmd constructs the prompt command group.
+func NewPromptCmd() *cobra.Command {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: "Generate LLM prompts from evaluation results",
@@ -44,7 +187,22 @@ func NewPromptCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	fromFindingCmd := &cobra.Command{
+	promptCmd.AddCommand(newPromptFromFindingCmd())
+
+	return promptCmd
+}
+
+func newPromptFromFindingCmd() *cobra.Command {
+	var (
+		evalFile    string
+		assetID     string
+		controlsDir string
+		obsDir      string
+		format      string
+		quietMode   bool
+	)
+
+	cmd := &cobra.Command{
 		Use:   "from-finding",
 		Short: "Generate an LLM prompt from evaluation findings for a specific asset",
 		Long: `From-finding reads evaluation output, loads control definitions and
@@ -99,190 +257,35 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runPromptFromFinding(cmd, &flags)
+			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
+			if fmtErr != nil {
+				return fmtErr
+			}
+
+			runner := NewPromptRunner(compose.ActiveProvider())
+			return runner.Run(cmd.Context(), PromptConfig{
+				EvalFile:        fsutil.CleanUserPath(evalFile),
+				AssetID:         strings.TrimSpace(assetID),
+				ControlsDir:     fsutil.CleanUserPath(controlsDir),
+				ObservationsDir: fsutil.CleanUserPath(obsDir),
+				Format:          fmtValue,
+				Quiet:           quietMode || cmdutil.GetGlobalFlags(cmd).Quiet,
+				Stdout:          cmd.OutOrStdout(),
+				Stderr:          cmd.ErrOrStderr(),
+			})
 		},
 	}
 
-	fromFindingCmd.Flags().StringVar(&flags.evalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
-	fromFindingCmd.Flags().StringVar(&flags.assetID, "asset-id", "", "Asset ID to filter findings (required)")
-	fromFindingCmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	fromFindingCmd.Flags().StringVarP(&flags.obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
-	fromFindingCmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	fromFindingCmd.Flags().BoolVar(&flags.quietMode, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	cmd.Flags().StringVar(&evalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
+	cmd.Flags().StringVar(&assetID, "asset-id", "", "Asset ID to filter findings (required)")
+	cmd.Flags().StringVarP(&controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
+	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+	cmd.Flags().BoolVar(&quietMode, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
-	_ = fromFindingCmd.MarkFlagRequired("evaluation-file")
-	_ = fromFindingCmd.MarkFlagRequired("asset-id")
-	_ = fromFindingCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.MarkFlagRequired("evaluation-file")
+	_ = cmd.MarkFlagRequired("asset-id")
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
-	promptCmd.AddCommand(fromFindingCmd)
-
-	return promptCmd
-}
-
-type promptRunOptions struct {
-	EvalFile        string
-	AssetID         string
-	ControlsDir     string
-	ObservationsDir string
-	Format          ui.OutputFormat
-	Quiet           bool
-}
-
-func runPromptFromFinding(cmd *cobra.Command, flags *promptFlagsType) error {
-	opts, err := gatherPromptFromFindingOptions(cmd, flags)
-	if err != nil {
-		return err
-	}
-
-	// 1. Load evaluation output and narrow to asset findings.
-	evalResult, err := evaljson.NewLoader().LoadFromFile(opts.EvalFile)
-	if err != nil {
-		return fmt.Errorf("load evaluation file: %w", err)
-	}
-
-	matched := appdiagnose.FilterFindings(evalResult.Findings, asset.ID(opts.AssetID))
-	if len(matched) == 0 {
-		return fmt.Errorf("no findings for asset %q in %s", opts.AssetID, opts.EvalFile)
-	}
-
-	// 2. Load enrichment sources (controls + optional observations).
-	ctx := compose.CommandContext(cmd)
-
-	ctlByID, err := loadControlsMap(ctx, opts.ControlsDir)
-	if err != nil {
-		return err
-	}
-
-	assetPropsJSON := ""
-	if opts.ObservationsDir != "" {
-		assetPropsJSON, err = loadAssetProperties(ctx, opts.ObservationsDir, opts.AssetID)
-		if err != nil {
-			return err
-		}
-	}
-
-	// 3. Build, render, and emit output.
-	builder := &appdiagnose.PromptBuilder{
-		AssetID:        opts.AssetID,
-		ControlsByID:   ctlByID,
-		AssetPropsJSON: assetPropsJSON,
-	}
-	data := builder.Build(matched)
-	rendered := appdiagnose.RenderPrompt(data)
-	return writePromptOutput(opts, cmd.OutOrStdout(), cmd.ErrOrStderr(), rendered, data)
-}
-
-func gatherPromptFromFindingOptions(cmd *cobra.Command, flags *promptFlagsType) (promptRunOptions, error) {
-	format, err := compose.ResolveFormatValue(cmd, flags.format)
-	if err != nil {
-		return promptRunOptions{}, err
-	}
-
-	opts := promptRunOptions{
-		EvalFile:        fsutil.CleanUserPath(flags.evalFile),
-		AssetID:         strings.TrimSpace(flags.assetID),
-		ControlsDir:     fsutil.CleanUserPath(flags.controlsDir),
-		ObservationsDir: fsutil.CleanUserPath(flags.obsDir),
-		Format:          format,
-		Quiet:           flags.quietMode || cmdutil.GetGlobalFlags(cmd).Quiet,
-	}
-
-	if opts.EvalFile == "" {
-		return promptRunOptions{}, fmt.Errorf("--evaluation-file is required")
-	}
-	if opts.AssetID == "" {
-		return promptRunOptions{}, fmt.Errorf("--asset-id is required")
-	}
-	return opts, nil
-}
-
-func loadControlsMap(ctx context.Context, dir string) (map[string]*policy.ControlDefinition, error) {
-	controls, err := compose.LoadControls(ctx, dir)
-	if err != nil {
-		return nil, err
-	}
-
-	ctlByID := make(map[string]*policy.ControlDefinition, len(controls))
-	for i := range controls {
-		ctlByID[controls[i].ID.String()] = &controls[i]
-	}
-	return ctlByID, nil
-}
-
-func writePromptOutput(opts promptRunOptions, stdout, stderr io.Writer, rendered string, data appdiagnose.PromptData) error {
-	out := stdout
-	if opts.Quiet && !opts.Format.IsJSON() {
-		out = io.Discard
-	}
-
-	if opts.Format.IsJSON() {
-		jsonOut := promptJSONOutput{
-			Prompt:     rendered,
-			FindingIDs: collectFindingIDs(data.Findings),
-			AssetID:    data.AssetID,
-		}
-		if err := jsonutil.WriteIndented(out, jsonOut); err != nil {
-			return err
-		}
-	} else if _, err := fmt.Fprint(out, rendered); err != nil {
-		return err
-	}
-
-	if !opts.Format.IsJSON() {
-		clipboardHint(stderr, opts.Quiet)
-	}
-	return nil
-}
-
-// clipboardHint prints a hint for piping output to the system clipboard.
-// Only prints when not in quiet mode and a known clipboard tool exists.
-func clipboardHint(w io.Writer, quiet bool) {
-	if quiet {
-		return
-	}
-	var tool string
-	switch runtime.GOOS {
-	case "darwin":
-		tool = "pbcopy"
-	case "linux":
-		tool = "xclip -selection clipboard"
-	default:
-		return
-	}
-	fmt.Fprintf(w, "Hint: pipe to clipboard with:\n  stave prompt from-finding ... | %s\n", tool)
-}
-
-func collectFindingIDs(findings []appdiagnose.FindingData) []string {
-	return lo.Map(findings, func(f appdiagnose.FindingData, _ int) string { return string(f.ControlID) })
-}
-
-// promptJSONOutput is the structured JSON output.
-type promptJSONOutput struct {
-	Prompt     string   `json:"prompt"`
-	FindingIDs []string `json:"finding_ids"`
-	AssetID    string   `json:"asset_id"`
-}
-
-// loadAssetProperties loads the latest observation snapshot and extracts
-// properties for the given asset ID as indented JSON.
-func loadAssetProperties(ctx context.Context, obsDir, assetID string) (string, error) {
-	snapshots, err := compose.LoadSnapshots(ctx, obsDir)
-	if err != nil {
-		return "", err
-	}
-	if len(snapshots) == 0 {
-		return "", nil
-	}
-
-	latest := asset.LatestSnapshot(snapshots)
-
-	a, found := lo.Find(latest.Assets, func(r asset.Asset) bool { return r.ID.String() == assetID })
-	if !found {
-		return "", nil
-	}
-	propsJSON, err := json.MarshalIndent(a.Properties, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("marshal asset properties: %w", err)
-	}
-	return string(propsJSON), nil
+	return cmd
 }
