@@ -7,12 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 
-	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/gitinfo"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
@@ -28,189 +25,82 @@ import (
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
-// CommandContext returns cmd.Context() with a fallback to context.Background().
-func CommandContext(cmd *cobra.Command) context.Context {
-	if cmd == nil {
-		return context.Background()
-	}
-	if ctx := cmd.Context(); ctx != nil {
-		return ctx
-	}
-	return context.Background()
+// Provider manages the instantiation of various adapters and repositories.
+// It acts as a Service Locator/Factory registry.
+type Provider struct {
+	ObsRepoFunc       func() (appcontracts.ObservationRepository, error)
+	StdinObsRepoFunc  func(io.Reader) (appcontracts.ObservationRepository, error)
+	ControlRepoFunc   func() (appcontracts.ControlRepository, error)
+	FindingWriterFunc func(format string, jsonMode bool) (appcontracts.FindingMarshaler, error)
 }
 
-// ResolveNow parses a --now flag value. Returns wall clock UTC when raw is empty.
-func ResolveNow(raw string) (time.Time, error) {
-	if raw == "" {
-		return time.Now().UTC(), nil
-	}
-	return timeutil.ParseRFC3339(raw, "--now")
-}
-
-// ResolveClock parses a --now flag value into a Clock. Returns RealClock when raw is empty.
-func ResolveClock(raw string) (ports.Clock, error) {
-	if raw == "" {
-		return ports.RealClock{}, nil
-	}
-	t, err := timeutil.ParseRFC3339(raw, "--now")
-	if err != nil {
-		return nil, err
-	}
-	return ports.FixedClock(t), nil
-}
-
-// ResolveStdout returns the appropriate stdout writer for the given quiet/format
-// combination. JSON output is always preserved (for scripting/piping); text
-// output is discarded when quiet mode is active.
-func ResolveStdout(cmd *cobra.Command, quiet bool, format ui.OutputFormat) io.Writer {
-	if quiet && !format.IsJSON() {
-		return io.Discard
-	}
-	if cmd != nil {
-		return cmd.OutOrStdout()
-	}
-	return os.Stdout
-}
-
-// ResolveFormatValue determines the effective output format from a flag value and
-// global JSON mode. When the flag was not explicitly changed and global JSON mode
-// is active, "json" is used instead.
-func ResolveFormatValue(cmd *cobra.Command, raw string) (ui.OutputFormat, error) {
-	formatRaw, err := cmdutil.ResolveFormat(cmd, raw)
-	if err != nil {
-		return "", err
-	}
-	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
-}
-
-// LoadedAssets holds concurrently loaded observations and controls.
-type LoadedAssets struct {
-	Snapshots   []asset.Snapshot
-	Controls    []policy.ControlDefinition
-	ObsRepo     appcontracts.ObservationRepository
-	ControlRepo appcontracts.ControlRepository
-}
-
-// Load concurrently fetches observations and controls using configured repositories.
-func (r *LoadedAssets) Load(ctx context.Context, obsDir, ctlDir string) error {
-	if r.ObsRepo == nil {
-		return fmt.Errorf("observation repository is required")
-	}
-	if r.ControlRepo == nil {
-		return fmt.Errorf("control repository is required")
-	}
-
-	var (
-		wg     sync.WaitGroup
-		obsErr error
-		ctlErr error
-	)
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		var loadResult appcontracts.LoadResult
-		loadResult, obsErr = r.ObsRepo.LoadSnapshots(ctx, obsDir)
-		r.Snapshots = loadResult.Snapshots
-	}()
-	go func() {
-		defer wg.Done()
-		r.Controls, ctlErr = r.ControlRepo.LoadControls(ctx, ctlDir)
-	}()
-	wg.Wait()
-
-	if obsErr != nil {
-		return fmt.Errorf("load observations from %q: %w", obsDir, obsErr)
-	}
-	if ctlErr != nil {
-		return fmt.Errorf("load controls from %q: %w", ctlDir, ctlErr)
-	}
-	return nil
-}
-
-// SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
-type SnapshotObservationRepository interface {
-	appcontracts.ObservationRepository
-	appcontracts.SnapshotReader
-}
-
-// Composition holds constructor wiring for adapters.
-type Composition struct {
-	NewObservationRepository func() (appcontracts.ObservationRepository, error)
-	NewStdinObservationRepo  func(r io.Reader) (appcontracts.ObservationRepository, error)
-	NewControlRepository     func() (appcontracts.ControlRepository, error)
-	NewSnapshotObservation   func() (SnapshotObservationRepository, error)
-	NewFindingWriter         func(format string, jsonMode bool) (appcontracts.FindingMarshaler, error)
-}
-
-// defaultComposition is the standard adapter wiring.
-// Use DefaultComposition() to obtain a copy of the defaults, UseComposition() to
-// activate a custom composition for the current process, and the package-level
-// convenience functions (NewObservationRepository, etc.) to consume it.
-// Tests that need to override should use OverrideForTest.
-var defaultComposition = Composition{
-	NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
-		return obsjson.NewObservationLoader(), nil
-	},
-	NewStdinObservationRepo: func(r io.Reader) (appcontracts.ObservationRepository, error) {
-		return obsjson.NewStdinObservationLoader(obsjson.NewObservationLoader(), r), nil
-	},
-	NewControlRepository: func() (appcontracts.ControlRepository, error) {
-		return ctlyaml.NewControlLoader()
-	},
-	NewSnapshotObservation: func() (SnapshotObservationRepository, error) {
-		return obsjson.NewObservationLoader(), nil
-	},
-	NewFindingWriter: defaultNewFindingWriter,
-}
-
-// DefaultComposition returns a fresh copy of the standard adapter wiring.
-// Callers (e.g. App.NewApp) should store the result and pass it to
-// UseComposition before executing any command.
-func DefaultComposition() Composition {
-	return Composition{
-		NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
+// NewDefaultProvider returns a provider configured with standard adapters.
+func NewDefaultProvider() *Provider {
+	return &Provider{
+		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
 			return obsjson.NewObservationLoader(), nil
 		},
-		NewStdinObservationRepo: func(r io.Reader) (appcontracts.ObservationRepository, error) {
+		StdinObsRepoFunc: func(r io.Reader) (appcontracts.ObservationRepository, error) {
 			return obsjson.NewStdinObservationLoader(obsjson.NewObservationLoader(), r), nil
 		},
-		NewControlRepository: func() (appcontracts.ControlRepository, error) {
+		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
 			return ctlyaml.NewControlLoader()
 		},
-		NewSnapshotObservation: func() (SnapshotObservationRepository, error) {
-			return obsjson.NewObservationLoader(), nil
-		},
-		NewFindingWriter: defaultNewFindingWriter,
+		FindingWriterFunc: DefaultFindingWriter,
 	}
 }
 
-// UseComposition replaces the active composition used by the package-level
-// convenience functions (NewObservationRepository, NewControlRepository, etc.).
-// It is intended to be called once from App.bootstrap before any command runs,
-// making App the explicit owner of the composition.
-//
-// For test overrides that need automatic cleanup, use OverrideForTest instead.
-func UseComposition(c Composition) {
-	defaultComposition = c
+// --- Asset Loading ---
+
+// Assets represents the data loaded for an evaluation.
+type Assets struct {
+	Snapshots []asset.Snapshot
+	Controls  []policy.ControlDefinition
 }
 
-// OverrideForTest replaces the default composition for the duration of a test.
-// The original composition is restored via t.Cleanup.
-func OverrideForTest(t interface {
-	Helper()
-	Cleanup(func())
-}, c Composition) {
-	t.Helper()
-	orig := defaultComposition
-	defaultComposition = c
-	t.Cleanup(func() { defaultComposition = orig })
+// LoadAssets concurrently fetches observations and controls.
+func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Assets, error) {
+	obsRepo, err := p.ObsRepoFunc()
+	if err != nil {
+		return Assets{}, fmt.Errorf("create observation loader: %w", err)
+	}
+	ctlRepo, err := p.ControlRepoFunc()
+	if err != nil {
+		return Assets{}, fmt.Errorf("create control loader: %w", err)
+	}
+
+	var res Assets
+	g, gCtx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		loadResult, loadErr := obsRepo.LoadSnapshots(gCtx, obsDir)
+		if loadErr != nil {
+			return fmt.Errorf("load observations from %q: %w", obsDir, loadErr)
+		}
+		res.Snapshots = loadResult.Snapshots
+		return nil
+	})
+
+	g.Go(func() error {
+		ctls, loadErr := ctlRepo.LoadControls(gCtx, ctlDir)
+		if loadErr != nil {
+			return fmt.Errorf("load controls from %q: %w", ctlDir, loadErr)
+		}
+		res.Controls = ctls
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return Assets{}, err
+	}
+	return res, nil
 }
 
-// defaultNewFindingWriter creates a finding marshaler for the given output format.
-func defaultNewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+// --- Output Resolution ---
+
+// DefaultFindingWriter is the standard implementation for finding marshalers.
+func DefaultFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
 	const indented = true
-
 	switch strings.ToLower(strings.TrimSpace(format)) {
 	case "text":
 		return outtext.NewFindingWriter(), nil
@@ -226,55 +116,35 @@ func defaultNewFindingWriter(format string, jsonMode bool) (appcontracts.Finding
 	}
 }
 
-// NewObservationRepository creates a new observation repository.
-func NewObservationRepository() (appcontracts.ObservationRepository, error) {
-	return defaultComposition.NewObservationRepository()
+// ResolveStdout returns a writer based on quiet settings and format.
+func ResolveStdout(w io.Writer, quiet bool, format ui.OutputFormat) io.Writer {
+	if quiet && !format.IsJSON() {
+		return io.Discard
+	}
+	if w == nil {
+		return os.Stdout
+	}
+	return w
 }
 
-// NewControlRepository creates a new control repository.
-func NewControlRepository() (appcontracts.ControlRepository, error) {
-	return defaultComposition.NewControlRepository()
-}
+// --- Time & Clock ---
 
-// NewStdinObservationRepository creates an observation repository that reads from stdin.
-func NewStdinObservationRepository(r io.Reader) (appcontracts.ObservationRepository, error) {
-	return defaultComposition.NewStdinObservationRepo(r)
-}
-
-// NewSnapshotObservationRepository creates a snapshot observation repository.
-func NewSnapshotObservationRepository() (SnapshotObservationRepository, error) {
-	return defaultComposition.NewSnapshotObservation()
-}
-
-// NewFindingWriter creates a finding marshaler for the given output format.
-func NewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
-	return defaultComposition.NewFindingWriter(format, jsonMode)
-}
-
-// LoadObsAndInv creates loaders and loads both concurrently.
-func LoadObsAndInv(ctx context.Context, obsDir, ctlDir string) (LoadedAssets, error) {
-	obsRepo, err := NewObservationRepository()
+// ResolveClock returns a FixedClock if a timestamp is provided, otherwise RealClock.
+func ResolveClock(raw string) (ports.Clock, error) {
+	if raw == "" {
+		return ports.RealClock{}, nil
+	}
+	t, err := timeutil.ParseRFC3339(raw, "--now")
 	if err != nil {
-		return LoadedAssets{}, fmt.Errorf("create observation loader: %w", err)
+		return nil, err
 	}
-	ctlRepo, err := NewControlRepository()
-	if err != nil {
-		return LoadedAssets{}, fmt.Errorf("create control loader: %w", err)
-	}
-
-	res := LoadedAssets{
-		ObsRepo:     obsRepo,
-		ControlRepo: ctlRepo,
-	}
-	if err := res.Load(ctx, obsDir, ctlDir); err != nil {
-		return LoadedAssets{}, err
-	}
-	return res, nil
+	return ports.FixedClock(t), nil
 }
 
-// CollectGitAudit gathers git status for the given paths.
-// Returns nil when git is not available or the directory is not a repository.
-func CollectGitAudit(baseDir string, watchPaths []string) *evaluation.GitInfo {
+// --- Git Auditing ---
+
+// AuditGitStatus gathers git metadata for specific paths.
+func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 	if strings.TrimSpace(baseDir) == "" {
 		baseDir, _ = os.Getwd()
 	}
@@ -283,7 +153,8 @@ func CollectGitAudit(baseDir string, watchPaths []string) *evaluation.GitInfo {
 		return nil
 	}
 	head, _ := gitinfo.HeadCommit(repoRoot)
-	cleaned := make([]string, 0, len(watchPaths))
+
+	var cleaned []string
 	for _, p := range watchPaths {
 		if strings.TrimSpace(p) == "" {
 			continue
@@ -294,26 +165,31 @@ func CollectGitAudit(baseDir string, watchPaths []string) *evaluation.GitInfo {
 		}
 		cleaned = append(cleaned, abs)
 	}
+
 	dirty, dirtyList, _ := gitinfo.IsDirty(repoRoot, cleaned)
-	return &evaluation.GitInfo{RepoRoot: repoRoot, Head: head, Dirty: dirty, DirtyList: dirtyList}
+	return &evaluation.GitInfo{
+		RepoRoot:  repoRoot,
+		Head:      head,
+		Dirty:     dirty,
+		DirtyList: dirtyList,
+	}
 }
 
-// WarnIfGitDirty prints a warning if git is dirty and quiet is not set.
-func WarnIfGitDirty(cmd *cobra.Command, git *evaluation.GitInfo, label string) {
-	if git == nil || !git.Dirty {
+// WarnGitDirty prints a warning to stderr if the repository is dirty.
+func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string, quiet bool) {
+	if git == nil || !git.Dirty || quiet {
 		return
 	}
-	if cmdutil.QuietEnabled(cmd) {
-		return
+	if stderr == nil {
+		stderr = os.Stderr
 	}
-	stderr := io.Writer(os.Stderr)
-	if cmd != nil {
-		stderr = cmd.ErrOrStderr()
-	}
-	_, _ = fmt.Fprintf(stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n", label, strings.Join(git.DirtyList, ", "))
+	fmt.Fprintf(stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n",
+		label, strings.Join(git.DirtyList, ", "))
 }
 
-// EmptyDash returns "-" for empty strings.
+// --- Helpers ---
+
+// EmptyDash returns "-" if the string is whitespace-only.
 func EmptyDash(s string) string {
 	if strings.TrimSpace(s) == "" {
 		return "-"

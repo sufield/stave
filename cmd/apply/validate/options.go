@@ -107,10 +107,8 @@ func (o *options) validate() error {
 // prepareEnvironment handles Git audits and verbose context logging.
 func (o *options) prepareEnvironment(cmd *cobra.Command) {
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
-	gitMeta := compose.CollectGitAudit(projctx.RootForContextName(), []string{o.Controls, cfgPath})
-	if !o.Quiet && !cmdutil.QuietEnabled(cmd) {
-		compose.WarnIfGitDirty(cmd, gitMeta, "validate")
-	}
+	gitMeta := compose.AuditGitStatus(projctx.RootForContextName(), []string{o.Controls, cfgPath})
+	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", o.Quiet || cmdutil.QuietEnabled(cmd))
 
 	verbosity := 0
 	if cmd != nil {

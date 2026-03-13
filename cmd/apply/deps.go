@@ -90,7 +90,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	}
 
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
-	gitMeta := compose.CollectGitAudit(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
+	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
 	// 3. Assemble Enrichment Logic
 	enricher := remediation.NewMapper(crypto.NewHasher())

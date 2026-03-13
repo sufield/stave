@@ -390,7 +390,7 @@ func TestQuietModeOutputs(t *testing.T) {
 	}
 	out = compose.ResolveStdout(nil, true, "json")
 	if out == io.Discard {
-		t.Error("quiet+json mode should preserve stdout for piping")
+		t.Error("quiet+json mode should preserve stdout (fallback to os.Stdout) for piping")
 	}
 }
 

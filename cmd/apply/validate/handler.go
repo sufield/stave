@@ -27,7 +27,7 @@ func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	// 3. Initialize Reporter
 	quiet := opts.Quiet || cmdutil.QuietEnabled(cmd)
 	rt.Quiet = quiet
-	out := compose.ResolveStdout(cmd, quiet, ui.OutputFormat(format))
+	out := compose.ResolveStdout(cmd.OutOrStdout(), quiet, ui.OutputFormat(format))
 
 	f := format
 	if opts.Template != "" {

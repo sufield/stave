@@ -168,11 +168,11 @@ func TestBuildDiagnoseConfigAndOutputHelpers(t *testing.T) {
 		t.Fatalf("file config mismatch: %#v", cfg)
 	}
 
-	testCmd := &cobra.Command{}
-	if compose.ResolveStdout(testCmd, true, "text") != io.Discard {
+	var buf bytes.Buffer
+	if compose.ResolveStdout(&buf, true, "text") != io.Discard {
 		t.Fatal("ResolveStdout(quiet=true, text) should return io.Discard")
 	}
-	if compose.ResolveStdout(testCmd, true, "json") == io.Discard {
+	if compose.ResolveStdout(&buf, true, "json") == io.Discard {
 		t.Fatal("ResolveStdout(quiet=true, json) should preserve stdout for piping")
 	}
 }
@@ -248,11 +248,11 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 	}
 
 	opts.MaxUnsafe = "24h"
-	compose.OverrideForTest(t, compose.Composition{
-		NewObservationRepository: func() (appcontracts.ObservationRepository, error) {
+	compose.OverrideProviderForTest(t, &compose.Provider{
+		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
 			return nil, os.ErrPermission
 		},
-		NewControlRepository: func() (appcontracts.ControlRepository, error) {
+		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
 			return nil, nil
 		},
 	})
