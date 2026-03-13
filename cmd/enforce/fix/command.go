@@ -1,11 +1,14 @@
 package fix
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -27,11 +30,15 @@ for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffi
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
-			return runner.Fix(cmd.Context(), Request{
+			err := runner.Run(cmd.Context(), Request{
 				InputPath:  inputPath,
 				FindingRef: findingRef,
 				Stdout:     cmd.OutOrStdout(),
 			})
+			if err != nil && (strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "cannot be empty")) {
+				return &ui.UserError{Err: err}
+			}
+			return err
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

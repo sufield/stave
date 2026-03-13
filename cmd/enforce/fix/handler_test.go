@@ -47,7 +47,7 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 	runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
-	if err := runner.Fix(context.Background(), Request{
+	if err := runner.Run(context.Background(), Request{
 		InputPath:  in,
 		FindingRef: "CTL.S3.PUBLIC.001@bucket-a",
 		Stdout:     buf,
@@ -77,7 +77,7 @@ func TestRunFix_MissingFinding(t *testing.T) {
 	}
 
 	runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
-	err := runner.Fix(context.Background(), Request{
+	err := runner.Run(context.Background(), Request{
 		InputPath:  in,
 		FindingRef: "CTL.S3.PUBLIC.001@missing",
 		Stdout:     &bytes.Buffer{},
@@ -85,7 +85,7 @@ func TestRunFix_MissingFinding(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected missing finding error")
 	}
-	if !strings.Contains(err.Error(), "available finding IDs") {
+	if !strings.Contains(err.Error(), "available findings") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
