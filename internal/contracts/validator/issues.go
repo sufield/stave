@@ -2,10 +2,10 @@ package validator
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 
-	"github.com/samber/lo"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	"github.com/sufield/stave/internal/domain/diag"
@@ -13,15 +13,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type diagnosticExternalError struct {
-	path        string
-	description string
-	code        string
-}
+// DiagnosticCategory identifies specific classes of schema failures.
+type DiagnosticCategory string
 
-func (e diagnosticExternalError) Field() string       { return e.path }
-func (e diagnosticExternalError) Description() string { return e.description }
-func (e diagnosticExternalError) Code() string        { return e.code }
+const (
+	CatAdditionalProperties DiagnosticCategory = "additional_properties"
+	CatRequired             DiagnosticCategory = "required"
+	CatEnum                 DiagnosticCategory = "enum"
+	CatType                 DiagnosticCategory = "type"
+	CatViolation            DiagnosticCategory = "schema_violation"
+)
 
 type options struct {
 	pathPrefix string
@@ -43,52 +44,27 @@ func resolveOptions(opts []Option) options {
 	return o
 }
 
-// DiagnosticCategory classifies the kind of schema diagnostic.
-type DiagnosticCategory string
-
-const (
-	DiagAdditionalProperties DiagnosticCategory = "additional_properties"
-	DiagRequired             DiagnosticCategory = "required"
-	DiagEnum                 DiagnosticCategory = "enum"
-	DiagType                 DiagnosticCategory = "type"
-	DiagSchemaViolation      DiagnosticCategory = "schema_violation"
-)
-
 // IsUnknownFieldDiagnostic checks if a diagnostic refers to additional/unknown fields.
 func IsUnknownFieldDiagnostic(d Diagnostic) bool {
-	return classifyDiagnosticCode(d) == DiagAdditionalProperties
+	return classify(d) == CatAdditionalProperties
 }
 
-func classifyDiagnosticCode(d Diagnostic) DiagnosticCategory {
-	if d.Kind != nil {
-		switch d.Kind.(type) {
-		case *kind.AdditionalProperties:
-			return DiagAdditionalProperties
-		case *kind.Required, *kind.Dependency, *kind.DependentRequired:
-			return DiagRequired
-		case *kind.Enum, *kind.Const:
-			return DiagEnum
-		case *kind.Type:
-			return DiagType
-		}
-	}
-	return DiagSchemaViolation
-}
-
-// DiagnosticsResult converts generic schema diagnostics into canonical diag results.
+// DiagnosticsResult converts engine-level diagnostics into a domain diag.Result.
 func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Result {
 	o := resolveOptions(opts)
-	externalErrors := lo.FilterMap(diags, func(d Diagnostic, _ int) (diag.ExternalError, bool) {
-		category := classifyDiagnosticCode(d)
-		if !strict && category == DiagAdditionalProperties {
-			return nil, false
+
+	externalErrors := make([]diag.ExternalError, 0, len(diags))
+	for _, d := range diags {
+		cat := classify(d)
+		if !strict && cat == CatAdditionalProperties {
+			continue
 		}
-		return diagnosticExternalError{
-			path:        d.Path,
-			description: d.Message,
-			code:        string(category),
-		}, true
-	})
+		externalErrors = append(externalErrors, schemaError{
+			path: d.Path,
+			desc: d.Message,
+			code: string(cat),
+		})
+	}
 
 	return diag.NewTranslator(diag.CodeSchemaViolation,
 		diag.WithDefaultAction(action),
@@ -96,22 +72,105 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 	).Translate(externalErrors)
 }
 
-func syntaxResult(prefix, action string, err error) *diag.Result {
-	result := diag.NewResult()
-	if err == nil {
-		return result
+// ValidateControlYAML validates a control document against its contract schema.
+func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Result, error) {
+	return v.validateDocument(raw, yaml.Unmarshal, "YAML", "dsl_version",
+		[]string{string(kernel.SchemaControl)},
+		string(schemas.KindControl), true, "Fix control to match DSL schema", opts...)
+}
+
+// ValidateObservationJSON validates an observation against its contract schema.
+func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Result, error) {
+	return v.validateDocument(raw, json.Unmarshal, "JSON", "schema_version",
+		[]string{string(kernel.SchemaObservation)},
+		string(schemas.KindObservation), false, "Fix observation to match schema", opts...)
+}
+
+// --- Internal helpers ---
+
+func (v *Validator) validateDocument(
+	raw []byte,
+	unmarshal func([]byte, any) error,
+	formatName string,
+	versionField string,
+	accepted []string,
+	kind string,
+	isYAML bool,
+	defaultAction string,
+	opts ...Option,
+) (*diag.Result, error) {
+	o := resolveOptions(opts)
+
+	var partial struct {
+		Version string `json:"schema_version" yaml:"schema_version"`
+		DSL     string `json:"dsl_version" yaml:"dsl_version"`
 	}
+	if err := unmarshal(raw, &partial); err != nil {
+		return syntaxErrorResult(formatName, err), nil
+	}
+
+	actual := partial.Version
+	if actual == "" {
+		actual = partial.DSL
+	}
+
+	if strings.TrimSpace(actual) == "" {
+		return missingFieldResult(versionField, fmt.Sprintf("Add %q field to %s", versionField, formatName)), nil
+	}
+
+	if !slices.Contains(accepted, actual) {
+		return unsupportedVersionResult(actual, accepted, "Use a supported schema version"), nil
+	}
+
+	diags, err := v.Validate(kind, kernel.RegistryLayoutStandard, raw, isYAML)
+	if err != nil {
+		return nil, err
+	}
+
+	return DiagnosticsResult(diags, defaultAction, true, WithPrefix(o.pathPrefix)), nil
+}
+
+func classify(d Diagnostic) DiagnosticCategory {
+	if d.Kind == nil {
+		return CatViolation
+	}
+	switch d.Kind.(type) {
+	case *kind.AdditionalProperties:
+		return CatAdditionalProperties
+	case *kind.Required, *kind.Dependency, *kind.DependentRequired:
+		return CatRequired
+	case *kind.Enum, *kind.Const:
+		return CatEnum
+	case *kind.Type:
+		return CatType
+	default:
+		return CatViolation
+	}
+}
+
+type schemaError struct {
+	path string
+	desc string
+	code string
+}
+
+func (e schemaError) Field() string       { return e.path }
+func (e schemaError) Description() string { return e.desc }
+func (e schemaError) Code() string        { return e.code }
+
+func syntaxErrorResult(fmtName string, err error) *diag.Result {
+	result := diag.NewResult()
 	result.Add(
 		diag.New(diag.CodeSchemaViolation).
 			Error().
-			Action(action).
-			WithSensitive("error", prefix+err.Error()).
+			Action(fmt.Sprintf("Fix %s syntax errors", fmtName)).
+			WithSensitive("error", fmt.Sprintf("invalid %s: %v", fmtName, err)).
 			Build(),
 	)
 	return result
 }
 
-func missingRequiredFieldResult(field, action string) *diag.Result {
+func missingFieldResult(field, action string) *diag.Result {
 	result := diag.NewResult()
 	result.Add(
 		diag.New(diag.CodeSchemaViolation).
@@ -135,78 +194,4 @@ func unsupportedVersionResult(version string, supported []string, action string)
 			Build(),
 	)
 	return result
-}
-
-func (v *Validator) validateKnownSchemaVersion(
-	req SchemaValidationRequest,
-) (*diag.Result, error) {
-	const strictDiagnostics = true
-
-	actual := strings.TrimSpace(req.ActualVersion)
-	accepted := slices.Contains(req.AcceptedVersions, actual)
-	if !accepted {
-		action := strings.TrimSpace(req.Action)
-		if action == "" {
-			action = "Use a supported schema version"
-		}
-		return unsupportedVersionResult(req.ActualVersion, req.AcceptedVersions, action), nil
-	}
-
-	diags, err := v.Validate(req.Kind, kernel.RegistryLayoutStandard, req.Raw, req.IsYAML)
-	if err != nil {
-		return nil, err
-	}
-	action := strings.TrimSpace(req.Action)
-	if action == "" {
-		action = "Fix input to match schema"
-	}
-	return DiagnosticsResult(diags, action, strictDiagnostics, WithPrefix(req.PathPrefix)), nil
-}
-
-// ValidateControlYAML validates control YAML against contract schema.
-func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Result, error) {
-	o := resolveOptions(opts)
-	var partial struct {
-		DSLVersion string `yaml:"dsl_version"`
-	}
-	if err := yaml.Unmarshal(raw, &partial); err != nil {
-		return syntaxResult("invalid YAML: ", "Fix YAML syntax errors", err), nil
-	}
-	if strings.TrimSpace(partial.DSLVersion) == "" {
-		return missingRequiredFieldResult("dsl_version", "Add 'dsl_version' field to control YAML"), nil
-	}
-
-	return v.validateKnownSchemaVersion(SchemaValidationRequest{
-		Raw:              raw,
-		ActualVersion:    partial.DSLVersion,
-		AcceptedVersions: []string{string(kernel.SchemaControl)},
-		Kind:             string(schemas.KindControl),
-		IsYAML:           true,
-		PathPrefix:       o.pathPrefix,
-		Action:           "Fix control to match DSL schema",
-	})
-}
-
-// ValidateObservationJSON validates observation JSON against contract schema.
-func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Result, error) {
-	o := resolveOptions(opts)
-	var partial struct {
-		SchemaVersion string `json:"schema_version"`
-	}
-	if err := json.Unmarshal(raw, &partial); err != nil {
-		return syntaxResult("invalid JSON: ", "Fix JSON syntax errors", err), nil
-	}
-	if strings.TrimSpace(partial.SchemaVersion) == "" {
-		return missingRequiredFieldResult("schema_version", "Add 'schema_version' field to observation JSON"), nil
-	}
-
-	return v.validateKnownSchemaVersion(SchemaValidationRequest{
-		Raw:              raw,
-		ActualVersion:    partial.SchemaVersion,
-		AcceptedVersions: []string{string(kernel.SchemaObservation)},
-		Kind:             string(schemas.KindObservation),
-		IsYAML:           false,
-		PathPrefix:       o.pathPrefix,
-		Action:           "Fix observation to match schema",
-	})
 }
