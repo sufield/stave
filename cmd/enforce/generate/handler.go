@@ -150,7 +150,7 @@ func writeDryRun(w io.Writer, res result) error {
 }
 
 func writeOutputFile(cmd *cobra.Command, outPath, rendered string) error {
-	file, err := cmdutil.CreateOutputFile(cmd, outPath)
+	file, err := cmdutil.PrepareOutputFile(outPath, cmdutil.GetGlobalFlags(cmd))
 	if err != nil {
 		return err
 	}

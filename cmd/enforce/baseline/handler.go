@@ -52,7 +52,7 @@ func runSave(cmd *cobra.Command, opts *saveOptions) error {
 		Findings:         entries,
 	}
 
-	f, err := cmdutil.CreateOutputFile(cmd, outPath)
+	f, err := cmdutil.PrepareOutputFile(outPath, gf)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", outPath, err)
 	}

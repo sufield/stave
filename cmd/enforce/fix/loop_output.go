@@ -70,7 +70,7 @@ func buildEvaluationEnvelope(cmd *cobra.Command, result evaluation.Result) safet
 }
 
 func writeOutputJSONFile(cmd *cobra.Command, path string, value any) error {
-	f, err := cmdutil.CreateOutputFile(cmd, path)
+	f, err := cmdutil.PrepareOutputFile(path, cmdutil.GetGlobalFlags(cmd))
 	if err != nil {
 		return err
 	}
