@@ -26,50 +26,21 @@ func buildPlan(params planBuildParams) planOutput {
 }
 
 func toPrunerBuildParams(params planBuildParams) pruner.BuildSnapshotPlanParams {
-	cmdRules := params.TierRules
 	return pruner.BuildSnapshotPlanParams{
 		Now:                params.Now,
 		ObsRoot:            params.ObsRoot,
 		ArchiveDir:         params.ArchiveDir,
 		DefaultTier:        params.DefaultTier,
-		TierRules:          toPrunerTierRules(params.TierRules),
-		Tiers:              toPrunerRetentionTiers(params.Tiers),
+		TierRules:          params.TierRules,
+		Tiers:              params.Tiers,
 		Files:              params.Files,
 		Apply:              params.Apply,
 		Force:              params.Force,
 		DefaultOlderThan:   projconfig.DefaultSnapshotRetention,
 		DefaultKeepMin:     projconfig.DefaultTierKeepMin,
 		ParseDuration:      timeutil.ParseDuration,
-		ResolveTierForPath: newPrunerTierResolver(cmdRules),
+		ResolveTierForPath: projconfig.ResolveTierForPath,
 	}
-}
-
-func newPrunerTierResolver(rules []projconfig.TierMappingRule) func(string, []pruner.TierMappingRule, string) string {
-	return func(relPath string, _ []pruner.TierMappingRule, defaultTier string) string {
-		return projconfig.ResolveTierForPath(relPath, rules, defaultTier)
-	}
-}
-
-func toPrunerTierRules(in []projconfig.TierMappingRule) []pruner.TierMappingRule {
-	out := make([]pruner.TierMappingRule, 0, len(in))
-	for _, rule := range in {
-		out = append(out, pruner.TierMappingRule{
-			Pattern: rule.Pattern,
-			Tier:    rule.Tier,
-		})
-	}
-	return out
-}
-
-func toPrunerRetentionTiers(in map[string]projconfig.RetentionTierConfig) map[string]pruner.RetentionTier {
-	out := make(map[string]pruner.RetentionTier, len(in))
-	for name, tier := range in {
-		out[name] = pruner.RetentionTier{
-			OlderThan: tier.OlderThan,
-			KeepMin:   tier.EffectiveKeepMin(),
-		}
-	}
-	return out
 }
 
 func applyPlan(plan planOutput, obsRoot, archiveDir string, allowSymlink bool) error {

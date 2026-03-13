@@ -1,17 +1,19 @@
 package terraform
 
+import s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+
 // State collects S3 resource fragments extracted from Terraform resources.
 type State struct {
 	Buckets     map[string]*Bucket
 	Policies    map[string]string
 	ACLs        map[string][]ACLGrant
-	PABs        map[string]*PublicAccessBlock
-	Encryptions map[string]*EncryptionConfig
-	Versionings map[string]*VersioningConfig
-	Loggings    map[string]*LoggingConfig
-	Lifecycles  map[string]*LifecycleConfig
-	ObjectLocks map[string]*ObjectLockConfig
-	AccountPAB  *PublicAccessBlock
+	PABs        map[string]*s3storage.PublicAccessBlock
+	Encryptions map[string]*s3storage.EncryptionConfig
+	Versionings map[string]*s3storage.VersioningConfig
+	Loggings    map[string]*s3storage.LoggingConfig
+	Lifecycles  map[string]*s3storage.LifecycleConfig
+	ObjectLocks map[string]*s3storage.ObjectLockConfig
+	AccountPAB  *s3storage.PublicAccessBlock
 }
 
 func NewState() *State {
@@ -19,12 +21,12 @@ func NewState() *State {
 		Buckets:     make(map[string]*Bucket),
 		Policies:    make(map[string]string),
 		ACLs:        make(map[string][]ACLGrant),
-		PABs:        make(map[string]*PublicAccessBlock),
-		Encryptions: make(map[string]*EncryptionConfig),
-		Versionings: make(map[string]*VersioningConfig),
-		Loggings:    make(map[string]*LoggingConfig),
-		Lifecycles:  make(map[string]*LifecycleConfig),
-		ObjectLocks: make(map[string]*ObjectLockConfig),
+		PABs:        make(map[string]*s3storage.PublicAccessBlock),
+		Encryptions: make(map[string]*s3storage.EncryptionConfig),
+		Versionings: make(map[string]*s3storage.VersioningConfig),
+		Loggings:    make(map[string]*s3storage.LoggingConfig),
+		Lifecycles:  make(map[string]*s3storage.LifecycleConfig),
+		ObjectLocks: make(map[string]*s3storage.ObjectLockConfig),
 	}
 }
 
@@ -43,7 +45,7 @@ func (s *State) HydrateBuckets() {
 }
 
 // SetObjectLock merges object-lock fragments for a bucket.
-func (s *State) SetObjectLock(bucket string, olc *ObjectLockConfig) {
+func (s *State) SetObjectLock(bucket string, olc *s3storage.ObjectLockConfig) {
 	if olc == nil || bucket == "" {
 		return
 	}

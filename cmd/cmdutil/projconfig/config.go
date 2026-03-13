@@ -7,9 +7,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/domain/retention"
 )
 
 // Constants for config files and built-in defaults.
@@ -72,34 +71,14 @@ func ParseGatePolicy(raw string) (GatePolicy, error) {
 // --- Retention Configuration ---
 
 // RetentionTierConfig holds a tier's retention settings.
-type RetentionTierConfig struct {
-	OlderThan string `yaml:"older_than" json:"older_than"`
-	KeepMin   int    `yaml:"keep_min"   json:"keep_min"`
-}
-
-// ParseDuration returns the OlderThan string as a time.Duration.
-func (c RetentionTierConfig) ParseDuration() (time.Duration, error) {
-	if c.OlderThan == "" {
-		return 0, fmt.Errorf("older_than is empty")
-	}
-	return timeutil.ParseDuration(c.OlderThan)
-}
-
-// EffectiveKeepMin returns the keep_min value, using DefaultTierKeepMin as fallback.
-func (c RetentionTierConfig) EffectiveKeepMin() int {
-	if c.KeepMin <= 0 {
-		return DefaultTierKeepMin
-	}
-	return c.KeepMin
-}
+// This is a type alias for the canonical retention.TierConfig.
+type RetentionTierConfig = retention.TierConfig
 
 // --- Tier Mapping Logic ---
 
 // TierMappingRule maps a glob pattern to a retention tier.
-type TierMappingRule struct {
-	Pattern string `yaml:"pattern" json:"pattern"`
-	Tier    string `yaml:"tier"    json:"tier"`
-}
+// This is a type alias for the canonical retention.MappingRule.
+type TierMappingRule = retention.MappingRule
 
 // ResolveTierForPath identifies the appropriate tier for a file path based on glob rules.
 func ResolveTierForPath(relPath string, rules []TierMappingRule, defaultTier string) string {

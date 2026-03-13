@@ -8,9 +8,12 @@ import (
 	"github.com/sufield/stave/internal/dbc"
 )
 
-// Timeline tracks the unsafe status of an asset across snapshots.
+// Timeline tracks the unsafe-state episodes of an asset across snapshots.
 // It records when the asset first became unsafe, when it was last seen unsafe,
 // and maintains a history of completed episodes for recurrence detection.
+//
+// Note: "Timeline" refers to unsafe-state episode tracking, not S3 resource
+// lifecycle configuration (which lives in storage.LifecycleConfig).
 //
 // CONTRACT: historical episodes are archived as closed entries in history.
 type Timeline struct {

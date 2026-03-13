@@ -1,5 +1,7 @@
 package terraform
 
+import s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+
 const (
 	tfTypeS3Bucket                        = "aws_s3_bucket"
 	tfTypeS3BucketPolicy                  = "aws_s3_bucket_policy"
@@ -49,7 +51,7 @@ func handleS3BucketResource(resName string, values map[string]any, state *State)
 	}
 	// object_lock_enabled may be set on the bucket itself.
 	if p.String("object_lock_enabled") == "Enabled" {
-		state.SetObjectLock(name, &ObjectLockConfig{Enabled: true})
+		state.SetObjectLock(name, &s3storage.ObjectLockConfig{Enabled: true})
 	}
 	state.Buckets[name] = bucket
 }
@@ -78,7 +80,7 @@ func handleS3BucketPublicAccessBlockResource(_ string, values map[string]any, st
 	if bucketName == "" {
 		return
 	}
-	state.PABs[bucketName] = &PublicAccessBlock{
+	state.PABs[bucketName] = &s3storage.PublicAccessBlock{
 		BlockPublicAcls:       p.Bool("block_public_acls"),
 		IgnorePublicAcls:      p.Bool("ignore_public_acls"),
 		BlockPublicPolicy:     p.Bool("block_public_policy"),
@@ -88,7 +90,7 @@ func handleS3BucketPublicAccessBlockResource(_ string, values map[string]any, st
 
 func handleS3AccountPublicAccessBlockResource(_ string, values map[string]any, state *State) {
 	p := newMapPicker(values)
-	state.AccountPAB = &PublicAccessBlock{
+	state.AccountPAB = &s3storage.PublicAccessBlock{
 		BlockPublicAcls:       p.Bool("block_public_acls"),
 		IgnorePublicAcls:      p.Bool("ignore_public_acls"),
 		BlockPublicPolicy:     p.Bool("block_public_policy"),
@@ -150,6 +152,6 @@ func handleS3BucketWebsiteConfigurationResource(_ string, values map[string]any,
 		return
 	}
 	if b, ok := state.Buckets[bucketName]; ok {
-		b.Website = &WebsiteConfig{}
+		b.Website = &s3storage.WebsiteConfig{}
 	}
 }

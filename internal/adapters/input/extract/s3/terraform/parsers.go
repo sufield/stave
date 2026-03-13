@@ -1,6 +1,10 @@
 package terraform
 
-import "strings"
+import (
+	"strings"
+
+	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+)
 
 const (
 	cannedACLPublicRead      = "public-read"
@@ -19,36 +23,36 @@ func getBucketName(resName string, picker *MapPicker) string {
 }
 
 // extractEncryptionConfig extracts encryption configuration from Terraform values.
-func extractEncryptionConfig(values map[string]any) *EncryptionConfig {
+func extractEncryptionConfig(values map[string]any) *s3storage.EncryptionConfig {
 	p := newMapPicker(values)
 	def := p.Dig("rule").Dig("apply_server_side_encryption_by_default")
-	return &EncryptionConfig{
-		Algorithm: def.String("sse_algorithm"),
+	return &s3storage.EncryptionConfig{
+		Algorithm: s3storage.EncryptionAlgorithm(def.String("sse_algorithm")),
 		KMSKeyARN: def.String("kms_master_key_id"),
 	}
 }
 
 // extractVersioningConfig extracts versioning configuration from Terraform values.
-func extractVersioningConfig(values map[string]any) *VersioningConfig {
+func extractVersioningConfig(values map[string]any) *s3storage.VersioningConfig {
 	p := newMapPicker(values)
 	config := p.Dig("versioning_configuration")
-	return &VersioningConfig{
-		Status:    config.String("status"),
-		MFADelete: config.String("mfa_delete"),
+	return &s3storage.VersioningConfig{
+		Status:    s3storage.VersioningStatus(config.String("status")),
+		MFADelete: s3storage.MFADeleteStatus(config.String("mfa_delete")),
 	}
 }
 
 // extractLoggingConfig extracts logging configuration from Terraform values.
-func extractLoggingConfig(values map[string]any) *LoggingConfig {
-	return &LoggingConfig{
+func extractLoggingConfig(values map[string]any) *s3storage.LoggingConfig {
+	return &s3storage.LoggingConfig{
 		TargetBucket: getString(values, "target_bucket"),
 		TargetPrefix: getString(values, "target_prefix"),
 	}
 }
 
 // extractLifecycleConfig extracts lifecycle configuration from Terraform values.
-func extractLifecycleConfig(values map[string]any) *LifecycleConfig {
-	lc := &LifecycleConfig{}
+func extractLifecycleConfig(values map[string]any) *s3storage.LifecycleConfig {
+	lc := &s3storage.LifecycleConfig{}
 	rules, _ := values["rule"].([]any)
 	minExpSet := false
 
@@ -76,7 +80,7 @@ func extractLifecycleConfig(values map[string]any) *LifecycleConfig {
 	return lc
 }
 
-func applyExpirationRule(p *MapPicker, lc *LifecycleConfig, minExpSet *bool) {
+func applyExpirationRule(p *MapPicker, lc *s3storage.LifecycleConfig, minExpSet *bool) {
 	exp := p.Dig("expiration")
 	if exp.IsEmpty() {
 		return
@@ -93,14 +97,14 @@ func applyExpirationRule(p *MapPicker, lc *LifecycleConfig, minExpSet *bool) {
 }
 
 // extractObjectLockConfig extracts object lock configuration from Terraform values.
-func extractObjectLockConfig(values map[string]any) *ObjectLockConfig {
+func extractObjectLockConfig(values map[string]any) *s3storage.ObjectLockConfig {
 	p := newMapPicker(values)
 	ret := p.Dig("rule").Dig("default_retention")
 	if ret.IsEmpty() {
-		return &ObjectLockConfig{}
+		return &s3storage.ObjectLockConfig{}
 	}
 
-	olc := &ObjectLockConfig{Mode: ret.String("mode")}
+	olc := &s3storage.ObjectLockConfig{Mode: s3storage.ObjectLockMode(ret.String("mode"))}
 	if days := ret.Int("days"); days > 0 {
 		olc.RetentionDays = days
 	} else if years := ret.Int("years"); years > 0 {

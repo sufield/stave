@@ -1,5 +1,7 @@
 package terraform
 
+import s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+
 const (
 	permRead  = "READ"
 	permWrite = "WRITE"
@@ -45,45 +47,6 @@ type ACLGrant struct {
 	Permission string
 }
 
-// EncryptionConfig represents S3 SSE configuration.
-type EncryptionConfig struct {
-	Algorithm string
-	KMSKeyARN string
-}
-
-// VersioningConfig represents S3 bucket versioning configuration.
-type VersioningConfig struct {
-	Status    string
-	MFADelete string
-}
-
-// LoggingConfig represents S3 bucket logging configuration.
-type LoggingConfig struct {
-	TargetBucket string
-	TargetPrefix string
-}
-
-// LifecycleConfig represents S3 lifecycle configuration.
-type LifecycleConfig struct {
-	RulesConfigured                bool
-	RuleCount                      int
-	HasExpiration                  bool
-	HasTransition                  bool
-	MinExpirationDays              int
-	HasNoncurrentVersionExpiration bool
-}
-
-// ObjectLockConfig represents S3 object lock configuration.
-type ObjectLockConfig struct {
-	Enabled       bool
-	Mode          string
-	RetentionDays int
-}
-
-// WebsiteConfig represents S3 static website hosting configuration.
-// Presence (non-nil pointer) means hosting is enabled.
-type WebsiteConfig struct{}
-
 // Bucket is the normalized Terraform-collected bucket state.
 type Bucket struct {
 	// Identity
@@ -94,21 +57,13 @@ type Bucket struct {
 	// Security data
 	PolicyJSON        string
 	ACLGrants         []ACLGrant
-	PublicAccessBlock *PublicAccessBlock
+	PublicAccessBlock *s3storage.PublicAccessBlock
 
 	// Sub-configurations
-	Encryption *EncryptionConfig
-	Versioning *VersioningConfig
-	Logging    *LoggingConfig
-	Lifecycle  *LifecycleConfig
-	ObjectLock *ObjectLockConfig
-	Website    *WebsiteConfig
-}
-
-// PublicAccessBlock represents S3 public access block settings.
-type PublicAccessBlock struct {
-	BlockPublicAcls       bool
-	IgnorePublicAcls      bool
-	BlockPublicPolicy     bool
-	RestrictPublicBuckets bool
+	Encryption *s3storage.EncryptionConfig
+	Versioning *s3storage.VersioningConfig
+	Logging    *s3storage.LoggingConfig
+	Lifecycle  *s3storage.LifecycleConfig
+	ObjectLock *s3storage.ObjectLockConfig
+	Website    *s3storage.WebsiteConfig
 }
