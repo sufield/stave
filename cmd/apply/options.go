@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -29,58 +28,36 @@ const (
 	runModeProfile  runMode = "profile"
 )
 
-type runOptions struct {
-	mode           runMode
-	params         applyParams
-	format         ui.OutputFormat
-	profile        applyProfileOptions
-	evaluatorInput appeval.Options
-}
-
-func gatherRunOptions(cmd *cobra.Command, opts *ApplyOptions) (runOptions, error) {
+func gatherRunOptions(cmd *cobra.Command, opts *ApplyOptions) (applyParams, runMode, error) {
 	if opts.Profile != "" {
 		profile, err := ParseApplyProfile(opts.Profile)
 		if err != nil {
-			return runOptions{}, err
+			return applyParams{}, "", err
 		}
-		switch profile {
-		case ApplyProfileAWSS3:
-			if opts.InputFile == "" {
-				return runOptions{}, fmt.Errorf("--input is required when using --profile aws-s3")
-			}
-			return runOptions{
-				mode: runModeProfile,
-				profile: applyProfileOptions{
-					inputFile:       opts.InputFile,
-					bucketAllowlist: opts.BucketAllowlist,
-					includeAll:      opts.IncludeAll,
-					outputFormat:    opts.Format,
-					nowTime:         opts.NowTime,
-					quiet:           cmdutil.QuietEnabled(cmd),
-				},
-			}, nil
+		if profile == ApplyProfileAWSS3 && opts.InputFile == "" {
+			return applyParams{}, "", fmt.Errorf("--input is required when using --profile aws-s3")
 		}
-	}
-
-	if strictErr := runStrictIntegrityCheck(cmd); strictErr != nil {
-		return runOptions{}, strictErr
+		return applyParams{}, runModeProfile, nil
 	}
 
 	params, err := validateApplyFlags(cmd, opts)
 	if err != nil {
-		return runOptions{}, err
-	}
-	format, err := compose.ResolveFormatValue(cmd, opts.Format)
-	if err != nil {
-		return runOptions{}, err
+		return applyParams{}, "", err
 	}
 
-	return runOptions{
-		mode:           runModeStandard,
-		params:         params,
-		format:         format,
-		evaluatorInput: buildEvaluatorOptions(opts),
-	}, nil
+	return params, runModeStandard, nil
+}
+
+// toProfileOptions converts ApplyOptions to profile-specific options.
+func (o *ApplyOptions) toProfileOptions(cmd *cobra.Command) applyProfileOptions {
+	return applyProfileOptions{
+		inputFile:       o.InputFile,
+		bucketAllowlist: o.BucketAllowlist,
+		includeAll:      o.IncludeAll,
+		outputFormat:    o.Format,
+		nowTime:         o.NowTime,
+		quiet:           cmdutil.QuietEnabled(cmd),
+	}
 }
 
 func buildEvaluatorOptions(opts *ApplyOptions) appeval.Options {

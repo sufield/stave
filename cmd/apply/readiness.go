@@ -2,7 +2,6 @@ package apply
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
@@ -41,30 +40,6 @@ func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
 	}
 
 	return readinessExitError(report)
-}
-
-func runApply(cmd *cobra.Command, _ []string, opts *ApplyOptions) error {
-	if err := projctx.EnsureContextSelectionValid(); err != nil {
-		return err
-	}
-
-	// Profile mode bypasses standard readiness checks — it uses its own
-	// input validation inside runApplyCoreProfileWithOptions.
-	if opts.Profile != "" {
-		return runApplyCore(cmd, opts)
-	}
-
-	report, err := assessReadiness(cmd, opts.toReadinessInput())
-	if err != nil {
-		return &ui.InputError{Err: ui.EvaluateErrorWithHint(err)}
-	}
-	if !report.Ready {
-		if !cmdutil.QuietEnabled(cmd) {
-			_ = writeReadinessText(cmd.ErrOrStderr(), report)
-		}
-		return ui.WithNextCommand(fmt.Errorf("%w: readiness checks failed; apply not executed", ui.ErrValidationFailed), "stave plan")
-	}
-	return runApplyCore(cmd, opts)
 }
 
 func assessReadiness(cmd *cobra.Command, in readinessInput) (validation.ReadinessReport, error) {
