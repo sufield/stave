@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -85,34 +84,6 @@ func (r *Runner) computeDelta(ctx context.Context, dir string, filter asset.Filt
 	return asset.ComputeObservationDelta(prev, curr).ApplyFilter(filter), nil
 }
 
-func buildFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
-	filter := asset.FilterOptions{
-		ChangeTypes: make([]asset.ChangeType, 0, len(changeTypes)),
-		AssetTypes:  make([]kernel.AssetType, 0, len(assetTypes)),
-		AssetID:     strings.TrimSpace(assetID),
-	}
-	for _, raw := range changeTypes {
-		ct := strings.ToLower(strings.TrimSpace(raw))
-		if ct == "" {
-			continue
-		}
-		switch ct {
-		case "added", "removed", "modified":
-			filter.ChangeTypes = append(filter.ChangeTypes, asset.ChangeType(ct))
-		default:
-			return asset.FilterOptions{}, &ui.UserError{Err: fmt.Errorf("invalid --change-type %q (use: added, removed, modified)", raw)}
-		}
-	}
-	for _, raw := range assetTypes {
-		rt := strings.TrimSpace(raw)
-		if rt == "" {
-			continue
-		}
-		filter.AssetTypes = append(filter.AssetTypes, kernel.NewAssetType(rt))
-	}
-	return filter, nil
-}
-
 func writeText(w io.Writer, out asset.ObservationDelta) error {
 	var err error
 	writef := func(format string, args ...any) {
@@ -139,9 +110,4 @@ func writeText(w io.Writer, out asset.ObservationDelta) error {
 		}
 	}
 	return err
-}
-
-// newDiffFilter is a test helper that constructs a filter from raw flag values.
-func newDiffFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
-	return buildFilter(changeTypes, assetTypes, assetID)
 }
