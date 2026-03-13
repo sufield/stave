@@ -166,7 +166,7 @@ func evaluateFixLoopState(
 	observationsDir string,
 	label string,
 ) (fixLoopEvaluation, error) {
-	loader, err := compose.NewObservationRepository()
+	loader, err := compose.ActiveProvider().NewObservationRepo()
 	if err != nil {
 		return fixLoopEvaluation{}, fmt.Errorf("%s evaluation: create observation loader: %w", label, err)
 	}

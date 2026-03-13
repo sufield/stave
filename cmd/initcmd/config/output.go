@@ -23,7 +23,7 @@ type configResolvedField = configservice.ResolvedField
 type configShowOutput = configservice.EffectiveConfig
 
 func buildConfigShowOutput() configShowOutput {
-	cfg, cfgPath, hasCfg := projconfig.FindProjectConfigWithPath()
+	cfg, cfgPath, hasCfg := projconfig.FindProjectConfigWithPath("")
 
 	retTier := projconfig.ResolveRetentionTierWithSource(cfg, cfgPath)
 	out := configShowOutput{

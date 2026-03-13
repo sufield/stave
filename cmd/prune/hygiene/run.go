@@ -125,14 +125,14 @@ func prepareHygieneExecution(cmd *cobra.Command, flags *hygieneFlagsType) (hygie
 func buildHygieneOutputs(execCtx hygieneExecution) (appcontracts.ReportRequest, hygieneapp.Output, error) {
 	ctx := execCtx.ctx
 	req := execCtx.req
-	loaded, err := compose.LoadObsAndInv(ctx, req.ObservationsDir, req.ControlsDir)
+	loaded, err := compose.ActiveProvider().LoadAssets(ctx, req.ObservationsDir, req.ControlsDir)
 	if err != nil {
 		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}
 	activeSnapshots := loaded.Snapshots
 	controls := loaded.Controls
 
-	obsRepo, err := compose.NewObservationRepository()
+	obsRepo, err := compose.ActiveProvider().NewObservationRepo()
 	if err != nil {
 		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}

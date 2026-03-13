@@ -10,7 +10,7 @@ import (
 // LoadSnapshots is a convenience wrapper that uses the default provider
 // to load snapshots from a directory.
 func LoadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {
-	return defaultProvider.LoadSnapshots(ctx, dir)
+	return ActiveProvider().LoadSnapshots(ctx, dir)
 }
 
 // LoadSnapshots loads observations from the specified directory using

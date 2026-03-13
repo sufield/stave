@@ -90,11 +90,11 @@ func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts 
 
 func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
 	// Setup Repositories
-	obsLoader, err := compose.NewObservationRepository()
+	obsLoader, err := compose.ActiveProvider().NewObservationRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init observation repository: %w", err)
 	}
-	ctlLoader, err := compose.NewControlRepository()
+	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}

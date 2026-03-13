@@ -169,7 +169,7 @@ func loadControlsForList(ctx context.Context, flags *controlsListFlagsType) ([]p
 		return controls, nil
 	}
 
-	loader, err := compose.NewControlRepository()
+	loader, err := compose.ActiveProvider().NewControlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}

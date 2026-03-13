@@ -81,11 +81,11 @@ func normalizeKind(raw string) (string, error) {
 // It removes the dependency on cobra.Command by accepting the sanitize flag directly.
 func NewReadinessValidator(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
 	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ValidationResult, error) {
-		obsRepo, err := compose.NewObservationRepository()
+		obsRepo, err := compose.ActiveProvider().NewObservationRepo()
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}
-		ctlRepo, err := compose.NewControlRepository()
+		ctlRepo, err := compose.ActiveProvider().NewControlRepo()
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}

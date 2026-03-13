@@ -88,7 +88,7 @@ func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error)
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
 func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 	root := projctx.RootForContextName()
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath()
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 	_, userPath, _ := projconfig.FindUserConfigWithPath()
 
 	selectedContext := ""

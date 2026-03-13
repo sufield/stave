@@ -121,7 +121,7 @@ func loadTraceControl(ctx context.Context, controlsDir, controlID string) (polic
 }
 
 func loadTraceSnapshot(ctx context.Context, observationPath string) (*asset.Snapshot, error) {
-	obsLoader, err := compose.NewSnapshotObservationRepository()
+	obsLoader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

@@ -50,6 +50,70 @@ func NewDefaultProvider() *Provider {
 	}
 }
 
+// --- Active Provider ---
+
+// activeProvider is the process-wide provider used by command handlers.
+// Set via UseProvider during App bootstrap; tests use OverrideProviderForTest.
+var activeProvider = NewDefaultProvider()
+
+// ActiveProvider returns the current process-wide provider.
+func ActiveProvider() *Provider { return activeProvider }
+
+// UseProvider replaces the active provider. Called once from App.bootstrap.
+func UseProvider(p *Provider) { activeProvider = p }
+
+// OverrideProviderForTest replaces the active provider for the duration of a test.
+func OverrideProviderForTest(t interface {
+	Helper()
+	Cleanup(func())
+}, p *Provider) {
+	t.Helper()
+	orig := activeProvider
+	activeProvider = p
+	t.Cleanup(func() { activeProvider = orig })
+}
+
+// SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
+type SnapshotObservationRepository interface {
+	appcontracts.ObservationRepository
+	appcontracts.SnapshotReader
+}
+
+// --- Provider Repository Methods ---
+
+// NewObservationRepo creates a new observation repository.
+func (p *Provider) NewObservationRepo() (appcontracts.ObservationRepository, error) {
+	return p.ObsRepoFunc()
+}
+
+// NewControlRepo creates a new control repository.
+func (p *Provider) NewControlRepo() (appcontracts.ControlRepository, error) {
+	return p.ControlRepoFunc()
+}
+
+// NewStdinObsRepo creates an observation repository that reads from stdin.
+func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationRepository, error) {
+	return p.StdinObsRepoFunc(r)
+}
+
+// NewSnapshotRepo creates a snapshot observation repository.
+func (p *Provider) NewSnapshotRepo() (SnapshotObservationRepository, error) {
+	repo, err := p.ObsRepoFunc()
+	if err != nil {
+		return nil, err
+	}
+	sr, ok := repo.(SnapshotObservationRepository)
+	if !ok {
+		return nil, fmt.Errorf("observation repository does not implement SnapshotReader")
+	}
+	return sr, nil
+}
+
+// NewFindingWriter creates a finding marshaler for the given output format.
+func (p *Provider) NewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+	return p.FindingWriterFunc(format, jsonMode)
+}
+
 // --- Asset Loading ---
 
 // Assets represents the data loaded for an evaluation.

@@ -242,7 +242,7 @@ func sanitizeGateResult(s kernel.Sanitizer, r gateResult) gateResult {
 }
 
 func runPolicyOverdue(ctx context.Context, now time.Time, controlsDir, observationsDir string, maxUnsafe time.Duration) (gateResult, error) {
-	loaded, err := compose.LoadObsAndInv(ctx, observationsDir, controlsDir)
+	loaded, err := compose.ActiveProvider().LoadAssets(ctx, observationsDir, controlsDir)
 	if err != nil {
 		return gateResult{}, err
 	}

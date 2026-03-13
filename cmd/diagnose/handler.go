@@ -93,11 +93,11 @@ func executeDiagnoseReport(execCtx diagnoseExecution) (*diagnosis.Report, error)
 }
 
 func newDiagnoseRun() (*appdiagnose.Run, error) {
-	obsLoader, err := compose.NewObservationRepository()
+	obsLoader, err := compose.ActiveProvider().NewObservationRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	ctlLoader, err := compose.NewControlRepository()
+	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}

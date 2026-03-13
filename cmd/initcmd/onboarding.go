@@ -246,7 +246,7 @@ func loadQuickstartSnapshotsFromFile(ctx context.Context, path string) ([]asset.
 		return nil, err
 	}
 
-	loader, err := compose.NewSnapshotObservationRepository()
+	loader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

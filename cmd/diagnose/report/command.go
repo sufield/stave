@@ -114,7 +114,7 @@ func selectedContextConfigPath() (string, bool) {
 			return sc.Context.AbsPath(p), true
 		}
 	}
-	_, path, ok := projconfig.FindProjectConfigWithPath()
+	_, path, ok := projconfig.FindProjectConfigWithPath("")
 	return path, ok
 }
 
