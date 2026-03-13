@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
-	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -33,19 +33,19 @@ func TestValidateFindingDetailArgs(t *testing.T) {
 	}
 }
 
-func TestRunDiagnoseFindingDetail_ValidationShortCircuit(t *testing.T) {
-	err := runDiagnoseFindingDetail(diagnoseFindingDetailRequest{
-		cmd:         &cobra.Command{},
-		diagnoseRun: nil,
-		ctx:         nil,
-		baseCfg:     appdiagnose.Config{},
-		controlID:   "",
-		assetID:     "res-1",
-		formatRaw:   "text",
-		quiet:       false,
-	})
-	if err == nil || !strings.Contains(err.Error(), "--control-id is required") {
-		t.Fatalf("expected control-id error, got %v", err)
+func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
+	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
+	cfg := Config{
+		ControlID: "",
+		AssetID:   "res-1",
+		MaxUnsafe: "24h",
+		Format:    ui.OutputFormatText,
+		Stdout:    &bytes.Buffer{},
+		Stderr:    &bytes.Buffer{},
+	}
+	err := runner.Run(context.Background(), cfg)
+	if err == nil || !strings.Contains(err.Error(), "detail mode requires both") {
+		t.Fatalf("expected detail mode validation error, got %v", err)
 	}
 }
 
@@ -88,7 +88,7 @@ func TestWriteFindingDetailJSON_IncludesTrace(t *testing.T) {
 	}
 }
 
-func TestRunDiagnoseFindingDetail_SuccessJSON(t *testing.T) {
+func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	controls := []policy.ControlDefinition{
 		{
@@ -132,82 +132,51 @@ func TestRunDiagnoseFindingDetail_SuccessJSON(t *testing.T) {
 		},
 	}
 
-	evalStub := diagnoseEvalRepoStub{result: result}
-	run, err := appdiagnose.NewRun(
-		diagnoseObsRepoStub{snapshots: snapshots},
-		diagnoseInvRepoStub{controls: controls},
-		evalStub,
-	)
-	if err != nil {
-		t.Fatal(err)
+	// Write eval result to temp file for the real JSON loader.
+	tmp := t.TempDir()
+	evalFile := filepath.Join(tmp, "eval.json")
+	evalJSON, marshalErr := json.Marshal(result)
+	if marshalErr != nil {
+		t.Fatal(marshalErr)
+	}
+	if writeErr := os.WriteFile(evalFile, evalJSON, 0o644); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 
-	cmd := &cobra.Command{Use: "test"}
-	cmd.Flags().String("format", "text", "")
-	_ = cmd.Flags().Set("format", "json")
+	provider := &compose.Provider{
+		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
+			return diagnoseObsRepoStub{snapshots: snapshots}, nil
+		},
+		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
+			return diagnoseInvRepoStub{controls: controls}, nil
+		},
+	}
 
 	var out bytes.Buffer
-	origStdout := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stdout = w
-	defer func() {
-		_ = w.Close()
-		_ = r.Close()
-		os.Stdout = origStdout
-	}()
-
-	err = runDiagnoseFindingDetail(diagnoseFindingDetailRequest{
-		cmd:         cmd,
-		diagnoseRun: run,
-		ctx:         context.Background(),
-		baseCfg: appdiagnose.Config{
-			ControlsDir:     "ctl",
-			ObservationsDir: "obs",
-			OutputFile:      "previous.json",
-			MaxUnsafe:       time.Hour,
-			Clock:           clockadp.FixedClock(now),
-		},
-		controlID: "CTL.TEST.A.001",
-		assetID:   "res-1",
-		formatRaw: "json",
-		quiet:     false,
-	})
-	if err != nil {
-		t.Fatalf("expected nil in json mode, got %v", err)
+	runner := NewRunner(provider, clockadp.FixedClock(now))
+	cfg := Config{
+		ControlsDir:     "ctl",
+		ObservationsDir: "obs",
+		PreviousOutput:  evalFile,
+		MaxUnsafe:       "1h",
+		Format:          ui.OutputFormatJSON,
+		ControlID:       "CTL.TEST.A.001",
+		AssetID:         "res-1",
+		Stdout:          &out,
+		Stderr:          &bytes.Buffer{},
 	}
 
-	_ = w.Close()
-	if _, copyErr := io.Copy(&out, r); copyErr != nil {
-		t.Fatal(err)
+	if runErr := runner.Run(context.Background(), cfg); runErr != nil {
+		t.Fatalf("expected nil in json mode, got %v", runErr)
 	}
 	if !strings.Contains(out.String(), "\"control\"") {
 		t.Fatalf("expected finding detail json output, got %s", out.String())
 	}
 
 	// Text mode branch returns ErrViolationsFound.
-	cmdText := &cobra.Command{Use: "test-text"}
-	cmdText.Flags().String("format", "text", "")
-	_ = cmdText.Flags().Set("format", "text")
-	err = runDiagnoseFindingDetail(diagnoseFindingDetailRequest{
-		cmd:         cmdText,
-		diagnoseRun: run,
-		ctx:         context.Background(),
-		baseCfg: appdiagnose.Config{
-			ControlsDir:     "ctl",
-			ObservationsDir: "obs",
-			OutputFile:      "previous.json",
-			MaxUnsafe:       time.Hour,
-			Clock:           clockadp.FixedClock(now),
-		},
-		controlID: "CTL.TEST.A.001",
-		assetID:   "res-1",
-		formatRaw: "text",
-		quiet:     true,
-	})
-	if err != ui.ErrViolationsFound {
-		t.Fatalf("expected ErrViolationsFound in text mode, got %v", err)
+	out.Reset()
+	cfg.Format = ui.OutputFormatText
+	if runErr := runner.Run(context.Background(), cfg); runErr != ui.ErrViolationsFound {
+		t.Fatalf("expected ErrViolationsFound in text mode, got %v", runErr)
 	}
 }
