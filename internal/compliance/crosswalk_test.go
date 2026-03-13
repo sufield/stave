@@ -66,8 +66,8 @@ checks:
       rationale: "   "
 `)
 	_, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
-	if err == nil || !strings.Contains(err.Error(), "empty control_id/rationale") {
-		t.Fatalf("expected empty control_id/rationale error, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "empty control_id or rationale") {
+		t.Fatalf("expected empty control_id or rationale error, got %v", err)
 	}
 }
 
