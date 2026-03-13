@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -30,15 +29,18 @@ type Config struct {
 	Stderr          io.Writer
 }
 
-// Runner orchestrates the loading and comparison of snapshots.
-type Runner struct{}
-
-// NewRunner initializes a diff runner.
-func NewRunner() *Runner {
-	return &Runner{}
+// Runner orchestrates the loading and comparison of observation snapshots.
+type Runner struct {
+	Provider *compose.Provider
 }
 
-// Run executes the diffing workflow.
+// NewRunner initializes a diff runner with the provided dependency provider.
+func NewRunner(p *compose.Provider) *Runner {
+	return &Runner{Provider: p}
+}
+
+// Run executes the diffing workflow: loading the two latest snapshots,
+// calculating the delta, applying filters, and rendering the output.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
 
@@ -47,9 +49,10 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	rt := cmdutil.NewRuntime(cfg.Stdout, cfg.Stderr, cfg.Quiet)
-	stop := rt.BeginProgress("Computing observation delta")
-	delta, err := compute(ctx, obsDir, filter)
+	progress := ui.NewRuntime(cfg.Stdout, cfg.Stderr)
+	progress.Quiet = cfg.Quiet
+	stop := progress.BeginProgress("Computing observation delta")
+	delta, err := r.computeDelta(ctx, obsDir, filter)
 	stop()
 	if err != nil {
 		return err
@@ -66,13 +69,13 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	return writeText(cfg.Stdout, delta)
 }
 
-func compute(ctx context.Context, observationsDir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
-	snapshots, err := compose.LoadSnapshots(ctx, observationsDir)
+func (r *Runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
+	snapshots, err := r.Provider.LoadSnapshots(ctx, dir)
 	if err != nil {
-		return asset.ObservationDelta{}, err
+		return asset.ObservationDelta{}, fmt.Errorf("loading snapshots: %w", err)
 	}
 	if len(snapshots) < 2 {
-		return asset.ObservationDelta{}, fmt.Errorf("need at least 2 snapshots in %s for diff", observationsDir)
+		return asset.ObservationDelta{}, fmt.Errorf("need at least 2 snapshots in %s for diff", dir)
 	}
 
 	prev, curr, err := asset.LatestTwoSnapshots(snapshots)
