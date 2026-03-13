@@ -2,7 +2,6 @@ package validate
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -34,11 +33,9 @@ What it checks:
   - Cross-file consistency and time sanity
   - Duration format and feasibility` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
-		// 1. Validation and Normalization
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.validate()
 		},
-		// 2. Main Execution
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runValidate(cmd, rt, opts)
 		},
@@ -48,12 +45,4 @@ What it checks:
 
 	opts.BindFlags(cmd)
 	return cmd
-}
-
-func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
-	// Sync global flags/runtime state
-	rt.Quiet = cmdutil.QuietEnabled(cmd)
-
-	// Delegate to internal business logic
-	return runValidateWithOptions(cmd, rt, opts)
 }

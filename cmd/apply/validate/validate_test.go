@@ -105,7 +105,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	cmd.SetErr(&buf)
 
 	// Exercise full validate command flow (directory mode).
-	err := runValidateWithOptions(cmd, ui.DefaultRuntime(), opts)
+	err := runValidate(cmd, ui.DefaultRuntime(), opts)
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v", err)
 	}
