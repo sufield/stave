@@ -26,6 +26,7 @@ func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
 		return err
 	}
 
+	gf := cmdutil.GetGlobalFlags(cmd)
 	plan := buildPlan(planBuildParams{
 		Now:         runInput.now,
 		ObsRoot:     runInput.observationsRoot,
@@ -35,13 +36,13 @@ func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
 		Tiers:       runInput.tiers,
 		Files:       files,
 		Apply:       flags.apply,
-		Force:       cmdutil.ForceEnabled(cmd),
+		Force:       gf.Force,
 	})
 	if err := writePlanOutput(cmd, plan, flags.format); err != nil {
 		return err
 	}
 	if plan.Applied {
-		return applyPlan(plan, runInput.observationsRoot, runInput.archiveDir, cmdutil.AllowSymlinkOutEnabled(cmd))
+		return applyPlan(plan, runInput.observationsRoot, runInput.archiveDir, gf.AllowSymlinkOut)
 	}
 	return nil
 }
@@ -112,7 +113,7 @@ func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) erro
 	if err != nil {
 		return err
 	}
-	if cmdutil.QuietEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).Quiet {
 		return nil
 	}
 	w := cmd.OutOrStdout()

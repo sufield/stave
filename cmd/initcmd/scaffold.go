@@ -40,14 +40,14 @@ type scaffoldOptions struct {
 }
 
 func runInit(cmd *cobra.Command, flags *initFlagsType) error {
-	allowSymlink := cmdutil.AllowSymlinkOutEnabled(cmd)
+	gf := cmdutil.GetGlobalFlags(cmd)
 	result, err := projectapp.RunInit(projectapp.InitRequest{
 		Dir:               flags.dir,
 		Profile:           flags.profile,
 		DryRun:            flags.dryRun,
 		WithGitHubActions: flags.withGitHubActions,
 		CaptureCadence:    flags.captureCadence,
-		Force:             cmdutil.ForceEnabled(cmd),
+		Force:             gf.Force,
 	}, projectapp.InitDeps{
 		ValidateInputs: validateScaffoldInputs,
 		Plan: func(baseDir string, overwrite bool, opts projectapp.ScaffoldOptions) (projectapp.ScaffoldResult, error) {
@@ -62,7 +62,7 @@ func runInit(cmd *cobra.Command, flags *initFlagsType) error {
 				Profile:           opts.Profile,
 				WithGitHubActions: opts.WithGitHubActions,
 				CaptureCadence:    opts.CaptureCadence,
-			}, allowSymlink)
+			}, gf.AllowSymlinkOut)
 		},
 		AfterScaffold: func(baseDir string) error {
 			return maybePromptAndInitGitRepo(baseDir, os.Stdin, cmd.OutOrStdout())
@@ -78,7 +78,7 @@ func runInit(cmd *cobra.Command, flags *initFlagsType) error {
 		Created: result.Created,
 		Skipped: result.Skipped,
 		DryRun:  result.DryRun,
-	}, cmdutil.QuietEnabled(cmd))
+	}, gf.Quiet)
 	return nil
 }
 

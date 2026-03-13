@@ -65,7 +65,7 @@ func (d *deleteOrchestrator) Apply(_ appeval.CleanupPlan) error {
 	if err != nil {
 		return err
 	}
-	if !cmdutil.QuietEnabled(d.cmd) && !d.plan.Format.IsJSON() {
+	if !cmdutil.GetGlobalFlags(d.cmd).Quiet && !d.plan.Format.IsJSON() {
 		fmt.Fprintf(d.cmd.OutOrStdout(), "Deleted %d snapshot(s).\n", deletion.Deleted)
 	}
 	return nil
@@ -139,7 +139,8 @@ func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput
 		return deleteRunInput{}, err
 	}
 
-	dryRun := opts.DryRun || !cmdutil.ForceEnabled(cmd)
+	gf := cmdutil.GetGlobalFlags(cmd)
+	dryRun := opts.DryRun || !gf.Force
 
 	return deleteRunInput{
 		CleanupRunInput: pruneshared.CleanupRunInput{
@@ -150,7 +151,7 @@ func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput
 			Format:    format,
 			KeepMin:   opts.KeepMin,
 			DryRun:    dryRun,
-			Quiet:     cmdutil.QuietEnabled(cmd),
+			Quiet:     gf.Quiet,
 			Action:    pruner.ActionDelete,
 		},
 	}, nil

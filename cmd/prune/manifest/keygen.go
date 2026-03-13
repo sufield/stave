@@ -39,7 +39,7 @@ func runSnapshotManifestKeygen(cmd *cobra.Command, privateKeyOutPath, publicKeyO
 		return fmt.Errorf("write public key %q: %w", publicOut, err)
 	}
 
-	if cmdutil.TextOutputEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).TextOutputEnabled() {
 		fmt.Fprintf(cmd.OutOrStdout(), "Wrote private key: %s\n", privateOut)
 		fmt.Fprintf(cmd.OutOrStdout(), "Wrote public key: %s\n", publicOut)
 	}

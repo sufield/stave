@@ -184,7 +184,7 @@ func gatherPromptFromFindingOptions(cmd *cobra.Command, flags *promptFlagsType) 
 		ControlsDir:     fsutil.CleanUserPath(flags.controlsDir),
 		ObservationsDir: fsutil.CleanUserPath(flags.obsDir),
 		Format:          format,
-		Quiet:           flags.quietMode || cmdutil.QuietEnabled(cmd),
+		Quiet:           flags.quietMode || cmdutil.GetGlobalFlags(cmd).Quiet,
 	}
 
 	if opts.EvalFile == "" {

@@ -143,7 +143,7 @@ func applyFormattingToTargets(cmd *cobra.Command, files []string, checkOnly bool
 			continue
 		}
 		opts := fsutil.ConfigWriteOpts()
-		opts.AllowSymlink = cmdutil.AllowSymlinkOutEnabled(cmd)
+		opts.AllowSymlink = cmdutil.GetGlobalFlags(cmd).AllowSymlinkOut
 		if err := fsutil.SafeWriteFile(path, formatted, opts); err != nil {
 			return 0, 0, fmt.Errorf("write %s: %w", path, err)
 		}

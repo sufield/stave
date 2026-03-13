@@ -38,6 +38,8 @@ type auditCmd struct {
 }
 
 func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
+
 	format, err := parseFormat(c.flags.format)
 	if err != nil {
 		return err
@@ -106,7 +108,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 		ReleaseBundleDir:     fsutil.CleanUserPath(c.flags.releaseBundleDir),
 		PrivacyMode:          c.flags.privacyMode,
 		FailOn:               failOn,
-		RequireOffline:       cmdutil.RequireOfflineEnabled(cmd),
+		RequireOffline:       gf.RequireOffline,
 	})
 	if err != nil {
 		return fmt.Errorf("run security audit: %w", err)
@@ -119,8 +121,8 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 
 	mainOutPath, err := securityout.WriteBundle(
 		securityout.BundleWriteOpts{
-			Force:        cmdutil.ForceEnabled(cmd),
-			AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
+			Force:        gf.Force,
+			AllowSymlink: gf.AllowSymlinkOut,
 		},
 		now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath,
 	)
@@ -128,7 +130,7 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if !cmdutil.QuietEnabled(cmd) {
+	if !gf.Quiet {
 		if err := printSummary(cmd.OutOrStdout(), mainOutPath, bundleDir, report.Summary); err != nil {
 			return err
 		}

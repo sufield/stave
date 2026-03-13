@@ -58,7 +58,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	}
 	baselineEntries := remediation.BaselineEntriesFromFindings(baselineEval.Findings)
 
-	sanitizer := cmdutil.GetSanitizer(cmd)
+	sanitizer := cmdutil.GetGlobalFlags(cmd).GetSanitizer()
 	currentEntries = output.SanitizeBaselineEntries(sanitizer, currentEntries)
 	baselineEntries = output.SanitizeBaselineEntries(sanitizer, baselineEntries)
 

@@ -53,10 +53,11 @@ func runProfileApply(cmd *cobra.Command, cfg Config) error {
 		return err
 	}
 
+	gf := cmdutil.GetGlobalFlags(cmd)
 	cfg.Stdout = compose.ResolveStdout(cmd.OutOrStdout(), cfg.Quiet, format)
 	cfg.Stderr = cmd.ErrOrStderr()
-	cfg.IsJSONMode = cmdutil.IsJSONMode(cmd)
-	cfg.Sanitizer = cmdutil.GetSanitizer(cmd)
+	cfg.IsJSONMode = gf.IsJSONMode()
+	cfg.Sanitizer = gf.GetSanitizer()
 	cfg.OutputFormat = format.String()
 
 	runner := NewRunner(clock, cfg.Quiet)
@@ -79,7 +80,7 @@ func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, params applyParams
 	rep := &Reporter{
 		Stdout: cmd.OutOrStdout(),
 		Stderr: cmd.ErrOrStderr(),
-		Quiet:  cmdutil.QuietEnabled(cmd),
+		Quiet:  cmdutil.GetGlobalFlags(cmd).Quiet,
 	}
 	return rep.ReportApply(results)
 }
@@ -90,6 +91,7 @@ func executeEvaluation(
 	params applyParams,
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
+	gf := cmdutil.GetGlobalFlags(cmd)
 	rt := cmdutil.NewRuntime(cmd)
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
@@ -98,10 +100,10 @@ func executeEvaluation(
 
 	builder := &Builder{
 		Ctx:           cmd.Context(),
-		Stdout:        compose.ResolveStdout(cmd.OutOrStdout(), cmdutil.QuietEnabled(cmd), format),
+		Stdout:        compose.ResolveStdout(cmd.OutOrStdout(), gf.Quiet, format),
 		Stderr:        cmd.ErrOrStderr(),
-		Sanitizer:     cmdutil.GetSanitizer(cmd),
-		IsJSON:        cmdutil.IsJSONMode(cmd),
+		Sanitizer:     gf.GetSanitizer(),
+		IsJSON:        gf.IsJSONMode(),
 		Opts:          opts,
 		Params:        params,
 		OnObsProgress: progress.Update,
@@ -126,7 +128,7 @@ func executeEvaluation(
 
 // runStrictIntegrityCheck ensures internal pack integrity when --strict is set.
 func runStrictIntegrityCheck(cmd *cobra.Command) error {
-	if !cmdutil.StrictEnabled(cmd) {
+	if !cmdutil.GetGlobalFlags(cmd).Strict {
 		return nil
 	}
 

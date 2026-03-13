@@ -50,7 +50,7 @@ func runHygiene(cmd *cobra.Command, flags *hygieneFlagsType) error {
 	if err != nil {
 		return err
 	}
-	if !cmdutil.QuietEnabled(cmd) {
+	if !cmdutil.GetGlobalFlags(cmd).Quiet {
 		if err := writeHygieneOutput(format, reportReq, jsonOut, cmd.OutOrStdout()); err != nil {
 			return err
 		}

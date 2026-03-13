@@ -42,7 +42,7 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
 	a.stopCPUProfile()
 	a.writeMemProfile(cmd)
-	if !a.Flags.Quiet && !cmdutil.IsJSONMode(a.Root) {
+	if !a.Flags.Quiet && !cmdutil.GetGlobalFlags(a.Root).IsJSONMode() {
 		fmt.Fprintln(cmd.ErrOrStderr(), "\nNeed help? Run 'stave bug-report' to create a diagnostic bundle.")
 	}
 	if a.LogCloser != nil {

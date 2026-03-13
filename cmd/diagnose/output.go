@@ -60,7 +60,7 @@ func writeDiagnoseReport(cmd *cobra.Command, out io.Writer, format ui.OutputForm
 // writeDiagnoseJSON outputs diagnostic report as JSON.
 // If global JSON mode is set, wraps output in {"ok": true, "data": ...}.
 func writeDiagnoseJSON(cmd *cobra.Command, w io.Writer, report *diagnosis.Report) error {
-	return outjson.WriteDiagnosis(w, report, cmdutil.IsJSONMode(cmd))
+	return outjson.WriteDiagnosis(w, report, cmdutil.GetGlobalFlags(cmd).IsJSONMode())
 }
 
 // writeFindingDetailJSON outputs a FindingDetail as JSON.

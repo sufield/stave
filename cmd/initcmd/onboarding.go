@@ -48,6 +48,8 @@ type detectedSnapshot struct {
 }
 
 func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("resolve current directory: %w", err)
@@ -102,11 +104,11 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 		Findings:     findings,
 		GeneratedAt:  reportNow,
 		Overwrite:    true,
-		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
+		AllowSymlink: gf.AllowSymlinkOut,
 	}); err != nil {
 		return onboardingCommandError(err, "stave quickstart --report ./stave-report.json")
 	}
-	san := cmdutil.GetSanitizer(cmd)
+	san := gf.GetSanitizer()
 	return writeQuickstartSummary(out, san, sourceLabel, findings, latest, reportPath)
 }
 
@@ -290,6 +292,8 @@ const (
 )
 
 func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
+
 	fixture := strings.TrimSpace(flags.fixtureName)
 	snapshots, err := loadDemoSnapshots(fixture)
 	if err != nil {
@@ -335,12 +339,12 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 		Findings:     findings,
 		GeneratedAt:  reportNow,
 		Overwrite:    true,
-		AllowSymlink: cmdutil.AllowSymlinkOutEnabled(cmd),
+		AllowSymlink: gf.AllowSymlinkOut,
 	}); err != nil {
 		return onboardingCommandError(err, "stave demo --report ./stave-report.json")
 	}
 
-	return printDemoSummary(cmd.OutOrStdout(), cmdutil.GetSanitizer(cmd), lastSnap, findings, reportPath)
+	return printDemoSummary(cmd.OutOrStdout(), gf.GetSanitizer(), lastSnap, findings, reportPath)
 }
 
 func loadDemoSnapshots(name string) ([]asset.Snapshot, error) {
@@ -474,12 +478,14 @@ func runGenerateObservation(cmd *cobra.Command, args []string, outPath string) e
 }
 
 func writeGeneratedFile(path string, content []byte, cmd *cobra.Command) error {
+	gf := cmdutil.GetGlobalFlags(cmd)
+
 	path = fsutil.CleanUserPath(path)
 	if strings.TrimSpace(path) == "" {
 		return fmt.Errorf("output path cannot be empty")
 	}
-	force := cmdutil.ForceEnabled(cmd)
-	allowSymlink := cmdutil.AllowSymlinkOutEnabled(cmd)
+	force := gf.Force
+	allowSymlink := gf.AllowSymlinkOut
 	if !force {
 		if _, err := os.Stat(path); err == nil {
 			return fmt.Errorf("file already exists: %s (use --force to overwrite)", path)
@@ -494,7 +500,7 @@ func writeGeneratedFile(path string, content []byte, cmd *cobra.Command) error {
 	if err := fsutil.SafeWriteFile(path, content, opts); err != nil {
 		return err
 	}
-	if !cmdutil.QuietEnabled(cmd) {
+	if !gf.Quiet {
 		fmt.Fprintf(cmd.OutOrStdout(), "Generated %s\n", path)
 	}
 	return nil

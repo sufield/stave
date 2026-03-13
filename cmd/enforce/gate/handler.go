@@ -87,7 +87,7 @@ func run(cmd *cobra.Command, opts *options) error {
 		return err
 	}
 
-	result = sanitizeGateResult(cmdutil.GetSanitizer(cmd), result)
+	result = sanitizeGateResult(cmdutil.GetGlobalFlags(cmd).GetSanitizer(), result)
 
 	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
@@ -167,7 +167,7 @@ func writeOutput(cmd *cobra.Command, format ui.OutputFormat, result gateResult) 
 		}
 		return nil
 	}
-	if cmdutil.QuietEnabled(cmd) {
+	if cmdutil.GetGlobalFlags(cmd).Quiet {
 		return nil
 	}
 	if result.Pass {

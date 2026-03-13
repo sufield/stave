@@ -35,9 +35,6 @@ func ResolveNow(raw string) (time.Time, error) {
 // global JSON mode. When the flag was not explicitly changed and global JSON mode
 // is active, "json" is used instead.
 func ResolveFormatValue(cmd *cobra.Command, raw string) (ui.OutputFormat, error) {
-	formatRaw, err := cmdutil.ResolveFormat(cmd, raw)
-	if err != nil {
-		return "", err
-	}
+	formatRaw := cmdutil.ResolveFormat(cmd, raw)
 	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
 }

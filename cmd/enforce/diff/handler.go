@@ -33,7 +33,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return err
 	}
-	out = output.SanitizeObservationDelta(cmdutil.GetSanitizer(cmd), out)
+	out = output.SanitizeObservationDelta(cmdutil.GetGlobalFlags(cmd).GetSanitizer(), out)
 	return writeOutput(cmd, cmd.OutOrStdout(), format, out)
 }
 
