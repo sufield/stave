@@ -4,21 +4,76 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// buildFilter converts raw CLI string slices into a validated domain filter.
-func buildFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
-	ct, err := parseChangeTypes(changeTypes)
+// Options holds the raw input from CLI flags.
+type Options struct {
+	ObservationsDir string
+	Format          string
+	ChangeTypes     []string
+	AssetTypes      []string
+	AssetID         string
+}
+
+// DefaultOptions returns the standard defaults for the diff command.
+func DefaultOptions() Options {
+	return Options{
+		ObservationsDir: "observations",
+		Format:          "text",
+	}
+}
+
+// BindFlags attaches the options to a Cobra command.
+func (o *Options) BindFlags(cmd *cobra.Command) {
+	f := cmd.Flags()
+	f.StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory")
+	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format (text|json)")
+	f.StringSliceVar(&o.ChangeTypes, "change-type", nil, "Filter changes: added, removed, modified")
+	f.StringSliceVar(&o.AssetTypes, "asset-type", nil, "Filter by asset type")
+	f.StringVar(&o.AssetID, "asset-id", "", "Filter by asset ID substring")
+}
+
+// ToConfig converts raw CLI options into a validated logic configuration.
+func (o *Options) ToConfig(cmd *cobra.Command) (Config, error) {
+	obsDir := fsutil.CleanUserPath(o.ObservationsDir)
+	format, err := compose.ResolveFormatValue(cmd, o.Format)
+	if err != nil {
+		return Config{}, err
+	}
+
+	filter, err := o.buildFilter()
+	if err != nil {
+		return Config{}, err
+	}
+
+	gf := cmdutil.GetGlobalFlags(cmd)
+	return Config{
+		ObservationsDir: obsDir,
+		Format:          format,
+		Filter:          filter,
+		Quiet:           gf.Quiet,
+		Sanitizer:       gf.GetSanitizer(),
+		Stdout:          cmd.OutOrStdout(),
+		Stderr:          cmd.ErrOrStderr(),
+	}, nil
+}
+
+func (o *Options) buildFilter() (asset.FilterOptions, error) {
+	changeTypes, err := parseChangeTypes(o.ChangeTypes)
 	if err != nil {
 		return asset.FilterOptions{}, err
 	}
 	return asset.FilterOptions{
-		ChangeTypes: ct,
-		AssetTypes:  cmdutil.ToAssetTypes(assetTypes),
-		AssetID:     strings.TrimSpace(assetID),
+		ChangeTypes: changeTypes,
+		AssetTypes:  cmdutil.ToAssetTypes(o.AssetTypes),
+		AssetID:     strings.TrimSpace(o.AssetID),
 	}, nil
 }
 
@@ -38,7 +93,7 @@ func parseChangeTypes(raw []string) ([]asset.ChangeType, error) {
 			out = append(out, asset.ChangeType(val))
 		default:
 			return nil, &ui.UserError{
-				Err: fmt.Errorf("invalid --change-type %q (use: added, removed, modified)", s),
+				Err: fmt.Errorf("invalid --change-type %q (supported: added, removed, modified)", s),
 			}
 		}
 	}
@@ -47,5 +102,10 @@ func parseChangeTypes(raw []string) ([]asset.ChangeType, error) {
 
 // newDiffFilter is a test helper that constructs a filter from raw flag values.
 func newDiffFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
-	return buildFilter(changeTypes, assetTypes, assetID)
+	opts := Options{
+		ChangeTypes: changeTypes,
+		AssetTypes:  assetTypes,
+		AssetID:     assetID,
+	}
+	return opts.buildFilter()
 }

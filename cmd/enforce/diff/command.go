@@ -10,13 +10,7 @@ import (
 
 // NewCmd constructs the snapshot diff command.
 func NewCmd() *cobra.Command {
-	var (
-		obsDir      string
-		format      string
-		changeTypes []string
-		assetTypes  []string
-		assetID     string
-	)
+	opts := DefaultOptions()
 
 	cmd := &cobra.Command{
 		Use:   "diff",
@@ -36,34 +30,18 @@ Examples:
   stave snapshot diff --observations ./observations --format json > output/diff.json` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
-			if fmtErr != nil {
-				return fmtErr
+			cfg, err := opts.ToConfig(cmd)
+			if err != nil {
+				return err
 			}
-
-			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := NewRunner(compose.ActiveProvider())
-			return runner.Run(cmd.Context(), Config{
-				ObservationsDir: obsDir,
-				Format:          fmtValue,
-				ChangeTypes:     changeTypes,
-				AssetTypes:      assetTypes,
-				AssetID:         assetID,
-				Quiet:           gf.Quiet,
-				Sanitizer:       gf.GetSanitizer(),
-				Stdout:          cmd.OutOrStdout(),
-				Stderr:          cmd.ErrOrStderr(),
-			})
+			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().StringSliceVar(&changeTypes, "change-type", nil, "Filter change types: added, removed, modified")
-	cmd.Flags().StringSliceVar(&assetTypes, "asset-type", nil, "Filter asset type values")
-	cmd.Flags().StringVar(&assetID, "asset-id", "", "Filter by asset ID substring")
+	opts.BindFlags(cmd)
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 	_ = cmd.RegisterFlagCompletionFunc("change-type", cmdutil.CompleteFixed("added", "removed", "modified"))
 

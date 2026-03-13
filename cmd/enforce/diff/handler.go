@@ -12,16 +12,13 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Config defines the parameters for comparing observation snapshots.
 type Config struct {
 	ObservationsDir string
 	Format          ui.OutputFormat
-	ChangeTypes     []string
-	AssetTypes      []string
-	AssetID         string
+	Filter          asset.FilterOptions
 	Quiet           bool
 	Sanitizer       kernel.Sanitizer
 	Stdout          io.Writer
@@ -41,17 +38,10 @@ func NewRunner(p *compose.Provider) *Runner {
 // Run executes the diffing workflow: loading the two latest snapshots,
 // calculating the delta, applying filters, and rendering the output.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
-
-	filter, err := buildFilter(cfg.ChangeTypes, cfg.AssetTypes, cfg.AssetID)
-	if err != nil {
-		return err
-	}
-
 	progress := ui.NewRuntime(cfg.Stdout, cfg.Stderr)
 	progress.Quiet = cfg.Quiet
 	stop := progress.BeginProgress("Computing observation delta")
-	delta, err := r.computeDelta(ctx, obsDir, filter)
+	delta, err := r.computeDelta(ctx, cfg.ObservationsDir, cfg.Filter)
 	stop()
 	if err != nil {
 		return err
