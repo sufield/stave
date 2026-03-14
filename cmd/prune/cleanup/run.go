@@ -1,180 +1,145 @@
 package cleanup
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
 
-type deleteOptions struct {
+// --- Config ---
+
+// Config defines the resolved parameters for a snapshot prune operation.
+type Config struct {
 	ObservationsDir string
-	OlderThan       string
+	OlderThan       time.Duration
 	RetentionTier   string
-	Now             string
+	Now             time.Time
 	KeepMin         int
 	DryRun          bool
-	Format          string
+	Force           bool
+	Quiet           bool
+	Format          ui.OutputFormat
+	Stdout          io.Writer
 }
 
-type deleteOutput = pruner.PruneOutput
+// --- Runner ---
 
-type deletePlan struct {
-	pruneshared.CleanupPlan
-	output deleteOutput
+// executionPlan holds the calculated state of what will be pruned.
+type executionPlan struct {
+	obsDir         string
+	allFiles       []pruner.SnapshotFile
+	candidateFiles []pruner.SnapshotFile
+	output         pruner.PruneOutput
+	dryRun         bool
 }
 
-type deleteRunInput struct {
-	pruneshared.CleanupRunInput
+// Runner orchestrates the identification and removal of stale snapshot files.
+// It implements appeval.CleanupOrchestrator directly.
+type Runner struct {
+	cfg  Config
+	plan *executionPlan
 }
 
-type deleteOrchestrator struct {
-	cmd  *cobra.Command
-	opts *deleteOptions
-	plan deletePlan
-}
-
-func (d *deleteOrchestrator) BuildPlan() (appeval.CleanupPlan, error) {
-	p, err := buildDeletePlan(d.cmd, d.opts)
-	if err != nil {
-		return appeval.CleanupPlan{}, err
+// Run executes the full pruning workflow via the appeval.RunCleanup lifecycle.
+func (r *Runner) Run(ctx context.Context, cfg Config) error {
+	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
+	if obsDir == "" {
+		return fmt.Errorf("--observations cannot be empty")
 	}
-	d.plan = p
+	if cfg.KeepMin < 0 {
+		return fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)
+	}
+
+	cfg.ObservationsDir = obsDir
+	cfg.DryRun = cfg.DryRun || !cfg.Force
+	r.cfg = cfg
+
+	return appeval.RunCleanup(r)
+}
+
+// BuildPlan identifies which snapshots meet the criteria for pruning.
+func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(context.Background(), r.cfg.ObservationsDir)
+	if err != nil {
+		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
+	}
+
+	candidates := pruneshared.PlanPrune(allFiles, pruner.Criteria{
+		Now:       r.cfg.Now,
+		OlderThan: r.cfg.OlderThan,
+		KeepMin:   r.cfg.KeepMin,
+	})
+
+	out := pruner.BuildPruneOutput(pruner.CleanupInput{
+		Now:             r.cfg.Now,
+		Action:          pruner.ActionDelete,
+		DryRun:          r.cfg.DryRun,
+		ObservationsDir: r.cfg.ObservationsDir,
+		Tier:            r.cfg.RetentionTier,
+		OlderThan:       r.cfg.OlderThan,
+		KeepMin:         r.cfg.KeepMin,
+		AllFiles:        allFiles,
+		CandidateFiles:  candidates,
+	})
+
+	r.plan = &executionPlan{
+		obsDir:         r.cfg.ObservationsDir,
+		allFiles:       allFiles,
+		candidateFiles: candidates,
+		output:         out,
+		dryRun:         r.cfg.DryRun,
+	}
+
 	return appeval.CleanupPlan{
-		CandidateCount: len(d.plan.CandidateFiles),
-		DryRun:         d.plan.DryRun,
+		CandidateCount: len(candidates),
+		DryRun:         r.cfg.DryRun,
 	}, nil
 }
 
-func (d *deleteOrchestrator) Render(_ appeval.CleanupPlan) error {
-	return renderDeletePlan(d.plan, d.cmd.OutOrStdout())
+// Render outputs the plan to the user in the requested format.
+func (r *Runner) Render(_ appeval.CleanupPlan) error {
+	return pruner.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, pruner.SnapshotCleanupRenderInput{
+		Format:         r.cfg.Format,
+		Output:         r.plan.output,
+		OutputKind:     "prune",
+		ActionLabel:    "prune",
+		SummaryPrefix:  "Prune",
+		Action:         pruner.ActionDelete,
+		DryRun:         r.plan.dryRun,
+		AllFiles:       r.plan.allFiles,
+		CandidateFiles: r.plan.candidateFiles,
+		OlderThan:      r.cfg.OlderThan,
+		KeepMin:        r.cfg.KeepMin,
+		Tier:           r.cfg.RetentionTier,
+		Now:            r.cfg.Now,
+		Quiet:          r.cfg.Quiet,
+	})
 }
 
-func (d *deleteOrchestrator) Apply(_ appeval.CleanupPlan) error {
+// Apply executes the file deletions.
+func (r *Runner) Apply(_ appeval.CleanupPlan) error {
 	deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
-		ObservationsDir: d.plan.ObservationsDir,
-		Files:           toDeleteFiles(d.plan.CandidateFiles),
+		ObservationsDir: r.plan.obsDir,
+		Files:           toDeleteFiles(r.plan.candidateFiles),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting snapshots: %w", err)
 	}
-	if !cmdutil.GetGlobalFlags(d.cmd).Quiet && !d.plan.Format.IsJSON() {
-		fmt.Fprintf(d.cmd.OutOrStdout(), "Deleted %d snapshot(s).\n", deletion.Deleted)
+
+	if !r.cfg.Quiet && !r.cfg.Format.IsJSON() {
+		fmt.Fprintf(r.cfg.Stdout, "Deleted %d snapshot(s).\n", deletion.Deleted)
 	}
 	return nil
 }
 
-func runDelete(cmd *cobra.Command, opts *deleteOptions) error {
-	return appeval.RunCleanup(&deleteOrchestrator{cmd: cmd, opts: opts})
-}
-
-func buildDeletePlan(cmd *cobra.Command, opts *deleteOptions) (deletePlan, error) {
-	in, err := resolveDeleteInput(cmd, opts)
-	if err != nil {
-		return deletePlan{}, err
-	}
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(cmd.Context(), in.ObsDir)
-	if err != nil {
-		return deletePlan{}, err
-	}
-	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: in.Now, OlderThan: in.OlderThan, KeepMin: in.KeepMin})
-	out := pruner.BuildPruneOutput(pruner.CleanupInput{
-		Now:             in.Now,
-		Action:          in.Action,
-		DryRun:          in.DryRun,
-		ObservationsDir: in.ObsDir,
-		Tier:            in.Tier,
-		OlderThan:       in.OlderThan,
-		KeepMin:         in.KeepMin,
-		AllFiles:        allFiles,
-		CandidateFiles:  candidateFiles,
-	})
-	return deletePlan{
-		CleanupPlan: pruneshared.CleanupPlan{
-			Now:             in.Now,
-			Action:          in.Action,
-			DryRun:          in.DryRun,
-			Quiet:           in.Quiet,
-			Format:          in.Format,
-			ObservationsDir: in.ObsDir,
-			Tier:            in.Tier,
-			OlderThan:       in.OlderThan,
-			KeepMin:         in.KeepMin,
-			AllFiles:        allFiles,
-			CandidateFiles:  candidateFiles,
-		},
-		output: out,
-	}, nil
-}
-
-func resolveDeleteInput(cmd *cobra.Command, opts *deleteOptions) (deleteRunInput, error) {
-	obsDir := fsutil.CleanUserPath(opts.ObservationsDir)
-	if obsDir == "" {
-		return deleteRunInput{}, fmt.Errorf("--observations cannot be empty")
-	}
-	if opts.KeepMin < 0 {
-		return deleteRunInput{}, fmt.Errorf("invalid --keep-min %d: must be >= 0", opts.KeepMin)
-	}
-	tier, err := pruneshared.ValidateRetentionTier(opts.RetentionTier)
-	if err != nil {
-		return deleteRunInput{}, err
-	}
-	olderThan, err := pruneshared.ResolveOlderThan(cmd, opts.OlderThan, tier)
-	if err != nil {
-		return deleteRunInput{}, err
-	}
-	now, err := compose.ResolveNow(opts.Now)
-	if err != nil {
-		return deleteRunInput{}, err
-	}
-	format, err := compose.ResolveFormatValue(cmd, opts.Format)
-	if err != nil {
-		return deleteRunInput{}, err
-	}
-
-	gf := cmdutil.GetGlobalFlags(cmd)
-	dryRun := opts.DryRun || !gf.Force
-
-	return deleteRunInput{
-		CleanupRunInput: pruneshared.CleanupRunInput{
-			ObsDir:    obsDir,
-			Tier:      tier,
-			OlderThan: olderThan,
-			Now:       now,
-			Format:    format,
-			KeepMin:   opts.KeepMin,
-			DryRun:    dryRun,
-			Quiet:     gf.Quiet,
-			Action:    pruner.ActionDelete,
-		},
-	}, nil
-}
-
-func renderDeletePlan(plan deletePlan, out io.Writer) error {
-	return pruner.RenderSnapshotCleanupExecutionPlan(out, pruner.SnapshotCleanupRenderInput{
-		Format:         plan.Format,
-		Output:         plan.output,
-		OutputKind:     "prune",
-		ActionLabel:    "prune",
-		SummaryPrefix:  "Prune",
-		Action:         plan.Action,
-		DryRun:         plan.DryRun,
-		AllFiles:       plan.AllFiles,
-		CandidateFiles: plan.CandidateFiles,
-		OlderThan:      plan.OlderThan,
-		KeepMin:        plan.KeepMin,
-		Tier:           plan.Tier,
-		Now:            plan.Now,
-		Quiet:          plan.Quiet,
-	})
-}
+// --- Helpers ---
 
 func toDeleteFiles(in []pruner.SnapshotFile) []pruner.DeleteFile {
 	out := make([]pruner.DeleteFile, 0, len(in))
