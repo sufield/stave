@@ -4,13 +4,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// NewCmd constructs the prune command with closure-scoped flags.
+// NewCmd constructs the prune command.
 func NewCmd() *cobra.Command {
-	var opts deleteOptions
+	var (
+		obsDir     string
+		olderThan  string
+		tier       string
+		nowRaw     string
+		keepMin    int
+		dryRun     bool
+		formatFlag string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "prune",
@@ -34,19 +44,59 @@ Examples:
   stave snapshot prune --observations ./observations --older-than 14d --now 2026-01-20T00:00:00Z --dry-run` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runDelete(cmd, &opts)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			eval := projconfig.Global()
+
+			if olderThan == "" {
+				olderThan = eval.SnapshotRetention()
+			}
+			if tier == "" {
+				tier = eval.RetentionTier()
+			}
+
+			validTier, err := pruneshared.ValidateRetentionTier(tier)
+			if err != nil {
+				return err
+			}
+			resolvedOlderThan, err := pruneshared.ResolveOlderThan(cmd, olderThan, validTier)
+			if err != nil {
+				return err
+			}
+			now, err := compose.ResolveNow(nowRaw)
+			if err != nil {
+				return err
+			}
+			format, err := compose.ResolveFormatValue(cmd, formatFlag)
+			if err != nil {
+				return err
+			}
+
+			runner := &Runner{}
+			return runner.Run(cmd.Context(), Config{
+				ObservationsDir: obsDir,
+				OlderThan:       resolvedOlderThan,
+				RetentionTier:   validTier,
+				Now:             now,
+				KeepMin:         keepMin,
+				DryRun:          dryRun,
+				Force:           gf.Force,
+				Quiet:           gf.Quiet,
+				Format:          format,
+				Stdout:          cmd.OutOrStdout(),
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&opts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	cmd.Flags().StringVar(&opts.OlderThan, "older-than", projconfig.Global().SnapshotRetention(), cmdutil.WithDynamicDefaultHelp("Prune snapshots older than this age (e.g., 14d, 720h)"))
-	cmd.Flags().StringVar(&opts.RetentionTier, "retention-tier", projconfig.Global().RetentionTier(), cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
-	cmd.Flags().StringVar(&opts.Now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
-	cmd.Flags().IntVar(&opts.KeepMin, "keep-min", 2, "Minimum number of snapshots to keep")
-	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Preview planned file operations without applying them")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "Output format: text or json")
+	f := cmd.Flags()
+	f.StringVarP(&obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
+	f.StringVar(&olderThan, "older-than", "", cmdutil.WithDynamicDefaultHelp("Prune snapshots older than this age (e.g., 14d, 720h)"))
+	f.StringVar(&tier, "retention-tier", "", cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
+	f.StringVar(&nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
+	f.IntVar(&keepMin, "keep-min", 2, "Minimum number of snapshots to keep")
+	f.BoolVar(&dryRun, "dry-run", false, "Preview planned file operations without applying them")
+	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd
