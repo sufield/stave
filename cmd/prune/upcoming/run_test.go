@@ -161,12 +161,11 @@ func TestRiskItemsFilter(t *testing.T) {
 			Remaining: -1 * time.Hour,
 		},
 	}
-	dueWithin := 24 * time.Hour
 	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.TEST.A.001"},
 		AssetTypes: []kernel.AssetType{"res:aws:s3:bucket"},
 		Statuses:   []string{"OVERDUE", "UPCOMING"},
-		DueWithin:  &dueWithin,
+		DueWithin:  24 * time.Hour,
 	})
 	if err != nil {
 		t.Fatalf("new filter: %v", err)
@@ -184,12 +183,11 @@ func TestRiskItemsFilter(t *testing.T) {
 }
 
 func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
-	dueWithin := 12 * time.Hour
 	criteria, err := newUpcomingFilter(UpcomingFilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.A"},
 		AssetTypes: []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		Statuses:   []string{"OVERDUE"},
-		DueWithin:  &dueWithin,
+		DueWithin:  12 * time.Hour,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -206,8 +204,8 @@ func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
 	if _, ok := criteria.Statuses[risk.StatusOverdue]; !ok {
 		t.Fatal("expected OVERDUE in statuses")
 	}
-	if criteria.MaxRemaining != dueWithin {
-		t.Fatalf("expected MaxRemaining=%v, got %v", dueWithin, criteria.MaxRemaining)
+	if criteria.MaxRemaining != 12*time.Hour {
+		t.Fatalf("expected MaxRemaining=%v, got %v", 12*time.Hour, criteria.MaxRemaining)
 	}
 }
 

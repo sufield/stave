@@ -42,11 +42,12 @@ type UpcomingOutput struct {
 }
 
 // UpcomingFilterCriteria holds filter rules for upcoming action items.
+// A DueWithin of 0 means no duration filter is applied.
 type UpcomingFilterCriteria struct {
 	ControlIDs []kernel.ControlID
 	AssetTypes []kernel.AssetType
 	Statuses   []string
-	DueWithin  *time.Duration
+	DueWithin  time.Duration
 }
 
 // UpcomingRenderOptions holds configuration for rendering upcoming markdown.
