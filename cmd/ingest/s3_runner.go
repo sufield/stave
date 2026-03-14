@@ -4,205 +4,113 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	s3 "github.com/sufield/stave/internal/adapters/input/extract/s3"
 	s3snapshot "github.com/sufield/stave/internal/adapters/input/extract/s3/snapshot"
 	appingest "github.com/sufield/stave/internal/app/ingest"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/observations"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
-type s3Runner struct {
-	runtime *ui.Runtime
-	opts    *Options
+// S3Config defines the resolved parameters for an AWS S3 ingestion run.
+type S3Config struct {
+	InputDir        string
+	OutFile         string
+	Now             time.Time
+	ScopeConfig     *s3.ScopeConfig
+	Scrub           bool
+	Force           bool
+	DryRun          bool
+	TextOutput      bool
+	AllowSymlinkOut bool
 }
 
-type s3RunConfig struct {
-	now         time.Time
-	snapshotDir string
-	outFile     string
-	scopeConfig *s3.ScopeConfig
+// S3Runner orchestrates the conversion of AWS CLI S3 exports into Stave observations.
+type S3Runner struct {
+	UI     *ui.Runtime
+	Clock  ports.Clock
+	Stdout io.Writer
 }
 
-func newS3Runner(rt *ui.Runtime, opts *Options) *s3Runner {
-	return &s3Runner{runtime: rt, opts: opts}
-}
-
-func (r *s3Runner) run(cmd *cobra.Command) error {
-	cfg, err := r.prepareRun(cmd)
+// Run executes the S3 ingestion workflow.
+func (r *S3Runner) Run(ctx context.Context, cfg S3Config) error {
+	snapshots, err := r.extract(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	snapshots, err := r.extractSnapshots(cmd.Context(), cfg)
-	if err != nil {
-		return err
+	if len(snapshots) == 0 || len(snapshots[0].Assets) == 0 {
+		return r.handleEmpty(cfg)
 	}
 
-	return r.persistOutput(cmd, cfg, snapshots)
-}
-
-func (r *s3Runner) prepareRun(cmd *cobra.Command) (s3RunConfig, error) {
-	if r.opts.OutDir != "" && cmd.Flags().Changed("out") {
-		return s3RunConfig{}, fmt.Errorf("--out and --out-dir are mutually exclusive")
-	}
-
-	snapshotDir := fsutil.CleanUserPath(r.opts.InputDir)
-	scopeFile := fsutil.CleanUserPath(r.opts.ScopeFile)
-	outFile := fsutil.CleanUserPath(r.opts.OutFile)
-	outDir := fsutil.CleanUserPath(r.opts.OutDir)
-
-	now, parseErr := compose.ResolveNow(r.opts.Now)
-	if parseErr != nil {
-		return s3RunConfig{}, parseErr
-	}
-
-	gf := cmdutil.GetGlobalFlags(cmd)
-	if outDir != "" {
-		mkdirErr := fsutil.SafeMkdirAll(outDir, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: gf.AllowSymlinkOut})
-		if mkdirErr != nil {
-			return s3RunConfig{}, fmt.Errorf("create --out-dir: %w", mkdirErr)
+	if cfg.DryRun {
+		if cfg.TextOutput {
+			fmt.Fprintf(r.Stdout, "[dry-run] would write: %s\n", cfg.OutFile)
 		}
-		outFile = filepath.Join(outDir, now.UTC().Format(time.RFC3339)+".json")
-	}
-
-	writableErr := ensureOutputWritable(outFile, r.opts.Force || gf.Force, r.opts.DryRun)
-	if writableErr != nil {
-		return s3RunConfig{}, writableErr
-	}
-	inputErr := validateInputDir(snapshotDir)
-	if inputErr != nil {
-		return s3RunConfig{}, inputErr
-	}
-
-	scopeConfig, scopeErr := resolveScopeConfig(r.opts.IncludeAll, r.opts.BucketAllowlist, scopeFile)
-	if scopeErr != nil {
-		return s3RunConfig{}, scopeErr
-	}
-
-	return s3RunConfig{
-		now:         now,
-		snapshotDir: snapshotDir,
-		outFile:     outFile,
-		scopeConfig: scopeConfig,
-	}, nil
-}
-
-func ensureOutputWritable(path string, overwrite, dryRun bool) error {
-	if overwrite || dryRun {
 		return nil
 	}
-	if _, err := os.Stat(path); err == nil {
-		return fmt.Errorf("output file already exists: %s (use --force to overwrite)", path)
+
+	if err := r.persist(cfg, snapshots); err != nil {
+		return err
+	}
+
+	if cfg.TextOutput {
+		fmt.Fprintf(r.Stdout, "Extracted %d bucket(s) to %s\n", len(snapshots[0].Assets), cfg.OutFile)
+		printIngestCoverage(r.Stdout, snapshots[len(snapshots)-1].Assets)
 	}
 	return nil
 }
 
-func validateInputDir(path string) error {
-	if _, err := os.Stat(path); err != nil {
-		return fmt.Errorf("--input not accessible: %s: %w", path, err)
-	}
-	return nil
-}
+func (r *S3Runner) extract(ctx context.Context, cfg S3Config) ([]asset.Snapshot, error) {
+	extractor := s3snapshot.NewSnapshotExtractor(cfg.ScopeConfig)
 
-func resolveScopeConfig(includeAll bool, bucketAllowlist []string, scopeFile string) (*s3.ScopeConfig, error) {
-	if includeAll {
-		return &s3.ScopeConfig{IncludeAll: true}, nil
-	}
-	if len(bucketAllowlist) > 0 {
-		return s3.NewScopeConfigFromAllowlist(bucketAllowlist), nil
-	}
-	if scopeFile != "" {
-		cfg, err := s3.NewScopeConfigFromFile(scopeFile)
-		if err != nil {
-			return nil, fmt.Errorf("--scope file error: %w", err)
-		}
-		return cfg, nil
-	}
-	return s3.DefaultScopeConfig(), nil
-}
-
-func (r *s3Runner) extractSnapshots(ctx context.Context, cfg s3RunConfig) ([]asset.Snapshot, error) {
-	extractor := s3snapshot.NewSnapshotExtractor(cfg.scopeConfig)
-	done := r.runtime.BeginProgress("ingest snapshot into normalized observations")
+	done := r.UI.BeginProgress("ingest snapshot into normalized observations")
 	defer done()
 
-	snapshots, err := appingest.ExtractS3Snapshots(appingest.S3IngestExtractRequest{
+	return appingest.ExtractS3Snapshots(appingest.S3IngestExtractRequest{
 		Context:     ctx,
-		SnapshotDir: cfg.snapshotDir,
-		Now:         cfg.now,
+		SnapshotDir: cfg.InputDir,
+		Now:         cfg.Now,
 		Extract: func(ctx context.Context, snapshotDir string, now time.Time) ([]asset.Snapshot, error) {
 			return extractor.ExtractFromSnapshotWithTime(ctx, snapshotDir, now)
 		},
 	})
-	if err != nil {
-		return nil, err
-	}
-	return snapshots, nil
 }
 
-func (r *s3Runner) persistOutput(cmd *cobra.Command, cfg s3RunConfig, snapshots []asset.Snapshot) error {
-	if len(snapshots) == 0 || len(snapshots[0].Assets) == 0 {
-		return r.handleEmptySnapshot(cmd, cfg)
-	}
-
-	gf := cmdutil.GetGlobalFlags(cmd)
-	if r.opts.DryRun {
-		if gf.TextOutputEnabled() {
-			fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
-		}
-		return nil
-	}
-
-	if err := r.writeObservationsFile(cmd, cfg.outFile, snapshots); err != nil {
-		return err
-	}
-
-	if gf.TextOutputEnabled() {
-		fmt.Fprintf(cmd.OutOrStdout(), "Extracted %d bucket(s) to %s\n", len(snapshots[0].Assets), cfg.outFile)
-		printIngestCoverage(cmd.OutOrStdout(), snapshots[len(snapshots)-1].Assets)
-	}
-	return nil
-}
-
-func (r *s3Runner) handleEmptySnapshot(cmd *cobra.Command, cfg s3RunConfig) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
-	if gf.TextOutputEnabled() {
-		fmt.Fprintln(cmd.OutOrStdout(), "No S3 buckets matching health scope found in snapshot")
-	}
-	if r.opts.DryRun {
-		if gf.TextOutputEnabled() {
-			fmt.Fprintf(cmd.OutOrStdout(), "[dry-run] would write: %s\n", cfg.outFile)
-		}
-		return nil
-	}
-	return r.writeObservationsFile(cmd, cfg.outFile, nil)
-}
-
-func (r *s3Runner) writeObservationsFile(cmd *cobra.Command, path string, snapshots []asset.Snapshot) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
+func (r *S3Runner) persist(cfg S3Config, snapshots []asset.Snapshot) error {
 	req := appingest.ObservationsWriteRequest{
-		Path:         path,
+		Path:         cfg.OutFile,
 		Snapshots:    snapshots,
-		Overwrite:    r.opts.Force || gf.Force,
-		AllowSymlink: gf.AllowSymlinkOut,
+		Overwrite:    cfg.Force,
+		AllowSymlink: cfg.AllowSymlinkOut,
 		Writer:       observations.JSONWriter{},
 	}
-	if r.opts.Scrub {
+	if cfg.Scrub {
 		req.Scrubber = sanitize.New()
 	}
 	return appingest.WriteObservationsFile(req)
 }
+
+func (r *S3Runner) handleEmpty(cfg S3Config) error {
+	if cfg.TextOutput {
+		fmt.Fprintln(r.Stdout, "No S3 buckets matching health scope found in snapshot")
+	}
+	if cfg.DryRun {
+		if cfg.TextOutput {
+			fmt.Fprintf(r.Stdout, "[dry-run] would write: %s\n", cfg.OutFile)
+		}
+		return nil
+	}
+	return r.persist(cfg, nil)
+}
+
+// --- Coverage Reporting ---
 
 // evidenceShortLabel extracts a short label from an evidence or missing_inputs string.
 // "tags from get-bucket-tagging/foo.json" -> "tags"
@@ -212,7 +120,6 @@ func evidenceShortLabel(s string) string {
 	if idx := strings.Index(s, " from "); idx > 0 {
 		return s[:idx]
 	}
-
 	s = filepath.Base(filepath.Dir(s))
 	if after, ok := strings.CutPrefix(s, "get-bucket-"); ok {
 		return after
@@ -228,7 +135,6 @@ func printIngestCoverage(w io.Writer, resources []asset.Asset) {
 	if len(resources) == 0 {
 		return
 	}
-
 	if optionalIngestInputCount("aws-s3") == 0 {
 		return
 	}
@@ -237,7 +143,6 @@ func printIngestCoverage(w io.Writer, resources []asset.Asset) {
 
 	for _, r := range resources {
 		props := r.Properties
-
 		foundLabels := extractIngestLabels(props, "evidence", true)
 		missingLabels := extractIngestLabels(props, "missing_inputs", false)
 
