@@ -176,7 +176,7 @@ func renderDeletePlan(plan deletePlan, out io.Writer) error {
 	})
 }
 
-func toDeleteFiles(in []snapshotFile) []pruner.DeleteFile {
+func toDeleteFiles(in []pruner.SnapshotFile) []pruner.DeleteFile {
 	out := make([]pruner.DeleteFile, 0, len(in))
 	for _, sf := range in {
 		out = append(out, pruner.DeleteFile{Path: sf.Path})

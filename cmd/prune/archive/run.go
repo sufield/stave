@@ -214,7 +214,7 @@ func applyArchiveExecutionPlan(plan archiveExecutionPlan) error {
 	return err
 }
 
-func toArchiveMoves(files []snapshotFile, archiveDir string) []pruner.ArchiveMove {
+func toArchiveMoves(files []pruner.SnapshotFile, archiveDir string) []pruner.ArchiveMove {
 	moves := make([]pruner.ArchiveMove, 0, len(files))
 	for _, sf := range files {
 		moves = append(moves, pruner.ArchiveMove{
