@@ -31,15 +31,23 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type quickstartFlagsType struct {
-	reportPath string
-	nowTime    string
+// QuickstartRequest defines the parameters for the quickstart command.
+type QuickstartRequest struct {
+	ReportPath string
+	NowTime    string
 }
 
-type demoFlagsType struct {
-	fixtureName string
-	reportPath  string
-	nowTime     string
+// DemoRequest defines the parameters for the demo command.
+type DemoRequest struct {
+	FixtureName string
+	ReportPath  string
+	NowTime     string
+}
+
+// GenerateRequest defines the parameters for artifact generation.
+type GenerateRequest struct {
+	Name string
+	Out  string
 }
 
 type detectedSnapshot struct {
@@ -47,7 +55,7 @@ type detectedSnapshot struct {
 	Format string
 }
 
-func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
+func runQuickstart(cmd *cobra.Command, req *QuickstartRequest) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
 
 	cwd, err := os.Getwd()
@@ -60,7 +68,7 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 		return onboardingCommandError(err, "stave quickstart --help")
 	}
 	out := cmd.OutOrStdout()
-	reportPath := fsutil.CleanUserPath(flags.reportPath)
+	reportPath := fsutil.CleanUserPath(req.ReportPath)
 	if strings.TrimSpace(reportPath) == "" {
 		return onboardingCommandError(fmt.Errorf("--report cannot be empty"), "stave quickstart --report ./stave-report.json")
 	}
@@ -92,7 +100,7 @@ func runQuickstart(cmd *cobra.Command, flags *quickstartFlagsType) error {
 	}
 	findings := remediation.NewMapper(crypto.NewHasher()).EnrichFindings(result)
 	latest := snapshots[len(snapshots)-1]
-	reportNow, err := resolveQuickstartReportTime(latest, flags)
+	reportNow, err := resolveQuickstartReportTime(latest, req)
 	if err != nil {
 		return onboardingCommandError(err, "stave quickstart --now 2026-01-15T00:00:00Z")
 	}
@@ -127,14 +135,14 @@ func loadDetectedQuickstartSnapshots(ctx context.Context, cwd string, detected [
 	return nil, ""
 }
 
-func resolveQuickstartReportTime(latest asset.Snapshot, flags *quickstartFlagsType) (time.Time, error) {
+func resolveQuickstartReportTime(latest asset.Snapshot, req *QuickstartRequest) (time.Time, error) {
 	reportNow := latest.CapturedAt.UTC()
-	if strings.TrimSpace(flags.nowTime) == "" {
+	if strings.TrimSpace(req.NowTime) == "" {
 		return reportNow, nil
 	}
-	parsed, err := compose.ResolveNow(flags.nowTime)
+	parsed, err := compose.ResolveNow(req.NowTime)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", flags.nowTime)
+		return time.Time{}, fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", req.NowTime)
 	}
 	return parsed, nil
 }
@@ -291,10 +299,25 @@ const (
 	demoFixtureKnownGood = "known-good"
 )
 
-func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
+type demoReportRequest struct {
+	Path         string
+	Fixture      string
+	Snapshot     asset.Snapshot
+	Result       evaluation.Result
+	Findings     []remediation.Finding
+	GeneratedAt  time.Time
+	Overwrite    bool
+	AllowSymlink bool
+}
+
+var demoFastLaneControlIDs = []string{
+	"CTL.S3.PUBLIC.001",
+}
+
+func runDemo(cmd *cobra.Command, req *DemoRequest) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
 
-	fixture := strings.TrimSpace(flags.fixtureName)
+	fixture := strings.TrimSpace(req.FixtureName)
 	snapshots, err := loadDemoSnapshots(fixture)
 	if err != nil {
 		return onboardingCommandError(err, "stave demo --help")
@@ -319,14 +342,14 @@ func runDemo(cmd *cobra.Command, flags *demoFlagsType) error {
 	findings := remediation.NewMapper(crypto.NewHasher()).EnrichFindings(result)
 
 	reportNow := lastSnap.CapturedAt.UTC()
-	if strings.TrimSpace(flags.nowTime) != "" {
-		reportNow, err = compose.ResolveNow(flags.nowTime)
+	if strings.TrimSpace(req.NowTime) != "" {
+		reportNow, err = compose.ResolveNow(req.NowTime)
 		if err != nil {
-			return onboardingCommandError(fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", flags.nowTime), "stave demo --now 2026-01-15T00:00:00Z")
+			return onboardingCommandError(fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", req.NowTime), "stave demo --now 2026-01-15T00:00:00Z")
 		}
 	}
 
-	reportPath := fsutil.CleanUserPath(flags.reportPath)
+	reportPath := fsutil.CleanUserPath(req.ReportPath)
 	if strings.TrimSpace(reportPath) == "" {
 		return onboardingCommandError(fmt.Errorf("--report cannot be empty"), "stave demo --report ./stave-report.json")
 	}
@@ -449,28 +472,28 @@ func writeDemoReport(req demoReportRequest) error {
 	return nil
 }
 
-func runGenerateControl(cmd *cobra.Command, args []string, outPath string) error {
-	name := strings.TrimSpace(args[0])
+func runGenerateControl(cmd *cobra.Command, req GenerateRequest) error {
+	name := strings.TrimSpace(req.Name)
 	if name == "" {
 		return fmt.Errorf("control name cannot be empty")
 	}
 	id := controlIDFromName(name)
 	content := strings.ReplaceAll(strings.TrimLeft(templateControlCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
-	out := strings.TrimSpace(outPath)
+	out := strings.TrimSpace(req.Out)
 	if out == "" {
 		out = filepath.Join("controls", id+".yaml")
 	}
 	return writeGeneratedFile(out, []byte(content), cmd)
 }
 
-func runGenerateObservation(cmd *cobra.Command, args []string, outPath string) error {
-	name := strings.TrimSpace(args[0])
+func runGenerateObservation(cmd *cobra.Command, req GenerateRequest) error {
+	name := strings.TrimSpace(req.Name)
 	if name == "" {
 		return fmt.Errorf("observation name cannot be empty")
 	}
 	slug := sanitizeSlug(name)
 	content := strings.ReplaceAll(strings.TrimLeft(templateObservation, "\n"), "aws:s3:::example-phi-bucket", "asset:"+slug)
-	out := strings.TrimSpace(outPath)
+	out := strings.TrimSpace(req.Out)
 	if out == "" {
 		out = filepath.Join("observations", slug+".json")
 	}

@@ -1,18 +1,13 @@
 package initcmd
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/metadata"
 )
 
 // NewInitCmd constructs the init command with closure-scoped flags.
 func NewInitCmd() *cobra.Command {
-	var flags initFlagsType
+	var req InitRequest
 
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -41,24 +36,24 @@ Examples:
   stave init --dir ./my-s3 --profile aws-s3 --capture-cadence hourly --force` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runInit(cmd, &flags)
+			return runInit(cmd, &req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&flags.dir, "dir", "d", ".", "Directory where scaffold is created")
-	cmd.Flags().StringVarP(&flags.profile, "profile", "p", "", "Optional scaffold profile (supported: aws-s3)")
-	cmd.Flags().BoolVar(&flags.dryRun, "dry-run", false, "Preview scaffold without creating files")
-	cmd.Flags().BoolVar(&flags.withGitHubActions, "with-github-actions", false, "Create a starter GitHub Actions workflow")
-	cmd.Flags().StringVar(&flags.captureCadence, "capture-cadence", "daily", "Snapshot capture cadence template for scaffolded docs/workflows: daily or hourly")
+	cmd.Flags().StringVarP(&req.Dir, "dir", "d", ".", "Directory where scaffold is created")
+	cmd.Flags().StringVarP(&req.Profile, "profile", "p", "", "Optional scaffold profile (supported: aws-s3)")
+	cmd.Flags().BoolVar(&req.DryRun, "dry-run", false, "Preview scaffold without creating files")
+	cmd.Flags().BoolVar(&req.WithGitHubActions, "with-github-actions", false, "Create a starter GitHub Actions workflow")
+	cmd.Flags().StringVar(&req.CaptureCadence, "capture-cadence", "daily", "Snapshot capture cadence template for scaffolded docs/workflows: daily or hourly")
 
 	return cmd
 }
 
 // NewQuickstartCmd constructs the quickstart command with closure-scoped flags.
 func NewQuickstartCmd() *cobra.Command {
-	var flags quickstartFlagsType
+	var req QuickstartRequest
 
 	cmd := &cobra.Command{
 		Use:   "quickstart",
@@ -79,36 +74,21 @@ Examples:
   stave quickstart` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runQuickstart(cmd, &flags)
+			return runQuickstart(cmd, &req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&flags.reportPath, "report", "stave-report.json", "Report artifact path")
-	cmd.Flags().StringVar(&flags.nowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
+	cmd.Flags().StringVar(&req.ReportPath, "report", "stave-report.json", "Report artifact path")
+	cmd.Flags().StringVar(&req.NowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
 
 	return cmd
 }
 
-type demoReportRequest struct {
-	Path         string
-	Fixture      string
-	Snapshot     asset.Snapshot
-	Result       evaluation.Result
-	Findings     []remediation.Finding
-	GeneratedAt  time.Time
-	Overwrite    bool
-	AllowSymlink bool
-}
-
-var demoFastLaneControlIDs = []string{
-	"CTL.S3.PUBLIC.001",
-}
-
 // NewDemoCmd constructs the demo command with closure-scoped flags.
 func NewDemoCmd() *cobra.Command {
-	var flags demoFlagsType
+	var req DemoRequest
 
 	cmd := &cobra.Command{
 		Use:   "demo",
@@ -129,18 +109,18 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runDemo(cmd, &flags)
+			return runDemo(cmd, &req)
 		},
 	}
 
-	cmd.Flags().StringVar(&flags.fixtureName, "fixture", demoFixtureKnownBad, "Fixture to run: known-bad or known-good")
-	cmd.Flags().StringVar(&flags.reportPath, "report", "./stave-report.json", "Report artifact path")
-	cmd.Flags().StringVar(&flags.nowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
+	cmd.Flags().StringVar(&req.FixtureName, "fixture", demoFixtureKnownBad, "Fixture to run: known-bad or known-good")
+	cmd.Flags().StringVar(&req.ReportPath, "report", "./stave-report.json", "Report artifact path")
+	cmd.Flags().StringVar(&req.NowTime, "now", "", "Override report generation time (RFC3339) for deterministic output")
 
 	return cmd
 }
 
-// NewGenerateCmd constructs the generate command tree with closure-scoped flags.
+// NewGenerateCmd constructs the generate command tree.
 func NewGenerateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate",
@@ -156,7 +136,7 @@ func NewGenerateCmd() *cobra.Command {
 }
 
 func newGenerateControlCmd() *cobra.Command {
-	var out string
+	var req GenerateRequest
 
 	cmd := &cobra.Command{
 		Use:   "control <name>",
@@ -164,19 +144,20 @@ func newGenerateControlCmd() *cobra.Command {
 		Long:  "Generate control creates a ctrl.v1 YAML template in controls/." + metadata.OfflineHelpSuffix,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateControl(cmd, args, out)
+			req.Name = args[0]
+			return runGenerateControl(cmd, req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&out, "out", "", "Output file path (default: controls/<derived-id>.yaml)")
+	cmd.Flags().StringVar(&req.Out, "out", "", "Output file path (default: controls/<derived-id>.yaml)")
 
 	return cmd
 }
 
 func newGenerateObservationCmd() *cobra.Command {
-	var out string
+	var req GenerateRequest
 
 	cmd := &cobra.Command{
 		Use:   "observation <name>",
@@ -184,13 +165,14 @@ func newGenerateObservationCmd() *cobra.Command {
 		Long:  "Generate observation creates an obs.v0.1 JSON template in observations/." + metadata.OfflineHelpSuffix,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateObservation(cmd, args, out)
+			req.Name = args[0]
+			return runGenerateObservation(cmd, req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&out, "out", "", "Output file path (default: observations/<name>.json)")
+	cmd.Flags().StringVar(&req.Out, "out", "", "Output file path (default: observations/<name>.json)")
 
 	return cmd
 }
