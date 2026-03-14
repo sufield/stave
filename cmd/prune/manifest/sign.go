@@ -1,39 +1,48 @@
 package manifest
 
 import (
+	"context"
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
+	"io"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func runSnapshotManifestSign(cmd *cobra.Command, inFile, keyPath, outFile string) error {
-	in := filepath.Clean(inFile)
-	out := filepath.Clean(outFile)
-	privateKeyPath := filepath.Clean(keyPath)
+// SignConfig defines the parameters for signing a manifest.
+type SignConfig struct {
+	InPath         string
+	PrivateKeyPath string
+	OutPath        string
+	TextOutput     bool
+	Stdout         io.Writer
+}
 
-	manifestData, err := fsutil.ReadFileLimited(in)
+// SignRunner handles cryptographic signing of observation manifests.
+type SignRunner struct{}
+
+// Run loads an unsigned manifest and a private key, computes a signature,
+// and persists the signed envelope.
+func (r *SignRunner) Run(_ context.Context, cfg SignConfig) error {
+	manifestData, err := fsutil.ReadFileLimited(cfg.InPath)
 	if err != nil {
-		return fmt.Errorf("read manifest %q: %w", in, err)
+		return fmt.Errorf("read manifest %q: %w", cfg.InPath, err)
 	}
 
 	var manifest integrity.Manifest
 	if err = json.Unmarshal(manifestData, &manifest); err != nil {
-		return fmt.Errorf("parse manifest %q: %w", in, err)
+		return fmt.Errorf("parse manifest %q: %w", cfg.InPath, err)
 	}
 	if err = manifest.ValidateOverall(); err != nil {
-		return fmt.Errorf("invalid manifest %q: %w", in, err)
+		return fmt.Errorf("invalid manifest %q: %w", cfg.InPath, err)
 	}
-	privateKey, err := loadPrivateKey(privateKeyPath)
+
+	privateKey, err := loadPrivateKey(cfg.PrivateKeyPath)
 	if err != nil {
-		return fmt.Errorf("load private key %q: %w", privateKeyPath, err)
+		return fmt.Errorf("load private key %q: %w", cfg.PrivateKeyPath, err)
 	}
 
 	message, err := manifest.CanonicalBytes()
@@ -50,12 +59,12 @@ func runSnapshotManifestSign(cmd *cobra.Command, inFile, keyPath, outFile string
 	if err != nil {
 		return fmt.Errorf("marshal signed manifest: %w", err)
 	}
-	if err := fsutil.WriteFileAtomic(out, signedData, 0o600); err != nil {
-		return fmt.Errorf("write signed manifest %q: %w", out, err)
+	if err := fsutil.WriteFileAtomic(cfg.OutPath, signedData, 0o600); err != nil {
+		return fmt.Errorf("write signed manifest %q: %w", cfg.OutPath, err)
 	}
 
-	if cmdutil.GetGlobalFlags(cmd).TextOutputEnabled() {
-		fmt.Fprintf(cmd.OutOrStdout(), "Wrote signed manifest: %s\n", out)
+	if cfg.TextOutput {
+		fmt.Fprintf(cfg.Stdout, "Wrote signed manifest: %s\n", cfg.OutPath)
 	}
 	return nil
 }
