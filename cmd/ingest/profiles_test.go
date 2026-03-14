@@ -9,15 +9,15 @@ import (
 )
 
 func TestIngestProfilesRegistryNotEmpty(t *testing.T) {
-	if len(ingestProfiles) == 0 {
+	if len(AllProfiles()) == 0 {
 		t.Fatal("expected at least one ingest profile")
 	}
 }
 
 func TestIngestProfilesRegistryHasAWSS3(t *testing.T) {
 	found := false
-	for _, p := range ingestProfiles {
-		if p.Name == "aws-s3" {
+	for _, p := range AllProfiles() {
+		if p.Name == ProfileAWSS3 {
 			found = true
 			if len(p.Inputs) == 0 {
 				t.Error("aws-s3 profile has no inputs")
@@ -35,9 +35,12 @@ func TestIngestProfilesRegistryHasAWSS3(t *testing.T) {
 	}
 }
 
-func TestPrintIngestProfiles(t *testing.T) {
+func TestRenderTextProfiles(t *testing.T) {
 	var buf bytes.Buffer
-	printIngestProfiles(&buf)
+	presenter := &RegistryPresenter{Stdout: &buf}
+	if err := presenter.RenderText(); err != nil {
+		t.Fatalf("RenderText: %v", err)
+	}
 	out := buf.String()
 
 	for _, want := range []string{
@@ -52,7 +55,7 @@ func TestPrintIngestProfiles(t *testing.T) {
 		"Expected inputs",
 	} {
 		if !strings.Contains(out, want) {
-			t.Errorf("printIngestProfiles output missing %q", want)
+			t.Errorf("RenderText output missing %q", want)
 		}
 	}
 }
