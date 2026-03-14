@@ -55,7 +55,7 @@ func NewRunner() *Runner {
 // Run executes the report generation process.
 func (r *Runner) Run(_ context.Context, req Request) error {
 	inputFile := fsutil.CleanUserPath(req.InputFile)
-	eval, err := shared.LoadEvaluationEnvelope(inputFile)
+	eval, err := shared.NewLoader().Evaluation(inputFile)
 	if err != nil {
 		return fmt.Errorf("loading evaluation: %w", err)
 	}

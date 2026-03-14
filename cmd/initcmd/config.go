@@ -92,39 +92,6 @@ func renderTemplate(src, name string, data ScaffoldData) (string, error) {
 	return buf.String(), nil
 }
 
-// --- Backward-compatible wrappers used by scaffold.go ---
-
-func scaffoldGitignore() string {
-	return gitignoreContent
-}
-
-func scaffoldReadme(opts scaffoldOptions) string {
-	sc := NewScaffolder(opts)
-	out, err := sc.Readme()
-	if err != nil {
-		return fmt.Sprintf("# Error rendering README: %v\n", err)
-	}
-	return out
-}
-
-func scaffoldUserConfigExample() string {
-	sc := NewScaffolder(scaffoldOptions{})
-	out, err := sc.UserConfig()
-	if err != nil {
-		return fmt.Sprintf("# Error rendering user config: %v\n", err)
-	}
-	return out
-}
-
-func scaffoldLockfile() string {
-	sc := NewScaffolder(scaffoldOptions{})
-	out, err := sc.Lockfile()
-	if err != nil {
-		return fmt.Sprintf("# Error rendering lockfile: %v\n", err)
-	}
-	return out
-}
-
 // --- Static template constants (use compile-time kernel.Schema* values) ---
 
 const templateControlSample = `# ── Stave Control (` + string(kernel.SchemaControl) + `) ──────────────────────────────────────

@@ -67,13 +67,3 @@ func (l *Loader) Baseline(path string, expectedKind kernel.OutputKind) (*evaluat
 
 	return &base, nil
 }
-
-// LoadEvaluationEnvelope is a convenience wrapper for one-off loads.
-func LoadEvaluationEnvelope(path string) (*safetyenvelope.Evaluation, error) {
-	return NewLoader().Evaluation(path)
-}
-
-// LoadBaselineFile is a convenience wrapper for one-off loads.
-func LoadBaselineFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
-	return NewLoader().Baseline(path, expectedKind)
-}

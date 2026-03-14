@@ -135,31 +135,3 @@ func extractEvidence(snapshot asset.Snapshot, assetID string) string {
 	}
 	return "BlockPublicAccess=unknown, ACL=unknown"
 }
-
-// --- Backward-compatible wrappers ---
-
-func writeQuickstartSummary(
-	out io.Writer,
-	san kernel.Sanitizer,
-	sourceLabel string,
-	findings []remediation.Finding,
-	latest asset.Snapshot,
-	reportPath string,
-) error {
-	p := &Presenter{Out: out, Sanitizer: san}
-	return p.WriteQuickstart(SummaryRequest{
-		SourceLabel: sourceLabel,
-		ReportPath:  reportPath,
-		Findings:    findings,
-		Snapshot:    latest,
-	})
-}
-
-func printDemoSummary(out io.Writer, san kernel.Sanitizer, snapshot asset.Snapshot, findings []remediation.Finding, reportPath string) error {
-	p := &Presenter{Out: out, Sanitizer: san}
-	return p.WriteDemo(SummaryRequest{
-		ReportPath: reportPath,
-		Findings:   findings,
-		Snapshot:   snapshot,
-	})
-}

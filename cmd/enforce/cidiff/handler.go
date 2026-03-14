@@ -65,13 +65,13 @@ func (r *Runner) Run(_ context.Context, cfg Config) error {
 	currentPath := fsutil.CleanUserPath(cfg.CurrentPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
-	currentEval, err := shared.LoadEvaluationEnvelope(currentPath)
+	currentEval, err := shared.NewLoader().Evaluation(currentPath)
 	if err != nil {
 		return fmt.Errorf("load current evaluation: %w", err)
 	}
 	currentEntries := remediation.BaselineEntriesFromFindings(currentEval.Findings)
 
-	baselineEval, err := shared.LoadEvaluationEnvelope(baselinePath)
+	baselineEval, err := shared.NewLoader().Evaluation(baselinePath)
 	if err != nil {
 		return fmt.Errorf("load baseline evaluation: %w", err)
 	}

@@ -102,7 +102,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) runPolicyAny(evaluationPath string) (Result, error) {
-	eval, err := shared.LoadEvaluationEnvelope(evaluationPath)
+	eval, err := shared.NewLoader().Evaluation(evaluationPath)
 	if err != nil {
 		return Result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
@@ -125,11 +125,11 @@ func (r *Runner) runPolicyAny(evaluationPath string) (Result, error) {
 }
 
 func (r *Runner) runPolicyNew(evaluationPath, baselinePath string) (Result, error) {
-	eval, err := shared.LoadEvaluationEnvelope(evaluationPath)
+	eval, err := shared.NewLoader().Evaluation(evaluationPath)
 	if err != nil {
 		return Result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
-	base, err := shared.LoadBaselineFile(baselinePath, kernel.KindBaseline)
+	base, err := shared.NewLoader().Baseline(baselinePath, kernel.KindBaseline)
 	if err != nil {
 		return Result{}, fmt.Errorf("loading baseline: %w", err)
 	}
