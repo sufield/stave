@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func runSnapshotManifestKeygen(cmd *cobra.Command, privateKeyOutPath, publicKeyOutPath string) error {
@@ -32,10 +33,10 @@ func runSnapshotManifestKeygen(cmd *cobra.Command, privateKeyOutPath, publicKeyO
 	privatePEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privatePKCS8})
 	publicPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicPKIX})
 
-	if err := writeFileAtomic(privateOut, privatePEM, 0o600); err != nil {
+	if err := fsutil.WriteFileAtomic(privateOut, privatePEM, 0o600); err != nil {
 		return fmt.Errorf("write private key %q: %w", privateOut, err)
 	}
-	if err := writeFileAtomic(publicOut, publicPEM, 0o644); err != nil {
+	if err := fsutil.WriteFileAtomic(publicOut, publicPEM, 0o644); err != nil {
 		return fmt.Errorf("write public key %q: %w", publicOut, err)
 	}
 
