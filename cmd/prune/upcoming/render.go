@@ -10,13 +10,13 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func buildUpcomingOutput(opts upcomingRunOptions, summary UpcomingSummary, items []UpcomingItem) UpcomingOutput {
+func buildUpcomingOutput(cfg UpcomingConfig, summary UpcomingSummary, items []UpcomingItem) UpcomingOutput {
 	return UpcomingOutput{
-		GeneratedAt:  opts.Now,
-		ControlsDir:  opts.ControlsDir,
-		Observations: opts.ObservationsDir,
-		MaxUnsafe:    opts.MaxUnsafeRaw,
-		DueSoon:      opts.DueSoonRaw,
+		GeneratedAt:  cfg.Now,
+		ControlsDir:  cfg.ControlsDir,
+		Observations: cfg.ObservationsDir,
+		MaxUnsafe:    cfg.MaxUnsafeRaw,
+		DueSoon:      cfg.DueSoonRaw,
 		Summary:      summary,
 		Items:        items,
 	}

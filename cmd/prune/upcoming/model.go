@@ -3,7 +3,6 @@ package upcoming
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -54,16 +53,4 @@ type UpcomingFilterCriteria struct {
 type UpcomingRenderOptions struct {
 	Now              time.Time
 	DueSoonThreshold time.Duration
-}
-
-type upcomingRunOptions struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       time.Duration
-	MaxUnsafeRaw    string
-	DueSoon         time.Duration
-	DueSoonRaw      string
-	Now             time.Time
-	Format          ui.OutputFormat
-	Filter          risk.FilterCriteria
 }

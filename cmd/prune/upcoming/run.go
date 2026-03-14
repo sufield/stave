@@ -1,122 +1,147 @@
 package upcoming
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/sanitize"
 )
 
-type upcomingFlagsType struct {
-	controlsDir, observationsDir string
-	maxUnsafe, now, dueSoon      string
-	format, dueWithin            string
-	controlIDs, assetTypes       []string
-	statuses                     []string
+// UpcomingConfig defines the resolved parameters for upcoming action analysis.
+type UpcomingConfig struct {
+	ControlsDir     string
+	ObservationsDir string
+	MaxUnsafe       time.Duration
+	MaxUnsafeRaw    string
+	DueSoon         time.Duration
+	DueSoonRaw      string
+	Now             time.Time
+	Format          ui.OutputFormat
+	Filter          risk.FilterCriteria
+	Sanitizer       *sanitize.Sanitizer
+	Quiet           bool
+	Stdout          io.Writer
 }
 
-func runUpcoming(cmd *cobra.Command, flags *upcomingFlagsType) error {
-	opts, err := gatherUpcomingOptions(cmd, flags)
-	if err != nil {
-		return err
-	}
+// UpcomingRunner orchestrates the risk analysis and timeline projection.
+type UpcomingRunner struct{}
 
-	ctx := compose.CommandContext(cmd)
-	loaded, err := compose.ActiveProvider().LoadAssets(ctx, opts.ObservationsDir, opts.ControlsDir)
+// Run executes the upcoming analysis workflow.
+func (r *UpcomingRunner) Run(ctx context.Context, cfg UpcomingConfig) error {
+	loaded, err := compose.ActiveProvider().LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
 		return err
 	}
-	snapshots := loaded.Snapshots
-	controls := loaded.Controls
 
 	riskItems := risk.ComputeItems(risk.Request{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: opts.MaxUnsafe,
-		Now:             opts.Now,
+		Controls:        loaded.Controls,
+		Snapshots:       loaded.Snapshots,
+		GlobalMaxUnsafe: cfg.MaxUnsafe,
+		Now:             cfg.Now,
 		PredicateParser: ctlyaml.YAMLPredicateParser,
 	})
-	riskItems = riskItems.Filter(opts.Filter)
-	gf := cmdutil.GetGlobalFlags(cmd)
-	items := mapRiskItems(riskItems)
-	if san := gf.GetSanitizer(); san != nil {
-		items = sanitizeUpcomingItems(san, items)
-	}
-	summary := summarizeUpcoming(items, opts.DueSoon)
-	report := renderUpcomingMarkdown(items, summary, UpcomingRenderOptions{
-		Now:              opts.Now,
-		DueSoonThreshold: opts.DueSoon,
-	})
-	jsonOut := buildUpcomingOutput(opts, summary, items)
+	riskItems = riskItems.Filter(cfg.Filter)
 
-	if !gf.Quiet {
-		return writeUpcomingOutput(opts.Format, cmd.OutOrStdout(), report, jsonOut)
+	items := mapRiskItems(riskItems)
+	if cfg.Sanitizer != nil {
+		items = sanitizeUpcomingItems(cfg.Sanitizer, items)
 	}
-	return nil
+	summary := summarizeUpcoming(items, cfg.DueSoon)
+	report := renderUpcomingMarkdown(items, summary, UpcomingRenderOptions{
+		Now:              cfg.Now,
+		DueSoonThreshold: cfg.DueSoon,
+	})
+	jsonOut := buildUpcomingOutput(cfg, summary, items)
+
+	if cfg.Quiet {
+		return nil
+	}
+	return writeUpcomingOutput(cfg.Format, cfg.Stdout, report, jsonOut)
 }
 
-func gatherUpcomingOptions(cmd *cobra.Command, flags *upcomingFlagsType) (upcomingRunOptions, error) {
-	opts := upcomingRunOptions{
-		ControlsDir:     fsutil.CleanUserPath(flags.controlsDir),
-		ObservationsDir: fsutil.CleanUserPath(flags.observationsDir),
-		MaxUnsafeRaw:    strings.TrimSpace(flags.maxUnsafe),
-		DueSoonRaw:      strings.TrimSpace(flags.dueSoon),
-	}
+// --- Bridge Helpers ---
 
-	maxUnsafeDur, err := timeutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
+func gatherUpcomingConfig(
+	obsDir, ctlDir string,
+	maxUnsafeRaw, dueSoonRaw, nowRaw, formatRaw, dueWithinRaw string,
+	controlIDs []kernel.ControlID,
+	assetTypes []kernel.AssetType,
+	statuses []string,
+	san *sanitize.Sanitizer,
+	quiet bool,
+	stdout io.Writer,
+	resolveFormat func(string) (ui.OutputFormat, error),
+) (UpcomingConfig, error) {
+	maxUnsafeDur, err := parsePositiveDuration(maxUnsafeRaw, "--max-unsafe")
 	if err != nil {
-		return upcomingRunOptions{}, err
+		return UpcomingConfig{}, err
 	}
-	dueSoonDur, err := timeutil.ParseDurationFlag(opts.DueSoonRaw, "--due-soon")
+	dueSoonDur, err := parsePositiveDuration(dueSoonRaw, "--due-soon")
 	if err != nil {
-		return upcomingRunOptions{}, err
-	}
-	if dueSoonDur < 0 {
-		return upcomingRunOptions{}, fmt.Errorf("invalid --due-soon %q: must be >= 0", flags.dueSoon)
+		return UpcomingConfig{}, err
 	}
 
 	var dueWithinDur *time.Duration
-	if strings.TrimSpace(flags.dueWithin) != "" {
-		parsedDueWithin, parseErr := timeutil.ParseDurationFlag(flags.dueWithin, "--due-within")
+	if strings.TrimSpace(dueWithinRaw) != "" {
+		parsed, parseErr := parsePositiveDuration(dueWithinRaw, "--due-within")
 		if parseErr != nil {
-			return upcomingRunOptions{}, parseErr
+			return UpcomingConfig{}, parseErr
 		}
-		if parsedDueWithin < 0 {
-			return upcomingRunOptions{}, fmt.Errorf("invalid --due-within %q: must be >= 0", flags.dueWithin)
-		}
-		dueWithinDur = &parsedDueWithin
+		dueWithinDur = &parsed
 	}
 
-	now, err := compose.ResolveNow(flags.now)
+	now, err := compose.ResolveNow(nowRaw)
 	if err != nil {
-		return upcomingRunOptions{}, err
+		return UpcomingConfig{}, err
 	}
-	format, err := compose.ResolveFormatValue(cmd, flags.format)
+	format, err := resolveFormat(formatRaw)
 	if err != nil {
-		return upcomingRunOptions{}, err
+		return UpcomingConfig{}, err
 	}
+
 	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
-		ControlIDs: cmdutil.ToControlIDs(flags.controlIDs),
-		AssetTypes: cmdutil.ToAssetTypes(flags.assetTypes),
-		Statuses:   flags.statuses,
+		ControlIDs: controlIDs,
+		AssetTypes: assetTypes,
+		Statuses:   statuses,
 		DueWithin:  dueWithinDur,
 	})
 	if err != nil {
-		return upcomingRunOptions{}, err
+		return UpcomingConfig{}, err
 	}
 
-	opts.MaxUnsafe = maxUnsafeDur
-	opts.DueSoon = dueSoonDur
-	opts.Now = now
-	opts.Format = format
-	opts.Filter = filter
-	return opts, nil
+	return UpcomingConfig{
+		ControlsDir:     ctlDir,
+		ObservationsDir: obsDir,
+		MaxUnsafe:       maxUnsafeDur,
+		MaxUnsafeRaw:    maxUnsafeRaw,
+		DueSoon:         dueSoonDur,
+		DueSoonRaw:      dueSoonRaw,
+		Now:             now,
+		Format:          format,
+		Filter:          filter,
+		Sanitizer:       san,
+		Quiet:           quiet,
+		Stdout:          stdout,
+	}, nil
+}
+
+func parsePositiveDuration(raw, flag string) (time.Duration, error) {
+	raw = strings.TrimSpace(raw)
+	dur, err := timeutil.ParseDurationFlag(raw, flag)
+	if err != nil {
+		return 0, err
+	}
+	if dur < 0 {
+		return 0, fmt.Errorf("invalid %s %q: must be >= 0", flag, raw)
+	}
+	return dur, nil
 }
