@@ -42,7 +42,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 		"security_posture.block_identity_public_access",
 		"security_posture.block_resource_metadata_access",
 		"security_posture.ignore_resource_metadata_access",
-		"security_posture.restrict_resource_public_access",
+		"security_posture.block_resource_public_access",
 	)
 
 	differentActions := makeActions(

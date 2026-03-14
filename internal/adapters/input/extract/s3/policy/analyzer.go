@@ -39,7 +39,7 @@ func (e *Engine) FullAnalysis() Analysis {
 		state.processStatement(&result, stmt, i)
 	}
 	applyPermissionMasks(&result, state.publicPerms, state.authPerms)
-	result.EffectiveNetworkScope = string(state.weakestScope)
+	result.EffectiveNetworkScope = toKernelNetworkScope(state.weakestScope)
 	return result
 }
 

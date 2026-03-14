@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 type policyActionMask uint8
@@ -176,6 +177,22 @@ func conditionScope(ca ConditionAnalysis) networkScope {
 		return networkScope(policyScopeOrgRestricted)
 	}
 	return networkScope(policyScopePublic)
+}
+
+// toKernelNetworkScope maps the adapter-private networkScope to the domain type.
+func toKernelNetworkScope(s networkScope) kernel.NetworkScope {
+	switch string(s) {
+	case policyScopePublic:
+		return kernel.NetworkScopePublic
+	case policyScopeIPRestricted:
+		return kernel.NetworkScopeIPRestricted
+	case policyScopeVPCRestricted:
+		return kernel.NetworkScopeVPCRestricted
+	case policyScopeOrgRestricted:
+		return kernel.NetworkScopeOrgRestricted
+	default:
+		return kernel.NetworkScopeUnknown
+	}
 }
 
 // NormalizeStringOrSlice converts a string or []string to []string.

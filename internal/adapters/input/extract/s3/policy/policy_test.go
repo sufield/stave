@@ -1,6 +1,10 @@
 package policy
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 func TestAnalyzePolicyPublicReadWrite(t *testing.T) {
 	policy := `{
@@ -389,7 +393,7 @@ func TestAnalyzePolicyCondition_SourceVPCE_StringLike_IsRestrictive(t *testing.T
 	if !result.HasVPCCondition {
 		t.Error("expected HasVPCCondition=true for source VPCE condition")
 	}
-	if result.EffectiveNetworkScope != "vpc-restricted" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopeVPCRestricted {
 		t.Errorf("expected EffectiveNetworkScope=vpc-restricted, got %q", result.EffectiveNetworkScope)
 	}
 }
@@ -441,7 +445,7 @@ func TestAnalyzePolicyCondition_PrincipalOrgID_StringEquals_IsRestrictive(t *tes
 	if result.AllowsPublicList {
 		t.Error("expected AllowsPublicList=false when restricted by principal org condition")
 	}
-	if result.EffectiveNetworkScope != "org-restricted" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopeOrgRestricted {
 		t.Errorf("expected EffectiveNetworkScope=org-restricted, got %q", result.EffectiveNetworkScope)
 	}
 }
@@ -864,7 +868,7 @@ func TestEffectiveNetworkScopePublicNoCondition(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "public" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopePublic {
 		t.Errorf("expected EffectiveNetworkScope='public', got %q", result.EffectiveNetworkScope)
 	}
 	if !result.AllowsPublicRead {
@@ -890,7 +894,7 @@ func TestEffectiveNetworkScopeIPRestricted(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "ip-restricted" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopeIPRestricted {
 		t.Errorf("expected EffectiveNetworkScope='ip-restricted', got %q", result.EffectiveNetworkScope)
 	}
 	if result.AllowsPublicRead {
@@ -919,7 +923,7 @@ func TestEffectiveNetworkScopeVPCRestricted(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "vpc-restricted" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopeVPCRestricted {
 		t.Errorf("expected EffectiveNetworkScope='vpc-restricted', got %q", result.EffectiveNetworkScope)
 	}
 	if result.AllowsPublicRead {
@@ -948,7 +952,7 @@ func TestEffectiveNetworkScopeOrgRestricted(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "org-restricted" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopeOrgRestricted {
 		t.Errorf("expected EffectiveNetworkScope='org-restricted', got %q", result.EffectiveNetworkScope)
 	}
 	if result.AllowsPublicRead {
@@ -969,7 +973,7 @@ func TestEffectiveNetworkScopeSpecificARNNoScope(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopeUnknown {
 		t.Errorf("expected empty EffectiveNetworkScope for specific ARN, got %q", result.EffectiveNetworkScope)
 	}
 }
@@ -1004,7 +1008,7 @@ func TestEffectiveNetworkScopeWeakestLink(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "public" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopePublic {
 		t.Errorf("expected EffectiveNetworkScope='public' (weakest link), got %q", result.EffectiveNetworkScope)
 	}
 	if !result.AllowsPublicRead {
@@ -1167,7 +1171,7 @@ func TestEffectiveNetworkScopeSecureTransportNotNetworkCondition(t *testing.T) {
 
 	result := AnalyzePolicy(policy)
 
-	if result.EffectiveNetworkScope != "public" {
+	if result.EffectiveNetworkScope != kernel.NetworkScopePublic {
 		t.Errorf("expected EffectiveNetworkScope='public' for SecureTransport-only condition, got %q", result.EffectiveNetworkScope)
 	}
 	if !result.AllowsPublicRead {

@@ -22,7 +22,7 @@ func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	// The 'apply' layer is responsible for translating these to vendor-specific APIs.
 	actions := []evaluation.RemediationAction{
 		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
-		{ActionType: "set", Path: "security_posture.restrict_resource_public_access", Value: true},
+		{ActionType: "set", Path: "security_posture.block_resource_public_access", Value: true},
 		{ActionType: "set", Path: "security_posture.block_resource_metadata_access", Value: true},
 		{ActionType: "set", Path: "security_posture.ignore_resource_metadata_access", Value: true},
 	}
