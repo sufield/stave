@@ -166,9 +166,9 @@ func (s Statement) IsDeny() bool {
 
 func (s Statement) ID(index int) kernel.StatementID {
 	if s.Sid != "" {
-		return kernel.StatementID(s.Sid)
+		return kernel.StatementID("sid:" + s.Sid)
 	}
-	return kernel.StatementID(strconv.Itoa(index))
+	return kernel.StatementID("idx:" + strconv.Itoa(index))
 }
 
 func (s Statement) PrincipalScope() kernel.PrincipalScope {

@@ -92,7 +92,7 @@ func (g Grant) Permissions() Permission {
 func (gs Grants) PublicGrantees() []kernel.GranteeID {
 	return lo.FilterMap(gs, func(g Grant, _ int) (kernel.GranteeID, bool) {
 		if g.IsPublic() {
-			return kernel.GranteeID(g.Grantee), true
+			return kernel.GranteeID("uri:" + g.Grantee), true
 		}
 		return "", false
 	})

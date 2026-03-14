@@ -43,9 +43,9 @@ func (e *Engine) PrefixScopeAnalysis() PrefixScopeAnalysis {
 		trimmed := strings.TrimSpace(stmt.Sid)
 		var sid kernel.StatementID
 		if trimmed != "" {
-			sid = kernel.StatementID(trimmed)
+			sid = kernel.StatementID("sid:" + trimmed)
 		} else {
-			sid = kernel.StatementID("stmt-" + strconv.Itoa(i))
+			sid = kernel.StatementID("idx:" + strconv.Itoa(i))
 		}
 		sourceByScope[scope] = sid
 	}

@@ -22,8 +22,8 @@ func TestAnalyzePolicyPublicReadWrite(t *testing.T) {
 	if !result.AllowsPublicList {
 		t.Error("expected AllowsPublicList=true")
 	}
-	if len(result.PublicStatements) != 1 || result.PublicStatements[0] != "PublicAccess" {
-		t.Errorf("expected PublicStatements=[PublicAccess], got %v", result.PublicStatements)
+	if len(result.PublicStatements) != 1 || result.PublicStatements[0] != "sid:PublicAccess" {
+		t.Errorf("expected PublicStatements=[sid:PublicAccess], got %v", result.PublicStatements)
 	}
 }
 
