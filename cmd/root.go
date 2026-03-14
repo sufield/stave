@@ -102,16 +102,6 @@ func cliCommand(command string) string {
 	return metadata.Command(command)
 }
 
-// Sentinel errors re-exported from cli/ui for convenience.
-// These trigger specific exit codes via ExitCode().
-var (
-	ErrViolationsFound       = ui.ErrViolationsFound
-	ErrDiagnosticsFound      = ui.ErrDiagnosticsFound
-	ErrValidationWarnings    = ui.ErrValidationWarnings
-	ErrValidationFailed      = ui.ErrValidationFailed
-	ErrSecurityAuditFindings = ui.ErrSecurityAuditFindings
-)
-
 // ExitCode delegates to ui.ExitCode for centralized exit code logic.
 func ExitCode(err error) int {
 	return ui.ExitCode(err)
