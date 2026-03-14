@@ -6,16 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/sufield/stave/internal/cli/ui"
 )
 
 func TestSchemasTextOutput(t *testing.T) {
 	var buf bytes.Buffer
-	cmd := &cobra.Command{}
-	cmd.SetOut(&buf)
-
-	if err := runSchemas(cmd, "text"); err != nil {
-		t.Fatalf("runSchemas error: %v", err)
+	if err := writeSchemas(&buf, ui.OutputFormatText); err != nil {
+		t.Fatalf("writeSchemas error: %v", err)
 	}
 
 	out := buf.String()
@@ -42,14 +39,8 @@ func TestSchemasTextOutput(t *testing.T) {
 
 func TestSchemasJSONOutput(t *testing.T) {
 	var buf bytes.Buffer
-	cmd := &cobra.Command{}
-	cmd.SetOut(&buf)
-	var format string
-	cmd.Flags().StringVar(&format, "format", "json", "")
-	_ = cmd.Flags().Set("format", "json")
-
-	if err := runSchemas(cmd, "json"); err != nil {
-		t.Fatalf("runSchemas error: %v", err)
+	if err := writeSchemas(&buf, ui.OutputFormatJSON); err != nil {
+		t.Fatalf("writeSchemas error: %v", err)
 	}
 
 	var got schemasOutput
@@ -70,7 +61,6 @@ func TestSchemasJSONOutput(t *testing.T) {
 		t.Fatal("artifact array must be non-empty")
 	}
 
-	// Verify key schemas are present.
 	found := map[string]bool{}
 	for _, e := range got.Data {
 		found[e.Schema] = true

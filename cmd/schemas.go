@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -35,7 +36,11 @@ Examples:
   stave schemas --format json | jq '.data'` + OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runSchemas(cmd, format)
+			fmtValue, err := compose.ResolveFormatValue(cmd, format)
+			if err != nil {
+				return err
+			}
+			return writeSchemas(cmd.OutOrStdout(), fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -58,8 +63,8 @@ type schemasOutput struct {
 	Artifact      []schemaEntry `json:"artifact"`
 }
 
-func buildSchemasOutput() schemasOutput {
-	return schemasOutput{
+func writeSchemas(w io.Writer, format ui.OutputFormat) error {
+	out := schemasOutput{
 		Data: []schemaEntry{
 			{"control", kernel.SchemaControl.String()},
 			{"observation", kernel.SchemaObservation.String()},
@@ -90,24 +95,11 @@ func buildSchemasOutput() schemasOutput {
 			{"security_audit_run_manifest", kernel.SchemaSecurityAuditRunManifest.String()},
 		},
 	}
-}
 
-func runSchemas(cmd *cobra.Command, format string) error {
-	parsed, err := compose.ResolveFormatValue(cmd, format)
-	if err != nil {
-		return err
+	if format.IsJSON() {
+		return jsonutil.WriteIndented(w, out)
 	}
 
-	out := buildSchemasOutput()
-
-	if parsed.IsJSON() {
-		return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
-	}
-
-	return writeSchemasText(cmd.OutOrStdout(), out)
-}
-
-func writeSchemasText(w io.Writer, out schemasOutput) error {
 	groups := []struct {
 		heading string
 		entries []schemaEntry
