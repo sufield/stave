@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -50,16 +51,19 @@ func applyPlan(plan planOutput, obsRoot, archiveDir string, allowSymlink bool) e
 		ArchiveDir:       archiveDir,
 		AllowSymlink:     allowSymlink,
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("applying snapshot lifecycle plan: %w", err)
+	}
+	return nil
 }
 
 func toPrunerPlanEntries(entries []planFileEntry) []pruner.PlanEntry {
-	out := make([]pruner.PlanEntry, 0, len(entries))
-	for _, entry := range entries {
-		out = append(out, pruner.PlanEntry{
+	out := make([]pruner.PlanEntry, len(entries))
+	for i, entry := range entries {
+		out[i] = pruner.PlanEntry{
 			RelPath: entry.RelPath,
 			Action:  entry.Action,
-		})
+		}
 	}
 	return out
 }
