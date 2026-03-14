@@ -1,14 +1,12 @@
 package storage
 
-import "github.com/sufield/stave/internal/domain/kernel"
-
 func BuildModel(in BuildModelInput) S3StorageModel {
 	bucket := in.Bucket
 
 	model := S3StorageModel{
 		Kind:       "bucket",
-		ID:         kernel.NewBucketRef(bucket.Name).ModelID(),
-		Name:       bucket.Name,
+		ID:         bucket.Name.ModelID(),
+		Name:       bucket.Name.Name(),
 		Visibility: in.Visibility,
 		ACL: ACLSummary{
 			FullControlPublic:        in.Analysis.ACL.HasFullControlPublic,

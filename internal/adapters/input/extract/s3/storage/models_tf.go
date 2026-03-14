@@ -1,6 +1,9 @@
 package storage
 
-import s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
+import (
+	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // VersioningStatus represents the S3 bucket versioning state.
 type VersioningStatus string
@@ -76,7 +79,7 @@ type WebsiteConfig struct{}
 // S3Bucket represents extracted S3 bucket information.
 type S3Bucket struct {
 	// Identity
-	Name string
+	Name kernel.BucketRef
 	ARN  string
 	Tags map[string]string
 

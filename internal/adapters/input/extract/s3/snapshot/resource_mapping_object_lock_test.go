@@ -5,6 +5,7 @@ import (
 
 	s3resource "github.com/sufield/stave/internal/adapters/input/extract/s3/resource"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 func TestNewObjectLockEvidence(t *testing.T) {
@@ -71,7 +72,7 @@ func TestNewObjectLockEvidence(t *testing.T) {
 
 func TestBuildAWSS3Evidence_OmitsObjectLockWhenNotEnabled(t *testing.T) {
 	bucket := &s3storage.S3Bucket{
-		Name: "no-lock",
+		Name: kernel.NewBucketRef("no-lock"),
 	}
 
 	out := s3resource.ToMap(s3storage.BuildAWSS3Evidence(bucket, s3storage.S3AnalysisResult{}))
@@ -86,7 +87,7 @@ func TestBuildAWSS3Evidence_OmitsObjectLockWhenNotEnabled(t *testing.T) {
 
 func TestBuildAWSS3Evidence_ObjectLockUsesOmitempty(t *testing.T) {
 	bucket := &s3storage.S3Bucket{
-		Name: "with-lock",
+		Name: kernel.NewBucketRef("with-lock"),
 		ObjectLock: &s3storage.ObjectLockConfig{
 			Enabled: true,
 		},
