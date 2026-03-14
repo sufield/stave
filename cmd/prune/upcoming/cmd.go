@@ -4,13 +4,22 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// NewCmd constructs the upcoming command with closure-scoped flags.
+// NewCmd constructs the upcoming command.
 func NewCmd() *cobra.Command {
-	var flags upcomingFlagsType
+	var (
+		ctlDir, obsDir             string
+		maxUnsafe, dueSoon, nowRaw string
+		formatFlag, dueWithin      string
+		controlIDs, assetTypes     []string
+		statuses                   []string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "upcoming",
@@ -30,22 +39,47 @@ Examples:
   stave snapshot upcoming --controls ./controls --observations ./observations --now 2026-01-15T00:00:00Z` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runUpcoming(cmd, &flags)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			eval := projconfig.Global()
+
+			if maxUnsafe == "" {
+				maxUnsafe = eval.MaxUnsafe()
+			}
+
+			cfg, err := gatherUpcomingConfig(
+				fsutil.CleanUserPath(obsDir),
+				fsutil.CleanUserPath(ctlDir),
+				maxUnsafe, dueSoon, nowRaw, formatFlag, dueWithin,
+				cmdutil.ToControlIDs(controlIDs),
+				cmdutil.ToAssetTypes(assetTypes),
+				statuses,
+				gf.GetSanitizer(),
+				gf.Quiet,
+				cmd.OutOrStdout(),
+				func(raw string) (ui.OutputFormat, error) { return compose.ResolveFormatValue(cmd, raw) },
+			)
+			if err != nil {
+				return err
+			}
+
+			runner := &UpcomingRunner{}
+			return runner.Run(compose.CommandContext(cmd), cfg)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&flags.controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	cmd.Flags().StringVar(&flags.maxUnsafe, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
-	cmd.Flags().StringVar(&flags.now, "now", "", "Override current time (RFC3339). If omitted, uses wall clock")
-	cmd.Flags().StringVar(&flags.dueSoon, "due-soon", "24h", "Threshold for 'due soon' reminders (e.g., 4h, 1d)")
-	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().StringSliceVar(&flags.controlIDs, "control-id", nil, "Filter to one or more control IDs")
-	cmd.Flags().StringSliceVar(&flags.assetTypes, "asset-type", nil, "Filter to one or more asset types")
-	cmd.Flags().StringSliceVar(&flags.statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
-	cmd.Flags().StringVar(&flags.dueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
+	f := cmd.Flags()
+	f.StringVarP(&ctlDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	f.StringVarP(&obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
+	f.StringVar(&maxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	f.StringVar(&nowRaw, "now", "", "Override current time (RFC3339). If omitted, uses wall clock")
+	f.StringVar(&dueSoon, "due-soon", "24h", "Threshold for 'due soon' reminders (e.g., 4h, 1d)")
+	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
+	f.StringSliceVar(&controlIDs, "control-id", nil, "Filter to one or more control IDs")
+	f.StringSliceVar(&assetTypes, "asset-type", nil, "Filter to one or more asset types")
+	f.StringSliceVar(&statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
+	f.StringVar(&dueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 	_ = cmd.RegisterFlagCompletionFunc("status", cmdutil.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
 
