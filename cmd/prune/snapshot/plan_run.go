@@ -3,79 +3,94 @@ package snapshot
 import (
 	"context"
 	"fmt"
+	"io"
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 )
 
-func runPlan(cmd *cobra.Command, flags *planFlagsType) error {
-	runInput, err := preparePlanRunInput(flags)
-	if err != nil {
-		return err
-	}
-	files, err := listPlanFiles(cmd.Context(), runInput.observationsRoot, runInput.archiveDir)
+// PlanConfig defines the resolved parameters for multi-tier snapshot retention.
+type PlanConfig struct {
+	ObservationsRoot string
+	ArchiveDir       string
+	Now              time.Time
+	Format           ui.OutputFormat
+	Apply            bool
+	Force            bool
+	Quiet            bool
+	AllowSymlink     bool
+	Stdout           io.Writer
+}
+
+// PlanRunner orchestrates the recursive inspection and lifecycle execution.
+type PlanRunner struct{}
+
+// Run executes the multi-tier planning workflow.
+func (r *PlanRunner) Run(ctx context.Context, cfg PlanConfig) error {
+	files, err := listPlanFiles(ctx, cfg.ObservationsRoot, cfg.ArchiveDir)
 	if err != nil {
 		return err
 	}
 
-	gf := cmdutil.GetGlobalFlags(cmd)
+	tiers, tierRules, defaultTier := resolvePlanRetentionConfig()
+
 	plan := buildPlan(planBuildParams{
-		Now:         runInput.now,
-		ObsRoot:     runInput.observationsRoot,
-		ArchiveDir:  runInput.archiveDir,
-		DefaultTier: runInput.defaultTier,
-		TierRules:   runInput.tierRules,
-		Tiers:       runInput.tiers,
+		Now:         cfg.Now,
+		ObsRoot:     cfg.ObservationsRoot,
+		ArchiveDir:  cfg.ArchiveDir,
+		DefaultTier: defaultTier,
+		TierRules:   tierRules,
+		Tiers:       tiers,
 		Files:       files,
-		Apply:       flags.apply,
-		Force:       gf.Force,
+		Apply:       cfg.Apply,
+		Force:       cfg.Force,
 	})
-	if err := writePlanOutput(cmd, plan, flags.format); err != nil {
+
+	if err := r.writePlanOutput(cfg, plan); err != nil {
 		return err
 	}
 	if plan.Applied {
-		return applyPlan(plan, runInput.observationsRoot, runInput.archiveDir, gf.AllowSymlinkOut)
+		return applyPlan(plan, cfg.ObservationsRoot, cfg.ArchiveDir, cfg.AllowSymlink)
 	}
 	return nil
 }
 
-type planRunInput struct {
-	observationsRoot string
-	archiveDir       string
-	now              time.Time
-	defaultTier      string
-	tiers            map[string]projconfig.RetentionTierConfig
-	tierRules        []projconfig.TierMappingRule
+func (r *PlanRunner) writePlanOutput(cfg PlanConfig, plan planOutput) error {
+	if cfg.Quiet {
+		return nil
+	}
+	w := cfg.Stdout
+	if cfg.Format.IsJSON() {
+		if err := jsonutil.WriteIndented(w, plan); err != nil {
+			return fmt.Errorf("write plan output: %w", err)
+		}
+		return nil
+	}
+	if err := pruner.RenderSnapshotPlanText(w, plan); err != nil {
+		return fmt.Errorf("write plan output: %w", err)
+	}
+	return nil
 }
 
-func preparePlanRunInput(flags *planFlagsType) (planRunInput, error) {
-	obsRoot := fsutil.CleanUserPath(flags.observationsRoot)
-	var archiveDir string
-	if flags.archiveDir != "" {
-		archiveDir = fsutil.CleanUserPath(flags.archiveDir)
-	}
+// --- Helpers ---
 
-	now, err := compose.ResolveNow(flags.now)
+func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]snapshotFile, error) {
+	loader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
-		return planRunInput{}, err
+		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	tiers, tierRules, defaultTier := resolvePlanRetentionConfig()
-	return planRunInput{
-		observationsRoot: obsRoot,
-		archiveDir:       archiveDir,
-		now:              now,
-		defaultTier:      defaultTier,
-		tiers:            tiers,
-		tierRules:        tierRules,
-	}, nil
+	excludeDirs := make([]string, 0, 1)
+	if archiveDir != "" {
+		if abs, err := filepath.Abs(archiveDir); err == nil {
+			excludeDirs = append(excludeDirs, abs)
+		}
+	}
+	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
 }
 
 func resolvePlanRetentionConfig() (map[string]projconfig.RetentionTierConfig, []projconfig.TierMappingRule, string) {
@@ -96,39 +111,4 @@ func resolvePlanRetentionConfig() (map[string]projconfig.RetentionTierConfig, []
 		}
 	}
 	return tiers, tierRules, defaultTier
-}
-
-func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]snapshotFile, error) {
-	loader, err := compose.ActiveProvider().NewSnapshotRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create observation loader: %w", err)
-	}
-	excludeDirs := make([]string, 0, 1)
-	if archiveDir != "" {
-		if abs, err := filepath.Abs(archiveDir); err == nil {
-			excludeDirs = append(excludeDirs, abs)
-		}
-	}
-	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
-}
-
-func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) error {
-	format, err := compose.ResolveFormatValue(cmd, rawFormat)
-	if err != nil {
-		return err
-	}
-	if cmdutil.GetGlobalFlags(cmd).Quiet {
-		return nil
-	}
-	w := cmd.OutOrStdout()
-	if format.IsJSON() {
-		if err := jsonutil.WriteIndented(w, plan); err != nil {
-			return fmt.Errorf("write plan output: %w", err)
-		}
-		return nil
-	}
-	if err := pruner.RenderSnapshotPlanText(w, plan); err != nil {
-		return fmt.Errorf("write plan output: %w", err)
-	}
-	return nil
 }
