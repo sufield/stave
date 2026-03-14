@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -13,9 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
@@ -50,14 +48,17 @@ type GenerateRequest struct {
 	Out  string
 }
 
-type detectedSnapshot struct {
-	Path   string
-	Format string
+// --- DemoRunner ---
+
+// DemoRunner orchestrates quickstart and demo evaluation workflows.
+type DemoRunner struct {
+	Out          io.Writer
+	Sanitizer    kernel.Sanitizer
+	AllowSymlink bool
 }
 
-func runQuickstart(cmd *cobra.Command, req *QuickstartRequest) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
-
+// RunQuickstart detects local snapshots and evaluates the fastest path to a first finding.
+func (r *DemoRunner) RunQuickstart(ctx context.Context, req *QuickstartRequest) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("resolve current directory: %w", err)
@@ -67,12 +68,10 @@ func runQuickstart(cmd *cobra.Command, req *QuickstartRequest) error {
 	if err != nil {
 		return onboardingCommandError(err, "stave quickstart --help")
 	}
-	out := cmd.OutOrStdout()
 	reportPath := fsutil.CleanUserPath(req.ReportPath)
 	if strings.TrimSpace(reportPath) == "" {
 		return onboardingCommandError(fmt.Errorf("--report cannot be empty"), "stave quickstart --report ./stave-report.json")
 	}
-	ctx := compose.CommandContext(cmd)
 	controls, err := loadDemoControls(ctx)
 	if err != nil {
 		return onboardingCommandError(err, "stave quickstart --help")
@@ -112,17 +111,149 @@ func runQuickstart(cmd *cobra.Command, req *QuickstartRequest) error {
 		Findings:     findings,
 		GeneratedAt:  reportNow,
 		Overwrite:    true,
-		AllowSymlink: gf.AllowSymlinkOut,
+		AllowSymlink: r.AllowSymlink,
 	}); err != nil {
 		return onboardingCommandError(err, "stave quickstart --report ./stave-report.json")
 	}
-	p := &Presenter{Out: out, Sanitizer: gf.GetSanitizer()}
+	p := &Presenter{Out: r.Out, Sanitizer: r.Sanitizer}
 	return p.WriteQuickstart(SummaryRequest{
 		SourceLabel: sourceLabel,
 		ReportPath:  reportPath,
 		Findings:    findings,
 		Snapshot:    latest,
 	})
+}
+
+// RunDemo executes a hello-world safety loop using embedded fixtures.
+func (r *DemoRunner) RunDemo(ctx context.Context, req *DemoRequest) error {
+	fixture := strings.TrimSpace(req.FixtureName)
+	snapshots, err := loadDemoSnapshots(fixture)
+	if err != nil {
+		return onboardingCommandError(err, "stave demo --help")
+	}
+
+	controls, err := loadDemoControls(ctx)
+	if err != nil {
+		return onboardingCommandError(err, "stave demo --help")
+	}
+
+	lastSnap := snapshots[len(snapshots)-1]
+	result, evalErr := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+		Controls:    controls,
+		Snapshots:   snapshots,
+		MaxUnsafe:   0,
+		Clock:       clockadp.FixedClock(lastSnap.CapturedAt),
+		ToolVersion: GetVersion(),
+	})
+	if evalErr != nil {
+		return onboardingCommandError(evalErr, "stave demo")
+	}
+	findings := remediation.NewMapper(crypto.NewHasher()).EnrichFindings(result)
+
+	reportNow := lastSnap.CapturedAt.UTC()
+	if strings.TrimSpace(req.NowTime) != "" {
+		reportNow, err = compose.ResolveNow(req.NowTime)
+		if err != nil {
+			return onboardingCommandError(fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", req.NowTime), "stave demo --now 2026-01-15T00:00:00Z")
+		}
+	}
+
+	reportPath := fsutil.CleanUserPath(req.ReportPath)
+	if strings.TrimSpace(reportPath) == "" {
+		return onboardingCommandError(fmt.Errorf("--report cannot be empty"), "stave demo --report ./stave-report.json")
+	}
+
+	if err := writeDemoReport(demoReportRequest{
+		Path:         reportPath,
+		Fixture:      fixture,
+		Snapshot:     lastSnap,
+		Result:       result,
+		Findings:     findings,
+		GeneratedAt:  reportNow,
+		Overwrite:    true,
+		AllowSymlink: r.AllowSymlink,
+	}); err != nil {
+		return onboardingCommandError(err, "stave demo --report ./stave-report.json")
+	}
+
+	p := &Presenter{Out: r.Out, Sanitizer: r.Sanitizer}
+	return p.WriteDemo(SummaryRequest{
+		ReportPath: reportPath,
+		Findings:   findings,
+		Snapshot:   lastSnap,
+	})
+}
+
+// --- GenerateRunner ---
+
+// GenerateRunner handles artifact template generation.
+type GenerateRunner struct {
+	Out          io.Writer
+	Force        bool
+	Quiet        bool
+	AllowSymlink bool
+}
+
+// RunControl generates a canonical control YAML template.
+func (r *GenerateRunner) RunControl(req GenerateRequest) error {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return fmt.Errorf("control name cannot be empty")
+	}
+	id := controlIDFromName(name)
+	content := strings.ReplaceAll(strings.TrimLeft(templateControlCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
+	out := strings.TrimSpace(req.Out)
+	if out == "" {
+		out = filepath.Join("controls", id+".yaml")
+	}
+	return r.writeFile(out, []byte(content))
+}
+
+// RunObservation generates an observation JSON template.
+func (r *GenerateRunner) RunObservation(req GenerateRequest) error {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return fmt.Errorf("observation name cannot be empty")
+	}
+	slug := sanitizeSlug(name)
+	content := strings.ReplaceAll(strings.TrimLeft(templateObservation, "\n"), "aws:s3:::example-phi-bucket", "asset:"+slug)
+	out := strings.TrimSpace(req.Out)
+	if out == "" {
+		out = filepath.Join("observations", slug+".json")
+	}
+	return r.writeFile(out, []byte(content))
+}
+
+func (r *GenerateRunner) writeFile(path string, content []byte) error {
+	path = fsutil.CleanUserPath(path)
+	if strings.TrimSpace(path) == "" {
+		return fmt.Errorf("output path cannot be empty")
+	}
+	if !r.Force {
+		if _, err := os.Stat(path); err == nil {
+			return fmt.Errorf("file already exists: %s (use --force to overwrite)", path)
+		}
+	}
+	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700, AllowSymlink: r.AllowSymlink}); err != nil {
+		return err
+	}
+	opts := fsutil.ConfigWriteOpts()
+	opts.Overwrite = r.Force
+	opts.AllowSymlink = r.AllowSymlink
+	if err := fsutil.SafeWriteFile(path, content, opts); err != nil {
+		return err
+	}
+	if !r.Quiet {
+		fmt.Fprintf(r.Out, "Generated %s\n", path)
+	}
+	return nil
+}
+
+// --- Snapshot Detection ---
+
+type detectedSnapshot struct {
+	Path   string
+	Format string
 }
 
 func loadDetectedQuickstartSnapshots(ctx context.Context, cwd string, detected []detectedSnapshot) ([]asset.Snapshot, string) {
@@ -266,12 +397,10 @@ func loadQuickstartSnapshotsFromFile(ctx context.Context, path string) ([]asset.
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
 
-	// First try strict single-snapshot loading (schema + semantic validation).
 	if single, err := loader.LoadSnapshotFromReader(ctx, bytes.NewReader(data), path); err == nil {
 		return []asset.Snapshot{single}, nil
 	}
 
-	// Then try bundle format and validate each snapshot entry independently.
 	var bundle struct {
 		SchemaVersion kernel.Schema     `json:"schema_version"`
 		Snapshots     []json.RawMessage `json:"snapshots"`
@@ -292,6 +421,8 @@ func loadQuickstartSnapshotsFromFile(ctx context.Context, path string) ([]asset.
 	}
 	return snapshots, nil
 }
+
+// --- Fixtures & Controls ---
 
 //go:embed fixtures/demo/snapshot-known-bad.json
 var demoSnapshotKnownBad []byte
@@ -317,67 +448,6 @@ type demoReportRequest struct {
 
 var demoFastLaneControlIDs = []string{
 	"CTL.S3.PUBLIC.001",
-}
-
-func runDemo(cmd *cobra.Command, req *DemoRequest) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
-
-	fixture := strings.TrimSpace(req.FixtureName)
-	snapshots, err := loadDemoSnapshots(fixture)
-	if err != nil {
-		return onboardingCommandError(err, "stave demo --help")
-	}
-
-	controls, err := loadDemoControls(compose.CommandContext(cmd))
-	if err != nil {
-		return onboardingCommandError(err, "stave demo --help")
-	}
-
-	lastSnap := snapshots[len(snapshots)-1]
-	result, evalErr := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
-		Controls:    controls,
-		Snapshots:   snapshots,
-		MaxUnsafe:   0,
-		Clock:       clockadp.FixedClock(lastSnap.CapturedAt),
-		ToolVersion: GetVersion(),
-	})
-	if evalErr != nil {
-		return onboardingCommandError(evalErr, "stave demo")
-	}
-	findings := remediation.NewMapper(crypto.NewHasher()).EnrichFindings(result)
-
-	reportNow := lastSnap.CapturedAt.UTC()
-	if strings.TrimSpace(req.NowTime) != "" {
-		reportNow, err = compose.ResolveNow(req.NowTime)
-		if err != nil {
-			return onboardingCommandError(fmt.Errorf("invalid --now %q (use RFC3339: 2026-01-15T00:00:00Z)", req.NowTime), "stave demo --now 2026-01-15T00:00:00Z")
-		}
-	}
-
-	reportPath := fsutil.CleanUserPath(req.ReportPath)
-	if strings.TrimSpace(reportPath) == "" {
-		return onboardingCommandError(fmt.Errorf("--report cannot be empty"), "stave demo --report ./stave-report.json")
-	}
-
-	if err := writeDemoReport(demoReportRequest{
-		Path:         reportPath,
-		Fixture:      fixture,
-		Snapshot:     lastSnap,
-		Result:       result,
-		Findings:     findings,
-		GeneratedAt:  reportNow,
-		Overwrite:    true,
-		AllowSymlink: gf.AllowSymlinkOut,
-	}); err != nil {
-		return onboardingCommandError(err, "stave demo --report ./stave-report.json")
-	}
-
-	p := &Presenter{Out: cmd.OutOrStdout(), Sanitizer: gf.GetSanitizer()}
-	return p.WriteDemo(SummaryRequest{
-		ReportPath: reportPath,
-		Findings:   findings,
-		Snapshot:   lastSnap,
-	})
 }
 
 func loadDemoSnapshots(name string) ([]asset.Snapshot, error) {
@@ -427,6 +497,8 @@ func loadDemoControls(ctx context.Context) ([]policy.ControlDefinition, error) {
 	})
 	return selected, nil
 }
+
+// --- Reporting ---
 
 type demoReport struct {
 	SchemaVersion kernel.Schema      `json:"schema_version"`
@@ -478,63 +550,6 @@ func writeDemoReport(req demoReportRequest) error {
 	opts.AllowSymlink = req.AllowSymlink
 	if err := fsutil.SafeWriteFile(req.Path, append(data, '\n'), opts); err != nil {
 		return fmt.Errorf("write demo report: %w", err)
-	}
-	return nil
-}
-
-func runGenerateControl(cmd *cobra.Command, req GenerateRequest) error {
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return fmt.Errorf("control name cannot be empty")
-	}
-	id := controlIDFromName(name)
-	content := strings.ReplaceAll(strings.TrimLeft(templateControlCanonical, "\n"), "CTL.S3.PUBLIC.901", id)
-	out := strings.TrimSpace(req.Out)
-	if out == "" {
-		out = filepath.Join("controls", id+".yaml")
-	}
-	return writeGeneratedFile(out, []byte(content), cmd)
-}
-
-func runGenerateObservation(cmd *cobra.Command, req GenerateRequest) error {
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return fmt.Errorf("observation name cannot be empty")
-	}
-	slug := sanitizeSlug(name)
-	content := strings.ReplaceAll(strings.TrimLeft(templateObservation, "\n"), "aws:s3:::example-phi-bucket", "asset:"+slug)
-	out := strings.TrimSpace(req.Out)
-	if out == "" {
-		out = filepath.Join("observations", slug+".json")
-	}
-	return writeGeneratedFile(out, []byte(content), cmd)
-}
-
-func writeGeneratedFile(path string, content []byte, cmd *cobra.Command) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
-
-	path = fsutil.CleanUserPath(path)
-	if strings.TrimSpace(path) == "" {
-		return fmt.Errorf("output path cannot be empty")
-	}
-	force := gf.Force
-	allowSymlink := gf.AllowSymlinkOut
-	if !force {
-		if _, err := os.Stat(path); err == nil {
-			return fmt.Errorf("file already exists: %s (use --force to overwrite)", path)
-		}
-	}
-	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700, AllowSymlink: allowSymlink}); err != nil {
-		return err
-	}
-	opts := fsutil.ConfigWriteOpts()
-	opts.Overwrite = force
-	opts.AllowSymlink = allowSymlink
-	if err := fsutil.SafeWriteFile(path, content, opts); err != nil {
-		return err
-	}
-	if !gf.Quiet {
-		fmt.Fprintf(cmd.OutOrStdout(), "Generated %s\n", path)
 	}
 	return nil
 }
