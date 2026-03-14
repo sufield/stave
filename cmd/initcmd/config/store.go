@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -12,32 +11,43 @@ import (
 )
 
 // projectConfigStore implements cliconfig.Store[projconfig.ProjectConfig].
-// svc must not be nil; it is always set from the configCommand that owns this
-// store, which in turn receives it from NewConfigCmd's required parameter.
+// It acts as the infrastructure adapter for the stave.yaml file.
 type projectConfigStore struct {
-	allowSymlink bool
+	resolver     *projconfig.Resolver
 	svc          *configservice.Service
+	allowSymlink bool
 }
 
+// Find attempts to locate an existing project configuration.
 func (s projectConfigStore) Find() (*projconfig.ProjectConfig, string, bool) {
-	return projconfig.FindProjectConfigWithPath("")
+	if s.resolver == nil {
+		return projconfig.FindProjectConfigWithPath("")
+	}
+	cfg, path, err := s.resolver.FindProjectConfig("")
+	if err != nil {
+		return nil, "", false
+	}
+	return cfg, path, true
 }
 
+// LoadOrCreate finds the config file or prepares a new one in the working directory.
 func (s projectConfigStore) LoadOrCreate() (*projconfig.ProjectConfig, string, error) {
-	cfg, cfgPath, existed := projconfig.FindProjectConfigWithPath("")
-	if existed {
+	cfg, cfgPath, ok := s.Find()
+	if ok {
 		if cfg == nil {
 			cfg = &projconfig.ProjectConfig{}
 		}
 		return cfg, cfgPath, nil
 	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, "", err
+
+	baseDir := "."
+	if s.resolver != nil && s.resolver.WorkingDir != "" {
+		baseDir = s.resolver.WorkingDir
 	}
-	return &projconfig.ProjectConfig{}, filepath.Join(wd, projconfig.ProjectConfigFile), nil
+	return &projconfig.ProjectConfig{}, filepath.Join(baseDir, projconfig.ProjectConfigFile), nil
 }
 
+// CurrentValue resolves the effective value of a key for display during interactive editing.
 func (s projectConfigStore) CurrentValue(cfg *projconfig.ProjectConfig, key, cfgPath string) string {
 	if cfg == nil {
 		return "(not set)"
@@ -50,51 +60,47 @@ func (s projectConfigStore) CurrentValue(cfg *projconfig.ProjectConfig, key, cfg
 	return kv.Value
 }
 
+// Set updates a specific key in the provided config struct.
 func (s projectConfigStore) Set(cfg *projconfig.ProjectConfig, key, value string) error {
-	return setConfigKeyValue(s.svc, cfg, key, value)
-}
-
-func (s projectConfigStore) Delete(cfg *projconfig.ProjectConfig, key string) error {
-	return deleteConfigKeyValue(s.svc, cfg, key)
-}
-
-func (s projectConfigStore) Write(path string, cfg *projconfig.ProjectConfig) error {
-	outBytes, err := yaml.Marshal(cfg)
+	parsed, err := s.svc.ParseConfigKey(key)
 	if err != nil {
-		return fmt.Errorf("marshal %s: %w", projconfig.ProjectConfigFile, err)
+		return err
+	}
+	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
+		return s.svc.SetConfigKeyValue(serviceCfg, parsed, value)
+	})
+}
+
+// Delete removes a specific key from the provided config struct.
+func (s projectConfigStore) Delete(cfg *projconfig.ProjectConfig, key string) error {
+	parsed, err := s.svc.ParseConfigKey(key)
+	if err != nil {
+		return err
+	}
+	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
+		return s.svc.DeleteConfigKeyValue(serviceCfg, parsed)
+	})
+}
+
+// Write serializes the configuration back to the stave.yaml file.
+func (s projectConfigStore) Write(path string, cfg *projconfig.ProjectConfig) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("marshaling configuration: %w", err)
 	}
 	opts := fsutil.ConfigWriteOpts()
 	opts.AllowSymlink = s.allowSymlink
-	if err := fsutil.SafeWriteFile(path, outBytes, opts); err != nil {
-		return fmt.Errorf("write %s: %w", path, err)
+	if err := fsutil.SafeWriteFile(path, data, opts); err != nil {
+		return fmt.Errorf("writing configuration to %q: %w", path, err)
 	}
 	return nil
 }
 
+// resolveServiceConfigKeyValue resolves a config key to its effective value and source.
 func resolveServiceConfigKeyValue(svc *configservice.Service, key string, cfg *projconfig.ProjectConfig, cfgPath, fallbackTier string) (configservice.KeyValueOutput, error) {
 	parsed, err := svc.ParseConfigKey(key)
 	if err != nil {
 		return configservice.KeyValueOutput{}, err
 	}
 	return svc.ResolveConfigKeyValue(parsed, projconfig.FromProjectConfig(cfg), cfgPath, fallbackTier)
-}
-
-func deleteConfigKeyValue(svc *configservice.Service, cfg *projconfig.ProjectConfig, key string) error {
-	parsed, err := svc.ParseConfigKey(key)
-	if err != nil {
-		return err
-	}
-	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
-		return svc.DeleteConfigKeyValue(serviceCfg, parsed)
-	})
-}
-
-func setConfigKeyValue(svc *configservice.Service, cfg *projconfig.ProjectConfig, key, value string) error {
-	parsed, err := svc.ParseConfigKey(key)
-	if err != nil {
-		return err
-	}
-	return projconfig.MutateProjectConfig(cfg, func(serviceCfg *configservice.Config) error {
-		return svc.SetConfigKeyValue(serviceCfg, parsed, value)
-	})
 }
