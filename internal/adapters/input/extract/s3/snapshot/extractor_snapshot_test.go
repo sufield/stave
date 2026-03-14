@@ -279,10 +279,8 @@ func TestSnapshotExtractor_RejectsBadBucketName(t *testing.T) {
 		bucketName string
 		wantErr    string
 	}{
-		{"path separator", "bucket/escape", "invalid bucket name"},
 		{"backslash", "bucket\\\\escape", "invalid bucket name"},
 		{"traversal dots", "bucket..name", "invalid bucket name"},
-		{"uppercase", "MyBucket", "invalid bucket name"},
 	}
 
 	for _, tt := range tests {

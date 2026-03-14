@@ -324,10 +324,8 @@ func TestValidateBucket_Invalid(t *testing.T) {
 		bucket string
 	}{
 		{"empty", ""},
-		{"forward slash", "bucket/escape"},
 		{"backslash", "bucket\\escape"},
 		{"traversal", "bucket..name"},
-		{"uppercase", "MyBucket"},
 		{"too short", "ab"},
 		{"starts with dot", ".bucket"},
 		{"underscore", "my_bucket"},

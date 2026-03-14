@@ -16,11 +16,11 @@ type S3BucketRefModel struct {
 }
 
 // BuildBucketRefModel creates a bucket reference model with normalized bucket identity.
-func BuildBucketRefModel(endpoint string, bucket kernel.BucketRef, exists, owned bool) S3BucketRefModel {
+func BuildBucketRefModel(endpoint string, bucket kernel.BucketRef, claim kernel.NamespaceClaim) S3BucketRefModel {
 	return S3BucketRefModel{
 		Endpoint:     endpoint,
 		Bucket:       bucket.Name(),
-		BucketExists: exists,
-		BucketOwned:  owned,
+		BucketExists: claim.Exists,
+		BucketOwned:  claim.Owned,
 	}
 }

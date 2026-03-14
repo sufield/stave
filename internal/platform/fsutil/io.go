@@ -14,8 +14,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
+
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // maxInputFileBytes is the hardcoded safety limit for input files (256 MB).
@@ -32,10 +33,8 @@ var (
 	// ErrFileExists indicates overwrite-protected output already exists.
 	ErrFileExists = errors.New("output file already exists")
 	// ErrInvalidBucket indicates the supplied bucket name is invalid.
-	ErrInvalidBucket = errors.New("invalid bucket name")
-
-	// RFC 1123-style bucket regex used by common object stores.
-	bucketNameRe = regexp.MustCompile(`^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$`)
+	// Canonical definition lives in kernel; re-exported here for backward compatibility.
+	ErrInvalidBucket = kernel.ErrInvalidBucket
 )
 
 // --- READ SAFETY ---
@@ -274,9 +273,7 @@ func verifyHandle(f *os.File, path string) error {
 // --- VALIDATION ---
 
 // ValidateBucket checks that a bucket name is safe for use in file paths and URLs.
+// It delegates to kernel.BucketRef.Validate for the canonical validation logic.
 func ValidateBucket(name string) error {
-	if strings.Contains(name, "..") || !bucketNameRe.MatchString(name) {
-		return fmt.Errorf("%w: %q", ErrInvalidBucket, name)
-	}
-	return nil
+	return kernel.NewBucketRef(name).Validate()
 }

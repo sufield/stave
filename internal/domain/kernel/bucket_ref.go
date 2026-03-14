@@ -1,6 +1,17 @@
 package kernel
 
-import "strings"
+import (
+	"errors"
+	"fmt"
+	"regexp"
+	"strings"
+)
+
+// ErrInvalidBucket indicates the bucket name is not a valid S3 bucket name.
+var ErrInvalidBucket = errors.New("invalid bucket name")
+
+// bucketNameRe is an RFC 1123-style regex used by common object stores.
+var bucketNameRe = regexp.MustCompile(`^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$`)
 
 // BucketRef is a normalized S3 bucket identity value object.
 // It consolidates bucket name extraction from ARN, model ID, and S3 URI formats.
@@ -37,3 +48,13 @@ func (r BucketRef) IsEmpty() bool { return r.name == "" }
 
 // Equals reports whether two BucketRefs refer to the same bucket.
 func (r BucketRef) Equals(other BucketRef) bool { return r.name == other.name }
+
+// Validate checks that the normalized bucket name is safe for use in
+// file paths and URLs. It applies the same RFC 1123-style rules that S3
+// enforces: 3-63 lowercase alphanumeric/hyphen/dot characters, no "..".
+func (r BucketRef) Validate() error {
+	if strings.Contains(r.name, "..") || !bucketNameRe.MatchString(r.name) {
+		return fmt.Errorf("%w: %q", ErrInvalidBucket, r.name)
+	}
+	return nil
+}
