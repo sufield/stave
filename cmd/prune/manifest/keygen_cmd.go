@@ -1,6 +1,11 @@
 package manifest
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
+)
 
 func newKeygenCmd() *cobra.Command {
 	var privateKeyOut, publicKeyOut string
@@ -10,8 +15,17 @@ func newKeygenCmd() *cobra.Command {
 		Short: "Generate an Ed25519 keypair for manifest signing",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runSnapshotManifestKeygen(cmd, privateKeyOut, publicKeyOut)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := &KeygenRunner{}
+			return runner.Run(cmd.Context(), KeygenConfig{
+				PrivateKeyPath: fsutil.CleanUserPath(privateKeyOut),
+				PublicKeyPath:  fsutil.CleanUserPath(publicKeyOut),
+				TextOutput:     gf.TextOutputEnabled(),
+				Stdout:         cmd.OutOrStdout(),
+			})
 		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 
 	cmd.Flags().StringVar(&privateKeyOut, "private-key-out", "manifest.private", "Output private key path")
