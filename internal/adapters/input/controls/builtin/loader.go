@@ -42,7 +42,7 @@ func LoadAll(ctx context.Context) ([]policy.ControlDefinition, error) {
 
 // LoadFiltered loads embedded controls matching at least one selector.
 // If selectors is empty, all controls are returned.
-func LoadFiltered(ctx context.Context, selectors []BuiltinSelector) ([]policy.ControlDefinition, error) {
+func LoadFiltered(ctx context.Context, selectors []Selector) ([]policy.ControlDefinition, error) {
 	return defaultRegistry.Filtered(ctx, selectors)
 }
 
@@ -58,7 +58,7 @@ func (r *EmbeddedRegistry) All(_ context.Context) ([]policy.ControlDefinition, e
 }
 
 // Filtered returns controls matching at least one selector.
-func (r *EmbeddedRegistry) Filtered(ctx context.Context, selectors []BuiltinSelector) ([]policy.ControlDefinition, error) {
+func (r *EmbeddedRegistry) Filtered(ctx context.Context, selectors []Selector) ([]policy.ControlDefinition, error) {
 	all, err := r.All(ctx)
 	if err != nil || len(selectors) == 0 {
 		return all, err
