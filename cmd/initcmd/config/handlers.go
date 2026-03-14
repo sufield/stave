@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -32,17 +31,30 @@ type GetRequest struct {
 
 // SetRequest defines the parameters for updating a project config value.
 type SetRequest struct {
-	Key    string
-	Value  string
-	Format ui.OutputFormat
-	GF     cmdutil.GlobalFlags
+	Key   string
+	Value string
 }
 
 // DeleteRequest defines the parameters for removing a project config value.
 type DeleteRequest struct {
-	Key    string
-	Format ui.OutputFormat
-	GF     cmdutil.GlobalFlags
+	Key string
+}
+
+// MutationOpts carries CLI-environment context needed for config mutations.
+type MutationOpts struct {
+	Format       ui.OutputFormat
+	Force        bool
+	IsTTY        bool
+	AllowSymlink bool
+	Quiet        bool
+}
+
+// ValueResult is the DTO used for JSON output and text rendering.
+type ValueResult struct {
+	Key    string `json:"key"`
+	Value  string `json:"value,omitempty"`
+	Source string `json:"source,omitempty"`
+	Path   string `json:"path,omitempty"`
 }
 
 // --- Logic Implementation ---
@@ -57,24 +69,24 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	if err != nil {
 		return err
 	}
-	out := configKeyValueOutput{Key: kv.Key, Value: kv.Value, Source: kv.Source}
+	res := ValueResult{Key: kv.Key, Value: kv.Value, Source: kv.Source}
 
 	if req.Format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, out)
+		return jsonutil.WriteIndented(r.Stdout, res)
 	}
-	_, err = fmt.Fprintf(r.Stdout, "%s\n", out.Value)
+	_, err = fmt.Fprintf(r.Stdout, "%s\n", res.Value)
 	return err
 }
 
 // Set updates the stave.yaml file in the nearest project root.
-func (r *Runner) Set(_ context.Context, req SetRequest) error {
+func (r *Runner) Set(_ context.Context, req SetRequest, opts MutationOpts) error {
 	key := strings.TrimSpace(req.Key)
 	value := strings.TrimSpace(req.Value)
 	if value == "" {
 		return fmt.Errorf("value cannot be empty")
 	}
 
-	editor := r.newProjectConfigEditor(req.GF)
+	editor := r.newEditor(opts)
 	result, err := editor.Set(key, value)
 	if err != nil {
 		return err
@@ -83,18 +95,16 @@ func (r *Runner) Set(_ context.Context, req SetRequest) error {
 		return nil
 	}
 
-	return r.writeMutationResult(req.Format, configKeyValueOutput{
-		Key:   result.Key,
-		Value: result.Value,
-		Path:  result.Path,
-	}, fmt.Sprintf("Set %s=%s in %s", result.Key, result.Value, result.Path), true, req.GF.Quiet)
+	res := ValueResult{Key: result.Key, Value: result.Value, Path: result.Path}
+	return r.presentMutation(opts, res,
+		fmt.Sprintf("Set %s=%s in %s", res.Key, res.Value, res.Path), true)
 }
 
 // Delete removes a project config key, reverting it to the built-in default.
-func (r *Runner) Delete(_ context.Context, req DeleteRequest) error {
+func (r *Runner) Delete(_ context.Context, req DeleteRequest, opts MutationOpts) error {
 	key := strings.TrimSpace(req.Key)
 
-	editor := r.newProjectConfigEditor(req.GF)
+	editor := r.newEditor(opts)
 	result, err := editor.Delete(key)
 	if err != nil {
 		return err
@@ -103,10 +113,9 @@ func (r *Runner) Delete(_ context.Context, req DeleteRequest) error {
 		return nil
 	}
 
-	return r.writeMutationResult(req.Format, configKeyValueOutput{
-		Key:  result.Key,
-		Path: result.Path,
-	}, fmt.Sprintf("Deleted %s from %s (reverted to default)", result.Key, result.Path), false, req.GF.Quiet)
+	res := ValueResult{Key: result.Key, Path: result.Path}
+	return r.presentMutation(opts, res,
+		fmt.Sprintf("Deleted %s from %s (reverted to default)", res.Key, res.Path), false)
 }
 
 // Show renders the full suite of effective values and their sources.
@@ -120,40 +129,27 @@ func (r *Runner) Show(_ context.Context, format ui.OutputFormat) error {
 
 // --- Internal Helpers ---
 
-func (r *Runner) newProjectConfigEditor(gf cmdutil.GlobalFlags) *cliconfig.Editor[projconfig.ProjectConfig] {
-	store := projectConfigStore{allowSymlink: gf.AllowSymlinkOut, svc: r.Svc}
+func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[projconfig.ProjectConfig] {
+	store := projectConfigStore{allowSymlink: opts.AllowSymlink, svc: r.Svc}
 	return &cliconfig.Editor[projconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
 		Stderr:      r.Stderr,
-		Force:       gf.Force,
-		IsTTY:       r.isTTY,
+		Force:       opts.Force,
+		IsTTY:       func() bool { return opts.IsTTY },
 		Confirm:     ui.Confirm,
 	}
 }
 
-func (r *Runner) isTTY() bool {
-	if r.RT != nil && r.RT.IsTTY != nil {
-		return *r.RT.IsTTY
-	}
-	return ui.IsStderrTTY()
-}
-
-func (r *Runner) writeMutationResult(
-	format ui.OutputFormat,
-	result configKeyValueOutput,
-	textLine string,
-	showHint bool,
-	quiet bool,
-) error {
-	if format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, result)
+func (r *Runner) presentMutation(opts MutationOpts, res ValueResult, text string, showHint bool) error {
+	if opts.Format.IsJSON() {
+		return jsonutil.WriteIndented(r.Stdout, res)
 	}
 
-	if _, err := fmt.Fprintln(r.Stdout, textLine); err != nil {
+	if _, err := fmt.Fprintln(r.Stdout, text); err != nil {
 		return err
 	}
-	if showHint && !quiet {
+	if showHint && !opts.Quiet {
 		ui.WriteHint(r.Stderr, "stave config show")
 	}
 	return nil

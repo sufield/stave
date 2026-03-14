@@ -10,13 +10,6 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-type configKeyValueOutput struct {
-	Key    string `json:"key"`
-	Value  string `json:"value"`
-	Source string `json:"source,omitempty"`
-	Path   string `json:"path,omitempty"`
-}
-
 type configResolvedField = configservice.ResolvedField
 type configShowOutput = configservice.EffectiveConfig
 
