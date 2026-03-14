@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -57,27 +55,26 @@ func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) (
 	}
 	files, err := pruner.ListSnapshotFilesFlatWithLoader(ctx, observationsDir, loader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("listing snapshots in %q: %w", observationsDir, err)
 	}
 	return files, nil
 }
 
 // PlanPrune determines which snapshot files should be pruned based on the given criteria.
 func PlanPrune(files []SnapshotFile, criteria PruningCriteria) []SnapshotFile {
-	items := make([]pruner.Candidate, 0, len(files))
+	items := make([]pruner.Candidate, len(files))
 	for i, sf := range files {
-		items = append(items, pruner.Candidate{
+		items[i] = pruner.Candidate{
 			Index:      i,
 			CapturedAt: sf.CapturedAt,
-		})
+		}
 	}
 	selected := pruner.PlanPrune(items, criteria)
 	out := make([]SnapshotFile, 0, len(selected))
 	for _, item := range selected {
-		if item.Index < 0 || item.Index >= len(files) {
-			continue
+		if item.Index >= 0 && item.Index < len(files) {
+			out = append(out, files[item.Index])
 		}
-		out = append(out, files[item.Index])
 	}
 	return out
 }
@@ -88,23 +85,26 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
-	if !projconfig.Global().HasConfiguredTier(tier) {
+	eval := projconfig.Global()
+	if !eval.HasConfiguredTier(tier) {
 		if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
-			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)", tier, strings.Join(projconfig.SortedTierNames(cfg.RetentionTiers), ", "))
+			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)",
+				tier, strings.Join(projconfig.SortedTierNames(cfg.RetentionTiers), ", "))
 		}
 	}
 	return tier, nil
 }
 
-// ResolveOlderThan resolves the --older-than duration from the flag or tier config.
-func ResolveOlderThan(cmd *cobra.Command, raw, tier string) (time.Duration, error) {
-	olderThanRaw := raw
-	if !cmd.Flags().Changed("older-than") {
-		olderThanRaw = projconfig.Global().SnapshotRetentionForTier(tier)
+// ResolveOlderThan resolves the --older-than duration from the flag value or tier config.
+// If flagChanged is false, the tier-specific retention from project config is used instead.
+func ResolveOlderThan(flagValue string, flagChanged bool, tier string) (time.Duration, error) {
+	raw := flagValue
+	if !flagChanged {
+		raw = projconfig.Global().SnapshotRetentionForTier(tier)
 	}
-	olderThan, err := timeutil.ParseDuration(olderThanRaw)
+	dur, err := timeutil.ParseDuration(raw)
 	if err != nil {
-		return 0, fmt.Errorf("invalid --older-than %q (use format: 14d, 720h, or 1d12h)", olderThanRaw)
+		return 0, fmt.Errorf("invalid --older-than %q (use format: 14d, 720h, or 1d12h)", raw)
 	}
-	return olderThan, nil
+	return dur, nil
 }
