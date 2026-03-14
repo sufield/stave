@@ -118,8 +118,8 @@ See docs/s3-assessment.md for the complete S3 assessment workflow.` + metadata.O
 
 func (ic *ingestCommand) runIngest(cmd *cobra.Command) error {
 	if ic.opts.ListProfiles {
-		printIngestProfiles(cmd.OutOrStdout())
-		return nil
+		presenter := &RegistryPresenter{Stdout: cmd.OutOrStdout()}
+		return presenter.RenderText()
 	}
 	if strings.TrimSpace(ic.opts.Profile) == "" {
 		return fmt.Errorf("--profile is required (supported: aws-s3)")
@@ -128,11 +128,11 @@ func (ic *ingestCommand) runIngest(cmd *cobra.Command) error {
 		return fmt.Errorf("--input is required")
 	}
 
-	profile, err := parseIngestProfile(ic.opts.Profile)
+	profile, err := ParseProfile(ic.opts.Profile)
 	if err != nil {
 		return err
 	}
-	if profile != ingestProfileAWSS3 {
+	if profile != ProfileAWSS3 {
 		return fmt.Errorf("unsupported --profile %q (supported: aws-s3)", ic.opts.Profile)
 	}
 

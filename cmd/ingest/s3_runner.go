@@ -257,8 +257,8 @@ func printIngestCoverage(w io.Writer, resources []asset.Asset) {
 
 func optionalIngestInputCount(profileName string) int {
 	totalOptional := 0
-	for _, p := range ingestProfiles {
-		if p.Name != profileName {
+	for _, p := range AllProfiles() {
+		if string(p.Name) != profileName {
 			continue
 		}
 		for _, inp := range p.Inputs {
