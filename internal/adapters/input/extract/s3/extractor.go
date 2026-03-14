@@ -117,7 +117,7 @@ func (e *Extractor) buildResourceSlices(state *s3terraform.State) []asset.Asset 
 	resources := make([]asset.Asset, 0, len(bucketNames))
 	for _, name := range bucketNames {
 		bucket := fromTerraformBucket(state.Buckets[name])
-		if e.ScopeConfig != nil && !e.ScopeConfig.IsHealthBucket(bucket.Tags, bucket.Name) {
+		if e.ScopeConfig != nil && !e.ScopeConfig.IsHealthBucket(bucket.Tags, bucket.Name.Name()) {
 			continue
 		}
 		resources = append(resources, s3resource.BuildBucketAsset(bucket, state.AccountPAB))
@@ -130,7 +130,7 @@ func fromTerraformBucket(bucket *s3terraform.Bucket) *s3storage.S3Bucket {
 		return nil
 	}
 	converted := &s3storage.S3Bucket{
-		Name:              bucket.Name,
+		Name:              kernel.NewBucketRef(bucket.Name),
 		ARN:               bucket.ARN,
 		Tags:              cloneStringMap(bucket.Tags),
 		PolicyJSON:        bucket.PolicyJSON,

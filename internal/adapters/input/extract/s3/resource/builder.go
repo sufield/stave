@@ -43,7 +43,7 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 	}
 
 	return asset.Asset{
-		ID:         asset.ID(bucket.Name),
+		ID:         asset.ID(bucket.Name.Name()),
 		Type:       s3storage.TypeS3Bucket,
 		Vendor:     s3storage.VendorAWS,
 		Properties: props,
