@@ -133,7 +133,7 @@ func (r *Runner) runPolicyNew(evaluationPath, baselinePath string) (Result, erro
 	if err != nil {
 		return Result{}, fmt.Errorf("loading baseline: %w", err)
 	}
-	bc := shared.CompareBaseline(base.Findings, eval.Findings)
+	bc := shared.CompareAgainstBaseline(r.Sanitizer, base.Findings, eval.Findings)
 	newCount := len(bc.Comparison.New)
 	pass := newCount == 0
 	reason := fmt.Sprintf("new findings=%d", newCount)
