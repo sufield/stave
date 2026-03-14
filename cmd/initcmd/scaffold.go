@@ -2,6 +2,7 @@ package initcmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -9,9 +10,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/gitinfo"
 	projectapp "github.com/sufield/stave/internal/app/project"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -40,15 +38,26 @@ type scaffoldOptions struct {
 	CaptureCadence    string
 }
 
-func runInit(cmd *cobra.Command, req *InitRequest) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
+// --- InitRunner ---
+
+// InitRunner orchestrates project scaffolding.
+type InitRunner struct {
+	Stdout       io.Writer
+	Stderr       io.Writer
+	Force        bool
+	AllowSymlink bool
+	Quiet        bool
+}
+
+// Run executes the project initialization workflow.
+func (r *InitRunner) Run(_ context.Context, req *InitRequest) error {
 	result, err := projectapp.RunInit(projectapp.InitRequest{
 		Dir:               req.Dir,
 		Profile:           req.Profile,
 		DryRun:            req.DryRun,
 		WithGitHubActions: req.WithGitHubActions,
 		CaptureCadence:    req.CaptureCadence,
-		Force:             gf.Force,
+		Force:             r.Force,
 	}, projectapp.InitDeps{
 		ValidateInputs: validateScaffoldInputs,
 		Plan: func(baseDir string, overwrite bool, opts projectapp.ScaffoldOptions) (projectapp.ScaffoldResult, error) {
@@ -63,25 +72,27 @@ func runInit(cmd *cobra.Command, req *InitRequest) error {
 				Profile:           opts.Profile,
 				WithGitHubActions: opts.WithGitHubActions,
 				CaptureCadence:    opts.CaptureCadence,
-			}, gf.AllowSymlinkOut)
+			}, r.AllowSymlink)
 		},
 		AfterScaffold: func(baseDir string) error {
-			return maybePromptAndInitGitRepo(baseDir, os.Stdin, cmd.OutOrStdout())
+			return maybePromptAndInitGitRepo(baseDir, os.Stdin, r.Stdout)
 		},
 	})
 	if err != nil {
 		return err
 	}
 
-	printScaffoldSummary(cmd.OutOrStdout(), scaffoldSummaryRequest{
+	printScaffoldSummary(r.Stdout, scaffoldSummaryRequest{
 		BaseDir: result.BaseDir,
 		Dirs:    result.Dirs,
 		Created: result.Created,
 		Skipped: result.Skipped,
 		DryRun:  result.DryRun,
-	}, gf.Quiet)
+	}, r.Quiet)
 	return nil
 }
+
+// --- Validation ---
 
 func validateScaffoldInputs(rawDir, profile, cadence string) (string, error) {
 	dir := fsutil.CleanUserPath(rawDir)
@@ -96,6 +107,8 @@ func validateScaffoldInputs(rawDir, profile, cadence string) (string, error) {
 	}
 	return dir, nil
 }
+
+// --- Git Prompting ---
 
 func maybePromptAndInitGitRepo(baseDir string, in io.Reader, out io.Writer) error {
 	gitDir := filepath.Join(baseDir, ".git")
@@ -147,6 +160,8 @@ func promptInitializeGit(baseDir string, in io.Reader, out io.Writer) (bool, err
 	answer := strings.ToLower(strings.TrimSpace(line))
 	return answer == "" || answer == "y" || answer == "yes", nil
 }
+
+// --- Scaffold Execution ---
 
 func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allowSymlink bool) (projectapp.ScaffoldResult, error) {
 	dirs, files := scaffoldLayout(opts)
@@ -284,6 +299,8 @@ func addWorkflowScaffoldFiles(files map[string]string, opts scaffoldOptions) {
 	files[".github/workflows/stave.yml"] = normalizeTemplate(scaffoldGitHubActions(opts))
 }
 
+// --- Presentation ---
+
 type scaffoldSummaryRequest struct {
 	BaseDir string
 	Dirs    []string
@@ -335,6 +352,8 @@ func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest, quiet bool) {
 		"Read the generated README.md for the full recommended workflow.",
 	)
 }
+
+// --- Tree Rendering ---
 
 type summaryTreeNode struct {
 	children map[string]*summaryTreeNode

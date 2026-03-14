@@ -38,7 +38,15 @@ Examples:
   stave init --dir ./my-s3 --profile aws-s3 --capture-cadence hourly --force` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runInit(cmd, &req)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := &InitRunner{
+				Stdout:       cmd.OutOrStdout(),
+				Stderr:       cmd.ErrOrStderr(),
+				Force:        gf.Force,
+				AllowSymlink: gf.AllowSymlinkOut,
+				Quiet:        gf.Quiet,
+			}
+			return runner.Run(compose.CommandContext(cmd), &req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
