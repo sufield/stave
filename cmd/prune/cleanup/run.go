@@ -33,11 +33,9 @@ type Config struct {
 
 // executionPlan holds the calculated state of what will be pruned.
 type executionPlan struct {
-	obsDir         string
 	allFiles       []pruner.SnapshotFile
 	candidateFiles []pruner.SnapshotFile
 	output         pruner.PruneOutput
-	dryRun         bool
 }
 
 // Runner orchestrates the identification and removal of stale snapshot files.
@@ -90,11 +88,9 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 	})
 
 	r.plan = &executionPlan{
-		obsDir:         r.cfg.ObservationsDir,
 		allFiles:       allFiles,
 		candidateFiles: candidates,
 		output:         out,
-		dryRun:         r.cfg.DryRun,
 	}
 
 	return appeval.CleanupPlan{
@@ -112,7 +108,7 @@ func (r *Runner) Render(_ appeval.CleanupPlan) error {
 		ActionLabel:    "prune",
 		SummaryPrefix:  "Prune",
 		Action:         pruner.ActionDelete,
-		DryRun:         r.plan.dryRun,
+		DryRun:         r.cfg.DryRun,
 		AllFiles:       r.plan.allFiles,
 		CandidateFiles: r.plan.candidateFiles,
 		OlderThan:      r.cfg.OlderThan,
@@ -126,8 +122,8 @@ func (r *Runner) Render(_ appeval.CleanupPlan) error {
 // Apply executes the file deletions.
 func (r *Runner) Apply(_ appeval.CleanupPlan) error {
 	deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
-		ObservationsDir: r.plan.obsDir,
-		Files:           toDeleteFiles(r.plan.candidateFiles),
+		ObservationsDir: r.cfg.ObservationsDir,
+		Files:           r.toDeleteFiles(),
 	})
 	if err != nil {
 		return fmt.Errorf("deleting snapshots: %w", err)
@@ -141,9 +137,9 @@ func (r *Runner) Apply(_ appeval.CleanupPlan) error {
 
 // --- Helpers ---
 
-func toDeleteFiles(in []pruner.SnapshotFile) []pruner.DeleteFile {
-	out := make([]pruner.DeleteFile, 0, len(in))
-	for _, sf := range in {
+func (r *Runner) toDeleteFiles() []pruner.DeleteFile {
+	out := make([]pruner.DeleteFile, 0, len(r.plan.candidateFiles))
+	for _, sf := range r.plan.candidateFiles {
 		out = append(out, pruner.DeleteFile{Path: sf.Path})
 	}
 	return out
