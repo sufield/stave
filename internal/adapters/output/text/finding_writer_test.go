@@ -104,10 +104,10 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		Skipped: []evaluation.SkippedControl{
 			{ControlID: "CTL.SKIP.001", ControlName: "Skipped", Reason: "missing resource type"},
 		},
-		SkippedAssets: []asset.SkippedAsset{
+		ExemptedAssets: []asset.ExemptedAsset{
 			{ID: "skip-secret", Pattern: "*", Reason: "scoped out"},
 		},
-		SuppressedFindings: []evaluation.SuppressedFinding{
+		ExceptedFindings: []evaluation.ExceptedFinding{
 			{ControlID: "CTL.SUP.001", AssetID: "supp-res", Reason: "approved", Expires: "2027-01-01"},
 		},
 	}
@@ -124,8 +124,8 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		"Violations",
 		"Remediation Groups",
 		"Skipped Controls: 1",
-		"Skipped Assets: 1",
-		"Suppressed Findings: 1",
+		"Exempted Assets: 1",
+		"Excepted Findings: 1",
 		"run `stave diagnose --controls <dir> --observations <dir>`",
 	}
 	for _, want := range contains {

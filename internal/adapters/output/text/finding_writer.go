@@ -43,8 +43,8 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	w.writeViolationsFromEnriched(d, result, enriched.Findings)
 	w.writeRemediationGroups(d, enriched.Findings)
 	w.writeSkippedControls(d, result.Skipped)
-	writeSkippedAssets(d, enriched.SkippedAssets)
-	w.writeSuppressedFindings(d, result.SuppressedFindings)
+	writeExemptedAssets(d, enriched.ExemptedAssets)
+	w.writeExceptedFindings(d, result.ExceptedFindings)
 	d.f("\nNext step: run `stave diagnose --controls <dir> --observations <dir>` for root-cause guidance.\n")
 
 	if d.err != nil {
@@ -97,22 +97,22 @@ func (w *FindingWriter) writeSkippedControls(d *drawer, skipped []evaluation.Ski
 	}
 }
 
-func writeSkippedAssets(d *drawer, skipped []asset.SkippedAsset) {
+func writeExemptedAssets(d *drawer, skipped []asset.ExemptedAsset) {
 	if len(skipped) == 0 {
 		return
 	}
-	d.f("\nSkipped Assets: %d\n", len(skipped))
+	d.f("\nExempted Assets: %d\n", len(skipped))
 	for _, s := range skipped {
 		d.f("  - %s: %s\n", s.ID, s.Reason)
 	}
 }
 
-func (w *FindingWriter) writeSuppressedFindings(d *drawer, suppressed []evaluation.SuppressedFinding) {
-	if len(suppressed) == 0 {
+func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.ExceptedFinding) {
+	if len(excepted) == 0 {
 		return
 	}
-	d.f("\nSuppressed Findings: %d\n", len(suppressed))
-	for _, s := range suppressed {
+	d.f("\nExcepted Findings: %d\n", len(excepted))
+	for _, s := range excepted {
 		d.f("  - %s on %s: %s", s.ControlID, s.AssetID, s.Reason)
 		if s.Expires != "" {
 			d.f(" (expires %s)", s.Expires)

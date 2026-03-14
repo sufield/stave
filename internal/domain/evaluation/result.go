@@ -117,14 +117,14 @@ type SkippedControl struct {
 
 // Result is the root aggregate of an evaluation execution.
 type Result struct {
-	Run                RunInfo              `json:"run"`
-	Summary            Summary              `json:"summary"`
-	Findings           []Finding            `json:"findings"`
-	SuppressedFindings []SuppressedFinding  `json:"suppressed_findings,omitempty"`
-	Skipped            []SkippedControl     `json:"skipped,omitempty"`
-	SkippedAssets      []asset.SkippedAsset `json:"skipped_assets,omitempty"`
-	Metadata           Metadata             `json:"-"`
-	Rows               []Row                `json:"rows,omitempty"` // populated if --explain is used
+	Run              RunInfo               `json:"run"`
+	Summary          Summary               `json:"summary"`
+	Findings         []Finding             `json:"findings"`
+	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`
+	Skipped          []SkippedControl      `json:"skipped,omitempty"`
+	ExemptedAssets   []asset.ExemptedAsset `json:"exempted_assets,omitempty"`
+	Metadata         Metadata              `json:"-"`
+	Rows             []Row                 `json:"rows,omitempty"` // populated if --explain is used
 }
 
 // FindFinding retrieves a finding for a specific control/asset pair, returning nil if not found.

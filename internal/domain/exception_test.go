@@ -23,16 +23,16 @@ func exp(t *testing.T, s string) policy.ExpiryDate {
 	return d
 }
 
-func TestSuppressionConfig_NilConfig(t *testing.T) {
-	var cfg *policy.SuppressionConfig
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), time.Now())
+func TestExceptionConfig_NilConfig(t *testing.T) {
+	var cfg *policy.ExceptionConfig
+	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), time.Now())
 	if rule != nil {
 		t.Error("nil config should not suppress")
 	}
 }
 
-func TestSuppressionConfig_ExactMatch(t *testing.T) {
-	cfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+func TestExceptionConfig_ExactMatch(t *testing.T) {
+	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
 			AssetID:   res("arn:aws:s3:::marketing-assets"),
@@ -43,7 +43,7 @@ func TestSuppressionConfig_ExactMatch(t *testing.T) {
 
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::marketing-assets"), now)
+	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::marketing-assets"), now)
 	if rule == nil {
 		t.Error("exact match should suppress")
 	}
@@ -52,8 +52,8 @@ func TestSuppressionConfig_ExactMatch(t *testing.T) {
 	}
 }
 
-func TestSuppressionConfig_GlobMatch(t *testing.T) {
-	cfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+func TestExceptionConfig_GlobMatch(t *testing.T) {
+	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
 			AssetID:   res("arn:aws:s3:::staging-*"),
@@ -63,19 +63,19 @@ func TestSuppressionConfig_GlobMatch(t *testing.T) {
 
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::staging-logs"), now)
+	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::staging-logs"), now)
 	if rule == nil {
 		t.Error("glob pattern should match staging-logs")
 	}
 
-	rule = cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::production-logs"), now)
+	rule = cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::production-logs"), now)
 	if rule != nil {
 		t.Error("glob pattern should not match production-logs")
 	}
 }
 
-func TestSuppressionConfig_ExpiredRule(t *testing.T) {
-	cfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+func TestExceptionConfig_ExpiredRule(t *testing.T) {
+	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
 			AssetID:   res("arn:aws:s3:::mybucket"),
@@ -86,21 +86,21 @@ func TestSuppressionConfig_ExpiredRule(t *testing.T) {
 
 	// After expiry
 	afterExpiry := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), afterExpiry)
+	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), afterExpiry)
 	if rule != nil {
 		t.Error("expired rule should not suppress")
 	}
 
 	// Before expiry
 	beforeExpiry := time.Date(2025, 12, 15, 0, 0, 0, 0, time.UTC)
-	rule = cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), beforeExpiry)
+	rule = cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), beforeExpiry)
 	if rule == nil {
 		t.Error("non-expired rule should suppress")
 	}
 }
 
-func TestSuppressionConfig_NoMatch(t *testing.T) {
-	cfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+func TestExceptionConfig_NoMatch(t *testing.T) {
+	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
 			AssetID:   res("arn:aws:s3:::marketing-assets"),
@@ -111,36 +111,36 @@ func TestSuppressionConfig_NoMatch(t *testing.T) {
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 
 	// Different control
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.ENCRYPT.001"), res("arn:aws:s3:::marketing-assets"), now)
+	rule := cfg.ShouldExcept(ctl("CTL.S3.ENCRYPT.001"), res("arn:aws:s3:::marketing-assets"), now)
 	if rule != nil {
 		t.Error("different control_id should not match")
 	}
 
 	// Different asset
-	rule = cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::other-bucket"), now)
+	rule = cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::other-bucket"), now)
 	if rule != nil {
 		t.Error("different asset_id should not match")
 	}
 }
 
-func TestSuppressionConfig_NoExpiry(t *testing.T) {
-	cfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+func TestExceptionConfig_NoExpiry(t *testing.T) {
+	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
 			AssetID:   res("arn:aws:s3:::mybucket"),
-			Reason:    "Permanent suppression",
+			Reason:    "Permanent exception",
 		},
 	})
 
 	farFuture := time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), farFuture)
+	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), farFuture)
 	if rule == nil {
 		t.Error("rule without expiry should always match")
 	}
 }
 
-func TestSuppressionConfig_ExpiryOnExactDate(t *testing.T) {
-	cfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+func TestExceptionConfig_ExpiryOnExactDate(t *testing.T) {
+	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
 			AssetID:   res("arn:aws:s3:::mybucket"),
@@ -151,14 +151,14 @@ func TestSuppressionConfig_ExpiryOnExactDate(t *testing.T) {
 
 	// During the expiry date, the rule should still be active (end-of-day inclusive).
 	duringExpiry := time.Date(2026, 6, 1, 12, 0, 0, 0, time.UTC)
-	rule := cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), duringExpiry)
+	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), duringExpiry)
 	if rule == nil {
 		t.Error("rule should still suppress during the expiry date")
 	}
 
 	// At the start of the next day, the rule should be expired.
 	nextDay := time.Date(2026, 6, 2, 0, 0, 0, 0, time.UTC)
-	rule = cfg.ShouldSuppress(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), nextDay)
+	rule = cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), nextDay)
 	if rule != nil {
 		t.Error("rule should be expired at the start of the next day")
 	}
@@ -166,6 +166,6 @@ func TestSuppressionConfig_ExpiryOnExactDate(t *testing.T) {
 
 func TestParseExpiryDate_Invalid(t *testing.T) {
 	if _, err := policy.ParseExpiryDate("2026-13-01"); err == nil {
-		t.Fatal("expected invalid suppression expiry to fail parsing")
+		t.Fatal("expected invalid exception expiry to fail parsing")
 	}
 }

@@ -55,7 +55,7 @@
       }
     }
   ],
-  "skipped_assets": [
+  "exempted_assets": [
     {
       "asset_id": "k8s:ClusterRoleBinding/system-admin-binding",
       "matched_pattern": "k8s:ClusterRoleBinding/system-*",

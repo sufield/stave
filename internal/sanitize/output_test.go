@@ -78,7 +78,7 @@ func makeTestResult() evaluation.Result {
 				},
 			},
 		},
-		SkippedAssets: []asset.SkippedAsset{
+		ExemptedAssets: []asset.ExemptedAsset{
 			{ID: "my-phi-bucket", Pattern: "*", Reason: "test"},
 		},
 	}

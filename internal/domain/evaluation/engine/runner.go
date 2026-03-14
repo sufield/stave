@@ -23,7 +23,7 @@ type Runner struct {
 	Clock           ports.Clock
 	Hasher          ports.Digester
 	Exemptions      *policy.ExemptionConfig
-	Suppressions    *policy.SuppressionConfig
+	Exceptions      *policy.ExceptionConfig
 	ToolVersion     string
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
@@ -108,7 +108,7 @@ func (e *Runner) evaluateControl(
 		// Check if asset is exempted.
 		if rule := e.Exemptions.ShouldExempt(string(assetID)); rule != nil {
 			if acc.TrackExemption(assetID) {
-				acc.AddSkippedAsset(assetID, rule.Pattern, rule.Reason)
+				acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
 			}
 			acc.AddRow(evaluation.Row{
 				ControlID:   ctl.ID,
@@ -140,8 +140,8 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
 
-	// Sort skipped assets for deterministic output.
-	slices.SortFunc(acc.skippedByAst, func(a, b asset.SkippedAsset) int {
+	// Sort exempted assets for deterministic output.
+	slices.SortFunc(acc.exemptedByAst, func(a, b asset.ExemptedAsset) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
 
@@ -153,7 +153,7 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 
-	regularFindings, suppressedFindings := e.partitionFindings(acc.findings, now)
+	regularFindings, exceptedFindings := e.partitionFindings(acc.findings, now)
 
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
@@ -170,23 +170,23 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 			AttackSurface:   len(acc.unsafeAssets),
 			Violations:      len(regularFindings),
 		},
-		Findings:           regularFindings,
-		SuppressedFindings: suppressedFindings,
-		Skipped:            acc.skippedByCtl,
-		SkippedAssets:      acc.skippedByAst,
-		Rows:               acc.rows,
+		Findings:         regularFindings,
+		ExceptedFindings: exceptedFindings,
+		Skipped:          acc.skippedByCtl,
+		ExemptedAssets:   acc.exemptedByAst,
+		Rows:             acc.rows,
 	}
 }
 
-// partitionFindings separates findings into regular and suppressed based on active suppression rules.
+// partitionFindings separates findings into regular and excepted based on active exception rules.
 func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time) (
-	[]evaluation.Finding, []evaluation.SuppressedFinding,
+	[]evaluation.Finding, []evaluation.ExceptedFinding,
 ) {
 	var regular []evaluation.Finding
-	var suppressed []evaluation.SuppressedFinding
+	var excepted []evaluation.ExceptedFinding
 	for _, f := range findings {
-		if rule := e.Suppressions.ShouldSuppress(f.ControlID, f.AssetID, now); rule != nil {
-			suppressed = append(suppressed, evaluation.SuppressedFinding{
+		if rule := e.Exceptions.ShouldExcept(f.ControlID, f.AssetID, now); rule != nil {
+			excepted = append(excepted, evaluation.ExceptedFinding{
 				ControlID: f.ControlID,
 				AssetID:   f.AssetID,
 				Reason:    rule.Reason,
@@ -196,7 +196,7 @@ func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time)
 			regular = append(regular, f)
 		}
 	}
-	return regular, suppressed
+	return regular, excepted
 }
 
 // computePackHash returns a deterministic SHA-256 hex digest of the evaluated

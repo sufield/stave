@@ -53,7 +53,7 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 		t.Fatalf("FilterControls() error = %v", err)
 	}
 
-	suppressionCfg := policy.NewSuppressionConfig([]policy.SuppressionRule{
+	exceptionCfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: kernel.ControlID("CTL.A"),
 			Reason:    "known issue",
@@ -63,7 +63,7 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 	cfg := NewConfig(plan,
 		WithMaxUnsafe(24*time.Hour),
 		WithRuntime(io.Discard, io.Discard, clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)), "test"),
-		WithSuppressionConfig(suppressionCfg),
+		WithExceptionConfig(exceptionCfg),
 		WithPreloadedControls(filtered),
 		WithGitMetadata(&evaluation.GitInfo{
 			RepoRoot: "/repo",
@@ -72,8 +72,8 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 		}),
 	)
 
-	if cfg.SuppressionConfig == nil || len(cfg.SuppressionConfig.Rules) != 1 {
-		t.Fatalf("suppression config = %#v", cfg.SuppressionConfig)
+	if cfg.ExceptionConfig == nil || len(cfg.ExceptionConfig.Rules) != 1 {
+		t.Fatalf("exception config = %#v", cfg.ExceptionConfig)
 	}
 	if len(cfg.PreloadedControls) != 1 || cfg.PreloadedControls[0].ID != "CTL.A" {
 		t.Fatalf("preloaded controls = %#v", cfg.PreloadedControls)

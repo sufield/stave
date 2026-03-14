@@ -21,10 +21,10 @@ func (s assetIDSet) Add(id asset.ID) bool {
 // Accumulator gathers evaluation artifacts across multiple controls and snapshots.
 type Accumulator struct {
 	// Collected artifacts
-	findings     []evaluation.Finding
-	rows         []evaluation.Row
-	skippedByCtl []evaluation.SkippedControl
-	skippedByAst []asset.SkippedAsset
+	findings      []evaluation.Finding
+	rows          []evaluation.Row
+	skippedByCtl  []evaluation.SkippedControl
+	exemptedByAst []asset.ExemptedAsset
 
 	// Bookkeeping sets
 	seenAssets   assetIDSet
@@ -56,8 +56,8 @@ func (a *Accumulator) AddSkippedControl(id kernel.ControlID, name, reason string
 	})
 }
 
-func (a *Accumulator) AddSkippedAsset(id asset.ID, pattern, reason string) {
-	a.skippedByAst = append(a.skippedByAst, asset.SkippedAsset{
+func (a *Accumulator) AddExemptedAsset(id asset.ID, pattern, reason string) {
+	a.exemptedByAst = append(a.exemptedByAst, asset.ExemptedAsset{
 		ID:      id,
 		Pattern: pattern,
 		Reason:  reason,

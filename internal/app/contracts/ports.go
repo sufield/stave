@@ -57,13 +57,13 @@ func LoadSnapshots(ctx context.Context, repo ObservationRepository, dir string) 
 
 // EnrichedResult holds evaluation output together with enriched findings
 // and fully-sanitized metadata. Boundary type between the "enrich" and
-// "marshal" pipeline steps. Marshalers should read SkippedAssets and Run
+// "marshal" pipeline steps. Marshalers should read ExemptedAssets and Run
 // from this struct (not from Result) because they are pre-sanitized.
 type EnrichedResult struct {
-	Result        evaluation.Result
-	Findings      []remediation.Finding
-	SkippedAssets []asset.SkippedAsset
-	Run           evaluation.RunInfo
+	Result         evaluation.Result
+	Findings       []remediation.Finding
+	ExemptedAssets []asset.ExemptedAsset
+	Run            evaluation.RunInfo
 }
 
 // FindingMarshaler transforms enriched findings into format-specific bytes

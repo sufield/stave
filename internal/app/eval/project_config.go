@@ -20,8 +20,8 @@ import (
 // conflicting settings (e.g. explicit --controls with enabled_control_packs).
 var ErrConfigConflict = errors.New("config conflict")
 
-// SuppressionInput holds raw suppression rule data before parsing.
-type SuppressionInput struct {
+// ExceptionInput holds raw exception rule data before parsing.
+type ExceptionInput struct {
 	ControlID kernel.ControlID
 	AssetID   asset.ID
 	Reason    string
@@ -30,7 +30,7 @@ type SuppressionInput struct {
 
 // ProjectConfigInput holds project configuration from stave.yaml.
 type ProjectConfigInput struct {
-	Suppressions        []SuppressionInput
+	Exceptions          []ExceptionInput
 	EnabledControlPacks []string
 	ExcludeControls     []kernel.ControlID
 	ControlsFlagSet     bool
@@ -42,23 +42,23 @@ type ProjectConfigInput struct {
 // All parsing and I/O has already occurred; the result consists
 // only of domain types suitable for option assignment.
 type ResolvedProjectConfig struct {
-	SuppressionConfig *policy.SuppressionConfig
+	ExceptionConfig   *policy.ExceptionConfig
 	PreloadedControls []policy.ControlDefinition
 	ControlSource     evaluation.ControlSourceInfo
 }
 
 // ResolveProjectConfig validates and resolves project configuration.
-// It parses suppression rules, resolves enabled packs, and loads
+// It parses exception rules, resolves enabled packs, and loads
 // built-in controls. All I/O happens here, not in options.
 func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedProjectConfig, error) {
 	var result ResolvedProjectConfig
 
-	if len(in.Suppressions) > 0 {
-		rules, err := resolveSuppressionRules(in.Suppressions)
+	if len(in.Exceptions) > 0 {
+		rules, err := resolveExceptionRules(in.Exceptions)
 		if err != nil {
 			return ResolvedProjectConfig{}, err
 		}
-		result.SuppressionConfig = policy.NewSuppressionConfig(rules)
+		result.ExceptionConfig = policy.NewExceptionConfig(rules)
 	}
 
 	if len(in.EnabledControlPacks) == 0 {
@@ -99,14 +99,14 @@ func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedP
 	return result, nil
 }
 
-func resolveSuppressionRules(in []SuppressionInput) ([]policy.SuppressionRule, error) {
-	rules := make([]policy.SuppressionRule, len(in))
+func resolveExceptionRules(in []ExceptionInput) ([]policy.ExceptionRule, error) {
+	rules := make([]policy.ExceptionRule, len(in))
 	for i, s := range in {
 		expires, err := policy.ParseExpiryDate(s.Expires)
 		if err != nil {
-			return nil, fmt.Errorf("invalid suppression expiry at index %d: %w", i, err)
+			return nil, fmt.Errorf("invalid exception expiry at index %d: %w", i, err)
 		}
-		rules[i] = policy.SuppressionRule{
+		rules[i] = policy.ExceptionRule{
 			ControlID: s.ControlID,
 			AssetID:   s.AssetID,
 			Reason:    s.Reason,

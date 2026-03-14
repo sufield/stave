@@ -76,17 +76,17 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	}
 }
 
-func TestSanitizeSkippedAssets(t *testing.T) {
+func TestSanitizeExemptedAssets(t *testing.T) {
 	r := sanitize.New()
-	resources := []asset.SkippedAsset{
+	resources := []asset.ExemptedAsset{
 		{ID: "my-bucket", Pattern: "*", Reason: "ignored"},
 	}
-	sanitized := output.SanitizeSkippedAssets(r, resources)
+	sanitized := output.SanitizeExemptedAssets(r, resources)
 	if sanitized[0].ID == "my-bucket" {
-		t.Error("SkippedAsset.ID not sanitized")
+		t.Error("ExemptedAsset.ID not sanitized")
 	}
 	if sanitized[0].Reason != "ignored" {
-		t.Error("SkippedAsset.Reason changed")
+		t.Error("ExemptedAsset.Reason changed")
 	}
 }
 

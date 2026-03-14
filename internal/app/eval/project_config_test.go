@@ -19,9 +19,9 @@ func defaultPackRegistry(t *testing.T) *pack.Registry {
 	return reg
 }
 
-func TestResolveProjectConfig_InvalidSuppressionExpiry(t *testing.T) {
+func TestResolveProjectConfig_InvalidExceptionExpiry(t *testing.T) {
 	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
-		Suppressions: []SuppressionInput{
+		Exceptions: []ExceptionInput{
 			{
 				ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
 				AssetID:   asset.ID("res-1"),
@@ -31,7 +31,7 @@ func TestResolveProjectConfig_InvalidSuppressionExpiry(t *testing.T) {
 		},
 	})
 	if err == nil {
-		t.Fatal("expected invalid suppression expiry error")
+		t.Fatal("expected invalid exception expiry error")
 	}
 }
 

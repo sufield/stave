@@ -98,7 +98,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 		WithHasher(in.Runtime.Hasher),
 		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
 		WithExemptionConfig(in.Runtime.ExemptionConfig),
-		WithSuppressionConfig(resolved.SuppressionConfig),
+		WithExceptionConfig(resolved.ExceptionConfig),
 		WithPreloadedControls(preloaded),
 		WithGitMetadata(in.Project.GitMetadata),
 		WithPredicateParser(in.Runtime.PredicateParser),

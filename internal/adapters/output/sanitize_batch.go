@@ -14,9 +14,9 @@ func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []reme
 	return lo.Map(findings, func(f remediation.Finding, _ int) remediation.Finding { return f.Sanitized(s) })
 }
 
-// SanitizeSkippedAssets returns sanitized copies of skipped assets.
-func SanitizeSkippedAssets(s kernel.Sanitizer, assets []asset.SkippedAsset) []asset.SkippedAsset {
-	return lo.Map(assets, func(a asset.SkippedAsset, _ int) asset.SkippedAsset { return a.Sanitized(s) })
+// SanitizeExemptedAssets returns sanitized copies of exempted assets.
+func SanitizeExemptedAssets(s kernel.Sanitizer, assets []asset.ExemptedAsset) []asset.ExemptedAsset {
+	return lo.Map(assets, func(a asset.ExemptedAsset, _ int) asset.ExemptedAsset { return a.Sanitized(s) })
 }
 
 // SanitizeInputHashKeys returns a copy with file keys sanitized to basenames.
