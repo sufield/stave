@@ -53,7 +53,7 @@ func (a *App) startCPUProfile() error {
 	if a.Flags.CPUProfile == "" {
 		return nil
 	}
-	f, err := os.Create(a.Flags.CPUProfile)
+	f, err := os.Create(fsutil.CleanUserPath(a.Flags.CPUProfile))
 	if err != nil {
 		return fmt.Errorf("create CPU profile: %w", err)
 	}
@@ -78,7 +78,7 @@ func (a *App) writeMemProfile(cmd *cobra.Command) {
 	if a.Flags.MemProfile == "" {
 		return
 	}
-	f, err := os.Create(a.Flags.MemProfile)
+	f, err := os.Create(fsutil.CleanUserPath(a.Flags.MemProfile))
 	if err != nil {
 		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: create memory profile: %v\n", err)
 		return
