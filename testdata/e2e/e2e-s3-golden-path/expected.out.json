@@ -271,12 +271,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -366,12 +366,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -440,12 +440,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -514,12 +514,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -585,12 +585,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -674,12 +674,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -747,12 +747,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -820,12 +820,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -893,12 +893,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -966,12 +966,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1039,12 +1039,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1112,12 +1112,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1185,12 +1185,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1258,12 +1258,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1276,7 +1276,7 @@
       "asset_id": "private-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-1c2153eebb183d02",
+        "id": "fix-ddeb6cdb0d875ed0",
         "target": {
           "asset_id": "private-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1298,12 +1298,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1318,7 +1318,7 @@
       "asset_id": "public-phi-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-f531715b8575c700",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1340,12 +1340,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -1372,7 +1372,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
+      "head_commit": "d5a6c5b28121593a1723d747bd86f34188bf1367",
       "dirty": false
     }
   }

@@ -81,12 +81,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -164,12 +164,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -182,7 +182,7 @@
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-0c60fb41710b562b",
+        "id": "fix-81313fa1ba57cf6a",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -204,12 +204,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -231,7 +231,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
+      "head_commit": "d5a6c5b28121593a1723d747bd86f34188bf1367",
       "dirty": false
     }
   }

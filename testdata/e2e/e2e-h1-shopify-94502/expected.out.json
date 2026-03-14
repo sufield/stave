@@ -357,12 +357,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -428,12 +428,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -499,12 +499,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -564,12 +564,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -631,12 +631,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -698,12 +698,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -765,12 +765,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -783,7 +783,7 @@
       "asset_id": "shopify-owned-1",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-e3fbdf0f43ead880",
+        "id": "fix-728fc9e1572de8e9",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -805,12 +805,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -826,7 +826,7 @@
       "asset_id": "shopify-owned-2",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-d18ab8976117f037",
+        "id": "fix-cb40dd526a18d441",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -848,12 +848,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -869,7 +869,7 @@
       "asset_id": "shopify-writeable-1",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-30e5ba728310aec0",
+        "id": "fix-1c9e0099685bba81",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -891,12 +891,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -919,7 +919,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
+      "head_commit": "d5a6c5b28121593a1723d747bd86f34188bf1367",
       "dirty": false
     }
   }
