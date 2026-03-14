@@ -21,13 +21,13 @@ type S3ObjectLock struct {
 }
 
 type S3PrefixExposure struct {
-	HasIdentityEvidence   bool                           `json:"has_identity_evidence"`
-	HasResourceEvidence   bool                           `json:"has_resource_evidence"`
-	IdentityReadScopes    []kernel.ObjectPrefix          `json:"identity_read_scopes"`
+	HasIdentityEvidence   bool                                       `json:"has_identity_evidence"`
+	HasResourceEvidence   bool                                       `json:"has_resource_evidence"`
+	IdentityReadScopes    []kernel.ObjectPrefix                      `json:"identity_read_scopes"`
 	IdentitySourceByScope map[kernel.ObjectPrefix]kernel.StatementID `json:"identity_source_by_scope"`
-	IdentityReadBlocked   bool                           `json:"identity_read_blocked"`
-	ResourceReadAll       bool                           `json:"resource_read_all"`
-	ResourceReadBlocked   bool                           `json:"resource_read_blocked"`
+	IdentityReadBlocked   bool                                       `json:"identity_read_blocked"`
+	ResourceReadAll       bool                                       `json:"resource_read_all"`
+	ResourceReadBlocked   bool                                       `json:"resource_read_blocked"`
 }
 
 // Canonical returns a stable lifecycle model.

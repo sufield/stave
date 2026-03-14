@@ -72,7 +72,7 @@ func makeTestResult() evaluation.Result {
 					},
 					SourceEvidence: &evaluation.SourceEvidence{
 						IdentityStatements: []kernel.StatementID{"AllowPublicRead"},
-						ResourceGrantees:   []kernel.SourceID{"http://acs.amazonaws.com/groups/global/AllUsers"},
+						ResourceGrantees:   []kernel.GranteeID{"http://acs.amazonaws.com/groups/global/AllUsers"},
 					},
 					WhyNow: "Unsafe for 24h, threshold is 0h",
 				},

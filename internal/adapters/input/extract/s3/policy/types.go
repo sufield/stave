@@ -89,10 +89,10 @@ type Analysis struct {
 	AllowsPublicDelete    bool
 	HasWildcardActions    bool
 	PublicStatements      []kernel.StatementID // Statement IDs or indices that grant public access
-	HasNetworkCondition   bool     // any statement with Principal:* also has IP/VPC/Org condition
-	HasIPCondition        bool     // any public-principal statement has IP condition
-	HasVPCCondition       bool     // any public-principal statement has VPC condition
-	EffectiveNetworkScope string   // "public", "vpc-restricted", "ip-restricted", "org-restricted", or ""
+	HasNetworkCondition   bool                 // any statement with Principal:* also has IP/VPC/Org condition
+	HasIPCondition        bool                 // any public-principal statement has IP condition
+	HasVPCCondition       bool                 // any public-principal statement has VPC condition
+	EffectiveNetworkScope string               // "public", "vpc-restricted", "ip-restricted", "org-restricted", or ""
 
 	// Authenticated-only principal access (any AWS account, not anonymous)
 	AllowsAuthenticatedRead  bool

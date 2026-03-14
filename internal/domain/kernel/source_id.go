@@ -1,18 +1,12 @@
 package kernel
 
-// SourceID is a generic, opaque identifier for a configuration source.
-// It could be a Statement ID (SID), a Grantee URI, or an array index.
-type SourceID string
-
-func (s SourceID) String() string { return string(s) }
-
 // StatementID identifies a policy statement (SID or synthetic index label).
-type StatementID SourceID
+type StatementID string
 
 func (s StatementID) String() string { return string(s) }
 
 // GranteeID identifies an ACL grantee (typically a URI).
-type GranteeID SourceID
+type GranteeID string
 
 func (s GranteeID) String() string { return string(s) }
 

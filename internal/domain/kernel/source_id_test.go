@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-func TestSourceIDString(t *testing.T) {
-	if got := SourceID("abc").String(); got != "abc" {
-		t.Errorf("SourceID.String() = %q, want %q", got, "abc")
-	}
-}
-
 func TestStatementIDString(t *testing.T) {
 	if got := StatementID("AllowPublic").String(); got != "AllowPublic" {
 		t.Errorf("StatementID.String() = %q, want %q", got, "AllowPublic")
@@ -40,11 +34,11 @@ func TestStringsFromNil(t *testing.T) {
 	}
 }
 
-func TestStringsFromSourceID(t *testing.T) {
-	ids := []SourceID{"x", "y"}
+func TestStringsFromGranteeID(t *testing.T) {
+	ids := []GranteeID{"x", "y"}
 	got := StringsFrom(ids)
 	want := []string{"x", "y"}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("StringsFrom(SourceID) = %v, want %v", got, want)
+		t.Errorf("StringsFrom(GranteeID) = %v, want %v", got, want)
 	}
 }

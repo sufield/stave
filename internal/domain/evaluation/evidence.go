@@ -67,7 +67,7 @@ type SourceEvidence struct {
 	// IdentityStatements lists IDs/indices of identity-bound policies (e.g., IAM SIDs).
 	IdentityStatements []kernel.StatementID `json:"identity_statements,omitempty"`
 	// ResourceGrantees lists specific entities granted access via resource-bound policies (e.g., ACL URIs).
-	ResourceGrantees []kernel.SourceID `json:"resource_grantees,omitempty"`
+	ResourceGrantees []kernel.GranteeID `json:"resource_grantees,omitempty"`
 }
 
 // DriftPattern classifies the temporal behavior of a violation.

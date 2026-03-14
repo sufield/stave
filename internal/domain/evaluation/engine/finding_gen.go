@@ -83,7 +83,7 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 		case evaluation.RootCauseIdentity:
 			evidence.IdentityStatements = getSortedIDs[kernel.StatementID](props, pathPolicyStatements)
 		case evaluation.RootCauseResource:
-			evidence.ResourceGrantees = getSortedIDs[kernel.SourceID](props, pathACLGrantees)
+			evidence.ResourceGrantees = getSortedIDs[kernel.GranteeID](props, pathACLGrantees)
 		}
 	}
 

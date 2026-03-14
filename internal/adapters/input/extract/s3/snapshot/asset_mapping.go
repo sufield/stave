@@ -11,26 +11,26 @@ import (
 )
 
 type snapshotResourceProperties struct {
-	BucketName               string            `json:"bucket_name"`
-	ARN                      string            `json:"arn,omitempty"`
-	Evidence                 []string          `json:"evidence"`
-	MissingInputs            []string          `json:"missing_inputs,omitempty"`
-	PolicyJSON               string            `json:"policy_json,omitempty"`
-	PolicyAllowsPublicRead   *bool             `json:"policy_allows_public_read,omitempty"`
-	PolicyAllowsPublicList   *bool             `json:"policy_allows_public_list,omitempty"`
+	BucketName               string               `json:"bucket_name"`
+	ARN                      string               `json:"arn,omitempty"`
+	Evidence                 []string             `json:"evidence"`
+	MissingInputs            []string             `json:"missing_inputs,omitempty"`
+	PolicyJSON               string               `json:"policy_json,omitempty"`
+	PolicyAllowsPublicRead   *bool                `json:"policy_allows_public_read,omitempty"`
+	PolicyAllowsPublicList   *bool                `json:"policy_allows_public_list,omitempty"`
 	PolicyPublicStatements   []kernel.StatementID `json:"policy_public_statements,omitempty"`
-	PolicyStatus             string            `json:"policy_status,omitempty"`
-	ACLGrants                []s3acl.Grant     `json:"acl_grants,omitempty"`
-	ACLAllowsPublicRead      *bool             `json:"acl_allows_public_read,omitempty"`
-	ACLPublicGrantees        []kernel.GranteeID `json:"acl_public_grantees,omitempty"`
-	ACLStatus                string            `json:"acl_status,omitempty"`
-	PublicAccessBlock        *snapshotPABBlock `json:"public_access_block,omitempty"`
-	PublicAccessFullyBlocked *bool             `json:"public_access_fully_blocked,omitempty"`
-	PublicAccessBlockStatus  string            `json:"public_access_block_status,omitempty"`
-	Public                   bool              `json:"public"`
-	SafetyProvable           bool              `json:"safety_provable"`
-	Tags                     map[string]string `json:"tags,omitempty"`
-	SourceEvidence           map[string]any    `json:"source_evidence,omitempty"`
+	PolicyStatus             string               `json:"policy_status,omitempty"`
+	ACLGrants                []s3acl.Grant        `json:"acl_grants,omitempty"`
+	ACLAllowsPublicRead      *bool                `json:"acl_allows_public_read,omitempty"`
+	ACLPublicGrantees        []kernel.GranteeID   `json:"acl_public_grantees,omitempty"`
+	ACLStatus                string               `json:"acl_status,omitempty"`
+	PublicAccessBlock        *snapshotPABBlock    `json:"public_access_block,omitempty"`
+	PublicAccessFullyBlocked *bool                `json:"public_access_fully_blocked,omitempty"`
+	PublicAccessBlockStatus  string               `json:"public_access_block_status,omitempty"`
+	Public                   bool                 `json:"public"`
+	SafetyProvable           bool                 `json:"safety_provable"`
+	Tags                     map[string]string    `json:"tags,omitempty"`
+	SourceEvidence           map[string]any       `json:"source_evidence,omitempty"`
 }
 
 type snapshotPABBlock struct {

@@ -37,10 +37,10 @@ func (s Snapshot) HasTimestamp() bool {
 // GeneratedBy describes the tool that generated this observation.
 type GeneratedBy struct {
 	SourceType      kernel.ObservationSourceType `json:"source_type"`
-	Tool            string `json:"tool,omitempty"`
-	ToolVersion     string `json:"tool_version,omitempty"`
-	Provider        string `json:"provider,omitempty"`
-	ProviderVersion string `json:"provider_version,omitempty"`
+	Tool            string                       `json:"tool,omitempty"`
+	ToolVersion     string                       `json:"tool_version,omitempty"`
+	Provider        string                       `json:"provider,omitempty"`
+	ProviderVersion string                       `json:"provider_version,omitempty"`
 }
 
 // LatestSnapshot returns the snapshot with the most recent CapturedAt.
