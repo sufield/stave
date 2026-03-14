@@ -30,7 +30,6 @@ import (
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
 	"github.com/sufield/stave/cmd/prune"
-	"github.com/sufield/stave/cmd/prune/manifest"
 	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -227,7 +226,6 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
 	for _, subCmd := range prune.Commands() {
 		snapshotCmd.AddCommand(subCmd)
 	}
-	snapshotCmd.AddCommand(manifest.NewCmd())
 }
 
 func wireCISubtree(ciCmd *cobra.Command) {
