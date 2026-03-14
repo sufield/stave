@@ -12,11 +12,11 @@ import (
 
 func TestRecommendNextCreateControlWhenMissing(t *testing.T) {
 	root := "/tmp/project"
-	compiled := dirSummary{}
-	raw := dirSummary{}
-	obs := dirSummary{Count: 1, HasLatest: true, Latest: time.Now().Add(-2 * time.Hour)}
+	compiled := Summary{}
+	raw := Summary{}
+	obs := Summary{Count: 1, HasLatest: true, Latest: time.Now().Add(-2 * time.Hour)}
 
-	next := ProjectState{
+	next := State{
 		Root:         root,
 		Controls:     compiled,
 		RawSnapshots: raw,
@@ -31,11 +31,11 @@ func TestRecommendNextCreateControlWhenMissing(t *testing.T) {
 
 func TestRecommendNextValidateEvaluateWhenOutputMissing(t *testing.T) {
 	root := "/tmp/project"
-	compiled := dirSummary{Count: 1, HasLatest: true, Latest: time.Now().Add(-2 * time.Hour)}
-	raw := dirSummary{}
-	obs := dirSummary{Count: 2, HasLatest: true, Latest: time.Now().Add(-time.Hour)}
+	compiled := Summary{Count: 1, HasLatest: true, Latest: time.Now().Add(-2 * time.Hour)}
+	raw := Summary{}
+	obs := Summary{Count: 2, HasLatest: true, Latest: time.Now().Add(-time.Hour)}
 
-	next := ProjectState{
+	next := State{
 		Root:         root,
 		Controls:     compiled,
 		RawSnapshots: raw,
