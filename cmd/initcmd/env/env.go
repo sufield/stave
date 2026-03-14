@@ -1,18 +1,101 @@
 package env
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 	staveenv "github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-// NewEnvCmd constructs the env command tree with closure-scoped flags.
+// --- Domain Types ---
+
+// ListConfig defines the parameters for the environment variable listing.
+type ListConfig struct {
+	Format ui.OutputFormat
+	Stdout io.Writer
+}
+
+// Entry represents the structured output for an environment variable.
+type Entry struct {
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Category     string `json:"category"`
+	Value        string `json:"value"`
+	DefaultValue string `json:"default_value,omitempty"`
+}
+
+// --- Runner ---
+
+// Runner orchestrates the discovery and display of supported environment variables.
+type Runner struct{}
+
+// List retrieves all supported STAVE_* variables and renders them.
+func (r *Runner) List(_ context.Context, cfg ListConfig) error {
+	vars := staveenv.All()
+	entries := make([]Entry, len(vars))
+	for i, v := range vars {
+		val := v.Value()
+		if val == "" {
+			val = v.DefaultValue
+		}
+		if val == "" {
+			val = "(not set)"
+		}
+		entries[i] = Entry{
+			Name:         v.Name,
+			Description:  v.Description,
+			Category:     v.Category,
+			Value:        val,
+			DefaultValue: v.DefaultValue,
+		}
+	}
+
+	if cfg.Format.IsJSON() {
+		return jsonutil.WriteIndented(cfg.Stdout, entries)
+	}
+	return r.renderText(cfg.Stdout, entries)
+}
+
+func (r *Runner) renderText(w io.Writer, entries []Entry) error {
+	fmt.Fprintln(w, "STAVE_* Environment Variables")
+	fmt.Fprintln(w, "-----------------------------")
+
+	categories := []struct {
+		label string
+		key   string
+	}{
+		{"Configuration", "config"},
+		{"Debug", "debug"},
+	}
+
+	for _, cat := range categories {
+		fmt.Fprintf(w, "\n%s:\n", cat.label)
+
+		tw := tabwriter.NewWriter(w, 0, 8, 2, ' ', 0)
+		for _, e := range entries {
+			if e.Category != cat.key {
+				continue
+			}
+			fmt.Fprintf(tw, "  %s\t%s\t%s\n", e.Name, e.Description, e.Value)
+		}
+		if err := tw.Flush(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// --- CLI Bridge ---
+
+// NewEnvCmd constructs the env command tree.
 func NewEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "env",
@@ -27,7 +110,6 @@ Examples:
 	}
 
 	cmd.AddCommand(newEnvListCmd())
-
 	return cmd
 }
 
@@ -45,118 +127,20 @@ Examples:
   stave env list --format json` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runEnvList(cmd, format)
+			fmtValue, err := compose.ResolveFormatValue(cmd, format)
+			if err != nil {
+				return err
+			}
+			runner := &Runner{}
+			return runner.List(cmd.Context(), ListConfig{
+				Format: fmtValue,
+				Stdout: cmd.OutOrStdout(),
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-
 	return cmd
-}
-
-type envListEntry struct {
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Category     string `json:"category"`
-	Value        string `json:"value"`
-	DefaultValue string `json:"default_value,omitempty"`
-}
-
-func runEnvList(cmd *cobra.Command, rawFormat string) error {
-	vars := staveenv.All()
-
-	format, err := compose.ResolveFormatValue(cmd, rawFormat)
-	if err != nil {
-		return err
-	}
-
-	if format.IsJSON() {
-		return writeEnvListJSON(cmd, vars)
-	}
-	return writeEnvListText(cmd, vars)
-}
-
-func writeEnvListJSON(cmd *cobra.Command, vars []staveenv.Entry) error {
-	entries := make([]envListEntry, len(vars))
-	for i, v := range vars {
-		entries[i] = envListEntry{
-			Name:         v.Name,
-			Description:  v.Description,
-			Category:     v.Category,
-			Value:        v.Value(),
-			DefaultValue: v.DefaultValue,
-		}
-	}
-	return jsonutil.WriteIndented(cmd.OutOrStdout(), entries)
-}
-
-func writeEnvListText(cmd *cobra.Command, vars []staveenv.Entry) error {
-	w := cmd.OutOrStdout()
-	if err := writeEnvListHeader(w); err != nil {
-		return err
-	}
-	nameWidth, descWidth := envColumnWidths(vars)
-
-	categories := []struct {
-		label string
-		key   string
-	}{
-		{"Configuration", "config"},
-		{"Debug", "debug"},
-	}
-
-	for _, category := range categories {
-		if err := writeEnvListCategory(w, vars, category.label, category.key, nameWidth, descWidth); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func writeEnvListHeader(w io.Writer) error {
-	if _, err := fmt.Fprintln(w, "STAVE_* Environment Variables"); err != nil {
-		return err
-	}
-	_, err := fmt.Fprintln(w, "-----------------------------")
-	return err
-}
-
-func envColumnWidths(vars []staveenv.Entry) (int, int) {
-	nameWidth := 0
-	descWidth := 0
-	for _, variable := range vars {
-		if len(variable.Name) > nameWidth {
-			nameWidth = len(variable.Name)
-		}
-		if len(variable.Description) > descWidth {
-			descWidth = len(variable.Description)
-		}
-	}
-	return nameWidth, descWidth
-}
-
-func writeEnvListCategory(w io.Writer, vars []staveenv.Entry, label, key string, nameWidth, descWidth int) error {
-	if _, err := fmt.Fprintf(w, "\n%s:\n", label); err != nil {
-		return err
-	}
-	for _, variable := range vars {
-		if variable.Category != key {
-			continue
-		}
-		if err := writeEnvListVariable(w, variable, nameWidth, descWidth); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func writeEnvListVariable(w io.Writer, variable staveenv.Entry, nameWidth, descWidth int) error {
-	value := variable.Value()
-	if value == "" {
-		value = "(not set)"
-	}
-	_, err := fmt.Fprintf(w, "  %-*s  %-*s  %s\n", nameWidth, variable.Name, descWidth, variable.Description, value)
-	return err
 }
