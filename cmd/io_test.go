@@ -141,7 +141,7 @@ func TestExtractS3FlagRegistered(t *testing.T) {
 
 // TestEnforceFlagRegistered verifies --dry-run flag exists on enforce.
 func TestEnforceFlagRegistered(t *testing.T) {
-	f := enforce.NewEnforceCmd().Flags().Lookup("dry-run")
+	f := enforce.NewGenerateCmd().Flags().Lookup("dry-run")
 	if f == nil {
 		t.Error("enforce missing --dry-run flag")
 	}
