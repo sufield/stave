@@ -6,6 +6,14 @@ import (
 	"github.com/samber/lo"
 )
 
+// AssetPredicate is the domain-level evaluation-time filter.
+// It operates on Asset objects after extraction is complete.
+//
+// This is intentionally separate from the adapter-level ScopeConfig
+// (adapters/input/extract/s3/scope.go), which filters during extraction
+// using raw tags and bucket names. The two serve different hexagonal
+// layers and are not a duplication bug.
+
 // AssetPredicate decides whether a single asset is in scope.
 type AssetPredicate interface {
 	IsInScope(a Asset) bool

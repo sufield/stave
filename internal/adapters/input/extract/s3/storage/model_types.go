@@ -107,9 +107,9 @@ type S3AccessModel struct {
 	HasWildcardPolicy  bool     `json:"has_wildcard_policy"`
 
 	// Network scope
-	HasIPCondition        bool   `json:"has_ip_condition"`
-	HasVPCCondition       bool   `json:"has_vpc_condition"`
-	EffectiveNetworkScope string `json:"effective_network_scope"`
+	HasIPCondition        bool                `json:"has_ip_condition"`
+	HasVPCCondition       bool                `json:"has_vpc_condition"`
+	EffectiveNetworkScope kernel.NetworkScope `json:"effective_network_scope"`
 }
 
 // S3StorageModel is the projected storage representation of an S3 bucket.

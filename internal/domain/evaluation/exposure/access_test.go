@@ -37,7 +37,7 @@ func TestResolveBucketAccess_PassthroughFields(t *testing.T) {
 		},
 		NetworkScope: NetworkScopeAccess{
 			HasIPCondition:        true,
-			EffectiveNetworkScope: "ip-restricted",
+			EffectiveNetworkScope: kernel.NetworkScopeIPRestricted,
 		},
 		ACLFullControl: ACLFullControlAccess{
 			FullControlPublic: true,

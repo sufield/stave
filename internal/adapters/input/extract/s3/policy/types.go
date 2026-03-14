@@ -92,7 +92,7 @@ type Analysis struct {
 	HasNetworkCondition   bool                 // any statement with Principal:* also has IP/VPC/Org condition
 	HasIPCondition        bool                 // any public-principal statement has IP condition
 	HasVPCCondition       bool                 // any public-principal statement has VPC condition
-	EffectiveNetworkScope string               // "public", "vpc-restricted", "ip-restricted", "org-restricted", or ""
+	EffectiveNetworkScope kernel.NetworkScope  // public, vpc-restricted, ip-restricted, org-restricted, or unknown
 
 	// Authenticated-only principal access (any AWS account, not anonymous)
 	AllowsAuthenticatedRead  bool

@@ -276,7 +276,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -371,7 +371,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -445,7 +445,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -519,7 +519,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -590,7 +590,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -679,7 +679,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -752,7 +752,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -825,7 +825,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -898,7 +898,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -971,7 +971,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -1044,7 +1044,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -1117,7 +1117,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -1190,7 +1190,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -1263,7 +1263,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -1303,7 +1303,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],
@@ -1345,7 +1345,7 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.restrict_resource_public_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           }
         ],

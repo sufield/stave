@@ -36,8 +36,8 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 	wantActionPaths := []string{
 		"security_posture.block_identity_public_access",
 		"security_posture.block_resource_metadata_access",
+		"security_posture.block_resource_public_access",
 		"security_posture.ignore_resource_metadata_access",
-		"security_posture.restrict_resource_public_access",
 	}
 	gotPaths := make([]string, len(plan.Actions))
 	for i := range plan.Actions {

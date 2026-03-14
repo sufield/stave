@@ -14,7 +14,7 @@ type CrossAccountAccess struct {
 type NetworkScopeAccess struct {
 	HasIPCondition        bool
 	HasVPCCondition       bool
-	EffectiveNetworkScope string
+	EffectiveNetworkScope kernel.NetworkScope
 }
 
 // ACLFullControlAccess captures full-control ACL grants.

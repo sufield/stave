@@ -9,6 +9,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ScopeConfig is an extraction-time adapter concern: it filters S3 buckets
+// during the ingestion phase, before assets reach the domain layer.
+// It operates on raw tags and bucket names — not on domain Asset objects.
+//
+// This is intentionally separate from the domain-level AssetPredicate
+// (asset/scope_filter.go), which filters during evaluation using the
+// Asset abstraction. The two serve different hexagonal layers and are
+// not a duplication bug.
+
 // ScopeOption configures ScopeConfig construction.
 type ScopeOption func(*ScopeConfig)
 
