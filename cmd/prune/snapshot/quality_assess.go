@@ -2,7 +2,7 @@ package snapshot
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -168,9 +168,9 @@ func (r qualityReport) finalize() qualityReport {
 }
 
 func sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
-	sorted := append([]asset.Snapshot(nil), snapshots...)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].CapturedAt.Before(sorted[j].CapturedAt)
+	sorted := slices.Clone(snapshots)
+	slices.SortFunc(sorted, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
 	})
 	return sorted
 }
@@ -203,6 +203,6 @@ func findMissingRequiredAssets(latest asset.Snapshot, requiredAssets []string) [
 		}
 	}
 
-	sort.Strings(missing)
+	slices.Sort(missing)
 	return missing
 }
