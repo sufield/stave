@@ -5,7 +5,6 @@ import (
 	"io"
 	"sort"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -25,12 +24,11 @@ func buildConfigShowOutput() configShowOutput {
 	return projconfig.Global().BuildEffectiveConfig()
 }
 
-func writeConfigShowJSON(cmd *cobra.Command, out configShowOutput) error {
-	return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
+func writeConfigShowJSON(w io.Writer, out configShowOutput) error {
+	return jsonutil.WriteIndented(w, out)
 }
 
-func writeConfigShowText(cmd *cobra.Command, out configShowOutput) error {
-	w := cmd.OutOrStdout()
+func writeConfigShowText(w io.Writer, out configShowOutput) error {
 	if err := writeConfigShowHeader(w, out); err != nil {
 		return err
 	}
