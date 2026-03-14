@@ -58,6 +58,16 @@ func newRunner(rt *ui.Runtime, svc *configservice.Service, cmd *cobra.Command) *
 	}
 }
 
+func mutationOptsFrom(gf cmdutil.GlobalFlags, format ui.OutputFormat) MutationOpts {
+	return MutationOpts{
+		Format:       format,
+		Force:        gf.Force,
+		IsTTY:        ui.IsStderrTTY(),
+		AllowSymlink: gf.AllowSymlinkOut,
+		Quiet:        gf.Quiet,
+	}
+}
+
 func newGetCmd(rt *ui.Runtime, svc *configservice.Service, format *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "get <key>",
@@ -125,11 +135,9 @@ Supported keys:
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := newRunner(rt, svc, cmd)
 			return runner.Set(cmd.Context(), SetRequest{
-				Key:    args[0],
-				Value:  args[1],
-				Format: fmtValue,
-				GF:     gf,
-			})
+				Key:   args[0],
+				Value: args[1],
+			}, mutationOptsFrom(gf, fmtValue))
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -157,10 +165,8 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := newRunner(rt, svc, cmd)
 			return runner.Delete(cmd.Context(), DeleteRequest{
-				Key:    args[0],
-				Format: fmtValue,
-				GF:     gf,
-			})
+				Key: args[0],
+			}, mutationOptsFrom(gf, fmtValue))
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
