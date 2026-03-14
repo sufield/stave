@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"time"
 
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
+// loadSnapshotsIfDirExists retrieves snapshots from a directory only if it exists.
 func loadSnapshotsIfDirExists(
 	ctx context.Context,
 	loader appcontracts.ObservationRepository,
@@ -29,18 +30,19 @@ func loadSnapshotsIfDirExists(
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("stat %s: %w", dir, err)
+		return nil, fmt.Errorf("stat %q: %w", dir, err)
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("%s must be a directory", dir)
+		return nil, fmt.Errorf("%q must be a directory", dir)
 	}
 	result, err := loader.LoadSnapshots(ctx, dir)
 	if err != nil {
-		return nil, fmt.Errorf("load archive observations: %w", err)
+		return nil, fmt.Errorf("loading snapshots from %q: %w", dir, err)
 	}
 	return result.Snapshots, nil
 }
 
+// filterSnapshotsBefore returns snapshots captured on or before cutoff, sorted chronologically.
 func filterSnapshotsBefore(snapshots []asset.Snapshot, cutoff time.Time) []asset.Snapshot {
 	filtered := make([]asset.Snapshot, 0, len(snapshots))
 	for _, snap := range snapshots {
@@ -48,21 +50,22 @@ func filterSnapshotsBefore(snapshots []asset.Snapshot, cutoff time.Time) []asset
 			filtered = append(filtered, snap)
 		}
 	}
-	sort.Slice(filtered, func(i, j int) bool {
-		return filtered[i].CapturedAt.Before(filtered[j].CapturedAt)
+	slices.SortFunc(filtered, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
 	})
 	return filtered
 }
 
+// writeHygieneOutput dispatches the report to the correct presenter based on format.
 func writeHygieneOutput(format ui.OutputFormat, report appcontracts.ReportRequest, jsonOut hygieneapp.Output, w io.Writer) error {
 	if format.IsJSON() {
 		if err := jsonutil.WriteIndented(w, jsonOut); err != nil {
-			return fmt.Errorf("write report: %w", err)
+			return fmt.Errorf("writing hygiene JSON: %w", err)
 		}
 		return nil
 	}
 	if err := outtext.WriteHygieneReport(w, report); err != nil {
-		return fmt.Errorf("write report: %w", err)
+		return fmt.Errorf("rendering hygiene markdown: %w", err)
 	}
 	return nil
 }
