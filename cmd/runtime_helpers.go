@@ -35,7 +35,7 @@ func (a *App) expandAliasIfMatch() {
 		// Malformed alias value: surface the error via stderr and leave
 		// os.Args unchanged so the CLI produces a "command not found" error
 		// rather than silently misexpanding.
-		fmt.Fprintf(os.Stderr, "stave: alias %q: %v\n", os.Args[1], err)
+		fmt.Fprintf(a.Root.ErrOrStderr(), "stave: alias %q: %v\n", os.Args[1], err)
 		return
 	}
 	newArgs := append(tokens, os.Args[2:]...)
