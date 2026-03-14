@@ -2,12 +2,15 @@ package initcmd
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	initalias "github.com/sufield/stave/cmd/initcmd/alias"
+	"github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
@@ -25,6 +28,9 @@ const (
 	projectConfigFile        = projconfig.ProjectConfigFile
 )
 
+// slugRegexp matches one or more non-alphanumeric characters for slug generation.
+var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
+
 // GetRootCmd builds a minimal root *cobra.Command with initcmd subcommands
 // attached. It is used by package-level tests that need to exercise commands
 // via root.Execute() without importing the parent cmd package (which would
@@ -35,15 +41,18 @@ func GetRootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	root.PersistentFlags().String("output", "text", "Output format: json or text")
-	root.PersistentFlags().Bool("quiet", false, "Suppress output")
-	root.PersistentFlags().CountP("verbose", "v", "Increase verbosity")
-	root.PersistentFlags().Bool("force", false, "Allow overwrite operations")
-	root.PersistentFlags().Bool("allow-symlink-output", false, "Allow writing through symlinks")
-	root.PersistentFlags().Bool("sanitize", false, "Sanitize identifiers")
-	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
-	root.PersistentFlags().String("log-file", "", "Log file path")
-	root.PersistentFlags().Bool("require-offline", false, "Require offline execution")
+
+	p := root.PersistentFlags()
+	p.String(cmdutil.FlagOutput, "text", "Output format: json or text")
+	p.Bool(cmdutil.FlagQuiet, false, "Suppress output")
+	p.CountP("verbose", "v", "Increase verbosity")
+	p.Bool(cmdutil.FlagForce, false, "Allow overwrite operations")
+	p.Bool(cmdutil.FlagSymlink, false, "Allow writing through symlinks")
+	p.Bool(cmdutil.FlagSanitize, false, "Sanitize identifiers")
+	p.String(cmdutil.FlagPathMode, "base", "Path rendering mode")
+	p.String(cmdutil.FlagLogFile, "", "Log file path")
+	p.Bool(cmdutil.FlagOffline, false, "Require offline execution")
+
 	root.AddCommand(NewInitCmd())
 	root.AddCommand(NewQuickstartCmd())
 	root.AddCommand(NewDemoCmd())
@@ -51,7 +60,8 @@ func GetRootCmd() *cobra.Command {
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), projconfig.ConfigKeyService))
 	root.AddCommand(contextcmd.NewContextCmd())
 	root.AddCommand(initenv.NewEnvCmd())
-	root.AddCommand(initalias.NewCmd(root))
+	root.AddCommand(alias.NewCmd(root))
+
 	return root
 }
 
@@ -64,7 +74,7 @@ func GetVersion() string { return version.Version }
 
 func normalizeTemplate(s string) string {
 	s = strings.TrimLeft(s, "\n")
-	if !strings.HasSuffix(s, "\n") {
+	if s != "" && !strings.HasSuffix(s, "\n") {
 		s += "\n"
 	}
 	return s
@@ -81,7 +91,7 @@ func readBool(m map[string]any, keys ...string) bool {
 	if len(keys) == 0 {
 		return false
 	}
-	cur := any(m)
+	var cur any = m
 	for _, k := range keys {
 		obj, ok := cur.(map[string]any)
 		if !ok {
@@ -97,12 +107,11 @@ func readBool(m map[string]any, keys ...string) bool {
 }
 
 func controlIDFromName(name string) string {
-	norm := strings.ToUpper(strings.TrimSpace(name))
-	norm = strings.ReplaceAll(norm, "-", "_")
-	norm = strings.ReplaceAll(norm, ".", "_")
-	norm = strings.ReplaceAll(norm, " ", "_")
-	parts := strings.Split(norm, "_")
-	parts = slicesDeleteEmpty(parts)
+	f := func(c rune) bool {
+		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+	}
+	parts := strings.FieldsFunc(strings.ToUpper(strings.TrimSpace(name)), f)
+
 	if len(parts) == 0 {
 		return "CTL.GENERATED.SAMPLE.001"
 	}
@@ -116,25 +125,10 @@ func controlIDFromName(name string) string {
 
 func sanitizeSlug(name string) string {
 	s := strings.ToLower(strings.TrimSpace(name))
-	s = strings.ReplaceAll(s, "_", "-")
-	s = strings.ReplaceAll(s, ".", "-")
-	s = strings.ReplaceAll(s, " ", "-")
-	for strings.Contains(s, "--") {
-		s = strings.ReplaceAll(s, "--", "-")
-	}
+	s = slugRegexp.ReplaceAllString(s, "-")
 	s = strings.Trim(s, "-")
 	if s == "" {
 		return "snapshot"
 	}
 	return s
-}
-
-func slicesDeleteEmpty(in []string) []string {
-	out := make([]string, 0, len(in))
-	for _, v := range in {
-		if strings.TrimSpace(v) != "" {
-			out = append(out, v)
-		}
-	}
-	return out
 }
