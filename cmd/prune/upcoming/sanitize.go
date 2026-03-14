@@ -6,6 +6,9 @@ import (
 )
 
 func sanitizeItems(s *sanitize.Sanitizer, items []Item) []Item {
+	if s == nil || len(items) == 0 {
+		return items
+	}
 	out := make([]Item, len(items))
 	for i, item := range items {
 		item.AssetID = asset.ID(s.ID(string(item.AssetID)))
