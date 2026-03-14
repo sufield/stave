@@ -64,7 +64,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 		t.Fatalf("config show failed: %v", err)
 	}
 
-	var out configShowOutput
+	var out showOutput
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("decode output: %v\noutput=%s", err, buf.String())
 	}
