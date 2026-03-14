@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 func TestCleanUserPath(t *testing.T) {
@@ -337,8 +339,8 @@ func TestValidateBucket_Invalid(t *testing.T) {
 			if err == nil {
 				t.Fatalf("expected error for bucket name %q", tt.bucket)
 			}
-			if !errors.Is(err, ErrInvalidBucket) {
-				t.Errorf("expected ErrInvalidBucket, got: %v", err)
+			if !errors.Is(err, kernel.ErrInvalidBucket) {
+				t.Errorf("expected kernel.ErrInvalidBucket, got: %v", err)
 			}
 		})
 	}

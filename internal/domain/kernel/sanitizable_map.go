@@ -56,7 +56,7 @@ func (m SanitizableMap) Sanitized(key string) string {
 		return ""
 	}
 	if _, isSensitive := m.sensitive[key]; isSensitive {
-		return SanitizedValue
+		return Redacted
 	}
 	return v
 }
@@ -101,7 +101,7 @@ func (m SanitizableMap) MarshalJSON() ([]byte, error) {
 	proxy := make(map[string]string, len(m.entries))
 	for k, v := range m.entries {
 		if _, isSensitive := m.sensitive[k]; isSensitive {
-			proxy[k] = SanitizedValue
+			proxy[k] = Redacted
 		} else {
 			proxy[k] = v
 		}

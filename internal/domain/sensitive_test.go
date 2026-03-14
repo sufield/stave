@@ -11,15 +11,15 @@ import (
 
 func TestSensitive_String(t *testing.T) {
 	s := kernel.Sensitive("my-secret")
-	if got := s.String(); got != kernel.SanitizedValue {
-		t.Errorf("String() = %q, want %q", got, kernel.SanitizedValue)
+	if got := s.String(); got != kernel.Redacted {
+		t.Errorf("String() = %q, want %q", got, kernel.Redacted)
 	}
 }
 
 func TestSensitive_GoString(t *testing.T) {
 	s := kernel.Sensitive("my-secret")
-	if got := s.GoString(); got != kernel.SanitizedValue {
-		t.Errorf("GoString() = %q, want %q", got, kernel.SanitizedValue)
+	if got := s.GoString(); got != kernel.Redacted {
+		t.Errorf("GoString() = %q, want %q", got, kernel.Redacted)
 	}
 }
 
@@ -36,7 +36,7 @@ func TestSensitive_MarshalJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MarshalJSON error: %v", err)
 	}
-	want := `"` + kernel.SanitizedValue + `"`
+	want := `"` + kernel.Redacted + `"`
 	if string(data) != want {
 		t.Errorf("MarshalJSON() = %s, want %s", data, want)
 	}
@@ -48,8 +48,8 @@ func TestSensitive_MarshalYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MarshalYAML error: %v", err)
 	}
-	if val != kernel.SanitizedValue {
-		t.Errorf("MarshalYAML() = %v, want %v", val, kernel.SanitizedValue)
+	if val != kernel.Redacted {
+		t.Errorf("MarshalYAML() = %v, want %v", val, kernel.Redacted)
 	}
 }
 
@@ -60,9 +60,9 @@ func TestSensitive_FmtVerbs(t *testing.T) {
 		format string
 		want   string
 	}{
-		{"%s", kernel.SanitizedValue},
-		{"%v", kernel.SanitizedValue},
-		{"%#v", kernel.SanitizedValue},
+		{"%s", kernel.Redacted},
+		{"%v", kernel.Redacted},
+		{"%#v", kernel.Redacted},
 	}
 
 	for _, tt := range tests {
@@ -93,8 +93,8 @@ func TestSensitive_JSONStructField(t *testing.T) {
 	if raw["name"] != "test" {
 		t.Errorf("name = %q, want %q", raw["name"], "test")
 	}
-	if raw["secret"] != kernel.SanitizedValue {
-		t.Errorf("secret = %q, want %q", raw["secret"], kernel.SanitizedValue)
+	if raw["secret"] != kernel.Redacted {
+		t.Errorf("secret = %q, want %q", raw["secret"], kernel.Redacted)
 	}
 }
 
@@ -129,8 +129,8 @@ func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
 	if evidenceMap["control_id"] != "CTL.EXP.STATE.001" {
 		t.Errorf("control_id = %q, want %q", evidenceMap["control_id"], "CTL.EXP.STATE.001")
 	}
-	if evidenceMap["error"] != kernel.SanitizedValue {
-		t.Errorf("error = %q, want %q (should be sanitized)", evidenceMap["error"], kernel.SanitizedValue)
+	if evidenceMap["error"] != kernel.Redacted {
+		t.Errorf("error = %q, want %q (should be sanitized)", evidenceMap["error"], kernel.Redacted)
 	}
 }
 

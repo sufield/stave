@@ -5,9 +5,6 @@ import "encoding/json"
 // Redacted is the placeholder shown in place of sensitive data in public outputs.
 const Redacted = "[SANITIZED]"
 
-// SanitizedValue is an alias for Redacted, kept for backward compatibility.
-const SanitizedValue = Redacted
-
 // Sensitive wraps a string that must be shielded from logs, JSON, and YAML output.
 // It implements standard formatting and marshaling interfaces to prevent leaks.
 //

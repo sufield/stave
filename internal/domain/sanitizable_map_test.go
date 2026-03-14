@@ -38,8 +38,8 @@ func TestSanitizableMap_SetSensitive(t *testing.T) {
 	}
 
 	// Sanitized sanitizes sensitive keys
-	if got := m.Sanitized("secret"); got != kernel.SanitizedValue {
-		t.Errorf("Sanitized(secret) = %q, want %q", got, kernel.SanitizedValue)
+	if got := m.Sanitized("secret"); got != kernel.Redacted {
+		t.Errorf("Sanitized(secret) = %q, want %q", got, kernel.Redacted)
 	}
 
 	// Non-sensitive keys pass through
@@ -74,8 +74,8 @@ func TestSanitizableMap_MarshalJSON(t *testing.T) {
 	if raw["public"] != "data" {
 		t.Errorf("public = %q, want \"data\"", raw["public"])
 	}
-	if raw["secret"] != kernel.SanitizedValue {
-		t.Errorf("secret = %q, want %q", raw["secret"], kernel.SanitizedValue)
+	if raw["secret"] != kernel.Redacted {
+		t.Errorf("secret = %q, want %q", raw["secret"], kernel.Redacted)
 	}
 }
 
@@ -208,7 +208,7 @@ func TestSanitizableMap_Clone_IsolatedCopy(t *testing.T) {
 	if _, ok := original.Get("new_key"); ok {
 		t.Fatal("original unexpectedly contains new_key after clone mutation")
 	}
-	if got := original.Sanitized("secret"); got != kernel.SanitizedValue {
-		t.Fatalf("original sanitized secret = %q, want %q", got, kernel.SanitizedValue)
+	if got := original.Sanitized("secret"); got != kernel.Redacted {
+		t.Fatalf("original sanitized secret = %q, want %q", got, kernel.Redacted)
 	}
 }
