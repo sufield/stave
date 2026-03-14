@@ -6,13 +6,44 @@ func BuildModel(in BuildModelInput) S3StorageModel {
 	access := in.Access
 
 	model := S3StorageModel{
-		Kind:       "bucket",
-		ID:         bucket.Name.ModelID(),
-		Name:       bucket.Name.Name(),
-		Visibility: access.Visibility,
-		ACL: ACLSummary{
+		Kind: "bucket",
+		ID:   bucket.Name.ModelID(),
+		Name: bucket.Name.Name(),
+		Access: S3AccessModel{
+			Scope:         access.Scope,
+			TrustBoundary: access.TrustBoundary,
+			// Effective permissions
+			PublicRead:   access.Visibility.PublicRead,
+			PublicList:   access.Visibility.PublicList,
+			PublicWrite:  access.Visibility.PublicWrite,
+			PublicDelete: access.Visibility.PublicDelete,
+			PublicAdmin:  access.Visibility.PublicAdmin,
+			// Origin signals
+			ReadViaIdentity:  access.Visibility.ReadViaIdentity,
+			ReadViaResource:  access.Visibility.ReadViaResource,
+			ListViaIdentity:  access.Visibility.ListViaIdentity,
+			WriteViaResource: access.Visibility.WriteViaResource,
+			AdminViaResource: access.Visibility.AdminViaResource,
+			// Authenticated scope
+			AuthenticatedRead:  access.Visibility.AuthenticatedRead,
+			AuthenticatedWrite: access.Visibility.AuthenticatedWrite,
+			AuthenticatedAdmin: access.Visibility.AuthenticatedAdmin,
+			// Latent signals
+			LatentPublicRead: access.Visibility.LatentPublicRead,
+			LatentPublicList: access.Visibility.LatentPublicList,
+			// ACL full-control grants
 			FullControlPublic:        access.ACLFullControl.FullControlPublic,
 			FullControlAuthenticated: access.ACLFullControl.FullControlAuthenticated,
+			// Cross-account
+			ExternalAccounts:   access.CrossAccount.ExternalAccountARNs,
+			ExternalAccountIDs: access.CrossAccount.ExternalAccountIDs,
+			HasExternalAccess:  access.CrossAccount.HasExternalAccess,
+			HasExternalWrite:   access.CrossAccount.HasExternalWrite,
+			HasWildcardPolicy:  access.HasWildcardPolicy,
+			// Network scope
+			HasIPCondition:        access.NetworkScope.HasIPCondition,
+			HasVPCCondition:       access.NetworkScope.HasVPCCondition,
+			EffectiveNetworkScope: access.NetworkScope.EffectiveNetworkScope,
 		},
 		Controls: buildS3Controls(in),
 		PrefixExposure: S3PrefixExposure{
@@ -38,18 +69,6 @@ func BuildModel(in BuildModelInput) S3StorageModel {
 			Enabled:      bucket.Logging != nil,
 			TargetBucket: loggingTargetBucket(bucket.Logging),
 			TargetPrefix: loggingTargetPrefix(bucket.Logging),
-		},
-		Access: CrossAccountSummary{
-			ExternalAccounts:   access.CrossAccount.ExternalAccountARNs,
-			ExternalAccountIDs: access.CrossAccount.ExternalAccountIDs,
-			HasExternalAccess:  access.CrossAccount.HasExternalAccess,
-			HasExternalWrite:   access.CrossAccount.HasExternalWrite,
-			HasWildcardPolicy:  access.HasWildcardPolicy,
-		},
-		Policy: S3Policy{
-			HasIPCondition:        access.NetworkScope.HasIPCondition,
-			HasVPCCondition:       access.NetworkScope.HasVPCCondition,
-			EffectiveNetworkScope: access.NetworkScope.EffectiveNetworkScope,
 		},
 		Website:    websiteFromBucket(bucket),
 		Lifecycle:  bucket.Lifecycle.Canonical(),

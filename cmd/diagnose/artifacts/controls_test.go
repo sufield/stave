@@ -22,7 +22,7 @@ type: unsafe_state
 params: {}
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
 `
@@ -58,7 +58,7 @@ type: unsafe_state
 params: {}
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
 `
@@ -93,7 +93,7 @@ type: unsafe_state
 params: {}
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
 `

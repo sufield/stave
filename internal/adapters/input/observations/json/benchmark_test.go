@@ -58,7 +58,7 @@ func buildBenchmarkSnapshot(assetCount int) []byte {
 			"vendor": "aws",
 			"properties": {
 				"storage": {
-					"visibility": {"public_read": false, "public_write": false},
+					"access": {"public_read": false, "public_write": false},
 					"encryption": {"at_rest_enabled": true, "algorithm": "AES256"},
 					"versioning": {"enabled": true},
 					"logging": {"enabled": true},

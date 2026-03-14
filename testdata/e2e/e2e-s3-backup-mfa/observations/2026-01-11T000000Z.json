@@ -19,12 +19,40 @@
             "backup": "true",
             "Environment": "production"
           },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
-          "versioning": { "enabled": true, "mfa_delete_enabled": false },
-          "logging": { "enabled": true },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false }
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false
+          }
         }
       }
     },
@@ -40,12 +68,40 @@
             "backup": "true",
             "Environment": "production"
           },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
-          "versioning": { "enabled": true, "mfa_delete_enabled": true },
-          "logging": { "enabled": true },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false }
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": true
+          },
+          "logging": {
+            "enabled": true
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false
+          }
         }
       }
     },
@@ -60,12 +116,40 @@
           "tags": {
             "Environment": "production"
           },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
-          "versioning": { "enabled": true, "mfa_delete_enabled": false },
-          "logging": { "enabled": true },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false }
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false
+          }
         }
       }
     }

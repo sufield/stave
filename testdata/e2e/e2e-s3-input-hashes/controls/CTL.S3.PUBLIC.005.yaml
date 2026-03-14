@@ -12,6 +12,6 @@ version: ctrl.v1
 type: unsafe_state
 unsafe_predicate:
   any:
-  - field: properties.storage.visibility.latent_public_read
+  - field: properties.storage.access.latent_public_read
     op: eq
     value: true

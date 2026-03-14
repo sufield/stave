@@ -26,13 +26,13 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "read_via_resource": false
         }
       }
     }
 unsafe_predicate:
   any:
-  - field: properties.storage.visibility.read_via_resource
+  - field: properties.storage.access.read_via_resource
     op: eq
     value: true

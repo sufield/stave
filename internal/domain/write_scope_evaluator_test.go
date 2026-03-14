@@ -224,7 +224,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"storage": map[string]any{
-							"visibility": map[string]any{
+							"access": map[string]any{
 								"public_read": true,
 							},
 						},
@@ -241,7 +241,7 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"storage": map[string]any{
-							"visibility": map[string]any{
+							"access": map[string]any{
 								"public_read": true,
 							},
 						},

@@ -30,7 +30,7 @@ remediation:
         "website": {
           "enabled": true
         },
-        "visibility": {
+        "access": {
           "public_read": false
         }
       }
@@ -40,6 +40,6 @@ unsafe_predicate:
     - field: properties.storage.website.enabled
       op: eq
       value: true
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true

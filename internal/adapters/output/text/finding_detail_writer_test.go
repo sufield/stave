@@ -37,7 +37,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 			UnsafeDurationHours: 12.0,
 			ThresholdHours:      24.0,
 			Misconfigurations: []policy.Misconfiguration{
-				{Property: "properties.storage.visibility.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+				{Property: "properties.storage.access.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 			},
 			RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},
@@ -73,7 +73,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 		"First unsafe at:",
 		"Unsafe duration:    12.0h",
 		"Misconfigurations:",
-		`property "storage.visibility.public_read" has unsafe value: true`,
+		`property "storage.access.public_read" has unsafe value: true`,
 		"Root causes:",
 		"identity",
 		"Remediation Guidance",

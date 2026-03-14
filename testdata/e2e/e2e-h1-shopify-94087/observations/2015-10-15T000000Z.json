@@ -15,8 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "shopify-merchant-assets",
-          "id": "aws:s3:::shopify-merchant-assets",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -26,6 +25,7 @@
             "latent_public_read": false,
             "latent_public_list": false
           },
+          "id": "aws:s3:::shopify-merchant-assets",
           "controls": {
             "public_access_fully_blocked": true,
             "account_public_access_fully_blocked": true,

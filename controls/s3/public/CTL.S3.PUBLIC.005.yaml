@@ -25,7 +25,7 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "latent_public_read": false
         }
       }

@@ -29,7 +29,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Compliance:  map[string]string{"cis_aws_v1.4.0": "2.1.5"},
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.storage.visibility.public_read", Op: "eq", Value: true},
+				{Field: "properties.storage.access.public_read", Op: "eq", Value: true},
 			},
 		},
 		Remediation: &policy.RemediationSpec{
@@ -44,7 +44,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Type: "aws:s3:bucket",
 		Properties: map[string]any{
 			"storage": map[string]any{
-				"visibility": map[string]any{
+				"access": map[string]any{
 					"public_read": true,
 				},
 			},

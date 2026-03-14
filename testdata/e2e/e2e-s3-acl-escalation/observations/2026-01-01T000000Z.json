@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "public-acl-writable-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_write": false,
             "public_admin": true,
@@ -35,7 +35,7 @@
         "storage": {
           "kind": "bucket",
           "name": "auth-acl-writable-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_write": false,
             "public_admin": false,
@@ -55,7 +55,7 @@
         "storage": {
           "kind": "bucket",
           "name": "safe-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_write": false,
             "public_admin": false,

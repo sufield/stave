@@ -15,16 +15,61 @@
         "storage": {
           "kind": "bucket",
           "name": "retention-no-rules",
-          "tags": { "data-retention": "6-year" },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
-          "versioning": { "enabled": false, "mfa_delete_enabled": false },
-          "logging": { "enabled": false, "target_bucket": "", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
-          "lifecycle": { "rules_configured": false, "rule_count": 0, "has_expiration": false, "has_transition": false, "min_expiration_days": 0, "has_noncurrent_version_expiration": false },
-          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+          "tags": {
+            "data-retention": "6-year"
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": false,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": ""
+          },
+          "lifecycle": {
+            "rules_configured": false,
+            "rule_count": 0,
+            "has_expiration": false,
+            "has_transition": false,
+            "min_expiration_days": 0,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
         }
       }
     },
@@ -36,16 +81,61 @@
         "storage": {
           "kind": "bucket",
           "name": "phi-short-expiry",
-          "tags": { "data-classification": "phi" },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "aws:kms", "kms_key_id": "arn:aws:kms:us-east-1:111:key/abc", "in_transit_enforced": true },
-          "versioning": { "enabled": true, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "log-bucket", "target_prefix": "phi-logs/" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
-          "lifecycle": { "rules_configured": true, "rule_count": 1, "has_expiration": true, "has_transition": false, "min_expiration_days": 90, "has_noncurrent_version_expiration": false },
-          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+          "tags": {
+            "data-classification": "phi"
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:111:key/abc",
+            "in_transit_enforced": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "log-bucket",
+            "target_prefix": "phi-logs/"
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": ""
+          },
+          "lifecycle": {
+            "rules_configured": true,
+            "rule_count": 1,
+            "has_expiration": true,
+            "has_transition": false,
+            "min_expiration_days": 90,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
         }
       }
     },
@@ -57,16 +147,61 @@
         "storage": {
           "kind": "bucket",
           "name": "retention-with-rules",
-          "tags": { "data-retention": "6-year" },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
-          "versioning": { "enabled": true, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "log-bucket", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
-          "lifecycle": { "rules_configured": true, "rule_count": 2, "has_expiration": true, "has_transition": true, "min_expiration_days": 2555, "has_noncurrent_version_expiration": false },
-          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+          "tags": {
+            "data-retention": "6-year"
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "log-bucket",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": ""
+          },
+          "lifecycle": {
+            "rules_configured": true,
+            "rule_count": 2,
+            "has_expiration": true,
+            "has_transition": true,
+            "min_expiration_days": 2555,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
         }
       }
     },
@@ -78,16 +213,61 @@
         "storage": {
           "kind": "bucket",
           "name": "phi-long-expiry",
-          "tags": { "data-classification": "phi" },
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "aws:kms", "kms_key_id": "arn:aws:kms:us-east-1:111:key/def", "in_transit_enforced": true },
-          "versioning": { "enabled": true, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "log-bucket", "target_prefix": "phi-logs/" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
-          "lifecycle": { "rules_configured": true, "rule_count": 1, "has_expiration": true, "has_transition": false, "min_expiration_days": 2555, "has_noncurrent_version_expiration": false },
-          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+          "tags": {
+            "data-classification": "phi"
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:111:key/def",
+            "in_transit_enforced": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "log-bucket",
+            "target_prefix": "phi-logs/"
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": ""
+          },
+          "lifecycle": {
+            "rules_configured": true,
+            "rule_count": 1,
+            "has_expiration": true,
+            "has_transition": false,
+            "min_expiration_days": 2555,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
         }
       }
     },
@@ -99,15 +279,58 @@
         "storage": {
           "kind": "bucket",
           "name": "no-tags-bucket",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": true, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": true, "ignore_public_acls": true, "block_public_policy": true, "restrict_public_buckets": true } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
-          "versioning": { "enabled": false, "mfa_delete_enabled": false },
-          "logging": { "enabled": false, "target_bucket": "", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "" },
-          "lifecycle": { "rules_configured": false, "rule_count": 0, "has_expiration": false, "has_transition": false, "min_expiration_days": 0, "has_noncurrent_version_expiration": false },
-          "object_lock": { "enabled": false, "mode": "", "retention_days": 0 }
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": false,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": ""
+          },
+          "lifecycle": {
+            "rules_configured": false,
+            "rule_count": 0,
+            "has_expiration": false,
+            "has_transition": false,
+            "min_expiration_days": 0,
+            "has_noncurrent_version_expiration": false
+          },
+          "object_lock": {
+            "enabled": false,
+            "mode": "",
+            "retention_days": 0
+          }
         }
       }
     }

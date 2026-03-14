@@ -12,6 +12,6 @@ params:
   max_unsafe_duration: 0h
 unsafe_predicate:
   any:
-  - field: properties.storage.visibility.public_read
+  - field: properties.storage.access.public_read
     op: eq
     value: true

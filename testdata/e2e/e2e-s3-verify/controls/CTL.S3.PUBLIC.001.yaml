@@ -13,6 +13,6 @@ params:
   max_unsafe_duration: 0h
 unsafe_predicate:
   any:
-  - field: properties.storage.visibility.read_via_identity
+  - field: properties.storage.access.read_via_identity
     op: eq
     value: true

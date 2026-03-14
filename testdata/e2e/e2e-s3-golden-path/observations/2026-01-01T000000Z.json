@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "public-phi-bucket",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": true,
             "public_write": false,
@@ -48,7 +48,7 @@
         "storage": {
           "kind": "bucket",
           "name": "private-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,

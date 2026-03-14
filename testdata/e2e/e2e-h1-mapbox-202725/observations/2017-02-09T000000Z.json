@@ -15,8 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "mapbox-private-objects",
-          "id": "aws:s3:::mapbox-private-objects",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": false,
             "public_write": false,
@@ -26,6 +25,7 @@
             "latent_public_read": false,
             "latent_public_list": false
           },
+          "id": "aws:s3:::mapbox-private-objects",
           "controls": {
             "public_access_fully_blocked": false,
             "account_public_access_fully_blocked": false,

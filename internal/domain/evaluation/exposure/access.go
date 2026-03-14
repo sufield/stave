@@ -44,6 +44,8 @@ type BucketAccess struct {
 	ACLFullControl    ACLFullControlAccess
 	PrefixExposure    PrefixExposureAccess
 	HasWildcardPolicy bool
+	Scope             kernel.PrincipalScope
+	TrustBoundary     kernel.TrustBoundary
 }
 
 // BucketAccessInput carries the raw signals needed to resolve a BucketAccess.
@@ -59,15 +61,30 @@ type BucketAccessInput struct {
 }
 
 // ResolveBucketAccess computes the full BucketAccess aggregate from raw inputs.
-// It calls BuildVisibilityResult internally and passes through all other fields.
+// It resolves effective visibility once and uses it for both the VisibilityResult
+// projection and the computed Scope/TrustBoundary fields.
 func ResolveBucketAccess(in BucketAccessInput) BucketAccess {
+	effective := ResolveEffectiveVisibility(in.Identity, in.Resource, in.Gov)
 	return BucketAccess{
-		Visibility:        BuildVisibilityResult(in.Identity, in.Resource, in.Gov),
+		Visibility:        buildVisibilityFromEffective(in.Identity, in.Resource, in.Gov, effective),
 		Governance:        in.Gov,
 		CrossAccount:      in.CrossAccount,
 		NetworkScope:      in.NetworkScope,
 		ACLFullControl:    in.ACLFullControl,
 		PrefixExposure:    in.PrefixExposure,
 		HasWildcardPolicy: in.HasWildcardPolicy,
+		Scope:             effective.PrincipalScope,
+		TrustBoundary:     resolveTrustBoundary(effective.PrincipalScope, in.CrossAccount),
+	}
+}
+
+func resolveTrustBoundary(scope kernel.PrincipalScope, ca CrossAccountAccess) kernel.TrustBoundary {
+	switch {
+	case scope == kernel.ScopePublic || scope == kernel.ScopeAuthenticated:
+		return kernel.BoundaryExternal
+	case ca.HasExternalAccess:
+		return kernel.BoundaryCrossAccount
+	default:
+		return kernel.BoundaryInternal
 	}
 }

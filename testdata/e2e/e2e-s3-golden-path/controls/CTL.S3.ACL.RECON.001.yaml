@@ -26,7 +26,7 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "public_admin": false
         }
       }

@@ -13,6 +13,6 @@ type: unsafe_state
 params: {}
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.write_via_resource
+    - field: properties.storage.access.write_via_resource
       op: eq
       value: true

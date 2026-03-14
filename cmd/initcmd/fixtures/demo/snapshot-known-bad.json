@@ -17,7 +17,7 @@
             "storage": {
               "kind": "bucket",
               "name": "demo-public-bucket",
-              "visibility": {
+              "access": {
                 "public_read": true,
                 "public_read_via_acl": true
               },
@@ -51,7 +51,7 @@
             "storage": {
               "kind": "bucket",
               "name": "demo-public-bucket",
-              "visibility": {
+              "access": {
                 "public_read": true,
                 "public_read_via_acl": true
               },

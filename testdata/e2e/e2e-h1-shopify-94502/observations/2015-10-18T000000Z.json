@@ -15,8 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "shopify-owned-1",
-          "id": "aws:s3:::shopify-owned-1",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": true,
             "public_write": false,
@@ -26,6 +25,7 @@
             "latent_public_read": false,
             "latent_public_list": false
           },
+          "id": "aws:s3:::shopify-owned-1",
           "controls": {
             "public_access_fully_blocked": false,
             "account_public_access_fully_blocked": false,
@@ -50,8 +50,7 @@
         "storage": {
           "kind": "bucket",
           "name": "shopify-owned-2",
-          "id": "aws:s3:::shopify-owned-2",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": true,
             "public_write": false,
@@ -61,6 +60,7 @@
             "latent_public_read": false,
             "latent_public_list": false
           },
+          "id": "aws:s3:::shopify-owned-2",
           "controls": {
             "public_access_fully_blocked": false,
             "account_public_access_fully_blocked": false,
@@ -85,8 +85,7 @@
         "storage": {
           "kind": "bucket",
           "name": "shopify-writeable-1",
-          "id": "aws:s3:::shopify-writeable-1",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": true,
             "public_write": true,
@@ -96,6 +95,7 @@
             "latent_public_read": false,
             "latent_public_list": false
           },
+          "id": "aws:s3:::shopify-writeable-1",
           "controls": {
             "public_access_fully_blocked": false,
             "account_public_access_fully_blocked": false,

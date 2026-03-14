@@ -29,7 +29,13 @@ func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOve
 // BuildVisibilityResult constructs the flattened "Fact" structure used for storage/diagnostics.
 func BuildVisibilityResult(identity, resource Visibility, gov GovernanceOverrides) VisibilityResult {
 	effective := ResolveEffectiveVisibility(identity, resource, gov)
+	return buildVisibilityFromEffective(identity, resource, gov, effective)
+}
 
+// buildVisibilityFromEffective constructs a VisibilityResult from pre-computed effective visibility.
+// This allows callers that already have the EffectiveVisibility (e.g. ResolveBucketAccess)
+// to avoid a redundant ResolveEffectiveVisibility call.
+func buildVisibilityFromEffective(identity, resource Visibility, gov GovernanceOverrides, effective EffectiveVisibility) VisibilityResult {
 	res := VisibilityResult{
 		// Governance Status
 		IdentityExposureBlocked: gov.BlockIdentityBoundPublicAccess,

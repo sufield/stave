@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "zomato-chat-images",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": true,
             "public_write": false,

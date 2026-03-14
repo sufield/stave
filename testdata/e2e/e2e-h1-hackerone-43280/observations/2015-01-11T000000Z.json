@@ -11,10 +11,7 @@
           "kind": "bucket",
           "id": "aws:s3:::hackerone-attachments",
           "name": "hackerone-attachments",
-          "encryption": {
-            "in_transit_enforced": false
-          },
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -23,6 +20,9 @@
             "list_via_identity": false,
             "latent_public_read": false,
             "latent_public_list": false
+          },
+          "encryption": {
+            "in_transit_enforced": false
           },
           "controls": {
             "public_access_fully_blocked": true,

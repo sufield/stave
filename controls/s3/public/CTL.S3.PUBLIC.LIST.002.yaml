@@ -26,7 +26,7 @@ remediation:
     {
       "storage": {
         "kind": "bucket",
-        "visibility": {
+        "access": {
           "public_list": false
         }
       }
@@ -36,7 +36,7 @@ unsafe_predicate:
     - field: properties.storage.kind
       op: eq
       value: bucket
-    - field: properties.storage.visibility.public_list
+    - field: properties.storage.access.public_list
       op: eq
       value: true
     - any:

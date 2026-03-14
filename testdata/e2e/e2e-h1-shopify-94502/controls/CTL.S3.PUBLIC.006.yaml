@@ -18,6 +18,6 @@ unsafe_predicate:
     - field: properties.storage.kind
       op: eq
       value: bucket
-    - field: properties.storage.visibility.latent_public_list
+    - field: properties.storage.access.latent_public_list
       op: eq
       value: true

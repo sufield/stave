@@ -28,13 +28,13 @@ remediation:
   example: |
     {
       "storage": {
-        "policy": {
+        "access": {
           "effective_network_scope": "vpc"
         }
       }
     }
 unsafe_predicate:
   all:
-    - field: properties.storage.policy.effective_network_scope
+    - field: properties.storage.access.effective_network_scope
       op: eq
       value: "public"
