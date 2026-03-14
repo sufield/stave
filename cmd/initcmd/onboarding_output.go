@@ -23,107 +23,105 @@ Example (Terraform):
   }
 `
 
-func writeQuickstartSummary(
-	out io.Writer,
-	san kernel.Sanitizer,
-	sourceLabel string,
-	findings []remediation.Finding,
-	latest asset.Snapshot,
-	reportPath string,
-) error {
-	if len(findings) == 0 {
-		return writeQuickstartNoFindingSummary(out, sourceLabel, reportPath)
-	}
-	top := findings[0]
-	evidence := demoEvidenceLine(latest, string(top.AssetID))
-	return writeQuickstartTopFindingSummary(out, san, sourceLabel, reportPath, top, evidence)
+// SummaryRequest holds the data needed to render a finding summary.
+type SummaryRequest struct {
+	SourceLabel string
+	ReportPath  string
+	Findings    []remediation.Finding
+	Snapshot    asset.Snapshot
 }
 
-func writeQuickstartNoFindingSummary(out io.Writer, sourceLabel, reportPath string) error {
-	if _, err := fmt.Fprintf(out, "Source: %s\n", sourceLabel); err != nil {
+// Presenter handles the formatting of demo and quickstart results.
+type Presenter struct {
+	Out       io.Writer
+	Sanitizer kernel.Sanitizer
+}
+
+// WriteQuickstart renders the summary for the quickstart workflow.
+func (p *Presenter) WriteQuickstart(req SummaryRequest) error {
+	if len(req.Findings) == 0 {
+		return p.render(
+			req.SourceLabel, "none (0 violations)", "-",
+			"no action required", false, req.ReportPath,
+			"Next: add a known-unsafe snapshot to validate detection behavior.",
+		)
+	}
+
+	top := req.Findings[0]
+	evidence := extractEvidence(req.Snapshot, string(top.AssetID))
+
+	return p.render(
+		req.SourceLabel,
+		string(top.ControlID),
+		p.Sanitizer.ID(string(top.AssetID)),
+		fmt.Sprintf("%s (%s)", demoFixHint, evidence),
+		true,
+		req.ReportPath,
+		"Next: run `stave demo --fixture known-good` to compare safe output.",
+	)
+}
+
+// WriteDemo renders the summary for the demo workflow.
+func (p *Presenter) WriteDemo(req SummaryRequest) error {
+	if len(req.Findings) == 0 {
+		var err error
+		writef := newWritef(p.Out, &err)
+		writef("Found 0 violations.\n")
+		writef("Report: %s\n", req.ReportPath)
 		return err
 	}
-	if _, err := fmt.Fprintln(out, "Top finding: none (0 violations)"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintln(out, "Asset: -"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintln(out, "Fix: no action required"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "Report: %s\n", reportPath); err != nil {
-		return err
-	}
-	_, err := fmt.Fprintln(out, "Next: add a known-unsafe snapshot to validate detection behavior.")
+
+	top := req.Findings[0]
+	evidence := extractEvidence(req.Snapshot, string(top.AssetID))
+
+	var err error
+	writef := newWritef(p.Out, &err)
+	writef("Found 1 violation: %s\n", top.ControlID)
+	writef("Asset: %s\n", p.Sanitizer.ID(string(top.AssetID)))
+	writef("Evidence: %s\n", evidence)
+	writef("Fix: %s\n", demoFixHint)
+	writef("%s", demoFixExample)
+	writef("Report: %s\n", req.ReportPath)
 	return err
 }
 
-func writeQuickstartTopFindingSummary(
-	out io.Writer,
-	san kernel.Sanitizer,
-	sourceLabel string,
-	reportPath string,
-	top remediation.Finding,
-	evidence string,
-) error {
-	if _, err := fmt.Fprintf(out, "Source: %s\n", sourceLabel); err != nil {
-		return err
+// render is the unified output engine for quickstart summaries.
+func (p *Presenter) render(source, finding, assetLabel, fix string, showFixExample bool, reportPath, next string) error {
+	var err error
+	writef := newWritef(p.Out, &err)
+
+	if source != "" {
+		writef("Source: %s\n", source)
 	}
-	if _, err := fmt.Fprintf(out, "Top finding: %s\n", top.ControlID); err != nil {
-		return err
+	writef("Top finding: %s\n", finding)
+	if assetLabel != "" {
+		writef("Asset: %s\n", assetLabel)
 	}
-	if _, err := fmt.Fprintf(out, "Asset: %s\n", san.ID(string(top.AssetID))); err != nil {
-		return err
+	if fix != "" {
+		writef("Fix: %s\n", fix)
 	}
-	if _, err := fmt.Fprintf(out, "Fix: %s (%s)\n", "enable account/bucket Block Public Access + deny public principals", evidence); err != nil {
-		return err
+	if showFixExample {
+		writef("%s", demoFixExample)
 	}
-	if _, err := fmt.Fprint(out, demoFixExample); err != nil {
-		return err
+	writef("Report: %s\n", reportPath)
+	if next != "" {
+		writef("%s\n", next)
 	}
-	if _, err := fmt.Fprintf(out, "Report: %s\n", reportPath); err != nil {
-		return err
-	}
-	_, err := fmt.Fprintln(out, "Next: run `stave demo --fixture known-good` to compare safe output.")
 	return err
 }
 
-func printDemoSummary(out io.Writer, san kernel.Sanitizer, snapshot asset.Snapshot, findings []remediation.Finding, reportPath string) error {
-	if len(findings) == 0 {
-		if _, err := fmt.Fprintln(out, "Found 0 violations."); err != nil {
-			return err
+// newWritef returns a closure that writes formatted output, short-circuiting on first error.
+func newWritef(w io.Writer, err *error) func(string, ...any) {
+	return func(format string, args ...any) {
+		if *err != nil {
+			return
 		}
-		if _, err := fmt.Fprintf(out, "Report: %s\n", reportPath); err != nil {
-			return err
-		}
-		return nil
+		_, *err = fmt.Fprintf(w, format, args...)
 	}
-
-	top := findings[0]
-	evidence := demoEvidenceLine(snapshot, string(top.AssetID))
-	if _, err := fmt.Fprintf(out, "Found 1 violation: %s\n", top.ControlID); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "Asset: %s\n", san.ID(string(top.AssetID))); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "Evidence: %s\n", evidence); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "Fix: %s\n", demoFixHint); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprint(out, demoFixExample); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(out, "Report: %s\n", reportPath); err != nil {
-		return err
-	}
-	return nil
 }
 
-func demoEvidenceLine(snapshot asset.Snapshot, assetID string) string {
+// extractEvidence pulls S3 security markers from asset properties.
+func extractEvidence(snapshot asset.Snapshot, assetID string) string {
 	for _, r := range snapshot.Assets {
 		if r.ID.String() != assetID {
 			continue
@@ -136,4 +134,32 @@ func demoEvidenceLine(snapshot asset.Snapshot, assetID string) string {
 		return fmt.Sprintf("BlockPublicAccess=%t, ACL=%s", block, acl)
 	}
 	return "BlockPublicAccess=unknown, ACL=unknown"
+}
+
+// --- Backward-compatible wrappers ---
+
+func writeQuickstartSummary(
+	out io.Writer,
+	san kernel.Sanitizer,
+	sourceLabel string,
+	findings []remediation.Finding,
+	latest asset.Snapshot,
+	reportPath string,
+) error {
+	p := &Presenter{Out: out, Sanitizer: san}
+	return p.WriteQuickstart(SummaryRequest{
+		SourceLabel: sourceLabel,
+		ReportPath:  reportPath,
+		Findings:    findings,
+		Snapshot:    latest,
+	})
+}
+
+func printDemoSummary(out io.Writer, san kernel.Sanitizer, snapshot asset.Snapshot, findings []remediation.Finding, reportPath string) error {
+	p := &Presenter{Out: out, Sanitizer: san}
+	return p.WriteDemo(SummaryRequest{
+		ReportPath: reportPath,
+		Findings:   findings,
+		Snapshot:   snapshot,
+	})
 }

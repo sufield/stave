@@ -447,7 +447,7 @@ func writeDemoReport(req demoReportRequest) error {
 		report.TopFinding = &demoFindingRef{
 			ControlID: top.ControlID,
 			AssetID:   top.AssetID,
-			Evidence:  demoEvidenceLine(req.Snapshot, string(top.AssetID)),
+			Evidence:  extractEvidence(req.Snapshot, string(top.AssetID)),
 			FixHint:   demoFixHint,
 		}
 	}
