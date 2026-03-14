@@ -13,18 +13,24 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 	analysis := bucket.Analyze()
 	effectivePAB := computeEffectivePAB(accountPAB, bucket.PublicAccessBlock)
 
-	visibility := s3exposure.BuildVisibilityResult(
-		ToIdentityVisibility(analysis.Policy),
-		ToResourceVisibility(analysis.ACL),
-		ToGovernanceOverrides(effectivePAB),
-	)
+	gov := ToGovernanceOverrides(effectivePAB)
+	access := s3exposure.ResolveBucketAccess(s3exposure.BucketAccessInput{
+		Identity:          ToIdentityVisibility(analysis.Policy),
+		Resource:          ToResourceVisibility(analysis.ACL),
+		Gov:               gov,
+		CrossAccount:      toCrossAccountAccess(analysis.CrossAccount),
+		NetworkScope:      toNetworkScopeAccess(analysis.Policy),
+		ACLFullControl:    toACLFullControlAccess(analysis.ACL),
+		PrefixExposure:    toPrefixExposureAccess(analysis, gov),
+		HasWildcardPolicy: analysis.Policy.HasWildcardActions,
+	})
 
 	storageModel := s3storage.BuildModel(s3storage.BuildModelInput{
-		Bucket:       bucket,
-		AccountPAB:   accountPAB,
-		EffectivePAB: effectivePAB,
-		Analysis:     analysis,
-		Visibility:   visibility,
+		Bucket:                 bucket,
+		AccountPAB:             accountPAB,
+		EffectivePAB:           effectivePAB,
+		Access:                 access,
+		TransportEnforcesHTTPS: analysis.Transport.EnforcesHTTPS,
 	})
 	awsS3Evidence := s3storage.BuildAWSS3Evidence(bucket, analysis)
 
@@ -116,5 +122,42 @@ func ToGovernanceOverrides(pab s3storage.PublicAccessBlock) s3exposure.Governanc
 		BlockResourceBoundPublicAccess: pab.BlockPublicAcls || pab.IgnorePublicAcls,
 		EnforceStrictPublicInheritance: pab.BlockPublicAcls && pab.IgnorePublicAcls &&
 			pab.BlockPublicPolicy && pab.RestrictPublicBuckets,
+	}
+}
+
+func toCrossAccountAccess(ca s3policy.CrossAccountAnalysis) s3exposure.CrossAccountAccess {
+	return s3exposure.CrossAccountAccess{
+		ExternalAccountARNs: ca.ExternalAccountARNs,
+		ExternalAccountIDs:  ca.ExternalAccountIDs,
+		HasExternalAccess:   ca.HasExternalAccess,
+		HasExternalWrite:    ca.HasExternalWrite,
+	}
+}
+
+func toNetworkScopeAccess(policy s3policy.Analysis) s3exposure.NetworkScopeAccess {
+	return s3exposure.NetworkScopeAccess{
+		HasIPCondition:        policy.HasIPCondition,
+		HasVPCCondition:       policy.HasVPCCondition,
+		EffectiveNetworkScope: policy.EffectiveNetworkScope,
+	}
+}
+
+func toACLFullControlAccess(acl s3acl.Analysis) s3exposure.ACLFullControlAccess {
+	return s3exposure.ACLFullControlAccess{
+		FullControlPublic:        acl.HasFullControlPublic,
+		FullControlAuthenticated: acl.HasFullControlAuthenticated,
+	}
+}
+
+func toPrefixExposureAccess(analysis s3storage.S3AnalysisResult, gov s3exposure.GovernanceOverrides) s3exposure.PrefixExposureAccess {
+	aclPublicReadAll := analysis.HasACL && analysis.ACL.AllowsPublicRead
+	return s3exposure.PrefixExposureAccess{
+		HasIdentityEvidence:   analysis.HasPolicy,
+		HasResourceEvidence:   analysis.HasACL,
+		IdentityReadScopes:    analysis.PrefixScopes.Scopes,
+		IdentitySourceByScope: analysis.PrefixScopes.SourceByScope,
+		IdentityReadBlocked:   gov.BlockIdentityBoundPublicAccess,
+		ResourceReadAll:       aclPublicReadAll,
+		ResourceReadBlocked:   gov.BlockResourceBoundPublicAccess,
 	}
 }
