@@ -1,6 +1,7 @@
 package status
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -8,16 +9,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type options struct {
+// Config defines the parameters for the status check.
+type Config struct {
 	Dir    string
-	Format string
+	Format ui.OutputFormat
+	Stdout io.Writer
+	Stderr io.Writer
+}
+
+// Runner orchestrates the inspection of local project artifacts.
+type Runner struct {
+	Resolver *projctx.Resolver
+}
+
+// NewRunner initializes a status runner with the provided context resolver.
+func NewRunner(r *projctx.Resolver) *Runner {
+	return &Runner{Resolver: r}
 }
 
 // dirSummary and supporting helpers (status command).
@@ -139,12 +152,11 @@ func (s ProjectState) needsReevaluation() bool {
 	return inputLatest.After(s.EvalTime)
 }
 
-func run(cmd *cobra.Command, opts *options) error {
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return err
-	}
-	root, err := resolver.DetectProjectRoot(opts.Dir)
+// Run executes the project inspection and writes the report to the output stream.
+func (r *Runner) Run(_ context.Context, cfg Config) error {
+	dir := fsutil.CleanUserPath(cfg.Dir)
+
+	root, err := r.Resolver.DetectProjectRoot(dir)
 	if err != nil {
 		return ui.WithNextCommand(err, "stave init")
 	}
@@ -153,14 +165,11 @@ func run(cmd *cobra.Command, opts *options) error {
 	if err != nil {
 		return err
 	}
-	format, err := compose.ResolveFormatValue(cmd, opts.Format)
-	if err != nil {
-		return err
+
+	if cfg.Format.IsJSON() {
+		return jsonutil.WriteIndented(cfg.Stdout, out)
 	}
-	if format.IsJSON() {
-		return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
-	}
-	return writeText(cmd.OutOrStdout(), out)
+	return writeText(cfg.Stdout, out)
 }
 
 func buildOutput(root string) (statusOutput, error) {
