@@ -2,6 +2,8 @@ package initcmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -74,7 +76,13 @@ Examples:
   stave quickstart` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runQuickstart(cmd, &req)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := &DemoRunner{
+				Out:          cmd.OutOrStdout(),
+				Sanitizer:    gf.GetSanitizer(),
+				AllowSymlink: gf.AllowSymlinkOut,
+			}
+			return runner.RunQuickstart(compose.CommandContext(cmd), &req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -109,7 +117,13 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runDemo(cmd, &req)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := &DemoRunner{
+				Out:          cmd.OutOrStdout(),
+				Sanitizer:    gf.GetSanitizer(),
+				AllowSymlink: gf.AllowSymlinkOut,
+			}
+			return runner.RunDemo(compose.CommandContext(cmd), &req)
 		},
 	}
 
@@ -145,7 +159,14 @@ func newGenerateControlCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req.Name = args[0]
-			return runGenerateControl(cmd, req)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := &GenerateRunner{
+				Out:          cmd.OutOrStdout(),
+				Force:        gf.Force,
+				Quiet:        gf.Quiet,
+				AllowSymlink: gf.AllowSymlinkOut,
+			}
+			return runner.RunControl(req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -166,7 +187,14 @@ func newGenerateObservationCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req.Name = args[0]
-			return runGenerateObservation(cmd, req)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := &GenerateRunner{
+				Out:          cmd.OutOrStdout(),
+				Force:        gf.Force,
+				Quiet:        gf.Quiet,
+				AllowSymlink: gf.AllowSymlinkOut,
+			}
+			return runner.RunObservation(req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
