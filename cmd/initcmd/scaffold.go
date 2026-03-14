@@ -18,12 +18,13 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-type initFlagsType struct {
-	dir               string
-	profile           string
-	dryRun            bool
-	withGitHubActions bool
-	captureCadence    string
+// InitRequest defines the parameters for project initialization.
+type InitRequest struct {
+	Dir               string
+	Profile           string
+	DryRun            bool
+	WithGitHubActions bool
+	CaptureCadence    string
 }
 
 const (
@@ -39,14 +40,14 @@ type scaffoldOptions struct {
 	CaptureCadence    string
 }
 
-func runInit(cmd *cobra.Command, flags *initFlagsType) error {
+func runInit(cmd *cobra.Command, req *InitRequest) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
 	result, err := projectapp.RunInit(projectapp.InitRequest{
-		Dir:               flags.dir,
-		Profile:           flags.profile,
-		DryRun:            flags.dryRun,
-		WithGitHubActions: flags.withGitHubActions,
-		CaptureCadence:    flags.captureCadence,
+		Dir:               req.Dir,
+		Profile:           req.Profile,
+		DryRun:            req.DryRun,
+		WithGitHubActions: req.WithGitHubActions,
+		CaptureCadence:    req.CaptureCadence,
 		Force:             gf.Force,
 	}, projectapp.InitDeps{
 		ValidateInputs: validateScaffoldInputs,
