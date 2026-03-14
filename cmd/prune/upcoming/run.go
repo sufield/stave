@@ -51,21 +51,21 @@ func (r *UpcomingRunner) Run(ctx context.Context, cfg UpcomingConfig) error {
 	})
 	riskItems = riskItems.Filter(cfg.Filter)
 
+	// Map domain items to display DTOs
 	items := mapRiskItems(riskItems)
 	if cfg.Sanitizer != nil {
 		items = sanitizeItems(cfg.Sanitizer, items)
 	}
 	summary := summarizeUpcoming(items, cfg.DueSoon)
-	report := renderUpcomingMarkdown(items, summary, RenderOptions{
-		Now:              cfg.Now,
-		DueSoonThreshold: cfg.DueSoon,
-	})
-	jsonOut := buildOutput(cfg, summary, items)
 
+	// Assemble final output
+	output := buildOutput(cfg, summary, items)
+
+	// Render in requested format
 	if cfg.Quiet {
 		return nil
 	}
-	return writeOutput(cfg.Format, cfg.Stdout, report, jsonOut)
+	return renderOutput(cfg, output)
 }
 
 // --- Bridge Helpers ---

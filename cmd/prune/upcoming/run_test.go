@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	textout "github.com/sufield/stave/internal/adapters/output/text"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -102,7 +103,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 
 func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	out := renderUpcomingMarkdown(nil, Summary{}, RenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
+	out := textout.RenderUpcomingMarkdown(nil, textout.UpcomingSummary{}, textout.UpcomingRenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
 	if !strings.Contains(out, "No upcoming snapshot action items.") {
 		t.Fatalf("expected no-items message, got: %s", out)
 	}
@@ -120,7 +121,7 @@ func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	if s.Overdue != 1 || s.DueNow != 1 || s.DueSoon != 1 || s.Later != 1 || s.Total != 4 {
 		t.Fatalf("unexpected summary: %+v", s)
 	}
-	md := renderSummaryMarkdown(s, 6*time.Hour)
+	md := textout.RenderUpcomingSummaryMarkdown(toAdapterSummary(s), 6*time.Hour)
 	if !strings.Contains(md, "Due soon (<= 6h): **1**") {
 		t.Fatalf("expected due-soon line in summary markdown, got: %s", md)
 	}

@@ -3,11 +3,9 @@ package upcoming
 import (
 	"fmt"
 	"io"
-	"time"
 
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	textout "github.com/sufield/stave/internal/adapters/output/text"
-	"github.com/sufield/stave/internal/cli/ui"
 )
 
 func buildOutput(cfg UpcomingConfig, summary Summary, items []Item) Output {
@@ -22,25 +20,25 @@ func buildOutput(cfg UpcomingConfig, summary Summary, items []Item) Output {
 	}
 }
 
-func writeOutput(format ui.OutputFormat, w io.Writer, report string, jsonOut Output) error {
-	if format.IsJSON() {
-		return jsonout.WriteUpcomingJSON(w, jsonOut)
+// renderOutput dispatches the Output to the correct format adapter.
+// Markdown is only generated when text format is requested.
+func renderOutput(cfg UpcomingConfig, out Output) error {
+	if cfg.Format.IsJSON() {
+		return jsonout.WriteUpcomingJSON(cfg.Stdout, out)
 	}
-	if _, err := io.WriteString(w, report); err != nil {
-		return fmt.Errorf("write report: %w", err)
+
+	report := textout.RenderUpcomingMarkdown(
+		toAdapterItems(out.Items),
+		toAdapterSummary(out.Summary),
+		textout.UpcomingRenderOptions{
+			Now:              cfg.Now,
+			DueSoonThreshold: cfg.DueSoon,
+		},
+	)
+	if _, err := io.WriteString(cfg.Stdout, report); err != nil {
+		return fmt.Errorf("writing report: %w", err)
 	}
 	return nil
-}
-
-func renderSummaryMarkdown(summary Summary, dueSoonThreshold time.Duration) string {
-	return textout.RenderUpcomingSummaryMarkdown(toAdapterSummary(summary), dueSoonThreshold)
-}
-
-func renderUpcomingMarkdown(items []Item, summary Summary, opts RenderOptions) string {
-	return textout.RenderUpcomingMarkdown(toAdapterItems(items), toAdapterSummary(summary), textout.UpcomingRenderOptions{
-		Now:              opts.Now,
-		DueSoonThreshold: opts.DueSoonThreshold,
-	})
 }
 
 func toAdapterItems(items []Item) []textout.UpcomingItem {
