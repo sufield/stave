@@ -43,11 +43,11 @@ func TestCIDiff_NewAndResolved(t *testing.T) {
 	})
 
 	// Load and compare using the same functions as runCIDiff
-	baselineEval, err := shared.LoadEvaluationEnvelope(baselinePath)
+	baselineEval, err := shared.NewLoader().Evaluation(baselinePath)
 	if err != nil {
 		t.Fatalf("load baseline: %v", err)
 	}
-	currentEval, err := shared.LoadEvaluationEnvelope(currentPath)
+	currentEval, err := shared.NewLoader().Evaluation(currentPath)
 	if err != nil {
 		t.Fatalf("load current: %v", err)
 	}
@@ -77,11 +77,11 @@ func TestCIDiff_EmptyFindings(t *testing.T) {
 	baselinePath := writeEvalJSON(t, dir, "baseline.json", nil)
 	currentPath := writeEvalJSON(t, dir, "current.json", nil)
 
-	baselineEval, err := shared.LoadEvaluationEnvelope(baselinePath)
+	baselineEval, err := shared.NewLoader().Evaluation(baselinePath)
 	if err != nil {
 		t.Fatalf("load baseline: %v", err)
 	}
-	currentEval, err := shared.LoadEvaluationEnvelope(currentPath)
+	currentEval, err := shared.NewLoader().Evaluation(currentPath)
 	if err != nil {
 		t.Fatalf("load current: %v", err)
 	}
@@ -106,11 +106,11 @@ func TestCIDiff_AllNew(t *testing.T) {
 		{Finding: evaluation.Finding{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}},
 	})
 
-	baselineEval, err := shared.LoadEvaluationEnvelope(baselinePath)
+	baselineEval, err := shared.NewLoader().Evaluation(baselinePath)
 	if err != nil {
 		t.Fatalf("load baseline: %v", err)
 	}
-	currentEval, err := shared.LoadEvaluationEnvelope(currentPath)
+	currentEval, err := shared.NewLoader().Evaluation(currentPath)
 	if err != nil {
 		t.Fatalf("load current: %v", err)
 	}
@@ -135,11 +135,11 @@ func TestCIDiff_AllResolved(t *testing.T) {
 	})
 	currentPath := writeEvalJSON(t, dir, "current.json", nil)
 
-	baselineEval, err := shared.LoadEvaluationEnvelope(baselinePath)
+	baselineEval, err := shared.NewLoader().Evaluation(baselinePath)
 	if err != nil {
 		t.Fatalf("load baseline: %v", err)
 	}
-	currentEval, err := shared.LoadEvaluationEnvelope(currentPath)
+	currentEval, err := shared.NewLoader().Evaluation(currentPath)
 	if err != nil {
 		t.Fatalf("load current: %v", err)
 	}

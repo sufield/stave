@@ -53,7 +53,7 @@ func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	outPath := fsutil.CleanUserPath(cfg.OutPath)
 
-	eval, err := shared.LoadEvaluationEnvelope(inPath)
+	eval, err := shared.NewLoader().Evaluation(inPath)
 	if err != nil {
 		return err
 	}
@@ -86,14 +86,14 @@ func (r *Runner) Check(_ context.Context, cfg CheckConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
-	eval, err := shared.LoadEvaluationEnvelope(inPath)
+	eval, err := shared.NewLoader().Evaluation(inPath)
 	if err != nil {
 		return err
 	}
 	current := remediation.BaselineEntriesFromFindings(eval.Findings)
 	current = output.SanitizeBaselineEntries(r.Sanitizer, current)
 
-	base, err := shared.LoadBaselineFile(baselinePath, kernel.KindBaseline)
+	base, err := shared.NewLoader().Baseline(baselinePath, kernel.KindBaseline)
 	if err != nil {
 		return err
 	}

@@ -222,11 +222,15 @@ func scaffoldDirectories(opts scaffoldOptions) []string {
 }
 
 func scaffoldBaseFiles(opts scaffoldOptions) map[string]string {
+	sc := NewScaffolder(opts)
+	readme, _ := sc.Readme()
+	userCfg, _ := sc.UserConfig()
+	lockfile, _ := sc.Lockfile()
 	return map[string]string{
-		".gitignore": scaffoldGitignore(),
-		"README.md":  scaffoldReadme(opts),
-		"cli.yaml":   scaffoldUserConfigExample(),
-		"stave.lock": scaffoldLockfile(),
+		".gitignore": gitignoreContent,
+		"README.md":  readme,
+		"cli.yaml":   userCfg,
+		"stave.lock": lockfile,
 		projectConfigFile: normalizeTemplate(
 			"# Stave project manifest (user-editable configuration).\n" +
 				"# This file controls default evaluation and snapshot workflow behavior for this project.\n" +

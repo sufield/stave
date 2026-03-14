@@ -116,8 +116,13 @@ func runQuickstart(cmd *cobra.Command, req *QuickstartRequest) error {
 	}); err != nil {
 		return onboardingCommandError(err, "stave quickstart --report ./stave-report.json")
 	}
-	san := gf.GetSanitizer()
-	return writeQuickstartSummary(out, san, sourceLabel, findings, latest, reportPath)
+	p := &Presenter{Out: out, Sanitizer: gf.GetSanitizer()}
+	return p.WriteQuickstart(SummaryRequest{
+		SourceLabel: sourceLabel,
+		ReportPath:  reportPath,
+		Findings:    findings,
+		Snapshot:    latest,
+	})
 }
 
 func loadDetectedQuickstartSnapshots(ctx context.Context, cwd string, detected []detectedSnapshot) ([]asset.Snapshot, string) {
@@ -367,7 +372,12 @@ func runDemo(cmd *cobra.Command, req *DemoRequest) error {
 		return onboardingCommandError(err, "stave demo --report ./stave-report.json")
 	}
 
-	return printDemoSummary(cmd.OutOrStdout(), gf.GetSanitizer(), lastSnap, findings, reportPath)
+	p := &Presenter{Out: cmd.OutOrStdout(), Sanitizer: gf.GetSanitizer()}
+	return p.WriteDemo(SummaryRequest{
+		ReportPath: reportPath,
+		Findings:   findings,
+		Snapshot:   lastSnap,
+	})
 }
 
 func loadDemoSnapshots(name string) ([]asset.Snapshot, error) {
