@@ -59,7 +59,7 @@ func (r *GenerateRunner) Run(ctx context.Context, cfg GenerateConfig) error {
 	if err != nil {
 		return fmt.Errorf("marshal manifest: %w", err)
 	}
-	if err := writeFileAtomic(out, data, 0o600); err != nil {
+	if err := fsutil.WriteFileAtomic(out, data, 0o600); err != nil {
 		return fmt.Errorf("write manifest %q: %w", out, err)
 	}
 

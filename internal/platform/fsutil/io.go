@@ -274,3 +274,48 @@ func verifyHandle(f *os.File, path string) error {
 func ValidateBucket(name string) error {
 	return kernel.NewBucketRef(name).Validate()
 }
+
+// --- ATOMIC WRITES ---
+
+// WriteFileAtomic writes data to a temporary file and renames it to the
+// destination path. This ensures that the destination file is either fully
+// written or not changed at all, preventing partial writes on crash.
+func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
+	if err := CheckSymlinkSafety(path); err != nil {
+		return fmt.Errorf("atomic write safety check: %w", err)
+	}
+
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+
+	tmpFile, err := os.CreateTemp(dir, "."+base+".tmp-*")
+	if err != nil {
+		return fmt.Errorf("create temp file for atomic write: %w", err)
+	}
+	tmpPath := tmpFile.Name()
+
+	closed := false
+	defer func() {
+		if !closed {
+			_ = tmpFile.Close()
+		}
+		_ = os.Remove(tmpPath)
+	}()
+
+	if err := tmpFile.Chmod(perm); err != nil {
+		return fmt.Errorf("set permissions on temp file: %w", err)
+	}
+	if _, err := tmpFile.Write(data); err != nil {
+		return fmt.Errorf("write data to temp file: %w", err)
+	}
+	if err := tmpFile.Sync(); err != nil {
+		return fmt.Errorf("sync temp file: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("close temp file: %w", err)
+	}
+	closed = true
+
+	// #nosec G703 -- destination path is a local CLI output path; symlink safety checked above.
+	return os.Rename(tmpPath, path)
+}
