@@ -15,8 +15,8 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/pruner"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
