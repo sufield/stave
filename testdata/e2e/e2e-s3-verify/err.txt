@@ -1,5 +1,5 @@
 Running: apply before observations...
-Done:    apply before observations (1ms)
+Done:    apply before observations (2ms)
 Running: apply after observations...
 Done:    apply after observations (1ms)
 

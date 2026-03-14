@@ -81,12 +81,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -99,7 +99,7 @@
       "asset_id": "uberflip-widget-vspcode-ref",
       "asset_type": "s3_bucket_reference",
       "fix_plan": {
-        "id": "fix-c63b1e7d4874e40b",
+        "id": "fix-4fc5717d63c4d128",
         "target": {
           "asset_id": "uberflip-widget-vspcode-ref",
           "asset_type": "s3_bucket_reference"
@@ -121,12 +121,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -147,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
+      "head_commit": "d5a6c5b28121593a1723d747bd86f34188bf1367",
       "dirty": false
     }
   }

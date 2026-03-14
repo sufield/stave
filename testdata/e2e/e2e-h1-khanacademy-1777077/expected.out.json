@@ -81,12 +81,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -99,7 +99,7 @@
       "asset_id": "learn2-khanacademy-cname-ref",
       "asset_type": "s3_bucket_reference",
       "fix_plan": {
-        "id": "fix-9982b0719ddb03ac",
+        "id": "fix-b6aa58c6b933ff2c",
         "target": {
           "asset_id": "learn2-khanacademy-cname-ref",
           "asset_type": "s3_bucket_reference"
@@ -121,12 +121,12 @@
           },
           {
             "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
+            "path": "security_posture.block_resource_public_access",
             "value": true
           },
           {
             "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
+            "path": "security_posture.ignore_resource_metadata_access",
             "value": true
           }
         ],
@@ -147,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
+      "head_commit": "d5a6c5b28121593a1723d747bd86f34188bf1367",
       "dirty": false
     }
   }

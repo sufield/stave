@@ -106,7 +106,7 @@ ci: tidy check build
 ## golden: Update e2e expected outputs from current behavior
 golden: build
 	@echo "Updating golden files..."
-	@for case in testdata/e2e/e2e-[0-9]*; do \
+	@for case in testdata/e2e/e2e-*; do \
 		if [ -f "$$case/command.txt" ]; then continue; fi; \
 		extra=""; \
 		if [ -f "$$case/args.txt" ]; then \

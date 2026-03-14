@@ -108,11 +108,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-s3-acl-fullcontrol/controls/CTL.S3.ACL.FULLCONTROL.001.yaml"
-      ]
+      "head_commit": "d5a6c5b28121593a1723d747bd86f34188bf1367",
+      "dirty": false
     }
   }
 }
