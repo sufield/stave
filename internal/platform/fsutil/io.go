@@ -32,9 +32,6 @@ var (
 	ErrSymlinkForbidden = errors.New("refusing to write through symlink")
 	// ErrFileExists indicates overwrite-protected output already exists.
 	ErrFileExists = errors.New("output file already exists")
-	// ErrInvalidBucket indicates the supplied bucket name is invalid.
-	// Canonical definition lives in kernel; re-exported here for backward compatibility.
-	ErrInvalidBucket = kernel.ErrInvalidBucket
 )
 
 // --- READ SAFETY ---

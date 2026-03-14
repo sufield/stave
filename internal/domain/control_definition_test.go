@@ -50,8 +50,8 @@ func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *t
 	if got, ok := issue.Evidence.Get("control_id"); !ok || got != ctl.ID.String() {
 		t.Fatalf("evidence control_id = %q (ok=%v), want %q", got, ok, ctl.ID)
 	}
-	if got := issue.Evidence.Sanitized("error"); got != kernel.SanitizedValue {
-		t.Fatalf("sanitized error = %q, want %q", got, kernel.SanitizedValue)
+	if got := issue.Evidence.Sanitized("error"); got != kernel.Redacted {
+		t.Fatalf("sanitized error = %q, want %q", got, kernel.Redacted)
 	}
 	rawErr, ok := issue.Evidence.Get("error")
 	if !ok {
@@ -196,8 +196,8 @@ func TestControlDefinitionValidate_MaxUnsafeDurationParam(t *testing.T) {
 			}
 
 			if tt.wantSensitiveErrKey {
-				if got := issue.Evidence.Sanitized("error"); got != kernel.SanitizedValue {
-					t.Fatalf("sanitized error = %q, want %q", got, kernel.SanitizedValue)
+				if got := issue.Evidence.Sanitized("error"); got != kernel.Redacted {
+					t.Fatalf("sanitized error = %q, want %q", got, kernel.Redacted)
 				}
 				if raw, ok := issue.Evidence.Get("error"); !ok || raw == "" {
 					t.Fatalf("expected raw sensitive error key to be set")
