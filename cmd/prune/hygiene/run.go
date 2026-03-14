@@ -50,6 +50,15 @@ type UpcomingFilter struct {
 	DueWithinRaw string
 }
 
+// DueWithinPtr returns a *time.Duration for the domain layer (nil if unset).
+func (f UpcomingFilter) DueWithinPtr() *time.Duration {
+	if f.DueWithin <= 0 {
+		return nil
+	}
+	d := f.DueWithin
+	return &d
+}
+
 // --- Runner ---
 
 // Runner orchestrates the multi-domain hygiene report.
@@ -144,22 +153,7 @@ func computeRiskTrend(
 	controls []policy.ControlDefinition,
 	activeSnapshots []asset.Snapshot,
 ) (appcontracts.RiskStats, []appcontracts.TrendMetric) {
-	var dueWithinPtr *time.Duration
-	if cfg.Filter.DueWithin > 0 {
-		dw := cfg.Filter.DueWithin
-		dueWithinPtr = &dw
-	}
-	riskOpts := hygieneapp.RiskOptions{
-		GlobalMaxUnsafe:  cfg.MaxUnsafe,
-		Now:              cfg.Now,
-		DueSoonThreshold: cfg.DueSoon,
-		ToolVersion:      staveversion.Version,
-		ControlIDs:       cfg.Filter.ControlIDs,
-		AssetTypes:       cfg.Filter.AssetTypes,
-		Statuses:         cfg.Filter.Statuses,
-		DueWithin:        dueWithinPtr,
-		PredicateParser:  ctlyaml.YAMLPredicateParser,
-	}
+	riskOpts := buildRiskOptions(cfg)
 
 	svc := hygieneapp.NewService()
 	currentRisk := svc.ComputeRisk(controls, activeSnapshots, riskOpts)
@@ -171,4 +165,18 @@ func computeRiskTrend(
 
 	trend := hygieneapp.CalculateTrend(currentRisk, previousRisk)
 	return currentRisk, trend
+}
+
+func buildRiskOptions(cfg Config) hygieneapp.RiskOptions {
+	return hygieneapp.RiskOptions{
+		GlobalMaxUnsafe:  cfg.MaxUnsafe,
+		Now:              cfg.Now,
+		DueSoonThreshold: cfg.DueSoon,
+		ToolVersion:      staveversion.Version,
+		ControlIDs:       cfg.Filter.ControlIDs,
+		AssetTypes:       cfg.Filter.AssetTypes,
+		Statuses:         cfg.Filter.Statuses,
+		DueWithin:        cfg.Filter.DueWithinPtr(),
+		PredicateParser:  ctlyaml.YAMLPredicateParser,
+	}
 }
