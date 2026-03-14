@@ -4,12 +4,20 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// NewPlanCmd constructs the plan command with closure-scoped flags.
+// NewPlanCmd constructs the plan command.
 func NewPlanCmd() *cobra.Command {
-	var flags planFlagsType
+	var (
+		obsRoot    string
+		archiveDir string
+		nowRaw     string
+		formatFlag string
+		apply      bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "plan",
@@ -36,17 +44,39 @@ Examples:
   stave snapshot plan --observations-root ./observations --archive-dir ./observations/archive --apply --force` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runPlan(cmd, &flags)
+			gf := cmdutil.GetGlobalFlags(cmd)
+			now, err := compose.ResolveNow(nowRaw)
+			if err != nil {
+				return err
+			}
+			format, err := compose.ResolveFormatValue(cmd, formatFlag)
+			if err != nil {
+				return err
+			}
+
+			runner := &PlanRunner{}
+			return runner.Run(cmd.Context(), PlanConfig{
+				ObservationsRoot: fsutil.CleanUserPath(obsRoot),
+				ArchiveDir:       fsutil.CleanUserPath(archiveDir),
+				Now:              now,
+				Format:           format,
+				Apply:            apply,
+				Force:            gf.Force,
+				Quiet:            gf.Quiet,
+				AllowSymlink:     gf.AllowSymlinkOut,
+				Stdout:           cmd.OutOrStdout(),
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&flags.observationsRoot, "observations-root", "o", "observations", "Root directory (inspected recursively)")
-	cmd.Flags().StringVar(&flags.archiveDir, "archive-dir", "", "Archive directory (empty = prune mode)")
-	cmd.Flags().StringVar(&flags.now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
-	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&flags.apply, "apply", false, "Execute the plan (requires --force)")
+	f := cmd.Flags()
+	f.StringVarP(&obsRoot, "observations-root", "o", "observations", "Root directory (inspected recursively)")
+	f.StringVar(&archiveDir, "archive-dir", "", "Archive directory (empty = prune mode)")
+	f.StringVar(&nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
+	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
+	f.BoolVar(&apply, "apply", false, "Execute the plan (requires --force)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd
