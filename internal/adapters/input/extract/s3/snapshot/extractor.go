@@ -54,7 +54,7 @@ func (e *SnapshotExtractor) ExtractFromSnapshotWithTime(ctx context.Context, sna
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		if err := fsutil.ValidateBucket(bucket.Name); err != nil {
+		if err := kernel.NewBucketRef(bucket.Name).Validate(); err != nil {
 			return nil, fmt.Errorf("snapshot contains %w", err)
 		}
 

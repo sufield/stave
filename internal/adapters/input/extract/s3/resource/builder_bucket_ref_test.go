@@ -11,7 +11,7 @@ func TestBuildBucketRefAsset(t *testing.T) {
 	model := s3storage.BuildBucketRefModel(
 		"cdn.example.com",
 		kernel.NewBucketRef("dangling-bucket"),
-		false, false,
+		kernel.NamespaceClaim{},
 	)
 	a := BuildBucketRefAsset("ref-1", model)
 
@@ -47,7 +47,7 @@ func TestBuildBucketRefAssetSafeState(t *testing.T) {
 	model := s3storage.BuildBucketRefModel(
 		"app.example.com",
 		kernel.NewBucketRef("owned-bucket"),
-		true, true,
+		kernel.NamespaceClaim{Exists: true, Owned: true},
 	)
 	a := BuildBucketRefAsset("ref-safe", model)
 

@@ -8,7 +8,7 @@ import (
 
 func TestBuildBucketRefModel(t *testing.T) {
 	ref := kernel.NewBucketRef("arn:aws:s3:::my-bucket")
-	model := BuildBucketRefModel("cdn.example.com", ref, false, false)
+	model := BuildBucketRefModel("cdn.example.com", ref, kernel.NamespaceClaim{})
 
 	if model.Endpoint != "cdn.example.com" {
 		t.Errorf("Endpoint = %q, want %q", model.Endpoint, "cdn.example.com")
@@ -35,8 +35,9 @@ func TestBuildBucketRefModelNormalizesBucket(t *testing.T) {
 		{"s3://my-bucket/path", "my-bucket"},
 		{"MY-BUCKET", "my-bucket"},
 	}
+	safe := kernel.NamespaceClaim{Exists: true, Owned: true}
 	for _, tc := range tests {
-		model := BuildBucketRefModel("ep", kernel.NewBucketRef(tc.input), true, true)
+		model := BuildBucketRefModel("ep", kernel.NewBucketRef(tc.input), safe)
 		if model.Bucket != tc.want {
 			t.Errorf("BuildBucketRefModel(%q).Bucket = %q, want %q", tc.input, model.Bucket, tc.want)
 		}
@@ -44,7 +45,7 @@ func TestBuildBucketRefModelNormalizesBucket(t *testing.T) {
 }
 
 func TestBuildBucketRefModelSafeState(t *testing.T) {
-	model := BuildBucketRefModel("app.example.com", kernel.NewBucketRef("safe-bucket"), true, true)
+	model := BuildBucketRefModel("app.example.com", kernel.NewBucketRef("safe-bucket"), kernel.NamespaceClaim{Exists: true, Owned: true})
 	if !model.BucketExists {
 		t.Error("BucketExists = false, want true")
 	}

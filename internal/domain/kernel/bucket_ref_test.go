@@ -1,6 +1,9 @@
 package kernel
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestBucketRefName(t *testing.T) {
 	tests := []struct {
@@ -83,5 +86,63 @@ func TestBucketRefRoundTrip(t *testing.T) {
 	}
 	if NewBucketRef(ref.ModelID()).Name() != "my-bucket" {
 		t.Error("round-trip through ModelID failed")
+	}
+}
+
+func TestBucketRefValidate(t *testing.T) {
+	valid := []string{
+		"my-bucket",
+		"bucket123",
+		"my.bucket.name",
+		"a-b",
+		"abc",
+	}
+	for _, name := range valid {
+		if err := NewBucketRef(name).Validate(); err != nil {
+			t.Errorf("Validate(%q) = %v, want nil", name, err)
+		}
+	}
+
+	// Uppercase and path inputs are normalized before validation.
+	if err := NewBucketRef("MyBucket").Validate(); err != nil {
+		t.Errorf("Validate(MyBucket) should pass after normalization, got %v", err)
+	}
+	if err := NewBucketRef("bucket/path").Validate(); err != nil {
+		t.Errorf("Validate(bucket/path) should pass after path strip, got %v", err)
+	}
+}
+
+func TestBucketRefValidateInvalid(t *testing.T) {
+	invalid := []string{
+		"",
+		"bucket\\escape",
+		"bucket..name",
+		"ab",
+		".bucket",
+		"my_bucket",
+	}
+	for _, name := range invalid {
+		err := NewBucketRef(name).Validate()
+		if err == nil {
+			t.Errorf("Validate(%q) = nil, want error", name)
+		}
+		if !errors.Is(err, ErrInvalidBucket) {
+			t.Errorf("Validate(%q) error = %v, want ErrInvalidBucket", name, err)
+		}
+	}
+}
+
+func TestNamespaceClaimIsSafe(t *testing.T) {
+	if (NamespaceClaim{}).IsSafe() {
+		t.Error("zero value should not be safe")
+	}
+	if (NamespaceClaim{Exists: true}).IsSafe() {
+		t.Error("exists but not owned should not be safe")
+	}
+	if (NamespaceClaim{Owned: true}).IsSafe() {
+		t.Error("owned but not exists should not be safe")
+	}
+	if !(NamespaceClaim{Exists: true, Owned: true}).IsSafe() {
+		t.Error("exists and owned should be safe")
 	}
 }

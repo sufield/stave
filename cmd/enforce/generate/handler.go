@@ -139,7 +139,7 @@ func loadInput(inputPath string) (input, error) {
 func targetNames(targets []outenforce.BucketTarget) []string {
 	names := make([]string, len(targets))
 	for i, target := range targets {
-		names[i] = target.BucketName
+		names[i] = target.BucketName.Name()
 	}
 	return names
 }
