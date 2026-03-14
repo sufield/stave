@@ -223,7 +223,7 @@ func writeDOT(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer)
 
 // dotQuote wraps a string in double quotes for DOT format, escaping inner quotes.
 func dotQuote(s string) string {
-	escaped := strings.ReplaceAll(s, `\\`, `\\\\`)
+	escaped := strings.ReplaceAll(s, `\`, `\\`)
 	escaped = strings.ReplaceAll(escaped, `"`, `\\"`)
 	return `"` + escaped + `"`
 }
