@@ -10,13 +10,13 @@ import (
 // PrefixScopeAnalysis contains the public-read prefix scopes extracted from a bucket policy.
 type PrefixScopeAnalysis struct {
 	Scopes        []kernel.ObjectPrefix
-	SourceByScope map[kernel.ObjectPrefix]string
+	SourceByScope map[kernel.ObjectPrefix]kernel.StatementID
 }
 
 // PrefixScopeAnalysis extracts public-read prefix scopes from the parsed bucket policy.
 func (e *Engine) PrefixScopeAnalysis() PrefixScopeAnalysis {
 	var scopes []kernel.ObjectPrefix
-	sourceByScope := make(map[kernel.ObjectPrefix]string)
+	sourceByScope := make(map[kernel.ObjectPrefix]kernel.StatementID)
 	seen := make(map[kernel.ObjectPrefix]bool)
 
 	for i, stmt := range e.policy.Statement {
@@ -40,9 +40,12 @@ func (e *Engine) PrefixScopeAnalysis() PrefixScopeAnalysis {
 		seen[scope] = true
 		scopes = append(scopes, scope)
 
-		sid := strings.TrimSpace(stmt.Sid)
-		if sid == "" {
-			sid = "stmt-" + strconv.Itoa(i)
+		trimmed := strings.TrimSpace(stmt.Sid)
+		var sid kernel.StatementID
+		if trimmed != "" {
+			sid = kernel.StatementID(trimmed)
+		} else {
+			sid = kernel.StatementID("stmt-" + strconv.Itoa(i))
 		}
 		sourceByScope[scope] = sid
 	}

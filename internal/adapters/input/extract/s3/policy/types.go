@@ -88,7 +88,7 @@ type Analysis struct {
 	AllowsPublicWrite     bool
 	AllowsPublicDelete    bool
 	HasWildcardActions    bool
-	PublicStatements      []string // Statement IDs or indices that grant public access
+	PublicStatements      []kernel.StatementID // Statement IDs or indices that grant public access
 	HasNetworkCondition   bool     // any statement with Principal:* also has IP/VPC/Org condition
 	HasIPCondition        bool     // any public-principal statement has IP condition
 	HasVPCCondition       bool     // any public-principal statement has VPC condition
@@ -164,11 +164,11 @@ func (s Statement) IsDeny() bool {
 	return s.Effect.IsDeny()
 }
 
-func (s Statement) ID(index int) string {
+func (s Statement) ID(index int) kernel.StatementID {
 	if s.Sid != "" {
-		return s.Sid
+		return kernel.StatementID(s.Sid)
 	}
-	return strconv.Itoa(index)
+	return kernel.StatementID(strconv.Itoa(index))
 }
 
 func (s Statement) PrincipalScope() kernel.PrincipalScope {

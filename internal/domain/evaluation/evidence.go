@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
@@ -64,9 +65,9 @@ func (e Evidence) RootCauseStrings() []string {
 // SourceEvidence provides pointers to specific configuration entries (e.g. SIDs, Grantees).
 type SourceEvidence struct {
 	// IdentityStatements lists IDs/indices of identity-bound policies (e.g., IAM SIDs).
-	IdentityStatements []string `json:"identity_statements,omitempty"`
+	IdentityStatements []kernel.StatementID `json:"identity_statements,omitempty"`
 	// ResourceGrantees lists specific entities granted access via resource-bound policies (e.g., ACL URIs).
-	ResourceGrantees []string `json:"resource_grantees,omitempty"`
+	ResourceGrantees []kernel.SourceID `json:"resource_grantees,omitempty"`
 }
 
 // DriftPattern classifies the temporal behavior of a violation.

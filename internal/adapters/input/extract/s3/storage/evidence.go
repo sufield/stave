@@ -1,6 +1,9 @@
 package storage
 
-import s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
+import (
+	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
+	"github.com/sufield/stave/internal/domain/kernel"
+)
 
 // AWSS3Evidence is the vendor-specific S3 evidence contract.
 type AWSS3Evidence struct {
@@ -52,8 +55,8 @@ type ObjectLockEvidence struct {
 }
 
 type SourceEvidence struct {
-	PolicyPublicStatements []string `json:"policy_public_statements,omitempty"`
-	ACLPublicGrantees      []string `json:"acl_public_grantees,omitempty"`
+	PolicyPublicStatements []kernel.StatementID `json:"policy_public_statements,omitempty"`
+	ACLPublicGrantees      []kernel.GranteeID   `json:"acl_public_grantees,omitempty"`
 }
 
 func NewEncryptionEvidence(e *EncryptionConfig) *EncryptionEvidence {

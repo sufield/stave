@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 const (
@@ -88,10 +89,10 @@ func (g Grant) Permissions() Permission {
 }
 
 // PublicGrantees returns public grantee identifiers in encounter order.
-func (gs Grants) PublicGrantees() []string {
-	return lo.FilterMap(gs, func(g Grant, _ int) (string, bool) {
+func (gs Grants) PublicGrantees() []kernel.GranteeID {
+	return lo.FilterMap(gs, func(g Grant, _ int) (kernel.GranteeID, bool) {
 		if g.IsPublic() {
-			return g.Grantee, true
+			return kernel.GranteeID(g.Grantee), true
 		}
 		return "", false
 	})

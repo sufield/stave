@@ -98,8 +98,8 @@ func (f Finding) Sanitized(s kernel.Sanitizer) Finding {
 
 	if f.Evidence.SourceEvidence != nil {
 		se := *f.Evidence.SourceEvidence
-		se.IdentityStatements = sanitizeStrings(se.IdentityStatements, s)
-		se.ResourceGrantees = sanitizeStrings(se.ResourceGrantees, s)
+		se.IdentityStatements = sanitizeSlice(se.IdentityStatements, s)
+		se.ResourceGrantees = sanitizeSlice(se.ResourceGrantees, s)
 		out.Evidence.SourceEvidence = &se
 	}
 
@@ -127,14 +127,14 @@ func (m *Mapper) EnrichFindings(result evaluation.Result) []Finding {
 	return enriched
 }
 
-// sanitizeStrings clones and replaces every element using the provided sanitizer.
-func sanitizeStrings(lines []string, s kernel.Sanitizer) []string {
-	if len(lines) == 0 {
+// sanitizeSlice clones and replaces every element using the provided sanitizer.
+func sanitizeSlice[T ~string](items []T, s kernel.Sanitizer) []T {
+	if len(items) == 0 {
 		return nil
 	}
-	out := make([]string, len(lines))
-	for i := range lines {
-		out[i] = s.Value(lines[i])
+	out := make([]T, len(items))
+	for i := range items {
+		out[i] = T(s.Value(string(items[i])))
 	}
 	return out
 }

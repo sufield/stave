@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/domain/asset"
-
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/engine"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 func TestExtractSourceEvidenceUsesCanonicalPath(t *testing.T) {
@@ -31,10 +31,10 @@ func TestExtractSourceEvidenceUsesCanonicalPath(t *testing.T) {
 	if got == nil {
 		t.Fatal("expected source evidence")
 	}
-	if !reflect.DeepEqual(got.IdentityStatements, []string{"A", "B"}) {
+	if !reflect.DeepEqual(got.IdentityStatements, []kernel.StatementID{"A", "B"}) {
 		t.Fatalf("unexpected policy statements: %v", got.IdentityStatements)
 	}
-	if !reflect.DeepEqual(got.ResourceGrantees, []string{"acl-a", "acl-b"}) {
+	if !reflect.DeepEqual(got.ResourceGrantees, []kernel.SourceID{"acl-a", "acl-b"}) {
 		t.Fatalf("unexpected acl grantees: %v", got.ResourceGrantees)
 	}
 }
@@ -67,7 +67,7 @@ func TestExtractSourceEvidenceRespectsRootCauseFilter(t *testing.T) {
 	if got == nil {
 		t.Fatal("expected source evidence")
 	}
-	if !reflect.DeepEqual(got.IdentityStatements, []string{"stmt"}) {
+	if !reflect.DeepEqual(got.IdentityStatements, []kernel.StatementID{"stmt"}) {
 		t.Fatalf("unexpected policy statements: %v", got.IdentityStatements)
 	}
 	if len(got.ResourceGrantees) != 0 {

@@ -1,5 +1,7 @@
 package acl
 
+import "github.com/sufield/stave/internal/domain/kernel"
+
 // Entry wraps raw S3 ACL grants and exposes high-level access predicates.
 type Entry struct {
 	grants []Grant
@@ -7,9 +9,9 @@ type Entry struct {
 
 // Analysis contains the analysis results of S3 ACL grants.
 type Analysis struct {
-	AllowsPublicRead  bool     // READ to AllUsers
-	AllowsPublicWrite bool     // WRITE to AllUsers
-	PublicGrantees    []string // URIs of public grantees found
+	AllowsPublicRead  bool               // READ to AllUsers
+	AllowsPublicWrite bool               // WRITE to AllUsers
+	PublicGrantees    []kernel.GranteeID // URIs of public grantees found
 
 	// Authenticated-only access (AuthenticatedUsers grantee, not AllUsers)
 	AllowsAuthenticatedRead  bool
@@ -82,7 +84,7 @@ func (a *Entry) Grants() []Grant {
 type Summary struct {
 	AllUsersPerms               Permission
 	AuthOnlyPerms               Permission
-	PublicGrantees              []string
+	PublicGrantees              []kernel.GranteeID
 	HasFullControlPublic        bool
 	HasFullControlAuthenticated bool
 }
