@@ -1,27 +1,34 @@
 package shared
 
 import (
+	output "github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// BaselineComparison holds the result of comparing baseline to current findings.
-type BaselineComparison struct {
+// BaselineComparisonResult holds the full context of a comparison between
+// a known baseline and the current findings.
+type BaselineComparisonResult struct {
 	Baseline   []evaluation.BaselineEntry
 	Current    []evaluation.BaselineEntry
 	Comparison evaluation.BaselineComparisonResult
 }
 
-// CompareBaseline converts current findings to baseline entries and compares
-// them against baseline entries. Callers that need sanitization should apply it
-// to the returned Current/Comparison entries after the call.
-func CompareBaseline(
+// CompareAgainstBaseline transforms current findings into baseline entries
+// and executes a domain-level comparison.
+//
+// If a sanitizer is provided, it is applied to the current findings before
+// comparison to ensure that entries in the result respect anonymization settings.
+func CompareAgainstBaseline(
+	san kernel.Sanitizer,
 	baseEntries []evaluation.BaselineEntry,
 	currentFindings []remediation.Finding,
-) BaselineComparison {
+) BaselineComparisonResult {
 	current := remediation.BaselineEntriesFromFindings(currentFindings)
+	current = output.SanitizeBaselineEntries(san, current)
 	comparison := evaluation.CompareBaseline(baseEntries, current)
-	return BaselineComparison{
+	return BaselineComparisonResult{
 		Baseline:   baseEntries,
 		Current:    current,
 		Comparison: comparison,
