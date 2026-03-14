@@ -9,7 +9,7 @@ import (
 // Source identifies what mechanism exposed a prefix as publicly readable.
 type Source struct {
 	Kind Kind
-	ID   kernel.SourceID
+	ID   kernel.StatementID
 }
 
 // Kind identifies the evidence mechanism (for example, identity or resource).
@@ -22,10 +22,10 @@ const (
 )
 
 // NewSource constructs a normalized evidence source.
-func NewSource(kind Kind, sourceID kernel.SourceID) Source {
+func NewSource(kind Kind, sourceID kernel.StatementID) Source {
 	return Source{
 		Kind: kind,
-		ID:   kernel.SourceID(strings.TrimSpace(string(sourceID))),
+		ID:   kernel.StatementID(strings.TrimSpace(string(sourceID))),
 	}
 }
 
@@ -50,7 +50,7 @@ var SafeResult = Result{Exposed: false}
 // Grant pairs a scope (e.g. "*", "invoices/") with the statement ID that granted it.
 type Grant struct {
 	Scope    kernel.ObjectPrefix
-	SourceID kernel.SourceID
+	SourceID kernel.StatementID
 }
 
 // Covers reports whether this grant's scope matches the given prefix.

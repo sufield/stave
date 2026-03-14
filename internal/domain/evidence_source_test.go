@@ -34,7 +34,7 @@ func TestExtractSourceEvidenceUsesCanonicalPath(t *testing.T) {
 	if !reflect.DeepEqual(got.IdentityStatements, []kernel.StatementID{"A", "B"}) {
 		t.Fatalf("unexpected policy statements: %v", got.IdentityStatements)
 	}
-	if !reflect.DeepEqual(got.ResourceGrantees, []kernel.SourceID{"acl-a", "acl-b"}) {
+	if !reflect.DeepEqual(got.ResourceGrantees, []kernel.GranteeID{"acl-a", "acl-b"}) {
 		t.Fatalf("unexpected acl grantees: %v", got.ResourceGrantees)
 	}
 }
