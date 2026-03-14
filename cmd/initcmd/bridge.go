@@ -51,7 +51,7 @@ func GetRootCmd() *cobra.Command {
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), projconfig.ConfigKeyService))
 	root.AddCommand(contextcmd.NewContextCmd())
 	root.AddCommand(initenv.NewEnvCmd())
-	root.AddCommand(initalias.NewAliasCmd(root))
+	root.AddCommand(initalias.NewCmd(root))
 	return root
 }
 
