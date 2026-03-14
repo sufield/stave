@@ -26,8 +26,8 @@ func TestPrefixScopeAnalysisWildcardResource(t *testing.T) {
 	if result.Scopes[0] != kernel.WildcardPrefix {
 		t.Errorf("expected WildcardPrefix, got %q", result.Scopes[0])
 	}
-	if result.SourceByScope[kernel.WildcardPrefix] != "PublicRead" {
-		t.Errorf("expected source 'PublicRead', got %q", result.SourceByScope[kernel.WildcardPrefix])
+	if result.SourceByScope[kernel.WildcardPrefix] != "sid:PublicRead" {
+		t.Errorf("expected source 'sid:PublicRead', got %q", result.SourceByScope[kernel.WildcardPrefix])
 	}
 }
 
@@ -52,8 +52,8 @@ func TestPrefixScopeAnalysisPrefixedResource(t *testing.T) {
 	if result.Scopes[0] != expected {
 		t.Errorf("expected %q, got %q", expected, result.Scopes[0])
 	}
-	if result.SourceByScope[expected] != "InvoiceAccess" {
-		t.Errorf("expected source 'InvoiceAccess', got %q", result.SourceByScope[expected])
+	if result.SourceByScope[expected] != "sid:InvoiceAccess" {
+		t.Errorf("expected source 'sid:InvoiceAccess', got %q", result.SourceByScope[expected])
 	}
 }
 
@@ -127,8 +127,8 @@ func TestPrefixScopeAnalysisSidAbsentUsesIndex(t *testing.T) {
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
 	}
-	if result.SourceByScope[kernel.WildcardPrefix] != "stmt-0" {
-		t.Errorf("expected source 'stmt-0', got %q", result.SourceByScope[kernel.WildcardPrefix])
+	if result.SourceByScope[kernel.WildcardPrefix] != "idx:0" {
+		t.Errorf("expected source 'idx:0', got %q", result.SourceByScope[kernel.WildcardPrefix])
 	}
 }
 
@@ -219,7 +219,7 @@ func TestPrefixScopeAnalysisDeduplicatesScopes(t *testing.T) {
 	if len(result.Scopes) != 1 {
 		t.Errorf("expected 1 deduplicated scope, got %d", len(result.Scopes))
 	}
-	if result.SourceByScope[kernel.WildcardPrefix] != "First" {
+	if result.SourceByScope[kernel.WildcardPrefix] != "sid:First" {
 		t.Errorf("expected first Sid to win, got %q", result.SourceByScope[kernel.WildcardPrefix])
 	}
 }
