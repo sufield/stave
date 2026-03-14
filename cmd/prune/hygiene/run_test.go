@@ -8,6 +8,7 @@ import (
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
 func TestFilterSnapshotsBefore(t *testing.T) {
@@ -53,7 +54,7 @@ func TestRenderMarkdown(t *testing.T) {
 			Later:             0,
 			UpcomingTotal:     4,
 		},
-		Trends: []appcontracts.TrendMetric{
+		Trends: []evaluation.TrendMetric{
 			{Name: "Current violations", Current: 4, Previous: 6},
 		},
 	}

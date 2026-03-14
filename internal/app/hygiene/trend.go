@@ -1,11 +1,14 @@
 package hygiene
 
-import appcontracts "github.com/sufield/stave/internal/app/contracts"
+import (
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/domain/evaluation"
+)
 
 // CalculateTrend compares current risk metrics against metrics from a
 // previous point in time. It is pure and has no external dependencies.
-func CalculateTrend(current, previous appcontracts.RiskStats) []appcontracts.TrendMetric {
-	return []appcontracts.TrendMetric{
+func CalculateTrend(current, previous appcontracts.RiskStats) []evaluation.TrendMetric {
+	return []evaluation.TrendMetric{
 		{
 			Name:     "Current violations",
 			Current:  current.CurrentViolations,
