@@ -216,7 +216,7 @@ func WireCommands(app *App) {
 	// ConfigKeyService is passed explicitly so the config command tree does not
 	// depend on the projconfig package-level global.
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), app.ConfigKeyService))
-	root.AddCommand(initalias.NewAliasCmd(root))
+	root.AddCommand(initalias.NewCmd(root))
 	root.AddCommand(initenv.NewEnvCmd())
 	root.AddCommand(diagnose.NewPromptCmd())
 	root.AddCommand(enforce.NewFixCmd())

@@ -203,25 +203,3 @@ func LoadUserAliases() map[string]string {
 	return cfg.Aliases
 }
 
-// LoadUserConfigFull loads the full user config struct and its path.
-func LoadUserConfigFull() (*UserConfig, string) {
-	cfg, path, ok := FindUserConfigWithPath()
-	if ok && cfg != nil {
-		return cfg, path
-	}
-	r := defaultResolver()
-	if r == nil {
-		return &UserConfig{}, ""
-	}
-	p, _ := r.UserConfigPath()
-	return &UserConfig{}, p
-}
-
-// WriteUserConfigFull marshals and writes the user config to the given path.
-func WriteUserConfigFull(cfg *UserConfig, path string) error {
-	r := defaultResolver()
-	if r == nil {
-		r = &Resolver{}
-	}
-	return r.WriteUserConfig(cfg, path)
-}
