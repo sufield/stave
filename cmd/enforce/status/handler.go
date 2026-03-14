@@ -23,7 +23,70 @@ type Config struct {
 	Stderr io.Writer
 }
 
-// Runner orchestrates the inspection of local project artifacts.
+// --- Domain Models ---
+
+// Summary captures metadata about a group of files (e.g., controls or observations).
+type Summary struct {
+	Count     int       `json:"count"`
+	Latest    time.Time `json:"latest"`
+	HasLatest bool      `json:"has_latest"`
+}
+
+// State represents the point-in-time health and progress of a project.
+type State struct {
+	Root         string                `json:"project_root"`
+	LastSession  *projctx.SessionState `json:"last_session,omitempty"`
+	Controls     Summary               `json:"controls"`
+	RawSnapshots Summary               `json:"snapshots_raw"`
+	Observations Summary               `json:"observations"`
+	EvalTime     time.Time             `json:"evaluation_time"`
+	HasEval      bool                  `json:"has_evaluation"`
+}
+
+// RecommendNext returns a string command suggesting the most logical next step.
+func (s State) RecommendNext() string {
+	ctlDir := filepath.Join(s.Root, "controls")
+	rawDir := filepath.Join(s.Root, "snapshots", "raw", "aws-s3")
+	obsDir := filepath.Join(s.Root, "observations")
+	outPath := filepath.Join(s.Root, "output", "evaluation.json")
+
+	if s.RawSnapshots.Count > 0 && (s.Observations.Count == 0 || s.isRawNewerThanObs()) {
+		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
+	}
+	if s.Controls.Count == 0 {
+		return fmt.Sprintf("stave generate control --id CTL.S3.PUBLIC.901 --out %s", filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml"))
+	}
+	if s.Observations.Count == 0 {
+		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
+	}
+	if s.needsReevaluation() {
+		return fmt.Sprintf("stave validate --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",
+			ctlDir, obsDir, ctlDir, obsDir, outPath)
+	}
+	return fmt.Sprintf("stave diagnose --controls %s --observations %s --previous-output %s",
+		ctlDir, obsDir, outPath)
+}
+
+func (s State) isRawNewerThanObs() bool {
+	return s.RawSnapshots.HasLatest &&
+		s.Observations.HasLatest &&
+		s.RawSnapshots.Latest.After(s.Observations.Latest)
+}
+
+func (s State) needsReevaluation() bool {
+	if !s.HasEval {
+		return true
+	}
+	latestInput := s.Controls.Latest
+	if s.Observations.HasLatest && s.Observations.Latest.After(latestInput) {
+		latestInput = s.Observations.Latest
+	}
+	return latestInput.After(s.EvalTime)
+}
+
+// --- Logic Runner ---
+
+// Runner orchestrates the collection of project state and its presentation.
 type Runner struct {
 	Resolver *projctx.Resolver
 }
@@ -31,125 +94,6 @@ type Runner struct {
 // NewRunner initializes a status runner with the provided context resolver.
 func NewRunner(r *projctx.Resolver) *Runner {
 	return &Runner{Resolver: r}
-}
-
-// dirSummary and supporting helpers (status command).
-type dirSummary struct {
-	Count     int
-	Latest    time.Time
-	HasLatest bool
-}
-
-func summarizeFiles(dir string, exts ...string) (dirSummary, error) {
-	var out dirSummary
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return out, nil
-		}
-		return out, err
-	}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		if len(exts) > 0 && !matchesExtension(e.Name(), exts) {
-			continue
-		}
-		fi, err := e.Info()
-		if err != nil {
-			continue
-		}
-		out.Count++
-		if !out.HasLatest || fi.ModTime().After(out.Latest) {
-			out.Latest = fi.ModTime()
-			out.HasLatest = true
-		}
-	}
-	return out, nil
-}
-
-func matchesExtension(name string, exts []string) bool {
-	for _, ext := range exts {
-		if strings.HasSuffix(name, ext) {
-			return true
-		}
-	}
-	return false
-}
-
-func latestFileTime(path string) (time.Time, bool) {
-	fi, err := os.Stat(path)
-	if err != nil || fi.IsDir() {
-		return time.Time{}, false
-	}
-	return fi.ModTime(), true
-}
-
-type statusOutput struct {
-	ProjectRoot   string                `json:"project_root"`
-	LastSession   *projctx.SessionState `json:"last_session,omitempty"`
-	Controls      dirSummary            `json:"controls"`
-	RawSnapshots  dirSummary            `json:"snapshots_raw"`
-	Observations  dirSummary            `json:"observations"`
-	EvaluationOut bool                  `json:"evaluation_output"`
-	NextCommand   string                `json:"next_command"`
-}
-
-// ProjectState captures project artifacts and timestamps for recommendation logic.
-type ProjectState struct {
-	Root         string
-	Controls     dirSummary
-	RawSnapshots dirSummary
-	Observations dirSummary
-	EvalTime     time.Time
-	HasEval      bool
-}
-
-// RecommendNext returns the next best command for progressing the project.
-func (s ProjectState) RecommendNext() string {
-	raw := s.RawSnapshots
-	obs := s.Observations
-	ctl := s.Controls
-	ctlDir := filepath.Join(s.Root, "controls")
-	rawDir := filepath.Join(s.Root, "snapshots", "raw", "aws-s3")
-	obsDir := filepath.Join(s.Root, "observations")
-
-	if raw.Count > 0 && (obs.Count == 0 || s.isRawNewerThanObs()) {
-		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
-	}
-	if ctl.Count == 0 {
-		return fmt.Sprintf("stave generate control --id CTL.S3.PUBLIC.901 --out %s", filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml"))
-	}
-	if obs.Count == 0 {
-		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
-	}
-	if s.needsReevaluation() {
-		return fmt.Sprintf("stave validate --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",
-			ctlDir, obsDir, ctlDir, obsDir, filepath.Join(s.Root, "output", "evaluation.json"))
-	}
-	return fmt.Sprintf("stave diagnose --controls %s --observations %s --previous-output %s",
-		ctlDir, obsDir, filepath.Join(s.Root, "output", "evaluation.json"))
-}
-
-func (s ProjectState) isRawNewerThanObs() bool {
-	raw := s.RawSnapshots
-	obs := s.Observations
-	return raw.HasLatest &&
-		obs.HasLatest &&
-		raw.Latest.After(obs.Latest)
-}
-
-func (s ProjectState) needsReevaluation() bool {
-	if !s.HasEval {
-		return true
-	}
-	inputLatest := s.Controls.Latest
-	obs := s.Observations
-	if obs.HasLatest && obs.Latest.After(inputLatest) {
-		inputLatest = obs.Latest
-	}
-	return inputLatest.After(s.EvalTime)
 }
 
 // Run executes the project inspection and writes the report to the output stream.
@@ -161,89 +105,123 @@ func (r *Runner) Run(_ context.Context, cfg Config) error {
 		return ui.WithNextCommand(err, "stave init")
 	}
 
-	out, err := buildOutput(root)
+	state, err := r.scan(root)
 	if err != nil {
-		return err
+		return fmt.Errorf("scanning project: %w", err)
+	}
+
+	result := statusResult{
+		State:       state,
+		NextCommand: state.RecommendNext(),
 	}
 
 	if cfg.Format.IsJSON() {
-		return jsonutil.WriteIndented(cfg.Stdout, out)
+		return jsonutil.WriteIndented(cfg.Stdout, result)
 	}
-	return writeText(cfg.Stdout, out)
+	return r.presentText(cfg.Stdout, result.State, result.NextCommand)
 }
 
-func buildOutput(root string) (statusOutput, error) {
-	controls, err := summarizeFiles(filepath.Join(root, "controls"), ".yaml", ".yml")
-	if err != nil {
-		return statusOutput{}, err
-	}
-	raw, err := summarizeFiles(filepath.Join(root, "snapshots", "raw"), ".json")
-	if err != nil {
-		return statusOutput{}, err
-	}
-	obs, err := summarizeFiles(filepath.Join(root, "observations"), ".json")
-	if err != nil {
-		return statusOutput{}, err
-	}
+// statusResult is the JSON-serializable output combining state and recommendation.
+type statusResult struct {
+	State       State  `json:"state"`
+	NextCommand string `json:"next_command"`
+}
+
+// --- Infrastructure: Filesystem Scanner ---
+
+func (r *Runner) scan(root string) (State, error) {
+	controls, _ := r.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
+	raw, _ := r.summarize(filepath.Join(root, "snapshots", "raw"), ".json")
+	obs, _ := r.summarize(filepath.Join(root, "observations"), ".json")
+
 	evalPath := filepath.Join(root, "output", "evaluation.json")
-	evalTime, hasEval := latestFileTime(evalPath)
+	evalTime, hasEval := r.fileModTime(evalPath)
 
-	last, err := projctx.LoadSession(root)
-	if err != nil {
-		return statusOutput{}, err
-	}
+	last, _ := projctx.LoadSession(root)
 
-	state := ProjectState{
+	return State{
 		Root:         root,
+		LastSession:  last,
 		Controls:     controls,
 		RawSnapshots: raw,
 		Observations: obs,
 		EvalTime:     evalTime,
 		HasEval:      hasEval,
-	}
-	out := statusOutput{
-		ProjectRoot:   root,
-		LastSession:   last,
-		Controls:      controls,
-		RawSnapshots:  raw,
-		Observations:  obs,
-		EvaluationOut: hasEval,
-		NextCommand:   state.RecommendNext(),
-	}
-	return out, nil
+	}, nil
 }
 
-func writeText(w io.Writer, out statusOutput) error {
-	var err error
-	writef := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
-	}
-
-	writef("Summary\n-------\n")
-	writef("Project: %s\n", out.ProjectRoot)
-	if out.LastSession != nil {
-		writef("Last command: %s (%s)\n", out.LastSession.LastCommand, out.LastSession.WhenUTC.Format(time.RFC3339))
-	}
-	writef("Artifacts:\n")
-	writef("  - controls: %d\n", out.Controls.Count)
-	writef("  - snapshots/raw: %d\n", out.RawSnapshots.Count)
-	writef("  - observations: %d\n", out.Observations.Count)
-	writef("  - output/evaluation.json: %v\n", out.EvaluationOut)
+func (r *Runner) summarize(dir string, exts ...string) (Summary, error) {
+	var s Summary
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return err
+		return s, err
 	}
-	next := ui.SeverityLabel("info", fmt.Sprintf("Next: %s", out.NextCommand), w)
-	writef("\n%s\n", next)
-	return err
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if len(exts) > 0 && !matchesExtension(e.Name(), exts) {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		s.Count++
+		if !s.HasLatest || info.ModTime().After(s.Latest) {
+			s.Latest = info.ModTime()
+			s.HasLatest = true
+		}
+	}
+	return s, nil
 }
 
+func matchesExtension(name string, exts []string) bool {
+	for _, ext := range exts {
+		if strings.HasSuffix(name, ext) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Runner) fileModTime(path string) (time.Time, bool) {
+	fi, err := os.Stat(path)
+	if err != nil || fi.IsDir() {
+		return time.Time{}, false
+	}
+	return fi.ModTime(), true
+}
+
+// --- Presentation ---
+
+func (r *Runner) presentText(w io.Writer, s State, next string) error {
+	fmt.Fprintf(w, "Summary\n-------\n")
+	fmt.Fprintf(w, "Project: %s\n", s.Root)
+
+	if s.LastSession != nil {
+		fmt.Fprintf(w, "Last command: %s (%s)\n",
+			s.LastSession.LastCommand,
+			s.LastSession.WhenUTC.Format(time.RFC3339))
+	}
+
+	fmt.Fprintln(w, "Artifacts:")
+	fmt.Fprintf(w, "  - controls: %d\n", s.Controls.Count)
+	fmt.Fprintf(w, "  - snapshots/raw: %d\n", s.RawSnapshots.Count)
+	fmt.Fprintf(w, "  - observations: %d\n", s.Observations.Count)
+	fmt.Fprintf(w, "  - output/evaluation.json: %v\n", s.HasEval)
+
+	label := ui.SeverityLabel("info", fmt.Sprintf("Next: %s", next), w)
+	fmt.Fprintf(w, "\n%s\n", label)
+	return nil
+}
+
+// NextCommandForProject is a convenience helper for external callers.
 func NextCommandForProject(projectRoot string) (string, error) {
-	out, err := buildOutput(projectRoot)
+	r := &Runner{}
+	state, err := r.scan(projectRoot)
 	if err != nil {
 		return "", err
 	}
-	return out.NextCommand, nil
+	return state.RecommendNext(), nil
 }
