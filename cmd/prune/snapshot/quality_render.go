@@ -11,42 +11,52 @@ import (
 )
 
 func writeQualityOutput(w io.Writer, format ui.OutputFormat, report qualityReport, quiet bool) error {
-	if format.IsJSON() {
-		if err := jsonutil.WriteIndented(w, report); err != nil {
-			return fmt.Errorf("write quality report: %w", err)
-		}
+	if quiet {
 		return nil
 	}
-	if !quiet {
-		renderQualityText(w, report)
+	if format.IsJSON() {
+		return jsonutil.WriteIndented(w, report)
 	}
-	return nil
+	return renderQualityText(w, report)
 }
 
-func renderQualityText(w io.Writer, report qualityReport) {
-	out := w
-	summary := report.Summary
+func renderQualityText(w io.Writer, report qualityReport) error {
+	var err error
+	printf := func(format string, args ...any) {
+		if err != nil {
+			return
+		}
+		_, err = fmt.Fprintf(w, format, args...)
+	}
+
+	s := report.Summary
 	status := "PASS"
 	if !report.Pass {
 		status = "FAIL"
 	}
-	fmt.Fprintf(out, "Snapshot quality: %s\n", status)
-	fmt.Fprintf(out, "Snapshots: %d\n", summary.Snapshots)
-	if !summary.OldestCapturedAt.IsZero() {
-		fmt.Fprintf(out, "Oldest: %s\n", summary.OldestCapturedAt.Format(time.RFC3339))
+	printf("Snapshot quality: %s\n", status)
+	printf("Snapshots:        %d\n", s.Snapshots)
+	if !s.OldestCapturedAt.IsZero() {
+		printf("Oldest:           %s\n", s.OldestCapturedAt.Format(time.RFC3339))
 	}
-	if !summary.LatestCapturedAt.IsZero() {
-		fmt.Fprintf(out, "Latest: %s\n", summary.LatestCapturedAt.Format(time.RFC3339))
+	if !s.LatestCapturedAt.IsZero() {
+		printf("Latest:           %s\n", s.LatestCapturedAt.Format(time.RFC3339))
 	}
-	if summary.MaxGap != "" {
-		fmt.Fprintf(out, "Max gap: %s\n", summary.MaxGap)
+	if s.MaxGap != "" {
+		printf("Max gap:          %s\n", s.MaxGap)
 	}
+
 	if len(report.Issues) == 0 {
-		fmt.Fprintln(out, "No quality issues detected.")
-		return
+		printf("\nNo quality issues detected.\n")
+		return err
 	}
-	fmt.Fprintln(out, "Issues:")
+
+	printf("\nIssues:\n")
 	for _, issue := range report.Issues {
-		fmt.Fprintf(out, "- [%s] %s: %s\n", strings.ToUpper(string(issue.Severity)), issue.Code, issue.Message)
+		severity := strings.ToUpper(string(issue.Severity))
+		label := ui.SeverityLabel(string(issue.Severity), severity, w)
+		printf("- [%s] %s: %s\n", label, issue.Code, issue.Message)
 	}
+
+	return err
 }
