@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/maps"
 )
@@ -80,9 +81,9 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 	for _, cause := range causes {
 		switch cause {
 		case evaluation.RootCauseIdentity:
-			evidence.IdentityStatements = getSortedEvidence(props, pathPolicyStatements)
+			evidence.IdentityStatements = getSortedIDs[kernel.StatementID](props, pathPolicyStatements)
 		case evaluation.RootCauseResource:
-			evidence.ResourceGrantees = getSortedEvidence(props, pathACLGrantees)
+			evidence.ResourceGrantees = getSortedIDs[kernel.SourceID](props, pathACLGrantees)
 		}
 	}
 
@@ -92,12 +93,16 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 	return evidence
 }
 
-// getSortedEvidence extracts a string slice from a property path and sorts it for deterministic output.
-func getSortedEvidence(props maps.Value, path string) []string {
+// getSortedIDs extracts a string slice from a property path, converts to typed IDs, and sorts.
+func getSortedIDs[T ~string](props maps.Value, path string) []T {
 	values := props.GetPath(path).StringSlice()
 	if len(values) == 0 {
 		return nil
 	}
 	slices.Sort(values)
-	return values
+	ids := make([]T, len(values))
+	for i, v := range values {
+		ids[i] = T(v)
+	}
+	return ids
 }

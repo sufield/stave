@@ -37,7 +37,7 @@ func buildGrants(pe maps.Value) Grants {
 	for _, scope := range scopes {
 		grants = append(grants, Grant{
 			Scope:    kernel.ObjectPrefix(scope),
-			SourceID: sources[scope],
+			SourceID: kernel.SourceID(sources[scope]),
 		})
 	}
 	return grants

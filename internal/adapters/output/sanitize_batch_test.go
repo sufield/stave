@@ -21,8 +21,8 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	r := sanitize.New()
 
 	src := &asset.SourceRef{File: "/home/user/ctl/public.yaml", Line: 10}
-	stmts := []string{"AllowPublicRead", "AllowPublicList"}
-	grantees := []string{"http://acs.amazonaws.com/groups/global/AllUsers"}
+	stmts := []kernel.StatementID{"AllowPublicRead", "AllowPublicList"}
+	grantees := []kernel.SourceID{"http://acs.amazonaws.com/groups/global/AllUsers"}
 
 	findings := []remediation.Finding{{
 		Finding: evaluation.Finding{
@@ -148,8 +148,8 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 					{Property: "properties.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
-					IdentityStatements: []string{"AllowPublicRead"},
-					ResourceGrantees:   []string{"http://acs.amazonaws.com/groups/global/AllUsers"},
+					IdentityStatements: []kernel.StatementID{"AllowPublicRead"},
+					ResourceGrantees:   []kernel.SourceID{"http://acs.amazonaws.com/groups/global/AllUsers"},
 				},
 			},
 		},

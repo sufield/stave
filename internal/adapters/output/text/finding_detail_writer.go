@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 const sectionWidth = 72
@@ -134,10 +135,10 @@ func writeEvidenceSourceDetails(d *drawer, ev *evaluation.Evidence) {
 		return
 	}
 	if len(ev.SourceEvidence.IdentityStatements) > 0 {
-		d.f("  Identity statements: %s\n", strings.Join(ev.SourceEvidence.IdentityStatements, ", "))
+		d.f("  Identity statements: %s\n", strings.Join(kernel.StringsFrom(ev.SourceEvidence.IdentityStatements), ", "))
 	}
 	if len(ev.SourceEvidence.ResourceGrantees) > 0 {
-		d.f("  Resource grantees:  %s\n", strings.Join(ev.SourceEvidence.ResourceGrantees, ", "))
+		d.f("  Resource grantees:  %s\n", strings.Join(kernel.StringsFrom(ev.SourceEvidence.ResourceGrantees), ", "))
 	}
 }
 

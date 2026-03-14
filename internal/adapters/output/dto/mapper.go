@@ -103,8 +103,8 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 
 	if e.SourceEvidence != nil {
 		dto.SourceEvidence = &SourceEvidenceDTO{
-			IdentityStatements: e.SourceEvidence.IdentityStatements,
-			ResourceGrantees:   e.SourceEvidence.ResourceGrantees,
+			IdentityStatements: kernel.StringsFrom(e.SourceEvidence.IdentityStatements),
+			ResourceGrantees:   kernel.StringsFrom(e.SourceEvidence.ResourceGrantees),
 		}
 	}
 

@@ -7,6 +7,7 @@ import (
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
 	"github.com/sufield/stave/internal/domain/asset"
 	s3exposure "github.com/sufield/stave/internal/domain/evaluation/exposure"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 type snapshotResourceProperties struct {
@@ -17,11 +18,11 @@ type snapshotResourceProperties struct {
 	PolicyJSON               string            `json:"policy_json,omitempty"`
 	PolicyAllowsPublicRead   *bool             `json:"policy_allows_public_read,omitempty"`
 	PolicyAllowsPublicList   *bool             `json:"policy_allows_public_list,omitempty"`
-	PolicyPublicStatements   []string          `json:"policy_public_statements,omitempty"`
+	PolicyPublicStatements   []kernel.StatementID `json:"policy_public_statements,omitempty"`
 	PolicyStatus             string            `json:"policy_status,omitempty"`
 	ACLGrants                []s3acl.Grant     `json:"acl_grants,omitempty"`
 	ACLAllowsPublicRead      *bool             `json:"acl_allows_public_read,omitempty"`
-	ACLPublicGrantees        []string          `json:"acl_public_grantees,omitempty"`
+	ACLPublicGrantees        []kernel.GranteeID `json:"acl_public_grantees,omitempty"`
 	ACLStatus                string            `json:"acl_status,omitempty"`
 	PublicAccessBlock        *snapshotPABBlock `json:"public_access_block,omitempty"`
 	PublicAccessFullyBlocked *bool             `json:"public_access_fully_blocked,omitempty"`
