@@ -171,7 +171,7 @@ func (e *Extractor) wrapSnapshots(resources []asset.Asset, now time.Time) []asse
 	snapshot1 := asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
 		GeneratedBy: &asset.GeneratedBy{
-			SourceType: "terraform-plan-json",
+			SourceType: kernel.SourceTypeTerraformPlanJSON,
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: pastTime,
@@ -181,7 +181,7 @@ func (e *Extractor) wrapSnapshots(resources []asset.Asset, now time.Time) []asse
 	snapshot2 := asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
 		GeneratedBy: &asset.GeneratedBy{
-			SourceType: "terraform-plan-json",
+			SourceType: kernel.SourceTypeTerraformPlanJSON,
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: now,

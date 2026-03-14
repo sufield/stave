@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/app/capabilities"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 func TestCapabilities_SourceTypeCount(t *testing.T) {
@@ -18,14 +19,14 @@ func TestCapabilities_SourceTypeCount(t *testing.T) {
 func TestCapabilities_SourceTypesExpectedSet(t *testing.T) {
 	caps := capabilities.GetCapabilities("test-v1")
 
-	got := make(map[string]bool, len(caps.Inputs.SourceTypes))
+	got := make(map[kernel.ObservationSourceType]bool, len(caps.Inputs.SourceTypes))
 	for _, st := range caps.Inputs.SourceTypes {
 		got[st.Type] = true
 	}
 
-	want := []string{
-		"terraform.plan_json",
-		"aws-s3-snapshot",
+	want := []kernel.ObservationSourceType{
+		kernel.SourceTypeTerraformPlanJSON,
+		kernel.SourceTypeAWSS3Snapshot,
 	}
 
 	for _, sourceType := range want {

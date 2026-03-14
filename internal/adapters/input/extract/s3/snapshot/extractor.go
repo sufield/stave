@@ -98,7 +98,7 @@ func (e *SnapshotExtractor) wrapSnapshots(resources []asset.Asset, now time.Time
 	snapshot1 := asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
 		GeneratedBy: &asset.GeneratedBy{
-			SourceType: "aws-s3-snapshot",
+			SourceType: kernel.SourceTypeAWSS3Snapshot,
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: pastTime,
@@ -107,7 +107,7 @@ func (e *SnapshotExtractor) wrapSnapshots(resources []asset.Asset, now time.Time
 	snapshot2 := asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
 		GeneratedBy: &asset.GeneratedBy{
-			SourceType: "aws-s3-snapshot",
+			SourceType: kernel.SourceTypeAWSS3Snapshot,
 			Tool:       "stave-s3-extractor",
 		},
 		CapturedAt: now,
