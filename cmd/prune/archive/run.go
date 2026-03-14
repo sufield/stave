@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/internal/pruner"
 )
 
-// --- Config & Runner ---
+// --- Config ---
 
 // Config defines the resolved parameters for a snapshot archive operation.
 type Config struct {
@@ -32,10 +32,26 @@ type Config struct {
 	Stdout          io.Writer
 }
 
-// Runner orchestrates the movement of stale snapshot files to an archive location.
-type Runner struct{}
+// --- Runner ---
 
-// Run executes the archiving workflow.
+// executionPlan holds the calculated state of what will be archived.
+type executionPlan struct {
+	obsDir         string
+	archiveDir     string
+	allFiles       []pruner.SnapshotFile
+	candidateFiles []pruner.SnapshotFile
+	output         pruner.ArchiveOutput
+	dryRun         bool
+}
+
+// Runner orchestrates the snapshot archiving process.
+// It holds the calculated plan between BuildPlan and Apply phases.
+type Runner struct {
+	cfg  Config
+	plan *executionPlan
+}
+
+// Run executes the full archiving workflow via the appeval.RunCleanup lifecycle.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	obsDir, archiveDir, err := resolveArchivePaths(cfg.ObservationsDir, cfg.ArchiveDir)
 	if err != nil {
@@ -45,101 +61,110 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)
 	}
 
-	effectiveDryRun := cfg.DryRun || !cfg.Force
+	cfg.ObservationsDir = obsDir
+	cfg.ArchiveDir = archiveDir
+	cfg.DryRun = cfg.DryRun || !cfg.Force
+	r.cfg = cfg
 
-	plan, err := r.buildPlan(ctx, cfg, obsDir, archiveDir, effectiveDryRun)
+	return appeval.RunCleanup(r)
+}
+
+// BuildPlan identifies which snapshots meet the criteria for archiving.
+func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(context.Background(), r.cfg.ObservationsDir)
 	if err != nil {
-		return err
+		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}
 
-	return appeval.RunCleanup(&archiveOrchestrator{
-		cfg:  cfg,
-		plan: plan,
+	candidates := pruneshared.PlanPrune(allFiles, pruner.Criteria{
+		Now:       r.cfg.Now,
+		OlderThan: r.cfg.OlderThan,
+		KeepMin:   r.cfg.KeepMin,
 	})
-}
 
-// --- Orchestrator ---
+	out := pruner.BuildArchiveOutput(pruner.ArchiveOutputInput{
+		CleanupInput: pruner.CleanupInput{
+			Now:             r.cfg.Now,
+			Action:          pruner.ActionMove,
+			DryRun:          r.cfg.DryRun,
+			ObservationsDir: r.cfg.ObservationsDir,
+			Tier:            r.cfg.RetentionTier,
+			OlderThan:       r.cfg.OlderThan,
+			KeepMin:         r.cfg.KeepMin,
+			AllFiles:        allFiles,
+			CandidateFiles:  candidates,
+		},
+		ArchiveDir: r.cfg.ArchiveDir,
+	})
 
-type archiveOutput = pruner.ArchiveOutput
+	r.plan = &executionPlan{
+		obsDir:         r.cfg.ObservationsDir,
+		archiveDir:     r.cfg.ArchiveDir,
+		allFiles:       allFiles,
+		candidateFiles: candidates,
+		output:         out,
+		dryRun:         r.cfg.DryRun,
+	}
 
-type archiveExecutionPlan struct {
-	pruneshared.CleanupPlan
-	overwrite    bool
-	allowSymlink bool
-	archiveDir   string
-	output       archiveOutput
-}
-
-type archiveOrchestrator struct {
-	cfg  Config
-	plan archiveExecutionPlan
-}
-
-func (a *archiveOrchestrator) BuildPlan() (appeval.CleanupPlan, error) {
 	return appeval.CleanupPlan{
-		CandidateCount: len(a.plan.CandidateFiles),
-		DryRun:         a.plan.DryRun,
+		CandidateCount: len(candidates),
+		DryRun:         r.cfg.DryRun,
 	}, nil
 }
 
-func (a *archiveOrchestrator) Render(_ appeval.CleanupPlan) error {
-	return renderArchiveExecutionPlan(a.plan, a.cfg.Stdout)
+// Render outputs the plan to the user in the requested format.
+func (r *Runner) Render(_ appeval.CleanupPlan) error {
+	return pruner.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, pruner.SnapshotCleanupRenderInput{
+		Format:         r.cfg.Format,
+		Output:         r.plan.output,
+		OutputKind:     "archive",
+		ActionLabel:    "archive",
+		SummaryPrefix:  "Archive",
+		Action:         pruner.ActionMove,
+		DryRun:         r.plan.dryRun,
+		AllFiles:       r.plan.allFiles,
+		CandidateFiles: r.plan.candidateFiles,
+		OlderThan:      r.cfg.OlderThan,
+		KeepMin:        r.cfg.KeepMin,
+		Tier:           r.cfg.RetentionTier,
+		Now:            r.cfg.Now,
+		Quiet:          r.cfg.Quiet,
+	})
 }
 
-func (a *archiveOrchestrator) Apply(_ appeval.CleanupPlan) error {
-	if err := applyArchiveExecutionPlan(a.plan); err != nil {
-		return err
+// Apply executes the file moves.
+func (r *Runner) Apply(_ appeval.CleanupPlan) error {
+	_, err := pruner.ApplyArchive(pruner.ArchiveInput{
+		ArchiveDir: r.plan.archiveDir,
+		Moves:      r.toArchiveMoves(),
+		Options: pruner.MoveOptions{
+			Overwrite:    r.cfg.Force,
+			AllowSymlink: r.cfg.AllowSymlink,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("archiving snapshots: %w", err)
 	}
-	if !a.cfg.Quiet && !a.plan.Format.IsJSON() {
-		fmt.Fprintf(a.cfg.Stdout, "Archived %d snapshot(s) to %s.\n", len(a.plan.CandidateFiles), a.plan.archiveDir)
+
+	if !r.cfg.Quiet && !r.cfg.Format.IsJSON() {
+		fmt.Fprintf(r.cfg.Stdout, "Archived %d snapshot(s) to %s.\n",
+			len(r.plan.candidateFiles), r.plan.archiveDir)
 	}
 	return nil
 }
 
-// --- Plan Building ---
-
-func (r *Runner) buildPlan(ctx context.Context, cfg Config, obsDir, archiveDir string, dryRun bool) (archiveExecutionPlan, error) {
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(ctx, obsDir)
-	if err != nil {
-		return archiveExecutionPlan{}, err
-	}
-	candidateFiles := pruneshared.PlanPrune(allFiles, pruner.Criteria{Now: cfg.Now, OlderThan: cfg.OlderThan, KeepMin: cfg.KeepMin})
-	out := pruner.BuildArchiveOutput(pruner.ArchiveOutputInput{
-		CleanupInput: pruner.CleanupInput{
-			Now:             cfg.Now,
-			Action:          pruner.ActionMove,
-			DryRun:          dryRun,
-			ObservationsDir: obsDir,
-			Tier:            cfg.RetentionTier,
-			OlderThan:       cfg.OlderThan,
-			KeepMin:         cfg.KeepMin,
-			AllFiles:        allFiles,
-			CandidateFiles:  candidateFiles,
-		},
-		ArchiveDir: archiveDir,
-	})
-	return archiveExecutionPlan{
-		CleanupPlan: pruneshared.CleanupPlan{
-			Now:             cfg.Now,
-			Action:          pruner.ActionMove,
-			DryRun:          dryRun,
-			Quiet:           cfg.Quiet,
-			Format:          cfg.Format,
-			ObservationsDir: obsDir,
-			Tier:            cfg.RetentionTier,
-			OlderThan:       cfg.OlderThan,
-			KeepMin:         cfg.KeepMin,
-			AllFiles:        allFiles,
-			CandidateFiles:  candidateFiles,
-		},
-		overwrite:    cfg.Force,
-		allowSymlink: cfg.AllowSymlink,
-		archiveDir:   archiveDir,
-		output:       out,
-	}, nil
-}
-
 // --- Helpers ---
+
+func (r *Runner) toArchiveMoves() []pruner.ArchiveMove {
+	moves := make([]pruner.ArchiveMove, 0, len(r.plan.candidateFiles))
+	for _, sf := range r.plan.candidateFiles {
+		moves = append(moves, pruner.ArchiveMove{
+			Src: sf.Path,
+			Dst: filepath.Join(r.plan.archiveDir, sf.Name),
+		})
+	}
+	return moves
+}
 
 func resolveArchivePaths(observationsPath, archivePath string) (string, string, error) {
 	obsDir := fsutil.CleanUserPath(observationsPath)
@@ -151,48 +176,6 @@ func resolveArchivePaths(observationsPath, archivePath string) (string, string, 
 		return "", "", fmt.Errorf("--archive-dir cannot be empty")
 	}
 	return obsDir, destArchiveDir, nil
-}
-
-func renderArchiveExecutionPlan(plan archiveExecutionPlan, out io.Writer) error {
-	return pruner.RenderSnapshotCleanupExecutionPlan(out, pruner.SnapshotCleanupRenderInput{
-		Format:         plan.Format,
-		Output:         plan.output,
-		OutputKind:     "archive",
-		ActionLabel:    "archive",
-		SummaryPrefix:  "Archive",
-		Action:         plan.Action,
-		DryRun:         plan.DryRun,
-		AllFiles:       plan.AllFiles,
-		CandidateFiles: plan.CandidateFiles,
-		OlderThan:      plan.OlderThan,
-		KeepMin:        plan.KeepMin,
-		Tier:           plan.Tier,
-		Now:            plan.Now,
-		Quiet:          plan.Quiet,
-	})
-}
-
-func applyArchiveExecutionPlan(plan archiveExecutionPlan) error {
-	_, err := pruner.ApplyArchive(pruner.ArchiveInput{
-		ArchiveDir: plan.archiveDir,
-		Moves:      toArchiveMoves(plan.CandidateFiles, plan.archiveDir),
-		Options: pruner.MoveOptions{
-			Overwrite:    plan.overwrite,
-			AllowSymlink: plan.allowSymlink,
-		},
-	})
-	return err
-}
-
-func toArchiveMoves(files []pruner.SnapshotFile, archiveDir string) []pruner.ArchiveMove {
-	moves := make([]pruner.ArchiveMove, 0, len(files))
-	for _, sf := range files {
-		moves = append(moves, pruner.ArchiveMove{
-			Src: sf.Path,
-			Dst: filepath.Join(archiveDir, sf.Name),
-		})
-	}
-	return moves
 }
 
 func moveSnapshotFile(src, dst string) error {
