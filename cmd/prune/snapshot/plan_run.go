@@ -99,13 +99,17 @@ func resolvePlanRetentionConfig() (map[string]projconfig.RetentionTierConfig, []
 }
 
 func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]snapshotFile, error) {
+	loader, err := compose.ActiveProvider().NewSnapshotRepo()
+	if err != nil {
+		return nil, fmt.Errorf("create observation loader: %w", err)
+	}
 	excludeDirs := make([]string, 0, 1)
 	if archiveDir != "" {
 		if abs, err := filepath.Abs(archiveDir); err == nil {
 			excludeDirs = append(excludeDirs, abs)
 		}
 	}
-	return listObservationSnapshotFilesRecursive(ctx, observationsRoot, excludeDirs)
+	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
 }
 
 func writePlanOutput(cmd *cobra.Command, plan planOutput, rawFormat string) error {
