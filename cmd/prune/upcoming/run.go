@@ -53,19 +53,19 @@ func (r *UpcomingRunner) Run(ctx context.Context, cfg UpcomingConfig) error {
 
 	items := mapRiskItems(riskItems)
 	if cfg.Sanitizer != nil {
-		items = sanitizeUpcomingItems(cfg.Sanitizer, items)
+		items = sanitizeItems(cfg.Sanitizer, items)
 	}
 	summary := summarizeUpcoming(items, cfg.DueSoon)
-	report := renderUpcomingMarkdown(items, summary, UpcomingRenderOptions{
+	report := renderUpcomingMarkdown(items, summary, RenderOptions{
 		Now:              cfg.Now,
 		DueSoonThreshold: cfg.DueSoon,
 	})
-	jsonOut := buildUpcomingOutput(cfg, summary, items)
+	jsonOut := buildOutput(cfg, summary, items)
 
 	if cfg.Quiet {
 		return nil
 	}
-	return writeUpcomingOutput(cfg.Format, cfg.Stdout, report, jsonOut)
+	return writeOutput(cfg.Format, cfg.Stdout, report, jsonOut)
 }
 
 // --- Bridge Helpers ---
@@ -108,7 +108,7 @@ func gatherUpcomingConfig(
 		return UpcomingConfig{}, err
 	}
 
-	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
+	filter, err := newUpcomingFilter(FilterCriteria{
 		ControlIDs: controlIDs,
 		AssetTypes: assetTypes,
 		Statuses:   statuses,

@@ -6,7 +6,7 @@ import (
 )
 
 // newUpcomingFilter transforms raw input criteria into a validated domain filter.
-func newUpcomingFilter(criteria UpcomingFilterCriteria) (risk.FilterCriteria, error) {
+func newUpcomingFilter(criteria FilterCriteria) (risk.FilterCriteria, error) {
 	validated, err := risk.ValidateStatuses(criteria.Statuses)
 	if err != nil {
 		return risk.FilterCriteria{}, err

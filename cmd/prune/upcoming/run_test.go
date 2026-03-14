@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/internal/pkg/fp"
 )
 
-func TestComputeAndMapUpcomingItems_SortsChronologicallyAndComputesStatus(t *testing.T) {
+func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) {
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
@@ -102,7 +102,7 @@ func TestComputeAndMapUpcomingItems_SortsChronologicallyAndComputesStatus(t *tes
 
 func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	out := renderUpcomingMarkdown(nil, UpcomingSummary{}, UpcomingRenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
+	out := renderUpcomingMarkdown(nil, Summary{}, RenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
 	if !strings.Contains(out, "No upcoming snapshot action items.") {
 		t.Fatalf("expected no-items message, got: %s", out)
 	}
@@ -110,7 +110,7 @@ func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 
 func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
-	items := []UpcomingItem{
+	items := []Item{
 		{Status: risk.StatusOverdue, Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
 		{Status: risk.StatusDueNow, Remaining: 0, DueAt: now},
 		{Status: risk.StatusUpcoming, Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},
@@ -120,14 +120,14 @@ func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	if s.Overdue != 1 || s.DueNow != 1 || s.DueSoon != 1 || s.Later != 1 || s.Total != 4 {
 		t.Fatalf("unexpected summary: %+v", s)
 	}
-	md := renderUpcomingSummaryMarkdown(s, 6*time.Hour)
+	md := renderSummaryMarkdown(s, 6*time.Hour)
 	if !strings.Contains(md, "Due soon (<= 6h): **1**") {
 		t.Fatalf("expected due-soon line in summary markdown, got: %s", md)
 	}
 }
 
 func TestNewUpcomingFilter_InvalidStatus(t *testing.T) {
-	_, err := newUpcomingFilter(UpcomingFilterCriteria{Statuses: []string{"later"}})
+	_, err := newUpcomingFilter(FilterCriteria{Statuses: []string{"later"}})
 	if err == nil {
 		t.Fatal("expected invalid status error")
 	}
@@ -161,7 +161,7 @@ func TestRiskItemsFilter(t *testing.T) {
 			Remaining: -1 * time.Hour,
 		},
 	}
-	filter, err := newUpcomingFilter(UpcomingFilterCriteria{
+	filter, err := newUpcomingFilter(FilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.TEST.A.001"},
 		AssetTypes: []kernel.AssetType{"res:aws:s3:bucket"},
 		Statuses:   []string{"OVERDUE", "UPCOMING"},
@@ -183,7 +183,7 @@ func TestRiskItemsFilter(t *testing.T) {
 }
 
 func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
-	criteria, err := newUpcomingFilter(UpcomingFilterCriteria{
+	criteria, err := newUpcomingFilter(FilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.A"},
 		AssetTypes: []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		Statuses:   []string{"OVERDUE"},

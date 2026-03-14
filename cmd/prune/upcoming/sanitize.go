@@ -5,8 +5,8 @@ import (
 	"github.com/sufield/stave/internal/sanitize"
 )
 
-func sanitizeUpcomingItems(s *sanitize.Sanitizer, items []UpcomingItem) []UpcomingItem {
-	out := make([]UpcomingItem, len(items))
+func sanitizeItems(s *sanitize.Sanitizer, items []Item) []Item {
+	out := make([]Item, len(items))
 	for i, item := range items {
 		item.AssetID = asset.ID(s.ID(string(item.AssetID)))
 		out[i] = item
