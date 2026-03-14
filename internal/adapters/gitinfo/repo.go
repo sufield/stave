@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"os/exec"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -75,7 +75,7 @@ func IsDirty(repoRoot string, paths []string) (bool, []string, error) {
 	for p := range dirty {
 		list = append(list, p)
 	}
-	sort.Strings(list)
+	slices.Sort(list)
 	return len(list) > 0, list, nil
 }
 
