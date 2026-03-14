@@ -1,16 +1,13 @@
 package securityaudit
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/govulncheck"
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
@@ -24,35 +21,33 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-type auditFlagsType struct {
-	format, out, outDir        string
-	severity, sbom, vulnSource string
-	failOn, releaseBundleDir   string
-	nowTime                    string
-	frameworks                 []string
-	liveVulnCheck, privacyMode bool
+// AuditConfig defines the resolved parameters for a security audit.
+type AuditConfig struct {
+	Format           string
+	OutPath          string
+	OutDir           string
+	SeverityFilter   []domainsecurityaudit.Severity
+	SBOMFormat       string
+	Frameworks       []string
+	VulnSource       string
+	LiveVulnCheck    bool
+	ReleaseBundleDir string
+	PrivacyMode      bool
+	FailOn           domainsecurityaudit.Severity
+	Now              time.Time
+
+	Force          bool
+	AllowSymlink   bool
+	Quiet          bool
+	RequireOffline bool
+	Stdout         io.Writer
 }
 
-type auditCmd struct {
-	flags auditFlagsType
-}
+// AuditRunner orchestrates security evidence collection.
+type AuditRunner struct{}
 
-func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
-
-	format, err := parseFormat(c.flags.format)
-	if err != nil {
-		return err
-	}
-	severityFilter, err := domainsecurityaudit.ParseSeverityList(c.flags.severity)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("invalid --severity: %w", err)}
-	}
-	failOn, err := domainsecurityaudit.ParseSeverity(c.flags.failOn)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
-	}
-
+// Run executes the security audit workflow.
+func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("resolve current directory: %w", err)
@@ -61,11 +56,8 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("resolve executable path: %w", err)
 	}
-	now, err := compose.ResolveNow(c.flags.nowTime)
-	if err != nil {
-		return &ui.UserError{Err: err}
-	}
-	bundleDir := c.resolveOutDir(now)
+
+	bundleDir := resolveOutDir(cfg.OutDir, cfg.Now)
 
 	runner := appsa.NewSecurityAuditRunner(appsa.RunnerDeps{
 		ReadFile: fsutil.ReadFileLimited,
@@ -94,44 +86,53 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 			}, nil
 		},
 	})
-	report, artifacts, err := runner.Run(cmd.Context(), appsa.SecurityAuditRequest{
-		Now:                  now,
+
+	report, artifacts, err := runner.Run(ctx, appsa.SecurityAuditRequest{
+		Now:                  cfg.Now,
 		ToolVersion:          staveversion.Version,
 		Cwd:                  cwd,
 		BinaryPath:           exe,
 		OutDir:               bundleDir,
-		SeverityFilter:       severityFilter,
-		SBOMFormat:           appsa.SBOMFormat(c.flags.sbom),
-		ComplianceFrameworks: c.flags.frameworks,
-		VulnSource:           appsa.VulnSource(c.flags.vulnSource),
-		LiveVulnCheck:        c.flags.liveVulnCheck,
-		ReleaseBundleDir:     fsutil.CleanUserPath(c.flags.releaseBundleDir),
-		PrivacyMode:          c.flags.privacyMode,
-		FailOn:               failOn,
-		RequireOffline:       gf.RequireOffline,
+		SeverityFilter:       cfg.SeverityFilter,
+		SBOMFormat:           appsa.SBOMFormat(cfg.SBOMFormat),
+		ComplianceFrameworks: cfg.Frameworks,
+		VulnSource:           appsa.VulnSource(cfg.VulnSource),
+		LiveVulnCheck:        cfg.LiveVulnCheck,
+		ReleaseBundleDir:     cfg.ReleaseBundleDir,
+		PrivacyMode:          cfg.PrivacyMode,
+		FailOn:               cfg.FailOn,
+		RequireOffline:       cfg.RequireOffline,
 	})
 	if err != nil {
 		return fmt.Errorf("run security audit: %w", err)
 	}
 
-	mainData, mainName, err := renderReport(format, report)
+	mainData, mainName, err := renderReport(cfg.Format, report)
 	if err != nil {
 		return err
 	}
 
+	outPathResolver := func(defaultPath string) string {
+		p := fsutil.CleanUserPath(cfg.OutPath)
+		if strings.TrimSpace(p) == "" {
+			return defaultPath
+		}
+		return p
+	}
+
 	mainOutPath, err := securityout.WriteBundle(
 		securityout.BundleWriteOpts{
-			Force:        gf.Force,
-			AllowSymlink: gf.AllowSymlinkOut,
+			Force:        cfg.Force,
+			AllowSymlink: cfg.AllowSymlink,
 		},
-		now, bundleDir, mainName, mainData, report, artifacts, c.resolveOutPath,
+		cfg.Now, bundleDir, mainName, mainData, report, artifacts, outPathResolver,
 	)
 	if err != nil {
 		return err
 	}
 
-	if !gf.Quiet {
-		if err := printSummary(cmd.OutOrStdout(), mainOutPath, bundleDir, report.Summary); err != nil {
+	if !cfg.Quiet {
+		if err := printSummary(cfg.Stdout, mainOutPath, bundleDir, report.Summary); err != nil {
 			return err
 		}
 	}
@@ -140,6 +141,16 @@ func (c *auditCmd) run(cmd *cobra.Command, _ []string) error {
 		return ui.ErrSecurityAuditFindings
 	}
 	return nil
+}
+
+// --- Helpers ---
+
+func resolveOutDir(raw string, now time.Time) string {
+	outDir := fsutil.CleanUserPath(raw)
+	if strings.TrimSpace(outDir) != "" {
+		return outDir
+	}
+	return fmt.Sprintf("security-audit-%s", now.UTC().Format("20060102T150405Z"))
 }
 
 func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecurityaudit.Summary) error {
@@ -178,20 +189,4 @@ func renderReport(format string, report domainsecurityaudit.Report) ([]byte, str
 	default:
 		return nil, "", fmt.Errorf("unsupported report format %q", format)
 	}
-}
-
-func (c *auditCmd) resolveOutDir(now time.Time) string {
-	outDir := fsutil.CleanUserPath(c.flags.outDir)
-	if strings.TrimSpace(outDir) != "" {
-		return outDir
-	}
-	return fmt.Sprintf("security-audit-%s", now.UTC().Format("20060102T150405Z"))
-}
-
-func (c *auditCmd) resolveOutPath(defaultPath string) string {
-	outPath := fsutil.CleanUserPath(c.flags.out)
-	if strings.TrimSpace(outPath) == "" {
-		return defaultPath
-	}
-	return outPath
 }
