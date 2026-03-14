@@ -27,10 +27,12 @@ type GenerateConfig struct {
 }
 
 // GenerateRunner orchestrates the indexing of observation files and manifest creation.
-type GenerateRunner struct{}
+type GenerateRunner struct {
+	validator *contractvalidator.Validator
+}
 
 // Run executes the manifest generation workflow.
-func (r *GenerateRunner) Run(_ context.Context, cfg GenerateConfig) error {
+func (r *GenerateRunner) Run(ctx context.Context, cfg GenerateConfig) error {
 	dir := filepath.Clean(cfg.ObservationsDir)
 	out := filepath.Clean(cfg.OutPath)
 
@@ -40,19 +42,20 @@ func (r *GenerateRunner) Run(_ context.Context, cfg GenerateConfig) error {
 		return fmt.Errorf("--observations must be a directory: %s", dir)
 	}
 
-	files, skipped, err := collectObservationHashes(dir)
+	files, skipped, err := r.collectHashes(ctx, dir)
 	if err != nil {
 		return err
 	}
 	if len(files) == 0 {
 		return fmt.Errorf("%w: no observation snapshots found in %q", appeval.ErrNoSnapshots, dir)
 	}
-	manifest := integrity.Manifest{
+
+	m := integrity.Manifest{
 		Files:   files,
 		Overall: integrity.ComputeOverall(files),
 	}
 
-	data, err := json.MarshalIndent(manifest, "", "  ")
+	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal manifest: %w", err)
 	}
@@ -69,27 +72,41 @@ func (r *GenerateRunner) Run(_ context.Context, cfg GenerateConfig) error {
 	return nil
 }
 
-func collectObservationHashes(dir string) (map[evaluation.FilePath]kernel.Digest, int, error) {
+func (r *GenerateRunner) ensureValidator() *contractvalidator.Validator {
+	if r.validator == nil {
+		r.validator = contractvalidator.New()
+	}
+	return r.validator
+}
+
+func (r *GenerateRunner) collectHashes(ctx context.Context, dir string) (map[evaluation.FilePath]kernel.Digest, int, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, 0, fmt.Errorf("read observations directory: %w", err)
+		return nil, 0, fmt.Errorf("reading observations directory: %w", err)
 	}
 
-	validator := contractvalidator.New()
+	v := r.ensureValidator()
 	files := make(map[evaluation.FilePath]kernel.Digest)
 	skipped := 0
+
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") || isExcludedManifestArtifact(entry.Name()) {
+		select {
+		case <-ctx.Done():
+			return nil, 0, ctx.Err()
+		default:
+		}
+
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") || isManifestArtifact(entry.Name()) {
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())
 		data, readErr := fsutil.ReadFileLimited(path)
 		if readErr != nil {
-			return nil, 0, fmt.Errorf("read observation %q: %w", path, readErr)
+			return nil, 0, fmt.Errorf("reading %q: %w", path, readErr)
 		}
-		issues, validateErr := validator.ValidateObservationJSON(data)
+		issues, validateErr := v.ValidateObservationJSON(data)
 		if validateErr != nil {
-			return nil, 0, fmt.Errorf("validate observation schema for %q: %w", path, validateErr)
+			return nil, 0, fmt.Errorf("validating schema for %q: %w", path, validateErr)
 		}
 		if issues.HasErrors() || issues.HasWarnings() {
 			skipped++
@@ -100,7 +117,7 @@ func collectObservationHashes(dir string) (map[evaluation.FilePath]kernel.Digest
 	return files, skipped, nil
 }
 
-func isExcludedManifestArtifact(name string) bool {
+func isManifestArtifact(name string) bool {
 	lower := strings.ToLower(name)
 	return lower == "manifest.json" ||
 		lower == "signed-manifest.json" ||

@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/x509"
 	"encoding/json"
@@ -45,7 +46,7 @@ func TestCollectObservationHashes_FiltersNonObservationAndManifestArtifacts(t *t
 		t.Fatal(err)
 	}
 
-	files, skipped, err := collectObservationHashes(dir)
+	files, skipped, err := (&GenerateRunner{}).collectHashes(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("collectObservationHashes failed: %v", err)
 	}
@@ -76,9 +77,9 @@ func TestIsExcludedManifestArtifact(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		got := isExcludedManifestArtifact(tc.name)
+		got := isManifestArtifact(tc.name)
 		if got != tc.want {
-			t.Fatalf("isExcludedManifestArtifact(%q) = %v, want %v", tc.name, got, tc.want)
+			t.Fatalf("isManifestArtifact(%q) = %v, want %v", tc.name, got, tc.want)
 		}
 	}
 }
