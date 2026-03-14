@@ -198,7 +198,7 @@ func WireCommands(app *App) {
 	root.AddCommand(ingest.NewIngestCmd(ui.DefaultRuntime()))
 	root.AddCommand(artifacts.NewControlsCmd())
 	root.AddCommand(artifacts.NewPacksCmd())
-	root.AddCommand(enforce.NewEnforceCmd())
+	root.AddCommand(enforce.NewGenerateCmd())
 	root.AddCommand(enforce.NewGraphCmd())
 	root.AddCommand(diagreport.NewReportCmd())
 

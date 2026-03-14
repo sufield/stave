@@ -105,7 +105,7 @@ func (r *Runner) Run(_ context.Context, cfg Config) error {
 		return ui.WithNextCommand(err, "stave init")
 	}
 
-	state, err := r.scan(root)
+	state, err := r.Scan(root)
 	if err != nil {
 		return fmt.Errorf("scanning project: %w", err)
 	}
@@ -129,7 +129,8 @@ type statusResult struct {
 
 // --- Infrastructure: Filesystem Scanner ---
 
-func (r *Runner) scan(root string) (State, error) {
+// Scan collects project artifact metadata from the filesystem.
+func (r *Runner) Scan(root string) (State, error) {
 	controls, _ := r.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
 	raw, _ := r.summarize(filepath.Join(root, "snapshots", "raw"), ".json")
 	obs, _ := r.summarize(filepath.Join(root, "observations"), ".json")
@@ -214,14 +215,4 @@ func (r *Runner) presentText(w io.Writer, s State, next string) error {
 	label := ui.SeverityLabel("info", fmt.Sprintf("Next: %s", next), w)
 	fmt.Fprintf(w, "\n%s\n", label)
 	return nil
-}
-
-// NextCommandForProject is a convenience helper for external callers.
-func NextCommandForProject(projectRoot string) (string, error) {
-	r := &Runner{}
-	state, err := r.scan(projectRoot)
-	if err != nil {
-		return "", err
-	}
-	return state.RecommendNext(), nil
 }
