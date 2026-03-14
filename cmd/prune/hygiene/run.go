@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -140,7 +141,7 @@ func buildHygieneOutputs(execCtx hygieneExecution) (appcontracts.ReportRequest, 
 	if err != nil {
 		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}
-	files, err := listObservationSnapshotFiles(ctx, req.ObservationsDir)
+	files, err := pruneshared.ListObservationSnapshotFiles(ctx, req.ObservationsDir)
 	if err != nil {
 		return appcontracts.ReportRequest{}, hygieneapp.Output{}, err
 	}
@@ -180,10 +181,10 @@ func buildHygieneSnapshotStats(
 	execCtx hygieneExecution,
 	activeSnapshots []asset.Snapshot,
 	archiveSnapshots []asset.Snapshot,
-	files []snapshotFile,
+	files []pruner.SnapshotFile,
 ) appcontracts.SnapshotStats {
 	keepMin := execCtx.req.KeepMin
-	pruneCandidates := planPrune(files, PruningCriteria{Now: execCtx.now, OlderThan: execCtx.retentionDur, KeepMin: keepMin})
+	pruneCandidates := pruneshared.PlanPrune(files, pruner.Criteria{Now: execCtx.now, OlderThan: execCtx.retentionDur, KeepMin: keepMin})
 	return appcontracts.NewSnapshotStats(
 		len(activeSnapshots),
 		len(archiveSnapshots),

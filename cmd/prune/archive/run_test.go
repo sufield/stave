@@ -12,7 +12,7 @@ import (
 
 func TestPlanPruneForArchive_RespectsKeepMin(t *testing.T) {
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	files := []snapshotFile{
+	files := []pruner.SnapshotFile{
 		{Name: "a.json", CapturedAt: now.AddDate(0, 0, -40)},
 		{Name: "b.json", CapturedAt: now.AddDate(0, 0, -35)},
 		{Name: "c.json", CapturedAt: now.AddDate(0, 0, -20)},
