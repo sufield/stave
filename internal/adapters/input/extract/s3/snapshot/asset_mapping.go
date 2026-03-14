@@ -52,12 +52,15 @@ func (e *SnapshotExtractor) observationToAsset(obs S3Observation) asset.Asset {
 	policyAnalysis, hasPolicy, policyMissing := applyPolicyObservation(obs, &props)
 	aclAnalysis, aclMissing := applyACLObservation(obs, &props)
 	effectivePAB := applyPABObservation(obs, &props)
-	effective := s3exposure.ResolveEffectiveVisibility(
-		s3resource.ToIdentityVisibility(policyAnalysis),
-		s3resource.ToResourceVisibility(aclAnalysis),
-		s3resource.ToGovernanceOverrides(effectivePAB),
-	)
-	props.Public = effective.IsExposed() || (hasPolicy && policyAnalysis.HasWildcardActions)
+	access := s3exposure.ResolveBucketAccess(s3exposure.BucketAccessInput{
+		Identity:          s3resource.ToIdentityVisibility(policyAnalysis),
+		Resource:          s3resource.ToResourceVisibility(aclAnalysis),
+		Gov:               s3resource.ToGovernanceOverrides(effectivePAB),
+		HasWildcardPolicy: hasPolicy && policyAnalysis.HasWildcardActions,
+	})
+	vis := access.Visibility
+	exposed := vis.PublicRead || vis.PublicWrite || vis.PublicList || vis.PublicDelete || vis.PublicAdmin
+	props.Public = exposed || access.HasWildcardPolicy
 	props.SafetyProvable = !policyMissing && !aclMissing
 	props.SourceEvidence = buildSnapshotSourceEvidence(props)
 

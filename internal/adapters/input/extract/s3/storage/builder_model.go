@@ -3,29 +3,32 @@ package storage
 func BuildModel(in BuildModelInput) S3StorageModel {
 	bucket := in.Bucket
 
+	access := in.Access
+
 	model := S3StorageModel{
 		Kind:       "bucket",
 		ID:         bucket.Name.ModelID(),
 		Name:       bucket.Name.Name(),
-		Visibility: in.Visibility,
+		Visibility: access.Visibility,
 		ACL: ACLSummary{
-			FullControlPublic:        in.Analysis.ACL.HasFullControlPublic,
-			FullControlAuthenticated: in.Analysis.ACL.HasFullControlAuthenticated,
+			FullControlPublic:        access.ACLFullControl.FullControlPublic,
+			FullControlAuthenticated: access.ACLFullControl.FullControlAuthenticated,
 		},
 		Controls: buildS3Controls(in),
-		PrefixExposure: buildPrefixExposureModel(prefixExposureModelInput{
-			PrefixScopes:   in.Analysis.PrefixScopes,
-			HasPolicy:      in.Analysis.HasPolicy,
-			ACLAnalysis:    in.Analysis.ACL,
-			HasACLAnalysis: in.Analysis.HasACL,
-			PolicyBlocked:  in.Visibility.IdentityExposureBlocked,
-			ACLBlocked:     in.Visibility.ResourceExposureBlocked,
-		}),
+		PrefixExposure: S3PrefixExposure{
+			HasIdentityEvidence:   access.PrefixExposure.HasIdentityEvidence,
+			HasResourceEvidence:   access.PrefixExposure.HasResourceEvidence,
+			IdentityReadScopes:    access.PrefixExposure.IdentityReadScopes,
+			IdentitySourceByScope: access.PrefixExposure.IdentitySourceByScope,
+			IdentityReadBlocked:   access.PrefixExposure.IdentityReadBlocked,
+			ResourceReadAll:       access.PrefixExposure.ResourceReadAll,
+			ResourceReadBlocked:   access.PrefixExposure.ResourceReadBlocked,
+		},
 		Encryption: S3Encryption{
 			AtRestEnabled:     bucket.Encryption != nil,
 			Algorithm:         encryptionAlgorithmOrEmpty(bucket.Encryption),
 			KMSKeyID:          encryptionKMSKeyOrEmpty(bucket.Encryption),
-			InTransitEnforced: in.Analysis.Transport.EnforcesHTTPS,
+			InTransitEnforced: in.TransportEnforcesHTTPS,
 		},
 		Versioning: S3Versioning{
 			Enabled:          bucket.Versioning != nil && bucket.Versioning.Status == VersioningEnabled,
@@ -36,17 +39,17 @@ func BuildModel(in BuildModelInput) S3StorageModel {
 			TargetBucket: loggingTargetBucket(bucket.Logging),
 			TargetPrefix: loggingTargetPrefix(bucket.Logging),
 		},
-		Access: S3Access{
-			ExternalAccounts:   in.Analysis.CrossAccount.ExternalAccountARNs,
-			ExternalAccountIDs: in.Analysis.CrossAccount.ExternalAccountIDs,
-			HasExternalAccess:  in.Analysis.CrossAccount.HasExternalAccess,
-			HasExternalWrite:   in.Analysis.CrossAccount.HasExternalWrite,
-			HasWildcardPolicy:  in.Analysis.Policy.HasWildcardActions,
+		Access: CrossAccountSummary{
+			ExternalAccounts:   access.CrossAccount.ExternalAccountARNs,
+			ExternalAccountIDs: access.CrossAccount.ExternalAccountIDs,
+			HasExternalAccess:  access.CrossAccount.HasExternalAccess,
+			HasExternalWrite:   access.CrossAccount.HasExternalWrite,
+			HasWildcardPolicy:  access.HasWildcardPolicy,
 		},
 		Policy: S3Policy{
-			HasIPCondition:        in.Analysis.Policy.HasIPCondition,
-			HasVPCCondition:       in.Analysis.Policy.HasVPCCondition,
-			EffectiveNetworkScope: in.Analysis.Policy.EffectiveNetworkScope,
+			HasIPCondition:        access.NetworkScope.HasIPCondition,
+			HasVPCCondition:       access.NetworkScope.HasVPCCondition,
+			EffectiveNetworkScope: access.NetworkScope.EffectiveNetworkScope,
 		},
 		Website:    websiteFromBucket(bucket),
 		Lifecycle:  bucket.Lifecycle.Canonical(),

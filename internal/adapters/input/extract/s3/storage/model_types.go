@@ -58,11 +58,11 @@ func (olc *ObjectLockConfig) Canonical() S3ObjectLock {
 }
 
 type BuildModelInput struct {
-	Bucket       *S3Bucket
-	AccountPAB   *PublicAccessBlock
-	EffectivePAB PublicAccessBlock
-	Analysis     S3AnalysisResult
-	Visibility   s3exposure.VisibilityResult
+	Bucket                 *S3Bucket
+	AccountPAB             *PublicAccessBlock
+	EffectivePAB           PublicAccessBlock
+	Access                 s3exposure.BucketAccess
+	TransportEnforcesHTTPS bool
 }
 
 // S3StorageModel is the projected storage representation of an S3 bucket.
@@ -80,7 +80,7 @@ type S3StorageModel struct {
 	ACL            ACLSummary                  `json:"acl"`
 	Controls       S3Controls                  `json:"controls"`
 	PrefixExposure S3PrefixExposure            `json:"prefix_exposure"`
-	Access         S3Access                    `json:"access"`
+	Access         CrossAccountSummary                    `json:"access"`
 	Policy         S3Policy                    `json:"policy"`
 
 	// Security
@@ -120,7 +120,7 @@ type S3Logging struct {
 	TargetPrefix string `json:"target_prefix"`
 }
 
-type S3Access struct {
+type CrossAccountSummary struct {
 	ExternalAccounts   []string `json:"external_accounts"`
 	ExternalAccountIDs []string `json:"external_account_ids"`
 	HasExternalAccess  bool     `json:"has_external_access"`
