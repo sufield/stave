@@ -202,4 +202,3 @@ func LoadUserAliases() map[string]string {
 	}
 	return cfg.Aliases
 }
-
