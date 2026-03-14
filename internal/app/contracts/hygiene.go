@@ -3,6 +3,7 @@ package contracts
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 )
 
@@ -11,7 +12,7 @@ type ReportRequest struct {
 	Context   ReportContext
 	Snapshots SnapshotStats
 	Risks     RiskStats
-	Trends    []TrendMetric
+	Trends    []evaluation.TrendMetric
 }
 
 // ReportContext provides the temporal metadata for the report.
@@ -69,11 +70,4 @@ func NewRiskStats(violations int, summary risk.Summary) RiskStats {
 		Later:             summary.Later,
 		UpcomingTotal:     summary.Total,
 	}
-}
-
-// TrendMetric compares current vs previous values for a metric.
-type TrendMetric struct {
-	Name     string `json:"name"`
-	Current  int    `json:"current"`
-	Previous int    `json:"previous"`
 }

@@ -12,6 +12,7 @@ import (
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -152,7 +153,7 @@ func computeRiskTrend(
 	previousNow time.Time,
 	controls []policy.ControlDefinition,
 	activeSnapshots []asset.Snapshot,
-) (appcontracts.RiskStats, []appcontracts.TrendMetric) {
+) (appcontracts.RiskStats, []evaluation.TrendMetric) {
 	riskOpts := buildRiskOptions(cfg)
 
 	svc := hygieneapp.NewService()

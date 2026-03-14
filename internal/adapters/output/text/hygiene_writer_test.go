@@ -6,12 +6,13 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
 func TestWriteHygieneReport(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	previous := now.Add(-7 * 24 * time.Hour)
-	trends := []appcontracts.TrendMetric{
+	trends := []evaluation.TrendMetric{
 		{Name: "Current violations", Current: 10, Previous: 5},
 		{Name: "Upcoming overdue", Current: 2, Previous: 2},
 	}

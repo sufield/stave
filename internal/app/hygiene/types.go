@@ -4,6 +4,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -25,5 +26,5 @@ type Output struct {
 	Filters          HygieneFilters             `json:"filters"`
 	SnapshotStats    appcontracts.SnapshotStats `json:"snapshot_stats"`
 	RiskStats        appcontracts.RiskStats     `json:"risk_stats"`
-	Trend            []appcontracts.TrendMetric `json:"trend"`
+	Trend            []evaluation.TrendMetric   `json:"trend"`
 }

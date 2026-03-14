@@ -6,6 +6,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/domain/evaluation"
 )
 
 // hygieneWriter collects the first write error so callers don't need to check every fmt call.
@@ -63,17 +64,10 @@ func writeRiskTable(h *hygieneWriter, risk appcontracts.RiskStats, dueSoon time.
 	h.f("| Upcoming total | %d |\n\n", risk.UpcomingTotal)
 }
 
-func writeTrendTable(h *hygieneWriter, trends []appcontracts.TrendMetric) {
+func writeTrendTable(h *hygieneWriter, trends []evaluation.TrendMetric) {
 	h.f("## Risk Posture & Trends\n\n")
 	h.f("| Metric | Current | Previous | Change |\n| :--- | :--- | :--- | :--- |\n")
 	for _, trend := range trends {
-		change := trend.Current - trend.Previous
-		symbol := ""
-		if change > 0 {
-			symbol = "↑ "
-		} else if change < 0 {
-			symbol = "↓ "
-		}
-		h.f("| %s | %d | %d | %s%d |\n", trend.Name, trend.Current, trend.Previous, symbol, change)
+		h.f("| %s | %d | %d | %s%d |\n", trend.Name, trend.Current, trend.Previous, trend.Symbol(), trend.Change())
 	}
 }
