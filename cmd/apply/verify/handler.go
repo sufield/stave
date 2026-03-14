@@ -93,9 +93,9 @@ func compareEvaluations(
 ) verificationOutcome {
 	diff := evaluation.CompareVerificationFindings(before.result.Findings, after.result.Findings)
 
-	resolved := redactEntries(sz, shared.FindingsToVerificationEntries(diff.Resolved))
-	remaining := redactEntries(sz, shared.FindingsToVerificationEntries(diff.Remaining))
-	introduced := redactEntries(sz, shared.FindingsToVerificationEntries(diff.Introduced))
+	resolved := shared.FindingsToVerificationEntries(sz, diff.Resolved)
+	remaining := shared.FindingsToVerificationEntries(sz, diff.Remaining)
+	introduced := shared.FindingsToVerificationEntries(sz, diff.Introduced)
 
 	envelope := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
@@ -123,16 +123,6 @@ func compareEvaluations(
 		RemainingCount:  len(remaining),
 		IntroducedCount: len(introduced),
 	}
-}
-
-// redactEntries returns a new slice with sensitive fields (AssetID) sanitized.
-func redactEntries(sz *sanitize.Sanitizer, entries []safetyenvelope.VerificationEntry) []safetyenvelope.VerificationEntry {
-	out := make([]safetyenvelope.VerificationEntry, len(entries))
-	for i, e := range entries {
-		e.AssetID = sz.Verification(e.AssetID)
-		out[i] = e
-	}
-	return out
 }
 
 func handleVerifyExit(rt *ui.Runtime, outcome verificationOutcome) error {

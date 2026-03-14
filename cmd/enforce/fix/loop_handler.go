@@ -177,9 +177,9 @@ func (r *Runner) evaluateState(
 
 func (r *Runner) verify(before, after evaluationState, maxUnsafe time.Duration) (safetyenvelope.Verification, error) {
 	diff := evaluation.CompareVerificationFindings(before.Result.Findings, after.Result.Findings)
-	resolved := shared.FindingsToVerificationEntries(diff.Resolved)
-	remaining := shared.FindingsToVerificationEntries(diff.Remaining)
-	introduced := shared.FindingsToVerificationEntries(diff.Introduced)
+	resolved := shared.FindingsToVerificationEntries(r.Sanitizer, diff.Resolved)
+	remaining := shared.FindingsToVerificationEntries(r.Sanitizer, diff.Remaining)
+	introduced := shared.FindingsToVerificationEntries(r.Sanitizer, diff.Introduced)
 
 	v := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
