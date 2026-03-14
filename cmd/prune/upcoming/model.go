@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// UpcomingItem represents a single upcoming snapshot action item.
-type UpcomingItem struct {
+// Item represents a single upcoming snapshot action item.
+type Item struct {
 	DueAt          time.Time
 	Status         risk.Status
 	ControlID      kernel.ControlID
@@ -21,8 +21,8 @@ type UpcomingItem struct {
 	Remaining      time.Duration
 }
 
-// UpcomingSummary holds aggregate counts for upcoming items by status.
-type UpcomingSummary struct {
+// Summary holds aggregate counts for upcoming items by status.
+type Summary struct {
 	Overdue int
 	DueNow  int
 	DueSoon int
@@ -30,28 +30,28 @@ type UpcomingSummary struct {
 	Total   int
 }
 
-// UpcomingOutput is the JSON-serializable output for the upcoming command.
-type UpcomingOutput struct {
-	GeneratedAt  time.Time       `json:"generated_at"`
-	ControlsDir  string          `json:"controls_dir"`
-	Observations string          `json:"observations_dir"`
-	MaxUnsafe    string          `json:"max_unsafe"`
-	DueSoon      string          `json:"due_soon"`
-	Summary      UpcomingSummary `json:"summary"`
-	Items        []UpcomingItem  `json:"items"`
+// Output is the JSON-serializable output for the upcoming command.
+type Output struct {
+	GeneratedAt  time.Time `json:"generated_at"`
+	ControlsDir  string    `json:"controls_dir"`
+	Observations string    `json:"observations_dir"`
+	MaxUnsafe    string    `json:"max_unsafe"`
+	DueSoon      string    `json:"due_soon"`
+	Summary      Summary   `json:"summary"`
+	Items        []Item    `json:"items"`
 }
 
-// UpcomingFilterCriteria holds filter rules for upcoming action items.
+// FilterCriteria holds filter rules for upcoming action items.
 // A DueWithin of 0 means no duration filter is applied.
-type UpcomingFilterCriteria struct {
+type FilterCriteria struct {
 	ControlIDs []kernel.ControlID
 	AssetTypes []kernel.AssetType
 	Statuses   []string
 	DueWithin  time.Duration
 }
 
-// UpcomingRenderOptions holds configuration for rendering upcoming markdown.
-type UpcomingRenderOptions struct {
+// RenderOptions holds configuration for rendering upcoming markdown.
+type RenderOptions struct {
 	Now              time.Time
 	DueSoonThreshold time.Duration
 }

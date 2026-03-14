@@ -6,13 +6,13 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 )
 
-func mapRiskItems(items risk.Items) []UpcomingItem {
+func mapRiskItems(items risk.Items) []Item {
 	if len(items) == 0 {
 		return nil
 	}
-	out := make([]UpcomingItem, len(items))
+	out := make([]Item, len(items))
 	for i, d := range items {
-		out[i] = UpcomingItem{
+		out[i] = Item{
 			DueAt:          d.DueAt,
 			Status:         d.Status,
 			ControlID:      d.ControlID,
@@ -27,7 +27,7 @@ func mapRiskItems(items risk.Items) []UpcomingItem {
 	return out
 }
 
-func summarizeUpcoming(items []UpcomingItem, dueSoonThreshold time.Duration) UpcomingSummary {
+func summarizeUpcoming(items []Item, dueSoonThreshold time.Duration) Summary {
 	// Convert to risk.Items for canonical summarization.
 	riskItems := make(risk.Items, len(items))
 	for i, item := range items {
@@ -37,7 +37,7 @@ func summarizeUpcoming(items []UpcomingItem, dueSoonThreshold time.Duration) Upc
 		}
 	}
 	s := riskItems.Summarize(dueSoonThreshold)
-	return UpcomingSummary{
+	return Summary{
 		Overdue: s.Overdue,
 		DueNow:  s.DueNow,
 		DueSoon: s.DueSoon,
