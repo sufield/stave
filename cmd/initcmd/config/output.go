@@ -3,38 +3,33 @@ package config
 import (
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-type configResolvedField = configservice.ResolvedField
-type configShowOutput = configservice.EffectiveConfig
+// showOutput is a convenience alias for the effective config type used in tests.
+type showOutput = configservice.EffectiveConfig
 
-func buildConfigShowOutput() configShowOutput {
-	return projconfig.Global().BuildEffectiveConfig()
+// ShowPresenter handles the formatting and output of the configuration summary.
+type ShowPresenter struct {
+	Stdout io.Writer
 }
 
-func writeConfigShowJSON(w io.Writer, out configShowOutput) error {
-	return jsonutil.WriteIndented(w, out)
+// Render writes the configuration summary in the requested format.
+func (p *ShowPresenter) Render(out configservice.EffectiveConfig, json bool) error {
+	if json {
+		return jsonutil.WriteIndented(p.Stdout, out)
+	}
+	return p.renderText(out)
 }
 
-func writeConfigShowText(w io.Writer, out configShowOutput) error {
-	if err := writeConfigShowHeader(w, out); err != nil {
-		return err
-	}
-	if err := writeConfigShowCLIDefaults(w, out); err != nil {
-		return err
-	}
-	if err := writeDefinedRetentionTierText(w, out.DefinedRetentionTiers); err != nil {
-		return err
-	}
-	return writeEffectiveRetentionText(w, out.EffectiveRetentionByTier)
-}
+func (p *ShowPresenter) renderText(out configservice.EffectiveConfig) error {
+	w := p.Stdout
 
-func writeConfigShowHeader(w io.Writer, out configShowOutput) error {
+	// Header
 	lines := []string{
 		"Effective Configuration",
 		"-----------------------",
@@ -49,7 +44,51 @@ func writeConfigShowHeader(w io.Writer, out configShowOutput) error {
 		fmt.Sprintf("default_retention_tier: %s (%s)", out.DefaultRetentionTier.Value, out.DefaultRetentionTier.Source),
 		fmt.Sprintf("ci_failure_policy: %s (%s)", out.CIFailurePolicy.Value, out.CIFailurePolicy.Source),
 	)
-	return writeLines(w, lines...)
+	if err := writeLines(w, lines...); err != nil {
+		return err
+	}
+
+	// CLI defaults
+	cliLines := []string{
+		"\nCLI defaults:",
+		fmt.Sprintf("  - output: %s (%s)", out.CLIOutput.Value, out.CLIOutput.Source),
+		fmt.Sprintf("  - quiet: %s (%s)", out.CLIQuiet.Value, out.CLIQuiet.Source),
+		fmt.Sprintf("  - sanitize: %s (%s)", out.CLISanitize.Value, out.CLISanitize.Source),
+		fmt.Sprintf("  - path_mode: %s (%s)", out.CLIPathMode.Value, out.CLIPathMode.Source),
+		fmt.Sprintf("  - allow_unknown_input: %s (%s)", out.CLIAllowUnknownInput.Value, out.CLIAllowUnknownInput.Source),
+	}
+	if err := writeLines(w, cliLines...); err != nil {
+		return err
+	}
+
+	// Defined retention tiers
+	if err := writeLines(w, "\nDefined retention tiers:"); err != nil {
+		return err
+	}
+	for _, name := range sortedKeys(out.DefinedRetentionTiers) {
+		tier := out.DefinedRetentionTiers[name]
+		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, tier.EffectiveKeepMin()); err != nil {
+			return err
+		}
+	}
+
+	// Effective retention by tier
+	if err := writeLines(w, "\nEffective retention by tier:"); err != nil {
+		return err
+	}
+	for _, name := range sortedKeys(out.EffectiveRetentionByTier) {
+		field := out.EffectiveRetentionByTier[name]
+		if _, err := fmt.Fprintf(w, "  - %s: %s (%s)\n", name, field.Value, field.Source); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// buildShowOutput resolves the current effective configuration state.
+func buildShowOutput() configservice.EffectiveConfig {
+	return projconfig.Global().BuildEffectiveConfig()
 }
 
 func configFileLine(configFile string) string {
@@ -59,52 +98,13 @@ func configFileLine(configFile string) string {
 	return fmt.Sprintf("Config file: %s", configFile)
 }
 
-func writeConfigShowCLIDefaults(w io.Writer, out configShowOutput) error {
-	lines := []string{
-		"\nCLI defaults:",
-		fmt.Sprintf("  - output: %s (%s)", out.CLIOutput.Value, out.CLIOutput.Source),
-		fmt.Sprintf("  - quiet: %s (%s)", out.CLIQuiet.Value, out.CLIQuiet.Source),
-		fmt.Sprintf("  - sanitize: %s (%s)", out.CLISanitize.Value, out.CLISanitize.Source),
-		fmt.Sprintf("  - path_mode: %s (%s)", out.CLIPathMode.Value, out.CLIPathMode.Source),
-		fmt.Sprintf("  - allow_unknown_input: %s (%s)", out.CLIAllowUnknownInput.Value, out.CLIAllowUnknownInput.Source),
+func sortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
 	}
-	return writeLines(w, lines...)
-}
-
-func writeDefinedRetentionTierText(w io.Writer, tiers map[string]configservice.RetentionTierConfig) error {
-	if err := writeLines(w, "\nDefined retention tiers:"); err != nil {
-		return err
-	}
-	for _, name := range sortedConfigKeys(tiers) {
-		tier := tiers[name]
-		keepMin := tier.EffectiveKeepMin()
-		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, keepMin); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func writeEffectiveRetentionText(w io.Writer, tiers map[string]configResolvedField) error {
-	if err := writeLines(w, "\nEffective retention by tier:"); err != nil {
-		return err
-	}
-	for _, name := range sortedConfigKeys(tiers) {
-		field := tiers[name]
-		if _, err := fmt.Fprintf(w, "  - %s: %s (%s)\n", name, field.Value, field.Source); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func sortedConfigKeys[V any](items map[string]V) []string {
-	names := make([]string, 0, len(items))
-	for name := range items {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return names
+	slices.Sort(keys)
+	return keys
 }
 
 func writeLines(w io.Writer, lines ...string) error {

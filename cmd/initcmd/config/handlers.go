@@ -120,11 +120,9 @@ func (r *Runner) Delete(_ context.Context, req DeleteRequest, opts MutationOpts)
 
 // Show renders the full suite of effective values and their sources.
 func (r *Runner) Show(_ context.Context, format ui.OutputFormat) error {
-	out := buildConfigShowOutput()
-	if format.IsJSON() {
-		return writeConfigShowJSON(r.Stdout, out)
-	}
-	return writeConfigShowText(r.Stdout, out)
+	out := buildShowOutput()
+	presenter := &ShowPresenter{Stdout: r.Stdout}
+	return presenter.Render(out, format.IsJSON())
 }
 
 // --- Internal Helpers ---
