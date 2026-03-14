@@ -43,8 +43,8 @@ func TestLoadAll(t *testing.T) {
 }
 
 func TestLoadFiltered_ByScopeTags(t *testing.T) {
-	selectors := []BuiltinSelector{
-		{ScopeTags: []string{"aws", "s3"}},
+	selectors := []Selector{
+		{Tags: []string{"aws", "s3"}},
 	}
 	controls, err := LoadFiltered(context.Background(), selectors)
 	if err != nil {

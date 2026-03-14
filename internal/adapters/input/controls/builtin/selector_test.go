@@ -35,12 +35,12 @@ func TestParseSelector(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if len(sel.ScopeTags) != len(tt.wantTags) {
-				t.Fatalf("scope_tags: got %v, want %v", sel.ScopeTags, tt.wantTags)
+			if len(sel.Tags) != len(tt.wantTags) {
+				t.Fatalf("scope_tags: got %v, want %v", sel.Tags, tt.wantTags)
 			}
 			for i := range tt.wantTags {
-				if sel.ScopeTags[i] != tt.wantTags[i] {
-					t.Errorf("scope_tags[%d]: got %q, want %q", i, sel.ScopeTags[i], tt.wantTags[i])
+				if sel.Tags[i] != tt.wantTags[i] {
+					t.Errorf("scope_tags[%d]: got %q, want %q", i, sel.Tags[i], tt.wantTags[i])
 				}
 			}
 			if sel.MinSeverity != tt.wantSev {
@@ -50,7 +50,7 @@ func TestParseSelector(t *testing.T) {
 	}
 }
 
-func TestBuiltinSelector_Matches(t *testing.T) {
+func TestSelector_Matches(t *testing.T) {
 	ctl := policy.ControlDefinition{
 		ID:        "CTL.S3.PUBLIC.001",
 		Name:      "No Public S3 Bucket Read",
@@ -67,20 +67,20 @@ func TestBuiltinSelector_Matches(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		selector BuiltinSelector
+		selector Selector
 		ctl      policy.ControlDefinition
 		want     bool
 	}{
-		{"match all tags", BuiltinSelector{ScopeTags: []string{"aws", "s3"}}, ctl, true},
-		{"match subset tag", BuiltinSelector{ScopeTags: []string{"aws"}}, ctl, true},
-		{"no match missing tag", BuiltinSelector{ScopeTags: []string{"aws", "gcp"}}, ctl, false},
-		{"no tags = match all", BuiltinSelector{}, ctl, true},
-		{"severity exact", BuiltinSelector{MinSeverity: policy.SeverityHigh}, ctl, true},
-		{"severity lower passes", BuiltinSelector{MinSeverity: policy.SeverityMedium}, ctl, true},
-		{"severity higher fails", BuiltinSelector{MinSeverity: policy.SeverityCritical}, ctl, false},
-		{"severity filter no sev on ctl", BuiltinSelector{MinSeverity: policy.SeverityLow}, invNoSeverity, false},
-		{"both tags and severity", BuiltinSelector{ScopeTags: []string{"aws", "s3"}, MinSeverity: policy.SeverityHigh}, ctl, true},
-		{"tags match severity fails", BuiltinSelector{ScopeTags: []string{"aws"}, MinSeverity: policy.SeverityCritical}, ctl, false},
+		{"match all tags", Selector{Tags: []string{"aws", "s3"}}, ctl, true},
+		{"match subset tag", Selector{Tags: []string{"aws"}}, ctl, true},
+		{"no match missing tag", Selector{Tags: []string{"aws", "gcp"}}, ctl, false},
+		{"no tags = match all", Selector{}, ctl, true},
+		{"severity exact", Selector{MinSeverity: policy.SeverityHigh}, ctl, true},
+		{"severity lower passes", Selector{MinSeverity: policy.SeverityMedium}, ctl, true},
+		{"severity higher fails", Selector{MinSeverity: policy.SeverityCritical}, ctl, false},
+		{"severity filter no sev on ctl", Selector{MinSeverity: policy.SeverityLow}, invNoSeverity, false},
+		{"both tags and severity", Selector{Tags: []string{"aws", "s3"}, MinSeverity: policy.SeverityHigh}, ctl, true},
+		{"tags match severity fails", Selector{Tags: []string{"aws"}, MinSeverity: policy.SeverityCritical}, ctl, false},
 	}
 
 	for _, tt := range tests {
@@ -107,9 +107,9 @@ func TestMatchesAny(t *testing.T) {
 	})
 
 	t.Run("one matches", func(t *testing.T) {
-		sels := []BuiltinSelector{
-			{ScopeTags: []string{"gcp"}},
-			{ScopeTags: []string{"aws"}},
+		sels := []Selector{
+			{Tags: []string{"gcp"}},
+			{Tags: []string{"aws"}},
 		}
 		if !MatchesAny(ctl, sels) {
 			t.Error("expected true when one selector matches")
@@ -117,8 +117,8 @@ func TestMatchesAny(t *testing.T) {
 	})
 
 	t.Run("none match", func(t *testing.T) {
-		sels := []BuiltinSelector{
-			{ScopeTags: []string{"gcp"}},
+		sels := []Selector{
+			{Tags: []string{"gcp"}},
 			{MinSeverity: policy.SeverityCritical},
 		}
 		if MatchesAny(ctl, sels) {
