@@ -1,15 +1,29 @@
 package snapshot
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// NewQualityCmd constructs the quality command with closure-scoped flags.
+// NewQualityCmd constructs the quality command.
 func NewQualityCmd() *cobra.Command {
-	var flags qualityFlagsType
+	var (
+		obsDir       string
+		minSnapshots int
+		maxStaleness string
+		maxGap       string
+		required     []string
+		nowRaw       string
+		formatFlag   string
+		strict       bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "quality",
@@ -30,20 +44,61 @@ Examples:
     --require-asset res:aws:s3:bucket:prod-logs` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runQuality(cmd, &flags)
+			gf := cmdutil.GetGlobalFlags(cmd)
+
+			if minSnapshots < 1 {
+				return fmt.Errorf("invalid --min-snapshots %d: must be >= 1", minSnapshots)
+			}
+			staleDur, err := timeutil.ParseDurationFlag(maxStaleness, "--max-staleness")
+			if err != nil {
+				return err
+			}
+			if staleDur < 0 {
+				return fmt.Errorf("invalid --max-staleness %q: must be >= 0", maxStaleness)
+			}
+			gapDur, err := timeutil.ParseDurationFlag(maxGap, "--max-gap")
+			if err != nil {
+				return err
+			}
+			if gapDur < 0 {
+				return fmt.Errorf("invalid --max-gap %q: must be >= 0", maxGap)
+			}
+			now, err := compose.ResolveNow(nowRaw)
+			if err != nil {
+				return err
+			}
+			format, err := compose.ResolveFormatValue(cmd, formatFlag)
+			if err != nil {
+				return err
+			}
+
+			runner := &QualityRunner{}
+			return runner.Run(compose.CommandContext(cmd), QualityConfig{
+				ObservationsDir:   fsutil.CleanUserPath(obsDir),
+				MinSnapshots:      minSnapshots,
+				MaxStaleness:      staleDur,
+				MaxGap:            gapDur,
+				RequiredResources: required,
+				Strict:            strict,
+				Now:               now,
+				Format:            format,
+				Quiet:             gf.Quiet,
+				Stdout:            cmd.OutOrStdout(),
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&flags.observationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	cmd.Flags().IntVar(&flags.minSnapshots, "min-snapshots", 2, "Minimum expected number of snapshots")
-	cmd.Flags().StringVar(&flags.maxStaleness, "max-staleness", "48h", "Maximum allowed age for latest snapshot (e.g., 24h, 2d)")
-	cmd.Flags().StringVar(&flags.maxGap, "max-gap", "7d", "Maximum allowed gap between adjacent snapshots (e.g., 48h, 7d)")
-	cmd.Flags().StringSliceVar(&flags.required, "require-asset", nil, "Asset ID required in latest snapshot (repeatable)")
-	cmd.Flags().StringVar(&flags.now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
-	cmd.Flags().StringVarP(&flags.format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&flags.strict, "strict", false, "Treat warnings as gate failures")
+	f := cmd.Flags()
+	f.StringVarP(&obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
+	f.IntVar(&minSnapshots, "min-snapshots", 2, "Minimum expected number of snapshots")
+	f.StringVar(&maxStaleness, "max-staleness", "48h", "Maximum allowed age for latest snapshot (e.g., 24h, 2d)")
+	f.StringVar(&maxGap, "max-gap", "7d", "Maximum allowed gap between adjacent snapshots (e.g., 48h, 7d)")
+	f.StringSliceVar(&required, "require-asset", nil, "Asset ID required in latest snapshot (repeatable)")
+	f.StringVar(&nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
+	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
+	f.BoolVar(&strict, "strict", false, "Treat warnings as gate failures")
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd

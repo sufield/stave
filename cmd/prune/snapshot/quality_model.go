@@ -3,7 +3,6 @@ package snapshot
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
@@ -55,15 +54,4 @@ type qualityAssessor struct {
 	params qualityParams
 	report qualityReport
 	sorted []asset.Snapshot
-}
-
-type qualityInput struct {
-	observationsDir string
-	minSnapshots    int
-	maxStaleness    time.Duration
-	maxGap          time.Duration
-	requiredAssets  []string
-	now             time.Time
-	format          ui.OutputFormat
-	strict          bool
 }
