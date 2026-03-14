@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (1 files, 14ms)
+Done:    apply controls against observations (1 files, 9ms)
 [ERR] Command failed (INTERNAL_ERROR)
   Message: evaluation runner: failed to load controls: failed to load control testdataCTL.EXP.DURATION.001.yaml: schema validation failed: validation failed: 1 errors, 0 warnings: UNSUPPORTED_SCHEMA_VERSION
 Next: stave validate --controls ./controls --observations ./observations

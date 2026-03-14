@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2015-11-15T000000Z.json": "69b2be050e44caffb8308ad23c15686931b0cb1f8476f4f05d789f1156035c79",
-        "2015-11-23T000000Z.json": "7d4ee70d40d5018b130fab62e06273a06050a85e2cd557a19c459d964e74add5"
+        "2015-11-15T000000Z.json": "0f858dc33fb1ee5a35da5ea6721cb29f97ca0bc502bd6a05897287d32afd963d",
+        "2015-11-23T000000Z.json": "dcc4fef0ec1f7661ec4cbc79f50b59719544d8a54b3446c14f1898973586c58f"
       },
-      "overall": "7b0d0798647c0297f2436c9fa6e0d0d2a898be87ed7007fdff1b87ddd39c20f7"
+      "overall": "e08cd7d964300c21e547081b91f1e68914f375c1bf46ded8e21fdced648d1783"
     },
     "pack_hash": "d2b35cd40cec32a8718ca0f93ff93d9e6b67eced18e3388436a53e8cee4e6b11"
   },
@@ -36,7 +36,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.write_via_resource",
+            "property": "storage.access.write_via_resource",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -104,7 +104,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_read",
+            "property": "storage.access.authenticated_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -175,7 +175,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

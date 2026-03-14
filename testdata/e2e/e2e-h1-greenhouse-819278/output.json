@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "6dfb370e49932c44d03eaf1f1e8605e2cab3be9ed2ca895af5f8357f2ae8fce3",
-        "2026-01-11T000000Z.json": "c0e98bb86fea18c0ccf4ed693485d5e510c8a0d30985cc18f82ebf1b8fed9ea2"
+        "2026-01-01T000000Z.json": "d29cd3abd3dcd81586599216fadd5b65ca2389323f4378b94f05b0de6eb6c04c",
+        "2026-01-11T000000Z.json": "7f75ae22f2d77f8d6cafa3f698b336a69c414e0c30bea54293b7e19d873e1b0c"
       },
-      "overall": "99c2aa8db0af05c4c1635f58ffd0de04d1e5ee4ff57dbbe6a5d3714247209a02"
+      "overall": "dc290b1c370aabfa0d4c4be9d7ee505bde211523728b3f8d7eab1756e2392b89"
     },
     "pack_hash": "2c3e3588e28da436e5052caf84f629ff4f9eb044d66fbe9c83e9facf975fda1e"
   },
@@ -36,13 +36,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_list",
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_read",
+            "property": "storage.access.public_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -147,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "585c6dc98d2898a25f5dac01c7fad1ce1b2b9ded67015e47647285191999be73",
-        "2026-01-11T000000Z.json": "80751b64e367ca61818c456e4136d8190de2c62fe74b2621045a6c168fd5a1b3"
+        "2026-01-01T000000Z.json": "11207ad7630b8404c4830ae07a7fb6d919f6e96dd591f177e2e47a1613ae9bb0",
+        "2026-01-11T000000Z.json": "5bc72a355cc0b53361576db91b55337ebaa8730f6a16a81b9a6bcaa112e4a2ce"
       },
-      "overall": "79f2394e95b1ea8c6a153b669e4c37fd633df137171de368103f4106559c6703"
+      "overall": "ba41ce06be4af1f562fa69388c8cc2466c3da3056fe6df0908c235839e2dabab"
     },
     "pack_hash": "406c5623be24de2c5cf4e7942ca898186e604ae98ac546f5a5456b72683ba76e"
   },
@@ -36,13 +36,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.acl.has_full_control_authenticated",
+            "property": "storage.access.has_full_control_authenticated",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.acl.has_full_control_public",
+            "property": "storage.access.has_full_control_public",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -57,7 +57,7 @@
       "remediation": {
         "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.\n",
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"acl\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
       }
     },
     {
@@ -74,13 +74,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.acl.has_full_control_authenticated",
+            "property": "storage.access.has_full_control_authenticated",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.acl.has_full_control_public",
+            "property": "storage.access.has_full_control_public",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -95,7 +95,7 @@
       "remediation": {
         "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.\n",
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"acl\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -108,8 +108,11 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
-      "dirty": false
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-acl-fullcontrol/controls/CTL.S3.ACL.FULLCONTROL.001.yaml"
+      ]
     }
   }
 }

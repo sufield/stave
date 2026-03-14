@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "b435739232bcce3149c8e9c4819f4d72f866ea67ca16735cf6ce99bd5573045b",
-        "2026-01-11T000000Z.json": "df60878afa2397a43ef191b28238ddb2a58e89ddd7e6f68504b67eb3161d3779"
+        "2026-01-01T000000Z.json": "227d289cab0539fb953f91accdb2cbdc77e02daa0658038c4bed464b0282e109",
+        "2026-01-11T000000Z.json": "254294fec1c7a06861b76486af8d12ea4be81aed2206fcc3db958e6f0e5cb14d"
       },
-      "overall": "f74cb92c374fdefd5a1084f1b7234b62c8c25e4367c64d8c7a9139654c54be19"
+      "overall": "848d8fd3ee824cb5350506fe95ed562b7393ce3bb29983cca126ee4bfe388466"
     },
     "pack_hash": "db3f38df6126d442df4328d57c383d85be200dc75f81137e78bacb1691c86f6d"
   },
@@ -36,7 +36,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_admin",
+            "property": "storage.access.public_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -51,7 +51,7 @@
       "remediation": {
         "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.\n",
         "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -64,7 +64,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

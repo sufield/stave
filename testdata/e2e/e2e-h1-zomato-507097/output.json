@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2019-03-01T000000Z.json": "4fa05ede580cfbf04c7cd25368893a22b70c95466175700ec02be37c0e10cc48",
-        "2019-03-09T000000Z.json": "c84800ed5ce87eeec7c3bf5d89c6f134686122cf0a24e1aeac1b05609046a4fa"
+        "2019-03-01T000000Z.json": "e849a76611c9a383a6e656c8e629ba3533566cd15aa3777dac20e28bd44e4f61",
+        "2019-03-09T000000Z.json": "dd3c627a65a3702922c9a7d61790d788c59e4e440e5ffd314d50ea0a6211d7e0"
       },
-      "overall": "6bf7676190ccfb14eb9bc7b0f3fbfee97340547ac018ca22d4d65a84e54cd0d5"
+      "overall": "645adfd70899cfc5fef2e289983bcf73eb04fa93626c008275ddcfa06e19691c"
     },
     "pack_hash": "94d929856f0be843071e52d987dad995a16b206b18a92ab46d0b14832f4981b2"
   },
@@ -36,13 +36,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_list",
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_read",
+            "property": "storage.access.public_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -107,6 +107,12 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
             "property": "storage.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
@@ -123,12 +129,6 @@
             "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "true"
-          },
-          {
-            "property": "storage.visibility.public_list",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
           }
         ],
         "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
@@ -231,7 +231,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

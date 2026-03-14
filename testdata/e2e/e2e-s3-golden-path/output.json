@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "1ed826b54ed1dcab5f78507feea60e7c685c32f2b6708610839882a39d4df656",
-        "2026-01-11T000000Z.json": "051a132773376971d74f1b4ffb527e6f7da552aac4a0eb1d9437d9737b7b180c"
+        "2026-01-01T000000Z.json": "60a6c48002d1592337cdc2f4a2e56d9dd7ba370bd0a8a5ec3fdddc808fefc5c9",
+        "2026-01-11T000000Z.json": "d90be0d479ac56796198526338c9da251c06791fb522e6b201dd2d9edabfda28"
       },
-      "overall": "66973b1e0599a57a6bdcca1d0605b54edc2155951e535d6caadf8e3ff153015e"
+      "overall": "f6cf103b7ebe8a91a9f2708bb27a9779af5f262f9d036a36b2f92dd7a3111b4a"
     },
     "pack_hash": "853b2485a07396a55f0ef421159807db391eab7282c1d4d3e83059506c0dcb67"
   },
@@ -221,7 +221,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_read",
+            "property": "storage.access.public_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -246,7 +246,7 @@
       "remediation": {
         "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.\n",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-990c069758119150",
@@ -297,6 +297,18 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
@@ -313,18 +325,6 @@
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "confidential"
-          },
-          {
-            "property": "storage.visibility.public_list",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          },
-          {
-            "property": "storage.visibility.public_read",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
           }
         ],
         "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
@@ -341,7 +341,7 @@
       "remediation": {
         "description": "A bucket containing sensitive data (PHI, PII, or confidential) has public read or list access. This data is accessible to anyone on the internet.\n",
         "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-a7c1b92fc4fd3b56",
@@ -392,7 +392,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.read_via_identity",
+            "property": "storage.access.read_via_identity",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -415,7 +415,7 @@
       "remediation": {
         "description": "Bucket policy grants public read (Principal \\\"*\\\" with read action).\n",
         "action": "Remove or constrain the public policy statement. Use restrictive principals or conditions and keep Public Access Block enabled.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-1f7cb52a37fba422",
@@ -466,7 +466,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.list_via_identity",
+            "property": "storage.access.list_via_identity",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -489,7 +489,7 @@
       "remediation": {
         "description": "Bucket policy grants public listing (Principal \\\"*\\\" with list action).\n",
         "action": "Remove or constrain policy statements allowing s3:ListBucket to anonymous principals.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-9348058b446900e1",
@@ -540,7 +540,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_list",
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -560,7 +560,7 @@
       "remediation": {
         "description": "Bucket allows anonymous listing of objects. Public listing exposes all object keys, enabling targeted data exfiltration.\n",
         "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_list\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-db589850848ca47e",
@@ -611,6 +611,12 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
             "property": "storage.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
@@ -627,12 +633,6 @@
             "actual_value": "[SANITIZED]",
             "operator": "ne",
             "unsafe_value": "true"
-          },
-          {
-            "property": "storage.visibility.public_list",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
           }
         ],
         "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
@@ -649,7 +649,7 @@
       "remediation": {
         "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.\n",
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.\n",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"visibility\": {\n      \"public_list\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
         "id": "fix-27f454c296aeb43f",
@@ -1372,7 +1372,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "9f9230f3d2576f3284c29e1e43257d6675f4bf88e819fa2ddb0e54f077a81f94",
-        "2026-01-11T000000Z.json": "d24cdfda095f56450fcad9fb4f0b16d9a0af6be0d7bed7805d461725258a9419"
+        "2026-01-01T000000Z.json": "6bb772c02ba1dde8631da31a4f08f22df13f45ae009058c100c92db44cfce6f7",
+        "2026-01-11T000000Z.json": "81169454726926f319176c5da022ef9f6ef61692f834efd908dc04a9a6b81679"
       },
-      "overall": "a1d2c012187b00d10578a075cf9a09b114a2795fc51bbadfbf7e8c249e3b03a4"
+      "overall": "af712417614c24707778e7131e2ee20c2cfe2e879730c80ecd2476fc601cf145"
     },
     "pack_hash": "d30d220b21d9587323f30d5cdea680eb7f9d9204b4bf2d5cd92666876d72d614"
   },
@@ -36,16 +36,16 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.latent_public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
             "property": "storage.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.visibility.latent_public_list",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
           }
         ],
         "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
@@ -147,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

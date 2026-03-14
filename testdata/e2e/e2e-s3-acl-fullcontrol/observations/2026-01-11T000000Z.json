@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "fullcontrol-public-bucket",
-          "acl": {
+          "access": {
             "has_full_control_public": true,
             "has_full_control_authenticated": false
           },
@@ -33,7 +33,7 @@
         "storage": {
           "kind": "bucket",
           "name": "fullcontrol-auth-bucket",
-          "acl": {
+          "access": {
             "has_full_control_public": false,
             "has_full_control_authenticated": true
           },
@@ -51,7 +51,7 @@
         "storage": {
           "kind": "bucket",
           "name": "safe-bucket",
-          "acl": {
+          "access": {
             "has_full_control_public": false,
             "has_full_control_authenticated": false
           },
