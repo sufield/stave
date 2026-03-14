@@ -1,0 +1,74 @@
+# Stave Project Scaffold
+
+This directory was created by `stave init`.
+
+## MVP operating assumption
+
+This scaffold assumes snapshots are captured from **production** to remediate
+**critical issues** quickly. Defaults are optimized for short feedback loops:
+
+- `stave snapshot upcoming` for chronological next-snapshot planning
+- `stave snapshot prune` for bounded snapshot retention
+
+## Recommended workflow
+
+Project-wide unsafe-duration threshold:
+```text
+{{ .ProjectConfigFile }}
+max_unsafe: {{ .MaxUnsafe }}
+snapshot_retention: {{ .Retention }}
+default_retention_tier: {{ .RetentionTier }}
+snapshot_retention_tiers:
+  critical:
+    older_than: 30d
+    keep_min: 2
+  non_critical:
+    older_than: 14d
+    keep_min: 2
+ci_failure_policy: {{ .CIFailurePolicy }}
+capture_cadence: {{ .CaptureCadence }}
+snapshot_filename_template: {{ .SnapshotTemplate }}
+enabled_control_packs:
+  - s3
+```
+Edit this file once to keep `--max-unsafe` and `snapshot prune --older-than` defaults consistent.
+
+The `enabled_control_packs` field activates built-in control checks.
+Run `stave controls list` to see all available checks.
+
+Optional personal CLI defaults:
+```text
+cli.yaml
+```
+Activate it with:
+```bash
+export {{ .UserConfigEnv }}="$PWD/cli.yaml"
+```
+Uncomment the `cli_defaults` keys you want for this project shell.
+
+1. Add raw snapshots under `snapshots/raw/` and convert observations:
+```bash
+{{ .ObsConvertCmd }}
+```
+
+2. Apply built-in checks and diagnose:
+```bash
+stave apply --observations ./observations --format json > output/evaluation.json
+stave diagnose --observations ./observations --previous-output output/evaluation.json
+```
+
+3. Add custom controls (optional):
+```bash
+stave generate control --id CTL.S3.PUBLIC.901 --out controls/MY.CUSTOM.001.yaml
+stave apply --controls ./controls --observations ./observations
+```
+
+## Timeline snapshots
+
+Store multiple observation files in `observations/` using timestamp filenames
+(example: `2026-01-11T000000Z.json`, `2026-01-18T000000Z.json`) to evaluate
+unsafe duration windows and compare remediation over time.
+
+Default cadence template:
+- cadence: `{{ .CaptureCadence }}`
+- naming convention: `observations/{{ .SnapshotExample }}`
