@@ -11,46 +11,18 @@ func wireHelpGroups(root *cobra.Command) {
 		&cobra.Group{ID: groupUtilities, Title: "Utilities & Help"},
 	)
 
-	assignCommandGroup(root, "doctor", groupGettingStarted)
-	assignCommandGroup(root, "demo", groupGettingStarted)
-	assignCommandGroup(root, "init", groupGettingStarted)
-	assignCommandGroup(root, "quickstart", groupGettingStarted)
-	assignCommandGroup(root, "generate", groupGettingStarted)
-
-	assignCommandGroup(root, "validate", groupCore)
-	assignCommandGroup(root, "lint", groupCore)
-	assignCommandGroup(root, "fmt", groupCore)
-	assignCommandGroup(root, "apply", groupCore)
-	assignCommandGroup(root, "diagnose", groupCore)
-	assignCommandGroup(root, "verify", groupCore)
-	assignCommandGroup(root, "explain", groupCore)
-	assignCommandGroup(root, "trace", groupCore)
-
-	assignCommandGroup(root, "snapshot", groupWorkflow)
-	assignCommandGroup(root, "ci", groupWorkflow)
-	assignCommandGroup(root, "plan", groupWorkflow)
-	assignCommandGroup(root, "context", groupWorkflow)
-	assignCommandGroup(root, "status", groupWorkflow)
-	assignCommandGroup(root, "security-audit", groupWorkflow)
-
-	assignCommandGroup(root, "ingest", groupArtifacts)
-	assignCommandGroup(root, "controls", groupArtifacts)
-	assignCommandGroup(root, "packs", groupArtifacts)
-	assignCommandGroup(root, "enforce", groupArtifacts)
-	assignCommandGroup(root, "extractor", groupArtifacts)
-	assignCommandGroup(root, "graph", groupArtifacts)
-	assignCommandGroup(root, "report", groupArtifacts)
-
-	assignCommandGroup(root, "docs", groupUtilities)
-	assignCommandGroup(root, "bug-report", groupUtilities)
-	assignCommandGroup(root, "capabilities", groupUtilities)
-	assignCommandGroup(root, "config", groupUtilities)
-	assignCommandGroup(root, "version", groupUtilities)
-	assignCommandGroup(root, "alias", groupUtilities)
-	assignCommandGroup(root, "prompt", groupUtilities)
-	assignCommandGroup(root, "fix", groupUtilities)
-	assignCommandGroup(root, "env", groupUtilities)
-	assignCommandGroup(root, "schemas", groupUtilities)
+	groupMap := map[string][]string{
+		groupGettingStarted: {"doctor", "demo", "init", "quickstart", "generate"},
+		groupCore:           {"validate", "lint", "fmt", "apply", "diagnose", "verify", "explain", "trace"},
+		groupWorkflow:       {"snapshot", "ci", "plan", "context", "status", "security-audit"},
+		groupArtifacts:      {"ingest", "controls", "packs", "enforce", "extractor", "graph", "report"},
+		groupUtilities:      {"docs", "bug-report", "capabilities", "config", "version", "alias", "prompt", "fix", "env", "schemas"},
+	}
+	for groupID, names := range groupMap {
+		for _, name := range names {
+			assignCommandGroup(root, name, groupID)
+		}
+	}
 
 	root.SetCompletionCommandGroupID(groupUtilities)
 	root.SetHelpCommandGroupID(groupUtilities)
