@@ -90,13 +90,13 @@ func gatherUpcomingConfig(
 		return UpcomingConfig{}, err
 	}
 
-	var dueWithinDur *time.Duration
+	var dueWithinDur time.Duration
 	if strings.TrimSpace(dueWithinRaw) != "" {
 		parsed, parseErr := parsePositiveDuration(dueWithinRaw, "--due-within")
 		if parseErr != nil {
 			return UpcomingConfig{}, parseErr
 		}
-		dueWithinDur = &parsed
+		dueWithinDur = parsed
 	}
 
 	now, err := compose.ResolveNow(nowRaw)
