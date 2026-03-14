@@ -1,11 +1,12 @@
 package capabilities
 
 import (
+	"github.com/sufield/stave/internal/domain/kernel"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
 // IsSourceTypeSupported checks if a source type is supported.
-func IsSourceTypeSupported(sourceType string) bool {
+func IsSourceTypeSupported(sourceType kernel.ObservationSourceType) bool {
 	_, ok := capabilitiesRegistry.sourceTypeIndex[sourceType]
 	return ok
 }
@@ -45,7 +46,7 @@ type InputSupport struct {
 
 // SourceTypeSupport describes a supported source type and its version constraints.
 type SourceTypeSupport struct {
-	Type           string `json:"type"`
+	Type           kernel.ObservationSourceType `json:"type"`
 	Description    string `json:"description"`
 	ToolMinVersion string `json:"tool_min_version,omitempty"`
 	PlanFormat     string `json:"plan_format,omitempty"`

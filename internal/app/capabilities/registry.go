@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	sourceTypeTerraformPlanJSON = "terraform.plan_json"
-	sourceTypeAWSS3Snapshot     = "aws-s3-snapshot"
-
 	terraformPlanMinVersion = "1.5.0"
 	terraformPlanFormat     = "terraform show -json"
 
@@ -23,7 +20,7 @@ type registry struct {
 	observationSchemaVersions []string
 	controlDSLVersions        []string
 	sourceTypes               []SourceTypeSupport
-	sourceTypeIndex           map[string]struct{}
+	sourceTypeIndex           map[kernel.ObservationSourceType]struct{}
 	packs                     []ControlPack
 	securityAudit             SecurityAuditSupport
 }
@@ -70,18 +67,18 @@ func newRegistry() *registry {
 
 	sourceTypes := []SourceTypeSupport{
 		{
-			Type:           sourceTypeTerraformPlanJSON,
+			Type:           kernel.SourceTypeTerraformPlanJSON,
 			Description:    "Terraform plan JSON output",
 			ToolMinVersion: terraformPlanMinVersion,
 			PlanFormat:     terraformPlanFormat,
 		},
 		{
-			Type:        sourceTypeAWSS3Snapshot,
+			Type:        kernel.SourceTypeAWSS3Snapshot,
 			Description: "S3 snapshot JSON observations",
 		},
 	}
 
-	sourceTypeIndex := make(map[string]struct{}, len(sourceTypes))
+	sourceTypeIndex := make(map[kernel.ObservationSourceType]struct{}, len(sourceTypes))
 	for _, st := range sourceTypes {
 		sourceTypeIndex[st.Type] = struct{}{}
 	}

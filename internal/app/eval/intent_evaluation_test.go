@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
@@ -21,7 +22,7 @@ func TestIntentEvaluationLoadArtifacts_LoadsBoth(t *testing.T) {
 	}}
 	snapshots := []asset.Snapshot{{
 		CapturedAt:  now,
-		GeneratedBy: &asset.GeneratedBy{SourceType: "terraform.plan_json"},
+		GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeTerraformPlanJSON},
 	}}
 
 	intent := NewIntentEvaluation(
