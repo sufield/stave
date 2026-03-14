@@ -32,8 +32,7 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 	// rather than the package initialiser default.
 	//
 	// CLI commands execute sequentially, so replacing the package-level
-	// variable here is safe. For parallel test isolation, use
-	// compose.OverrideProviderForTest instead.
+	// variable here is safe.
 	compose.UseProvider(a.Provider)
 	a.initSanitizer()
 	return a.initLogger()
