@@ -7,9 +7,12 @@ import (
 )
 
 func mapRiskItems(items risk.Items) []UpcomingItem {
-	out := make([]UpcomingItem, 0, len(items))
-	for _, d := range items {
-		out = append(out, UpcomingItem{
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]UpcomingItem, len(items))
+	for i, d := range items {
+		out[i] = UpcomingItem{
 			DueAt:          d.DueAt,
 			Status:         d.Status,
 			ControlID:      d.ControlID,
@@ -19,7 +22,7 @@ func mapRiskItems(items risk.Items) []UpcomingItem {
 			LastSeenUnsafe: d.LastSeenUnsafe,
 			Threshold:      d.Threshold,
 			Remaining:      d.Remaining,
-		})
+		}
 	}
 	return out
 }
