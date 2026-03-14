@@ -1,15 +1,14 @@
 package manifest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -19,9 +18,21 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile string) error {
-	dir := filepath.Clean(observationsDir)
-	out := filepath.Clean(outFile)
+// GenerateConfig defines the parameters for manifest generation.
+type GenerateConfig struct {
+	ObservationsDir string
+	OutPath         string
+	TextOutput      bool
+	Stdout          io.Writer
+}
+
+// GenerateRunner orchestrates the indexing of observation files and manifest creation.
+type GenerateRunner struct{}
+
+// Run executes the manifest generation workflow.
+func (r *GenerateRunner) Run(_ context.Context, cfg GenerateConfig) error {
+	dir := filepath.Clean(cfg.ObservationsDir)
+	out := filepath.Clean(cfg.OutPath)
 
 	if fi, err := os.Stat(dir); err != nil {
 		return fmt.Errorf("access observations directory %q: %w", dir, err)
@@ -49,10 +60,10 @@ func runSnapshotManifestGenerate(cmd *cobra.Command, observationsDir, outFile st
 		return fmt.Errorf("write manifest %q: %w", out, err)
 	}
 
-	if cmdutil.GetGlobalFlags(cmd).TextOutputEnabled() {
-		fmt.Fprintf(cmd.OutOrStdout(), "Wrote manifest with %d files: %s\n", len(files), out)
+	if cfg.TextOutput {
+		fmt.Fprintf(cfg.Stdout, "Wrote manifest with %d files: %s\n", len(files), out)
 		if skipped > 0 {
-			fmt.Fprintf(cmd.OutOrStdout(), "Skipped %d non-observation JSON file(s)\n", skipped)
+			fmt.Fprintf(cfg.Stdout, "Skipped %d non-observation JSON file(s)\n", skipped)
 		}
 	}
 	return nil
