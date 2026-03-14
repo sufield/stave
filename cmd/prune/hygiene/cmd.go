@@ -69,7 +69,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			retentionDur, err := pruneshared.ResolveOlderThan(cmd, olderThan, validTier)
+			retentionDur, err := pruneshared.ResolveOlderThan(olderThan, cmd.Flags().Changed("older-than"), validTier)
 			if err != nil {
 				return err
 			}

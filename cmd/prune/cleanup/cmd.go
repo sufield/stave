@@ -58,7 +58,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			resolvedOlderThan, err := pruneshared.ResolveOlderThan(cmd, olderThan, validTier)
+			resolvedOlderThan, err := pruneshared.ResolveOlderThan(olderThan, cmd.Flags().Changed("older-than"), validTier)
 			if err != nil {
 				return err
 			}
