@@ -234,20 +234,20 @@
             "additionalProperties": true
           }
         },
-        "skipped_assets": {
+        "exempted_assets": {
           "type": "array",
-          "title": "Skipped Assets",
+          "title": "Exempted Assets",
           "description": "Assets that were excluded from evaluation (e.g., by scope exclusion rules).",
           "items": {
             "type": "object",
-            "title": "Skipped Asset Entry",
-            "description": "A skipped asset entry.",
+            "title": "Exempted Asset Entry",
+            "description": "A exempted asset entry.",
             "required": ["asset_id", "matched_pattern", "reason"],
             "properties": {
               "asset_id": {
                 "type": "string",
                 "title": "Asset Identifier",
-                "description": "Unique identifier of the skipped asset."
+                "description": "Unique identifier of the exempted asset."
               },
               "matched_pattern": {
                 "type": "string",
@@ -263,35 +263,35 @@
             "additionalProperties": true
           }
         },
-        "suppressed_findings": {
+        "excepted_findings": {
           "type": "array",
-          "title": "Suppressed Findings",
-          "description": "Findings that matched a suppression rule. These were evaluated but excluded from the violation count.",
+          "title": "Excepted Findings",
+          "description": "Findings that matched a exception rule. These were evaluated but excluded from the violation count.",
           "items": {
             "type": "object",
-            "title": "Suppressed Finding Entry",
-            "description": "A finding that was suppressed by a suppression rule.",
+            "title": "Excepted Finding Entry",
+            "description": "A finding that was excepted by an exception rule.",
             "required": ["control_id", "asset_id", "reason"],
             "properties": {
               "control_id": {
                 "type": "string",
                 "title": "Control Identifier",
-                "description": "Unique identifier of the suppressed control."
+                "description": "Unique identifier of the excepted control."
               },
               "asset_id": {
                 "type": "string",
                 "title": "Asset Identifier",
-                "description": "Unique identifier of the suppressed asset."
+                "description": "Unique identifier of the excepted asset."
               },
               "reason": {
                 "type": "string",
                 "title": "Suppression Reason",
-                "description": "Reason the finding was suppressed."
+                "description": "Reason the finding was excepted."
               },
               "expires": {
                 "type": "string",
                 "title": "Suppression Expiry",
-                "description": "Date when the suppression expires (YYYY-MM-DD)."
+                "description": "Date when the exception expires (YYYY-MM-DD)."
               }
             },
             "additionalProperties": true

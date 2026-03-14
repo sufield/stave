@@ -16,12 +16,12 @@ func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) safet
 	}
 
 	out := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
-		Run:                enriched.Run,
-		Summary:            enriched.Result.Summary,
-		Findings:           findings,
-		Skipped:            enriched.Result.Skipped,
-		SkippedAssets:      enriched.SkippedAssets,
-		SuppressedFindings: enriched.Result.SuppressedFindings,
+		Run:              enriched.Run,
+		Summary:          enriched.Result.Summary,
+		Findings:         findings,
+		Skipped:          enriched.Result.Skipped,
+		ExemptedAssets:   enriched.ExemptedAssets,
+		ExceptedFindings: enriched.Result.ExceptedFindings,
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
 	h := crypto.NewHasher()

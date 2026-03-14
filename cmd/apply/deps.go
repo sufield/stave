@@ -84,7 +84,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	}
 
 	// 2. Build Metadata & Policy
-	exemptionCfg, err := LoadExemptionConfig(b.Opts.IgnoreFile)
+	exemptionCfg, err := LoadExemptionConfig(b.Opts.ExemptionFile)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
 
 	reg, _ := pack.DefaultRegistry()
 	return appeval.ProjectConfigInput{
-		Suppressions:        b.mapSuppressions(projCfg.Suppressions),
+		Exceptions:          b.mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
 		ControlsFlagSet:     b.Opts.ControlsSet,
@@ -194,13 +194,13 @@ func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
 	}
 }
 
-func (b *Builder) mapSuppressions(in []projconfig.SuppressionRule) []appeval.SuppressionInput {
+func (b *Builder) mapExceptions(in []projconfig.ExceptionRule) []appeval.ExceptionInput {
 	if len(in) == 0 {
 		return nil
 	}
-	out := make([]appeval.SuppressionInput, len(in))
+	out := make([]appeval.ExceptionInput, len(in))
 	for i, s := range in {
-		out[i] = appeval.SuppressionInput{
+		out[i] = appeval.ExceptionInput{
 			ControlID: kernel.ControlID(s.ControlID),
 			AssetID:   asset.ID(s.AssetID),
 			Reason:    s.Reason,

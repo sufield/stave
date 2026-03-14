@@ -72,7 +72,7 @@ func NewPlanCmd() *cobra.Command {
 type ApplyOptions struct {
 	SharedOptions
 	AllowUnknown       bool
-	IgnoreFile         string
+	ExemptionFile      string
 	IntegrityManifest  string
 	IntegrityPublicKey string
 	Profile            string
@@ -115,7 +115,7 @@ Run stave plan first to preview what will be evaluated.` + metadata.OfflineHelpS
 func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", projconfig.Global().AllowUnknownInput(), cmdutil.WithDynamicDefaultHelp("Allow unknown source types"))
-	f.StringVar(&o.IgnoreFile, "ignore", "", "Path to asset ignore list YAML file")
+	f.StringVar(&o.ExemptionFile, "exemption-file", "", "Path to asset exemption list YAML file")
 	f.StringVar(&o.IntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected hashes")
 	f.StringVar(&o.IntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")
 	f.StringVarP(&o.Profile, "profile", "p", "", "Evaluation profile (e.g. aws-s3)")

@@ -172,8 +172,8 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 	}
 }
 
-// SuppressedFinding records a finding that was suppressed, with audit trail.
-type SuppressedFinding struct {
+// ExceptedFinding records a finding that was excepted, with audit trail.
+type ExceptedFinding struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	AssetID   asset.ID         `json:"asset_id"`
 	Reason    string           `json:"reason"`

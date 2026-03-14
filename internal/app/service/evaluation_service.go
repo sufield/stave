@@ -12,17 +12,17 @@ import (
 
 // EvaluateInput holds loaded models and runtime options for evaluation processing.
 type EvaluateInput struct {
-	Controls          []policy.ControlDefinition
-	Snapshots         []asset.Snapshot
-	MaxUnsafe         time.Duration
-	Clock             ports.Clock
-	Hasher            ports.Digester
-	ExemptionConfig   *policy.ExemptionConfig
-	SuppressionConfig *policy.SuppressionConfig
-	ToolVersion       string
-	InputHashes       *evaluation.InputHashes
-	PredicateParser   func(any) (*policy.UnsafePredicate, error)
-	Metadata          evaluation.Metadata
+	Controls        []policy.ControlDefinition
+	Snapshots       []asset.Snapshot
+	MaxUnsafe       time.Duration
+	Clock           ports.Clock
+	Hasher          ports.Digester
+	ExemptionConfig *policy.ExemptionConfig
+	ExceptionConfig *policy.ExceptionConfig
+	ToolVersion     string
+	InputHashes     *evaluation.InputHashes
+	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	Metadata        evaluation.Metadata
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
@@ -33,7 +33,7 @@ func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 		Clock:           input.Clock,
 		Hasher:          input.Hasher,
 		Exemptions:      input.ExemptionConfig,
-		Suppressions:    input.SuppressionConfig,
+		Exceptions:      input.ExceptionConfig,
 		ToolVersion:     input.ToolVersion,
 		InputHashes:     input.InputHashes,
 		PredicateParser: input.PredicateParser,

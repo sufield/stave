@@ -72,7 +72,7 @@ func (c *ExemptionConfig) ShouldExempt(assetID string) *ExemptionRule {
 }
 
 // matchPattern checks if a string matches a pattern supporting exact and glob matches.
-// Shared by ExemptionConfig and SuppressionRule.
+// Shared by ExemptionConfig and ExceptionRule.
 func matchPattern(pattern, s string) bool {
 	if pattern == s {
 		return true

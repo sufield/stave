@@ -108,8 +108,8 @@ type RemediationActionDTO struct {
 	Value      any                              `json:"value,omitempty"`
 }
 
-// SuppressedFindingDTO mirrors evaluation.SuppressedFinding.
-type SuppressedFindingDTO struct {
+// ExceptedFindingDTO mirrors evaluation.ExceptedFinding.
+type ExceptedFindingDTO struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	AssetID   asset.ID         `json:"asset_id"`
 	Reason    string           `json:"reason"`
@@ -123,8 +123,8 @@ type SkippedControlDTO struct {
 	Reason      string           `json:"reason"`
 }
 
-// SkippedAssetDTO mirrors asset.SkippedAsset.
-type SkippedAssetDTO struct {
+// ExemptedAssetDTO mirrors asset.ExemptedAsset.
+type ExemptedAssetDTO struct {
 	AssetID asset.ID `json:"asset_id"`
 	Pattern string   `json:"matched_pattern"`
 	Reason  string   `json:"reason"`
@@ -198,14 +198,14 @@ type RowDTO struct {
 
 // ResultDTO is the top-level evaluation output envelope content.
 type ResultDTO struct {
-	SchemaVersion      kernel.Schema          `json:"schema_version"`
-	Kind               string                 `json:"kind"`
-	Run                RunInfoDTO             `json:"run"`
-	Summary            SummaryDTO             `json:"summary"`
-	Findings           []FindingDTO           `json:"findings"`
-	SuppressedFindings []SuppressedFindingDTO `json:"suppressed_findings,omitempty"`
-	RemediationGroups  []RemediationGroupDTO  `json:"remediation_groups,omitempty"`
-	Skipped            []SkippedControlDTO    `json:"skipped,omitempty"`
-	SkippedAssets      []SkippedAssetDTO      `json:"skipped_assets,omitempty"`
-	Extensions         *ExtensionsDTO         `json:"extensions,omitempty"`
+	SchemaVersion     kernel.Schema         `json:"schema_version"`
+	Kind              string                `json:"kind"`
+	Run               RunInfoDTO            `json:"run"`
+	Summary           SummaryDTO            `json:"summary"`
+	Findings          []FindingDTO          `json:"findings"`
+	ExceptedFindings  []ExceptedFindingDTO  `json:"excepted_findings,omitempty"`
+	RemediationGroups []RemediationGroupDTO `json:"remediation_groups,omitempty"`
+	Skipped           []SkippedControlDTO   `json:"skipped,omitempty"`
+	ExemptedAssets    []ExemptedAssetDTO    `json:"exempted_assets,omitempty"`
+	Extensions        *ExtensionsDTO        `json:"extensions,omitempty"`
 }

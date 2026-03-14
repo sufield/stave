@@ -32,10 +32,10 @@ func (depsMarshalerStub) MarshalFindings(appcontracts.EnrichedResult) ([]byte, e
 
 func depsEnrichFn(result evaluation.Result) appcontracts.EnrichedResult {
 	return appcontracts.EnrichedResult{
-		Result:        result,
-		Findings:      []remediation.Finding{},
-		SkippedAssets: result.SkippedAssets,
-		Run:           result.Run,
+		Result:         result,
+		Findings:       []remediation.Finding{},
+		ExemptedAssets: result.ExemptedAssets,
+		Run:            result.Run,
 	}
 }
 

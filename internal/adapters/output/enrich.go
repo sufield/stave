@@ -10,21 +10,21 @@ import (
 
 // Enrich enriches findings from the result and returns a fully-sanitized
 // EnrichedResult suitable for passing to a FindingMarshaler. All metadata
-// that needs sanitization (findings, skipped assets, input hashes) is
+// that needs sanitization (findings, exempted assets, input hashes) is
 // handled here so marshalers receive clean data.
 func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) appcontracts.EnrichedResult {
 	findings := PrepareFindings(enricher, sanitizer, result)
-	skippedAssets := result.SkippedAssets
+	skippedAssets := result.ExemptedAssets
 	run := result.Run
 	if sanitizer != nil {
-		skippedAssets = SanitizeSkippedAssets(sanitizer, skippedAssets)
+		skippedAssets = SanitizeExemptedAssets(sanitizer, skippedAssets)
 		run.InputHashes = SanitizeInputHashKeys(sanitizer, run.InputHashes)
 	}
 	return appcontracts.EnrichedResult{
-		Result:        result,
-		Findings:      findings,
-		SkippedAssets: skippedAssets,
-		Run:           run,
+		Result:         result,
+		Findings:       findings,
+		ExemptedAssets: skippedAssets,
+		Run:            run,
 	}
 }
 

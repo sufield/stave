@@ -260,12 +260,12 @@ const templateStaveConfigSample = `# ── Stave Project Configuration ──�
 # exclude_controls:
 #   - CTL.S3.PUBLIC.901
 #
-# ── Suppressions ───────────────────────────────────────────────────
+# ── Exceptions ───────────────────────────────────────────────────
 #
 # Suppress known findings by asset + control. Useful for
 # accepted risks or resources with compensating controls.
 #
-# suppressions:
+# exceptions:
 #   - asset_id: "aws:s3:::legacy-public-assets"
 #     control_id: CTL.S3.PUBLIC.001
 #     reason: "Public assets bucket — accepted risk per SEC-2024-042"

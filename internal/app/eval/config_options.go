@@ -37,9 +37,9 @@ func WithExemptionConfig(exemptionConfig *policy.ExemptionConfig) Option {
 	}
 }
 
-func WithSuppressionConfig(suppressionConfig *policy.SuppressionConfig) Option {
+func WithExceptionConfig(exceptionConfig *policy.ExceptionConfig) Option {
 	return func(cfg *EvaluateConfig) {
-		cfg.SuppressionConfig = suppressionConfig
+		cfg.ExceptionConfig = exceptionConfig
 	}
 }
 

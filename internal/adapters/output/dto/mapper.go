@@ -13,16 +13,16 @@ import (
 // FromEvaluation projects a safetyenvelope.Evaluation into a ResultDTO.
 func FromEvaluation(e safetyenvelope.Evaluation) ResultDTO {
 	return ResultDTO{
-		SchemaVersion:      e.SchemaVersion,
-		Kind:               string(e.Kind),
-		Run:                fromRunInfo(e.Run),
-		Summary:            fromSummary(e.Summary),
-		Findings:           fromFindings(e.Findings),
-		SuppressedFindings: fromSuppressedFindings(e.SuppressedFindings),
-		RemediationGroups:  fromRemediationGroups(e.RemediationGroups),
-		Skipped:            fromSkippedControls(e.Skipped),
-		SkippedAssets:      fromSkippedAssets(e.SkippedAssets),
-		Extensions:         fromExtensions(e.Extensions),
+		SchemaVersion:     e.SchemaVersion,
+		Kind:              string(e.Kind),
+		Run:               fromRunInfo(e.Run),
+		Summary:           fromSummary(e.Summary),
+		Findings:          fromFindings(e.Findings),
+		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),
+		RemediationGroups: fromRemediationGroups(e.RemediationGroups),
+		Skipped:           fromSkippedControls(e.Skipped),
+		ExemptedAssets:    fromExemptedAssets(e.ExemptedAssets),
+		Extensions:        fromExtensions(e.Extensions),
 	}
 }
 
@@ -185,12 +185,12 @@ func fromSummary(s evaluation.Summary) SummaryDTO {
 	}
 }
 
-func fromSuppressedFindings(fs []evaluation.SuppressedFinding) []SuppressedFindingDTO {
+func fromExceptedFindings(fs []evaluation.ExceptedFinding) []ExceptedFindingDTO {
 	if len(fs) == 0 {
 		return nil
 	}
-	return lo.Map(fs, func(f evaluation.SuppressedFinding, _ int) SuppressedFindingDTO {
-		return SuppressedFindingDTO{
+	return lo.Map(fs, func(f evaluation.ExceptedFinding, _ int) ExceptedFindingDTO {
+		return ExceptedFindingDTO{
 			ControlID: f.ControlID,
 			AssetID:   f.AssetID,
 			Reason:    f.Reason,
@@ -227,12 +227,12 @@ func fromSkippedControls(cs []evaluation.SkippedControl) []SkippedControlDTO {
 	})
 }
 
-func fromSkippedAssets(as []asset.SkippedAsset) []SkippedAssetDTO {
+func fromExemptedAssets(as []asset.ExemptedAsset) []ExemptedAssetDTO {
 	if len(as) == 0 {
 		return nil
 	}
-	return lo.Map(as, func(a asset.SkippedAsset, _ int) SkippedAssetDTO {
-		return SkippedAssetDTO{
+	return lo.Map(as, func(a asset.ExemptedAsset, _ int) ExemptedAssetDTO {
+		return ExemptedAssetDTO{
 			AssetID: a.ID,
 			Pattern: a.Pattern,
 			Reason:  a.Reason,

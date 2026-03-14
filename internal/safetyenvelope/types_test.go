@@ -10,12 +10,12 @@ import (
 
 func TestNewEvaluation_NormalizesSlices(t *testing.T) {
 	got := NewEvaluation(EvaluationRequest{
-		Run:                evaluation.RunInfo{},
-		Summary:            evaluation.Summary{},
-		Findings:           nil,
-		Skipped:            nil,
-		SkippedAssets:      nil,
-		SuppressedFindings: nil,
+		Run:              evaluation.RunInfo{},
+		Summary:          evaluation.Summary{},
+		Findings:         nil,
+		Skipped:          nil,
+		ExemptedAssets:   nil,
+		ExceptedFindings: nil,
 	})
 
 	if got.SchemaVersion != kernel.SchemaOutput {
@@ -27,14 +27,14 @@ func TestNewEvaluation_NormalizesSlices(t *testing.T) {
 	if got.Findings == nil {
 		t.Fatal("Findings should be normalized to empty slice")
 	}
-	if got.SuppressedFindings == nil {
-		t.Fatal("SuppressedFindings should be normalized to empty slice")
+	if got.ExceptedFindings == nil {
+		t.Fatal("ExceptedFindings should be normalized to empty slice")
 	}
 	if got.Skipped == nil {
 		t.Fatal("Skipped should be normalized to empty slice")
 	}
-	if got.SkippedAssets == nil {
-		t.Fatal("SkippedAssets should be normalized to empty slice")
+	if got.ExemptedAssets == nil {
+		t.Fatal("ExemptedAssets should be normalized to empty slice")
 	}
 }
 

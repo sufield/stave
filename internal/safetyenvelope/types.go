@@ -27,26 +27,26 @@ type JSONEnvelope[T any] struct {
 
 // EvaluationRequest bundles inputs for constructing an Evaluation envelope.
 type EvaluationRequest struct {
-	Run                evaluation.RunInfo
-	Summary            evaluation.Summary
-	Findings           []remediation.Finding
-	Skipped            []evaluation.SkippedControl
-	SkippedAssets      []asset.SkippedAsset
-	SuppressedFindings []evaluation.SuppressedFinding
+	Run              evaluation.RunInfo
+	Summary          evaluation.Summary
+	Findings         []remediation.Finding
+	Skipped          []evaluation.SkippedControl
+	ExemptedAssets   []asset.ExemptedAsset
+	ExceptedFindings []evaluation.ExceptedFinding
 }
 
 // Evaluation is the out.v0.1 evaluation output envelope.
 type Evaluation struct {
-	SchemaVersion      kernel.Schema                  `json:"schema_version"`
-	Kind               EnvelopeKind                   `json:"kind"`
-	Run                evaluation.RunInfo             `json:"run"`
-	Summary            evaluation.Summary             `json:"summary"`
-	Findings           []remediation.Finding          `json:"findings"`
-	SuppressedFindings []evaluation.SuppressedFinding `json:"suppressed_findings,omitempty"`
-	RemediationGroups  []remediation.Group            `json:"remediation_groups,omitempty"`
-	Skipped            []evaluation.SkippedControl    `json:"skipped,omitempty"`
-	SkippedAssets      []asset.SkippedAsset           `json:"skipped_assets,omitempty"`
-	Extensions         *evaluation.Extensions         `json:"extensions,omitempty"`
+	SchemaVersion     kernel.Schema                `json:"schema_version"`
+	Kind              EnvelopeKind                 `json:"kind"`
+	Run               evaluation.RunInfo           `json:"run"`
+	Summary           evaluation.Summary           `json:"summary"`
+	Findings          []remediation.Finding        `json:"findings"`
+	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
+	RemediationGroups []remediation.Group          `json:"remediation_groups,omitempty"`
+	Skipped           []evaluation.SkippedControl  `json:"skipped,omitempty"`
+	ExemptedAssets    []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
+	Extensions        *evaluation.Extensions       `json:"extensions,omitempty"`
 }
 
 func normalizeSlice[T any](in []T) []T {
@@ -58,22 +58,22 @@ func normalizeSlice[T any](in []T) []T {
 
 func (e *Evaluation) normalize() {
 	e.Findings = normalizeSlice(e.Findings)
-	e.SuppressedFindings = normalizeSlice(e.SuppressedFindings)
+	e.ExceptedFindings = normalizeSlice(e.ExceptedFindings)
 	e.RemediationGroups = normalizeSlice(e.RemediationGroups)
 	e.Skipped = normalizeSlice(e.Skipped)
-	e.SkippedAssets = normalizeSlice(e.SkippedAssets)
+	e.ExemptedAssets = normalizeSlice(e.ExemptedAssets)
 }
 
 func NewEvaluation(req EvaluationRequest) Evaluation {
 	out := Evaluation{
-		SchemaVersion:      kernel.SchemaOutput,
-		Kind:               KindEvaluation,
-		Run:                req.Run,
-		Summary:            req.Summary,
-		Findings:           req.Findings,
-		SuppressedFindings: req.SuppressedFindings,
-		Skipped:            req.Skipped,
-		SkippedAssets:      req.SkippedAssets,
+		SchemaVersion:    kernel.SchemaOutput,
+		Kind:             KindEvaluation,
+		Run:              req.Run,
+		Summary:          req.Summary,
+		Findings:         req.Findings,
+		ExceptedFindings: req.ExceptedFindings,
+		Skipped:          req.Skipped,
+		ExemptedAssets:   req.ExemptedAssets,
 	}
 	out.normalize()
 	return out

@@ -111,13 +111,13 @@ type ProjectConfig struct {
 	CIFailurePolicy          string                         `yaml:"ci_failure_policy"`
 	CaptureCadence           string                         `yaml:"capture_cadence"`
 	SnapshotFilenameTemplate string                         `yaml:"snapshot_filename_template"`
-	Suppressions             []SuppressionRule              `yaml:"suppressions"`
+	Exceptions               []ExceptionRule                `yaml:"exceptions"`
 	EnabledControlPacks      []string                       `yaml:"enabled_control_packs"`
 	ExcludeControls          []string                       `yaml:"exclude_controls"`
 }
 
-// SuppressionRule defines a control suppression.
-type SuppressionRule struct {
+// ExceptionRule defines a control exception.
+type ExceptionRule struct {
 	ControlID string `yaml:"control_id"`
 	AssetID   string `yaml:"asset_id"`
 	Reason    string `yaml:"reason"`

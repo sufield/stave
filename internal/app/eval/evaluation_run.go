@@ -26,15 +26,15 @@ type LoadConfig struct {
 // EvaluateConfig holds configuration for the evaluate use case.
 type EvaluateConfig struct {
 	LoadConfig
-	MaxUnsafe         time.Duration
-	Clock             ports.Clock
-	Hasher            ports.Digester
-	Output            io.Writer
-	ExemptionConfig   *policy.ExemptionConfig
-	SuppressionConfig *policy.SuppressionConfig
-	ToolVersion       string
-	Metadata          evaluation.Metadata
-	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	MaxUnsafe       time.Duration
+	Clock           ports.Clock
+	Hasher          ports.Digester
+	Output          io.Writer
+	ExemptionConfig *policy.ExemptionConfig
+	ExceptionConfig *policy.ExceptionConfig
+	ToolVersion     string
+	Metadata        evaluation.Metadata
+	PredicateParser func(any) (*policy.UnsafePredicate, error)
 }
 
 // EvaluateRun executes the evaluation use case.
@@ -77,17 +77,17 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 	snapshots := preflight.Snapshots
 
 	result, err := service.Evaluate(service.EvaluateInput{
-		Controls:          controls,
-		Snapshots:         snapshots,
-		MaxUnsafe:         cfg.MaxUnsafe,
-		Clock:             cfg.Clock,
-		Hasher:            cfg.Hasher,
-		ExemptionConfig:   cfg.ExemptionConfig,
-		SuppressionConfig: cfg.SuppressionConfig,
-		ToolVersion:       cfg.ToolVersion,
-		InputHashes:       preflight.Hashes,
-		PredicateParser:   cfg.PredicateParser,
-		Metadata:          cfg.Metadata,
+		Controls:        controls,
+		Snapshots:       snapshots,
+		MaxUnsafe:       cfg.MaxUnsafe,
+		Clock:           cfg.Clock,
+		Hasher:          cfg.Hasher,
+		ExemptionConfig: cfg.ExemptionConfig,
+		ExceptionConfig: cfg.ExceptionConfig,
+		ToolVersion:     cfg.ToolVersion,
+		InputHashes:     preflight.Hashes,
+		PredicateParser: cfg.PredicateParser,
+		Metadata:        cfg.Metadata,
 	})
 	if err != nil {
 		return "", fmt.Errorf("evaluation failed: %w", err)
