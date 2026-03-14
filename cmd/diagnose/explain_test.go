@@ -26,10 +26,10 @@ type: unsafe_state
 params: {}
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
-    - field: properties.storage.visibility.public_list
+    - field: properties.storage.access.public_list
       op: eq
       value: true
 `
@@ -53,7 +53,7 @@ unsafe_predicate:
 	if !strings.Contains(out, "Matched fields:") {
 		t.Fatalf("expected matched fields section, got: %s", out)
 	}
-	if !strings.Contains(out, "properties.storage.visibility.public_read") {
+	if !strings.Contains(out, "properties.storage.access.public_read") {
 		t.Fatalf("expected public_read field, got: %s", out)
 	}
 	if !strings.Contains(out, `"schema_version": "obs.v0.1"`) {

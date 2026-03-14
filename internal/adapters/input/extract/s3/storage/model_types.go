@@ -65,8 +65,55 @@ type BuildModelInput struct {
 	TransportEnforcesHTTPS bool
 }
 
+// S3AccessModel is the unified access projection for S3 buckets.
+// All access-related fields live here under the "access" JSON branch.
+type S3AccessModel struct {
+	// Principal scope & trust boundary (computed by ResolveBucketAccess)
+	Scope         kernel.PrincipalScope `json:"scope"`
+	TrustBoundary kernel.TrustBoundary  `json:"trust_boundary"`
+
+	// Effective permissions
+	PublicRead   bool `json:"public_read"`
+	PublicList   bool `json:"public_list"`
+	PublicWrite  bool `json:"public_write"`
+	PublicDelete bool `json:"public_delete"`
+	PublicAdmin  bool `json:"public_admin"`
+
+	// Origin signals
+	ReadViaIdentity  bool `json:"read_via_identity"`
+	ReadViaResource  bool `json:"read_via_resource"`
+	ListViaIdentity  bool `json:"list_via_identity"`
+	WriteViaResource bool `json:"write_via_resource"`
+	AdminViaResource bool `json:"admin_via_resource"`
+
+	// Authenticated scope
+	AuthenticatedRead  bool `json:"authenticated_read"`
+	AuthenticatedWrite bool `json:"authenticated_write"`
+	AuthenticatedAdmin bool `json:"authenticated_admin"`
+
+	// Latent signals
+	LatentPublicRead bool `json:"latent_public_read"`
+	LatentPublicList bool `json:"latent_public_list"`
+
+	// ACL full-control grants
+	FullControlPublic        bool `json:"has_full_control_public"`
+	FullControlAuthenticated bool `json:"has_full_control_authenticated"`
+
+	// Cross-account
+	ExternalAccounts   []string `json:"external_accounts"`
+	ExternalAccountIDs []string `json:"external_account_ids"`
+	HasExternalAccess  bool     `json:"has_external_access"`
+	HasExternalWrite   bool     `json:"has_external_write"`
+	HasWildcardPolicy  bool     `json:"has_wildcard_policy"`
+
+	// Network scope
+	HasIPCondition        bool   `json:"has_ip_condition"`
+	HasVPCCondition       bool   `json:"has_vpc_condition"`
+	EffectiveNetworkScope string `json:"effective_network_scope"`
+}
+
 // S3StorageModel is the projected storage representation of an S3 bucket.
-// The JSON field paths (e.g., "visibility.effective_exposure", "lifecycle.rules_configured",
+// The JSON field paths (e.g., "access.public_read", "lifecycle.rules_configured",
 // "object_lock.enabled") form the projection contract consumed by control YAML
 // `field:` expressions. Changes to field names or nesting here break control evaluation.
 type S3StorageModel struct {
@@ -75,13 +122,10 @@ type S3StorageModel struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 
-	// Access & Visibility
-	Visibility     s3exposure.VisibilityResult `json:"visibility"`
-	ACL            ACLSummary                  `json:"acl"`
-	Controls       S3Controls                  `json:"controls"`
-	PrefixExposure S3PrefixExposure            `json:"prefix_exposure"`
-	Access         CrossAccountSummary         `json:"access"`
-	Policy         S3Policy                    `json:"policy"`
+	// Access
+	Access         S3AccessModel    `json:"access"`
+	Controls       S3Controls       `json:"controls"`
+	PrefixExposure S3PrefixExposure `json:"prefix_exposure"`
 
 	// Security
 	Encryption S3Encryption `json:"encryption"`
@@ -95,11 +139,6 @@ type S3StorageModel struct {
 
 	// Metadata
 	Tags map[string]string `json:"tags,omitempty"`
-}
-
-type ACLSummary struct {
-	FullControlPublic        bool `json:"has_full_control_public"`
-	FullControlAuthenticated bool `json:"has_full_control_authenticated"`
 }
 
 type S3Encryption struct {
@@ -118,20 +157,6 @@ type S3Logging struct {
 	Enabled      bool   `json:"enabled"`
 	TargetBucket string `json:"target_bucket"`
 	TargetPrefix string `json:"target_prefix"`
-}
-
-type CrossAccountSummary struct {
-	ExternalAccounts   []string `json:"external_accounts"`
-	ExternalAccountIDs []string `json:"external_account_ids"`
-	HasExternalAccess  bool     `json:"has_external_access"`
-	HasExternalWrite   bool     `json:"has_external_write"`
-	HasWildcardPolicy  bool     `json:"has_wildcard_policy"`
-}
-
-type S3Policy struct {
-	HasIPCondition        bool   `json:"has_ip_condition"`
-	HasVPCCondition       bool   `json:"has_vpc_condition"`
-	EffectiveNetworkScope string `json:"effective_network_scope"`
 }
 
 type S3Website struct {

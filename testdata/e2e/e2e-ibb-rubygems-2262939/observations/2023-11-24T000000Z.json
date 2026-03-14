@@ -11,7 +11,9 @@
           "kind": "distribution",
           "id": "rubygems-org-distribution",
           "domain_name": "d111111abcdef8.cloudfront.net",
-          "aliases": ["rubygems.org"],
+          "aliases": [
+            "rubygems.org"
+          ],
           "enabled": true,
           "origins_has_dangling_s3": true,
           "origins": [
@@ -35,7 +37,7 @@
           "kind": "bucket",
           "id": "aws:s3:::index.rubygems.org",
           "name": "index.rubygems.org",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,

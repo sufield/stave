@@ -23,7 +23,7 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "public_admin": false,
           "authenticated_admin": false
         }
@@ -31,9 +31,9 @@ remediation:
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_admin
+    - field: properties.storage.access.public_admin
       op: eq
       value: true
-    - field: properties.storage.visibility.authenticated_admin
+    - field: properties.storage.access.authenticated_admin
       op: eq
       value: true

@@ -13,6 +13,6 @@ type: unsafe_state
 params: {}
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.authenticated_read
+    - field: properties.storage.access.authenticated_read
       op: eq
       value: true

@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "exposed-bucket",
-          "visibility": {
+          "access": {
             "public_read": true,
             "public_list": false,
             "public_write": false,
@@ -39,8 +39,12 @@
           "aws": {
             "s3": {
               "arn": "arn:aws:s3:::exposed-bucket",
-              "policy_public_statements": ["AllowPublicRead"],
-              "acl_public_grantees": ["http://acs.amazonaws.com/groups/global/AllUsers"]
+              "policy_public_statements": [
+                "AllowPublicRead"
+              ],
+              "acl_public_grantees": [
+                "http://acs.amazonaws.com/groups/global/AllUsers"
+              ]
             }
           }
         }

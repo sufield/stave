@@ -23,13 +23,13 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "authenticated_write": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.authenticated_write
+    - field: properties.storage.access.authenticated_write
       op: eq
       value: true

@@ -29,13 +29,13 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "public_read": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true

@@ -53,7 +53,7 @@ remediation:
 unsafe_predicate:
   any:
     - id: one
-      field: properties.storage.visibility.public_read
+      field: properties.storage.access.public_read
       op: eq
       value: true
 `)

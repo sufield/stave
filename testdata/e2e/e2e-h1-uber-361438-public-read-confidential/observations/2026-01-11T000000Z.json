@@ -23,16 +23,6 @@
             "data-classification": "confidential",
             "Owner": "operations"
           },
-          "visibility": {
-            "public_read": true,
-            "public_list": false,
-            "public_write": false,
-            "read_via_identity": true,
-            "read_via_resource": false,
-            "list_via_identity": false,
-            "latent_public_read": false,
-            "latent_public_list": false
-          },
           "controls": {
             "public_access_fully_blocked": false,
             "account_public_access_fully_blocked": false,
@@ -62,9 +52,15 @@
             "external_accounts": null,
             "has_external_access": false,
             "has_wildcard_policy": true,
-            "has_external_write": false
-          },
-          "policy": {
+            "has_external_write": false,
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": true,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "latent_public_read": false,
+            "latent_public_list": false,
             "has_ip_condition": false,
             "has_vpc_condition": false,
             "effective_network_scope": "public"

@@ -30,9 +30,9 @@ remediation:
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.acl.has_full_control_public
+    - field: properties.storage.access.has_full_control_public
       op: eq
       value: true
-    - field: properties.storage.acl.has_full_control_authenticated
+    - field: properties.storage.access.has_full_control_authenticated
       op: eq
       value: true

@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "latent-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,
@@ -46,7 +46,7 @@
         "storage": {
           "kind": "bucket",
           "name": "safe-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,

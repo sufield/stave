@@ -116,7 +116,7 @@ func TestExtractPublicBucket(t *testing.T) {
 	}
 
 	storage := getStorageMap(t, resource)
-	visibility := getSubMap(t, storage, "visibility")
+	visibility := getSubMap(t, storage, "access")
 
 	assertBoolField(t, visibility, "public_read", true)
 	assertBoolField(t, visibility, "public_list", true)
@@ -161,7 +161,7 @@ func TestExtractPrivateBucket(t *testing.T) {
 	assertBoolField(t, eff, "block_public_policy", true)
 	assertBoolField(t, eff, "restrict_public_buckets", true)
 
-	visibility := getSubMap(t, storage, "visibility")
+	visibility := getSubMap(t, storage, "access")
 
 	// Check visibility is false when fully blocked
 	assertBoolField(t, visibility, "public_read", false)
@@ -230,7 +230,7 @@ func TestExtractAccountPublicAccessBlock(t *testing.T) {
 	storage := getStorageMap(t, resource)
 
 	// Account-level block should override: post-PAB visibility must be false
-	visibility := getSubMap(t, storage, "visibility")
+	visibility := getSubMap(t, storage, "access")
 	assertBoolField(t, visibility, "public_read", false)
 
 	// Root-cause fields are pre-PAB: policy grants public read, so via_policy should be true
@@ -476,7 +476,7 @@ func TestExtractACLOnlyPublicRead(t *testing.T) {
 	}
 
 	storage := getStorageMap(t, resource)
-	visibility := getSubMap(t, storage, "visibility")
+	visibility := getSubMap(t, storage, "access")
 
 	// ACL-only public: public_read=true via ACL, not via policy
 	assertBoolField(t, visibility, "public_read", true)
@@ -521,7 +521,7 @@ func TestExtractPartialPAB(t *testing.T) {
 	assertBoolField(t, eff, "restrict_public_buckets", false)
 
 	// With block_public_policy=true, policy-based public read is blocked
-	visibility := getSubMap(t, storage, "visibility")
+	visibility := getSubMap(t, storage, "access")
 	assertBoolField(t, visibility, "public_read", false)
 	assertBoolField(t, visibility, "read_via_identity", true)
 	assertBoolField(t, visibility, "latent_public_read", true)
@@ -550,7 +550,7 @@ func TestExtractLatentPublicList(t *testing.T) {
 	}
 
 	storage := getStorageMap(t, resource)
-	visibility := getSubMap(t, storage, "visibility")
+	visibility := getSubMap(t, storage, "access")
 
 	// PAB fully blocks effective exposure
 	assertBoolField(t, visibility, "public_list", false)

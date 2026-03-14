@@ -11,7 +11,7 @@
           "kind": "bucket",
           "id": "aws:s3:::slack-ios-test-builds",
           "name": "slack-ios-test-builds",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,

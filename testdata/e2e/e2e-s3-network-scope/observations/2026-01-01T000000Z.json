@@ -15,13 +15,45 @@
         "storage": {
           "kind": "bucket",
           "name": "public-no-condition",
-          "visibility": { "public_read": true, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": false, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": false, "ignore_public_acls": false, "block_public_policy": false, "restrict_public_buckets": false } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
-          "versioning": { "enabled": false, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "public" }
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": "public"
+          }
         }
       }
     },
@@ -33,13 +65,45 @@
         "storage": {
           "kind": "bucket",
           "name": "vpc-conditioned",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": false, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": false, "ignore_public_acls": false, "block_public_policy": false, "restrict_public_buckets": false } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
-          "versioning": { "enabled": false, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": true, "effective_network_scope": "vpc-restricted" }
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": true,
+            "effective_network_scope": "vpc-restricted"
+          }
         }
       }
     },
@@ -51,13 +115,45 @@
         "storage": {
           "kind": "bucket",
           "name": "ip-conditioned",
-          "visibility": { "public_read": false, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": false, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": false, "ignore_public_acls": false, "block_public_policy": false, "restrict_public_buckets": false } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": false },
-          "versioning": { "enabled": false, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": true, "has_vpc_condition": false, "effective_network_scope": "ip-restricted" }
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": true,
+            "has_vpc_condition": false,
+            "effective_network_scope": "ip-restricted"
+          }
         }
       }
     },
@@ -69,13 +165,45 @@
         "storage": {
           "kind": "bucket",
           "name": "securetransport-only",
-          "visibility": { "public_read": true, "public_list": false, "public_write": false, "read_via_identity": false, "read_via_resource": false, "list_via_identity": false },
-          "controls": { "public_access_fully_blocked": false, "account_public_access_fully_blocked": false, "public_access_block": { "block_public_acls": false, "ignore_public_acls": false, "block_public_policy": false, "restrict_public_buckets": false } },
-          "encryption": { "at_rest_enabled": true, "algorithm": "AES256", "kms_key_id": "", "in_transit_enforced": true },
-          "versioning": { "enabled": false, "mfa_delete_enabled": false },
-          "logging": { "enabled": true, "target_bucket": "", "target_prefix": "" },
-          "access": { "external_accounts": null, "has_external_access": false, "has_wildcard_policy": false },
-          "policy": { "has_ip_condition": false, "has_vpc_condition": false, "effective_network_scope": "public" }
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": "",
+            "in_transit_enforced": true
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "",
+            "target_prefix": ""
+          },
+          "access": {
+            "external_accounts": null,
+            "has_external_access": false,
+            "has_wildcard_policy": false,
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": "public"
+          }
         }
       }
     }

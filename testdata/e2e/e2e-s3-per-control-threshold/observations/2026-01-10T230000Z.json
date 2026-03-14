@@ -1,6 +1,9 @@
 {
   "schema_version": "obs.v0.1",
-  "generated_by": { "source_type": "aws-s3-snapshot", "tool": "stave-e2e" },
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "stave-e2e"
+  },
   "captured_at": "2026-01-10T23:00:00Z",
   "assets": [
     {
@@ -11,7 +14,11 @@
         "storage": {
           "kind": "bucket",
           "name": "test-public-bucket",
-          "visibility": { "public_read": true, "public_list": false, "public_write": false }
+          "access": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false
+          }
         }
       }
     }

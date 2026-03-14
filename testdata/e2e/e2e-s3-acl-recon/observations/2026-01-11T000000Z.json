@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "acl-readable-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_admin": true
           },
@@ -33,7 +33,7 @@
         "storage": {
           "kind": "bucket",
           "name": "safe-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_admin": false
           },

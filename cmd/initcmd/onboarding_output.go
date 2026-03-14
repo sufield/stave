@@ -130,7 +130,7 @@ func demoEvidenceLine(snapshot asset.Snapshot, assetID string) string {
 		}
 		block := readBool(r.Properties, "storage", "controls", "public_access_fully_blocked")
 		acl := "private"
-		if readBool(r.Properties, "storage", "visibility", "public_read_via_acl") || readBool(r.Properties, "storage", "visibility", "public_read") {
+		if readBool(r.Properties, "storage", "access", "public_read_via_acl") || readBool(r.Properties, "storage", "access", "public_read") {
 			acl = "public-read"
 		}
 		return fmt.Sprintf("BlockPublicAccess=%t, ACL=%s", block, acl)

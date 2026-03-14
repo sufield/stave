@@ -15,16 +15,6 @@
         "storage": {
           "kind": "bucket",
           "name": "shared-upload-bucket",
-          "visibility": {
-            "public_read": false,
-            "public_list": false,
-            "public_write": false,
-            "read_via_identity": false,
-            "read_via_resource": false,
-            "list_via_identity": false,
-            "latent_public_read": false,
-            "latent_public_list": false
-          },
           "controls": {
             "public_access_fully_blocked": true,
             "account_public_access_fully_blocked": false,
@@ -36,10 +26,20 @@
             }
           },
           "access": {
-            "external_accounts": ["arn:aws:iam::111222333444:root"],
+            "external_accounts": [
+              "arn:aws:iam::111222333444:root"
+            ],
             "has_external_access": true,
             "has_external_write": true,
-            "has_wildcard_policy": false
+            "has_wildcard_policy": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "latent_public_read": false,
+            "latent_public_list": false
           }
         }
       }

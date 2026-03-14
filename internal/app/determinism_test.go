@@ -37,7 +37,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"storage": map[string]any{
-							"visibility": map[string]any{
+							"access": map[string]any{
 								"public_read": true,
 							},
 						},
@@ -49,7 +49,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"storage": map[string]any{
-							"visibility": map[string]any{
+							"access": map[string]any{
 								"public_read": false,
 							},
 						},
@@ -67,7 +67,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"storage": map[string]any{
-							"visibility": map[string]any{
+							"access": map[string]any{
 								"public_read": true,
 							},
 						},
@@ -79,7 +79,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 					Vendor: kernel.Vendor("aws"),
 					Properties: map[string]any{
 						"storage": map[string]any{
-							"visibility": map[string]any{
+							"access": map[string]any{
 								"public_read": false,
 							},
 						},
@@ -97,7 +97,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		Type:        policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			All: []policy.PredicateRule{
-				{Field: "properties.storage.visibility.public_read", Op: "eq", Value: true},
+				{Field: "properties.storage.access.public_read", Op: "eq", Value: true},
 			},
 		},
 	}
@@ -154,13 +154,13 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	resources := []asset.Asset{
 		{ID: "bucket-z", Type: kernel.AssetType("storage_bucket"), Vendor: kernel.Vendor("aws"), Properties: map[string]any{
-			"storage": map[string]any{"visibility": map[string]any{"public_read": true}},
+			"storage": map[string]any{"access": map[string]any{"public_read": true}},
 		}},
 		{ID: "bucket-a", Type: kernel.AssetType("storage_bucket"), Vendor: kernel.Vendor("aws"), Properties: map[string]any{
-			"storage": map[string]any{"visibility": map[string]any{"public_read": true}},
+			"storage": map[string]any{"access": map[string]any{"public_read": true}},
 		}},
 		{ID: "bucket-m", Type: kernel.AssetType("storage_bucket"), Vendor: kernel.Vendor("aws"), Properties: map[string]any{
-			"storage": map[string]any{"visibility": map[string]any{"public_read": false}},
+			"storage": map[string]any{"access": map[string]any{"public_read": false}},
 		}},
 	}
 
@@ -173,7 +173,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		DSLVersion: "ctrl.v1", ID: "CTL.Z.001", Name: "Z control",
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
-			All: []policy.PredicateRule{{Field: "properties.storage.visibility.public_read", Op: "eq", Value: true}},
+			All: []policy.PredicateRule{{Field: "properties.storage.access.public_read", Op: "eq", Value: true}},
 		},
 	}
 	_ = ctlZ.Prepare()
@@ -181,7 +181,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		DSLVersion: "ctrl.v1", ID: "CTL.A.001", Name: "A control",
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
-			All: []policy.PredicateRule{{Field: "properties.storage.visibility.public_read", Op: "eq", Value: true}},
+			All: []policy.PredicateRule{{Field: "properties.storage.access.public_read", Op: "eq", Value: true}},
 		},
 	}
 	_ = ctlA.Prepare()

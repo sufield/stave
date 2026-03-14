@@ -31,7 +31,7 @@ func writeTestObservation(t *testing.T, path string, capturedAt time.Time) {
       "vendor": "aws",
       "properties": {
         "storage": {
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false
           }

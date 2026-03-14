@@ -18,26 +18,6 @@
             "storage": {
               "kind": "bucket",
               "name": "private-test-bucket",
-              "visibility": {
-                "public_read": false,
-                "public_list": false,
-                "public_write": false,
-                "read_via_identity": false,
-                "read_via_resource": false,
-                "list_via_identity": false,
-                "authenticated_read": false,
-                "authenticated_write": false,
-                "public_admin": false,
-                "authenticated_admin": false,
-                "public_admin": false,
-                "authenticated_admin": false,
-                "latent_public_read": false,
-                "latent_public_list": false
-              },
-              "acl": {
-                "has_full_control_public": false,
-                "has_full_control_authenticated": false
-              },
               "controls": {
                 "public_access_fully_blocked": true,
                 "account_public_access_fully_blocked": true,
@@ -68,9 +48,21 @@
                 "external_account_ids": [],
                 "has_external_access": false,
                 "has_external_write": false,
-                "has_wildcard_policy": false
-              },
-              "policy": {
+                "has_wildcard_policy": false,
+                "public_read": false,
+                "public_list": false,
+                "public_write": false,
+                "read_via_identity": false,
+                "read_via_resource": false,
+                "list_via_identity": false,
+                "authenticated_read": false,
+                "authenticated_write": false,
+                "public_admin": false,
+                "authenticated_admin": false,
+                "latent_public_read": false,
+                "latent_public_list": false,
+                "has_full_control_public": false,
+                "has_full_control_authenticated": false,
                 "has_ip_condition": true,
                 "has_vpc_condition": true,
                 "effective_network_scope": "vpc"
@@ -98,7 +90,11 @@
                 "resource_read_blocked": true
               },
               "website": null,
-              "tags": {"containsPHI": "true", "data-classification": "phi", "compliance": "hipaa"}
+              "tags": {
+                "containsPHI": "true",
+                "data-classification": "phi",
+                "compliance": "hipaa"
+              }
             }
           }
         }
@@ -121,26 +117,6 @@
             "storage": {
               "kind": "bucket",
               "name": "private-test-bucket",
-              "visibility": {
-                "public_read": false,
-                "public_list": false,
-                "public_write": false,
-                "read_via_identity": false,
-                "read_via_resource": false,
-                "list_via_identity": false,
-                "authenticated_read": false,
-                "authenticated_write": false,
-                "public_admin": false,
-                "authenticated_admin": false,
-                "public_admin": false,
-                "authenticated_admin": false,
-                "latent_public_read": false,
-                "latent_public_list": false
-              },
-              "acl": {
-                "has_full_control_public": false,
-                "has_full_control_authenticated": false
-              },
               "controls": {
                 "public_access_fully_blocked": true,
                 "account_public_access_fully_blocked": true,
@@ -171,9 +147,21 @@
                 "external_account_ids": [],
                 "has_external_access": false,
                 "has_external_write": false,
-                "has_wildcard_policy": false
-              },
-              "policy": {
+                "has_wildcard_policy": false,
+                "public_read": false,
+                "public_list": false,
+                "public_write": false,
+                "read_via_identity": false,
+                "read_via_resource": false,
+                "list_via_identity": false,
+                "authenticated_read": false,
+                "authenticated_write": false,
+                "public_admin": false,
+                "authenticated_admin": false,
+                "latent_public_read": false,
+                "latent_public_list": false,
+                "has_full_control_public": false,
+                "has_full_control_authenticated": false,
                 "has_ip_condition": true,
                 "has_vpc_condition": true,
                 "effective_network_scope": "vpc"
@@ -201,7 +189,11 @@
                 "resource_read_blocked": true
               },
               "website": null,
-              "tags": {"containsPHI": "true", "data-classification": "phi", "compliance": "hipaa"}
+              "tags": {
+                "containsPHI": "true",
+                "data-classification": "phi",
+                "compliance": "hipaa"
+              }
             }
           }
         }

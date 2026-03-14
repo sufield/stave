@@ -22,13 +22,13 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "list_via_identity": false
         }
       }
     }
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.list_via_identity
+    - field: properties.storage.access.list_via_identity
       op: eq
       value: true

@@ -27,7 +27,7 @@ remediation:
   example: |
     {
       "storage": {
-        "visibility": {
+        "access": {
           "authenticated_read": false
         }
       }

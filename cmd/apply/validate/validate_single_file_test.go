@@ -21,7 +21,7 @@ description: Public buckets increase exposure risk.
 type: unsafe_state
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
 `), 0o644); err != nil {
@@ -56,7 +56,7 @@ description: Public buckets increase exposure risk.
 type: unsafe_state
 unsafe_predicate:
   any:
-    - field: properties.storage.visibility.public_read
+    - field: properties.storage.access.public_read
       op: eq
       value: true
 unexpected: true

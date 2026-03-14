@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "latent-listable-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_list": false,
             "public_write": false,

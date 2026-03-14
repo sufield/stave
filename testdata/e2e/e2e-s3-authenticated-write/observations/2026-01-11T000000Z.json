@@ -15,7 +15,7 @@
         "storage": {
           "kind": "bucket",
           "name": "auth-write-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_write": false,
             "authenticated_write": true
@@ -34,7 +34,7 @@
         "storage": {
           "kind": "bucket",
           "name": "safe-bucket",
-          "visibility": {
+          "access": {
             "public_read": false,
             "public_write": false,
             "authenticated_write": false

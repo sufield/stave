@@ -32,7 +32,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "properties.storage.visibility.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+					{Property: "properties.storage.access.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
 					IdentityStatements: stmts,
@@ -58,7 +58,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	if s.Evidence.Misconfigurations[0].ActualValue != "[SANITIZED]" {
 		t.Errorf("Misconfigurations[0].ActualValue = %v, want [SANITIZED]", s.Evidence.Misconfigurations[0].ActualValue)
 	}
-	if s.Evidence.Misconfigurations[0].Property != "properties.storage.visibility.public_read" {
+	if s.Evidence.Misconfigurations[0].Property != "properties.storage.access.public_read" {
 		t.Errorf("Misconfigurations[0].Property changed")
 	}
 	for i, v := range s.Evidence.SourceEvidence.IdentityStatements {
