@@ -128,7 +128,8 @@ func (r *Runner) Show(_ context.Context, format ui.OutputFormat) error {
 // --- Internal Helpers ---
 
 func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[projconfig.ProjectConfig] {
-	store := projectConfigStore{allowSymlink: opts.AllowSymlink, svc: r.Svc}
+	cfgResolver, _ := projconfig.NewResolver()
+	store := projectConfigStore{resolver: cfgResolver, svc: r.Svc, allowSymlink: opts.AllowSymlink}
 	return &cliconfig.Editor[projconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
