@@ -9,17 +9,17 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2015-10-15T000000Z.json": "19ee962eb305cd3eb9bf950f76a5dce7be9003613189170c6367b0417562de94",
-        "2015-10-23T000000Z.json": "2baae6870054c3f8cec208b9eae47a3094df104089e1f5ce9cdf97268c6b95ea"
+        "2015-10-15T000000Z.json": "dcf5c24f384fc87e55dadaf0f570ef62c8111e3f506dff0661f00cdf7e096630",
+        "2015-10-23T000000Z.json": "4efafa0a0a384dfc6a2b0ca51627f230239441d1b547b0ac612f6f40eeca68f5"
       },
-      "overall": "6a69cf2a84ed8c0d0dc281c1db06b70c2f91ea7263a1d1b4d742c5cc38b01c0e"
+      "overall": "7607158d662a7e76662cb428a99aa0dd721cd028ae6abb81741c4f51a0e4c1f0"
     },
     "pack_hash": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025"
   },
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 1,
-    "violations": 1
+    "violations": 2
   },
   "findings": [
     {
@@ -76,6 +76,82 @@
         "description": "Resource data is not encrypted at rest.",
         "action": "Enable server-side encryption using a managed key."
       }
+    },
+    {
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
+      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-15T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-23T00:00:00Z",
+        "unsafe_duration_hours": 192,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "identities",
+            "actual_value": "[SANITIZED]",
+            "operator": "any_match",
+            "unsafe_value": {
+              "all": [
+                {
+                  "field": "type",
+                  "op": "eq",
+                  "value": "app_signer"
+                },
+                {
+                  "field": "id",
+                  "op": "contains",
+                  "value": "appsigner:s3:"
+                },
+                {
+                  "any": [
+                    {
+                      "field": "purpose",
+                      "op": "contains",
+                      "value": "allow_traversal=true"
+                    },
+                    {
+                      "field": "purpose",
+                      "op": "contains",
+                      "value": "enforce_prefix=false"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.tenant_mode",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "shared"
+          },
+          {
+            "property": "storage.tags.tenant_prefix",
+            "actual_value": "[SANITIZED]",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-15T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      }
     }
   ],
   "extensions": {
@@ -87,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

@@ -1,6 +1,6 @@
 Running: apply before observations...
-Done:    apply before observations (3ms)
+Done:    apply before observations (1ms)
 Running: apply after observations...
-Done:    apply after observations (2ms)
+Done:    apply after observations (1ms)
 
 Need help? Run 'stave bug-report' to create a diagnostic bundle.

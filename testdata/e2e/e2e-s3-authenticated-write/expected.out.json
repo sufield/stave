@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "d3404025cf96157e10c1c67f133a12ec280ab433fd9f63db98b68c89832e2179",
-        "2026-01-11T000000Z.json": "f3a91836e45314fe5d6b18638ad40edff80baab4c02d9ec704137ab7fb726653"
+        "2026-01-01T000000Z.json": "9679014f8e5a69bbb0cb005e0b41dcf63f7e39ed05a9c870294c045f322f40e0",
+        "2026-01-11T000000Z.json": "2319dd48d7d0c80079977404ecdc978d84b03044782cc98bd9afde12a55a3e87"
       },
-      "overall": "df3270f30974bee2ebaf97e5d42d3a65b953df2b1e982dcba40ed9a4c661236a"
+      "overall": "3aabd76db25be19bff1373a7b460322a9102e1a3c1b63c0ba4862c9cc4cd5a21"
     },
     "pack_hash": "17414bae5932af88e63416916bca2242600d0e92802c4e165dbd7687591de427"
   },
@@ -36,7 +36,7 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_write",
+            "property": "storage.access.authenticated_write",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -51,7 +51,7 @@
       "remediation": {
         "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.\n",
         "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"authenticated_write\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"authenticated_write\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -64,7 +64,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "ffb9bf451c19097e5494d328ff05e29c5be32c45e43628d29dc495a599d9d23d",
-        "2026-01-11T000000Z.json": "8d0976dcf57015f2fb4108862b5f81638d091578ef59c4659d80048c4f602859"
+        "2026-01-01T000000Z.json": "661a6a222a18a58a17607de975c9a9148e44041b4fd02f889dc765869473b395",
+        "2026-01-11T000000Z.json": "f3b29d47b937b9320297bb02c3b908064fb79cd174e2ac62dc7467fe2c45d5ae"
       },
-      "overall": "ea9243665dd8ba62ce30f8add08c77387bd39fa18a2e4774e60eb1df44c59df2"
+      "overall": "fa24af8399c1959f95503cb5f7ef4afb8d5b6002a76df140e48d08f10faa740a"
     },
     "pack_hash": "ead857b92e4376bbffe52bf25cf5f85586697bba1c421ea7cc0eb1fbb5c26867"
   },
@@ -36,13 +36,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_admin",
+            "property": "storage.access.authenticated_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_admin",
+            "property": "storage.access.public_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -57,7 +57,7 @@
       "remediation": {
         "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.\n",
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       }
     },
     {
@@ -74,13 +74,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.authenticated_admin",
+            "property": "storage.access.authenticated_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_admin",
+            "property": "storage.access.public_admin",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -95,7 +95,7 @@
       "remediation": {
         "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.\n",
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
-        "example": "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       }
     }
   ],
@@ -108,7 +108,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34561953843ec3950f9ebf48a14a342bbcee2f5e",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

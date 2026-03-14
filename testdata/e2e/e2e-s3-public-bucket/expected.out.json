@@ -9,10 +9,10 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "548a3a70fc7e39d9386a6fe918993cff535b83545d4910760c1058e853f86bd0",
-        "2026-01-11T000000Z.json": "655daea809c54ab8ee2738e23d7a954223f1e21909a89b89ba066ba070f8ce41"
+        "2026-01-01T000000Z.json": "9577941a36549d87f04799f73714c638e4eab5b0bc21847ec80f98748fbf2c99",
+        "2026-01-11T000000Z.json": "ee7d8b8f65a0d8ffb6bcc2da3737e1f3e62ff108f2fab95556b74f5a9fcabae5"
       },
-      "overall": "b1aa2a6218adad1cb1f97705941fd30e9ad54f59b222df9cd451d7f7abf423c8"
+      "overall": "3e018d7ed6ffb0c24a7c65d2b1aa65252ab96c11de21eaa36f958d578322a0c7"
     },
     "pack_hash": "0ffacc4b512c8cf8cf3ccbfff470edb0d473292faa17586cdcc318c3eb3f8db6"
   },
@@ -36,13 +36,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_list",
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_read",
+            "property": "storage.access.public_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -107,13 +107,13 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.visibility.public_list",
+            "property": "storage.access.public_list",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
           },
           {
-            "property": "storage.visibility.public_read",
+            "property": "storage.access.public_read",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": true
@@ -178,6 +178,18 @@
         "threshold_hours": 168,
         "misconfigurations": [
           {
+            "property": "storage.access.public_list",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access.public_read",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
@@ -194,18 +206,6 @@
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "confidential"
-          },
-          {
-            "property": "storage.visibility.public_list",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          },
-          {
-            "property": "storage.visibility.public_read",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
           }
         ],
         "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
@@ -350,7 +350,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1fde7aa589b8e51273839eab6108b0f382deceea",
+      "head_commit": "6ff47fdd9f691e074da048d00944ede228bd7e67",
       "dirty": false
     }
   }

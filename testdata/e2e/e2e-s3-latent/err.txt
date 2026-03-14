@@ -1,9 +1,9 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 34ms)
+Done:    apply controls against observations (2 files, 12ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-latent/controls --observations testdata/e2e/e2e-s3-latent/observations
 
 Next steps:
   1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-s3-latent/controls --observations testdata/e2e/e2e-s3-latent/observations`
   2. View a summary: `stave apply --format text`
-  3. Export findings for S3: `stave apply --format json > findings.json`
+  3. Export findings to a file: `stave apply --format json > findings.json`
