@@ -1,159 +1,131 @@
 package initcmd
 
 import (
+	"bytes"
+	_ "embed"
+	"fmt"
+	"text/template"
+
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/env"
 )
 
+//go:embed templates/gitignore.txt
+var gitignoreContent string
+
+//go:embed templates/README.md.tmpl
+var readmeTemplateSrc string
+
+//go:embed templates/cli.yaml.tmpl
+var userConfigTemplateSrc string
+
+//go:embed templates/stave.lock.tmpl
+var lockfileTemplateSrc string
+
+// ScaffoldData holds all variables needed to render project templates.
+type ScaffoldData struct {
+	Version           string
+	CaptureCadence    string
+	SnapshotTemplate  string
+	SnapshotExample   string
+	ObsConvertCmd     string
+	ProjectConfigFile string
+	UserConfigEnv     string
+	MaxUnsafe         string
+	Retention         string
+	RetentionTier     string
+	CIFailurePolicy   string
+}
+
+// Scaffolder renders project scaffold templates using a populated ScaffoldData model.
+type Scaffolder struct {
+	Data ScaffoldData
+}
+
+// NewScaffolder creates a Scaffolder from scaffold options.
+func NewScaffolder(opts scaffoldOptions) *Scaffolder {
+	obsCmd := "stave ingest --profile aws-s3 --input ./snapshots/raw/snapshot.json --out ./observations"
+	if opts.Profile == profileAWSS3 {
+		obsCmd = "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
+	}
+	return &Scaffolder{
+		Data: ScaffoldData{
+			Version:           GetVersion(),
+			CaptureCadence:    opts.CaptureCadence,
+			SnapshotTemplate:  snapshotFilenameTemplate(opts.CaptureCadence),
+			SnapshotExample:   snapshotFilenameExample(opts.CaptureCadence),
+			ObsConvertCmd:     obsCmd,
+			ProjectConfigFile: projectConfigFile,
+			UserConfigEnv:     env.UserConfig.Name,
+			MaxUnsafe:         defaultMaxUnsafeDuration,
+			Retention:         defaultSnapshotRetention,
+			RetentionTier:     defaultRetentionTier,
+			CIFailurePolicy:   defaultCIFailurePolicy,
+		},
+	}
+}
+
+// Readme renders the project README from the embedded template.
+func (s *Scaffolder) Readme() (string, error) {
+	return renderTemplate(readmeTemplateSrc, "readme", s.Data)
+}
+
+// UserConfig renders the example CLI config from the embedded template.
+func (s *Scaffolder) UserConfig() (string, error) {
+	return renderTemplate(userConfigTemplateSrc, "userconfig", s.Data)
+}
+
+// Lockfile renders the stave.lock from the embedded template.
+func (s *Scaffolder) Lockfile() (string, error) {
+	return renderTemplate(lockfileTemplateSrc, "lockfile", s.Data)
+}
+
+func renderTemplate(src, name string, data ScaffoldData) (string, error) {
+	tmpl, err := template.New(name).Parse(src)
+	if err != nil {
+		return "", fmt.Errorf("parse %s template: %w", name, err)
+	}
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("execute %s template: %w", name, err)
+	}
+	return buf.String(), nil
+}
+
+// --- Backward-compatible wrappers used by scaffold.go ---
+
 func scaffoldGitignore() string {
-	return `# Stave raw capture inputs (sensitive by default)
-snapshots/raw/*
-!snapshots/raw/*.example.*
-
-# Normalized observations often contain asset identifiers
-observations/*.json
-
-# Evaluation/diagnostic output artifacts
-output/*
-!output/.gitkeep
-
-# Local logs
-*.log
-`
+	return gitignoreContent
 }
 
 func scaffoldReadme(opts scaffoldOptions) string {
-	obsConvertCmd := "stave ingest --profile aws-s3 --input ./snapshots/raw/snapshot.json --out ./observations"
-	if opts.Profile == profileAWSS3 {
-		obsConvertCmd = "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
+	sc := NewScaffolder(opts)
+	out, err := sc.Readme()
+	if err != nil {
+		return fmt.Sprintf("# Error rendering README: %v\n", err)
 	}
-	snapshotNameExample := snapshotFilenameExample(opts.CaptureCadence)
-	return scaffoldReadmeIntro(opts) +
-		scaffoldReadmeWorkflow(opts, obsConvertCmd) +
-		scaffoldReadmeTimeline(opts, snapshotNameExample)
-}
-
-func scaffoldReadmeIntro(opts scaffoldOptions) string {
-	return `# Stave Project Scaffold
-
-This directory was created by ` + "`stave init`" + `.
-
-## MVP operating assumption
-
-This scaffold assumes snapshots are captured from **production** to remediate
-**critical issues** quickly. Defaults are optimized for short feedback loops:
-
-- ` + "`stave snapshot upcoming`" + ` for chronological next-snapshot planning
-- ` + "`stave snapshot prune`" + ` for bounded snapshot retention
-`
-}
-
-func scaffoldReadmeWorkflow(opts scaffoldOptions, obsConvertCmd string) string {
-	return `
-## Recommended workflow
-
-Project-wide unsafe-duration threshold:
-` + "```text" + `
-` + projectConfigFile + `
-max_unsafe: ` + defaultMaxUnsafeDuration + `
-snapshot_retention: ` + defaultSnapshotRetention + `
-default_retention_tier: ` + defaultRetentionTier + `
-snapshot_retention_tiers:
-  critical:
-    older_than: 30d
-    keep_min: 2
-  non_critical:
-    older_than: 14d
-    keep_min: 2
-ci_failure_policy: ` + defaultCIFailurePolicy + `
-capture_cadence: ` + opts.CaptureCadence + `
-snapshot_filename_template: ` + snapshotFilenameTemplate(opts.CaptureCadence) + `
-enabled_control_packs:
-  - s3
-` + "```" + `
-Edit this file once to keep ` + "`--max-unsafe`" + ` and ` + "`snapshot prune --older-than`" + ` defaults consistent.
-
-The ` + "`enabled_control_packs`" + ` field activates built-in control checks.
-Run ` + "`stave controls list`" + ` to see all available checks.
-
-Optional personal CLI defaults:
-` + "```text" + `
-cli.yaml
-` + "```" + `
-Activate it with:
-` + "```bash" + `
-export ` + env.UserConfig.Name + `="$PWD/cli.yaml"
-` + "```" + `
-Uncomment the ` + "`cli_defaults`" + ` keys you want for this project shell.
-
-1. Add raw snapshots under ` + "`snapshots/raw/`" + ` and convert observations:
-` + "```bash" + `
-` + obsConvertCmd + `
-` + "```" + `
-
-2. Apply built-in checks and diagnose:
-` + "```bash" + `
-stave apply --observations ./observations --format json > output/evaluation.json
-stave diagnose --observations ./observations --previous-output output/evaluation.json
-` + "```" + `
-
-3. Add custom controls (optional):
-` + "```bash" + `
-stave generate control --id CTL.S3.PUBLIC.901 --out controls/MY.CUSTOM.001.yaml
-stave apply --controls ./controls --observations ./observations
-` + "```" + `
-`
-}
-
-func scaffoldReadmeTimeline(opts scaffoldOptions, snapshotNameExample string) string {
-	return `
-## Timeline snapshots
-
-Store multiple observation files in ` + "`observations/`" + ` using timestamp filenames
-(example: ` + "`2026-01-11T000000Z.json`" + `, ` + "`2026-01-18T000000Z.json`" + `) to evaluate
-unsafe duration windows and compare remediation over time.
-
-Default cadence template:
-- cadence: ` + "`" + opts.CaptureCadence + "`" + `
-- naming convention: ` + "`observations/" + snapshotNameExample + "`" + `
-`
+	return out
 }
 
 func scaffoldUserConfigExample() string {
-	return normalizeTemplate(`# Optional user-level defaults for Stave CLI.
-# This file is a template to reduce repeated flags in local workflows.
-#
-# Activate for current shell:
-#   export ` + env.UserConfig.Name + `="$PWD/cli.yaml"
-#
-# Uncomment fields you need.
-
-# max_unsafe: 72h
-# snapshot_retention: 30d
-# default_retention_tier: critical
-# ci_failure_policy: fail_on_new_violation
-
-# cli_defaults:
-#   output: json
-#   quiet: false
-#   sanitize: false
-#   path_mode: base
-#   allow_unknown_input: false
-`)
+	sc := NewScaffolder(scaffoldOptions{})
+	out, err := sc.UserConfig()
+	if err != nil {
+		return fmt.Sprintf("# Error rendering user config: %v\n", err)
+	}
+	return out
 }
 
 func scaffoldLockfile() string {
-	return normalizeTemplate(`schema_version: lock.v1
-tool:
-  name: stave
-  version: ` + GetVersion() + `
-contracts:
-  control: ctrl.v1
-  observation: obs.v0.1
-  output: out.v0.1
-registries: []
-`)
+	sc := NewScaffolder(scaffoldOptions{})
+	out, err := sc.Lockfile()
+	if err != nil {
+		return fmt.Sprintf("# Error rendering lockfile: %v\n", err)
+	}
+	return out
 }
+
+// --- Static template constants (use compile-time kernel.Schema* values) ---
 
 const templateControlSample = `# ── Stave Control (` + string(kernel.SchemaControl) + `) ──────────────────────────────────────
 #

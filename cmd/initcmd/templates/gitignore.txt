@@ -1,0 +1,13 @@
+# Stave raw capture inputs (sensitive by default)
+snapshots/raw/*
+!snapshots/raw/*.example.*
+
+# Normalized observations often contain asset identifiers
+observations/*.json
+
+# Evaluation/diagnostic output artifacts
+output/*
+!output/.gitkeep
+
+# Local logs
+*.log
