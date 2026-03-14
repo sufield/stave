@@ -80,7 +80,7 @@ type S3StorageModel struct {
 	ACL            ACLSummary                  `json:"acl"`
 	Controls       S3Controls                  `json:"controls"`
 	PrefixExposure S3PrefixExposure            `json:"prefix_exposure"`
-	Access         CrossAccountSummary                    `json:"access"`
+	Access         CrossAccountSummary         `json:"access"`
 	Policy         S3Policy                    `json:"policy"`
 
 	// Security

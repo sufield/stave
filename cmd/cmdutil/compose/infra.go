@@ -53,7 +53,7 @@ func NewDefaultProvider() *Provider {
 // --- Active Provider ---
 
 // activeProvider is the process-wide provider used by command handlers.
-// Set via UseProvider during App bootstrap; tests use OverrideProviderForTest.
+// Set via UseProvider during App bootstrap.
 var activeProvider = NewDefaultProvider()
 
 // ActiveProvider returns the current process-wide provider.
@@ -61,17 +61,6 @@ func ActiveProvider() *Provider { return activeProvider }
 
 // UseProvider replaces the active provider. Called once from App.bootstrap.
 func UseProvider(p *Provider) { activeProvider = p }
-
-// OverrideProviderForTest replaces the active provider for the duration of a test.
-func OverrideProviderForTest(t interface {
-	Helper()
-	Cleanup(func())
-}, p *Provider) {
-	t.Helper()
-	orig := activeProvider
-	activeProvider = p
-	t.Cleanup(func() { activeProvider = orig })
-}
 
 // SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
 type SnapshotObservationRepository interface {
