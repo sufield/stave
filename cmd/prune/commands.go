@@ -3,21 +3,23 @@ package prune
 import (
 	"github.com/spf13/cobra"
 
-	archivecmd "github.com/sufield/stave/cmd/prune/archive"
-	cleanupcmd "github.com/sufield/stave/cmd/prune/cleanup"
-	hygienecmd "github.com/sufield/stave/cmd/prune/hygiene"
-	snapshotcmd "github.com/sufield/stave/cmd/prune/snapshot"
-	upcomingcmd "github.com/sufield/stave/cmd/prune/upcoming"
+	"github.com/sufield/stave/cmd/prune/archive"
+	"github.com/sufield/stave/cmd/prune/cleanup"
+	"github.com/sufield/stave/cmd/prune/hygiene"
+	"github.com/sufield/stave/cmd/prune/manifest"
+	"github.com/sufield/stave/cmd/prune/snapshot"
+	"github.com/sufield/stave/cmd/prune/upcoming"
 )
 
-// Commands returns the aggregate list of snapshot lifecycle commands in this package.
+// Commands returns the snapshot lifecycle commands in this package.
 func Commands() []*cobra.Command {
 	return []*cobra.Command{
-		cleanupcmd.NewCmd(),
-		archivecmd.NewCmd(),
-		upcomingcmd.NewCmd(),
-		snapshotcmd.NewQualityCmd(),
-		snapshotcmd.NewPlanCmd(),
-		hygienecmd.NewCmd(),
+		cleanup.NewCmd(),
+		archive.NewCmd(),
+		upcoming.NewCmd(),
+		snapshot.NewQualityCmd(),
+		snapshot.NewPlanCmd(),
+		hygiene.NewCmd(),
+		manifest.NewCmd(),
 	}
 }
