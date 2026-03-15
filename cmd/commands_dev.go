@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -32,16 +34,144 @@ import (
 // groupDevTools is the help group for developer-only commands.
 const groupDevTools = "dev-tools"
 
-type versionOutput struct {
-	Version           string        `json:"version"`
-	Edition           string        `json:"edition"`
-	SchemaControl     kernel.Schema `json:"schema_control"`
-	SchemaObservation kernel.Schema `json:"schema_observation"`
-	SchemaOutput      kernel.Schema `json:"schema_output"`
-	ProjectRoot       string        `json:"project_root,omitempty"`
-	LockFile          string        `json:"lock_file,omitempty"`
-	LockHash          string        `json:"lock_hash,omitempty"`
-	LockPresent       bool          `json:"lock_present"`
+// WireDevCommands attaches developer-only commands to an already prod-wired App.
+// Commands are assigned to the dev-tools group declaratively at construction
+// time rather than retroactively by string lookup.
+func WireDevCommands(app *App) {
+	root := app.Root
+
+	// Create the developer group
+	root.AddGroup(&cobra.Group{ID: groupDevTools, Title: "Developer Tools"})
+
+	// Build the dev command set
+	devCmds := []*cobra.Command{
+		doctor.NewCmd(),
+		extractor.NewCmd(ui.DefaultRuntime()),
+		diagnose.NewTraceCmd(),
+		artifacts.NewLintCmd(),
+		artifacts.NewFmtCmd(),
+		securityaudit.NewCmd(),
+		artifacts.NewControlsCmd(),
+		artifacts.NewPacksCmd(),
+		enforce.NewGraphCmd(),
+		bugreport.NewCmd(),
+		initalias.NewCmd(root),
+		diagnose.NewPromptCmd(),
+		newCapabilitiesCmd(),
+		newSchemasCmd(),
+		newVersionCmd(app.Edition),
+	}
+
+	// Attach all dev commands with group assignment
+	for _, c := range devCmds {
+		c.GroupID = groupDevTools
+		root.AddCommand(c)
+	}
+
+	// Docs subtree
+	docsCmd := &cobra.Command{
+		Use:     "docs",
+		Short:   "Documentation workflow commands",
+		Long:    "Grouped docs commands: search, open." + OfflineHelpSuffix,
+		Args:    cobra.NoArgs,
+		GroupID: groupDevTools,
+	}
+	docsCmd.AddCommand(diagdocs.NewDocsSearchCmd(), diagdocs.NewDocsOpenCmd())
+	root.AddCommand(docsCmd)
+
+	// Attach destructive snapshot commands to existing snapshot subtree
+	if snapshotCmd, _, err := root.Find([]string{"snapshot"}); err == nil && snapshotCmd != nil {
+		for _, c := range prune.DevCommands() {
+			snapshotCmd.AddCommand(c)
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// VersionRunner — extracted orchestrator for the version command
+// ---------------------------------------------------------------------------
+
+// VersionRunner collects version, schema, and project metadata for display.
+type VersionRunner struct {
+	Stdout io.Writer
+	Flags  cmdutil.GlobalFlags
+}
+
+// Run produces version output in text or JSON format.
+func (r *VersionRunner) Run(_ context.Context, edition Edition, verbose bool) error {
+	out := versionOutput{
+		Version:           GetVersion(),
+		Edition:           string(edition),
+		SchemaControl:     kernel.SchemaControl,
+		SchemaObservation: kernel.SchemaObservation,
+		SchemaOutput:      kernel.SchemaOutput,
+	}
+
+	if verbose {
+		r.enrichWithProjectInfo(&out)
+	}
+
+	if r.Flags.IsJSONMode() {
+		return jsonutil.WriteIndented(r.Stdout, out)
+	}
+
+	if !verbose {
+		_, err := fmt.Fprintf(r.Stdout, "%s (%s)\n", out.Version, out.Edition)
+		return err
+	}
+
+	_, err := fmt.Fprintf(r.Stdout,
+		"Version:      %s\nEdition:      %s\nSchemas:      control=%s, observation=%s, output=%s\nProject root: %s\nLockfile:     %v (%s)\nLock hash:    %s\n",
+		out.Version, out.Edition, out.SchemaControl, out.SchemaObservation, out.SchemaOutput,
+		compose.EmptyDash(out.ProjectRoot), out.LockPresent, compose.EmptyDash(out.LockFile), compose.EmptyDash(out.LockHash))
+	return err
+}
+
+// enrichWithProjectInfo detects the project root and reads lockfile metadata.
+func (r *VersionRunner) enrichWithProjectInfo(out *versionOutput) {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return
+	}
+	root, err := resolver.DetectProjectRoot(".")
+	if err != nil {
+		return
+	}
+	out.ProjectRoot = root
+	lockPath := filepath.Join(root, CLILockfile)
+	if _, statErr := os.Stat(lockPath); statErr == nil {
+		out.LockPresent = true
+		out.LockFile = lockPath
+		if data, readErr := fsutil.ReadFileLimited(lockPath); readErr == nil {
+			sum := sha256.Sum256(data)
+			out.LockHash = hex.EncodeToString(sum[:])
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Command constructors
+// ---------------------------------------------------------------------------
+
+func newVersionCmd(edition Edition) *cobra.Command {
+	var verbose bool
+	cmd := &cobra.Command{
+		Use:           "version",
+		Short:         "Print version and environment state",
+		Long:          "Version prints binary version and, with --verbose, schema and lockfile status." + OfflineHelpSuffix,
+		Args:          cobra.NoArgs,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			runner := &VersionRunner{
+				Stdout: cmd.OutOrStdout(),
+				Flags:  cmdutil.GetGlobalFlags(cmd),
+			}
+			return runner.Run(cmd.Context(), edition, verbose)
+		},
+	}
+	cmd.Flags().BoolVar(&verbose, "verbose", false, "Include schema and lockfile status")
+	return cmd
 }
 
 func newCapabilitiesCmd() *cobra.Command {
@@ -69,123 +199,24 @@ Examples:
   # Check security-audit capabilities
   stave capabilities | jq '.security_audit'` + OfflineHelpSuffix,
 		Args:          cobra.NoArgs,
-		RunE:          runCapabilities,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-	}
-}
-
-func newVersionCmd(edition string) *cobra.Command {
-	var verbose bool
-
-	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Print version information",
-		Long:  "Version prints binary version and, with --verbose, schema and lockfile status." + OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			out := versionOutput{
-				Version:           GetVersion(),
-				Edition:           edition,
-				SchemaControl:     kernel.SchemaControl,
-				SchemaObservation: kernel.SchemaObservation,
-				SchemaOutput:      kernel.SchemaOutput,
-			}
-			if verbose {
-				if resolver, resolverErr := projctx.NewResolver(); resolverErr == nil {
-					root, err := resolver.DetectProjectRoot(".")
-					if err == nil {
-						out.ProjectRoot = root
-						lockPath := filepath.Join(root, CLILockfile)
-						if _, statErr := os.Stat(lockPath); statErr == nil {
-							out.LockPresent = true
-							out.LockFile = lockPath
-							if data, readErr := fsutil.ReadFileLimited(lockPath); readErr == nil {
-								sum := sha256.Sum256(data)
-								out.LockHash = hex.EncodeToString(sum[:])
-							}
-						}
-					}
-				}
-			}
-			if cmdutil.GetGlobalFlags(cmd).IsJSONMode() {
-				return jsonutil.WriteIndented(cmd.OutOrStdout(), out)
-			}
-			if !verbose {
-				_, err := fmt.Fprintf(cmd.OutOrStdout(), "%s (%s)\n", out.Version, out.Edition)
-				return err
-			}
-			_, err := fmt.Fprintf(cmd.OutOrStdout(),
-				"Version: %s\nEdition: %s\nSchemas: control=%s observation=%s output=%s\nProject root: %s\nLockfile: %v (%s)\nLock hash: %s\n",
-				out.Version, out.Edition, out.SchemaControl, out.SchemaObservation, out.SchemaOutput,
-				compose.EmptyDash(out.ProjectRoot), out.LockPresent, compose.EmptyDash(out.LockFile), compose.EmptyDash(out.LockHash))
-			return err
+			caps := capabilities.GetCapabilities(GetVersion())
+			return jsonutil.WriteIndented(cmd.OutOrStdout(), caps)
 		},
 	}
-
-	cmd.Flags().BoolVar(&verbose, "verbose", false, "Include schema and lockfile status")
-
-	return cmd
 }
 
-// WireDevCommands attaches developer-only commands to an already prod-wired App.
-func WireDevCommands(app *App) {
-	root := app.Root
-
-	// Getting started (dev additions)
-	root.AddCommand(doctor.NewCmd())
-
-	// Control Engine (dev additions)
-	root.AddCommand(extractor.NewCmd(ui.DefaultRuntime()))
-	root.AddCommand(diagnose.NewTraceCmd())
-	root.AddCommand(artifacts.NewLintCmd())
-	root.AddCommand(artifacts.NewFmtCmd())
-
-	// Workflow (dev additions)
-	root.AddCommand(securityaudit.NewCmd())
-
-	// Destructive snapshot commands (too dangerous for production pipelines)
-	snapshotCmd, _, _ := root.Find([]string{"snapshot"})
-	if snapshotCmd != nil {
-		for _, cmd := range prune.DevCommands() {
-			snapshotCmd.AddCommand(cmd)
-		}
-	}
-
-	// Data & Artifacts (dev additions)
-	root.AddCommand(artifacts.NewControlsCmd())
-	root.AddCommand(artifacts.NewPacksCmd())
-	root.AddCommand(enforce.NewGraphCmd())
-
-	// Utilities (dev additions)
-	docsCmd := &cobra.Command{
-		Use:   "docs",
-		Short: "Documentation workflow commands",
-		Long:  "Grouped docs commands: search, open." + OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
-	}
-	root.AddCommand(docsCmd)
-	wireDocsSubtree(docsCmd)
-
-	root.AddCommand(bugreport.NewCmd())
-	root.AddCommand(initalias.NewCmd(root))
-	root.AddCommand(diagnose.NewPromptCmd())
-
-	// Meta commands (schemas, capabilities, version subcommand)
-	root.AddCommand(newCapabilitiesCmd(), newSchemasCmd(), newVersionCmd(app.Edition))
-}
-
-func wireDocsSubtree(docsCmd *cobra.Command) {
-	docsCmd.AddCommand(diagdocs.NewDocsSearchCmd())
-	docsCmd.AddCommand(diagdocs.NewDocsOpenCmd())
-}
-
-// runCapabilities executes the capabilities command.
-func runCapabilities(cmd *cobra.Command, _ []string) error {
-	caps := capabilities.GetCapabilities(GetVersion())
-
-	if err := jsonutil.WriteIndented(cmd.OutOrStdout(), caps); err != nil {
-		return fmt.Errorf("failed to encode capabilities: %w", err)
-	}
-	return nil
+// versionOutput represents the structured metadata for the binary.
+type versionOutput struct {
+	Version           string        `json:"version"`
+	Edition           string        `json:"edition"`
+	SchemaControl     kernel.Schema `json:"schema_control"`
+	SchemaObservation kernel.Schema `json:"schema_observation"`
+	SchemaOutput      kernel.Schema `json:"schema_output"`
+	ProjectRoot       string        `json:"project_root,omitempty"`
+	LockFile          string        `json:"lock_file,omitempty"`
+	LockHash          string        `json:"lock_hash,omitempty"`
+	LockPresent       bool          `json:"lock_present"`
 }

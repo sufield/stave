@@ -1,158 +1,154 @@
 # Time To First Finding
 
-Goal: get your first finding in under 60 seconds with one command.
+Get your first real finding against your own AWS environment in under 10 minutes.
+
+No agents, no credentials stored by Stave, no network calls during evaluation. You extract the data yourself with the AWS CLI, then Stave evaluates it offline.
 
 ## Prerequisites
 
 - `stave` installed and on `PATH`
-- writable working directory
+- AWS CLI configured with read access to the target account
+- `jq` installed (for extracting observation data)
 
-Optional (recommended):
+## Step 1: Extract a snapshot from your AWS account
 
-- `jq` for quick JSON inspection
-
-## Step 1: Run the Demo
-
-```bash
-stave demo
-```
-
-Expected terminal output:
-
-```
-Found 1 violation: CTL.S3.PUBLIC.001
-Asset: s3://demo-public-bucket
-Evidence: BlockPublicAccess=false, ACL=public-read
-Fix: enable account/bucket Block Public Access + deny public principals
-
-Example (Terraform):
-
-  resource "aws_s3_bucket_public_access_block" "example" {
-    bucket                  = aws_s3_bucket.example.id
-    block_public_acls       = true
-    block_public_policy     = true
-    ignore_public_acls      = true
-    restrict_public_buckets = true
-  }
-Report: ./stave-report.json
-```
-
-## Step 2: View the Report
-
-The demo saves a JSON report to `./stave-report.json` in your current directory. View it:
+Use the AWS CLI to pull S3 bucket configuration into a local directory. This is your extractor — a few shell commands you control.
 
 ```bash
-cat stave-report.json              # view the full JSON report
-jq . stave-report.json             # pretty-print with jq (recommended)
-jq '.summary' stave-report.json    # just the summary
+mkdir -p snapshot-raw
+aws s3api list-buckets > snapshot-raw/list-buckets.json
+for bucket in $(jq -r '.Buckets[].Name' snapshot-raw/list-buckets.json); do
+  aws s3api get-public-access-block --bucket "$bucket" > "snapshot-raw/${bucket}-pab.json" 2>/dev/null || true
+  aws s3api get-bucket-acl --bucket "$bucket" > "snapshot-raw/${bucket}-acl.json" 2>/dev/null || true
+  aws s3api get-bucket-policy --bucket "$bucket" > "snapshot-raw/${bucket}-policy.json" 2>/dev/null || true
+  aws s3api get-bucket-encryption --bucket "$bucket" > "snapshot-raw/${bucket}-encryption.json" 2>/dev/null || true
+  aws s3api get-bucket-logging --bucket "$bucket" > "snapshot-raw/${bucket}-logging.json" 2>/dev/null || true
+  aws s3api get-bucket-versioning --bucket "$bucket" > "snapshot-raw/${bucket}-versioning.json" 2>/dev/null || true
+done
 ```
 
-## Step 3: Compare Safe vs Unsafe
+This runs entirely in your terminal. Stave never sees your credentials.
 
-Run the demo with a properly secured bucket to see what zero violations looks like:
+## Step 2: Ingest the snapshot into observations
+
+Convert the raw AWS CLI output into Stave's normalized observation format.
 
 ```bash
-stave demo --fixture known-good
+stave ingest --source-dir ./snapshot-raw --output-dir ./observations
 ```
 
-Expected output:
+## Step 3: Validate the observations
 
-```
-Found 0 violations.
-Report: ./stave-report.json
-```
-
-Compare the two reports:
+Check that the ingested data is well-formed before evaluation.
 
 ```bash
-stave demo --fixture known-bad     # default — one violation
-cat stave-report.json              # see the finding details
-
-stave demo --fixture known-good    # no violations
-cat stave-report.json              # empty findings array
+stave validate --controls controls/s3 --observations ./observations
 ```
 
-## Fast Path On Your Data
+If validation fails, the error message tells you exactly which field is missing or malformed. Fix your extractor script (Step 1) and re-run ingest.
+
+## Step 4: Apply built-in controls
+
+Run all 43 built-in S3 controls against your observations. This is where findings appear.
 
 ```bash
-stave quickstart
+stave apply --controls controls/s3 --observations ./observations \
+  --max-unsafe 168h --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
 ```
 
-`quickstart` auto-detects snapshots in your current directory and `./stave.snapshot/`:
+Example output:
 
-- If a snapshot is found, it runs evaluation against it immediately.
-- If no snapshot is found, it falls back to the built-in demo fixture.
-- The report is always saved to `./stave-report.json`.
+```
+Evaluation Results
+==================
+
+Summary
+-------
+  Controls evaluated:  43
+  Assets evaluated:    12
+  Attack surface:      2
+  Violations:          3
+
+Violations
+----------
+  1. CTL.S3.CONTROLS.001
+     Public Access Block Must Be Enabled
+     Asset: res:aws:s3:bucket:staging-uploads
+     Remediation: Enable BlockPublicAccess on this bucket.
+
+  2. CTL.S3.ENCRYPT.002
+     Transport Encryption Required
+     Asset: res:aws:s3:bucket:staging-uploads
+     Remediation: Add a bucket policy requiring ssl-only access.
+
+  3. CTL.S3.LOG.001
+     Access Logging Required
+     Asset: res:aws:s3:bucket:staging-uploads
+     Remediation: Enable server access logging.
+```
+
+You now have your first findings with specific remediation guidance.
+
+## Step 5: Fix and verify
+
+Fix the issues in your AWS account, then take a second snapshot and re-evaluate.
 
 ```bash
-# View results
-cat stave-report.json
+# Fix the cloud config (e.g., enable BlockPublicAccess in AWS console or Terraform)
 
-# Deterministic variant (for CI or reproducible output):
-stave quickstart --now 2026-01-15T00:00:00Z --report ./output/report.json
+# Take a second snapshot
+aws s3api get-public-access-block --bucket staging-uploads > snapshot-raw/staging-uploads-pab.json
+
+# Re-ingest and re-evaluate
+stave ingest --source-dir ./snapshot-raw --output-dir ./observations
+stave apply --controls controls/s3 --observations ./observations \
+  --max-unsafe 168h --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
 ```
 
-Output shape:
+If the fix worked, the finding disappears from the output. To formally verify:
 
-```
-Source: <detected-path-or-built-in-demo-fixture>
-Top finding: CTL.S3.PUBLIC.001
-Asset: s3://demo-public-bucket
-Fix: enable account/bucket Block Public Access + deny public principals (BlockPublicAccess=false, ACL=public-read)
-
-Example (Terraform):
-
-  resource "aws_s3_bucket_public_access_block" "example" {
-    bucket                  = aws_s3_bucket.example.id
-    block_public_acls       = true
-    block_public_policy     = true
-    ignore_public_acls      = true
-    restrict_public_buckets = true
-  }
-Report: stave-report.json
-Next: run `stave demo --fixture known-good` to compare safe output.
+```bash
+# Save both evaluations
+stave apply ... -f json > before.json   # (from Step 4)
+stave apply ... -f json > after.json    # (after fix)
+stave verify --before before.json --after after.json
 ```
 
-## What Next? Check Status
+## Step 6: Check status
 
-After your first finding, run `stave status` to see where you are and what to do next:
+See where you are in the workflow and what to do next:
 
 ```bash
 stave status
 ```
 
-This prints a summary of your project state (controls, snapshots, observations, last evaluation) and recommends the next command to run.
+## What if apply returns no findings?
 
-## Full Workflow After First Finding
-
-```bash
-# 1) Create a new project with built-in S3 pack enabled
-mkdir -p ./stave-first-finding
-cd ./stave-first-finding
-stave init --profile aws-s3
-
-# 2) Confirm readiness
-stave plan
-
-# 3) Run control engine and save findings
-stave apply --format json > output/evaluation.json
-```
-
-Quick check:
+Your infrastructure might be clean, or the threshold might be too high. Run:
 
 ```bash
-cat output/evaluation.json                              # view the full output
-jq '.summary.violations, .findings[0].control_id' output/evaluation.json  # summary
+stave diagnose --controls controls/s3 --observations ./observations
 ```
 
-If `stave plan` is not ready, run exactly the `Next:` command shown in its output.
+This explains why findings did not trigger — threshold too high, time span too short, no predicate matches, or data shape issues.
 
-## If Apply Returns No Findings
+## What if validate fails?
 
-Run:
+The error tells you which field is missing or malformed. Common fixes:
 
-```bash
-stave diagnose --controls ./controls --observations ./observations
-```
+- **Missing `source_type`**: add `"source_type": "aws-s3-snapshot"` to your observation JSON, or pass `--allow-unknown-input`
+- **Missing `captured_at`**: add a timestamp to your observation: `"captured_at": "2026-03-15T00:00:00Z"`
+- **Schema mismatch**: ensure observations use `obs.v0.1` format — flat JSON, no `"snapshots"` wrapper
 
-This explains why findings did not trigger (threshold too high, time span too short, no predicate matches, or data shape issues).
+Fix your extractor script, re-run `stave ingest`, and validate again.
+
+## Summary
+
+| Step | Command | What happens |
+|---|---|---|
+| 1 | AWS CLI + jq | Extract bucket config from your account |
+| 2 | `stave ingest` | Normalize raw exports to observations |
+| 3 | `stave validate` | Check observations are well-formed |
+| 4 | `stave apply` | Evaluate 43 S3 controls, get findings |
+| 5 | Fix + re-snapshot | Remediate, retake snapshot, re-evaluate |
+| 6 | `stave verify` | Confirm the fix resolved the finding |

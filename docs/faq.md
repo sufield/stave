@@ -110,6 +110,72 @@ Three reasons:
 
 Observations are what you feed in. Evidence is what Stave produces to support each finding.
 
+## What S3 blind spots does Stave detect that AWS Trusted Advisor misses?
+
+AWS Trusted Advisor checks whether S3 buckets are publicly accessible. Stave evaluates 43 controls that go deeper — detecting risks that Trusted Advisor cannot see because of how it collects data and what it checks.
+
+### 1. Policy-denied scanning (the Fog Security bypass)
+
+In August 2025, [Fog Security disclosed](https://www.fogsecurity.io/blog/mistrusted-advisor-public-s3-buckets) that an attacker with AWS access can add a bucket policy denying `s3:GetBucketAcl`, `s3:GetBucketPolicyStatus`, and `s3:GetPublicAccessBlock` to the Trusted Advisor scanning role. The bucket can be fully public, but Trusted Advisor reports green — "no problems detected" — because it cannot read the policy. AWS [patched this](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/) to show a "Warn" status, but the underlying issue remains: if the scanner is denied access, it cannot prove safety.
+
+Stave handles this via **`CTL.S3.INCOMPLETE.001`** — if required fields are missing from the observation (because the scanning role was denied access), the bucket is flagged as unsafe. Missing data is not safe data.
+
+### 2. Latent public exposure behind Public Access Block
+
+A bucket with Public Access Block (PAB) enabled may have an underlying policy granting `Principal: "*"`. Trusted Advisor reports it as safe because PAB prevents public access at the API level. But removing PAB — one toggle — immediately makes the bucket public.
+
+Stave detects this via **`CTL.S3.PUBLIC.005`** — latent exposure is a finding even when masked by a compensating control.
+
+### 3. ACL escalation paths
+
+A bucket ACL may grant `WRITE_ACP` to public or authenticated users. This allows anyone to call `PutBucketAcl` and grant themselves `FULL_CONTROL`, then read or modify every object. Trusted Advisor checks whether a bucket is publicly readable — it does not check whether the public can modify the ACL itself.
+
+Stave detects this via **`CTL.S3.ACL.ESCALATION.001`**.
+
+### Detection comparison
+
+| Blind spot | Trusted Advisor | Stave |
+|---|---|---|
+| Policy denies scanning role access | Reports green (or "Warn" post-patch) | `CTL.S3.INCOMPLETE.001` — flags missing data as unsafe |
+| Latent exposure behind PAB | Reports safe (PAB is on) | `CTL.S3.PUBLIC.005` — flags underlying public policy |
+| ACL escalation (WRITE_ACP) | Not checked | `CTL.S3.ACL.ESCALATION.001` — flags privilege escalation path |
+| Unsafe duration tracking | Not tracked | All controls track how long a bucket has been unsafe |
+| Cross-account policy grants | Limited checks | `CTL.S3.ACCESS.001` — flags unauthorized cross-account access |
+| Authenticated-users group grants | Not distinguished from public | `CTL.S3.AUTH.READ.001`, `CTL.S3.AUTH.WRITE.001` — separate controls |
+
+References:
+- [Fog Security: Mistrusted Advisor — Evading Detection with Public S3 Buckets](https://www.fogsecurity.io/blog/mistrusted-advisor-public-s3-buckets)
+- [SecurityWeek: AWS Trusted Advisor Tricked Into Showing Unprotected S3 Buckets as Secure](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/)
+- [CheckRed: AWS Bypass — Misconfigurations Still Threaten Cloud Security](https://checkred.com/resources/blog/when-secure-isnt-what-the-trusted-advisor-s3-bypass-reveals-about-aws-misconfigurations/)
+
+## Why does `verify` exist when `ci diff` already compares evaluations?
+
+They answer different questions for different personas.
+
+`verify` answers: **"did my specific fix work?"** An engineer remediates three bucket misconfigurations, re-runs `apply`, and needs to know: are those three findings gone, and did the fix introduce anything new? `verify` closes the remediation loop with a formal answer.
+
+`ci diff` answers: **"did the overall security posture regress?"** A CI pipeline compares the current evaluation against an accepted baseline to detect new findings introduced by a code change or configuration drift.
+
+| | `verify` | `ci diff` |
+|---|---|---|
+| Question | Did my remediation resolve the findings? | Did the posture regress since baseline? |
+| Persona | Engineer who just fixed something | CI pipeline checking for regressions |
+| Input | Before/after evaluation files from the same remediation cycle | Current evaluation vs accepted baseline |
+| Cares about | Resolved findings | New findings |
+| Typical exit | 0 (all resolved) | 3 (new findings detected) |
+
+Without `verify`, the remediation workflow has no formal end. You find the problem with `apply`, fix it, re-run `apply`, and manually scan the output hoping you didn't miss anything. `verify` makes the fix provable:
+
+```bash
+stave apply ... -f json > before.json    # 3 findings
+# fix the cloud config, retake snapshot
+stave apply ... -f json > after.json     # 0 findings
+stave verify --before before.json --after after.json
+# Resolved: 3, New: 0, Unchanged: 0
+```
+
+This is also why `verify` is a production command and not dev-only — it's part of the operational remediation cycle, not a debugging tool.
+
 ## Why does `stave snapshot archive` exist when Unix has `mv`?
 
 `stave snapshot archive` is not a file mover — it is a retention-aware lifecycle command that understands your project's snapshot policies. A plain `mv` knows nothing about observation files, retention tiers, or evaluation requirements.
@@ -227,10 +293,121 @@ The dev binary provides tools for **authoring, debugging, and inspecting** the c
 
 **Why a separate binary instead of hidden flags or feature gates?** The separation is at the compile level. The production binary does not contain the code for these commands. There is no `--enable-dev` flag to discover, no environment variable to flip, no config to override. The attack surface, the help output, and the dependency tree are all smaller by construction. A compromised CI runner cannot use `stave` to delete evidence, exfiltrate diagnostics, or run extractors against production APIs — because those capabilities do not exist in the binary.
 
-- stave (production) — run evaluations safely. Validate, apply, diagnose, verify, enforce, report, CI gates, snapshot archiving, config. Everything an automated pipeline or operator needs to detect and remediate unsafe   
-  infrastructure. Cannot delete evidence, cannot introspect the tool itself, cannot author controls.                                                                                                                           
-  - stave-dev (developer) — build and debug the evaluation system. Author controls, trace predicate logic, lint YAML, visualize graphs, scaffold extractors, inspect schemas, generate security audits of Stave itself. Used at
-   a workstation, not in a pipeline. Blocked from production environments by default. 
+### Production binary (`stave`)
+
+Runs evaluations safely. Cannot delete evidence, cannot introspect the tool itself, cannot author controls.
+
+**Setup** — run once when starting a new project.
+
+| Command | Purpose |
+|---|---|
+| `init` | Scaffold a new project |
+| `generate` | Create starter controls and observations |
+| `config` | Manage project settings, contexts, and environment variables |
+| `status` | Show next recommended workflow step |
+
+**Data preparation** — run before every evaluation.
+
+| Command | Purpose |
+|---|---|
+| `ingest` | Convert raw cloud exports to normalized observations |
+| `validate` | Pre-flight check that inputs are well-formed |
+
+**Evaluation** — the core loop: evaluate, understand, fix, confirm.
+
+| Command | Purpose |
+|---|---|
+| `apply` | Run control evaluation (with `--dry-run` for readiness checks) |
+| `diagnose` | Root-cause guidance when results are unexpected |
+| `explain` | Show how a specific control evaluates |
+| `verify` | Confirm a remediation resolved a finding |
+
+**CI/CD** — automated pipeline gates and regression analysis.
+
+| Command | Purpose |
+|---|---|
+| `ci baseline` | Save/check accepted findings baseline |
+| `ci gate` | Pass/fail gate for pipelines |
+| `ci diff` | Regression analysis between two evaluations |
+| `ci fix` | Machine-readable fix plan for a finding |
+| `ci fix-loop` | Apply-before, apply-after, verify in one command |
+
+**Remediation artifacts** — generate outputs for stakeholders and IaC.
+
+| Command | Purpose |
+|---|---|
+| `enforce` | Generate Terraform/SCP remediation templates |
+| `report` | Plain-text summary for stakeholders and auditors |
+
+**Snapshot lifecycle** — manage observation history without destroying evidence.
+
+| Command | Purpose |
+|---|---|
+| `snapshot plan` | Preview retention actions |
+| `snapshot quality` | Check staleness, cadence gaps, missing fields |
+| `snapshot upcoming` | Snapshots approaching retention deadlines |
+| `snapshot archive` | Move aged snapshots to cold storage (non-destructive) |
+| `snapshot hygiene` | Orphaned files, naming inconsistencies |
+| `snapshot diff` | Drift detection between two snapshots |
+| `snapshot manifest` | Generate and sign integrity manifests |
+
+### Dev binary (`stave-dev`) — adds
+
+Build and debug the evaluation system. Used at a workstation, not in a pipeline. Blocked from production environments by default.
+
+**Control authoring** — write, validate, and visualize controls.
+
+| Command | Purpose |
+|---|---|
+| `controls list` | Inventory of built-in controls |
+| `packs show` | Pack metadata: version, control count, paths |
+| `lint` | Design-quality linting of control YAML |
+| `fmt` | Deterministic formatting |
+| `graph` | Visualize control-to-asset relationships |
+
+**Debugging** — investigate why a control matched or didn't.
+
+| Command | Purpose |
+|---|---|
+| `trace` | Step-by-step predicate evaluation for one asset |
+| `prompt` | Generate LLM-ready context from results |
+
+**Extractor development** — build extractors for new source types.
+
+| Command | Purpose |
+|---|---|
+| `extractor scaffold` | Generate boilerplate for a custom extractor |
+| `extractor validate` | Validate extractor output against obs.v0.1 |
+
+**Introspection** — understand what this build of Stave supports.
+
+| Command | Purpose |
+|---|---|
+| `doctor` | Local environment readiness checks |
+| `schemas` | List all wire-format contract schemas |
+| `capabilities` | Supported schemas, source types, packs |
+| `version` | Verbose version with schema and lockfile details |
+
+**Security posture** — audit Stave itself and collect diagnostics.
+
+| Command | Purpose |
+|---|---|
+| `security-audit` | SBOM, vulnerability scan, compliance matrix |
+| `bug-report` | Collect sanitized diagnostic bundle |
+
+**Productivity** — shortcuts and documentation lookup.
+
+| Command | Purpose |
+|---|---|
+| `alias` | Create/list/delete command shortcuts |
+| `docs search` | Full-text search across Stave documentation |
+| `docs open` | Open a docs page in the browser |
+
+**Destructive maintenance** — evidence deletion, blocked in production.
+
+| Command | Purpose |
+|---|---|
+| `snapshot prune` | Permanently delete old snapshots |
 
 ## What does Stave *not* do?
 

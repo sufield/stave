@@ -1,22 +1,40 @@
 package yaml
 
 import (
+	"fmt"
+
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
-// LoadExemptionConfig loads an asset exemption configuration from a YAML file.
-func LoadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
-	data, err := fsutil.ReadFileLimited(path)
+// Loader handles retrieval of exemption configurations from YAML files.
+type Loader struct{}
+
+// NewLoader initializes a standard YAML exemption loader.
+func NewLoader() *Loader {
+	return &Loader{}
+}
+
+// Load reads and parses an exemption configuration from the given path.
+// It normalizes the path and wraps errors with file context for diagnostics.
+func (l *Loader) Load(path string) (*policy.ExemptionConfig, error) {
+	cleanPath := fsutil.CleanUserPath(path)
+
+	data, err := fsutil.ReadFileLimited(cleanPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading exemption file %q: %w", cleanPath, err)
 	}
 
-	var config policy.ExemptionConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, err
+	var cfg policy.ExemptionConfig
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("malformed YAML in exemption file %q: %w", cleanPath, err)
 	}
 
-	return &config, nil
+	return &cfg, nil
+}
+
+// LoadExemptionConfig is a package-level helper for one-off loading.
+func LoadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
+	return NewLoader().Load(path)
 }

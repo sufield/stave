@@ -74,7 +74,7 @@ func (a *App) recoverExecutePanic() {
 		userMsg := a.panicUserMessage(sanitized)
 
 		action := "Rerun with -vv, then run `stave-dev doctor` or contact support if this error persists."
-		if a.Edition == "dev" {
+		if a.Edition == EditionDev {
 			action = "Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists."
 		}
 		errInfo := ui.NewErrorInfo(ui.CodeInternalError, userMsg).

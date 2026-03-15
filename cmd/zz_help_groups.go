@@ -27,19 +27,3 @@ func wireProdHelpGroups(root *cobra.Command) {
 	root.SetCompletionCommandGroupID(groupSettings)
 	root.SetHelpCommandGroupID(groupSettings)
 }
-
-func wireDevHelpGroups(root *cobra.Command) {
-	root.AddGroup(
-		&cobra.Group{ID: groupDevTools, Title: "Developer Tools"},
-	)
-
-	devCommands := []string{
-		"doctor", "bug-report", "extractor", "prompt", "trace",
-		"controls", "packs", "graph", "lint", "fmt",
-		"docs", "alias", "schemas", "capabilities", "security-audit",
-		"version",
-	}
-	for _, name := range devCommands {
-		assignCommandGroup(root, name, groupDevTools)
-	}
-}

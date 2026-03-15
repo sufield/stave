@@ -165,7 +165,7 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, controlsDir, observations
 		Snapshots:       loaded.Snapshots,
 		GlobalMaxUnsafe: maxUnsafe,
 		Now:             now,
-		PredicateParser: ctlyaml.YAMLPredicateParser,
+		PredicateParser: ctlyaml.ParsePredicate,
 	})
 	overdueCount := items.CountOverdue()
 	pass := overdueCount == 0

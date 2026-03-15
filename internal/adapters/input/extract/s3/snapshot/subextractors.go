@@ -57,7 +57,7 @@ var s3Manifest = []subExtractorSpec{
 					Permission: grant.Permission,
 				})
 			}
-			obs.ACL = s3acl.NewEntry(grants)
+			obs.ACL = s3acl.New(grants)
 			return nil
 		},
 	},

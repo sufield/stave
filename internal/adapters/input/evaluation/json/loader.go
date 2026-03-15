@@ -31,60 +31,68 @@ func NewLoader() *Loader {
 
 // LoadFromFile loads an evaluation result from a JSON file.
 func (l *Loader) LoadFromFile(path string) (*evaluation.Result, error) {
+	path = fsutil.CleanUserPath(path)
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load output file %s: %w", path, err)
+		return nil, fmt.Errorf("failed to load output file %q: %w", path, err)
 	}
-
-	var result evaluation.Result
-	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, fmt.Errorf("failed to load output file %s: invalid JSON: %w", path, err)
-	}
-
-	return &result, nil
-}
-
-// ParseFindings extracts remediation findings from JSON data, trying multiple
-// envelope formats: safety envelope, wrapped envelope, bare findings array.
-func ParseFindings(raw []byte) ([]remediation.Finding, error) {
-	var env safetyenvelope.Evaluation
-	if err := json.Unmarshal(raw, &env); err == nil && len(env.Findings) > 0 {
-		return env.Findings, nil
-	}
-
-	var wrapped struct {
-		OK   bool                      `json:"ok"`
-		Data safetyenvelope.Evaluation `json:"data"`
-	}
-	if err := json.Unmarshal(raw, &wrapped); err == nil && len(wrapped.Data.Findings) > 0 {
-		return wrapped.Data.Findings, nil
-	}
-
-	var direct struct {
-		Findings []remediation.Finding `json:"findings"`
-	}
-	if err := json.Unmarshal(raw, &direct); err == nil {
-		return direct.Findings, nil
-	}
-
-	var probe any
-	if err := json.Unmarshal(raw, &probe); err != nil {
-		return nil, err
-	}
-	return nil, ErrNoFindings
+	return l.parseResult(data, path)
 }
 
 // LoadFromReader loads an evaluation result from an io.Reader.
 func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Result, error) {
 	data, err := fsutil.LimitedReadAll(r, sourceName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read evaluation output from %s: %w", sourceName, err)
+		return nil, fmt.Errorf("reading evaluation from %s: %w", sourceName, err)
 	}
+	return l.parseResult(data, sourceName)
+}
 
+// parseResult is the shared unmarshaling path for both file and reader loading.
+func (l *Loader) parseResult(data []byte, source string) (*evaluation.Result, error) {
 	var result evaluation.Result
 	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse evaluation output from %s: invalid JSON: %w", sourceName, err)
+		return nil, fmt.Errorf("failed to load output file %s: invalid JSON: %w", source, err)
+	}
+	return &result, nil
+}
+
+// ParseFindings extracts findings from various JSON envelope formats.
+// It probes the top-level keys to identify the format before performing
+// a full unmarshal, avoiding trial-and-error deserialization.
+//
+// Supported formats:
+//   - API wrapped envelope: {"ok": true, "data": {"findings": [...]}}
+//   - Safety envelope:      {"kind": "evaluation", "findings": [...]}
+//   - Direct result:        {"findings": [...]}
+func ParseFindings(raw []byte) ([]remediation.Finding, error) {
+	var probe map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}
 
-	return &result, nil
+	// Format 1: API wrapped envelope ({"ok": ..., "data": {...}})
+	if _, hasOK := probe["ok"]; hasOK {
+		if data, hasData := probe["data"]; hasData {
+			return ParseFindings(data)
+		}
+	}
+
+	// Format 2: Safety envelope ({"kind": ..., "findings": [...]})
+	if _, hasKind := probe["kind"]; hasKind {
+		var env safetyenvelope.Evaluation
+		if err := json.Unmarshal(raw, &env); err == nil {
+			return env.Findings, nil
+		}
+	}
+
+	// Format 3: Direct result ({"findings": [...]})
+	if rawFindings, hasFindings := probe["findings"]; hasFindings {
+		var list []remediation.Finding
+		if err := json.Unmarshal(rawFindings, &list); err == nil {
+			return list, nil
+		}
+	}
+
+	return nil, ErrNoFindings
 }

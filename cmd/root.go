@@ -47,7 +47,7 @@ type AppOption func(*App)
 // commands and sets the binary edition to "dev".
 func WithDevCommands() AppOption {
 	return func(app *App) {
-		app.Edition = "dev"
+		app.Edition = EditionDev
 		WireDevCommands(app)
 	}
 }
@@ -55,10 +55,10 @@ func WithDevCommands() AppOption {
 // App owns all CLI-wide mutable state, eliminating package-level globals
 // and making the CLI reentrant.
 type App struct {
-	// Edition identifies the binary variant: "production" or "dev".
+	// Edition identifies the binary variant (EditionProd or EditionDev).
 	// It is embedded in --version output so bug reports identify which
 	// binary is running.
-	Edition string
+	Edition Edition
 
 	Flags          globalFlagsType
 	Logger         *slog.Logger
@@ -88,7 +88,7 @@ type App struct {
 // Pass WithDevCommands() to build the stave-dev binary with all commands.
 func NewApp(opts ...AppOption) *App {
 	app := &App{
-		Edition:          "production",
+		Edition:          EditionProd,
 		ExitFunc:         os.Exit,
 		Provider:         compose.NewDefaultProvider(),
 		ConfigKeyService: projconfig.ConfigKeyService,
@@ -109,11 +109,8 @@ func NewApp(opts ...AppOption) *App {
 		opt(app)
 	}
 
-	app.Root.Version = fmt.Sprintf("%s (%s)", GetVersion(), app.Edition)
+	app.Root.Version = fmt.Sprintf("%s (%s)", GetVersion(), string(app.Edition))
 	wireProdHelpGroups(app.Root)
-	if app.Edition == "dev" {
-		wireDevHelpGroups(app.Root)
-	}
 	return app
 }
 

@@ -90,19 +90,19 @@ func applyPolicyObservation(obs S3Observation, props *snapshotResourceProperties
 	return policyAnalysis, true, policyMissing
 }
 
-func applyACLObservation(obs S3Observation, props *snapshotResourceProperties) (s3acl.Analysis, bool) {
+func applyACLObservation(obs S3Observation, props *snapshotResourceProperties) (s3acl.Assessment, bool) {
 	aclMissing := s3resource.ContainsSubstring(obs.MissingInputs, "get-bucket-acl")
-	if obs.ACL == nil {
+	if len(obs.ACL.Grants()) == 0 {
 		if aclMissing {
 			props.ACLStatus = "unknown"
 		}
-		return s3acl.Analysis{}, aclMissing
+		return s3acl.Assessment{}, aclMissing
 	}
 	grants := obs.ACL.Grants()
 	if len(grants) > 0 {
 		props.ACLGrants = grants
 	}
-	aclAnalysis := obs.ACL.Analyze()
+	aclAnalysis := obs.ACL.Assess()
 	aclAllowsRead := aclAnalysis.AllowsPublicRead
 	props.ACLAllowsPublicRead = &aclAllowsRead
 	props.ACLPublicGrantees = aclAnalysis.PublicGrantees

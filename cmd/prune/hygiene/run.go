@@ -178,6 +178,6 @@ func buildRiskOptions(cfg Config) hygieneapp.RiskOptions {
 		AssetTypes:       cfg.Filter.AssetTypes,
 		Statuses:         cfg.Filter.Statuses,
 		DueWithin:        cfg.Filter.DueWithinPtr(),
-		PredicateParser:  ctlyaml.YAMLPredicateParser,
+		PredicateParser:  ctlyaml.ParsePredicate,
 	}
 }
