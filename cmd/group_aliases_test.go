@@ -9,7 +9,6 @@ func TestGroupedCommandAliasesExist(t *testing.T) {
 		{"snapshot"},
 		{"snapshot", "upcoming"},
 		{"snapshot", "diff"},
-		{"snapshot", "prune"},
 		{"snapshot", "archive"},
 		{"snapshot", "quality"},
 		{"snapshot", "hygiene"},
@@ -36,6 +35,7 @@ func TestGroupedCommandAliasesExist_Dev(t *testing.T) {
 		{"docs"},
 		{"docs", "search"},
 		{"docs", "open"},
+		{"snapshot", "prune"},
 	}
 
 	for _, path := range paths {

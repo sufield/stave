@@ -31,6 +31,7 @@ type Context struct {
 	ProjectRoot   string   `yaml:"project_root"`
 	ProjectConfig string   `yaml:"project_config,omitempty"`
 	Defaults      Defaults `yaml:"defaults,omitempty"`
+	Production    bool     `yaml:"production,omitempty"`
 }
 
 // Store represents the persistent collection of named stave contexts.

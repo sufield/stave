@@ -20,6 +20,7 @@ import (
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
+	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -142,6 +143,14 @@ func WireDevCommands(app *App) {
 
 	// Workflow (dev additions)
 	root.AddCommand(securityaudit.NewCmd())
+
+	// Destructive snapshot commands (too dangerous for production pipelines)
+	snapshotCmd, _, _ := root.Find([]string{"snapshot"})
+	if snapshotCmd != nil {
+		for _, cmd := range prune.DevCommands() {
+			snapshotCmd.AddCommand(cmd)
+		}
+	}
 
 	// Data & Artifacts (dev additions)
 	root.AddCommand(artifacts.NewControlsCmd())
