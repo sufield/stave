@@ -40,7 +40,7 @@ Supported Modes:
 				DirPerms:      0o700,
 			}
 
-			return runner.Run(Config{
+			return runner.Run(cmd.Context(), Config{
 				InputPath: fsutil.CleanUserPath(inPath),
 				OutDir:    fsutil.CleanUserPath(outDir),
 				Mode:      mode,
