@@ -156,7 +156,7 @@ jobs:
       - name: Run security-audit (json, fail-on NONE)
         run: |
           mkdir -p .artifacts/security-audit
-          go run ./cmd/stave security-audit \
+          go run ./cmd/stave-dev security-audit \
             --format json \
             --fail-on NONE \
             --out-dir ./.artifacts/security-audit \
