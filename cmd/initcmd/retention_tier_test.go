@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/domain/retention"
 	"gopkg.in/yaml.v3"
 )
 
 func TestRetentionTierConfig_UnmarshalStructForm(t *testing.T) {
 	input := "older_than: 14d\nkeep_min: 5\n"
-	var c projconfig.RetentionTierConfig
+	var c retention.TierConfig
 	if err := yaml.Unmarshal([]byte(input), &c); err != nil {
 		t.Fatalf("unmarshal struct form: %v", err)
 	}
@@ -23,7 +24,7 @@ func TestRetentionTierConfig_UnmarshalStructForm(t *testing.T) {
 
 func TestRetentionTierConfig_UnmarshalDefaultKeepMin(t *testing.T) {
 	input := "older_than: 7d\n"
-	var c projconfig.RetentionTierConfig
+	var c retention.TierConfig
 	if err := yaml.Unmarshal([]byte(input), &c); err != nil {
 		t.Fatalf("unmarshal without keep_min: %v", err)
 	}
@@ -36,12 +37,12 @@ func TestRetentionTierConfig_UnmarshalDefaultKeepMin(t *testing.T) {
 }
 
 func TestRetentionTierConfig_MarshalRoundTrip(t *testing.T) {
-	c := projconfig.RetentionTierConfig{OlderThan: "14d", KeepMin: 5}
+	c := retention.TierConfig{OlderThan: "14d", KeepMin: 5}
 	out, err := yaml.Marshal(c)
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}
-	var roundTrip projconfig.RetentionTierConfig
+	var roundTrip retention.TierConfig
 	if err := yaml.Unmarshal(out, &roundTrip); err != nil {
 		t.Fatalf("round-trip unmarshal: %v", err)
 	}
@@ -57,7 +58,7 @@ func TestRetentionTiersMap_StructuredForm(t *testing.T) {
 non_critical:
   older_than: 14d
 `
-	var m map[string]projconfig.RetentionTierConfig
+	var m map[string]retention.TierConfig
 	if err := yaml.Unmarshal([]byte(input), &m); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
@@ -78,7 +79,7 @@ non_critical:
 }
 
 func TestRetentionTierConfig_ParseDuration(t *testing.T) {
-	c := projconfig.RetentionTierConfig{OlderThan: "14d"}
+	c := retention.TierConfig{OlderThan: "14d"}
 	d, err := c.ParseDuration()
 	if err != nil {
 		t.Fatalf("ParseDuration: %v", err)
@@ -89,7 +90,7 @@ func TestRetentionTierConfig_ParseDuration(t *testing.T) {
 }
 
 func TestRetentionTierConfig_ParseDurationEmpty(t *testing.T) {
-	c := projconfig.RetentionTierConfig{}
+	c := retention.TierConfig{}
 	_, err := c.ParseDuration()
 	if err == nil {
 		t.Fatal("expected error for empty older_than")
@@ -109,7 +110,7 @@ func TestRetentionTierConfig_EffectiveKeepMin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := projconfig.RetentionTierConfig{KeepMin: tt.keepMin}
+			c := retention.TierConfig{KeepMin: tt.keepMin}
 			if got := c.EffectiveKeepMin(); got != tt.want {
 				t.Fatalf("EffectiveKeepMin()=%d, want %d", got, tt.want)
 			}

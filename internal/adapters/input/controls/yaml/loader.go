@@ -37,20 +37,6 @@ var _ appcontracts.ControlRepository = (*ControlLoader)(nil)
 // LoaderOption configures a ControlLoader.
 type LoaderOption func(*ControlLoader)
 
-// WithValidator allows injecting a custom or mock validator.
-func WithValidator(v SchemaValidator) LoaderOption {
-	return func(l *ControlLoader) {
-		l.validator = v
-	}
-}
-
-// WithProgress sets a callback for tracking loading progress.
-func WithProgress(fn func(processed, total int)) LoaderOption {
-	return func(l *ControlLoader) {
-		l.onProgress = fn
-	}
-}
-
 // NewControlLoader creates a new YAML control loader.
 // It initializes with a default validator unless overridden by options.
 // The returned loader is ready to use immediately — no lazy initialization.

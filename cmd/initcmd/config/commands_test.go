@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/env"
 )
 
@@ -64,7 +65,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 		t.Fatalf("config show failed: %v", err)
 	}
 
-	var out showOutput
+	var out configservice.EffectiveConfig
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("decode output: %v\noutput=%s", err, buf.String())
 	}

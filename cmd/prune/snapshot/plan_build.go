@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -15,14 +16,14 @@ type planBuildParams struct {
 	ObsRoot     string
 	ArchiveDir  string
 	DefaultTier string
-	TierRules   []projconfig.TierMappingRule
-	Tiers       map[string]projconfig.RetentionTierConfig
-	Files       []snapshotFile
+	TierRules   []retention.MappingRule
+	Tiers       map[string]retention.TierConfig
+	Files       []pruner.SnapshotFile
 	Apply       bool
 	Force       bool
 }
 
-func buildPlan(params planBuildParams) planOutput {
+func buildPlan(params planBuildParams) pruner.SnapshotPlanOutput {
 	return pruner.BuildSnapshotPlan(toPrunerBuildParams(params))
 }
 
@@ -44,7 +45,7 @@ func toPrunerBuildParams(params planBuildParams) pruner.BuildSnapshotPlanParams 
 	}
 }
 
-func applyPlan(plan planOutput, obsRoot, archiveDir string, allowSymlink bool) error {
+func applyPlan(plan pruner.SnapshotPlanOutput, obsRoot, archiveDir string, allowSymlink bool) error {
 	_, err := pruner.ApplySnapshotPlan(pruner.SnapshotPlanApplyInput{
 		Entries:          toPrunerPlanEntries(plan.Files),
 		ObservationsRoot: obsRoot,
@@ -57,7 +58,7 @@ func applyPlan(plan planOutput, obsRoot, archiveDir string, allowSymlink bool) e
 	return nil
 }
 
-func toPrunerPlanEntries(entries []planFileEntry) []pruner.PlanEntry {
+func toPrunerPlanEntries(entries []pruner.SnapshotPlanFile) []pruner.PlanEntry {
 	out := make([]pruner.PlanEntry, len(entries))
 	for i, entry := range entries {
 		out[i] = pruner.PlanEntry{

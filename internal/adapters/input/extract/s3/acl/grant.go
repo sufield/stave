@@ -1,11 +1,6 @@
 package acl
 
-import (
-	"strings"
-
-	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/domain/kernel"
-)
+import "strings"
 
 const (
 	permRead        = "READ"
@@ -86,14 +81,4 @@ func (g Grant) HasFullControl() bool {
 // Permissions returns ACL analysis bits for this grant.
 func (g Grant) Permissions() Permission {
 	return aclPermissionByString[g.normalizedPermission()]
-}
-
-// PublicGrantees returns public grantee identifiers in encounter order.
-func (gs Grants) PublicGrantees() []kernel.GranteeID {
-	return lo.FilterMap(gs, func(g Grant, _ int) (kernel.GranteeID, bool) {
-		if g.IsPublic() {
-			return kernel.GranteeID("uri:" + g.Grantee), true
-		}
-		return "", false
-	})
 }

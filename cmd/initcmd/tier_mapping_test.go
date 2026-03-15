@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/domain/retention"
 )
 
 func TestResolveTierForPath_FirstMatchWins(t *testing.T) {
-	rules := []projconfig.TierMappingRule{
+	rules := []retention.MappingRule{
 		{Pattern: "prod/**", Tier: "critical"},
 		{Pattern: "prod/**", Tier: "non_critical"}, // should never match
 	}
@@ -18,7 +19,7 @@ func TestResolveTierForPath_FirstMatchWins(t *testing.T) {
 }
 
 func TestResolveTierForPath_DefaultFallback(t *testing.T) {
-	rules := []projconfig.TierMappingRule{
+	rules := []retention.MappingRule{
 		{Pattern: "prod/**", Tier: "critical"},
 	}
 	got := projconfig.ResolveTierForPath("staging/2026-01-01.json", rules, "non_critical")

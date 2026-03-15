@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/configservice"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
@@ -193,11 +194,11 @@ func (e *Evaluator) resolveCLIAllowUnknownInput() Value[bool] {
 // --- Static Helpers ---
 
 // ResolveDefinedRetentionTiers returns the defined retention tiers from project config.
-func ResolveDefinedRetentionTiers(cfg *ProjectConfig) map[string]RetentionTierConfig {
+func ResolveDefinedRetentionTiers(cfg *ProjectConfig) map[string]retention.TierConfig {
 	if cfg == nil || len(cfg.RetentionTiers) == 0 {
 		return nil
 	}
-	out := make(map[string]RetentionTierConfig, len(cfg.RetentionTiers))
+	out := make(map[string]retention.TierConfig, len(cfg.RetentionTiers))
 	for name, tc := range cfg.RetentionTiers {
 		out[NormalizeTier(name)] = tc
 	}
@@ -241,13 +242,13 @@ func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
 	return out
 }
 
-func (e *Evaluator) buildDefinedRetentionTiers() map[string]configservice.RetentionTierConfig {
+func (e *Evaluator) buildDefinedRetentionTiers() map[string]retention.TierConfig {
 	if e.Project != nil {
 		if tiers := ResolveDefinedRetentionTiers(e.Project); len(tiers) > 0 {
 			return tiers
 		}
 	}
-	return map[string]configservice.RetentionTierConfig{
+	return map[string]retention.TierConfig{
 		DefaultRetentionTier: {OlderThan: DefaultSnapshotRetention, KeepMin: DefaultTierKeepMin},
 	}
 }
@@ -288,7 +289,7 @@ func ToProjectConfig(cfg *configservice.Config) *ProjectConfig {
 		SnapshotFilenameTemplate: cfg.SnapshotFilenameTemplate,
 	}
 	if len(cfg.RetentionTiers) > 0 {
-		out.RetentionTiers = make(map[string]RetentionTierConfig, len(cfg.RetentionTiers))
+		out.RetentionTiers = make(map[string]retention.TierConfig, len(cfg.RetentionTiers))
 		maps.Copy(out.RetentionTiers, cfg.RetentionTiers)
 	}
 	return out
@@ -310,7 +311,7 @@ func CopyProjectConfig(dst *ProjectConfig, src *configservice.Config) {
 		dst.RetentionTiers = nil
 		return
 	}
-	dst.RetentionTiers = make(map[string]RetentionTierConfig, len(src.RetentionTiers))
+	dst.RetentionTiers = make(map[string]retention.TierConfig, len(src.RetentionTiers))
 	maps.Copy(dst.RetentionTiers, src.RetentionTiers)
 }
 
@@ -346,7 +347,7 @@ func (staveConfigValidator) NormalizePolicy(value string) (configservice.CIFailu
 type staveKeepMinResolver struct{}
 
 func (staveKeepMinResolver) EffectiveKeepMin(keepMin int) int {
-	return RetentionTierConfig{KeepMin: keepMin}.EffectiveKeepMin()
+	return retention.TierConfig{KeepMin: keepMin}.EffectiveKeepMin()
 }
 
 // staveConfigResolver bridges the Evaluator to the configservice.Resolver interface.
