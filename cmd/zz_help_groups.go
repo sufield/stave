@@ -12,7 +12,7 @@ func wireHelpGroups(root *cobra.Command) {
 	)
 
 	groupMap := map[string][]string{
-		groupGettingStarted: {"doctor", "demo", "init", "quickstart", "generate"},
+		groupGettingStarted: {"doctor", "init", "generate"},
 		groupCore:           {"validate", "lint", "fmt", "apply", "diagnose", "verify", "explain", "trace"},
 		groupWorkflow:       {"snapshot", "ci", "plan", "context", "status", "security-audit"},
 		groupArtifacts:      {"ingest", "controls", "packs", "enforce", "extractor", "graph", "report"},

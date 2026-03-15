@@ -4,10 +4,9 @@ const rootLongHelp = `Stave detects infrastructure assets that have remained uns
 using only configuration snapshots-no cloud credentials required.
 Output is deterministic when --now is set (required for reproducible CI/CD runs).
 
-First 60 Seconds:
-  1. demo       - Run one built-in finding with evidence + fix hint
-  2. quickstart - Auto-detect local snapshots or fall back to demo
-  3. status     - See what to run next in the workflow
+Getting Started:
+  1. init       - Create a starter project layout
+  2. status     - See what to run next in the workflow
 
 Operational Workflow:
   1. validate   - Check inputs are well-formed (run first)
@@ -46,12 +45,6 @@ Exit Codes:
   130 Interrupted (SIGINT/Ctrl+C)
 
 Examples:
-  # Fastest hello-world path
-  stave demo
-
-  # Fast path on your own snapshot files
-  stave quickstart
-
   # Step 1: Validate inputs
   stave validate --controls ./controls --observations ./obs
 

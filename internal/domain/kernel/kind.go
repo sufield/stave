@@ -8,7 +8,6 @@ func (k OutputKind) String() string { return string(k) }
 
 const (
 	// --- Reporting Kinds ---
-	KindDemoReport        OutputKind = "demo_report"
 	KindRemediationReport OutputKind = "remediation_report"
 
 	// --- Baseline & Compliance Kinds ---
@@ -32,9 +31,8 @@ const (
 var validOutputKinds = map[OutputKind]struct{}{
 	KindBaseline:          {},
 	KindBaselineCheck:     {},
-	KindCIDiff:            {},
-	KindDemoReport:        {},
-	KindEnforcement:       {},
+	KindCIDiff:      {},
+	KindEnforcement: {},
 	KindGateCheck:         {},
 	KindObservationDelta:  {},
 	KindRemediationReport: {},

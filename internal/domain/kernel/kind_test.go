@@ -4,7 +4,7 @@ import "testing"
 
 func TestOutputKind_IsValid(t *testing.T) {
 	valid := []OutputKind{
-		KindBaseline, KindBaselineCheck, KindCIDiff, KindDemoReport,
+		KindBaseline, KindBaselineCheck, KindCIDiff,
 		KindEnforcement, KindGateCheck, KindObservationDelta,
 		KindRemediationReport, KindSnapshotArchive, KindSnapshotPlan,
 		KindSnapshotPrune, KindSnapshotQuality,

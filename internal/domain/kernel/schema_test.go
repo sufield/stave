@@ -10,7 +10,7 @@ func TestSchemaIsValid(t *testing.T) {
 		SchemaSnapshotQuality, SchemaSnapshotArchive, SchemaCIDiff,
 		SchemaFixLoop, SchemaCrosswalkResolution, SchemaSecurityAudit,
 		SchemaSecurityAuditArtifacts, SchemaSecurityAuditRunManifest,
-		SchemaBugReport, SchemaDemoReport,
+		SchemaBugReport,
 	}
 	for _, s := range valid {
 		if !s.IsValid() {

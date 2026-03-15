@@ -20,7 +20,6 @@ func TestOfflineHelpSuffix_AllCommands(t *testing.T) {
 		{"plan"},
 		{"ingest"},
 		{"init"},
-		{"quickstart"},
 		{"ci"},
 		{"ci", "baseline"},
 		{"ci", "gate"},

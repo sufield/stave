@@ -194,7 +194,7 @@ func ensureFirstRunRunHint(message string, args []string) string {
 		return message
 	}
 	switch args[0] {
-	case "demo", "quickstart", "init", "doctor", "status":
+	case "init", "doctor", "status":
 		return fmt.Sprintf("%s\nRun: %s --help", message, cliCommand(args[0]))
 	default:
 		return message
