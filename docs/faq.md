@@ -110,6 +110,103 @@ Three reasons:
 
 Observations are what you feed in. Evidence is what Stave produces to support each finding.
 
+## Why does `stave snapshot archive` exist when Unix has `mv`?
+
+`stave snapshot archive` is not a file mover — it is a retention-aware lifecycle command that understands your project's snapshot policies. A plain `mv` knows nothing about observation files, retention tiers, or evaluation requirements.
+
+| Capability | `mv` | `stave snapshot archive` |
+|---|---|---|
+| Retention policy | None — you decide what to move | Reads `--older-than` and `--retention-tier` from `stave.yaml` |
+| Safety guard | None — will move everything you tell it to | `--keep-min` (default 2) prevents archiving below the minimum needed for duration evaluation |
+| Dry-run default | No — acts immediately | Dry-run by default; requires `--force` to move files |
+| Determinism | Depends on wall clock | `--now` flag pins the reference time for reproducible decisions in CI |
+| Tier awareness | None | Pulls per-tier retention settings (e.g., `critical: 30d`, `non_critical: 14d`) from project config |
+| Machine-readable output | None | `--format json` produces structured results for pipeline integration |
+
+The equivalent Unix script would need to: parse each JSON filename as a timestamp, look up the retention tier config, compare against a policy, verify the remaining count stays above `keep_min`, preview the plan, then move — a non-trivial amount of logic that `stave snapshot archive` encapsulates in a single command with safety defaults.
+
+The same reasoning applies to `stave snapshot prune` (delete instead of move) and `stave snapshot plan` (preview without acting). These commands exist because snapshot lifecycle management is a first-class concern in Stave's safety engineering model — observation history is evidence, and managing it carelessly can break duration calculations.
+
+## Can snapshot pruning or archiving conflict with compliance?
+
+Yes. Observation snapshots are evidence — they prove what state your infrastructure was in at a specific point in time. Deleting or relocating that evidence can conflict with regulatory retention mandates.
+
+| Framework | Minimum retention | What it covers |
+|---|---|---|
+| HIPAA | 6 years | Records documenting PHI safeguards |
+| SOX (Sarbanes-Oxley) | 7 years | Audit records for financial system controls |
+| PCI-DSS | 1 year | Security event logs and access records |
+| FedRAMP / NIST 800-53 | 3 years | System security evidence and audit trails |
+| GDPR | Varies by purpose | Processing records (but also right-to-erasure tension) |
+
+**Pruning is the higher risk.** It permanently deletes snapshots. If your `stave.yaml` sets `snapshot_retention: 30d` but your compliance framework requires 6 years of evidence, pruning destroys records you are legally required to keep.
+
+**Archiving is safer** because the data is preserved, but the archive location must be documented and accessible to auditors. Moving files to a path that is not part of your audit trail can create gaps if an auditor asks for evidence from a specific date range.
+
+**`keep_min` protects evaluation, not compliance.** The default `keep_min: 2` ensures Stave can still calculate unsafe duration. It does not ensure you retain enough snapshots to satisfy an audit. Two snapshots out of a year is fine for duration math but useless for proving continuous compliance.
+
+**Recommendations for regulated environments:**
+
+1. **Set retention to match your longest compliance mandate** — if you are subject to HIPAA and SOX, set `snapshot_retention: 2557d` (7 years), not `30d`.
+2. **Use archive, not prune** — move aged snapshots to cold storage rather than deleting them. Configure `--archive-dir` to point to a durable, backed-up location.
+3. **Never prune without legal review** — if you are subject to any retention mandate, treat `stave snapshot prune --force` as a destructive operation that requires the same approval as deleting database backups.
+4. **Use retention tiers to separate concerns** — configure a `compliance` tier with long retention for regulated assets and a shorter `operational` tier for non-regulated ones.
+5. **Document your archive location** — auditors need to know where evidence lives. If you archive to `s3://audit-archive/stave/`, document that path in your security plan.
+
+Stave's snapshot lifecycle commands give you the tooling to manage retention. They do not make compliance decisions for you — your retention settings must reflect your regulatory obligations.
+
+## How do I prevent `stave-dev` from being used against production?
+
+Three layers of defense, used together:
+
+**Layer 1: Environment variable (`STAVE_ENV`)**
+
+Set `STAVE_ENV=production` in your production CI/CD runners and deployment environments. The dev binary checks this automatically:
+
+- Read-only commands (doctor, trace, explain) print a warning but proceed — this allows break-glass debugging.
+- Destructive commands (prune) are hard-blocked with an error.
+
+```bash
+export STAVE_ENV=production
+stave-dev snapshot prune --force   # BLOCKED: "command 'prune' is blocked in production"
+stave-dev doctor                   # WARNING, then runs (read-only)
+stave apply ...                    # No guard — production binary is always safe
+```
+
+**Layer 2: Context metadata (`production: true`)**
+
+Mark production contexts in your contexts config:
+
+```yaml
+contexts:
+  prod-us-east:
+    project_root: /ops/stave
+    production: true
+  dev-sandbox:
+    project_root: /home/user/stave
+    production: false
+```
+
+The dev binary reads the active context and applies the same guards as `STAVE_ENV`.
+
+**Layer 3: IAM boundaries (the gold standard)**
+
+The most robust defense is ensuring developer credentials cannot modify production data:
+
+- The IAM role used by developers should have **read-only** access to production snapshot storage.
+- Only the production service account (used by the `stave` binary in CI/CD) should have write/delete permissions on the production archive.
+- This ensures that even if someone bypasses the CLI guards, the cloud layer blocks the operation.
+
+| Environment | Binary | Credentials | Can read | Can write/delete |
+|---|---|---|---|---|
+| CI/CD pipeline | `stave` | Service account | Yes | Yes (archive only) |
+| Developer laptop | `stave-dev` | Developer IAM role | Yes (break-glass) | No |
+| Local sandbox | `stave-dev` | Sandbox credentials | Yes | Yes |
+
+**When is it okay for `stave-dev` to read production data?**
+
+Break-glass debugging. If a production evaluation fails and logs don't explain why, a senior engineer may need `stave-dev trace` or `stave-dev diagnose` against production snapshots to identify the exact predicate logic that failed. The read-only warning acknowledges this is happening without blocking it.
+
 ## What does Stave *not* do?
 
 - **No live scanning** — it does not query cloud APIs during evaluation.

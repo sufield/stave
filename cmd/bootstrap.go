@@ -16,7 +16,7 @@ import (
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
-func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
+func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.startCPUProfile(); err != nil {
 		return err
 	}
@@ -24,6 +24,9 @@ func (a *App) bootstrap(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := a.checkRequireOffline(); err != nil {
+		return err
+	}
+	if err := a.checkDevProductionGuard(cmd); err != nil {
 		return err
 	}
 	// Activate the provider owned by this App instance so that all

@@ -24,7 +24,6 @@ func TestOfflineHelpSuffix_ProdCommands(t *testing.T) {
 		{"snapshot"},
 		{"snapshot", "diff"},
 		{"snapshot", "upcoming"},
-		{"snapshot", "prune"},
 		{"snapshot", "archive"},
 		{"snapshot", "quality"},
 		{"snapshot", "hygiene"},

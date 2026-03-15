@@ -1,6 +1,8 @@
 package cleanup
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -24,9 +26,12 @@ func NewCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "prune",
-		Short: "Prune stale observation snapshots by age",
-		Long: `Prune removes old observation snapshots so the observations directory does not
-grow indefinitely. Files are selected by snapshot captured_at age, not file mtime.
+		Short: "Prune stale observation snapshots by age (dev-only)",
+		Long: `Prune permanently deletes old observation snapshots. This command is available
+only in stave-dev because observation snapshots are compliance evidence.
+Use "stave snapshot archive" in production to move files without destroying them.
+
+Files are selected by snapshot captured_at age, not file mtime.
 
 Safety defaults:
   - Keeps at least --keep-min snapshots (default: 2)
@@ -45,6 +50,13 @@ Examples:
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cmdutil.GetGlobalFlags(cmd)
+
+			if gf.Force {
+				fmt.Fprintln(cmd.ErrOrStderr(),
+					"WARNING: This operation permanently deletes observation snapshots.",
+					"\nEnsure this complies with your data retention policies (HIPAA, SOX, PCI-DSS)",
+					"before proceeding.")
+			}
 			eval := projconfig.Global()
 
 			if olderThan == "" {
