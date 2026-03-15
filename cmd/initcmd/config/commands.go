@@ -5,6 +5,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/initcmd/contextcmd"
+	initenv "github.com/sufield/stave/cmd/initcmd/env"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/metadata"
@@ -44,6 +46,8 @@ func NewConfigCmd(rt *ui.Runtime, svc *configservice.Service) *cobra.Command {
 		newDeleteCmd(rt, svc, &format),
 		newShowCmd(rt, svc, &format),
 		newExplainCmd(rt, svc, &format),
+		contextcmd.NewContextCmd(),
+		initenv.NewEnvCmd(),
 	)
 
 	return cmd

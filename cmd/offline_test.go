@@ -7,17 +7,14 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// TestOfflineHelpSuffix_AllCommands verifies that every command that should
-// display the offline guarantee does so, preventing drift.
-func TestOfflineHelpSuffix_AllCommands(t *testing.T) {
+// TestOfflineHelpSuffix_ProdCommands verifies that every production command
+// that should display the offline guarantee does so, preventing drift.
+func TestOfflineHelpSuffix_ProdCommands(t *testing.T) {
 	root := GetRootCmd()
 
-	// Command paths that must contain the offline help text.
+	// Command paths that must contain the offline help text in the prod binary.
 	required := [][]string{
-		{"doctor"},
-		{"bug-report"},
 		{"apply"},
-		{"plan"},
 		{"ingest"},
 		{"init"},
 		{"ci"},
@@ -32,18 +29,41 @@ func TestOfflineHelpSuffix_AllCommands(t *testing.T) {
 		{"snapshot", "quality"},
 		{"snapshot", "hygiene"},
 		{"explain"},
-		{"controls"},
 		{"validate"},
 		{"diagnose"},
 		{"verify"},
-		{"security-audit"},
-		{"capabilities"},
 	}
 
 	for _, path := range required {
 		cmd, _, err := root.Find(path)
 		if err != nil {
 			t.Errorf("command path %v not found: %v", path, err)
+			continue
+		}
+		long := cmd.Long
+		if !strings.Contains(long, "Offline-only") {
+			t.Errorf("%v: Long help does not contain 'Offline-only'", path)
+		}
+	}
+}
+
+// TestOfflineHelpSuffix_DevCommands verifies dev-only commands that should
+// display the offline guarantee.
+func TestOfflineHelpSuffix_DevCommands(t *testing.T) {
+	root := GetDevRootCmd()
+
+	required := [][]string{
+		{"doctor"},
+		{"bug-report"},
+		{"controls"},
+		{"capabilities"},
+		{"security-audit"},
+	}
+
+	for _, path := range required {
+		cmd, _, err := root.Find(path)
+		if err != nil {
+			t.Errorf("dev command path %v not found: %v", path, err)
 			continue
 		}
 		long := cmd.Long

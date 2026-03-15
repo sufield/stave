@@ -37,40 +37,10 @@ func (o *SharedOptions) normalize() {
 	o.ObservationsDir = fsutil.CleanUserPath(o.ObservationsDir)
 }
 
-// PlanOptions configuration for the plan command.
-type PlanOptions struct {
-	SharedOptions
-}
-
-// NewPlanCmd constructs the plan command.
-func NewPlanCmd() *cobra.Command {
-	opts := &PlanOptions{}
-
-	cmd := &cobra.Command{
-		Use:   "plan",
-		Short: "Readiness gate before apply",
-		Long:  `Plan checks whether your project is ready to run apply.` + metadata.OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			opts.ControlsSet = cmdutil.ControlsFlagChanged(cmd)
-			opts.normalize()
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runPlan(cmd, opts)
-		},
-		SilenceUsage:  true,
-		SilenceErrors: true,
-	}
-
-	opts.bindCommon(cmd, "text")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-
-	return cmd
-}
-
 // ApplyOptions configuration for the apply command.
 type ApplyOptions struct {
 	SharedOptions
+	DryRun             bool
 	AllowUnknown       bool
 	ExemptionFile      string
 	IntegrityManifest  string
@@ -89,7 +59,7 @@ func NewApplyCmd() *cobra.Command {
 		Use:   "apply",
 		Short: "Run control evaluation after plan checks pass",
 		Long: `Apply executes control evaluation only after readiness checks pass.
-Run stave plan first to preview what will be evaluated.` + metadata.OfflineHelpSuffix,
+Use --dry-run to preview what will be evaluated without running the full evaluation.` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			opts.ControlsSet = cmdutil.ControlsFlagChanged(cmd)
@@ -105,6 +75,7 @@ Run stave plan first to preview what will be evaluated.` + metadata.OfflineHelpS
 		SilenceErrors: true,
 	}
 
+	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Run readiness checks only, without evaluating controls")
 	opts.bindCommon(cmd, "json")
 	opts.bindApplySpecific(cmd)
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))

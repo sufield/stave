@@ -16,12 +16,18 @@ import (
 	"github.com/sufield/stave/internal/platform/state"
 )
 
-// Execute runs the root command and handles exit codes appropriately.
+// Execute runs the production root command and handles exit codes appropriately.
 // It sets up SIGINT handling, executes the root command, and exits with
 // the appropriate exit code based on the result.
 // Panics are recovered and converted to error messages to prevent stack traces.
 func Execute() {
 	app := NewApp()
+	app.execute()
+}
+
+// ExecuteDev runs the dev root command with all developer-only commands enabled.
+func ExecuteDev() {
+	app := NewApp(WithDevCommands())
 	app.execute()
 }
 
@@ -67,9 +73,13 @@ func (a *App) recoverExecutePanic() {
 		sanitized := a.sanitizeExecuteMessage(panicMsg)
 		userMsg := a.panicUserMessage(sanitized)
 
+		action := "Rerun with -vv, then run `stave-dev doctor` or contact support if this error persists."
+		if a.Edition == "dev" {
+			action = "Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists."
+		}
 		errInfo := ui.NewErrorInfo(ui.CodeInternalError, userMsg).
 			WithTitle("Internal error").
-			WithAction("Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists.").
+			WithAction(action).
 			WithURL(metadata.IssuesRef())
 		a.writeErrorInfo(errInfo)
 		a.ExitFunc(ui.ExitInternal)
@@ -194,7 +204,7 @@ func ensureFirstRunRunHint(message string, args []string) string {
 		return message
 	}
 	switch args[0] {
-	case "init", "doctor", "status":
+	case "init", "status":
 		return fmt.Sprintf("%s\nRun: %s --help", message, cliCommand(args[0]))
 	default:
 		return message

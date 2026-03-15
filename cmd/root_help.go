@@ -10,9 +10,9 @@ Getting Started:
 
 Operational Workflow:
   1. validate   - Check inputs are well-formed (run first)
-  2. plan       - Verify readiness and prerequisites
-  3. apply      - Run control evaluation and produce findings
-  4. diagnose   - Understand unexpected results
+  2. apply      - Run control evaluation and produce findings
+                  Use --dry-run to verify readiness first
+  3. diagnose   - Understand unexpected results
 
 Input Formats:
   --controls      Directory with YAML control definitions (ctrl.v1)
@@ -48,8 +48,8 @@ Examples:
   # Step 1: Validate inputs
   stave validate --controls ./controls --observations ./obs
 
-  # Step 2: Plan readiness checks
-  stave plan --controls ./controls --observations ./obs
+  # Step 2: Dry-run readiness checks
+  stave apply --dry-run --controls ./controls --observations ./obs
 
   # Step 3: Apply with 7-day threshold
   stave apply --controls ./controls --observations ./obs --max-unsafe 7d

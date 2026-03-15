@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -38,9 +39,27 @@ type globalFlagsType struct {
 	MemProfile      string // write heap profile to file
 }
 
+// AppOption configures optional behaviour on an App before it is returned
+// from NewApp. Use WithDevCommands to build the full developer binary.
+type AppOption func(*App)
+
+// WithDevCommands returns an AppOption that registers all developer-only
+// commands and sets the binary edition to "dev".
+func WithDevCommands() AppOption {
+	return func(app *App) {
+		app.Edition = "dev"
+		WireDevCommands(app)
+	}
+}
+
 // App owns all CLI-wide mutable state, eliminating package-level globals
 // and making the CLI reentrant.
 type App struct {
+	// Edition identifies the binary variant: "production" or "dev".
+	// It is embedded in --version output so bug reports identify which
+	// binary is running.
+	Edition string
+
 	Flags          globalFlagsType
 	Logger         *slog.Logger
 	LogCloser      *logging.LogCloser
@@ -66,8 +85,10 @@ type App struct {
 }
 
 // NewApp creates a fully-wired CLI application.
-func NewApp() *App {
+// Pass WithDevCommands() to build the stave-dev binary with all commands.
+func NewApp(opts ...AppOption) *App {
 	app := &App{
+		Edition:          "production",
 		ExitFunc:         os.Exit,
 		Provider:         compose.NewDefaultProvider(),
 		ConfigKeyService: projconfig.ConfigKeyService,
@@ -75,7 +96,6 @@ func NewApp() *App {
 	app.Root = &cobra.Command{
 		Use:               CLIName,
 		Short:             "Configuration safety evaluator",
-		Version:           GetVersion(),
 		SilenceErrors:     true,
 		SilenceUsage:      true,
 		PersistentPreRunE: app.bootstrap,
@@ -83,9 +103,17 @@ func NewApp() *App {
 		Long:              rootLongHelp,
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
-	WireMetaCommands(app)
-	WireCommands(app)
-	wireHelpGroups(app.Root)
+	WireProdCommands(app)
+
+	for _, opt := range opts {
+		opt(app)
+	}
+
+	app.Root.Version = fmt.Sprintf("%s (%s)", GetVersion(), app.Edition)
+	wireProdHelpGroups(app.Root)
+	if app.Edition == "dev" {
+		wireDevHelpGroups(app.Root)
+	}
 	return app
 }
 
@@ -126,4 +154,9 @@ func GetVersion() string {
 // GetRootCmd returns a fully-wired root cobra command for tests and doc generation.
 func GetRootCmd() *cobra.Command {
 	return NewApp().Root
+}
+
+// GetDevRootCmd returns a fully-wired root cobra command with all dev commands.
+func GetDevRootCmd() *cobra.Command {
+	return NewApp(WithDevCommands()).Root
 }
