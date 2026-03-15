@@ -2,71 +2,134 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
-
-	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
 )
 
-// ProductionSource returns a human-readable description of why the
-// environment is detected as production, or "" if it is not.
-func ProductionSource() string {
-	if strings.EqualFold(os.Getenv("STAVE_ENV"), "production") {
-		return "STAVE_ENV=production"
+// Edition defines the build flavor of the application.
+type Edition string
+
+const (
+	EditionProd Edition = "production"
+	EditionDev  Edition = "dev"
+)
+
+// Environment captures the detected state of the runtime environment.
+type Environment struct {
+	IsProduction bool
+	Source       string // e.g., "STAVE_ENV=production" or "context \"prod\" has production: true"
+}
+
+// ---------------------------------------------------------------------------
+// Infrastructure: Environment Detector
+// ---------------------------------------------------------------------------
+
+// EnvironmentDetector identifies the current deployment context by checking
+// environment variables and the active project context.
+type EnvironmentDetector struct {
+	EnvProvider func(string) string // defaults to os.Getenv
+}
+
+// Detect checks STAVE_ENV and the active context to determine whether
+// the tool is operating against production resources.
+func (d *EnvironmentDetector) Detect() Environment {
+	getenv := d.EnvProvider
+	if getenv == nil {
+		getenv = os.Getenv
 	}
+
+	if strings.EqualFold(getenv("STAVE_ENV"), "production") {
+		return Environment{IsProduction: true, Source: "STAVE_ENV=production"}
+	}
+
 	st, _, err := contexts.Load()
 	if err != nil {
-		return ""
+		return Environment{}
 	}
 	name, ctx, ok, resolveErr := st.ResolveSelected()
-	if resolveErr != nil || !ok || ctx == nil {
-		return ""
+	if resolveErr == nil && ok && ctx != nil && ctx.Production {
+		return Environment{
+			IsProduction: true,
+			Source:       fmt.Sprintf("context %q has production: true", name),
+		}
 	}
-	if ctx.Production {
-		return fmt.Sprintf("context %q has production: true", name)
-	}
-	return ""
+
+	return Environment{}
 }
 
-// destructiveDevCommands lists command paths that permanently modify or
-// delete data and must never run against production environments.
-var destructiveDevCommands = map[string]bool{
-	"prune": true,
+// ---------------------------------------------------------------------------
+// Policy: Production Guard
+// ---------------------------------------------------------------------------
+
+// SafetyPolicy defines which commands are restricted in production.
+type SafetyPolicy struct {
+	BlockedCommands map[string]bool
 }
 
-// checkDevProductionGuard warns or blocks when the dev binary targets a
-// production environment. Read-only dev commands (trace, explain, lint)
-// print a warning for break-glass debugging. Destructive dev commands
-// (prune) are hard-blocked.
-func (a *App) checkDevProductionGuard(cmd *cobra.Command) error {
-	if a.Edition != "dev" {
-		return nil
-	}
-	source := ProductionSource()
-	if source == "" {
+// DefaultSafetyPolicy blocks commands that permanently destroy evidence.
+var DefaultSafetyPolicy = SafetyPolicy{
+	BlockedCommands: map[string]bool{
+		"prune": true,
+	},
+}
+
+// ProductionGuard prevents the developer binary from performing
+// dangerous operations against production environments.
+type ProductionGuard struct {
+	Edition Edition
+	Policy  SafetyPolicy
+	Stderr  io.Writer
+}
+
+// Check evaluates whether a command is safe to run. Returns a UserError
+// if the command is hard-blocked, or prints a warning for read-only dev
+// commands running against production.
+func (g *ProductionGuard) Check(cmdName string, env Environment) error {
+	if g.Edition != EditionDev || !env.IsProduction {
 		return nil
 	}
 
-	cmdName := cmd.Name()
-
-	// Hard block destructive commands
-	if destructiveDevCommands[cmdName] {
+	if g.Policy.BlockedCommands[cmdName] {
 		return &ui.UserError{
 			Err: fmt.Errorf(
 				"command %q is blocked in production (%s): "+
 					"use `stave snapshot archive` to move snapshots without deleting them, "+
-					"or unset STAVE_ENV / switch to a non-production context to prune",
-				cmdName, source),
+					"or switch to a non-production context to prune",
+				cmdName, env.Source),
 		}
 	}
 
-	// Warn on all other dev commands
-	fmt.Fprintf(os.Stderr,
+	stderr := g.Stderr
+	if stderr == nil {
+		stderr = os.Stderr
+	}
+	fmt.Fprintf(stderr,
 		"WARNING: stave-dev running against production environment (%s).\n"+
-			"Dev commands are read-only in this mode. Use the production binary for operational workflows.\n\n",
-		source)
+			"Dev commands are restricted to read-only mode for safety.\n\n",
+		env.Source)
+
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Bootstrap integration
+// ---------------------------------------------------------------------------
+
+// checkDevProductionGuard detects the environment and runs the safety guard.
+// Called from App.bootstrap before any command executes.
+func (a *App) checkDevProductionGuard(cmd interface{ Name() string }) error {
+	detector := &EnvironmentDetector{EnvProvider: os.Getenv}
+	env := detector.Detect()
+
+	guard := &ProductionGuard{
+		Edition: a.Edition,
+		Policy:  DefaultSafetyPolicy,
+		Stderr:  a.Root.ErrOrStderr(),
+	}
+
+	return guard.Check(cmd.Name(), env)
 }

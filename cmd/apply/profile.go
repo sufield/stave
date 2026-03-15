@@ -107,7 +107,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		Clock:           r.Clock,
 		Hasher:          r.Hasher,
 		ToolVersion:     version.Version,
-		PredicateParser: ctlyaml.YAMLPredicateParser,
+		PredicateParser: ctlyaml.ParsePredicate,
 	})
 	done()
 	if err != nil {

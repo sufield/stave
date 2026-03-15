@@ -9,7 +9,7 @@ type S3AnalysisResult struct {
 	HasPolicy    bool
 	Policy       s3policy.Analysis
 	HasACL       bool
-	ACL          s3acl.Analysis
+	ACL          s3acl.Assessment
 	Transport    s3policy.TransportEncryptionAnalysis
 	CrossAccount s3policy.CrossAccountAnalysis
 	PrefixScopes s3policy.PrefixScopeAnalysis
@@ -32,7 +32,7 @@ func (b *S3Bucket) Analyze() S3AnalysisResult {
 	}
 	if len(b.ACLGrants) > 0 {
 		result.HasACL = true
-		result.ACL = s3acl.Analyze(b.ACLGrants)
+		result.ACL = s3acl.Assess(b.ACLGrants)
 	}
 	return result
 }

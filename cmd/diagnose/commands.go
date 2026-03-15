@@ -141,7 +141,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		DiagnoseConfig: baseCfg,
 		ControlID:      kernel.ControlID(cfg.ControlID),
 		AssetID:        asset.ID(cfg.AssetID),
-		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.YAMLPredicateParser),
+		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.ParsePredicate),
 		IDGen:          crypto.NewHasher(),
 	})
 	if err != nil {
@@ -177,7 +177,7 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) appdiagno
 		ObservationsDir: cfg.ObservationsDir,
 		MaxUnsafe:       maxDuration,
 		Clock:           r.Clock,
-		PredicateParser: ctlyaml.YAMLPredicateParser,
+		PredicateParser: ctlyaml.ParsePredicate,
 	}
 	if cfg.PreviousOutput == "-" {
 		appCfg.OutputReader = cfg.Stdin

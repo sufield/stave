@@ -65,7 +65,7 @@ type S3Observation struct {
 	BucketARN         string                       `json:"bucket_arn,omitempty"`
 	Tags              map[string]string            `json:"tags,omitempty"`
 	PolicyJSON        string                       `json:"policy_json,omitempty"`
-	ACL               *s3acl.Entry                 `json:"-"`
+	ACL               s3acl.List                   `json:"-"`
 	PublicAccessBlock *s3storage.PublicAccessBlock `json:"public_access_block,omitempty"`
 	Evidence          []string                     `json:"evidence"`
 	MissingInputs     []string                     `json:"missing_inputs,omitempty"`

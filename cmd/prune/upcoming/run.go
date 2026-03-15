@@ -47,7 +47,7 @@ func (r *UpcomingRunner) Run(ctx context.Context, cfg UpcomingConfig) error {
 		Snapshots:       loaded.Snapshots,
 		GlobalMaxUnsafe: cfg.MaxUnsafe,
 		Now:             cfg.Now,
-		PredicateParser: ctlyaml.YAMLPredicateParser,
+		PredicateParser: ctlyaml.ParsePredicate,
 	})
 	riskItems = riskItems.Filter(cfg.Filter)
 

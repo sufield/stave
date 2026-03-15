@@ -25,33 +25,41 @@ type SchemaValidator interface {
 	ValidateControlYAML(raw []byte, opts ...contractvalidator.Option) (*diag.Result, error)
 }
 
+// ControlLoader loads control definitions from YAML files.
+type ControlLoader struct {
+	validator  SchemaValidator
+	onProgress func(processed, total int)
+}
+
+// Ensure ControlLoader satisfies the ControlRepository interface at compile time.
+var _ appcontracts.ControlRepository = (*ControlLoader)(nil)
+
 // LoaderOption configures a ControlLoader.
 type LoaderOption func(*ControlLoader)
 
-// ControlLoader loads control definitions from YAML files.
-type ControlLoader struct {
-	validator SchemaValidator
-	// OnProgress is called after each file is processed with (processed, total) counts.
-	// It is optional and safe to leave nil.
-	OnProgress func(processed, total int)
+// WithValidator allows injecting a custom or mock validator.
+func WithValidator(v SchemaValidator) LoaderOption {
+	return func(l *ControlLoader) {
+		l.validator = v
+	}
 }
 
-var _ appcontracts.ControlRepository = (*ControlLoader)(nil)
-
-func (l *ControlLoader) ensureInit() {
-	if l.validator == nil {
-		l.validator = contractvalidator.New()
+// WithProgress sets a callback for tracking loading progress.
+func WithProgress(fn func(processed, total int)) LoaderOption {
+	return func(l *ControlLoader) {
+		l.onProgress = fn
 	}
 }
 
 // NewControlLoader creates a new YAML control loader.
+// It initializes with a default validator unless overridden by options.
+// The returned loader is ready to use immediately — no lazy initialization.
 func NewControlLoader(opts ...LoaderOption) (*ControlLoader, error) {
-	l := &ControlLoader{}
+	l := &ControlLoader{
+		validator: contractvalidator.New(),
+	}
 	for _, opt := range opts {
 		opt(l)
-	}
-	if l.validator == nil {
-		l.validator = contractvalidator.New()
 	}
 	return l, nil
 }
@@ -59,7 +67,7 @@ func NewControlLoader(opts ...LoaderOption) (*ControlLoader, error) {
 // SetOnProgress sets a callback that is called after each file is processed
 // with (processed, total) counts. Pass nil to disable.
 func (l *ControlLoader) SetOnProgress(fn func(processed, total int)) {
-	l.OnProgress = fn
+	l.onProgress = fn
 }
 
 // LoadControls loads all YAML control definitions from the given directory,
@@ -67,42 +75,40 @@ func (l *ControlLoader) SetOnProgress(fn func(processed, total int)) {
 // It supports an optional _registry/controls.index.json fast-path for large sets.
 // Results are sorted by control ID for deterministic output.
 func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-	l.ensureInit()
-
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 
 	paths, err := resolveControlPaths(ctx, dir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolving control paths in %q: %w", dir, err)
 	}
 
-	controls := make([]policy.ControlDefinition, 0, len(paths))
-	idSources := make(map[kernel.ControlID]string, len(paths))
 	total := len(paths)
+	controls := make([]policy.ControlDefinition, 0, total)
+	idSources := make(map[kernel.ControlID]string, total)
+
 	for i, path := range paths {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 
-		ctl, err := l.loadControl(path)
+		ctl, err := l.loadOne(path)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load control %s: %w", path, err)
+			return nil, fmt.Errorf("control %q: %w", path, err)
 		}
 
 		if existing, ok := idSources[ctl.ID]; ok {
-			return nil, fmt.Errorf("duplicate control ID %q: found in %s and %s", ctl.ID, existing, path)
+			return nil, fmt.Errorf("duplicate control ID %q found in %q and %q", ctl.ID, existing, path)
 		}
 		idSources[ctl.ID] = path
 		controls = append(controls, ctl)
 
-		if l.OnProgress != nil {
-			l.OnProgress(i+1, total)
+		if l.onProgress != nil {
+			l.onProgress(i+1, total)
 		}
 	}
 
-	// Sort by control ID for deterministic output
 	slices.SortFunc(controls, func(a, b policy.ControlDefinition) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
@@ -110,15 +116,14 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	return controls, nil
 }
 
-// loadControl loads a single control definition from a YAML file.
-// It reads the file, validates against JSON Schema, and unmarshals into domain type.
-func (l *ControlLoader) loadControl(path string) (policy.ControlDefinition, error) {
+// loadOne performs IO, schema validation, unmarshal, and semantic enrichment
+// for a single control file.
+func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return policy.ControlDefinition{}, err
 	}
 
-	// Validate against JSON Schema
 	issues, err := l.validator.ValidateControlYAML(data, contractvalidator.WithPrefix(path))
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("schema validation error: %w", err)
@@ -127,36 +132,38 @@ func (l *ControlLoader) loadControl(path string) (policy.ControlDefinition, erro
 		return policy.ControlDefinition{}, fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 
-	// Schema passed, unmarshal into domain type
 	var ctl policy.ControlDefinition
 	if err := yaml.Unmarshal(data, &ctl); err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("failed to unmarshal control: %w", err)
+		return policy.ControlDefinition{}, fmt.Errorf("yaml parse error: %w", err)
 	}
-	if err := l.expandAndPrepare(&ctl); err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("invalid control semantics: %w", err)
+
+	if err := l.enrichAndPrepare(&ctl); err != nil {
+		return policy.ControlDefinition{}, err
 	}
 
 	return ctl, nil
 }
 
-// expandAndPrepare resolves predicate aliases and prepares the control for use.
+// enrichAndPrepare resolves predicate aliases and prepares the control for use.
 // Alias expansion lives in the adapter layer because moving it to the domain
 // would create a circular dependency: policy → predicate → policy.
-func (l *ControlLoader) expandAndPrepare(ctl *policy.ControlDefinition) error {
+func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
+
 	if alias != "" {
 		if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
-			return fmt.Errorf("unsafe_predicate_alias and unsafe_predicate cannot both be set")
+			return fmt.Errorf("invalid definition: cannot set both unsafe_predicate and unsafe_predicate_alias")
 		}
 		expanded, ok := predicates.Resolve(alias)
 		if !ok {
-			return fmt.Errorf("unknown unsafe_predicate_alias %q (available: %s)", alias, strings.Join(predicates.ListAliases(), ", "))
+			return fmt.Errorf("unknown unsafe_predicate_alias %q (available: %s)",
+				alias, strings.Join(predicates.ListAliases(), ", "))
 		}
 		ctl.UnsafePredicate = expanded
 	}
 
 	if err := ctl.Prepare(); err != nil {
-		return err
+		return fmt.Errorf("semantic error: %w", err)
 	}
 
 	return nil

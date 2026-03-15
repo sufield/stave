@@ -135,7 +135,7 @@ func coverageEdges(
 		ctl := &controls[i]
 		for _, rid := range assetIDs {
 			evalCtx := policy.NewAssetEvalContext(assetMap[rid], policy.ControlParams(ctl.Params), identities...)
-			evalCtx.PredicateParser = ctlyaml.YAMLPredicateParser
+			evalCtx.PredicateParser = ctlyaml.ParsePredicate
 			if !ctl.UnsafePredicate.EvaluateWithContext(evalCtx) {
 				continue
 			}

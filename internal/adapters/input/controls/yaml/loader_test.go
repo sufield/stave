@@ -805,10 +805,13 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	var loader ControlLoader
+	loader, err := NewControlLoader()
+	if err != nil {
+		t.Fatalf("NewControlLoader: %v", err)
+	}
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
-		t.Fatalf("zero-value loader failed: %v", err)
+		t.Fatalf("loader failed: %v", err)
 	}
 	if len(controls) != 1 {
 		t.Fatalf("expected 1 control, got %d", len(controls))

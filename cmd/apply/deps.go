@@ -132,7 +132,7 @@ func (b *Builder) mapToBuildInput(
 			ToolVersion:       version.Version,
 			AllowUnknownInput: b.Opts.AllowUnknown,
 			ExemptionConfig:   exemptionCfg,
-			PredicateParser:   ctlyaml.YAMLPredicateParser,
+			PredicateParser:   ctlyaml.ParsePredicate,
 		},
 		Writers: appeval.OutputWriters{
 			Stdout: b.Stdout,

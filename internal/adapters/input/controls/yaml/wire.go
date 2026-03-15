@@ -1,22 +1,33 @@
 package yaml
 
 import (
+	"fmt"
+
 	"github.com/sufield/stave/internal/domain/policy"
 	"gopkg.in/yaml.v3"
 )
 
-// YAMLPredicateParser re-marshals an arbitrary value through YAML to produce
-// a typed UnsafePredicate. This is used at evaluation time (policy/rule.go)
-// to parse nested predicate nodes that arrive as map[string]any from the
-// initial YAML unmarshal.
-func YAMLPredicateParser(v any) (*policy.UnsafePredicate, error) {
+// ParsePredicate transforms a generic value (typically a map[string]any) into
+// a domain-typed UnsafePredicate using a YAML round-trip.
+//
+// This is used during evaluation to resolve dynamic or nested predicate nodes
+// that arrive as map[string]any from the initial YAML unmarshal. The round-trip
+// ensures all yaml tags and Unmarshaler interfaces in the policy package are
+// strictly respected.
+func ParsePredicate(v any) (*policy.UnsafePredicate, error) {
+	if v == nil {
+		return nil, nil
+	}
+
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal generic predicate: %w", err)
 	}
+
 	var pred policy.UnsafePredicate
 	if err := yaml.Unmarshal(data, &pred); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse predicate structure: %w", err)
 	}
+
 	return &pred, nil
 }

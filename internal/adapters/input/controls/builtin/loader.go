@@ -18,22 +18,27 @@ import (
 //go:embed embedded/s3/**/*.yaml
 var embeddedControls embed.FS
 
-// EmbeddedRegistry holds the lifecycle and retrieval logic for embedded control definitions.
-type EmbeddedRegistry struct {
-	fsys  fs.FS
-	root  string
+// Registry manages the lifecycle and retrieval of embedded control definitions.
+// It loads controls lazily on first access and returns cloned slices to prevent
+// callers from mutating the shared cache.
+type Registry struct {
+	fsys fs.FS
+	root string
+
+	mu    sync.RWMutex
 	cache []policy.ControlDefinition
 	err   error
 	once  sync.Once
 }
 
-// NewEmbeddedRegistry creates a registry backed by the given filesystem.
-func NewEmbeddedRegistry(fsys fs.FS, root string) *EmbeddedRegistry {
-	return &EmbeddedRegistry{fsys: fsys, root: root}
+// NewRegistry creates a registry backed by the given filesystem.
+// Pass any fs.FS (embed.FS, fstest.MapFS, os.DirFS) for testing flexibility.
+func NewRegistry(fsys fs.FS, root string) *Registry {
+	return &Registry{fsys: fsys, root: root}
 }
 
 // defaultRegistry is the singleton used by the package-level API.
-var defaultRegistry = NewEmbeddedRegistry(embeddedControls, "embedded")
+var defaultRegistry = NewRegistry(embeddedControls, "embedded")
 
 // LoadAll loads all embedded control definitions.
 func LoadAll(ctx context.Context) ([]policy.ControlDefinition, error) {
@@ -46,19 +51,26 @@ func LoadFiltered(ctx context.Context, selectors []Selector) ([]policy.ControlDe
 	return defaultRegistry.Filtered(ctx, selectors)
 }
 
-// All returns all control definitions, loading them on first call.
-func (r *EmbeddedRegistry) All(_ context.Context) ([]policy.ControlDefinition, error) {
+// All returns all control definitions. It performs a lazy load on the first
+// call and returns a shallow clone of the cache for subsequent calls.
+func (r *Registry) All(_ context.Context) ([]policy.ControlDefinition, error) {
 	r.once.Do(func() {
-		r.cache, r.err = loadFromFS(r.fsys, r.root)
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		r.cache, r.err = r.load()
 	})
+
 	if r.err != nil {
 		return nil, r.err
 	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	return slices.Clone(r.cache), nil
 }
 
 // Filtered returns controls matching at least one selector.
-func (r *EmbeddedRegistry) Filtered(ctx context.Context, selectors []Selector) ([]policy.ControlDefinition, error) {
+func (r *Registry) Filtered(ctx context.Context, selectors []Selector) ([]policy.ControlDefinition, error) {
 	all, err := r.All(ctx)
 	if err != nil || len(selectors) == 0 {
 		return all, err
@@ -68,28 +80,32 @@ func (r *EmbeddedRegistry) Filtered(ctx context.Context, selectors []Selector) (
 	}), nil
 }
 
-// --- Internal Loading ---
+// --- Internal implementation ---
 
-func loadFromFS(fsys fs.FS, root string) ([]policy.ControlDefinition, error) {
+func (r *Registry) load() ([]policy.ControlDefinition, error) {
 	var controls []policy.ControlDefinition
 	idSources := make(map[kernel.ControlID]string)
 
-	err := fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(r.fsys, r.root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() || !isYAML(path) {
+		if d.IsDir() || !r.isYAML(path) {
 			return nil
 		}
 
-		data, readErr := fs.ReadFile(fsys, path)
+		data, readErr := fs.ReadFile(r.fsys, path)
 		if readErr != nil {
-			return fmt.Errorf("reading embedded control %q: %w", path, readErr)
+			return fmt.Errorf("reading %q: %w", path, readErr)
 		}
 
-		ctl, unmarshalErr := unmarshalAndPrepareControl(path, data, idSources)
+		ctl, unmarshalErr := r.unmarshal(path, data)
 		if unmarshalErr != nil {
 			return unmarshalErr
+		}
+
+		if existing, ok := idSources[ctl.ID]; ok {
+			return fmt.Errorf("duplicate control ID %q: found in %q and %q", ctl.ID, existing, path)
 		}
 		idSources[ctl.ID] = path
 		controls = append(controls, ctl)
@@ -106,25 +122,23 @@ func loadFromFS(fsys fs.FS, root string) ([]policy.ControlDefinition, error) {
 	return controls, nil
 }
 
-func unmarshalAndPrepareControl(path string, data []byte, idSources map[kernel.ControlID]string) (policy.ControlDefinition, error) {
+func (r *Registry) unmarshal(path string, data []byte) (policy.ControlDefinition, error) {
 	var ctl policy.ControlDefinition
 	if err := yaml.Unmarshal(data, &ctl); err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("parsing embedded control %q: %w", path, err)
+		return policy.ControlDefinition{}, fmt.Errorf("parsing YAML in %q: %w", path, err)
 	}
 	if err := ctl.Prepare(); err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("preparing embedded control %q: %w", path, err)
-	}
-	if existing, ok := idSources[ctl.ID]; ok {
-		return policy.ControlDefinition{}, fmt.Errorf("duplicate embedded control ID %q: %q and %q", ctl.ID, existing, path)
+		return policy.ControlDefinition{}, fmt.Errorf("preparing %q: %w", path, err)
 	}
 	return ctl, nil
 }
 
-func isYAML(path string) bool {
+func (r *Registry) isYAML(path string) bool {
 	return strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")
 }
 
-// EmbeddedFS exposes the bundled built-in control files for cross-package validation tests.
+// EmbeddedFS exposes the bundled built-in control files for cross-package
+// validation and strict integrity checks.
 func EmbeddedFS() embed.FS {
 	return embeddedControls
 }

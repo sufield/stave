@@ -92,7 +92,7 @@ func ToIdentityVisibility(policy s3policy.Analysis) s3exposure.Visibility {
 }
 
 // ToResourceVisibility maps an S3 ACL analysis to the exposure domain Visibility.
-func ToResourceVisibility(acl s3acl.Analysis) s3exposure.Visibility {
+func ToResourceVisibility(acl s3acl.Assessment) s3exposure.Visibility {
 	pub := s3exposure.Capabilities{
 		Read:  acl.AllowsPublicRead,
 		Write: acl.AllowsPublicWrite,
@@ -142,7 +142,7 @@ func toNetworkScopeAccess(policy s3policy.Analysis) s3exposure.NetworkScopeAcces
 	}
 }
 
-func toACLFullControlAccess(acl s3acl.Analysis) s3exposure.ACLFullControlAccess {
+func toACLFullControlAccess(acl s3acl.Assessment) s3exposure.ACLFullControlAccess {
 	return s3exposure.ACLFullControlAccess{
 		FullControlPublic:        acl.HasFullControlPublic,
 		FullControlAuthenticated: acl.HasFullControlAuthenticated,

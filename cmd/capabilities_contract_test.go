@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/spf13/cobra"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -17,11 +16,11 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 	})
 
 	var out bytes.Buffer
-	cmd := &cobra.Command{}
+	cmd := newCapabilitiesCmd()
 	cmd.SetOut(&out)
 
-	if err := runCapabilities(cmd, nil); err != nil {
-		t.Fatalf("runCapabilities error: %v", err)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("capabilities command error: %v", err)
 	}
 
 	var got map[string]any

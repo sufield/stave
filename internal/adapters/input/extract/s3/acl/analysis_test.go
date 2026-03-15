@@ -2,13 +2,13 @@ package acl
 
 import "testing"
 
-func TestAnalyze_PublicAndAuthenticatedGrants(t *testing.T) {
+func TestAssess_PublicAndAuthenticatedGrants(t *testing.T) {
 	grants := []Grant{
 		{Grantee: AllUsersGranteeURI, Permission: "READ"},
 		{Grantee: AuthenticatedUsersGranteeURI, Permission: "FULL_CONTROL"},
 	}
 
-	got := Analyze(grants)
+	got := Assess(grants)
 
 	if !got.AllowsPublicRead {
 		t.Fatal("expected public read to be allowed")
@@ -30,13 +30,13 @@ func TestAnalyze_PublicAndAuthenticatedGrants(t *testing.T) {
 	}
 }
 
-func TestAnalyze_ACLPermissions(t *testing.T) {
+func TestAssess_ACLPermissions(t *testing.T) {
 	grants := []Grant{
 		{Grantee: AllUsersGranteeURI, Permission: "WRITE_ACP"},
 		{Grantee: AuthenticatedUsersGranteeURI, Permission: "READ_ACP"},
 	}
 
-	got := Analyze(grants)
+	got := Assess(grants)
 
 	if !got.AllowsPublicACLWrite {
 		t.Fatal("expected public ACL write to be allowed")
