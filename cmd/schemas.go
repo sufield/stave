@@ -89,7 +89,6 @@ func writeSchemas(w io.Writer, format ui.OutputFormat) error {
 		Artifact: []schemaEntry{
 			{"bug_report", kernel.SchemaBugReport.String()},
 			{"control_crosswalk_resolution", kernel.SchemaCrosswalkResolution.String()},
-			{"demo_report", kernel.SchemaDemoReport.String()},
 			{"security_audit", kernel.SchemaSecurityAudit.String()},
 			{"security_audit_artifacts", kernel.SchemaSecurityAuditArtifacts.String()},
 			{"security_audit_run_manifest", kernel.SchemaSecurityAuditRunManifest.String()},

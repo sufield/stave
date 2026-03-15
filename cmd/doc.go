@@ -2,7 +2,7 @@
 //
 // Commands are organized into five groups:
 //
-// Getting Started: doctor, demo, init, quickstart, generate
+// Getting Started: doctor, init, generate
 //
 // Control Engine: validate, lint, fmt, apply, diagnose, verify, explain, trace
 //

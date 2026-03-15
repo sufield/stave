@@ -153,8 +153,6 @@ func WireCommands(app *App) {
 
 	// Getting started
 	root.AddCommand(initcmd.NewInitCmd())
-	root.AddCommand(initcmd.NewQuickstartCmd())
-	root.AddCommand(initcmd.NewDemoCmd())
 	root.AddCommand(initcmd.NewGenerateCmd())
 	root.AddCommand(doctor.NewCmd())
 

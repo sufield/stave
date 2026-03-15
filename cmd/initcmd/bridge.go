@@ -54,8 +54,6 @@ func GetRootCmd() *cobra.Command {
 	p.Bool(cmdutil.FlagOffline, false, "Require offline execution")
 
 	root.AddCommand(NewInitCmd())
-	root.AddCommand(NewQuickstartCmd())
-	root.AddCommand(NewDemoCmd())
 	root.AddCommand(NewGenerateCmd())
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), projconfig.ConfigKeyService))
 	root.AddCommand(contextcmd.NewContextCmd())
@@ -78,32 +76,6 @@ func normalizeTemplate(s string) string {
 		s += "\n"
 	}
 	return s
-}
-
-func onboardingCommandError(err error, runLine string) error {
-	if err == nil {
-		return nil
-	}
-	return fmt.Errorf("%w\nRun: %s", err, runLine)
-}
-
-func readBool(m map[string]any, keys ...string) bool {
-	if len(keys) == 0 {
-		return false
-	}
-	var cur any = m
-	for _, k := range keys {
-		obj, ok := cur.(map[string]any)
-		if !ok {
-			return false
-		}
-		cur, ok = obj[k]
-		if !ok {
-			return false
-		}
-	}
-	b, ok := cur.(bool)
-	return ok && b
 }
 
 func controlIDFromName(name string) string {
