@@ -1,4 +1,4 @@
-.PHONY: all build test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz docker-demo demo-check readme readme-check
+.PHONY: all build build-dev test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz docker-demo demo-check readme readme-check
 
 # Binary name
 BINARY=stave
@@ -45,9 +45,13 @@ sync-controls:
 	rm -rf $(CONTROL_DST)/*
 	cp -R $(CONTROL_SRC)/* $(CONTROL_DST)/
 
-## build: Build the binary
+## build: Build the production binary
 build: sync-schemas sync-controls
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY) ./cmd/stave
+
+## build-dev: Build the dev binary with all commands
+build-dev: sync-schemas sync-controls
+	$(GOBUILD) $(LDFLAGS) -o stave-dev ./cmd/stave-dev
 
 ## test: Run all tests
 test: sync-schemas sync-controls
@@ -80,7 +84,7 @@ tidy:
 
 ## clean: Remove build artifacts
 clean:
-	rm -f $(BINARY)
+	rm -f $(BINARY) stave-dev
 	rm -rf bin/
 	rm -f coverage.out coverage.html
 	rm -rf $(SCHEMA_DST)/*

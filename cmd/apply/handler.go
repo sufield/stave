@@ -26,6 +26,10 @@ func runApply(cmd *cobra.Command, _ []string, opts *ApplyOptions) error {
 		return err
 	}
 
+	if opts.DryRun {
+		return runDryRun(cmd, opts)
+	}
+
 	if err = runStrictIntegrityCheck(cmd); err != nil {
 		return err
 	}

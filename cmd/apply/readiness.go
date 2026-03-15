@@ -93,21 +93,18 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 	return rep.ReportPlan(report)
 }
 
-// runPlan bridges the Cobra layer into the Planner/PlanConfig pattern.
-func runPlan(cmd *cobra.Command, opts *PlanOptions) error {
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return err
-	}
-	if _, err = resolver.ResolveSelected(); err != nil {
-		return err
-	}
-
+// runDryRun performs only readiness checks (replacing the removed plan command).
+// It is invoked by apply --dry-run.
+func runDryRun(cmd *cobra.Command, opts *ApplyOptions) error {
 	format, err := compose.ResolveFormatValue(cmd, opts.Format)
 	if err != nil {
 		return err
 	}
 
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
 	engine := projctx.NewInferenceEngine(resolver)
 	ctlDir := fsutil.CleanUserPath(opts.ControlsDir)
 	if !cmd.Flags().Changed("controls") {

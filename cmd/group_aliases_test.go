@@ -19,6 +19,20 @@ func TestGroupedCommandAliasesExist(t *testing.T) {
 		{"ci", "baseline", "check"},
 		{"ci", "gate"},
 		{"ci", "fix-loop"},
+		{"ci", "fix"},
+	}
+
+	for _, path := range paths {
+		if _, _, err := root.Find(path); err != nil {
+			t.Fatalf("expected grouped command path %v to exist: %v", path, err)
+		}
+	}
+}
+
+func TestGroupedCommandAliasesExist_Dev(t *testing.T) {
+	root := GetDevRootCmd()
+
+	paths := [][]string{
 		{"docs"},
 		{"docs", "search"},
 		{"docs", "open"},
@@ -26,7 +40,7 @@ func TestGroupedCommandAliasesExist(t *testing.T) {
 
 	for _, path := range paths {
 		if _, _, err := root.Find(path); err != nil {
-			t.Fatalf("expected grouped command path %v to exist: %v", path, err)
+			t.Fatalf("expected dev command path %v to exist: %v", path, err)
 		}
 	}
 }

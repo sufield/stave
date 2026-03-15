@@ -2,21 +2,21 @@ package cmd
 
 import "github.com/spf13/cobra"
 
-func wireHelpGroups(root *cobra.Command) {
+func wireProdHelpGroups(root *cobra.Command) {
 	root.AddGroup(
 		&cobra.Group{ID: groupGettingStarted, Title: "Getting Started"},
 		&cobra.Group{ID: groupCore, Title: "Control Engine"},
 		&cobra.Group{ID: groupWorkflow, Title: "Workflow & CI"},
 		&cobra.Group{ID: groupArtifacts, Title: "Data & Artifacts"},
-		&cobra.Group{ID: groupUtilities, Title: "Utilities & Help"},
+		&cobra.Group{ID: groupSettings, Title: "Settings"},
 	)
 
 	groupMap := map[string][]string{
-		groupGettingStarted: {"doctor", "init", "generate"},
-		groupCore:           {"validate", "lint", "fmt", "apply", "diagnose", "verify", "explain", "trace"},
-		groupWorkflow:       {"snapshot", "ci", "plan", "context", "status", "security-audit"},
-		groupArtifacts:      {"ingest", "controls", "packs", "enforce", "extractor", "graph", "report"},
-		groupUtilities:      {"docs", "bug-report", "capabilities", "config", "version", "alias", "prompt", "fix", "env", "schemas"},
+		groupGettingStarted: {"init", "generate"},
+		groupCore:           {"validate", "apply", "diagnose", "explain", "verify"},
+		groupWorkflow:       {"ci", "snapshot", "status"},
+		groupArtifacts:      {"ingest", "enforce", "report"},
+		groupSettings:       {"config"},
 	}
 	for groupID, names := range groupMap {
 		for _, name := range names {
@@ -24,6 +24,22 @@ func wireHelpGroups(root *cobra.Command) {
 		}
 	}
 
-	root.SetCompletionCommandGroupID(groupUtilities)
-	root.SetHelpCommandGroupID(groupUtilities)
+	root.SetCompletionCommandGroupID(groupSettings)
+	root.SetHelpCommandGroupID(groupSettings)
+}
+
+func wireDevHelpGroups(root *cobra.Command) {
+	root.AddGroup(
+		&cobra.Group{ID: groupDevTools, Title: "Developer Tools"},
+	)
+
+	devCommands := []string{
+		"doctor", "bug-report", "extractor", "prompt", "trace",
+		"controls", "packs", "graph", "lint", "fmt",
+		"docs", "alias", "schemas", "capabilities", "security-audit",
+		"version",
+	}
+	for _, name := range devCommands {
+		assignCommandGroup(root, name, groupDevTools)
+	}
 }

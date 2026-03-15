@@ -1,16 +1,22 @@
 // Package cmd implements the Stave command-line interface using [cobra.Command].
 //
-// Commands are organized into five groups:
+// The production binary (stave) includes commands organized into four groups:
 //
-// Getting Started: doctor, init, generate
+// Getting Started: init, generate
 //
-// Control Engine: validate, lint, fmt, apply, diagnose, verify, explain, trace
+// Control Engine: validate, apply (--dry-run), diagnose, explain, verify
 //
-// Workflow & CI: snapshot, ci, plan, context, status, security-audit
+// Workflow & CI: ci (baseline/gate/fix-loop/diff/fix), snapshot, status
 //
-// Data & Artifacts: ingest, controls, packs, enforce, extractor, graph, report
+// Data & Artifacts: ingest, enforce, report
 //
-// Utilities & Help: docs, bug-report, capabilities, config, alias, prompt, fix, version, env, schemas
+// Settings: config (get/set/show/delete/explain/context/env)
+//
+// The dev binary (stave-dev) adds a Developer Tools group:
+//
+// Developer Tools: doctor, bug-report, extractor, prompt, trace, controls,
+// packs, graph, lint, fmt, docs, alias, schemas, capabilities, security-audit,
+// version
 //
 // # Exit Codes
 //
