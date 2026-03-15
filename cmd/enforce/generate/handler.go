@@ -6,9 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	outenforce "github.com/sufield/stave/internal/adapters/output/enforcement"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -17,169 +15,6 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-type input struct {
-	Findings []struct {
-		ControlID kernel.ControlID `json:"control_id"`
-		AssetID   asset.ID         `json:"asset_id"`
-	} `json:"findings"`
-}
-
-type result struct {
-	SchemaVersion kernel.Schema     `json:"schema_version"`
-	Kind          kernel.OutputKind `json:"kind"`
-	Mode          Mode              `json:"mode"`
-	DryRun        bool              `json:"dry_run,omitempty"`
-	OutputFile    string            `json:"output_file"`
-	Targets       []string          `json:"targets"`
-}
-
-type runRequest struct {
-	inputPath string
-	outDir    string
-	mode      Mode
-	dryRun    bool
-}
-
-type plan struct {
-	result   result
-	rendered string
-}
-
-func run(cmd *cobra.Command, opts *options) error {
-	out := cmd.OutOrStdout()
-
-	req, err := resolveRunRequest(opts)
-	if err != nil {
-		return fmt.Errorf("resolve request: %w", err)
-	}
-	p, err := buildPlan(req)
-	if err != nil {
-		return fmt.Errorf("build plan: %w", err)
-	}
-	if req.dryRun {
-		return writeDryRun(out, p.result)
-	}
-	if err := writeOutputFile(cmd, p.result.OutputFile, p.rendered); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	return writeResult(out, p.result)
-}
-
-func resolveRunRequest(opts *options) (runRequest, error) {
-	inputPath := fsutil.CleanUserPath(opts.InputPath)
-	outDir := fsutil.CleanUserPath(opts.OutDir)
-	if err := validateInputPath(inputPath); err != nil {
-		return runRequest{}, err
-	}
-	mode, err := ParseMode(strings.ToLower(strings.TrimSpace(opts.Mode)))
-	if err != nil {
-		return runRequest{}, err
-	}
-	return runRequest{
-		inputPath: inputPath,
-		outDir:    outDir,
-		mode:      mode,
-		dryRun:    opts.DryRun,
-	}, nil
-}
-
-func validateInputPath(inputPath string) error {
-	fi, err := os.Stat(inputPath)
-	if err != nil {
-		return fmt.Errorf("--in not accessible: %s: %w", inputPath, err)
-	}
-	if fi.IsDir() {
-		return fmt.Errorf("--in must be a file: %s", inputPath)
-	}
-	return nil
-}
-
-func buildPlan(req runRequest) (plan, error) {
-	in, err := loadInput(req.inputPath)
-	if err != nil {
-		return plan{}, err
-	}
-	refs := make([]outenforce.FindingRef, len(in.Findings))
-	for i, f := range in.Findings {
-		refs[i] = outenforce.FindingRef{
-			ControlID: f.ControlID,
-			AssetID:   f.AssetID,
-		}
-	}
-	targets := outenforce.ExtractBucketTargets(refs)
-	outPath, rendered, err := buildOutput(req.mode, req.outDir, targets)
-	if err != nil {
-		return plan{}, err
-	}
-	return plan{
-		result: result{
-			SchemaVersion: kernel.SchemaEnforce,
-			Kind:          kernel.KindEnforcement,
-			Mode:          req.mode,
-			OutputFile:    outPath,
-			Targets:       targetNames(targets),
-		},
-		rendered: rendered,
-	}, nil
-}
-
-func loadInput(inputPath string) (input, error) {
-	data, err := fsutil.ReadFileLimited(inputPath)
-	if err != nil {
-		return input{}, fmt.Errorf("read input: %w", err)
-	}
-	var in input
-	if err := json.Unmarshal(data, &in); err != nil {
-		return input{}, fmt.Errorf("parse input JSON: %w", err)
-	}
-	return in, nil
-}
-
-func targetNames(targets []outenforce.BucketTarget) []string {
-	names := make([]string, len(targets))
-	for i, target := range targets {
-		names[i] = target.BucketName.Name()
-	}
-	return names
-}
-
-func writeDryRun(w io.Writer, res result) error {
-	res.DryRun = true
-	return writeResult(w, res)
-}
-
-func writeOutputFile(cmd *cobra.Command, outPath, rendered string) error {
-	file, err := cmdutil.PrepareOutputFile(outPath, cmdutil.GetGlobalFlags(cmd))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	if _, err := file.WriteString(rendered); err != nil {
-		return fmt.Errorf("write output file: %w", err)
-	}
-	return nil
-}
-
-func writeResult(w io.Writer, res result) error {
-	return jsonutil.WriteIndented(w, res)
-}
-
-func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (string, string, error) {
-	base := filepath.Join(outDir, "enforcement", "aws")
-	switch mode {
-	case ModePAB:
-		return filepath.Join(base, "pab.tf"), outenforce.RenderPABTerraform(targets), nil
-	case ModeSCP:
-		rendered, err := outenforce.RenderSCP(targets)
-		if err != nil {
-			return "", "", fmt.Errorf("render scp: %w", err)
-		}
-		return filepath.Join(base, "scp.json"), rendered, nil
-	default:
-		return "", "", fmt.Errorf("unsupported mode: %s", mode)
-	}
-}
 
 // Mode represents a validated enforcement mode.
 type Mode string
@@ -205,4 +40,159 @@ func ParseMode(s string) (Mode, error) {
 // String implements fmt.Stringer.
 func (m Mode) String() string {
 	return string(m)
+}
+
+// Config holds the validated parameters for the generation engine.
+type Config struct {
+	InputPath string
+	OutDir    string
+	Mode      Mode
+	DryRun    bool
+	Stdout    io.Writer
+}
+
+// Runner orchestrates reading evaluation data and writing enforcement templates.
+type Runner struct {
+	FileOptions cmdutil.FileOptions
+}
+
+// NewRunner initializes a generate runner.
+func NewRunner() *Runner {
+	return &Runner{}
+}
+
+type input struct {
+	Findings []struct {
+		ControlID kernel.ControlID `json:"control_id"`
+		AssetID   asset.ID         `json:"asset_id"`
+	} `json:"findings"`
+}
+
+type result struct {
+	SchemaVersion kernel.Schema     `json:"schema_version"`
+	Kind          kernel.OutputKind `json:"kind"`
+	Mode          Mode              `json:"mode"`
+	DryRun        bool              `json:"dry_run,omitempty"`
+	OutputFile    string            `json:"output_file"`
+	Targets       []string          `json:"targets"`
+}
+
+type plan struct {
+	result   result
+	rendered string
+}
+
+// Run executes the template generation workflow.
+func (r *Runner) Run(cfg Config) error {
+	p, err := r.buildPlan(cfg)
+	if err != nil {
+		return err
+	}
+	if cfg.DryRun {
+		return r.writeDryRun(cfg.Stdout, p.result)
+	}
+	if err := r.writeOutputFile(p.result.OutputFile, p.rendered); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return r.writeResult(cfg.Stdout, p.result)
+}
+
+func (r *Runner) buildPlan(cfg Config) (plan, error) {
+	if err := validateInputPath(cfg.InputPath); err != nil {
+		return plan{}, err
+	}
+	in, err := loadInput(cfg.InputPath)
+	if err != nil {
+		return plan{}, err
+	}
+	refs := make([]outenforce.FindingRef, len(in.Findings))
+	for i, f := range in.Findings {
+		refs[i] = outenforce.FindingRef{
+			ControlID: f.ControlID,
+			AssetID:   f.AssetID,
+		}
+	}
+	targets := outenforce.ExtractBucketTargets(refs)
+	outPath, rendered, err := buildOutput(cfg.Mode, cfg.OutDir, targets)
+	if err != nil {
+		return plan{}, err
+	}
+	return plan{
+		result: result{
+			SchemaVersion: kernel.SchemaEnforce,
+			Kind:          kernel.KindEnforcement,
+			Mode:          cfg.Mode,
+			OutputFile:    outPath,
+			Targets:       targetNames(targets),
+		},
+		rendered: rendered,
+	}, nil
+}
+
+func validateInputPath(inputPath string) error {
+	fi, err := os.Stat(inputPath)
+	if err != nil {
+		return fmt.Errorf("--in not accessible: %s: %w", inputPath, err)
+	}
+	if fi.IsDir() {
+		return fmt.Errorf("--in must be a file: %s", inputPath)
+	}
+	return nil
+}
+
+func loadInput(inputPath string) (input, error) {
+	data, err := fsutil.ReadFileLimited(inputPath)
+	if err != nil {
+		return input{}, fmt.Errorf("read input: %w", err)
+	}
+	var in input
+	if err := json.Unmarshal(data, &in); err != nil {
+		return input{}, fmt.Errorf("parse input JSON: %w", err)
+	}
+	return in, nil
+}
+
+func targetNames(targets []outenforce.BucketTarget) []string {
+	names := make([]string, len(targets))
+	for i, target := range targets {
+		names[i] = target.BucketName.Name()
+	}
+	return names
+}
+
+func (r *Runner) writeDryRun(w io.Writer, res result) error {
+	res.DryRun = true
+	return r.writeResult(w, res)
+}
+
+func (r *Runner) writeOutputFile(outPath, rendered string) error {
+	file, err := cmdutil.OpenOutputFile(outPath, r.FileOptions)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := file.WriteString(rendered); err != nil {
+		return fmt.Errorf("write output file: %w", err)
+	}
+	return nil
+}
+
+func (r *Runner) writeResult(w io.Writer, res result) error {
+	return jsonutil.WriteIndented(w, res)
+}
+
+func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (string, string, error) {
+	base := filepath.Join(outDir, "enforcement", "aws")
+	switch mode {
+	case ModePAB:
+		return filepath.Join(base, "pab.tf"), outenforce.RenderPABTerraform(targets), nil
+	case ModeSCP:
+		rendered, err := outenforce.RenderSCP(targets)
+		if err != nil {
+			return "", "", fmt.Errorf("render scp: %w", err)
+		}
+		return filepath.Join(base, "scp.json"), rendered, nil
+	default:
+		return "", "", fmt.Errorf("unsupported mode: %s", mode)
+	}
 }
