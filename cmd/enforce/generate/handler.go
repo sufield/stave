@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -83,7 +84,7 @@ type plan struct {
 }
 
 // Run executes the template generation workflow.
-func (r *Runner) Run(cfg Config) error {
+func (r *Runner) Run(_ context.Context, cfg Config) error {
 	p, err := r.buildPlan(cfg)
 	if err != nil {
 		return err
