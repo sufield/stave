@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pruner"
 )
@@ -60,7 +61,7 @@ func (r *PlanRunner) Run(ctx context.Context, cfg PlanConfig) error {
 	return nil
 }
 
-func (r *PlanRunner) writePlanOutput(cfg PlanConfig, plan planOutput) error {
+func (r *PlanRunner) writePlanOutput(cfg PlanConfig, plan pruner.SnapshotPlanOutput) error {
 	if cfg.Quiet {
 		return nil
 	}
@@ -79,7 +80,7 @@ func (r *PlanRunner) writePlanOutput(cfg PlanConfig, plan planOutput) error {
 
 // --- Helpers ---
 
-func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]snapshotFile, error) {
+func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]pruner.SnapshotFile, error) {
 	loader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
@@ -93,17 +94,17 @@ func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]
 	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
 }
 
-func resolvePlanRetentionConfig() (map[string]projconfig.RetentionTierConfig, []projconfig.TierMappingRule, string) {
+func resolvePlanRetentionConfig() (map[string]retention.TierConfig, []retention.MappingRule, string) {
 	cfg, _, _ := projconfig.FindProjectConfigWithPath("")
 	defaultTier := projconfig.Global().RetentionTier()
-	var tiers map[string]projconfig.RetentionTierConfig
-	var tierRules []projconfig.TierMappingRule
+	var tiers map[string]retention.TierConfig
+	var tierRules []retention.MappingRule
 	if cfg != nil {
 		tiers = cfg.RetentionTiers
 		tierRules = cfg.ObservationTierMapping
 	}
 	if tiers == nil {
-		tiers = map[string]projconfig.RetentionTierConfig{
+		tiers = map[string]retention.TierConfig{
 			projconfig.DefaultRetentionTier: {
 				OlderThan: projconfig.DefaultSnapshotRetention,
 				KeepMin:   projconfig.DefaultTierKeepMin,

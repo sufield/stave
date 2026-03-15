@@ -36,11 +36,8 @@ const (
 	CadenceHourly CaptureCadence = "hourly"
 )
 
-// RetentionTierConfig is a type alias for the canonical retention.TierConfig.
-type RetentionTierConfig = retention.TierConfig
-
 // RetentionTiers maps tier names to their retention configuration.
-type RetentionTiers map[string]RetentionTierConfig
+type RetentionTiers map[string]retention.TierConfig
 
 type Config struct {
 	MaxUnsafe                string

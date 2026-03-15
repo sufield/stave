@@ -68,20 +68,10 @@ func ParseGatePolicy(raw string) (GatePolicy, error) {
 	}
 }
 
-// --- Retention Configuration ---
-
-// RetentionTierConfig holds a tier's retention settings.
-// This is a type alias for the canonical retention.TierConfig.
-type RetentionTierConfig = retention.TierConfig
-
 // --- Tier Mapping Logic ---
 
-// TierMappingRule maps a glob pattern to a retention tier.
-// This is a type alias for the canonical retention.MappingRule.
-type TierMappingRule = retention.MappingRule
-
 // ResolveTierForPath identifies the appropriate tier for a file path based on glob rules.
-func ResolveTierForPath(relPath string, rules []TierMappingRule, defaultTier string) string {
+func ResolveTierForPath(relPath string, rules []retention.MappingRule, defaultTier string) string {
 	for _, rule := range rules {
 		if matched, _ := MatchGlob(rule.Pattern, relPath); matched {
 			return rule.Tier
@@ -103,17 +93,17 @@ func MatchGlob(pattern, relPath string) (bool, error) {
 
 // ProjectConfig represents the schema for the stave.yaml file.
 type ProjectConfig struct {
-	MaxUnsafe                string                         `yaml:"max_unsafe"`
-	SnapshotRetention        string                         `yaml:"snapshot_retention"`
-	RetentionTier            string                         `yaml:"default_retention_tier"`
-	RetentionTiers           map[string]RetentionTierConfig `yaml:"snapshot_retention_tiers"`
-	ObservationTierMapping   []TierMappingRule              `yaml:"observation_tier_mapping"`
-	CIFailurePolicy          string                         `yaml:"ci_failure_policy"`
-	CaptureCadence           string                         `yaml:"capture_cadence"`
-	SnapshotFilenameTemplate string                         `yaml:"snapshot_filename_template"`
-	Exceptions               []ExceptionRule                `yaml:"exceptions"`
-	EnabledControlPacks      []string                       `yaml:"enabled_control_packs"`
-	ExcludeControls          []string                       `yaml:"exclude_controls"`
+	MaxUnsafe                string                          `yaml:"max_unsafe"`
+	SnapshotRetention        string                          `yaml:"snapshot_retention"`
+	RetentionTier            string                          `yaml:"default_retention_tier"`
+	RetentionTiers           map[string]retention.TierConfig `yaml:"snapshot_retention_tiers"`
+	ObservationTierMapping   []retention.MappingRule         `yaml:"observation_tier_mapping"`
+	CIFailurePolicy          string                          `yaml:"ci_failure_policy"`
+	CaptureCadence           string                          `yaml:"capture_cadence"`
+	SnapshotFilenameTemplate string                          `yaml:"snapshot_filename_template"`
+	Exceptions               []ExceptionRule                 `yaml:"exceptions"`
+	EnabledControlPacks      []string                        `yaml:"enabled_control_packs"`
+	ExcludeControls          []string                        `yaml:"exclude_controls"`
 }
 
 // ExceptionRule defines a control exception.
@@ -151,7 +141,7 @@ func NormalizeTier(tier string) string {
 }
 
 // SortedTierNames returns the keys of a tier map in alphabetical order.
-func SortedTierNames(tiers map[string]RetentionTierConfig) []string {
+func SortedTierNames(tiers map[string]retention.TierConfig) []string {
 	names := make([]string, 0, len(tiers))
 	for name := range tiers {
 		names = append(names, name)

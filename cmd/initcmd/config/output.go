@@ -10,9 +10,6 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-// showOutput is a convenience alias for the effective config type used in tests.
-type showOutput = configservice.EffectiveConfig
-
 // ShowPresenter handles the formatting and output of the configuration summary.
 type ShowPresenter struct {
 	Stdout io.Writer

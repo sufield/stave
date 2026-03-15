@@ -24,8 +24,8 @@ type CleanupPlan struct {
 	Tier            string
 	OlderThan       time.Duration
 	KeepMin         int
-	AllFiles        []SnapshotFile
-	CandidateFiles  []SnapshotFile
+	AllFiles        []pruner.SnapshotFile
+	CandidateFiles  []pruner.SnapshotFile
 }
 
 // CleanupRunInput holds the fields shared by delete and archive resolved inputs.
@@ -41,14 +41,8 @@ type CleanupRunInput struct {
 	Action    pruner.CleanupAction
 }
 
-// SnapshotFile is an alias for pruner.SnapshotFile.
-type SnapshotFile = pruner.SnapshotFile
-
-// PruningCriteria is an alias for pruner.Criteria.
-type PruningCriteria = pruner.Criteria
-
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
-func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) ([]SnapshotFile, error) {
+func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) ([]pruner.SnapshotFile, error) {
 	loader, err := compose.ActiveProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
@@ -61,7 +55,7 @@ func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) (
 }
 
 // PlanPrune determines which snapshot files should be pruned based on the given criteria.
-func PlanPrune(files []SnapshotFile, criteria PruningCriteria) []SnapshotFile {
+func PlanPrune(files []pruner.SnapshotFile, criteria pruner.Criteria) []pruner.SnapshotFile {
 	items := make([]pruner.Candidate, len(files))
 	for i, sf := range files {
 		items[i] = pruner.Candidate{
@@ -70,7 +64,7 @@ func PlanPrune(files []SnapshotFile, criteria PruningCriteria) []SnapshotFile {
 		}
 	}
 	selected := pruner.PlanPrune(items, criteria)
-	out := make([]SnapshotFile, 0, len(selected))
+	out := make([]pruner.SnapshotFile, 0, len(selected))
 	for _, item := range selected {
 		if item.Index >= 0 && item.Index < len(files) {
 			out = append(out, files[item.Index])

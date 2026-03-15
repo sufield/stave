@@ -10,7 +10,7 @@ import (
 // These are opaque identifiers defined by AWS, NOT HTTP endpoints — Stave never fetches them.
 // See: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#specifying-grantee
 const (
-	AllUsersGranteeURI          = "http://acs.amazonaws.com/groups/global/AllUsers"
+	AllUsersGranteeURI           = "http://acs.amazonaws.com/groups/global/AllUsers"
 	AuthenticatedUsersGranteeURI = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
 )
 
