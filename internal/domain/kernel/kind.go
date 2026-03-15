@@ -31,8 +31,8 @@ const (
 var validOutputKinds = map[OutputKind]struct{}{
 	KindBaseline:          {},
 	KindBaselineCheck:     {},
-	KindCIDiff:      {},
-	KindEnforcement: {},
+	KindCIDiff:            {},
+	KindEnforcement:       {},
 	KindGateCheck:         {},
 	KindObservationDelta:  {},
 	KindRemediationReport: {},

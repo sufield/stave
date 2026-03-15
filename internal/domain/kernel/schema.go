@@ -32,7 +32,7 @@ const (
 	SchemaSecurityAudit            Schema = "security-audit.v1"
 	SchemaSecurityAuditArtifacts   Schema = "security-audit-artifacts.v1"
 	SchemaSecurityAuditRunManifest Schema = "security-audit-run-manifest.v1"
-	SchemaBugReport Schema = "bug-report.v0.1"
+	SchemaBugReport                Schema = "bug-report.v0.1"
 )
 
 // validSchemas enables fast membership checks for validation.
@@ -56,7 +56,7 @@ var validSchemas = map[Schema]struct{}{
 	SchemaSecurityAudit:            {},
 	SchemaSecurityAuditArtifacts:   {},
 	SchemaSecurityAuditRunManifest: {},
-	SchemaBugReport: {},
+	SchemaBugReport:                {},
 }
 
 // IsValid reports whether the schema version is recognized by the system.
