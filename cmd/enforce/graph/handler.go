@@ -7,41 +7,53 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
-type options struct {
-	ControlsDir     string
-	ObservationsDir string
-	Format          string
-	AllowUnknown    bool
-}
+// Format represents a validated graph output format.
+type Format string
 
-func defaultOptions() *options {
-	return &options{
-		ControlsDir:     "controls/s3",
-		ObservationsDir: "observations",
-		Format:          "dot",
-		AllowUnknown:    projconfig.Global().AllowUnknownInput(),
+const (
+	FormatDot  Format = "dot"
+	FormatJSON Format = "json"
+)
+
+// ParseFormat validates and returns a Format value.
+func ParseFormat(s string) (Format, error) {
+	normalized := Format(ui.NormalizeToken(s))
+	switch normalized {
+	case FormatDot, FormatJSON:
+		return normalized, nil
+	default:
+		return "", ui.EnumError("--format", s, []string{string(FormatDot), string(FormatJSON)})
 	}
 }
 
-func (o *options) bindFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
-	cmd.Flags().StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory")
-	cmd.Flags().StringVarP(&o.Format, "format", "f", o.Format, "Output format: dot or json")
-	cmd.Flags().BoolVar(&o.AllowUnknown, "allow-unknown-input", o.AllowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
+// Config holds the validated parameters for graph generation.
+type Config struct {
+	ControlsDir     string
+	ObservationsDir string
+	Format          Format
+	AllowUnknown    bool
+	Sanitizer       *sanitize.Sanitizer
+	Stdout          io.Writer
+}
+
+// Runner orchestrates loading assets and generating coverage graphs.
+type Runner struct{}
+
+// NewRunner initializes a graph runner.
+func NewRunner() *Runner {
+	return &Runner{}
 }
 
 // coverageEdge represents a single control→asset coverage relationship.
@@ -58,60 +70,34 @@ type coverageResult struct {
 	UncoveredAssets []string       `json:"uncovered_assets"`
 }
 
-func runCoverage(cmd *cobra.Command, opts *options) error {
-	input, err := prepareInput(opts)
-	if err != nil {
+// Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
+func (r *Runner) Run(ctx context.Context, cfg Config) error {
+	if err := cmdutil.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
 		return err
 	}
-	controls, latestSnapshot, err := loadArtifacts(cmd.Context(), input)
+	if err := cmdutil.ValidateFlagDir("--observations", cfg.ObservationsDir, "", nil, nil); err != nil {
+		return err
+	}
+
+	controls, latestSnapshot, err := loadArtifacts(ctx, cfg.ControlsDir, cfg.ObservationsDir)
 	if err != nil {
 		return err
 	}
 	result := buildResult(controls, latestSnapshot)
-	return writeResult(cmd.OutOrStdout(), input.format, result, cmdutil.GetGlobalFlags(cmd).GetSanitizer())
+	return writeResult(cfg.Stdout, cfg.Format, result, cfg.Sanitizer)
 }
 
-type input struct {
-	controlsDir     string
-	observationsDir string
-	format          string
-}
-
-func prepareInput(opts *options) (input, error) {
-	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
-	observationsDir := fsutil.CleanUserPath(opts.ObservationsDir)
-	if err := cmdutil.ValidateFlagDir("--controls", controlsDir, "", nil, nil); err != nil {
-		return input{}, err
-	}
-	if err := cmdutil.ValidateFlagDir("--observations", observationsDir, "", nil, nil); err != nil {
-		return input{}, err
-	}
-	if err := validateFormat(opts.Format); err != nil {
-		return input{}, err
-	}
-	return input{controlsDir: controlsDir, observationsDir: observationsDir, format: opts.Format}, nil
-}
-
-func validateFormat(format string) error {
-	switch format {
-	case "dot", "json":
-		return nil
-	default:
-		return fmt.Errorf("invalid --format %q (use dot or json)", format)
-	}
-}
-
-func loadArtifacts(ctx context.Context, input input) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	controls, err := compose.LoadControls(ctx, input.controlsDir)
+func loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
+	controls, err := compose.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
-	snapshots, err := compose.LoadSnapshots(ctx, input.observationsDir)
+	snapshots, err := compose.LoadSnapshots(ctx, observationsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
 	if len(snapshots) == 0 {
-		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", appeval.ErrNoSnapshots, input.observationsDir)
+		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", appeval.ErrNoSnapshots, observationsDir)
 	}
 	return controls, asset.LatestSnapshot(snapshots), nil
 }
@@ -164,11 +150,11 @@ func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string 
 	return lo.Reject(assetIDs, func(rid string, _ int) bool { return coveredAssets[rid] })
 }
 
-func writeResult(w io.Writer, format string, result coverageResult, sanitizer *sanitize.Sanitizer) error {
+func writeResult(w io.Writer, format Format, result coverageResult, sanitizer *sanitize.Sanitizer) error {
 	switch format {
-	case "dot":
+	case FormatDot:
 		return writeDOT(w, result, sanitizer)
-	case "json":
+	case FormatJSON:
 		return writeJSON(w, result, sanitizer)
 	default:
 		return nil

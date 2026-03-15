@@ -4,11 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func NewCmd() *cobra.Command {
-	opts := defaultOptions()
-
 	graphCmd := &cobra.Command{
 		Use:   "graph",
 		Short: "Visualize control and asset relationships",
@@ -16,7 +15,19 @@ func NewCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	coverageCmd := &cobra.Command{
+	graphCmd.AddCommand(newCoverageCmd())
+	return graphCmd
+}
+
+func newCoverageCmd() *cobra.Command {
+	var (
+		ctlDir       string
+		obsDir       string
+		formatRaw    string
+		allowUnknown bool
+	)
+
+	cmd := &cobra.Command{
 		Use:   "coverage",
 		Short: "Show which controls cover which assets",
 		Long: `Coverage outputs a graph showing control→asset edges.
@@ -43,14 +54,36 @@ Examples:
 
   # Sanitize asset identifiers
   stave graph coverage --controls ./controls --observations ./obs --sanitize` + metadata.OfflineHelpSuffix,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return runCoverage(cmd, opts) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			format, err := ParseFormat(formatRaw)
+			if err != nil {
+				return err
+			}
+
+			gf := cmdutil.GetGlobalFlags(cmd)
+			runner := NewRunner()
+
+			return runner.Run(cmd.Context(), Config{
+				ControlsDir:     fsutil.CleanUserPath(ctlDir),
+				ObservationsDir: fsutil.CleanUserPath(obsDir),
+				Format:          format,
+				AllowUnknown:    allowUnknown,
+				Sanitizer:       gf.GetSanitizer(),
+				Stdout:          cmd.OutOrStdout(),
+			})
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	opts.bindFlags(coverageCmd)
-	graphCmd.AddCommand(coverageCmd)
-	_ = coverageCmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("dot", "json"))
-	return graphCmd
+	f := cmd.Flags()
+	f.StringVarP(&ctlDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	f.StringVarP(&obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
+	f.StringVarP(&formatRaw, "format", "f", "dot", "Output format: dot or json")
+	f.BoolVar(&allowUnknown, "allow-unknown-input", allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
+
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("dot", "json"))
+
+	return cmd
 }
