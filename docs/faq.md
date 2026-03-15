@@ -207,6 +207,31 @@ The most robust defense is ensuring developer credentials cannot modify producti
 
 Break-glass debugging. If a production evaluation fails and logs don't explain why, a senior engineer may need `stave-dev trace` or `stave-dev diagnose` against production snapshots to identify the exact predicate logic that failed. The read-only warning acknowledges this is happening without blocking it.
 
+## Why is there a separate `stave-dev` binary?
+
+The dev binary provides tools for **authoring, debugging, and inspecting** the control evaluation system itself — things an operator running evaluations in CI never needs.
+
+**Control authoring** — `controls list`, `packs show`, `lint`, `fmt`, `graph`. You need these when writing new controls or modifying existing ones. A production pipeline consumes controls; it doesn't author them.
+
+**Deep debugging** — `trace`, `prompt`. When a control produces an unexpected finding, `trace` walks you through the predicate evaluation step-by-step for a single asset. `prompt` generates an LLM-ready context from results. These are investigation tools, not operational ones.
+
+**Security posture** — `security-audit`, `bug-report`. Security-audit generates SBOM, vulnerability scans, and compliance matrices for the tool itself. Bug-report collects a sanitized diagnostic bundle. Both produce artifacts about Stave, not about your infrastructure.
+
+**Introspection** — `schemas`, `capabilities`, `version` (verbose), `doctor`. These answer "what does this build of Stave support?" — schema versions, source types, pack metadata, local environment readiness. Useful when onboarding, upgrading, or filing issues.
+
+**Extractor development** — `extractor scaffold`, `extractor validate`. For building custom observation extractors for new source types beyond AWS S3.
+
+**Productivity** — `alias`, `docs search`, `docs open`. Developer conveniences that have no place in an automated pipeline.
+
+**Destructive maintenance** — `snapshot prune`. Permanently deletes observation snapshots. This is the only write-destructive dev command and is blocked from running against production environments.
+
+**Why a separate binary instead of hidden flags or feature gates?** The separation is at the compile level. The production binary does not contain the code for these commands. There is no `--enable-dev` flag to discover, no environment variable to flip, no config to override. The attack surface, the help output, and the dependency tree are all smaller by construction. A compromised CI runner cannot use `stave` to delete evidence, exfiltrate diagnostics, or run extractors against production APIs — because those capabilities do not exist in the binary.
+
+- stave (production) — run evaluations safely. Validate, apply, diagnose, verify, enforce, report, CI gates, snapshot archiving, config. Everything an automated pipeline or operator needs to detect and remediate unsafe   
+  infrastructure. Cannot delete evidence, cannot introspect the tool itself, cannot author controls.                                                                                                                           
+  - stave-dev (developer) — build and debug the evaluation system. Author controls, trace predicate logic, lint YAML, visualize graphs, scaffold extractors, inspect schemas, generate security audits of Stave itself. Used at
+   a workstation, not in a pipeline. Blocked from production environments by default. 
+
 ## What does Stave *not* do?
 
 - **No live scanning** — it does not query cloud APIs during evaluation.
