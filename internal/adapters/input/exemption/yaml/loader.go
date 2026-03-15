@@ -33,8 +33,3 @@ func (l *Loader) Load(path string) (*policy.ExemptionConfig, error) {
 
 	return &cfg, nil
 }
-
-// LoadExemptionConfig is a package-level helper for one-off loading.
-func LoadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
-	return NewLoader().Load(path)
-}

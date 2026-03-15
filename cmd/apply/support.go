@@ -29,7 +29,7 @@ func LoadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, nil
 	}
-	cfg, err := exemptionyaml.LoadExemptionConfig(path)
+	cfg, err := exemptionyaml.NewLoader().Load(path)
 	if err != nil {
 		return nil, fmt.Errorf("loading exemptions from %q: %w", path, err)
 	}
