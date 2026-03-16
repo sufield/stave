@@ -1,30 +1,8 @@
 package policy
 
 import (
-	"strings"
-
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 )
-
-var evaluatorActionMap = map[string]risk.Permission{
-	policyWildcard:                 risk.PermFullControl,
-	policyS3Wildcard:               risk.PermFullControl,
-	policyActionGetObject:          risk.PermRead,
-	policyActionPutObject:          risk.PermWrite,
-	policyActionListBucket:         risk.PermList,
-	policyActionGetBucketACL:       risk.PermAdminRead,
-	policyActionGetObjectACL:       risk.PermAdminRead,
-	policyActionPutBucketACL:       risk.PermAdminWrite,
-	policyActionPutObjectACL:       risk.PermAdminWrite,
-	policyActionDeleteObject:       risk.PermDelete,
-	policyActionDeleteBucket:       risk.PermDelete,
-	policyActionListBucketVersions: risk.PermList,
-}
-
-var evaluatorPrefixRules = []risk.PrefixRule{
-	{Prefix: policyActionPrefixPut, Perm: risk.PermWrite},
-	{Prefix: policyActionPrefixDelete, Perm: risk.PermDelete},
-}
 
 // Evaluator encapsulates policy scoring rules.
 type Evaluator struct {
@@ -50,8 +28,8 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 			continue
 		}
 
-		actions := normalizeActions([]string(stmt.Action))
-		perms := risk.AnalyzeActions(actions, evaluatorActionMap, evaluatorPrefixRules)
+		actions := risk.NormalizeActions([]string(stmt.Action))
+		perms := risk.AnalyzeActions(actions, risk.S3ActionMap, risk.S3PrefixRules)
 		report.Permissions |= perms
 
 		isPublic, isAuth := classifyPolicyPrincipal(stmt.principalAny())
@@ -72,12 +50,4 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 
 func classifyPolicyPrincipal(principal any) (isPublic bool, isAuthenticated bool) {
 	return IsPublicPrincipal(principal), isAuthenticatedPrincipal(principal)
-}
-
-func normalizeActions(actions []string) []string {
-	out := make([]string, len(actions))
-	for i, a := range actions {
-		out[i] = strings.ToLower(strings.TrimSpace(a))
-	}
-	return out
 }

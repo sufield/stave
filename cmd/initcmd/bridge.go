@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/spf13/cobra"
+	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -17,12 +18,12 @@ import (
 
 // Constant aliases — shorthand for scaffold templates and tests.
 const (
-	defaultMaxUnsafeDuration = projconfig.DefaultMaxUnsafeDuration
-	defaultSnapshotRetention = projconfig.DefaultSnapshotRetention
-	defaultRetentionTier     = projconfig.DefaultRetentionTier
-	defaultTierKeepMin       = projconfig.DefaultTierKeepMin
-	defaultCIFailurePolicy   = string(projconfig.GatePolicyAny)
-	projectConfigFile        = projconfig.ProjectConfigFile
+	defaultMaxUnsafeDuration = appconfig.DefaultMaxUnsafeDuration
+	defaultSnapshotRetention = appconfig.DefaultSnapshotRetention
+	defaultRetentionTier     = appconfig.DefaultRetentionTier
+	defaultTierKeepMin       = appconfig.DefaultTierKeepMin
+	defaultCIFailurePolicy   = string(appconfig.GatePolicyAny)
+	projectConfigFile        = appconfig.ProjectConfigFile
 
 	profileAWSS3 = "aws-s3"
 

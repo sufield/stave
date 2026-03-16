@@ -6,32 +6,33 @@ import (
 	"io"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/catalog"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func (r *ListRunner) formatOutput(cfg ListConfig, rows []ControlRow) error {
+func formatOutput(w io.Writer, cfg catalog.ListConfig, rows []catalog.ControlRow) error {
 	format := strings.ToLower(strings.TrimSpace(cfg.Format))
 
 	if format == "json" {
-		return jsonutil.WriteIndented(cfg.Stdout, rows)
+		return jsonutil.WriteIndented(w, rows)
 	}
 
-	cols, err := parseColumns(cfg.Columns)
+	cols, err := catalog.ParseColumns(cfg.Columns)
 	if err != nil {
 		return err
 	}
 
 	switch format {
 	case "csv":
-		return r.writeCSV(cfg.Stdout, rows, cols, !cfg.NoHeaders)
+		return writeCSV(w, rows, cols, !cfg.NoHeaders)
 	case "text":
-		return r.writeTable(cfg.Stdout, rows, cols, !cfg.NoHeaders)
+		return writeTable(w, rows, cols, !cfg.NoHeaders)
 	default:
 		return fmt.Errorf("unsupported --format %q (use: text, json, csv)", cfg.Format)
 	}
 }
 
-func (r *ListRunner) writeCSV(w io.Writer, rows []ControlRow, cols []string, header bool) error {
+func writeCSV(w io.Writer, rows []catalog.ControlRow, cols []string, header bool) error {
 	cw := csv.NewWriter(w)
 	if header {
 		if err := cw.Write(cols); err != nil {
@@ -41,7 +42,7 @@ func (r *ListRunner) writeCSV(w io.Writer, rows []ControlRow, cols []string, hea
 	for _, row := range rows {
 		record := make([]string, len(cols))
 		for i, c := range cols {
-			record[i] = fieldValue(row, c)
+			record[i] = catalog.FieldValue(row, c)
 		}
 		if err := cw.Write(record); err != nil {
 			return err
@@ -51,7 +52,7 @@ func (r *ListRunner) writeCSV(w io.Writer, rows []ControlRow, cols []string, hea
 	return cw.Error()
 }
 
-func (r *ListRunner) writeTable(w io.Writer, rows []ControlRow, cols []string, header bool) error {
+func writeTable(w io.Writer, rows []catalog.ControlRow, cols []string, header bool) error {
 	if len(rows) == 0 {
 		_, err := fmt.Fprintln(w, "No controls found.")
 		return err
@@ -63,7 +64,7 @@ func (r *ListRunner) writeTable(w io.Writer, rows []ControlRow, cols []string, h
 	}
 	for _, row := range rows {
 		for i, c := range cols {
-			if l := len(fieldValue(row, c)); l > widths[i] {
+			if l := len(catalog.FieldValue(row, c)); l > widths[i] {
 				widths[i] = l
 			}
 		}
@@ -93,7 +94,7 @@ func (r *ListRunner) writeTable(w io.Writer, rows []ControlRow, cols []string, h
 	for _, row := range rows {
 		vals := make([]string, len(cols))
 		for i, c := range cols {
-			vals[i] = fieldValue(row, c)
+			vals[i] = catalog.FieldValue(row, c)
 		}
 		if err := printLine(vals); err != nil {
 			return err

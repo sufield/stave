@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/enforce"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/state"
@@ -152,7 +153,7 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 	if len(args) != 0 {
 		return
 	}
-	if _, found := projconfig.FindNearestFile(projconfig.ProjectConfigFile); !found {
+	if _, found := projconfig.FindNearestFile(appconfig.ProjectConfigFile); !found {
 		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -53,7 +54,7 @@ func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 
 // ToConfig converts raw CLI options into a validated Config.
 func (o *gateOptions) ToConfig(cmd *cobra.Command) (Config, error) {
-	policy, err := projconfig.ParseGatePolicy(o.PolicyRaw)
+	policy, err := appconfig.ParseGatePolicy(o.PolicyRaw)
 	if err != nil {
 		return Config{}, err
 	}
@@ -69,7 +70,7 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 	}
 
 	var maxUnsafeDur time.Duration
-	if policy == projconfig.GatePolicyOverdue {
+	if policy == appconfig.GatePolicyOverdue {
 		maxUnsafeDur, err = timeutil.ParseDurationFlag(o.MaxUnsafe, "--max-unsafe")
 		if err != nil {
 			return Config{}, err

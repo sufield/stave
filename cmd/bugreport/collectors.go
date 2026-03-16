@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/platform/logging"
 )
@@ -147,7 +148,7 @@ func isSensitiveEnvKey(key string) bool {
 }
 
 func findConfigPath() (string, bool) {
-	path, ok := projconfig.FindNearestFile(projconfig.ProjectConfigFile)
+	path, ok := projconfig.FindNearestFile(appconfig.ProjectConfigFile)
 	if !ok || strings.TrimSpace(path) == "" {
 		return "", false
 	}

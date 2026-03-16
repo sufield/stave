@@ -5,7 +5,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -53,9 +53,9 @@ Examples:
 
 func registerCompletions(cmd *cobra.Command) {
 	_ = cmd.RegisterFlagCompletionFunc("policy", cmdutil.CompleteFixed(
-		string(projconfig.GatePolicyAny),
-		string(projconfig.GatePolicyNew),
-		string(projconfig.GatePolicyOverdue),
+		string(appconfig.GatePolicyAny),
+		string(appconfig.GatePolicyNew),
+		string(appconfig.GatePolicyOverdue),
 	))
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 }

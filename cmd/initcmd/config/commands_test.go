@@ -8,7 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
+
 	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/env"
 )
@@ -47,7 +48,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 	temp := t.TempDir()
 	chdirForConfigTest(t, temp)
 
-	cfgPath := filepath.Join(temp, projconfig.ProjectConfigFile)
+	cfgPath := filepath.Join(temp, appconfig.ProjectConfigFile)
 	cfg := "max_unsafe: 96h\nsnapshot_retention: 45d\ndefault_retention_tier: non_critical\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n  non_critical:\n    older_than: 14d\nci_failure_policy: fail_on_new_violation\n"
 	if err := os.WriteFile(cfgPath, []byte(cfg), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -70,13 +71,13 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 		t.Fatalf("decode output: %v\noutput=%s", err, buf.String())
 	}
 	configBase := filepath.Base(out.ConfigFile)
-	if configBase != projconfig.ProjectConfigFile {
-		t.Fatalf("config file base=%q want %q", configBase, projconfig.ProjectConfigFile)
+	if configBase != appconfig.ProjectConfigFile {
+		t.Fatalf("config file base=%q want %q", configBase, appconfig.ProjectConfigFile)
 	}
 	if out.MaxUnsafe.Value != "96h" {
 		t.Fatalf("max_unsafe=%q want 96h", out.MaxUnsafe.Value)
 	}
-	if !strings.HasSuffix(out.MaxUnsafe.Source, projconfig.ProjectConfigFile+":max_unsafe") {
+	if !strings.HasSuffix(out.MaxUnsafe.Source, appconfig.ProjectConfigFile+":max_unsafe") {
 		t.Fatalf("max_unsafe source=%q", out.MaxUnsafe.Source)
 	}
 	if out.SnapshotRetention.Value != "7d" {
@@ -127,7 +128,7 @@ func TestConfigSetRetentionTierKey(t *testing.T) {
 		t.Fatalf("config set failed: %v", err)
 	}
 
-	cfgBytes, err := os.ReadFile(filepath.Join(temp, projconfig.ProjectConfigFile))
+	cfgBytes, err := os.ReadFile(filepath.Join(temp, appconfig.ProjectConfigFile))
 	if err != nil {
 		t.Fatalf("read config: %v", err)
 	}

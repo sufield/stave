@@ -1,4 +1,4 @@
-package projconfig
+package config
 
 import (
 	"path/filepath"
@@ -15,17 +15,17 @@ func toResolvedField[T any](v Value[T]) configservice.ResolvedField {
 // BuildEffectiveConfig assembles the fully resolved configuration with provenance,
 // suitable for `stave config show` output.
 func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
-	retTier := e.resolveRetentionTier()
+	retTier := e.ResolveRetentionTier()
 	out := configservice.EffectiveConfig{
 		DefaultRetentionTier:     toResolvedField(retTier),
-		MaxUnsafe:                toResolvedField(e.resolveMaxUnsafe()),
-		SnapshotRetention:        toResolvedField(e.resolveSnapshotRetention(retTier.Value)),
-		CIFailurePolicy:          toResolvedField(e.resolveCIFailurePolicy()),
-		CLIOutput:                toResolvedField(e.resolveCLIOutput()),
-		CLIQuiet:                 toResolvedField(e.resolveCLIQuiet()),
-		CLISanitize:              toResolvedField(e.resolveCLISanitize()),
-		CLIPathMode:              toResolvedField(e.resolveCLIPathMode()),
-		CLIAllowUnknownInput:     toResolvedField(e.resolveCLIAllowUnknownInput()),
+		MaxUnsafe:                toResolvedField(e.ResolveMaxUnsafe()),
+		SnapshotRetention:        toResolvedField(e.ResolveSnapshotRetention(retTier.Value)),
+		CIFailurePolicy:          toResolvedField(e.ResolveCIFailurePolicy()),
+		CLIOutput:                toResolvedField(e.ResolveCLIOutput()),
+		CLIQuiet:                 toResolvedField(e.ResolveCLIQuiet()),
+		CLISanitize:              toResolvedField(e.ResolveCLISanitize()),
+		CLIPathMode:              toResolvedField(e.ResolveCLIPathMode()),
+		CLIAllowUnknownInput:     toResolvedField(e.ResolveCLIAllowUnknownInput()),
 		DefinedRetentionTiers:    e.buildDefinedRetentionTiers(),
 		EffectiveRetentionByTier: map[string]configservice.ResolvedField{},
 	}
@@ -37,7 +37,7 @@ func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
 		out.UserConfigFile = e.UserPath
 	}
 	for tier := range out.DefinedRetentionTiers {
-		out.EffectiveRetentionByTier[tier] = toResolvedField(e.resolveSnapshotRetention(tier))
+		out.EffectiveRetentionByTier[tier] = toResolvedField(e.ResolveSnapshotRetention(tier))
 	}
 	return out
 }

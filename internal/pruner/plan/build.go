@@ -12,22 +12,24 @@ import (
 	"github.com/sufield/stave/internal/pruner"
 )
 
-// PlanAction represents the action to take on a snapshot in a retention plan.
-type PlanAction string
+// PlanAction is an alias for the domain retention PlanAction type.
+type PlanAction = retention.PlanAction
 
+// Action constants re-exported from domain retention.
 const (
-	ActionKeep    PlanAction = "KEEP"
-	ActionPrune   PlanAction = "PRUNE"
-	ActionArchive PlanAction = "ARCHIVE"
+	ActionKeep    = retention.ActionKeep
+	ActionPrune   = retention.ActionPrune
+	ActionArchive = retention.ActionArchive
 )
 
-// PlanMode represents the execution mode of a snapshot retention plan.
-type PlanMode string
+// PlanMode is an alias for the domain retention PlanMode type.
+type PlanMode = retention.PlanMode
 
+// Mode constants re-exported from domain retention.
 const (
-	ModePreview PlanMode = "PREVIEW"
-	ModePrune   PlanMode = "PRUNE"
-	ModeArchive PlanMode = "ARCHIVE"
+	ModePreview = retention.ModePreview
+	ModePrune   = retention.ModePrune
+	ModeArchive = retention.ModeArchive
 )
 
 // SnapshotPlanFile is one file row in the generated snapshot plan.

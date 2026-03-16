@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/enforce/shared"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
@@ -19,7 +19,7 @@ import (
 
 // Config defines the parameters for enforcing a CI failure policy.
 type Config struct {
-	Policy          projconfig.GatePolicy
+	Policy          appconfig.GatePolicy
 	InPath          string
 	BaselinePath    string
 	ControlsDir     string
@@ -51,7 +51,7 @@ type Result struct {
 	SchemaVersion kernel.Schema         `json:"schema_version"`
 	Kind          kernel.OutputKind     `json:"kind"`
 	CheckedAt     time.Time             `json:"checked_at"`
-	Policy        projconfig.GatePolicy `json:"policy"`
+	Policy        appconfig.GatePolicy `json:"policy"`
 	Pass          bool                  `json:"pass"`
 	Reason        string                `json:"reason"`
 
@@ -73,11 +73,11 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	)
 
 	switch cfg.Policy {
-	case projconfig.GatePolicyAny:
+	case appconfig.GatePolicyAny:
 		res, err = r.runPolicyAny(cfg)
-	case projconfig.GatePolicyNew:
+	case appconfig.GatePolicyNew:
 		res, err = r.runPolicyNew(cfg)
-	case projconfig.GatePolicyOverdue:
+	case appconfig.GatePolicyOverdue:
 		res, err = r.runPolicyOverdue(ctx, cfg)
 	default:
 		return fmt.Errorf("unsupported gate policy: %q", cfg.Policy)
@@ -117,7 +117,7 @@ func (r *Runner) runPolicyAny(cfg Config) (Result, error) {
 		SchemaVersion:     kernel.SchemaGate,
 		Kind:              kernel.KindGateCheck,
 		CheckedAt:         cfg.Clock.Now().UTC(),
-		Policy:            projconfig.GatePolicyAny,
+		Policy:            appconfig.GatePolicyAny,
 		Pass:              pass,
 		Reason:            reason,
 		EvaluationPath:    cfg.InPath,
@@ -145,7 +145,7 @@ func (r *Runner) runPolicyNew(cfg Config) (Result, error) {
 		SchemaVersion:     kernel.SchemaGate,
 		Kind:              kernel.KindGateCheck,
 		CheckedAt:         cfg.Clock.Now().UTC(),
-		Policy:            projconfig.GatePolicyNew,
+		Policy:            appconfig.GatePolicyNew,
 		Pass:              pass,
 		Reason:            reason,
 		EvaluationPath:    cfg.InPath,
@@ -178,7 +178,7 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, erro
 		SchemaVersion:    kernel.SchemaGate,
 		Kind:             kernel.KindGateCheck,
 		CheckedAt:        now,
-		Policy:           projconfig.GatePolicyOverdue,
+		Policy:           appconfig.GatePolicyOverdue,
 		Pass:             pass,
 		Reason:           reason,
 		ControlsPath:     cfg.ControlsDir,

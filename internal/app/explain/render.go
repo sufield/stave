@@ -1,4 +1,4 @@
-package diagnose
+package explain
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func writeExplainText(w io.Writer, out ExplainResult) error {
+// WriteExplainText renders the explain result as human-readable text.
+func WriteExplainText(w io.Writer, out ExplainResult) error {
 	if err := writeExplainHeader(w, out); err != nil {
 		return err
 	}

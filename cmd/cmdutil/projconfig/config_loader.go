@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
@@ -38,7 +39,7 @@ func NewResolver() (*Resolver, error) {
 
 // FindProjectConfig searches for the project configuration file by walking up
 // the directory tree starting from the resolver's WorkingDir.
-func (r *Resolver) FindProjectConfig(contextPath string) (*ProjectConfig, string, error) {
+func (r *Resolver) FindProjectConfig(contextPath string) (*appconfig.ProjectConfig, string, error) {
 	// 1. Priority: Explicit context path (passed from CLI layer)
 	if contextPath != "" {
 		cfg, err := r.loadProjectConfig(contextPath)
@@ -48,9 +49,9 @@ func (r *Resolver) FindProjectConfig(contextPath string) (*ProjectConfig, string
 	}
 
 	// 2. Secondary: Walk up from working directory
-	path, ok := r.NearestFile(ProjectConfigFile)
+	path, ok := r.NearestFile(appconfig.ProjectConfigFile)
 	if !ok {
-		return nil, "", fmt.Errorf("%w: %s", ErrConfigNotFound, ProjectConfigFile)
+		return nil, "", fmt.Errorf("%w: %s", ErrConfigNotFound, appconfig.ProjectConfigFile)
 	}
 
 	cfg, err := r.loadProjectConfig(path)
@@ -78,12 +79,12 @@ func (r *Resolver) NearestFile(filename string) (string, bool) {
 	return "", false
 }
 
-func (r *Resolver) loadProjectConfig(path string) (*ProjectConfig, error) {
+func (r *Resolver) loadProjectConfig(path string) (*appconfig.ProjectConfig, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read project config: %w", err)
 	}
-	var cfg ProjectConfig
+	var cfg appconfig.ProjectConfig
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse project config at %q: %w", path, err)
 	}
@@ -104,7 +105,7 @@ func (r *Resolver) UserConfigPath() (string, error) {
 }
 
 // LoadUserConfig finds and parses the user's global configuration.
-func (r *Resolver) LoadUserConfig() (*UserConfig, string, error) {
+func (r *Resolver) LoadUserConfig() (*appconfig.UserConfig, string, error) {
 	path, err := r.UserConfigPath()
 	if err != nil {
 		return nil, "", err
@@ -113,12 +114,12 @@ func (r *Resolver) LoadUserConfig() (*UserConfig, string, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &UserConfig{}, path, nil
+			return &appconfig.UserConfig{}, path, nil
 		}
 		return nil, path, fmt.Errorf("read user config: %w", err)
 	}
 
-	var cfg UserConfig
+	var cfg appconfig.UserConfig
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, path, fmt.Errorf("parse user config at %q: %w", path, err)
 	}
@@ -126,7 +127,7 @@ func (r *Resolver) LoadUserConfig() (*UserConfig, string, error) {
 }
 
 // WriteUserConfig persists the user configuration to disk.
-func (r *Resolver) WriteUserConfig(cfg *UserConfig, path string) error {
+func (r *Resolver) WriteUserConfig(cfg *appconfig.UserConfig, path string) error {
 	outBytes, err := yaml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshal user config: %w", err)
@@ -162,14 +163,14 @@ func FindNearestFile(filename string) (string, bool) {
 }
 
 // FindProjectConfig returns the nearest project config.
-func FindProjectConfig() (*ProjectConfig, bool) {
+func FindProjectConfig() (*appconfig.ProjectConfig, bool) {
 	cfg, _, ok := FindProjectConfigWithPath("")
 	return cfg, ok
 }
 
 // FindProjectConfigWithPath returns the config, its path, and whether found.
 // If contextPath is non-empty, it is checked first before walking up from cwd.
-func FindProjectConfigWithPath(contextPath string) (*ProjectConfig, string, bool) {
+func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, string, bool) {
 	r := defaultResolver()
 	if r == nil {
 		return nil, "", false
@@ -182,7 +183,7 @@ func FindProjectConfigWithPath(contextPath string) (*ProjectConfig, string, bool
 }
 
 // FindUserConfigWithPath returns the user config, path, and whether found.
-func FindUserConfigWithPath() (*UserConfig, string, bool) {
+func FindUserConfigWithPath() (*appconfig.UserConfig, string, bool) {
 	r := defaultResolver()
 	if r == nil {
 		return nil, "", false

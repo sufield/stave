@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/env"
 )
 
@@ -16,8 +17,8 @@ func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
 	chdirForTest(t, tmp)
 
 	got := projconfig.Global().MaxUnsafe()
-	if got != projconfig.DefaultMaxUnsafeDuration {
-		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, projconfig.DefaultMaxUnsafeDuration)
+	if got != appconfig.DefaultMaxUnsafeDuration {
+		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, appconfig.DefaultMaxUnsafeDuration)
 	}
 }
 
@@ -25,7 +26,7 @@ func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
 	t.Setenv(env.MaxUnsafe.Name, "24h")
 	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
-	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("max_unsafe: 48h\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, appconfig.ProjectConfigFile), []byte("max_unsafe: 48h\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, tmp)
@@ -45,7 +46,7 @@ func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
 	if err := os.MkdirAll(nested, 0o755); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, projconfig.ProjectConfigFile), []byte("max_unsafe: 36h\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, appconfig.ProjectConfigFile), []byte("max_unsafe: 36h\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, nested)
@@ -79,15 +80,15 @@ func TestResolveSnapshotRetentionDefault_Fallback(t *testing.T) {
 	chdirForTest(t, tmp)
 
 	got := projconfig.Global().SnapshotRetention()
-	if got != projconfig.DefaultSnapshotRetention {
-		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, projconfig.DefaultSnapshotRetention)
+	if got != appconfig.DefaultSnapshotRetention {
+		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, appconfig.DefaultSnapshotRetention)
 	}
 }
 
 func TestResolveSnapshotRetentionDefault_EnvOverridesProjectFile(t *testing.T) {
 	t.Setenv(env.SnapshotRetention.Name, "10d")
 	tmp := t.TempDir()
-	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("snapshot_retention: 45d\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, appconfig.ProjectConfigFile), []byte("snapshot_retention: 45d\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, tmp)
@@ -106,7 +107,7 @@ func TestResolveSnapshotRetentionDefault_ProjectFile(t *testing.T) {
 	if err := os.MkdirAll(nested, 0o755); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, projconfig.ProjectConfigFile), []byte("snapshot_retention: 21d\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, appconfig.ProjectConfigFile), []byte("snapshot_retention: 21d\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, nested)
@@ -139,22 +140,22 @@ func TestResolveCIFailurePolicyDefault_Fallback(t *testing.T) {
 	chdirForTest(t, tmp)
 
 	got := projconfig.Global().CIFailurePolicy()
-	if got != projconfig.GatePolicyAny {
-		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyAny)
+	if got != appconfig.GatePolicyAny {
+		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, appconfig.GatePolicyAny)
 	}
 }
 
 func TestResolveCIFailurePolicyDefault_EnvOverridesProjectFile(t *testing.T) {
-	t.Setenv(env.CIFailurePolicy.Name, string(projconfig.GatePolicyOverdue))
+	t.Setenv(env.CIFailurePolicy.Name, string(appconfig.GatePolicyOverdue))
 	tmp := t.TempDir()
-	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(projconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, appconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(appconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, tmp)
 
 	got := projconfig.Global().CIFailurePolicy()
-	if got != projconfig.GatePolicyOverdue {
-		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyOverdue)
+	if got != appconfig.GatePolicyOverdue {
+		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, appconfig.GatePolicyOverdue)
 	}
 }
 
@@ -166,14 +167,14 @@ func TestResolveCIFailurePolicyDefault_ProjectFile(t *testing.T) {
 	if err := os.MkdirAll(nested, 0o755); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(root, projconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(projconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, appconfig.ProjectConfigFile), []byte("ci_failure_policy: "+string(appconfig.GatePolicyNew)+"\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, nested)
 
 	got := projconfig.Global().CIFailurePolicy()
-	if got != projconfig.GatePolicyNew {
-		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyNew)
+	if got != appconfig.GatePolicyNew {
+		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, appconfig.GatePolicyNew)
 	}
 }
 
@@ -182,14 +183,14 @@ func TestResolveCIFailurePolicyDefault_UserConfigFallback(t *testing.T) {
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
 	t.Setenv(env.UserConfig.Name, userCfgPath)
-	if err := os.WriteFile(userCfgPath, []byte("ci_failure_policy: "+string(projconfig.GatePolicyOverdue)+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(userCfgPath, []byte("ci_failure_policy: "+string(appconfig.GatePolicyOverdue)+"\n"), 0o644); err != nil {
 		t.Fatalf("write user config file: %v", err)
 	}
 	chdirForTest(t, tmp)
 
 	got := projconfig.Global().CIFailurePolicy()
-	if got != projconfig.GatePolicyOverdue {
-		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, projconfig.GatePolicyOverdue)
+	if got != appconfig.GatePolicyOverdue {
+		t.Fatalf("ResolveCIFailurePolicyDefault() = %q, want %q", got, appconfig.GatePolicyOverdue)
 	}
 }
 
@@ -227,8 +228,8 @@ func TestResolveRetentionTierDefault_Fallback(t *testing.T) {
 	chdirForTest(t, tmp)
 
 	got := projconfig.Global().RetentionTier()
-	if got != projconfig.DefaultRetentionTier {
-		t.Fatalf("ResolveRetentionTierDefault() = %q, want %q", got, projconfig.DefaultRetentionTier)
+	if got != appconfig.DefaultRetentionTier {
+		t.Fatalf("ResolveRetentionTierDefault() = %q, want %q", got, appconfig.DefaultRetentionTier)
 	}
 }
 
@@ -237,7 +238,7 @@ func TestResolveSnapshotRetentionForTier_FromProjectTiers(t *testing.T) {
 	t.Setenv(env.RetentionTier.Name, "")
 	tmp := t.TempDir()
 	cfg := "snapshot_retention: 30d\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n  non_critical:\n    older_than: 14d\n"
-	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte(cfg), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, appconfig.ProjectConfigFile), []byte(cfg), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, tmp)
@@ -253,7 +254,7 @@ func TestResolveSnapshotRetentionForTier_FallsBackToGlobal(t *testing.T) {
 	t.Setenv(env.RetentionTier.Name, "")
 	tmp := t.TempDir()
 	cfg := "snapshot_retention: 45d\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n"
-	if err := os.WriteFile(filepath.Join(tmp, projconfig.ProjectConfigFile), []byte(cfg), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, appconfig.ProjectConfigFile), []byte(cfg), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
 	}
 	chdirForTest(t, tmp)

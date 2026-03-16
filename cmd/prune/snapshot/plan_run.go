@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -106,9 +107,9 @@ func resolvePlanRetentionConfig() (map[string]retention.TierConfig, []retention.
 	}
 	if tiers == nil {
 		tiers = map[string]retention.TierConfig{
-			projconfig.DefaultRetentionTier: {
-				OlderThan: projconfig.DefaultSnapshotRetention,
-				KeepMin:   projconfig.DefaultTierKeepMin,
+			appconfig.DefaultRetentionTier: {
+				OlderThan: appconfig.DefaultSnapshotRetention,
+				KeepMin:   appconfig.DefaultTierKeepMin,
 			},
 		}
 	}
