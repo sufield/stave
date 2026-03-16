@@ -1,4 +1,4 @@
-package trace
+package apptrace
 
 import (
 	"time"
@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/trace"
 )
 
 // Builder implements evaluation.FindingTraceBuilder using the trace engine
@@ -36,8 +37,8 @@ func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTra
 
 	ctx := policy.NewAssetEvalContext(*found, policy.ControlParams(req.Control.Params), snapshot.Identities...)
 	ctx.PredicateParser = b.predicateParser
-	root := TracePredicate(req.Control.UnsafePredicate, ctx)
-	tr := &TraceResult{
+	root := trace.TracePredicate(req.Control.UnsafePredicate, ctx)
+	tr := &trace.TraceResult{
 		ControlID:   req.Control.ID,
 		AssetID:     found.ID,
 		Properties:  found.Properties,

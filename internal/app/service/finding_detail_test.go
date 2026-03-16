@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
+	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/trace"
 )
 
@@ -90,7 +91,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Controls:     policy.ControlDefinitions{ctl},
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
 		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
-		TraceBuilder: trace.NewFindingTraceBuilder(nil),
+		TraceBuilder: apptrace.NewFindingTraceBuilder(nil),
 		IDGen:        crypto.NewHasher(),
 	})
 	if err != nil {

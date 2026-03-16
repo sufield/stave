@@ -94,12 +94,21 @@ func groupToJSON(g *GroupNode) jsonNode {
 	}
 }
 
-func nodeToJSON(node Node) jsonNode { return node.toJSON() }
+func nodeToJSON(node Node) jsonNode {
+	switch n := node.(type) {
+	case *GroupNode:
+		return groupToJSON(n)
+	case *ClauseNode:
+		return clauseToJSON(n)
+	case *FieldRefNode:
+		return fieldRefToJSON(n)
+	case *AnyMatchNode:
+		return anyMatchToJSON(n)
+	default:
+		return jsonNode{}
+	}
+}
 
-func (g *GroupNode) toJSON() jsonNode    { return groupToJSON(g) }
-func (c *ClauseNode) toJSON() jsonNode   { return clauseToJSON(c) }
-func (f *FieldRefNode) toJSON() jsonNode { return fieldRefToJSON(f) }
-func (a *AnyMatchNode) toJSON() jsonNode { return anyMatchToJSON(a) }
 
 func clauseToJSON(c *ClauseNode) jsonNode {
 	idx := c.Index

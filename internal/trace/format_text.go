@@ -69,18 +69,22 @@ func (tw *TextWriter) renderGroup(g *GroupNode) {
 	tw.printf("%s\n", g.Reason)
 }
 
-func (tw *TextWriter) renderNode(node Node) { node.renderText(tw) }
-
-func (g *GroupNode) renderText(tw *TextWriter) {
-	tw.printf("[nested %s]\n", g.Logic)
-	tw.indent++
-	tw.renderGroup(g)
-	tw.indent--
+func (tw *TextWriter) renderNode(node Node) {
+	switch n := node.(type) {
+	case *GroupNode:
+		tw.printf("[nested %s]\n", n.Logic)
+		tw.indent++
+		tw.renderGroup(n)
+		tw.indent--
+	case *ClauseNode:
+		tw.renderClause(n)
+	case *FieldRefNode:
+		tw.renderFieldRef(n)
+	case *AnyMatchNode:
+		tw.renderAnyMatch(n)
+	}
 }
 
-func (c *ClauseNode) renderText(tw *TextWriter)   { tw.renderClause(c) }
-func (f *FieldRefNode) renderText(tw *TextWriter) { tw.renderFieldRef(f) }
-func (a *AnyMatchNode) renderText(tw *TextWriter) { tw.renderAnyMatch(a) }
 
 func (tw *TextWriter) renderClause(c *ClauseNode) {
 	tw.printf("[%d] field: %s  op: %s  value: %s\n",

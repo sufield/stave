@@ -23,6 +23,11 @@ const (
 	defaultTierKeepMin       = projconfig.DefaultTierKeepMin
 	defaultCIFailurePolicy   = string(projconfig.GatePolicyAny)
 	projectConfigFile        = projconfig.ProjectConfigFile
+
+	profileAWSS3 = "aws-s3"
+
+	cadenceDaily  = "daily"
+	cadenceHourly = "hourly"
 )
 
 // slugRegexp matches one or more non-alphanumeric characters for slug generation.
