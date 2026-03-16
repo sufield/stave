@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 )
 
 func chdirForConfigTest(t *testing.T, dir string) {
@@ -39,9 +40,9 @@ func TestConfigKeyCompletions_IncludeServiceTopLevelKeys(t *testing.T) {
 	}
 
 	requiredTierKeys := []string{
-		"snapshot_retention_tiers." + projconfig.DefaultRetentionTier,
-		"snapshot_retention_tiers." + projconfig.DefaultRetentionTier + ".older_than",
-		"snapshot_retention_tiers." + projconfig.DefaultRetentionTier + ".keep_min",
+		"snapshot_retention_tiers." + appconfig.DefaultRetentionTier,
+		"snapshot_retention_tiers." + appconfig.DefaultRetentionTier + ".older_than",
+		"snapshot_retention_tiers." + appconfig.DefaultRetentionTier + ".keep_min",
 	}
 	for _, key := range requiredTierKeys {
 		if _, ok := seen[key]; !ok {

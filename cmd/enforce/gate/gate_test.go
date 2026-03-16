@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/testutil"
 )
@@ -18,16 +18,16 @@ import (
 func TestParseGatePolicy(t *testing.T) {
 	tests := []struct {
 		in      string
-		want    projconfig.GatePolicy
+		want    appconfig.GatePolicy
 		wantErr bool
 	}{
-		{in: string(projconfig.GatePolicyAny), want: projconfig.GatePolicyAny},
-		{in: "  FAIL_ON_NEW_VIOLATION  ", want: projconfig.GatePolicyNew},
-		{in: string(projconfig.GatePolicyOverdue), want: projconfig.GatePolicyOverdue},
+		{in: string(appconfig.GatePolicyAny), want: appconfig.GatePolicyAny},
+		{in: "  FAIL_ON_NEW_VIOLATION  ", want: appconfig.GatePolicyNew},
+		{in: string(appconfig.GatePolicyOverdue), want: appconfig.GatePolicyOverdue},
 		{in: "unknown", wantErr: true},
 	}
 	for _, tc := range tests {
-		got, err := projconfig.ParseGatePolicy(tc.in)
+		got, err := appconfig.ParseGatePolicy(tc.in)
 		if tc.wantErr {
 			if err == nil {
 				t.Fatalf("ParseGatePolicy(%q): expected error", tc.in)

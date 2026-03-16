@@ -3,7 +3,7 @@ package initcmd
 import (
 	"testing"
 
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/domain/retention"
 	"gopkg.in/yaml.v3"
 )
@@ -127,7 +127,7 @@ snapshot_retention_tiers:
   non_critical:
     older_than: 14d
 `
-	var cfg projconfig.ProjectConfig
+	var cfg appconfig.ProjectConfig
 	if err := yaml.Unmarshal([]byte(input), &cfg); err != nil {
 		t.Fatalf("unmarshal project config: %v", err)
 	}

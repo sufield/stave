@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
@@ -39,10 +39,10 @@ func toPlanBuildParams(params planBuildParams) plan.BuildSnapshotPlanParams {
 		Files:              params.Files,
 		Apply:              params.Apply,
 		Force:              params.Force,
-		DefaultOlderThan:   projconfig.DefaultSnapshotRetention,
-		DefaultKeepMin:     projconfig.DefaultTierKeepMin,
+		DefaultOlderThan:   appconfig.DefaultSnapshotRetention,
+		DefaultKeepMin:     appconfig.DefaultTierKeepMin,
 		ParseDuration:      timeutil.ParseDuration,
-		ResolveTierForPath: projconfig.ResolveTierForPath,
+		ResolveTierForPath: appconfig.ResolveTierForPath,
 	}
 }
 

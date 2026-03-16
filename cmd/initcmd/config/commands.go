@@ -2,6 +2,8 @@ package config
 
 import (
 	"github.com/spf13/cobra"
+	appconfig "github.com/sufield/stave/internal/app/config"
+
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -124,7 +126,7 @@ Supported keys:
 				return projconfig.ConfigKeyCompletionsFrom(svc), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
-				return []string{string(projconfig.GatePolicyAny), string(projconfig.GatePolicyNew), string(projconfig.GatePolicyOverdue)}, cobra.ShellCompDirectiveNoFileComp
+				return []string{string(appconfig.GatePolicyAny), string(appconfig.GatePolicyNew), string(appconfig.GatePolicyOverdue)}, cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "capture_cadence" {
 				return []string{"daily", "hourly"}, cobra.ShellCompDirectiveNoFileComp

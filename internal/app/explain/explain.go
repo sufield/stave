@@ -1,6 +1,7 @@
-package diagnose
+package explain
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -10,7 +11,71 @@ import (
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-func (e *Explainer) walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]string, []ExplainRule) {
+// ControlFinder loads a single control by ID.
+type ControlFinder interface {
+	FindByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error)
+}
+
+// ExplainInput holds the inputs for the explain workflow.
+type ExplainInput struct {
+	ControlID   string
+	ControlsDir string
+}
+
+// ExplainResult holds the structured output of an explain analysis.
+type ExplainResult struct {
+	ControlID          string        `json:"control_id"`
+	Name               string        `json:"name"`
+	Description        string        `json:"description"`
+	Type               string        `json:"type"`
+	MatchedFields      []string      `json:"matched_fields"`
+	Rules              []ExplainRule `json:"rules"`
+	MinimalObservation any           `json:"minimal_observation"`
+}
+
+// ExplainRule describes a single predicate rule.
+type ExplainRule struct {
+	Path    string             `json:"path"`
+	Op      predicate.Operator `json:"op"`
+	Value   any                `json:"value,omitempty"`
+	From    string             `json:"from,omitempty"`
+	Comment string             `json:"comment,omitempty"`
+}
+
+// Explainer analyzes a control and explains its predicate structure.
+type Explainer struct {
+	Finder ControlFinder
+}
+
+// Run executes the explain workflow.
+func (e *Explainer) Run(ctx context.Context, input ExplainInput) (ExplainResult, error) {
+	id := strings.TrimSpace(input.ControlID)
+	if id == "" {
+		return ExplainResult{}, fmt.Errorf("control id cannot be empty")
+	}
+	controlsDir := strings.TrimSpace(input.ControlsDir)
+	ctl, err := e.Finder.FindByID(ctx, controlsDir, id)
+	if err != nil {
+		return ExplainResult{}, err
+	}
+	return analyze(ctl), nil
+}
+
+func analyze(ctl policy.ControlDefinition) ExplainResult {
+	fields, rules := walkPredicate(ctl.UnsafePredicate, ctl.Params)
+	slices.Sort(fields)
+	return ExplainResult{
+		ControlID:          ctl.ID.String(),
+		Name:               ctl.Name,
+		Description:        ctl.Description,
+		Type:               ctl.Type.String(),
+		MatchedFields:      fields,
+		Rules:              rules,
+		MinimalObservation: buildMinimalObservation(fields, rules),
+	}
+}
+
+func walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]string, []ExplainRule) {
 	rules, fieldSet := walkRules("any", pred.Any, params)
 	allRules, allFields := walkRules("all", pred.All, params)
 	rules = append(rules, allRules...)
@@ -73,7 +138,7 @@ func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (valu
 	return value, comment
 }
 
-func (e *Explainer) buildMinimalObservation(fields []string, rules []ExplainRule) map[string]any {
+func buildMinimalObservation(fields []string, rules []ExplainRule) map[string]any {
 	props := map[string]any{}
 	valueByPath := map[string]any{}
 	for _, r := range rules {

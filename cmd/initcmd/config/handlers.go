@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 
+	appconfig "github.com/sufield/stave/internal/app/config"
+
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -63,7 +65,7 @@ type ValueResult struct {
 func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	key := strings.TrimSpace(req.Key)
 	cfg, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
-	eval := projconfig.NewEvaluator(cfg, cfgPath, nil, "")
+	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
 
 	kv, err := resolveServiceConfigKeyValue(r.Svc, key, cfg, cfgPath, eval.RetentionTier())
 	if err != nil {
@@ -127,10 +129,10 @@ func (r *Runner) Show(_ context.Context, format ui.OutputFormat) error {
 
 // --- Internal Helpers ---
 
-func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[projconfig.ProjectConfig] {
+func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[appconfig.ProjectConfig] {
 	cfgResolver, _ := projconfig.NewResolver()
 	store := projectConfigStore{resolver: cfgResolver, svc: r.Svc, allowSymlink: opts.AllowSymlink}
-	return &cliconfig.Editor[projconfig.ProjectConfig]{
+	return &cliconfig.Editor[appconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
 		Stderr:      r.Stderr,

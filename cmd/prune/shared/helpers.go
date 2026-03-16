@@ -8,6 +8,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -77,7 +78,7 @@ func PlanPrune(files []pruner.SnapshotFile, criteria retention.Criteria) []prune
 
 // ValidateRetentionTier normalizes and validates a retention tier name.
 func ValidateRetentionTier(rawTier string) (string, error) {
-	tier := projconfig.NormalizeTier(rawTier)
+	tier := appconfig.NormalizeTier(rawTier)
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
@@ -85,7 +86,7 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 	if !eval.HasConfiguredTier(tier) {
 		if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
 			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)",
-				tier, strings.Join(projconfig.SortedTierNames(cfg.RetentionTiers), ", "))
+				tier, strings.Join(appconfig.SortedTierNames(cfg.RetentionTiers), ", "))
 		}
 	}
 	return tier, nil

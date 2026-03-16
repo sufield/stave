@@ -13,7 +13,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/metadata"
@@ -104,7 +104,7 @@ func (g *Generator) addConfigArtifact(bundle *bundleWriter, path string) error {
 		bundle.addWarning("skipped project config (%s): %v", path, err)
 		return nil
 	}
-	var cfg projconfig.ProjectConfig
+	var cfg appconfig.ProjectConfig
 	if unmarshalErr := yaml.Unmarshal(cfgBytes, &cfg); unmarshalErr != nil {
 		bundle.addWarning("skipped project config (%s): parse error: %v", path, unmarshalErr)
 		return nil

@@ -8,7 +8,10 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
+	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	"github.com/sufield/stave/internal/app/catalog"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
+	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -37,7 +40,7 @@ Examples:
 }
 
 func newControlsListCmd() *cobra.Command {
-	cfg := ListConfig{}
+	cfg := catalog.ListConfig{}
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -50,9 +53,34 @@ Examples:
   stave controls list --controls ./controls --format csv --columns id,name` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg.Stdout = cmd.OutOrStdout()
-			runner := &ListRunner{Provider: compose.ActiveProvider()}
-			return runner.Run(cmd.Context(), cfg)
+			stdout := cmd.OutOrStdout()
+
+			if cfg.ListPacks {
+				return runListPacks(stdout, cfg)
+			}
+
+			var rows []catalog.ControlRow
+			if cfg.UseBuiltIn {
+				controls, err := builtin.LoadAll(cmd.Context())
+				if err != nil {
+					return fmt.Errorf("load built-in controls: %w", err)
+				}
+				rows = catalog.ToRows(controls)
+				if err := catalog.SortRows(rows, cfg.SortBy); err != nil {
+					return err
+				}
+			} else {
+				repo, err := compose.ActiveProvider().NewControlRepo()
+				if err != nil {
+					return fmt.Errorf("create control loader: %w", err)
+				}
+				runner := &catalog.ListRunner{Repo: repo}
+				rows, err = runner.Run(cmd.Context(), cfg)
+				if err != nil {
+					return err
+				}
+			}
+			return formatOutput(stdout, cfg, rows)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -67,6 +95,29 @@ Examples:
 	cmd.Flags().BoolVar(&cfg.ListPacks, "packs", false, "List built-in control packs instead of controls")
 
 	return cmd
+}
+
+func runListPacks(w interface{ Write([]byte) (int, error) }, cfg catalog.ListConfig) error {
+	items, err := packs.ListPacks()
+	if err != nil {
+		return err
+	}
+
+	if strings.ToLower(strings.TrimSpace(cfg.Format)) == "json" {
+		return jsonutil.WriteIndented(w, items)
+	}
+
+	if len(items) == 0 {
+		_, err := fmt.Fprintln(w, "No packs found.")
+		return err
+	}
+
+	for _, p := range items {
+		if _, err := fmt.Fprintf(w, "%s\t%s\n", p.Name, p.Description); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func newControlsExplainCmd() *cobra.Command {

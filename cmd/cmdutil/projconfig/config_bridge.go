@@ -3,13 +3,14 @@ package projconfig
 import (
 	"maps"
 
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
 // FromProjectConfig converts a ProjectConfig to a configservice.Config.
-func FromProjectConfig(cfg *ProjectConfig) *configservice.Config {
+func FromProjectConfig(cfg *appconfig.ProjectConfig) *configservice.Config {
 	if cfg == nil {
 		return nil
 	}
@@ -29,11 +30,11 @@ func FromProjectConfig(cfg *ProjectConfig) *configservice.Config {
 }
 
 // ToProjectConfig converts a configservice.Config to a ProjectConfig.
-func ToProjectConfig(cfg *configservice.Config) *ProjectConfig {
+func ToProjectConfig(cfg *configservice.Config) *appconfig.ProjectConfig {
 	if cfg == nil {
 		return nil
 	}
-	out := &ProjectConfig{
+	out := &appconfig.ProjectConfig{
 		MaxUnsafe:                cfg.MaxUnsafe,
 		SnapshotRetention:        cfg.SnapshotRetention,
 		RetentionTier:            cfg.RetentionTier,
@@ -49,7 +50,7 @@ func ToProjectConfig(cfg *configservice.Config) *ProjectConfig {
 }
 
 // CopyProjectConfig copies fields from a configservice.Config into a ProjectConfig.
-func CopyProjectConfig(dst *ProjectConfig, src *configservice.Config) {
+func CopyProjectConfig(dst *appconfig.ProjectConfig, src *configservice.Config) {
 	if dst == nil || src == nil {
 		return
 	}
@@ -69,7 +70,7 @@ func CopyProjectConfig(dst *ProjectConfig, src *configservice.Config) {
 }
 
 // MutateProjectConfig applies a mutation function via configservice.Config translation.
-func MutateProjectConfig(cfg *ProjectConfig, mutate func(*configservice.Config) error) error {
+func MutateProjectConfig(cfg *appconfig.ProjectConfig, mutate func(*configservice.Config) error) error {
 	serviceCfg := FromProjectConfig(cfg)
 	if err := mutate(serviceCfg); err != nil {
 		return err
@@ -86,11 +87,11 @@ func (staveConfigValidator) ParseDuration(value string) error {
 }
 
 func (staveConfigValidator) NormalizeTier(value string) string {
-	return NormalizeTier(value)
+	return appconfig.NormalizeTier(value)
 }
 
 func (staveConfigValidator) NormalizePolicy(value string) (configservice.CIFailurePolicy, error) {
-	policy, err := ParseGatePolicy(value)
+	policy, err := appconfig.ParseGatePolicy(value)
 	if err != nil {
 		return "", err
 	}
@@ -107,27 +108,27 @@ func (staveKeepMinResolver) EffectiveKeepMin(keepMin int) int {
 type staveConfigResolver struct{}
 
 func (staveConfigResolver) MaxUnsafe(cfg *configservice.Config, cfgPath string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveMaxUnsafe()
+	v := defaultEvaluator().WithProject(ToProjectConfig(cfg), cfgPath).ResolveMaxUnsafe()
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 func (staveConfigResolver) SnapshotRetention(cfg *configservice.Config, cfgPath, fallbackTier string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveSnapshotRetention(fallbackTier)
+	v := defaultEvaluator().WithProject(ToProjectConfig(cfg), cfgPath).ResolveSnapshotRetention(fallbackTier)
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 func (staveConfigResolver) RetentionTier(cfg *configservice.Config, cfgPath string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveRetentionTier()
+	v := defaultEvaluator().WithProject(ToProjectConfig(cfg), cfgPath).ResolveRetentionTier()
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 func (staveConfigResolver) CIFailurePolicy(cfg *configservice.Config, cfgPath string) configservice.ValueSource {
-	v := defaultEvaluator().withProject(ToProjectConfig(cfg), cfgPath).resolveCIFailurePolicy()
+	v := defaultEvaluator().WithProject(ToProjectConfig(cfg), cfgPath).ResolveCIFailurePolicy()
 	return configservice.ValueSource{Value: v.Value, Source: v.Source}
 }
 
 // ConfigKeyService is the shared config service instance.
-var ConfigKeyService = configservice.New(ProjectConfigFile, staveConfigValidator{}, staveConfigResolver{}, staveKeepMinResolver{})
+var ConfigKeyService = configservice.New(appconfig.ProjectConfigFile, staveConfigValidator{}, staveConfigResolver{}, staveKeepMinResolver{})
 
 // ConfigKeyCompletions returns config key completions including retention tier
 // variants from the project config.
@@ -141,14 +142,14 @@ func ConfigKeyCompletionsFrom(svc *configservice.Service) []string {
 		svc = ConfigKeyService
 	}
 	baseKeys := svc.TopLevelKeys()
-	tiers := []string{DefaultRetentionTier}
+	tiers := []string{appconfig.DefaultRetentionTier}
 
 	if cfg, ok := FindProjectConfig(); ok {
-		if t := NormalizeTier(cfg.RetentionTier); t != "" {
+		if t := appconfig.NormalizeTier(cfg.RetentionTier); t != "" {
 			tiers = append(tiers, t)
 		}
 		for tier := range cfg.RetentionTiers {
-			if t := NormalizeTier(tier); t != "" {
+			if t := appconfig.NormalizeTier(tier); t != "" {
 				tiers = append(tiers, t)
 			}
 		}

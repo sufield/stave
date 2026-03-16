@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -166,7 +167,7 @@ func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
 	}
 }
 
-func (b *Builder) mapExceptions(in []projconfig.ExceptionRule) []appeval.ExceptionInput {
+func (b *Builder) mapExceptions(in []appconfig.ExceptionRule) []appeval.ExceptionInput {
 	if len(in) == 0 {
 		return nil
 	}

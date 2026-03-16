@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appexplain "github.com/sufield/stave/internal/app/explain"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -23,26 +22,6 @@ type ExplainRequest struct {
 	ControlsDir string
 	Format      ui.OutputFormat
 	Stdout      io.Writer
-}
-
-// ExplainResult holds the structured output of an explain analysis.
-type ExplainResult struct {
-	ControlID          string        `json:"control_id"`
-	Name               string        `json:"name"`
-	Description        string        `json:"description"`
-	Type               string        `json:"type"`
-	MatchedFields      []string      `json:"matched_fields"`
-	Rules              []ExplainRule `json:"rules"`
-	MinimalObservation any           `json:"minimal_observation"`
-}
-
-// ExplainRule describes a single predicate rule.
-type ExplainRule struct {
-	Path    string             `json:"path"`
-	Op      predicate.Operator `json:"op"`
-	Value   any                `json:"value,omitempty"`
-	From    string             `json:"from,omitempty"`
-	Comment string             `json:"comment,omitempty"`
 }
 
 // Explainer analyzes a control and explains its predicate structure.
@@ -61,43 +40,35 @@ func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
 	if id == "" {
 		return &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
 	}
-	controlsDir := strings.TrimSpace(req.ControlsDir)
-	ctl, err := e.loadControl(ctx, id, controlsDir)
+
+	finder := &composeFinder{provider: e.Provider}
+	runner := &appexplain.Explainer{Finder: finder}
+	result, err := runner.Run(ctx, appexplain.ExplainInput{
+		ControlID:   req.ControlID,
+		ControlsDir: req.ControlsDir,
+	})
 	if err != nil {
 		return err
 	}
-	result := e.analyze(ctl)
-	return e.write(req.Stdout, req.Format, result)
+
+	if req.Format.IsJSON() {
+		return jsonutil.WriteIndented(req.Stdout, result)
+	}
+	return appexplain.WriteExplainText(req.Stdout, result)
 }
 
-func (e *Explainer) loadControl(ctx context.Context, id, controlsDir string) (policy.ControlDefinition, error) {
-	ctl, err := compose.LoadControlByID(ctx, controlsDir, id)
+// composeFinder adapts compose.LoadControlByID to the ControlFinder interface.
+type composeFinder struct {
+	provider *compose.Provider
+}
+
+func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
+	ctl, err := compose.LoadControlByID(ctx, dir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
-			fmt.Sprintf("stave validate --controls %s", controlsDir))
+			fmt.Sprintf("stave validate --controls %s", dir))
 	}
 	return ctl, nil
-}
-
-func (e *Explainer) analyze(ctl policy.ControlDefinition) ExplainResult {
-	fields, rules := e.walkPredicate(ctl.UnsafePredicate, ctl.Params)
-	slices.Sort(fields)
-	return ExplainResult{
-		ControlID:          ctl.ID.String(),
-		Name:               ctl.Name,
-		Description:        ctl.Description,
-		Type:               ctl.Type.String(),
-		MatchedFields:      fields,
-		Rules:              rules,
-		MinimalObservation: e.buildMinimalObservation(fields, rules),
-	}
-}
-
-func (e *Explainer) write(w io.Writer, format ui.OutputFormat, result ExplainResult) error {
-	if format.IsJSON() {
-		return jsonutil.WriteIndented(w, result)
-	}
-	return writeExplainText(w, result)
 }
 
 // NewExplainCmd constructs the explain command.
