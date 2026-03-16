@@ -3,7 +3,6 @@ package securityaudit
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -69,10 +68,10 @@ func NewSecurityAuditRunner(deps RunnerDeps) *SecurityAuditRunner {
 		diagnostics: defaultDiagnosticsService{run: deps.RunDiagnostics},
 		buildInfo:   defaultBuildInfoProvider{},
 		sbom:        defaultSBOMGenerator{},
-		vulns:       defaultVulnEvidenceProvider{runGovulncheck: deps.GovulncheckRunner, readFile: deps.ReadFile},
-		binary:      defaultBinaryInspector{signatureVerifier: deps.SignatureVerifier, hashFile: deps.HashFile, readFile: deps.ReadFile},
-		policy:      defaultPolicyInspector{readFile: deps.ReadFile},
-		crosswalk:   defaultCrosswalkResolver{readFile: deps.ReadFile, resolve: deps.ResolveCrosswalk},
+		vulns:       defaultVulnEvidenceProvider{runGovulncheck: deps.GovulncheckRunner, readFile: deps.ReadFile, statFile: deps.StatFile},
+		binary:      defaultBinaryInspector{signatureVerifier: deps.SignatureVerifier, hashFile: deps.HashFile, readFile: deps.ReadFile, statFile: deps.StatFile},
+		policy:      defaultPolicyInspector{readFile: deps.ReadFile, statFile: deps.StatFile, getenv: deps.Getenv, isPrivileged: deps.IsPrivileged, walkDir: deps.WalkDir},
+		crosswalk:   defaultCrosswalkResolver{readFile: deps.ReadFile, resolve: deps.ResolveCrosswalk, statFile: deps.StatFile},
 		hashBytes:   deps.HashBytes,
 	}
 }
@@ -283,11 +282,6 @@ func normalizeSecurityAuditRequest(req SecurityAuditRequest) SecurityAuditReques
 			securityaudit.SeverityHigh,
 		}
 	}
-	if strings.TrimSpace(req.BinaryPath) == "" {
-		if exe, err := executablePath(); err == nil {
-			req.BinaryPath = exe
-		}
-	}
 	if strings.TrimSpace(req.OutDir) == "" {
 		req.OutDir = fmt.Sprintf("security-audit-%s", req.Now.UTC().Format("20060102T150405Z"))
 	}
@@ -314,12 +308,4 @@ func validateSecurityAuditRequest(req SecurityAuditRequest) error {
 		}
 	}
 	return nil
-}
-
-func executablePath() (string, error) {
-	exe, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Abs(filepath.Clean(strings.TrimSpace(exe)))
 }

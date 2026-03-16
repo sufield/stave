@@ -8,10 +8,8 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	predicates "github.com/sufield/stave/internal/builtin/predicate"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -27,8 +25,9 @@ type SchemaValidator interface {
 
 // ControlLoader loads control definitions from YAML files.
 type ControlLoader struct {
-	validator  SchemaValidator
-	onProgress func(processed, total int)
+	validator     SchemaValidator
+	aliasResolver policy.AliasResolver
+	onProgress    func(processed, total int)
 }
 
 // Ensure ControlLoader satisfies the ControlRepository interface at compile time.
@@ -36,6 +35,11 @@ var _ appcontracts.ControlRepository = (*ControlLoader)(nil)
 
 // LoaderOption configures a ControlLoader.
 type LoaderOption func(*ControlLoader)
+
+// WithAliasResolver sets the predicate alias resolver used during control loading.
+func WithAliasResolver(r policy.AliasResolver) LoaderOption {
+	return func(l *ControlLoader) { l.aliasResolver = r }
+}
 
 // NewControlLoader creates a new YAML control loader.
 // It initializes with a default validator unless overridden by options.
@@ -131,26 +135,9 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 }
 
 // enrichAndPrepare resolves predicate aliases and prepares the control for use.
-// Alias expansion lives in the adapter layer because moving it to the domain
-// would create a circular dependency: policy → predicate → policy.
 func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
-	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
-
-	if alias != "" {
-		if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
-			return fmt.Errorf("invalid definition: cannot set both unsafe_predicate and unsafe_predicate_alias")
-		}
-		expanded, ok := predicates.Resolve(alias)
-		if !ok {
-			return fmt.Errorf("unknown unsafe_predicate_alias %q (available: %s)",
-				alias, strings.Join(predicates.ListAliases(), ", "))
-		}
-		ctl.UnsafePredicate = expanded
-	}
-
-	if err := ctl.Prepare(); err != nil {
+	if err := ctl.ResolveAndPrepare(l.aliasResolver); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
-
 	return nil
 }

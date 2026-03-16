@@ -29,7 +29,7 @@ import (
 // Builder encapsulates the cmd-layer resolution needed before building
 // apply dependencies. It resolves adapters from the compose provider,
 // loads exemptions, audits git status, and delegates final assembly
-// to appeval.BuildApplyDeps.
+// to BuildApplyDeps (local to this package).
 type Builder struct {
 	Ctx       context.Context
 	Stdout    io.Writer
@@ -46,7 +46,7 @@ type Builder struct {
 }
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
-func (b *Builder) BuildWithNewPlan() (*appeval.ApplyDeps, error) {
+func (b *Builder) BuildWithNewPlan() (*ApplyDeps, error) {
 	plan, err := appeval.NewPlan(b.Opts.buildEvaluatorInput())
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (b *Builder) BuildWithNewPlan() (*appeval.ApplyDeps, error) {
 }
 
 // Build constructs ApplyDeps from a pre-existing evaluation plan.
-func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error) {
+func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	if plan == nil {
 		return nil, errors.New("evaluation plan is required")
 	}
@@ -91,8 +91,8 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		return output.Enrich(enricher, b.Sanitizer, result)
 	}
 
-	// 4. Final Assembly (delegated to app layer)
-	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
+	// 4. Final Assembly
+	deps, err := BuildApplyDeps(ApplyBuilderInput{
 		Ctx:               b.Ctx,
 		Stdout:            b.Stdout,
 		Stderr:            b.Stderr,

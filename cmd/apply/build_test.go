@@ -1,4 +1,4 @@
-package eval
+package apply
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -41,7 +42,7 @@ func depsEnrichFn(result evaluation.Result) appcontracts.EnrichedResult {
 
 func TestBuildDependencies_ValidationErrors(t *testing.T) {
 	base := BuildDependenciesInput{
-		Plan: EvaluationPlan{
+		Plan: appeval.EvaluationPlan{
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},
@@ -61,7 +62,7 @@ func TestBuildDependencies_ValidationErrors(t *testing.T) {
 		{
 			name: "empty plan",
 			mutate: func(in *BuildDependenciesInput) {
-				in.Plan = EvaluationPlan{}
+				in.Plan = appeval.EvaluationPlan{}
 			},
 			wantErr: "evaluation plan is required",
 		},
@@ -116,7 +117,7 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 	ctlRepo := &depsControlRepoStub{}
 
 	out, err := BuildDependencies(BuildDependenciesInput{
-		Plan: EvaluationPlan{
+		Plan: appeval.EvaluationPlan{
 			ContextName:      "ctx",
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
@@ -136,9 +137,9 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 		t.Fatalf("BuildDependencies() error = %v", err)
 	}
 
-	run, ok := out.Runner.(*EvaluateRun)
+	run, ok := out.Runner.(*appeval.EvaluateRun)
 	if !ok {
-		t.Fatalf("runner type = %T, want *EvaluateRun", out.Runner)
+		t.Fatalf("runner type = %T, want *appeval.EvaluateRun", out.Runner)
 	}
 	if run.ObservationRepo != obsRepo {
 		t.Fatalf("observation repo mismatch: got %#v want %#v", run.ObservationRepo, obsRepo)
@@ -156,7 +157,7 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 	}
 
 	out, err := BuildDependencies(BuildDependenciesInput{
-		Plan: EvaluationPlan{
+		Plan: appeval.EvaluationPlan{
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},

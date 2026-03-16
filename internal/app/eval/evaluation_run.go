@@ -64,11 +64,26 @@ func NewEvaluateRun(
 	}
 }
 
-// Execute runs the evaluation and returns the safety status.
+// Execute runs the evaluation, writes output via the pipeline, and returns the safety status.
 func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluation.SafetyStatus, error) {
+	result, status, err := e.ExecuteAndReturn(ctx, cfg)
+	if err != nil {
+		return "", err
+	}
+
+	if err := e.writeOutput(ctx, cfg.Output, result); err != nil {
+		return "", fmt.Errorf("failed to write findings: %w", err)
+	}
+
+	return status, nil
+}
+
+// ExecuteAndReturn runs the evaluation and returns the Result alongside SafetyStatus
+// without writing output. The caller is responsible for output rendering.
+func (e *EvaluateRun) ExecuteAndReturn(ctx context.Context, cfg EvaluateConfig) (evaluation.Result, evaluation.SafetyStatus, error) {
 	preflight := e.loadEvaluationArtifacts(ctx, cfg.LoadConfig)
 	if preflight.HasErrors() {
-		return "", preflight.FirstError()
+		return evaluation.Result{}, "", preflight.FirstError()
 	}
 	controls := cfg.PreloadedControls
 	if controls == nil {
@@ -90,15 +105,11 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		Metadata:        cfg.Metadata,
 	})
 	if err != nil {
-		return "", fmt.Errorf("evaluation failed: %w", err)
+		return evaluation.Result{}, "", fmt.Errorf("evaluation failed: %w", err)
 	}
 
-	// Write output: use explicit pipeline when available, else fallback writer.
-	if err := e.writeOutput(ctx, cfg.Output, result); err != nil {
-		return "", fmt.Errorf("failed to write findings: %w", err)
-	}
-
-	return evaluation.ClassifySafetyStatus(len(result.Findings), nil), nil
+	status := evaluation.ClassifySafetyStatus(len(result.Findings), nil)
+	return result, status, nil
 }
 
 // writeOutput writes findings using the Enrich → Marshal → Write pipeline.

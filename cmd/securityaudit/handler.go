@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -85,6 +86,13 @@ func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
 				ResolutionJSON: resolved.ResolutionJSON,
 			}, nil
 		},
+		StatFile:     os.Stat,
+		Getenv:       os.Getenv,
+		IsPrivileged: func() bool { return os.Geteuid() == 0 },
+		WalkDir: func(root string, fn appsa.WalkFunc) error {
+			return filepath.Walk(root, filepath.WalkFunc(fn))
+		},
+		Getwd: os.Getwd,
 	})
 
 	report, artifacts, err := runner.Run(ctx, appsa.SecurityAuditRequest{

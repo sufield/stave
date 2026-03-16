@@ -280,7 +280,7 @@ func TestBuildApplyDeps(t *testing.T) {
 
 func TestApplyDepsClose(t *testing.T) {
 	t.Run("close is safe", func(t *testing.T) {
-		deps := &appeval.ApplyDeps{}
+		deps := &ApplyDeps{}
 		deps.Close() // should not panic
 	})
 }

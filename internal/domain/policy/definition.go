@@ -3,10 +3,15 @@ package policy
 import (
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
 )
+
+// AliasResolver resolves a predicate alias name to its expanded UnsafePredicate.
+// Returning false means the alias is unknown.
+type AliasResolver func(alias string) (UnsafePredicate, bool)
 
 // ControlDefinitions is a collection of control rules.
 type ControlDefinitions []ControlDefinition
@@ -45,6 +50,26 @@ type ControlDefinition struct {
 // HasCompliance reports whether the control has a non-empty mapping for the given framework key.
 func (ctl *ControlDefinition) HasCompliance(key string) bool {
 	return ctl.Compliance.HasFramework(key)
+}
+
+// ResolveAndPrepare expands a predicate alias (if set) and prepares
+// the control for evaluation. If resolve is nil, alias expansion is skipped.
+func (ctl *ControlDefinition) ResolveAndPrepare(resolve AliasResolver) error {
+	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
+	if alias != "" {
+		if resolve == nil {
+			return fmt.Errorf("unsafe_predicate_alias %q requires an alias resolver", alias)
+		}
+		if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
+			return fmt.Errorf("cannot set both unsafe_predicate and unsafe_predicate_alias")
+		}
+		expanded, ok := resolve(alias)
+		if !ok {
+			return fmt.Errorf("unknown unsafe_predicate_alias %q", alias)
+		}
+		ctl.UnsafePredicate = expanded
+	}
+	return ctl.Prepare()
 }
 
 // Prepare extracts and validates typed parameters from the raw Params map.

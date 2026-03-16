@@ -3,7 +3,7 @@ package securityaudit
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"strings"
 	"time"
@@ -17,6 +17,7 @@ type defaultBinaryInspector struct {
 	signatureVerifier ports.Verifier
 	hashFile          func(path string) (kernel.Digest, error)
 	readFile          func(path string) ([]byte, error)
+	statFile          func(string) (fs.FileInfo, error)
 }
 
 func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error) {
@@ -50,7 +51,7 @@ func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buil
 	var signatureJSON []byte
 
 	if signatureAttempt {
-		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir, d.signatureVerifier, d.readFile)
+		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir, d.signatureVerifier, d.readFile, d.statFile)
 		signaturePayload := map[string]any{
 			"release_bundle_dir": strings.TrimSpace(req.ReleaseBundleDir),
 			"verified":           signatureVerified,
@@ -78,7 +79,7 @@ func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buil
 	}, nil
 }
 
-func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string, verifier ports.Verifier, readFile func(string) ([]byte, error)) (bool, string) {
+func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string, verifier ports.Verifier, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (bool, string) {
 	sumsPath := filepath.Join(releaseBundleDir, "SHA256SUMS")
 	raw, err := readFile(sumsPath)
 	if err != nil {
@@ -89,7 +90,7 @@ func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDi
 		return false, msg
 	}
 
-	return verifyChecksumSignature(raw, releaseBundleDir, verifier, readFile)
+	return verifyChecksumSignature(raw, releaseBundleDir, verifier, readFile, statFile)
 }
 
 // matchChecksumEntry searches SHA256SUMS lines for the binary and verifies its hash.
@@ -111,11 +112,11 @@ func matchChecksumEntry(raw []byte, binaryName, expectedHash string) (string, bo
 }
 
 // verifyChecksumSignature validates the SHA256SUMS signature file.
-func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier ports.Verifier, readFile func(string) ([]byte, error)) (bool, string) {
+func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier ports.Verifier, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (bool, string) {
 	sigBytes, sigErr := readFile(filepath.Join(releaseBundleDir, "SHA256SUMS.sig"))
 	if sigErr != nil {
 		sigstorePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sigstore.json")
-		if _, statErr := os.Stat(sigstorePath); statErr == nil {
+		if _, statErr := statFile(sigstorePath); statErr == nil {
 			return false, "checksum matched; sigstore bundle found but cryptographic verification of sigstore format is not yet supported"
 		}
 		return false, "checksum matched but no signature artifact found"

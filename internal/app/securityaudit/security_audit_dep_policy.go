@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -16,22 +16,26 @@ import (
 )
 
 type defaultPolicyInspector struct {
-	readFile func(path string) ([]byte, error)
+	readFile     func(path string) ([]byte, error)
+	statFile     func(string) (fs.FileInfo, error)
+	getenv       func(string) string
+	isPrivileged func() bool
+	walkDir      func(string, WalkFunc) error
 }
 
 func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequest) (policyInspectionSnapshot, error) {
-	root, err := findRepoRoot(req.Cwd)
+	root, err := findRepoRootWith(req.Cwd, func() (string, error) { return req.Cwd, nil }, d.statFile)
 	if err != nil {
 		return policyInspectionSnapshot{}, err
 	}
 
-	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root, d.readFile)
-	credentialViolations, credErr := inspectForCredentialEnvRefs(root, d.readFile)
+	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root, d.readFile, d.walkDir)
+	credentialViolations, credErr := inspectForCredentialEnvRefs(root, d.readFile, d.walkDir)
 	if inspectErr != nil || credErr != nil {
 		return policyInspectionSnapshot{}, errors.Join(inspectErr, credErr)
 	}
 
-	proxyVars := setProxyVars()
+	proxyVars := setProxyVars(d.getenv)
 	reads := []string{
 		"Input directories provided by --controls and --observations",
 		"Optional project config: stave.yaml",
@@ -60,13 +64,13 @@ func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequ
 	filesystemJSON, _ := json.MarshalIndent(filesystemDecl, "", "  ")
 
 	redactionPath := filepath.Join(root, "internal", "sanitize")
-	_, redactionErr := os.Stat(redactionPath)
+	_, redactionErr := d.statFile(redactionPath)
 	loggingPath := filepath.Join(root, "internal", "platform", "logging")
-	_, loggingErr := os.Stat(loggingPath)
+	_, loggingErr := d.statFile(loggingPath)
 
 	runningPrivileged := false
-	if runtime.GOOS != "windows" {
-		runningPrivileged = os.Geteuid() == 0
+	if runtime.GOOS != "windows" && d.isPrivileged != nil {
+		runningPrivileged = d.isPrivileged()
 	}
 
 	iamActions := kernel.DefaultPolicy().ProviderPermissions("aws")
@@ -97,11 +101,11 @@ func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequ
 	}, nil
 }
 
-func setProxyVars() []string {
+func setProxyVars(getenv func(string) string) []string {
 	proxyVarNames := kernel.DefaultPolicy().ProxyEnvVars()
 	out := make([]string, 0, len(proxyVarNames))
 	for _, key := range proxyVarNames {
-		if strings.TrimSpace(os.Getenv(key)) == "" {
+		if strings.TrimSpace(getenv(key)) == "" {
 			continue
 		}
 		out = append(out, key)
@@ -116,10 +120,10 @@ type sourceMatch func(relPath, content string) []string
 
 // inspectSourceFiles walks root, reads each non-test, non-vendor .go file,
 // and calls matchFn to collect violations.
-func inspectSourceFiles(root string, matchFn sourceMatch, readFile func(string) ([]byte, error)) ([]string, error) {
+func inspectSourceFiles(root string, matchFn sourceMatch, readFile func(string) ([]byte, error), walkDir func(string, WalkFunc) error) ([]string, error) {
 	excludedDirs := map[string]bool{"vendor": true}
 	var violations []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
+	err := walkDir(root, func(path string, info fs.FileInfo, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
@@ -161,7 +165,7 @@ func shouldInspectPath(relPath string, excludedDirs map[string]bool) bool {
 	return true
 }
 
-func inspectForBannedRuntimeImports(root string, readFile func(string) ([]byte, error)) ([]string, error) {
+func inspectForBannedRuntimeImports(root string, readFile func(string) ([]byte, error), walkDir func(string, WalkFunc) error) ([]string, error) {
 	return inspectSourceFiles(root, func(relPath, content string) []string {
 		var hits []string
 		for _, banned := range kernel.DefaultPolicy().BannedImports() {
@@ -170,10 +174,10 @@ func inspectForBannedRuntimeImports(root string, readFile func(string) ([]byte, 
 			}
 		}
 		return hits
-	}, readFile)
+	}, readFile, walkDir)
 }
 
-func inspectForCredentialEnvRefs(root string, readFile func(string) ([]byte, error)) ([]string, error) {
+func inspectForCredentialEnvRefs(root string, readFile func(string) ([]byte, error), walkDir func(string, WalkFunc) error) ([]string, error) {
 	return inspectSourceFiles(root, func(relPath, content string) []string {
 		var hits []string
 		for _, envVar := range kernel.DefaultPolicy().BannedCredentialKeys() {
@@ -182,5 +186,5 @@ func inspectForCredentialEnvRefs(root string, readFile func(string) ([]byte, err
 			}
 		}
 		return hits
-	}, readFile)
+	}, readFile, walkDir)
 }

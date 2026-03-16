@@ -81,17 +81,17 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 
 			// Dry-run branch
 			if opts.DryRun {
-				planCfg, err := opts.ResolveDryRun(cmd)
-				if err != nil {
-					return err
+				planCfg, planErr := opts.ResolveDryRun(cmd)
+				if planErr != nil {
+					return planErr
 				}
 				return runDryRun(planCfg)
 			}
 
 			// Strict integrity check
 			gf := cmdutil.GetGlobalFlags(cmd)
-			if err := runStrictIntegrityCheck(gf.Strict, cmd.OutOrStdout(), cmd.ErrOrStderr()); err != nil {
-				return err
+			if strictErr := runStrictIntegrityCheck(gf.Strict, cmd.OutOrStdout(), cmd.ErrOrStderr()); strictErr != nil {
+				return strictErr
 			}
 
 			// Resolve run mode
