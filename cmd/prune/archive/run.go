@@ -10,8 +10,11 @@ import (
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/pruner/fsops"
+	"github.com/sufield/stave/internal/pruner/report"
 )
 
 // --- Config ---
@@ -40,7 +43,7 @@ type executionPlan struct {
 	archiveDir     string
 	allFiles       []pruner.SnapshotFile
 	candidateFiles []pruner.SnapshotFile
-	output         pruner.ArchiveOutput
+	output         report.ArchiveOutput
 	dryRun         bool
 }
 
@@ -76,16 +79,16 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}
 
-	candidates := pruneshared.PlanPrune(allFiles, pruner.Criteria{
+	candidates := pruneshared.PlanPrune(allFiles, retention.Criteria{
 		Now:       r.cfg.Now,
 		OlderThan: r.cfg.OlderThan,
 		KeepMin:   r.cfg.KeepMin,
 	})
 
-	out := pruner.BuildArchiveOutput(pruner.ArchiveOutputInput{
-		CleanupInput: pruner.CleanupInput{
+	out := report.BuildArchiveOutput(report.ArchiveOutputInput{
+		CleanupInput: report.CleanupInput{
 			Now:             r.cfg.Now,
-			Action:          pruner.ActionMove,
+			Action:          report.ActionMove,
 			DryRun:          r.cfg.DryRun,
 			ObservationsDir: r.cfg.ObservationsDir,
 			Tier:            r.cfg.RetentionTier,
@@ -114,13 +117,13 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 
 // Render outputs the plan to the user in the requested format.
 func (r *Runner) Render(_ appeval.CleanupPlan) error {
-	return pruner.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, pruner.SnapshotCleanupRenderInput{
+	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
 		Format:         r.cfg.Format,
 		Output:         r.plan.output,
 		OutputKind:     "archive",
 		ActionLabel:    "archive",
 		SummaryPrefix:  "Archive",
-		Action:         pruner.ActionMove,
+		Action:         report.ActionMove,
 		DryRun:         r.plan.dryRun,
 		AllFiles:       r.plan.allFiles,
 		CandidateFiles: r.plan.candidateFiles,
@@ -134,10 +137,10 @@ func (r *Runner) Render(_ appeval.CleanupPlan) error {
 
 // Apply executes the file moves.
 func (r *Runner) Apply(_ appeval.CleanupPlan) error {
-	_, err := pruner.ApplyArchive(pruner.ArchiveInput{
+	_, err := fsops.ApplyArchive(fsops.ArchiveInput{
 		ArchiveDir: r.plan.archiveDir,
 		Moves:      r.toArchiveMoves(),
-		Options: pruner.MoveOptions{
+		Options: fsops.MoveOptions{
 			Overwrite:    r.cfg.Force,
 			AllowSymlink: r.cfg.AllowSymlink,
 		},
@@ -155,10 +158,10 @@ func (r *Runner) Apply(_ appeval.CleanupPlan) error {
 
 // --- Helpers ---
 
-func (r *Runner) toArchiveMoves() []pruner.ArchiveMove {
-	moves := make([]pruner.ArchiveMove, 0, len(r.plan.candidateFiles))
+func (r *Runner) toArchiveMoves() []fsops.ArchiveMove {
+	moves := make([]fsops.ArchiveMove, 0, len(r.plan.candidateFiles))
 	for _, sf := range r.plan.candidateFiles {
-		moves = append(moves, pruner.ArchiveMove{
+		moves = append(moves, fsops.ArchiveMove{
 			Src: sf.Path,
 			Dst: filepath.Join(r.plan.archiveDir, sf.Name),
 		})
@@ -179,5 +182,5 @@ func resolveArchivePaths(observationsPath, archivePath string) (string, string, 
 }
 
 func moveSnapshotFile(src, dst string) error {
-	return pruner.MoveSnapshotFile(src, dst, pruner.MoveOptions{})
+	return fsops.MoveSnapshotFile(src, dst, fsops.MoveOptions{})
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/observations"
 	"github.com/sufield/stave/internal/sanitize"
+	"github.com/sufield/stave/internal/sanitize/scrub"
 )
 
 // S3Config defines the resolved parameters for an AWS S3 ingestion run.
@@ -92,7 +93,7 @@ func (r *S3Runner) persist(cfg S3Config, snapshots []asset.Snapshot) error {
 		Writer:       observations.JSONWriter{},
 	}
 	if cfg.Scrub {
-		req.Scrubber = sanitize.New()
+		req.Scrubber = scrub.NewScrubber(sanitize.New())
 	}
 	return appingest.WriteObservationsFile(req)
 }

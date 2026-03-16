@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pruner"
 )
 
@@ -17,7 +18,7 @@ func TestPlanPrune_RespectsKeepMin(t *testing.T) {
 		{Name: "d.json", CapturedAt: now.AddDate(0, 0, -5)},
 	}
 
-	deletions := pruneshared.PlanPrune(files, pruner.Criteria{Now: now, OlderThan: 30 * 24 * time.Hour, KeepMin: 2})
+	deletions := pruneshared.PlanPrune(files, retention.Criteria{Now: now, OlderThan: 30 * 24 * time.Hour, KeepMin: 2})
 	if len(deletions) != 2 {
 		t.Fatalf("expected 2 deletions, got %d", len(deletions))
 	}
@@ -33,7 +34,7 @@ func TestPlanPrune_NoDeletionsWhenWouldDropBelowKeepMin(t *testing.T) {
 		{Name: "b.json", CapturedAt: now.AddDate(0, 0, -35)},
 	}
 
-	deletions := pruneshared.PlanPrune(files, pruner.Criteria{Now: now, OlderThan: 30 * 24 * time.Hour, KeepMin: 2})
+	deletions := pruneshared.PlanPrune(files, retention.Criteria{Now: now, OlderThan: 30 * 24 * time.Hour, KeepMin: 2})
 	if len(deletions) != 0 {
 		t.Fatalf("expected 0 deletions, got %d", len(deletions))
 	}

@@ -77,9 +77,19 @@ func (g GlobalFlags) TextOutputEnabled() bool {
 func (g GlobalFlags) GetSanitizer() *sanitize.Sanitizer {
 	policy := sanitize.OutputSanitizationPolicy{
 		SanitizeIDs: g.Sanitize,
-		PathMode:    sanitize.ParsePathMode(g.PathMode),
+		PathMode:    ParsePathMode(g.PathMode),
 	}
 	return policy.Sanitizer()
+}
+
+// ParsePathMode parses a CLI flag string to a sanitize.PathMode, defaulting to PathModeBase.
+func ParsePathMode(s string) sanitize.PathMode {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case string(sanitize.PathModeFull):
+		return sanitize.PathModeFull
+	default:
+		return sanitize.PathModeBase
+	}
 }
 
 // --- Cobra Specific Helpers ---

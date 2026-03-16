@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/pruner/plan"
 )
 
 // PlanConfig defines the resolved parameters for multi-tier snapshot retention.
@@ -40,7 +41,7 @@ func (r *PlanRunner) Run(ctx context.Context, cfg PlanConfig) error {
 
 	tiers, tierRules, defaultTier := resolvePlanRetentionConfig()
 
-	plan := buildPlan(planBuildParams{
+	p := buildPlan(planBuildParams{
 		Now:         cfg.Now,
 		ObsRoot:     cfg.ObservationsRoot,
 		ArchiveDir:  cfg.ArchiveDir,
@@ -52,27 +53,27 @@ func (r *PlanRunner) Run(ctx context.Context, cfg PlanConfig) error {
 		Force:       cfg.Force,
 	})
 
-	if err := r.writePlanOutput(cfg, plan); err != nil {
+	if err := r.writePlanOutput(cfg, p); err != nil {
 		return err
 	}
-	if plan.Applied {
-		return applyPlan(plan, cfg.ObservationsRoot, cfg.ArchiveDir, cfg.AllowSymlink)
+	if p.Applied {
+		return applyPlan(p, cfg.ObservationsRoot, cfg.ArchiveDir, cfg.AllowSymlink)
 	}
 	return nil
 }
 
-func (r *PlanRunner) writePlanOutput(cfg PlanConfig, plan pruner.SnapshotPlanOutput) error {
+func (r *PlanRunner) writePlanOutput(cfg PlanConfig, p plan.SnapshotPlanOutput) error {
 	if cfg.Quiet {
 		return nil
 	}
 	w := cfg.Stdout
 	if cfg.Format.IsJSON() {
-		if err := jsonutil.WriteIndented(w, plan); err != nil {
+		if err := jsonutil.WriteIndented(w, p); err != nil {
 			return fmt.Errorf("write plan output: %w", err)
 		}
 		return nil
 	}
-	if err := pruner.RenderSnapshotPlanText(w, plan); err != nil {
+	if err := plan.RenderSnapshotPlanText(w, p); err != nil {
 		return fmt.Errorf("write plan output: %w", err)
 	}
 	return nil

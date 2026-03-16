@@ -13,10 +13,8 @@ import (
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/logging"
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 // runProfileApply executes the profile-based evaluation workflow.
@@ -68,7 +66,7 @@ func executeEvaluation(
 		Ctx:           ctx,
 		Stdout:        sio.Stdout,
 		Stderr:        sio.Stderr,
-		Sanitizer:     asSanitizer(sio.Sanitizer),
+		Sanitizer:     sio.Sanitizer,
 		IsJSON:        sio.IsJSON,
 		Opts:          opts,
 		Params:        params,
@@ -135,15 +133,4 @@ func decorateError(err error) error {
 		return err
 	}
 	return ui.EvaluateErrorWithHint(ui.WithHint(err, hint))
-}
-
-// asSanitizer converts kernel.Sanitizer to *sanitize.Sanitizer for Builder compatibility.
-func asSanitizer(s kernel.Sanitizer) *sanitize.Sanitizer {
-	if s == nil {
-		return nil
-	}
-	if san, ok := s.(*sanitize.Sanitizer); ok {
-		return san
-	}
-	return nil
 }

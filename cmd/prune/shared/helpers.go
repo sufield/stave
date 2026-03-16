@@ -9,14 +9,16 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/pruner/report"
 )
 
 // CleanupPlan holds the fields shared by delete and archive execution plans.
 type CleanupPlan struct {
 	Now             time.Time
-	Action          pruner.CleanupAction
+	Action          report.CleanupAction
 	DryRun          bool
 	Quiet           bool
 	Format          ui.OutputFormat
@@ -38,7 +40,7 @@ type CleanupRunInput struct {
 	KeepMin   int
 	DryRun    bool
 	Quiet     bool
-	Action    pruner.CleanupAction
+	Action    report.CleanupAction
 }
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
@@ -55,15 +57,15 @@ func ListObservationSnapshotFiles(ctx context.Context, observationsDir string) (
 }
 
 // PlanPrune determines which snapshot files should be pruned based on the given criteria.
-func PlanPrune(files []pruner.SnapshotFile, criteria pruner.Criteria) []pruner.SnapshotFile {
-	items := make([]pruner.Candidate, len(files))
+func PlanPrune(files []pruner.SnapshotFile, criteria retention.Criteria) []pruner.SnapshotFile {
+	items := make([]retention.Candidate, len(files))
 	for i, sf := range files {
-		items[i] = pruner.Candidate{
+		items[i] = retention.Candidate{
 			Index:      i,
 			CapturedAt: sf.CapturedAt,
 		}
 	}
-	selected := pruner.PlanPrune(items, criteria)
+	selected := retention.PlanPrune(items, criteria)
 	out := make([]pruner.SnapshotFile, 0, len(selected))
 	for _, item := range selected {
 		if item.Index >= 0 && item.Index < len(files) {

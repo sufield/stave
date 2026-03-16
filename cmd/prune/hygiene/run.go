@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 	staveversion "github.com/sufield/stave/internal/version"
@@ -133,7 +134,7 @@ func buildSnapshotStats(
 	archiveSnapshots []asset.Snapshot,
 	files []pruner.SnapshotFile,
 ) appcontracts.SnapshotStats {
-	pruneCandidates := pruneshared.PlanPrune(files, pruner.Criteria{
+	pruneCandidates := pruneshared.PlanPrune(files, retention.Criteria{
 		Now:       cfg.Now,
 		OlderThan: cfg.OlderThan,
 		KeepMin:   cfg.KeepMin,

@@ -1,16 +1,17 @@
-package sanitize
+package scrub_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/kernel"
-
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/sanitize"
+	"github.com/sufield/stave/internal/sanitize/scrub"
 )
 
 func TestScrubSnapshot_Resources(t *testing.T) {
-	r := New()
+	sc := scrub.NewScrubber(sanitize.New())
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
@@ -36,7 +37,7 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 		},
 	}
 
-	scrubbed := r.ScrubSnapshot(snap)
+	scrubbed := sc.ScrubSnapshot(snap)
 
 	if len(scrubbed.Assets) != 1 {
 		t.Fatalf("Expected 1 resource, got %d", len(scrubbed.Assets))
@@ -85,7 +86,7 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 }
 
 func TestScrubSnapshot_Identities(t *testing.T) {
-	r := New()
+	sc := scrub.NewScrubber(sanitize.New())
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
@@ -110,7 +111,7 @@ func TestScrubSnapshot_Identities(t *testing.T) {
 		},
 	}
 
-	scrubbed := r.ScrubSnapshot(snap)
+	scrubbed := sc.ScrubSnapshot(snap)
 
 	if len(scrubbed.Identities) != 1 {
 		t.Fatalf("Expected 1 identity, got %d", len(scrubbed.Identities))
@@ -141,7 +142,7 @@ func TestScrubSnapshot_Identities(t *testing.T) {
 }
 
 func TestScrubSnapshot_PreservesTimestamp(t *testing.T) {
-	r := New()
+	sc := scrub.NewScrubber(sanitize.New())
 	ts := time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
@@ -149,7 +150,7 @@ func TestScrubSnapshot_PreservesTimestamp(t *testing.T) {
 		Assets:        []asset.Asset{},
 	}
 
-	scrubbed := r.ScrubSnapshot(snap)
+	scrubbed := sc.ScrubSnapshot(snap)
 
 	if !scrubbed.CapturedAt.Equal(ts) {
 		t.Error("CapturedAt changed")

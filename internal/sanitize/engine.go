@@ -21,19 +21,13 @@ var _ kernel.Sanitizer = (*Sanitizer)(nil)
 // Sanitizer sanitizes infrastructure identifiers from output.
 // It is deterministic: the same input value always produces the same token.
 type Sanitizer struct {
-	noOp          bool
-	pathMode      PathMode
-	resourceScrub ScrubConfig
-	identityScrub ScrubConfig
+	noOp     bool
+	pathMode PathMode
 }
 
-// New creates a new Sanitizer with default scrub configs.
+// New creates a new Sanitizer with default path mode.
 func New() *Sanitizer {
-	return &Sanitizer{
-		pathMode:      PathModeBase,
-		resourceScrub: DefaultAssetScrub,
-		identityScrub: DefaultIdentityScrub,
-	}
+	return &Sanitizer{pathMode: PathModeBase}
 }
 
 func (r *Sanitizer) enabled() bool {
@@ -62,12 +56,6 @@ func (r *Sanitizer) Asset(id asset.ID) asset.ID {
 	return id.Sanitize(r.token)
 }
 
-// sanitizeAssetID is the string-level adapter used by free-text sanitization
-// (scrubProperties) where the input is a raw string.
-func (r *Sanitizer) sanitizeAssetID(raw string) string {
-	return string(asset.ID(raw).Sanitize(r.token))
-}
-
 // Value sanitizes an arbitrary string value.
 func (r *Sanitizer) Value(v string) string {
 	if !r.enabled() {
@@ -93,17 +81,4 @@ func (r *Sanitizer) ScrubMessage(msg string) string {
 		return msg
 	}
 	return messagePathRe.ReplaceAllString(msg, "$1")
-}
-
-// Bucket sanitizes a bucket name for enforcement artifacts.
-func (r *Sanitizer) Bucket(name string) string {
-	if !r.enabled() {
-		return name
-	}
-	return "SANITIZED_" + r.token(name)
-}
-
-// Verification sanitizes an asset ID in a verification entry.
-func (r *Sanitizer) Verification(assetID asset.ID) asset.ID {
-	return r.Asset(assetID)
 }

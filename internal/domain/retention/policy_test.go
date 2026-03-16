@@ -1,4 +1,4 @@
-package pruner
+package retention
 
 import (
 	"testing"

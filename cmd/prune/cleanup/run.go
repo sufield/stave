@@ -9,8 +9,11 @@ import (
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/pruner/fsops"
+	"github.com/sufield/stave/internal/pruner/report"
 )
 
 // --- Config ---
@@ -35,7 +38,7 @@ type Config struct {
 type executionPlan struct {
 	allFiles       []pruner.SnapshotFile
 	candidateFiles []pruner.SnapshotFile
-	output         pruner.PruneOutput
+	output         report.PruneOutput
 }
 
 // Runner orchestrates the identification and removal of stale snapshot files.
@@ -69,15 +72,15 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}
 
-	candidates := pruneshared.PlanPrune(allFiles, pruner.Criteria{
+	candidates := pruneshared.PlanPrune(allFiles, retention.Criteria{
 		Now:       r.cfg.Now,
 		OlderThan: r.cfg.OlderThan,
 		KeepMin:   r.cfg.KeepMin,
 	})
 
-	out := pruner.BuildPruneOutput(pruner.CleanupInput{
+	out := report.BuildPruneOutput(report.CleanupInput{
 		Now:             r.cfg.Now,
-		Action:          pruner.ActionDelete,
+		Action:          report.ActionDelete,
 		DryRun:          r.cfg.DryRun,
 		ObservationsDir: r.cfg.ObservationsDir,
 		Tier:            r.cfg.RetentionTier,
@@ -101,13 +104,13 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 
 // Render outputs the plan to the user in the requested format.
 func (r *Runner) Render(_ appeval.CleanupPlan) error {
-	return pruner.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, pruner.SnapshotCleanupRenderInput{
+	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
 		Format:         r.cfg.Format,
 		Output:         r.plan.output,
 		OutputKind:     "prune",
 		ActionLabel:    "prune",
 		SummaryPrefix:  "Prune",
-		Action:         pruner.ActionDelete,
+		Action:         report.ActionDelete,
 		DryRun:         r.cfg.DryRun,
 		AllFiles:       r.plan.allFiles,
 		CandidateFiles: r.plan.candidateFiles,
@@ -121,7 +124,7 @@ func (r *Runner) Render(_ appeval.CleanupPlan) error {
 
 // Apply executes the file deletions.
 func (r *Runner) Apply(_ appeval.CleanupPlan) error {
-	deletion, err := pruner.ApplyDelete(pruner.DeleteInput{
+	deletion, err := fsops.ApplyDelete(fsops.DeleteInput{
 		ObservationsDir: r.cfg.ObservationsDir,
 		Files:           r.toDeleteFiles(),
 	})
@@ -137,10 +140,10 @@ func (r *Runner) Apply(_ appeval.CleanupPlan) error {
 
 // --- Helpers ---
 
-func (r *Runner) toDeleteFiles() []pruner.DeleteFile {
-	out := make([]pruner.DeleteFile, 0, len(r.plan.candidateFiles))
+func (r *Runner) toDeleteFiles() []fsops.DeleteFile {
+	out := make([]fsops.DeleteFile, 0, len(r.plan.candidateFiles))
 	for _, sf := range r.plan.candidateFiles {
-		out = append(out, pruner.DeleteFile{Path: sf.Path})
+		out = append(out, fsops.DeleteFile{Path: sf.Path})
 	}
 	return out
 }
