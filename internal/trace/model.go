@@ -76,7 +76,7 @@ type GroupNode struct {
 }
 
 func (g *GroupNode) Matched() bool { return g.Result }
-func (*GroupNode) isNode()          {}
+func (*GroupNode) isNode()         {}
 
 // ClauseNode is a leaf field comparison (standard operators).
 type ClauseNode struct {
@@ -92,7 +92,7 @@ type ClauseNode struct {
 }
 
 func (c *ClauseNode) Matched() bool { return c.Result }
-func (*ClauseNode) isNode()          {}
+func (*ClauseNode) isNode()         {}
 
 // FieldRefNode represents neq_field, not_in_field, not_subset_of_field.
 type FieldRefNode struct {
@@ -108,7 +108,7 @@ type FieldRefNode struct {
 }
 
 func (f *FieldRefNode) Matched() bool { return f.Result }
-func (*FieldRefNode) isNode()          {}
+func (*FieldRefNode) isNode()         {}
 
 // AnyMatchNode represents an any_match with identity iteration.
 type AnyMatchNode struct {
@@ -123,4 +123,4 @@ type AnyMatchNode struct {
 }
 
 func (a *AnyMatchNode) Matched() bool { return a.Result }
-func (*AnyMatchNode) isNode()          {}
+func (*AnyMatchNode) isNode()         {}
