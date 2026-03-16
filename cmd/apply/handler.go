@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
@@ -80,11 +81,17 @@ func executeEvaluation(
 	}
 	defer deps.Close()
 
-	status, err := appeval.Run(ctx, appeval.RunInput{
-		Runner: deps.Runner,
-		Config: deps.Config,
-	})
+	runner, ok := deps.Runner.(*appeval.EvaluateRun)
+	if !ok {
+		return EvaluateResult{}, fmt.Errorf("unexpected runner type %T", deps.Runner)
+	}
+
+	result, status, err := runner.ExecuteAndReturn(ctx, deps.Config)
 	if err != nil {
+		return EvaluateResult{}, err
+	}
+
+	if err := RunOutputPipeline(ctx, deps.Config.Output, result, runner.Marshaler, runner.EnrichFn, slog.Default()); err != nil {
 		return EvaluateResult{}, err
 	}
 

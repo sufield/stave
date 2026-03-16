@@ -1,11 +1,7 @@
 package app
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"io"
-	"strings"
 	"testing"
 	"time"
 
@@ -18,31 +14,6 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
 )
-
-type evalResultRepoStub struct {
-	result *evaluation.Result
-	err    error
-}
-
-func (s evalResultRepoStub) LoadFromFile(_ string) (*evaluation.Result, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-	if s.result != nil {
-		return s.result, nil
-	}
-	return &evaluation.Result{}, nil
-}
-
-func (s evalResultRepoStub) LoadFromReader(_ io.Reader, _ string) (*evaluation.Result, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-	if s.result != nil {
-		return s.result, nil
-	}
-	return &evaluation.Result{}, nil
-}
 
 func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
@@ -76,22 +47,20 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 		},
 	}
 
-	evalStub := evalResultRepoStub{}
 	run, newErr := appdiagnose.NewRun(
 		evalObservationRepoStub{snapshots: snapshots},
 		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
-		evalStub,
 	)
 	if newErr != nil {
 		t.Fatal(newErr)
 	}
 
-	t.Run("uses output reader when provided", func(t *testing.T) {
-		reader := bytes.NewBufferString(`{"findings":[]}`)
+	t.Run("uses previous result when provided", func(t *testing.T) {
+		previousResult := &evaluation.Result{Findings: []evaluation.Finding{}}
 		report, err := run.Execute(context.Background(), appdiagnose.Config{
 			ControlsDir:     "ctl",
 			ObservationsDir: "obs",
-			OutputReader:    reader,
+			PreviousResult:  previousResult,
 			MaxUnsafe:       30 * time.Minute,
 			Clock:           clockadp.FixedClock(now),
 		})
@@ -106,11 +75,20 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 		}
 	})
 
-	t.Run("loads output from file", func(t *testing.T) {
-		report, err := run.Execute(context.Background(), appdiagnose.Config{
+	t.Run("evaluates fresh when no previous result", func(t *testing.T) {
+		// Fresh evaluation with a properly prepared control.
+		preparedCtl := ctl
+		preparedCtl.Prepare()
+		preparedRun, newErr := appdiagnose.NewRun(
+			evalObservationRepoStub{snapshots: snapshots},
+			evalControlRepoStub{controls: []policy.ControlDefinition{preparedCtl}},
+		)
+		if newErr != nil {
+			t.Fatal(newErr)
+		}
+		report, err := preparedRun.Execute(context.Background(), appdiagnose.Config{
 			ControlsDir:     "ctl",
 			ObservationsDir: "obs",
-			OutputFile:      "out.json",
 			MaxUnsafe:       30 * time.Minute,
 			Clock:           clockadp.FixedClock(now),
 		})
@@ -123,26 +101,35 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	})
 }
 
-func TestDiagnoseExecute_EvaluationResultRepoErrors(t *testing.T) {
+func TestDiagnoseExecute_NilPreviousResultRunsFreshEvaluation(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
-	errStub := evalResultRepoStub{err: errors.New("bad output")}
+	ctl := policy.ControlDefinition{
+		ID:   "CTL.TEST.001",
+		Name: "test",
+		Type: policy.TypeUnsafeDuration,
+	}
+	if err := ctl.Prepare(); err != nil {
+		t.Fatal(err)
+	}
+
 	run, newErr := appdiagnose.NewRun(
 		evalObservationRepoStub{snapshots: []asset.Snapshot{{CapturedAt: now}}},
-		evalControlRepoStub{controls: []policy.ControlDefinition{{ID: "CTL.TEST.001"}}},
-		errStub,
+		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
 	)
 	if newErr != nil {
 		t.Fatal(newErr)
 	}
 
-	_, err := run.Execute(context.Background(), appdiagnose.Config{
+	report, err := run.Execute(context.Background(), appdiagnose.Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
-		OutputReader:    bytes.NewBufferString(`{bad}`),
 		MaxUnsafe:       time.Hour,
 		Clock:           clockadp.FixedClock(now),
 	})
-	if err == nil || !strings.Contains(err.Error(), "bad output") {
+	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
+	}
+	if report == nil {
+		t.Fatal("expected non-nil report")
 	}
 }

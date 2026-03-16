@@ -106,26 +106,31 @@ func TestDiagnoseParseHelpers(t *testing.T) {
 func TestRunnerBuildAppConfig(t *testing.T) {
 	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
 
-	fakeStdin := strings.NewReader("{}")
+	fakeStdin := strings.NewReader(`{"findings":[]}`)
 	cfg := Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
 		PreviousOutput:  "-",
 		Stdin:           fakeStdin,
 	}
-	appCfg := runner.buildAppConfig(cfg, 24*time.Hour)
-	if appCfg.OutputReader != fakeStdin || appCfg.OutputFile != "" {
-		t.Fatalf("stdin config mismatch: %#v", appCfg)
+	appCfg, err := runner.buildAppConfig(cfg, 24*time.Hour)
+	if err != nil {
+		t.Fatalf("buildAppConfig(stdin) error = %v", err)
+	}
+	if appCfg.PreviousResult == nil {
+		t.Fatal("expected PreviousResult to be set from stdin")
 	}
 
 	cfg = Config{
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
-		PreviousOutput:  "out.json",
 	}
-	appCfg = runner.buildAppConfig(cfg, 24*time.Hour)
-	if appCfg.OutputFile != "out.json" || appCfg.OutputReader != nil {
-		t.Fatalf("file config mismatch: %#v", appCfg)
+	appCfg, err = runner.buildAppConfig(cfg, 24*time.Hour)
+	if err != nil {
+		t.Fatalf("buildAppConfig(no previous) error = %v", err)
+	}
+	if appCfg.PreviousResult != nil {
+		t.Fatalf("expected PreviousResult nil, got %#v", appCfg.PreviousResult)
 	}
 
 	var buf bytes.Buffer

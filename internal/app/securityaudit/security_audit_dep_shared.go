@@ -2,15 +2,15 @@ package securityaudit
 
 import (
 	"fmt"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"strings"
 )
 
-func findRepoRoot(start string) (string, error) {
+func findRepoRootWith(start string, getwd func() (string, error), statFile func(string) (fs.FileInfo, error)) (string, error) {
 	dir := start
 	if strings.TrimSpace(dir) == "" {
-		wd, err := os.Getwd()
+		wd, err := getwd()
 		if err != nil {
 			return "", err
 		}
@@ -21,7 +21,7 @@ func findRepoRoot(start string) (string, error) {
 		return "", err
 	}
 	for {
-		if _, statErr := os.Stat(filepath.Join(abs, "go.mod")); statErr == nil {
+		if _, statErr := statFile(filepath.Join(abs, "go.mod")); statErr == nil {
 			return abs, nil
 		}
 		parent := filepath.Dir(abs)

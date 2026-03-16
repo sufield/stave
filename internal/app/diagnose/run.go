@@ -3,7 +3,6 @@ package diagnose
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -20,8 +19,7 @@ import (
 type Config struct {
 	ControlsDir     string
 	ObservationsDir string
-	OutputFile      string    // Optional: path to existing apply output JSON.
-	OutputReader    io.Reader // Optional: reader for apply output JSON (e.g. stdin).
+	PreviousResult  *evaluation.Result // Optional: pre-loaded evaluation result (resolved by cmd layer).
 	MaxUnsafe       time.Duration
 	Clock           ports.Clock
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
@@ -31,7 +29,6 @@ type Config struct {
 type Run struct {
 	ObservationRepo appcontracts.ObservationRepository
 	ControlRepo     appcontracts.ControlRepository
-	ResultLoader    appcontracts.ResultLoader
 }
 
 type artifacts struct {
@@ -43,7 +40,6 @@ type artifacts struct {
 func NewRun(
 	obsRepo appcontracts.ObservationRepository,
 	ctlRepo appcontracts.ControlRepository,
-	resultLoader appcontracts.ResultLoader,
 ) (*Run, error) {
 	if obsRepo == nil {
 		return nil, fmt.Errorf("NewRun requires non-nil ObservationRepository")
@@ -54,7 +50,6 @@ func NewRun(
 	return &Run{
 		ObservationRepo: obsRepo,
 		ControlRepo:     ctlRepo,
-		ResultLoader:    resultLoader,
 	}, nil
 }
 
@@ -141,17 +136,8 @@ func (d *Run) resolveResult(
 	cfg Config,
 	artifacts artifacts,
 ) (*evaluation.Result, error) {
-	if cfg.OutputReader != nil {
-		if d.ResultLoader == nil {
-			return nil, fmt.Errorf("evaluation result repository is not configured: cannot load from reader")
-		}
-		return d.ResultLoader.LoadFromReader(cfg.OutputReader, "stdin")
-	}
-	if cfg.OutputFile != "" {
-		if d.ResultLoader == nil {
-			return nil, fmt.Errorf("evaluation result repository is not configured: cannot load from file %q", cfg.OutputFile)
-		}
-		return d.ResultLoader.LoadFromFile(cfg.OutputFile)
+	if cfg.PreviousResult != nil {
+		return cfg.PreviousResult, nil
 	}
 
 	result, err := service.Evaluate(service.EvaluateInput{

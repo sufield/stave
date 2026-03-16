@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -84,13 +85,13 @@ func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
 		}
 	}
 
-	builder := &appdiagnose.PromptBuilder{
+	builder := &promptout.PromptBuilder{
 		AssetID:        cfg.AssetID,
 		ControlsByID:   ctlByID,
 		AssetPropsJSON: assetPropsJSON,
 	}
 	data := builder.Build(matched)
-	rendered := appdiagnose.RenderPrompt(data)
+	rendered := promptout.RenderPrompt(data)
 
 	return r.write(cfg, rendered, data)
 }
@@ -134,7 +135,7 @@ func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir, assetID str
 	return "", nil
 }
 
-func (r *PromptRunner) write(cfg PromptConfig, rendered string, data appdiagnose.PromptData) error {
+func (r *PromptRunner) write(cfg PromptConfig, rendered string, data promptout.PromptData) error {
 	out := cfg.Stdout
 	if cfg.Quiet && !cfg.Format.IsJSON() {
 		out = io.Discard

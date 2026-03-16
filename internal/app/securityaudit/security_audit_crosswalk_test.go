@@ -27,6 +27,7 @@ func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {
 				ResolutionJSON: resolved.ResolutionJSON,
 			}, nil
 		},
+		statFile: os.Stat,
 	}
 	checkIDs := securityaudit.AllCheckIDs()
 

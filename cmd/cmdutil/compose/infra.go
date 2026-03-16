@@ -17,6 +17,7 @@ import (
 	outsarif "github.com/sufield/stave/internal/adapters/output/sarif"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -44,7 +45,7 @@ func NewDefaultProvider() *Provider {
 			return obsjson.NewStdinObservationLoader(obsjson.NewObservationLoader(), r), nil
 		},
 		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
-			return ctlyaml.NewControlLoader()
+			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.Resolve))
 		},
 		FindingWriterFunc: DefaultFindingWriter,
 	}

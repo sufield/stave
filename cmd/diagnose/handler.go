@@ -95,7 +95,10 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	baseCfg := r.buildAppConfig(cfg, maxDuration)
+	baseCfg, err := r.buildAppConfig(cfg, maxDuration)
+	if err != nil {
+		return err
+	}
 	report, err := diagnoseRun.Execute(ctx, baseCfg)
 	if err != nil {
 		return err
@@ -128,7 +131,10 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	baseCfg := r.buildAppConfig(cfg, maxDuration)
+	baseCfg, err := r.buildAppConfig(cfg, maxDuration)
+	if err != nil {
+		return err
+	}
 	detail, err := diagnoseRun.ExecuteFindingDetail(ctx, appdiagnose.FindingDetailConfig{
 		DiagnoseConfig: baseCfg,
 		ControlID:      kernel.ControlID(cfg.ControlID),
@@ -159,11 +165,10 @@ func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
-	evalLoader := evaljson.NewLoader()
-	return appdiagnose.NewRun(obsLoader, ctlLoader, evalLoader)
+	return appdiagnose.NewRun(obsLoader, ctlLoader)
 }
 
-func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) appdiagnose.Config {
+func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagnose.Config, error) {
 	appCfg := appdiagnose.Config{
 		ControlsDir:     cfg.ControlsDir,
 		ObservationsDir: cfg.ObservationsDir,
@@ -171,12 +176,23 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) appdiagno
 		Clock:           r.Clock,
 		PredicateParser: ctlyaml.ParsePredicate,
 	}
-	if cfg.PreviousOutput == "-" {
-		appCfg.OutputReader = cfg.Stdin
-	} else {
-		appCfg.OutputFile = cfg.PreviousOutput
+
+	loader := evaljson.NewLoader()
+	switch {
+	case cfg.PreviousOutput == "-":
+		result, err := loader.LoadFromReader(cfg.Stdin, "stdin")
+		if err != nil {
+			return appdiagnose.Config{}, fmt.Errorf("load evaluation from stdin: %w", err)
+		}
+		appCfg.PreviousResult = result
+	case cfg.PreviousOutput != "":
+		result, err := loader.LoadFromFile(cfg.PreviousOutput)
+		if err != nil {
+			return appdiagnose.Config{}, fmt.Errorf("load evaluation from %q: %w", cfg.PreviousOutput, err)
+		}
+		appCfg.PreviousResult = result
 	}
-	return appCfg
+	return appCfg, nil
 }
 
 func (r *Runner) newPresenter(cfg Config) *Presenter {

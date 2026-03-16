@@ -2,6 +2,7 @@ package securityaudit
 
 import (
 	"context"
+	"io/fs"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -19,7 +20,17 @@ type RunnerDeps struct {
 	SignatureVerifier ports.Verifier
 	RunDiagnostics    func(cwd, binaryPath, staveVersion string)
 	ResolveCrosswalk  func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
+
+	// OS-level functions injected to keep the app layer free of direct os.* calls.
+	StatFile     func(string) (fs.FileInfo, error)
+	Getenv       func(string) string
+	IsPrivileged func() bool
+	WalkDir      func(string, WalkFunc) error
+	Getwd        func() (string, error)
 }
+
+// WalkFunc is the callback signature for directory walking, matching filepath.WalkFunc.
+type WalkFunc func(path string, info fs.FileInfo, err error) error
 
 // CrosswalkResult holds the resolved crosswalk mapping, matching the shape of
 // compliance.CrosswalkResolution without importing that package.

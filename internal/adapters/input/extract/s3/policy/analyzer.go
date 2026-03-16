@@ -16,18 +16,18 @@ var accountARNPattern = regexp.MustCompile(`^arn:aws:iam::(\d{12}):`)
 // into a single result produced in one pass.
 type Assessment struct {
 	// Public exposure
-	AllowsPublicRead   bool                  `json:"allows_public_read"`
-	AllowsPublicList   bool                  `json:"allows_public_list"`
-	AllowsPublicWrite  bool                  `json:"allows_public_write"`
-	AllowsPublicDelete bool                  `json:"allows_public_delete"`
-	HasWildcardActions bool                  `json:"has_wildcard_actions"`
-	PublicStatements   []kernel.StatementID  `json:"public_statements"`
+	AllowsPublicRead   bool                 `json:"allows_public_read"`
+	AllowsPublicList   bool                 `json:"allows_public_list"`
+	AllowsPublicWrite  bool                 `json:"allows_public_write"`
+	AllowsPublicDelete bool                 `json:"allows_public_delete"`
+	HasWildcardActions bool                 `json:"has_wildcard_actions"`
+	PublicStatements   []kernel.StatementID `json:"public_statements"`
 
 	// Network conditions
-	HasNetworkCondition   bool                 `json:"has_network_condition"`
-	HasIPCondition        bool                 `json:"has_ip_condition"`
-	HasVPCCondition       bool                 `json:"has_vpc_condition"`
-	EffectiveNetworkScope kernel.NetworkScope  `json:"effective_network_scope"`
+	HasNetworkCondition   bool                `json:"has_network_condition"`
+	HasIPCondition        bool                `json:"has_ip_condition"`
+	HasVPCCondition       bool                `json:"has_vpc_condition"`
+	EffectiveNetworkScope kernel.NetworkScope `json:"effective_network_scope"`
 
 	// Authenticated-only principal access
 	AllowsAuthenticatedRead  bool `json:"allows_authenticated_read"`
