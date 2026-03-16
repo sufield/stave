@@ -109,7 +109,6 @@ func nodeToJSON(node Node) jsonNode {
 	}
 }
 
-
 func clauseToJSON(c *ClauseNode) jsonNode {
 	idx := c.Index
 	exists := c.FieldExists

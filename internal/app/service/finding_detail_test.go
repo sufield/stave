@@ -8,10 +8,10 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 
+	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
-	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/trace"
 )
 

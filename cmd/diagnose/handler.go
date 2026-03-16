@@ -11,13 +11,13 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/adapters/output"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
+	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/crypto"
-	apptrace "github.com/sufield/stave/internal/app/trace"
 )
 
 // Config holds the inputs for the diagnostic engine.
