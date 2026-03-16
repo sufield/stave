@@ -6,12 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/cobra"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -95,52 +91,9 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 
 // runDryRun performs only readiness checks (replacing the removed plan command).
 // It is invoked by apply --dry-run.
-func runDryRun(cmd *cobra.Command, opts *ApplyOptions) error {
-	format, err := compose.ResolveFormatValue(cmd, opts.Format)
-	if err != nil {
-		return err
-	}
-
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return err
-	}
-	engine := projctx.NewInferenceEngine(resolver)
-	ctlDir := fsutil.CleanUserPath(opts.ControlsDir)
-	if !cmd.Flags().Changed("controls") {
-		if inferred := engine.InferDir("controls", ""); inferred != "" {
-			ctlDir = inferred
-		}
-	}
-	obsDir := fsutil.CleanUserPath(opts.ObservationsDir)
-	if !cmd.Flags().Changed("observations") {
-		if inferred := engine.InferDir("observations", ""); inferred != "" {
-			obsDir = inferred
-		}
-	}
-
-	hasPacks := false
-	if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
-		hasPacks = true
-	}
-
-	gf := cmdutil.GetGlobalFlags(cmd)
+func runDryRun(cfg PlanConfig) error {
 	planner := NewPlanner(applyvalidate.NewReadinessValidator)
-
-	return planner.Execute(PlanConfig{
-		ControlsDir:     ctlDir,
-		ObservationsDir: obsDir,
-		MaxUnsafe:       opts.MaxUnsafe,
-		Now:             opts.NowTime,
-		Format:          format,
-		Quiet:           gf.Quiet,
-		Sanitize:        gf.Sanitize,
-		Stdout:          cmd.OutOrStdout(),
-		Stderr:          cmd.ErrOrStderr(),
-		ControlsFlagSet: opts.ControlsSet,
-		HasEnabledPacks: hasPacks,
-		PrereqChecks:    doctorPrereqs(),
-	})
+	return planner.Execute(cfg)
 }
 
 func doctorPrereqs() []validation.PrereqCheck {

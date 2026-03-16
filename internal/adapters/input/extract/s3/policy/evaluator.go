@@ -1,36 +1,10 @@
 package policy
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 )
-
-// Re-export score constants.
-const (
-	ScoreSafe         = risk.ScoreSafe
-	ScoreInfo         = risk.ScoreInfo
-	ScoreWarning      = risk.ScoreWarning
-	ScoreCritical     = risk.ScoreCritical
-	ScoreCatastrophic = risk.ScoreCatastrophic
-)
-
-// Re-export permission constants.
-const (
-	PermRead        = risk.PermRead
-	PermWrite       = risk.PermWrite
-	PermList        = risk.PermList
-	PermAdminRead   = risk.PermAdminRead
-	PermAdminWrite  = risk.PermAdminWrite
-	PermDelete      = risk.PermDelete
-	PermFullControl = risk.PermFullControl
-)
-
-// Evaluator encapsulates policy scoring rules.
-type Evaluator struct {
-	TrustedCIDRs []string
-}
 
 var evaluatorActionMap = map[string]risk.Permission{
 	policyWildcard:                 risk.PermFullControl,
@@ -52,39 +26,26 @@ var evaluatorPrefixRules = []risk.PrefixRule{
 	{Prefix: policyActionPrefixDelete, Perm: risk.PermDelete},
 }
 
+// Evaluator encapsulates policy scoring rules.
+type Evaluator struct {
+	TrustedCIDRs []string
+}
+
 // NewEvaluator constructs a new policy evaluator.
 func NewEvaluator(trusted []string) *Evaluator {
 	return &Evaluator{TrustedCIDRs: trusted}
 }
 
-// ParseIAMPolicy parses raw IAM policy JSON.
-func ParseIAMPolicy(jsonPolicy string) (BucketPolicy, error) {
-	var policy BucketPolicy
-	if err := json.Unmarshal([]byte(jsonPolicy), &policy); err != nil {
-		return BucketPolicy{}, err
-	}
-	return policy, nil
-}
-
-// IsNetworkScoped returns true when condition restricts by IP/VPC/Org.
-func IsNetworkScoped(condition any) bool {
-	analysis := analyzeCondition(condition)
-	return analysis.HasIPCondition || analysis.HasVPCCondition || analysis.HasOrgCondition
-}
-
-// Evaluate computes a policy risk report from raw JSON.
-func (e *Evaluator) Evaluate(jsonPolicy string) risk.Report {
-	policy, err := ParseIAMPolicy(jsonPolicy)
-	if err != nil {
-		return risk.Report{
-			Score:    risk.ScoreCatastrophic,
-			Findings: []string{"Malformed JSON Policy"},
-		}
+// Evaluate computes a policy risk report from a pre-parsed Document.
+// The Document must have been created via Parse() at the adapter boundary.
+func (e *Evaluator) Evaluate(doc *Document) risk.Report {
+	if doc == nil || len(doc.statements) == 0 {
+		return risk.Report{Score: risk.ScoreSafe}
 	}
 
 	report := risk.Report{}
 
-	for _, stmt := range policy.Statement {
+	for _, stmt := range doc.statements {
 		if stmt.Effect != "" && !stmt.Effect.IsAllow() {
 			continue
 		}
@@ -94,12 +55,13 @@ func (e *Evaluator) Evaluate(jsonPolicy string) risk.Report {
 		report.Permissions |= perms
 
 		isPublic, isAuth := classifyPolicyPrincipal(stmt.principalAny())
-		isNetworkScoped := IsNetworkScoped(stmt.conditionAny())
+		cond := stmt.ConditionAnalysis()
+
 		ctx := risk.StatementContext{
 			Permissions:     perms,
 			IsPublic:        isPublic,
 			IsAuthenticated: isAuth,
-			IsNetworkScoped: isNetworkScoped,
+			IsNetworkScoped: cond.IsNetworkScoped(),
 			IsAllow:         stmt.Effect == "" || stmt.Effect.IsAllow(),
 		}
 		report.UpdateReport(ctx.Evaluate())
@@ -115,7 +77,7 @@ func classifyPolicyPrincipal(principal any) (isPublic bool, isAuthenticated bool
 func normalizeActions(actions []string) []string {
 	out := make([]string, len(actions))
 	for i, a := range actions {
-		out[i] = strings.ToLower(a)
+		out[i] = strings.ToLower(strings.TrimSpace(a))
 	}
 	return out
 }

@@ -1,76 +1,31 @@
 package apply
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/internal/sanitize"
 )
 
-// runApply is the main entry point for the apply command.
-func runApply(cmd *cobra.Command, _ []string, opts *ApplyOptions) error {
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return err
-	}
-	if _, err = resolver.ResolveSelected(); err != nil {
-		return err
-	}
-
-	if opts.DryRun {
-		return runDryRun(cmd, opts)
-	}
-
-	if err = runStrictIntegrityCheck(cmd); err != nil {
-		return err
-	}
-
-	cfg, err := opts.Resolve(cmd)
-	if err != nil {
-		return decorateError(err)
-	}
-
-	if cfg.Mode == runModeProfile {
-		return runProfileApply(cmd, cfg.Profile)
-	}
-
-	return runStandardApply(cmd, opts, cfg.Params)
-}
-
-// runProfileApply bridges the Cobra layer into the Runner/Config pattern.
-func runProfileApply(cmd *cobra.Command, cfg Config) error {
-	clock, err := compose.ResolveClock(cfg.NowTime)
-	if err != nil {
-		return err
-	}
-
-	format, err := compose.ResolveFormatValue(cmd, cfg.OutputFormat)
-	if err != nil {
-		return err
-	}
-
-	gf := cmdutil.GetGlobalFlags(cmd)
-	cfg.Stdout = compose.ResolveStdout(cmd.OutOrStdout(), cfg.Quiet, format)
-	cfg.Stderr = cmd.ErrOrStderr()
-	cfg.IsJSONMode = gf.IsJSONMode()
-	cfg.Sanitizer = gf.GetSanitizer()
-	cfg.OutputFormat = format.String()
-
+// runProfileApply executes the profile-based evaluation workflow.
+func runProfileApply(ctx context.Context, clock ports.Clock, cfg Config) error {
 	runner := NewRunner(clock, cfg.Quiet)
-	return runner.Run(cmd.Context(), cfg)
+	return runner.Run(ctx, cfg)
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, params applyParams) error {
+func runStandardApply(ctx context.Context, opts *ApplyOptions, params applyParams, sio standardIO) error {
 	plan, err := appeval.NewPlan(opts.buildEvaluatorInput())
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
@@ -83,38 +38,37 @@ func runStandardApply(cmd *cobra.Command, opts *ApplyOptions, params applyParams
 		))
 	}
 
-	results, err := executeEvaluation(cmd, opts, params, plan)
+	results, err := executeEvaluation(ctx, opts, params, sio, plan)
 	if err != nil {
 		return decorateError(err)
 	}
 
 	rep := &Reporter{
-		Stdout: cmd.OutOrStdout(),
-		Stderr: cmd.ErrOrStderr(),
-		Quiet:  cmdutil.GetGlobalFlags(cmd).Quiet,
+		Stdout: sio.Stdout,
+		Stderr: sio.Stderr,
+		Quiet:  sio.Quiet,
 	}
 	return rep.ReportApply(results)
 }
 
 func executeEvaluation(
-	cmd *cobra.Command,
+	ctx context.Context,
 	opts *ApplyOptions,
 	params applyParams,
+	sio standardIO,
 	plan *appeval.EvaluationPlan,
 ) (EvaluateResult, error) {
-	gf := cmdutil.GetGlobalFlags(cmd)
-	rt := cmdutil.NewRuntimeFromFlags(cmd.OutOrStdout(), cmd.ErrOrStderr(), gf)
+	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
+	rt.Quiet = sio.Quiet
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	format, _ := compose.ResolveFormatValue(cmd, opts.Format)
-
 	builder := &Builder{
-		Ctx:           cmd.Context(),
-		Stdout:        compose.ResolveStdout(cmd.OutOrStdout(), gf.Quiet, format),
-		Stderr:        cmd.ErrOrStderr(),
-		Sanitizer:     gf.GetSanitizer(),
-		IsJSON:        gf.IsJSONMode(),
+		Ctx:           ctx,
+		Stdout:        sio.Stdout,
+		Stderr:        sio.Stderr,
+		Sanitizer:     asSanitizer(sio.Sanitizer),
+		IsJSON:        sio.IsJSON,
 		Opts:          opts,
 		Params:        params,
 		OnObsProgress: progress.Update,
@@ -126,7 +80,7 @@ func executeEvaluation(
 	}
 	defer deps.Close()
 
-	status, err := appeval.Run(cmd.Context(), appeval.RunInput{
+	status, err := appeval.Run(ctx, appeval.RunInput{
 		Runner: deps.Runner,
 		Config: deps.Config,
 	})
@@ -138,12 +92,12 @@ func executeEvaluation(
 }
 
 // runStrictIntegrityCheck ensures internal pack integrity when --strict is set.
-func runStrictIntegrityCheck(cmd *cobra.Command) error {
-	if !cmdutil.GetGlobalFlags(cmd).Strict {
+func runStrictIntegrityCheck(strict bool, stdout, stderr io.Writer) error {
+	if !strict {
 		return nil
 	}
 
-	rt := cmdutil.NewRuntimeFromFlags(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmdutil.GetGlobalFlags(cmd))
+	rt := ui.NewRuntime(stdout, stderr)
 	done := rt.BeginProgress("perform strict integrity checks")
 	defer done()
 
@@ -174,4 +128,15 @@ func decorateError(err error) error {
 		return err
 	}
 	return ui.EvaluateErrorWithHint(ui.WithHint(err, hint))
+}
+
+// asSanitizer converts kernel.Sanitizer to *sanitize.Sanitizer for Builder compatibility.
+func asSanitizer(s kernel.Sanitizer) *sanitize.Sanitizer {
+	if s == nil {
+		return nil
+	}
+	if san, ok := s.(*sanitize.Sanitizer); ok {
+		return san
+	}
+	return nil
 }

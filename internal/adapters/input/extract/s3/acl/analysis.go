@@ -26,14 +26,6 @@ const (
 	aclPermFullControl = aclPermRead | aclPermWrite | aclPermReadACP | aclPermWriteACP
 )
 
-var aclPermissionByString = map[string]Permission{
-	permRead:        aclPermRead,
-	permWrite:       aclPermWrite,
-	permReadACL:     aclPermReadACP,
-	permWriteACL:    aclPermWriteACP,
-	permFullControl: aclPermFullControl,
-}
-
 func (p Permission) has(target Permission) bool {
 	return p&target != 0
 }

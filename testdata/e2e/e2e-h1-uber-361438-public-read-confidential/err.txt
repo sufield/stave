@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 24ms)
+Done:    apply controls against observations (2 files, 44ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-uber-361438-public-read-confidential/controls --observations testdata/e2e/e2e-h1-uber-361438-public-read-confidential/observations
 

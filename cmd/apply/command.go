@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -65,11 +66,51 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 			opts.ControlsSet = cmdutil.ControlsFlagChanged(cmd)
 			opts.normalize()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := opts.validate(); err != nil {
 				return err
 			}
-			return runApply(cmd, args, opts)
+
+			resolver, err := projctx.NewResolver()
+			if err != nil {
+				return err
+			}
+			if _, err = resolver.ResolveSelected(); err != nil {
+				return err
+			}
+
+			// Dry-run branch
+			if opts.DryRun {
+				planCfg, err := opts.ResolveDryRun(cmd)
+				if err != nil {
+					return err
+				}
+				return runDryRun(planCfg)
+			}
+
+			// Strict integrity check
+			gf := cmdutil.GetGlobalFlags(cmd)
+			if err := runStrictIntegrityCheck(gf.Strict, cmd.OutOrStdout(), cmd.ErrOrStderr()); err != nil {
+				return err
+			}
+
+			// Resolve run mode
+			cfg, err := opts.Resolve(cmd)
+			if err != nil {
+				return decorateError(err)
+			}
+
+			// Profile branch
+			if cfg.Mode == runModeProfile {
+				return runProfileApply(cmd.Context(), cfg.profileClock, cfg.Profile)
+			}
+
+			// Standard apply branch
+			sio, err := opts.ResolveStandardIO(cmd)
+			if err != nil {
+				return err
+			}
+			return runStandardApply(cmd.Context(), opts, cfg.Params, sio)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

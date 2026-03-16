@@ -7,24 +7,33 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/exposure"
 )
 
-// S3 action-to-permission mapping.
-var actionToPerm = map[string]exposure.Permission{
-	"*":                     exposure.PermAll,
-	"s3:*":                  exposure.PermAll,
-	"s3:getobject":          exposure.PermRead,
-	"s3:putobject":          exposure.PermWrite,
-	"s3:listbucket":         exposure.PermList,
-	"s3:listbucketversions": exposure.PermList,
-	"s3:getbucketacl":       exposure.PermMetadataRead,
-	"s3:getobjectacl":       exposure.PermMetadataRead,
-	"s3:putbucketacl":       exposure.PermMetadataWrite,
-	"s3:putobjectacl":       exposure.PermMetadataWrite,
-	"s3:deleteobject":       exposure.PermDelete,
-	"s3:deletebucket":       exposure.PermDelete,
+// mapActionToPermission maps an S3 action string to a domain permission bitmask.
+// Uses prefix/contains matching to handle action variants (e.g., s3:GetObjectVersion).
+func mapActionToPermission(action string) exposure.Permission {
+	a := strings.ToLower(strings.TrimSpace(action))
+	switch {
+	case a == "*" || a == "s3:*":
+		return exposure.PermAll
+	case strings.Contains(a, "getobject"):
+		return exposure.PermRead
+	case strings.Contains(a, "putobject"):
+		return exposure.PermWrite
+	case strings.Contains(a, "listbucket"):
+		return exposure.PermList
+	case strings.Contains(a, "deleteobject") || strings.Contains(a, "deletebucket"):
+		return exposure.PermDelete
+	case strings.Contains(a, "acl"):
+		if strings.Contains(a, "get") {
+			return exposure.PermMetadataRead
+		}
+		return exposure.PermMetadataWrite
+	default:
+		return 0
+	}
 }
 
 // Normalize converts an S3-specific bucket input into a vendor-neutral NormalizedResourceInput.
-func Normalize(input S3BucketInput) exposure.NormalizedResourceInput {
+func Normalize(input Bucket) exposure.NormalizedResourceInput {
 	result := exposure.NormalizedResourceInput{
 		Name:                input.Name,
 		Exists:              input.Exists,
@@ -41,7 +50,7 @@ func Normalize(input S3BucketInput) exposure.NormalizedResourceInput {
 }
 
 // NormalizeAll converts a slice of S3 bucket inputs into normalized inputs.
-func NormalizeAll(inputs []S3BucketInput) []exposure.NormalizedResourceInput {
+func NormalizeAll(inputs []Bucket) []exposure.NormalizedResourceInput {
 	normalized := make([]exposure.NormalizedResourceInput, len(inputs))
 	for i, b := range inputs {
 		normalized[i] = Normalize(b)
@@ -50,13 +59,13 @@ func NormalizeAll(inputs []S3BucketInput) []exposure.NormalizedResourceInput {
 }
 
 // ClassifyS3Exposure normalizes S3-specific bucket inputs and classifies exposure.
-func ClassifyS3Exposure(buckets []S3BucketInput) []exposure.ExposureClassification {
+func ClassifyS3Exposure(buckets []Bucket) []exposure.ExposureClassification {
 	return exposure.ClassifyExposure(NormalizeAll(buckets))
 }
 
 // --- Policy Inspection ---
 
-func inspectPolicy(result *exposure.NormalizedResourceInput, policy PolicyConfig) {
+func inspectPolicy(result *exposure.NormalizedResourceInput, policy Policy) {
 	for i, stmt := range policy.Statements {
 		if !strings.EqualFold(stmt.Effect, "allow") {
 			continue
@@ -77,7 +86,7 @@ func inspectPolicy(result *exposure.NormalizedResourceInput, policy PolicyConfig
 
 // --- ACL Inspection ---
 
-func inspectACL(result *exposure.NormalizedResourceInput, acl ACLConfig) {
+func inspectACL(result *exposure.NormalizedResourceInput, acl ACL) {
 	for i, grant := range acl.Grants {
 		if !grantIsPublic(grant) {
 			continue
@@ -138,9 +147,7 @@ func recordPerms(
 func analyzeActions(actions []string) exposure.Permission {
 	var mask exposure.Permission
 	for _, action := range actions {
-		if p, ok := actionToPerm[strings.ToLower(action)]; ok {
-			mask |= p
-		}
+		mask |= mapActionToPermission(action)
 		if mask == exposure.PermAll {
 			break
 		}
@@ -161,7 +168,7 @@ func classifyPrincipal(principal string) (isGlobal, isAuthenticated bool) {
 	if p == principalWildcard {
 		return true, false
 	}
-	if strings.Contains(strings.ToLower(p), principalTokenAuthenticatedUsers) {
+	if matchesPrincipalToken(p, principalTokenAuthenticatedUsers) {
 		return false, true
 	}
 	return false, false
@@ -169,17 +176,26 @@ func classifyPrincipal(principal string) (isGlobal, isAuthenticated bool) {
 
 // --- ACL Grant Helpers ---
 
-func grantIsAllUsers(g ACLGrant) bool {
-	return strings.Contains(strings.ToLower(g.Grantee), principalTokenAllUsers)
+func grantIsAllUsers(g Grant) bool {
+	return matchesPrincipalToken(g.Grantee, principalTokenAllUsers)
 }
 
-func grantIsPublic(g ACLGrant) bool {
-	grantee := strings.ToLower(g.Grantee)
-	return strings.Contains(grantee, principalTokenAllUsers) ||
-		strings.Contains(grantee, principalTokenAuthenticatedUsers)
+func grantIsPublic(g Grant) bool {
+	return matchesPrincipalToken(g.Grantee, principalTokenAllUsers) ||
+		matchesPrincipalToken(g.Grantee, principalTokenAuthenticatedUsers)
 }
 
-func grantPermissions(g ACLGrant) exposure.Permission {
+// matchesPrincipalToken checks if a principal string matches a token.
+// Handles bare tokens ("allusers"), URI paths (".../AllUsers"),
+// and AWS prefixed forms ("AWS:AuthenticatedUsers").
+func matchesPrincipalToken(principal, token string) bool {
+	v := strings.ToLower(strings.TrimSpace(principal))
+	return v == token ||
+		strings.HasSuffix(v, "/"+token) ||
+		strings.HasSuffix(v, ":"+token)
+}
+
+func grantPermissions(g Grant) exposure.Permission {
 	perm := strings.ToUpper(strings.TrimSpace(g.Permission))
 	scope := strings.ToLower(strings.TrimSpace(g.Scope))
 

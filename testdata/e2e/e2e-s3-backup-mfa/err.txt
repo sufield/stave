@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 23ms)
+Done:    apply controls against observations (2 files, 54ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-s3-backup-mfa/controls --observations testdata/e2e/e2e-s3-backup-mfa/observations
 

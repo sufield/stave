@@ -2,29 +2,30 @@ package acl
 
 import "strings"
 
+// AWS canonical permission strings.
 const (
 	permRead        = "READ"
 	permWrite       = "WRITE"
-	permReadACL     = "READ_ACP"
-	permWriteACL    = "WRITE_ACP"
+	permReadACP     = "READ_ACP"
+	permWriteACP    = "WRITE_ACP"
 	permFullControl = "FULL_CONTROL"
 )
 
-// GrantAudience classifies who a grant targets.
-type GrantAudience int
+// Audience classifies the reach of an ACL grant.
+type Audience int
 
 const (
-	// AudiencePrivate means the grant targets a specific account or user.
-	AudiencePrivate GrantAudience = iota
-	// AudienceAllUsers means the grant targets anonymous/public access.
+	// AudiencePrivate targets specific accounts or canonical users.
+	AudiencePrivate Audience = iota
+	// AudienceAllUsers targets the public internet (AllUsers group).
 	AudienceAllUsers
-	// AudienceAuthenticatedOnly means the grant targets any authenticated AWS user.
+	// AudienceAuthenticatedOnly targets any authenticated AWS user.
 	AudienceAuthenticatedOnly
 )
 
-// Grant represents a single ACL grant from adapters or fixtures.
+// Grant represents a single entry in an S3 Access Control List.
 type Grant struct {
-	Grantee    string // URI or ID
+	Grantee    string // URI for groups, or canonical ID for accounts
 	Permission string // READ, WRITE, READ_ACP, WRITE_ACP, FULL_CONTROL
 	Type       string `json:"type,omitempty"`
 	Scope      string `json:"scope,omitempty"`
@@ -33,39 +34,30 @@ type Grant struct {
 // Grants is a collection helper for ACL grant slices.
 type Grants []Grant
 
-func (g Grant) normalizedGrantee() string {
-	return strings.ToLower(strings.TrimSpace(g.Grantee))
-}
-
-func (g Grant) normalizedPermission() string {
-	return strings.ToUpper(strings.TrimSpace(g.Permission))
-}
-
-// IsAllUsers reports whether the grant targets the global AllUsers principal.
-func (g Grant) IsAllUsers() bool {
-	return isAllUsersPrincipalToken(g.normalizedGrantee())
-}
-
-// IsAuthenticatedUsers reports whether the grant targets AuthenticatedUsers.
-func (g Grant) IsAuthenticatedUsers() bool {
-	return isAuthenticatedUsersPrincipalToken(g.normalizedGrantee())
-}
-
-// IsAuthenticatedOnly reports whether this grant is not world-public.
-func (g Grant) IsAuthenticatedOnly() bool {
-	return g.IsAuthenticatedUsers() && !g.IsAllUsers()
-}
-
-// Audience classifies who this grant targets: AllUsers, AuthenticatedOnly, or Private.
-func (g Grant) Audience() GrantAudience {
+// Audience determines who the grant applies to by inspecting the Grantee URI
+// against the canonical AWS group identifiers.
+//
+// Uses suffix matching instead of Contains to avoid false positives:
+// a principal like "arn:aws:iam::123:user/allusers-service" must not
+// match as the public AllUsers group.
+func (g Grant) Audience() Audience {
 	switch {
-	case g.IsAllUsers():
+	case matchesToken(g.Grantee, "allusers"):
 		return AudienceAllUsers
-	case g.IsAuthenticatedUsers():
+	case matchesToken(g.Grantee, "authenticatedusers"):
 		return AudienceAuthenticatedOnly
 	default:
 		return AudiencePrivate
 	}
+}
+
+// matchesToken checks if a principal string matches a token via exact match,
+// URI path suffix (".../AllUsers"), or AWS prefix ("AWS:AuthenticatedUsers").
+func matchesToken(principal, token string) bool {
+	v := strings.ToLower(strings.TrimSpace(principal))
+	return v == token ||
+		strings.HasSuffix(v, "/"+token) ||
+		strings.HasSuffix(v, ":"+token)
 }
 
 // IsPublic reports whether this grant applies to public or authenticated principals.
@@ -75,10 +67,23 @@ func (g Grant) IsPublic() bool {
 
 // HasFullControl reports whether the grant includes FULL_CONTROL.
 func (g Grant) HasFullControl() bool {
-	return g.normalizedPermission() == permFullControl
+	return strings.ToUpper(strings.TrimSpace(g.Permission)) == permFullControl
 }
 
-// Permissions returns ACL analysis bits for this grant.
+// Permissions maps the raw permission string to the domain bitmask.
 func (g Grant) Permissions() Permission {
-	return aclPermissionByString[g.normalizedPermission()]
+	switch strings.ToUpper(strings.TrimSpace(g.Permission)) {
+	case permRead:
+		return aclPermRead
+	case permWrite:
+		return aclPermWrite
+	case permReadACP:
+		return aclPermReadACP
+	case permWriteACP:
+		return aclPermWriteACP
+	case permFullControl:
+		return aclPermFullControl
+	default:
+		return 0
+	}
 }

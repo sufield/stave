@@ -1,42 +1,47 @@
 // Package classify translates S3-specific bucket policy, ACL, and website
 // data into the vendor-neutral exposure domain model.
+//
+// The structs in this file are inbound DTOs: they capture raw data from
+// external sources (AWS API, Terraform state) before the translator maps
+// them into clean domain types.
 package classify
 
-// S3BucketInput represents a bucket with raw S3 policy/ACL/website data.
-type S3BucketInput struct {
-	Name              string        `json:"name"`
-	Exists            bool          `json:"exists"`
-	ExternalReference bool          `json:"external_reference"`
-	Website           WebsiteConfig `json:"website"`
-	Policy            PolicyConfig  `json:"policy"`
-	ACL               ACLConfig     `json:"acl"`
+// Bucket represents the raw S3 bucket configuration as ingested from
+// an external source (e.g., a JSON snapshot or Terraform state).
+type Bucket struct {
+	Name              string  `json:"name"`
+	Exists            bool    `json:"exists"`
+	ExternalReference bool    `json:"external_reference"`
+	Website           Website `json:"website"`
+	Policy            Policy  `json:"policy"`
+	ACL               ACL     `json:"acl"`
 }
 
-// WebsiteConfig represents S3 static website hosting configuration.
-type WebsiteConfig struct {
+// Website represents the S3 static website hosting configuration.
+type Website struct {
 	Enabled bool `json:"enabled"`
 }
 
-// PolicyConfig represents a simplified bucket policy.
-type PolicyConfig struct {
-	Statements []StatementInput `json:"statements"`
+// Policy represents a simplified AWS IAM policy document attached to a bucket.
+type Policy struct {
+	Statements []Statement `json:"statements"`
 }
 
-// StatementInput represents a single policy statement.
-type StatementInput struct {
+// Statement represents a single entry in an AWS IAM policy.
+type Statement struct {
 	Effect    string   `json:"effect"`
 	Principal string   `json:"principal"`
 	Actions   []string `json:"actions"`
 	Resources []string `json:"resources"`
 }
 
-// ACLConfig represents simplified ACL grants.
-type ACLConfig struct {
-	Grants []ACLGrant `json:"grants"`
+// ACL represents the S3 Access Control List configuration.
+type ACL struct {
+	Grants []Grant `json:"grants"`
 }
 
-// ACLGrant represents a single ACL grant.
-type ACLGrant struct {
+// Grant represents a single permission entry in an S3 ACL.
+type Grant struct {
 	Grantee    string `json:"grantee"`
 	Permission string `json:"permission"`
 	Scope      string `json:"scope,omitempty"`

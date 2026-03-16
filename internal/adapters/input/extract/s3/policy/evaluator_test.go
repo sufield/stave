@@ -1,22 +1,42 @@
 package policy
 
-import "testing"
+import (
+	"testing"
 
-func TestEvaluatorMalformedPolicy(t *testing.T) {
-	e := NewEvaluator(nil)
-	report := e.Evaluate("{")
+	"github.com/sufield/stave/internal/domain/evaluation/risk"
+)
 
-	if report.Score != ScoreCatastrophic {
-		t.Fatalf("expected catastrophic score, got %d", report.Score)
+func mustParse(t *testing.T, jsonPolicy string) *Document {
+	t.Helper()
+	doc, err := Parse(jsonPolicy)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
 	}
-	if len(report.Findings) != 1 || report.Findings[0] != "Malformed JSON Policy" {
-		t.Fatalf("unexpected findings: %#v", report.Findings)
+	return doc
+}
+
+func TestEvaluatorNilDocument(t *testing.T) {
+	e := NewEvaluator(nil)
+	report := e.Evaluate(nil)
+
+	if report.Score != risk.ScoreSafe {
+		t.Fatalf("expected safe score for nil doc, got %d", report.Score)
+	}
+}
+
+func TestEvaluatorEmptyPolicy(t *testing.T) {
+	e := NewEvaluator(nil)
+	doc := mustParse(t, "")
+	report := e.Evaluate(doc)
+
+	if report.Score != risk.ScoreSafe {
+		t.Fatalf("expected safe score for empty policy, got %d", report.Score)
 	}
 }
 
 func TestEvaluatorPublicWriteUnscoped(t *testing.T) {
 	e := NewEvaluator(nil)
-	report := e.Evaluate(`{
+	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
 			{
@@ -27,24 +47,22 @@ func TestEvaluatorPublicWriteUnscoped(t *testing.T) {
 			}
 		]
 	}`)
+	report := e.Evaluate(doc)
 
-	if report.Score != ScoreCritical {
+	if report.Score != risk.ScoreCritical {
 		t.Fatalf("expected critical score, got %d", report.Score)
 	}
 	if !report.IsPublic {
 		t.Fatalf("expected IsPublic=true")
 	}
-	if !report.Permissions.Has(PermWrite | PermAdminWrite) {
+	if !report.Permissions.Has(risk.PermWrite | risk.PermAdminWrite) {
 		t.Fatalf("expected write+adminwrite permissions, got %v", report.Permissions)
-	}
-	if len(report.Findings) != 1 || report.Findings[0] != "Unrestricted Public Write/Admin Access" {
-		t.Fatalf("unexpected findings: %#v", report.Findings)
 	}
 }
 
 func TestEvaluatorPublicReadUnscoped(t *testing.T) {
 	e := NewEvaluator(nil)
-	report := e.Evaluate(`{
+	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
 			{
@@ -55,18 +73,16 @@ func TestEvaluatorPublicReadUnscoped(t *testing.T) {
 			}
 		]
 	}`)
+	report := e.Evaluate(doc)
 
-	if report.Score != ScoreWarning {
+	if report.Score != risk.ScoreWarning {
 		t.Fatalf("expected warning score, got %d", report.Score)
-	}
-	if len(report.Findings) != 1 || report.Findings[0] != "Unrestricted Public Read Access" {
-		t.Fatalf("unexpected findings: %#v", report.Findings)
 	}
 }
 
 func TestEvaluatorPublicReadNetworkScoped(t *testing.T) {
 	e := NewEvaluator(nil)
-	report := e.Evaluate(`{
+	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
 			{
@@ -80,18 +96,16 @@ func TestEvaluatorPublicReadNetworkScoped(t *testing.T) {
 			}
 		]
 	}`)
+	report := e.Evaluate(doc)
 
-	if report.Score != ScoreSafe {
+	if report.Score != risk.ScoreSafe {
 		t.Fatalf("expected safe score, got %d", report.Score)
-	}
-	if len(report.Findings) != 0 {
-		t.Fatalf("expected no findings, got %#v", report.Findings)
 	}
 }
 
 func TestEvaluatorAuthenticatedFullControl(t *testing.T) {
 	e := NewEvaluator(nil)
-	report := e.Evaluate(`{
+	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
 			{
@@ -102,21 +116,19 @@ func TestEvaluatorAuthenticatedFullControl(t *testing.T) {
 			}
 		]
 	}`)
+	report := e.Evaluate(doc)
 
-	if report.Score != ScoreWarning {
+	if report.Score != risk.ScoreWarning {
 		t.Fatalf("expected warning score, got %d", report.Score)
 	}
-	if !report.Permissions.Has(PermFullControl) {
+	if !report.Permissions.Has(risk.PermFullControl) {
 		t.Fatalf("expected full control permissions, got %v", report.Permissions)
-	}
-	if len(report.Findings) != 1 || report.Findings[0] != "Full Admin access granted to all Authenticated Users" {
-		t.Fatalf("unexpected findings: %#v", report.Findings)
 	}
 }
 
 func TestEvaluator_DenyStatementSkipped(t *testing.T) {
 	e := NewEvaluator(nil)
-	report := e.Evaluate(`{
+	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
 			{
@@ -127,14 +139,12 @@ func TestEvaluator_DenyStatementSkipped(t *testing.T) {
 			}
 		]
 	}`)
+	report := e.Evaluate(doc)
 
-	if report.Score != ScoreSafe {
+	if report.Score != risk.ScoreSafe {
 		t.Fatalf("expected score to remain safe for deny statement, got %d", report.Score)
 	}
 	if report.IsPublic {
 		t.Fatalf("expected IsPublic=false for deny statement")
-	}
-	if len(report.Findings) != 0 {
-		t.Fatalf("expected no findings for deny statement, got %#v", report.Findings)
 	}
 }
