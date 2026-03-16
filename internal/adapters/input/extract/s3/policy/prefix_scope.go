@@ -19,7 +19,7 @@ func (e *Engine) PrefixScopeAnalysis() PrefixScopeAnalysis {
 	sourceByScope := make(map[kernel.ObjectPrefix]kernel.StatementID)
 	seen := make(map[kernel.ObjectPrefix]bool)
 
-	for i, stmt := range e.policy.Statement {
+	for i, stmt := range e.statements {
 		if !stmt.Effect.IsAllow() {
 			continue
 		}

@@ -12,11 +12,10 @@ import (
 )
 
 type overlapInput struct {
-	Buckets []s3classify.S3BucketInput `json:"buckets"`
+	Buckets []s3classify.Bucket `json:"buckets"`
 }
 
 func TestS3ExposureOverlapCases(t *testing.T) {
-	// Load input
 	inputData, err := os.ReadFile(filepath.Join(TestdataDir(t), "s3_exposure", "overlap_cases.json"))
 	if err != nil {
 		t.Fatalf("failed to read overlap_cases.json: %v", err)
@@ -26,7 +25,6 @@ func TestS3ExposureOverlapCases(t *testing.T) {
 		t.Fatalf("failed to parse overlap_cases.json: %v", err)
 	}
 
-	// Load expected
 	expectedData, err := os.ReadFile(filepath.Join(TestdataDir(t), "s3_exposure", "expected", "overlap_cases.findings.json"))
 	if err != nil {
 		t.Fatalf("failed to read expected findings: %v", err)
@@ -36,10 +34,8 @@ func TestS3ExposureOverlapCases(t *testing.T) {
 		t.Fatalf("failed to parse expected findings: %v", err)
 	}
 
-	// Run evaluator
 	actual := s3classify.ClassifyS3Exposure(input.Buckets)
 
-	// Compare as JSON for golden comparison
 	actualJSON, err := json.MarshalIndent(exposure.Classifications{Classifications: actual}, "", "  ")
 	if err != nil {
 		t.Fatalf("failed to marshal actual findings: %v", err)
@@ -55,23 +51,22 @@ func TestS3ExposureOverlapCases(t *testing.T) {
 }
 
 func TestS3ExposureNoDuplicateREAD(t *testing.T) {
-	// policy+acl_read_bucket: both policy and ACL grant read → only one READ finding
-	bucket := s3classify.S3BucketInput{
+	bucket := s3classify.Bucket{
 		Name:   "test-dedup",
 		Exists: true,
-		Policy: s3classify.PolicyConfig{
-			Statements: []s3classify.StatementInput{
+		Policy: s3classify.Policy{
+			Statements: []s3classify.Statement{
 				{Effect: "Allow", Principal: "*", Actions: []string{"s3:GetObject"}},
 			},
 		},
-		ACL: s3classify.ACLConfig{
-			Grants: []s3classify.ACLGrant{
+		ACL: s3classify.ACL{
+			Grants: []s3classify.Grant{
 				{Grantee: "AllUsers", Permission: "READ", Scope: "object"},
 			},
 		},
 	}
 
-	findings := s3classify.ClassifyS3Exposure([]s3classify.S3BucketInput{bucket})
+	findings := s3classify.ClassifyS3Exposure([]s3classify.Bucket{bucket})
 
 	readCount := 0
 	for _, f := range findings {
@@ -85,18 +80,18 @@ func TestS3ExposureNoDuplicateREAD(t *testing.T) {
 }
 
 func TestS3ExposureWebsiteSuppressesREAD(t *testing.T) {
-	bucket := s3classify.S3BucketInput{
+	bucket := s3classify.Bucket{
 		Name:    "test-website",
 		Exists:  true,
-		Website: s3classify.WebsiteConfig{Enabled: true},
-		ACL: s3classify.ACLConfig{
-			Grants: []s3classify.ACLGrant{
+		Website: s3classify.Website{Enabled: true},
+		ACL: s3classify.ACL{
+			Grants: []s3classify.Grant{
 				{Grantee: "AllUsers", Permission: "READ", Scope: "object"},
 			},
 		},
 	}
 
-	findings := s3classify.ClassifyS3Exposure([]s3classify.S3BucketInput{bucket})
+	findings := s3classify.ClassifyS3Exposure([]s3classify.Bucket{bucket})
 
 	for _, f := range findings {
 		if f.ID == "CTL.STORAGE.PUBLIC.READ.001" {
@@ -129,7 +124,7 @@ func TestS3ExposureWriteScopeBlindVsFull(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			stmts := []s3classify.StatementInput{
+			stmts := []s3classify.Statement{
 				{Effect: "Allow", Principal: "*", Actions: []string{"s3:PutObject"}},
 			}
 			if tc.hasGet {
@@ -139,13 +134,13 @@ func TestS3ExposureWriteScopeBlindVsFull(t *testing.T) {
 				stmts[0].Actions = append(stmts[0].Actions, "s3:ListBucket")
 			}
 
-			bucket := s3classify.S3BucketInput{
+			bucket := s3classify.Bucket{
 				Name:   "test-scope",
 				Exists: true,
-				Policy: s3classify.PolicyConfig{Statements: stmts},
+				Policy: s3classify.Policy{Statements: stmts},
 			}
 
-			findings := s3classify.ClassifyS3Exposure([]s3classify.S3BucketInput{bucket})
+			findings := s3classify.ClassifyS3Exposure([]s3classify.Bucket{bucket})
 
 			for _, f := range findings {
 				if f.ID == "CTL.STORAGE.PUBLIC.WRITE.001" {
@@ -161,17 +156,17 @@ func TestS3ExposureWriteScopeBlindVsFull(t *testing.T) {
 }
 
 func TestS3ExposureAuthenticatedScope(t *testing.T) {
-	bucket := s3classify.S3BucketInput{
+	bucket := s3classify.Bucket{
 		Name:   "test-auth",
 		Exists: true,
-		Policy: s3classify.PolicyConfig{
-			Statements: []s3classify.StatementInput{
+		Policy: s3classify.Policy{
+			Statements: []s3classify.Statement{
 				{Effect: "Allow", Principal: "AWS:AuthenticatedUsers", Actions: []string{"s3:PutObject"}},
 			},
 		},
 	}
 
-	findings := s3classify.ClassifyS3Exposure([]s3classify.S3BucketInput{bucket})
+	findings := s3classify.ClassifyS3Exposure([]s3classify.Bucket{bucket})
 
 	for _, f := range findings {
 		if f.PrincipalScope != kernel.ScopeAuthenticated {

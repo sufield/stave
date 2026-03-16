@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 47ms)
+Done:    apply controls against observations (2 files, 50ms)
 Evaluation complete. No violations found.
 
 Need help? Run 'stave bug-report' to create a diagnostic bundle.

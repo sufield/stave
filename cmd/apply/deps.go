@@ -21,22 +21,15 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/version"
 )
 
-// ApplyDeps holds wired dependencies for the apply command.
-type ApplyDeps struct {
-	Runner appeval.EvaluateRunner
-	Config appeval.EvaluateConfig
-}
-
-// Close releases assets held by ApplyDeps.
-func (d *ApplyDeps) Close() {}
-
-// Builder encapsulates the construction of ApplyDeps.
+// Builder encapsulates the cmd-layer resolution needed before building
+// apply dependencies. It resolves adapters from the compose provider,
+// loads exemptions, audits git status, and delegates final assembly
+// to appeval.BuildApplyDeps.
 type Builder struct {
 	Ctx       context.Context
 	Stdout    io.Writer
@@ -53,7 +46,7 @@ type Builder struct {
 }
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
-func (b *Builder) BuildWithNewPlan() (*ApplyDeps, error) {
+func (b *Builder) BuildWithNewPlan() (*appeval.ApplyDeps, error) {
 	plan, err := appeval.NewPlan(b.Opts.buildEvaluatorInput())
 	if err != nil {
 		return nil, err
@@ -62,7 +55,7 @@ func (b *Builder) BuildWithNewPlan() (*ApplyDeps, error) {
 }
 
 // Build constructs ApplyDeps from a pre-existing evaluation plan.
-func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
+func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error) {
 	if plan == nil {
 		return nil, errors.New("evaluation plan is required")
 	}
@@ -98,53 +91,33 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return output.Enrich(enricher, b.Sanitizer, result)
 	}
 
-	// 4. Final Assembly
-	built, err := appeval.BuildDependencies(b.mapToBuildInput(plan, marshaler, obsLoader, ctlLoader, exemptionCfg, gitMeta, enrichFn))
+	// 4. Final Assembly (delegated to app layer)
+	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
+		Ctx:               b.Ctx,
+		Stdout:            b.Stdout,
+		Stderr:            b.Stderr,
+		Plan:              *plan,
+		Marshaler:         marshaler,
+		ObsLoader:         obsLoader,
+		CtlLoader:         ctlLoader,
+		EnrichFn:          enrichFn,
+		MaxUnsafe:         b.Params.maxDuration,
+		Clock:             b.Params.clock,
+		Hasher:            crypto.NewHasher(),
+		AllowUnknownInput: b.Opts.AllowUnknown,
+		ExemptionConfig:   exemptionCfg,
+		PredicateParser:   ctlyaml.ParsePredicate,
+		ToolVersion:       version.Version,
+		ControlsDir:       b.Opts.ControlsDir,
+		ProjectConfig:     b.buildProjectConfig(),
+		GitMetadata:       gitMeta,
+		ControlFilters:    appeval.ControlFilter{},
+	})
 	if err != nil {
 		return nil, b.wrapError(err)
 	}
 
-	return &ApplyDeps{Runner: built.Runner, Config: built.Config}, nil
-}
-
-func (b *Builder) mapToBuildInput(
-	plan *appeval.EvaluationPlan,
-	marshaler appcontracts.FindingMarshaler,
-	obsLoader appcontracts.ObservationRepository,
-	ctlLoader appcontracts.ControlRepository,
-	exemptionCfg *policy.ExemptionConfig,
-	gitMeta *evaluation.GitInfo,
-	enrichFn appcontracts.EnrichFunc,
-) appeval.BuildDependenciesInput {
-	return appeval.BuildDependenciesInput{
-		Plan:    *plan,
-		Context: b.Ctx,
-		Adapters: appeval.Adapters{
-			FindingMarshaler:  marshaler,
-			EnrichFn:          enrichFn,
-			ObservationLoader: obsLoader,
-			ControlLoader:     ctlLoader,
-		},
-		Runtime: appeval.RuntimeConfig{
-			MaxUnsafe:         b.Params.maxDuration,
-			Clock:             b.Params.clock,
-			Hasher:            crypto.NewHasher(),
-			ToolVersion:       version.Version,
-			AllowUnknownInput: b.Opts.AllowUnknown,
-			ExemptionConfig:   exemptionCfg,
-			PredicateParser:   ctlyaml.ParsePredicate,
-		},
-		Writers: appeval.OutputWriters{
-			Stdout: b.Stdout,
-			Stderr: b.Stderr,
-		},
-		Project: appeval.ProjectScope{
-			Config:      b.buildProjectConfig(),
-			GitMetadata: gitMeta,
-			Filters:     appeval.ControlFilter{},
-			ControlsDir: b.Opts.ControlsDir,
-		},
-	}
+	return deps, nil
 }
 
 // buildObservationLoader creates and configures the observation repository,

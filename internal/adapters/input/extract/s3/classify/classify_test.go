@@ -11,7 +11,7 @@ import (
 )
 
 // loadExposureFixture loads a JSON fixture file and returns the S3 bucket inputs.
-func loadExposureFixture(t *testing.T, filename string) []S3BucketInput {
+func loadExposureFixture(t *testing.T, filename string) []Bucket {
 	t.Helper()
 	path := filepath.Join(testutil.TestdataDir(t), "s3_exposure", filename)
 	data, err := os.ReadFile(path)
@@ -19,7 +19,7 @@ func loadExposureFixture(t *testing.T, filename string) []S3BucketInput {
 		t.Fatalf("failed to read fixture %s: %v", filename, err)
 	}
 	var input struct {
-		Buckets []S3BucketInput `json:"buckets"`
+		Buckets []Bucket `json:"buckets"`
 	}
 	if err := json.Unmarshal(data, &input); err != nil {
 		t.Fatalf("failed to parse fixture %s: %v", filename, err)

@@ -21,6 +21,7 @@ func FuzzEvaluate(f *testing.F) {
 	eval := NewEvaluator(nil)
 
 	f.Fuzz(func(t *testing.T, input string) {
-		eval.Evaluate(input)
+		doc, _ := Parse(input)
+		eval.Evaluate(doc)
 	})
 }
