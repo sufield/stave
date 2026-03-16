@@ -1,7 +1,9 @@
-// Package trace implements predicate evaluation tracing for debugging control
-// matching.
+// Package trace defines the trace model (Node types, TraceResult) and the
+// tracing engine that walks unsafe_predicate clause trees against an
+// EvalContext. Formatters in this package render traces as human-readable
+// text or structured JSON via type-switch walkers — the Node interface
+// is presentation-agnostic.
 //
-// The tracing engine walks unsafe_predicate clause trees, recording each
-// operator evaluation and its result. Output can be formatted as structured
-// JSON or human-readable text via the respective formatters.
+// App-layer orchestration (asset lookup, EvalContext wiring) lives in
+// internal/app/trace.
 package trace

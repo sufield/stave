@@ -17,7 +17,7 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/trace"
+	apptrace "github.com/sufield/stave/internal/app/trace"
 )
 
 // Config holds the inputs for the diagnostic engine.
@@ -139,7 +139,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		DiagnoseConfig: baseCfg,
 		ControlID:      kernel.ControlID(cfg.ControlID),
 		AssetID:        asset.ID(cfg.AssetID),
-		TraceBuilder:   trace.NewFindingTraceBuilder(ctlyaml.ParsePredicate),
+		TraceBuilder:   apptrace.NewFindingTraceBuilder(ctlyaml.ParsePredicate),
 		IDGen:          crypto.NewHasher(),
 	})
 	if err != nil {
