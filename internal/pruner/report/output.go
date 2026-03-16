@@ -1,4 +1,4 @@
-package pruner
+package report
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/internal/pruner"
 )
 
 // CleanupAction represents the kind of cleanup operation (delete or move).
@@ -72,8 +73,8 @@ type CleanupInput struct {
 	Tier            string
 	OlderThan       time.Duration
 	KeepMin         int
-	AllFiles        []SnapshotFile
-	CandidateFiles  []SnapshotFile
+	AllFiles        []pruner.SnapshotFile
+	CandidateFiles  []pruner.SnapshotFile
 }
 
 // ArchiveOutputInput holds all data needed to build archive output.
@@ -131,8 +132,8 @@ type SnapshotCleanupRenderInput struct {
 	SummaryPrefix  string
 	Action         CleanupAction
 	DryRun         bool
-	AllFiles       []SnapshotFile
-	CandidateFiles []SnapshotFile
+	AllFiles       []pruner.SnapshotFile
+	CandidateFiles []pruner.SnapshotFile
 	OlderThan      time.Duration
 	KeepMin        int
 	Tier           string
@@ -163,7 +164,7 @@ func RenderSnapshotCleanupExecutionPlan(out io.Writer, in SnapshotCleanupRenderI
 	return nil
 }
 
-func toCleanupFiles(in []SnapshotFile) []CleanupFile {
+func toCleanupFiles(in []pruner.SnapshotFile) []CleanupFile {
 	out := make([]CleanupFile, 0, len(in))
 	for _, sf := range in {
 		out = append(out, CleanupFile{

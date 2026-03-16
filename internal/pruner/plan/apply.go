@@ -1,4 +1,4 @@
-package pruner
+package plan
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/pruner/fsops"
 )
 
 // PlanEntry is a single snapshot plan row.
@@ -88,7 +89,7 @@ func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool
 		}
 		createdDirs[parentDir] = struct{}{}
 	}
-	if err := MoveSnapshotFile(src, dst, MoveOptions{AllowSymlink: allowSymlink}); err != nil {
+	if err := fsops.MoveSnapshotFile(src, dst, fsops.MoveOptions{AllowSymlink: allowSymlink}); err != nil {
 		return fmt.Errorf("archive %s: %w", entry.RelPath, err)
 	}
 	return nil

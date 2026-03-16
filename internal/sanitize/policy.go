@@ -1,8 +1,6 @@
 // Package sanitize — OutputSanitizationPolicy centralizes sanitization configuration.
 package sanitize
 
-import "strings"
-
 // PathMode controls how file paths are rendered in user-facing output.
 type PathMode string
 
@@ -12,16 +10,6 @@ const (
 	// PathModeBase renders only the basename of each path.
 	PathModeBase PathMode = "base"
 )
-
-// ParsePathMode parses a string to a PathMode, defaulting to PathModeBase.
-func ParsePathMode(s string) PathMode {
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case string(PathModeFull):
-		return PathModeFull
-	default:
-		return PathModeBase
-	}
-}
 
 // OutputSanitizationPolicy bundles all output sanitization settings.
 // It is constructed once from CLI flags and threaded through commands,

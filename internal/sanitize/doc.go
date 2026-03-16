@@ -1,8 +1,10 @@
-// Package sanitize provides deterministic identifier masking for evaluation
-// output.
+// Package sanitize provides a deterministic sanitization engine for
+// infrastructure identifiers in Stave CLI output.
 //
-// [Engine] applies scrub policies to observations, findings, and metadata,
-// replacing sensitive values (asset IDs, account IDs) with deterministic
-// pseudonyms. [ScrubConfig] selects which field categories to redact, and
-// [Policy] enforces sanitization rules across output artifacts.
+// [Sanitizer] replaces asset IDs, file paths, and arbitrary values with
+// deterministic pseudonyms or basenames. [OutputSanitizationPolicy]
+// bridges CLI flags to Sanitizer configuration.
+//
+// Snapshot-level scrubbing (removing sensitive property keys from observation
+// data before persistence) lives in the [scrub] sub-package.
 package sanitize

@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pruner"
+	pruneplan "github.com/sufield/stave/internal/pruner/plan"
 )
 
 func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
@@ -32,7 +33,7 @@ func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 		// keep-min=2 means we can't prune even though one is older than 30d
 		t.Fatalf("TotalActions=%d, want 0 (keep-min floor)", plan.TotalActions)
 	}
-	if plan.Mode != pruner.ModePreview {
+	if plan.Mode != pruneplan.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW", plan.Mode)
 	}
 }
@@ -62,9 +63,9 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 		t.Fatalf("TotalActions=%d, want 1", plan.TotalActions)
 	}
 
-	var pruned []pruner.SnapshotPlanFile
+	var pruned []pruneplan.SnapshotPlanFile
 	for _, f := range plan.Files {
-		if f.Action == pruner.ActionPrune {
+		if f.Action == pruneplan.ActionPrune {
 			pruned = append(pruned, f)
 		}
 	}
@@ -108,8 +109,8 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 	}
 
 	// critical: 3 files, 1 older than 30d (2 left ≥ keep_min=2) → 1 prune
-	var critSummary *pruner.SnapshotPlanTierSummary
-	var ncSummary *pruner.SnapshotPlanTierSummary
+	var critSummary *pruneplan.SnapshotPlanTierSummary
+	var ncSummary *pruneplan.SnapshotPlanTierSummary
 	for i := range plan.TierSummaries {
 		switch plan.TierSummaries[i].Tier {
 		case "critical":
@@ -187,7 +188,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 		Force: true,
 	})
 
-	if plan.Mode != pruner.ModeArchive {
+	if plan.Mode != pruneplan.ModeArchive {
 		t.Fatalf("Mode=%q, want ARCHIVE", plan.Mode)
 	}
 	if !plan.Applied {
@@ -196,7 +197,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 
 	archiveCount := 0
 	for _, f := range plan.Files {
-		if f.Action == pruner.ActionArchive {
+		if f.Action == pruneplan.ActionArchive {
 			archiveCount++
 		}
 	}
@@ -274,7 +275,7 @@ func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 		Force: false,
 	})
 
-	if plan.Mode != pruner.ModePreview {
+	if plan.Mode != pruneplan.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW (--apply without --force)", plan.Mode)
 	}
 	if plan.Applied {
@@ -301,13 +302,13 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 		Force: true,
 	})
 
-	if plan.Mode != pruner.ModePrune {
+	if plan.Mode != pruneplan.ModePrune {
 		t.Fatalf("Mode=%q, want PRUNE", plan.Mode)
 	}
 
 	pruneCount := 0
 	for _, f := range plan.Files {
-		if f.Action == pruner.ActionPrune {
+		if f.Action == pruneplan.ActionPrune {
 			pruneCount++
 		}
 	}

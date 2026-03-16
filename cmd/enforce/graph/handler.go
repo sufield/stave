@@ -13,10 +13,10 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 // Format represents a validated graph output format.
@@ -44,7 +44,7 @@ type Config struct {
 	ObservationsDir string
 	Format          Format
 	AllowUnknown    bool
-	Sanitizer       *sanitize.Sanitizer
+	Sanitizer       kernel.Sanitizer
 	Stdout          io.Writer
 }
 
@@ -150,7 +150,7 @@ func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string 
 	return lo.Reject(assetIDs, func(rid string, _ int) bool { return coveredAssets[rid] })
 }
 
-func writeResult(w io.Writer, format Format, result coverageResult, sanitizer *sanitize.Sanitizer) error {
+func writeResult(w io.Writer, format Format, result coverageResult, sanitizer kernel.Sanitizer) error {
 	switch format {
 	case FormatDot:
 		return writeDOT(w, result, sanitizer)
@@ -161,7 +161,7 @@ func writeResult(w io.Writer, format Format, result coverageResult, sanitizer *s
 	}
 }
 
-func writeDOT(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer) error {
+func writeDOT(w io.Writer, result coverageResult, sanitizer kernel.Sanitizer) error {
 	uncoveredSet := make(map[string]bool)
 	for _, r := range result.UncoveredAssets {
 		uncoveredSet[r] = true
@@ -187,7 +187,7 @@ func writeDOT(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer)
 	fmt.Fprintln(w, "  subgraph cluster_assets {")
 	fmt.Fprintln(w, `    label="Assets";`)
 	for _, rid := range result.Assets {
-		displayID := string(sanitizer.Asset(asset.ID(rid)))
+		displayID := sanitizer.ID(rid)
 		if uncoveredSet[rid] {
 			fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightyellow];\n", dotQuote(displayID))
 		} else {
@@ -199,7 +199,7 @@ func writeDOT(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer)
 
 	// Edges
 	for _, edge := range result.Edges {
-		assetDisplay := string(sanitizer.Asset(asset.ID(edge.AssetID)))
+		assetDisplay := sanitizer.ID(edge.AssetID)
 		fmt.Fprintf(w, "  %s -> %s;\n", dotQuote(edge.ControlID), dotQuote(assetDisplay))
 	}
 
@@ -214,15 +214,15 @@ func dotQuote(s string) string {
 	return `"` + escaped + `"`
 }
 
-func writeJSON(w io.Writer, result coverageResult, sanitizer *sanitize.Sanitizer) error {
+func writeJSON(w io.Writer, result coverageResult, sanitizer kernel.Sanitizer) error {
 	for i, rid := range result.Assets {
-		result.Assets[i] = string(sanitizer.Asset(asset.ID(rid)))
+		result.Assets[i] = sanitizer.ID(rid)
 	}
 	for i, edge := range result.Edges {
-		result.Edges[i].AssetID = string(sanitizer.Asset(asset.ID(edge.AssetID)))
+		result.Edges[i].AssetID = sanitizer.ID(edge.AssetID)
 	}
 	for i, rid := range result.UncoveredAssets {
-		result.UncoveredAssets[i] = string(sanitizer.Asset(asset.ID(rid)))
+		result.UncoveredAssets[i] = sanitizer.ID(rid)
 	}
 
 	if result.Edges == nil {

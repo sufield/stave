@@ -68,22 +68,5 @@ func TestPath(t *testing.T) {
 	}
 }
 
-func TestBucket(t *testing.T) {
-	r := New()
-	got := r.Bucket("my-bucket")
-	want := "SANITIZED_" + crypto.ShortToken("my-bucket")
-	if got != want {
-		t.Errorf("Bucket() = %q, want %q", got, want)
-	}
-}
-
-func TestSanitizeVerificationFields(t *testing.T) {
-	r := New()
-	got := r.Verification("my-bucket")
-	if got == "my-bucket" {
-		t.Error("AssetID not sanitized")
-	}
-}
-
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)

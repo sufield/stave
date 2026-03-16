@@ -1,4 +1,4 @@
-package pruner
+package plan
 
 import (
 	"fmt"

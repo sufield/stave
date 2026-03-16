@@ -12,9 +12,9 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/safetyenvelope"
-	"github.com/sufield/stave/internal/sanitize"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -89,7 +89,7 @@ func loadVerifyControls(ctx context.Context, dir string) ([]policy.ControlDefini
 func compareEvaluations(
 	exec Execution,
 	before, after evalResult,
-	sz *sanitize.Sanitizer,
+	sz kernel.Sanitizer,
 ) verificationOutcome {
 	diff := evaluation.CompareVerificationFindings(before.result.Findings, after.result.Findings)
 

@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/pruner/plan"
 )
 
 // planBuildParams holds all inputs for buildPlan (pure, testable).
@@ -23,12 +24,12 @@ type planBuildParams struct {
 	Force       bool
 }
 
-func buildPlan(params planBuildParams) pruner.SnapshotPlanOutput {
-	return pruner.BuildSnapshotPlan(toPrunerBuildParams(params))
+func buildPlan(params planBuildParams) plan.SnapshotPlanOutput {
+	return plan.BuildSnapshotPlan(toPlanBuildParams(params))
 }
 
-func toPrunerBuildParams(params planBuildParams) pruner.BuildSnapshotPlanParams {
-	return pruner.BuildSnapshotPlanParams{
+func toPlanBuildParams(params planBuildParams) plan.BuildSnapshotPlanParams {
+	return plan.BuildSnapshotPlanParams{
 		Now:                params.Now,
 		ObsRoot:            params.ObsRoot,
 		ArchiveDir:         params.ArchiveDir,
@@ -45,9 +46,9 @@ func toPrunerBuildParams(params planBuildParams) pruner.BuildSnapshotPlanParams 
 	}
 }
 
-func applyPlan(plan pruner.SnapshotPlanOutput, obsRoot, archiveDir string, allowSymlink bool) error {
-	_, err := pruner.ApplySnapshotPlan(pruner.SnapshotPlanApplyInput{
-		Entries:          toPrunerPlanEntries(plan.Files),
+func applyPlan(p plan.SnapshotPlanOutput, obsRoot, archiveDir string, allowSymlink bool) error {
+	_, err := plan.ApplySnapshotPlan(plan.SnapshotPlanApplyInput{
+		Entries:          toPlanEntries(p.Files),
 		ObservationsRoot: obsRoot,
 		ArchiveDir:       archiveDir,
 		AllowSymlink:     allowSymlink,
@@ -58,10 +59,10 @@ func applyPlan(plan pruner.SnapshotPlanOutput, obsRoot, archiveDir string, allow
 	return nil
 }
 
-func toPrunerPlanEntries(entries []pruner.SnapshotPlanFile) []pruner.PlanEntry {
-	out := make([]pruner.PlanEntry, len(entries))
+func toPlanEntries(entries []plan.SnapshotPlanFile) []plan.PlanEntry {
+	out := make([]plan.PlanEntry, len(entries))
 	for i, entry := range entries {
-		out[i] = pruner.PlanEntry{
+		out[i] = plan.PlanEntry{
 			RelPath: entry.RelPath,
 			Action:  entry.Action,
 		}

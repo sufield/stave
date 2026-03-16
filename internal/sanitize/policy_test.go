@@ -2,25 +2,6 @@ package sanitize
 
 import "testing"
 
-func TestParsePathMode(t *testing.T) {
-	tests := []struct {
-		input string
-		want  PathMode
-	}{
-		{"base", PathModeBase},
-		{"full", PathModeFull},
-		{" FULL ", PathModeFull},
-		{"", PathModeBase},
-		{"other", PathModeBase},
-	}
-	for _, tt := range tests {
-		got := ParsePathMode(tt.input)
-		if got != tt.want {
-			t.Errorf("ParsePathMode(%q) = %q, want %q", tt.input, got, tt.want)
-		}
-	}
-}
-
 func TestOutputSanitizationPolicy_Sanitizer(t *testing.T) {
 	p := OutputSanitizationPolicy{SanitizeIDs: true}
 	if p.Sanitizer() == nil {

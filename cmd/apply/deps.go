@@ -22,7 +22,6 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -34,7 +33,7 @@ type Builder struct {
 	Ctx       context.Context
 	Stdout    io.Writer
 	Stderr    io.Writer
-	Sanitizer *sanitize.Sanitizer
+	Sanitizer kernel.Sanitizer
 	IsJSON    bool
 
 	Opts   *ApplyOptions

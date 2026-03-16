@@ -13,7 +13,6 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 // UpcomingConfig defines the resolved parameters for upcoming action analysis.
@@ -27,7 +26,7 @@ type UpcomingConfig struct {
 	Now             time.Time
 	Format          ui.OutputFormat
 	Filter          risk.FilterCriteria
-	Sanitizer       *sanitize.Sanitizer
+	Sanitizer       kernel.Sanitizer
 	Quiet           bool
 	Stdout          io.Writer
 }
@@ -76,7 +75,7 @@ func gatherUpcomingConfig(
 	controlIDs []kernel.ControlID,
 	assetTypes []kernel.AssetType,
 	statuses []string,
-	san *sanitize.Sanitizer,
+	san kernel.Sanitizer,
 	quiet bool,
 	stdout io.Writer,
 	resolveFormat func(string) (ui.OutputFormat, error),

@@ -2,10 +2,10 @@ package upcoming
 
 import (
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/sanitize"
+	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-func sanitizeItems(s *sanitize.Sanitizer, items []Item) []Item {
+func sanitizeItems(s kernel.Sanitizer, items []Item) []Item {
 	if s == nil || len(items) == 0 {
 		return items
 	}
