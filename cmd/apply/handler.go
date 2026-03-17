@@ -82,17 +82,12 @@ func executeEvaluation(
 	}
 	defer deps.Close()
 
-	runner, ok := deps.Runner.(*appeval.EvaluateRun)
-	if !ok {
-		return EvaluateResult{}, fmt.Errorf("unexpected runner type %T", deps.Runner)
-	}
-
-	result, status, err := runner.ExecuteAndReturn(ctx, deps.Config)
+	result, status, err := deps.Runner.ExecuteAndReturn(ctx, deps.Config)
 	if err != nil {
 		return EvaluateResult{}, err
 	}
 
-	if err := RunOutputPipeline(ctx, deps.Config.Output, result, runner.Marshaler, runner.EnrichFn, slog.Default()); err != nil {
+	if err := RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, slog.Default()); err != nil {
 		return EvaluateResult{}, err
 	}
 

@@ -11,8 +11,8 @@ type Clock interface {
 // RealClock implements Clock using the standard time package.
 type RealClock struct{}
 
-// NewRealClock returns a Clock backed by the system wall clock.
-func NewRealClock() Clock {
+// NewRealClock returns a RealClock backed by the system wall clock.
+func NewRealClock() RealClock {
 	return RealClock{}
 }
 

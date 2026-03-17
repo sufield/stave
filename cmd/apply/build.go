@@ -64,7 +64,7 @@ type BuildDependenciesInput struct {
 
 // BuildDependenciesOutput is the assembled runner + config pair.
 type BuildDependenciesOutput struct {
-	Runner appeval.EvaluateRunner
+	Runner *appeval.EvaluateRun
 	Config appeval.EvaluateConfig
 }
 
@@ -169,7 +169,7 @@ func validateBuildDependenciesInput(in BuildDependenciesInput) error {
 
 // ApplyDeps holds wired dependencies for the apply workflow.
 type ApplyDeps struct {
-	Runner appeval.EvaluateRunner
+	Runner *appeval.EvaluateRun
 	Config appeval.EvaluateConfig
 }
 
