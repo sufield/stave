@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -138,7 +139,7 @@ func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[appconfig.Projec
 		Stderr:      r.Stderr,
 		Force:       opts.Force,
 		IsTTY:       func() bool { return opts.IsTTY },
-		Confirm:     ui.Confirm,
+		Confirm:     ui.NewPrompter(os.Stdin, os.Stderr).Confirm,
 	}
 }
 

@@ -4,12 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 )
-
-// DefaultPrompter is the standard prompter using os.Stdin and os.Stderr.
-var DefaultPrompter = NewPrompter(os.Stdin, os.Stderr)
 
 // Prompter handles interactive user input.
 type Prompter struct {
@@ -36,9 +32,4 @@ func (p *Prompter) Confirm(prompt string) bool {
 
 	input := strings.ToLower(strings.TrimSpace(p.scanner.Text()))
 	return input == "y" || input == "yes"
-}
-
-// Confirm is a wrapper for DefaultPrompter.Confirm.
-func Confirm(prompt string) bool {
-	return DefaultPrompter.Confirm(prompt)
 }
