@@ -89,10 +89,12 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return nil
 	}
 
-	ctlDir, controls, err := r.loadControls(ctx, cfg.InputFile)
+	ctlDir, controls, err := r.loadControls(ctx)
 	if err != nil {
 		return err
 	}
+
+	r.setupRunLogging(cfg.InputFile, ctlDir)
 
 	done := r.UI.BeginProgress("apply profile observations")
 	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
@@ -133,7 +135,7 @@ func (r *Runner) validateInput(path string) error {
 	return nil
 }
 
-func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []policy.ControlDefinition, error) {
+func (r *Runner) loadControls(ctx context.Context) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 
 	controls, err := compose.LoadControls(ctx, ctlDir)
@@ -144,6 +146,10 @@ func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []
 		return "", nil, fmt.Errorf("%w: no S3 controls found in %s", appeval.ErrNoControls, ctlDir)
 	}
 
+	return ctlDir, controls, nil
+}
+
+func (r *Runner) setupRunLogging(inputFile, ctlDir string) {
 	inputsHash, _ := fsutil.HashFile(inputFile)
 	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
 	logging.SetDefaultLogger(cmdutil.SetupLoggingWithRunID(
@@ -151,8 +157,6 @@ func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []
 		inputsHash.String(),
 		controlsHash.String(),
 	))
-
-	return ctlDir, controls, nil
 }
 
 func getControlsBaseDir() string {

@@ -60,23 +60,11 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 		return nil, errors.New("evaluation plan is required")
 	}
 
-	// 1. Build Adapters
-	marshaler, err := compose.ActiveProvider().NewFindingWriter(b.Opts.Format, b.IsJSON)
+	a, err := b.buildAdapters()
 	if err != nil {
 		return nil, err
 	}
 
-	obsLoader, err := b.buildObservationLoader(b.Params.source)
-	if err != nil {
-		return nil, err
-	}
-
-	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-
-	// 2. Build Metadata & Policy
 	exemptionCfg, err := LoadExemptionConfig(b.Opts.ExemptionFile)
 	if err != nil {
 		return nil, err
@@ -85,22 +73,15 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
-	// 3. Assemble Enrichment Logic
-	enricher := remediation.NewMapper(crypto.NewHasher())
-	enrichFn := func(result evaluation.Result) appcontracts.EnrichedResult {
-		return output.Enrich(enricher, b.Sanitizer, result)
-	}
-
-	// 4. Final Assembly
 	deps, err := BuildApplyDeps(ApplyBuilderInput{
 		Ctx:               b.Ctx,
 		Stdout:            b.Stdout,
 		Stderr:            b.Stderr,
 		Plan:              *plan,
-		Marshaler:         marshaler,
-		ObsLoader:         obsLoader,
-		CtlLoader:         ctlLoader,
-		EnrichFn:          enrichFn,
+		Marshaler:         a.marshaler,
+		ObsLoader:         a.obsLoader,
+		CtlLoader:         a.ctlLoader,
+		EnrichFn:          b.buildEnrichFn(),
 		MaxUnsafe:         b.Params.maxDuration,
 		Clock:             b.Params.clock,
 		Hasher:            crypto.NewHasher(),
@@ -118,6 +99,38 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	}
 
 	return deps, nil
+}
+
+type adapters struct {
+	marshaler appcontracts.FindingMarshaler
+	obsLoader appcontracts.ObservationRepository
+	ctlLoader appcontracts.ControlRepository
+}
+
+func (b *Builder) buildAdapters() (adapters, error) {
+	marshaler, err := compose.ActiveProvider().NewFindingWriter(b.Opts.Format, b.IsJSON)
+	if err != nil {
+		return adapters{}, err
+	}
+
+	obsLoader, err := b.buildObservationLoader(b.Params.source)
+	if err != nil {
+		return adapters{}, err
+	}
+
+	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
+	if err != nil {
+		return adapters{}, fmt.Errorf("create control loader: %w", err)
+	}
+
+	return adapters{marshaler: marshaler, obsLoader: obsLoader, ctlLoader: ctlLoader}, nil
+}
+
+func (b *Builder) buildEnrichFn() appcontracts.EnrichFunc {
+	enricher := remediation.NewMapper(crypto.NewHasher())
+	return func(result evaluation.Result) appcontracts.EnrichedResult {
+		return output.Enrich(enricher, b.Sanitizer, result)
+	}
 }
 
 // buildObservationLoader creates and configures the observation repository,
