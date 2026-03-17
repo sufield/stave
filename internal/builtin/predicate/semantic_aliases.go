@@ -16,127 +16,128 @@ import (
 	"slices"
 
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 var aliasMap = map[string]policy.UnsafePredicate{
 	// ── Public exposure (composite) ───────────────────────────────
 	"s3.is_public_readable": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.public_read", Op: "eq", Value: true},
-			{Field: "properties.storage.access.read_via_identity", Op: "eq", Value: true},
-			{Field: "properties.storage.access.read_via_resource", Op: "eq", Value: true},
+			{Field: "properties.storage.access.public_read", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.access.read_via_identity", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.access.read_via_resource", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 	"s3.is_public_writable": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.public_write", Op: "eq", Value: true},
-			{Field: "properties.storage.access.write_via_resource", Op: "eq", Value: true},
+			{Field: "properties.storage.access.public_write", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.access.write_via_resource", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 	"s3.is_public_listable": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.public_list", Op: "eq", Value: true},
-			{Field: "properties.storage.access.list_via_identity", Op: "eq", Value: true},
+			{Field: "properties.storage.access.public_list", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.access.list_via_identity", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 
 	// ── Latent exposure (masked by public access block only) ──────
 	"s3.latent_public_read": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.latent_public_read", Op: "eq", Value: true},
+			{Field: "properties.storage.access.latent_public_read", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 	"s3.latent_public_list": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.latent_public_list", Op: "eq", Value: true},
+			{Field: "properties.storage.access.latent_public_list", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 
 	// ── Authenticated-users access ────────────────────────────────
 	"s3.authenticated_users_read": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.authenticated_read", Op: "eq", Value: true},
+			{Field: "properties.storage.access.authenticated_read", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 	"s3.authenticated_users_write": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.authenticated_write", Op: "eq", Value: true},
+			{Field: "properties.storage.access.authenticated_write", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 
 	// ── Admin grants ─────────────────────────────────────────────
 	"s3.acl_writable": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.public_admin", Op: "eq", Value: true},
-			{Field: "properties.storage.access.authenticated_admin", Op: "eq", Value: true},
+			{Field: "properties.storage.access.public_admin", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.access.authenticated_admin", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 	"s3.acl_readable_by_public": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.public_admin", Op: "eq", Value: true},
+			{Field: "properties.storage.access.public_admin", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 	"s3.has_full_control_grant": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.access.has_full_control_public", Op: "eq", Value: true},
-			{Field: "properties.storage.access.has_full_control_authenticated", Op: "eq", Value: true},
+			{Field: "properties.storage.access.has_full_control_public", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.access.has_full_control_authenticated", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	},
 
 	// ── Encryption ────────────────────────────────────────────────
 	"s3.encryption_at_rest_disabled": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.encryption.at_rest_enabled", Op: "eq", Value: false},
+			{Field: "properties.storage.encryption.at_rest_enabled", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 	"s3.encryption_in_transit_not_enforced": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.encryption.in_transit_enforced", Op: "eq", Value: false},
+			{Field: "properties.storage.encryption.in_transit_enforced", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 	"s3.not_using_kms_cmk": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.encryption.algorithm", Op: "ne", Value: "aws:kms"},
-			{Field: "properties.storage.encryption.kms_key_id", Op: "eq", Value: ""},
+			{Field: "properties.storage.encryption.algorithm", Op: predicate.OpNe, Value: policy.Str("aws:kms")},
+			{Field: "properties.storage.encryption.kms_key_id", Op: predicate.OpEq, Value: policy.Str("")},
 		},
 	},
 
 	// ── Logging ───────────────────────────────────────────────────
 	"s3.logging_disabled": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.logging.enabled", Op: "eq", Value: false},
+			{Field: "properties.storage.logging.enabled", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 
 	// ── Versioning ────────────────────────────────────────────────
 	"s3.versioning_disabled": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.versioning.enabled", Op: "eq", Value: false},
+			{Field: "properties.storage.versioning.enabled", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 	"s3.mfa_delete_disabled": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.versioning.mfa_delete_enabled", Op: "eq", Value: false},
+			{Field: "properties.storage.versioning.mfa_delete_enabled", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 
 	// ── Controls ──────────────────────────────────────────────────
 	"s3.public_access_block_disabled": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.controls.public_access_fully_blocked", Op: "eq", Value: false},
+			{Field: "properties.storage.controls.public_access_fully_blocked", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 
 	// ── Object lock ───────────────────────────────────────────────
 	"s3.object_lock_disabled": {
 		Any: []policy.PredicateRule{
-			{Field: "properties.storage.object_lock.enabled", Op: "eq", Value: false},
+			{Field: "properties.storage.object_lock.enabled", Op: predicate.OpEq, Value: policy.Bool(false)},
 		},
 	},
 	"s3.object_lock_not_compliance_mode": {
 		All: []policy.PredicateRule{
-			{Field: "properties.storage.object_lock.enabled", Op: "eq", Value: true},
-			{Field: "properties.storage.object_lock.mode", Op: "ne", Value: "COMPLIANCE"},
+			{Field: "properties.storage.object_lock.enabled", Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: "properties.storage.object_lock.mode", Op: predicate.OpNe, Value: policy.Str("COMPLIANCE")},
 		},
 	},
 }

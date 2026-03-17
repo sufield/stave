@@ -15,7 +15,7 @@ type PredicateRule struct {
 	// Simple field comparison
 	Field          string             `yaml:"field,omitempty"`
 	Op             predicate.Operator `yaml:"op,omitempty"`
-	Value          any                `yaml:"value,omitempty"`
+	Value          Operand            `yaml:"value,omitempty"`
 	ValueFromParam string             `yaml:"value_from_param,omitempty"`
 
 	// Nested logic blocks
@@ -28,7 +28,7 @@ type PredicateRule struct {
 
 // Matches evaluates the rule against an asset without additional parameters or identities.
 func (r *PredicateRule) Matches(a asset.Asset) bool {
-	return r.MatchesWithContext(NewAssetEvalContext(a, nil))
+	return r.MatchesWithContext(NewAssetEvalContext(a, ControlParams{}))
 }
 
 // MatchesWithContext evaluates the rule against a full evaluation context.
@@ -56,7 +56,7 @@ func (r *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
 	val, exists := getFieldValueByParts(ctx, r.parsedFieldParts())
 
 	// 3. Resolve Comparison Value (Literal or Parameter)
-	compareVal := r.Value
+	compareVal := r.Value.Raw()
 	if r.ValueFromParam != "" {
 		paramVal, ok := ctx.Param(r.ValueFromParam)
 		if !ok || paramVal == nil {
@@ -159,17 +159,17 @@ func (r *PredicateRule) parsedFieldParts() []string {
 
 // ExtractMisconfigurations traverses the predicate tree to pull the actual observed
 // values for every field mentioned in the unsafe predicate.
-func ExtractMisconfigurations(p *UnsafePredicate, props map[string]any) []Misconfiguration {
+func ExtractMisconfigurations(p *UnsafePredicate, ctx EvalContext) []Misconfiguration {
 	if p == nil {
 		return nil
 	}
 
 	var results []Misconfiguration
 	for i := range p.Any {
-		p.Any[i].collectFields(props, &results)
+		p.Any[i].collectFields(ctx, &results)
 	}
 	for i := range p.All {
-		p.All[i].collectFields(props, &results)
+		p.All[i].collectFields(ctx, &results)
 	}
 
 	// Sort by Property name for stable, deterministic reporting.
@@ -180,13 +180,13 @@ func ExtractMisconfigurations(p *UnsafePredicate, props map[string]any) []Miscon
 	return results
 }
 
-func (r *PredicateRule) collectFields(props map[string]any, results *[]Misconfiguration) {
+func (r *PredicateRule) collectFields(ctx EvalContext, results *[]Misconfiguration) {
 	// Recursive traversal for nested logic blocks
 	for i := range r.Any {
-		r.Any[i].collectFields(props, results)
+		r.Any[i].collectFields(ctx, results)
 	}
 	for i := range r.All {
-		r.All[i].collectFields(props, results)
+		r.All[i].collectFields(ctx, results)
 	}
 
 	// Leaf node processing
@@ -195,12 +195,12 @@ func (r *PredicateRule) collectFields(props map[string]any, results *[]Misconfig
 	}
 
 	fieldPath := strings.TrimPrefix(r.Field, propertiesPathPrefix)
-	val, _ := getNestedValue(props, strings.Split(fieldPath, "."))
+	val, _ := getFieldValueByParts(ctx, r.parsedFieldParts())
 
 	*results = append(*results, Misconfiguration{
 		Property:    fieldPath,
 		ActualValue: val,
 		Operator:    r.Op,
-		UnsafeValue: r.Value,
+		UnsafeValue: r.Value.Raw(),
 	})
 }

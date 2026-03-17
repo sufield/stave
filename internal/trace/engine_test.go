@@ -15,10 +15,10 @@ import (
 func TestTracePredicate_AnyAllSemantics(t *testing.T) {
 	pred := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
-			{Field: "properties.flag", Op: predicate.OpEq, Value: true},
+			{Field: "properties.flag", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 		All: []policy.PredicateRule{
-			{Field: "properties.ready", Op: predicate.OpEq, Value: true},
+			{Field: "properties.ready", Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	}
 
@@ -56,7 +56,7 @@ func TestTracePredicate_ValueFromParamMissing(t *testing.T) {
 	}
 	root := TracePredicate(pred, policy.EvalContext{
 		Properties: map[string]any{"enabled": true},
-		Params:     nil,
+		Params:     policy.ControlParams{},
 	})
 
 	if root.Result {
@@ -88,7 +88,7 @@ func TestTracePredicate_AnyMatchUsesResolvedParamAndCapturesMatch(t *testing.T) 
 		}
 		return &policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "owner", Op: predicate.OpEq, Value: "alice"},
+				{Field: "owner", Op: predicate.OpEq, Value: policy.Str("alice")},
 			},
 		}, nil
 	}
@@ -100,9 +100,9 @@ func TestTracePredicate_AnyMatchUsesResolvedParamAndCapturesMatch(t *testing.T) 
 			{ID: "id-1", Properties: map[string]any{"owner": ownerBob}},
 			{ID: "id-2", Properties: map[string]any{"owner": ownerAlice}},
 		},
-		Params: map[string]any{
+		Params: policy.NewParams(map[string]any{
 			"nested": map[string]any{"any": []any{}},
-		},
+		}),
 		PredicateParser: testParser,
 	}
 	pred := policy.UnsafePredicate{

@@ -12,12 +12,12 @@ import (
 func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []string {
 	missingSet := make(map[string]struct{})
 
-	pred.walk(func(rule PredicateRule) {
+	pred.Walk(func(rule PredicateRule) {
 		p := rule.ValueFromParam
 		if p == "" {
 			return
 		}
-		if _, exists := params[p]; !exists {
+		if !params.HasKey(p) {
 			missingSet[p] = struct{}{}
 		}
 	})
@@ -36,11 +36,11 @@ func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []st
 
 // CheckControlEffectiveness evaluates if controls are matching any assets in the
 // current dataset. This helps identify misconfigured predicates.
-func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot) []diag.Issue {
+func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, parser PredicateParser) []diag.Issue {
 	var issues []diag.Issue
 
 	for _, ctl := range controls {
-		if !isControlMatchingAny(ctl, snapshots) {
+		if !isControlMatchingAny(ctl, snapshots, parser) {
 			issues = append(issues, diag.New(diag.CodeControlNeverMatches).
 				Warning().
 				Action("Check predicate field paths or verify if all resources are currently safe.").
@@ -52,10 +52,12 @@ func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.S
 	return issues
 }
 
-func isControlMatchingAny(ctl ControlDefinition, snapshots []asset.Snapshot) bool {
+func isControlMatchingAny(ctl ControlDefinition, snapshots []asset.Snapshot, parser PredicateParser) bool {
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			if ctl.UnsafePredicate.Evaluate(a, ctl.Params) {
+			ctx := NewAssetEvalContext(a, ctl.Params, snap.Identities...)
+			ctx.PredicateParser = parser
+			if ctl.UnsafePredicate.EvaluateWithContext(ctx) {
 				return true
 			}
 		}
@@ -65,23 +67,23 @@ func isControlMatchingAny(ctl ControlDefinition, snapshots []asset.Snapshot) boo
 
 // --- Recursive Traversal Methods ---
 
-// walk performs a depth-first traversal of all rules within the predicate.
-func (p UnsafePredicate) walk(visit func(PredicateRule)) {
+// Walk performs a depth-first traversal of all rules within the predicate.
+func (p UnsafePredicate) Walk(visit func(PredicateRule)) {
 	for _, r := range p.Any {
-		r.walk(visit)
+		r.Walk(visit)
 	}
 	for _, r := range p.All {
-		r.walk(visit)
+		r.Walk(visit)
 	}
 }
 
-// walk visits the current rule and recursively visits all child rules.
-func (r PredicateRule) walk(visit func(PredicateRule)) {
+// Walk visits the current rule and recursively visits all child rules.
+func (r PredicateRule) Walk(visit func(PredicateRule)) {
 	visit(r)
 	for _, child := range r.Any {
-		child.walk(visit)
+		child.Walk(visit)
 	}
 	for _, child := range r.All {
-		child.walk(visit)
+		child.Walk(visit)
 	}
 }

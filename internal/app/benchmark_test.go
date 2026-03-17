@@ -68,8 +68,8 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 			Description: "Buckets should not allow public read access",
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "properties.storage.kind", Op: "eq", Value: "s3_bucket"},
-					{Field: "properties.vendor.aws.s3.policy_public_statements", Op: "list_empty", Value: false},
+					{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("s3_bucket")},
+					{Field: "properties.vendor.aws.s3.policy_public_statements", Op: "list_empty", Value: policy.Bool(false)},
 				},
 			},
 		},
@@ -138,8 +138,8 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 			Description: "Test control",
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "properties.storage.kind", Op: "eq", Value: "s3_bucket"},
-					{Field: "properties.vendor.aws.s3.policy_public_statements", Op: "list_empty", Value: false},
+					{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("s3_bucket")},
+					{Field: "properties.vendor.aws.s3.policy_public_statements", Op: "list_empty", Value: policy.Bool(false)},
 				},
 			},
 		},
@@ -206,7 +206,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 		Description: "Always triggers for S3 buckets",
 		UnsafePredicate: policy.UnsafePredicate{
 			All: []policy.PredicateRule{
-				{Field: "properties.storage.kind", Op: "eq", Value: "s3_bucket"},
+				{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("s3_bucket")},
 			},
 		},
 	}

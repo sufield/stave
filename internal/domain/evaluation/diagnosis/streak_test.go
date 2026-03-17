@@ -16,7 +16,7 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 		ID:   "CTL.TEST.001",
 		Name: "test",
 		UnsafePredicate: policy.UnsafePredicate{
-			Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: true}},
+			Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: policy.Bool(true)}},
 		},
 	}
 
@@ -36,7 +36,7 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 	}
 
 	s := newSession(NewInput(
-		snapshots, []policy.ControlDefinition{ctl}, []evaluation.Finding{}, nil, 0, base.Add(1*time.Hour),
+		snapshots, []policy.ControlDefinition{ctl}, []evaluation.Finding{}, nil, 0, base.Add(1*time.Hour), nil,
 	), 0)
 	maxStreak, ctlID := s.globalMaxStreak()
 

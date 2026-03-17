@@ -48,12 +48,12 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
-		Params: policy.ControlParams{
+		Params: policy.NewParams(map[string]any{
 			"max_unsafe_duration": "24h",
-		},
+		}),
 	}
 	_ = ctl24h.Prepare()
 
@@ -62,12 +62,12 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
-		Params: policy.ControlParams{
+		Params: policy.NewParams(map[string]any{
 			"max_unsafe_duration": "48h",
-		},
+		}),
 	}
 	_ = ctl48h.Prepare()
 

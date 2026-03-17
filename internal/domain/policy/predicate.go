@@ -58,11 +58,7 @@ type EvalContext struct {
 
 // Param retrieves a value from the control's parameter block.
 func (ctx EvalContext) Param(key string) (any, bool) {
-	if ctx.Params == nil {
-		return nil, false
-	}
-	v, ok := ctx.Params[key]
-	return v, ok
+	return ctx.Params.Get(key)
 }
 
 // ParsePredicate attempts to expand a raw value into a nested predicate.

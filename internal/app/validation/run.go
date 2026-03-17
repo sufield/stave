@@ -8,6 +8,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/domain/diag"
+	"github.com/sufield/stave/internal/domain/policy"
 )
 
 // Config holds configuration for the validate use case.
@@ -17,6 +18,7 @@ type Config struct {
 	MaxUnsafe       time.Duration
 	NowTime         time.Time
 	SanitizePaths   bool // When true, directory/file paths in evidence are marked sensitive.
+	PredicateParser policy.PredicateParser
 }
 
 // Run orchestrates the validation use case.
@@ -57,10 +59,11 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResul
 	}
 
 	serviceResult := service.ValidateLoaded(service.ValidationInput{
-		Controls:  controls,
-		Snapshots: snapshots,
-		MaxUnsafe: cfg.MaxUnsafe,
-		NowTime:   cfg.NowTime,
+		Controls:        controls,
+		Snapshots:       snapshots,
+		MaxUnsafe:       cfg.MaxUnsafe,
+		NowTime:         cfg.NowTime,
+		PredicateParser: cfg.PredicateParser,
 	})
 	return &serviceResult, nil
 }

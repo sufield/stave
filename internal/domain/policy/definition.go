@@ -154,17 +154,52 @@ func (ctl *ControlDefinition) mustBePrepared() {
 // --- Parameter Handling ---
 
 // ControlParams is a property bag for control-specific configuration.
-type ControlParams map[string]any
+type ControlParams struct{ m map[string]any }
+
+// NewParams wraps a raw map in a ControlParams struct.
+func NewParams(m map[string]any) ControlParams { return ControlParams{m: m} }
+
+// Get retrieves a value by key. Safe to call on a zero-value ControlParams.
+func (p ControlParams) Get(key string) (any, bool) {
+	if p.m == nil {
+		return nil, false
+	}
+	v, ok := p.m[key]
+	return v, ok
+}
+
+// Set stores a value. Must be called on a non-zero ControlParams.
+func (p *ControlParams) Set(key string, value any) {
+	if p.m == nil {
+		p.m = make(map[string]any)
+	}
+	p.m[key] = value
+}
+
+// Len returns the number of parameters.
+func (p ControlParams) Len() int { return len(p.m) }
+
+// IsZero reports whether the inner map is nil.
+func (p ControlParams) IsZero() bool { return p.m == nil }
+
+// Raw returns the underlying map for adapter-layer access.
+func (p ControlParams) Raw() map[string]any { return p.m }
 
 // HasKey returns true if the parameter key exists.
 func (p ControlParams) HasKey(key string) bool {
-	_, ok := p[key]
+	if p.m == nil {
+		return false
+	}
+	_, ok := p.m[key]
 	return ok
 }
 
 // String returns a string parameter or empty string if not found.
 func (p ControlParams) String(key string) string {
-	if v, ok := p[key].(string); ok {
+	if p.m == nil {
+		return ""
+	}
+	if v, ok := p.m[key].(string); ok {
 		return v
 	}
 	return ""
@@ -172,7 +207,10 @@ func (p ControlParams) String(key string) string {
 
 // Int returns an int parameter or 0 if not found.
 func (p ControlParams) Int(key string) int {
-	switch v := p[key].(type) {
+	if p.m == nil {
+		return 0
+	}
+	switch v := p.m[key].(type) {
 	case int:
 		return v
 	case int64:
@@ -186,7 +224,10 @@ func (p ControlParams) Int(key string) int {
 
 // Bool returns a bool parameter or false if not found.
 func (p ControlParams) Bool(key string) bool {
-	if v, ok := p[key].(bool); ok {
+	if p.m == nil {
+		return false
+	}
+	if v, ok := p.m[key].(bool); ok {
 		return v
 	}
 	return false
@@ -194,7 +235,10 @@ func (p ControlParams) Bool(key string) bool {
 
 // StringSlice handles the common case where YAML unmarshals a list into []any.
 func (p ControlParams) StringSlice(key string) []string {
-	v, ok := p[key]
+	if p.m == nil {
+		return nil
+	}
+	v, ok := p.m[key]
 	if !ok {
 		return nil
 	}

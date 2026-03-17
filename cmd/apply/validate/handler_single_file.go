@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
@@ -97,6 +98,7 @@ func NewReadinessValidator(ctlDir, obsDir string, sanitize bool) func(time.Durat
 			MaxUnsafe:       maxUnsafeDur,
 			NowTime:         now,
 			SanitizePaths:   sanitize,
+			PredicateParser: ctlyaml.ParsePredicate,
 		})
 		if err != nil {
 			return validation.ValidationResult{}, err

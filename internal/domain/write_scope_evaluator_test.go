@@ -22,9 +22,9 @@ func TestEvaluator_WriteScope_PrefixModeViolation(t *testing.T) {
 			Description: "Signed upload policies must restrict write permission to a single exact object key.",
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "type", Op: "eq", Value: "upload_policy"},
-					{Field: "properties.upload.operation", Op: "eq", Value: "write"},
-					{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: "prefix"},
+					{Field: "type", Op: "eq", Value: policy.Str("upload_policy")},
+					{Field: "properties.upload.operation", Op: "eq", Value: policy.Str("write")},
+					{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: policy.Str("prefix")},
 				},
 			},
 		},
@@ -137,9 +137,9 @@ func TestEvaluator_WriteScope_ExactModeNoViolation(t *testing.T) {
 			Type: policy.TypeUnsafeState,
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "type", Op: "eq", Value: "upload_policy"},
-					{Field: "properties.upload.operation", Op: "eq", Value: "write"},
-					{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: "prefix"},
+					{Field: "type", Op: "eq", Value: policy.Str("upload_policy")},
+					{Field: "properties.upload.operation", Op: "eq", Value: policy.Str("write")},
+					{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: policy.Str("prefix")},
 				},
 			},
 		},
@@ -206,9 +206,9 @@ func TestEvaluator_WriteScope_NoUploadPolicyObservations(t *testing.T) {
 			Type: policy.TypeUnsafeState,
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "type", Op: "eq", Value: "upload_policy"},
-					{Field: "properties.upload.operation", Op: "eq", Value: "write"},
-					{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: "prefix"},
+					{Field: "type", Op: "eq", Value: policy.Str("upload_policy")},
+					{Field: "properties.upload.operation", Op: "eq", Value: policy.Str("write")},
+					{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: policy.Str("prefix")},
 				},
 			},
 		},

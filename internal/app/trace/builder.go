@@ -35,7 +35,7 @@ func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTra
 		return nil
 	}
 
-	ctx := policy.NewAssetEvalContext(*found, policy.ControlParams(req.Control.Params), snapshot.Identities...)
+	ctx := policy.NewAssetEvalContext(*found, req.Control.Params, snapshot.Identities...)
 	ctx.PredicateParser = b.predicateParser
 	root := trace.TracePredicate(req.Control.UnsafePredicate, ctx)
 	tr := &trace.TraceResult{

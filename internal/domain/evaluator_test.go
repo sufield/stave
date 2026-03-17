@@ -33,7 +33,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 		Description: "asset.Asset must not remain unsafe beyond threshold",
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -110,7 +110,7 @@ func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -149,7 +149,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -201,7 +201,7 @@ func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -255,12 +255,12 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 		Name:        "Strict Duration",
 		Description: "Short threshold via params",
 		Type:        policy.TypeUnsafeDuration,
-		Params: policy.ControlParams{
+		Params: policy.NewParams(map[string]any{
 			"max_unsafe_duration": "24h", // 1 day - stricter than CLI default
-		},
+		}),
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -273,7 +273,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 		// No params.max_unsafe_duration - uses CLI default
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -343,12 +343,12 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 		ID:   "CTL.EXP.DURATION.103",
 		Name: "Day Syntax Duration",
 		Type: policy.TypeUnsafeDuration,
-		Params: policy.ControlParams{
+		Params: policy.NewParams(map[string]any{
 			"max_unsafe_duration": "7d", // 7 days in day syntax
-		},
+		}),
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: true},
+				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -398,7 +398,7 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -457,7 +457,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 			Type: policy.TypeUnsafeDuration, // Supported
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -466,7 +466,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 			Type: policy.TypeAuthorizationBoundary, // Not supported in MVP 1.0
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -528,12 +528,12 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 		{
 			ID:   "CTL.EXP.DURATION.001",
 			Type: policy.TypeUnsafeDuration,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "48h",
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -590,13 +590,13 @@ func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
 		{
 			ID:   "CTL.EXP.RECURRENCE.001",
 			Type: policy.TypeUnsafeRecurrence,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"recurrence_limit": 3,
 				"window_days":      90,
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -666,12 +666,12 @@ func TestEvaluator_TypeGating(t *testing.T) {
 			{
 				ID:   "CTL.DURATION.001",
 				Type: policy.TypeUnsafeDuration,
-				Params: policy.ControlParams{
+				Params: policy.NewParams(map[string]any{
 					"max_unsafe_duration": "24h",
-				},
+				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: true},
+						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -709,12 +709,12 @@ func TestEvaluator_TypeGating(t *testing.T) {
 			{
 				ID:   "CTL.STATE.001",
 				Type: policy.TypeUnsafeState,
-				Params: policy.ControlParams{
+				Params: policy.NewParams(map[string]any{
 					"max_unsafe_duration": "0h",
-				},
+				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: true},
+						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -752,13 +752,13 @@ func TestEvaluator_TypeGating(t *testing.T) {
 			{
 				ID:   "CTL.RECURRENCE.001",
 				Type: policy.TypeUnsafeRecurrence,
-				Params: policy.ControlParams{
+				Params: policy.NewParams(map[string]any{
 					"recurrence_limit": 2,
 					"window_days":      90,
-				},
+				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: true},
+						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -819,12 +819,12 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 		{
 			ID:   "CTL.DURATION.001",
 			Type: policy.TypeUnsafeDuration,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "48h", // 2-day threshold
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -890,12 +890,12 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 		{
 			ID:   "CTL.DURATION.001",
 			Type: policy.TypeUnsafeDuration,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "48h", // 2-day threshold
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -963,7 +963,7 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1050,7 +1050,7 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1109,12 +1109,12 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 		{
 			ID:   "CTL.DURATION.SPARSE",
 			Type: policy.TypeUnsafeDuration,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "168h", // 7 days
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1167,12 +1167,12 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 		{
 			ID:   "CTL.DURATION.MISSING",
 			Type: policy.TypeUnsafeDuration,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "48h",
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1223,13 +1223,13 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 		{
 			ID:   "CTL.RECURRENCE.INCOMPLETE",
 			Type: policy.TypeUnsafeRecurrence,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"recurrence_limit": 2,
 				"window_days":      90, // 90-day window
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1280,12 +1280,12 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 		{
 			ID:   "CTL.DURATION.ADEQUATE",
 			Type: policy.TypeUnsafeDuration,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "48h",
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1358,12 +1358,12 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 			{
 				ID:   "CTL.CONF.HIGH",
 				Type: policy.TypeUnsafeDuration,
-				Params: policy.ControlParams{
+				Params: policy.NewParams(map[string]any{
 					"max_unsafe_duration": "48h", // 48h threshold, 25% = 12h
-				},
+				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: true},
+						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -1431,12 +1431,12 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 			{
 				ID:   "CTL.CONF.MED",
 				Type: policy.TypeUnsafeDuration,
-				Params: policy.ControlParams{
+				Params: policy.NewParams(map[string]any{
 					"max_unsafe_duration": "48h", // 48h threshold, 25% = 12h, 50% = 24h
-				},
+				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: true},
+						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -1474,7 +1474,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 			},
 		}
 
-		controls[0].Params["max_unsafe_duration"] = "24h" // Adjust threshold for this test
+		controls[0].Params = policy.NewParams(map[string]any{"max_unsafe_duration": "24h"}) // Adjust threshold for this test
 
 		clock := clockadp.FixedClock(mustParseTime("2026-01-02T00:00:00Z"))
 		evaluator := NewEvaluator(controls, 168*time.Hour, clock)
@@ -1509,12 +1509,12 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 			{
 				ID:   "CTL.CONF.DET",
 				Type: policy.TypeUnsafeDuration,
-				Params: policy.ControlParams{
+				Params: policy.NewParams(map[string]any{
 					"max_unsafe_duration": "48h",
-				},
+				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: true},
+						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -1585,13 +1585,13 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 		{
 			ID:   "CTL.RECURRENCE.OPEN",
 			Type: policy.TypeUnsafeRecurrence,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"recurrence_limit": 3,
 				"window_days":      90,
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1685,13 +1685,13 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 		{
 			ID:   "CTL.RECURRENCE.OPEN.NOCOUNT",
 			Type: policy.TypeUnsafeRecurrence,
-			Params: policy.ControlParams{
+			Params: policy.NewParams(map[string]any{
 				"recurrence_limit": 3,
 				"window_days":      30, // 30-day window
-			},
+			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},

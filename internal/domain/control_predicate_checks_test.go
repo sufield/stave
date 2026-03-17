@@ -5,8 +5,8 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/diag"
-
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 func TestFindMissingParamReferences_DedupesAndSorts(t *testing.T) {
@@ -26,9 +26,9 @@ func TestFindMissingParamReferences_DedupesAndSorts(t *testing.T) {
 		},
 	}
 
-	got := policy.FindMissingParamReferences(pred, policy.ControlParams{
+	got := policy.FindMissingParamReferences(pred, policy.NewParams(map[string]any{
 		"a": "present",
-	})
+	}))
 
 	if len(got) != 2 {
 		t.Fatalf("missing refs len = %d, want 2 (%v)", len(got), got)
@@ -45,7 +45,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 			Name: "Match",
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -54,7 +54,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 			Name: "Never",
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.nonexistent", Op: "eq", Value: true},
+					{Field: "properties.nonexistent", Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -73,7 +73,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 		},
 	}
 
-	issues := policy.CheckControlEffectiveness(controls, snapshots)
+	issues := policy.CheckControlEffectiveness(controls, snapshots, nil)
 	if len(issues) != 1 {
 		t.Fatalf("issue count = %d, want 1 (%v)", len(issues), issues)
 	}

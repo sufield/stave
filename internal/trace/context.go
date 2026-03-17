@@ -27,7 +27,7 @@ type ruleContext struct {
 func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalContext) ruleContext {
 	fieldValue, fieldExists := policy.GetFieldValueWithContext(evalCtx, rule.Field)
 
-	compareValue := rule.Value
+	compareValue := rule.Value.Raw()
 	if rule.ValueFromParam != "" {
 		compareValue, _ = evalCtx.Param(rule.ValueFromParam)
 	}
@@ -36,7 +36,7 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 		Index:          index,
 		Field:          rule.Field,
 		Op:             rule.Op,
-		Value:          rule.Value,
+		Value:          rule.Value.Raw(),
 		ValueFromParam: rule.ValueFromParam,
 		CompareValue:   compareValue,
 		FieldValue:     fieldValue,

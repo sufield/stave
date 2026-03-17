@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/diag"
 
+	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	appservice "github.com/sufield/stave/internal/app/service"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
@@ -108,6 +109,7 @@ func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options
 		MaxUnsafe:       *params.maxUnsafe,
 		NowTime:         params.nowTime,
 		SanitizePaths:   cmdutil.GetGlobalFlags(cmd).Sanitize,
+		PredicateParser: ctlyaml.ParsePredicate,
 	}
 
 	return runner.Execute(compose.CommandContext(cmd), cfg)

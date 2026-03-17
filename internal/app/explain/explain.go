@@ -128,9 +128,9 @@ func walkRules(from string, prs []policy.PredicateRule, params policy.ControlPar
 }
 
 func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (value any, comment string) {
-	value = r.Value
-	if r.ValueFromParam != "" && params != nil {
-		value = params[r.ValueFromParam]
+	value = r.Value.Raw()
+	if r.ValueFromParam != "" && !params.IsZero() {
+		value, _ = params.Get(r.ValueFromParam)
 	}
 	if r.ValueFromParam != "" {
 		comment = "value resolved from params." + r.ValueFromParam

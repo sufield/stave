@@ -77,12 +77,13 @@ func (dr *Report) Sanitized(r kernel.IDSanitizer) *Report {
 
 // Input encapsulates all data required to run a diagnosis.
 type Input struct {
-	Snapshots asset.Snapshots
-	Controls  []policy.ControlDefinition
-	Findings  []evaluation.Finding
-	Result    *evaluation.Result
-	MaxUnsafe time.Duration
-	Now       time.Time
+	Snapshots       asset.Snapshots
+	Controls        []policy.ControlDefinition
+	Findings        []evaluation.Finding
+	Result          *evaluation.Result
+	MaxUnsafe       time.Duration
+	Now             time.Time
+	PredicateParser policy.PredicateParser
 
 	// cached summary computed at creation
 	summary Summary
@@ -96,14 +97,16 @@ func NewInput(
 	result *evaluation.Result,
 	maxUnsafe time.Duration,
 	now time.Time,
+	parser policy.PredicateParser,
 ) Input {
 	i := Input{
-		Snapshots: snapshots,
-		Controls:  controls,
-		Findings:  findings,
-		Result:    result,
-		MaxUnsafe: maxUnsafe,
-		Now:       now,
+		Snapshots:       snapshots,
+		Controls:        controls,
+		Findings:        findings,
+		Result:          result,
+		MaxUnsafe:       maxUnsafe,
+		Now:             now,
+		PredicateParser: parser,
 	}
 	i.summary = i.buildSummary()
 	return i
