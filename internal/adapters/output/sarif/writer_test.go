@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	output "github.com/sufield/stave/internal/adapters/output"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -26,7 +26,7 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -91,7 +91,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -193,7 +193,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -258,7 +258,7 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

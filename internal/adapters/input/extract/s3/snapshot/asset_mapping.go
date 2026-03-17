@@ -1,13 +1,13 @@
 package snapshot
 
 import (
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
-	s3policy "github.com/sufield/stave/internal/adapters/input/extract/s3/policy"
 	s3resource "github.com/sufield/stave/internal/adapters/input/extract/s3/resource"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
 	"github.com/sufield/stave/internal/domain/asset"
 	s3exposure "github.com/sufield/stave/internal/domain/evaluation/exposure"
 	"github.com/sufield/stave/internal/domain/kernel"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
+	s3policy "github.com/sufield/stave/internal/domain/s3/policy"
 )
 
 type snapshotResourceProperties struct {
@@ -72,16 +72,20 @@ func (e *SnapshotExtractor) observationToAsset(obs S3Observation) asset.Asset {
 	}
 }
 
-func applyPolicyObservation(obs S3Observation, props *snapshotResourceProperties) (s3policy.Analysis, bool, bool) {
+func applyPolicyObservation(obs S3Observation, props *snapshotResourceProperties) (s3policy.Assessment, bool, bool) {
 	policyMissing := s3resource.ContainsSubstring(obs.MissingInputs, "get-bucket-policy")
 	if obs.PolicyJSON == "" {
 		if policyMissing {
 			props.PolicyStatus = "unknown"
 		}
-		return s3policy.Analysis{}, false, policyMissing
+		return s3policy.Assessment{}, false, policyMissing
 	}
 	props.PolicyJSON = obs.PolicyJSON
-	policyAnalysis := s3policy.AnalyzePolicy(obs.PolicyJSON)
+	doc, err := s3policy.Parse(obs.PolicyJSON)
+	if err != nil {
+		return s3policy.Assessment{}, false, policyMissing
+	}
+	policyAnalysis := doc.Assess()
 	allowsRead := policyAnalysis.AllowsPublicRead
 	props.PolicyAllowsPublicRead = &allowsRead
 	allowsList := policyAnalysis.AllowsPublicList

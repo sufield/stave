@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 	s3resource "github.com/sufield/stave/internal/adapters/input/extract/s3/resource"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
 	s3terraform "github.com/sufield/stave/internal/adapters/input/extract/s3/terraform"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
 
 	"github.com/sufield/stave/internal/platform/fsutil"
 )

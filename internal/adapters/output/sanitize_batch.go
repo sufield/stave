@@ -5,27 +5,8 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 )
-
-// SanitizeFindings returns sanitized copies of a slice of findings.
-func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []remediation.Finding {
-	return lo.Map(findings, func(f remediation.Finding, _ int) remediation.Finding { return f.Sanitized(s) })
-}
-
-// SanitizeExemptedAssets returns sanitized copies of exempted assets.
-func SanitizeExemptedAssets(s kernel.Sanitizer, assets []asset.ExemptedAsset) []asset.ExemptedAsset {
-	return lo.Map(assets, func(a asset.ExemptedAsset, _ int) asset.ExemptedAsset { return a.Sanitized(s) })
-}
-
-// SanitizeInputHashKeys returns a copy with file keys sanitized to basenames.
-func SanitizeInputHashKeys(s kernel.Sanitizer, h *evaluation.InputHashes) *evaluation.InputHashes {
-	if h == nil {
-		return nil
-	}
-	return h.Sanitized(s)
-}
 
 // SanitizeReport returns a sanitized copy of a diagnosis report.
 func SanitizeReport(s kernel.Sanitizer, r *diagnosis.Report) *diagnosis.Report {

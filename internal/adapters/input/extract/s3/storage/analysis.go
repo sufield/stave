@@ -1,17 +1,15 @@
 package storage
 
 import (
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
-	s3policy "github.com/sufield/stave/internal/adapters/input/extract/s3/policy"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
+	s3policy "github.com/sufield/stave/internal/domain/s3/policy"
 )
 
 type S3AnalysisResult struct {
 	HasPolicy    bool
-	Policy       s3policy.Analysis
+	Policy       s3policy.Assessment
 	HasACL       bool
 	ACL          s3acl.Assessment
-	Transport    s3policy.TransportEncryptionAnalysis
-	CrossAccount s3policy.CrossAccountAnalysis
 	PrefixScopes s3policy.PrefixScopeAnalysis
 }
 
@@ -22,12 +20,10 @@ func (b *S3Bucket) Analyze() S3AnalysisResult {
 	}
 	if b.PolicyJSON != "" {
 		result.HasPolicy = true
-		engine, err := s3policy.NewEngine(b.PolicyJSON)
+		doc, err := s3policy.Parse(b.PolicyJSON)
 		if err == nil {
-			result.Policy = engine.FullAnalysis()
-			result.Transport = engine.TransportEncryptionAnalysis()
-			result.CrossAccount = engine.CrossAccountAnalysis()
-			result.PrefixScopes = engine.PrefixScopeAnalysis()
+			result.Policy = doc.Assess()
+			result.PrefixScopes = doc.PrefixScopeAnalysis()
 		}
 	}
 	if len(b.ACLGrants) > 0 {

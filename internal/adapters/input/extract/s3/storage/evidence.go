@@ -1,8 +1,8 @@
 package storage
 
 import (
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 	"github.com/sufield/stave/internal/domain/kernel"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
 )
 
 // AWSS3Evidence is the vendor-specific S3 evidence contract.

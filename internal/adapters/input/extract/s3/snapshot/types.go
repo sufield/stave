@@ -1,8 +1,8 @@
 package snapshot
 
 import (
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
 )
 
 // ListBucketsResponse represents the AWS CLI list-buckets output.

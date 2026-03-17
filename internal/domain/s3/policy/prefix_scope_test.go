@@ -7,7 +7,7 @@ import (
 )
 
 func TestPrefixScopeAnalysisWildcardResource(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Sid": "PublicRead",
@@ -32,7 +32,7 @@ func TestPrefixScopeAnalysisWildcardResource(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisPrefixedResource(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Sid": "InvoiceAccess",
@@ -58,7 +58,7 @@ func TestPrefixScopeAnalysisPrefixedResource(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisNonAllowSkipped(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Deny",
@@ -76,7 +76,7 @@ func TestPrefixScopeAnalysisNonAllowSkipped(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisNonPublicPrincipalSkipped(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Allow",
@@ -94,7 +94,7 @@ func TestPrefixScopeAnalysisNonPublicPrincipalSkipped(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisNonReadActionsSkipped(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Allow",
@@ -112,7 +112,7 @@ func TestPrefixScopeAnalysisNonReadActionsSkipped(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisSidAbsentUsesIndex(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Allow",
@@ -133,7 +133,7 @@ func TestPrefixScopeAnalysisSidAbsentUsesIndex(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisS3WildcardAction(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Allow",
@@ -155,7 +155,7 @@ func TestPrefixScopeAnalysisS3WildcardAction(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisFullWildcardAction(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Allow",
@@ -176,7 +176,7 @@ func TestPrefixScopeAnalysisFullWildcardAction(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisAWSPrincipalWildcard(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [{
 			"Effect": "Allow",
@@ -194,7 +194,7 @@ func TestPrefixScopeAnalysisAWSPrincipalWildcard(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisDeduplicatesScopes(t *testing.T) {
-	engine := mustEngine(t, `{
+	engine := mustParse(t, `{
 		"Version": "2012-10-17",
 		"Statement": [
 			{
@@ -225,7 +225,7 @@ func TestPrefixScopeAnalysisDeduplicatesScopes(t *testing.T) {
 }
 
 func TestPrefixScopeAnalysisEmptyPolicy(t *testing.T) {
-	engine := mustEngine(t, `{"Version": "2012-10-17", "Statement": []}`)
+	engine := mustParse(t, `{"Version": "2012-10-17", "Statement": []}`)
 
 	result := engine.PrefixScopeAnalysis()
 
@@ -235,13 +235,4 @@ func TestPrefixScopeAnalysisEmptyPolicy(t *testing.T) {
 	if result.SourceByScope == nil {
 		t.Error("expected non-nil SourceByScope map")
 	}
-}
-
-func mustEngine(t *testing.T, policyJSON string) *Engine {
-	t.Helper()
-	engine, err := NewEngine(policyJSON)
-	if err != nil {
-		t.Fatalf("NewEngine: %v", err)
-	}
-	return engine
 }

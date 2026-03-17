@@ -1,11 +1,11 @@
 package resource
 
 import (
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
-	s3policy "github.com/sufield/stave/internal/adapters/input/extract/s3/policy"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
 	"github.com/sufield/stave/internal/domain/asset"
 	s3exposure "github.com/sufield/stave/internal/domain/evaluation/exposure"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
+	s3policy "github.com/sufield/stave/internal/domain/s3/policy"
 )
 
 // BuildBucketAsset converts a bucket model into a normalized asset.Asset.
@@ -18,7 +18,7 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 		Identity:          ToIdentityVisibility(analysis.Policy),
 		Resource:          ToResourceVisibility(analysis.ACL),
 		Gov:               gov,
-		CrossAccount:      toCrossAccountAccess(analysis.CrossAccount),
+		CrossAccount:      toCrossAccountAccess(analysis.Policy),
 		NetworkScope:      toNetworkScopeAccess(analysis.Policy),
 		ACLFullControl:    toACLFullControlAccess(analysis.ACL),
 		PrefixExposure:    toPrefixExposureAccess(analysis, gov),
@@ -30,7 +30,7 @@ func BuildBucketAsset(bucket *s3storage.S3Bucket, accountPAB *s3storage.PublicAc
 		AccountPAB:             accountPAB,
 		EffectivePAB:           effectivePAB,
 		Access:                 access,
-		TransportEnforcesHTTPS: analysis.Transport.EnforcesHTTPS,
+		TransportEnforcesHTTPS: analysis.Policy.EnforcesHTTPS,
 	})
 	awsS3Evidence := s3storage.BuildAWSS3Evidence(bucket, analysis)
 
@@ -73,8 +73,8 @@ func mergePublicAccessBlock(effective *s3storage.PublicAccessBlock, candidate *s
 	effective.RestrictPublicBuckets = effective.RestrictPublicBuckets || candidate.RestrictPublicBuckets
 }
 
-// ToIdentityVisibility maps an S3 policy analysis to the exposure domain Visibility.
-func ToIdentityVisibility(policy s3policy.Analysis) s3exposure.Visibility {
+// ToIdentityVisibility maps an S3 policy assessment to the exposure domain Visibility.
+func ToIdentityVisibility(policy s3policy.Assessment) s3exposure.Visibility {
 	return s3exposure.Visibility{
 		Public: s3exposure.Capabilities{
 			Read:  policy.AllowsPublicRead,
@@ -125,16 +125,16 @@ func ToGovernanceOverrides(pab s3storage.PublicAccessBlock) s3exposure.Governanc
 	}
 }
 
-func toCrossAccountAccess(ca s3policy.CrossAccountAnalysis) s3exposure.CrossAccountAccess {
+func toCrossAccountAccess(a s3policy.Assessment) s3exposure.CrossAccountAccess {
 	return s3exposure.CrossAccountAccess{
-		ExternalAccountARNs: ca.ExternalAccountARNs,
-		ExternalAccountIDs:  ca.ExternalAccountIDs,
-		HasExternalAccess:   ca.HasExternalAccess,
-		HasExternalWrite:    ca.HasExternalWrite,
+		ExternalAccountARNs: a.ExternalAccountARNs,
+		ExternalAccountIDs:  a.ExternalAccountIDs,
+		HasExternalAccess:   a.HasExternalAccess,
+		HasExternalWrite:    a.HasExternalWrite,
 	}
 }
 
-func toNetworkScopeAccess(policy s3policy.Analysis) s3exposure.NetworkScopeAccess {
+func toNetworkScopeAccess(policy s3policy.Assessment) s3exposure.NetworkScopeAccess {
 	return s3exposure.NetworkScopeAccess{
 		HasIPCondition:        policy.HasIPCondition,
 		HasVPCCondition:       policy.HasVPCCondition,

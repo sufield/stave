@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	output "github.com/sufield/stave/internal/adapters/output"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -55,7 +55,7 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, sanitizer, result)
+	enriched := appeval.Enrich(enricher, sanitizer, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
@@ -129,7 +129,7 @@ func TestWriteFindings_WithoutEnvelope(t *testing.T) {
 		Findings: nil,
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
