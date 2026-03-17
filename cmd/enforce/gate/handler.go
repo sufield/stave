@@ -8,8 +8,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/shared"
-	appconfig "github.com/sufield/stave/internal/app/config"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -48,12 +48,12 @@ func NewRunner(p *compose.Provider) *Runner {
 
 // Result represents the structured output of a gate evaluation.
 type Result struct {
-	SchemaVersion kernel.Schema         `json:"schema_version"`
-	Kind          kernel.OutputKind     `json:"kind"`
-	CheckedAt     time.Time             `json:"checked_at"`
+	SchemaVersion kernel.Schema        `json:"schema_version"`
+	Kind          kernel.OutputKind    `json:"kind"`
+	CheckedAt     time.Time            `json:"checked_at"`
 	Policy        appconfig.GatePolicy `json:"policy"`
-	Pass          bool                  `json:"pass"`
-	Reason        string                `json:"reason"`
+	Pass          bool                 `json:"pass"`
+	Reason        string               `json:"reason"`
 
 	EvaluationPath   string `json:"evaluation_path,omitempty"`
 	BaselinePath     string `json:"baseline_path,omitempty"`
