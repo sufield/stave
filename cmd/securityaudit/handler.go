@@ -5,19 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/adapters/govulncheck"
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/compliance"
-	"github.com/sufield/stave/internal/doctor"
-	"github.com/sufield/stave/internal/domain/kernel"
 	domainsecurityaudit "github.com/sufield/stave/internal/domain/securityaudit"
-	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -60,40 +54,7 @@ func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
 
 	bundleDir := resolveOutDir(cfg.OutDir, cfg.Now)
 
-	runner := appsa.NewSecurityAuditRunner(appsa.RunnerDeps{
-		ReadFile: fsutil.ReadFileLimited,
-		HashFile: fsutil.HashFile,
-		HashBytes: func(data []byte) kernel.Digest {
-			return platformcrypto.HashBytes(data)
-		},
-		GovulncheckRunner: govulncheck.Run,
-		SignatureVerifier: nil,
-		RunDiagnostics: func(cwd, binaryPath, staveVersion string) {
-			_, _ = doctor.Run(&doctor.Context{
-				Cwd:          cwd,
-				BinaryPath:   binaryPath,
-				StaveVersion: staveVersion,
-			})
-		},
-		ResolveCrosswalk: func(raw []byte, frameworks, checkIDs []string, now time.Time) (appsa.CrosswalkResult, error) {
-			resolved, resolveErr := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
-			if resolveErr != nil {
-				return appsa.CrosswalkResult{}, resolveErr
-			}
-			return appsa.CrosswalkResult{
-				ByCheck:        resolved.ByCheck,
-				MissingChecks:  resolved.MissingChecks,
-				ResolutionJSON: resolved.ResolutionJSON,
-			}, nil
-		},
-		StatFile:     os.Stat,
-		Getenv:       os.Getenv,
-		IsPrivileged: func() bool { return os.Geteuid() == 0 },
-		WalkDir: func(root string, fn appsa.WalkFunc) error {
-			return filepath.Walk(root, filepath.WalkFunc(fn))
-		},
-		Getwd: os.Getwd,
-	})
+	runner := appsa.NewSecurityAuditRunner(buildRunnerDeps())
 
 	report, artifacts, err := runner.Run(ctx, appsa.SecurityAuditRequest{
 		Now:                  cfg.Now,
@@ -159,42 +120,4 @@ func resolveOutDir(raw string, now time.Time) string {
 		return outDir
 	}
 	return fmt.Sprintf("security-audit-%s", now.UTC().Format("20060102T150405Z"))
-}
-
-func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecurityaudit.Summary) error {
-	if _, err := fmt.Fprintf(w, "security-audit report: %s\n", mainOutPath); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "security-audit bundle: %s\n", bundleDir); err != nil {
-		return err
-	}
-	_, err := fmt.Fprintf(w, "summary: total=%d pass=%d warn=%d fail=%d gated=%t threshold=%s\n",
-		summary.Total, summary.Pass, summary.Warn, summary.Fail, summary.Gated, summary.FailOn)
-	return err
-}
-
-func parseFormat(raw string) (string, error) {
-	normalized := ui.NormalizeToken(raw)
-	switch normalized {
-	case "json", "markdown", "sarif":
-		return normalized, nil
-	default:
-		return "", &ui.UserError{Err: ui.EnumError("--format", raw, []string{"json", "markdown", "sarif"})}
-	}
-}
-
-func renderReport(format string, report domainsecurityaudit.Report) ([]byte, string, error) {
-	switch format {
-	case "json":
-		data, err := securityout.MarshalJSONReport(report)
-		return data, "security-report.json", err
-	case "markdown":
-		data, err := securityout.MarshalMarkdownReport(report)
-		return data, "security-report.md", err
-	case "sarif":
-		data, err := securityout.MarshalSARIFReport(report)
-		return data, "security-report.sarif", err
-	default:
-		return nil, "", fmt.Errorf("unsupported report format %q", format)
-	}
 }

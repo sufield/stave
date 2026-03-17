@@ -11,14 +11,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
-	"github.com/sufield/stave/internal/adapters/output"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
@@ -138,36 +133,6 @@ func (r *Runner) validateInput(path string) error {
 	return nil
 }
 
-func (r *Runner) resolveScopeFilter(cfg Config) asset.AssetPredicate {
-	if cfg.IncludeAll {
-		return asset.UniversalFilter
-	}
-	if len(cfg.BucketAllowlist) > 0 {
-		return asset.NewScopeFilterFromAllowlist(cfg.BucketAllowlist)
-	}
-	return asset.DefaultHealthcareScopeFilter()
-}
-
-func (r *Runner) filterSnapshots(cfg Config, snapshots []asset.Snapshot) []asset.Snapshot {
-	if len(snapshots) == 0 {
-		if !cfg.Quiet {
-			fmt.Fprintln(cfg.Stderr, "No snapshots in observations file")
-		}
-		return nil
-	}
-
-	scopeFilter := r.resolveScopeFilter(cfg)
-	filtered := asset.FilterSnapshots(scopeFilter, snapshots)
-	if len(filtered) == 0 {
-		if !cfg.Quiet {
-			fmt.Fprintln(cfg.Stderr, "No S3 buckets matching health scope found in observations")
-		}
-		return nil
-	}
-
-	return filtered
-}
-
 func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 
@@ -188,46 +153,6 @@ func (r *Runner) loadControls(ctx context.Context, inputFile string) (string, []
 	))
 
 	return ctlDir, controls, nil
-}
-
-func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
-	marshaler, err := compose.ActiveProvider().NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
-	if err != nil {
-		return err
-	}
-
-	enricher := remediation.NewMapper(crypto.NewHasher())
-	enrichFn := func(res evaluation.Result) appcontracts.EnrichedResult {
-		return output.Enrich(enricher, cfg.Sanitizer, res)
-	}
-
-	return appeval.NewPipeline(ctx, &appeval.PipelineData{
-		Result: result,
-		Output: cfg.Stdout,
-	}).
-		Then(appeval.EnrichStep(enrichFn)).
-		Then(appeval.MarshalStep(marshaler)).
-		Then(appeval.WriteStep()).
-		Error()
-}
-
-func (r *Runner) finalize(cfg Config, results evaluation.Result, snapshots []asset.Snapshot, ctlDir string) error {
-	unprovable := asset.CountUnprovablySafe(snapshots)
-	if unprovable > 0 && !cfg.Quiet {
-		fmt.Fprintf(cfg.Stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", unprovable)
-	}
-
-	if len(results.Findings) > 0 {
-		if !cfg.Quiet {
-			ui.WriteHint(cfg.Stderr, fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, cfg.InputFile))
-		}
-		return ui.ErrViolationsFound
-	}
-
-	if !cfg.Quiet {
-		fmt.Fprintln(cfg.Stderr, "Evaluation complete. No violations found.")
-	}
-	return nil
 }
 
 func getControlsBaseDir() string {

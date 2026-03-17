@@ -4,26 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/sufield/stave/internal/adapters/gitinfo"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
-	outjson "github.com/sufield/stave/internal/adapters/output/json"
-	outsarif "github.com/sufield/stave/internal/adapters/output/sarif"
-	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
 // Provider manages the instantiation of various adapters and repositories.
@@ -148,105 +137,4 @@ func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Asset
 		return Assets{}, err
 	}
 	return res, nil
-}
-
-// --- Output Resolution ---
-
-// DefaultFindingWriter is the standard implementation for finding marshalers.
-func DefaultFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
-	const indented = true
-	switch strings.ToLower(strings.TrimSpace(format)) {
-	case "text":
-		return outtext.NewFindingWriter(), nil
-	case "json":
-		if jsonMode {
-			return outjson.NewFindingWriterWithEnvelope(indented), nil
-		}
-		return outjson.NewFindingWriter(indented), nil
-	case "sarif":
-		return outsarif.NewFindingWriter(), nil
-	default:
-		return nil, fmt.Errorf("invalid --format %q (use text, json, or sarif)", format)
-	}
-}
-
-// ResolveStdout returns a writer based on quiet settings and format.
-func ResolveStdout(w io.Writer, quiet bool, format ui.OutputFormat) io.Writer {
-	if quiet && !format.IsJSON() {
-		return io.Discard
-	}
-	if w == nil {
-		return os.Stdout
-	}
-	return w
-}
-
-// --- Time & Clock ---
-
-// ResolveClock returns a FixedClock if a timestamp is provided, otherwise RealClock.
-func ResolveClock(raw string) (ports.Clock, error) {
-	if raw == "" {
-		return ports.RealClock{}, nil
-	}
-	t, err := timeutil.ParseRFC3339(raw, "--now")
-	if err != nil {
-		return nil, err
-	}
-	return ports.FixedClock(t), nil
-}
-
-// --- Git Auditing ---
-
-// AuditGitStatus gathers git metadata for specific paths.
-func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
-	if strings.TrimSpace(baseDir) == "" {
-		baseDir, _ = os.Getwd()
-	}
-	repoRoot, ok := gitinfo.DetectRepoRoot(baseDir)
-	if !ok {
-		return nil
-	}
-	head, _ := gitinfo.HeadCommit(repoRoot)
-
-	var cleaned []string
-	for _, p := range watchPaths {
-		if strings.TrimSpace(p) == "" {
-			continue
-		}
-		abs := p
-		if !filepath.IsAbs(abs) {
-			abs = filepath.Join(baseDir, p)
-		}
-		cleaned = append(cleaned, abs)
-	}
-
-	dirty, dirtyList, _ := gitinfo.IsDirty(repoRoot, cleaned)
-	return &evaluation.GitInfo{
-		RepoRoot:  repoRoot,
-		Head:      head,
-		Dirty:     dirty,
-		DirtyList: dirtyList,
-	}
-}
-
-// WarnGitDirty prints a warning to stderr if the repository is dirty.
-func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string, quiet bool) {
-	if git == nil || !git.Dirty || quiet {
-		return
-	}
-	if stderr == nil {
-		stderr = os.Stderr
-	}
-	fmt.Fprintf(stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n",
-		label, strings.Join(git.DirtyList, ", "))
-}
-
-// --- Helpers ---
-
-// EmptyDash returns "-" if the string is whitespace-only.
-func EmptyDash(s string) string {
-	if strings.TrimSpace(s) == "" {
-		return "-"
-	}
-	return s
 }
