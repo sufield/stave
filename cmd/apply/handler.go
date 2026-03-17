@@ -9,19 +9,58 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
-// runProfileApply executes the profile-based evaluation workflow.
-func runProfileApply(ctx context.Context, p *compose.Provider, clock ports.Clock, cfg Config) error {
-	runner := NewRunner(p, clock, cfg.Quiet)
-	return runner.Run(ctx, cfg)
+// runApply is the single dispatch function called by the thin RunE wrapper.
+// All cobra state has already been extracted into cs.
+func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
+	if err := opts.validate(); err != nil {
+		return err
+	}
+
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return err
+	}
+	if _, err = resolver.ResolveSelected(); err != nil {
+		return err
+	}
+
+	if opts.DryRun {
+		var planCfg PlanConfig
+		planCfg, err = opts.ResolveDryRun(cs)
+		if err != nil {
+			return err
+		}
+		return runDryRun(p, planCfg)
+	}
+
+	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
+		return err
+	}
+
+	cfg, err := opts.Resolve(cs)
+	if err != nil {
+		return decorateError(err)
+	}
+
+	if cfg.Mode == runModeProfile {
+		runner := NewRunner(p, cfg.profileClock, cfg.Profile.Quiet)
+		return runner.Run(cs.Ctx, cfg.Profile)
+	}
+
+	sio, err := opts.ResolveStandardIO(cs)
+	if err != nil {
+		return err
+	}
+	return runStandardApply(cs.Ctx, p, opts, cfg.Params, sio)
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.

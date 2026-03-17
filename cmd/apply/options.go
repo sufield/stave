@@ -1,11 +1,11 @@
 package apply
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -16,6 +16,17 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
+
+// cobraState holds all values extracted from *cobra.Command.
+// Populated once in RunE; all downstream functions are cobra-free.
+type cobraState struct {
+	Ctx           context.Context
+	Stdout        io.Writer
+	Stderr        io.Writer
+	GlobalFlags   cmdutil.GlobalFlags
+	FormatChanged bool
+	ObsChanged    bool
+}
 
 type runMode string
 
@@ -42,12 +53,12 @@ type applyParams struct {
 }
 
 // Resolve transforms raw CLI options into a RunConfig.
-func (o *ApplyOptions) Resolve(cmd *cobra.Command) (RunConfig, error) {
+func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 	if o.Profile != "" {
-		return o.resolveProfileMode(cmd)
+		return o.resolveProfileMode(cs)
 	}
 
-	o.normalizeApplyPaths(cmd)
+	o.normalizeApplyPaths(cs.ObsChanged)
 
 	parsed, err := o.parseDomain()
 	if err != nil {
@@ -68,7 +79,7 @@ func (o *ApplyOptions) Resolve(cmd *cobra.Command) (RunConfig, error) {
 	}, nil
 }
 
-func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error) {
+func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 	prof, err := ParseProfile(o.Profile)
 	if err != nil {
 		return RunConfig{}, err
@@ -83,12 +94,10 @@ func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error)
 		return RunConfig{}, err
 	}
 
-	format, err := compose.ResolveFormatValue(cmd, o.Format)
+	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
 	if err != nil {
 		return RunConfig{}, err
 	}
-
-	gf := cmdutil.GetGlobalFlags(cmd)
 
 	return RunConfig{
 		Mode: runModeProfile,
@@ -98,11 +107,11 @@ func (o *ApplyOptions) resolveProfileMode(cmd *cobra.Command) (RunConfig, error)
 			IncludeAll:      o.IncludeAll,
 			OutputFormat:    format.String(),
 			NowTime:         o.NowTime,
-			Quiet:           gf.Quiet,
-			Stdout:          compose.ResolveStdout(cmd.OutOrStdout(), gf.Quiet, format),
-			Stderr:          cmd.ErrOrStderr(),
-			IsJSONMode:      gf.IsJSONMode(),
-			Sanitizer:       gf.GetSanitizer(),
+			Quiet:           cs.GlobalFlags.Quiet,
+			Stdout:          compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
+			Stderr:          cs.Stderr,
+			IsJSONMode:      cs.GlobalFlags.IsJSONMode(),
+			Sanitizer:       cs.GlobalFlags.GetSanitizer(),
 		},
 		profileClock: clock,
 	}, nil
@@ -142,18 +151,18 @@ func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 
 // normalizeApplyPaths cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
-func (o *ApplyOptions) normalizeApplyPaths(cmd *cobra.Command) {
+func (o *ApplyOptions) normalizeApplyPaths(obsChanged bool) {
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 
 	resolver, _ := projctx.NewResolver()
 	engine := projctx.NewInferenceEngine(resolver)
-	if !cmd.Flags().Changed("controls") {
+	if !o.ControlsSet {
 		if inferred := engine.InferDir("controls", ""); inferred != "" {
 			o.ControlsDir = inferred
 		}
 	}
-	if o.ObservationsDir != "-" && !cmd.Flags().Changed("observations") {
+	if o.ObservationsDir != "-" && !obsChanged {
 		if inferred := engine.InferDir("observations", ""); inferred != "" {
 			o.ObservationsDir = inferred
 		}
@@ -210,20 +219,19 @@ type standardIO struct {
 	Quiet     bool
 }
 
-// ResolveStandardIO extracts IO and format state from the command for the standard apply path.
-func (o *ApplyOptions) ResolveStandardIO(cmd *cobra.Command) (standardIO, error) {
-	format, err := compose.ResolveFormatValue(cmd, o.Format)
+// ResolveStandardIO extracts IO and format state for the standard apply path.
+func (o *ApplyOptions) ResolveStandardIO(cs cobraState) (standardIO, error) {
+	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
 	if err != nil {
 		return standardIO{}, err
 	}
-	gf := cmdutil.GetGlobalFlags(cmd)
 	return standardIO{
-		Stdout:    compose.ResolveStdout(cmd.OutOrStdout(), gf.Quiet, format),
-		Stderr:    cmd.ErrOrStderr(),
-		Sanitizer: gf.GetSanitizer(),
+		Stdout:    compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
+		Stderr:    cs.Stderr,
+		Sanitizer: cs.GlobalFlags.GetSanitizer(),
 		Format:    format,
-		IsJSON:    gf.IsJSONMode(),
-		Quiet:     gf.Quiet,
+		IsJSON:    cs.GlobalFlags.IsJSONMode(),
+		Quiet:     cs.GlobalFlags.Quiet,
 	}, nil
 }
 
@@ -235,8 +243,8 @@ func (o *ApplyOptions) buildClock(now time.Time) ports.Clock {
 }
 
 // ResolveDryRun converts raw CLI options into a PlanConfig for dry-run mode.
-func (o *ApplyOptions) ResolveDryRun(cmd *cobra.Command) (PlanConfig, error) {
-	format, err := compose.ResolveFormatValue(cmd, o.Format)
+func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
+	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
 	if err != nil {
 		return PlanConfig{}, err
 	}
@@ -247,13 +255,13 @@ func (o *ApplyOptions) ResolveDryRun(cmd *cobra.Command) (PlanConfig, error) {
 	}
 	engine := projctx.NewInferenceEngine(resolver)
 	ctlDir := fsutil.CleanUserPath(o.ControlsDir)
-	if !cmd.Flags().Changed("controls") {
+	if !o.ControlsSet {
 		if inferred := engine.InferDir("controls", ""); inferred != "" {
 			ctlDir = inferred
 		}
 	}
 	obsDir := fsutil.CleanUserPath(o.ObservationsDir)
-	if !cmd.Flags().Changed("observations") {
+	if !cs.ObsChanged {
 		if inferred := engine.InferDir("observations", ""); inferred != "" {
 			obsDir = inferred
 		}
@@ -264,18 +272,16 @@ func (o *ApplyOptions) ResolveDryRun(cmd *cobra.Command) (PlanConfig, error) {
 		hasPacks = true
 	}
 
-	gf := cmdutil.GetGlobalFlags(cmd)
-
 	return PlanConfig{
 		ControlsDir:     ctlDir,
 		ObservationsDir: obsDir,
 		MaxUnsafe:       o.MaxUnsafe,
 		Now:             o.NowTime,
 		Format:          format,
-		Quiet:           gf.Quiet,
-		Sanitize:        gf.Sanitize,
-		Stdout:          cmd.OutOrStdout(),
-		Stderr:          cmd.ErrOrStderr(),
+		Quiet:           cs.GlobalFlags.Quiet,
+		Sanitize:        cs.GlobalFlags.Sanitize,
+		Stdout:          cs.Stdout,
+		Stderr:          cs.Stderr,
 		ControlsFlagSet: o.ControlsSet,
 		HasEnabledPacks: hasPacks,
 		PrereqChecks:    doctorPrereqs(),

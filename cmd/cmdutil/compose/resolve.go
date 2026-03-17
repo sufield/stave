@@ -38,3 +38,10 @@ func ResolveFormatValue(cmd *cobra.Command, raw string) (ui.OutputFormat, error)
 	formatRaw := cmdutil.ResolveFormat(cmd, raw)
 	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
 }
+
+// ResolveFormatValuePure determines the effective output format without cobra.
+// formatChanged indicates whether --format was explicitly set by the user.
+func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (ui.OutputFormat, error) {
+	formatRaw := cmdutil.ResolveFormatPure(raw, formatChanged, isJSONMode)
+	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
+}

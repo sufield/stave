@@ -7,7 +7,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -57,28 +56,11 @@ Examples:
 					"\nEnsure this complies with your data retention policies (HIPAA, SOX, PCI-DSS)",
 					"before proceeding.")
 			}
-			eval := projconfig.Global()
 
-			if olderThan == "" {
-				olderThan = eval.SnapshotRetention()
-			}
-			if tier == "" {
-				tier = eval.RetentionTier()
-			}
-
-			validTier, err := pruneshared.ValidateRetentionTier(tier)
-			if err != nil {
-				return err
-			}
-			resolvedOlderThan, err := pruneshared.ResolveOlderThan(olderThan, cmd.Flags().Changed("older-than"), validTier)
-			if err != nil {
-				return err
-			}
-			now, err := compose.ResolveNow(nowRaw)
-			if err != nil {
-				return err
-			}
-			format, err := compose.ResolveFormatValue(cmd, formatFlag)
+			ret, err := pruneshared.ResolveRetention(
+				pruneshared.RawRetentionOpts{OlderThan: olderThan, Tier: tier, NowRaw: nowRaw, FormatFlag: formatFlag},
+				cmd.Flags().Changed("older-than"), cmd.Flags().Changed("format"), gf.IsJSONMode(),
+			)
 			if err != nil {
 				return err
 			}
@@ -86,14 +68,14 @@ Examples:
 			runner := &Runner{Provider: p}
 			return runner.Run(cmd.Context(), Config{
 				ObservationsDir: obsDir,
-				OlderThan:       resolvedOlderThan,
-				RetentionTier:   validTier,
-				Now:             now,
+				OlderThan:       ret.OlderThan,
+				RetentionTier:   ret.RetentionTier,
+				Now:             ret.Now,
 				KeepMin:         keepMin,
 				DryRun:          dryRun,
 				Force:           gf.Force,
 				Quiet:           gf.Quiet,
-				Format:          format,
+				Format:          ret.Format,
 				Stdout:          cmd.OutOrStdout(),
 			})
 		},

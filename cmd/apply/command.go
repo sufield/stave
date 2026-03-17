@@ -7,7 +7,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -68,50 +67,15 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 			opts.normalize()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if err := opts.validate(); err != nil {
-				return err
+			cs := cobraState{
+				Ctx:           cmd.Context(),
+				Stdout:        cmd.OutOrStdout(),
+				Stderr:        cmd.ErrOrStderr(),
+				GlobalFlags:   cmdutil.GetGlobalFlags(cmd),
+				FormatChanged: cmd.Flags().Changed("format"),
+				ObsChanged:    cmd.Flags().Changed("observations"),
 			}
-
-			resolver, err := projctx.NewResolver()
-			if err != nil {
-				return err
-			}
-			if _, err = resolver.ResolveSelected(); err != nil {
-				return err
-			}
-
-			// Dry-run branch
-			if opts.DryRun {
-				planCfg, planErr := opts.ResolveDryRun(cmd)
-				if planErr != nil {
-					return planErr
-				}
-				return runDryRun(p, planCfg)
-			}
-
-			// Strict integrity check
-			gf := cmdutil.GetGlobalFlags(cmd)
-			if strictErr := runStrictIntegrityCheck(gf.Strict, cmd.OutOrStdout(), cmd.ErrOrStderr()); strictErr != nil {
-				return strictErr
-			}
-
-			// Resolve run mode
-			cfg, err := opts.Resolve(cmd)
-			if err != nil {
-				return decorateError(err)
-			}
-
-			// Profile branch
-			if cfg.Mode == runModeProfile {
-				return runProfileApply(cmd.Context(), p, cfg.profileClock, cfg.Profile)
-			}
-
-			// Standard apply branch
-			sio, err := opts.ResolveStandardIO(cmd)
-			if err != nil {
-				return err
-			}
-			return runStandardApply(cmd.Context(), p, opts, cfg.Params, sio)
+			return runApply(p, opts, cs)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
