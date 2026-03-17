@@ -8,9 +8,9 @@ type PredicateParser func(v any) (*UnsafePredicate, error)
 // UnsafePredicate defines the logical conditions required to classify a resource as unsafe.
 type UnsafePredicate struct {
 	// Any matches if at least one rule evaluates to true (Logical OR).
-	Any []PredicateRule `yaml:"any,omitempty"`
+	Any []PredicateRule
 	// All matches only if every rule evaluates to true (Logical AND).
-	All []PredicateRule `yaml:"all,omitempty"`
+	All []PredicateRule
 }
 
 // Evaluate performs a standalone evaluation against a specific asset.

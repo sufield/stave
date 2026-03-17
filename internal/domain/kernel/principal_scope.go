@@ -87,15 +87,6 @@ func (s PrincipalScope) MarshalYAML() (any, error) {
 	return s.String(), nil
 }
 
-// UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (s *PrincipalScope) UnmarshalYAML(unmarshal func(any) error) error {
-	var str string
-	if err := unmarshal(&str); err != nil {
-		return err
-	}
-	return s.assign(str)
-}
-
 // assign is a private helper to update the enum value from a string.
 func (s *PrincipalScope) assign(raw string) error {
 	parsed, err := ParsePrincipalScope(raw)

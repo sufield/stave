@@ -23,10 +23,10 @@ func (cm ComplianceMapping) HasFramework(framework string) bool {
 // This metadata is only present on controls that detect visibility or reachability issues.
 type Exposure struct {
 	// Type classifies the specific risk (e.g., "public_read", "public_write", "resource_takeover").
-	Type string `json:"type" yaml:"type"`
+	Type string `json:"type"`
 
 	// PrincipalScope defines the reachability boundary (e.g., "public", "authenticated").
-	PrincipalScope kernel.PrincipalScope `json:"principal_scope" yaml:"principal_scope"`
+	PrincipalScope kernel.PrincipalScope `json:"principal_scope"`
 }
 
 // IsPublic returns true if the exposure allows anonymous or unauthenticated access.

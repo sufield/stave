@@ -6,10 +6,17 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/predicate"
 )
+
+// ExplainResult is an alias for contracts.ExplainResult.
+type ExplainResult = contracts.ExplainResult
+
+// ExplainRule is an alias for contracts.ExplainRule.
+type ExplainRule = contracts.ExplainRule
 
 // ControlFinder loads a single control by ID.
 type ControlFinder interface {
@@ -20,26 +27,6 @@ type ControlFinder interface {
 type ExplainInput struct {
 	ControlID   string
 	ControlsDir string
-}
-
-// ExplainResult holds the structured output of an explain analysis.
-type ExplainResult struct {
-	ControlID          string        `json:"control_id"`
-	Name               string        `json:"name"`
-	Description        string        `json:"description"`
-	Type               string        `json:"type"`
-	MatchedFields      []string      `json:"matched_fields"`
-	Rules              []ExplainRule `json:"rules"`
-	MinimalObservation any           `json:"minimal_observation"`
-}
-
-// ExplainRule describes a single predicate rule.
-type ExplainRule struct {
-	Path    string             `json:"path"`
-	Op      predicate.Operator `json:"op"`
-	Value   any                `json:"value,omitempty"`
-	From    string             `json:"from,omitempty"`
-	Comment string             `json:"comment,omitempty"`
 }
 
 // Explainer analyzes a control and explains its predicate structure.

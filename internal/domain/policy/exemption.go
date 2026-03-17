@@ -7,8 +7,8 @@ import (
 // ExemptionConfig defines a set of rules used to exclude specific assets
 // from policy evaluation.
 type ExemptionConfig struct {
-	Version string          `yaml:"version"`
-	Assets  []ExemptionRule `yaml:"assets"`
+	Version string
+	Assets  []ExemptionRule
 
 	// Prepared state for performance optimization
 	exactMatches map[string]*ExemptionRule
@@ -19,8 +19,8 @@ type ExemptionConfig struct {
 // ExemptionRule defines the criteria for skipping an asset.
 type ExemptionRule struct {
 	// Pattern supports exact asset IDs or simple globs (e.g. "aws_s3_bucket:*")
-	Pattern string `yaml:"pattern"`
-	Reason  string `yaml:"reason"`
+	Pattern string
+	Reason  string
 }
 
 // Prepare indexes the rules to optimize lookup performance.

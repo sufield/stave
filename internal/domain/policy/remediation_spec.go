@@ -6,13 +6,13 @@ import "strings"
 // It is designed to be both human-readable and machine-parseable for automated ticketing or fix systems.
 type RemediationSpec struct {
 	// Description explains the security risk and the logic behind the required change.
-	Description string `json:"description" yaml:"description"`
+	Description string `json:"description"`
 
 	// Action describes the specific step needed to remediate the resource (e.g., a CLI command).
-	Action string `json:"action" yaml:"action"`
+	Action string `json:"action"`
 
 	// Example provides an optional concrete sample of the remediated state or command.
-	Example string `json:"example,omitempty" yaml:"example,omitempty"`
+	Example string `json:"example,omitempty"`
 }
 
 // Actionable reports whether the specification contains a concrete remediation instruction.

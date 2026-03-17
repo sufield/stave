@@ -24,10 +24,11 @@ func ParsePredicate(v any) (*policy.UnsafePredicate, error) {
 		return nil, fmt.Errorf("failed to marshal generic predicate: %w", err)
 	}
 
-	var pred policy.UnsafePredicate
-	if err := yaml.Unmarshal(data, &pred); err != nil {
+	var dto yamlUnsafePredicate
+	if err := yaml.Unmarshal(data, &dto); err != nil {
 		return nil, fmt.Errorf("failed to parse predicate structure: %w", err)
 	}
 
+	pred := unsafePredicateToDomain(dto)
 	return &pred, nil
 }

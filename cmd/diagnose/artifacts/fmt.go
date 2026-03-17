@@ -11,11 +11,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -161,13 +160,9 @@ func (f *Formatter) formatJSON(data []byte) ([]byte, error) {
 }
 
 func (f *Formatter) formatYAML(data []byte) ([]byte, error) {
-	var ctl policy.ControlDefinition
-	if err := yaml.Unmarshal(data, &ctl); err != nil {
-		return nil, fmt.Errorf("parse control yaml: %w", err)
-	}
-	out, err := yaml.Marshal(ctl)
+	out, err := controlyaml.FormatControlYAML(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse control yaml: %w", err)
 	}
 	if len(out) == 0 || out[len(out)-1] != '\n' {
 		out = append(out, '\n')

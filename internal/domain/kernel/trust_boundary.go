@@ -67,15 +67,6 @@ func (b TrustBoundary) MarshalYAML() (any, error) {
 	return b.String(), nil
 }
 
-// UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (b *TrustBoundary) UnmarshalYAML(unmarshal func(any) error) error {
-	var str string
-	if err := unmarshal(&str); err != nil {
-		return err
-	}
-	return b.assign(str)
-}
-
 // assign is a private helper to update the enum value from a string.
 func (b *TrustBoundary) assign(raw string) error {
 	parsed, err := ParseTrustBoundary(raw)

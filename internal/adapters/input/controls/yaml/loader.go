@@ -122,10 +122,11 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 		return policy.ControlDefinition{}, fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 
-	var ctl policy.ControlDefinition
-	if err := yaml.Unmarshal(data, &ctl); err != nil {
+	var dto yamlControlDefinition
+	if err := yaml.Unmarshal(data, &dto); err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("yaml parse error: %w", err)
 	}
+	ctl := controlDefinitionToDomain(dto)
 
 	if err := l.enrichAndPrepare(&ctl); err != nil {
 		return policy.ControlDefinition{}, err
