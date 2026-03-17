@@ -2,16 +2,15 @@ package generate
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	outenforce "github.com/sufield/stave/internal/adapters/output/enforcement"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -62,13 +61,6 @@ func NewRunner() *Runner {
 	return &Runner{}
 }
 
-type input struct {
-	Findings []struct {
-		ControlID kernel.ControlID `json:"control_id"`
-		AssetID   asset.ID         `json:"asset_id"`
-	} `json:"findings"`
-}
-
 type result struct {
 	SchemaVersion kernel.Schema     `json:"schema_version"`
 	Kind          kernel.OutputKind `json:"kind"`
@@ -102,16 +94,9 @@ func (r *Runner) buildPlan(cfg Config) (plan, error) {
 	if err := validateInputPath(cfg.InputPath); err != nil {
 		return plan{}, err
 	}
-	in, err := loadInput(cfg.InputPath)
+	refs, err := loadFindingRefs(cfg.InputPath)
 	if err != nil {
 		return plan{}, err
-	}
-	refs := make([]outenforce.FindingRef, len(in.Findings))
-	for i, f := range in.Findings {
-		refs[i] = outenforce.FindingRef{
-			ControlID: f.ControlID,
-			AssetID:   f.AssetID,
-		}
 	}
 	targets := outenforce.ExtractBucketTargets(refs)
 	outPath, rendered, err := buildOutput(cfg.Mode, cfg.OutDir, targets)
@@ -141,16 +126,23 @@ func validateInputPath(inputPath string) error {
 	return nil
 }
 
-func loadInput(inputPath string) (input, error) {
+func loadFindingRefs(inputPath string) ([]outenforce.FindingRef, error) {
 	data, err := fsutil.ReadFileLimited(inputPath)
 	if err != nil {
-		return input{}, fmt.Errorf("read input: %w", err)
+		return nil, fmt.Errorf("read input: %w", err)
 	}
-	var in input
-	if err := json.Unmarshal(data, &in); err != nil {
-		return input{}, fmt.Errorf("parse input JSON: %w", err)
+	findings, err := evaljson.ParseFindings(data)
+	if err != nil {
+		return nil, fmt.Errorf("parse input JSON: %w", err)
 	}
-	return in, nil
+	refs := make([]outenforce.FindingRef, len(findings))
+	for i, f := range findings {
+		refs[i] = outenforce.FindingRef{
+			ControlID: f.ControlID,
+			AssetID:   f.AssetID,
+		}
+	}
+	return refs, nil
 }
 
 func targetNames(targets []outenforce.BucketTarget) []string {

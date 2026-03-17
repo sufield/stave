@@ -9,6 +9,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
@@ -22,6 +23,8 @@ type Loader struct{}
 var (
 	_ appcontracts.FileResultLoader   = (*Loader)(nil)
 	_ appcontracts.ReaderResultLoader = (*Loader)(nil)
+	_ appcontracts.FileEnvelopeLoader = (*Loader)(nil)
+	_ appcontracts.FileBaselineLoader = (*Loader)(nil)
 )
 
 // NewLoader creates a new evaluation result JSON loader.
@@ -55,6 +58,56 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Result, er
 		return nil, fmt.Errorf("failed to load output file %s: invalid JSON: %w", source, err)
 	}
 	return &result, nil
+}
+
+// LoadEnvelopeFromFile loads and validates a JSON safety envelope containing evaluation results.
+func (l *Loader) LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, error) {
+	path = fsutil.CleanUserPath(path)
+
+	data, err := fsutil.ReadFileLimited(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading evaluation file %q: %w", path, err)
+	}
+
+	var eval safetyenvelope.Evaluation
+	if err := json.Unmarshal(data, &eval); err != nil {
+		return nil, fmt.Errorf("parsing evaluation JSON from %q: %w", path, err)
+	}
+
+	if eval.Kind != safetyenvelope.KindEvaluation {
+		return nil, fmt.Errorf("invalid artifact kind in %q: got %q, expected %q",
+			path, eval.Kind, safetyenvelope.KindEvaluation)
+	}
+
+	return &eval, nil
+}
+
+// LoadBaselineFromFile loads a baseline finding file and ensures findings are sorted deterministically.
+func (l *Loader) LoadBaselineFromFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
+	path = fsutil.CleanUserPath(path)
+
+	data, err := fsutil.ReadFileLimited(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading baseline file %q: %w", path, err)
+	}
+
+	var base evaluation.Baseline
+	if err := json.Unmarshal(data, &base); err != nil {
+		return nil, fmt.Errorf("parsing baseline JSON from %q: %w", path, err)
+	}
+
+	if base.Kind != expectedKind {
+		return nil, fmt.Errorf("invalid baseline kind in %q: got %q, expected %q",
+			path, base.Kind, expectedKind)
+	}
+
+	if base.Findings == nil {
+		base.Findings = []evaluation.BaselineEntry{}
+	}
+
+	evaluation.SortBaselineEntries(base.Findings)
+
+	return &base, nil
 }
 
 // ParseFindings extracts findings from various JSON envelope formats.
