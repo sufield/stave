@@ -1,6 +1,7 @@
 package artifacts
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -54,32 +55,12 @@ Examples:
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			stdout := cmd.OutOrStdout()
-
 			if cfg.ListPacks {
 				return runListPacks(stdout, cfg)
 			}
-
-			var rows []catalog.ControlRow
-			if cfg.UseBuiltIn {
-				registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded")
-				controls, err := registry.All(cmd.Context())
-				if err != nil {
-					return fmt.Errorf("load built-in controls: %w", err)
-				}
-				rows = catalog.ToRows(controls)
-				if err := catalog.SortRows(rows, cfg.SortBy); err != nil {
-					return err
-				}
-			} else {
-				repo, err := p.NewControlRepo()
-				if err != nil {
-					return fmt.Errorf("create control loader: %w", err)
-				}
-				runner := &catalog.ListRunner{Repo: repo}
-				rows, err = runner.Run(cmd.Context(), cfg)
-				if err != nil {
-					return err
-				}
+			rows, err := listControlRows(cmd.Context(), p, cfg)
+			if err != nil {
+				return err
 			}
 			return formatOutput(stdout, cfg, rows)
 		},
@@ -96,6 +77,27 @@ Examples:
 	cmd.Flags().BoolVar(&cfg.ListPacks, "packs", false, "List built-in control packs instead of controls")
 
 	return cmd
+}
+
+func listControlRows(ctx context.Context, p *compose.Provider, cfg catalog.ListConfig) ([]catalog.ControlRow, error) {
+	if cfg.UseBuiltIn {
+		registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded")
+		controls, err := registry.All(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("load built-in controls: %w", err)
+		}
+		rows := catalog.ToRows(controls)
+		if err := catalog.SortRows(rows, cfg.SortBy); err != nil {
+			return nil, err
+		}
+		return rows, nil
+	}
+
+	repo, err := p.NewControlRepo()
+	if err != nil {
+		return nil, fmt.Errorf("create control loader: %w", err)
+	}
+	return (&catalog.ListRunner{Repo: repo}).Run(ctx, cfg)
 }
 
 func runListPacks(w interface{ Write([]byte) (int, error) }, cfg catalog.ListConfig) error {

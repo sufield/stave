@@ -87,6 +87,7 @@ type App struct {
 // NewApp creates a fully-wired CLI application.
 // Pass WithDevCommands() to build the stave-dev binary with all commands.
 func NewApp(opts ...AppOption) *App {
+	logging.InitDefaultLogger()
 	app := &App{
 		Edition:          EditionProd,
 		ExitFunc:         os.Exit,

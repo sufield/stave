@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
@@ -47,7 +48,7 @@ func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
 func (r *Runner) Run(ctx context.Context, req Request) error {
 	needle := strings.TrimSpace(req.FindingRef)
 	if needle == "" {
-		return fmt.Errorf("finding reference selector cannot be empty")
+		return &ui.UserError{Err: fmt.Errorf("finding reference selector cannot be empty")}
 	}
 
 	findings, err := r.loadFindings(fsutil.CleanUserPath(req.InputPath))
@@ -95,11 +96,11 @@ func (r *Runner) selectFinding(findings []remediation.Finding, needle string) (r
 	}
 	slices.Sort(keys)
 
-	return remediation.Finding{}, fmt.Errorf(
+	return remediation.Finding{}, &ui.UserError{Err: fmt.Errorf(
 		"finding %q not found; available findings:\n  %s",
 		needle,
 		strings.Join(keys, "\n  "),
-	)
+	)}
 }
 
 func (r *Runner) writeResult(w io.Writer, f remediation.Finding) error {

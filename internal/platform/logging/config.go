@@ -66,8 +66,10 @@ func (c Config) suppressTimestamps() bool { return !c.Timestamps }
 // sanitizeSourcePaths reports whether source file paths should be reduced to basenames for privacy.
 func (c Config) sanitizeSourcePaths() bool { return !c.FullPaths }
 
-func init() {
-	// Set a resilient default before Setup is called: warn-level, text, stderr.
+// InitDefaultLogger sets a warn-level text handler on stderr as the
+// process-wide slog default. Call this once from the application
+// constructor (e.g. NewApp) rather than relying on init().
+func InitDefaultLogger() {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		Level: LevelWarn,
 	})))
