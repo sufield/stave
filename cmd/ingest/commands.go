@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -142,15 +141,10 @@ func (ic *ingestCommand) runIngest(cmd *cobra.Command) error {
 		return err
 	}
 
-	gf := cmdutil.GetGlobalFlags(cmd)
 	runner := &S3Runner{
 		UI:     ic.runtime,
 		Clock:  nil,
 		Stdout: cmd.OutOrStdout(),
 	}
-	s3Cfg.TextOutput = gf.TextOutputEnabled()
-	s3Cfg.AllowSymlinkOut = gf.AllowSymlinkOut
-	s3Cfg.Force = ic.opts.Force || gf.Force
-
 	return runner.Run(cmd.Context(), s3Cfg)
 }

@@ -49,12 +49,15 @@ func (ic *ingestCommand) prepareS3Config(cmd *cobra.Command) (S3Config, error) {
 	}
 
 	return S3Config{
-		InputDir:    snapshotDir,
-		OutFile:     outFile,
-		Now:         now,
-		ScopeConfig: scopeConfig,
-		Scrub:       ic.opts.Scrub,
-		DryRun:      ic.opts.DryRun,
+		InputDir:        snapshotDir,
+		OutFile:         outFile,
+		Now:             now,
+		ScopeConfig:     scopeConfig,
+		Scrub:           ic.opts.Scrub,
+		DryRun:          ic.opts.DryRun,
+		Force:           ic.opts.Force || gf.Force,
+		TextOutput:      gf.TextOutputEnabled(),
+		AllowSymlinkOut: gf.AllowSymlinkOut,
 	}, nil
 }
 
