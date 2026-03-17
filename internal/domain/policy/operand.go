@@ -18,14 +18,8 @@ func Bool(v bool) Operand { return Operand{raw: v} }
 // Str creates an Operand holding a string.
 func Str(v string) Operand { return Operand{raw: v} }
 
-// Num creates an Operand holding a float64.
-func Num(v float64) Operand { return Operand{raw: v} }
-
 // Int creates an Operand holding an int.
 func Int(v int) Operand { return Operand{raw: v} }
-
-// Strs creates an Operand holding a []string.
-func Strs(v []string) Operand { return Operand{raw: v} }
 
 // NewOperand creates an Operand from a dynamic value (e.g. YAML unmarshal output).
 func NewOperand(v any) Operand { return Operand{raw: v} }
