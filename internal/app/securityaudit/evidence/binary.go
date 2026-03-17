@@ -1,4 +1,4 @@
-package securityaudit
+package evidence
 
 import (
 	"encoding/json"
@@ -13,36 +13,49 @@ import (
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-type defaultBinaryInspector struct {
-	signatureVerifier ports.Verifier
-	hashFile          func(path string) (kernel.Digest, error)
-	readFile          func(path string) ([]byte, error)
-	statFile          func(string) (fs.FileInfo, error)
+type binaryChecksumPayload struct {
+	BinaryPath  string `json:"binary_path"`
+	SHA256      string `json:"sha256"`
+	GeneratedAt string `json:"generated_at"`
 }
 
-func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error) {
+type binarySignaturePayload struct {
+	ReleaseBundleDir string `json:"release_bundle_dir"`
+	Verified         bool   `json:"verified"`
+	Detail           string `json:"detail"`
+	GeneratedAt      string `json:"generated_at"`
+}
+
+type DefaultBinaryInspector struct {
+	SignatureVerifier ports.Verifier
+	HashFile          func(path string) (kernel.Digest, error)
+	ReadFile          func(path string) ([]byte, error)
+	StatFile          func(string) (fs.FileInfo, error)
+}
+
+func (d DefaultBinaryInspector) Inspect(req Params, buildInfo BuildInfoSnapshot) (BinaryInspectionSnapshot, error) {
 	path := strings.TrimSpace(req.BinaryPath)
 	if path == "" {
-		return binaryInspectionSnapshot{}, fmt.Errorf("binary path is required")
+		return BinaryInspectionSnapshot{}, fmt.Errorf("binary path is required")
 	}
 	abs, err := filepath.Abs(path)
 	if err != nil {
-		return binaryInspectionSnapshot{}, fmt.Errorf("resolve binary path: %w", err)
+		return BinaryInspectionSnapshot{}, fmt.Errorf("resolve binary path: %w", err)
 	}
 
-	hash, err := d.hashFile(abs)
+	hash, err := d.HashFile(abs)
 	if err != nil {
-		return binaryInspectionSnapshot{}, fmt.Errorf("hash binary: %w", err)
+		return BinaryInspectionSnapshot{}, fmt.Errorf("hash binary: %w", err)
 	}
 
-	checksumPayload := map[string]any{
-		"binary_path":  abs,
-		"sha256":       hash,
-		"generated_at": req.Now.UTC().Format(time.RFC3339),
+	checksumPayload := binaryChecksumPayload{
+		BinaryPath:  abs,
+		SHA256:      string(hash),
+		GeneratedAt: req.Now.UTC().Format(time.RFC3339),
 	}
 	checksumJSON, err := json.MarshalIndent(checksumPayload, "", "  ")
 	if err != nil {
-		return binaryInspectionSnapshot{}, fmt.Errorf("marshal binary checksum: %w", err)
+		return BinaryInspectionSnapshot{}, fmt.Errorf("marshal binary checksum: %w", err)
 	}
 
 	signatureAttempt := strings.TrimSpace(req.ReleaseBundleDir) != ""
@@ -51,12 +64,12 @@ func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buil
 	var signatureJSON []byte
 
 	if signatureAttempt {
-		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir, d.signatureVerifier, d.readFile, d.statFile)
-		signaturePayload := map[string]any{
-			"release_bundle_dir": strings.TrimSpace(req.ReleaseBundleDir),
-			"verified":           signatureVerified,
-			"detail":             signatureDetail,
-			"generated_at":       req.Now.UTC().Format(time.RFC3339),
+		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir, d.SignatureVerifier, d.ReadFile, d.StatFile)
+		signaturePayload := binarySignaturePayload{
+			ReleaseBundleDir: strings.TrimSpace(req.ReleaseBundleDir),
+			Verified:         signatureVerified,
+			Detail:           signatureDetail,
+			GeneratedAt:      req.Now.UTC().Format(time.RFC3339),
 		}
 		signatureJSON, _ = json.MarshalIndent(signaturePayload, "", "  ")
 		if len(signatureJSON) > 0 {
@@ -66,7 +79,7 @@ func (d defaultBinaryInspector) Inspect(req SecurityAuditRequest, buildInfo buil
 
 	hardeningStatus, hardeningDetail := evaluateBuildHardening(buildInfo)
 
-	return binaryInspectionSnapshot{
+	return BinaryInspectionSnapshot{
 		BinaryPath:        abs,
 		SHA256:            string(hash),
 		ChecksumJSON:      append(checksumJSON, '\n'),
@@ -133,7 +146,7 @@ func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier 
 	return true, "checksum matched and signature cryptographically verified"
 }
 
-func evaluateBuildHardening(buildInfo buildInfoSnapshot) (securityaudit.Status, string) {
+func evaluateBuildHardening(buildInfo BuildInfoSnapshot) (securityaudit.Status, string) {
 	if len(buildInfo.Settings) == 0 {
 		return securityaudit.StatusWarn, "build settings unavailable; cannot verify hardening flags"
 	}

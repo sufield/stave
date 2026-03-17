@@ -105,7 +105,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	cmd.SetErr(&buf)
 
 	// Exercise full validate command flow (directory mode).
-	err := runValidate(cmd, ui.DefaultRuntime(), opts)
+	err := runValidate(cmd, compose.NewDefaultProvider(), ui.DefaultRuntime(), opts)
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v", err)
 	}
@@ -361,7 +361,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 
 // TestValidateHelpText verifies validate command help contains required sections.
 func TestValidateHelpText(t *testing.T) {
-	help := NewCmd(ui.DefaultRuntime()).Long
+	help := NewCmd(compose.NewDefaultProvider(), ui.DefaultRuntime()).Long
 	required := []string{"What it checks:", "Control schema", "Observation schema", "Duration format"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {
@@ -372,7 +372,7 @@ func TestValidateHelpText(t *testing.T) {
 
 // TestDiagnoseHelpText verifies diagnose command help contains required sections.
 func TestDiagnoseHelpText(t *testing.T) {
-	help := diagnose.NewDiagnoseCmd().Long
+	help := diagnose.NewDiagnoseCmd(compose.NewDefaultProvider()).Long
 	required := []string{"Purpose:", "Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {

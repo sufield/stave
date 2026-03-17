@@ -95,7 +95,7 @@ func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
 // --- CLI bridge ---
 
 // NewPromptCmd constructs the prompt command group.
-func NewPromptCmd() *cobra.Command {
+func NewPromptCmd(p *compose.Provider) *cobra.Command {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: "Generate LLM prompts from evaluation results",
@@ -103,12 +103,12 @@ func NewPromptCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	promptCmd.AddCommand(newPromptFromFindingCmd())
+	promptCmd.AddCommand(newPromptFromFindingCmd(p))
 
 	return promptCmd
 }
 
-func newPromptFromFindingCmd() *cobra.Command {
+func newPromptFromFindingCmd(p *compose.Provider) *cobra.Command {
 	var (
 		evalFile    string
 		assetID     string
@@ -178,7 +178,7 @@ Examples:
 				return fmtErr
 			}
 
-			runner := NewPromptRunner(compose.ActiveProvider())
+			runner := NewPromptRunner(p)
 			return runner.Run(cmd.Context(), PromptConfig{
 				EvalFile:        fsutil.CleanUserPath(evalFile),
 				AssetID:         strings.TrimSpace(assetID),

@@ -2,12 +2,13 @@ package verify
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
 
 // NewCmd builds the verify command.
-func NewCmd(rt *ui.Runtime) *cobra.Command {
+func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
 		rt = ui.DefaultRuntime()
 	}
@@ -26,7 +27,7 @@ which remain, and which are newly introduced.` + metadata.OfflineHelpSuffix,
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runVerify(cmd, rt, opts)
+			return runVerify(cmd, p, rt, opts)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

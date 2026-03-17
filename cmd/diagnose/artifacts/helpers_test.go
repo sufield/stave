@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 )
 
 // getTestRootCmd builds a minimal root command with artifact subcommands attached.
@@ -23,7 +24,7 @@ func getTestRootCmd() *cobra.Command {
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
 
-	root.AddCommand(NewControlsCmd())
+	root.AddCommand(NewControlsCmd(compose.NewDefaultProvider()))
 	root.AddCommand(NewPacksCmd())
 	root.AddCommand(NewLintCmd())
 	root.AddCommand(NewFmtCmd())

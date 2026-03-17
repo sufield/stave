@@ -96,18 +96,24 @@ func (l *Loader) LoadBaselineFromFile(path string, expectedKind kernel.OutputKin
 		return nil, fmt.Errorf("parsing baseline JSON from %q: %w", path, err)
 	}
 
-	if base.Kind != expectedKind {
-		return nil, fmt.Errorf("invalid baseline kind in %q: got %q, expected %q",
-			path, base.Kind, expectedKind)
+	if err := PrepareBaseline(&base, expectedKind, path); err != nil {
+		return nil, err
 	}
+	return &base, nil
+}
 
+// PrepareBaseline validates and normalizes a deserialized baseline for use.
+// It checks the kind field, initializes nil slices, and sorts findings deterministically.
+func PrepareBaseline(base *evaluation.Baseline, expectedKind kernel.OutputKind, source string) error {
+	if base.Kind != expectedKind {
+		return fmt.Errorf("invalid baseline kind in %q: got %q, expected %q",
+			source, base.Kind, expectedKind)
+	}
 	if base.Findings == nil {
 		base.Findings = []evaluation.BaselineEntry{}
 	}
-
 	evaluation.SortBaselineEntries(base.Findings)
-
-	return &base, nil
+	return nil
 }
 
 // ParseFindings extracts findings from various JSON envelope formats.

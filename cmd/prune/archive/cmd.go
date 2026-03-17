@@ -11,7 +11,7 @@ import (
 )
 
 // NewCmd constructs the archive command.
-func NewCmd() *cobra.Command {
+func NewCmd(p *compose.Provider) *cobra.Command {
 	var (
 		obsDir     string
 		archiveDir string
@@ -87,7 +87,7 @@ Examples:
 				Stdout:          cmd.OutOrStdout(),
 			}
 
-			runner := &Runner{}
+			runner := &Runner{Provider: p}
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

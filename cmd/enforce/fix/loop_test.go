@@ -17,7 +17,7 @@ import (
 
 func TestBuildFixLoopReport(t *testing.T) {
 	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
-	r := NewRunner(compose.ActiveProvider(), clock)
+	r := NewRunner(compose.NewDefaultProvider(), clock)
 
 	req := LoopRequest{
 		BeforeDir: "./before",
@@ -56,7 +56,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	outDir := t.TempDir()
 
 	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
-	runner := NewRunner(compose.ActiveProvider(), clock)
+	runner := NewRunner(compose.NewDefaultProvider(), clock)
 	runner.FileOptions = cmdutil.FileOptions{
 		Overwrite: true,
 		DirPerms:  0o700,

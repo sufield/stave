@@ -64,7 +64,7 @@ type composeFinder struct {
 }
 
 func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
-	ctl, err := compose.LoadControlByID(ctx, dir, id)
+	ctl, err := compose.LoadControlByID(ctx, f.provider, dir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave validate --controls %s", dir))
@@ -73,7 +73,7 @@ func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.Co
 }
 
 // NewExplainCmd constructs the explain command.
-func NewExplainCmd() *cobra.Command {
+func NewExplainCmd(p *compose.Provider) *cobra.Command {
 	var (
 		controlsDir string
 		format      string
@@ -99,7 +99,7 @@ Examples:
 			if fmtErr != nil {
 				return fmtErr
 			}
-			explainer := NewExplainer(compose.ActiveProvider())
+			explainer := NewExplainer(p)
 			return explainer.Run(cmd.Context(), ExplainRequest{
 				ControlID:   args[0],
 				ControlsDir: controlsDir,

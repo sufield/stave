@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-func findingFromBuildInfo(in buildInfoSnapshot) securityaudit.Finding {
+func findingFromBuildInfo(in evidence.BuildInfoSnapshot) securityaudit.Finding {
 	if in.Available {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckBuildInfoPresent,
@@ -32,7 +33,7 @@ func findingFromBuildInfo(in buildInfoSnapshot) securityaudit.Finding {
 	}
 }
 
-func findingFromSBOM(in sbomSnapshot, err error) securityaudit.Finding {
+func findingFromSBOM(in evidence.SBOMSnapshot, err error) securityaudit.Finding {
 	if err == nil && len(in.RawJSON) > 0 {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckSBOMGenerated,
@@ -57,7 +58,7 @@ func findingFromSBOM(in sbomSnapshot, err error) securityaudit.Finding {
 	}
 }
 
-func findingFromVuln(in vulnerabilitySnapshot, err error) securityaudit.Finding {
+func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckVulnResults,
@@ -106,7 +107,7 @@ func findingFromVuln(in vulnerabilitySnapshot, err error) securityaudit.Finding 
 	}
 }
 
-func findingFromBinaryHash(in binaryInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromBinaryHash(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {
 	if err == nil && strings.TrimSpace(in.SHA256) != "" {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckBinarySHA256,
@@ -131,7 +132,7 @@ func findingFromBinaryHash(in binaryInspectionSnapshot, err error) securityaudit
 	}
 }
 
-func findingFromSignature(in binaryInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromSignature(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil && in.SignatureAttempt {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckSignatureVerified,

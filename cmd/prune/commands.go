@@ -3,6 +3,7 @@ package prune
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/prune/archive"
 	"github.com/sufield/stave/cmd/prune/cleanup"
 	"github.com/sufield/stave/cmd/prune/hygiene"
@@ -13,20 +14,20 @@ import (
 
 // Commands returns the production snapshot lifecycle commands.
 // Prune is excluded — it permanently deletes evidence and belongs in the dev binary.
-func Commands() []*cobra.Command {
+func Commands(p *compose.Provider) []*cobra.Command {
 	return []*cobra.Command{
-		archive.NewCmd(),
-		upcoming.NewCmd(),
-		snapshot.NewQualityCmd(),
-		snapshot.NewPlanCmd(),
-		hygiene.NewCmd(),
+		archive.NewCmd(p),
+		upcoming.NewCmd(p),
+		snapshot.NewQualityCmd(p),
+		snapshot.NewPlanCmd(p),
+		hygiene.NewCmd(p),
 		manifest.NewCmd(),
 	}
 }
 
 // DevCommands returns snapshot commands that are too destructive for production.
-func DevCommands() []*cobra.Command {
+func DevCommands(p *compose.Provider) []*cobra.Command {
 	return []*cobra.Command{
-		cleanup.NewCmd(),
+		cleanup.NewCmd(p),
 	}
 }

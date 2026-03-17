@@ -4,19 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
 // SecurityAuditRunner orchestrates security-audit evidence collection.
 type SecurityAuditRunner struct {
-	diagnostics defaultDiagnosticsService
-	buildInfo   BuildInfoProvider
-	sbom        SBOMGenerator
-	vulns       VulnEvidenceProvider
-	binary      BinaryInspector
-	policy      PolicyInspector
-	crosswalk   CrosswalkResolver
+	collectors  evidence.Collectors
+	diagnostics evidence.DefaultDiagnosticsService
 	hashBytes   func([]byte) kernel.Digest
 }
 
@@ -25,13 +21,18 @@ type SecurityAuditRunner struct {
 // so the app layer never imports platform, adapter, or infrastructure packages.
 func NewSecurityAuditRunner(deps RunnerDeps) *SecurityAuditRunner {
 	return &SecurityAuditRunner{
-		diagnostics: defaultDiagnosticsService{run: deps.RunDiagnostics},
-		buildInfo:   defaultBuildInfoProvider{},
-		sbom:        defaultSBOMGenerator{},
-		vulns:       defaultVulnEvidenceProvider{runGovulncheck: deps.GovulncheckRunner, readFile: deps.ReadFile, statFile: deps.StatFile},
-		binary:      defaultBinaryInspector{signatureVerifier: deps.SignatureVerifier, hashFile: deps.HashFile, readFile: deps.ReadFile, statFile: deps.StatFile},
-		policy:      defaultPolicyInspector{readFile: deps.ReadFile, statFile: deps.StatFile, getenv: deps.Getenv, isPrivileged: deps.IsPrivileged, walkDir: deps.WalkDir},
-		crosswalk:   defaultCrosswalkResolver{readFile: deps.ReadFile, resolve: deps.ResolveCrosswalk, statFile: deps.StatFile},
+		collectors: evidence.NewCollectors(evidence.Deps{
+			ReadFile:          deps.ReadFile,
+			HashFile:          deps.HashFile,
+			GovulncheckRunner: deps.GovulncheckRunner,
+			SignatureVerifier: deps.SignatureVerifier,
+			StatFile:          deps.StatFile,
+			Getenv:            deps.Getenv,
+			IsPrivileged:      deps.IsPrivileged,
+			WalkDir:           deps.WalkDir,
+			ResolveCrosswalk:  deps.ResolveCrosswalk,
+		}),
+		diagnostics: evidence.DefaultDiagnosticsService{Run: deps.RunDiagnostics},
 		hashBytes:   deps.HashBytes,
 	}
 }
@@ -45,11 +46,12 @@ func (r *SecurityAuditRunner) Run(
 	if err := validateSecurityAuditRequest(req); err != nil {
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}
-	if r.diagnostics.run != nil {
-		r.diagnostics.run(req.Cwd, req.BinaryPath, req.ToolVersion)
+	if r.diagnostics.Run != nil {
+		r.diagnostics.Run(req.Cwd, req.BinaryPath, req.ToolVersion)
 	}
 
-	ev, err := r.collectEvidence(ctx, req)
+	params := req.toParams()
+	ev, err := r.collectEvidence(ctx, params)
 	if err != nil {
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}
@@ -60,27 +62,27 @@ func (r *SecurityAuditRunner) Run(
 	return report, artifacts, nil
 }
 
-func (r *SecurityAuditRunner) collectEvidence(ctx context.Context, req SecurityAuditRequest) (evidenceBundle, error) {
-	buildInfo, err := r.buildInfo.Collect(req.Now)
+func (r *SecurityAuditRunner) collectEvidence(ctx context.Context, params evidence.Params) (evidence.Bundle, error) {
+	buildInfo, err := r.collectors.BuildInfo.Collect(params.Now)
 	if err != nil {
-		return evidenceBundle{}, fmt.Errorf("collect build info: %w", err)
+		return evidence.Bundle{}, fmt.Errorf("collect build info: %w", err)
 	}
-	sbom, sbomErr := r.sbom.Generate(buildInfo, req.SBOMFormat, req.Now)
-	vuln, vulnErr := r.vulns.Resolve(ctx, req)
-	binary, binaryErr := r.binary.Inspect(req, buildInfo)
-	policy, policyErr := r.policy.Inspect(ctx, req)
-	crosswalk, crosswalkErr := r.crosswalk.Resolve(ctx, req, securityaudit.AllCheckIDs())
-	return evidenceBundle{
-		buildInfo:    buildInfo,
-		sbom:         sbom,
-		sbomErr:      sbomErr,
-		vuln:         vuln,
-		vulnErr:      vulnErr,
-		binary:       binary,
-		binaryErr:    binaryErr,
-		policy:       policy,
-		policyErr:    policyErr,
-		crosswalk:    crosswalk,
-		crosswalkErr: crosswalkErr,
+	sbom, sbomErr := r.collectors.SBOM.Generate(buildInfo, params.SBOMFormat, params.Now)
+	vuln, vulnErr := r.collectors.Vuln.Resolve(ctx, params)
+	binary, binaryErr := r.collectors.Binary.Inspect(params, buildInfo)
+	policy, policyErr := r.collectors.Policy.Inspect(ctx, params)
+	crosswalk, crosswalkErr := r.collectors.Crosswalk.Resolve(ctx, params, securityaudit.AllCheckIDs())
+	return evidence.Bundle{
+		BuildInfo:    buildInfo,
+		SBOM:         sbom,
+		SBOMErr:      sbomErr,
+		Vuln:         vuln,
+		VulnErr:      vulnErr,
+		Binary:       binary,
+		BinaryErr:    binaryErr,
+		Policy:       policy,
+		PolicyErr:    policyErr,
+		Crosswalk:    crosswalk,
+		CrosswalkErr: crosswalkErr,
 	}, nil
 }

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-func findingFromRuntimeNetwork(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromRuntimeNetwork(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckRuntimeNetworkNone,
@@ -44,7 +45,7 @@ func findingFromRuntimeNetwork(in policyInspectionSnapshot, err error) securitya
 	}
 }
 
-func findingFromOffline(in policyInspectionSnapshot, req SecurityAuditRequest, err error) securityaudit.Finding {
+func findingFromOffline(in evidence.PolicyInspectionSnapshot, req SecurityAuditRequest, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckOfflineEnforcement,
@@ -81,7 +82,7 @@ func findingFromOffline(in policyInspectionSnapshot, req SecurityAuditRequest, e
 	}
 }
 
-func findingFromFSDisclosure(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromFSDisclosure(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckFSAccessDisclosure,
@@ -106,7 +107,7 @@ func findingFromFSDisclosure(in policyInspectionSnapshot, err error) securityaud
 	}
 }
 
-func findingFromPrivilege(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromPrivilege(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckPrivilegeNoSudo,
@@ -143,7 +144,7 @@ func findingFromPrivilege(in policyInspectionSnapshot, err error) securityaudit.
 	}
 }
 
-func findingFromIAM(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromIAM(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckIAMS3MinPerms,

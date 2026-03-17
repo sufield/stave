@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -44,8 +45,9 @@ type executionPlan struct {
 // Runner orchestrates the identification and removal of stale snapshot files.
 // It implements appeval.CleanupOrchestrator directly.
 type Runner struct {
-	cfg  Config
-	plan *executionPlan
+	Provider *compose.Provider
+	cfg      Config
+	plan     *executionPlan
 }
 
 // Run executes the full pruning workflow via the appeval.RunCleanup lifecycle.
@@ -67,7 +69,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 // BuildPlan identifies which snapshots meet the criteria for pruning.
 func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(context.Background(), r.cfg.ObservationsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(context.Background(), r.Provider, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}

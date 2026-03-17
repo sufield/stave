@@ -8,6 +8,7 @@ import (
 
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -91,8 +92,11 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 
 // runDryRun performs only readiness checks (replacing the removed plan command).
 // It is invoked by apply --dry-run.
-func runDryRun(cfg PlanConfig) error {
-	planner := NewPlanner(applyvalidate.NewReadinessValidator)
+func runDryRun(p *compose.Provider, cfg PlanConfig) error {
+	factory := func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
+		return applyvalidate.NewReadinessValidator(p, ctlDir, obsDir, sanitize)
+	}
+	planner := NewPlanner(factory)
 	return planner.Execute(cfg)
 }
 

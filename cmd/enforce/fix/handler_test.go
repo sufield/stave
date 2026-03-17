@@ -46,7 +46,7 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 	}
 
 	buf := &bytes.Buffer{}
-	runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
+	runner := NewRunner(compose.NewDefaultProvider(), ports.RealClock{})
 	if err := runner.Run(context.Background(), Request{
 		InputPath:  in,
 		FindingRef: "CTL.S3.PUBLIC.001@bucket-a",
@@ -76,7 +76,7 @@ func TestRunFix_MissingFinding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
+	runner := NewRunner(compose.NewDefaultProvider(), ports.RealClock{})
 	err := runner.Run(context.Background(), Request{
 		InputPath:  in,
 		FindingRef: "CTL.S3.PUBLIC.001@missing",

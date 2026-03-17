@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 )
 
 // TestApplyCommandsDoNotImportExtractors ensures that evaluation commands
@@ -70,7 +72,7 @@ func TestApplyCommandsDoNotImportExtractors(t *testing.T) {
 
 // TestApplyDryRunContract verifies that apply help references --dry-run.
 func TestApplyDryRunContract(t *testing.T) {
-	helpText := NewApplyCmd().Long
+	helpText := NewApplyCmd(compose.NewDefaultProvider()).Long
 	if !strings.Contains(helpText, "--dry-run") {
 		t.Error("apply help text should reference --dry-run")
 	}

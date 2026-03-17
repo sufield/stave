@@ -49,11 +49,13 @@ type Config struct {
 }
 
 // Runner orchestrates loading assets and generating coverage graphs.
-type Runner struct{}
+type Runner struct {
+	Provider *compose.Provider
+}
 
 // NewRunner initializes a graph runner.
-func NewRunner() *Runner {
-	return &Runner{}
+func NewRunner(p *compose.Provider) *Runner {
+	return &Runner{Provider: p}
 }
 
 // coverageEdge represents a single control→asset coverage relationship.
@@ -79,7 +81,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	controls, latestSnapshot, err := loadArtifacts(ctx, cfg.ControlsDir, cfg.ObservationsDir)
+	controls, latestSnapshot, err := r.loadArtifacts(ctx, cfg.ControlsDir, cfg.ObservationsDir)
 	if err != nil {
 		return err
 	}
@@ -87,12 +89,12 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	return writeResult(cfg.Stdout, cfg.Format, result, cfg.Sanitizer)
 }
 
-func loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	controls, err := compose.LoadControls(ctx, controlsDir)
+func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
+	controls, err := compose.LoadControls(ctx, r.Provider, controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
-	snapshots, err := compose.LoadSnapshots(ctx, observationsDir)
+	snapshots, err := compose.LoadSnapshots(ctx, r.Provider, observationsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}

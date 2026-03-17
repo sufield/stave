@@ -7,19 +7,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/enforce/shared"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	appverify "github.com/sufield/stave/internal/app/verify"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/safetyenvelope"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
 // runVerify is the top-level CLI orchestrator.
-func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
+func runVerify(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *options) error {
 	// 1. Prepare environment and dependencies
 	exec, err := opts.Complete(compose.CommandContext(cmd))
 	if err != nil {
@@ -31,35 +29,46 @@ func runVerify(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 	rt.Quiet = gf.Quiet
 
 	// 2. Load Control Definitions
-	controls, err := loadVerifyControls(exec.Context, exec.ControlsDir)
+	controls, err := loadVerifyControls(exec.Context, p, exec.ControlsDir)
 	if err != nil {
 		return err
 	}
 
 	// 3. Run Evaluations
 	before, err := runStep(rt, "apply before observations", func() (evalResult, error) {
-		return runVerifyEvaluation(exec, controls, exec.BeforeDir)
+		return runVerifyEvaluation(p, exec, controls, exec.BeforeDir)
 	})
 	if err != nil {
 		return fmt.Errorf("before evaluation: %w", err)
 	}
 
 	after, err := runStep(rt, "apply after observations", func() (evalResult, error) {
-		return runVerifyEvaluation(exec, controls, exec.AfterDir)
+		return runVerifyEvaluation(p, exec, controls, exec.AfterDir)
 	})
 	if err != nil {
 		return fmt.Errorf("after evaluation: %w", err)
 	}
 
 	// 4. Compare and Construct Outcome
-	outcome := compareEvaluations(exec, before, after, sanitizer)
+	cmp, err := appverify.Compare(appverify.CompareRequest{
+		BeforeFindings:  before.result.Findings,
+		AfterFindings:   after.result.Findings,
+		BeforeSnapshots: before.snapshotCount,
+		AfterSnapshots:  after.snapshotCount,
+		MaxUnsafe:       exec.MaxUnsafe,
+		Now:             exec.Clock.Now(),
+		Sanitizer:       sanitizer,
+	})
+	if err != nil {
+		return err
+	}
 
 	// 5. Report Results
-	if err := outjson.WriteVerification(cmd.OutOrStdout(), outcome.Envelope); err != nil {
+	if err := outjson.WriteVerification(cmd.OutOrStdout(), cmp.Verification); err != nil {
 		return fmt.Errorf("failed to write JSON output: %w", err)
 	}
 
-	return handleVerifyExit(rt, outcome)
+	return handleVerifyExit(rt, cmp)
 }
 
 // --- Internal Business Logic ---
@@ -69,14 +78,8 @@ type evalResult struct {
 	snapshotCount int
 }
 
-type verificationOutcome struct {
-	Envelope        safetyenvelope.Verification
-	RemainingCount  int
-	IntroducedCount int
-}
-
-func loadVerifyControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-	controls, err := compose.LoadControls(ctx, dir)
+func loadVerifyControls(ctx context.Context, p *compose.Provider, dir string) ([]policy.ControlDefinition, error) {
+	controls, err := compose.LoadControls(ctx, p, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -86,46 +89,7 @@ func loadVerifyControls(ctx context.Context, dir string) ([]policy.ControlDefini
 	return controls, nil
 }
 
-func compareEvaluations(
-	exec Execution,
-	before, after evalResult,
-	sz kernel.Sanitizer,
-) verificationOutcome {
-	diff := evaluation.CompareVerificationFindings(before.result.Findings, after.result.Findings)
-
-	resolved := shared.FindingsToVerificationEntries(sz, diff.Resolved)
-	remaining := shared.FindingsToVerificationEntries(sz, diff.Remaining)
-	introduced := shared.FindingsToVerificationEntries(sz, diff.Introduced)
-
-	envelope := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
-		Run: safetyenvelope.VerificationRunInfo{
-			ToolVersion:     staveversion.Version,
-			Offline:         true,
-			Now:             exec.Clock.Now(),
-			MaxUnsafe:       exec.MaxUnsafe,
-			BeforeSnapshots: before.snapshotCount,
-			AfterSnapshots:  after.snapshotCount,
-		},
-		Summary: safetyenvelope.VerificationSummary{
-			BeforeViolations: len(before.result.Findings),
-			AfterViolations:  len(after.result.Findings),
-			Resolved:         len(resolved),
-			Remaining:        len(remaining),
-			Introduced:       len(introduced),
-		},
-		Resolved:   resolved,
-		Remaining:  remaining,
-		Introduced: introduced,
-	})
-
-	return verificationOutcome{
-		Envelope:        envelope,
-		RemainingCount:  len(remaining),
-		IntroducedCount: len(introduced),
-	}
-}
-
-func handleVerifyExit(rt *ui.Runtime, outcome verificationOutcome) error {
+func handleVerifyExit(rt *ui.Runtime, outcome appverify.CompareResult) error {
 	if outcome.RemainingCount == 0 && outcome.IntroducedCount == 0 {
 		return nil
 	}
@@ -148,8 +112,8 @@ func runStep[T any](rt *ui.Runtime, label string, fn func() (T, error)) (T, erro
 	return res, err
 }
 
-func runVerifyEvaluation(exec Execution, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
-	loader, err := compose.ActiveProvider().NewObservationRepo()
+func runVerifyEvaluation(p *compose.Provider, exec Execution, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
+	loader, err := p.NewObservationRepo()
 	if err != nil {
 		return evalResult{}, err
 	}

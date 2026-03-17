@@ -8,23 +8,6 @@ import (
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-// SBOMFormat identifies the SBOM output standard.
-type SBOMFormat string
-
-const (
-	SBOMFormatSPDX      SBOMFormat = "spdx"
-	SBOMFormatCycloneDX SBOMFormat = "cyclonedx"
-)
-
-// VulnSource identifies the vulnerability evidence strategy.
-type VulnSource string
-
-const (
-	VulnSourceHybrid VulnSource = "hybrid"
-	VulnSourceLocal  VulnSource = "local"
-	VulnSourceCI     VulnSource = "ci"
-)
-
 // SecurityAuditRequest defines all inputs for a full enterprise audit run.
 type SecurityAuditRequest struct {
 	Now                  time.Time

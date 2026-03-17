@@ -31,11 +31,13 @@ type PlanConfig struct {
 }
 
 // PlanRunner orchestrates the recursive inspection and lifecycle execution.
-type PlanRunner struct{}
+type PlanRunner struct {
+	Provider *compose.Provider
+}
 
 // Run executes the multi-tier planning workflow.
 func (r *PlanRunner) Run(ctx context.Context, cfg PlanConfig) error {
-	files, err := listPlanFiles(ctx, cfg.ObservationsRoot, cfg.ArchiveDir)
+	files, err := listPlanFiles(ctx, r.Provider, cfg.ObservationsRoot, cfg.ArchiveDir)
 	if err != nil {
 		return err
 	}
@@ -82,8 +84,8 @@ func (r *PlanRunner) writePlanOutput(cfg PlanConfig, p plan.SnapshotPlanOutput) 
 
 // --- Helpers ---
 
-func listPlanFiles(ctx context.Context, observationsRoot, archiveDir string) ([]pruner.SnapshotFile, error) {
-	loader, err := compose.ActiveProvider().NewSnapshotRepo()
+func listPlanFiles(ctx context.Context, p *compose.Provider, observationsRoot, archiveDir string) ([]pruner.SnapshotFile, error) {
+	loader, err := p.NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -14,24 +15,24 @@ import (
 
 func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {
 	root := repoRootForTest(t)
-	resolver := defaultCrosswalkResolver{
-		readFile: fsutil.ReadFileLimited,
-		resolve: func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error) {
+	resolver := evidence.DefaultCrosswalkResolver{
+		ReadFile: fsutil.ReadFileLimited,
+		ResolveFn: func(raw []byte, frameworks, checkIDs []string, now time.Time) (evidence.CrosswalkResult, error) {
 			resolved, err := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
 			if err != nil {
-				return CrosswalkResult{}, err
+				return evidence.CrosswalkResult{}, err
 			}
-			return CrosswalkResult{
+			return evidence.CrosswalkResult{
 				ByCheck:        resolved.ByCheck,
 				MissingChecks:  resolved.MissingChecks,
 				ResolutionJSON: resolved.ResolutionJSON,
 			}, nil
 		},
-		statFile: os.Stat,
+		StatFile: os.Stat,
 	}
 	checkIDs := securityaudit.AllCheckIDs()
 
-	resolved, err := resolver.Resolve(context.Background(), SecurityAuditRequest{
+	resolved, err := resolver.Resolve(context.Background(), evidence.Params{
 		Cwd: root,
 		ComplianceFrameworks: []string{
 			"nist_800_53",

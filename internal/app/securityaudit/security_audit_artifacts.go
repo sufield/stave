@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-func (r *SecurityAuditRunner) buildArtifactManifest(req SecurityAuditRequest, ev evidenceBundle) securityaudit.ArtifactManifest {
+func (r *SecurityAuditRunner) buildArtifactManifest(req SecurityAuditRequest, ev evidence.Bundle) securityaudit.ArtifactManifest {
 	manifest := securityaudit.ArtifactManifest{
 		SchemaVersion: kernel.SchemaSecurityAuditArtifacts,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
@@ -30,16 +31,16 @@ func (r *SecurityAuditRunner) buildArtifactManifest(req SecurityAuditRequest, ev
 		})
 	}
 
-	appendArtifact(securityaudit.ArtifactBuildInfo, ev.buildInfo.RawJSON)
-	appendArtifact(ev.sbom.FileName, ev.sbom.RawJSON)
-	appendArtifact(securityaudit.ArtifactVulnReport, ev.vuln.RawJSON)
-	appendArtifact(securityaudit.ArtifactBinaryChecksums, ev.binary.ChecksumJSON)
-	if ev.binary.SignatureJSON != nil {
-		appendArtifact(securityaudit.ArtifactSignatureVerify, ev.binary.SignatureJSON)
+	appendArtifact(securityaudit.ArtifactBuildInfo, ev.BuildInfo.RawJSON)
+	appendArtifact(ev.SBOM.FileName, ev.SBOM.RawJSON)
+	appendArtifact(securityaudit.ArtifactVulnReport, ev.Vuln.RawJSON)
+	appendArtifact(securityaudit.ArtifactBinaryChecksums, ev.Binary.ChecksumJSON)
+	if ev.Binary.SignatureJSON != nil {
+		appendArtifact(securityaudit.ArtifactSignatureVerify, ev.Binary.SignatureJSON)
 	}
-	appendArtifact(securityaudit.ArtifactNetworkEgress, ev.policy.Network.NetworkDeclJSON)
-	appendArtifact(securityaudit.ArtifactFilesystemAccess, ev.policy.Filesystem.FilesystemDeclJSON)
-	appendArtifact(securityaudit.ArtifactControlCrosswalk, ev.crosswalk.ResolutionJSON)
+	appendArtifact(securityaudit.ArtifactNetworkEgress, ev.Policy.Network.NetworkDeclJSON)
+	appendArtifact(securityaudit.ArtifactFilesystemAccess, ev.Policy.Filesystem.FilesystemDeclJSON)
+	appendArtifact(securityaudit.ArtifactControlCrosswalk, ev.Crosswalk.ResolutionJSON)
 
 	sort.Slice(manifest.Files, func(i, j int) bool {
 		return manifest.Files[i].Path < manifest.Files[j].Path

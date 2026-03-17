@@ -8,11 +8,17 @@ import (
 	ctl "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 )
 
-func TestListPacksStableOrder(t *testing.T) {
-	packs, err := ListPacks()
+func testRegistry(t *testing.T) *Registry {
+	t.Helper()
+	reg, err := NewEmbeddedRegistry()
 	if err != nil {
-		t.Fatalf("ListPacks error: %v", err)
+		t.Fatalf("NewEmbeddedRegistry: %v", err)
 	}
+	return reg
+}
+
+func TestListPacksStableOrder(t *testing.T) {
+	packs := testRegistry(t).ListPacks()
 	if len(packs) < 2 {
 		t.Fatalf("pack count = %d, want >= 2", len(packs))
 	}
@@ -21,21 +27,15 @@ func TestListPacksStableOrder(t *testing.T) {
 	}
 }
 
-func TestDefaultRegistry(t *testing.T) {
-	reg, err := DefaultRegistry()
-	if err != nil {
-		t.Fatalf("DefaultRegistry error: %v", err)
-	}
-	if reg == nil {
-		t.Fatal("expected default registry")
-	}
+func TestNewEmbeddedRegistry(t *testing.T) {
+	reg := testRegistry(t)
 	if strings.TrimSpace(reg.Version()) == "" {
 		t.Fatal("expected non-empty registry version")
 	}
 }
 
 func TestResolveEnabledPacks(t *testing.T) {
-	ids, err := ResolveEnabledPacks([]string{"s3/public-exposure"})
+	ids, err := testRegistry(t).ResolveEnabledPacks([]string{"s3/public-exposure"})
 	if err != nil {
 		t.Fatalf("ResolveEnabledPacks error: %v", err)
 	}
@@ -48,14 +48,14 @@ func TestResolveEnabledPacks(t *testing.T) {
 }
 
 func TestResolveEnabledPacksUnknown(t *testing.T) {
-	_, err := ResolveEnabledPacks([]string{"does-not-exist"})
+	_, err := testRegistry(t).ResolveEnabledPacks([]string{"does-not-exist"})
 	if err == nil {
 		t.Fatal("expected error for unknown pack")
 	}
 }
 
 func TestResolveEnabledPacksDedupSorted(t *testing.T) {
-	ids, err := ResolveEnabledPacks([]string{"s3/public-exposure", "s3"})
+	ids, err := testRegistry(t).ResolveEnabledPacks([]string{"s3/public-exposure", "s3"})
 	if err != nil {
 		t.Fatalf("ResolveEnabledPacks error: %v", err)
 	}
@@ -102,10 +102,7 @@ controls:
 }
 
 func TestRegistryValidateStrict(t *testing.T) {
-	reg, err := DefaultRegistry()
-	if err != nil {
-		t.Fatalf("DefaultRegistry error: %v", err)
-	}
+	reg := testRegistry(t)
 	if err := reg.ValidateStrict(ctl.EmbeddedFS()); err != nil {
 		t.Fatalf("ValidateStrict error: %v", err)
 	}
@@ -137,39 +134,35 @@ controls:
 }
 
 func TestRegistry_ListPacksReturnsClones(t *testing.T) {
-	if err := ensureDefault(); err != nil {
-		t.Fatalf("ensureDefault error: %v", err)
-	}
-	packs := defaultRegistry.ListPacks()
+	reg := testRegistry(t)
+	packs := reg.ListPacks()
 	if len(packs) == 0 || len(packs[0].Controls) == 0 {
 		t.Fatal("expected non-empty pack controls")
 	}
 	original := packs[0].Controls[0]
 	packs[0].Controls[0] = "MUTATED"
 
-	fresh := defaultRegistry.ListPacks()
+	fresh := reg.ListPacks()
 	if fresh[0].Controls[0] != original {
 		t.Fatalf("registry pack controls mutated via caller slice: got %q want %q", fresh[0].Controls[0], original)
 	}
 }
 
 func TestRegistry_LookupPackReturnsClone(t *testing.T) {
-	if err := ensureDefault(); err != nil {
-		t.Fatalf("ensureDefault error: %v", err)
-	}
-	names := defaultRegistry.PackNames()
+	reg := testRegistry(t)
+	names := reg.PackNames()
 	if len(names) == 0 {
 		t.Fatal("expected at least one pack")
 	}
 
-	p, ok := defaultRegistry.LookupPack(names[0])
+	p, ok := reg.LookupPack(names[0])
 	if !ok || len(p.Controls) == 0 {
 		t.Fatalf("expected pack with controls, ok=%v", ok)
 	}
 	original := p.Controls[0]
 	p.Controls[0] = "MUTATED"
 
-	fresh, ok := defaultRegistry.LookupPack(names[0])
+	fresh, ok := reg.LookupPack(names[0])
 	if !ok {
 		t.Fatalf("expected pack lookup ok")
 	}
@@ -179,10 +172,8 @@ func TestRegistry_LookupPackReturnsClone(t *testing.T) {
 }
 
 func TestRegistry_ControlRefsReturnsClone(t *testing.T) {
-	if err := ensureDefault(); err != nil {
-		t.Fatalf("ensureDefault error: %v", err)
-	}
-	refs := defaultRegistry.ControlRefs()
+	reg := testRegistry(t)
+	refs := reg.ControlRefs()
 	if len(refs) == 0 {
 		t.Fatal("expected control refs")
 	}
@@ -195,7 +186,7 @@ func TestRegistry_ControlRefsReturnsClone(t *testing.T) {
 	}
 	refs[key] = ControlRef{Path: "MUTATED", Summary: "MUTATED"}
 
-	fresh := defaultRegistry.ControlRefs()
+	fresh := reg.ControlRefs()
 	if fresh[key] != original {
 		t.Fatalf("control refs map mutated via caller write: got %+v want %+v", fresh[key], original)
 	}

@@ -195,7 +195,7 @@ func PackConfigIssues() []diag.Issue {
 	if !ok || len(cfg.EnabledControlPacks) == 0 {
 		return nil
 	}
-	known, err := packs.PackNames()
+	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
 		return []diag.Issue{
 			diag.New(diag.CodePackRegistryLoadFailed).
@@ -205,6 +205,7 @@ func PackConfigIssues() []diag.Issue {
 				Build(),
 		}
 	}
+	known := reg.PackNames()
 	knownSet := map[string]bool{}
 	for _, name := range known {
 		knownSet[name] = true

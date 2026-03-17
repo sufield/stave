@@ -1,4 +1,4 @@
-package securityaudit
+package evidence
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type defaultBuildInfoProvider struct{}
+type DefaultBuildInfoProvider struct{}
 
 type buildInfoModule struct {
 	Path    string           `json:"path,omitempty"`
@@ -29,10 +29,10 @@ type buildInfoPayload struct {
 	Generated string            `json:"generated_at"`
 }
 
-func (defaultBuildInfoProvider) Collect(now time.Time) (buildInfoSnapshot, error) {
-	out := buildInfoSnapshot{
+func (DefaultBuildInfoProvider) Collect(now time.Time) (BuildInfoSnapshot, error) {
+	out := BuildInfoSnapshot{
 		Settings: map[string]string{},
-		Deps:     []buildModuleSnapshot{},
+		Deps:     []BuildModuleSnapshot{},
 	}
 
 	payload := buildInfoPayload{
@@ -51,7 +51,7 @@ func (defaultBuildInfoProvider) Collect(now time.Time) (buildInfoSnapshot, error
 		payload.GoVersion = info.GoVersion
 		payload.Path = info.Path
 		payload.Main = toBuildInfoModule(info.Main)
-		out.Main = buildModuleSnapshot{
+		out.Main = BuildModuleSnapshot{
 			Path:    info.Main.Path,
 			Version: info.Main.Version,
 			Sum:     info.Main.Sum,
@@ -62,7 +62,7 @@ func (defaultBuildInfoProvider) Collect(now time.Time) (buildInfoSnapshot, error
 				continue
 			}
 			payload.Deps = append(payload.Deps, toBuildInfoModule(*dep))
-			out.Deps = append(out.Deps, buildModuleSnapshot{
+			out.Deps = append(out.Deps, BuildModuleSnapshot{
 				Path:    dep.Path,
 				Version: dep.Version,
 				Sum:     dep.Sum,
@@ -83,7 +83,7 @@ func (defaultBuildInfoProvider) Collect(now time.Time) (buildInfoSnapshot, error
 
 	raw, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		return buildInfoSnapshot{}, fmt.Errorf("marshal build info: %w", err)
+		return BuildInfoSnapshot{}, fmt.Errorf("marshal build info: %w", err)
 	}
 	out.RawJSON = append(raw, '\n')
 	return out, nil

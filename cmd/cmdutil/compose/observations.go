@@ -7,10 +7,9 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 )
 
-// LoadSnapshots is a convenience wrapper that uses the default provider
-// to load snapshots from a directory.
-func LoadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {
-	return ActiveProvider().LoadSnapshots(ctx, dir)
+// LoadSnapshots is a convenience wrapper that loads snapshots via the given provider.
+func LoadSnapshots(ctx context.Context, p *Provider, dir string) ([]asset.Snapshot, error) {
+	return p.LoadSnapshots(ctx, dir)
 }
 
 // LoadSnapshots loads observations from the specified directory using

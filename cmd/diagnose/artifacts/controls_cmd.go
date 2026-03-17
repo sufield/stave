@@ -18,7 +18,7 @@ import (
 )
 
 // NewControlsCmd constructs the controls command tree with closure-scoped flags.
-func NewControlsCmd() *cobra.Command {
+func NewControlsCmd(p *compose.Provider) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "controls",
 		Short: "Work with control definitions",
@@ -31,15 +31,15 @@ Examples:
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newControlsListCmd())
-	cmd.AddCommand(newControlsExplainCmd())
+	cmd.AddCommand(newControlsListCmd(p))
+	cmd.AddCommand(newControlsExplainCmd(p))
 	cmd.AddCommand(newControlsAliasesCmd())
 	cmd.AddCommand(newControlsAliasExplainCmd())
 
 	return cmd
 }
 
-func newControlsListCmd() *cobra.Command {
+func newControlsListCmd(p *compose.Provider) *cobra.Command {
 	cfg := catalog.ListConfig{}
 
 	cmd := &cobra.Command{
@@ -61,7 +61,8 @@ Examples:
 
 			var rows []catalog.ControlRow
 			if cfg.UseBuiltIn {
-				controls, err := builtin.LoadAll(cmd.Context())
+				registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded")
+				controls, err := registry.All(cmd.Context())
 				if err != nil {
 					return fmt.Errorf("load built-in controls: %w", err)
 				}
@@ -70,7 +71,7 @@ Examples:
 					return err
 				}
 			} else {
-				repo, err := compose.ActiveProvider().NewControlRepo()
+				repo, err := p.NewControlRepo()
 				if err != nil {
 					return fmt.Errorf("create control loader: %w", err)
 				}
@@ -98,10 +99,11 @@ Examples:
 }
 
 func runListPacks(w interface{ Write([]byte) (int, error) }, cfg catalog.ListConfig) error {
-	items, err := packs.ListPacks()
+	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
 		return err
 	}
+	items := reg.ListPacks()
 
 	if strings.ToLower(strings.TrimSpace(cfg.Format)) == "json" {
 		return jsonutil.WriteIndented(w, items)
@@ -120,7 +122,7 @@ func runListPacks(w interface{ Write([]byte) (int, error) }, cfg catalog.ListCon
 	return nil
 }
 
-func newControlsExplainCmd() *cobra.Command {
+func newControlsExplainCmd(p *compose.Provider) *cobra.Command {
 	var controlsDir string
 
 	cmd := &cobra.Command{
@@ -134,7 +136,7 @@ Examples:
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls --format json` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			explainer := diagnose.NewExplainer(compose.ActiveProvider())
+			explainer := diagnose.NewExplainer(p)
 			return explainer.Run(cmd.Context(), diagnose.ExplainRequest{
 				ControlID:   args[0],
 				ControlsDir: controlsDir,

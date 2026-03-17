@@ -2,12 +2,13 @@ package validate
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
 
 // NewCmd builds the validate command.
-func NewCmd(rt *ui.Runtime) *cobra.Command {
+func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
 		rt = ui.DefaultRuntime()
 	}
@@ -31,7 +32,7 @@ What it checks:
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runValidate(cmd, rt, opts)
+			return runValidate(cmd, p, rt, opts)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

@@ -74,7 +74,7 @@ func (r *TraceRunner) Run(ctx context.Context, req TraceRequest) error {
 }
 
 func (r *TraceRunner) loadControl(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
-	ctl, err := compose.LoadControlByID(ctx, dir, id)
+	ctl, err := compose.LoadControlByID(ctx, r.Provider, dir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave explain --controls %s <control-id>", dir))
@@ -133,7 +133,7 @@ func buildTraceResult(ctl *policy.ControlDefinition, a *asset.Asset, snapshot *a
 // --- CLI bridge ---
 
 // NewTraceCmd constructs the trace command.
-func NewTraceCmd() *cobra.Command {
+func NewTraceCmd(p *compose.Provider) *cobra.Command {
 	var (
 		controlID   string
 		controlsDir string
@@ -170,7 +170,7 @@ Examples:
 				return fmtErr
 			}
 
-			runner := NewTraceRunner(compose.ActiveProvider())
+			runner := NewTraceRunner(p)
 			return runner.Run(cmd.Context(), TraceRequest{
 				ControlID:       strings.TrimSpace(controlID),
 				ControlsDir:     fsutil.CleanUserPath(strings.TrimSpace(controlsDir)),

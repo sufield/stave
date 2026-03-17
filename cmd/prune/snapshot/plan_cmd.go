@@ -10,7 +10,7 @@ import (
 )
 
 // NewPlanCmd constructs the plan command.
-func NewPlanCmd() *cobra.Command {
+func NewPlanCmd(p *compose.Provider) *cobra.Command {
 	var (
 		obsRoot    string
 		archiveDir string
@@ -54,7 +54,7 @@ Examples:
 				return err
 			}
 
-			runner := &PlanRunner{}
+			runner := &PlanRunner{Provider: p}
 			return runner.Run(cmd.Context(), PlanConfig{
 				ObservationsRoot: fsutil.CleanUserPath(obsRoot),
 				ArchiveDir:       fsutil.CleanUserPath(archiveDir),

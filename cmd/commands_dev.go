@@ -39,6 +39,7 @@ const groupDevTools = "dev-tools"
 // time rather than retroactively by string lookup.
 func WireDevCommands(app *App) {
 	root := app.Root
+	p := app.Provider
 
 	// Create the developer group
 	root.AddGroup(&cobra.Group{ID: groupDevTools, Title: "Developer Tools"})
@@ -47,16 +48,16 @@ func WireDevCommands(app *App) {
 	devCmds := []*cobra.Command{
 		doctor.NewCmd(),
 		extractor.NewCmd(ui.DefaultRuntime()),
-		diagnose.NewTraceCmd(),
+		diagnose.NewTraceCmd(p),
 		artifacts.NewLintCmd(),
 		artifacts.NewFmtCmd(),
 		securityaudit.NewCmd(),
-		artifacts.NewControlsCmd(),
+		artifacts.NewControlsCmd(p),
 		artifacts.NewPacksCmd(),
-		enforce.NewGraphCmd(),
+		enforce.NewGraphCmd(p),
 		bugreport.NewCmd(),
 		initalias.NewCmd(root),
-		diagnose.NewPromptCmd(),
+		diagnose.NewPromptCmd(p),
 		newCapabilitiesCmd(),
 		newSchemasCmd(),
 		newVersionCmd(app.Edition),
@@ -81,7 +82,7 @@ func WireDevCommands(app *App) {
 
 	// Attach destructive snapshot commands to existing snapshot subtree
 	if snapshotCmd, _, err := root.Find([]string{"snapshot"}); err == nil && snapshotCmd != nil {
-		for _, c := range prune.DevCommands() {
+		for _, c := range prune.DevCommands(p) {
 			snapshotCmd.AddCommand(c)
 		}
 	}

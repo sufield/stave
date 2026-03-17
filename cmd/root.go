@@ -69,10 +69,9 @@ type App struct {
 	cpuProfileFile *os.File // held open during execution, closed in postRun
 
 	// Provider holds the adapter constructor wiring used by command handlers.
-	// It is initialised from compose.NewDefaultProvider() and activated via
-	// compose.UseProvider in App.bootstrap before any command runs.
-	// Replace it before calling Root.Execute() to swap adapters in tests or
-	// custom entry points without touching the package-level global directly.
+	// It is initialised from compose.NewDefaultProvider() and threaded through
+	// command constructors at registration time. Replace it before calling
+	// NewApp to swap adapters in tests or custom entry points.
 	Provider *compose.Provider
 
 	// ConfigKeyService is the config-key resolution service used by the
