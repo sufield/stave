@@ -1,14 +1,15 @@
-package explain
+package text
 
 import (
 	"fmt"
 	"io"
 
+	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // WriteExplainText renders the explain result as human-readable text.
-func WriteExplainText(w io.Writer, out ExplainResult) error {
+func WriteExplainText(w io.Writer, out contracts.ExplainResult) error {
 	if err := writeExplainHeader(w, out); err != nil {
 		return err
 	}
@@ -25,7 +26,7 @@ func WriteExplainText(w io.Writer, out ExplainResult) error {
 	return err
 }
 
-func writeExplainHeader(w io.Writer, out ExplainResult) error {
+func writeExplainHeader(w io.Writer, out contracts.ExplainResult) error {
 	lines := []string{
 		fmt.Sprintf("Control: %s", out.ControlID),
 		fmt.Sprintf("Name: %s", out.Name),
@@ -53,7 +54,7 @@ func writeExplainMatchedFields(w io.Writer, fields []string) error {
 	return nil
 }
 
-func writeExplainRules(w io.Writer, rules []ExplainRule) error {
+func writeExplainRules(w io.Writer, rules []contracts.ExplainRule) error {
 	if _, err := fmt.Fprintln(w, "\nRules:"); err != nil {
 		return err
 	}

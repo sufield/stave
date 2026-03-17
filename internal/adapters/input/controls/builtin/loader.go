@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
+	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"gopkg.in/yaml.v3"
 )
 
 //go:embed embedded/s3/**/*.yaml
@@ -123,8 +123,8 @@ func (r *Registry) load() ([]policy.ControlDefinition, error) {
 }
 
 func (r *Registry) unmarshal(path string, data []byte) (policy.ControlDefinition, error) {
-	var ctl policy.ControlDefinition
-	if err := yaml.Unmarshal(data, &ctl); err != nil {
+	ctl, err := controlyaml.UnmarshalControlDefinition(data)
+	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("parsing YAML in %q: %w", path, err)
 	}
 	if err := ctl.Prepare(); err != nil {

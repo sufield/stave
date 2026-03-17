@@ -70,10 +70,10 @@ func (d ExpiryDate) IsExpired(now time.Time) bool {
 
 // ExceptionRule defines a single exception entry from stave.yaml.
 type ExceptionRule struct {
-	ControlID kernel.ControlID `yaml:"control_id" json:"control_id"`
-	AssetID   asset.ID         `yaml:"asset_id" json:"asset_id"`
-	Reason    string           `yaml:"reason" json:"reason"`
-	Expires   ExpiryDate       `yaml:"expires,omitempty" json:"expires"` // YYYY-MM-DD
+	ControlID kernel.ControlID `json:"control_id"`
+	AssetID   asset.ID         `json:"asset_id"`
+	Reason    string           `json:"reason"`
+	Expires   ExpiryDate       `json:"expires"` // YYYY-MM-DD
 }
 
 func (r ExceptionRule) matchesResource(assetID asset.ID) bool {

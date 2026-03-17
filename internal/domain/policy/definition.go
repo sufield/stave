@@ -28,23 +28,23 @@ func (defs ControlDefinitions) FindByID(id kernel.ControlID) *ControlDefinition 
 
 // ControlDefinition represents a security rule loaded from external configuration.
 type ControlDefinition struct {
-	DSLVersion           string            `yaml:"dsl_version"`
-	ID                   kernel.ControlID  `yaml:"id"`
-	Name                 string            `yaml:"name"`
-	Description          string            `yaml:"description"`
-	Severity             Severity          `yaml:"severity,omitempty"`
-	Domain               string            `yaml:"domain,omitempty"`
-	ScopeTags            []string          `yaml:"scope_tags,omitempty"`
-	Compliance           ComplianceMapping `yaml:"compliance,omitempty"`
-	Type                 ControlType       `yaml:"type"`
-	Params               ControlParams     `yaml:"params"`
-	UnsafePredicate      UnsafePredicate   `yaml:"unsafe_predicate"`
-	UnsafePredicateAlias string            `yaml:"unsafe_predicate_alias,omitempty"`
-	Remediation          *RemediationSpec  `yaml:"remediation,omitempty"`
-	Exposure             *Exposure         `yaml:"exposure,omitempty"`
+	DSLVersion           string
+	ID                   kernel.ControlID
+	Name                 string
+	Description          string
+	Severity             Severity
+	Domain               string
+	ScopeTags            []string
+	Compliance           ComplianceMapping
+	Type                 ControlType
+	Params               ControlParams
+	UnsafePredicate      UnsafePredicate
+	UnsafePredicateAlias string
+	Remediation          *RemediationSpec
+	Exposure             *Exposure
 
 	// Prepared holds pre-calculated values to optimize the evaluation hot path.
-	Prepared PreparedParams `yaml:"-" json:"-"`
+	Prepared PreparedParams `json:"-"`
 }
 
 // HasCompliance reports whether the control has a non-empty mapping for the given framework key.

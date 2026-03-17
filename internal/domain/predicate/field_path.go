@@ -3,8 +3,6 @@ package predicate
 import (
 	"encoding/json"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 // FieldPath is a dot-separated path identifying a field in an asset's property
@@ -35,19 +33,6 @@ func (f FieldPath) Parts() []string { return f.parts }
 // TrimPrefix returns the path with the given prefix removed.
 func (f FieldPath) TrimPrefix(prefix string) string {
 	return strings.TrimPrefix(f.path, prefix)
-}
-
-// --- YAML ---
-
-func (f FieldPath) MarshalYAML() (any, error) { return f.path, nil }
-
-func (f *FieldPath) UnmarshalYAML(node *yaml.Node) error {
-	var s string
-	if err := node.Decode(&s); err != nil {
-		return err
-	}
-	*f = NewFieldPath(s)
-	return nil
 }
 
 // --- JSON ---

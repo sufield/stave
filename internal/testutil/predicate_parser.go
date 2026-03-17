@@ -3,22 +3,12 @@
 package testutil
 
 import (
+	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/policy"
-	"gopkg.in/yaml.v3"
 )
 
 // YAMLPredicateParser returns a YAML-based nested predicate parser function
 // suitable for use in tests that exercise any_match controls.
 func YAMLPredicateParser() func(any) (*policy.UnsafePredicate, error) {
-	return func(v any) (*policy.UnsafePredicate, error) {
-		data, err := yaml.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		var pred policy.UnsafePredicate
-		if err := yaml.Unmarshal(data, &pred); err != nil {
-			return nil, err
-		}
-		return &pred, nil
-	}
+	return controlyaml.ParsePredicate
 }

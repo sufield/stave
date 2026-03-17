@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/adapters/output/text"
 	appexplain "github.com/sufield/stave/internal/app/explain"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -54,7 +55,7 @@ func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
 	if req.Format.IsJSON() {
 		return jsonutil.WriteIndented(req.Stdout, result)
 	}
-	return appexplain.WriteExplainText(req.Stdout, result)
+	return text.WriteExplainText(req.Stdout, result)
 }
 
 // composeFinder adapts compose.LoadControlByID to the ControlFinder interface.

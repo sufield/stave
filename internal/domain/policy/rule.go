@@ -12,14 +12,14 @@ import (
 // It can be a simple field comparison or a nested "any/all" block.
 type PredicateRule struct {
 	// Simple field comparison
-	Field          predicate.FieldPath `yaml:"field,omitempty"`
-	Op             predicate.Operator  `yaml:"op,omitempty"`
-	Value          Operand             `yaml:"value,omitempty"`
-	ValueFromParam predicate.ParamRef  `yaml:"value_from_param,omitempty"`
+	Field          predicate.FieldPath
+	Op             predicate.Operator
+	Value          Operand
+	ValueFromParam predicate.ParamRef
 
 	// Nested logic blocks
-	Any []PredicateRule `yaml:"any,omitempty"`
-	All []PredicateRule `yaml:"all,omitempty"`
+	Any []PredicateRule
+	All []PredicateRule
 }
 
 // Matches evaluates the rule against an asset without additional parameters or identities.

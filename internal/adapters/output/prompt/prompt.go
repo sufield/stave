@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/samber/lo"
+	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"gopkg.in/yaml.v3"
 )
 
 // FindingData holds data for a single finding in the rendered prompt.
@@ -95,7 +95,7 @@ func summarizeMisconfigurations(misconfigs []policy.Misconfiguration) string {
 }
 
 func marshalControl(ctl *policy.ControlDefinition) string {
-	yamlBytes, err := yaml.Marshal(ctl)
+	yamlBytes, err := controlyaml.MarshalControlYAML(ctl)
 	if err != nil {
 		return ""
 	}
