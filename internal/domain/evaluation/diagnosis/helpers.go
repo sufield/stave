@@ -115,7 +115,7 @@ func resolveFinalizationTime(now, fallback time.Time) time.Time {
 func extractFieldPath(pred policy.UnsafePredicate) string {
 	var paths []string
 	pred.Walk(func(r policy.PredicateRule) {
-		if r.Field != "" {
+		if !r.Field.IsZero() {
 			paths = append(paths, fmt.Sprintf("%s %s %v", r.Field, r.Op, r.Value))
 		}
 	})

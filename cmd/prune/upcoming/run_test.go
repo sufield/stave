@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/pkg/fp"
 )
 
@@ -48,7 +49,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 		Params: policy.NewParams(map[string]any{
@@ -62,7 +63,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 		Params: policy.NewParams(map[string]any{

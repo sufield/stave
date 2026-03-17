@@ -12,17 +12,17 @@ import (
 func TestFindMissingParamReferences_DedupesAndSorts(t *testing.T) {
 	pred := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
-			{ValueFromParam: "z"},
+			{ValueFromParam: predicate.ParamRef("z")},
 			{
 				All: []policy.PredicateRule{
-					{ValueFromParam: "b"},
-					{ValueFromParam: "z"},
+					{ValueFromParam: predicate.ParamRef("b")},
+					{ValueFromParam: predicate.ParamRef("z")},
 				},
 			},
 		},
 		All: []policy.PredicateRule{
-			{ValueFromParam: "a"},
-			{ValueFromParam: "b"},
+			{ValueFromParam: predicate.ParamRef("a")},
+			{ValueFromParam: predicate.ParamRef("b")},
 		},
 	}
 
@@ -45,7 +45,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 			Name: "Match",
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: predicate.OpEq, Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -54,7 +54,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 			Name: "Never",
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.nonexistent", Op: predicate.OpEq, Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.nonexistent"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},

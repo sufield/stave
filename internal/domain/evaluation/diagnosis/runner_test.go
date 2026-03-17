@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
@@ -38,7 +39,7 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 			ID:   "CTL.EXP.DURATION.001",
 			Name: "Test",
 			UnsafePredicate: policy.UnsafePredicate{
-				Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: policy.Bool(true)}},
+				Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 			},
 		},
 	}
@@ -91,7 +92,7 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 			ID:   "CTL.EXP.DURATION.001",
 			Name: "Test",
 			UnsafePredicate: policy.UnsafePredicate{
-				Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: policy.Bool(true)}},
+				Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 			},
 		},
 	}
@@ -139,7 +140,7 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 			ID:   "CTL.EXP.DURATION.001",
 			Name: "Test",
 			UnsafePredicate: policy.UnsafePredicate{
-				Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: policy.Bool(true)}},
+				Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 			},
 		},
 	}

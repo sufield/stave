@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 )
@@ -32,7 +33,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "properties.storage.access.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+					{Property: "properties.storage.access.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
 					IdentityStatements: stmts,
@@ -145,7 +146,7 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "properties.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+					{Property: "properties.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
 					IdentityStatements: []kernel.StatementID{"AllowPublicRead"},

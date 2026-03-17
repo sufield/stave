@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -221,7 +222,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 			Type:        policy.TypePrefixExposure,
 			Params:      params,
 			UnsafePredicate: policy.UnsafePredicate{
-				Any: []policy.PredicateRule{{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("bucket")}},
+				Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("bucket")}},
 			},
 		}
 		_ = ctl.Prepare()

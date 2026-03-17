@@ -18,6 +18,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/domain/predicate"
 	"github.com/sufield/stave/internal/trace"
 )
 
@@ -52,7 +53,7 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 					ShortCircuitIndex: -1,
 					Result:            true,
 					Children: []trace.Node{
-						&trace.ClauseNode{Index: 0, Field: "properties.k", Op: "eq", Value: "v", Result: true},
+						&trace.ClauseNode{Index: 0, Field: "properties.k", Op: predicate.OpEq, Value: "v", Result: true},
 					},
 				},
 				FinalResult: true,
@@ -87,7 +88,7 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 			Type:        policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},

@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/engine"
@@ -33,7 +34,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 		Description: "asset.Asset must not remain unsafe beyond threshold",
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -110,7 +111,7 @@ func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -149,7 +150,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -201,7 +202,7 @@ func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -260,7 +261,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 		}),
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -273,7 +274,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 		// No params.max_unsafe_duration - uses CLI default
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -348,7 +349,7 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 		}),
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -398,7 +399,7 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -457,7 +458,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 			Type: policy.TypeUnsafeDuration, // Supported
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -466,7 +467,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 			Type: policy.TypeAuthorizationBoundary, // Not supported in MVP 1.0
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -533,7 +534,7 @@ func TestEvaluator_AbsenceDoesNotCloseEpisode(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -596,7 +597,7 @@ func TestEvaluator_OpenEpisodeNotInEpisodesList(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -671,7 +672,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+						{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -714,7 +715,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+						{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -758,7 +759,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+						{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -824,7 +825,7 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -895,7 +896,7 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -963,7 +964,7 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1050,7 +1051,7 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1114,7 +1115,7 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1172,7 +1173,7 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1229,7 +1230,7 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1285,7 +1286,7 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1363,7 +1364,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+						{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -1436,7 +1437,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+						{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -1514,7 +1515,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
-						{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+						{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 					},
 				},
 			},
@@ -1591,7 +1592,7 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -1691,7 +1692,7 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},

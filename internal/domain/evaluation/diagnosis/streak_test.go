@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T) {
@@ -16,7 +17,7 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 		ID:   "CTL.TEST.001",
 		Name: "test",
 		UnsafePredicate: policy.UnsafePredicate{
-			Any: []policy.PredicateRule{{Field: "properties.public", Op: "eq", Value: policy.Bool(true)}},
+			Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 		},
 	}
 

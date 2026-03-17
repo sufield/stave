@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/asset"
 )
@@ -13,9 +14,9 @@ import (
 func writeScopePredicate() policy.UnsafePredicate {
 	return policy.UnsafePredicate{
 		All: []policy.PredicateRule{
-			{Field: "type", Op: "eq", Value: policy.Str("upload_policy")},
-			{Field: "properties.upload.operation", Op: "eq", Value: policy.Str("write")},
-			{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: policy.Str("prefix")},
+			{Field: predicate.NewFieldPath("type"), Op: predicate.OpEq, Value: policy.Str("upload_policy")},
+			{Field: predicate.NewFieldPath("properties.upload.operation"), Op: predicate.OpEq, Value: policy.Str("write")},
+			{Field: predicate.NewFieldPath("properties.upload.allowed_key_mode"), Op: predicate.OpEq, Value: policy.Str("prefix")},
 		},
 	}
 }

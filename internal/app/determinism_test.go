@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/asset"
 
@@ -97,7 +98,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		Type:        policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			All: []policy.PredicateRule{
-				{Field: "properties.storage.access.public_read", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.storage.access.public_read"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
@@ -173,7 +174,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		DSLVersion: "ctrl.v1", ID: "CTL.Z.001", Name: "Z control",
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
-			All: []policy.PredicateRule{{Field: "properties.storage.access.public_read", Op: "eq", Value: policy.Bool(true)}},
+			All: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.storage.access.public_read"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 		},
 	}
 	_ = ctlZ.Prepare()
@@ -181,7 +182,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		DSLVersion: "ctrl.v1", ID: "CTL.A.001", Name: "A control",
 		Type: policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
-			All: []policy.PredicateRule{{Field: "properties.storage.access.public_read", Op: "eq", Value: policy.Bool(true)}},
+			All: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.storage.access.public_read"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 		},
 	}
 	_ = ctlA.Prepare()

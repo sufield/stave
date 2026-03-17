@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 type evalControlRepoStub struct {
@@ -87,7 +88,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 		Type:        policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}

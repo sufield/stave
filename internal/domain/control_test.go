@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 // TestParseDuration tests ParseDuration with various duration formats.
@@ -65,32 +66,32 @@ func TestPredicateRuleMatches(t *testing.T) {
 	}{
 		{
 			name:     "bool equality - true",
-			rule:     policy.PredicateRule{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+			rule:     policy.PredicateRule{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			expected: true,
 		},
 		{
 			name:     "bool equality - false",
-			rule:     policy.PredicateRule{Field: "properties.public", Op: "eq", Value: policy.Bool(false)},
+			rule:     policy.PredicateRule{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(false)},
 			expected: false,
 		},
 		{
 			name:     "string equality",
-			rule:     policy.PredicateRule{Field: "properties.acl", Op: "eq", Value: policy.Str("public-read")},
+			rule:     policy.PredicateRule{Field: predicate.NewFieldPath("properties.acl"), Op: predicate.OpEq, Value: policy.Str("public-read")},
 			expected: true,
 		},
 		{
 			name:     "string inequality",
-			rule:     policy.PredicateRule{Field: "properties.acl", Op: "eq", Value: policy.Str("private")},
+			rule:     policy.PredicateRule{Field: predicate.NewFieldPath("properties.acl"), Op: predicate.OpEq, Value: policy.Str("private")},
 			expected: false,
 		},
 		{
 			name:     "int equality",
-			rule:     policy.PredicateRule{Field: "properties.count", Op: "eq", Value: policy.Int(42)},
+			rule:     policy.PredicateRule{Field: predicate.NewFieldPath("properties.count"), Op: predicate.OpEq, Value: policy.Int(42)},
 			expected: true,
 		},
 		{
 			name:     "non-existent field",
-			rule:     policy.PredicateRule{Field: "properties.missing", Op: "eq", Value: policy.Bool(true)},
+			rule:     policy.PredicateRule{Field: predicate.NewFieldPath("properties.missing"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			expected: false,
 		},
 	}
@@ -119,7 +120,7 @@ func TestUnsafePredicateEvaluate(t *testing.T) {
 
 	predicate := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
-			{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+			{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 		},
 	}
 
@@ -140,21 +141,21 @@ func TestIdentityBlastRadiusPredicate(t *testing.T) {
 			// Missing owner or purpose
 			{
 				Any: []policy.PredicateRule{
-					{Field: "identity.owner", Op: "missing", Value: policy.Bool(true)},
-					{Field: "identity.purpose", Op: "missing", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("identity.owner"), Op: predicate.OpMissing, Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("identity.purpose"), Op: predicate.OpMissing, Value: policy.Bool(true)},
 				},
 			},
 			// Wildcard with forbid_wildcards
 			{
 				All: []policy.PredicateRule{
-					{Field: "identity.grants.has_wildcard", Op: "eq", Value: policy.Bool(true)},
-					{Field: "params.forbid_wildcards", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("identity.grants.has_wildcard"), Op: predicate.OpEq, Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("params.forbid_wildcards"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 			// Too many systems
-			{Field: "identity.scope.distinct_systems", Op: "gt", ValueFromParam: "max_systems"},
+			{Field: predicate.NewFieldPath("identity.scope.distinct_systems"), Op: predicate.OpGt, ValueFromParam: predicate.ParamRef("max_systems")},
 			// Too many asset groups
-			{Field: "identity.scope.distinct_resource_groups", Op: "gt", ValueFromParam: "max_resource_groups"},
+			{Field: predicate.NewFieldPath("identity.scope.distinct_resource_groups"), Op: predicate.OpGt, ValueFromParam: predicate.ParamRef("max_resource_groups")},
 		},
 	}
 
@@ -296,44 +297,44 @@ func TestMissingOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		identity asset.CloudIdentity
-		field    string
+		field    predicate.FieldPath
 		wantMiss bool
 	}{
 		{
 			name:     "nil owner is missing",
 			identity: asset.CloudIdentity{ID: "test"},
-			field:    "identity.owner",
+			field:    predicate.NewFieldPath("identity.owner"),
 			wantMiss: true,
 		},
 		{
 			name:     "empty string owner is missing",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"owner": ""}},
-			field:    "identity.owner",
+			field:    predicate.NewFieldPath("identity.owner"),
 			wantMiss: true,
 		},
 		{
 			name:     "non-empty owner is not missing",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"owner": "team-a"}},
-			field:    "identity.owner",
+			field:    predicate.NewFieldPath("identity.owner"),
 			wantMiss: false,
 		},
 		{
 			name:     "nil purpose is missing",
 			identity: asset.CloudIdentity{ID: "test"},
-			field:    "identity.purpose",
+			field:    predicate.NewFieldPath("identity.purpose"),
 			wantMiss: true,
 		},
 		{
 			name:     "non-empty purpose is not missing",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"purpose": "testing"}},
-			field:    "identity.purpose",
+			field:    predicate.NewFieldPath("identity.purpose"),
 			wantMiss: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "missing", Value: policy.Bool(true)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpMissing, Value: policy.Bool(true)}
 			ctx := policy.NewIdentityEvalContext(tt.identity, policy.ControlParams{})
 			got := rule.MatchesWithContext(ctx)
 
@@ -349,40 +350,40 @@ func TestGreaterThanOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		identity asset.CloudIdentity
-		field    string
-		param    string
+		field    predicate.FieldPath
+		param    predicate.ParamRef
 		params   policy.ControlParams
 		want     bool
 	}{
 		{
 			name:     "2 > 1 is true",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"scope": map[string]any{"distinct_systems": 2}}},
-			field:    "identity.scope.distinct_systems",
-			param:    "max_systems",
+			field:    predicate.NewFieldPath("identity.scope.distinct_systems"),
+			param:    predicate.ParamRef("max_systems"),
 			params:   policy.NewParams(map[string]any{"max_systems": 1}),
 			want:     true,
 		},
 		{
 			name:     "1 > 1 is false",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"scope": map[string]any{"distinct_systems": 1}}},
-			field:    "identity.scope.distinct_systems",
-			param:    "max_systems",
+			field:    predicate.NewFieldPath("identity.scope.distinct_systems"),
+			param:    predicate.ParamRef("max_systems"),
 			params:   policy.NewParams(map[string]any{"max_systems": 1}),
 			want:     false,
 		},
 		{
 			name:     "0 > 1 is false",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"scope": map[string]any{"distinct_systems": 0}}},
-			field:    "identity.scope.distinct_systems",
-			param:    "max_systems",
+			field:    predicate.NewFieldPath("identity.scope.distinct_systems"),
+			param:    predicate.ParamRef("max_systems"),
 			params:   policy.NewParams(map[string]any{"max_systems": 1}),
 			want:     false,
 		},
 		{
 			name:     "3 > 2 (resource groups)",
 			identity: asset.CloudIdentity{ID: "test", Properties: map[string]any{"scope": map[string]any{"distinct_resource_groups": 3}}},
-			field:    "identity.scope.distinct_resource_groups",
-			param:    "max_resource_groups",
+			field:    predicate.NewFieldPath("identity.scope.distinct_resource_groups"),
+			param:    predicate.ParamRef("max_resource_groups"),
 			params:   policy.NewParams(map[string]any{"max_resource_groups": 2}),
 			want:     true,
 		},
@@ -392,7 +393,7 @@ func TestGreaterThanOperator(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rule := policy.PredicateRule{
 				Field:          tt.field,
-				Op:             "gt",
+				Op:             predicate.OpGt,
 				ValueFromParam: tt.param,
 			}
 			ctx := policy.NewIdentityEvalContext(tt.identity, tt.params)
@@ -417,8 +418,8 @@ func TestNestedPredicates(t *testing.T) {
 		}
 		rule := policy.PredicateRule{
 			Any: []policy.PredicateRule{
-				{Field: "identity.owner", Op: "missing", Value: policy.Bool(true)},
-				{Field: "identity.purpose", Op: "missing", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("identity.owner"), Op: predicate.OpMissing, Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("identity.purpose"), Op: predicate.OpMissing, Value: policy.Bool(true)},
 			},
 		}
 		ctx := policy.NewIdentityEvalContext(identity, policy.ControlParams{})
@@ -437,8 +438,8 @@ func TestNestedPredicates(t *testing.T) {
 		}
 		rule := policy.PredicateRule{
 			Any: []policy.PredicateRule{
-				{Field: "identity.owner", Op: "missing", Value: policy.Bool(true)},
-				{Field: "identity.purpose", Op: "missing", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("identity.owner"), Op: predicate.OpMissing, Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("identity.purpose"), Op: predicate.OpMissing, Value: policy.Bool(true)},
 			},
 		}
 		ctx := policy.NewIdentityEvalContext(identity, policy.ControlParams{})
@@ -458,8 +459,8 @@ func TestNestedPredicates(t *testing.T) {
 		params := policy.NewParams(map[string]any{"forbid_wildcards": true})
 		rule := policy.PredicateRule{
 			All: []policy.PredicateRule{
-				{Field: "identity.grants.has_wildcard", Op: "eq", Value: policy.Bool(true)},
-				{Field: "params.forbid_wildcards", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("identity.grants.has_wildcard"), Op: predicate.OpEq, Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("params.forbid_wildcards"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		}
 		ctx := policy.NewIdentityEvalContext(identity, params)
@@ -478,8 +479,8 @@ func TestNestedPredicates(t *testing.T) {
 		params := policy.NewParams(map[string]any{"forbid_wildcards": false}) // not forbidden
 		rule := policy.PredicateRule{
 			All: []policy.PredicateRule{
-				{Field: "identity.grants.has_wildcard", Op: "eq", Value: policy.Bool(true)},
-				{Field: "params.forbid_wildcards", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("identity.grants.has_wildcard"), Op: predicate.OpEq, Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("params.forbid_wildcards"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		}
 		ctx := policy.NewIdentityEvalContext(identity, params)
@@ -502,9 +503,9 @@ func TestValueFromParam(t *testing.T) {
 	params := policy.NewParams(map[string]any{"max_systems": 3})
 
 	rule := policy.PredicateRule{
-		Field:          "identity.scope.distinct_systems",
-		Op:             "gt",
-		ValueFromParam: "max_systems",
+		Field:          predicate.NewFieldPath("identity.scope.distinct_systems"),
+		Op:             predicate.OpGt,
+		ValueFromParam: predicate.ParamRef("max_systems"),
 	}
 
 	ctx := policy.NewIdentityEvalContext(identity, params)
@@ -532,7 +533,7 @@ func TestPresentOperator(t *testing.T) {
 	tests := []struct {
 		name       string
 		resource   asset.Asset
-		field      string
+		field      predicate.FieldPath
 		wantValue  bool
 		wantResult bool
 	}{
@@ -542,7 +543,7 @@ func TestPresentOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"business_justification": "approved for public access"},
 			},
-			field:      "properties.business_justification",
+			field:      predicate.NewFieldPath("properties.business_justification"),
 			wantValue:  true,
 			wantResult: true,
 		},
@@ -552,7 +553,7 @@ func TestPresentOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{},
 			},
-			field:      "properties.business_justification",
+			field:      predicate.NewFieldPath("properties.business_justification"),
 			wantValue:  true,
 			wantResult: false,
 		},
@@ -562,7 +563,7 @@ func TestPresentOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"business_justification": ""},
 			},
-			field:      "properties.business_justification",
+			field:      predicate.NewFieldPath("properties.business_justification"),
 			wantValue:  true,
 			wantResult: false,
 		},
@@ -572,7 +573,7 @@ func TestPresentOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"business_justification": "   "},
 			},
-			field:      "properties.business_justification",
+			field:      predicate.NewFieldPath("properties.business_justification"),
 			wantValue:  true,
 			wantResult: false,
 		},
@@ -582,7 +583,7 @@ func TestPresentOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{},
 			},
-			field:      "properties.business_justification",
+			field:      predicate.NewFieldPath("properties.business_justification"),
 			wantValue:  false,
 			wantResult: true,
 		},
@@ -592,7 +593,7 @@ func TestPresentOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"business_justification": "approved"},
 			},
-			field:      "properties.business_justification",
+			field:      predicate.NewFieldPath("properties.business_justification"),
 			wantValue:  false,
 			wantResult: false,
 		},
@@ -600,7 +601,7 @@ func TestPresentOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "present", Value: policy.Bool(tt.wantValue)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpPresent, Value: policy.Bool(tt.wantValue)}
 			got := rule.Matches(tt.resource)
 			if got != tt.wantResult {
 				t.Errorf("present check: got %v, want %v", got, tt.wantResult)
@@ -614,7 +615,7 @@ func TestInOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource asset.Asset
-		field    string
+		field    predicate.FieldPath
 		list     []any
 		want     bool
 	}{
@@ -624,7 +625,7 @@ func TestInOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"data_classification": "PII"},
 			},
-			field: "properties.data_classification",
+			field: predicate.NewFieldPath("properties.data_classification"),
 			list:  []any{"PII", "PHI", "PCI"},
 			want:  true,
 		},
@@ -634,7 +635,7 @@ func TestInOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"data_classification": "NONE"},
 			},
-			field: "properties.data_classification",
+			field: predicate.NewFieldPath("properties.data_classification"),
 			list:  []any{"PII", "PHI", "PCI"},
 			want:  false,
 		},
@@ -644,7 +645,7 @@ func TestInOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{},
 			},
-			field: "properties.data_classification",
+			field: predicate.NewFieldPath("properties.data_classification"),
 			list:  []any{"PII", "PHI", "PCI"},
 			want:  false,
 		},
@@ -654,7 +655,7 @@ func TestInOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"data_classification": "PHI"},
 			},
-			field: "properties.data_classification",
+			field: predicate.NewFieldPath("properties.data_classification"),
 			list:  []any{"PII", "PHI", "PCI"},
 			want:  true,
 		},
@@ -662,7 +663,7 @@ func TestInOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "in", Value: policy.NewOperand(tt.list)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpIn, Value: policy.NewOperand(tt.list)}
 			got := rule.Matches(tt.resource)
 			if got != tt.want {
 				t.Errorf("in check: got %v, want %v", got, tt.want)
@@ -675,8 +676,8 @@ func TestInOperator(t *testing.T) {
 func TestINVEXP001Predicate(t *testing.T) {
 	predicate := policy.UnsafePredicate{
 		All: []policy.PredicateRule{
-			{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
-			{Field: "properties.business_justification", Op: "present", Value: policy.Bool(false)},
+			{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: predicate.NewFieldPath("properties.business_justification"), Op: predicate.OpPresent, Value: policy.Bool(false)},
 		},
 	}
 
@@ -733,8 +734,8 @@ func TestINVEXP001Predicate(t *testing.T) {
 func TestINVEXP002Predicate(t *testing.T) {
 	predicate := policy.UnsafePredicate{
 		All: []policy.PredicateRule{
-			{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
-			{Field: "properties.data_classification", Op: "in", Value: policy.NewOperand([]any{"PII", "PHI", "PCI"})},
+			{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: predicate.NewFieldPath("properties.data_classification"), Op: predicate.OpIn, Value: policy.NewOperand([]any{"PII", "PHI", "PCI"})},
 		},
 	}
 
@@ -799,8 +800,8 @@ func TestINVEXP002Predicate(t *testing.T) {
 func TestINVMETA001Predicate(t *testing.T) {
 	predicate := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
-			{Field: "properties.exposure_status", Op: "missing", Value: policy.Bool(true)},
-			{Field: "properties.exposure_status", Op: "eq", Value: policy.Str("unknown")},
+			{Field: predicate.NewFieldPath("properties.exposure_status"), Op: predicate.OpMissing, Value: policy.Bool(true)},
+			{Field: predicate.NewFieldPath("properties.exposure_status"), Op: predicate.OpEq, Value: policy.Str("unknown")},
 		},
 	}
 
@@ -857,8 +858,8 @@ func TestINVMETA001Predicate(t *testing.T) {
 func TestINVEXPOwnerMissing001Predicate(t *testing.T) {
 	predicate := policy.UnsafePredicate{
 		All: []policy.PredicateRule{
-			{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
-			{Field: "properties.owner", Op: "missing", Value: policy.Bool(true)},
+			{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
+			{Field: predicate.NewFieldPath("properties.owner"), Op: predicate.OpMissing, Value: policy.Bool(true)},
 		},
 	}
 
@@ -932,7 +933,7 @@ func TestListEmptyOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource asset.Asset
-		field    string
+		field    predicate.FieldPath
 		wantVal  bool
 		want     bool
 	}{
@@ -942,7 +943,7 @@ func TestListEmptyOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"audience": []any{}},
 			},
-			field:   "properties.audience",
+			field:   predicate.NewFieldPath("properties.audience"),
 			wantVal: true,
 			want:    true,
 		},
@@ -952,7 +953,7 @@ func TestListEmptyOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"audience": []any{"alice@company.com"}},
 			},
-			field:   "properties.audience",
+			field:   predicate.NewFieldPath("properties.audience"),
 			wantVal: true,
 			want:    false,
 		},
@@ -962,7 +963,7 @@ func TestListEmptyOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{},
 			},
-			field:   "properties.audience",
+			field:   predicate.NewFieldPath("properties.audience"),
 			wantVal: true,
 			want:    true,
 		},
@@ -972,7 +973,7 @@ func TestListEmptyOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"audience": nil},
 			},
-			field:   "properties.audience",
+			field:   predicate.NewFieldPath("properties.audience"),
 			wantVal: true,
 			want:    true,
 		},
@@ -982,7 +983,7 @@ func TestListEmptyOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"audience": "not-a-list"},
 			},
-			field:   "properties.audience",
+			field:   predicate.NewFieldPath("properties.audience"),
 			wantVal: true,
 			want:    true,
 		},
@@ -990,7 +991,7 @@ func TestListEmptyOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "list_empty", Value: policy.Bool(tt.wantVal)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpListEmpty, Value: policy.Bool(tt.wantVal)}
 			got := rule.Matches(tt.resource)
 			if got != tt.want {
 				t.Errorf("list_empty: got %v, want %v", got, tt.want)
@@ -1004,7 +1005,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource asset.Asset
-		field    string
+		field    predicate.FieldPath
 		other    string
 		want     bool
 	}{
@@ -1017,7 +1018,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 					"actual_audience":   []any{"alice@company.com", "bob@company.com", "eve@attacker.com"},
 				},
 			},
-			field: "properties.actual_audience",
+			field: predicate.NewFieldPath("properties.actual_audience"),
 			other: "properties.intended_audience",
 			want:  true,
 		},
@@ -1030,7 +1031,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 					"actual_audience":   []any{"alice@company.com", "bob@company.com"},
 				},
 			},
-			field: "properties.actual_audience",
+			field: predicate.NewFieldPath("properties.actual_audience"),
 			other: "properties.intended_audience",
 			want:  false,
 		},
@@ -1043,7 +1044,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 					"actual_audience":   []any{"alice@company.com"},
 				},
 			},
-			field: "properties.actual_audience",
+			field: predicate.NewFieldPath("properties.actual_audience"),
 			other: "properties.intended_audience",
 			want:  false,
 		},
@@ -1055,7 +1056,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 					"actual_audience": []any{"alice@company.com"},
 				},
 			},
-			field: "properties.actual_audience",
+			field: predicate.NewFieldPath("properties.actual_audience"),
 			other: "properties.intended_audience",
 			want:  true,
 		},
@@ -1067,7 +1068,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 					"intended_audience": []any{"alice@company.com"},
 				},
 			},
-			field: "properties.actual_audience",
+			field: predicate.NewFieldPath("properties.actual_audience"),
 			other: "properties.intended_audience",
 			want:  false,
 		},
@@ -1080,7 +1081,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 					"actual_audience":   []any{},
 				},
 			},
-			field: "properties.actual_audience",
+			field: predicate.NewFieldPath("properties.actual_audience"),
 			other: "properties.intended_audience",
 			want:  false,
 		},
@@ -1088,7 +1089,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "not_subset_of_field", Value: policy.Str(tt.other)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpNotSubsetOfField, Value: policy.Str(tt.other)}
 			got := rule.Matches(tt.resource)
 			if got != tt.want {
 				t.Errorf("not_subset_of_field: got %v, want %v", got, tt.want)
@@ -1100,7 +1101,7 @@ func TestNotSubsetOfFieldOperator(t *testing.T) {
 // TestNotSubsetOfFieldAgainstParams tests not_subset_of_field with params.* paths.
 func TestNotSubsetOfFieldAgainstParams(t *testing.T) {
 	rule := policy.PredicateRule{
-		Field: "properties.storage.access.external_account_ids",
+		Field: predicate.NewFieldPath("properties.storage.access.external_account_ids"),
 		Op:    "not_subset_of_field",
 		Value: policy.Str("params.allowed_accounts"),
 	}
@@ -1153,7 +1154,7 @@ func TestNeqFieldOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource asset.Asset
-		field    string
+		field    predicate.FieldPath
 		other    string
 		want     bool
 	}{
@@ -1166,7 +1167,7 @@ func TestNeqFieldOperator(t *testing.T) {
 					"subject_id":       "patient:alice",
 				},
 			},
-			field: "properties.actor_subject_id",
+			field: predicate.NewFieldPath("properties.actor_subject_id"),
 			other: "properties.subject_id",
 			want:  false,
 		},
@@ -1179,7 +1180,7 @@ func TestNeqFieldOperator(t *testing.T) {
 					"subject_id":       "patient:alice",
 				},
 			},
-			field: "properties.actor_subject_id",
+			field: predicate.NewFieldPath("properties.actor_subject_id"),
 			other: "properties.subject_id",
 			want:  true,
 		},
@@ -1191,7 +1192,7 @@ func TestNeqFieldOperator(t *testing.T) {
 					"actor_subject_id": "patient:bob",
 				},
 			},
-			field: "properties.actor_subject_id",
+			field: predicate.NewFieldPath("properties.actor_subject_id"),
 			other: "properties.subject_id",
 			want:  true,
 		},
@@ -1203,7 +1204,7 @@ func TestNeqFieldOperator(t *testing.T) {
 					"subject_id": "patient:alice",
 				},
 			},
-			field: "properties.actor_subject_id",
+			field: predicate.NewFieldPath("properties.actor_subject_id"),
 			other: "properties.subject_id",
 			want:  false,
 		},
@@ -1216,7 +1217,7 @@ func TestNeqFieldOperator(t *testing.T) {
 					"field_b": 42,
 				},
 			},
-			field: "properties.field_a",
+			field: predicate.NewFieldPath("properties.field_a"),
 			other: "properties.field_b",
 			want:  false,
 		},
@@ -1229,7 +1230,7 @@ func TestNeqFieldOperator(t *testing.T) {
 					"field_b": 99,
 				},
 			},
-			field: "properties.field_a",
+			field: predicate.NewFieldPath("properties.field_a"),
 			other: "properties.field_b",
 			want:  true,
 		},
@@ -1237,7 +1238,7 @@ func TestNeqFieldOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "neq_field", Value: policy.Str(tt.other)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpNeqField, Value: policy.Str(tt.other)}
 			got := rule.Matches(tt.resource)
 			if got != tt.want {
 				t.Errorf("neq_field: got %v, want %v", got, tt.want)
@@ -1251,7 +1252,7 @@ func TestNotInFieldOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource asset.Asset
-		field    string
+		field    predicate.FieldPath
 		listPath string
 		want     bool
 	}{
@@ -1264,7 +1265,7 @@ func TestNotInFieldOperator(t *testing.T) {
 					"allowed_subjects": []any{"patient:alice", "patient:bob"},
 				},
 			},
-			field:    "properties.subject_id",
+			field:    predicate.NewFieldPath("properties.subject_id"),
 			listPath: "properties.allowed_subjects",
 			want:     false,
 		},
@@ -1277,7 +1278,7 @@ func TestNotInFieldOperator(t *testing.T) {
 					"allowed_subjects": []any{"patient:alice", "patient:bob"},
 				},
 			},
-			field:    "properties.subject_id",
+			field:    predicate.NewFieldPath("properties.subject_id"),
 			listPath: "properties.allowed_subjects",
 			want:     true,
 		},
@@ -1289,7 +1290,7 @@ func TestNotInFieldOperator(t *testing.T) {
 					"subject_id": "patient:alice",
 				},
 			},
-			field:    "properties.subject_id",
+			field:    predicate.NewFieldPath("properties.subject_id"),
 			listPath: "properties.allowed_subjects",
 			want:     true,
 		},
@@ -1301,7 +1302,7 @@ func TestNotInFieldOperator(t *testing.T) {
 					"allowed_subjects": []any{"patient:alice", "patient:bob"},
 				},
 			},
-			field:    "properties.subject_id",
+			field:    predicate.NewFieldPath("properties.subject_id"),
 			listPath: "properties.allowed_subjects",
 			want:     true,
 		},
@@ -1314,7 +1315,7 @@ func TestNotInFieldOperator(t *testing.T) {
 					"allowed_subjects": []any{},
 				},
 			},
-			field:    "properties.subject_id",
+			field:    predicate.NewFieldPath("properties.subject_id"),
 			listPath: "properties.allowed_subjects",
 			want:     true,
 		},
@@ -1322,7 +1323,7 @@ func TestNotInFieldOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "not_in_field", Value: policy.Str(tt.listPath)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpNotInField, Value: policy.Str(tt.listPath)}
 			got := rule.Matches(tt.resource)
 			if got != tt.want {
 				t.Errorf("not_in_field: got %v, want %v", got, tt.want)
@@ -1336,7 +1337,7 @@ func TestContainsOperator(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource asset.Asset
-		field    string
+		field    predicate.FieldPath
 		value    string
 		want     bool
 	}{
@@ -1346,7 +1347,7 @@ func TestContainsOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"purpose": "signs_downloads;enforce_prefix=false"},
 			},
-			field: "properties.purpose",
+			field: predicate.NewFieldPath("properties.purpose"),
 			value: "enforce_prefix=false",
 			want:  true,
 		},
@@ -1356,7 +1357,7 @@ func TestContainsOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{"purpose": "signs_downloads;enforce_prefix=true"},
 			},
-			field: "properties.purpose",
+			field: predicate.NewFieldPath("properties.purpose"),
 			value: "enforce_prefix=false",
 			want:  false,
 		},
@@ -1366,7 +1367,7 @@ func TestContainsOperator(t *testing.T) {
 				ID:         "test",
 				Properties: map[string]any{},
 			},
-			field: "properties.purpose",
+			field: predicate.NewFieldPath("properties.purpose"),
 			value: "enforce_prefix=false",
 			want:  false,
 		},
@@ -1374,7 +1375,7 @@ func TestContainsOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule := policy.PredicateRule{Field: tt.field, Op: "contains", Value: policy.Str(tt.value)}
+			rule := policy.PredicateRule{Field: tt.field, Op: predicate.OpContains, Value: policy.Str(tt.value)}
 			got := rule.Matches(tt.resource)
 			if got != tt.want {
 				t.Errorf("contains: got %v, want %v", got, tt.want)
@@ -1413,7 +1414,7 @@ func TestAnyMatchOperator(t *testing.T) {
 
 		// Nested predicate: type == "app_signer" AND purpose contains "allow_traversal=true"
 		rule := policy.PredicateRule{
-			Field: "identities",
+			Field: predicate.NewFieldPath("identities"),
 			Op:    "any_match",
 			Value: policy.NewOperand(map[string]any{
 				"all": []any{
@@ -1446,7 +1447,7 @@ func TestAnyMatchOperator(t *testing.T) {
 		}
 
 		rule := policy.PredicateRule{
-			Field: "identities",
+			Field: predicate.NewFieldPath("identities"),
 			Op:    "any_match",
 			Value: policy.NewOperand(map[string]any{
 				"all": []any{
@@ -1469,7 +1470,7 @@ func TestAnyMatchOperator(t *testing.T) {
 		}
 
 		rule := policy.PredicateRule{
-			Field: "identities",
+			Field: predicate.NewFieldPath("identities"),
 			Op:    "any_match",
 			Value: policy.NewOperand(map[string]any{
 				"any": []any{
@@ -1490,7 +1491,7 @@ func TestAnyMatchOperator(t *testing.T) {
 		}
 
 		rule := policy.PredicateRule{
-			Field: "identities",
+			Field: predicate.NewFieldPath("identities"),
 			Op:    "any_match",
 			Value: policy.NewOperand(map[string]any{
 				"any": []any{
@@ -1523,7 +1524,7 @@ func TestAnyMatchOperator(t *testing.T) {
 
 		// Nested: type == "app_signer" AND (purpose contains "allow_traversal=true" OR purpose contains "enforce_prefix=false")
 		rule := policy.PredicateRule{
-			Field: "identities",
+			Field: predicate.NewFieldPath("identities"),
 			Op:    "any_match",
 			Value: policy.NewOperand(map[string]any{
 				"all": []any{
