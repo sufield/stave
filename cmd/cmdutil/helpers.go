@@ -127,6 +127,15 @@ func ResolveFormat(cmd *cobra.Command, rawFormat string) string {
 	return strings.TrimSpace(rawFormat)
 }
 
+// ResolveFormatPure calculates the effective output format without cobra.
+// formatChanged indicates whether --format was explicitly set.
+func ResolveFormatPure(rawFormat string, formatChanged bool, isJSONMode bool) string {
+	if !formatChanged && isJSONMode {
+		return "json"
+	}
+	return strings.TrimSpace(rawFormat)
+}
+
 // CollectVisibleFlags returns a list of all non-hidden flag strings (e.g., "--force", "-f").
 func CollectVisibleFlags(cmd *cobra.Command) []string {
 	var flags []string

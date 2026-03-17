@@ -76,6 +76,62 @@ func PlanPrune(files []pruner.SnapshotFile, criteria retention.Criteria) []prune
 	return out
 }
 
+// RawRetentionOpts holds the unresolved flag values common to prune and archive.
+type RawRetentionOpts struct {
+	OlderThan  string
+	Tier       string
+	NowRaw     string
+	FormatFlag string
+}
+
+// ResolvedRetention holds the fully resolved retention parameters.
+type ResolvedRetention struct {
+	OlderThan     time.Duration
+	RetentionTier string
+	Now           time.Time
+	Format        ui.OutputFormat
+}
+
+// ResolveRetention transforms raw CLI flag values into fully resolved retention
+// parameters. olderThanChanged and formatChanged indicate whether the respective
+// flags were explicitly set by the user. isJSONMode indicates global JSON output mode.
+func ResolveRetention(raw RawRetentionOpts, olderThanChanged, formatChanged, isJSONMode bool) (ResolvedRetention, error) {
+	eval := projconfig.Global()
+
+	olderThan := raw.OlderThan
+	if olderThan == "" {
+		olderThan = eval.SnapshotRetention()
+	}
+	tier := raw.Tier
+	if tier == "" {
+		tier = eval.RetentionTier()
+	}
+
+	validTier, err := ValidateRetentionTier(tier)
+	if err != nil {
+		return ResolvedRetention{}, err
+	}
+	resolvedOlderThan, err := ResolveOlderThan(olderThan, olderThanChanged, validTier)
+	if err != nil {
+		return ResolvedRetention{}, err
+	}
+	now, err := compose.ResolveNow(raw.NowRaw)
+	if err != nil {
+		return ResolvedRetention{}, err
+	}
+	format, err := compose.ResolveFormatValuePure(raw.FormatFlag, formatChanged, isJSONMode)
+	if err != nil {
+		return ResolvedRetention{}, err
+	}
+
+	return ResolvedRetention{
+		OlderThan:     resolvedOlderThan,
+		RetentionTier: validTier,
+		Now:           now,
+		Format:        format,
+	}, nil
+}
+
 // ValidateRetentionTier normalizes and validates a retention tier name.
 func ValidateRetentionTier(rawTier string) (string, error) {
 	tier := appconfig.NormalizeTier(rawTier)

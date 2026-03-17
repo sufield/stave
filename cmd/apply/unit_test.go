@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
@@ -23,6 +24,12 @@ func testdataDir(t *testing.T, name string) string {
 func TestResolveApplyOptions(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 	cmd := NewApplyCmd(compose.NewDefaultProvider())
+	cs := cobraState{
+		Ctx:         cmd.Context(),
+		Stdout:      cmd.OutOrStdout(),
+		Stderr:      cmd.ErrOrStderr(),
+		GlobalFlags: cmdutil.GetGlobalFlags(cmd),
+	}
 
 	t.Run("valid flags with defaults", func(t *testing.T) {
 		opts := &ApplyOptions{
@@ -33,7 +40,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		cfg, err := opts.Resolve(cmd)
+		cfg, err := opts.Resolve(cs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -59,7 +66,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		cfg, err := opts.Resolve(cmd)
+		cfg, err := opts.Resolve(cs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -85,7 +92,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		cfg, err := opts.Resolve(cmd)
+		cfg, err := opts.Resolve(cs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -148,7 +155,7 @@ func TestResolveApplyOptions(t *testing.T) {
 	for _, tc := range errorCases {
 		t.Run(tc.name, func(t *testing.T) {
 			o := tc.opts
-			_, err := o.Resolve(cmd)
+			_, err := o.Resolve(cs)
 			if err == nil {
 				t.Fatalf("expected error containing %q", tc.wantContain)
 			}
@@ -171,7 +178,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		_, err := opts.Resolve(cmd)
+		_, err := opts.Resolve(cs)
 		if err == nil {
 			t.Fatal("expected error when controls is a file")
 		}
