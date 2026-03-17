@@ -87,7 +87,7 @@ func executeEvaluation(
 		return EvaluateResult{}, err
 	}
 
-	if err := RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, slog.Default()); err != nil {
+	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, slog.Default()); err != nil {
 		return EvaluateResult{}, err
 	}
 

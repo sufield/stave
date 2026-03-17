@@ -1,4 +1,4 @@
-package apply
+package eval
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
@@ -42,9 +41,9 @@ type OutputWriters struct {
 
 // ProjectScope holds project configuration and control filtering inputs.
 type ProjectScope struct {
-	Config      appeval.ProjectConfigInput
+	Config      ProjectConfigInput
 	GitMetadata *evaluation.GitInfo
-	Filters     appeval.ControlFilter
+	Filters     ControlFilter
 	ControlsDir string
 }
 
@@ -53,7 +52,7 @@ type ProjectScope struct {
 // Runtime for evaluation parameters, Writers for output destinations,
 // and Project for configuration resolution.
 type BuildDependenciesInput struct {
-	Plan    appeval.EvaluationPlan
+	Plan    EvaluationPlan
 	Context context.Context
 
 	Adapters Adapters
@@ -64,8 +63,8 @@ type BuildDependenciesInput struct {
 
 // BuildDependenciesOutput is the assembled runner + config pair.
 type BuildDependenciesOutput struct {
-	Runner *appeval.EvaluateRun
-	Config appeval.EvaluateConfig
+	Runner *EvaluateRun
+	Config EvaluateConfig
 }
 
 // BuildDependencies assembles the evaluate runner and config from
@@ -81,7 +80,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 		ctx = context.Background()
 	}
 
-	resolved, err := appeval.ResolveProjectConfig(ctx, in.Project.Config)
+	resolved, err := ResolveProjectConfig(ctx, in.Project.Config)
 	if err != nil {
 		return BuildDependenciesOutput{}, err
 	}
@@ -93,24 +92,24 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 
 	output, stderr := resolveOutputWriters(in.Writers.Stdout, in.Writers.Stderr)
 
-	opts := []appeval.Option{
-		appeval.WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.ToolVersion),
-		appeval.WithMaxUnsafe(in.Runtime.MaxUnsafe),
-		appeval.WithHasher(in.Runtime.Hasher),
-		appeval.WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
-		appeval.WithExemptionConfig(in.Runtime.ExemptionConfig),
-		appeval.WithExceptionConfig(resolved.ExceptionConfig),
-		appeval.WithPreloadedControls(preloaded),
-		appeval.WithGitMetadata(in.Project.GitMetadata),
-		appeval.WithPredicateParser(in.Runtime.PredicateParser),
+	opts := []Option{
+		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.ToolVersion),
+		WithMaxUnsafe(in.Runtime.MaxUnsafe),
+		WithHasher(in.Runtime.Hasher),
+		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
+		WithExemptionConfig(in.Runtime.ExemptionConfig),
+		WithExceptionConfig(resolved.ExceptionConfig),
+		WithPreloadedControls(preloaded),
+		WithGitMetadata(in.Project.GitMetadata),
+		WithPredicateParser(in.Runtime.PredicateParser),
 	}
 	if resolved.ControlSource.Source != "" {
-		opts = append(opts, appeval.WithControlSource(resolved.ControlSource))
+		opts = append(opts, WithControlSource(resolved.ControlSource))
 	}
 
-	cfg := appeval.NewConfig(in.Plan, opts...)
+	cfg := NewConfig(in.Plan, opts...)
 
-	runner := appeval.NewEvaluateRun(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
+	runner := NewEvaluateRun(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
 	runner.Logger = slog.Default()
 
 	return BuildDependenciesOutput{
@@ -119,7 +118,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	}, nil
 }
 
-func resolvePreloadedControls(ctx context.Context, in BuildDependenciesInput, resolved appeval.ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
+func resolvePreloadedControls(ctx context.Context, in BuildDependenciesInput, resolved ResolvedProjectConfig) ([]policy.ControlDefinition, error) {
 	preloaded := resolved.PreloadedControls
 	if !in.Project.Filters.Enabled() {
 		return preloaded, nil
@@ -135,7 +134,7 @@ func resolvePreloadedControls(ctx context.Context, in BuildDependenciesInput, re
 		}
 		preloaded = loaded
 	}
-	return appeval.FilterControls(preloaded, in.Project.Filters)
+	return FilterControls(preloaded, in.Project.Filters)
 }
 
 func resolveOutputWriters(output, stderr io.Writer) (io.Writer, io.Writer) {
@@ -169,8 +168,8 @@ func validateBuildDependenciesInput(in BuildDependenciesInput) error {
 
 // ApplyDeps holds wired dependencies for the apply workflow.
 type ApplyDeps struct {
-	Runner *appeval.EvaluateRun
-	Config appeval.EvaluateConfig
+	Runner *EvaluateRun
+	Config EvaluateConfig
 }
 
 // Close releases assets held by ApplyDeps.
@@ -184,7 +183,7 @@ type ApplyBuilderInput struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	Plan appeval.EvaluationPlan
+	Plan EvaluationPlan
 
 	// Adapters (pre-built by caller)
 	Marshaler appcontracts.FindingMarshaler
@@ -203,9 +202,9 @@ type ApplyBuilderInput struct {
 
 	// Project scope
 	ControlsDir    string
-	ProjectConfig  appeval.ProjectConfigInput
+	ProjectConfig  ProjectConfigInput
 	GitMetadata    *evaluation.GitInfo
-	ControlFilters appeval.ControlFilter
+	ControlFilters ControlFilter
 }
 
 // BuildApplyDeps assembles ApplyDeps from fully resolved inputs.

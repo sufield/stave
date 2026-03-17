@@ -1,4 +1,4 @@
-package apply
+package eval
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -42,7 +41,7 @@ func depsEnrichFn(result evaluation.Result) appcontracts.EnrichedResult {
 
 func TestBuildDependencies_ValidationErrors(t *testing.T) {
 	base := BuildDependenciesInput{
-		Plan: appeval.EvaluationPlan{
+		Plan: EvaluationPlan{
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},
@@ -62,7 +61,7 @@ func TestBuildDependencies_ValidationErrors(t *testing.T) {
 		{
 			name: "empty plan",
 			mutate: func(in *BuildDependenciesInput) {
-				in.Plan = appeval.EvaluationPlan{}
+				in.Plan = EvaluationPlan{}
 			},
 			wantErr: "evaluation plan is required",
 		},
@@ -117,7 +116,7 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 	ctlRepo := &depsControlRepoStub{}
 
 	out, err := BuildDependencies(BuildDependenciesInput{
-		Plan: appeval.EvaluationPlan{
+		Plan: EvaluationPlan{
 			ContextName:      "ctx",
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
@@ -153,7 +152,7 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 	}
 
 	out, err := BuildDependencies(BuildDependenciesInput{
-		Plan: appeval.EvaluationPlan{
+		Plan: EvaluationPlan{
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
 		},
