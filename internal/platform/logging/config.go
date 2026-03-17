@@ -8,12 +8,9 @@
 package logging
 
 import (
-	"io"
 	"log/slog"
 	"os"
 	"strings"
-
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Format specifies log output format.
@@ -88,37 +85,6 @@ func DefaultConfig() Config {
 	}
 }
 
-// LevelFromVerbosity returns the log level based on -v count.
-func LevelFromVerbosity(v int) Level {
-	switch {
-	case v >= 2:
-		return LevelDebug
-	case v == 1:
-		return LevelInfo
-	default:
-		return LevelWarn
-	}
-}
-
-// ParseLevel parses a string into a Level.
-func ParseLevel(s string) Level {
-	var level slog.Level
-	if err := level.UnmarshalText([]byte(strings.TrimSpace(s))); err == nil {
-		return level
-	}
-	return LevelWarn
-}
-
-// ParseFormat parses a string into a Format.
-func ParseFormat(s string) Format {
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "json":
-		return FormatJSON
-	default:
-		return FormatText
-	}
-}
-
 // SetDefaultLogger updates the global slog default logger.
 func SetDefaultLogger(logger *slog.Logger) {
 	if logger == nil {
@@ -142,57 +108,4 @@ func WithRunID(logger *slog.Logger, runID string) *slog.Logger {
 		return logger
 	}
 	return logger.With(slog.String(RunIDKey, id))
-}
-
-// LogCloser wraps a logger with an optional closer for file handles.
-type LogCloser struct {
-	Logger *slog.Logger
-	closer io.Closer
-}
-
-// Close closes the underlying writer.
-func (lc *LogCloser) Close() error {
-	return lc.closer.Close()
-}
-
-// NewLogger creates a new logger based on configuration.
-// Returns a LogCloser that should be closed when done.
-func NewLogger(cfg Config) (*LogCloser, error) {
-	wc, err := openLogWriter(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	logger := slog.New(newHandler(cfg, wc))
-
-	return &LogCloser{
-		Logger: logger,
-		closer: wc,
-	}, nil
-}
-
-type nopCloser struct{ io.Writer }
-
-func (nopCloser) Close() error { return nil }
-
-func openLogWriter(cfg Config) (io.WriteCloser, error) {
-	if cfg.LogFile == "" {
-		return nopCloser{os.Stderr}, nil
-	}
-	return fsutil.SafeOpenAppend(cfg.LogFile, fsutil.WriteOptions{
-		Perm:         0o644,
-		AllowSymlink: cfg.AllowSymlink,
-	})
-}
-
-func newHandler(cfg Config, out io.Writer) slog.Handler {
-	opts := &slog.HandlerOptions{
-		Level:       cfg.Level,
-		ReplaceAttr: cfg.Scrub,
-	}
-
-	if cfg.Format == FormatJSON {
-		return slog.NewJSONHandler(out, opts)
-	}
-	return slog.NewTextHandler(out, opts)
 }

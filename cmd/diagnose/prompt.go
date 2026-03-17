@@ -2,10 +2,8 @@ package diagnose
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,9 +16,7 @@ import (
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -94,87 +90,6 @@ func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
 	rendered := promptout.RenderPrompt(data)
 
 	return r.write(cfg, rendered, data)
-}
-
-func (r *PromptRunner) loadControlsMap(ctx context.Context, dir string) (map[string]*policy.ControlDefinition, error) {
-	repo, err := r.Provider.NewControlRepo()
-	if err != nil {
-		return nil, err
-	}
-	controls, err := repo.LoadControls(ctx, dir)
-	if err != nil {
-		return nil, fmt.Errorf("loading controls: %w", err)
-	}
-
-	ctlByID := make(map[string]*policy.ControlDefinition, len(controls))
-	for i := range controls {
-		ctlByID[controls[i].ID.String()] = &controls[i]
-	}
-	return ctlByID, nil
-}
-
-func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir, assetID string) (string, error) {
-	snapshots, err := r.Provider.LoadSnapshots(ctx, dir)
-	if err != nil {
-		return "", err
-	}
-	if len(snapshots) == 0 {
-		return "", nil
-	}
-
-	latest := asset.LatestSnapshot(snapshots)
-	for _, a := range latest.Assets {
-		if a.ID.String() == assetID {
-			propsJSON, marshalErr := json.MarshalIndent(a.Properties, "", "  ")
-			if marshalErr != nil {
-				return "", fmt.Errorf("marshal asset properties: %w", marshalErr)
-			}
-			return string(propsJSON), nil
-		}
-	}
-	return "", nil
-}
-
-func (r *PromptRunner) write(cfg PromptConfig, rendered string, data promptout.PromptData) error {
-	out := cfg.Stdout
-	if cfg.Quiet && !cfg.Format.IsJSON() {
-		out = io.Discard
-	}
-
-	if cfg.Format.IsJSON() {
-		findingIDs := make([]string, len(data.Findings))
-		for i, f := range data.Findings {
-			findingIDs[i] = string(f.ControlID)
-		}
-		res := PromptResult{
-			Prompt:     rendered,
-			FindingIDs: findingIDs,
-			AssetID:    data.AssetID,
-		}
-		return jsonutil.WriteIndented(out, res)
-	}
-
-	if _, err := fmt.Fprint(out, rendered); err != nil {
-		return err
-	}
-	writeClipboardHint(cfg.Stderr, cfg.Quiet)
-	return nil
-}
-
-func writeClipboardHint(w io.Writer, quiet bool) {
-	if quiet {
-		return
-	}
-	var tool string
-	switch runtime.GOOS {
-	case "darwin":
-		tool = "pbcopy"
-	case "linux":
-		tool = "xclip -selection clipboard"
-	default:
-		return
-	}
-	fmt.Fprintf(w, "Hint: pipe to clipboard with:\n  stave prompt from-finding ... | %s\n", tool)
 }
 
 // --- CLI bridge ---
