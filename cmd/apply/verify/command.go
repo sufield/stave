@@ -1,18 +1,23 @@
 package verify
 
 import (
+	"context"
+	"io"
+
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	outjson "github.com/sufield/stave/internal/adapters/output/json"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appverify "github.com/sufield/stave/internal/app/verify"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // NewCmd builds the verify command.
-func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
-	if rt == nil {
-		rt = ui.DefaultRuntime()
-	}
-
+func NewCmd(p *compose.Provider, _ *ui.Runtime) *cobra.Command {
 	opts := newOptions()
 
 	cmd := &cobra.Command{
@@ -27,7 +32,38 @@ which remain, and which are newly introduced.` + metadata.OfflineHelpSuffix,
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runVerify(cmd, p, rt, opts)
+			exec, err := opts.Complete(compose.CommandContext(cmd))
+			if err != nil {
+				return err
+			}
+
+			gf := cmdutil.GetGlobalFlags(cmd)
+
+			return appverify.RunVerify(
+				appverify.VerifyDeps{
+					LoadControls: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+						return compose.LoadControls(ctx, p, dir)
+					},
+					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
+						return p.NewObservationRepo()
+					},
+					WriteVerification: func(w io.Writer, v safetyenvelope.Verification) error {
+						return outjson.WriteVerification(w, v)
+					},
+				},
+				appverify.VerifyRequest{
+					Ctx:          exec.Context,
+					BeforeDir:    exec.BeforeDir,
+					AfterDir:     exec.AfterDir,
+					ControlsDir:  exec.ControlsDir,
+					MaxUnsafe:    exec.MaxUnsafe,
+					Clock:        exec.Clock,
+					AllowUnknown: exec.AllowUnknown,
+					Quiet:        gf.Quiet,
+					Sanitizer:    gf.GetSanitizer(),
+					Stdout:       cmd.OutOrStdout(),
+				},
+			)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

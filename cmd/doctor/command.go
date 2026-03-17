@@ -43,7 +43,15 @@ func NewRunner() *Runner {
 }
 
 // Run executes the doctor checks and reports the results based on the config.
+// If Cwd or BinaryPath are empty, they are resolved from the current process.
 func (r *Runner) Run(_ context.Context, cfg Config) error {
+	if cfg.Cwd == "" {
+		cfg.Cwd, _ = os.Getwd()
+	}
+	if cfg.BinaryPath == "" {
+		cfg.BinaryPath, _ = os.Executable()
+	}
+
 	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:          cfg.Cwd,
 		BinaryPath:   cfg.BinaryPath,
@@ -121,24 +129,15 @@ Examples:
   stave doctor --format json` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cwd, err := os.Getwd()
+			fmtValue, err := compose.ResolveFormatValue(cmd, format)
 			if err != nil {
-				return fmt.Errorf("resolve current directory: %w", err)
-			}
-			binaryPath, _ := os.Executable()
-
-			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
-			if fmtErr != nil {
-				return fmtErr
+				return err
 			}
 
-			runner := NewRunner()
-			return runner.Run(cmd.Context(), Config{
-				Cwd:        cwd,
-				BinaryPath: binaryPath,
-				Format:     fmtValue,
-				Quiet:      cmdutil.GetGlobalFlags(cmd).Quiet,
-				Stdout:     cmd.OutOrStdout(),
+			return NewRunner().Run(cmd.Context(), Config{
+				Format: fmtValue,
+				Quiet:  cmdutil.GetGlobalFlags(cmd).Quiet,
+				Stdout: cmd.OutOrStdout(),
 			})
 		},
 		SilenceUsage:  true,

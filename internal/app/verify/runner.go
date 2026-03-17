@@ -1,0 +1,147 @@
+package verify
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"time"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/safetyenvelope"
+	staveversion "github.com/sufield/stave/internal/version"
+)
+
+// VerifyDeps holds injected infrastructure dependencies for the verify workflow.
+type VerifyDeps struct {
+	LoadControls       func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
+	NewObservationRepo func() (appcontracts.ObservationRepository, error)
+	WriteVerification  func(w io.Writer, v safetyenvelope.Verification) error
+}
+
+// VerifyRequest holds the fully-resolved parameters for a verify run.
+type VerifyRequest struct {
+	Ctx          context.Context
+	BeforeDir    string
+	AfterDir     string
+	ControlsDir  string
+	MaxUnsafe    time.Duration
+	Clock        ports.Clock
+	AllowUnknown bool
+	Quiet        bool
+	Sanitizer    kernel.Sanitizer
+	Stdout       io.Writer
+}
+
+// RunVerify executes the before/after comparison workflow.
+func RunVerify(deps VerifyDeps, req VerifyRequest) error {
+	rt := ui.NewRuntime(req.Stdout, io.Discard)
+	rt.Quiet = req.Quiet
+
+	// 1. Load controls
+	controls, err := loadControls(req.Ctx, deps.LoadControls, req.ControlsDir)
+	if err != nil {
+		return err
+	}
+
+	// 2. Run evaluations
+	before, err := runStep(rt, "apply before observations", func() (evalResult, error) {
+		return runEvaluation(deps, req, controls, req.BeforeDir)
+	})
+	if err != nil {
+		return fmt.Errorf("before evaluation: %w", err)
+	}
+
+	after, err := runStep(rt, "apply after observations", func() (evalResult, error) {
+		return runEvaluation(deps, req, controls, req.AfterDir)
+	})
+	if err != nil {
+		return fmt.Errorf("after evaluation: %w", err)
+	}
+
+	// 3. Compare
+	cmp, err := Compare(CompareRequest{
+		BeforeFindings:  before.result.Findings,
+		AfterFindings:   after.result.Findings,
+		BeforeSnapshots: before.snapshotCount,
+		AfterSnapshots:  after.snapshotCount,
+		MaxUnsafe:       req.MaxUnsafe,
+		Now:             req.Clock.Now(),
+		Sanitizer:       req.Sanitizer,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 4. Write output
+	if err := deps.WriteVerification(req.Stdout, cmp.Verification); err != nil {
+		return fmt.Errorf("failed to write JSON output: %w", err)
+	}
+
+	return handleExit(rt, cmp)
+}
+
+// --- Internal ---
+
+type evalResult struct {
+	result        *evaluation.Result
+	snapshotCount int
+}
+
+func loadControls(ctx context.Context, loadFn func(context.Context, string) ([]policy.ControlDefinition, error), dir string) ([]policy.ControlDefinition, error) {
+	controls, err := loadFn(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	if len(controls) == 0 {
+		return nil, fmt.Errorf("%w: no controls found in %s", appeval.ErrNoControls, dir)
+	}
+	return controls, nil
+}
+
+func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
+	loader, err := deps.NewObservationRepo()
+	if err != nil {
+		return evalResult{}, err
+	}
+
+	res, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
+		Context:           req.Ctx,
+		ObservationsDir:   obsDir,
+		Controls:          controls,
+		MaxUnsafe:         req.MaxUnsafe,
+		Clock:             req.Clock,
+		AllowUnknownType:  req.AllowUnknown,
+		ToolVersion:       staveversion.Version,
+		ObservationLoader: loader,
+	})
+	if err != nil {
+		return evalResult{}, err
+	}
+	return evalResult{result: res, snapshotCount: snaps}, nil
+}
+
+func handleExit(rt *ui.Runtime, outcome CompareResult) error {
+	if outcome.RemainingCount == 0 && outcome.IntroducedCount == 0 {
+		return nil
+	}
+
+	rt.PrintNextSteps(
+		"Run `stave diagnose` against the after observations to investigate remaining violations.",
+		"Check `introduced` findings to ensure remediation didn't create new security gaps.",
+	)
+
+	return ui.ErrViolationsFound
+}
+
+func runStep[T any](rt *ui.Runtime, label string, fn func() (T, error)) (T, error) {
+	done := rt.BeginProgress(label)
+	res, err := fn()
+	done()
+	return res, err
+}
