@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 func TestComputeItems_DeterministicOrder(t *testing.T) {
@@ -187,7 +188,7 @@ func testControl(id string, threshold string) policy.ControlDefinition {
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
 				{
-					Field: "properties.unsafe",
+					Field: predicate.NewFieldPath("properties.unsafe"),
 					Op:    "eq",
 					Value: policy.Bool(true),
 				},

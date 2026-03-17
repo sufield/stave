@@ -13,12 +13,12 @@ func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []st
 	missingSet := make(map[string]struct{})
 
 	pred.Walk(func(rule PredicateRule) {
-		p := rule.ValueFromParam
-		if p == "" {
+		if rule.ValueFromParam.IsZero() {
 			return
 		}
-		if !params.HasKey(p) {
-			missingSet[p] = struct{}{}
+		key := rule.ValueFromParam.String()
+		if !params.HasKey(key) {
+			missingSet[key] = struct{}{}
 		}
 	})
 

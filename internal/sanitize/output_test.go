@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/asset"
 
@@ -68,7 +69,7 @@ func makeTestResult() evaluation.Result {
 					UnsafeDurationHours: 24,
 					ThresholdHours:      0,
 					Misconfigurations: []policy.Misconfiguration{
-						{Property: "properties.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+						{Property: "properties.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 					},
 					SourceEvidence: &evaluation.SourceEvidence{
 						IdentityStatements: []kernel.StatementID{"AllowPublicRead"},

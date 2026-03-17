@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 func TestControlDefinitionValidate_ValidControlHasNoIssues(t *testing.T) {
@@ -98,11 +99,11 @@ func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t 
 	ctl := validControlForValidationTests()
 	ctl.UnsafePredicate = policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
-			{Field: "properties.public", Op: "eq", ValueFromParam: "p2"},
+			{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, ValueFromParam: predicate.ParamRef("p2")},
 			{
 				All: []policy.PredicateRule{
-					{Field: "properties.acl", Op: "eq", ValueFromParam: "p1"},
-					{Field: "properties.owner", Op: "eq", ValueFromParam: "p2"},
+					{Field: predicate.NewFieldPath("properties.acl"), Op: predicate.OpEq, ValueFromParam: predicate.ParamRef("p1")},
+					{Field: predicate.NewFieldPath("properties.owner"), Op: predicate.OpEq, ValueFromParam: predicate.ParamRef("p2")},
 				},
 			},
 		},
@@ -217,7 +218,7 @@ func validControlForValidationTests() policy.ControlDefinition {
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
 				{
-					Field: "properties.public",
+					Field: predicate.NewFieldPath("properties.public"),
 					Op:    "eq",
 					Value: policy.Bool(true),
 				},

@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 // BenchmarkEvaluate measures evaluation of controls across asset timelines.
@@ -21,7 +22,7 @@ func BenchmarkEvaluate(b *testing.B) {
 			Type: policy.TypeUnsafeState,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -31,7 +32,7 @@ func BenchmarkEvaluate(b *testing.B) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.encryption_enabled", Op: "eq", Value: policy.Bool(false)},
+					{Field: predicate.NewFieldPath("properties.encryption_enabled"), Op: predicate.OpEq, Value: policy.Bool(false)},
 				},
 			},
 		},

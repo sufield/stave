@@ -3,7 +3,6 @@ package policy
 import (
 	"cmp"
 	"slices"
-	"strings"
 
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/predicate"
@@ -13,17 +12,14 @@ import (
 // It can be a simple field comparison or a nested "any/all" block.
 type PredicateRule struct {
 	// Simple field comparison
-	Field          string             `yaml:"field,omitempty"`
-	Op             predicate.Operator `yaml:"op,omitempty"`
-	Value          Operand            `yaml:"value,omitempty"`
-	ValueFromParam string             `yaml:"value_from_param,omitempty"`
+	Field          predicate.FieldPath `yaml:"field,omitempty"`
+	Op             predicate.Operator  `yaml:"op,omitempty"`
+	Value          Operand             `yaml:"value,omitempty"`
+	ValueFromParam predicate.ParamRef  `yaml:"value_from_param,omitempty"`
 
 	// Nested logic blocks
 	Any []PredicateRule `yaml:"any,omitempty"`
 	All []PredicateRule `yaml:"all,omitempty"`
-
-	// fieldParts caches the split path segments to avoid allocations during evaluation.
-	fieldParts []string `yaml:"-"`
 }
 
 // Matches evaluates the rule against an asset without additional parameters or identities.
@@ -53,12 +49,12 @@ func (r *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
 	}
 
 	// 2. Resolve Field Value
-	val, exists := getFieldValueByParts(ctx, r.parsedFieldParts())
+	val, exists := getFieldValueByParts(ctx, r.Field.Parts())
 
 	// 3. Resolve Comparison Value (Literal or Parameter)
 	compareVal := r.Value.Raw()
-	if r.ValueFromParam != "" {
-		paramVal, ok := ctx.Param(r.ValueFromParam)
+	if !r.ValueFromParam.IsZero() {
+		paramVal, ok := ctx.Param(r.ValueFromParam.String())
 		if !ok || paramVal == nil {
 			return false // Parameter referenced but not provided
 		}
@@ -75,43 +71,49 @@ func (r *PredicateRule) MatchesWithContext(ctx EvalContext) bool {
 }
 
 func (r *PredicateRule) evaluateContextualOperator(ctx EvalContext, exists bool, val, compareVal any) bool {
-	switch r.Op {
-	case predicate.OpAnyMatch:
+	if r.Op.RequiresNestedPredicate() {
 		return evaluateAnyMatch(ctx, exists, val, compareVal)
+	}
 
-	case predicate.OpNotSubsetOfField, predicate.OpNeqField, predicate.OpNotInField:
-		otherPath, ok := compareVal.(string)
-		if !ok {
+	if r.Op.IsFieldRef() {
+		return r.evaluateFieldRef(ctx, exists, val, compareVal)
+	}
+
+	return false
+}
+
+func (r *PredicateRule) evaluateFieldRef(ctx EvalContext, exists bool, val, compareVal any) bool {
+	otherPath, ok := compareVal.(string)
+	if !ok {
+		return false
+	}
+	otherVal, otherExists := GetFieldValueWithContext(ctx, otherPath)
+
+	switch r.Op {
+	case predicate.OpNotSubsetOfField:
+		if !exists {
 			return false
 		}
-		otherVal, otherExists := GetFieldValueWithContext(ctx, otherPath)
-
-		switch r.Op {
-		case predicate.OpNotSubsetOfField:
-			if !exists {
-				return false
-			}
-			if !otherExists {
-				return true
-			}
-			return predicate.ListHasElementsNotIn(val, otherVal)
-		case predicate.OpNeqField:
-			if !exists {
-				return false
-			}
-			if !otherExists {
-				return true
-			}
-			return !predicate.EqualValues(val, otherVal)
-		case predicate.OpNotInField:
-			if !exists {
-				return true
-			}
-			if !otherExists {
-				return true
-			}
-			return !predicate.ValueInList(val, otherVal)
+		if !otherExists {
+			return true
 		}
+		return predicate.ListHasElementsNotIn(val, otherVal)
+	case predicate.OpNeqField:
+		if !exists {
+			return false
+		}
+		if !otherExists {
+			return true
+		}
+		return !predicate.EqualValues(val, otherVal)
+	case predicate.OpNotInField:
+		if !exists {
+			return true
+		}
+		if !otherExists {
+			return true
+		}
+		return !predicate.ValueInList(val, otherVal)
 	}
 	return false
 }
@@ -144,15 +146,6 @@ func evaluateAnyMatch(ctx EvalContext, exists bool, val, compareVal any) bool {
 		}
 	}
 	return false
-}
-
-// parsedFieldParts returns cached segments of the field path or parses them if missing.
-func (r *PredicateRule) parsedFieldParts() []string {
-	if r.fieldParts != nil || r.Field == "" {
-		return r.fieldParts
-	}
-	r.fieldParts = strings.Split(r.Field, ".")
-	return r.fieldParts
 }
 
 // --- Evidence Extraction ---
@@ -190,15 +183,14 @@ func (r *PredicateRule) collectFields(ctx EvalContext, results *[]Misconfigurati
 	}
 
 	// Leaf node processing
-	if r.Field == "" {
+	if r.Field.IsZero() {
 		return
 	}
 
-	fieldPath := strings.TrimPrefix(r.Field, propertiesPathPrefix)
-	val, _ := getFieldValueByParts(ctx, r.parsedFieldParts())
+	val, _ := getFieldValueByParts(ctx, r.Field.Parts())
 
 	*results = append(*results, Misconfiguration{
-		Property:    fieldPath,
+		Property:    r.Field.TrimPrefix(propertiesPathPrefix),
 		ActualValue: val,
 		Operator:    r.Op,
 		UnsafeValue: r.Value.Raw(),

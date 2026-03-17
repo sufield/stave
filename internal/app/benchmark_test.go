@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/asset"
 
@@ -68,8 +69,8 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 			Description: "Buckets should not allow public read access",
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("s3_bucket")},
-					{Field: "properties.vendor.aws.s3.policy_public_statements", Op: "list_empty", Value: policy.Bool(false)},
+					{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("s3_bucket")},
+					{Field: predicate.NewFieldPath("properties.vendor.aws.s3.policy_public_statements"), Op: predicate.OpListEmpty, Value: policy.Bool(false)},
 				},
 			},
 		},
@@ -138,8 +139,8 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 			Description: "Test control",
 			UnsafePredicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("s3_bucket")},
-					{Field: "properties.vendor.aws.s3.policy_public_statements", Op: "list_empty", Value: policy.Bool(false)},
+					{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("s3_bucket")},
+					{Field: predicate.NewFieldPath("properties.vendor.aws.s3.policy_public_statements"), Op: predicate.OpListEmpty, Value: policy.Bool(false)},
 				},
 			},
 		},
@@ -206,7 +207,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 		Description: "Always triggers for S3 buckets",
 		UnsafePredicate: policy.UnsafePredicate{
 			All: []policy.PredicateRule{
-				{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("s3_bucket")},
+				{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("s3_bucket")},
 			},
 		},
 	}

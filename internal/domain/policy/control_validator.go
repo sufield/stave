@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 // ValidateControlDefinition performs a comprehensive check of a control's
@@ -23,6 +24,7 @@ func ValidateControlDefinition(ctl *ControlDefinition) []diag.Issue {
 		validateSeverity,
 		validateLogicType,
 		validatePredicateRules,
+		validateOperatorSupport,
 		validateParameterReferences,
 		validateDurationConstraints,
 	}
@@ -135,6 +137,26 @@ func validatePredicateRules(ctl *ControlDefinition) []diag.Issue {
 		}
 	}
 	return nil
+}
+
+func validateOperatorSupport(ctl *ControlDefinition) []diag.Issue {
+	var issues []diag.Issue
+	ctl.UnsafePredicate.Walk(func(rule PredicateRule) {
+		if rule.Field.IsZero() {
+			return // nested logic block, no operator to check
+		}
+		if !predicate.IsSupported(rule.Op) {
+			issues = append(issues, diag.New(diag.CodeControlUnsupportedOperator).
+				Warning().
+				Action(fmt.Sprintf("Replace unsupported operator %q with a supported one", rule.Op)).
+				WithMap(buildCtx(ctl, map[string]string{
+					"field":    rule.Field.String(),
+					"operator": string(rule.Op),
+				})).
+				Build())
+		}
+	})
+	return issues
 }
 
 func validateParameterReferences(ctl *ControlDefinition) []diag.Issue {

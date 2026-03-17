@@ -25,19 +25,19 @@ type ruleContext struct {
 }
 
 func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalContext) ruleContext {
-	fieldValue, fieldExists := policy.GetFieldValueWithContext(evalCtx, rule.Field)
+	fieldValue, fieldExists := policy.GetFieldValueWithContext(evalCtx, rule.Field.String())
 
 	compareValue := rule.Value.Raw()
-	if rule.ValueFromParam != "" {
-		compareValue, _ = evalCtx.Param(rule.ValueFromParam)
+	if !rule.ValueFromParam.IsZero() {
+		compareValue, _ = evalCtx.Param(rule.ValueFromParam.String())
 	}
 
 	rc := ruleContext{
 		Index:          index,
-		Field:          rule.Field,
+		Field:          rule.Field.String(),
 		Op:             rule.Op,
 		Value:          rule.Value.Raw(),
-		ValueFromParam: rule.ValueFromParam,
+		ValueFromParam: rule.ValueFromParam.String(),
 		CompareValue:   compareValue,
 		FieldValue:     fieldValue,
 		FieldExists:    fieldExists,
@@ -46,7 +46,7 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 
 	// Pre-resolve the other-field for field-ref operators so tracers
 	// don't need to reach back into the EvalContext.
-	if isFieldRefOp(rc.Op) {
+	if rc.Op.IsFieldRef() {
 		if path, ok := compareValue.(string); ok {
 			rc.OtherField = path
 			rc.OtherValue, rc.OtherExists = policy.GetFieldValueWithContext(evalCtx, path)
@@ -54,13 +54,4 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 	}
 
 	return rc
-}
-
-func isFieldRefOp(op predicate.Operator) bool {
-	switch op {
-	case predicate.OpNeqField, predicate.OpNotInField, predicate.OpNotSubsetOfField:
-		return true
-	default:
-		return false
-	}
 }

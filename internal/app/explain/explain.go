@@ -111,29 +111,29 @@ func walkRules(from string, prs []policy.PredicateRule, params policy.ControlPar
 				fieldSet[f] = true
 			}
 		}
-		if r.Field == "" {
+		if r.Field.IsZero() {
 			continue
 		}
 		value, comment := resolveRuleValue(r, params)
 		rules = append(rules, ExplainRule{
-			Path:    r.Field,
+			Path:    r.Field.String(),
 			Op:      r.Op,
 			Value:   value,
 			From:    loc,
 			Comment: comment,
 		})
-		fieldSet[r.Field] = true
+		fieldSet[r.Field.String()] = true
 	}
 	return rules, fieldSet
 }
 
 func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (value any, comment string) {
 	value = r.Value.Raw()
-	if r.ValueFromParam != "" && !params.IsZero() {
-		value, _ = params.Get(r.ValueFromParam)
+	if !r.ValueFromParam.IsZero() && !params.IsZero() {
+		value, _ = params.Get(r.ValueFromParam.String())
 	}
-	if r.ValueFromParam != "" {
-		comment = "value resolved from params." + r.ValueFromParam
+	if !r.ValueFromParam.IsZero() {
+		comment = "value resolved from params." + r.ValueFromParam.String()
 	}
 	return value, comment
 }

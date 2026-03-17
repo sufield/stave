@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 func TestValidateControlBadDurationParam(t *testing.T) {
@@ -54,7 +55,7 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 				Type:        policy.TypeUnsafeDuration,
 				Params:      tt.params,
 				UnsafePredicate: policy.UnsafePredicate{
-					Any: []policy.PredicateRule{{Field: "properties.x", Op: "eq", Value: policy.Bool(true)}},
+					Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.x"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 				},
 			}
 			issues := policy.ValidateControlDefinition(&ctl)

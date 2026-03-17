@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/predicate"
 
 	"github.com/sufield/stave/internal/domain/asset"
 
@@ -24,7 +25,7 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 		Type:        policy.TypeUnsafeDuration,
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},
 			},
 		},
 	}
