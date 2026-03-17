@@ -21,7 +21,7 @@ func BenchmarkEvaluate(b *testing.B) {
 			Type: policy.TypeUnsafeState,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},
@@ -31,7 +31,7 @@ func BenchmarkEvaluate(b *testing.B) {
 			Type: policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.encryption_enabled", Op: "eq", Value: false},
+					{Field: "properties.encryption_enabled", Op: "eq", Value: policy.Bool(false)},
 				},
 			},
 		},

@@ -87,7 +87,7 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 			Type:        policy.TypeUnsafeDuration,
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
-					{Field: "properties.public", Op: "eq", Value: true},
+					{Field: "properties.public", Op: "eq", Value: policy.Bool(true)},
 				},
 			},
 		},

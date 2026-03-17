@@ -12,8 +12,9 @@ import (
 
 // observation pairs a capture timestamp with the asset state at that time.
 type observation struct {
-	at    time.Time
-	state asset.Asset
+	at         time.Time
+	state      asset.Asset
+	identities []asset.CloudIdentity
 }
 
 // streakTracker tracks whether a contiguous unsafe period is in progress
@@ -47,6 +48,7 @@ type assetStreakRequest struct {
 	Predicate policy.UnsafePredicate
 	Params    policy.ControlParams
 	EndTime   time.Time
+	Parser    policy.PredicateParser
 }
 
 // analyzeAssetStreak walks an asset's chronological timeline to find the
@@ -56,7 +58,9 @@ func analyzeAssetStreak(req assetStreakRequest) (maxStreak time.Duration, matche
 	var tracker streakTracker
 
 	for _, pt := range req.Points {
-		if req.Predicate.Evaluate(pt.state, req.Params) {
+		ctx := policy.NewAssetEvalContext(pt.state, req.Params, pt.identities...)
+		ctx.PredicateParser = req.Parser
+		if req.Predicate.EvaluateWithContext(ctx) {
 			matched = true
 			tracker.markUnsafe(pt.at)
 		} else {
@@ -142,7 +146,7 @@ func detectStreakResets(input Input) []Issue {
 	}
 
 	snaps := sortedSnapshots(input.Snapshots)
-	idx := buildUnsafeIndex(snaps, input.Controls)
+	idx := buildUnsafeIndex(snaps, input.Controls, input.PredicateParser)
 
 	violated := make(map[asset.ID]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
@@ -174,7 +178,7 @@ func detectAnyReset(input Input) bool {
 	}
 
 	snaps := sortedSnapshots(input.Snapshots)
-	idx := buildUnsafeIndex(snaps, input.Controls)
+	idx := buildUnsafeIndex(snaps, input.Controls, input.PredicateParser)
 
 	return len(findResets(snaps, idx, nil)) > 0
 }

@@ -13,9 +13,9 @@ import (
 func writeScopePredicate() policy.UnsafePredicate {
 	return policy.UnsafePredicate{
 		All: []policy.PredicateRule{
-			{Field: "type", Op: "eq", Value: "upload_policy"},
-			{Field: "properties.upload.operation", Op: "eq", Value: "write"},
-			{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: "prefix"},
+			{Field: "type", Op: "eq", Value: policy.Str("upload_policy")},
+			{Field: "properties.upload.operation", Op: "eq", Value: policy.Str("write")},
+			{Field: "properties.upload.allowed_key_mode", Op: "eq", Value: policy.Str("prefix")},
 		},
 	}
 }
@@ -38,7 +38,7 @@ func uploadPolicyResource(keyMode string) asset.Asset {
 func TestWriteScope_PrefixModeIsUnsafe(t *testing.T) {
 	pred := writeScopePredicate()
 	r := uploadPolicyResource("prefix")
-	if !pred.Evaluate(r, nil) {
+	if !pred.Evaluate(r, policy.ControlParams{}) {
 		t.Error("expected prefix-mode upload policy to be unsafe")
 	}
 }
@@ -46,7 +46,7 @@ func TestWriteScope_PrefixModeIsUnsafe(t *testing.T) {
 func TestWriteScope_ExactModeIsSafe(t *testing.T) {
 	pred := writeScopePredicate()
 	r := uploadPolicyResource("exact")
-	if pred.Evaluate(r, nil) {
+	if pred.Evaluate(r, policy.ControlParams{}) {
 		t.Error("expected exact-mode upload policy to be safe")
 	}
 }
@@ -65,7 +65,7 @@ func TestWriteScope_DifferentResourceTypeDoesNotMatch(t *testing.T) {
 			},
 		},
 	}
-	if pred.Evaluate(r, nil) {
+	if pred.Evaluate(r, policy.ControlParams{}) {
 		t.Error("expected non-upload-policy resource to not match")
 	}
 }
@@ -84,7 +84,7 @@ func TestWriteScope_ReadOperationDoesNotMatch(t *testing.T) {
 			},
 		},
 	}
-	if pred.Evaluate(r, nil) {
+	if pred.Evaluate(r, policy.ControlParams{}) {
 		t.Error("expected read operation to not match write-scope control")
 	}
 }
@@ -118,7 +118,7 @@ func TestWriteScope_MissingFieldsDoNotMatch(t *testing.T) {
 				Vendor:     kernel.Vendor("aws"),
 				Properties: tt.props,
 			}
-			if pred.Evaluate(r, nil) {
+			if pred.Evaluate(r, policy.ControlParams{}) {
 				t.Error("expected missing fields to not match")
 			}
 		})

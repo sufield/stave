@@ -72,6 +72,7 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		result,
 		cfg.MaxUnsafe,
 		cfg.Clock.Now(),
+		cfg.PredicateParser,
 	)
 
 	report := diagnosis.Explain(input)

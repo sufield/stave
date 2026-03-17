@@ -174,9 +174,9 @@ func TestFilter_EmptyPassesAll(t *testing.T) {
 }
 
 func testControl(id string, threshold string) policy.ControlDefinition {
-	params := policy.ControlParams{}
+	var params policy.ControlParams
 	if threshold != "" {
-		params["max_unsafe_duration"] = threshold
+		params = policy.NewParams(map[string]any{"max_unsafe_duration": threshold})
 	}
 
 	ctl := policy.ControlDefinition{
@@ -189,7 +189,7 @@ func testControl(id string, threshold string) policy.ControlDefinition {
 				{
 					Field: "properties.unsafe",
 					Op:    "eq",
-					Value: true,
+					Value: policy.Bool(true),
 				},
 			},
 		},

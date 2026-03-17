@@ -149,8 +149,9 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 	for _, snap := range snaps {
 		for _, a := range snap.Assets {
 			assetHistories[a.ID] = append(assetHistories[a.ID], observation{
-				at:    snap.CapturedAt,
-				state: a,
+				at:         snap.CapturedAt,
+				state:      a,
+				identities: snap.Identities,
 			})
 		}
 	}
@@ -166,6 +167,7 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 				Predicate: ctl.UnsafePredicate,
 				Params:    ctl.Params,
 				EndTime:   endTime,
+				Parser:    input.PredicateParser,
 			})
 
 			if matched {

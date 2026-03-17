@@ -113,16 +113,12 @@ func resolveFinalizationTime(now, fallback time.Time) time.Time {
 }
 
 func extractFieldPath(pred policy.UnsafePredicate) string {
-	var rules []policy.PredicateRule
-	rules = append(rules, pred.Any...)
-	rules = append(rules, pred.All...)
-
 	var paths []string
-	for _, r := range rules {
+	pred.Walk(func(r policy.PredicateRule) {
 		if r.Field != "" {
 			paths = append(paths, fmt.Sprintf("%s %s %v", r.Field, r.Op, r.Value))
 		}
-	}
+	})
 
 	switch len(paths) {
 	case 0:

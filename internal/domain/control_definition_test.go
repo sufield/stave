@@ -107,9 +107,9 @@ func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t 
 			},
 		},
 	}
-	ctl.Params = policy.ControlParams{
+	ctl.Params = policy.NewParams(map[string]any{
 		"defined_param": true,
-	}
+	})
 
 	issues := policy.ValidateControlDefinition(&ctl)
 	if len(issues) != 2 {
@@ -146,30 +146,30 @@ func TestControlDefinitionValidate_MaxUnsafeDurationParam(t *testing.T) {
 		},
 		{
 			name: "param valid duration",
-			params: policy.ControlParams{
+			params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "24h",
-			},
+			}),
 			wantIssueCount: 0,
 		},
 		{
 			name: "param empty string",
-			params: policy.ControlParams{
+			params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "",
-			},
+			}),
 			wantIssueCount: 1,
 		},
 		{
 			name: "param non string",
-			params: policy.ControlParams{
+			params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": 24,
-			},
+			}),
 			wantIssueCount: 1,
 		},
 		{
 			name: "param invalid duration",
-			params: policy.ControlParams{
+			params: policy.NewParams(map[string]any{
 				"max_unsafe_duration": "bad-duration",
-			},
+			}),
 			wantIssueCount:      1,
 			wantSensitiveErrKey: true,
 		},
@@ -219,7 +219,7 @@ func validControlForValidationTests() policy.ControlDefinition {
 				{
 					Field: "properties.public",
 					Op:    "eq",
-					Value: true,
+					Value: policy.Bool(true),
 				},
 			},
 		},

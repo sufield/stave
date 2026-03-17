@@ -30,7 +30,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Compliance:  map[string]string{"cis_aws_v1.4.0": "2.1.5"},
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.storage.access.public_read", Op: "eq", Value: true},
+				{Field: "properties.storage.access.public_read", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 		Remediation: &policy.RemediationSpec{
@@ -204,7 +204,7 @@ func TestBuildFindingDetail_NoMatchingSnapshot(t *testing.T) {
 		Name: "Test",
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
-				{Field: "properties.x", Op: "eq", Value: true},
+				{Field: "properties.x", Op: "eq", Value: policy.Bool(true)},
 			},
 		},
 	}

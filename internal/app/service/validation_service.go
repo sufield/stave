@@ -10,10 +10,11 @@ import (
 
 // ValidationInput holds loaded models and runtime options for validation processing.
 type ValidationInput struct {
-	Controls  []policy.ControlDefinition
-	Snapshots []asset.Snapshot
-	MaxUnsafe time.Duration
-	NowTime   time.Time
+	Controls        []policy.ControlDefinition
+	Snapshots       []asset.Snapshot
+	MaxUnsafe       time.Duration
+	NowTime         time.Time
+	PredicateParser policy.PredicateParser
 }
 
 // ValidationSummary provides counts over loaded models.
@@ -80,7 +81,7 @@ func ValidateLoaded(input ValidationInput) ValidationResult {
 
 	// 3. Cross-model consistency checks.
 	if len(input.Controls) > 0 && len(input.Snapshots) > 0 {
-		issues.AddAll(policy.CheckControlEffectiveness(input.Controls, input.Snapshots))
+		issues.AddAll(policy.CheckControlEffectiveness(input.Controls, input.Snapshots, input.PredicateParser))
 	}
 
 	return ValidationResult{

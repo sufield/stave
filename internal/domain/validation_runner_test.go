@@ -15,27 +15,27 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 	}{
 		{
 			name:      "valid 0h",
-			params:    policy.ControlParams{"max_unsafe_duration": "0h"},
+			params:    policy.NewParams(map[string]any{"max_unsafe_duration": "0h"}),
 			wantError: false,
 		},
 		{
 			name:      "valid 24h",
-			params:    policy.ControlParams{"max_unsafe_duration": "24h"},
+			params:    policy.NewParams(map[string]any{"max_unsafe_duration": "24h"}),
 			wantError: false,
 		},
 		{
 			name:      "valid 7d",
-			params:    policy.ControlParams{"max_unsafe_duration": "7d"},
+			params:    policy.NewParams(map[string]any{"max_unsafe_duration": "7d"}),
 			wantError: false,
 		},
 		{
 			name:      "invalid garbage",
-			params:    policy.ControlParams{"max_unsafe_duration": "not-a-duration"},
+			params:    policy.NewParams(map[string]any{"max_unsafe_duration": "not-a-duration"}),
 			wantError: true,
 		},
 		{
 			name:      "invalid numeric without unit",
-			params:    policy.ControlParams{"max_unsafe_duration": "24"},
+			params:    policy.NewParams(map[string]any{"max_unsafe_duration": "24"}),
 			wantError: true,
 		},
 		{
@@ -54,7 +54,7 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 				Type:        policy.TypeUnsafeDuration,
 				Params:      tt.params,
 				UnsafePredicate: policy.UnsafePredicate{
-					Any: []policy.PredicateRule{{Field: "properties.x", Op: "eq", Value: true}},
+					Any: []policy.PredicateRule{{Field: "properties.x", Op: "eq", Value: policy.Bool(true)}},
 				},
 			}
 			issues := policy.ValidateControlDefinition(&ctl)

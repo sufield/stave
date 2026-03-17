@@ -29,7 +29,8 @@ func CreateDurationFinding(
 ) *evaluation.Finding {
 	a := t.Asset()
 	duration := t.UnsafeDuration(now)
-	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, a.Properties)
+	ctx := policy.NewAssetEvalContext(a, ctl.Params)
+	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, ctx)
 	causes := DeriveRootCauses(misconfigs)
 
 	f := newBaseFinding(ctl, t)

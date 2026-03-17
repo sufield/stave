@@ -224,7 +224,7 @@ func computeAssetStates(
 				states[a.ID] = st
 			}
 
-			ctx := policy.NewAssetEvalContext(a, policy.ControlParams(ctl.Params), snap.Identities...)
+			ctx := policy.NewAssetEvalContext(a, ctl.Params, snap.Identities...)
 			ctx.PredicateParser = parser
 
 			isUnsafe := ctl.UnsafePredicate.EvaluateWithContext(ctx)

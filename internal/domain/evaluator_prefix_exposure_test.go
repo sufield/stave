@@ -210,10 +210,10 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 
 	makeInv := func(allowed, protected []string) *policy.ControlDefinition {
-		params := policy.ControlParams{
+		params := policy.NewParams(map[string]any{
 			"allowed_public_prefixes": toInterfaceSlice(allowed),
 			"protected_prefixes":      toInterfaceSlice(protected),
-		}
+		})
 		ctl := &policy.ControlDefinition{
 			ID:          "CTL.EXP.VISIBILITY.003",
 			Name:        "Public Read Allowed Only for Approved Prefixes",
@@ -221,7 +221,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 			Type:        policy.TypePrefixExposure,
 			Params:      params,
 			UnsafePredicate: policy.UnsafePredicate{
-				Any: []policy.PredicateRule{{Field: "properties.storage.kind", Op: "eq", Value: "bucket"}},
+				Any: []policy.PredicateRule{{Field: "properties.storage.kind", Op: "eq", Value: policy.Str("bucket")}},
 			},
 		}
 		_ = ctl.Prepare()

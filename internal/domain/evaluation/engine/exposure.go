@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/exposure"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/domain/predicate"
 )
 
 const (
@@ -71,8 +72,8 @@ func evaluateAssetExposure(
 		findings = append(findings, *NewFinding(ctl, t, FindingContext{
 			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{
-				{Property: propExposureSource, ActualValue: evidence, Operator: "eq", UnsafeValue: evidence},
-				{Property: propProtectedPrefix, ActualValue: string(prefix), Operator: "eq", UnsafeValue: string(prefix)},
+				{Property: propExposureSource, ActualValue: evidence, Operator: predicate.OpEq, UnsafeValue: evidence},
+				{Property: propProtectedPrefix, ActualValue: string(prefix), Operator: predicate.OpEq, UnsafeValue: string(prefix)},
 			},
 		}))
 	}
@@ -97,7 +98,7 @@ func buildConfigIssue(
 	f := NewFinding(ctl, t, FindingContext{
 		Reason: why,
 		Misconfigs: []policy.Misconfiguration{
-			{Property: propExposureSource, ActualValue: reasonCode, Operator: "eq", UnsafeValue: reasonCode},
+			{Property: propExposureSource, ActualValue: reasonCode, Operator: predicate.OpEq, UnsafeValue: reasonCode},
 		},
 	})
 	return row, []evaluation.Finding{*f}
@@ -113,9 +114,9 @@ func buildOverlapIssue(
 	f := NewFinding(ctl, t, FindingContext{
 		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
 		Misconfigs: []policy.Misconfiguration{
-			{Property: propExposureSource, ActualValue: valConfigOverlap, Operator: "eq", UnsafeValue: valConfigOverlap},
-			{Property: "overlap_with", ActualValue: string(c.Allowed), Operator: "eq", UnsafeValue: string(c.Allowed)},
-			{Property: propProtectedPrefix, ActualValue: string(c.Protected), Operator: "eq", UnsafeValue: string(c.Protected)},
+			{Property: propExposureSource, ActualValue: valConfigOverlap, Operator: predicate.OpEq, UnsafeValue: valConfigOverlap},
+			{Property: "overlap_with", ActualValue: string(c.Allowed), Operator: predicate.OpEq, UnsafeValue: string(c.Allowed)},
+			{Property: propProtectedPrefix, ActualValue: string(c.Protected), Operator: predicate.OpEq, UnsafeValue: string(c.Protected)},
 		},
 	})
 	return row, []evaluation.Finding{*f}
