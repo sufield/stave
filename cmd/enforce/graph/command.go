@@ -3,11 +3,12 @@ package graph
 import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func NewCmd() *cobra.Command {
+func NewCmd(p *compose.Provider) *cobra.Command {
 	graphCmd := &cobra.Command{
 		Use:   "graph",
 		Short: "Visualize control and asset relationships",
@@ -15,11 +16,11 @@ func NewCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	graphCmd.AddCommand(newCoverageCmd())
+	graphCmd.AddCommand(newCoverageCmd(p))
 	return graphCmd
 }
 
-func newCoverageCmd() *cobra.Command {
+func newCoverageCmd(p *compose.Provider) *cobra.Command {
 	var (
 		ctlDir       string
 		obsDir       string
@@ -62,7 +63,7 @@ Examples:
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner()
+			runner := NewRunner(p)
 
 			return runner.Run(cmd.Context(), Config{
 				ControlsDir:     fsutil.CleanUserPath(ctlDir),

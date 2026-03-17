@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-func findingFromHardening(in binaryInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckBuildHardening,
@@ -39,7 +40,7 @@ func findingFromHardening(in binaryInspectionSnapshot, err error) securityaudit.
 	}
 }
 
-func findingFromAuditLogging(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromAuditLogging(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckAuditLogging,
@@ -76,7 +77,7 @@ func findingFromAuditLogging(in policyInspectionSnapshot, err error) securityaud
 	}
 }
 
-func findingFromCrosswalk(in crosswalkSnapshot, err error) securityaudit.Finding {
+func findingFromCrosswalk(in evidence.CrosswalkSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckControlMapping,
@@ -113,7 +114,7 @@ func findingFromCrosswalk(in crosswalkSnapshot, err error) securityaudit.Finding
 	}
 }
 
-func findingFromCrosswalkMissing(in crosswalkSnapshot) securityaudit.Finding {
+func findingFromCrosswalkMissing(in evidence.CrosswalkSnapshot) securityaudit.Finding {
 	return securityaudit.Finding{
 		ID:             securityaudit.CheckControlMapMissing,
 		Pillar:         securityaudit.PillarControls,

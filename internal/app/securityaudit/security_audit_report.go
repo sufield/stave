@@ -5,11 +5,12 @@ import (
 	"sort"
 	"time"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, ev evidenceBundle, artifacts securityaudit.ArtifactManifest) securityaudit.Report {
+func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, ev evidence.Bundle, artifacts securityaudit.ArtifactManifest) securityaudit.Report {
 	report := securityaudit.Report{
 		SchemaVersion: kernel.SchemaSecurityAudit,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
@@ -17,14 +18,14 @@ func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, 
 		Summary: securityaudit.Summary{
 			BySeverity:        map[securityaudit.Severity]int{},
 			FailOn:            req.FailOn,
-			VulnSourceUsed:    ev.vuln.SourceUsed,
-			EvidenceFreshness: ev.vuln.Freshness,
+			VulnSourceUsed:    ev.Vuln.SourceUsed,
+			EvidenceFreshness: ev.Vuln.Freshness,
 		},
 		Findings: findings,
 	}
 
 	for i := range report.Findings {
-		refs := ev.crosswalk.ByCheck[report.Findings[i].ID]
+		refs := ev.Crosswalk.ByCheck[report.Findings[i].ID]
 		report.Findings[i].ControlRefs = slices.Clone(refs)
 	}
 
@@ -46,8 +47,8 @@ func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, 
 	report.Controls = collectUniqueControls(report.Findings)
 	report.Summary.FailOn = req.FailOn
 	report.RecomputeSummary()
-	report.Summary.VulnSourceUsed = ev.vuln.SourceUsed
-	report.Summary.EvidenceFreshness = ev.vuln.Freshness
+	report.Summary.VulnSourceUsed = ev.Vuln.SourceUsed
+	report.Summary.EvidenceFreshness = ev.Vuln.Freshness
 	report.Normalize()
 
 	return report

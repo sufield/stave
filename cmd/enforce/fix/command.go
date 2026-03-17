@@ -16,7 +16,7 @@ import (
 )
 
 // NewFixCmd constructs the fix command.
-func NewFixCmd() *cobra.Command {
+func NewFixCmd(p *compose.Provider) *cobra.Command {
 	var (
 		inputPath  string
 		findingRef string
@@ -29,7 +29,7 @@ func NewFixCmd() *cobra.Command {
 for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			runner := NewRunner(compose.ActiveProvider(), ports.RealClock{})
+			runner := NewRunner(p, ports.RealClock{})
 			err := runner.Run(cmd.Context(), Request{
 				InputPath:  inputPath,
 				FindingRef: findingRef,
@@ -53,7 +53,7 @@ for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffi
 }
 
 // NewFixLoopCmd constructs the fix-loop command.
-func NewFixLoopCmd() *cobra.Command {
+func NewFixLoopCmd(p *compose.Provider) *cobra.Command {
 	var (
 		beforeDir    string
 		afterDir     string
@@ -110,7 +110,7 @@ Examples:
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner(compose.ActiveProvider(), clock)
+			runner := NewRunner(p, clock)
 			runner.Sanitizer = gf.GetSanitizer()
 			runner.FileOptions = cmdutil.FileOptions{
 				Overwrite:     gf.Force,

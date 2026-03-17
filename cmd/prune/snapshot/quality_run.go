@@ -25,11 +25,13 @@ type QualityConfig struct {
 }
 
 // QualityRunner orchestrates the evaluation and reporting of snapshot readiness.
-type QualityRunner struct{}
+type QualityRunner struct {
+	Provider *compose.Provider
+}
 
 // Run executes the quality assessment workflow.
 func (r *QualityRunner) Run(ctx context.Context, cfg QualityConfig) error {
-	snapshots, err := compose.LoadSnapshots(ctx, cfg.ObservationsDir)
+	snapshots, err := compose.LoadSnapshots(ctx, r.Provider, cfg.ObservationsDir)
 	if err != nil {
 		return fmt.Errorf("loading snapshots from %q: %w", cfg.ObservationsDir, err)
 	}

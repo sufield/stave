@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/ingest"
@@ -149,15 +150,15 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	f := applyvalidate.NewCmd(ui.DefaultRuntime()).Flags().Lookup("in")
+	f := applyvalidate.NewCmd(compose.NewDefaultProvider(), ui.DefaultRuntime()).Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
 }
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
-	applyCmd := apply.NewApplyCmd()
-	validateCmd := applyvalidate.NewCmd(ui.DefaultRuntime())
+	applyCmd := apply.NewApplyCmd(compose.NewDefaultProvider())
+	validateCmd := applyvalidate.NewCmd(compose.NewDefaultProvider(), ui.DefaultRuntime())
 	cases := []struct {
 		name      string
 		shorthand string
@@ -167,7 +168,7 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		{name: "apply observations", shorthand: "o", flags: applyCmd.Flags()},
 		{name: "validate controls", shorthand: "i", flags: validateCmd.Flags()},
 		{name: "validate observations", shorthand: "o", flags: validateCmd.Flags()},
-		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd().Flags()},
+		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd(compose.NewDefaultProvider()).Flags()},
 	}
 
 	for _, tc := range cases {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/enforce/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	appverify "github.com/sufield/stave/internal/app/verify"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -67,7 +67,7 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 	}
 
 	// 2. Load controls once for both runs
-	controls, err := loadControls(ctx, req.ControlsDir)
+	controls, err := r.loadControls(ctx, req.ControlsDir)
 	if err != nil {
 		return err
 	}
@@ -85,10 +85,19 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 	}
 
 	// 5. Verify (compare before/after)
-	verification, err := r.verify(before, after, req.MaxUnsafe)
+	cmp, err := appverify.Compare(appverify.CompareRequest{
+		BeforeFindings:  before.Result.Findings,
+		AfterFindings:   after.Result.Findings,
+		BeforeSnapshots: before.Snapshots,
+		AfterSnapshots:  after.Snapshots,
+		MaxUnsafe:       req.MaxUnsafe,
+		Now:             r.Clock.Now().UTC(),
+		Sanitizer:       r.Sanitizer,
+	})
 	if err != nil {
 		return err
 	}
+	verification := cmp.Verification
 
 	// 6. Build envelopes
 	eb := NewEnvelopeBuilder(r.Sanitizer)
@@ -137,8 +146,8 @@ func validateLoopDirs(req LoopRequest) error {
 	return nil
 }
 
-func loadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-	controls, err := compose.LoadControls(ctx, dir)
+func (r *Runner) loadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+	controls, err := compose.LoadControls(ctx, r.Provider, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -173,35 +182,6 @@ func (r *Runner) evaluateState(
 		return evaluationState{}, fmt.Errorf("%s evaluation: %w", label, err)
 	}
 	return evaluationState{Result: result, Snapshots: snaps}, nil
-}
-
-func (r *Runner) verify(before, after evaluationState, maxUnsafe time.Duration) (safetyenvelope.Verification, error) {
-	diff := evaluation.CompareVerificationFindings(before.Result.Findings, after.Result.Findings)
-	resolved := shared.FindingsToVerificationEntries(r.Sanitizer, diff.Resolved)
-	remaining := shared.FindingsToVerificationEntries(r.Sanitizer, diff.Remaining)
-	introduced := shared.FindingsToVerificationEntries(r.Sanitizer, diff.Introduced)
-
-	v := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
-		Run: safetyenvelope.VerificationRunInfo{
-			ToolVersion:     version.Version,
-			Offline:         true,
-			Now:             r.Clock.Now().UTC(),
-			MaxUnsafe:       maxUnsafe,
-			BeforeSnapshots: before.Snapshots,
-			AfterSnapshots:  after.Snapshots,
-		},
-		Summary: safetyenvelope.VerificationSummary{
-			BeforeViolations: len(before.Result.Findings),
-			AfterViolations:  len(after.Result.Findings),
-			Resolved:         len(resolved),
-			Remaining:        len(remaining),
-			Introduced:       len(introduced),
-		},
-		Resolved:   resolved,
-		Remaining:  remaining,
-		Introduced: introduced,
-	})
-	return v, safetyenvelope.ValidateVerification(v)
 }
 
 func (r *Runner) buildReport(req LoopRequest, v safetyenvelope.Verification, artifacts LoopArtifacts) LoopReport {

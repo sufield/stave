@@ -32,11 +32,13 @@ type UpcomingConfig struct {
 }
 
 // UpcomingRunner orchestrates the risk analysis and timeline projection.
-type UpcomingRunner struct{}
+type UpcomingRunner struct {
+	Provider *compose.Provider
+}
 
 // Run executes the upcoming analysis workflow.
 func (r *UpcomingRunner) Run(ctx context.Context, cfg UpcomingConfig) error {
-	loaded, err := compose.ActiveProvider().LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
+	loaded, err := r.Provider.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
 		return err
 	}

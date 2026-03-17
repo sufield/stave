@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/metadata"
@@ -53,7 +54,7 @@ type ApplyOptions struct {
 }
 
 // NewApplyCmd constructs the apply command.
-func NewApplyCmd() *cobra.Command {
+func NewApplyCmd(p *compose.Provider) *cobra.Command {
 	opts := &ApplyOptions{}
 
 	cmd := &cobra.Command{
@@ -85,7 +86,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 				if planErr != nil {
 					return planErr
 				}
-				return runDryRun(planCfg)
+				return runDryRun(p, planCfg)
 			}
 
 			// Strict integrity check
@@ -102,7 +103,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 
 			// Profile branch
 			if cfg.Mode == runModeProfile {
-				return runProfileApply(cmd.Context(), cfg.profileClock, cfg.Profile)
+				return runProfileApply(cmd.Context(), p, cfg.profileClock, cfg.Profile)
 			}
 
 			// Standard apply branch
@@ -110,7 +111,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 			if err != nil {
 				return err
 			}
-			return runStandardApply(cmd.Context(), opts, cfg.Params, sio)
+			return runStandardApply(cmd.Context(), p, opts, cfg.Params, sio)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

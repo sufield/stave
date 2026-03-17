@@ -3,10 +3,11 @@ package securityaudit
 import (
 	"strings"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-func findingFromCredentialStorage(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromCredentialStorage(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckCredentialStorage,
@@ -43,7 +44,7 @@ func findingFromCredentialStorage(in policyInspectionSnapshot, err error) securi
 	}
 }
 
-func findingFromRedaction(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromRedaction(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckSanitizationPolicy,
@@ -80,7 +81,7 @@ func findingFromRedaction(in policyInspectionSnapshot, err error) securityaudit.
 	}
 }
 
-func findingFromTelemetry(in policyInspectionSnapshot, err error) securityaudit.Finding {
+func findingFromTelemetry(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckTelemetryDecl,
@@ -117,7 +118,7 @@ func findingFromTelemetry(in policyInspectionSnapshot, err error) securityaudit.
 	}
 }
 
-func findingFromPrivacyMode(in policyInspectionSnapshot, req SecurityAuditRequest, err error) securityaudit.Finding {
+func findingFromPrivacyMode(in evidence.PolicyInspectionSnapshot, req SecurityAuditRequest, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckPrivacyMode,

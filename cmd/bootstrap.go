@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -29,14 +28,6 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.checkDevProductionGuard(cmd); err != nil {
 		return err
 	}
-	// Activate the provider owned by this App instance so that all
-	// package-level convenience functions (compose.NewObservationRepository,
-	// compose.NewControlRepository, etc.) delegate through App.Provider
-	// rather than the package initialiser default.
-	//
-	// CLI commands execute sequentially, so replacing the package-level
-	// variable here is safe.
-	compose.UseProvider(a.Provider)
 	a.initSanitizer()
 	return a.initLogger()
 }

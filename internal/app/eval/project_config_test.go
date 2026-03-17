@@ -12,7 +12,7 @@ import (
 
 func defaultPackRegistry(t *testing.T) *pack.Registry {
 	t.Helper()
-	reg, err := pack.DefaultRegistry()
+	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {
 		t.Fatalf("load pack registry: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestResolveProjectConfig_UnknownPack(t *testing.T) {
 func TestResolveProjectConfig_LoadsEnabledPack(t *testing.T) {
 	got, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
 		EnabledControlPacks: []string{"s3/public-exposure"},
-		BuiltinLoader:       builtin.LoadAll,
+		BuiltinLoader:       builtin.NewRegistry(builtin.EmbeddedFS(), "embedded").All,
 		PackRegistry:        defaultPackRegistry(t),
 	})
 	if err != nil {

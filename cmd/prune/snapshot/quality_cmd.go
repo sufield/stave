@@ -13,7 +13,7 @@ import (
 )
 
 // NewQualityCmd constructs the quality command.
-func NewQualityCmd() *cobra.Command {
+func NewQualityCmd(p *compose.Provider) *cobra.Command {
 	var (
 		obsDir       string
 		minSnapshots int
@@ -72,7 +72,7 @@ Examples:
 				return err
 			}
 
-			runner := &QualityRunner{}
+			runner := &QualityRunner{Provider: p}
 			return runner.Run(compose.CommandContext(cmd), QualityConfig{
 				ObservationsDir:   fsutil.CleanUserPath(obsDir),
 				MinSnapshots:      minSnapshots,

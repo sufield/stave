@@ -1,13 +1,12 @@
 package securityaudit
 
 import (
-	"context"
 	"io/fs"
 	"time"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
-	domainsecaudit "github.com/sufield/stave/internal/domain/securityaudit"
 )
 
 // RunnerDeps holds injectable infrastructure dependencies for SecurityAuditRunner.
@@ -16,69 +15,90 @@ type RunnerDeps struct {
 	ReadFile          func(path string) ([]byte, error)
 	HashFile          func(path string) (kernel.Digest, error)
 	HashBytes         func(data []byte) kernel.Digest
-	GovulncheckRunner GovulncheckRunner
+	GovulncheckRunner evidence.GovulncheckRunner
 	SignatureVerifier ports.Verifier
 	RunDiagnostics    func(cwd, binaryPath, staveVersion string)
-	ResolveCrosswalk  func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
+	ResolveCrosswalk  func(raw []byte, frameworks, checkIDs []string, now time.Time) (evidence.CrosswalkResult, error)
 
 	// OS-level functions injected to keep the app layer free of direct os.* calls.
 	StatFile     func(string) (fs.FileInfo, error)
 	Getenv       func(string) string
 	IsPrivileged func() bool
-	WalkDir      func(string, WalkFunc) error
+	WalkDir      func(string, evidence.WalkFunc) error
 	Getwd        func() (string, error)
 }
 
-// WalkFunc is the callback signature for directory walking, matching filepath.WalkFunc.
-type WalkFunc func(path string, info fs.FileInfo, err error) error
+// GovulncheckRunner is an alias for the evidence package type.
+type GovulncheckRunner = evidence.GovulncheckRunner
 
-// CrosswalkResult holds the resolved crosswalk mapping, matching the shape of
-// compliance.CrosswalkResolution without importing that package.
-type CrosswalkResult struct {
-	ByCheck        map[string][]domainsecaudit.ControlRef
-	MissingChecks  []string
-	ResolutionJSON []byte
-}
+// CrosswalkResult is an alias for the evidence package type.
+type CrosswalkResult = evidence.CrosswalkResult
 
-// Evidence provider interfaces. Each defines the contract for a single
-// evidence-collection step in the security audit pipeline.
+// WalkFunc is an alias for the evidence package type.
+type WalkFunc = evidence.WalkFunc
+
+// --- Re-exported enum types for backward compatibility ---
+
+// SBOMFormat identifies the SBOM output standard.
+type SBOMFormat = evidence.SBOMFormat
+
+const (
+	SBOMFormatSPDX      = evidence.SBOMFormatSPDX
+	SBOMFormatCycloneDX = evidence.SBOMFormatCycloneDX
+)
+
+// VulnSource identifies the vulnerability evidence strategy.
+type VulnSource = evidence.VulnSource
+
+const (
+	VulnSourceHybrid = evidence.VulnSourceHybrid
+	VulnSourceLocal  = evidence.VulnSourceLocal
+	VulnSourceCI     = evidence.VulnSourceCI
+)
+
+// Re-export provider interfaces so callers importing only the root package
+// can still reference them by name if needed.
 
 // BuildInfoProvider collects Go build metadata.
-type BuildInfoProvider interface {
-	Collect(now time.Time) (buildInfoSnapshot, error)
-}
+type BuildInfoProvider = evidence.BuildInfoProvider
 
 // SBOMGenerator produces a Software Bill of Materials.
-type SBOMGenerator interface {
-	Generate(input buildInfoSnapshot, format SBOMFormat, now time.Time) (sbomSnapshot, error)
-}
+type SBOMGenerator = evidence.SBOMGenerator
 
 // VulnEvidenceProvider resolves vulnerability evidence.
-type VulnEvidenceProvider interface {
-	Resolve(ctx context.Context, req SecurityAuditRequest) (vulnerabilitySnapshot, error)
-}
+type VulnEvidenceProvider = evidence.VulnEvidenceProvider
 
 // BinaryInspector inspects binary artifacts for integrity and hardening.
-type BinaryInspector interface {
-	Inspect(req SecurityAuditRequest, buildInfo buildInfoSnapshot) (binaryInspectionSnapshot, error)
-}
+type BinaryInspector = evidence.BinaryInspector
 
 // PolicyInspector inspects runtime policy compliance.
-type PolicyInspector interface {
-	Inspect(ctx context.Context, req SecurityAuditRequest) (policyInspectionSnapshot, error)
-}
+type PolicyInspector = evidence.PolicyInspector
 
 // CrosswalkResolver maps security checks to compliance frameworks.
-type CrosswalkResolver interface {
-	Resolve(ctx context.Context, req SecurityAuditRequest, checkIDs []string) (crosswalkSnapshot, error)
-}
+type CrosswalkResolver = evidence.CrosswalkResolver
 
 // Compile-time interface satisfaction checks.
 var (
-	_ BuildInfoProvider    = defaultBuildInfoProvider{}
-	_ SBOMGenerator        = defaultSBOMGenerator{}
-	_ VulnEvidenceProvider = defaultVulnEvidenceProvider{}
-	_ BinaryInspector      = defaultBinaryInspector{}
-	_ PolicyInspector      = defaultPolicyInspector{}
-	_ CrosswalkResolver    = defaultCrosswalkResolver{}
+	_ BuildInfoProvider    = evidence.DefaultBuildInfoProvider{}
+	_ SBOMGenerator        = evidence.DefaultSBOMGenerator{}
+	_ VulnEvidenceProvider = evidence.DefaultVulnProvider{}
+	_ BinaryInspector      = evidence.DefaultBinaryInspector{}
+	_ PolicyInspector      = evidence.DefaultPolicyInspector{}
+	_ CrosswalkResolver    = evidence.DefaultCrosswalkResolver{}
 )
+
+// toParams extracts the evidence collection parameters from a full audit request.
+func (req SecurityAuditRequest) toParams() evidence.Params {
+	return evidence.Params{
+		Now:                  req.Now,
+		Cwd:                  req.Cwd,
+		BinaryPath:           req.BinaryPath,
+		OutDir:               req.OutDir,
+		ComplianceFrameworks: req.ComplianceFrameworks,
+		SBOMFormat:           req.SBOMFormat,
+		VulnSource:           req.VulnSource,
+		LiveVulnCheck:        req.LiveVulnCheck,
+		ReleaseBundleDir:     req.ReleaseBundleDir,
+		RequireOffline:       req.RequireOffline,
+	}
+}

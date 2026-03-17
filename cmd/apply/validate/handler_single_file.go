@@ -80,13 +80,13 @@ func normalizeKind(raw string) (string, error) {
 
 // NewReadinessValidator creates a validation function for plan/apply commands.
 // It removes the dependency on cobra.Command by accepting the sanitize flag directly.
-func NewReadinessValidator(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
+func NewReadinessValidator(p *compose.Provider, ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
 	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ValidationResult, error) {
-		obsRepo, err := compose.ActiveProvider().NewObservationRepo()
+		obsRepo, err := p.NewObservationRepo()
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}
-		ctlRepo, err := compose.ActiveProvider().NewControlRepo()
+		ctlRepo, err := p.NewControlRepo()
 		if err != nil {
 			return validation.ValidationResult{}, err
 		}

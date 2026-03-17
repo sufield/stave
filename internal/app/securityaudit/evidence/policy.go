@@ -1,4 +1,4 @@
-package securityaudit
+package evidence
 
 import (
 	"context"
@@ -15,27 +15,41 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-type defaultPolicyInspector struct {
-	readFile     func(path string) ([]byte, error)
-	statFile     func(string) (fs.FileInfo, error)
-	getenv       func(string) string
-	isPrivileged func() bool
-	walkDir      func(string, WalkFunc) error
+type networkDeclaration struct {
+	RuntimeNetworkNone bool     `json:"runtime_network_none"`
+	Violations         []string `json:"violations"`
+	ProxyEnvVarsSet    []string `json:"proxy_env_vars_set"`
+	BannedImports      []string `json:"banned_imports"`
+	GeneratedAt        string   `json:"generated_at"`
 }
 
-func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequest) (policyInspectionSnapshot, error) {
-	root, err := findRepoRootWith(req.Cwd, func() (string, error) { return req.Cwd, nil }, d.statFile)
+type filesystemDeclaration struct {
+	Reads       []string `json:"reads"`
+	Writes      []string `json:"writes"`
+	GeneratedAt string   `json:"generated_at"`
+}
+
+type DefaultPolicyInspector struct {
+	ReadFile     func(path string) ([]byte, error)
+	StatFile     func(string) (fs.FileInfo, error)
+	Getenv       func(string) string
+	IsPrivileged func() bool
+	WalkDir      func(string, WalkFunc) error
+}
+
+func (d DefaultPolicyInspector) Inspect(_ context.Context, req Params) (PolicyInspectionSnapshot, error) {
+	root, err := findRepoRootWith(req.Cwd, func() (string, error) { return req.Cwd, nil }, d.StatFile)
 	if err != nil {
-		return policyInspectionSnapshot{}, err
+		return PolicyInspectionSnapshot{}, err
 	}
 
-	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root, d.readFile, d.walkDir)
-	credentialViolations, credErr := inspectForCredentialEnvRefs(root, d.readFile, d.walkDir)
+	runtimeViolations, inspectErr := inspectForBannedRuntimeImports(root, d.ReadFile, d.WalkDir)
+	credentialViolations, credErr := inspectForCredentialEnvRefs(root, d.ReadFile, d.WalkDir)
 	if inspectErr != nil || credErr != nil {
-		return policyInspectionSnapshot{}, errors.Join(inspectErr, credErr)
+		return PolicyInspectionSnapshot{}, errors.Join(inspectErr, credErr)
 	}
 
-	proxyVars := setProxyVars(d.getenv)
+	proxyVars := setProxyVars(d.Getenv)
 	reads := []string{
 		"Input directories provided by --controls and --observations",
 		"Optional project config: stave.yaml",
@@ -48,49 +62,49 @@ func (d defaultPolicyInspector) Inspect(_ context.Context, req SecurityAuditRequ
 		"Optional log output via --log-file",
 	}
 
-	networkDecl := map[string]any{
-		"runtime_network_none": len(runtimeViolations) == 0,
-		"violations":           runtimeViolations,
-		"proxy_env_vars_set":   proxyVars,
-		"banned_imports":       kernel.DefaultPolicy().BannedImports(),
-		"generated_at":         req.Now.UTC().Format(time.RFC3339),
+	networkDecl := networkDeclaration{
+		RuntimeNetworkNone: len(runtimeViolations) == 0,
+		Violations:         runtimeViolations,
+		ProxyEnvVarsSet:    proxyVars,
+		BannedImports:      kernel.DefaultPolicy().BannedImports(),
+		GeneratedAt:        req.Now.UTC().Format(time.RFC3339),
 	}
-	filesystemDecl := map[string]any{
-		"reads":        reads,
-		"writes":       writes,
-		"generated_at": req.Now.UTC().Format(time.RFC3339),
+	filesystemDecl := filesystemDeclaration{
+		Reads:       reads,
+		Writes:      writes,
+		GeneratedAt: req.Now.UTC().Format(time.RFC3339),
 	}
 	networkJSON, _ := json.MarshalIndent(networkDecl, "", "  ")
 	filesystemJSON, _ := json.MarshalIndent(filesystemDecl, "", "  ")
 
 	redactionPath := filepath.Join(root, "internal", "sanitize")
-	_, redactionErr := d.statFile(redactionPath)
+	_, redactionErr := d.StatFile(redactionPath)
 	loggingPath := filepath.Join(root, "internal", "platform", "logging")
-	_, loggingErr := d.statFile(loggingPath)
+	_, loggingErr := d.StatFile(loggingPath)
 
 	runningPrivileged := false
-	if runtime.GOOS != "windows" && d.isPrivileged != nil {
-		runningPrivileged = d.isPrivileged()
+	if runtime.GOOS != "windows" && d.IsPrivileged != nil {
+		runningPrivileged = d.IsPrivileged()
 	}
 
 	iamActions := kernel.DefaultPolicy().ProviderPermissions("aws")
 
-	return policyInspectionSnapshot{
-		Network: networkInspection{
+	return PolicyInspectionSnapshot{
+		Network: NetworkInspection{
 			RuntimeNetworkOK:  len(runtimeViolations) == 0,
 			RuntimeViolations: runtimeViolations,
 			NetworkDeclJSON:   append(networkJSON, '\n'),
 		},
-		Credential: credentialInspection{
+		Credential: CredentialInspection{
 			CredentialPolicyOK:   len(credentialViolations) == 0,
 			CredentialViolations: credentialViolations,
 		},
-		Filesystem: filesystemInspection{
+		Filesystem: FilesystemInspection{
 			FilesystemReads:    reads,
 			FilesystemWrites:   writes,
 			FilesystemDeclJSON: append(filesystemJSON, '\n'),
 		},
-		Operational: operationalInspection{
+		Operational: OperationalInspection{
 			RedactionPolicyOK:      redactionErr == nil,
 			TelemetryDeclaredNone:  len(runtimeViolations) == 0,
 			AuditLoggingConfigured: loggingErr == nil,

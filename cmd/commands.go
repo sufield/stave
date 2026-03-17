@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/enforce"
@@ -30,17 +31,18 @@ const (
 // subcommand, security-audit) are wired separately by WireDevCommands.
 func WireProdCommands(app *App) {
 	root := app.Root
+	p := app.Provider
 
 	// Getting started
 	root.AddCommand(initcmd.NewInitCmd())
 	root.AddCommand(initcmd.NewGenerateCmd())
 
 	// Control Engine
-	root.AddCommand(applyvalidate.NewCmd(ui.DefaultRuntime()))
-	root.AddCommand(apply.NewApplyCmd())
-	root.AddCommand(applyverify.NewCmd(ui.DefaultRuntime()))
-	root.AddCommand(diagnose.NewDiagnoseCmd())
-	root.AddCommand(diagnose.NewExplainCmd())
+	root.AddCommand(applyvalidate.NewCmd(p, ui.DefaultRuntime()))
+	root.AddCommand(apply.NewApplyCmd(p))
+	root.AddCommand(applyverify.NewCmd(p, ui.DefaultRuntime()))
+	root.AddCommand(diagnose.NewDiagnoseCmd(p))
+	root.AddCommand(diagnose.NewExplainCmd(p))
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())
@@ -52,7 +54,7 @@ func WireProdCommands(app *App) {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(snapshotCmd)
-	wireSnapshotSubtree(snapshotCmd)
+	wireSnapshotSubtree(snapshotCmd, p)
 
 	ciCmd := &cobra.Command{
 		Use:   "ci",
@@ -61,7 +63,7 @@ func WireProdCommands(app *App) {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(ciCmd)
-	wireCISubtree(ciCmd)
+	wireCISubtree(ciCmd, p)
 
 	// Data & Artifacts
 	root.AddCommand(ingest.NewIngestCmd(ui.DefaultRuntime()))
@@ -72,19 +74,19 @@ func WireProdCommands(app *App) {
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), app.ConfigKeyService))
 }
 
-func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
-	snapshotCmd.AddCommand(enforce.NewDiffCmd())
-	for _, subCmd := range prune.Commands() {
+func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
+	snapshotCmd.AddCommand(enforce.NewDiffCmd(p))
+	for _, subCmd := range prune.Commands(p) {
 		snapshotCmd.AddCommand(subCmd)
 	}
 }
 
-func wireCISubtree(ciCmd *cobra.Command) {
+func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	ciCmd.AddCommand(enforce.NewBaselineCmd())
-	ciCmd.AddCommand(enforce.NewGateCmd())
-	ciCmd.AddCommand(enforce.NewFixLoopCmd())
+	ciCmd.AddCommand(enforce.NewGateCmd(p))
+	ciCmd.AddCommand(enforce.NewFixLoopCmd(p))
 	ciCmd.AddCommand(enforce.NewCiDiffCmd())
-	ciCmd.AddCommand(enforce.NewFixCmd())
+	ciCmd.AddCommand(enforce.NewFixCmd(p))
 }
 
 func assignCommandGroup(root *cobra.Command, use, groupID string) {

@@ -1,4 +1,4 @@
-package securityaudit
+package evidence
 
 import (
 	"bytes"
@@ -15,29 +15,57 @@ import (
 	"github.com/sufield/stave/internal/domain/securityaudit"
 )
 
-// GovulncheckRunner executes govulncheck and returns its combined output.
-// The concrete implementation lives in the adapter layer (internal/adapters/govulncheck/).
-type GovulncheckRunner func(ctx context.Context, cwd string) ([]byte, error)
+// --- Vuln evidence payload structs ---
 
-type defaultVulnEvidenceProvider struct {
-	runGovulncheck GovulncheckRunner
-	readFile       func(path string) ([]byte, error)
-	statFile       func(string) (fs.FileInfo, error)
+type vulnLiveReport struct {
+	Source       string         `json:"source"`
+	GeneratedAt  string         `json:"generated_at"`
+	FindingCount int            `json:"finding_count"`
+	Provenance   vulnProvenance `json:"provenance"`
+	RawStream    string         `json:"raw_stream"`
 }
 
-func (p defaultVulnEvidenceProvider) Resolve(ctx context.Context, req SecurityAuditRequest) (vulnerabilitySnapshot, error) {
+type vulnProvenance struct {
+	Tool string `json:"tool"`
+	Mode string `json:"mode"`
+}
+
+type vulnArtifactWrapper struct {
+	Source       string          `json:"source"`
+	Path         string          `json:"path"`
+	FindingCount int             `json:"finding_count"`
+	LoadedAt     string          `json:"loaded_at"`
+	Raw          json.RawMessage `json:"raw"`
+}
+
+type vulnFallbackEnvelope struct {
+	Source       string `json:"source"`
+	Available    bool   `json:"available"`
+	Freshness    string `json:"freshness"`
+	FindingCount int    `json:"finding_count"`
+	Details      string `json:"details"`
+	GeneratedAt  string `json:"generated_at"`
+}
+
+type DefaultVulnProvider struct {
+	RunGovulncheck GovulncheckRunner
+	ReadFile       func(path string) ([]byte, error)
+	StatFile       func(string) (fs.FileInfo, error)
+}
+
+func (p DefaultVulnProvider) Resolve(ctx context.Context, req Params) (VulnerabilitySnapshot, error) {
 	if shouldAttemptLiveCheck(req) {
-		live, liveErr := executeGovulncheck(ctx, req.Cwd, p.runGovulncheck, req.Now)
+		live, liveErr := executeGovulncheck(ctx, req.Cwd, p.RunGovulncheck, req.Now)
 		if liveErr == nil {
 			return ensureVulnRawJSON(live, req.Now), nil
 		}
 		// Keep fallback behavior but preserve the live-check failure reason.
-		fallback, err := resolveVulnFallback(req, p.readFile, p.statFile)
+		fallback, err := resolveVulnFallback(req, p.ReadFile, p.StatFile)
 		if err == nil && fallback.Available {
 			fallback.Details = fmt.Sprintf("live check failed (%v); used fallback evidence", liveErr)
 			return ensureVulnRawJSON(fallback, req.Now), nil
 		}
-		return ensureVulnRawJSON(vulnerabilitySnapshot{
+		return ensureVulnRawJSON(VulnerabilitySnapshot{
 			Available:    false,
 			SourceUsed:   "live_check_failed",
 			Freshness:    "unknown",
@@ -45,21 +73,21 @@ func (p defaultVulnEvidenceProvider) Resolve(ctx context.Context, req SecurityAu
 			Details:      fmt.Sprintf("govulncheck execution failed: %v", liveErr),
 		}, req.Now), nil
 	}
-	fallback, err := resolveVulnFallback(req, p.readFile, p.statFile)
+	fallback, err := resolveVulnFallback(req, p.ReadFile, p.StatFile)
 	if err != nil {
-		return vulnerabilitySnapshot{}, err
+		return VulnerabilitySnapshot{}, err
 	}
 	return ensureVulnRawJSON(fallback, req.Now), nil
 }
 
-func shouldAttemptLiveCheck(req SecurityAuditRequest) bool {
+func shouldAttemptLiveCheck(req Params) bool {
 	if !req.LiveVulnCheck {
 		return false
 	}
 	return req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid
 }
 
-func resolveVulnFallback(req SecurityAuditRequest, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (vulnerabilitySnapshot, error) {
+func resolveVulnFallback(req Params, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (VulnerabilitySnapshot, error) {
 	if req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid {
 		if cached, ok := loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now, readFile, statFile); ok {
 			return cached, nil
@@ -70,7 +98,7 @@ func resolveVulnFallback(req SecurityAuditRequest, readFile func(string) ([]byte
 			return ciEvidence, nil
 		}
 	}
-	return ensureVulnRawJSON(vulnerabilitySnapshot{
+	return ensureVulnRawJSON(VulnerabilitySnapshot{
 		Available:    false,
 		SourceUsed:   "none",
 		Freshness:    "unknown",
@@ -79,30 +107,27 @@ func resolveVulnFallback(req SecurityAuditRequest, readFile func(string) ([]byte
 	}, req.Now), nil
 }
 
-func executeGovulncheck(ctx context.Context, cwd string, run GovulncheckRunner, now time.Time) (vulnerabilitySnapshot, error) {
+func executeGovulncheck(ctx context.Context, cwd string, run GovulncheckRunner, now time.Time) (VulnerabilitySnapshot, error) {
 	output, err := run(ctx, cwd)
 	if err != nil {
-		return vulnerabilitySnapshot{}, fmt.Errorf("govulncheck failed: %w", err)
+		return VulnerabilitySnapshot{}, fmt.Errorf("govulncheck failed: %w", err)
 	}
 	count, parseErr := countGovulncheckFindings(output)
 	if parseErr != nil {
-		return vulnerabilitySnapshot{}, parseErr
+		return VulnerabilitySnapshot{}, parseErr
 	}
-	normalized := map[string]any{
-		"source":        "local_live_check",
-		"generated_at":  now.UTC().Format(time.RFC3339),
-		"finding_count": count,
-		"provenance": map[string]any{
-			"tool": "govulncheck",
-			"mode": "live",
-		},
-		"raw_stream": string(output),
+	normalized := vulnLiveReport{
+		Source:       "local_live_check",
+		GeneratedAt:  now.UTC().Format(time.RFC3339),
+		FindingCount: count,
+		Provenance:   vulnProvenance{Tool: "govulncheck", Mode: "live"},
+		RawStream:    string(output),
 	}
 	raw, err := json.MarshalIndent(normalized, "", "  ")
 	if err != nil {
-		return vulnerabilitySnapshot{}, fmt.Errorf("marshal vuln report: %w", err)
+		return VulnerabilitySnapshot{}, fmt.Errorf("marshal vuln report: %w", err)
 	}
-	return vulnerabilitySnapshot{
+	return VulnerabilitySnapshot{
 		Available:    true,
 		SourceUsed:   "local_live_check",
 		Freshness:    "live",
@@ -129,7 +154,7 @@ func countGovulncheckFindings(raw []byte) (int, error) {
 	}
 }
 
-func localVulnEvidenceCandidates(req SecurityAuditRequest) []string {
+func localVulnEvidenceCandidates(req Params) []string {
 	return compactPaths(
 		filepath.Join(req.OutDir, securityaudit.ArtifactVulnReport),
 		filepath.Join(req.Cwd, ".stave", "cache", securityaudit.ArtifactVulnReport),
@@ -137,7 +162,7 @@ func localVulnEvidenceCandidates(req SecurityAuditRequest) []string {
 	)
 }
 
-func ciVulnEvidenceCandidates(req SecurityAuditRequest) []string {
+func ciVulnEvidenceCandidates(req Params) []string {
 	return compactPaths(
 		filepath.Join(req.Cwd, "artifacts", securityaudit.ArtifactVulnReport),
 		filepath.Join(req.Cwd, "security", securityaudit.ArtifactVulnReport),
@@ -162,7 +187,7 @@ func compactPaths(paths ...string) []string {
 	return out
 }
 
-func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (vulnerabilitySnapshot, bool) {
+func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (VulnerabilitySnapshot, bool) {
 	for _, candidate := range candidates {
 		raw, err := readFile(candidate)
 		if err != nil {
@@ -175,12 +200,12 @@ func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile
 				freshness = stat.ModTime().UTC().Format(time.RFC3339)
 			}
 		}
-		normalized := map[string]any{
-			"source":        "artifact",
-			"path":          candidate,
-			"finding_count": count,
-			"loaded_at":     now.UTC().Format(time.RFC3339),
-			"raw":           json.RawMessage(raw),
+		normalized := vulnArtifactWrapper{
+			Source:       "artifact",
+			Path:         candidate,
+			FindingCount: count,
+			LoadedAt:     now.UTC().Format(time.RFC3339),
+			Raw:          json.RawMessage(raw),
 		}
 		payload, marshalErr := json.MarshalIndent(normalized, "", "  ")
 		if marshalErr != nil {
@@ -190,7 +215,7 @@ func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile
 		if strings.Contains(candidate, "artifact") || strings.Contains(candidate, "govulncheck") {
 			source = "ci_artifact"
 		}
-		return ensureVulnRawJSON(vulnerabilitySnapshot{
+		return ensureVulnRawJSON(VulnerabilitySnapshot{
 			Available:    true,
 			SourceUsed:   source,
 			Freshness:    freshness,
@@ -199,20 +224,20 @@ func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile
 			Details:      fmt.Sprintf("loaded vulnerability evidence from %s", candidate),
 		}, now), true
 	}
-	return vulnerabilitySnapshot{}, false
+	return VulnerabilitySnapshot{}, false
 }
 
-func ensureVulnRawJSON(in vulnerabilitySnapshot, now time.Time) vulnerabilitySnapshot {
+func ensureVulnRawJSON(in VulnerabilitySnapshot, now time.Time) VulnerabilitySnapshot {
 	if len(in.RawJSON) > 0 {
 		return in
 	}
-	payload := map[string]any{
-		"source":        in.SourceUsed,
-		"available":     in.Available,
-		"freshness":     in.Freshness,
-		"finding_count": in.FindingCount,
-		"details":       in.Details,
-		"generated_at":  now.UTC().Format(time.RFC3339),
+	payload := vulnFallbackEnvelope{
+		Source:       in.SourceUsed,
+		Available:    in.Available,
+		Freshness:    in.Freshness,
+		FindingCount: in.FindingCount,
+		Details:      in.Details,
+		GeneratedAt:  now.UTC().Format(time.RFC3339),
 	}
 	raw, err := json.MarshalIndent(payload, "", "  ")
 	if err == nil {

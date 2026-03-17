@@ -37,20 +37,6 @@ func NewRegistry(fsys fs.FS, root string) *Registry {
 	return &Registry{fsys: fsys, root: root}
 }
 
-// defaultRegistry is the singleton used by the package-level API.
-var defaultRegistry = NewRegistry(embeddedControls, "embedded")
-
-// LoadAll loads all embedded control definitions.
-func LoadAll(ctx context.Context) ([]policy.ControlDefinition, error) {
-	return defaultRegistry.All(ctx)
-}
-
-// LoadFiltered loads embedded controls matching at least one selector.
-// If selectors is empty, all controls are returned.
-func LoadFiltered(ctx context.Context, selectors []Selector) ([]policy.ControlDefinition, error) {
-	return defaultRegistry.Filtered(ctx, selectors)
-}
-
 // All returns all control definitions. It performs a lazy load on the first
 // call and returns a shallow clone of the cache for subsequent calls.
 func (r *Registry) All(_ context.Context) ([]policy.ControlDefinition, error) {

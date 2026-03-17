@@ -7,71 +7,121 @@ import (
 	domain "github.com/sufield/stave/internal/domain/securityaudit"
 )
 
+// --- SARIF v2.1.0 typed structs ---
+
+type sarifDocument struct {
+	Version string     `json:"version"`
+	Schema  string     `json:"$schema"`
+	Runs    []sarifRun `json:"runs"`
+}
+
+type sarifRun struct {
+	Tool    sarifTool     `json:"tool"`
+	Results []sarifResult `json:"results"`
+}
+
+type sarifTool struct {
+	Driver sarifDriver `json:"driver"`
+}
+
+type sarifDriver struct {
+	Name    string      `json:"name"`
+	Version string      `json:"version"`
+	Rules   []sarifRule `json:"rules"`
+}
+
+type sarifRule struct {
+	ID               string       `json:"id"`
+	Name             string       `json:"name"`
+	ShortDescription sarifMessage `json:"shortDescription"`
+	Help             sarifMessage `json:"help"`
+}
+
+type sarifMessage struct {
+	Text string `json:"text"`
+}
+
+type sarifResult struct {
+	RuleID     string                `json:"ruleId"`
+	RuleIndex  int                   `json:"ruleIndex"`
+	Level      string                `json:"level"`
+	Message    sarifMessage          `json:"message"`
+	Properties sarifResultProperties `json:"properties"`
+}
+
+type sarifResultProperties struct {
+	Pillar         domain.Pillar     `json:"pillar"`
+	Status         domain.Status     `json:"status"`
+	Severity       domain.Severity   `json:"severity"`
+	Controls       []sarifControlRef `json:"controls"`
+	Recommendation string            `json:"recommendation"`
+}
+
+type sarifControlRef struct {
+	Framework string `json:"framework"`
+	ControlID string `json:"control_id"`
+	Rationale string `json:"rationale"`
+}
+
 // MarshalSARIFReport renders the security-audit report in SARIF v2.1.0.
 func MarshalSARIFReport(report domain.Report) ([]byte, error) {
-	rules := make([]map[string]any, 0, len(report.Findings))
+	rules := make([]sarifRule, 0, len(report.Findings))
 	ruleIndex := make(map[string]int, len(report.Findings))
-	results := make([]map[string]any, 0, len(report.Findings))
+	results := make([]sarifResult, 0, len(report.Findings))
 
 	for _, finding := range report.Findings {
 		if _, exists := ruleIndex[finding.ID]; !exists {
 			ruleIndex[finding.ID] = len(rules)
-			rules = append(rules, map[string]any{
-				"id":   finding.ID,
-				"name": finding.Title,
-				"shortDescription": map[string]string{
-					"text": finding.Title,
-				},
-				"help": map[string]string{
-					"text": finding.Recommendation,
-				},
+			rules = append(rules, sarifRule{
+				ID:               finding.ID,
+				Name:             finding.Title,
+				ShortDescription: sarifMessage{Text: finding.Title},
+				Help:             sarifMessage{Text: finding.Recommendation},
 			})
 		}
 
-		controls := make([]map[string]string, 0, len(finding.ControlRefs))
+		controls := make([]sarifControlRef, 0, len(finding.ControlRefs))
 		for _, control := range finding.ControlRefs {
-			controls = append(controls, map[string]string{
-				"framework":  control.Framework,
-				"control_id": control.ControlID,
-				"rationale":  control.Rationale,
+			controls = append(controls, sarifControlRef{
+				Framework: control.Framework,
+				ControlID: control.ControlID,
+				Rationale: control.Rationale,
 			})
 		}
 
-		results = append(results, map[string]any{
-			"ruleId":    finding.ID,
-			"ruleIndex": ruleIndex[finding.ID],
-			"level":     sarifLevelFromSeverity(finding.Severity),
-			"message": map[string]string{
-				"text": fmt.Sprintf("%s. %s", finding.Details, finding.AuditorHint),
-			},
-			"properties": map[string]any{
-				"pillar":         finding.Pillar,
-				"status":         finding.Status,
-				"severity":       finding.Severity,
-				"controls":       controls,
-				"recommendation": finding.Recommendation,
+		results = append(results, sarifResult{
+			RuleID:    finding.ID,
+			RuleIndex: ruleIndex[finding.ID],
+			Level:     sarifLevelFromSeverity(finding.Severity),
+			Message:   sarifMessage{Text: fmt.Sprintf("%s. %s", finding.Details, finding.AuditorHint)},
+			Properties: sarifResultProperties{
+				Pillar:         finding.Pillar,
+				Status:         finding.Status,
+				Severity:       finding.Severity,
+				Controls:       controls,
+				Recommendation: finding.Recommendation,
 			},
 		})
 	}
 
-	sarif := map[string]any{
-		"version": "2.1.0",
-		"$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
-		"runs": []map[string]any{
+	doc := sarifDocument{
+		Version: "2.1.0",
+		Schema:  "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
+		Runs: []sarifRun{
 			{
-				"tool": map[string]any{
-					"driver": map[string]any{
-						"name":    "stave-security-audit",
-						"version": report.ToolVersion,
-						"rules":   rules,
+				Tool: sarifTool{
+					Driver: sarifDriver{
+						Name:    "stave-security-audit",
+						Version: report.ToolVersion,
+						Rules:   rules,
 					},
 				},
-				"results": results,
+				Results: results,
 			},
 		},
 	}
 
-	data, err := json.MarshalIndent(sarif, "", "  ")
+	data, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("marshal security audit sarif: %w", err)
 	}

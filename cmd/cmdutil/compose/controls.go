@@ -18,9 +18,9 @@ type ControlLoader struct {
 	repo appcontracts.ControlRepository
 }
 
-// NewLoader initializes a loader with the default repository.
-func NewLoader() (*ControlLoader, error) {
-	repo, err := ActiveProvider().NewControlRepo()
+// NewLoader initializes a loader with the given provider's repository.
+func NewLoader(p *Provider) (*ControlLoader, error) {
+	repo, err := p.NewControlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("initializing control repository: %w", err)
 	}
@@ -39,8 +39,8 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 // --- Package Level Helpers (Functional API) ---
 
 // LoadControls is a convenience wrapper for one-off loading.
-func LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-	l, err := NewLoader()
+func LoadControls(ctx context.Context, p *Provider, dir string) ([]policy.ControlDefinition, error) {
+	l, err := NewLoader(p)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,8 @@ func LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, 
 
 // LoadControlByID retrieves a single control by its ID.
 // Note: If calling this multiple times, prefer using LoadMappedControls for efficiency.
-func LoadControlByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
-	controls, err := LoadControls(ctx, dir)
+func LoadControlByID(ctx context.Context, p *Provider, dir, id string) (policy.ControlDefinition, error) {
+	controls, err := LoadControls(ctx, p, dir)
 	if err != nil {
 		return policy.ControlDefinition{}, err
 	}

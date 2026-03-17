@@ -2,7 +2,6 @@ package eval
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -80,26 +79,26 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 	return nil
 }
 
-func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error {
+// resolveLockPath returns the lock file path if a project root is set.
+func resolveLockPath(projectRoot string) string {
 	root := strings.TrimSpace(projectRoot)
 	if root == "" {
-		return nil
+		return ""
 	}
-	lockPath := filepath.Join(root, "stave.lock")
-	if _, err := os.Stat(lockPath); err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return fmt.Errorf("lock file %s: %w", lockPath, err)
-	}
-	plan.LockFile = lockPath
-	if hasher == nil {
+	return filepath.Join(root, "stave.lock")
+}
+
+func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error {
+	lockPath := resolveLockPath(projectRoot)
+	if lockPath == "" || hasher == nil {
 		return nil
 	}
 	h, err := hasher.HashFile(lockPath)
 	if err != nil {
-		return fmt.Errorf("lock file %s: %w", lockPath, err)
+		// Lock file is optional — absence is not an error.
+		return nil
 	}
+	plan.LockFile = lockPath
 	plan.LockHash = kernel.Digest(h)
 	return nil
 }

@@ -36,8 +36,9 @@ type Builder struct {
 	Sanitizer kernel.Sanitizer
 	IsJSON    bool
 
-	Opts   *ApplyOptions
-	Params applyParams
+	Opts     *ApplyOptions
+	Params   applyParams
+	Provider *compose.Provider
 
 	// OnObsProgress is called by the observation loader after each file
 	// with (processed, total) counts. Optional.
@@ -107,7 +108,7 @@ type adapters struct {
 }
 
 func (b *Builder) buildAdapters() (adapters, error) {
-	marshaler, err := compose.ActiveProvider().NewFindingWriter(b.Opts.Format, b.IsJSON)
+	marshaler, err := b.Provider.NewFindingWriter(b.Opts.Format, b.IsJSON)
 	if err != nil {
 		return adapters{}, err
 	}
@@ -117,7 +118,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 		return adapters{}, err
 	}
 
-	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
+	ctlLoader, err := b.Provider.NewControlRepo()
 	if err != nil {
 		return adapters{}, fmt.Errorf("create control loader: %w", err)
 	}
@@ -136,10 +137,10 @@ func (b *Builder) buildEnrichFn() appcontracts.EnrichFunc {
 // selecting stdin or file mode and applying integrity checks if configured.
 func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
 	if source.IsStdin() {
-		return compose.ActiveProvider().NewStdinObsRepo(os.Stdin)
+		return b.Provider.NewStdinObsRepo(os.Stdin)
 	}
 
-	loader, err := compose.ActiveProvider().NewObservationRepo()
+	loader, err := b.Provider.NewObservationRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
@@ -168,13 +169,14 @@ func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
 		return appeval.ProjectConfigInput{}
 	}
 
-	reg, _ := pack.DefaultRegistry()
+	builtinRegistry := ctlbuiltin.NewRegistry(ctlbuiltin.EmbeddedFS(), "embedded")
+	reg, _ := pack.NewEmbeddedRegistry()
 	return appeval.ProjectConfigInput{
 		Exceptions:          b.mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
 		ControlsFlagSet:     b.Opts.ControlsSet,
-		BuiltinLoader:       ctlbuiltin.LoadAll,
+		BuiltinLoader:       builtinRegistry.All,
 		PackRegistry:        reg,
 	}
 }

@@ -13,12 +13,10 @@ import (
 )
 
 func TestRegistryPacksAreValid(t *testing.T) {
-	if err := ensureDefault(); err != nil {
-		t.Fatalf("ensureDefault error: %v", err)
-	}
+	reg := testRegistry(t)
 
-	packs := defaultRegistry.ListPacks()
-	refs := defaultRegistry.ControlRefs()
+	packs := reg.ListPacks()
+	refs := reg.ControlRefs()
 
 	for _, p := range packs {
 		pack := p
@@ -36,9 +34,7 @@ func TestRegistryPacksAreValid(t *testing.T) {
 }
 
 func TestRegistryEmbeddedFilesExist(t *testing.T) {
-	if err := ensureDefault(); err != nil {
-		t.Fatalf("ensureDefault error: %v", err)
-	}
+	reg := testRegistry(t)
 
 	root, err := moduleRootFromThisFile()
 	if err != nil {
@@ -46,7 +42,7 @@ func TestRegistryEmbeddedFilesExist(t *testing.T) {
 	}
 
 	rootFS := os.DirFS(root)
-	for id, ref := range defaultRegistry.ControlRefs() {
+	for id, ref := range reg.ControlRefs() {
 		ctlID := id
 		ctlRef := ref
 		t.Run(ctlID, func(t *testing.T) {
@@ -72,9 +68,7 @@ func TestRegistryEmbeddedFilesExist(t *testing.T) {
 }
 
 func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
-	if err := ensureDefault(); err != nil {
-		t.Fatalf("ensureDefault error: %v", err)
-	}
+	reg := testRegistry(t)
 
 	root, err := moduleRootFromThisFile()
 	if err != nil {
@@ -87,7 +81,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 		t.Fatalf("collect embedded controls: %v", err)
 	}
 
-	refs := defaultRegistry.ControlRefs()
+	refs := reg.ControlRefs()
 	var missing []string
 	for _, p := range paths {
 		id := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
@@ -102,10 +96,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 }
 
 func TestRegistryNoOrphanedFiles(t *testing.T) {
-	reg, err := registry()
-	if err != nil {
-		t.Fatalf("failed to load registry: %v", err)
-	}
+	reg := testRegistry(t)
 
 	orphans, err := reg.VerifyNoOrphans(ctl.EmbeddedFS(), "embedded")
 	if err != nil {

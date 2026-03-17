@@ -15,7 +15,7 @@ import (
 
 // testListRecursive is a test helper that creates a loader and delegates.
 func testListRecursive(ctx context.Context, dir string, excludeDirs []string) ([]pruner.SnapshotFile, error) {
-	loader, err := compose.ActiveProvider().NewSnapshotRepo()
+	loader, err := compose.NewDefaultProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, err
 	}

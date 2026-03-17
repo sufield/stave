@@ -129,12 +129,17 @@ func (g *Generator) addLogArtifact(bundle *bundleWriter, path string, tailCount 
 		bundle.addWarning("skipped log tail (%s): %v", path, err)
 		return nil
 	}
-	tail := TailBytesByLine(logBytes, tailCount)
-	tail = scrub.Credentials(tail)
-	if err := bundle.addText("logs/stave.log.tail.txt", tail); err != nil {
+	sanitized := SanitizeLogTail(logBytes, tailCount)
+	if err := bundle.addText("logs/stave.log.tail.txt", sanitized); err != nil {
 		return fmt.Errorf("write logs/stave.log.tail.txt: %w", err)
 	}
 	return nil
+}
+
+// SanitizeLogTail truncates log data to the last N lines and scrubs credentials.
+func SanitizeLogTail(data []byte, maxLines int) []byte {
+	tail := TailBytesByLine(data, maxLines)
+	return scrub.Credentials(tail)
 }
 
 func (g *Generator) addManifest(bundle *bundleWriter) error {

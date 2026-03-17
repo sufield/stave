@@ -2,6 +2,7 @@ package enforce
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/enforce/baseline"
 	"github.com/sufield/stave/cmd/enforce/cidiff"
@@ -15,15 +16,15 @@ import (
 
 // Factory functions for individual enforcement commands.
 
-func NewGenerateCmd() *cobra.Command { return generate.NewCmd() }
-func NewDiffCmd() *cobra.Command     { return diff.NewCmd() }
-func NewFixCmd() *cobra.Command      { return fix.NewFixCmd() }
-func NewFixLoopCmd() *cobra.Command  { return fix.NewFixLoopCmd() }
-func NewGateCmd() *cobra.Command     { return gate.NewCmd() }
-func NewCiDiffCmd() *cobra.Command   { return cidiff.NewCmd() }
-func NewBaselineCmd() *cobra.Command { return baseline.NewCmd() }
-func NewGraphCmd() *cobra.Command    { return graph.NewCmd() }
-func NewStatusCmd() *cobra.Command   { return status.NewCmd() }
+func NewGenerateCmd() *cobra.Command                   { return generate.NewCmd() }
+func NewDiffCmd(p *compose.Provider) *cobra.Command    { return diff.NewCmd(p) }
+func NewFixCmd(p *compose.Provider) *cobra.Command     { return fix.NewFixCmd(p) }
+func NewFixLoopCmd(p *compose.Provider) *cobra.Command { return fix.NewFixLoopCmd(p) }
+func NewGateCmd(p *compose.Provider) *cobra.Command    { return gate.NewCmd(p) }
+func NewCiDiffCmd() *cobra.Command                     { return cidiff.NewCmd() }
+func NewBaselineCmd() *cobra.Command                   { return baseline.NewCmd() }
+func NewGraphCmd(p *compose.Provider) *cobra.Command   { return graph.NewCmd(p) }
+func NewStatusCmd() *cobra.Command                     { return status.NewCmd() }
 
 // NextCommandForProject provides a high-level recommendation for the next
 // action to take in a project. It delegates to the status Runner.

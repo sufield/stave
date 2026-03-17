@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -15,7 +14,7 @@ import (
 )
 
 func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
-	marshaler, err := compose.ActiveProvider().NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
+	marshaler, err := r.Provider.NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
 	if err != nil {
 		return err
 	}

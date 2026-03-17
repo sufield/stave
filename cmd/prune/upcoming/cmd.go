@@ -12,7 +12,7 @@ import (
 )
 
 // NewCmd constructs the upcoming command.
-func NewCmd() *cobra.Command {
+func NewCmd(p *compose.Provider) *cobra.Command {
 	var (
 		ctlDir, obsDir             string
 		maxUnsafe, dueSoon, nowRaw string
@@ -62,7 +62,7 @@ Examples:
 				return err
 			}
 
-			runner := &UpcomingRunner{}
+			runner := &UpcomingRunner{Provider: p}
 			return runner.Run(compose.CommandContext(cmd), cfg)
 		},
 		SilenceUsage:  true,

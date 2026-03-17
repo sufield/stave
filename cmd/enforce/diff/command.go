@@ -9,7 +9,7 @@ import (
 )
 
 // NewCmd constructs the snapshot diff command.
-func NewCmd() *cobra.Command {
+func NewCmd(p *compose.Provider) *cobra.Command {
 	opts := DefaultOptions()
 
 	cmd := &cobra.Command{
@@ -34,7 +34,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(compose.ActiveProvider())
+			runner := NewRunner(p)
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

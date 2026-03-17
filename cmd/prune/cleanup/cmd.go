@@ -13,7 +13,7 @@ import (
 )
 
 // NewCmd constructs the prune command.
-func NewCmd() *cobra.Command {
+func NewCmd(p *compose.Provider) *cobra.Command {
 	var (
 		obsDir     string
 		olderThan  string
@@ -83,7 +83,7 @@ Examples:
 				return err
 			}
 
-			runner := &Runner{}
+			runner := &Runner{Provider: p}
 			return runner.Run(cmd.Context(), Config{
 				ObservationsDir: obsDir,
 				OlderThan:       resolvedOlderThan,

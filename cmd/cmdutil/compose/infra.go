@@ -40,18 +40,6 @@ func NewDefaultProvider() *Provider {
 	}
 }
 
-// --- Active Provider ---
-
-// activeProvider is the process-wide provider used by command handlers.
-// Set via UseProvider during App bootstrap.
-var activeProvider = NewDefaultProvider()
-
-// ActiveProvider returns the current process-wide provider.
-func ActiveProvider() *Provider { return activeProvider }
-
-// UseProvider replaces the active provider. Called once from App.bootstrap.
-func UseProvider(p *Provider) { activeProvider = p }
-
 // SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
 type SnapshotObservationRepository interface {
 	appcontracts.ObservationRepository

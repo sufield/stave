@@ -15,7 +15,7 @@ import (
 )
 
 // runValidate is the primary entry point for the cobra command.
-func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
+func runValidate(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *options) error {
 	// 1. Prepare environment (git audit, verbose logging)
 	opts.prepareEnvironment(cmd)
 
@@ -48,10 +48,10 @@ func runValidate(cmd *cobra.Command, rt *ui.Runtime, opts *options) error {
 		return runValidateSingleFile(rep, opts)
 	}
 
-	return runValidateProject(cmd, rt, rep, opts)
+	return runValidateProject(cmd, p, rt, rep, opts)
 }
 
-func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts *options) error {
+func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, rep *Reporter, opts *options) error {
 	// Prepare parameters (MaxUnsafe, Time, etc)
 	params := opts.parseParams()
 	if len(params.issues) > 0 {
@@ -63,7 +63,7 @@ func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts 
 
 	// Start progress UI
 	done := rt.BeginProgress("validate artifacts")
-	result, err := executeValidateRun(cmd, params, opts)
+	result, err := executeValidateRun(cmd, p, params, opts)
 	done()
 
 	if err != nil {
@@ -90,13 +90,13 @@ func runValidateProject(cmd *cobra.Command, rt *ui.Runtime, rep *Reporter, opts 
 	return exitErr
 }
 
-func executeValidateRun(cmd *cobra.Command, params validateParams, opts *options) (*appservice.ValidationResult, error) {
+func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validateParams, opts *options) (*appservice.ValidationResult, error) {
 	// Setup Repositories
-	obsLoader, err := compose.ActiveProvider().NewObservationRepo()
+	obsLoader, err := p.NewObservationRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init observation repository: %w", err)
 	}
-	ctlLoader, err := compose.ActiveProvider().NewControlRepo()
+	ctlLoader, err := p.NewControlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}

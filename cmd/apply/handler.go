@@ -8,6 +8,7 @@ import (
 	"log/slog"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
@@ -18,13 +19,13 @@ import (
 )
 
 // runProfileApply executes the profile-based evaluation workflow.
-func runProfileApply(ctx context.Context, clock ports.Clock, cfg Config) error {
-	runner := NewRunner(clock, cfg.Quiet)
+func runProfileApply(ctx context.Context, p *compose.Provider, clock ports.Clock, cfg Config) error {
+	runner := NewRunner(p, clock, cfg.Quiet)
 	return runner.Run(ctx, cfg)
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, opts *ApplyOptions, params applyParams, sio standardIO) error {
+func runStandardApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) error {
 	plan, err := appeval.NewPlan(opts.buildEvaluatorInput())
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
@@ -37,7 +38,7 @@ func runStandardApply(ctx context.Context, opts *ApplyOptions, params applyParam
 		))
 	}
 
-	results, err := executeEvaluation(ctx, opts, params, sio, plan)
+	results, err := executeEvaluation(ctx, p, opts, params, sio, plan)
 	if err != nil {
 		return decorateError(err)
 	}
@@ -52,6 +53,7 @@ func runStandardApply(ctx context.Context, opts *ApplyOptions, params applyParam
 
 func executeEvaluation(
 	ctx context.Context,
+	p *compose.Provider,
 	opts *ApplyOptions,
 	params applyParams,
 	sio standardIO,
@@ -70,6 +72,7 @@ func executeEvaluation(
 		IsJSON:        sio.IsJSON,
 		Opts:          opts,
 		Params:        params,
+		Provider:      p,
 		OnObsProgress: progress.Update,
 	}
 
@@ -106,7 +109,7 @@ func runStrictIntegrityCheck(strict bool, stdout, stderr io.Writer) error {
 	done := rt.BeginProgress("perform strict integrity checks")
 	defer done()
 
-	reg, err := packs.DefaultRegistry()
+	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
 		return fmt.Errorf("load default pack registry: %w", err)
 	}

@@ -9,7 +9,6 @@ import (
 	"path"
 	"slices"
 	"strings"
-	"sync"
 
 	"gopkg.in/yaml.v3"
 
@@ -212,72 +211,13 @@ func (r *Registry) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error)
 	return orphans, nil
 }
 
-// --- Default embedded registry (package-level convenience API) ---
-
-var (
-	defaultOnce     sync.Once
-	defaultRegistry *Registry
-	defaultErr      error
-)
-
-func registry() (*Registry, error) {
-	defaultOnce.Do(func() {
-		var data []byte
-		data, defaultErr = embeddedRegistryFS.ReadFile("embedded/index.yaml")
-		if defaultErr != nil {
-			defaultErr = fmt.Errorf("read embedded pack registry: %w", defaultErr)
-			return
-		}
-		defaultRegistry, defaultErr = NewRegistry(data)
-	})
-	return defaultRegistry, defaultErr
-}
-
-func ensureDefault() error {
-	_, err := registry()
-	return err
-}
-
-// DefaultRegistry returns the embedded default pack registry singleton.
-func DefaultRegistry() (*Registry, error) {
-	return registry()
-}
-
-// ListPacks returns all available packs from the embedded registry.
-func ListPacks() ([]Pack, error) {
-	reg, err := registry()
+// NewEmbeddedRegistry creates a registry from the bundled embedded index.yaml.
+func NewEmbeddedRegistry() (*Registry, error) {
+	data, err := embeddedRegistryFS.ReadFile("embedded/index.yaml")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read embedded pack registry: %w", err)
 	}
-	return reg.ListPacks(), nil
-}
-
-// PackNames returns all pack names from the embedded registry.
-func PackNames() ([]string, error) {
-	reg, err := registry()
-	if err != nil {
-		return nil, err
-	}
-	return reg.PackNames(), nil
-}
-
-// LookupPack returns one pack by name from the embedded registry.
-func LookupPack(name string) (Pack, bool, error) {
-	reg, err := registry()
-	if err != nil {
-		return Pack{}, false, err
-	}
-	p, ok := reg.LookupPack(name)
-	return p, ok, nil
-}
-
-// ResolveEnabledPacks expands packs from the embedded registry.
-func ResolveEnabledPacks(names []string) ([]string, error) {
-	reg, err := registry()
-	if err != nil {
-		return nil, err
-	}
-	return reg.ResolveEnabledPacks(names)
+	return NewRegistry(data)
 }
 
 func clonePack(p Pack) Pack {

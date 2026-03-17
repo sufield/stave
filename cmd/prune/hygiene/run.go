@@ -84,7 +84,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	files, err := pruneshared.ListObservationSnapshotFiles(ctx, cfg.ObservationsDir)
+	files, err := pruneshared.ListObservationSnapshotFiles(ctx, r.Provider, cfg.ObservationsDir)
 	if err != nil {
 		return err
 	}

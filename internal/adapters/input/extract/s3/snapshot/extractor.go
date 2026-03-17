@@ -49,33 +49,49 @@ func (e *SnapshotExtractor) ExtractFromSnapshotWithTime(ctx context.Context, sna
 		return nil, nil
 	}
 
-	var resources []asset.Asset
-	for _, bucket := range listResp.Buckets {
+	observations, err := e.loadAllObservations(ctx, snapshotDir, listResp.Buckets)
+	if err != nil {
+		return nil, err
+	}
+
+	resources := filterAndConvert(observations, e.ScopeMatcher, e.observationToAsset)
+	if len(resources) == 0 {
+		return nil, nil
+	}
+
+	return e.wrapSnapshots(resources, now), nil
+}
+
+func (e *SnapshotExtractor) loadAllObservations(ctx context.Context, snapshotDir string, buckets []struct {
+	Name         string `json:"Name"`
+	CreationDate string `json:"CreationDate"`
+}) ([]S3Observation, error) {
+	observations := make([]S3Observation, 0, len(buckets))
+	for _, bucket := range buckets {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 		if err := kernel.NewBucketRef(bucket.Name).Validate(); err != nil {
 			return nil, fmt.Errorf("snapshot contains %w", err)
 		}
+		observations = append(observations, e.extractBucketObservation(snapshotDir, bucket.Name))
+	}
+	return observations, nil
+}
 
-		obs := e.extractBucketObservation(snapshotDir, bucket.Name)
-		if e.ScopeMatcher != nil && !e.ScopeMatcher.IsHealthBucket(obs.Tags, obs.BucketName) {
+// filterAndConvert applies scope filtering, converts observations to assets, and sorts deterministically.
+func filterAndConvert(observations []S3Observation, matcher ScopeMatcher, toAsset func(S3Observation) asset.Asset) []asset.Asset {
+	var resources []asset.Asset
+	for _, obs := range observations {
+		if matcher != nil && !matcher.IsHealthBucket(obs.Tags, obs.BucketName) {
 			continue
 		}
-
-		a := e.observationToAsset(obs)
-		resources = append(resources, a)
+		resources = append(resources, toAsset(obs))
 	}
-
 	sort.Slice(resources, func(i, j int) bool {
 		return resources[i].ID < resources[j].ID
 	})
-
-	if len(resources) == 0 {
-		return nil, nil
-	}
-
-	return e.wrapSnapshots(resources, now), nil
+	return resources
 }
 
 func (e *SnapshotExtractor) loadBucketList(snapshotDir string) (*ListBucketsResponse, error) {

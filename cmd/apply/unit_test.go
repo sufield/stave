@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/sanitize"
@@ -21,7 +22,7 @@ func testdataDir(t *testing.T, name string) string {
 
 func TestResolveApplyOptions(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
-	cmd := NewApplyCmd()
+	cmd := NewApplyCmd(compose.NewDefaultProvider())
 
 	t.Run("valid flags with defaults", func(t *testing.T) {
 		opts := &ApplyOptions{
@@ -188,6 +189,7 @@ func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
 		Sanitizer: sanitize.New(),
 		Opts:      opts,
 		Params:    params,
+		Provider:  compose.NewDefaultProvider(),
 	}
 }
 

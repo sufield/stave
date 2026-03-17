@@ -16,20 +16,23 @@ import (
 
 // PackRunner handles the inspection of built-in control packs.
 type PackRunner struct {
-	Stdout io.Writer
+	Stdout   io.Writer
+	Registry *packs.Registry
 }
 
-// NewPackRunner initializes a runner with the provided output stream.
-func NewPackRunner(stdout io.Writer) *PackRunner {
-	return &PackRunner{Stdout: stdout}
+// NewPackRunner initializes a runner with the provided output stream
+// and an embedded pack registry.
+func NewPackRunner(stdout io.Writer) (*PackRunner, error) {
+	reg, err := packs.NewEmbeddedRegistry()
+	if err != nil {
+		return nil, fmt.Errorf("load pack registry: %w", err)
+	}
+	return &PackRunner{Stdout: stdout, Registry: reg}, nil
 }
 
 // List prints all available built-in packs in a formatted table.
 func (r *PackRunner) List(_ context.Context) error {
-	items, err := packs.ListPacks()
-	if err != nil {
-		return fmt.Errorf("listing packs: %w", err)
-	}
+	items := r.Registry.ListPacks()
 
 	if len(items) == 0 {
 		_, err := fmt.Fprintln(r.Stdout, "No built-in packs available.")
@@ -49,16 +52,10 @@ func (r *PackRunner) List(_ context.Context) error {
 // Show prints the detailed configuration of a specific pack as JSON.
 func (r *PackRunner) Show(_ context.Context, name string) error {
 	name = strings.TrimSpace(name)
-	pack, ok, err := packs.LookupPack(name)
-	if err != nil {
-		return fmt.Errorf("lookup pack %q: %w", name, err)
-	}
+	pack, ok := r.Registry.LookupPack(name)
 
 	if !ok {
-		available, listErr := packs.PackNames()
-		if listErr != nil {
-			return fmt.Errorf("pack %q not found", name)
-		}
+		available := r.Registry.PackNames()
 		return fmt.Errorf("unknown pack %q (available: %s)", name, strings.Join(available, ", "))
 	}
 
@@ -88,7 +85,11 @@ func newPacksListCmd() *cobra.Command {
 		Short: "List available built-in packs",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return NewPackRunner(cmd.OutOrStdout()).List(cmd.Context())
+			runner, err := NewPackRunner(cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			return runner.List(cmd.Context())
 		},
 	}
 }
@@ -99,7 +100,11 @@ func newPacksShowCmd() *cobra.Command {
 		Short: "Show one built-in pack and its control IDs",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return NewPackRunner(cmd.OutOrStdout()).Show(cmd.Context(), args[0])
+			runner, err := NewPackRunner(cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			return runner.Show(cmd.Context(), args[0])
 		},
 	}
 }

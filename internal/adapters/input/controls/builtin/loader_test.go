@@ -7,10 +7,14 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
+func testRegistry() *Registry {
+	return NewRegistry(embeddedControls, "embedded")
+}
+
 func TestLoadAll(t *testing.T) {
-	controls, err := LoadAll(context.Background())
+	controls, err := testRegistry().All(context.Background())
 	if err != nil {
-		t.Fatalf("LoadAll failed: %v", err)
+		t.Fatalf("All failed: %v", err)
 	}
 	if len(controls) == 0 {
 		t.Fatal("expected at least one embedded control")
@@ -46,9 +50,9 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 	selectors := []Selector{
 		{Tags: []string{"aws", "s3"}},
 	}
-	controls, err := LoadFiltered(context.Background(), selectors)
+	controls, err := testRegistry().Filtered(context.Background(), selectors)
 	if err != nil {
-		t.Fatalf("LoadFiltered failed: %v", err)
+		t.Fatalf("Filtered failed: %v", err)
 	}
 	if len(controls) == 0 {
 		t.Fatal("expected at least one control matching aws/s3 tags")
@@ -67,13 +71,14 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 }
 
 func TestLoadFiltered_EmptySelectors(t *testing.T) {
-	all, err := LoadAll(context.Background())
+	reg := testRegistry()
+	all, err := reg.All(context.Background())
 	if err != nil {
-		t.Fatalf("LoadAll failed: %v", err)
+		t.Fatalf("All failed: %v", err)
 	}
-	filtered, err := LoadFiltered(context.Background(), nil)
+	filtered, err := reg.Filtered(context.Background(), nil)
 	if err != nil {
-		t.Fatalf("LoadFiltered(nil) failed: %v", err)
+		t.Fatalf("Filtered(nil) failed: %v", err)
 	}
 	if len(all) != len(filtered) {
 		t.Errorf("empty selectors: got %d controls, want %d", len(filtered), len(all))
@@ -81,9 +86,9 @@ func TestLoadFiltered_EmptySelectors(t *testing.T) {
 }
 
 func TestLoadAll_NoDuplicateIDs(t *testing.T) {
-	controls, err := LoadAll(context.Background())
+	controls, err := testRegistry().All(context.Background())
 	if err != nil {
-		t.Fatalf("LoadAll failed: %v", err)
+		t.Fatalf("All failed: %v", err)
 	}
 	seen := make(map[kernel.ControlID]bool, len(controls))
 	for _, ctl := range controls {

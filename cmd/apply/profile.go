@@ -57,19 +57,21 @@ type Config struct {
 
 // Runner handles the execution of the profile apply logic.
 type Runner struct {
-	Clock  ports.Clock
-	Hasher ports.Digester
-	UI     *ui.Runtime
+	Clock    ports.Clock
+	Hasher   ports.Digester
+	UI       *ui.Runtime
+	Provider *compose.Provider
 }
 
 // NewRunner initializes a runner with default dependencies.
-func NewRunner(clock ports.Clock, quiet bool) *Runner {
+func NewRunner(p *compose.Provider, clock ports.Clock, quiet bool) *Runner {
 	progress := ui.DefaultRuntime()
 	progress.Quiet = quiet
 	return &Runner{
-		Clock:  clock,
-		Hasher: crypto.NewHasher(),
-		UI:     progress,
+		Clock:    clock,
+		Hasher:   crypto.NewHasher(),
+		UI:       progress,
+		Provider: p,
 	}
 }
 
@@ -138,7 +140,7 @@ func (r *Runner) validateInput(path string) error {
 func (r *Runner) loadControls(ctx context.Context) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 
-	controls, err := compose.LoadControls(ctx, ctlDir)
+	controls, err := compose.LoadControls(ctx, r.Provider, ctlDir)
 	if err != nil {
 		return "", nil, err
 	}
