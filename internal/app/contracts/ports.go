@@ -8,7 +8,9 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // LoadResult holds the output of a snapshot load: the parsed snapshots and
@@ -90,6 +92,16 @@ type ReaderResultLoader interface {
 type ResultLoader interface {
 	FileResultLoader
 	ReaderResultLoader
+}
+
+// FileEnvelopeLoader loads a safety-envelope evaluation from a file path.
+type FileEnvelopeLoader interface {
+	LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, error)
+}
+
+// FileBaselineLoader loads an evaluation baseline from a file path.
+type FileBaselineLoader interface {
+	LoadBaselineFromFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error)
 }
 
 // IntegrityCheckConfigurer allows observation loaders to accept manifest
