@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -23,7 +22,7 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	enrichFn := func(res evaluation.Result) appcontracts.EnrichedResult {
-		return output.Enrich(enricher, cfg.Sanitizer, res)
+		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}
 
 	return appeval.NewPipeline(ctx, &appeval.PipelineData{

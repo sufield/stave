@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	"github.com/sufield/stave/internal/adapters/output"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -129,7 +128,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 func (b *Builder) buildEnrichFn() appcontracts.EnrichFunc {
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	return func(result evaluation.Result) appcontracts.EnrichedResult {
-		return output.Enrich(enricher, b.Sanitizer, result)
+		return appeval.Enrich(enricher, b.Sanitizer, result)
 	}
 }
 

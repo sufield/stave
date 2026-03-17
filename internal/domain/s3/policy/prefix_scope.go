@@ -14,7 +14,7 @@ type PrefixScopeAnalysis struct {
 }
 
 // PrefixScopeAnalysis extracts public-read prefix scopes from the parsed bucket policy.
-func (e *Engine) PrefixScopeAnalysis() PrefixScopeAnalysis {
+func (e *Document) PrefixScopeAnalysis() PrefixScopeAnalysis {
 	var scopes []kernel.ObjectPrefix
 	sourceByScope := make(map[kernel.ObjectPrefix]kernel.StatementID)
 	seen := make(map[kernel.ObjectPrefix]bool)

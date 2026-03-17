@@ -246,7 +246,7 @@ imports-check:
 
 ## fuzz: Run Go native fuzz tests (30s per target)
 fuzz: sync-schemas sync-controls
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/input/extract/s3/policy/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/s3/policy/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/input/observations/json/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/contracts/validator/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/predicate/

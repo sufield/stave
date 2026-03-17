@@ -81,31 +81,6 @@ func (s *StringList) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Analysis contains the analysis results of an S3 bucket policy.
-type Analysis struct {
-	AllowsPublicRead      bool
-	AllowsPublicList      bool
-	AllowsPublicWrite     bool
-	AllowsPublicDelete    bool
-	HasWildcardActions    bool
-	PublicStatements      []kernel.StatementID // Statement IDs or indices that grant public access
-	HasNetworkCondition   bool                 // any statement with Principal:* also has IP/VPC/Org condition
-	HasIPCondition        bool                 // any public-principal statement has IP condition
-	HasVPCCondition       bool                 // any public-principal statement has VPC condition
-	EffectiveNetworkScope kernel.NetworkScope  // public, vpc-restricted, ip-restricted, org-restricted, or unknown
-
-	// Authenticated-only principal access (any AWS account, not anonymous)
-	AllowsAuthenticatedRead  bool
-	AllowsAuthenticatedList  bool
-	AllowsAuthenticatedWrite bool
-
-	// ACL-specific actions via bucket policy
-	AllowsPublicACLWrite        bool // s3:PutBucketAcl or s3:PutObjectAcl to public principal
-	AllowsPublicACLRead         bool // s3:GetBucketAcl or s3:GetObjectAcl to public principal
-	AllowsAuthenticatedACLWrite bool // s3:PutBucketAcl or s3:PutObjectAcl to authenticated principal
-	AllowsAuthenticatedACLRead  bool // s3:GetBucketAcl or s3:GetObjectAcl to authenticated principal
-}
-
 // ConditionAnalysis contains the analysis of AWS policy condition keys.
 type ConditionAnalysis struct {
 	HasIPCondition  bool
@@ -235,17 +210,4 @@ func (s Statement) PrincipalARNs() []string {
 
 func (s Statement) HasWriteActions() bool {
 	return slices.ContainsFunc([]string(s.Action), isWriteAction)
-}
-
-// TransportEncryptionAnalysis contains the analysis of transport encryption enforcement.
-type TransportEncryptionAnalysis struct {
-	EnforcesHTTPS bool
-}
-
-// CrossAccountAnalysis contains the analysis of cross-account access in a bucket policy.
-type CrossAccountAnalysis struct {
-	ExternalAccountARNs []string
-	ExternalAccountIDs  []string
-	HasExternalAccess   bool
-	HasExternalWrite    bool
 }

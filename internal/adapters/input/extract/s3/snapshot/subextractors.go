@@ -3,8 +3,8 @@ package snapshot
 import (
 	"encoding/json"
 
-	s3acl "github.com/sufield/stave/internal/adapters/input/extract/s3/acl"
 	s3storage "github.com/sufield/stave/internal/adapters/input/extract/s3/storage"
+	s3acl "github.com/sufield/stave/internal/domain/s3/acl"
 )
 
 type bucketSubExtractor func(obs *S3Observation, data []byte) error

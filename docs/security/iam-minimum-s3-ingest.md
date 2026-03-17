@@ -1,7 +1,7 @@
 # Minimum IAM Permissions for S3 Ingest
 
 This document is generated from the source-of-truth mapping in:
-`internal/adapters/input/extract/s3/policy/manifest_iam.go`
+`internal/domain/s3/policy/manifest_iam.go`
 
 The actions below are the minimum IAM permissions required for Stave S3 ingest workflows.
 

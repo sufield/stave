@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/adapters/output"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
@@ -44,7 +45,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 		},
 	}}
 
-	sanitized := output.SanitizeFindings(r, findings)
+	sanitized := appeval.SanitizeFindings(r, findings)
 
 	s := sanitized[0]
 	if s.AssetID == "my-phi-bucket" {
@@ -82,7 +83,7 @@ func TestSanitizeExemptedAssets(t *testing.T) {
 	resources := []asset.ExemptedAsset{
 		{ID: "my-bucket", Pattern: "*", Reason: "ignored"},
 	}
-	sanitized := output.SanitizeExemptedAssets(r, resources)
+	sanitized := appeval.SanitizeExemptedAssets(r, resources)
 	if sanitized[0].ID == "my-bucket" {
 		t.Error("ExemptedAsset.ID not sanitized")
 	}
@@ -100,7 +101,7 @@ func TestSanitizeInputHashKeys(t *testing.T) {
 			"/home/user/obs/snap2.json": "hash2",
 		},
 	}
-	sanitized := output.SanitizeInputHashKeys(r, hashes)
+	sanitized := appeval.SanitizeInputHashKeys(r, hashes)
 	if sanitized.Overall != "abc123" {
 		t.Error("Overall hash changed")
 	}
@@ -114,7 +115,7 @@ func TestSanitizeInputHashKeys(t *testing.T) {
 
 func TestSanitizeInputHashKeys_Nil(t *testing.T) {
 	r := sanitize.New()
-	if got := output.SanitizeInputHashKeys(r, nil); got != nil {
+	if got := appeval.SanitizeInputHashKeys(r, nil); got != nil {
 		t.Error("Expected nil for nil input")
 	}
 }
@@ -156,7 +157,7 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 		},
 	}
 
-	sanitized := output.SanitizeFindings(r, []remediation.Finding{f})
+	sanitized := appeval.SanitizeFindings(r, []remediation.Finding{f})
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	if err := enc.Encode(sanitized[0]); err != nil {

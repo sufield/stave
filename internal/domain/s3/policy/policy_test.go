@@ -6,6 +6,15 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
+func mustAssess(t *testing.T, policyJSON string) Assessment {
+	t.Helper()
+	doc, err := Parse(policyJSON)
+	if err != nil {
+		return Assessment{}
+	}
+	return doc.Assess()
+}
+
 func TestAnalyzePolicyPublicReadWrite(t *testing.T) {
 	policy := `{
 		"Version": "2012-10-17",
@@ -18,7 +27,7 @@ func TestAnalyzePolicyPublicReadWrite(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=true")
@@ -42,7 +51,7 @@ func TestAnalyzePolicyAWSPrincipal(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=true for Principal.AWS=*")
@@ -60,7 +69,7 @@ func TestAnalyzePolicyAWSPrincipalArray(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=true for Principal.AWS=[*]")
@@ -81,7 +90,7 @@ func TestAnalyzePolicyDeny(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false for Deny effect")
@@ -102,7 +111,7 @@ func TestAnalyzePolicyPrivate(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false for specific account")
@@ -113,7 +122,7 @@ func TestAnalyzePolicyPrivate(t *testing.T) {
 }
 
 func TestAnalyzePolicyEmpty(t *testing.T) {
-	result := AnalyzePolicy("")
+	result := mustAssess(t, "")
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false for empty policy")
@@ -124,7 +133,7 @@ func TestAnalyzePolicyEmpty(t *testing.T) {
 }
 
 func TestAnalyzePolicyInvalidJSON(t *testing.T) {
-	result := AnalyzePolicy("not valid json")
+	result := mustAssess(t, "not valid json")
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false for invalid JSON")
@@ -143,7 +152,7 @@ func TestAnalyzePolicyPublicWrite(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicWrite {
 		t.Error("expected AllowsPublicWrite=true")
@@ -165,7 +174,7 @@ func TestAnalyzePolicyPublicDelete(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicDelete {
 		t.Error("expected AllowsPublicDelete=true")
@@ -186,7 +195,7 @@ func TestAnalyzePolicyS3WildcardSetsWriteAndDelete(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicWrite {
 		t.Error("expected AllowsPublicWrite=true for s3:*")
@@ -213,7 +222,7 @@ func TestAnalyzePolicyWildcardActions(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasWildcardActions {
 		t.Error("expected HasWildcardActions=true for Action=* with Resource=arn:aws:s3:::*")
@@ -232,7 +241,7 @@ func TestAnalyzePolicyWildcardActionSpecificResource(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.HasWildcardActions {
 		t.Error("expected HasWildcardActions=false when resource is specific")
@@ -250,7 +259,7 @@ func TestAnalyzePolicyPutBucketPolicy(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicWrite {
 		t.Error("expected AllowsPublicWrite=true for PutBucketPolicy")
@@ -275,7 +284,7 @@ func TestAnalyzeTransportEncryptionEnforced(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeTransportEncryption(policy)
+	result := mustAssess(t, policy)
 
 	if !result.EnforcesHTTPS {
 		t.Error("expected EnforcesHTTPS=true for Deny with SecureTransport condition")
@@ -293,7 +302,7 @@ func TestAnalyzeTransportEncryptionMissingCondition(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeTransportEncryption(policy)
+	result := mustAssess(t, policy)
 
 	if result.EnforcesHTTPS {
 		t.Error("expected EnforcesHTTPS=false when condition is missing")
@@ -316,7 +325,7 @@ func TestAnalyzeTransportEncryptionAllowNotDeny(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeTransportEncryption(policy)
+	result := mustAssess(t, policy)
 
 	if result.EnforcesHTTPS {
 		t.Error("expected EnforcesHTTPS=false for Allow effect (must be Deny)")
@@ -339,7 +348,7 @@ func TestAnalyzeTransportEncryptionBooleanFalseCondition(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeTransportEncryption(policy)
+	result := mustAssess(t, policy)
 
 	if !result.EnforcesHTTPS {
 		t.Error("expected EnforcesHTTPS=true for boolean false SecureTransport condition")
@@ -362,7 +371,7 @@ func TestAnalyzeTransportEncryptionMalformedSecureTransportValue(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeTransportEncryption(policy)
+	result := mustAssess(t, policy)
 
 	if result.EnforcesHTTPS {
 		t.Error("expected EnforcesHTTPS=false for malformed SecureTransport condition value")
@@ -385,7 +394,7 @@ func TestAnalyzePolicyCondition_SourceVPCE_StringLike_IsRestrictive(t *testing.T
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false when restricted by source VPCE condition")
@@ -414,7 +423,7 @@ func TestAnalyzePolicyCondition_SourceVPC_ArnEquals_IsRestrictive(t *testing.T) 
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false when restricted by source VPC condition")
@@ -440,7 +449,7 @@ func TestAnalyzePolicyCondition_PrincipalOrgID_StringEquals_IsRestrictive(t *tes
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicList {
 		t.Error("expected AllowsPublicList=false when restricted by principal org condition")
@@ -451,7 +460,7 @@ func TestAnalyzePolicyCondition_PrincipalOrgID_StringEquals_IsRestrictive(t *tes
 }
 
 func TestAnalyzeTransportEncryptionEmpty(t *testing.T) {
-	result := AnalyzeTransportEncryption("")
+	result := mustAssess(t, "")
 
 	if result.EnforcesHTTPS {
 		t.Error("expected EnforcesHTTPS=false for empty policy")
@@ -460,7 +469,7 @@ func TestAnalyzeTransportEncryptionEmpty(t *testing.T) {
 
 // Cross-account access tests
 
-func TestAnalyzeCrossAccountAccess(t *testing.T) {
+func TestCrossAccountAccess(t *testing.T) {
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -471,7 +480,7 @@ func TestAnalyzeCrossAccountAccess(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=true")
@@ -501,7 +510,7 @@ func TestAnalyzeCrossAccountAccessMultiple(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=true")
@@ -525,7 +534,7 @@ func TestAnalyzeCrossAccountAccessPublicPrincipal(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=false for public principal (handled by public access check)")
@@ -543,7 +552,7 @@ func TestAnalyzeCrossAccountAccessDenyIgnored(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=false for Deny statements")
@@ -551,7 +560,7 @@ func TestAnalyzeCrossAccountAccessDenyIgnored(t *testing.T) {
 }
 
 func TestAnalyzeCrossAccountAccessEmpty(t *testing.T) {
-	result := AnalyzeCrossAccountAccess("")
+	result := mustAssess(t, "")
 
 	if result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=false for empty policy")
@@ -571,7 +580,7 @@ func TestCrossAccountReadOnly(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=true")
@@ -592,7 +601,7 @@ func TestCrossAccountWriteAccess(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=true")
@@ -613,7 +622,7 @@ func TestCrossAccountWildcard(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasExternalWrite {
 		t.Error("expected HasExternalWrite=true for s3:*")
@@ -632,7 +641,7 @@ func TestCrossAccountNoExternal(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=false for public principal")
@@ -653,7 +662,7 @@ func TestCrossAccountPutWildcard(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzeCrossAccountAccess(policy)
+	result := mustAssess(t, policy)
 
 	if !result.HasExternalAccess {
 		t.Error("expected HasExternalAccess=true")
@@ -866,7 +875,7 @@ func TestEffectiveNetworkScopePublicNoCondition(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopePublic {
 		t.Errorf("expected EffectiveNetworkScope='public', got %q", result.EffectiveNetworkScope)
@@ -892,7 +901,7 @@ func TestEffectiveNetworkScopeIPRestricted(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopeIPRestricted {
 		t.Errorf("expected EffectiveNetworkScope='ip-restricted', got %q", result.EffectiveNetworkScope)
@@ -921,7 +930,7 @@ func TestEffectiveNetworkScopeVPCRestricted(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopeVPCRestricted {
 		t.Errorf("expected EffectiveNetworkScope='vpc-restricted', got %q", result.EffectiveNetworkScope)
@@ -950,7 +959,7 @@ func TestEffectiveNetworkScopeOrgRestricted(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopeOrgRestricted {
 		t.Errorf("expected EffectiveNetworkScope='org-restricted', got %q", result.EffectiveNetworkScope)
@@ -971,7 +980,7 @@ func TestEffectiveNetworkScopeSpecificARNNoScope(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopeUnknown {
 		t.Errorf("expected empty EffectiveNetworkScope for specific ARN, got %q", result.EffectiveNetworkScope)
@@ -1006,7 +1015,7 @@ func TestEffectiveNetworkScopeWeakestLink(t *testing.T) {
 		]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopePublic {
 		t.Errorf("expected EffectiveNetworkScope='public' (weakest link), got %q", result.EffectiveNetworkScope)
@@ -1035,7 +1044,7 @@ func TestEffectiveNetworkScopeVPCGetObjectSuppressesPublicRead(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicRead {
 		t.Error("expected AllowsPublicRead=false for VPC-conditioned GetObject")
@@ -1058,7 +1067,7 @@ func TestEffectiveNetworkScopeIPListBucketSuppressesPublicList(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicList {
 		t.Error("expected AllowsPublicList=false for IP-conditioned ListBucket")
@@ -1078,7 +1087,7 @@ func TestAnalyzePolicyAuthenticatedRead(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsAuthenticatedRead {
 		t.Error("expected AllowsAuthenticatedRead=true for arn:aws:iam::*:root")
@@ -1099,7 +1108,7 @@ func TestAnalyzePolicyAuthenticatedWrite(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsAuthenticatedWrite {
 		t.Error("expected AllowsAuthenticatedWrite=true")
@@ -1123,7 +1132,7 @@ func TestAnalyzePolicyAuthenticatedPrincipalArray(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsAuthenticatedRead {
 		t.Error("expected AllowsAuthenticatedRead=true for AWS array with arn:aws:iam::*:root")
@@ -1142,7 +1151,7 @@ func TestAnalyzePolicySpecificAccountNotAuthenticated(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsAuthenticatedRead {
 		t.Error("expected AllowsAuthenticatedRead=false for specific account ARN")
@@ -1169,7 +1178,7 @@ func TestEffectiveNetworkScopeSecureTransportNotNetworkCondition(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.EffectiveNetworkScope != kernel.NetworkScopePublic {
 		t.Errorf("expected EffectiveNetworkScope='public' for SecureTransport-only condition, got %q", result.EffectiveNetworkScope)
@@ -1192,7 +1201,7 @@ func TestAnalyzePolicyPublicPutBucketAcl(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicACLWrite {
 		t.Error("expected AllowsPublicACLWrite=true for public PutBucketAcl")
@@ -1213,7 +1222,7 @@ func TestAnalyzePolicyPublicPutObjectAcl(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicACLWrite {
 		t.Error("expected AllowsPublicACLWrite=true for public PutObjectAcl")
@@ -1231,7 +1240,7 @@ func TestAnalyzePolicyAuthenticatedPutBucketAcl(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsAuthenticatedACLWrite {
 		t.Error("expected AllowsAuthenticatedACLWrite=true for authenticated PutBucketAcl")
@@ -1254,7 +1263,7 @@ func TestAnalyzePolicyPublicGetBucketAcl(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicACLRead {
 		t.Error("expected AllowsPublicACLRead=true for public GetBucketAcl")
@@ -1275,7 +1284,7 @@ func TestAnalyzePolicyPublicGetObjectAcl(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicACLRead {
 		t.Error("expected AllowsPublicACLRead=true for public GetObjectAcl")
@@ -1293,7 +1302,7 @@ func TestAnalyzePolicyAuthenticatedGetBucketAcl(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsAuthenticatedACLRead {
 		t.Error("expected AllowsAuthenticatedACLRead=true for authenticated GetBucketAcl")
@@ -1316,7 +1325,7 @@ func TestAnalyzePolicyWildcardSetsACLFlags(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if !result.AllowsPublicACLWrite {
 		t.Error("expected AllowsPublicACLWrite=true for s3:* wildcard")
@@ -1339,7 +1348,7 @@ func TestAnalyzePolicyGetObjectDoesNotSetACLRead(t *testing.T) {
 		}]
 	}`
 
-	result := AnalyzePolicy(policy)
+	result := mustAssess(t, policy)
 
 	if result.AllowsPublicACLRead {
 		t.Error("expected AllowsPublicACLRead=false for GetObject (not GetBucketAcl)")

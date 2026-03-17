@@ -10,8 +10,8 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 
-	output "github.com/sufield/stave/internal/adapters/output"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -131,7 +131,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		}
 
 		writer := outjson.NewFindingWriter(true) // indent=true
-		enriched := output.Enrich(enricher, nil, result)
+		enriched := appeval.Enrich(enricher, nil, result)
 		data, err := writer.MarshalFindings(enriched)
 		if err != nil {
 			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)
@@ -206,7 +206,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		result.Run.ToolVersion = "test-v1"
 
 		writer := outjson.NewFindingWriter(true)
-		enriched := output.Enrich(enricher, nil, result)
+		enriched := appeval.Enrich(enricher, nil, result)
 		data, err := writer.MarshalFindings(enriched)
 		if err != nil {
 			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)

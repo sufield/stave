@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/output"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -106,7 +107,7 @@ func NewEnvelopeBuilder(san kernel.Sanitizer) *EnvelopeBuilder {
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
 func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) safetyenvelope.Evaluation {
 	enricher := remediation.NewMapper(b.IDGen)
-	enriched := output.Enrich(enricher, b.Sanitizer, result)
+	enriched := appeval.Enrich(enricher, b.Sanitizer, result)
 	return output.BuildSafetyEnvelopeFromEnriched(enriched)
 }
 

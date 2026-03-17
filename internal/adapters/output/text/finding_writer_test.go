@@ -10,7 +10,7 @@ import (
 
 	"github.com/sufield/stave/internal/domain/asset"
 
-	output "github.com/sufield/stave/internal/adapters/output"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -35,7 +35,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
@@ -112,7 +112,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, sanitizer, result)
+	enriched := appeval.Enrich(enricher, sanitizer, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
@@ -196,7 +196,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 		},
 	}
 
-	enriched := output.Enrich(enricher, nil, result)
+	enriched := appeval.Enrich(enricher, nil, result)
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatalf("MarshalFindings() error = %v", err)
