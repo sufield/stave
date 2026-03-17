@@ -47,7 +47,7 @@ type Builder struct {
 }
 
 // BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
-func (b *Builder) BuildWithNewPlan() (*ApplyDeps, error) {
+func (b *Builder) BuildWithNewPlan() (*appeval.ApplyDeps, error) {
 	plan, err := appeval.NewPlan(b.Opts.buildEvaluatorInput())
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (b *Builder) BuildWithNewPlan() (*ApplyDeps, error) {
 }
 
 // Build constructs ApplyDeps from a pre-existing evaluation plan.
-func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
+func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error) {
 	if plan == nil {
 		return nil, errors.New("evaluation plan is required")
 	}
@@ -74,7 +74,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*ApplyDeps, error) {
 	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
-	deps, err := BuildApplyDeps(ApplyBuilderInput{
+	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
 		Ctx:               b.Ctx,
 		Stdout:            b.Stdout,
 		Stderr:            b.Stderr,
