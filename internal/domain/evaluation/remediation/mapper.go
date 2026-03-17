@@ -18,7 +18,7 @@ var _ FindingEnricher = (*Mapper)(nil)
 
 // Mapper maps violations to remediation guidance based on control ID patterns.
 type Mapper struct {
-	planner Planner
+	planner *Planner
 }
 
 // NewMapper creates a new remediation mapper with a default planner.

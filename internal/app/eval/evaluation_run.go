@@ -46,8 +46,6 @@ type EvaluateRun struct {
 	Logger          *slog.Logger
 }
 
-var _ EvaluateRunner = (*EvaluateRun)(nil)
-
 // NewEvaluateRun creates an evaluate run with the explicit
 // Enrich → Marshal → Write pipeline.
 func NewEvaluateRun(

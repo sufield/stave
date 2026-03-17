@@ -29,7 +29,7 @@ type Request struct {
 type Runner struct {
 	Provider    *compose.Provider
 	Clock       ports.Clock
-	Planner     remediation.Planner
+	Planner     *remediation.Planner
 	Sanitizer   kernel.Sanitizer
 	FileOptions cmdutil.FileOptions
 }

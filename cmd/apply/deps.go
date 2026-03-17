@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -140,23 +141,14 @@ func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appc
 		return b.Provider.NewStdinObsRepo(os.Stdin)
 	}
 
-	loader, err := b.Provider.NewObservationRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create observation loader: %w", err)
-	}
+	loader := obsjson.NewObservationLoader()
 
 	if b.Opts.IntegrityManifest != "" {
-		cfg, ok := loader.(appcontracts.IntegrityCheckConfigurer)
-		if !ok {
-			return nil, fmt.Errorf("loader %T does not support integrity checks", loader)
-		}
-		cfg.ConfigureIntegrityCheck(b.Opts.IntegrityManifest, b.Opts.IntegrityPublicKey)
+		loader.ConfigureIntegrityCheck(b.Opts.IntegrityManifest, b.Opts.IntegrityPublicKey)
 	}
 
 	if b.OnObsProgress != nil {
-		if pc, ok := loader.(interface{ SetOnProgress(func(int, int)) }); ok {
-			pc.SetOnProgress(b.OnObsProgress)
-		}
+		loader.SetOnProgress(b.OnObsProgress)
 	}
 
 	return loader, nil
