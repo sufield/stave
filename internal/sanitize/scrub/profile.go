@@ -3,34 +3,56 @@
 // or display, removing or sanitizing sensitive property values.
 package scrub
 
-// ScrubProfile defines which property keys to remove or sanitize during scrubbing.
-type ScrubProfile struct {
-	RemovedKeys   map[string]struct{}
-	SanitizedKeys map[string]struct{}
+// Profile defines which property keys to remove or sanitize during scrubbing.
+type Profile struct {
+	Remove   map[string]struct{}
+	Sanitize map[string]struct{}
 }
 
-// DefaultAssetProfile is the default scrub profile for asset properties.
-// Sensitive keys (tags, policy, ACL) are removed; identifying keys (bucket_name,
-// arn) are replaced with deterministic tokens.
-var DefaultAssetProfile = ScrubProfile{
-	RemovedKeys: map[string]struct{}{
-		"tags":                     {},
-		"policy":                   {},
-		"policy_json":              {},
-		"policy_public_statements": {},
-		"acl_grants":               {},
-		"acl_public_grantees":      {},
-	},
-	SanitizedKeys: map[string]struct{}{
-		"bucket_name": {},
-		"arn":         {},
-	},
+// ShouldRemove reports whether the key is marked for removal.
+func (p Profile) ShouldRemove(key string) bool {
+	if p.Remove == nil {
+		return false
+	}
+	_, ok := p.Remove[key]
+	return ok
 }
 
-// DefaultIdentityProfile is the default scrub profile for identity properties.
-var DefaultIdentityProfile = ScrubProfile{
-	RemovedKeys: map[string]struct{}{
-		"owner":   {},
-		"purpose": {},
-	},
+// ShouldSanitize reports whether the key is marked for sanitization.
+func (p Profile) ShouldSanitize(key string) bool {
+	if p.Sanitize == nil {
+		return false
+	}
+	_, ok := p.Sanitize[key]
+	return ok
+}
+
+// AssetProfile returns the default scrub profile for asset properties.
+// Returns a fresh copy to prevent callers from mutating shared state.
+func AssetProfile() Profile {
+	return Profile{
+		Remove: map[string]struct{}{
+			"tags":                     {},
+			"policy":                   {},
+			"policy_json":              {},
+			"policy_public_statements": {},
+			"acl_grants":               {},
+			"acl_public_grantees":      {},
+		},
+		Sanitize: map[string]struct{}{
+			"bucket_name": {},
+			"arn":         {},
+		},
+	}
+}
+
+// IdentityProfile returns the default scrub profile for identity properties.
+func IdentityProfile() Profile {
+	return Profile{
+		Remove: map[string]struct{}{
+			"owner":   {},
+			"purpose": {},
+		},
+		Sanitize: make(map[string]struct{}),
+	}
 }

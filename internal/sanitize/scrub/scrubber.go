@@ -10,8 +10,8 @@ import (
 // It delegates identifier sanitization to a kernel.Sanitizer.
 type Scrubber struct {
 	sanitizer    kernel.Sanitizer
-	assetProfile ScrubProfile
-	identProfile ScrubProfile
+	assetProfile Profile
+	identProfile Profile
 }
 
 // NewScrubber creates a Scrubber with default asset and identity profiles.
@@ -19,8 +19,8 @@ type Scrubber struct {
 func NewScrubber(s kernel.Sanitizer) *Scrubber {
 	return &Scrubber{
 		sanitizer:    s,
-		assetProfile: DefaultAssetProfile,
-		identProfile: DefaultIdentityProfile,
+		assetProfile: AssetProfile(),
+		identProfile: IdentityProfile(),
 	}
 }
 
@@ -88,16 +88,16 @@ func (sc *Scrubber) scrubSource(s *asset.SourceRef) *asset.SourceRef {
 
 // ScrubMap returns a deep copy of a properties map with keys removed or
 // sanitized according to profile. Nested maps are recursed.
-func (sc *Scrubber) ScrubMap(props map[string]any, profile ScrubProfile) map[string]any {
+func (sc *Scrubber) ScrubMap(props map[string]any, profile Profile) map[string]any {
 	if props == nil {
 		return nil
 	}
 	out := make(map[string]any, len(props))
 	for k, v := range props {
-		if _, ok := profile.RemovedKeys[k]; ok {
+		if profile.ShouldRemove(k) {
 			continue
 		}
-		if _, ok := profile.SanitizedKeys[k]; ok {
+		if profile.ShouldSanitize(k) {
 			out[k] = sc.sanitizeValue(v)
 			continue
 		}
