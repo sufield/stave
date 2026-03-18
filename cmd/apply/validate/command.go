@@ -28,7 +28,9 @@ What it checks:
   - Duration format and feasibility` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			opts.normalize(cmd)
+			if err := opts.normalize(cmd); err != nil {
+				return err
+			}
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {

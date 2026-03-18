@@ -119,7 +119,10 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
 func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
-	resolver, _ := projctx.NewResolver()
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		slog.Warn("failed to create project resolver", "error", err)
+	}
 	root := ""
 	if resolver != nil {
 		root = resolver.ProjectRoot()
@@ -128,7 +131,10 @@ func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 	if err != nil {
 		slog.Warn("failed to load project config", "error", err)
 	}
-	_, userPath, _ := projconfig.FindUserConfigWithPath()
+	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
+	if uErr != nil {
+		slog.Warn("failed to load user config", "error", uErr)
+	}
 
 	selectedContext := ""
 	if resolver != nil {
@@ -158,7 +164,10 @@ func (o *ApplyOptions) normalizeApplyPaths(obsChanged bool) {
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 
-	resolver, _ := projctx.NewResolver()
+	resolver, resolverErr := projctx.NewResolver()
+	if resolverErr != nil {
+		slog.Warn("failed to create project resolver", "error", resolverErr)
+	}
 	engine := projctx.NewInferenceEngine(resolver)
 	if !o.ControlsSet {
 		if inferred := engine.InferDir("controls", ""); inferred != "" {
@@ -208,7 +217,11 @@ func (o *ApplyOptions) isUsingPacks() bool {
 	if o.ControlsSet {
 		return false
 	}
-	cfg, ok := projconfig.FindProjectConfig()
+	cfg, ok, err := projconfig.FindProjectConfig()
+	if err != nil {
+		slog.Warn("failed to load project config", "error", err)
+		return false
+	}
 	return ok && len(cfg.EnabledControlPacks) > 0
 }
 
@@ -271,7 +284,7 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
 	}
 
 	hasPacks := false
-	if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
+	if cfg, ok, _ := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
 		hasPacks = true
 	}
 

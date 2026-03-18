@@ -168,12 +168,12 @@ func FindNearestFile(filename string) (string, bool) {
 // FindProjectConfig returns the nearest project config.
 // Returns (nil, false, nil) when no config file is found.
 // Returns a non-nil error for parse or permission failures.
-func FindProjectConfig() (*appconfig.ProjectConfig, bool) {
+func FindProjectConfig() (*appconfig.ProjectConfig, bool, error) {
 	cfg, _, err := FindProjectConfigWithPath("")
 	if err != nil {
-		return nil, false
+		return nil, false, err
 	}
-	return cfg, cfg != nil
+	return cfg, cfg != nil, nil
 }
 
 // FindProjectConfigWithPath returns the config and its path.
@@ -196,22 +196,24 @@ func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, st
 }
 
 // FindUserConfigWithPath returns the user config, path, and whether found.
-func FindUserConfigWithPath() (*appconfig.UserConfig, string, bool) {
+// Returns a non-nil error for parse or permission failures (as opposed to
+// the config simply not existing, which returns found=false with nil error).
+func FindUserConfigWithPath() (*appconfig.UserConfig, string, bool, error) {
 	r := defaultResolver()
 	if r == nil {
-		return nil, "", false
+		return nil, "", false, nil
 	}
 	cfg, path, err := r.LoadUserConfig()
 	if err != nil {
-		return nil, "", false
+		return nil, "", false, err
 	}
-	return cfg, path, true
+	return cfg, path, true, nil
 }
 
 // LoadUserAliases returns the alias map from user config, or nil if none.
 func LoadUserAliases() map[string]string {
-	cfg, _, ok := FindUserConfigWithPath()
-	if !ok || cfg.Aliases == nil {
+	cfg, _, ok, _ := FindUserConfigWithPath()
+	if !ok || cfg == nil || cfg.Aliases == nil {
 		return nil
 	}
 	return cfg.Aliases

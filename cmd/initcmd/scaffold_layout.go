@@ -12,7 +12,10 @@ import (
 )
 
 func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allowSymlink bool) (projectapp.ScaffoldResult, error) {
-	dirs, files := scaffoldLayout(opts)
+	dirs, files, err := scaffoldLayout(opts)
+	if err != nil {
+		return projectapp.ScaffoldResult{}, err
+	}
 
 	for _, rel := range dirs {
 		path := filepath.Join(baseDir, rel)
@@ -39,7 +42,10 @@ func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allow
 }
 
 func scaffoldPlan(baseDir string, overwrite bool, opts scaffoldOptions) (projectapp.ScaffoldResult, error) {
-	dirs, files := scaffoldLayout(opts)
+	dirs, files, err := scaffoldLayout(opts)
+	if err != nil {
+		return projectapp.ScaffoldResult{}, err
+	}
 	var created, skipped []string
 	for rel := range files {
 		full := filepath.Join(baseDir, rel)
@@ -60,12 +66,15 @@ func scaffoldPlan(baseDir string, overwrite bool, opts scaffoldOptions) (project
 	return projectapp.ScaffoldResult{Dirs: dirs, Created: created, Skipped: skipped}, nil
 }
 
-func scaffoldLayout(opts scaffoldOptions) (dirs []string, files map[string]string) {
-	dirs = scaffoldDirectories(opts)
-	files = scaffoldBaseFiles(opts)
+func scaffoldLayout(opts scaffoldOptions) ([]string, map[string]string, error) {
+	dirs := scaffoldDirectories(opts)
+	files, err := scaffoldBaseFiles(opts)
+	if err != nil {
+		return nil, nil, err
+	}
 	addProfileScaffoldFiles(files, opts.Profile)
 	addWorkflowScaffoldFiles(files, opts)
-	return dirs, files
+	return dirs, files, nil
 }
 
 func scaffoldDirectories(opts scaffoldOptions) []string {
@@ -84,11 +93,20 @@ func scaffoldDirectories(opts scaffoldOptions) []string {
 	return dirs
 }
 
-func scaffoldBaseFiles(opts scaffoldOptions) map[string]string {
+func scaffoldBaseFiles(opts scaffoldOptions) (map[string]string, error) {
 	sc := NewScaffolder(opts)
-	readme, _ := sc.Readme()
-	userCfg, _ := sc.UserConfig()
-	lockfile, _ := sc.Lockfile()
+	readme, err := sc.Readme()
+	if err != nil {
+		return nil, fmt.Errorf("render README template: %w", err)
+	}
+	userCfg, err := sc.UserConfig()
+	if err != nil {
+		return nil, fmt.Errorf("render cli.yaml template: %w", err)
+	}
+	lockfile, err := sc.Lockfile()
+	if err != nil {
+		return nil, fmt.Errorf("render stave.lock template: %w", err)
+	}
 	return map[string]string{
 		".gitignore": gitignoreContent,
 		"README.md":  readme,
@@ -119,7 +137,7 @@ func scaffoldBaseFiles(opts scaffoldOptions) map[string]string {
 		"controls/control.example.yaml":          normalizeTemplate(templateControlSample),
 		"stave.example.yaml":                     normalizeTemplate(templateStaveConfigSample),
 		"output/.gitkeep":                        "",
-	}
+	}, nil
 }
 
 func addProfileScaffoldFiles(files map[string]string, profile string) {

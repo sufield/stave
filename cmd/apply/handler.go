@@ -39,7 +39,7 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 		if err != nil {
 			return err
 		}
-		return runDryRun(p, planCfg)
+		return runDryRun(cs.Ctx, p, planCfg)
 	}
 
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {

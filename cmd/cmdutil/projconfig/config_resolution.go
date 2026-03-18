@@ -25,6 +25,9 @@ func defaultEvaluator() *appconfig.Evaluator {
 	if err != nil {
 		slog.Warn("failed to load project config", "error", err)
 	}
-	uCfg, uPath, _ := FindUserConfigWithPath()
+	uCfg, uPath, _, uErr := FindUserConfigWithPath()
+	if uErr != nil {
+		slog.Warn("failed to load user config", "error", uErr)
+	}
 	return appconfig.NewEvaluator(pCfg, pPath, uCfg, uPath)
 }
