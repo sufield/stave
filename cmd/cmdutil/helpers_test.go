@@ -11,11 +11,11 @@ func TestParsePathMode(t *testing.T) {
 		input string
 		want  sanitize.PathMode
 	}{
-		{"base", sanitize.PathModeBase},
-		{"full", sanitize.PathModeFull},
-		{" FULL ", sanitize.PathModeFull},
-		{"", sanitize.PathModeBase},
-		{"other", sanitize.PathModeBase},
+		{"base", sanitize.PathBase},
+		{"full", sanitize.PathFull},
+		{" FULL ", sanitize.PathFull},
+		{"", sanitize.PathBase},
+		{"other", sanitize.PathBase},
 	}
 	for _, tt := range tests {
 		got := ParsePathMode(tt.input)

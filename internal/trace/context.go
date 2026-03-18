@@ -13,7 +13,7 @@ type ruleContext struct {
 	Index          int
 	Field          predicate.FieldPath
 	Op             predicate.Operator
-	Value          any               // raw value from policy definition
+	Value          any                // raw value from policy definition
 	ValueFromParam predicate.ParamRef // parameter reference, if used
 
 	// Resolved match state

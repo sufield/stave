@@ -1,20 +1,29 @@
-// Package sanitize — OutputSanitizationPolicy centralizes sanitization configuration.
+// Package sanitize — Policy centralizes output sanitization configuration.
 package sanitize
 
 // PathMode controls how file paths are rendered in user-facing output.
 type PathMode string
 
 const (
-	// PathModeFull renders absolute paths as-is.
-	PathModeFull PathMode = "full"
-	// PathModeBase renders only the basename of each path.
-	PathModeBase PathMode = "base"
+	// PathBase (default) renders only the basename of each path.
+	PathBase PathMode = "base"
+	// PathFull renders absolute paths as-is.
+	PathFull PathMode = "full"
 )
 
-// OutputSanitizationPolicy bundles all output sanitization settings.
+// Effective returns the mode, defaulting to PathBase when unset.
+// This handles the zero-value case where PathMode is "".
+func (m PathMode) Effective() PathMode {
+	if m == PathFull {
+		return PathFull
+	}
+	return PathBase
+}
+
+// Policy bundles all output sanitization settings.
 // It is constructed once from CLI flags and threaded through commands,
 // writers, error formatting, and the panic handler.
-type OutputSanitizationPolicy struct {
+type Policy struct {
 	// SanitizeIDs enables deterministic sanitization of asset identifiers,
 	// matched property values, and source evidence in findings output.
 	SanitizeIDs bool
@@ -24,14 +33,14 @@ type OutputSanitizationPolicy struct {
 	PathMode PathMode
 }
 
-// Sanitizer returns a configured sanitizer.
-// When SanitizeIDs is false, it returns a no-op sanitizer.
-// PathMode is always injected so that Path() respects the user's preference.
-func (p OutputSanitizationPolicy) Sanitizer() *Sanitizer {
+// NewSanitizer returns a configured sanitizer based on the policy.
+// When SanitizeIDs is false, ID/value sanitization is disabled but
+// path mode is still respected.
+func (p Policy) NewSanitizer() *Sanitizer {
 	s := New()
-	s.pathMode = p.PathMode
+	s.pathMode = p.PathMode.Effective()
 	if !p.SanitizeIDs {
-		s.noOp = true
+		s.disableIDs = true
 	}
 	return s
 }
