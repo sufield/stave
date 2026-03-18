@@ -44,7 +44,7 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 		Asset:    evaluation.FindingAssetSummary{ID: "res-1", Type: "storage_bucket"},
 		Evidence: evaluation.Evidence{},
 		Trace: &evaluation.FindingTrace{
-			Raw: &trace.TraceResult{
+			Raw: &trace.Result{
 				ControlID:  "CTL.TEST.A.001",
 				AssetID:    "res-1",
 				Properties: map[string]any{"k": "v"},

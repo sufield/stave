@@ -116,11 +116,11 @@ func findTraceAsset(snapshot *asset.Snapshot, assetID, path string) (*asset.Asse
 		assetID, path, strings.Join(available, ", "))
 }
 
-func buildTraceResult(ctl *policy.ControlDefinition, a *asset.Asset, snapshot *asset.Snapshot) *trace.TraceResult {
+func buildTraceResult(ctl *policy.ControlDefinition, a *asset.Asset, snapshot *asset.Snapshot) *trace.Result {
 	evalCtx := policy.NewAssetEvalContext(*a, ctl.Params, snapshot.Identities...)
 	evalCtx.PredicateParser = ctlyaml.ParsePredicate
 	root := trace.TracePredicate(ctl.UnsafePredicate, evalCtx)
-	return &trace.TraceResult{
+	return &trace.Result{
 		ControlID:   kernel.ControlID(ctl.ID),
 		AssetID:     a.ID,
 		Properties:  a.Properties,

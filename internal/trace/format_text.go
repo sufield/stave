@@ -21,14 +21,14 @@ func (tw *TextWriter) printf(format string, a ...any) {
 	_, tw.err = fmt.Fprintf(tw.w, strings.Repeat("  ", tw.indent)+format, a...)
 }
 
-// WriteText renders a TraceResult as indented human-readable text.
-func WriteText(w io.Writer, tr *TraceResult) error {
+// WriteText renders a Result as indented human-readable text.
+func WriteText(w io.Writer, tr *Result) error {
 	tw := &TextWriter{w: w}
 	tw.render(tr)
 	return tw.err
 }
 
-func (tw *TextWriter) render(tr *TraceResult) {
+func (tw *TextWriter) render(tr *Result) {
 	tw.printf("Tracing %s against asset %s\n", string(tr.ControlID), tr.AssetID.String())
 	tw.printf("\nAsset Properties:\n")
 	tw.renderProperties(tr.Properties, "properties")
@@ -108,8 +108,8 @@ func (tw *TextWriter) renderAnyMatch(a *AnyMatchNode) {
 	}
 	tw.printf("    Iterating %d identities\n", a.IdentityCount)
 	if a.Result && a.NestedTrace != nil {
-		if a.MatchedIndex != nil {
-			tw.printf("    Matched identity[%d] %q:\n", *a.MatchedIndex, a.MatchedID)
+		if a.MatchedIndex >= 0 {
+			tw.printf("    Matched identity[%d] %q:\n", a.MatchedIndex, a.MatchedID)
 		} else {
 			tw.printf("    Matched identity %q:\n", a.MatchedID)
 		}

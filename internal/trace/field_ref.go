@@ -21,7 +21,7 @@ func traceFieldRefRule(rc ruleContext) Node {
 		Field:       rc.Field,
 		Op:          rc.Op,
 		OtherField:  otherField,
-		FieldValue:  rc.FieldValue,
+		ActualValue: rc.FieldValue,
 		OtherValue:  rc.OtherValue,
 		FieldExists: rc.FieldExists,
 		OtherExists: rc.OtherExists,

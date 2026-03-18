@@ -62,7 +62,7 @@ func clauseExplanation(c *ClauseNode) string {
 		}
 	}
 
-	return fmt.Sprintf("%s %s %s → %s", formatValue(c.FieldValue), c.Op, formatValue(compareValue), tag)
+	return fmt.Sprintf("%s %s %s → %s", formatValue(c.ActualValue), c.Op, formatValue(compareValue), tag)
 }
 
 // fieldRefExplanation generates a human-readable explanation from a FieldRefNode's data.
@@ -71,5 +71,5 @@ func fieldRefExplanation(f *FieldRefNode) string {
 	if !f.FieldExists {
 		return fmt.Sprintf("field absent → %s", tag)
 	}
-	return fmt.Sprintf("%s %s %s → %s", formatValue(f.FieldValue), f.Op, f.OtherField.String(), tag)
+	return fmt.Sprintf("%s %s %s → %s", formatValue(f.ActualValue), f.Op, f.OtherField.String(), tag)
 }

@@ -1,4 +1,4 @@
-// Package trace defines the trace model (Node types, TraceResult) and the
+// Package trace defines the trace model (Node types, Result) and the
 // tracing engine that walks unsafe_predicate clause trees against an
 // EvalContext. Formatters in this package render traces as human-readable
 // text or structured JSON via type-switch walkers — the Node interface
