@@ -65,7 +65,10 @@ type ValueResult struct {
 // Get retrieves the effective value for a specific key and renders it.
 func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	key := strings.TrimSpace(req.Key)
-	cfg, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
+	cfg, cfgPath, err := projconfig.FindProjectConfigWithPath("")
+	if err != nil {
+		return err
+	}
 	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
 
 	kv, err := resolveServiceConfigKeyValue(r.Svc, key, cfg, cfgPath, eval.RetentionTier())

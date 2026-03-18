@@ -23,7 +23,11 @@ type projectConfigStore struct {
 // Find attempts to locate an existing project configuration.
 func (s projectConfigStore) Find() (*appconfig.ProjectConfig, string, bool) {
 	if s.resolver == nil {
-		return projconfig.FindProjectConfigWithPath("")
+		cfg, path, err := projconfig.FindProjectConfigWithPath("")
+		if err != nil {
+			return nil, "", false
+		}
+		return cfg, path, cfg != nil
 	}
 	cfg, path, err := s.resolver.FindProjectConfig("")
 	if err != nil {

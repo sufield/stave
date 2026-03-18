@@ -166,23 +166,33 @@ func FindNearestFile(filename string) (string, bool) {
 }
 
 // FindProjectConfig returns the nearest project config.
+// Returns (nil, false, nil) when no config file is found.
+// Returns a non-nil error for parse or permission failures.
 func FindProjectConfig() (*appconfig.ProjectConfig, bool) {
-	cfg, _, ok := FindProjectConfigWithPath("")
-	return cfg, ok
+	cfg, _, err := FindProjectConfigWithPath("")
+	if err != nil {
+		return nil, false
+	}
+	return cfg, cfg != nil
 }
 
-// FindProjectConfigWithPath returns the config, its path, and whether found.
-// If contextPath is non-empty, it is checked first before walking up from cwd.
-func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, string, bool) {
+// FindProjectConfigWithPath returns the config and its path.
+// Returns (nil, "", nil) when no config file is found (ErrConfigNotFound).
+// Returns a non-nil error for parse failures, permission errors, or
+// explicit context path load failures — these should not be silenced.
+func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, string, error) {
 	r := defaultResolver()
 	if r == nil {
-		return nil, "", false
+		return nil, "", nil
 	}
 	cfg, path, err := r.FindProjectConfig(contextPath)
 	if err != nil {
-		return nil, "", false
+		if errors.Is(err, ErrConfigNotFound) {
+			return nil, "", nil
+		}
+		return nil, path, err
 	}
-	return cfg, path, true
+	return cfg, path, nil
 }
 
 // FindUserConfigWithPath returns the user config, path, and whether found.
