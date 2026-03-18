@@ -41,6 +41,9 @@ func NewDefaultProvider() *Provider {
 	}
 }
 
+// Compile-time check that ObservationLoader satisfies the composed snapshot interface.
+var _ SnapshotObservationRepository = (*obsjson.ObservationLoader)(nil)
+
 // SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
 type SnapshotObservationRepository interface {
 	appcontracts.ObservationRepository
