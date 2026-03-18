@@ -7,16 +7,20 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-// jsonResult is the top-level JSON output.
-type jsonResult struct {
-	ControlID   string         `json:"control_id"`
-	AssetID     string         `json:"asset_id"`
-	Properties  map[string]any `json:"properties"`
-	Root        jsonNode       `json:"root"`
-	FinalResult bool           `json:"final_result"`
+// WriteJSON serializes a Result into structured, indented JSON.
+func WriteJSON(w io.Writer, tr *Result) error {
+	out := jsonResult{
+		ControlID:   tr.ControlID.String(),
+		AssetID:     tr.AssetID.String(),
+		Properties:  tr.Properties,
+		Root:        nodeToJSON(tr.Root),
+		FinalResult: tr.FinalResult,
+	}
+	return jsonutil.WriteIndented(w, out)
 }
 
-// nodeKind discriminates the JSON union type for trace nodes.
+// --- Wire Format Types ---
+
 type nodeKind string
 
 const (
@@ -26,17 +30,27 @@ const (
 	kindAnyMatch nodeKind = "any_match"
 )
 
-// jsonNode is a flat union type discriminated by "kind".
-type jsonNode struct {
-	Kind nodeKind `json:"kind"`
+type jsonResult struct {
+	ControlID   string         `json:"control_id"`
+	AssetID     string         `json:"asset_id"`
+	Properties  map[string]any `json:"properties"`
+	Root        jsonNode       `json:"root"`
+	FinalResult bool           `json:"final_result"`
+}
 
-	// group fields
+// jsonNode is a flat union type discriminated by "kind".
+// Pointer fields support correct omitempty behavior.
+type jsonNode struct {
+	Kind   nodeKind `json:"kind"`
+	Result bool     `json:"result"`
+
+	// Group fields
 	Logic        string     `json:"logic,omitempty"`
 	Children     []jsonNode `json:"children,omitempty"`
 	ShortCircuit *int       `json:"short_circuit,omitempty"`
 	Reason       string     `json:"reason,omitempty"`
 
-	// clause fields
+	// Clause fields
 	Index          *int               `json:"index,omitempty"`
 	Field          string             `json:"field,omitempty"`
 	Op             predicate.Operator `json:"op,omitempty"`
@@ -47,127 +61,93 @@ type jsonNode struct {
 	FieldExists    *bool              `json:"field_exists,omitempty"`
 	Explanation    string             `json:"explanation,omitempty"`
 
-	// field_ref fields
+	// FieldRef fields
 	OtherField  string `json:"other_field,omitempty"`
 	OtherValue  any    `json:"other_value,omitempty"`
 	OtherExists *bool  `json:"other_exists,omitempty"`
 
-	// any_match fields
+	// AnyMatch fields
 	IdentityCount *int      `json:"identity_count,omitempty"`
 	MatchedIndex  *int      `json:"matched_index,omitempty"`
 	MatchedID     string    `json:"matched_id,omitempty"`
 	NestedTrace   *jsonNode `json:"nested_trace,omitempty"`
-
-	// common
-	Result bool `json:"result"`
 }
 
-// WriteJSON renders a Result as structured JSON.
-func WriteJSON(w io.Writer, tr *Result) error {
-	out := jsonResult{
-		ControlID:   string(tr.ControlID),
-		AssetID:     tr.AssetID.String(),
-		Properties:  tr.Properties,
-		Root:        groupToJSON(tr.Root),
-		FinalResult: tr.FinalResult,
-	}
-	return jsonutil.WriteIndented(w, out)
-}
-
-func groupToJSON(g *GroupNode) jsonNode {
-	var sc *int
-	if g.ShortCircuitIndex >= 0 {
-		v := g.ShortCircuitIndex
-		sc = &v
-	}
-	children := make([]jsonNode, len(g.Children))
-	for i, child := range g.Children {
-		children[i] = nodeToJSON(child)
-	}
-	return jsonNode{
-		Kind:         kindGroup,
-		Logic:        g.Logic.String(),
-		Children:     children,
-		Result:       g.Result,
-		ShortCircuit: sc,
-		Reason:       g.Reason,
-	}
-}
+// --- Translation ---
 
 func nodeToJSON(node Node) jsonNode {
+	if node == nil {
+		return jsonNode{}
+	}
+
 	switch n := node.(type) {
 	case *GroupNode:
-		return groupToJSON(n)
+		children := make([]jsonNode, len(n.Children))
+		for i, child := range n.Children {
+			children[i] = nodeToJSON(child)
+		}
+		res := jsonNode{
+			Kind:     kindGroup,
+			Logic:    n.Logic.String(),
+			Children: children,
+			Result:   n.Result,
+			Reason:   n.Reason,
+		}
+		if n.ShortCircuitIndex >= 0 {
+			res.ShortCircuit = new(n.ShortCircuitIndex)
+		}
+		return res
+
 	case *ClauseNode:
-		return clauseToJSON(n)
+		return jsonNode{
+			Kind:           kindClause,
+			Result:         n.Result,
+			Index:          new(n.Index),
+			Field:          n.Field.String(),
+			Op:             n.Op,
+			Value:          n.Value,
+			ResolvedValue:  n.ResolvedValue,
+			ActualValue:    n.ActualValue,
+			ValueFromParam: n.ValueFromParam.String(),
+			FieldExists:    new(n.FieldExists),
+			Explanation:    n.Explain(),
+		}
+
 	case *FieldRefNode:
-		return fieldRefToJSON(n)
+		return jsonNode{
+			Kind:        kindFieldRef,
+			Result:      n.Result,
+			Index:       new(n.Index),
+			Field:       n.Field.String(),
+			Op:          n.Op,
+			OtherField:  n.OtherField.String(),
+			ActualValue: n.ActualValue,
+			OtherValue:  n.OtherValue,
+			FieldExists: new(n.FieldExists),
+			OtherExists: new(n.OtherExists),
+			Explanation: n.Explain(),
+		}
+
 	case *AnyMatchNode:
-		return anyMatchToJSON(n)
+		res := jsonNode{
+			Kind:          kindAnyMatch,
+			Result:        n.Result,
+			Index:         new(n.Index),
+			Field:         n.Field.String(),
+			FieldExists:   new(n.FieldExists),
+			IdentityCount: new(n.IdentityCount),
+			MatchedID:     n.MatchedID.String(),
+		}
+		if n.MatchedIndex >= 0 {
+			res.MatchedIndex = new(n.MatchedIndex)
+		}
+		if n.NestedTrace != nil {
+			nested := nodeToJSON(n.NestedTrace)
+			res.NestedTrace = &nested
+		}
+		return res
+
 	default:
 		return jsonNode{}
 	}
-}
-
-func clauseToJSON(c *ClauseNode) jsonNode {
-	idx := c.Index
-	exists := c.FieldExists
-	return jsonNode{
-		Kind:           kindClause,
-		Index:          &idx,
-		Field:          c.Field.String(),
-		Op:             c.Op,
-		Value:          c.Value,
-		ResolvedValue:  c.ResolvedValue,
-		ActualValue:    c.ActualValue,
-		ValueFromParam: c.ValueFromParam.String(),
-		FieldExists:    &exists,
-		Result:         c.Result,
-		Explanation:    c.Explain(),
-	}
-}
-
-func fieldRefToJSON(f *FieldRefNode) jsonNode {
-	idx := f.Index
-	exists := f.FieldExists
-	otherExists := f.OtherExists
-	return jsonNode{
-		Kind:        kindFieldRef,
-		Index:       &idx,
-		Field:       f.Field.String(),
-		Op:          f.Op,
-		OtherField:  f.OtherField.String(),
-		ActualValue: f.ActualValue,
-		OtherValue:  f.OtherValue,
-		FieldExists: &exists,
-		OtherExists: &otherExists,
-		Result:      f.Result,
-		Explanation: f.Explain(),
-	}
-}
-
-func anyMatchToJSON(a *AnyMatchNode) jsonNode {
-	idx := a.Index
-	exists := a.FieldExists
-	count := a.IdentityCount
-	var mi *int
-	if a.MatchedIndex >= 0 {
-		v := a.MatchedIndex
-		mi = &v
-	}
-	n := jsonNode{
-		Kind:          kindAnyMatch,
-		Index:         &idx,
-		Field:         a.Field.String(),
-		FieldExists:   &exists,
-		IdentityCount: &count,
-		MatchedIndex:  mi,
-		MatchedID:     a.MatchedID.String(),
-		Result:        a.Result,
-	}
-	if a.NestedTrace != nil {
-		nested := groupToJSON(a.NestedTrace)
-		n.NestedTrace = &nested
-	}
-	return n
 }
