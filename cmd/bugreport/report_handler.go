@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -25,7 +26,7 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 		return fmt.Errorf("resolve current directory: %w", err)
 	}
 
-	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out))
+	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out, time.Time{}))
 	f, err := cmdutil.PrepareOutputFile(outPath, gf)
 	if err != nil {
 		return err

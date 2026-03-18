@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/diag"
@@ -15,6 +16,11 @@ const (
 	StatusWarn Status = "warn"
 	StatusFail Status = "fail"
 )
+
+// Label returns the uppercase display form of the status (e.g. "PASS", "WARN", "FAIL").
+func (s Status) Label() string {
+	return strings.ToUpper(string(s))
+}
 
 type PrereqCheck struct {
 	Name    string
@@ -93,8 +99,8 @@ type ValidationResult struct {
 type ReadinessInput struct {
 	ControlsDir           string
 	ObservationsDir       string
-	MaxUnsafe             string
-	Now                   string
+	MaxUnsafe             time.Duration
+	Now                   time.Time
 	ControlsFlagSet       bool
 	HasEnabledControlPack bool
 	PrereqChecks          []PrereqCheck

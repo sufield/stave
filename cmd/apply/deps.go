@@ -109,7 +109,11 @@ type adapters struct {
 }
 
 func (b *Builder) buildAdapters() (adapters, error) {
-	marshaler, err := b.Provider.NewFindingWriter(b.Opts.Format, b.IsJSON)
+	format, err := ui.ParseOutputFormat(b.Opts.Format)
+	if err != nil {
+		return adapters{}, err
+	}
+	marshaler, err := b.Provider.NewFindingWriter(format, b.IsJSON)
 	if err != nil {
 		return adapters{}, err
 	}

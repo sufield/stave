@@ -1,7 +1,6 @@
 package apply
 
 import (
-	"errors"
 	"io"
 	"os"
 	"time"
@@ -13,6 +12,7 @@ import (
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/validation"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -53,20 +53,26 @@ func (p *Planner) Execute(cfg PlanConfig) error {
 	ctlDir := fsutil.CleanUserPath(cfg.ControlsDir)
 	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
 
+	maxUnsafe, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
+	if err != nil {
+		return ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
+	}
+	now, err := compose.ResolveNow(cfg.Now)
+	if err != nil {
+		return err
+	}
+
 	report, err := service.AssessReadiness(validation.ReadinessInput{
 		ControlsDir:           ctlDir,
 		ObservationsDir:       obsDir,
-		MaxUnsafe:             cfg.MaxUnsafe,
-		Now:                   cfg.Now,
+		MaxUnsafe:             maxUnsafe,
+		Now:                   now,
 		ControlsFlagSet:       cfg.ControlsFlagSet,
 		HasEnabledControlPack: cfg.HasEnabledPacks,
 		PrereqChecks:          cfg.PrereqChecks,
 		Validate:              p.CreateValidator(ctlDir, obsDir, cfg.Sanitize),
 	})
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidMaxUnsafe) {
-			return ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
-		}
 		return err
 	}
 

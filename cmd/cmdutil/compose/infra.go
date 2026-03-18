@@ -11,6 +11,7 @@ import (
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 )
@@ -21,7 +22,7 @@ type Provider struct {
 	ObsRepoFunc       func() (appcontracts.ObservationRepository, error)
 	StdinObsRepoFunc  func(io.Reader) (appcontracts.ObservationRepository, error)
 	ControlRepoFunc   func() (appcontracts.ControlRepository, error)
-	FindingWriterFunc func(format string, jsonMode bool) (appcontracts.FindingMarshaler, error)
+	FindingWriterFunc func(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error)
 }
 
 // NewDefaultProvider returns a provider configured with standard adapters.
@@ -77,7 +78,7 @@ func (p *Provider) NewSnapshotRepo() (SnapshotObservationRepository, error) {
 }
 
 // NewFindingWriter creates a finding marshaler for the given output format.
-func (p *Provider) NewFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+func (p *Provider) NewFindingWriter(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error) {
 	return p.FindingWriterFunc(format, jsonMode)
 }
 

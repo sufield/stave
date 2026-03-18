@@ -47,7 +47,6 @@ type Config struct {
 	BucketAllowlist []string
 	IncludeAll      bool
 	OutputFormat    ui.OutputFormat
-	NowTime         string
 	Quiet           bool
 	Stdout          io.Writer
 	Stderr          io.Writer

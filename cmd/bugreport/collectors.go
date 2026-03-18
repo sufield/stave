@@ -143,8 +143,18 @@ var sensitiveEnvKeys = map[string]struct{}{
 }
 
 func isSensitiveEnvKey(key string) bool {
-	_, ok := sensitiveEnvKeys[strings.ToLower(key)]
-	return ok
+	upper := strings.ToUpper(key)
+	if _, ok := sensitiveEnvKeys[strings.ToLower(key)]; ok {
+		return true
+	}
+	// Heuristic: sanitize any key containing common secret indicators.
+	// This protects against future STAVE_TOKEN, AWS_SECRET_*, etc.
+	for _, pattern := range []string{"SECRET", "TOKEN", "KEY", "PASSWORD", "CREDENTIAL"} {
+		if strings.Contains(upper, pattern) {
+			return true
+		}
+	}
+	return false
 }
 
 func findConfigPath() (string, bool) {

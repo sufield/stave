@@ -147,7 +147,7 @@ func (g *Generator) addManifest(bundle *bundleWriter) error {
 	manifestFiles := append([]string(nil), bundle.files...)
 	m := manifest{
 		BundleVersion: kernel.SchemaBugReport,
-		GeneratedAt:   g.now().Format(time.RFC3339),
+		GeneratedAt:   g.now(),
 		StaveVersion:  staveversion.Version,
 		Sanitized:     true,
 		Files:         manifestFiles,
@@ -201,7 +201,7 @@ func (w *bundleWriter) addWarning(format string, args ...any) {
 
 type manifest struct {
 	BundleVersion kernel.Schema `json:"bundle_version"`
-	GeneratedAt   string        `json:"generated_at"`
+	GeneratedAt   time.Time     `json:"generated_at"`
 	StaveVersion  string        `json:"stave_version"`
 	Sanitized     bool          `json:"sanitized"`
 	Files         []string      `json:"files"`
@@ -210,11 +210,15 @@ type manifest struct {
 }
 
 // ResolveDefaultOutPath generates a timestamped filename for the diagnostic bundle.
-func ResolveDefaultOutPath(cwd, override string) string {
+// When now is zero, the current wall clock is used.
+func ResolveDefaultOutPath(cwd, override string, now time.Time) string {
 	if strings.TrimSpace(override) != "" {
 		return override
 	}
-	name := fmt.Sprintf("stave-diag-%s.zip", time.Now().UTC().Format("20060102T150405Z"))
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	name := fmt.Sprintf("stave-diag-%s.zip", now.UTC().Format("20060102T150405Z"))
 	return filepath.Join(cwd, name)
 }
 
