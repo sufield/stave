@@ -5,8 +5,9 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-// traceAnyMatchRule traces any_match with identity iteration.
-func traceAnyMatchRule(rc ruleContext) Node {
+// traceAnyMatchRule traces any_match logic by iterating through identities.
+// Returns the concrete type so callers can access AnyMatchNode fields directly.
+func traceAnyMatchRule(rc ruleContext) *AnyMatchNode {
 	node := &AnyMatchNode{
 		Index:        rc.Index,
 		Field:        rc.Field,
@@ -14,7 +15,7 @@ func traceAnyMatchRule(rc ruleContext) Node {
 		MatchedIndex: -1,
 	}
 
-	if !rc.FieldExists {
+	if !rc.FieldExists || rc.FieldValue == nil {
 		return node
 	}
 
@@ -24,24 +25,29 @@ func traceAnyMatchRule(rc ruleContext) Node {
 	}
 
 	node.IdentityCount = len(identities)
-
-	nestedPred, err := rc.EvalCtx.ParsePredicate(rc.CompareValue)
-	if nestedPred == nil || err != nil {
+	if node.IdentityCount == 0 {
 		return node
 	}
 
-	idCtx := policy.EvalContext{
+	nestedPred, err := rc.EvalCtx.ParsePredicate(rc.CompareValue)
+	if err != nil || nestedPred == nil {
+		return node
+	}
+
+	baseCtx := policy.EvalContext{
 		Params:          rc.EvalCtx.Params,
 		PredicateParser: rc.EvalCtx.PredicateParser,
 	}
 	for i, id := range identities {
+		idCtx := baseCtx
 		idCtx.Properties = id.Map()
-		nestedGroup := TracePredicate(*nestedPred, idCtx)
-		if nestedGroup.Result {
+
+		nestedTrace := TracePredicate(*nestedPred, idCtx)
+		if nestedTrace.Result {
+			node.Result = true
 			node.MatchedIndex = i
 			node.MatchedID = id.ID
-			node.NestedTrace = nestedGroup
-			node.Result = true
+			node.NestedTrace = nestedTrace
 			return node
 		}
 	}
