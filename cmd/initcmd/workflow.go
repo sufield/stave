@@ -21,7 +21,7 @@ type githubActionsData struct {
 	DefaultPolicy   string
 }
 
-func scaffoldGitHubActions(opts scaffoldOptions) string {
+func scaffoldGitHubActions(opts scaffoldOptions) (string, error) {
 	data := githubActionsData{
 		MaxUnsafeVar:    env.MaxUnsafe.Name,
 		ScheduleBlock:   scheduleBlock(opts.CaptureCadence),
@@ -32,15 +32,15 @@ func scaffoldGitHubActions(opts scaffoldOptions) string {
 
 	tmpl, err := template.New("github-actions").Parse(githubActionsTemplateSrc)
 	if err != nil {
-		panic(fmt.Sprintf("parse github actions template: %v", err))
+		return "", fmt.Errorf("parse github actions template: %w", err)
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
-		panic(fmt.Sprintf("execute github actions template: %v", err))
+		return "", fmt.Errorf("execute github actions template: %w", err)
 	}
 
-	return buf.String()
+	return buf.String(), nil
 }
 
 func scheduleBlock(cadence string) string {

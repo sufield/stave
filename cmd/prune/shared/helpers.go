@@ -138,9 +138,16 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
+	if err := projconfig.GlobalConfigError(); err != nil {
+		return "", fmt.Errorf("cannot validate retention tier: %w", err)
+	}
 	eval := projconfig.Global()
 	if !eval.HasConfiguredTier(tier) {
-		if cfg, ok, _ := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
+		cfg, ok, cfgErr := projconfig.FindProjectConfig()
+		if cfgErr != nil {
+			return "", fmt.Errorf("load project config for tier validation: %w", cfgErr)
+		}
+		if ok && len(cfg.RetentionTiers) > 0 {
 			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)",
 				tier, strings.Join(appconfig.SortedTierNames(cfg.RetentionTiers), ", "))
 		}

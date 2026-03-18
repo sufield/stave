@@ -59,7 +59,9 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		return o.resolveProfileMode(cs)
 	}
 
-	o.normalizeApplyPaths(cs.ObsChanged)
+	if err := o.normalizeApplyPaths(cs.ObsChanged); err != nil {
+		return RunConfig{}, err
+	}
 
 	parsed, err := o.parseDomain()
 	if err != nil {
@@ -118,29 +120,25 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 }
 
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
-func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
+func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
-		slog.Warn("failed to create project resolver", "error", err)
+		return appeval.Options{}, fmt.Errorf("resolve project context: %w", err)
 	}
-	root := ""
-	if resolver != nil {
-		root = resolver.ProjectRoot()
-	}
+	root := resolver.ProjectRoot()
+
 	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
-		slog.Warn("failed to load project config", "error", err)
+		return appeval.Options{}, fmt.Errorf("load project config: %w", err)
 	}
 	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
 	if uErr != nil {
-		slog.Warn("failed to load user config", "error", uErr)
+		return appeval.Options{}, fmt.Errorf("load user config: %w", uErr)
 	}
 
 	selectedContext := ""
-	if resolver != nil {
-		if sc, err := resolver.ResolveSelected(); err == nil && sc.Active {
-			selectedContext = sc.Name
-		}
+	if sc, scErr := resolver.ResolveSelected(); scErr == nil && sc.Active {
+		selectedContext = sc.Name
 	}
 
 	return appeval.Options{
@@ -155,18 +153,18 @@ func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 		IntegrityManifest:  o.IntegrityManifest,
 		IntegrityPublicKey: o.IntegrityPublicKey,
 		Hasher:             fsutil.FSContentHasher{},
-	}
+	}, nil
 }
 
 // normalizeApplyPaths cleans user-supplied paths and applies project-root
 // inference for controls and observations directories.
-func (o *ApplyOptions) normalizeApplyPaths(obsChanged bool) {
+func (o *ApplyOptions) normalizeApplyPaths(obsChanged bool) error {
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
 	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 
-	resolver, resolverErr := projctx.NewResolver()
-	if resolverErr != nil {
-		slog.Warn("failed to create project resolver", "error", resolverErr)
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return fmt.Errorf("resolve project context: %w", err)
 	}
 	engine := projctx.NewInferenceEngine(resolver)
 	if !o.ControlsSet {
@@ -179,6 +177,7 @@ func (o *ApplyOptions) normalizeApplyPaths(obsChanged bool) {
 			o.ObservationsDir = inferred
 		}
 	}
+	return nil
 }
 
 // parseDomain handles the conversion of strings to domain-specific types.

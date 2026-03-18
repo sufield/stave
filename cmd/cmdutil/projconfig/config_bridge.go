@@ -1,6 +1,7 @@
 package projconfig
 
 import (
+	"log/slog"
 	"maps"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -144,7 +145,9 @@ func ConfigKeyCompletionsFrom(svc *configservice.Service) []string {
 	baseKeys := svc.TopLevelKeys()
 	tiers := []string{appconfig.DefaultRetentionTier}
 
-	if cfg, ok, _ := FindProjectConfig(); ok {
+	if cfg, ok, cfgErr := FindProjectConfig(); cfgErr != nil {
+		slog.Warn("failed to load project config for completions", "error", cfgErr)
+	} else if ok {
 		if t := appconfig.NormalizeTier(cfg.RetentionTier); t != "" {
 			tiers = append(tiers, t)
 		}
