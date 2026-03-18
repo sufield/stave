@@ -150,7 +150,10 @@ func (r *Runner) Scan(root string) (State, error) {
 	evalPath := filepath.Join(root, "output", "evaluation.json")
 	evalTime, hasEval := r.fileModTime(evalPath)
 
-	last, _ := projctx.LoadSession(root)
+	last, sessErr := projctx.LoadSession(root)
+	if sessErr != nil && !os.IsNotExist(sessErr) {
+		return State{}, fmt.Errorf("load session: %w", sessErr)
+	}
 
 	return State{
 		Root:         root,
@@ -178,7 +181,7 @@ func (r *Runner) summarize(dir string, exts ...string) (Summary, error) {
 		}
 		info, err := e.Info()
 		if err != nil {
-			continue
+			return s, fmt.Errorf("stat %s: %w", e.Name(), err)
 		}
 		s.Count++
 		if !s.HasLatest || info.ModTime().After(s.Latest) {
@@ -193,7 +196,13 @@ func (r *Runner) summarize(dir string, exts ...string) (Summary, error) {
 func (r *Runner) summarizeRecursive(dir string, exts ...string) (Summary, error) {
 	var s Summary
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err // surface permission and other real errors
+		}
+		if d.IsDir() {
 			return nil
 		}
 		if len(exts) > 0 && !matchesExtension(d.Name(), exts) {
@@ -201,7 +210,7 @@ func (r *Runner) summarizeRecursive(dir string, exts ...string) (Summary, error)
 		}
 		info, infoErr := d.Info()
 		if infoErr != nil {
-			return nil
+			return fmt.Errorf("stat %s: %w", path, infoErr)
 		}
 		s.Count++
 		if !s.HasLatest || info.ModTime().After(s.Latest) {

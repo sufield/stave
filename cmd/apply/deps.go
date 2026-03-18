@@ -71,7 +71,10 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		return nil, err
 	}
 
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
+	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
+	if err != nil {
+		return nil, fmt.Errorf("load project config: %w", err)
+	}
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
 	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{

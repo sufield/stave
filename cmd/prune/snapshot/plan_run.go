@@ -42,7 +42,10 @@ func (r *PlanRunner) Run(ctx context.Context, cfg PlanConfig) error {
 		return err
 	}
 
-	tiers, tierRules, defaultTier := resolvePlanRetentionConfig()
+	tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig()
+	if err != nil {
+		return fmt.Errorf("resolve retention config: %w", err)
+	}
 
 	p := buildPlan(planBuildParams{
 		Now:         cfg.Now,
@@ -98,8 +101,11 @@ func listPlanFiles(ctx context.Context, p *compose.Provider, observationsRoot, a
 	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
 }
 
-func resolvePlanRetentionConfig() (map[string]retention.TierConfig, []retention.MappingRule, string) {
-	cfg, _, _ := projconfig.FindProjectConfigWithPath("")
+func resolvePlanRetentionConfig() (map[string]retention.TierConfig, []retention.MappingRule, string, error) {
+	cfg, _, err := projconfig.FindProjectConfigWithPath("")
+	if err != nil {
+		return nil, nil, "", fmt.Errorf("load project config: %w", err)
+	}
 	defaultTier := projconfig.Global().RetentionTier()
 	var tiers map[string]retention.TierConfig
 	var tierRules []retention.MappingRule
@@ -115,5 +121,5 @@ func resolvePlanRetentionConfig() (map[string]retention.TierConfig, []retention.
 			},
 		}
 	}
-	return tiers, tierRules, defaultTier
+	return tiers, tierRules, defaultTier, nil
 }

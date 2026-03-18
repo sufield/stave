@@ -46,6 +46,7 @@ type executionPlan struct {
 // It implements appeval.CleanupOrchestrator directly.
 type Runner struct {
 	Provider *compose.Provider
+	ctx      context.Context
 	cfg      Config
 	plan     *executionPlan
 }
@@ -62,6 +63,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	cfg.ObservationsDir = obsDir
 	cfg.DryRun = cfg.DryRun || !cfg.Force
+	r.ctx = ctx
 	r.cfg = cfg
 
 	return appeval.RunCleanup(r)
@@ -69,7 +71,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 // BuildPlan identifies which snapshots meet the criteria for pruning.
 func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(context.Background(), r.Provider, r.cfg.ObservationsDir)
+	allFiles, err := pruneshared.ListObservationSnapshotFiles(r.ctx, r.Provider, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -123,7 +124,10 @@ func (o *ApplyOptions) buildEvaluatorInput() appeval.Options {
 	if resolver != nil {
 		root = resolver.ProjectRoot()
 	}
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
+	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
+	if err != nil {
+		slog.Warn("failed to load project config", "error", err)
+	}
 	_, userPath, _ := projconfig.FindUserConfigWithPath()
 
 	selectedContext := ""

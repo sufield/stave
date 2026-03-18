@@ -1,6 +1,8 @@
 package projconfig
 
 import (
+	"log/slog"
+
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
 
@@ -19,7 +21,10 @@ func Global() *appconfig.Evaluator {
 
 // defaultEvaluator creates a fresh evaluator from the filesystem.
 func defaultEvaluator() *appconfig.Evaluator {
-	pCfg, pPath, _ := FindProjectConfigWithPath("")
+	pCfg, pPath, err := FindProjectConfigWithPath("")
+	if err != nil {
+		slog.Warn("failed to load project config", "error", err)
+	}
 	uCfg, uPath, _ := FindUserConfigWithPath()
 	return appconfig.NewEvaluator(pCfg, pPath, uCfg, uPath)
 }

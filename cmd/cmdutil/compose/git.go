@@ -20,7 +20,7 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 	if !ok {
 		return nil
 	}
-	head, _ := gitinfo.HeadCommit(repoRoot)
+	head, headErr := gitinfo.HeadCommit(repoRoot)
 
 	var cleaned []string
 	for _, p := range watchPaths {
@@ -34,7 +34,14 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 		cleaned = append(cleaned, abs)
 	}
 
-	dirty, dirtyList, _ := gitinfo.IsDirty(repoRoot, cleaned)
+	dirty, dirtyList, dirtyErr := gitinfo.IsDirty(repoRoot, cleaned)
+
+	// Fail closed: if git commands error, report as dirty so outputs
+	// don't falsely claim a clean repository state.
+	if headErr != nil || dirtyErr != nil {
+		dirty = true
+	}
+
 	return &evaluation.GitInfo{
 		RepoRoot:  repoRoot,
 		Head:      head,

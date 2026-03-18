@@ -2,6 +2,7 @@ package validate
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -122,7 +123,10 @@ func (o *options) prepareEnvironment(cmd *cobra.Command) {
 	gf := cmdutil.GetGlobalFlags(cmd)
 	resolver, _ := projctx.NewResolver()
 
-	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
+	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
+	if err != nil {
+		slog.Warn("failed to load project config", "error", err)
+	}
 	root := ""
 	if resolver != nil {
 		root = resolver.ProjectRoot()
