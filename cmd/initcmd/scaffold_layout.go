@@ -73,7 +73,9 @@ func scaffoldLayout(opts scaffoldOptions) ([]string, map[string]string, error) {
 		return nil, nil, err
 	}
 	addProfileScaffoldFiles(files, opts.Profile)
-	addWorkflowScaffoldFiles(files, opts)
+	if err := addWorkflowScaffoldFiles(files, opts); err != nil {
+		return nil, nil, err
+	}
 	return dirs, files, nil
 }
 
@@ -158,11 +160,16 @@ Include files such as:
 `)
 }
 
-func addWorkflowScaffoldFiles(files map[string]string, opts scaffoldOptions) {
+func addWorkflowScaffoldFiles(files map[string]string, opts scaffoldOptions) error {
 	if !opts.WithGitHubActions {
-		return
+		return nil
 	}
-	files[".github/workflows/stave.yml"] = normalizeTemplate(scaffoldGitHubActions(opts))
+	content, err := scaffoldGitHubActions(opts)
+	if err != nil {
+		return fmt.Errorf("render GitHub Actions workflow: %w", err)
+	}
+	files[".github/workflows/stave.yml"] = normalizeTemplate(content)
+	return nil
 }
 
 func writeScaffoldFile(path string, data []byte, overwrite, allowSymlink bool) (bool, error) {

@@ -65,7 +65,11 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
 func runStandardApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) error {
-	plan, err := appeval.NewPlan(opts.buildEvaluatorInput())
+	evalInput, err := opts.buildEvaluatorInput()
+	if err != nil {
+		return decorateError(fmt.Errorf("failed to build evaluator input: %w", err))
+	}
+	plan, err := appeval.NewPlan(evalInput)
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
