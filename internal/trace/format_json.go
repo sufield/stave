@@ -123,7 +123,7 @@ func clauseToJSON(c *ClauseNode) jsonNode {
 		ValueFromParam: c.ValueFromParam.String(),
 		FieldExists:    &exists,
 		Result:         c.Result,
-		Explanation:    clauseExplanation(c),
+		Explanation:    c.Explain(),
 	}
 }
 
@@ -142,7 +142,7 @@ func fieldRefToJSON(f *FieldRefNode) jsonNode {
 		FieldExists: &exists,
 		OtherExists: &otherExists,
 		Result:      f.Result,
-		Explanation: fieldRefExplanation(f),
+		Explanation: f.Explain(),
 	}
 }
 

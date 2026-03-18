@@ -2,16 +2,56 @@ package trace
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-// maxValueLen caps formatted values in trace explanations so that large
-// payloads (e.g. inline IAM policy JSON) don't make the output unreadable.
-const maxValueLen = 120
+const (
+	// maxDisplayLen caps formatted values to keep trace outputs readable.
+	maxDisplayLen = 120
 
-// formatValue produces a human-readable representation of a value,
-// truncating results that exceed maxValueLen.
+	tagPass = "PASS"
+	tagFail = "FAIL"
+)
+
+// Explain generates a human-readable summary of the clause evaluation.
+func (c *ClauseNode) Explain() string {
+	if !c.ValueFromParam.IsZero() && c.ResolvedValue == nil {
+		return fmt.Sprintf("parameter %s not found → %s", c.ValueFromParam, tagFail)
+	}
+
+	tag := resultTag(c.Result)
+
+	if !c.FieldExists {
+		switch c.Op {
+		case predicate.OpMissing, predicate.OpPresent, predicate.OpListEmpty:
+			return fmt.Sprintf("field %q is absent (checked %s %v) → %s",
+				c.Field, c.Op, c.ResolvedValue, tag)
+		case predicate.OpNe:
+			return fmt.Sprintf("field %q is absent (absent != %v is true) → %s",
+				c.Field, c.ResolvedValue, tag)
+		default:
+			return fmt.Sprintf("field %q is absent → %s", c.Field, tag)
+		}
+	}
+
+	return fmt.Sprintf("%s %s %s → %s",
+		formatValue(c.ActualValue), c.Op, formatValue(c.ResolvedValue), tag)
+}
+
+// Explain generates a human-readable summary of the field-to-field comparison.
+func (f *FieldRefNode) Explain() string {
+	tag := resultTag(f.Result)
+	if !f.FieldExists {
+		return fmt.Sprintf("field %q is absent → %s", f.Field, tag)
+	}
+	return fmt.Sprintf("%s %s %s → %s",
+		formatValue(f.ActualValue), f.Op, f.OtherField, tag)
+}
+
+// formatValue produces a quoted string for strings, or a standard string
+// representation for other types, truncated for readability.
 func formatValue(v any) string {
 	if v == nil {
 		return "<nil>"
@@ -25,51 +65,27 @@ func formatValue(v any) string {
 	default:
 		s = fmt.Sprintf("%v", val)
 	}
-	if len(s) > maxValueLen {
-		return s[:maxValueLen] + "…"
-	}
-	return s
+	return truncate(s, maxDisplayLen)
 }
 
 func resultTag(result bool) string {
 	if result {
-		return "PASS"
+		return tagPass
 	}
-	return "FAIL"
+	return tagFail
 }
 
-// clauseExplanation generates a human-readable explanation from a ClauseNode's data.
-func clauseExplanation(c *ClauseNode) string {
-	if !c.ValueFromParam.IsZero() && c.ResolvedValue == nil {
-		return fmt.Sprintf("value_from_param %q not found in params → FAIL", c.ValueFromParam.String())
+// truncate safely shortens a string to n runes, not bytes.
+func truncate(s string, n int) string {
+	if utf8.RuneCountInString(s) <= n {
+		return s
 	}
-
-	tag := resultTag(c.Result)
-	compareValue := c.ResolvedValue
-
-	if !c.FieldExists {
-		switch c.Op {
-		case predicate.OpMissing:
-			return fmt.Sprintf("field absent, missing %v → %s", compareValue, tag)
-		case predicate.OpPresent:
-			return fmt.Sprintf("field absent, present %v → %s", compareValue, tag)
-		case predicate.OpNe:
-			return fmt.Sprintf("field absent (absent ne %v is true) → %s", compareValue, tag)
-		case predicate.OpListEmpty:
-			return fmt.Sprintf("field absent, list_empty %v → %s", compareValue, tag)
-		default:
-			return fmt.Sprintf("field absent → %s", tag)
+	var count int
+	for i := range s {
+		if count == n {
+			return s[:i] + "…"
 		}
+		count++
 	}
-
-	return fmt.Sprintf("%s %s %s → %s", formatValue(c.ActualValue), c.Op, formatValue(compareValue), tag)
-}
-
-// fieldRefExplanation generates a human-readable explanation from a FieldRefNode's data.
-func fieldRefExplanation(f *FieldRefNode) string {
-	tag := resultTag(f.Result)
-	if !f.FieldExists {
-		return fmt.Sprintf("field absent → %s", tag)
-	}
-	return fmt.Sprintf("%s %s %s → %s", formatValue(f.ActualValue), f.Op, f.OtherField.String(), tag)
+	return s
 }

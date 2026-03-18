@@ -91,13 +91,13 @@ func (tw *TextWriter) renderClause(c *ClauseNode) {
 	if !c.ValueFromParam.IsZero() {
 		tw.printf("    (value_from_param: %s)\n", c.ValueFromParam)
 	}
-	tw.printf("    Resolved: %s\n", clauseExplanation(c))
+	tw.printf("    Resolved: %s\n", c.Explain())
 }
 
 func (tw *TextWriter) renderFieldRef(f *FieldRefNode) {
 	tw.printf("[%d] field: %s  op: %s  other_field: %s\n",
 		f.Index+1, f.Field, f.Op, f.OtherField)
-	tw.printf("    Resolved: %s\n", fieldRefExplanation(f))
+	tw.printf("    Resolved: %s\n", f.Explain())
 }
 
 func (tw *TextWriter) renderAnyMatch(a *AnyMatchNode) {
