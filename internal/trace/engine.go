@@ -120,7 +120,7 @@ func traceRule(index int, rule *policy.PredicateRule, ctx policy.EvalContext) No
 
 	rc := newRuleContext(index, rule, ctx)
 
-	if rc.ValueFromParam != "" && rc.CompareValue == nil {
+	if !rc.ValueFromParam.IsZero() && rc.CompareValue == nil {
 		return buildClauseNode(rc, false)
 	}
 

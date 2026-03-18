@@ -25,7 +25,7 @@ type ContentValidator interface {
 // ExplicitRequest validates content against a named schema kind.
 type ExplicitRequest struct {
 	Data          []byte
-	Kind          string
+	Kind          schemas.Kind
 	SchemaVersion string
 	Strict        bool
 }
@@ -37,7 +37,7 @@ func (r ExplicitRequest) Validate(v SchemaValidator) (*service.ValidationResult,
 		return nil, err
 	}
 	diags, err := v.Validate(contractvalidator.Request{
-		Kind:          schemas.Kind(r.Kind),
+		Kind:          r.Kind,
 		ActualVersion: version,
 		Data:          r.Data,
 		IsYAML:        contractvalidator.IsLikelyYAML(r.Data),

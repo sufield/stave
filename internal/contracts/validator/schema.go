@@ -81,7 +81,7 @@ func (v *Validator) Validate(req Request) ([]Diagnostic, error) {
 // --- Internal Schema Management ---
 
 func (v *Validator) getSchema(kind schemas.Kind, version string) (*jsonschema.Schema, error) {
-	ver, err := schemas.ResolveVersion(string(kind), version)
+	ver, err := schemas.ResolveVersion(kind, version)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (v *Validator) getSchema(kind schemas.Kind, version string) (*jsonschema.Sc
 		return cached, nil
 	}
 
-	raw, err := schemas.LoadSchema(string(kind), ver)
+	raw, err := schemas.LoadSchema(kind, ver)
 	if err != nil {
 		return nil, err
 	}

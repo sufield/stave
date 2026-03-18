@@ -7,12 +7,12 @@ import (
 
 func TestLoadSchema(t *testing.T) {
 	cases := []struct {
-		kind    string
+		kind    Kind
 		version string
 	}{
-		{kind: string(KindControl), version: "v1"},
-		{kind: string(KindObservation), version: "v1"},
-		{kind: string(KindFinding), version: "v1"},
+		{kind: KindControl, version: "v1"},
+		{kind: KindObservation, version: "v1"},
+		{kind: KindFinding, version: "v1"},
 	}
 
 	for _, tc := range cases {
@@ -29,7 +29,7 @@ func TestLoadSchema(t *testing.T) {
 func TestAllRegistryEntriesLoadable(t *testing.T) {
 	for kind, versions := range registry {
 		for version := range versions {
-			raw, err := LoadSchema(string(kind), version)
+			raw, err := LoadSchema(kind, version)
 			if err != nil {
 				t.Errorf("LoadSchema(%s, %s): %v", kind, version, err)
 				continue
@@ -46,7 +46,7 @@ func TestAllRegistryEntriesLoadable(t *testing.T) {
 }
 
 func TestLoadSchema_DefaultVersion(t *testing.T) {
-	raw, err := LoadSchema(string(KindControl), "")
+	raw, err := LoadSchema(KindControl, "")
 	if err != nil {
 		t.Fatalf("LoadSchema default version failed: %v", err)
 	}

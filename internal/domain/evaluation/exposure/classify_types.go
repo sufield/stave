@@ -23,10 +23,10 @@ type NormalizedResourceInput struct {
 type ExposureClassification struct {
 	ID             kernel.ControlID      `json:"id"`
 	Resource       string                `json:"resource"`
-	ExposureType   string                `json:"exposure_type"`
+	ExposureType   Type                  `json:"exposure_type"`
 	PrincipalScope kernel.PrincipalScope `json:"principal_scope"`
 	Actions        []string              `json:"actions"`
-	WriteScope     string                `json:"write_scope,omitempty"`
+	WriteScope     WriteScope            `json:"write_scope,omitempty"`
 	EvidencePath   []string              `json:"evidence_path"`
 }
 

@@ -22,9 +22,9 @@ type AuditConfig struct {
 	OutPath          string
 	OutDir           string
 	SeverityFilter   []domainsecurityaudit.Severity
-	SBOMFormat       string
+	SBOMFormat       appsa.SBOMFormat
 	Frameworks       []string
-	VulnSource       string
+	VulnSource       appsa.VulnSource
 	LiveVulnCheck    bool
 	ReleaseBundleDir string
 	PrivacyMode      bool
@@ -63,9 +63,9 @@ func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
 		BinaryPath:           exe,
 		OutDir:               bundleDir,
 		SeverityFilter:       cfg.SeverityFilter,
-		SBOMFormat:           appsa.SBOMFormat(cfg.SBOMFormat),
+		SBOMFormat:           cfg.SBOMFormat,
 		ComplianceFrameworks: cfg.Frameworks,
-		VulnSource:           appsa.VulnSource(cfg.VulnSource),
+		VulnSource:           cfg.VulnSource,
 		LiveVulnCheck:        cfg.LiveVulnCheck,
 		ReleaseBundleDir:     cfg.ReleaseBundleDir,
 		PrivacyMode:          cfg.PrivacyMode,

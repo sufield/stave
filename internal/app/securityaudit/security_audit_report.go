@@ -18,8 +18,8 @@ func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, 
 		Summary: securityaudit.Summary{
 			BySeverity:        map[securityaudit.Severity]int{},
 			FailOn:            req.FailOn,
-			VulnSourceUsed:    ev.Vuln.SourceUsed,
-			EvidenceFreshness: ev.Vuln.Freshness,
+			VulnSourceUsed:    string(ev.Vuln.SourceUsed),
+			EvidenceFreshness: string(ev.Vuln.Freshness),
 		},
 		Findings: findings,
 	}
@@ -47,8 +47,8 @@ func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, 
 	report.Controls = collectUniqueControls(report.Findings)
 	report.Summary.FailOn = req.FailOn
 	report.RecomputeSummary()
-	report.Summary.VulnSourceUsed = ev.Vuln.SourceUsed
-	report.Summary.EvidenceFreshness = ev.Vuln.Freshness
+	report.Summary.VulnSourceUsed = string(ev.Vuln.SourceUsed)
+	report.Summary.EvidenceFreshness = string(ev.Vuln.Freshness)
 	report.Normalize()
 
 	return report

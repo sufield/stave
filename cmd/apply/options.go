@@ -105,7 +105,7 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 			InputFile:       o.InputFile,
 			BucketAllowlist: o.BucketAllowlist,
 			IncludeAll:      o.IncludeAll,
-			OutputFormat:    format.String(),
+			OutputFormat:    format,
 			NowTime:         o.NowTime,
 			Quiet:           cs.GlobalFlags.Quiet,
 			Stdout:          compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),

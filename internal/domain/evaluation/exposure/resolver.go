@@ -37,15 +37,15 @@ func (c *resolutionContext) readEvidence() []string {
 }
 
 // writeScope classifies the severity of write access.
-func (c *resolutionContext) writeScope() string {
+func (c *resolutionContext) writeScope() WriteScope {
 	perms := c.effectivePerms()
 	if !perms.Has(PermWrite) {
 		return ""
 	}
 	if perms.Has(PermRead) || perms.Has(PermList) {
-		return "full"
+		return WriteScopeFull
 	}
-	return "blind"
+	return WriteScopeBlind
 }
 
 // resolveRead evaluates and selects the primary read-based exposure finding.
@@ -85,7 +85,7 @@ func (c *resolutionContext) resolveList() []ExposureClassification {
 	return []ExposureClassification{{
 		ID:             idPublicList,
 		Resource:       c.input.Name,
-		ExposureType:   "public_list",
+		ExposureType:   TypePublicList,
 		PrincipalScope: c.principalScope(),
 		Actions:        []string{ActionList},
 		EvidencePath:   c.evidence.Get(EvDiscovery),
@@ -125,7 +125,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 		findings = append(findings, ExposureClassification{
 			ID:             idPublicAdminRead,
 			Resource:       c.input.Name,
-			ExposureType:   "public_metadata_read",
+			ExposureType:   TypePublicMetaRead,
 			PrincipalScope: scope,
 			Actions:        []string{ActionAdminRead},
 			EvidencePath:   c.evidence.Get(EvResourceAdminRead),
@@ -135,7 +135,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 		findings = append(findings, ExposureClassification{
 			ID:             idPublicAdminWrite,
 			Resource:       c.input.Name,
-			ExposureType:   "public_metadata_write",
+			ExposureType:   TypePublicMetaWrite,
 			PrincipalScope: scope,
 			Actions:        []string{ActionAdminWrite},
 			EvidencePath:   c.evidence.Get(EvResourceAdminRead),
@@ -145,7 +145,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 		findings = append(findings, ExposureClassification{
 			ID:             idPublicDelete,
 			Resource:       c.input.Name,
-			ExposureType:   "public_delete",
+			ExposureType:   TypePublicDelete,
 			PrincipalScope: scope,
 			Actions:        []string{ActionDelete},
 			EvidencePath:   c.evidence.Get(EvDelete),

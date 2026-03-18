@@ -40,8 +40,8 @@ func resultTag(result bool) string {
 
 // clauseExplanation generates a human-readable explanation from a ClauseNode's data.
 func clauseExplanation(c *ClauseNode) string {
-	if c.ValueFromParam != "" && c.ResolvedValue == nil {
-		return fmt.Sprintf("value_from_param %q not found in params → FAIL", c.ValueFromParam)
+	if !c.ValueFromParam.IsZero() && c.ResolvedValue == nil {
+		return fmt.Sprintf("value_from_param %q not found in params → FAIL", c.ValueFromParam.String())
 	}
 
 	tag := resultTag(c.Result)
@@ -71,5 +71,5 @@ func fieldRefExplanation(f *FieldRefNode) string {
 	if !f.FieldExists {
 		return fmt.Sprintf("field absent → %s", tag)
 	}
-	return fmt.Sprintf("%s %s %s → %s", formatValue(f.FieldValue), f.Op, f.OtherField, tag)
+	return fmt.Sprintf("%s %s %s → %s", formatValue(f.FieldValue), f.Op, f.OtherField.String(), tag)
 }

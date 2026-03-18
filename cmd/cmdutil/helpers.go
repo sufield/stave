@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -28,11 +29,11 @@ const DynamicDefaultHelpSuffix = " Resolved default may come from STAVE_* env va
 
 // GlobalFlags represents the state of persistent flags registered at the root.
 type GlobalFlags struct {
-	Output            string
+	Output            ui.OutputFormat
 	Quiet             bool
 	Force             bool
 	Sanitize          bool
-	PathMode          string
+	PathMode          sanitize.PathMode
 	Strict            bool
 	LogFile           string
 	RequireOffline    bool
@@ -48,12 +49,15 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 	}
 	rootFlags := cmd.Root().PersistentFlags()
 
+	outputRaw := getStr(rootFlags, FlagOutput)
+	outputMode, _ := ui.ParseOutputMode(outputRaw)
+
 	return GlobalFlags{
-		Output:          getStr(rootFlags, FlagOutput),
+		Output:          outputMode,
 		Quiet:           getBool(rootFlags, FlagQuiet),
 		Force:           getBool(rootFlags, FlagForce),
 		Sanitize:        getBool(rootFlags, FlagSanitize),
-		PathMode:        getStr(rootFlags, FlagPathMode),
+		PathMode:        ParsePathMode(getStr(rootFlags, FlagPathMode)),
 		Strict:          getBool(rootFlags, FlagStrict),
 		LogFile:         getStr(rootFlags, FlagLogFile),
 		RequireOffline:  getBool(rootFlags, FlagOffline),
@@ -65,7 +69,7 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 
 // IsJSONMode returns true if the output mode is set to JSON.
 func (g GlobalFlags) IsJSONMode() bool {
-	return g.Output == "json"
+	return g.Output == ui.OutputFormatJSON
 }
 
 // TextOutputEnabled returns true if human-readable text should be printed.
@@ -77,7 +81,7 @@ func (g GlobalFlags) TextOutputEnabled() bool {
 func (g GlobalFlags) GetSanitizer() *sanitize.Sanitizer {
 	policy := sanitize.OutputSanitizationPolicy{
 		SanitizeIDs: g.Sanitize,
-		PathMode:    ParsePathMode(g.PathMode),
+		PathMode:    g.PathMode,
 	}
 	return policy.Sanitizer()
 }

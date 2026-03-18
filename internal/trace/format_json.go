@@ -115,12 +115,12 @@ func clauseToJSON(c *ClauseNode) jsonNode {
 	return jsonNode{
 		Kind:           kindClause,
 		Index:          &idx,
-		Field:          c.Field,
+		Field:          c.Field.String(),
 		Op:             c.Op,
 		Value:          c.Value,
 		ResolvedValue:  c.ResolvedValue,
 		FieldValue:     c.FieldValue,
-		ValueFromParam: c.ValueFromParam,
+		ValueFromParam: c.ValueFromParam.String(),
 		FieldExists:    &exists,
 		Result:         c.Result,
 		Explanation:    clauseExplanation(c),
@@ -134,9 +134,9 @@ func fieldRefToJSON(f *FieldRefNode) jsonNode {
 	return jsonNode{
 		Kind:        kindFieldRef,
 		Index:       &idx,
-		Field:       f.Field,
+		Field:       f.Field.String(),
 		Op:          f.Op,
-		OtherField:  f.OtherField,
+		OtherField:  f.OtherField.String(),
 		FieldValue:  f.FieldValue,
 		OtherValue:  f.OtherValue,
 		FieldExists: &exists,
@@ -153,11 +153,11 @@ func anyMatchToJSON(a *AnyMatchNode) jsonNode {
 	n := jsonNode{
 		Kind:          kindAnyMatch,
 		Index:         &idx,
-		Field:         a.Field,
+		Field:         a.Field.String(),
 		FieldExists:   &exists,
 		IdentityCount: &count,
 		MatchedIndex:  a.MatchedIndex,
-		MatchedID:     a.MatchedID,
+		MatchedID:     a.MatchedID.String(),
 		Result:        a.Result,
 	}
 	if a.NestedTrace != nil {

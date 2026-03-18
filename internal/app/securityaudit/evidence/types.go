@@ -5,6 +5,7 @@ package evidence
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"time"
 
@@ -31,6 +32,52 @@ const (
 	VulnSourceLocal  VulnSource = "local"
 	VulnSourceCI     VulnSource = "ci"
 )
+
+// VulnSourceUsed identifies the actual evidence source outcome (vs VulnSource which is the strategy).
+type VulnSourceUsed string
+
+const (
+	VulnSourceUsedLive       VulnSourceUsed = "local_live_check"
+	VulnSourceUsedFailed     VulnSourceUsed = "live_check_failed"
+	VulnSourceUsedNone       VulnSourceUsed = "none"
+	VulnSourceUsedLocalCache VulnSourceUsed = "local_cache"
+	VulnSourceUsedCIArtifact VulnSourceUsed = "ci_artifact"
+)
+
+// VulnFreshness describes the age/provenance of vulnerability evidence.
+// Values are either named tokens or RFC3339 timestamps from file stat.
+type VulnFreshness string
+
+const (
+	FreshnessUnknown VulnFreshness = "unknown"
+	FreshnessLive    VulnFreshness = "live"
+	FreshnessCached  VulnFreshness = "cached"
+)
+
+// FreshnessFromTime creates a VulnFreshness from a file modification time.
+func FreshnessFromTime(t time.Time) VulnFreshness {
+	return VulnFreshness(t.UTC().Format(time.RFC3339))
+}
+
+// ParseSBOMFormat validates and returns an SBOMFormat.
+func ParseSBOMFormat(s string) (SBOMFormat, error) {
+	switch SBOMFormat(s) {
+	case SBOMFormatSPDX, SBOMFormatCycloneDX:
+		return SBOMFormat(s), nil
+	default:
+		return "", fmt.Errorf("unsupported --sbom-format %q (supported: spdx, cyclonedx)", s)
+	}
+}
+
+// ParseVulnSource validates and returns a VulnSource.
+func ParseVulnSource(s string) (VulnSource, error) {
+	switch VulnSource(s) {
+	case VulnSourceHybrid, VulnSourceLocal, VulnSourceCI:
+		return VulnSource(s), nil
+	default:
+		return "", fmt.Errorf("unsupported --vuln-source %q (supported: hybrid, local, ci)", s)
+	}
+}
 
 // --- Collection Parameters ---
 
@@ -73,8 +120,8 @@ type SBOMSnapshot struct {
 
 type VulnerabilitySnapshot struct {
 	Available    bool
-	SourceUsed   string
-	Freshness    string
+	SourceUsed   VulnSourceUsed
+	Freshness    VulnFreshness
 	FindingCount int
 	RawJSON      []byte
 	Details      string

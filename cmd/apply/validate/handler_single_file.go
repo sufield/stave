@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/cli/ui"
+	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/domain/validation"
 
@@ -65,14 +66,14 @@ func buildValidationRequest(data []byte, opts *options) (appvalidation.ContentVa
 }
 
 // normalizeKind converts various CLI aliases into canonical domain kinds.
-func normalizeKind(raw string) (string, error) {
+func normalizeKind(raw string) (schemas.Kind, error) {
 	switch ui.NormalizeToken(raw) {
 	case "control", "controls":
-		return "control", nil
+		return schemas.KindControl, nil
 	case "observation", "obs", "snapshot", "snapshots":
-		return "observation", nil
+		return schemas.KindObservation, nil
 	case "finding", "findings":
-		return "finding", nil
+		return schemas.KindFinding, nil
 	default:
 		return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
 	}

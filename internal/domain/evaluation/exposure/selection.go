@@ -10,10 +10,23 @@ import (
 type Type string
 
 const (
-	TypeWebPublic     Type = "web_public"
-	TypeAuthenticated Type = "authenticated_access"
-	TypePublicRead    Type = "public_read"
-	TypePublicWrite   Type = "public_write"
+	TypeWebPublic        Type = "web_public"
+	TypeAuthenticated    Type = "authenticated_access"
+	TypePublicRead       Type = "public_read"
+	TypePublicWrite      Type = "public_write"
+	TypePublicList       Type = "public_list"
+	TypePublicMetaRead   Type = "public_metadata_read"
+	TypePublicMetaWrite  Type = "public_metadata_write"
+	TypePublicDelete     Type = "public_delete"
+	TypeResourceTakeover Type = "resource_takeover"
+)
+
+// WriteScope represents the scope of write access.
+type WriteScope string
+
+const (
+	WriteScopeBlind WriteScope = "blind"
+	WriteScopeFull  WriteScope = "full"
 )
 
 // Priority levels (higher is more severe risk).
@@ -68,7 +81,7 @@ func SelectReadExposure(in ReadExposureInput) *exposureCandidate {
 		return ExposureClassification{
 			ID:             id,
 			Resource:       in.ResourceID,
-			ExposureType:   string(t),
+			ExposureType:   t,
 			PrincipalScope: in.PrincipalScope,
 			Actions:        in.Actions,
 			EvidencePath:   ev,
@@ -109,7 +122,7 @@ type WriteExposureInput struct {
 	HasIdentityWrite bool
 	HasResourceWrite bool
 	PrincipalScope   kernel.PrincipalScope
-	WriteScope       string
+	WriteScope       WriteScope
 	EvidenceIdentity []string
 	EvidenceResource []string
 	CanAlsoRead      bool
@@ -130,7 +143,7 @@ func SelectWriteExposure(in WriteExposureInput) *exposureCandidate {
 		return ExposureClassification{
 			ID:             id,
 			Resource:       in.ResourceID,
-			ExposureType:   string(TypePublicWrite),
+			ExposureType:   TypePublicWrite,
 			PrincipalScope: in.PrincipalScope,
 			WriteScope:     in.WriteScope,
 			Actions:        actions,

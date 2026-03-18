@@ -9,17 +9,17 @@ import (
 // All input data is pre-resolved so downstream tracers only record results.
 type ruleContext struct {
 	Index          int
-	Field          string
+	Field          predicate.FieldPath
 	Op             predicate.Operator
 	Value          any // raw from control
-	ValueFromParam string
+	ValueFromParam predicate.ParamRef
 	CompareValue   any // after value_from_param resolution
 	FieldValue     any // actual asset value
 	FieldExists    bool
 	EvalCtx        policy.EvalContext // needed by any-match tracer
 
 	// Field-ref operators: pre-resolved other-field state.
-	OtherField  string
+	OtherField  predicate.FieldPath
 	OtherValue  any
 	OtherExists bool
 }
@@ -34,10 +34,10 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 
 	rc := ruleContext{
 		Index:          index,
-		Field:          rule.Field.String(),
+		Field:          rule.Field,
 		Op:             rule.Op,
 		Value:          rule.Value.Raw(),
-		ValueFromParam: rule.ValueFromParam.String(),
+		ValueFromParam: rule.ValueFromParam,
 		CompareValue:   compareValue,
 		FieldValue:     fieldValue,
 		FieldExists:    fieldExists,
@@ -48,7 +48,7 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 	// don't need to reach back into the EvalContext.
 	if rc.Op.IsFieldRef() {
 		if path, ok := compareValue.(string); ok {
-			rc.OtherField = path
+			rc.OtherField = predicate.NewFieldPath(path)
 			rc.OtherValue, rc.OtherExists = policy.GetFieldValueWithContext(evalCtx, path)
 		}
 	}

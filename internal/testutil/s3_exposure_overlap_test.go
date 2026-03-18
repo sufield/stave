@@ -115,11 +115,11 @@ func TestS3ExposureWriteScopeBlindVsFull(t *testing.T) {
 		name          string
 		hasGet        bool
 		hasList       bool
-		expectedScope string
+		expectedScope exposure.WriteScope
 	}{
-		{"blind_no_read", false, false, "blind"},
-		{"full_with_read", true, false, "full"},
-		{"full_with_list", false, true, "full"},
+		{"blind_no_read", false, false, exposure.WriteScopeBlind},
+		{"full_with_read", true, false, exposure.WriteScopeFull},
+		{"full_with_list", false, true, exposure.WriteScopeFull},
 	}
 
 	for _, tc := range tests {
