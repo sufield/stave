@@ -27,7 +27,7 @@
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Exposure Duration Bound",
       "control_description": "An asset must not remain unsafe beyond the configured time window.",
-      "asset_id": "SANITIZED_d58d0e81",
+      "asset_id": "res:aws:s3:bucket:public-bucket",
       "asset_type": "storage_bucket",
       "asset_vendor": "aws",
       "source": {
