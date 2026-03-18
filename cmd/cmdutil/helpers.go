@@ -79,20 +79,20 @@ func (g GlobalFlags) TextOutputEnabled() bool {
 
 // GetSanitizer returns a configured sanitizer based on the global flags.
 func (g GlobalFlags) GetSanitizer() *sanitize.Sanitizer {
-	policy := sanitize.OutputSanitizationPolicy{
+	policy := sanitize.Policy{
 		SanitizeIDs: g.Sanitize,
 		PathMode:    g.PathMode,
 	}
-	return policy.Sanitizer()
+	return policy.NewSanitizer()
 }
 
-// ParsePathMode parses a CLI flag string to a sanitize.PathMode, defaulting to PathModeBase.
+// ParsePathMode parses a CLI flag string to a sanitize.PathMode, defaulting to PathBase.
 func ParsePathMode(s string) sanitize.PathMode {
 	switch strings.ToLower(strings.TrimSpace(s)) {
-	case string(sanitize.PathModeFull):
-		return sanitize.PathModeFull
+	case string(sanitize.PathFull):
+		return sanitize.PathFull
 	default:
-		return sanitize.PathModeBase
+		return sanitize.PathBase
 	}
 }
 

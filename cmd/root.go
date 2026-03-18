@@ -138,10 +138,10 @@ func (a *App) isJSONMode() bool {
 }
 
 func (a *App) initSanitizer() {
-	a.sanitizer = sanitize.OutputSanitizationPolicy{
+	a.sanitizer = sanitize.Policy{
 		SanitizeIDs: a.Flags.Sanitize,
 		PathMode:    cmdutil.ParsePathMode(a.Flags.PathMode),
-	}.Sanitizer()
+	}.NewSanitizer()
 }
 
 // GetVersion returns the version string.
