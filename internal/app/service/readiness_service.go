@@ -1,35 +1,21 @@
 package service
 
 import (
-	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/domain/diag"
 	"github.com/sufield/stave/internal/domain/validation"
-	"github.com/sufield/stave/internal/pkg/timeutil"
-)
-
-var (
-	ErrInvalidMaxUnsafe = errors.New("invalid max-unsafe")
-	ErrInvalidNow       = errors.New("invalid now")
 )
 
 func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, error) {
-	maxDur, now, err := parseReadinessInputs(in.MaxUnsafe, in.Now)
-	if err != nil {
-		return validation.ReadinessReport{}, err
-	}
-
 	report := validation.NewReadinessReport(in.ControlsDir, in.ObservationsDir)
 	recordPrereqIssues(report, in.PrereqChecks)
 	recordControlSourceIssue(report, in)
 	if err := recordValidationIssues(readinessValidationRequest{
 		Report:    report,
 		Input:     in,
-		MaxUnsafe: maxDur,
-		Now:       now,
+		MaxUnsafe: in.MaxUnsafe,
+		Now:       in.Now,
 	}); err != nil {
 		return validation.ReadinessReport{}, err
 	}
@@ -108,23 +94,4 @@ func readinessIssueStatus(issue diag.Issue) validation.Status {
 		return validation.StatusFail
 	}
 	return validation.StatusWarn
-}
-
-func parseReadinessInputs(maxUnsafeStr, nowStr string) (time.Duration, time.Time, error) {
-	dur, err := timeutil.ParseDuration(strings.TrimSpace(maxUnsafeStr))
-	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("%w: %s", ErrInvalidMaxUnsafe, err)
-	}
-
-	nowStr = strings.TrimSpace(nowStr)
-	if nowStr == "" {
-		return dur, time.Time{}, nil
-	}
-
-	now, err := timeutil.ParseTimestamp(nowStr)
-	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("%w: %v", ErrInvalidNow, err)
-	}
-
-	return dur, now, nil
 }

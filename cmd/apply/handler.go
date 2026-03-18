@@ -82,10 +82,13 @@ func runStandardApply(ctx context.Context, p *compose.Provider, opts *ApplyOptio
 		return decorateError(err)
 	}
 
+	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
+	rt.Quiet = sio.Quiet
 	rep := &Reporter{
-		Stdout: sio.Stdout,
-		Stderr: sio.Stderr,
-		Quiet:  sio.Quiet,
+		Stdout:  sio.Stdout,
+		Stderr:  sio.Stderr,
+		Runtime: rt,
+		Quiet:   sio.Quiet,
 	}
 	return rep.ReportApply(results)
 }

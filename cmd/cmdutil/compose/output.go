@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outsarif "github.com/sufield/stave/internal/adapters/output/sarif"
@@ -14,17 +13,17 @@ import (
 )
 
 // DefaultFindingWriter is the standard implementation for finding marshalers.
-func DefaultFindingWriter(format string, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+func DefaultFindingWriter(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error) {
 	const indented = true
-	switch strings.ToLower(strings.TrimSpace(format)) {
-	case "text":
+	switch format {
+	case ui.OutputFormatText:
 		return outtext.NewFindingWriter(), nil
-	case "json":
+	case ui.OutputFormatJSON:
 		if jsonMode {
 			return outjson.NewFindingWriterWithEnvelope(indented), nil
 		}
 		return outjson.NewFindingWriter(indented), nil
-	case "sarif":
+	case ui.OutputFormatSARIF:
 		return outsarif.NewFindingWriter(), nil
 	default:
 		return nil, fmt.Errorf("invalid --format %q (use text, json, or sarif)", format)

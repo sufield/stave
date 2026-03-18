@@ -12,9 +12,10 @@ import (
 
 // Reporter handles the visual presentation of results to the user.
 type Reporter struct {
-	Stdout io.Writer
-	Stderr io.Writer
-	Quiet  bool
+	Stdout  io.Writer
+	Stderr  io.Writer
+	Runtime *ui.Runtime
+	Quiet   bool
 }
 
 // ReportApply prints the outcome of an evaluation.
@@ -29,14 +30,13 @@ func (r *Reporter) ReportApply(res EvaluateResult) error {
 
 	if !r.Quiet {
 		ui.WriteHint(r.Stderr, res.DiagnoseHint)
-		rt := ui.NewRuntime(r.Stdout, r.Stderr)
-		rt.PrintNextSteps(res.NextSteps...)
+		r.Runtime.PrintNextSteps(res.NextSteps...)
 	}
 
 	return ui.ErrViolationsFound
 }
 
-// ReportPlan prints the readiness report (used by the plan command).
+// ReportPlan prints the readiness report (used by apply --dry-run).
 func (r *Reporter) ReportPlan(report validation.ReadinessReport) error {
 	if r.Quiet {
 		return nil
@@ -64,8 +64,7 @@ func (r *Reporter) ReportPlan(report validation.ReadinessReport) error {
 }
 
 func (r *Reporter) printReadinessIssue(issue validation.Issue) {
-	level := strings.ToUpper(string(issue.Status))
-	fmt.Fprintf(r.Stdout, "  [%s] %s: %s\n", level, issue.Name, issue.Message)
+	fmt.Fprintf(r.Stdout, "  [%s] %s: %s\n", issue.Status.Label(), issue.Name, issue.Message)
 
 	if fix := strings.TrimSpace(issue.Fix); fix != "" {
 		fmt.Fprintf(r.Stdout, "    Fix: %s\n", fix)
