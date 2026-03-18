@@ -31,7 +31,7 @@
       "asset_type": "storage_bucket",
       "asset_vendor": "aws",
       "source": {
-        "file": "infra/main.tf",
+        "file": "main.tf",
         "line": 42
       },
       "evidence": {
