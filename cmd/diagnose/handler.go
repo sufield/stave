@@ -16,7 +16,6 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
@@ -25,7 +24,7 @@ type Config struct {
 	ControlsDir     string
 	ObservationsDir string
 	PreviousOutput  string
-	MaxUnsafe       string
+	MaxUnsafe       time.Duration
 	Format          ui.OutputFormat
 	Quiet           bool
 	Cases           []string
@@ -85,17 +84,12 @@ func (r *Runner) validate(cfg Config) error {
 }
 
 func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
-	maxDuration, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
-	if err != nil {
-		return err
-	}
-
 	diagnoseRun, err := r.newDiagnoseRun()
 	if err != nil {
 		return err
 	}
 
-	baseCfg, err := r.buildAppConfig(cfg, maxDuration)
+	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafe)
 	if err != nil {
 		return err
 	}
@@ -121,17 +115,12 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
-	maxDuration, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
-	if err != nil {
-		return err
-	}
-
 	diagnoseRun, err := r.newDiagnoseRun()
 	if err != nil {
 		return err
 	}
 
-	baseCfg, err := r.buildAppConfig(cfg, maxDuration)
+	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafe)
 	if err != nil {
 		return err
 	}

@@ -55,8 +55,8 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 		t.Fatalf("Fix error: %v", err)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "Fix Plan") {
-		t.Fatalf("missing fix plan section: %s", out)
+	if !strings.Contains(out, `"fix_plan"`) {
+		t.Fatalf("missing fix_plan in JSON output: %s", out)
 	}
 	if !strings.Contains(out, "fix-123") {
 		t.Fatalf("missing fix plan id: %s", out)

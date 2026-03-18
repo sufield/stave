@@ -27,7 +27,7 @@ func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
 	cfg := Config{
 		ControlID: "",
 		AssetID:   "res-1",
-		MaxUnsafe: "24h",
+		MaxUnsafe: 24 * time.Hour,
 		Format:    ui.OutputFormatText,
 		Stdout:    &bytes.Buffer{},
 		Stderr:    &bytes.Buffer{},
@@ -148,7 +148,7 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 		ControlsDir:     "ctl",
 		ObservationsDir: "obs",
 		PreviousOutput:  evalFile,
-		MaxUnsafe:       "1h",
+		MaxUnsafe:       time.Hour,
 		Format:          ui.OutputFormatJSON,
 		ControlID:       "CTL.TEST.A.001",
 		AssetID:         "res-1",

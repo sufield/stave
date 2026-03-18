@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -88,13 +89,18 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		return Config{}, err
 	}
 
+	maxUnsafe, err := timeutil.ParseDurationFlag(o.MaxUnsafe, "--max-unsafe")
+	if err != nil {
+		return Config{}, err
+	}
+
 	flags := cmdutil.GetGlobalFlags(cmd)
 
 	return Config{
 		ControlsDir:     controlsDir,
 		ObservationsDir: obsDir,
 		PreviousOutput:  fsutil.CleanUserPath(o.PreviousOutput),
-		MaxUnsafe:       o.MaxUnsafe,
+		MaxUnsafe:       maxUnsafe,
 		Format:          fmtValue,
 		Quiet:           o.Quiet,
 		Cases:           o.Cases,

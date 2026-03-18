@@ -40,12 +40,15 @@ func NewResolver() (*Resolver, error) {
 // FindProjectConfig searches for the project configuration file by walking up
 // the directory tree starting from the resolver's WorkingDir.
 func (r *Resolver) FindProjectConfig(contextPath string) (*appconfig.ProjectConfig, string, error) {
-	// 1. Priority: Explicit context path (passed from CLI layer)
+	// 1. Priority: Explicit context path (passed from CLI layer).
+	// If loading fails, return the error — do not silently fall back
+	// to a different config from cwd ancestry.
 	if contextPath != "" {
 		cfg, err := r.loadProjectConfig(contextPath)
-		if err == nil {
-			return cfg, contextPath, nil
+		if err != nil {
+			return nil, contextPath, fmt.Errorf("load config from context path %q: %w", contextPath, err)
 		}
+		return cfg, contextPath, nil
 	}
 
 	// 2. Secondary: Walk up from working directory

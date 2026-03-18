@@ -195,22 +195,15 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Test max-unsafe validation error via Runner.
-	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
+	// Test observation loader error.
 	cfg := Config{
 		ControlsDir:     ctlDir,
 		ObservationsDir: obsDir,
-		MaxUnsafe:       "bad-duration",
+		MaxUnsafe:       24 * time.Hour,
 		Format:          ui.OutputFormatText,
 		Stdout:          &bytes.Buffer{},
 		Stderr:          &bytes.Buffer{},
 	}
-	if err := runner.Run(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "invalid --max-unsafe") {
-		t.Fatalf("expected max-unsafe validation error, got %v", err)
-	}
-
-	// Test observation loader error.
-	cfg.MaxUnsafe = "24h"
 	badProvider := &compose.Provider{
 		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
 			return nil, os.ErrPermission
@@ -219,7 +212,7 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 			return nil, nil
 		},
 	}
-	runner = NewRunner(badProvider, clockadp.RealClock{})
+	runner := NewRunner(badProvider, clockadp.RealClock{})
 	if err := runner.Run(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "create observation loader") {
 		t.Fatalf("expected observation loader error, got %v", err)
 	}
