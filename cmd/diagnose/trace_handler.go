@@ -60,7 +60,7 @@ func (r *TraceRunner) Run(ctx context.Context, req TraceRequest) error {
 		return err
 	}
 
-	found, err := findTraceAsset(snapshot, req.AssetID, req.ObservationPath)
+	found, err := findTraceAsset(snapshot, asset.ID(req.AssetID), req.ObservationPath)
 	if err != nil {
 		return err
 	}
@@ -101,9 +101,9 @@ func (r *TraceRunner) loadSnapshot(ctx context.Context, path string) (*asset.Sna
 	return &snapshot, nil
 }
 
-func findTraceAsset(snapshot *asset.Snapshot, assetID, path string) (*asset.Asset, error) {
+func findTraceAsset(snapshot *asset.Snapshot, assetID asset.ID, path string) (*asset.Asset, error) {
 	for i := range snapshot.Assets {
-		if snapshot.Assets[i].ID.String() == assetID {
+		if snapshot.Assets[i].ID == assetID {
 			return &snapshot.Assets[i], nil
 		}
 	}

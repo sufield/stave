@@ -21,15 +21,20 @@ const (
 )
 
 // CreateDurationFinding generates a violation finding specifically for duration-based controls.
+// Identities and predicateParser are required for correct evidence extraction
+// on controls that use any_match or identity-based predicates.
 func CreateDurationFinding(
 	t *asset.Timeline,
 	ctl *policy.ControlDefinition,
 	threshold time.Duration,
 	now time.Time,
+	identities []asset.CloudIdentity,
+	predicateParser func(any) (*policy.UnsafePredicate, error),
 ) *evaluation.Finding {
 	a := t.Asset()
 	duration := t.UnsafeDuration(now)
-	ctx := policy.NewAssetEvalContext(a, ctl.Params)
+	ctx := policy.NewAssetEvalContext(a, ctl.Params, identities...)
+	ctx.PredicateParser = predicateParser
 	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, ctx)
 	causes := DeriveRootCauses(misconfigs)
 

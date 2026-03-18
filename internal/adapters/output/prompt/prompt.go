@@ -39,7 +39,7 @@ type PromptData struct {
 // PromptBuilder coordinates assembly of LLM-ready prompt data.
 type PromptBuilder struct {
 	AssetID        string
-	ControlsByID   map[string]*policy.ControlDefinition
+	ControlsByID   map[kernel.ControlID]*policy.ControlDefinition
 	AssetPropsJSON string
 }
 
@@ -59,7 +59,7 @@ func (b *PromptBuilder) Build(matched []evaluation.Finding) PromptData {
 			RootCauses:   BuildRootCausesSummary(v.Evidence.RootCauses),
 		}
 
-		if ctl, ok := b.ControlsByID[string(v.ControlID)]; ok {
+		if ctl, ok := b.ControlsByID[v.ControlID]; ok {
 			fd.ControlYAML = marshalControl(ctl)
 			if ctl.Remediation != nil {
 				remediation := policy.RemediationSpec{

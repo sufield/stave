@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/ports"
@@ -104,29 +105,26 @@ func (r *Runner) selectFinding(findings []remediation.Finding, needle string) (r
 }
 
 func (r *Runner) writeResult(w io.Writer, f remediation.Finding) error {
-	var err error
-	printf := func(format string, args ...any) {
-		if err != nil {
-			return
-		}
-		_, err = fmt.Fprintf(w, format, args...)
+	// Output pure JSON so the result is machine-readable as advertised.
+	// The fix plan includes the finding context for traceability.
+	out := struct {
+		Finding     string                      `json:"finding"`
+		ControlID   string                      `json:"control_id"`
+		ControlName string                      `json:"control_name"`
+		AssetID     string                      `json:"asset_id"`
+		AssetType   string                      `json:"asset_type"`
+		Remediation string                      `json:"remediation,omitempty"`
+		FixPlan     *evaluation.RemediationPlan `json:"fix_plan"`
+	}{
+		Finding:     findingKey(f),
+		ControlID:   f.ControlID.String(),
+		ControlName: f.ControlName,
+		AssetID:     f.AssetID.String(),
+		AssetType:   f.AssetType.String(),
+		Remediation: strings.TrimSpace(f.RemediationSpec.Action),
+		FixPlan:     f.RemediationPlan,
 	}
-
-	printf("Finding:     %s\n", findingKey(f))
-	printf("Control:     %s\n", f.ControlName)
-	printf("Asset:       %s (%s)\n", f.AssetID, f.AssetType)
-
-	action := strings.TrimSpace(f.RemediationSpec.Action)
-	if action != "" {
-		printf("Remediation: %s\n", action)
-	}
-
-	printf("Fix Plan:\n")
-	if err != nil {
-		return err
-	}
-
-	return jsonutil.WriteIndented(w, f.RemediationPlan)
+	return jsonutil.WriteIndented(w, out)
 }
 
 // findingKey returns the canonical string selector for a finding.

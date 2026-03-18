@@ -79,6 +79,11 @@ func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
 		return Config{}, err
 	}
 
+	dueWithinDur, err := parseDueWithin(o.dueWithin)
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
 		ControlsDir:     fsutil.CleanUserPath(resolvedCtl),
 		ObservationsDir: fsutil.CleanUserPath(resolvedObs),
@@ -97,16 +102,15 @@ func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
 			ControlIDs:   cmdutil.ToControlIDs(o.controlIDs),
 			AssetTypes:   cmdutil.ToAssetTypes(o.assetTypes),
 			Statuses:     toStatuses(o.statuses),
-			DueWithin:    parseDueWithin(o.dueWithin),
+			DueWithin:    dueWithinDur,
 			DueWithinRaw: o.dueWithin,
 		},
 	}, nil
 }
 
-func parseDueWithin(raw string) time.Duration {
+func parseDueWithin(raw string) (time.Duration, error) {
 	if raw == "" {
-		return 0
+		return 0, nil
 	}
-	d, _ := timeutil.ParseDurationFlag(raw, "--due-within")
-	return d
+	return timeutil.ParseDurationFlag(raw, "--due-within")
 }

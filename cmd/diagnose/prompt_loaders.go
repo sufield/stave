@@ -6,10 +6,11 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
-func (r *PromptRunner) loadControlsMap(ctx context.Context, dir string) (map[string]*policy.ControlDefinition, error) {
+func (r *PromptRunner) loadControlsMap(ctx context.Context, dir string) (map[kernel.ControlID]*policy.ControlDefinition, error) {
 	repo, err := r.Provider.NewControlRepo()
 	if err != nil {
 		return nil, err
@@ -19,14 +20,14 @@ func (r *PromptRunner) loadControlsMap(ctx context.Context, dir string) (map[str
 		return nil, fmt.Errorf("loading controls: %w", err)
 	}
 
-	ctlByID := make(map[string]*policy.ControlDefinition, len(controls))
+	ctlByID := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
 	for i := range controls {
-		ctlByID[controls[i].ID.String()] = &controls[i]
+		ctlByID[controls[i].ID] = &controls[i]
 	}
 	return ctlByID, nil
 }
 
-func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir, assetID string) (string, error) {
+func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir string, assetID asset.ID) (string, error) {
 	snapshots, err := r.Provider.LoadSnapshots(ctx, dir)
 	if err != nil {
 		return "", err
@@ -37,7 +38,7 @@ func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir, assetID str
 
 	latest := asset.LatestSnapshot(snapshots)
 	for _, a := range latest.Assets {
-		if a.ID.String() == assetID {
+		if a.ID == assetID {
 			propsJSON, marshalErr := json.MarshalIndent(a.Properties, "", "  ")
 			if marshalErr != nil {
 				return "", fmt.Errorf("marshal asset properties: %w", marshalErr)

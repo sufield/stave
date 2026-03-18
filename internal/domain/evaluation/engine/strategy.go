@@ -60,7 +60,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evalua
 
 	if t.ExceedsUnsafeThreshold(now, maxUnsafe) {
 		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
-		finding := CreateDurationFinding(t, s.ctl, maxUnsafe, now)
+		finding := CreateDurationFinding(t, s.ctl, maxUnsafe, now, s.runner.latestIdentities, s.runner.PredicateParser)
 		return finalizeRow(row, evaluation.DecisionViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
 	}
 
@@ -79,7 +79,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (eva
 	// 1. Violation Check (Always takes precedence)
 	if t.ExceedsUnsafeThreshold(now, maxUnsafe) {
 		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
-		finding := CreateDurationFinding(t, s.ctl, maxUnsafe, now)
+		finding := CreateDurationFinding(t, s.ctl, maxUnsafe, now, s.runner.latestIdentities, s.runner.PredicateParser)
 		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(row, evaluation.DecisionViolation, confidence), []*evaluation.Finding{finding}
 	}

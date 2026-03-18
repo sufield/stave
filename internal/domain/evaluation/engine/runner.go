@@ -27,6 +27,10 @@ type Runner struct {
 	ToolVersion     string
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+
+	// latestIdentities holds the identities from the most recent snapshot.
+	// Set during Evaluate for use by finding generation.
+	latestIdentities []asset.CloudIdentity
 }
 
 // getMaxUnsafeForControl returns the max unsafe duration for a control.
@@ -60,6 +64,10 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 	}
 	sorted := e.normalizeSnapshots(snapshots)
 	now := e.deterministicNow(sorted)
+
+	if len(sorted) > 0 {
+		e.latestIdentities = sorted[len(sorted)-1].Identities
+	}
 
 	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.PredicateParser)
 

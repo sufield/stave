@@ -75,7 +75,7 @@ func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
 
 	var assetPropsJSON string
 	if cfg.ObservationsDir != "" {
-		assetPropsJSON, err = r.loadAssetProperties(ctx, cfg.ObservationsDir, cfg.AssetID)
+		assetPropsJSON, err = r.loadAssetProperties(ctx, cfg.ObservationsDir, asset.ID(cfg.AssetID))
 		if err != nil {
 			return err
 		}

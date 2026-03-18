@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/sufield/stave/internal/app/catalog"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -58,37 +59,10 @@ func writeTable(w io.Writer, rows []catalog.ControlRow, cols []string, header bo
 		return err
 	}
 
-	widths := make([]int, len(cols))
-	for i, c := range cols {
-		widths[i] = len(c)
-	}
-	for _, row := range rows {
-		for i, c := range cols {
-			if l := len(catalog.FieldValue(row, c)); l > widths[i] {
-				widths[i] = l
-			}
-		}
-	}
-
-	printLine := func(vals []string) error {
-		for i, v := range vals {
-			if i > 0 {
-				if _, err := fmt.Fprint(w, "  "); err != nil {
-					return err
-				}
-			}
-			if _, err := fmt.Fprintf(w, "%-*s", widths[i], v); err != nil {
-				return err
-			}
-		}
-		_, err := fmt.Fprintln(w)
-		return err
-	}
+	tw := tabwriter.NewWriter(w, 0, 8, 2, ' ', 0)
 
 	if header {
-		if err := printLine(cols); err != nil {
-			return err
-		}
+		fmt.Fprintln(tw, strings.Join(cols, "\t"))
 	}
 
 	for _, row := range rows {
@@ -96,9 +70,8 @@ func writeTable(w io.Writer, rows []catalog.ControlRow, cols []string, header bo
 		for i, c := range cols {
 			vals[i] = catalog.FieldValue(row, c)
 		}
-		if err := printLine(vals); err != nil {
-			return err
-		}
+		fmt.Fprintln(tw, strings.Join(vals, "\t"))
 	}
-	return nil
+
+	return tw.Flush()
 }
