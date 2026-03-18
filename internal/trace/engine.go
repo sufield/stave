@@ -2,32 +2,12 @@ package trace
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-// operatorTracers maps operator names to specialized tracing functions.
-// Initialized via sync.Once to avoid an initialization cycle (traceAnyMatchRule
-// transitively references operatorTracers through TracePredicate).
-var (
-	operatorTracers     map[predicate.Operator]func(ruleContext) Node
-	initOperatorTracers sync.Once
-)
-
-func ensureOperatorTracers() {
-	initOperatorTracers.Do(func() {
-		operatorTracers = map[predicate.Operator]func(ruleContext) Node{
-			predicate.OpNotSubsetOfField: traceFieldRefRule,
-			predicate.OpNeqField:         traceFieldRefRule,
-			predicate.OpNotInField:       traceFieldRefRule,
-			predicate.OpAnyMatch:         traceAnyMatchRule,
-		}
-	})
-}
-
-// TracePredicate traces the evaluation of an unsafe_predicate against an EvalContext.
+// TracePredicate builds a logical trace tree of how a predicate evaluated against an asset.
 func TracePredicate(pred policy.UnsafePredicate, ctx policy.EvalContext) *GroupNode {
 	hasAny := len(pred.Any) > 0
 	hasAll := len(pred.All) > 0
@@ -37,46 +17,46 @@ func TracePredicate(pred policy.UnsafePredicate, ctx policy.EvalContext) *GroupN
 			Logic:             LogicEmpty,
 			ShortCircuitIndex: -1,
 			Result:            false,
-			Reason:            "No predicate rules defined → NO MATCH",
+			Reason:            "No rules defined; evaluating as safe",
 		}
 	}
 
 	if hasAny && !hasAll {
 		return traceGroup(LogicAny, pred.Any, ctx)
 	}
-
 	if !hasAny && hasAll {
 		return traceGroup(LogicAll, pred.All, ctx)
 	}
 
-	anyGroup := traceGroup(LogicAny, pred.Any, ctx)
-	allGroup := traceGroup(LogicAll, pred.All, ctx)
+	anyNode := traceGroup(LogicAny, pred.Any, ctx)
+	allNode := traceGroup(LogicAll, pred.All, ctx)
 
-	result := anyGroup.Result || allGroup.Result
 	return &GroupNode{
 		Logic:             LogicMixed,
 		ShortCircuitIndex: -1,
-		Children:          []Node{anyGroup, allGroup},
-		Result:            result,
-		Reason:            formatCombinedReason(anyGroup, allGroup),
+		Children:          []Node{anyNode, allNode},
+		Result:            anyNode.Result || allNode.Result,
+		Reason:            formatCombinedReason(anyNode, allNode),
 	}
 }
 
-func formatCombinedReason(anyGroup, allGroup *GroupNode) string {
-	if anyGroup.Result {
-		return "any block matched → MATCH (all block not decisive)"
+func formatCombinedReason(anyNode, allNode *GroupNode) string {
+	switch {
+	case anyNode.Result:
+		return "Match found in 'any' block; 'all' block not decisive"
+	case allNode.Result:
+		return "No match in 'any' block, but 'all' block satisfied"
+	default:
+		return "Neither 'any' nor 'all' blocks satisfied criteria"
 	}
-	if allGroup.Result {
-		return "any block did not match, all block matched → MATCH"
-	}
-	return "neither any nor all block matched → NO MATCH"
 }
 
-// traceGroup walks a slice of rules under "any" or "all" logic.
+// traceGroup evaluates a slice of rules under a specific logic gate (OR/AND).
 func traceGroup(logic LogicType, rules []policy.PredicateRule, ctx policy.EvalContext) *GroupNode {
 	g := &GroupNode{
 		Logic:             logic,
 		ShortCircuitIndex: -1,
+		Children:          make([]Node, 0, len(rules)),
 	}
 
 	for i := range rules {
@@ -86,31 +66,29 @@ func traceGroup(logic LogicType, rules []policy.PredicateRule, ctx policy.EvalCo
 		if logic == LogicAny && child.Matched() {
 			g.ShortCircuitIndex = i
 			g.Result = true
-			g.Reason = fmt.Sprintf("Clause %d matched in any → MATCH", i+1)
+			g.Reason = fmt.Sprintf("Rule %d matched in 'any' block → MATCH", i+1)
 			return g
 		}
 		if logic == LogicAll && !child.Matched() {
 			g.ShortCircuitIndex = i
 			g.Result = false
-			g.Reason = fmt.Sprintf("Clause %d failed in all → NO MATCH", i+1)
+			g.Reason = fmt.Sprintf("Rule %d failed in 'all' block → NO MATCH", i+1)
 			return g
 		}
 	}
 
 	if logic == LogicAny {
 		g.Result = false
-		g.Reason = "No clause matched in any → NO MATCH"
+		g.Reason = "No rules matched in 'any' block"
 	} else {
 		g.Result = true
-		g.Reason = "All clauses passed → MATCH"
+		g.Reason = "All rules satisfied in 'all' block"
 	}
 	return g
 }
 
-// traceRule traces a single predicate rule.
+// traceRule dispatches a single rule to the correct tracer based on its operator.
 func traceRule(index int, rule *policy.PredicateRule, ctx policy.EvalContext) Node {
-	ensureOperatorTracers()
-
 	if len(rule.Any) > 0 {
 		return traceGroup(LogicAny, rule.Any, ctx)
 	}
@@ -124,8 +102,11 @@ func traceRule(index int, rule *policy.PredicateRule, ctx policy.EvalContext) No
 		return buildClauseNode(rc, false)
 	}
 
-	if tracer, ok := operatorTracers[rc.Op]; ok {
-		return tracer(rc)
+	switch rc.Op {
+	case predicate.OpAnyMatch:
+		return traceAnyMatchRule(rc)
+	case predicate.OpNotSubsetOfField, predicate.OpNeqField, predicate.OpNotInField:
+		return traceFieldRefRule(rc)
 	}
 
 	result, _ := predicate.EvaluateOperator(rc.Op, rc.FieldExists, rc.FieldValue, rc.CompareValue)

@@ -164,7 +164,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 				Result:        false,
 			},
 		},
-		Reason: "Clause 1 matched in any → MATCH",
+		Reason: "Rule 1 matched in 'any' block → MATCH",
 	}
 
 	tr := &Result{
@@ -223,7 +223,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 					Result:        true,
 				},
 			},
-			Reason: "Clause 1 matched in any → MATCH",
+			Reason: "Rule 1 matched in 'any' block → MATCH",
 		},
 	}
 	anyMatch.MatchedIndex = 0
@@ -260,7 +260,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 				},
 				anyMatch,
 			},
-			Reason: "Clause 3 failed in all → NO MATCH",
+			Reason: "Rule 3 failed in 'all' block → NO MATCH",
 		},
 		FinalResult: false,
 	}

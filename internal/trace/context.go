@@ -5,32 +5,33 @@ import (
 	"github.com/sufield/stave/internal/domain/predicate"
 )
 
-// ruleContext is a flat data carrier for a single predicate rule evaluation.
-// All input data is pre-resolved so downstream tracers only record results.
+// ruleContext captures the full pre-resolved state of a single predicate rule
+// evaluation. Downstream tracers only record results — they never reach back
+// into the EvalContext for field lookups.
 type ruleContext struct {
+	// Rule definition
 	Index          int
 	Field          predicate.FieldPath
 	Op             predicate.Operator
-	Value          any // raw from control
-	ValueFromParam predicate.ParamRef
-	CompareValue   any // after value_from_param resolution
-	FieldValue     any // actual asset value
-	FieldExists    bool
-	EvalCtx        policy.EvalContext // needed by any-match tracer
+	Value          any               // raw value from policy definition
+	ValueFromParam predicate.ParamRef // parameter reference, if used
 
-	// Field-ref operators: pre-resolved other-field state.
+	// Resolved match state
+	CompareValue any  // resolved value used for comparison (param or raw)
+	FieldValue   any  // actual value found on the asset
+	FieldExists  bool // whether the field was present on the asset
+
+	// Field-ref state (pre-resolved for neq_field, not_in_field, etc.)
 	OtherField  predicate.FieldPath
 	OtherValue  any
 	OtherExists bool
+
+	// Retained for complex tracers (any_match needs to build nested contexts)
+	EvalCtx policy.EvalContext
 }
 
-func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalContext) ruleContext {
-	fieldValue, fieldExists := policy.GetFieldValueWithContext(evalCtx, rule.Field.String())
-
-	compareValue := rule.Value.Raw()
-	if !rule.ValueFromParam.IsZero() {
-		compareValue, _ = evalCtx.Param(rule.ValueFromParam.String())
-	}
+func newRuleContext(index int, rule *policy.PredicateRule, ctx policy.EvalContext) ruleContext {
+	fieldValue, fieldExists := policy.GetFieldValueWithContext(ctx, rule.Field.String())
 
 	rc := ruleContext{
 		Index:          index,
@@ -38,20 +39,35 @@ func newRuleContext(index int, rule *policy.PredicateRule, evalCtx policy.EvalCo
 		Op:             rule.Op,
 		Value:          rule.Value.Raw(),
 		ValueFromParam: rule.ValueFromParam,
-		CompareValue:   compareValue,
+		CompareValue:   resolveCompareValue(rule, ctx),
 		FieldValue:     fieldValue,
 		FieldExists:    fieldExists,
-		EvalCtx:        evalCtx,
+		EvalCtx:        ctx,
 	}
 
-	// Pre-resolve the other-field for field-ref operators so tracers
-	// don't need to reach back into the EvalContext.
 	if rc.Op.IsFieldRef() {
-		if path, ok := compareValue.(string); ok {
-			rc.OtherField = predicate.NewFieldPath(path)
-			rc.OtherValue, rc.OtherExists = policy.GetFieldValueWithContext(evalCtx, path)
-		}
+		rc.resolveFieldRef(ctx)
 	}
 
 	return rc
+}
+
+// resolveCompareValue determines whether to use the hardcoded value or a parameter.
+func resolveCompareValue(rule *policy.PredicateRule, ctx policy.EvalContext) any {
+	if rule.ValueFromParam.IsZero() {
+		return rule.Value.Raw()
+	}
+	val, _ := ctx.Param(rule.ValueFromParam.String())
+	return val
+}
+
+// resolveFieldRef populates the OtherField/OtherValue/OtherExists fields
+// for operators that compare the primary field against another field.
+func (rc *ruleContext) resolveFieldRef(ctx policy.EvalContext) {
+	path, ok := rc.CompareValue.(string)
+	if !ok {
+		return
+	}
+	rc.OtherField = predicate.NewFieldPath(path)
+	rc.OtherValue, rc.OtherExists = policy.GetFieldValueWithContext(ctx, path)
 }
