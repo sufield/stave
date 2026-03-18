@@ -144,7 +144,7 @@ func ConfigKeyCompletionsFrom(svc *configservice.Service) []string {
 	baseKeys := svc.TopLevelKeys()
 	tiers := []string{appconfig.DefaultRetentionTier}
 
-	if cfg, ok := FindProjectConfig(); ok {
+	if cfg, ok, _ := FindProjectConfig(); ok {
 		if t := appconfig.NormalizeTier(cfg.RetentionTier); t != "" {
 			tiers = append(tiers, t)
 		}

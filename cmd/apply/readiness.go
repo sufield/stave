@@ -1,6 +1,7 @@
 package apply
 
 import (
+	"context"
 	"io"
 	"os"
 	"time"
@@ -98,9 +99,9 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 
 // runDryRun performs only readiness checks (replacing the removed plan command).
 // It is invoked by apply --dry-run.
-func runDryRun(p *compose.Provider, cfg PlanConfig) error {
+func runDryRun(ctx context.Context, p *compose.Provider, cfg PlanConfig) error {
 	factory := func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
-		return applyvalidate.NewReadinessValidator(p, ctlDir, obsDir, sanitize)
+		return applyvalidate.NewReadinessValidator(ctx, p, ctlDir, obsDir, sanitize)
 	}
 	planner := NewPlanner(factory)
 	return planner.Execute(cfg)

@@ -1,6 +1,7 @@
 package diagnose
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -56,7 +57,10 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 
 // ToConfig converts raw CLI options into a validated Config.
 func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
-	resolver, _ := projctx.NewResolver()
+	resolver, resolverErr := projctx.NewResolver()
+	if resolverErr != nil {
+		return Config{}, fmt.Errorf("resolve project context: %w", resolverErr)
+	}
 	engine := projctx.NewInferenceEngine(resolver)
 
 	clock, err := compose.ResolveClock(o.NowTime)

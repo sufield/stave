@@ -140,7 +140,7 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 	}
 	eval := projconfig.Global()
 	if !eval.HasConfiguredTier(tier) {
-		if cfg, ok := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
+		if cfg, ok, _ := projconfig.FindProjectConfig(); ok && len(cfg.RetentionTiers) > 0 {
 			return "", fmt.Errorf("unknown --retention-tier %q (configured tiers: %s)",
 				tier, strings.Join(appconfig.SortedTierNames(cfg.RetentionTiers), ", "))
 		}

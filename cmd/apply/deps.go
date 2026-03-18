@@ -77,6 +77,11 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 	}
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
+	projCfgInput, projCfgErr := b.buildProjectConfig()
+	if projCfgErr != nil {
+		return nil, fmt.Errorf("load project config: %w", projCfgErr)
+	}
+
 	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
 		Ctx:               b.Ctx,
 		Stdout:            b.Stdout,
@@ -94,7 +99,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		PredicateParser:   ctlyaml.ParsePredicate,
 		ToolVersion:       version.Version,
 		ControlsDir:       b.Opts.ControlsDir,
-		ProjectConfig:     b.buildProjectConfig(),
+		ProjectConfig:     projCfgInput,
 		GitMetadata:       gitMeta,
 		ControlFilters:    appeval.ControlFilter{},
 	})
@@ -162,10 +167,13 @@ func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appc
 }
 
 // buildProjectConfig assembles project configuration input from the project config file.
-func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
-	projCfg, ok := projconfig.FindProjectConfig()
+func (b *Builder) buildProjectConfig() (appeval.ProjectConfigInput, error) {
+	projCfg, ok, cfgErr := projconfig.FindProjectConfig()
+	if cfgErr != nil {
+		return appeval.ProjectConfigInput{}, cfgErr
+	}
 	if !ok {
-		return appeval.ProjectConfigInput{}
+		return appeval.ProjectConfigInput{}, nil
 	}
 
 	builtinRegistry := ctlbuiltin.NewRegistry(ctlbuiltin.EmbeddedFS(), "embedded")
@@ -177,7 +185,7 @@ func (b *Builder) buildProjectConfig() appeval.ProjectConfigInput {
 		ControlsFlagSet:     b.Opts.ControlsSet,
 		BuiltinLoader:       builtinRegistry.All,
 		PackRegistry:        reg,
-	}
+	}, nil
 }
 
 func (b *Builder) mapExceptions(in []appconfig.ExceptionRule) []appeval.ExceptionInput {

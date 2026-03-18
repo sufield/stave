@@ -191,7 +191,16 @@ func plural(n int) string {
 
 // PackConfigIssues checks for unknown control pack names in the project config.
 func PackConfigIssues() []diag.Issue {
-	cfg, ok := projconfig.FindProjectConfig()
+	cfg, ok, cfgErr := projconfig.FindProjectConfig()
+	if cfgErr != nil {
+		return []diag.Issue{
+			diag.New(diag.CodeProjectConfigLoadFailed).
+				Error().
+				Action("Check stave.yaml for syntax errors").
+				WithSensitive("error", cfgErr.Error()).
+				Build(),
+		}
+	}
 	if !ok || len(cfg.EnabledControlPacks) == 0 {
 		return nil
 	}

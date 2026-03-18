@@ -81,7 +81,7 @@ func normalizeKind(raw string) (schemas.Kind, error) {
 
 // NewReadinessValidator creates a validation function for plan/apply commands.
 // It removes the dependency on cobra.Command by accepting the sanitize flag directly.
-func NewReadinessValidator(p *compose.Provider, ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
+func NewReadinessValidator(ctx context.Context, p *compose.Provider, ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
 	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ValidationResult, error) {
 		obsRepo, err := p.NewObservationRepo()
 		if err != nil {
@@ -93,7 +93,7 @@ func NewReadinessValidator(p *compose.Provider, ctlDir, obsDir string, sanitize 
 		}
 
 		runner := appvalidation.NewRun(obsRepo, ctlRepo)
-		result, err := runner.Execute(context.Background(), appvalidation.Config{
+		result, err := runner.Execute(ctx, appvalidation.Config{
 			ControlsDir:     ctlDir,
 			ObservationsDir: obsDir,
 			MaxUnsafe:       maxUnsafeDur,

@@ -40,8 +40,9 @@ const (
 	CodeUnsupportedSchemaVersion Code = "UNSUPPORTED_SCHEMA_VERSION"
 
 	// CLI parameter validation.
-	CodeInvalidMaxUnsafe       Code = "INVALID_MAX_UNSAFE"
-	CodeInvalidNowTime         Code = "INVALID_NOW_TIME"
-	CodePackRegistryLoadFailed Code = "PACK_REGISTRY_LOAD_FAILED"
-	CodeUnknownControlPack     Code = "UNKNOWN_CONTROL_PACK"
+	CodeInvalidMaxUnsafe        Code = "INVALID_MAX_UNSAFE"
+	CodeInvalidNowTime          Code = "INVALID_NOW_TIME"
+	CodePackRegistryLoadFailed  Code = "PACK_REGISTRY_LOAD_FAILED"
+	CodeProjectConfigLoadFailed Code = "PROJECT_CONFIG_LOAD_FAILED"
+	CodeUnknownControlPack      Code = "UNKNOWN_CONTROL_PACK"
 )

@@ -67,7 +67,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 }
 
 // normalize cleans user input and applies project-root inference.
-func (o *options) normalize(cmd *cobra.Command) {
+func (o *options) normalize(cmd *cobra.Command) error {
 	o.Controls = fsutil.CleanUserPath(o.Controls)
 	o.Observations = fsutil.CleanUserPath(o.Observations)
 	o.InputPath = fsutil.CleanUserPath(o.InputPath)
@@ -76,7 +76,10 @@ func (o *options) normalize(cmd *cobra.Command) {
 
 	// Apply inference if we are not in single-file mode
 	if o.InputPath == "" {
-		resolver, _ := projctx.NewResolver()
+		resolver, err := projctx.NewResolver()
+		if err != nil {
+			return fmt.Errorf("resolve project context: %w", err)
+		}
 		engine := projctx.NewInferenceEngine(resolver)
 		if !cmd.Flags().Changed("controls") {
 			if inferred := engine.InferDir("controls", ""); inferred != "" {
@@ -89,6 +92,7 @@ func (o *options) normalize(cmd *cobra.Command) {
 			}
 		}
 	}
+	return nil
 }
 
 // validate performs logical checks on flag combinations.
@@ -121,7 +125,10 @@ func (o *options) validate() error {
 // prepareEnvironment handles Git audits and verbose context logging.
 func (o *options) prepareEnvironment(cmd *cobra.Command) {
 	gf := cmdutil.GetGlobalFlags(cmd)
-	resolver, _ := projctx.NewResolver()
+	resolver, resolverErr := projctx.NewResolver()
+	if resolverErr != nil {
+		slog.Warn("failed to create project resolver", "error", resolverErr)
+	}
 
 	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
