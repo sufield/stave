@@ -188,7 +188,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 		"Tracing CTL.TEST.001 against asset res:test",
 		"Asset Properties:",
 		"properties.flag: true",
-		"Predicate: any",
+		"Predicate Logic: any",
 		"... (short-circuited)",
 		"Final Result: PREDICATE MATCHED",
 	}
