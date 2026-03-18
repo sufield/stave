@@ -29,24 +29,27 @@ const (
 	WriteScopeFull  WriteScope = "full"
 )
 
-// Priority levels (higher is more severe risk).
+// Priority represents the severity ranking of an exposure finding.
+// Higher values indicate more severe risk.
+type Priority int
+
 const (
-	PriorityWebPublic     = 400
-	PriorityAuthenticated = 300
-	PriorityIdentityRead  = 200
-	PriorityResourceRead  = 100
-	PriorityIdentityWrite = 200
-	PriorityResourceWrite = 100
+	PriorityResourceRead  Priority = 100
+	PriorityResourceWrite Priority = 100
+	PriorityIdentityRead  Priority = 200
+	PriorityIdentityWrite Priority = 200
+	PriorityAuthenticated Priority = 300
+	PriorityWebPublic     Priority = 400
 )
 
 // exposureCandidate tracks the most severe finding identified during analysis.
 type exposureCandidate struct {
-	priority int
+	priority Priority
 	finding  ExposureClassification
 }
 
 // consider updates the candidate if the provided priority is higher than the current one.
-func (c *exposureCandidate) consider(priority int, f ExposureClassification) {
+func (c *exposureCandidate) consider(priority Priority, f ExposureClassification) {
 	if c.finding.ID == "" || priority > c.priority {
 		c.priority = priority
 		c.finding = f
