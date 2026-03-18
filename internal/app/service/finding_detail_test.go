@@ -133,9 +133,9 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 	if !detail.Trace.FinalResult {
 		t.Error("trace final result should be true (predicate matches)")
 	}
-	tr, ok := detail.Trace.Raw.(*trace.TraceResult)
+	tr, ok := detail.Trace.Raw.(*trace.Result)
 	if !ok {
-		t.Fatal("trace.Raw should be *trace.TraceResult")
+		t.Fatal("trace.Raw should be *trace.Result")
 	}
 	if tr.ControlID != "CTL.S3.PUBLIC.001" {
 		t.Errorf("trace control = %q", tr.ControlID)

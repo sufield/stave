@@ -35,8 +35,8 @@ func TestTracePredicate_AnyAllSemantics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			root := TracePredicate(pred, policy.EvalContext{Properties: tt.properties})
-			if root.Logic != LogicAnyAndAll {
-				t.Fatalf("logic = %v, want LogicAnyAndAll", root.Logic)
+			if root.Logic != LogicMixed {
+				t.Fatalf("logic = %v, want LogicMixed", root.Logic)
 			}
 			if len(root.Children) != 2 {
 				t.Fatalf("children = %d, want 2", len(root.Children))
@@ -126,7 +126,7 @@ func TestTracePredicate_AnyMatchUsesResolvedParamAndCapturesMatch(t *testing.T) 
 	if !node.Result {
 		t.Fatal("expected any_match result=true")
 	}
-	if node.MatchedIndex == nil || *node.MatchedIndex != 1 {
+	if node.MatchedIndex != 1 {
 		t.Fatalf("matched_index = %v, want 1", node.MatchedIndex)
 	}
 	if node.MatchedID != asset.ID("id-2") {
@@ -149,7 +149,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 				Op:            predicate.OpEq,
 				Value:         true,
 				ResolvedValue: true,
-				FieldValue:    true,
+				ActualValue:   true,
 				FieldExists:   true,
 				Result:        true,
 			},
@@ -159,7 +159,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 				Op:            predicate.OpEq,
 				Value:         true,
 				ResolvedValue: true,
-				FieldValue:    false,
+				ActualValue:   false,
 				FieldExists:   true,
 				Result:        false,
 			},
@@ -167,7 +167,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 		Reason: "Clause 1 matched in any → MATCH",
 	}
 
-	tr := &TraceResult{
+	tr := &Result{
 		ControlID: "CTL.TEST.001",
 		AssetID:   "res:test",
 		Properties: map[string]any{
@@ -218,7 +218,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 					Op:            predicate.OpEq,
 					Value:         "alice",
 					ResolvedValue: "alice",
-					FieldValue:    "alice",
+					ActualValue:   "alice",
 					FieldExists:   true,
 					Result:        true,
 				},
@@ -226,10 +226,9 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 			Reason: "Clause 1 matched in any → MATCH",
 		},
 	}
-	matchIdx := 0
-	anyMatch.MatchedIndex = &matchIdx
+	anyMatch.MatchedIndex = 0
 
-	tr := &TraceResult{
+	tr := &Result{
 		ControlID:  "CTL.TEST.002",
 		AssetID:    "res:test",
 		Properties: map[string]any{"x": 1},
@@ -244,7 +243,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 					Op:            predicate.OpEq,
 					Value:         1,
 					ResolvedValue: 1,
-					FieldValue:    1,
+					ActualValue:   1,
 					FieldExists:   true,
 					Result:        true,
 				},
@@ -253,7 +252,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 					Field:       predicate.NewFieldPath("properties.a"),
 					Op:          predicate.OpNeqField,
 					OtherField:  predicate.NewFieldPath("properties.b"),
-					FieldValue:  "a",
+					ActualValue: "a",
 					OtherValue:  "b",
 					FieldExists: true,
 					OtherExists: true,

@@ -8,9 +8,10 @@ import (
 // traceAnyMatchRule traces any_match with identity iteration.
 func traceAnyMatchRule(rc ruleContext) Node {
 	node := &AnyMatchNode{
-		Index:       rc.Index,
-		Field:       rc.Field,
-		FieldExists: rc.FieldExists,
+		Index:        rc.Index,
+		Field:        rc.Field,
+		FieldExists:  rc.FieldExists,
+		MatchedIndex: -1,
 	}
 
 	if !rc.FieldExists {
@@ -37,7 +38,7 @@ func traceAnyMatchRule(rc ruleContext) Node {
 		idCtx.Properties = id.Map()
 		nestedGroup := TracePredicate(*nestedPred, idCtx)
 		if nestedGroup.Result {
-			node.MatchedIndex = &i // safe: loop vars are per-iteration in Go 1.22+
+			node.MatchedIndex = i
 			node.MatchedID = id.ID
 			node.NestedTrace = nestedGroup
 			node.Result = true

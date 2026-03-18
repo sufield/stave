@@ -54,7 +54,7 @@ func TracePredicate(pred policy.UnsafePredicate, ctx policy.EvalContext) *GroupN
 
 	result := anyGroup.Result || allGroup.Result
 	return &GroupNode{
-		Logic:             LogicAnyAndAll,
+		Logic:             LogicMixed,
 		ShortCircuitIndex: -1,
 		Children:          []Node{anyGroup, allGroup},
 		Result:            result,
@@ -139,7 +139,7 @@ func buildClauseNode(rc ruleContext, result bool) *ClauseNode {
 		Op:             rc.Op,
 		Value:          rc.Value,
 		ResolvedValue:  rc.CompareValue,
-		FieldValue:     rc.FieldValue,
+		ActualValue:    rc.FieldValue,
 		ValueFromParam: rc.ValueFromParam,
 		FieldExists:    rc.FieldExists,
 		Result:         result,

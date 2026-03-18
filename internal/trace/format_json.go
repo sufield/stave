@@ -42,7 +42,7 @@ type jsonNode struct {
 	Op             predicate.Operator `json:"op,omitempty"`
 	Value          any                `json:"value,omitempty"`
 	ResolvedValue  any                `json:"resolved_value,omitempty"`
-	FieldValue     any                `json:"field_value,omitempty"`
+	ActualValue    any                `json:"field_value,omitempty"`
 	ValueFromParam string             `json:"value_from_param,omitempty"`
 	FieldExists    *bool              `json:"field_exists,omitempty"`
 	Explanation    string             `json:"explanation,omitempty"`
@@ -62,8 +62,8 @@ type jsonNode struct {
 	Result bool `json:"result"`
 }
 
-// WriteJSON renders a TraceResult as structured JSON.
-func WriteJSON(w io.Writer, tr *TraceResult) error {
+// WriteJSON renders a Result as structured JSON.
+func WriteJSON(w io.Writer, tr *Result) error {
 	out := jsonResult{
 		ControlID:   string(tr.ControlID),
 		AssetID:     tr.AssetID.String(),
@@ -119,7 +119,7 @@ func clauseToJSON(c *ClauseNode) jsonNode {
 		Op:             c.Op,
 		Value:          c.Value,
 		ResolvedValue:  c.ResolvedValue,
-		FieldValue:     c.FieldValue,
+		ActualValue:    c.ActualValue,
 		ValueFromParam: c.ValueFromParam.String(),
 		FieldExists:    &exists,
 		Result:         c.Result,
@@ -137,7 +137,7 @@ func fieldRefToJSON(f *FieldRefNode) jsonNode {
 		Field:       f.Field.String(),
 		Op:          f.Op,
 		OtherField:  f.OtherField.String(),
-		FieldValue:  f.FieldValue,
+		ActualValue: f.ActualValue,
 		OtherValue:  f.OtherValue,
 		FieldExists: &exists,
 		OtherExists: &otherExists,
@@ -150,13 +150,18 @@ func anyMatchToJSON(a *AnyMatchNode) jsonNode {
 	idx := a.Index
 	exists := a.FieldExists
 	count := a.IdentityCount
+	var mi *int
+	if a.MatchedIndex >= 0 {
+		v := a.MatchedIndex
+		mi = &v
+	}
 	n := jsonNode{
 		Kind:          kindAnyMatch,
 		Index:         &idx,
 		Field:         a.Field.String(),
 		FieldExists:   &exists,
 		IdentityCount: &count,
-		MatchedIndex:  a.MatchedIndex,
+		MatchedIndex:  mi,
 		MatchedID:     a.MatchedID.String(),
 		Result:        a.Result,
 	}

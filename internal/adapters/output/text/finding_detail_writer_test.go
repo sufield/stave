@@ -102,7 +102,7 @@ func TestWriteFindingDetail_WithTrace(t *testing.T) {
 		},
 		Evidence: evaluation.Evidence{},
 		Trace: &evaluation.FindingTrace{
-			Raw: &trace.TraceResult{
+			Raw: &trace.Result{
 				ControlID:  "CTL.TEST.001",
 				AssetID:    "res:test",
 				Properties: map[string]any{"x": true},
@@ -117,7 +117,7 @@ func TestWriteFindingDetail_WithTrace(t *testing.T) {
 							Op:            "eq",
 							Value:         true,
 							ResolvedValue: true,
-							FieldValue:    true,
+							ActualValue:   true,
 							FieldExists:   true,
 							Result:        true,
 						},
