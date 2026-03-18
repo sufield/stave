@@ -53,8 +53,8 @@ var defaultVersions = map[Kind]string{
 
 // ResolveVersion determines the effective version for a kind,
 // falling back to the default if the version is empty.
-func ResolveVersion(kind string, version string) (string, error) {
-	k := Kind(strings.TrimSpace(kind))
+func ResolveVersion(kind Kind, version string) (string, error) {
+	k := Kind(strings.TrimSpace(string(kind)))
 	v := strings.TrimSpace(version)
 
 	if v == "" {
@@ -74,8 +74,8 @@ func ResolveVersion(kind string, version string) (string, error) {
 }
 
 // LoadSchema retrieves the raw JSON bytes for a specific schema definition.
-func LoadSchema(kind string, version string) ([]byte, error) {
-	k := Kind(strings.TrimSpace(kind))
+func LoadSchema(kind Kind, version string) ([]byte, error) {
+	k := Kind(strings.TrimSpace(string(kind)))
 
 	v, err := ResolveVersion(kind, version)
 	if err != nil {
@@ -96,8 +96,8 @@ func LoadSchema(kind string, version string) ([]byte, error) {
 }
 
 // SupportedVersions returns all registered versions for a specific kind.
-func SupportedVersions(kind string) []string {
-	k := Kind(strings.TrimSpace(kind))
+func SupportedVersions(kind Kind) []string {
+	k := Kind(strings.TrimSpace(string(kind)))
 	versions, ok := registry[k]
 	if !ok {
 		return nil

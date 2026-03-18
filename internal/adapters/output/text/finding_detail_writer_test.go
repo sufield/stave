@@ -113,7 +113,7 @@ func TestWriteFindingDetail_WithTrace(t *testing.T) {
 					Children: []trace.Node{
 						&trace.ClauseNode{
 							Index:         0,
-							Field:         "properties.x",
+							Field:         predicate.NewFieldPath("properties.x"),
 							Op:            "eq",
 							Value:         true,
 							ResolvedValue: true,

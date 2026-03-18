@@ -39,12 +39,12 @@ type vulnArtifactWrapper struct {
 }
 
 type vulnFallbackEnvelope struct {
-	Source       string `json:"source"`
-	Available    bool   `json:"available"`
-	Freshness    string `json:"freshness"`
-	FindingCount int    `json:"finding_count"`
-	Details      string `json:"details"`
-	GeneratedAt  string `json:"generated_at"`
+	Source       VulnSourceUsed `json:"source"`
+	Available    bool           `json:"available"`
+	Freshness    VulnFreshness  `json:"freshness"`
+	FindingCount int            `json:"finding_count"`
+	Details      string         `json:"details"`
+	GeneratedAt  string         `json:"generated_at"`
 }
 
 type DefaultVulnProvider struct {
@@ -67,8 +67,8 @@ func (p DefaultVulnProvider) Resolve(ctx context.Context, req Params) (Vulnerabi
 		}
 		return ensureVulnRawJSON(VulnerabilitySnapshot{
 			Available:    false,
-			SourceUsed:   "live_check_failed",
-			Freshness:    "unknown",
+			SourceUsed:   VulnSourceUsedFailed,
+			Freshness:    FreshnessUnknown,
 			FindingCount: 0,
 			Details:      fmt.Sprintf("govulncheck execution failed: %v", liveErr),
 		}, req.Now), nil
@@ -100,8 +100,8 @@ func resolveVulnFallback(req Params, readFile func(string) ([]byte, error), stat
 	}
 	return ensureVulnRawJSON(VulnerabilitySnapshot{
 		Available:    false,
-		SourceUsed:   "none",
-		Freshness:    "unknown",
+		SourceUsed:   VulnSourceUsedNone,
+		Freshness:    FreshnessUnknown,
 		FindingCount: 0,
 		Details:      "no vulnerability evidence found (live check disabled or no cached/CI artifact present)",
 	}, req.Now), nil
@@ -129,8 +129,8 @@ func executeGovulncheck(ctx context.Context, cwd string, run GovulncheckRunner, 
 	}
 	return VulnerabilitySnapshot{
 		Available:    true,
-		SourceUsed:   "local_live_check",
-		Freshness:    "live",
+		SourceUsed:   VulnSourceUsedLive,
+		Freshness:    FreshnessLive,
 		FindingCount: count,
 		RawJSON:      append(raw, '\n'),
 		Details:      "vulnerability evidence collected from live govulncheck run",
@@ -194,10 +194,10 @@ func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile
 			continue
 		}
 		count := inferVulnCount(raw)
-		freshness := "cached"
+		freshness := FreshnessCached
 		if statFile != nil {
 			if stat, statErr := statFile(candidate); statErr == nil {
-				freshness = stat.ModTime().UTC().Format(time.RFC3339)
+				freshness = FreshnessFromTime(stat.ModTime())
 			}
 		}
 		normalized := vulnArtifactWrapper{
@@ -211,9 +211,9 @@ func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile
 		if marshalErr != nil {
 			continue
 		}
-		source := "local_cache"
+		source := VulnSourceUsedLocalCache
 		if strings.Contains(candidate, "artifact") || strings.Contains(candidate, "govulncheck") {
-			source = "ci_artifact"
+			source = VulnSourceUsedCIArtifact
 		}
 		return ensureVulnRawJSON(VulnerabilitySnapshot{
 			Available:    true,

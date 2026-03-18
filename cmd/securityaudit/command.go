@@ -8,6 +8,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/compliance"
 	domainsecurityaudit "github.com/sufield/stave/internal/domain/securityaudit"
@@ -66,15 +67,24 @@ Examples:
 				return &ui.UserError{Err: err}
 			}
 
+			parsedSBOM, err := appsa.ParseSBOMFormat(sbomFormat)
+			if err != nil {
+				return &ui.UserError{Err: err}
+			}
+			parsedVuln, err := appsa.ParseVulnSource(vulnSource)
+			if err != nil {
+				return &ui.UserError{Err: err}
+			}
+
 			runner := &AuditRunner{}
 			return runner.Run(cmd.Context(), AuditConfig{
 				Format:           format,
 				OutPath:          outPath,
 				OutDir:           outDir,
 				SeverityFilter:   severityFilter,
-				SBOMFormat:       sbomFormat,
+				SBOMFormat:       parsedSBOM,
 				Frameworks:       frameworks,
-				VulnSource:       vulnSource,
+				VulnSource:       parsedVuln,
 				LiveVulnCheck:    liveVuln,
 				ReleaseBundleDir: fsutil.CleanUserPath(releaseDir),
 				PrivacyMode:      privacy,

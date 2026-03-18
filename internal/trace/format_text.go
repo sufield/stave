@@ -88,7 +88,7 @@ func (tw *TextWriter) renderNode(node Node) {
 func (tw *TextWriter) renderClause(c *ClauseNode) {
 	tw.printf("[%d] field: %s  op: %s  value: %s\n",
 		c.Index+1, c.Field, c.Op, formatValue(c.Value))
-	if c.ValueFromParam != "" {
+	if !c.ValueFromParam.IsZero() {
 		tw.printf("    (value_from_param: %s)\n", c.ValueFromParam)
 	}
 	tw.printf("    Resolved: %s\n", clauseExplanation(c))

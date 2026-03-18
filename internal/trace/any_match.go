@@ -38,7 +38,7 @@ func traceAnyMatchRule(rc ruleContext) Node {
 		nestedGroup := TracePredicate(*nestedPred, idCtx)
 		if nestedGroup.Result {
 			node.MatchedIndex = &i // safe: loop vars are per-iteration in Go 1.22+
-			node.MatchedID = id.ID.String()
+			node.MatchedID = id.ID
 			node.NestedTrace = nestedGroup
 			node.Result = true
 			return node

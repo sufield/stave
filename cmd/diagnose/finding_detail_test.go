@@ -53,7 +53,7 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 					ShortCircuitIndex: -1,
 					Result:            true,
 					Children: []trace.Node{
-						&trace.ClauseNode{Index: 0, Field: "properties.k", Op: predicate.OpEq, Value: "v", Result: true},
+						&trace.ClauseNode{Index: 0, Field: predicate.NewFieldPath("properties.k"), Op: predicate.OpEq, Value: "v", Result: true},
 					},
 				},
 				FinalResult: true,

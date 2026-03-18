@@ -3,16 +3,18 @@ package validate
 import (
 	"strings"
 	"testing"
+
+	schemas "github.com/sufield/stave/internal/contracts/schema"
 )
 
 func TestNormalizeKind_AcceptsAliases(t *testing.T) {
-	cases := map[string]string{
-		"control":   "control",
-		"controls":  "control",
-		"obs":       "observation",
-		"snapshots": "observation",
-		"finding":   "finding",
-		"findings":  "finding",
+	cases := map[string]schemas.Kind{
+		"control":   schemas.KindControl,
+		"controls":  schemas.KindControl,
+		"obs":       schemas.KindObservation,
+		"snapshots": schemas.KindObservation,
+		"finding":   schemas.KindFinding,
+		"findings":  schemas.KindFinding,
 	}
 
 	for input, want := range cases {

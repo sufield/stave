@@ -81,12 +81,12 @@ func (*GroupNode) isNode()         {}
 // ClauseNode is a leaf field comparison (standard operators).
 type ClauseNode struct {
 	Index          int
-	Field          string
+	Field          predicate.FieldPath
 	Op             predicate.Operator
 	Value          any // raw from control
 	ResolvedValue  any // after value_from_param resolution
 	FieldValue     any // actual asset value
-	ValueFromParam string
+	ValueFromParam predicate.ParamRef
 	FieldExists    bool
 	Result         bool
 }
@@ -97,9 +97,9 @@ func (*ClauseNode) isNode()         {}
 // FieldRefNode represents neq_field, not_in_field, not_subset_of_field.
 type FieldRefNode struct {
 	Index       int
-	Field       string
+	Field       predicate.FieldPath
 	Op          predicate.Operator
-	OtherField  string
+	OtherField  predicate.FieldPath
 	FieldValue  any
 	OtherValue  any
 	FieldExists bool
@@ -113,11 +113,11 @@ func (*FieldRefNode) isNode()         {}
 // AnyMatchNode represents an any_match with identity iteration.
 type AnyMatchNode struct {
 	Index         int
-	Field         string
+	Field         predicate.FieldPath
 	FieldExists   bool
 	IdentityCount int
 	MatchedIndex  *int
-	MatchedID     string
+	MatchedID     asset.ID
 	NestedTrace   *GroupNode
 	Result        bool
 }

@@ -56,6 +56,12 @@ const (
 	VulnSourceCI     = evidence.VulnSourceCI
 )
 
+// ParseSBOMFormat validates and returns an SBOMFormat.
+var ParseSBOMFormat = evidence.ParseSBOMFormat
+
+// ParseVulnSource validates and returns a VulnSource.
+var ParseVulnSource = evidence.ParseVulnSource
+
 // Re-export provider interfaces so callers importing only the root package
 // can still reference them by name if needed.
 

@@ -66,7 +66,7 @@ func classifyResource(r NormalizedResourceInput) []ExposureClassification {
 		return []ExposureClassification{{
 			ID:             idResourceTakeover,
 			Resource:       r.Name,
-			ExposureType:   "resource_takeover",
+			ExposureType:   TypeResourceTakeover,
 			PrincipalScope: kernel.ScopeNotApplicable,
 			Actions:        []string{},
 			EvidencePath:   []string{"resource.exists", "resource.external_reference"},

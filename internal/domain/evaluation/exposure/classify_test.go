@@ -34,7 +34,7 @@ func TestClassifyExposure_PublicRead(t *testing.T) {
 	if f.ID != idPublicRead {
 		t.Errorf("expected ID %s, got %s", idPublicRead, f.ID)
 	}
-	if f.ExposureType != string(TypePublicRead) {
+	if f.ExposureType != TypePublicRead {
 		t.Errorf("expected exposure_type %s, got %s", TypePublicRead, f.ExposureType)
 	}
 	if f.PrincipalScope != kernel.ScopePublic {
@@ -117,7 +117,7 @@ func TestClassifyExposure_Write(t *testing.T) {
 	if findings[0].ID != idPublicWrite {
 		t.Errorf("expected write, got %s", findings[0].ID)
 	}
-	if findings[0].WriteScope != "blind" {
+	if findings[0].WriteScope != WriteScopeBlind {
 		t.Errorf("expected blind write, got %q", findings[0].WriteScope)
 	}
 }
@@ -140,7 +140,7 @@ func TestClassifyExposure_FullWrite(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].WriteScope != "full" {
+	if findings[0].WriteScope != WriteScopeFull {
 		t.Errorf("expected full write, got %q", findings[0].WriteScope)
 	}
 }
@@ -182,7 +182,7 @@ func TestClassifyExposure_MetadataRead(t *testing.T) {
 	if findings[0].ID != idPublicAdminRead {
 		t.Errorf("expected admin read, got %s", findings[0].ID)
 	}
-	if findings[0].ExposureType != "public_metadata_read" {
+	if findings[0].ExposureType != TypePublicMetaRead {
 		t.Errorf("expected public_metadata_read, got %s", findings[0].ExposureType)
 	}
 }
@@ -203,7 +203,7 @@ func TestClassifyExposure_MetadataWrite(t *testing.T) {
 	if findings[0].ID != idPublicAdminWrite {
 		t.Errorf("expected admin write, got %s", findings[0].ID)
 	}
-	if findings[0].ExposureType != "public_metadata_write" {
+	if findings[0].ExposureType != TypePublicMetaWrite {
 		t.Errorf("expected public_metadata_write, got %s", findings[0].ExposureType)
 	}
 }
@@ -317,7 +317,7 @@ func TestSelectWriteExposure_ResourceWrite(t *testing.T) {
 		ResourceID:       "test",
 		IsPubliclyWrite:  true,
 		HasResourceWrite: true,
-		WriteScope:       "blind",
+		WriteScope:       WriteScopeBlind,
 		BaseActions:      []string{ActionWrite},
 		EvidenceResource: aclEvidence,
 	})

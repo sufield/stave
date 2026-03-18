@@ -72,7 +72,7 @@ func TestTracePredicate_ValueFromParamMissing(t *testing.T) {
 	if clause.Result {
 		t.Fatal("expected clause result=false")
 	}
-	if clause.ValueFromParam != "desired" {
+	if clause.ValueFromParam != predicate.ParamRef("desired") {
 		t.Fatalf("value_from_param = %q, want %q", clause.ValueFromParam, "desired")
 	}
 	if clause.ResolvedValue != nil {
@@ -129,7 +129,7 @@ func TestTracePredicate_AnyMatchUsesResolvedParamAndCapturesMatch(t *testing.T) 
 	if node.MatchedIndex == nil || *node.MatchedIndex != 1 {
 		t.Fatalf("matched_index = %v, want 1", node.MatchedIndex)
 	}
-	if node.MatchedID != "id-2" {
+	if node.MatchedID != asset.ID("id-2") {
 		t.Fatalf("matched_id = %q, want id-2", node.MatchedID)
 	}
 	if node.NestedTrace == nil || !node.NestedTrace.Result {
@@ -145,7 +145,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 		Children: []Node{
 			&ClauseNode{
 				Index:         0,
-				Field:         "properties.flag",
+				Field:         predicate.NewFieldPath("properties.flag"),
 				Op:            predicate.OpEq,
 				Value:         true,
 				ResolvedValue: true,
@@ -155,7 +155,7 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 			},
 			&ClauseNode{
 				Index:         1,
-				Field:         "properties.ready",
+				Field:         predicate.NewFieldPath("properties.ready"),
 				Op:            predicate.OpEq,
 				Value:         true,
 				ResolvedValue: true,
@@ -202,11 +202,11 @@ func TestWriteText_PrintsTraceSections(t *testing.T) {
 func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 	anyMatch := &AnyMatchNode{
 		Index:         2,
-		Field:         "identities",
+		Field:         predicate.NewFieldPath("identities"),
 		FieldExists:   true,
 		IdentityCount: 1,
 		Result:        true,
-		MatchedID:     "id-1",
+		MatchedID:     asset.ID("id-1"),
 		NestedTrace: &GroupNode{
 			Logic:             LogicAny,
 			ShortCircuitIndex: -1,
@@ -214,7 +214,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 			Children: []Node{
 				&ClauseNode{
 					Index:         0,
-					Field:         "owner",
+					Field:         predicate.NewFieldPath("owner"),
 					Op:            predicate.OpEq,
 					Value:         "alice",
 					ResolvedValue: "alice",
@@ -240,7 +240,7 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 			Children: []Node{
 				&ClauseNode{
 					Index:         0,
-					Field:         "properties.x",
+					Field:         predicate.NewFieldPath("properties.x"),
 					Op:            predicate.OpEq,
 					Value:         1,
 					ResolvedValue: 1,
@@ -250,9 +250,9 @@ func TestWriteJSON_EncodesAllNodeKinds(t *testing.T) {
 				},
 				&FieldRefNode{
 					Index:       1,
-					Field:       "properties.a",
+					Field:       predicate.NewFieldPath("properties.a"),
 					Op:          predicate.OpNeqField,
-					OtherField:  "properties.b",
+					OtherField:  predicate.NewFieldPath("properties.b"),
 					FieldValue:  "a",
 					OtherValue:  "b",
 					FieldExists: true,

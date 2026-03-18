@@ -11,9 +11,9 @@ import (
 // records the result.
 func traceFieldRefRule(rc ruleContext) Node {
 	otherField := rc.OtherField
-	if otherField == "" {
+	if otherField.IsZero() {
 		// CompareValue wasn't a string field path — malformed rule.
-		otherField = fmt.Sprintf("%v", rc.CompareValue)
+		otherField = predicate.NewFieldPath(fmt.Sprintf("%v", rc.CompareValue))
 	}
 
 	return &FieldRefNode{
