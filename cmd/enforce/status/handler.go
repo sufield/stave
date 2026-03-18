@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -130,10 +131,21 @@ type statusResult struct {
 // --- Infrastructure: Filesystem Scanner ---
 
 // Scan collects project artifact metadata from the filesystem.
+// Missing directories are treated as empty (valid for new projects).
+// Permission or other filesystem errors are surfaced.
 func (r *Runner) Scan(root string) (State, error) {
-	controls, _ := r.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
-	raw, _ := r.summarize(filepath.Join(root, "snapshots", "raw"), ".json")
-	obs, _ := r.summarize(filepath.Join(root, "observations"), ".json")
+	controls, err := r.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
+	if err != nil && !os.IsNotExist(err) {
+		return State{}, fmt.Errorf("scan controls: %w", err)
+	}
+	raw, err := r.summarizeRecursive(filepath.Join(root, "snapshots", "raw"), ".json")
+	if err != nil && !os.IsNotExist(err) {
+		return State{}, fmt.Errorf("scan raw snapshots: %w", err)
+	}
+	obs, err := r.summarize(filepath.Join(root, "observations"), ".json")
+	if err != nil && !os.IsNotExist(err) {
+		return State{}, fmt.Errorf("scan observations: %w", err)
+	}
 
 	evalPath := filepath.Join(root, "output", "evaluation.json")
 	evalTime, hasEval := r.fileModTime(evalPath)
@@ -175,6 +187,30 @@ func (r *Runner) summarize(dir string, exts ...string) (Summary, error) {
 		}
 	}
 	return s, nil
+}
+
+// summarizeRecursive walks a directory tree and counts files matching the given extensions.
+func (r *Runner) summarizeRecursive(dir string, exts ...string) (Summary, error) {
+	var s Summary
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
+		if len(exts) > 0 && !matchesExtension(d.Name(), exts) {
+			return nil
+		}
+		info, infoErr := d.Info()
+		if infoErr != nil {
+			return nil
+		}
+		s.Count++
+		if !s.HasLatest || info.ModTime().After(s.Latest) {
+			s.Latest = info.ModTime()
+			s.HasLatest = true
+		}
+		return nil
+	})
+	return s, err
 }
 
 func matchesExtension(name string, exts []string) bool {

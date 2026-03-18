@@ -18,20 +18,21 @@ type CleanupOrchestrator interface {
 }
 
 // RunCleanup executes the common cleanup orchestration flow:
-// BuildPlan → Render → (optionally) Apply.
+// BuildPlan → Apply (if not dry-run) → Render.
+// Apply runs before Render so the rendered output accurately reflects
+// whether the mutation succeeded (the "Applied" field is truthful).
 func RunCleanup(orch CleanupOrchestrator) error {
 	plan, err := orch.BuildPlan()
 	if err != nil {
 		return fmt.Errorf("build cleanup plan: %w", err)
 	}
+	if plan.CandidateCount > 0 && !plan.DryRun {
+		if err := orch.Apply(plan); err != nil {
+			return fmt.Errorf("apply cleanup: %w", err)
+		}
+	}
 	if err := orch.Render(plan); err != nil {
 		return fmt.Errorf("render cleanup plan: %w", err)
-	}
-	if plan.CandidateCount == 0 || plan.DryRun {
-		return nil
-	}
-	if err := orch.Apply(plan); err != nil {
-		return fmt.Errorf("apply cleanup: %w", err)
 	}
 	return nil
 }

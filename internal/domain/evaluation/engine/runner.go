@@ -28,9 +28,29 @@ type Runner struct {
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 
-	// latestIdentities holds the identities from the most recent snapshot.
-	// Set during Evaluate for use by finding generation.
-	latestIdentities []asset.CloudIdentity
+	// identitiesByTime maps snapshot capture times to their identities.
+	// Set during Evaluate so finding generation can look up the identities
+	// from the snapshot where the asset was last seen unsafe.
+	identitiesByTime map[time.Time][]asset.CloudIdentity
+}
+
+// identitiesAt returns the identities from the snapshot captured at the given time.
+// Falls back to the latest snapshot's identities if no exact match is found.
+func (e *Runner) identitiesAt(t time.Time) []asset.CloudIdentity {
+	if ids, ok := e.identitiesByTime[t]; ok {
+		return ids
+	}
+	// Fallback: find the closest snapshot at or before t.
+	var best time.Time
+	for capturedAt := range e.identitiesByTime {
+		if !capturedAt.After(t) && capturedAt.After(best) {
+			best = capturedAt
+		}
+	}
+	if !best.IsZero() {
+		return e.identitiesByTime[best]
+	}
+	return nil
 }
 
 // getMaxUnsafeForControl returns the max unsafe duration for a control.
@@ -65,8 +85,9 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 	sorted := e.normalizeSnapshots(snapshots)
 	now := e.deterministicNow(sorted)
 
-	if len(sorted) > 0 {
-		e.latestIdentities = sorted[len(sorted)-1].Identities
+	e.identitiesByTime = make(map[time.Time][]asset.CloudIdentity, len(sorted))
+	for i := range sorted {
+		e.identitiesByTime[sorted[i].CapturedAt] = sorted[i].Identities
 	}
 
 	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.PredicateParser)
