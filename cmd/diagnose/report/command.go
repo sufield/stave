@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -100,7 +101,10 @@ func NewReportCmd() *cobra.Command {
 				return err
 			}
 
-			res, _ := projctx.NewResolver()
+			res, resolverErr := projctx.NewResolver()
+			if resolverErr != nil {
+				slog.Warn("failed to resolve project context", "error", resolverErr)
+			}
 
 			var projectRoot string
 			var auditPaths []string

@@ -23,7 +23,6 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
 )
@@ -88,6 +87,11 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		return nil, fmt.Errorf("load project config: %w", projCfgErr)
 	}
 
+	celEval, celErr := stavecel.NewPredicateEval()
+	if celErr != nil {
+		return nil, fmt.Errorf("initialize CEL evaluator: %w", celErr)
+	}
+
 	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
 		Ctx:               b.Ctx,
 		Stdout:            b.Stdout,
@@ -103,7 +107,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		AllowUnknownInput: b.Opts.AllowUnknown,
 		ExemptionConfig:   exemptionCfg,
 		PredicateParser:   ctlyaml.ParsePredicate,
-		CELEvaluator:      mustCELEvaluator(),
+		CELEvaluator:      celEval,
 		ToolVersion:       version.Version,
 		ControlsDir:       b.Opts.ControlsDir,
 		ProjectConfig:     projCfgInput,
@@ -115,14 +119,6 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 	}
 
 	return deps, nil
-}
-
-func mustCELEvaluator() policy.PredicateEval {
-	eval, err := stavecel.NewPredicateEval()
-	if err != nil {
-		panic("CEL evaluator init: " + err.Error())
-	}
-	return eval
 }
 
 type adapters struct {

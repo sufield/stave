@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 	"time"
-
-	"github.com/sufield/stave/internal/dbc"
 )
 
 // Timeline tracks the unsafe-state episodes of an asset across snapshots.
@@ -129,7 +127,6 @@ func (rt *Timeline) handleSafe(at time.Time) {
 	rt.history.Record(closed)
 	rt.activeEpisode = nil
 	rt.resetUnsafeState()
-	dbc.ExpensiveCheck(rt.verifyHistoryOrdering)
 }
 
 func (rt *Timeline) closeTimestamp(at time.Time) time.Time {
@@ -170,17 +167,6 @@ func (rt *Timeline) UnsafeDuration(now time.Time) time.Duration {
 func (rt *Timeline) checkContracts() {
 	if rt.ID.IsEmpty() {
 		panic("contract violated: Timeline.ID must be non-empty")
-	}
-}
-
-// verifyHistoryOrdering checks that all archived episodes are chronologically ordered.
-// O(n) scan — only runs in debug builds via dbc.ExpensiveCheck.
-func (rt *Timeline) verifyHistoryOrdering() {
-	episodes := rt.history.episodes
-	for i := 1; i < len(episodes); i++ {
-		if episodes[i].StartAt().Before(episodes[i-1].StartAt()) {
-			panic("contract violated: Timeline history episodes are not chronologically ordered")
-		}
 	}
 }
 

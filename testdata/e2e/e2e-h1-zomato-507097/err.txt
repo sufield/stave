@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 28ms)
+Done:    apply controls against observations (2 files, 23ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-zomato-507097/controls --observations testdata/e2e/e2e-h1-zomato-507097/observations
 

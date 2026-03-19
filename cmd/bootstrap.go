@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -28,8 +29,34 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.checkDevProductionGuard(cmd); err != nil {
 		return err
 	}
+	if err := a.checkConfigHealth(cmd); err != nil {
+		return err
+	}
 	a.initSanitizer()
 	return a.initLogger()
+}
+
+// checkConfigHealth enforces config loading errors for commands that need config.
+// Commands that can operate without a project config (init, generate, help, etc.)
+// are tolerant of config failures.
+func (a *App) checkConfigHealth(cmd *cobra.Command) error {
+	cfgErr := projconfig.GlobalConfigError()
+	if cfgErr == nil {
+		return nil
+	}
+	// Commands that work without config
+	tolerant := map[string]bool{
+		"init": true, "generate": true, "help": true,
+		"completion": true, "doctor": true,
+	}
+	if tolerant[cmd.Name()] {
+		return nil
+	}
+	return &ui.UserError{Err: fmt.Errorf(
+		"project configuration is invalid: %w\n"+
+			"Fix: check stave.yaml syntax or run 'stave init' to create a new one",
+		cfgErr,
+	)}
 }
 
 func (a *App) postRun(cmd *cobra.Command, _ []string) {

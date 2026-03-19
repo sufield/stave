@@ -1,6 +1,7 @@
 package hygiene
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -30,7 +31,10 @@ func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
 	eval := projconfig.Global()
 
 	// Path inference
-	res, _ := projctx.NewResolver()
+	res, resolverErr := projctx.NewResolver()
+	if resolverErr != nil {
+		return Config{}, fmt.Errorf("resolve project context: %w", resolverErr)
+	}
 	engine := projctx.NewInferenceEngine(res)
 	resolvedCtl := engine.InferDir("controls", o.ctlDir)
 	resolvedObs := engine.InferDir("observations", o.obsDir)
