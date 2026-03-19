@@ -48,7 +48,6 @@ Or use Stave's built-in sanitization:
 
 ```bash
 stave apply --controls ./controls --observations ./obs --sanitize > sanitized-output.json
-stave ingest --profile aws-s3 --input ./snapshot --out obs.json --scrub
 ```
 
 ### 3. Write the observation file

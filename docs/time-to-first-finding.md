@@ -29,23 +29,26 @@ done
 
 This runs entirely in your terminal. Stave never sees your credentials.
 
-## Step 2: Ingest the snapshot into observations
+## Step 2: Convert the snapshot into observations
 
-Convert the raw AWS CLI output into Stave's normalized observation format.
+Use an extractor to convert the raw AWS CLI output into Stave's normalized observation format (`obs.v0.1` JSON). You can write your own extractor in any language, or use an existing one such as `stave-extractor`. See [Building an Extractor](extractor-prompt.md) for a jumpstart template.
+
+Your extractor should read the files in `snapshot-raw/` and produce one or more `obs.v0.1` JSON files in an output directory:
 
 ```bash
-stave ingest --source-dir ./snapshot-raw --output-dir ./observations
+# Example: run your extractor
+./my-s3-extractor.sh ./snapshot-raw ./observations
 ```
 
 ## Step 3: Validate the observations
 
-Check that the ingested data is well-formed before evaluation.
+Check that the extracted data is well-formed before evaluation.
 
 ```bash
 stave validate --controls controls/s3 --observations ./observations
 ```
 
-If validation fails, the error message tells you exactly which field is missing or malformed. Fix your extractor script (Step 1) and re-run ingest.
+If validation fails, the error message tells you exactly which field is missing or malformed. Fix your extractor script (Step 2) and re-run it.
 
 ## Step 4: Apply built-in controls
 
@@ -99,8 +102,8 @@ Fix the issues in your AWS account, then take a second snapshot and re-evaluate.
 # Take a second snapshot
 aws s3api get-public-access-block --bucket staging-uploads > snapshot-raw/staging-uploads-pab.json
 
-# Re-ingest and re-evaluate
-stave ingest --source-dir ./snapshot-raw --output-dir ./observations
+# Re-run your extractor and re-evaluate
+./my-s3-extractor.sh ./snapshot-raw ./observations
 stave apply --controls controls/s3 --observations ./observations \
   --max-unsafe 168h --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
 ```
@@ -140,14 +143,14 @@ The error tells you which field is missing or malformed. Common fixes:
 - **Missing `captured_at`**: add a timestamp to your observation: `"captured_at": "2026-03-15T00:00:00Z"`
 - **Schema mismatch**: ensure observations use `obs.v0.1` format — flat JSON, no `"snapshots"` wrapper
 
-Fix your extractor script, re-run `stave ingest`, and validate again.
+Fix your extractor script, re-run it, and validate again.
 
 ## Summary
 
 | Step | Command | What happens |
 |---|---|---|
 | 1 | AWS CLI + jq | Extract bucket config from your account |
-| 2 | `stave ingest` | Normalize raw exports to observations |
+| 2 | Your extractor | Normalize raw exports to observations |
 | 3 | `stave validate` | Check observations are well-formed |
 | 4 | `stave apply` | Evaluate 43 S3 controls, get findings |
 | 5 | Fix + re-snapshot | Remediate, retake snapshot, re-evaluate |

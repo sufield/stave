@@ -52,17 +52,9 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 
 **When to use:** You have AWS CLI JSON exports from a Terraform-managed environment and want to evaluate them with Stave.
 
-1. **Ingest** — convert the raw AWS snapshot into a normalized observations file:
+1. **Extract** — use an extractor (any language) to produce `obs.v0.1` JSON from your AWS snapshot directory. The input directory should contain files like `list-buckets.json`, `get-bucket-acl/<bucket>.json`, etc. See [Building an Extractor](extractor-prompt.md) for a jumpstart template.
 
-   ```bash
-   stave ingest --profile aws-s3 \
-     --input ./aws-snapshot/ \
-     --out ./observations/snap-2026-02-22.json
-   ```
-
-   The input directory should contain files like `list-buckets.json`, `get-bucket-acl/<bucket>.json`, etc.
-
-2. **Validate** — confirm the ingested observation is well-formed:
+2. **Validate** — confirm the extracted observation is well-formed:
 
    ```bash
    stave validate --in ./observations/snap-2026-02-22.json
@@ -86,23 +78,11 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
 
 **When to use:** In CI/CD, you want to verify that a remediation actually fixed the violations found in a before-state snapshot.
 
-1. **Capture before-state observations** (pre-remediation):
-
-   ```bash
-   stave ingest --profile aws-s3 \
-     --input ./aws-before/ \
-     --out ./obs-before/snap.json
-   ```
+1. **Capture before-state observations** (pre-remediation) — use an extractor to produce `obs.v0.1` JSON from your AWS snapshot. See [Building an Extractor](extractor-prompt.md).
 
 2. **Apply remediation** (your Terraform apply, script, etc.)
 
-3. **Capture after-state observations** (post-remediation):
-
-   ```bash
-   stave ingest --profile aws-s3 \
-     --input ./aws-after/ \
-     --out ./obs-after/snap.json
-   ```
+3. **Capture after-state observations** (post-remediation) — re-run your extractor against the post-remediation snapshot.
 
 4. **Run fix-loop** — evaluate both states and produce a remediation report:
 
