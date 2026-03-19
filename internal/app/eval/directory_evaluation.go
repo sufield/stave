@@ -23,6 +23,7 @@ type DirectoryEvaluationRequest struct {
 	AllowUnknownType  bool
 	ToolVersion       string
 	ObservationLoader appcontracts.ObservationRepository
+	CELEvaluator      policy.PredicateEval
 }
 
 // RunDirectoryEvaluation loads snapshots and evaluates them against controls.
@@ -49,11 +50,12 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 	}
 
 	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
-		Controls:    req.Controls,
-		Snapshots:   snapshots,
-		MaxUnsafe:   req.MaxUnsafe,
-		Clock:       req.Clock,
-		ToolVersion: req.ToolVersion,
+		Controls:     req.Controls,
+		Snapshots:    snapshots,
+		MaxUnsafe:    req.MaxUnsafe,
+		Clock:        req.Clock,
+		ToolVersion:  req.ToolVersion,
+		CELEvaluator: req.CELEvaluator,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("evaluation failed: %w", err)

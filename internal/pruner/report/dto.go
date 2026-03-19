@@ -94,13 +94,6 @@ func buildCleanupOutput(schema kernel.Schema, kind kernel.OutputKind, input Clea
 	}
 }
 
-// BuildPruneOutput creates prune JSON output payload.
-func BuildPruneOutput(input CleanupInput) PruneOutput {
-	return PruneOutput{
-		CleanupOutput: buildCleanupOutput(kernel.SchemaSnapshotPrune, kernel.KindSnapshotPrune, input),
-	}
-}
-
 // BuildArchiveOutput creates archive JSON output payload.
 func BuildArchiveOutput(input ArchiveOutputInput) ArchiveOutput {
 	return ArchiveOutput{

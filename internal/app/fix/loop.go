@@ -151,6 +151,7 @@ func (s *Service) evaluateState(
 		AllowUnknownType:  req.AllowUnknown,
 		ToolVersion:       version.Version,
 		ObservationLoader: loader,
+		CELEvaluator:      s.CELEvaluator,
 	})
 	if err != nil {
 		return evaluationState{}, fmt.Errorf("%s evaluation: %w", label, err)

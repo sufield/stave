@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -31,6 +32,7 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 		},
 	}
 
+	celEval := stavecel.MustPredicateEval()
 	var expected []Item
 	for i := range 20 {
 		items := ComputeItems(Request{
@@ -38,6 +40,7 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 			Snapshots:       snapshots,
 			GlobalMaxUnsafe: 4 * time.Hour,
 			Now:             base.Add(time.Hour),
+			PredicateEval:   celEval,
 		})
 		if len(items) != 2 {
 			t.Fatalf("iteration %d: items len = %d, want 2", i, len(items))
@@ -74,6 +77,7 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 		Snapshots:       snapshots,
 		GlobalMaxUnsafe: 6 * time.Hour,
 		Now:             base.Add(2 * time.Hour),
+		PredicateEval:   stavecel.MustPredicateEval(),
 	})
 	if len(items) != 1 {
 		t.Fatalf("items len = %d, want 1", len(items))
@@ -95,12 +99,14 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
+	celEval := stavecel.MustPredicateEval()
 	invalid := []policy.ControlDefinition{testControl("CTL.A", "not-a-duration")}
 	items := ComputeItems(Request{
 		Controls:        invalid,
 		Snapshots:       snapshots,
 		GlobalMaxUnsafe: 5 * time.Hour,
 		Now:             base.Add(time.Hour),
+		PredicateEval:   celEval,
 	})
 	if len(items) != 1 {
 		t.Fatalf("items len = %d, want 1", len(items))
@@ -115,6 +121,7 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 		Snapshots:       snapshots,
 		GlobalMaxUnsafe: 5 * time.Hour,
 		Now:             base.Add(time.Hour),
+		PredicateEval:   celEval,
 	})
 	if len(items) != 1 {
 		t.Fatalf("zero-threshold items len = %d, want 1", len(items))

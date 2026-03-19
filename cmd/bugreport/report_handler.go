@@ -29,7 +29,11 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 	}
 
 	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out, time.Time{}))
-	f, err := cmdutil.PrepareOutputFile(outPath, gf)
+	f, err := cmdutil.OpenOutputFile(outPath, cmdutil.FileOptions{
+		Overwrite:     gf.Force,
+		AllowSymlinks: gf.AllowSymlinkOut,
+		DirPerms:      0o700,
+	})
 	if err != nil {
 		return err
 	}

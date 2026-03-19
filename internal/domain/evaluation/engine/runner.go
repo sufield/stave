@@ -13,6 +13,10 @@ import (
 	"github.com/sufield/stave/internal/domain/ports"
 )
 
+// PredicateEvaluator is a function that evaluates whether an asset is unsafe
+// according to a control's predicate.
+type PredicateEvaluator = policy.PredicateEval
+
 // Runner executes evaluation logic over snapshots.
 type Runner struct {
 	Controls  []policy.ControlDefinition
@@ -27,6 +31,10 @@ type Runner struct {
 	ToolVersion     string
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+
+	// CELEvaluator evaluates predicates using the CEL engine.
+	// Required — the built-in predicate evaluator has been removed.
+	CELEvaluator PredicateEvaluator
 
 	// identitiesByTime maps snapshot capture times to their identities.
 	// Set during Evaluate so finding generation can look up the identities
@@ -90,7 +98,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 		e.identitiesByTime[sorted[i].CapturedAt] = sorted[i].Identities
 	}
 
-	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.PredicateParser)
+	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
 
 	assetHint := 0
 	if len(sorted) > 0 {

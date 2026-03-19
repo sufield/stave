@@ -40,11 +40,6 @@ func New(grants []Grant) List {
 	return List{grants: slices.Clone(grants)}
 }
 
-// Grants returns a defensive copy of the underlying grants.
-func (l List) Grants() []Grant {
-	return slices.Clone(l.grants)
-}
-
 // Assessment contains the result of evaluating an ACL for security posture.
 type Assessment struct {
 	AllowsPublicRead  bool               // READ to AllUsers

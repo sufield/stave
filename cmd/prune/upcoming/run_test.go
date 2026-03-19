@@ -6,6 +6,7 @@ import (
 	"time"
 
 	textout "github.com/sufield/stave/internal/adapters/output/text"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -79,6 +80,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 		Snapshots:       snapshots,
 		GlobalMaxUnsafe: 168 * time.Hour,
 		Now:             now,
+		PredicateEval:   stavecel.MustPredicateEval(),
 	})
 	items := mapRiskItems(riskItems)
 	if len(items) != 2 {

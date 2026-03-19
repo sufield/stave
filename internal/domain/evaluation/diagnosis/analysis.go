@@ -163,11 +163,10 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 
 		for id, history := range assetHistories {
 			streak, matched := analyzeAssetStreak(assetStreakRequest{
-				Points:    history,
-				Predicate: ctl.UnsafePredicate,
-				Params:    ctl.Params,
-				EndTime:   endTime,
-				Parser:    input.PredicateParser,
+				Points:  history,
+				Control: ctl,
+				EndTime: endTime,
+				Eval:    input.PredicateEval,
 			})
 
 			if matched {

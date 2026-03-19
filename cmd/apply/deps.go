@@ -17,11 +17,13 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/builtin/pack"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
 )
@@ -101,6 +103,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		AllowUnknownInput: b.Opts.AllowUnknown,
 		ExemptionConfig:   exemptionCfg,
 		PredicateParser:   ctlyaml.ParsePredicate,
+		CELEvaluator:      mustCELEvaluator(),
 		ToolVersion:       version.Version,
 		ControlsDir:       b.Opts.ControlsDir,
 		ProjectConfig:     projCfgInput,
@@ -112,6 +115,14 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 	}
 
 	return deps, nil
+}
+
+func mustCELEvaluator() policy.PredicateEval {
+	eval, err := stavecel.NewPredicateEval()
+	if err != nil {
+		panic("CEL evaluator init: " + err.Error())
+	}
+	return eval
 }
 
 type adapters struct {

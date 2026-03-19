@@ -10,10 +10,10 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 
 	apptrace "github.com/sufield/stave/internal/app/trace"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/trace"
 )
 
 func TestBuildFindingDetail_Success(t *testing.T) {
@@ -92,7 +92,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Controls:     policy.ControlDefinitions{ctl},
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
 		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
-		TraceBuilder: apptrace.NewFindingTraceBuilder(nil),
+		TraceBuilder: apptrace.NewFindingTraceBuilder(),
 		IDGen:        crypto.NewHasher(),
 	})
 	if err != nil {
@@ -133,9 +133,9 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 	if !detail.Trace.FinalResult {
 		t.Error("trace final result should be true (predicate matches)")
 	}
-	tr, ok := detail.Trace.Raw.(*trace.Result)
+	tr, ok := detail.Trace.Raw.(*stavecel.TraceResult)
 	if !ok {
-		t.Fatal("trace.Raw should be *trace.Result")
+		t.Fatal("trace.Raw should be *stavecel.TraceResult")
 	}
 	if tr.ControlID != "CTL.S3.PUBLIC.001" {
 		t.Errorf("trace control = %q", tr.ControlID)

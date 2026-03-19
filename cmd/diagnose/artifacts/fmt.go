@@ -15,10 +15,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"gopkg.in/yaml.v3"
 )
 
 // FormatConfig defines the behavior of the formatting operation.
@@ -162,7 +162,11 @@ func (f *Formatter) formatJSON(data []byte) ([]byte, error) {
 }
 
 func (f *Formatter) formatYAML(data []byte) ([]byte, error) {
-	out, err := controlyaml.FormatControlYAML(data)
+	var dto any
+	if err := yaml.Unmarshal(data, &dto); err != nil {
+		return nil, fmt.Errorf("parse control yaml: %w", err)
+	}
+	out, err := yaml.Marshal(dto)
 	if err != nil {
 		return nil, fmt.Errorf("parse control yaml: %w", err)
 	}

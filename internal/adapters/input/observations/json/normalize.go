@@ -30,6 +30,9 @@ func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 		if err := normalizeTypeAndVendor(&snapshot.Assets[i].Type, &snapshot.Assets[i].Vendor, "assets", i); err != nil {
 			return fmt.Errorf("normalize snapshot assets: %w", err)
 		}
+		if snapshot.Assets[i].Properties != nil {
+			normalizeProperties(snapshot.Assets[i].Properties)
+		}
 	}
 	for i := range snapshot.Identities {
 		if err := normalizeTypeAndVendor(&snapshot.Identities[i].Type, &snapshot.Identities[i].Vendor, "identities", i); err != nil {

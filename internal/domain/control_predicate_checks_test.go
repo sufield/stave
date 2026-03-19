@@ -73,7 +73,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 		},
 	}
 
-	issues := policy.CheckControlEffectiveness(controls, snapshots, nil)
+	issues := policy.CheckControlEffectiveness(controls, snapshots, testCELEvaluator())
 	if len(issues) != 1 {
 		t.Fatalf("issue count = %d, want 1 (%v)", len(issues), issues)
 	}

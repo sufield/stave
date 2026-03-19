@@ -84,6 +84,7 @@ type Input struct {
 	MaxUnsafe       time.Duration
 	Now             time.Time
 	PredicateParser policy.PredicateParser
+	PredicateEval   policy.PredicateEval
 
 	// cached summary computed at creation
 	summary Summary
@@ -98,6 +99,7 @@ func NewInput(
 	maxUnsafe time.Duration,
 	now time.Time,
 	parser policy.PredicateParser,
+	eval policy.PredicateEval,
 ) Input {
 	i := Input{
 		Snapshots:       snapshots,
@@ -107,6 +109,7 @@ func NewInput(
 		MaxUnsafe:       maxUnsafe,
 		Now:             now,
 		PredicateParser: parser,
+		PredicateEval:   eval,
 	}
 	i.summary = i.buildSummary()
 	return i

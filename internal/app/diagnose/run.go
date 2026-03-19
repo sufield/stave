@@ -23,6 +23,7 @@ type Config struct {
 	MaxUnsafe       time.Duration
 	Clock           ports.Clock
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	PredicateEval   policy.PredicateEval
 }
 
 // Run executes the diagnose use case.
@@ -73,6 +74,7 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		cfg.MaxUnsafe,
 		cfg.Clock.Now(),
 		cfg.PredicateParser,
+		cfg.PredicateEval,
 	)
 
 	report := diagnosis.Explain(input)
@@ -147,6 +149,7 @@ func (d *Run) resolveResult(
 		MaxUnsafe:       cfg.MaxUnsafe,
 		Clock:           cfg.Clock,
 		PredicateParser: cfg.PredicateParser,
+		CELEvaluator:    cfg.PredicateEval,
 	})
 	if err != nil {
 		return nil, err

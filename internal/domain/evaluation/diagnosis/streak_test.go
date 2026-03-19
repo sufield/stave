@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -37,7 +38,7 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 	}
 
 	s := newSession(NewInput(
-		snapshots, []policy.ControlDefinition{ctl}, []evaluation.Finding{}, nil, 0, base.Add(1*time.Hour), nil,
+		snapshots, []policy.ControlDefinition{ctl}, []evaluation.Finding{}, nil, 0, base.Add(1*time.Hour), nil, stavecel.MustPredicateEval(),
 	), 0)
 	maxStreak, ctlID := s.globalMaxStreak()
 

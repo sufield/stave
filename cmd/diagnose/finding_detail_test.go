@@ -12,6 +12,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
@@ -19,7 +20,6 @@ import (
 	"github.com/sufield/stave/internal/domain/policy"
 	clockadp "github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/domain/predicate"
-	"github.com/sufield/stave/internal/trace"
 )
 
 func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
@@ -44,19 +44,11 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 		Asset:    evaluation.FindingAssetSummary{ID: "res-1", Type: "storage_bucket"},
 		Evidence: evaluation.Evidence{},
 		Trace: &evaluation.FindingTrace{
-			Raw: &trace.Result{
-				ControlID:  "CTL.TEST.A.001",
+			Raw: &stavecel.TraceResult{
+				ControlID:  kernel.ControlID("CTL.TEST.A.001"),
 				AssetID:    "res-1",
-				Properties: map[string]any{"k": "v"},
-				Root: &trace.GroupNode{
-					Logic:             trace.LogicAny,
-					ShortCircuitIndex: -1,
-					Result:            true,
-					Children: []trace.Node{
-						&trace.ClauseNode{Index: 0, Field: predicate.NewFieldPath("properties.k"), Op: predicate.OpEq, Value: "v", Result: true},
-					},
-				},
-				FinalResult: true,
+				Expression: `any(properties.k == "v")`,
+				Result:     true,
 			},
 			FinalResult: true,
 		},

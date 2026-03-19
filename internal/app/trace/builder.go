@@ -3,59 +3,43 @@ package apptrace
 import (
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/trace"
 )
 
-// Builder implements evaluation.FindingTraceBuilder using the trace engine
-// with an injected predicate parser.
-type Builder struct {
-	predicateParser func(any) (*policy.UnsafePredicate, error)
-}
+// Builder implements evaluation.FindingTraceBuilder using the CEL engine.
+type Builder struct{}
 
 // NewFindingTraceBuilder creates a Builder that satisfies the
-// evaluation.FindingTraceBuilder interface. Suitable for injection into
-// the service layer from the cmd layer.
-func NewFindingTraceBuilder(
-	predicateParser func(any) (*policy.UnsafePredicate, error),
-) *Builder {
-	return &Builder{predicateParser: predicateParser}
+// evaluation.FindingTraceBuilder interface.
+func NewFindingTraceBuilder() *Builder {
+	return &Builder{}
 }
 
-// BuildTrace builds a predicate evaluation trace for the given request.
+// BuildTrace builds a CEL-based predicate evaluation trace for the given request.
 func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTrace {
 	if req.Control == nil {
 		return nil
 	}
 
 	found, snapshot := findAssetInSnapshots(req.AssetID, req.Snapshots, req.TargetTime)
-	if found == nil || snapshot == nil {
+	if found == nil {
 		return nil
 	}
 
-	ctx := policy.NewAssetEvalContext(*found, req.Control.Params, snapshot.Identities...)
-	ctx.PredicateParser = b.predicateParser
-	root := trace.TracePredicate(req.Control.UnsafePredicate, ctx)
-	tr := &trace.Result{
-		ControlID:   req.Control.ID,
-		AssetID:     found.ID,
-		Properties:  found.Properties,
-		Params:      req.Control.Params,
-		Root:        root,
-		FinalResult: root.Result,
+	tr := stavecel.BuildTrace(req.Control, found, snapshot)
+	if tr == nil {
+		return nil
 	}
 	return &evaluation.FindingTrace{
 		Raw:         tr,
-		FinalResult: root.Result,
+		FinalResult: tr.Result,
 	}
 }
 
 // findAssetInSnapshots locates an asset in the loaded snapshots,
-// preferring the snapshot at targetTime. Uses a single pass: returns
-// immediately on an exact time match, otherwise keeps the first (fallback)
-// asset found while scanning.
+// preferring the snapshot at targetTime.
 func findAssetInSnapshots(
 	assetID asset.ID,
 	snapshots []asset.Snapshot,

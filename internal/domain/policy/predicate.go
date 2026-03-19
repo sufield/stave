@@ -13,39 +13,10 @@ type UnsafePredicate struct {
 	All []PredicateRule
 }
 
-// Evaluate performs a standalone evaluation against a specific asset.
-func (p UnsafePredicate) Evaluate(a asset.Asset, params ControlParams) bool {
-	return p.EvaluateWithContext(NewAssetEvalContext(a, params))
-}
-
-// EvaluateIdentity performs a standalone evaluation against a cloud identity (e.g. Service Account).
-func (p UnsafePredicate) EvaluateIdentity(id asset.CloudIdentity, params ControlParams) bool {
-	return p.EvaluateWithContext(NewIdentityEvalContext(id, params))
-}
-
-// EvaluateWithContext executes the predicate logic against a prepared evaluation context.
-func (p UnsafePredicate) EvaluateWithContext(ctx EvalContext) bool {
-	// 1. Evaluate "Any" (OR logic)
-	// If any rule matches, the entire predicate is satisfied immediately.
-	for i := range p.Any {
-		if p.Any[i].MatchesWithContext(ctx) {
-			return true
-		}
-	}
-
-	// 2. Evaluate "All" (AND logic)
-	// If the "All" block exists, all rules within it must satisfy.
-	if len(p.All) > 0 {
-		for i := range p.All {
-			if !p.All[i].MatchesWithContext(ctx) {
-				return false
-			}
-		}
-		return true
-	}
-
-	return false
-}
+// PredicateEval evaluates whether an asset is unsafe according to a control's
+// predicate. This function type decouples evaluation consumers from the
+// evaluation engine implementation (CEL or built-in).
+type PredicateEval func(ctl ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (unsafe bool, err error)
 
 // EvalContext encapsulates all state available to a predicate during evaluation.
 type EvalContext struct {
@@ -61,14 +32,6 @@ func (ctx EvalContext) Param(key string) (any, bool) {
 	return ctx.Params.Get(key)
 }
 
-// ParsePredicate attempts to expand a raw value into a nested predicate.
-func (ctx EvalContext) ParsePredicate(v any) (*UnsafePredicate, error) {
-	if ctx.PredicateParser == nil {
-		return nil, nil
-	}
-	return ctx.PredicateParser(v)
-}
-
 // --- Constructors ---
 
 // NewAssetEvalContext builds a context focused on resource properties.
@@ -77,13 +40,5 @@ func NewAssetEvalContext(a asset.Asset, params ControlParams, identities ...asse
 		Properties: a.Map(),
 		Params:     params,
 		Identities: identities,
-	}
-}
-
-// NewIdentityEvalContext builds a context focused on a specific identity's attributes.
-func NewIdentityEvalContext(id asset.CloudIdentity, params ControlParams) EvalContext {
-	return EvalContext{
-		CloudIdentity: &id,
-		Params:        params,
 	}
 }

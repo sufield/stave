@@ -9,6 +9,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
@@ -132,9 +133,10 @@ func TestEvaluateRunExecute(t *testing.T) {
 				ControlsDir:     "ctl",
 				ObservationsDir: "obs",
 			},
-			MaxUnsafe: 30 * time.Minute,
-			Clock:     clockadp.FixedClock(now),
-			Output:    &bytes.Buffer{},
+			MaxUnsafe:    30 * time.Minute,
+			Clock:        clockadp.FixedClock(now),
+			Output:       &bytes.Buffer{},
+			CELEvaluator: stavecel.MustPredicateEval(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -166,9 +168,10 @@ func TestEvaluateRunExecute(t *testing.T) {
 				ControlsDir:     "ctl",
 				ObservationsDir: "obs",
 			},
-			MaxUnsafe: 30 * time.Minute,
-			Clock:     clockadp.FixedClock(now),
-			Output:    &bytes.Buffer{},
+			MaxUnsafe:    30 * time.Minute,
+			Clock:        clockadp.FixedClock(now),
+			Output:       &bytes.Buffer{},
+			CELEvaluator: stavecel.MustPredicateEval(),
 		})
 		if err == nil || !strings.Contains(err.Error(), "failed to write findings") {
 			t.Fatalf("unexpected err: %v", err)

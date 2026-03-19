@@ -41,14 +41,3 @@ func OpenOutputFile(path string, opts FileOptions) (*os.File, error) {
 
 	return f, nil
 }
-
-// PrepareOutputFile is a convenience wrapper that maps GlobalFlags to FileOptions.
-// This is used by Cobra RunE functions.
-func PrepareOutputFile(path string, flags GlobalFlags) (*os.File, error) {
-	opts := FileOptions{
-		Overwrite:     flags.Force,
-		AllowSymlinks: flags.AllowSymlinkOut,
-		DirPerms:      0o700,
-	}
-	return OpenOutputFile(path, opts)
-}

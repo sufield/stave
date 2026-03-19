@@ -36,11 +36,11 @@ func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []st
 
 // CheckControlEffectiveness evaluates if controls are matching any assets in the
 // current dataset. This helps identify misconfigured predicates.
-func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, parser PredicateParser) []diag.Issue {
+func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) []diag.Issue {
 	var issues []diag.Issue
 
 	for _, ctl := range controls {
-		if !isControlMatchingAny(ctl, snapshots, parser) {
+		if !isControlMatchingAny(ctl, snapshots, eval) {
 			issues = append(issues, diag.New(diag.CodeControlNeverMatches).
 				Warning().
 				Action("Check predicate field paths or verify if all resources are currently safe.").
@@ -52,12 +52,14 @@ func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.S
 	return issues
 }
 
-func isControlMatchingAny(ctl ControlDefinition, snapshots []asset.Snapshot, parser PredicateParser) bool {
+func isControlMatchingAny(ctl ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) bool {
+	if eval == nil {
+		return false
+	}
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			ctx := NewAssetEvalContext(a, ctl.Params, snap.Identities...)
-			ctx.PredicateParser = parser
-			if ctl.UnsafePredicate.EvaluateWithContext(ctx) {
+			unsafe, err := eval(ctl, a, snap.Identities)
+			if err == nil && unsafe {
 				return true
 			}
 		}

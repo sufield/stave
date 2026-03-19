@@ -128,7 +128,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		DiagnoseConfig: baseCfg,
 		ControlID:      kernel.ControlID(cfg.ControlID),
 		AssetID:        asset.ID(cfg.AssetID),
-		TraceBuilder:   apptrace.NewFindingTraceBuilder(ctlyaml.ParsePredicate),
+		TraceBuilder:   apptrace.NewFindingTraceBuilder(),
 		IDGen:          crypto.NewHasher(),
 	})
 	if err != nil {
