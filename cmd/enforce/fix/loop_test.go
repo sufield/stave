@@ -11,15 +11,15 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 func TestBuildFixLoopReport(t *testing.T) {
 	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
-	r := NewRunner(compose.NewDefaultProvider(), clock)
 
-	req := LoopRequest{
+	req := appfix.LoopRequest{
 		BeforeDir: "./before",
 		AfterDir:  "./after",
 		MaxUnsafe: 7 * 24 * time.Hour,
@@ -39,7 +39,7 @@ func TestBuildFixLoopReport(t *testing.T) {
 		},
 	}
 
-	report := r.buildReport(req, v, LoopArtifacts{})
+	report := appfix.BuildReport(req, clock, v, appfix.LoopArtifacts{})
 	if report.Pass {
 		t.Fatalf("expected report to fail when remaining findings exist")
 	}
@@ -93,7 +93,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read remediation report: %v", err)
 	}
-	var report LoopReport
+	var report appfix.LoopReport
 	if err := json.Unmarshal(data, &report); err != nil {
 		t.Fatalf("parse remediation report: %v", err)
 	}

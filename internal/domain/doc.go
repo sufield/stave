@@ -1,3 +1,7 @@
+// TODO(v1.0): Promote internal/domain to pkg/stave once the evaluation API is stable.
+// This will allow external consumers (stave-extractor, third-party tools) to import
+// the evaluation engine directly. Until then, internal/ prevents premature API commitment.
+
 // Package domain contains the core business logic for Stave's safety evaluation.
 //
 // This package is a namespace for domain subpackages; it has no Go source files

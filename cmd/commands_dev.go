@@ -1,3 +1,5 @@
+//go:build stavedev
+
 package cmd
 
 import (
@@ -28,9 +30,6 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-// groupDevTools is the help group for developer-only commands.
-const groupDevTools = "dev-tools"
 
 // WireDevCommands attaches developer-only commands to an already prod-wired App.
 // Commands are assigned to the dev-tools group declaratively at construction

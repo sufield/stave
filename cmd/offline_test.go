@@ -45,32 +45,6 @@ func TestOfflineHelpSuffix_ProdCommands(t *testing.T) {
 	}
 }
 
-// TestOfflineHelpSuffix_DevCommands verifies dev-only commands that should
-// display the offline guarantee.
-func TestOfflineHelpSuffix_DevCommands(t *testing.T) {
-	root := GetDevRootCmd()
-
-	required := [][]string{
-		{"doctor"},
-		{"bug-report"},
-		{"controls"},
-		{"capabilities"},
-		{"security-audit"},
-	}
-
-	for _, path := range required {
-		cmd, _, err := root.Find(path)
-		if err != nil {
-			t.Errorf("dev command path %v not found: %v", path, err)
-			continue
-		}
-		long := cmd.Long
-		if !strings.Contains(long, "Offline-only") {
-			t.Errorf("%v: Long help does not contain 'Offline-only'", path)
-		}
-	}
-}
-
 // TestRequireOffline_PassesCleanEnv verifies the self-check passes without proxy vars.
 func TestRequireOffline_PassesCleanEnv(t *testing.T) {
 	app := &App{}
