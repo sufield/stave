@@ -37,6 +37,11 @@ which remain, and which are newly introduced.` + metadata.OfflineHelpSuffix,
 				return err
 			}
 
+			celEval, err := p.NewCELEvaluator()
+			if err != nil {
+				return err
+			}
+
 			gf := cmdutil.GetGlobalFlags(cmd)
 
 			return appverify.RunVerify(
@@ -62,6 +67,7 @@ which remain, and which are newly introduced.` + metadata.OfflineHelpSuffix,
 					Quiet:        gf.Quiet,
 					Sanitizer:    gf.GetSanitizer(),
 					Stdout:       cmd.OutOrStdout(),
+					CELEvaluator: celEval,
 				},
 			)
 		},

@@ -36,6 +36,7 @@ type VerifyRequest struct {
 	Quiet        bool
 	Sanitizer    kernel.Sanitizer
 	Stdout       io.Writer
+	CELEvaluator policy.PredicateEval
 }
 
 // RunVerify executes the before/after comparison workflow.
@@ -119,6 +120,7 @@ func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.Control
 		AllowUnknownType:  req.AllowUnknown,
 		ToolVersion:       staveversion.Version,
 		ObservationLoader: loader,
+		CELEvaluator:      req.CELEvaluator,
 	})
 	if err != nil {
 		return evalResult{}, err

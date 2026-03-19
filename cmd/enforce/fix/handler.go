@@ -29,6 +29,9 @@ type Runner struct {
 func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
 	svc := appfix.NewService(clock, remediation.NewPlanner(crypto.NewHasher()))
 	svc.ParseFindings = evaljson.ParseFindings
+	if celEval, err := p.NewCELEvaluator(); err == nil {
+		svc.CELEvaluator = celEval
+	}
 	return &Runner{
 		Provider: p,
 		Clock:    clock,

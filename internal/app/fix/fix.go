@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -28,6 +29,7 @@ type Service struct {
 	Planner       *remediation.Planner
 	Sanitizer     kernel.Sanitizer
 	ParseFindings FindingsParser
+	CELEvaluator  policy.PredicateEval
 }
 
 // NewService creates a Service. The caller must set ParseFindings

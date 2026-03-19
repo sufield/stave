@@ -44,23 +44,24 @@ func (t *streakTracker) endStreak(at time.Time) time.Duration {
 }
 
 type assetStreakRequest struct {
-	Points    []observation
-	Predicate policy.UnsafePredicate
-	Params    policy.ControlParams
-	EndTime   time.Time
-	Parser    policy.PredicateParser
+	Points  []observation
+	Control policy.ControlDefinition
+	EndTime time.Time
+	Eval    policy.PredicateEval
 }
 
 // analyzeAssetStreak walks an asset's chronological timeline to find the
 // longest contiguous unsafe period (streak). A streak starts when the predicate
 // first matches and ends when it stops matching or at endTime if still unsafe.
 func analyzeAssetStreak(req assetStreakRequest) (maxStreak time.Duration, matched bool) {
+	if req.Eval == nil {
+		return 0, false
+	}
 	var tracker streakTracker
 
 	for _, pt := range req.Points {
-		ctx := policy.NewAssetEvalContext(pt.state, req.Params, pt.identities...)
-		ctx.PredicateParser = req.Parser
-		if req.Predicate.EvaluateWithContext(ctx) {
+		unsafe, err := req.Eval(req.Control, pt.state, pt.identities)
+		if err == nil && unsafe {
 			matched = true
 			tracker.markUnsafe(pt.at)
 		} else {
@@ -146,7 +147,7 @@ func detectStreakResets(input Input) []Issue {
 	}
 
 	snaps := sortedSnapshots(input.Snapshots)
-	idx := buildUnsafeIndex(snaps, input.Controls, input.PredicateParser)
+	idx := buildUnsafeIndex(snaps, input.Controls, input.PredicateEval)
 
 	violated := make(map[asset.ID]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
@@ -178,7 +179,7 @@ func detectAnyReset(input Input) bool {
 	}
 
 	snaps := sortedSnapshots(input.Snapshots)
-	idx := buildUnsafeIndex(snaps, input.Controls, input.PredicateParser)
+	idx := buildUnsafeIndex(snaps, input.Controls, input.PredicateEval)
 
 	return len(findResets(snaps, idx, nil)) > 0
 }

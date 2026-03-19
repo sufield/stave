@@ -151,7 +151,8 @@ type Request struct {
 	Snapshots       []asset.Snapshot
 	GlobalMaxUnsafe time.Duration
 	Now             time.Time
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	PredicateParser func(any) (*policy.UnsafePredicate, error) // kept for signature compat
+	PredicateEval   policy.PredicateEval
 }
 
 type assetState struct {
@@ -181,7 +182,7 @@ func ComputeItems(req Request) Items {
 		}
 
 		threshold := ctl.EffectiveMaxUnsafe(req.GlobalMaxUnsafe)
-		states := computeAssetStates(ctl, sortedSnaps, req.PredicateParser)
+		states := computeAssetStates(ctl, sortedSnaps, req.PredicateEval)
 
 		// 3. Convert states to risk items
 		for id, st := range states {
@@ -212,7 +213,7 @@ func ComputeItems(req Request) Items {
 func computeAssetStates(
 	ctl policy.ControlDefinition,
 	snapshots []asset.Snapshot,
-	parser func(any) (*policy.UnsafePredicate, error),
+	eval policy.PredicateEval,
 ) map[asset.ID]*assetState {
 	states := make(map[asset.ID]*assetState)
 
@@ -224,10 +225,12 @@ func computeAssetStates(
 				states[a.ID] = st
 			}
 
-			ctx := policy.NewAssetEvalContext(a, ctl.Params, snap.Identities...)
-			ctx.PredicateParser = parser
-
-			isUnsafe := ctl.UnsafePredicate.EvaluateWithContext(ctx)
+			isUnsafe := false
+			if eval != nil {
+				if result, err := eval(ctl, a, snap.Identities); err == nil {
+					isUnsafe = result
+				}
+			}
 
 			if isUnsafe {
 				if st.FirstUnsafeAt.IsZero() {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -13,9 +14,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
-	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -63,7 +64,8 @@ func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
 		return fmt.Errorf("load evaluation file: %w", err)
 	}
 
-	matched := appdiagnose.FilterFindings(evalResult.Findings, asset.ID(cfg.AssetID))
+	assetID := asset.ID(cfg.AssetID)
+	matched := lo.Filter(evalResult.Findings, func(v evaluation.Finding, _ int) bool { return v.AssetID == assetID })
 	if len(matched) == 0 {
 		return fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
 	}

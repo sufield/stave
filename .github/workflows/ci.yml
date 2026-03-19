@@ -140,29 +140,3 @@ jobs:
           cache: true
       - name: Check README freshness
         run: make readme-check
-
-  security-audit:
-    name: Security audit smoke
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
-        with:
-          go-version-file: 'go.mod'
-          check-latest: true
-          cache: true
-      - name: Run security-audit (json, fail-on NONE)
-        run: |
-          mkdir -p .artifacts/security-audit
-          go run ./cmd/stave-dev security-audit \
-            --format json \
-            --fail-on NONE \
-            --out-dir ./.artifacts/security-audit \
-            --out ./.artifacts/security-audit/security-report.json
-      - name: Upload security-audit artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: security-audit-artifacts
-          path: .artifacts/security-audit

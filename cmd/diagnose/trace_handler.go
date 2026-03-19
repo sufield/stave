@@ -13,14 +13,12 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/trace"
 )
 
 // TraceRequest defines the parameters for tracing a predicate evaluation.
@@ -65,12 +63,15 @@ func (r *TraceRunner) Run(ctx context.Context, req TraceRequest) error {
 		return err
 	}
 
-	result := buildTraceResult(&control, found, snapshot)
+	result := stavecel.BuildTrace(&control, found, snapshot)
+	if result == nil {
+		return fmt.Errorf("trace: no result produced")
+	}
 
 	if req.Format.IsJSON() {
-		return trace.WriteJSON(req.Stdout, result)
+		return result.RenderJSON(req.Stdout)
 	}
-	return trace.WriteText(req.Stdout, result)
+	return result.RenderText(req.Stdout)
 }
 
 func (r *TraceRunner) loadControl(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
@@ -114,20 +115,6 @@ func findTraceAsset(snapshot *asset.Snapshot, assetID asset.ID, path string) (*a
 	slices.Sort(available)
 	return nil, fmt.Errorf("asset %q not found in %s\nAvailable assets: %s",
 		assetID, path, strings.Join(available, ", "))
-}
-
-func buildTraceResult(ctl *policy.ControlDefinition, a *asset.Asset, snapshot *asset.Snapshot) *trace.Result {
-	evalCtx := policy.NewAssetEvalContext(*a, ctl.Params, snapshot.Identities...)
-	evalCtx.PredicateParser = ctlyaml.ParsePredicate
-	root := trace.TracePredicate(ctl.UnsafePredicate, evalCtx)
-	return &trace.Result{
-		ControlID:   kernel.ControlID(ctl.ID),
-		AssetID:     a.ID,
-		Properties:  a.Properties,
-		Params:      ctl.Params,
-		Root:        root,
-		FinalResult: root.Result,
-	}
 }
 
 // --- CLI bridge ---

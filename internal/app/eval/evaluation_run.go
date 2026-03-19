@@ -35,6 +35,7 @@ type EvaluateConfig struct {
 	ToolVersion     string
 	Metadata        evaluation.Metadata
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator    policy.PredicateEval
 }
 
 // EvaluateRun executes the evaluation use case.
@@ -100,6 +101,7 @@ func (e *EvaluateRun) ExecuteAndReturn(ctx context.Context, cfg EvaluateConfig) 
 		ToolVersion:     cfg.ToolVersion,
 		InputHashes:     preflight.Hashes,
 		PredicateParser: cfg.PredicateParser,
+		CELEvaluator:    cfg.CELEvaluator,
 		Metadata:        cfg.Metadata,
 	})
 	if err != nil {

@@ -26,6 +26,7 @@ type RiskOptions struct {
 	Statuses        []risk.Status
 	DueWithin       *time.Duration
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator    policy.PredicateEval
 }
 
 // Service encapsulates the core calculations used by snapshot hygiene
@@ -64,6 +65,7 @@ func (s *Service) ComputeRisk(
 			Clock:           fixedClock{now: opts.Now},
 			ToolVersion:     opts.ToolVersion,
 			PredicateParser: opts.PredicateParser,
+			CELEvaluator:    opts.CELEvaluator,
 		})
 		if err != nil {
 			return appcontracts.RiskStats{}
@@ -86,6 +88,7 @@ func computeUpcomingSummary(
 		GlobalMaxUnsafe: opts.GlobalMaxUnsafe,
 		Now:             opts.Now,
 		PredicateParser: opts.PredicateParser,
+		PredicateEval:   opts.CELEvaluator,
 	})
 	items = items.Filter(risk.FilterCriteria{
 		ControlIDs:   fp.ToSet(opts.ControlIDs),

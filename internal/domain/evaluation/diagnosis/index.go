@@ -26,14 +26,14 @@ func (idx *unsafeIndex) isUnsafe(snapIdx int, assetID asset.ID) bool {
 }
 
 // buildUnsafeIndex constructs a lookup of all unsafe states across snapshots.
-func buildUnsafeIndex(snapshots []asset.Snapshot, controls []policy.ControlDefinition, parser policy.PredicateParser) *unsafeIndex {
+func buildUnsafeIndex(snapshots []asset.Snapshot, controls []policy.ControlDefinition, eval policy.PredicateEval) *unsafeIndex {
 	idx := &unsafeIndex{
 		violations: make(map[unsafeKey]struct{}),
 	}
 
 	for sIdx, snap := range snapshots {
 		for _, a := range snap.Assets {
-			if matchesAnyControl(a, snap, controls, parser) {
+			if matchesAnyControl(a, snap, controls, eval) {
 				idx.violations[unsafeKey{sIdx, a.ID}] = struct{}{}
 			}
 		}
@@ -43,11 +43,13 @@ func buildUnsafeIndex(snapshots []asset.Snapshot, controls []policy.ControlDefin
 }
 
 // matchesAnyControl checks if an asset matches any control's unsafe_predicate.
-func matchesAnyControl(a asset.Asset, snap asset.Snapshot, controls []policy.ControlDefinition, parser policy.PredicateParser) bool {
+func matchesAnyControl(a asset.Asset, snap asset.Snapshot, controls []policy.ControlDefinition, eval policy.PredicateEval) bool {
+	if eval == nil {
+		return false
+	}
 	for i := range controls {
-		ctx := policy.NewAssetEvalContext(a, controls[i].Params, snap.Identities...)
-		ctx.PredicateParser = parser
-		if controls[i].UnsafePredicate.EvaluateWithContext(ctx) {
+		unsafe, err := eval(controls[i], a, snap.Identities)
+		if err == nil && unsafe {
 			return true
 		}
 	}

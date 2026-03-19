@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
@@ -44,7 +45,7 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(48*time.Hour), nil)
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(48*time.Hour), nil, stavecel.MustPredicateEval())
 
 	report := Explain(input)
 
@@ -97,7 +98,7 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(24*time.Hour), nil)
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(24*time.Hour), nil, stavecel.MustPredicateEval())
 
 	report := Explain(input)
 
@@ -145,7 +146,7 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(200*time.Hour), nil)
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(200*time.Hour), nil, stavecel.MustPredicateEval())
 
 	report := Explain(input)
 
@@ -186,7 +187,7 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, []policy.ControlDefinition{{ID: "CTL.TEST"}}, findings, nil, 168*time.Hour, baseTime.Add(100*time.Hour), nil)
+	input := NewInput(snapshots, []policy.ControlDefinition{{ID: "CTL.TEST"}}, findings, nil, 168*time.Hour, baseTime.Add(100*time.Hour), nil, stavecel.MustPredicateEval())
 
 	report := Explain(input)
 
@@ -230,7 +231,7 @@ func TestRun_Summary(t *testing.T) {
 		{ID: "CTL.2", Name: "Test2"},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(240*time.Hour), nil)
+	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(240*time.Hour), nil, stavecel.MustPredicateEval())
 
 	report := Explain(input)
 

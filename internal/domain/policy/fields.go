@@ -14,15 +14,6 @@ const (
 	nsProperties = "properties"
 )
 
-// GetFieldValueWithContext retrieves a value from the evaluation context using a dot-path.
-// Example paths: "identity.owner", "params.threshold", "properties.tags.env".
-func GetFieldValueWithContext(ctx EvalContext, field string) (any, bool) {
-	if field == "" {
-		return nil, false
-	}
-	return getFieldValueByParts(ctx, strings.Split(field, "."))
-}
-
 func getFieldValueByParts(ctx EvalContext, parts []string) (any, bool) {
 	if len(parts) == 0 {
 		return nil, false

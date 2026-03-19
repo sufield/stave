@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"regexp"
+
 	"gopkg.in/yaml.v3"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -20,7 +22,6 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/platform/scrub"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -138,10 +139,21 @@ func (g *Generator) addLogArtifact(bundle *bundleWriter, path string, tailCount 
 	return nil
 }
 
+var (
+	akiaMatch    = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
+	urlCredMatch = regexp.MustCompile(`(?i)(https?://[^/\s:@]+:)[^@/\s]+@`)
+)
+
 // SanitizeLogTail truncates log data to the last N lines and scrubs credentials.
 func SanitizeLogTail(data []byte, maxLines int) []byte {
 	tail := TailBytesByLine(data, maxLines)
-	return scrub.Credentials(tail)
+	if len(tail) == 0 {
+		return tail
+	}
+	sanitized := []byte("[SANITIZED]")
+	tail = akiaMatch.ReplaceAll(tail, sanitized)
+	tail = urlCredMatch.ReplaceAll(tail, []byte("${1}[SANITIZED]@"))
+	return tail
 }
 
 func (g *Generator) addManifest(bundle *bundleWriter) error {

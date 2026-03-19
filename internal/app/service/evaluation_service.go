@@ -23,6 +23,9 @@ type EvaluateInput struct {
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	Metadata        evaluation.Metadata
+
+	// CELEvaluator evaluates predicates using the CEL engine.
+	CELEvaluator engine.PredicateEvaluator
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
@@ -37,6 +40,7 @@ func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 		ToolVersion:     input.ToolVersion,
 		InputHashes:     input.InputHashes,
 		PredicateParser: input.PredicateParser,
+		CELEvaluator:    input.CELEvaluator,
 	}
 	result, err := runner.Evaluate(input.Snapshots)
 	if err != nil {

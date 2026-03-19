@@ -100,6 +100,10 @@ func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validate
 	if err != nil {
 		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}
+	celEval, err := p.NewCELEvaluator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to init CEL evaluator: %w", err)
+	}
 
 	// Execute Domain Logic
 	runner := appvalidation.NewRun(obsLoader, ctlLoader)
@@ -110,6 +114,7 @@ func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validate
 		NowTime:         params.nowTime,
 		SanitizePaths:   cmdutil.GetGlobalFlags(cmd).Sanitize,
 		PredicateParser: ctlyaml.ParsePredicate,
+		PredicateEval:   celEval,
 	}
 
 	return runner.Execute(compose.CommandContext(cmd), cfg)

@@ -36,7 +36,12 @@ func (r *PromptRunner) loadAssetProperties(ctx context.Context, dir string, asse
 		return "", nil
 	}
 
-	latest := asset.LatestSnapshot(snapshots)
+	latest := snapshots[0]
+	for _, s := range snapshots[1:] {
+		if s.CapturedAt.After(latest.CapturedAt) {
+			latest = s
+		}
+	}
 	for _, a := range latest.Assets {
 		if a.ID == assetID {
 			propsJSON, marshalErr := json.MarshalIndent(a.Properties, "", "  ")

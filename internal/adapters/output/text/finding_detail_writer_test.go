@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/predicate"
-	"github.com/sufield/stave/internal/trace"
 )
 
 func TestWriteFindingDetail_Basic(t *testing.T) {
@@ -102,29 +103,11 @@ func TestWriteFindingDetail_WithTrace(t *testing.T) {
 		},
 		Evidence: evaluation.Evidence{},
 		Trace: &evaluation.FindingTrace{
-			Raw: &trace.Result{
-				ControlID:  "CTL.TEST.001",
+			Raw: &stavecel.TraceResult{
+				ControlID:  kernel.ControlID("CTL.TEST.001"),
 				AssetID:    "res:test",
-				Properties: map[string]any{"x": true},
-				Root: &trace.GroupNode{
-					Logic:             trace.LogicAny,
-					ShortCircuitIndex: -1,
-					Result:            true,
-					Children: []trace.Node{
-						&trace.ClauseNode{
-							Index:         0,
-							Field:         predicate.NewFieldPath("properties.x"),
-							Op:            "eq",
-							Value:         true,
-							ResolvedValue: true,
-							ActualValue:   true,
-							FieldExists:   true,
-							Result:        true,
-						},
-					},
-					Reason: "Clause 1 matched in any → MATCH",
-				},
-				FinalResult: true,
+				Expression: `any(properties.x == true)`,
+				Result:     true,
 			},
 			FinalResult: true,
 		},
@@ -143,8 +126,8 @@ func TestWriteFindingDetail_WithTrace(t *testing.T) {
 	if !strings.Contains(out, "properties.x") {
 		t.Error("missing field path in trace")
 	}
-	if !strings.Contains(out, "MATCH") {
-		t.Error("missing MATCH result in trace")
+	if !strings.Contains(out, "Result:") {
+		t.Error("missing Result line in trace")
 	}
 }
 

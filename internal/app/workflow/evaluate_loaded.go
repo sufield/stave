@@ -19,6 +19,7 @@ type EvaluationRequest struct {
 	Hasher          ports.Digester
 	ToolVersion     string
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator    policy.PredicateEval
 }
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
@@ -36,5 +37,6 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 		Hasher:          req.Hasher,
 		ToolVersion:     req.ToolVersion,
 		PredicateParser: req.PredicateParser,
+		CELEvaluator:    req.CELEvaluator,
 	})
 }

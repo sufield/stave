@@ -31,6 +31,7 @@ type RuntimeConfig struct {
 	AllowUnknownInput bool
 	ExemptionConfig   *policy.ExemptionConfig
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator      policy.PredicateEval
 }
 
 // OutputWriters holds the destination writers for evaluation output.
@@ -102,6 +103,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 		WithPreloadedControls(preloaded),
 		WithGitMetadata(in.Project.GitMetadata),
 		WithPredicateParser(in.Runtime.PredicateParser),
+		WithCELEvaluator(in.Runtime.CELEvaluator),
 	}
 	if resolved.ControlSource.Source != "" {
 		opts = append(opts, WithControlSource(resolved.ControlSource))
@@ -198,6 +200,7 @@ type ApplyBuilderInput struct {
 	AllowUnknownInput bool
 	ExemptionConfig   *policy.ExemptionConfig
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator      policy.PredicateEval
 	ToolVersion       string
 
 	// Project scope
@@ -231,6 +234,7 @@ func BuildApplyDeps(in ApplyBuilderInput) (*ApplyDeps, error) {
 			AllowUnknownInput: in.AllowUnknownInput,
 			ExemptionConfig:   in.ExemptionConfig,
 			PredicateParser:   in.PredicateParser,
+			CELEvaluator:      in.CELEvaluator,
 		},
 		Writers: OutputWriters{
 			Stdout: in.Stdout,

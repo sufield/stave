@@ -12,7 +12,9 @@ import (
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/retention"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/internal/pruner/fsops"
@@ -84,17 +86,29 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 		KeepMin:   r.cfg.KeepMin,
 	})
 
-	out := report.BuildPruneOutput(report.CleanupInput{
-		Now:             r.cfg.Now,
-		Action:          report.ActionDelete,
-		DryRun:          r.cfg.DryRun,
-		ObservationsDir: r.cfg.ObservationsDir,
-		Tier:            r.cfg.RetentionTier,
-		OlderThan:       r.cfg.OlderThan,
-		KeepMin:         r.cfg.KeepMin,
-		AllFiles:        allFiles,
-		CandidateFiles:  candidates,
-	})
+	pruneFiles := make([]report.CleanupFile, 0, len(candidates))
+	for _, sf := range candidates {
+		pruneFiles = append(pruneFiles, report.CleanupFile{
+			Name:       sf.Name,
+			CapturedAt: sf.CapturedAt.UTC(),
+		})
+	}
+	out := report.PruneOutput{
+		CleanupOutput: report.CleanupOutput{
+			SchemaVersion:   kernel.SchemaSnapshotPrune,
+			Kind:            kernel.KindSnapshotPrune,
+			CheckedAt:       r.cfg.Now.UTC(),
+			Mode:            report.ActionDelete.ModeString(r.cfg.DryRun),
+			Applied:         !r.cfg.DryRun && len(candidates) > 0,
+			ObservationsDir: r.cfg.ObservationsDir,
+			RetentionTier:   r.cfg.RetentionTier,
+			OlderThan:       timeutil.FormatDuration(r.cfg.OlderThan),
+			KeepMin:         r.cfg.KeepMin,
+			TotalSnapshots:  len(allFiles),
+			Candidates:      len(candidates),
+			Files:           pruneFiles,
+		},
+	}
 
 	r.plan = &executionPlan{
 		allFiles:       allFiles,

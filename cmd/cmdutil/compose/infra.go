@@ -11,6 +11,7 @@ import (
 	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
@@ -23,6 +24,15 @@ type Provider struct {
 	StdinObsRepoFunc  func(io.Reader) (appcontracts.ObservationRepository, error)
 	ControlRepoFunc   func() (appcontracts.ControlRepository, error)
 	FindingWriterFunc func(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error)
+	CELEvalFunc       func() (policy.PredicateEval, error)
+}
+
+// NewCELEvaluator returns the CEL predicate evaluator from the provider.
+func (p *Provider) NewCELEvaluator() (policy.PredicateEval, error) {
+	if p.CELEvalFunc != nil {
+		return p.CELEvalFunc()
+	}
+	return stavecel.NewPredicateEval()
 }
 
 // NewDefaultProvider returns a provider configured with standard adapters.
@@ -38,6 +48,7 @@ func NewDefaultProvider() *Provider {
 			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.Resolve))
 		},
 		FindingWriterFunc: DefaultFindingWriter,
+		CELEvalFunc:       stavecel.NewPredicateEval,
 	}
 }
 

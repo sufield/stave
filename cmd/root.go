@@ -153,8 +153,3 @@ func GetVersion() string {
 func GetRootCmd() *cobra.Command {
 	return NewApp().Root
 }
-
-// GetDevRootCmd returns a fully-wired root cobra command with all dev commands.
-func GetDevRootCmd() *cobra.Command {
-	return NewApp(WithDevCommands()).Root
-}

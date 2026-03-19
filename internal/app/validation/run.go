@@ -19,6 +19,7 @@ type Config struct {
 	NowTime         time.Time
 	SanitizePaths   bool // When true, directory/file paths in evidence are marked sensitive.
 	PredicateParser policy.PredicateParser
+	PredicateEval   policy.PredicateEval
 }
 
 // Run orchestrates the validation use case.
@@ -64,6 +65,7 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResul
 		MaxUnsafe:       cfg.MaxUnsafe,
 		NowTime:         cfg.NowTime,
 		PredicateParser: cfg.PredicateParser,
+		PredicateEval:   cfg.PredicateEval,
 	})
 	return &serviceResult, nil
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
@@ -48,6 +47,7 @@ type Config struct {
 	AllowUnknown    bool
 	Sanitizer       kernel.Sanitizer
 	Stdout          io.Writer
+	PredicateEval   policy.PredicateEval
 }
 
 // Runner orchestrates loading assets and generating coverage graphs.
@@ -87,7 +87,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	result := buildResult(controls, latestSnapshot)
+	result := buildResult(controls, latestSnapshot, cfg.PredicateEval)
 	return writeResult(cfg.Stdout, cfg.Format, result, cfg.Sanitizer)
 }
 
@@ -103,13 +103,19 @@ func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir
 	if len(snapshots) == 0 {
 		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", appeval.ErrNoSnapshots, observationsDir)
 	}
-	return controls, asset.LatestSnapshot(snapshots), nil
+	latest := snapshots[0]
+	for _, s := range snapshots[1:] {
+		if s.CapturedAt.After(latest.CapturedAt) {
+			latest = s
+		}
+	}
+	return controls, latest, nil
 }
 
-func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot) coverageResult {
+func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eval policy.PredicateEval) coverageResult {
 	assetMap, assetIDs := coverageAssets(latest.Assets)
 	controlIDs := coverageControlIDs(controls)
-	edges, covered := coverageEdges(controls, assetMap, assetIDs, latest.Identities)
+	edges, covered := coverageEdges(controls, assetMap, assetIDs, latest.Identities, eval)
 	return coverageResult{
 		Controls:        controlIDs,
 		Assets:          assetIDs,
@@ -132,15 +138,18 @@ func coverageEdges(
 	assetMap map[string]asset.Asset,
 	assetIDs []string,
 	identities []asset.CloudIdentity,
+	eval policy.PredicateEval,
 ) ([]coverageEdge, map[string]bool) {
 	edges := make([]coverageEdge, 0)
 	coveredAssets := make(map[string]bool, len(assetIDs))
+	if eval == nil {
+		return edges, coveredAssets
+	}
 	for i := range controls {
 		ctl := &controls[i]
 		for _, rid := range assetIDs {
-			evalCtx := policy.NewAssetEvalContext(assetMap[rid], ctl.Params, identities...)
-			evalCtx.PredicateParser = ctlyaml.ParsePredicate
-			if !ctl.UnsafePredicate.EvaluateWithContext(evalCtx) {
+			unsafe, err := eval(*ctl, assetMap[rid], identities)
+			if err != nil || !unsafe {
 				continue
 			}
 			edges = append(edges, coverageEdge{ControlID: ctl.ID.String(), AssetID: rid})

@@ -160,6 +160,10 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, erro
 	if err != nil {
 		return Result{}, err
 	}
+	celEval, err := r.Provider.NewCELEvaluator()
+	if err != nil {
+		return Result{}, fmt.Errorf("init CEL evaluator: %w", err)
+	}
 	now := cfg.Clock.Now().UTC()
 	items := risk.ComputeItems(risk.Request{
 		Controls:        loaded.Controls,
@@ -167,6 +171,7 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, erro
 		GlobalMaxUnsafe: cfg.MaxUnsafe,
 		Now:             now,
 		PredicateParser: ctlyaml.ParsePredicate,
+		PredicateEval:   celEval,
 	})
 	overdueCount := items.CountOverdue()
 	pass := overdueCount == 0

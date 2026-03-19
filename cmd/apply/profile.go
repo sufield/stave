@@ -97,6 +97,11 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	r.setupRunLogging(cfg.InputFile, ctlDir)
 
+	celEval, err := r.Provider.NewCELEvaluator()
+	if err != nil {
+		return fmt.Errorf("init CEL evaluator: %w", err)
+	}
+
 	done := r.UI.BeginProgress("apply profile observations")
 	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
 		Controls:        controls,
@@ -106,6 +111,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		Hasher:          r.Hasher,
 		ToolVersion:     version.Version,
 		PredicateParser: ctlyaml.ParsePredicate,
+		CELEvaluator:    celEval,
 	})
 	done()
 	if err != nil {
