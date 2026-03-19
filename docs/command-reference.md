@@ -16,8 +16,9 @@ Every command in the production (`stave`) and developer (`stave-dev`) binaries.
 
 | Command | Purpose | Input | Output | When to use |
 |---|---|---|---|---|
-| `ingest` | Convert raw cloud exports to normalized observations | `--source-dir` (AWS CLI JSON directory) | `obs.v0.1` JSON files in `--output-dir` | After extracting data from AWS with the CLI |
-| `validate` | Check that controls and observations are well-formed | `--controls` dir, `--observations` dir | Validation report (text or JSON) | Before `apply`, especially with hand-crafted observations |
+| `validate` | Check that controls and observations are well-formed | `--controls` dir, `--observations` dir | Validation report (text or JSON) | Before `apply`, especially with extractor-produced observations |
+
+> **Note:** Extraction is external to Stave. Use an extractor (any language) to produce `obs.v0.1` JSON from your data source. See [Building an Extractor](extractor-prompt.md).
 
 ### Evaluation
 
@@ -102,9 +103,7 @@ Every command in the production (`stave`) and developer (`stave-dev`) binaries.
 
 ### Extractor Development
 
-| Command | Purpose | Input | Output | When to use |
-|---|---|---|---|---|
-| `extractor new` | Scaffold a custom extractor | `--source-type` name | Boilerplate Go extractor code | When building extractors for new cloud providers |
+> Extraction is external to Stave. To build a custom extractor, see [Building an Extractor](extractor-prompt.md).
 
 ### Introspection
 

@@ -111,8 +111,8 @@ Use this table when you know your goal but want the fastest path to the right co
 
 | I want to... | Run this command | Read this doc |
 |--------------|------------------|---------------|
-| Get my first finding in 60 seconds | `stave demo` then `cat stave-report.json` | [`time-to-first-finding.md`](time-to-first-finding.md) |
-| Evaluate my own snapshots instantly | `stave quickstart` then `cat stave-report.json` | [`time-to-first-finding.md`](time-to-first-finding.md) |
+| Get my first finding in 60 seconds | `stave apply --observations examples/observations/ --max-unsafe 168h --now 2026-01-11T00:00:00Z` | [`time-to-first-finding.md`](time-to-first-finding.md) |
+| Evaluate my own snapshots instantly | `stave init && stave validate && stave apply` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | See where I am and what to do next | `stave status` | [`README.md`](../README.md) |
 | Start a new project with sane defaults | `stave init --profile aws-s3` | [`README.md`](../README.md) |
 | Validate controls and observations before evaluating | `stave validate --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
@@ -195,8 +195,6 @@ Stave provides these commands:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `demo` | Hello world | Get your first finding in 60 seconds — `cat stave-report.json` to view |
-| `quickstart` | Fast-lane evaluation | Auto-detect your snapshots and evaluate — `cat stave-report.json` to view |
 | `status` | Project state | See where you are and what command to run next |
 
 **Core workflow:**
@@ -240,7 +238,7 @@ For snapshot operations, use the lifecycle command set:
 | `alias ...` | Command aliases | `alias set|list|delete` for user-defined command shortcuts |
 | `enforce` | Remediation artifacts | Generate PAB/SCP templates from evaluation output |
 | `controls list\|explain\|aliases` | Control discovery | Browse, explain, and manage control aliases |
-| `extractor new` | Extractor scaffolding | Scaffold a new custom extractor project |
+| — | Extractor development | Use an extractor (any language) to produce `obs.v0.1` JSON. See [Building an Extractor](extractor-prompt.md) |
 | `packs list\|show` | Pack discovery | Browse available control packs |
 | `fix` | Remediation guidance | Show fix guidance for a specific finding |
 | `bug-report` | Diagnostic bundle | Collect environment info for bug reports |
@@ -1043,142 +1041,6 @@ stave alias list --format json
 stave alias delete ev
 ```
 
-### demo
-
-One-command hello world. Runs a built-in fixture through the control engine and writes a report to your current directory.
-
-```bash
-stave demo [flags]
-```
-
-**Flags:**
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--fixture` | `known-bad` | Demo fixture: `known-bad` (one violation) or `known-good` (zero violations) |
-| `--report` | `./stave-report.json` | Path to write the JSON report |
-| `--now` | (derived from fixture) | Override evaluation timestamp |
-
-**Exit Codes:**
-
-| Code | Meaning |
-|------|---------|
-| 0 | Success, no violations found |
-| 3 | Success, violations found |
-
-**Examples:**
-
-```bash
-# Run the demo — findings print to terminal, report saved to current directory
-stave demo
-
-# View the saved report
-cat stave-report.json
-
-# Pretty-print with jq
-jq . stave-report.json
-
-# Compare: safe bucket (zero violations)
-stave demo --fixture known-good
-cat stave-report.json
-
-# Compare: unsafe bucket (one violation — the default)
-stave demo --fixture known-bad
-cat stave-report.json
-```
-
-**Expected output (known-bad):**
-
-```
-Found 1 violation: CTL.S3.PUBLIC.001
-Asset: s3://demo-public-bucket
-Evidence: BlockPublicAccess=false, ACL=public-read
-Fix: enable account/bucket Block Public Access + deny public principals
-
-Example (Terraform):
-
-  resource "aws_s3_bucket_public_access_block" "example" {
-    bucket                  = aws_s3_bucket.example.id
-    block_public_acls       = true
-    block_public_policy     = true
-    ignore_public_acls      = true
-    restrict_public_buckets = true
-  }
-Report: ./stave-report.json
-```
-
-**Expected output (known-good):**
-
-```
-Found 0 violations.
-Report: ./stave-report.json
-```
-
-The report file is always written to `./stave-report.json` in your **current working directory** (override with `--report`). Use `cat stave-report.json` to view it after running.
-
----
-
-### quickstart
-
-Auto-detects observation snapshots in your current directory and runs a fast-lane evaluation. If no snapshots are found, falls back to the built-in demo fixture.
-
-```bash
-stave quickstart [flags]
-```
-
-**Flags:**
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--report` | `./stave-report.json` | Path to write the JSON report |
-| `--now` | (derived from snapshots) | Override evaluation timestamp |
-
-**Snapshot detection order:**
-
-1. `./stave.snapshot/` directory
-2. `./observations/` directory
-3. Current directory (any `obs.v0.1` JSON files)
-4. Falls back to built-in demo fixture if nothing found
-
-**Examples:**
-
-```bash
-# Run quickstart — auto-detects your snapshots
-stave quickstart
-
-# View the report saved to your current directory
-cat stave-report.json
-
-# Deterministic variant for CI
-stave quickstart --now 2026-01-15T00:00:00Z --report ./output/report.json
-cat ./output/report.json
-```
-
-**Output shape:**
-
-```
-Source: <detected-path-or-built-in-demo-fixture>
-Top finding: CTL.S3.PUBLIC.001
-Asset: s3://demo-public-bucket
-Fix: enable account/bucket Block Public Access + deny public principals (BlockPublicAccess=false, ACL=public-read)
-
-Example (Terraform):
-
-  resource "aws_s3_bucket_public_access_block" "example" {
-    bucket                  = aws_s3_bucket.example.id
-    block_public_acls       = true
-    block_public_policy     = true
-    ignore_public_acls      = true
-    restrict_public_buckets = true
-  }
-Report: stave-report.json
-Next: run `stave demo --fixture known-good` to compare safe output.
-```
-
-The report file is always written to `./stave-report.json` in your **current working directory** (override with `--report`). Use `cat stave-report.json` to view it.
-
----
-
 ### status
 
 Shows your current project state and recommends the next command to run. Use this when resuming work or when you're unsure what step comes next.
@@ -1551,22 +1413,6 @@ stave controls list
 stave controls list --format json
 stave controls explain CTL.S3.PUBLIC.001
 stave controls aliases
-```
-
----
-
-### extractor new
-
-Scaffolds a new custom extractor project.
-
-```bash
-stave extractor new [flags]
-```
-
-**Examples:**
-
-```bash
-stave extractor new --name my-extractor --out ./extractors/my-extractor
 ```
 
 ---
@@ -2063,49 +1909,6 @@ stave apply \
   --observations ./observations \
   --max-unsafe 168h
 ```
-
-### Quick Start: S3 from AWS CLI Snapshots
-
-For evaluating existing AWS infrastructure directly from snapshots:
-
-```bash
-# Step 1: Extract observations from offline AWS CLI exports
-stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
-
-# Step 2: Evaluate against PHI controls
-stave apply --profile aws-s3 --input observations.json
-```
-
-### ingest --profile aws-s3
-
-Reads offline AWS CLI JSON exports and produces a normalized observations file.
-
-```bash
-stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json
-```
-
-**Input directory structure:**
-```
-aws-snapshot/
-├── list-buckets.json              (required)
-├── get-bucket-tagging/<bucket>.json
-├── get-bucket-policy/<bucket>.json
-├── get-bucket-acl/<bucket>.json
-└── get-public-access-block/<bucket>.json
-```
-
-**Flags:**
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--input` | (required) | Path to AWS snapshot directory |
-| `--out` | `observations.json` | Path to output observations file |
-| `--scope` | (none) | Path to health scope config YAML |
-| `--bucket-allowlist` | (none) | Bucket names/ARNs to include (repeatable) |
-| `--include-all` | `false` | Disable health scope filtering (extract all buckets) |
-| `--now` | (current time) | Override current time (RFC3339) |
-
-**Health scope filtering (default):** Only buckets tagged `DataDomain=health` or `containsPHI=true` are extracted. Use `--include-all` to extract all buckets, or `--bucket-allowlist` for explicit selection.
 
 ### apply --profile aws-s3
 

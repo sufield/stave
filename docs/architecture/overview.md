@@ -139,7 +139,7 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 | `apply` | `cmd/apply/` | `app/eval/` | `domain/evaluation/` |
 | `validate` | `cmd/apply/validate/` | `app/validation/` | `contracts/` |
 | `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `domain/diag/` |
-| `ingest` | `cmd/ingest/` | `app/ingest/` | Adapter-level extraction |
+| _(extraction is external)_ | — | — | Use an extractor to produce `obs.v0.1` JSON |
 | `verify` | `cmd/apply/verify/` | — | Before/after comparison |
 | `snapshot hygiene` | `cmd/prune/hygiene/` | `app/hygiene/` | Weekly lifecycle report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |

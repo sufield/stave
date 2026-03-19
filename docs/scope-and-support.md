@@ -12,5 +12,5 @@
 - Continuous monitoring or agents
 
 ## Supported surfaces
-- CLI: `stave apply`, `stave apply --profile aws-s3`, `stave ingest --profile aws-s3`, `stave validate`, `stave diagnose`, `stave verify`, `stave snapshot hygiene`, `stave ci fix-loop`, `stave graph coverage`
+- CLI: `stave apply`, `stave apply --profile aws-s3`, `stave validate`, `stave diagnose`, `stave verify`, `stave snapshot hygiene`, `stave ci fix-loop`, `stave graph coverage`
 - Tests: `make e2e`, `go test ./...`

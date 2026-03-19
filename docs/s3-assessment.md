@@ -5,14 +5,12 @@ This is the supported S3 MVP workflow for the current CLI surface.
 ## Golden Path
 
 ```text
-ingest --profile aws-s3 -> apply --profile aws-s3 -> verify
+extract (external) -> validate -> apply -> verify
 ```
 
 ## 1) Extract observations from an offline AWS snapshot
 
-```bash
-stave ingest --profile aws-s3 --input ./aws-snapshot --out observations.json --include-all
-```
+Use an extractor (any language) to produce `obs.v0.1` JSON from your AWS snapshot directory. See [Building an Extractor](extractor-prompt.md) for a jumpstart template, or use an existing extractor such as `stave-extractor`.
 
 Input:
 - Snapshot directory with AWS CLI exports (`list-buckets.json`, `get-bucket-*` files)

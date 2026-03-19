@@ -100,7 +100,7 @@ Three reasons:
 
 1. **Air-gapped environments** — security review and audit often happen in isolated networks where cloud API access is unavailable or prohibited.
 2. **Deterministic replay** — the same snapshot files produce the same findings on any machine, any time. Live API queries introduce non-determinism (state changes, API throttling, clock differences).
-3. **Separation of concerns** — extracting data from cloud APIs is a different problem from evaluating safety invariants. Stave handles evaluation; `stave ingest` or external tools handle extraction.
+3. **Separation of concerns** — extracting data from cloud APIs is a different problem from evaluating safety invariants. Stave handles evaluation; external extractors handle extraction. See [Building an Extractor](extractor-prompt.md).
 
 ## How is "evidence" different from "observation"?
 
@@ -310,7 +310,6 @@ Runs evaluations safely. Cannot delete evidence, cannot introspect the tool itse
 
 | Command | Purpose |
 |---|---|
-| `ingest` | Convert raw cloud exports to normalized observations |
 | `validate` | Pre-flight check that inputs are well-formed |
 
 **Evaluation** — the core loop: evaluate, understand, fix, confirm.
