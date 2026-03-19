@@ -1,75 +1,32 @@
 package upcoming
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
-// UpcomingConfig defines the resolved parameters for upcoming action analysis.
-type UpcomingConfig struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       time.Duration
-	MaxUnsafeRaw    string
-	DueSoon         time.Duration
-	DueSoonRaw      string
-	Now             time.Time
-	Format          ui.OutputFormat
-	Filter          risk.FilterCriteria
-	Sanitizer       kernel.Sanitizer
-	Quiet           bool
-	Stdout          io.Writer
+// resolvedConfig holds CLI-resolved parameters before asset loading.
+type resolvedConfig struct {
+	MaxUnsafe    time.Duration
+	MaxUnsafeRaw string
+	DueSoon      time.Duration
+	DueSoonRaw   string
+	Now          time.Time
+	Format       ui.OutputFormat
+	Filter       risk.FilterCriteria
+	Sanitizer    kernel.Sanitizer
+	Quiet        bool
+	Stdout       io.Writer
 }
-
-// UpcomingRunner orchestrates the risk analysis and timeline projection.
-type UpcomingRunner struct {
-	Provider *compose.Provider
-}
-
-// Run executes the upcoming analysis workflow.
-func (r *UpcomingRunner) Run(ctx context.Context, cfg UpcomingConfig) error {
-	loaded, err := r.Provider.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
-	if err != nil {
-		return err
-	}
-
-	riskItems := risk.ComputeItems(risk.Request{
-		Controls:        loaded.Controls,
-		Snapshots:       loaded.Snapshots,
-		GlobalMaxUnsafe: cfg.MaxUnsafe,
-		Now:             cfg.Now,
-		PredicateParser: ctlyaml.ParsePredicate,
-	})
-	riskItems = riskItems.Filter(cfg.Filter)
-
-	// Map domain items to display DTOs
-	items := mapRiskItems(riskItems)
-	if cfg.Sanitizer != nil {
-		items = sanitizeItems(cfg.Sanitizer, items)
-	}
-	summary := summarizeUpcoming(items, cfg.DueSoon)
-
-	// Assemble final output
-	output := buildOutput(cfg, summary, items)
-
-	// Render in requested format
-	if cfg.Quiet {
-		return nil
-	}
-	return renderOutput(cfg, output)
-}
-
-// --- Bridge Helpers ---
 
 func gatherUpcomingConfig(
 	obsDir, ctlDir string,
@@ -81,57 +38,55 @@ func gatherUpcomingConfig(
 	quiet bool,
 	stdout io.Writer,
 	resolveFormat func(string) (ui.OutputFormat, error),
-) (UpcomingConfig, error) {
+) (resolvedConfig, error) {
 	maxUnsafeDur, err := parsePositiveDuration(maxUnsafeRaw, "--max-unsafe")
 	if err != nil {
-		return UpcomingConfig{}, err
+		return resolvedConfig{}, err
 	}
 	dueSoonDur, err := parsePositiveDuration(dueSoonRaw, "--due-soon")
 	if err != nil {
-		return UpcomingConfig{}, err
+		return resolvedConfig{}, err
 	}
 
 	var dueWithinDur time.Duration
 	if strings.TrimSpace(dueWithinRaw) != "" {
 		parsed, parseErr := parsePositiveDuration(dueWithinRaw, "--due-within")
 		if parseErr != nil {
-			return UpcomingConfig{}, parseErr
+			return resolvedConfig{}, parseErr
 		}
 		dueWithinDur = parsed
 	}
 
 	now, err := compose.ResolveNow(nowRaw)
 	if err != nil {
-		return UpcomingConfig{}, err
+		return resolvedConfig{}, err
 	}
 	format, err := resolveFormat(formatRaw)
 	if err != nil {
-		return UpcomingConfig{}, err
+		return resolvedConfig{}, err
 	}
 
-	filter, err := newUpcomingFilter(FilterCriteria{
+	filter, err := appupcoming.NewUpcomingFilter(appupcoming.FilterCriteria{
 		ControlIDs: controlIDs,
 		AssetTypes: assetTypes,
 		Statuses:   statuses,
 		DueWithin:  dueWithinDur,
 	})
 	if err != nil {
-		return UpcomingConfig{}, err
+		return resolvedConfig{}, err
 	}
 
-	return UpcomingConfig{
-		ControlsDir:     ctlDir,
-		ObservationsDir: obsDir,
-		MaxUnsafe:       maxUnsafeDur,
-		MaxUnsafeRaw:    maxUnsafeRaw,
-		DueSoon:         dueSoonDur,
-		DueSoonRaw:      dueSoonRaw,
-		Now:             now,
-		Format:          format,
-		Filter:          filter,
-		Sanitizer:       san,
-		Quiet:           quiet,
-		Stdout:          stdout,
+	return resolvedConfig{
+		MaxUnsafe:    maxUnsafeDur,
+		MaxUnsafeRaw: maxUnsafeRaw,
+		DueSoon:      dueSoonDur,
+		DueSoonRaw:   dueSoonRaw,
+		Now:          now,
+		Format:       format,
+		Filter:       filter,
+		Sanitizer:    san,
+		Quiet:        quiet,
+		Stdout:       stdout,
 	}, nil
 }
 

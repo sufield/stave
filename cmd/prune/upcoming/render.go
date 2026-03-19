@@ -3,45 +3,35 @@ package upcoming
 import (
 	"fmt"
 	"io"
+	"time"
 
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	textout "github.com/sufield/stave/internal/adapters/output/text"
+	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
+	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func buildOutput(cfg UpcomingConfig, summary Summary, items []Item) Output {
-	return Output{
-		GeneratedAt:  cfg.Now,
-		ControlsDir:  cfg.ControlsDir,
-		Observations: cfg.ObservationsDir,
-		MaxUnsafe:    cfg.MaxUnsafeRaw,
-		DueSoon:      cfg.DueSoonRaw,
-		Summary:      summary,
-		Items:        items,
-	}
-}
-
 // renderOutput dispatches the Output to the correct format adapter.
-// Markdown is only generated when text format is requested.
-func renderOutput(cfg UpcomingConfig, out Output) error {
-	if cfg.Format.IsJSON() {
-		return jsonout.WriteUpcomingJSON(cfg.Stdout, out)
+func renderOutput(w io.Writer, format ui.OutputFormat, out appupcoming.Output, dueSoonThreshold time.Duration) error {
+	if format.IsJSON() {
+		return jsonout.WriteUpcomingJSON(w, out)
 	}
 
 	report := textout.RenderUpcomingMarkdown(
 		toAdapterItems(out.Items),
 		toAdapterSummary(out.Summary),
 		textout.UpcomingRenderOptions{
-			Now:              cfg.Now,
-			DueSoonThreshold: cfg.DueSoon,
+			Now:              out.GeneratedAt,
+			DueSoonThreshold: dueSoonThreshold,
 		},
 	)
-	if _, err := io.WriteString(cfg.Stdout, report); err != nil {
+	if _, err := io.WriteString(w, report); err != nil {
 		return fmt.Errorf("writing report: %w", err)
 	}
 	return nil
 }
 
-func toAdapterItems(items []Item) []textout.UpcomingItem {
+func toAdapterItems(items []appupcoming.Item) []textout.UpcomingItem {
 	out := make([]textout.UpcomingItem, len(items))
 	for i, item := range items {
 		out[i] = textout.UpcomingItem{
@@ -59,7 +49,7 @@ func toAdapterItems(items []Item) []textout.UpcomingItem {
 	return out
 }
 
-func toAdapterSummary(s Summary) textout.UpcomingSummary {
+func toAdapterSummary(s appupcoming.Summary) textout.UpcomingSummary {
 	return textout.UpcomingSummary{
 		Overdue: s.Overdue,
 		DueNow:  s.DueNow,

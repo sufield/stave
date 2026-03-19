@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -54,16 +55,37 @@ Examples:
 				return err
 			}
 
-			runner := &PlanRunner{Provider: p}
-			return runner.Run(cmd.Context(), PlanConfig{
-				ObservationsRoot: fsutil.CleanUserPath(obsRoot),
-				ArchiveDir:       fsutil.CleanUserPath(archiveDir),
+			ctx := cmd.Context()
+			cleanObsRoot := fsutil.CleanUserPath(obsRoot)
+			cleanArchiveDir := fsutil.CleanUserPath(archiveDir)
+
+			// Load files via Provider
+			files, err := listPlanFiles(ctx, p, cleanObsRoot, cleanArchiveDir)
+			if err != nil {
+				return err
+			}
+
+			// Load retention config
+			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig()
+			if err != nil {
+				return err
+			}
+
+			// Delegate to internal runner
+			runner := appsnapshot.NewPlanRunner()
+			return runner.Run(ctx, appsnapshot.PlanConfig{
+				Files:            files,
+				Tiers:            tiers,
+				TierRules:        tierRules,
+				DefaultTier:      defaultTier,
 				Now:              now,
-				Format:           format,
+				ObservationsRoot: cleanObsRoot,
+				ArchiveDir:       cleanArchiveDir,
 				Apply:            apply,
 				Force:            gf.Force,
-				Quiet:            gf.Quiet,
 				AllowSymlink:     gf.AllowSymlinkOut,
+				Format:           format,
+				Quiet:            gf.Quiet,
 				Stdout:           cmd.OutOrStdout(),
 			})
 		},

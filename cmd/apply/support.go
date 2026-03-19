@@ -2,27 +2,15 @@ package apply
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	exemptionyaml "github.com/sufield/stave/internal/adapters/input/exemption/yaml"
+	appapply "github.com/sufield/stave/internal/app/apply"
 	"github.com/sufield/stave/internal/domain/policy"
 )
 
 // ResolveContextName provides the default logic for naming the evaluation run.
-// It is pure — it doesn't look at global state, only its inputs.
-func ResolveContextName(projectRoot string, selectedContext string) string {
-	if strings.TrimSpace(selectedContext) != "" {
-		return strings.TrimSpace(selectedContext)
-	}
-
-	base := filepath.Base(projectRoot)
-	if base == "" || base == "." || base == string(os.PathSeparator) {
-		return "default"
-	}
-	return base
-}
+var ResolveContextName = appapply.ResolveContextName
 
 // LoadExemptionConfig loads and wraps domain-level exemptions from a YAML file.
 func LoadExemptionConfig(path string) (*policy.ExemptionConfig, error) {

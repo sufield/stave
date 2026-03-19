@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -72,15 +73,24 @@ Examples:
 				return err
 			}
 
-			runner := &QualityRunner{Provider: p}
-			return runner.Run(compose.CommandContext(cmd), QualityConfig{
-				ObservationsDir:   fsutil.CleanUserPath(obsDir),
+			// Load snapshots via Provider
+			ctx := compose.CommandContext(cmd)
+			cleanObsDir := fsutil.CleanUserPath(obsDir)
+			snapshots, err := compose.LoadSnapshots(ctx, p, cleanObsDir)
+			if err != nil {
+				return fmt.Errorf("loading snapshots from %q: %w", cleanObsDir, err)
+			}
+
+			// Delegate to internal runner
+			runner := appsnapshot.NewQualityRunner()
+			return runner.Run(ctx, appsnapshot.QualityConfig{
+				Snapshots:         snapshots,
+				Now:               now,
 				MinSnapshots:      minSnapshots,
 				MaxStaleness:      staleDur,
 				MaxGap:            gapDur,
 				RequiredResources: required,
 				Strict:            strict,
-				Now:               now,
 				Format:            format,
 				Quiet:             gf.Quiet,
 				Stdout:            cmd.OutOrStdout(),

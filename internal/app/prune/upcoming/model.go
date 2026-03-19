@@ -49,9 +49,3 @@ type FilterCriteria struct {
 	Statuses   []string
 	DueWithin  time.Duration
 }
-
-// RenderOptions holds configuration for rendering upcoming markdown.
-type RenderOptions struct {
-	Now              time.Time
-	DueSoonThreshold time.Duration
-}

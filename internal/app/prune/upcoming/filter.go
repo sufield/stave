@@ -5,8 +5,8 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 )
 
-// newUpcomingFilter transforms raw input criteria into a validated domain filter.
-func newUpcomingFilter(criteria FilterCriteria) (risk.FilterCriteria, error) {
+// NewUpcomingFilter transforms raw input criteria into a validated domain filter.
+func NewUpcomingFilter(criteria FilterCriteria) (risk.FilterCriteria, error) {
 	validated, err := risk.ValidateStatuses(criteria.Statuses)
 	if err != nil {
 		return risk.FilterCriteria{}, err

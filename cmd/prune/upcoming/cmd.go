@@ -6,6 +6,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -46,9 +48,11 @@ Examples:
 				maxUnsafe = eval.MaxUnsafe()
 			}
 
+			cleanObsDir := fsutil.CleanUserPath(obsDir)
+			cleanCtlDir := fsutil.CleanUserPath(ctlDir)
+
 			cfg, err := gatherUpcomingConfig(
-				fsutil.CleanUserPath(obsDir),
-				fsutil.CleanUserPath(ctlDir),
+				cleanObsDir, cleanCtlDir,
 				maxUnsafe, dueSoon, nowRaw, formatFlag, dueWithin,
 				cmdutil.ToControlIDs(controlIDs),
 				cmdutil.ToAssetTypes(assetTypes),
@@ -62,8 +66,36 @@ Examples:
 				return err
 			}
 
-			runner := &UpcomingRunner{Provider: p}
-			return runner.Run(compose.CommandContext(cmd), cfg)
+			// Load assets via Provider
+			ctx := compose.CommandContext(cmd)
+			loaded, err := p.LoadAssets(ctx, cleanObsDir, cleanCtlDir)
+			if err != nil {
+				return err
+			}
+
+			// Delegate to internal runner
+			runner := appupcoming.NewRunner()
+			output, err := runner.Run(ctx, appupcoming.Config{
+				Controls:        loaded.Controls,
+				Snapshots:       loaded.Snapshots,
+				MaxUnsafe:       cfg.MaxUnsafe,
+				MaxUnsafeRaw:    cfg.MaxUnsafeRaw,
+				DueSoon:         cfg.DueSoon,
+				DueSoonRaw:      cfg.DueSoonRaw,
+				Now:             cfg.Now,
+				Filter:          cfg.Filter,
+				Sanitizer:       cfg.Sanitizer,
+				PredicateParser: ctlyaml.ParsePredicate,
+				ControlsDir:     cleanCtlDir,
+				ObservationsDir: cleanObsDir,
+			})
+			if err != nil {
+				return err
+			}
+			if cfg.Quiet {
+				return nil
+			}
+			return renderOutput(cfg.Stdout, cfg.Format, output, cfg.DueSoon)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
