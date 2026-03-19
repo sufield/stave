@@ -66,4 +66,4 @@ For S3 public exposure evaluation, these keys are the stability surface:
 ## Important warning
 
 Do not hand-author production observations.
-Generate observations via extractor commands and treat manual JSON edits as test-only.
+Generate observations using an extractor written in any language that outputs `obs.v0.1` JSON. Treat manual JSON edits as test-only. See [Building an Extractor](extractor-prompt.md) for a jumpstart template.
