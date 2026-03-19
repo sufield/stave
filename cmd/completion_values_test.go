@@ -33,7 +33,7 @@ func TestConfigKeyCompletions_IncludeServiceTopLevelKeys(t *testing.T) {
 		seen[key] = struct{}{}
 	}
 
-	for _, key := range projconfig.ConfigKeyService.TopLevelKeys() {
+	for _, key := range appconfig.ConfigKeys {
 		if _, ok := seen[key]; !ok {
 			t.Fatalf("missing top-level key completion %q", key)
 		}

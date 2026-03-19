@@ -24,7 +24,6 @@ import (
 	"github.com/sufield/stave/cmd/enforce"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	"github.com/sufield/stave/cmd/prune"
-	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -47,7 +46,6 @@ func WireDevCommands(app *App) {
 		diagnose.NewTraceCmd(p),
 		artifacts.NewLintCmd(),
 		artifacts.NewFmtCmd(),
-		securityaudit.NewCmd(),
 		artifacts.NewControlsCmd(p),
 		artifacts.NewPacksCmd(),
 		enforce.NewGraphCmd(p),

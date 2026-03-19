@@ -8,21 +8,20 @@ func TestDevHelpGroupsAssigned(t *testing.T) {
 	root := GetDevRootCmd()
 
 	devChecks := map[string]string{
-		"doctor":         groupDevTools,
-		"bug-report":     groupDevTools,
-		"prompt":         groupDevTools,
-		"trace":          groupDevTools,
-		"controls":       groupDevTools,
-		"packs":          groupDevTools,
-		"graph":          groupDevTools,
-		"lint":           groupDevTools,
-		"fmt":            groupDevTools,
-		"docs":           groupDevTools,
-		"alias":          groupDevTools,
-		"schemas":        groupDevTools,
-		"capabilities":   groupDevTools,
-		"security-audit": groupDevTools,
-		"version":        groupDevTools,
+		"doctor":       groupDevTools,
+		"bug-report":   groupDevTools,
+		"prompt":       groupDevTools,
+		"trace":        groupDevTools,
+		"controls":     groupDevTools,
+		"packs":        groupDevTools,
+		"graph":        groupDevTools,
+		"lint":         groupDevTools,
+		"fmt":          groupDevTools,
+		"docs":         groupDevTools,
+		"alias":        groupDevTools,
+		"schemas":      groupDevTools,
+		"capabilities": groupDevTools,
+		"version":      groupDevTools,
 	}
 
 	for use, wantGroup := range devChecks {

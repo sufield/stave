@@ -53,15 +53,6 @@ build: sync-schemas sync-controls
 build-dev: sync-schemas sync-controls
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
-## security-audit: Run security audit using stave-dev (one-off evaluation, not CI)
-security-audit: build-dev
-	@mkdir -p .artifacts/security-audit
-	./stave-dev security-audit \
-		--format json \
-		--fail-on NONE \
-		--out-dir ./.artifacts/security-audit \
-		--out ./.artifacts/security-audit/security-report.json
-
 ## test: Run all tests (includes dev-only packages via build tag)
 test: sync-schemas sync-controls
 	$(GOTEST) -tags stavedev -v ./...

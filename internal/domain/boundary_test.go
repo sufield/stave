@@ -24,7 +24,6 @@ func TestDomainLayerBoundary(t *testing.T) {
 		"/internal/sanitize/",
 		"/internal/trace/",
 		"/internal/config",
-		"/internal/configservice/",
 		"/internal/builtin/",
 		"/internal/compliance/",
 		"/internal/doctor/",

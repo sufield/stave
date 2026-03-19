@@ -27,11 +27,6 @@ type EvalContext struct {
 	PredicateParser PredicateParser       // Logic for parsing nested predicates
 }
 
-// Param retrieves a value from the control's parameter block.
-func (ctx EvalContext) Param(key string) (any, bool) {
-	return ctx.Params.Get(key)
-}
-
 // --- Constructors ---
 
 // NewAssetEvalContext builds a context focused on resource properties.

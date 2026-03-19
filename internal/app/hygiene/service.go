@@ -10,7 +10,6 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // RiskOptions configures how risk metrics should be computed for a
@@ -90,10 +89,34 @@ func computeUpcomingSummary(
 		PredicateParser: opts.PredicateParser,
 		PredicateEval:   opts.CELEvaluator,
 	})
+	var controlIDSet map[kernel.ControlID]struct{}
+	if len(opts.ControlIDs) > 0 {
+		controlIDSet = make(map[kernel.ControlID]struct{}, len(opts.ControlIDs))
+		for _, item := range opts.ControlIDs {
+			controlIDSet[item] = struct{}{}
+		}
+	}
+
+	var assetTypeSet map[kernel.AssetType]struct{}
+	if len(opts.AssetTypes) > 0 {
+		assetTypeSet = make(map[kernel.AssetType]struct{}, len(opts.AssetTypes))
+		for _, item := range opts.AssetTypes {
+			assetTypeSet[item] = struct{}{}
+		}
+	}
+
+	var statusSet map[risk.Status]struct{}
+	if len(opts.Statuses) > 0 {
+		statusSet = make(map[risk.Status]struct{}, len(opts.Statuses))
+		for _, item := range opts.Statuses {
+			statusSet[item] = struct{}{}
+		}
+	}
+
 	items = items.Filter(risk.FilterCriteria{
-		ControlIDs:   fp.ToSet(opts.ControlIDs),
-		AssetTypes:   fp.ToSet(opts.AssetTypes),
-		Statuses:     fp.ToSet(opts.Statuses),
+		ControlIDs:   controlIDSet,
+		AssetTypes:   assetTypeSet,
+		Statuses:     statusSet,
 		MaxRemaining: derefDuration(opts.DueWithin),
 	})
 	return items.Summarize(opts.DueSoonThreshold)

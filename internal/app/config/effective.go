@@ -3,20 +3,45 @@ package config
 import (
 	"path/filepath"
 
-	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/domain/retention"
 )
 
-// toResolvedField converts a Value[T] to a configservice.ResolvedField.
-func toResolvedField[T any](v Value[T]) configservice.ResolvedField {
-	return configservice.ResolvedField{Value: v.String(), Source: v.Source}
+// ResolvedField pairs a configuration value with its originating source
+// (e.g., environment variable, file path, or hardcoded default).
+type ResolvedField struct {
+	Value  string `json:"value"`
+	Source string `json:"source"`
+}
+
+// EffectiveConfig represents the fully resolved, merged configuration state
+// as seen by the CLI.
+type EffectiveConfig struct {
+	ConfigFile               string                          `json:"config_file,omitempty"`
+	UserConfigFile           string                          `json:"user_config_file,omitempty"`
+	ProjectRoot              string                          `json:"project_root,omitempty"`
+	MaxUnsafe                ResolvedField                   `json:"max_unsafe"`
+	SnapshotRetention        ResolvedField                   `json:"snapshot_retention"`
+	DefaultRetentionTier     ResolvedField                   `json:"default_retention_tier"`
+	CIFailurePolicy          ResolvedField                   `json:"ci_failure_policy"`
+	CLIOutput                ResolvedField                   `json:"cli_output"`
+	CLIQuiet                 ResolvedField                   `json:"cli_quiet"`
+	CLISanitize              ResolvedField                   `json:"cli_sanitize"`
+	CLIPathMode              ResolvedField                   `json:"cli_path_mode"`
+	CLIAllowUnknownInput     ResolvedField                   `json:"cli_allow_unknown_input"`
+	DefinedRetentionTiers    map[string]retention.TierConfig `json:"defined_retention_tiers"`
+	EffectiveRetentionByTier map[string]ResolvedField        `json:"effective_retention_by_tier"`
+}
+
+// toResolvedField converts a Value[T] to a ResolvedField.
+func toResolvedField[T any](v Value[T]) ResolvedField {
+	return ResolvedField{Value: v.String(), Source: v.Source}
 }
 
 // BuildEffectiveConfig assembles the fully resolved configuration with provenance,
 // suitable for `stave config show` output.
-func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
+func (e *Evaluator) BuildEffectiveConfig() EffectiveConfig {
 	retTier := e.ResolveRetentionTier()
-	out := configservice.EffectiveConfig{
+	out := EffectiveConfig{
 		DefaultRetentionTier:     toResolvedField(retTier),
 		MaxUnsafe:                toResolvedField(e.ResolveMaxUnsafe()),
 		SnapshotRetention:        toResolvedField(e.ResolveSnapshotRetention(retTier.Value)),
@@ -27,7 +52,7 @@ func (e *Evaluator) BuildEffectiveConfig() configservice.EffectiveConfig {
 		CLIPathMode:              toResolvedField(e.ResolveCLIPathMode()),
 		CLIAllowUnknownInput:     toResolvedField(e.ResolveCLIAllowUnknownInput()),
 		DefinedRetentionTiers:    e.buildDefinedRetentionTiers(),
-		EffectiveRetentionByTier: map[string]configservice.ResolvedField{},
+		EffectiveRetentionByTier: map[string]ResolvedField{},
 	}
 	if e.ProjectPath != "" {
 		out.ConfigFile = e.ProjectPath

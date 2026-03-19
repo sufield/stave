@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 15ms)
+Done:    apply controls against observations (2 files, 27ms)
 Hint:
   stave diagnose --controls testdata/e2e/e2e-h1-greenhouse-819278/controls --observations testdata/e2e/e2e-h1-greenhouse-819278/observations
 

@@ -10,7 +10,6 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/version"
@@ -58,7 +57,7 @@ func GetRootCmd() *cobra.Command {
 
 	root.AddCommand(NewInitCmd())
 	root.AddCommand(NewGenerateCmd())
-	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), projconfig.ConfigKeyService))
+	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))
 
 	return root
 }

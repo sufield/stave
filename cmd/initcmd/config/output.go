@@ -6,7 +6,7 @@ import (
 	"slices"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/internal/configservice"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
@@ -16,14 +16,14 @@ type ShowPresenter struct {
 }
 
 // Render writes the configuration summary in the requested format.
-func (p *ShowPresenter) Render(out configservice.EffectiveConfig, json bool) error {
+func (p *ShowPresenter) Render(out appconfig.EffectiveConfig, json bool) error {
 	if json {
 		return jsonutil.WriteIndented(p.Stdout, out)
 	}
 	return p.renderText(out)
 }
 
-func (p *ShowPresenter) renderText(out configservice.EffectiveConfig) error {
+func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 	w := p.Stdout
 
 	// Header
@@ -84,7 +84,7 @@ func (p *ShowPresenter) renderText(out configservice.EffectiveConfig) error {
 }
 
 // buildShowOutput resolves the current effective configuration state.
-func buildShowOutput() configservice.EffectiveConfig {
+func buildShowOutput() appconfig.EffectiveConfig {
 	return projconfig.Global().BuildEffectiveConfig()
 }
 
