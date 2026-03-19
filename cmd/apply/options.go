@@ -283,7 +283,9 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
 	}
 
 	hasPacks := false
-	if cfg, ok, _ := projconfig.FindProjectConfig(); ok && len(cfg.EnabledControlPacks) > 0 {
+	if cfg, ok, err := projconfig.FindProjectConfig(); err != nil {
+		slog.Warn("failed to load project config", "error", err)
+	} else if ok && len(cfg.EnabledControlPacks) > 0 {
 		hasPacks = true
 	}
 
