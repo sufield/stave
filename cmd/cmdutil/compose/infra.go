@@ -45,7 +45,7 @@ func NewDefaultProvider() *Provider {
 			return obsjson.NewStdinObservationLoader(obsjson.NewObservationLoader(), r), nil
 		},
 		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
-			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.Resolve))
+			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.ResolverFunc()))
 		},
 		FindingWriterFunc: DefaultFindingWriter,
 		CELEvalFunc:       stavecel.NewPredicateEval,

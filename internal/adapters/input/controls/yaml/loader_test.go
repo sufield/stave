@@ -246,7 +246,7 @@ func TestControlLoader_CanonicalS3DirNoDuplicates(t *testing.T) {
 		t.Skip("controls/s3/ not found (running outside repo)")
 	}
 
-	loader, err := NewControlLoader(WithAliasResolver(predicate.Resolve))
+	loader, err := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
 	if err != nil {
 		t.Fatalf("failed to create loader: %v", err)
 	}
@@ -711,7 +711,7 @@ unsafe_predicate_alias: s3.is_public_readable
 	if err := os.WriteFile(filepath.Join(dir, "alias.yaml"), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	loader, err := NewControlLoader(WithAliasResolver(predicate.Resolve))
+	loader, err := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
 	if err != nil {
 		t.Fatalf("failed to create loader: %v", err)
 	}
@@ -740,7 +740,7 @@ unsafe_predicate_alias: s3.unknown_alias
 	if err := os.WriteFile(filepath.Join(dir, "alias_bad.yaml"), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	loader, err := NewControlLoader(WithAliasResolver(predicate.Resolve))
+	loader, err := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
 	if err != nil {
 		t.Fatalf("failed to create loader: %v", err)
 	}

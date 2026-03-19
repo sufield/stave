@@ -158,12 +158,13 @@ Examples:
 }
 
 func newControlsAliasesCmd() *cobra.Command {
-	return &cobra.Command{
+	var category string
+	cmd := &cobra.Command{
 		Use:   "aliases",
 		Short: "List built-in semantic predicate aliases",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			names := predicates.ListAliases()
+			names := predicates.ListAliases(category)
 			for _, name := range names {
 				if _, err := fmt.Fprintln(cmd.OutOrStdout(), name); err != nil {
 					return err
@@ -172,6 +173,8 @@ func newControlsAliasesCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&category, "category", "", "Filter by category (e.g. Encryption, Logging)")
+	return cmd
 }
 
 func newControlsAliasExplainCmd() *cobra.Command {
@@ -180,9 +183,9 @@ func newControlsAliasExplainCmd() *cobra.Command {
 		Short: "Show expanded predicate for an alias",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			expanded, ok := predicates.Resolve(strings.TrimSpace(args[0]))
-			if !ok {
-				return fmt.Errorf("unknown alias %q (available: %s)", args[0], strings.Join(predicates.ListAliases(), ", "))
+			expanded, err := predicates.Resolve(strings.TrimSpace(args[0]))
+			if err != nil {
+				return err
 			}
 			return jsonutil.WriteIndented(cmd.OutOrStdout(), map[string]any{
 				"alias":    args[0],
