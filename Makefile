@@ -286,9 +286,7 @@ demo-check: build
 		expected="$$(cat "$$scenario/expected.findings.count" 2>/dev/null)"; \
 		if [ -z "$$expected" ]; then continue; fi; \
 		actual="$$(./stave apply \
-			--profile aws-s3 \
-			--input "$$scenario/observations.json" \
-			--include-all \
+			--observations "$$scenario/observations" \
 			--now 2026-01-15T00:00:00Z \
 			--max-unsafe 12h \
 			--format json 2>/dev/null \
