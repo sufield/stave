@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/apply/extractor"
 	"github.com/sufield/stave/cmd/bugreport"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -25,7 +24,6 @@ import (
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/app/capabilities"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -47,7 +45,6 @@ func WireDevCommands(app *App) {
 	// Build the dev command set
 	devCmds := []*cobra.Command{
 		doctor.NewCmd(),
-		extractor.NewCmd(ui.DefaultRuntime()),
 		diagnose.NewTraceCmd(p),
 		artifacts.NewLintCmd(),
 		artifacts.NewFmtCmd(),

@@ -15,7 +15,7 @@ func wireProdHelpGroups(root *cobra.Command) {
 		groupGettingStarted: {"init", "generate"},
 		groupCore:           {"validate", "apply", "diagnose", "explain", "verify"},
 		groupWorkflow:       {"ci", "snapshot", "status"},
-		groupArtifacts:      {"ingest", "enforce", "report"},
+		groupArtifacts:      {"enforce", "report"},
 		groupSettings:       {"config"},
 	}
 	for groupID, names := range groupMap {
