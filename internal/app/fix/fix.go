@@ -24,10 +24,10 @@ type FindingsParser func(data []byte) ([]remediation.Finding, error)
 
 // Service orchestrates finding remediation workflows.
 type Service struct {
-	Clock          ports.Clock
-	Planner        *remediation.Planner
-	Sanitizer      kernel.Sanitizer
-	ParseFindings  FindingsParser
+	Clock         ports.Clock
+	Planner       *remediation.Planner
+	Sanitizer     kernel.Sanitizer
+	ParseFindings FindingsParser
 }
 
 // NewService creates a Service. The caller must set ParseFindings

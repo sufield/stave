@@ -5,8 +5,8 @@ import (
 	"io"
 	"time"
 
-	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/app/contracts"
+	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 

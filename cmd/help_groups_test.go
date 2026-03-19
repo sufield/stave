@@ -34,4 +34,3 @@ func TestRootHelpGroupsAssigned(t *testing.T) {
 		}
 	}
 }
-
