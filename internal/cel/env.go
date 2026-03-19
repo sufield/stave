@@ -65,13 +65,38 @@ func isMissing(val ref.Val) bool {
 	}
 }
 
+// knownNamespaces are the top-level CEL variables in the activation.
+// Field paths that don't start with one of these are treated as property
+// lookups (prefixed with "properties" to match the old evaluator's
+// default-namespace behavior).
+var knownNamespaces = map[string]bool{
+	"properties": true,
+	"params":     true,
+	"identities": true,
+	"identity":   true,
+}
+
+// normalizePath ensures the field path starts with a known CEL namespace.
+// Bare fields like "type" become "properties.type" to match the old
+// evaluator's default-namespace resolution.
+func normalizePath(dotPath string) string {
+	first, _, _ := strings.Cut(dotPath, ".")
+	if knownNamespaces[first] {
+		return dotPath
+	}
+	return "properties." + dotPath
+}
+
 // fieldAccess generates a CEL expression for accessing a dot-path field
 // using bracket indexing on dynamic maps.
 //
 // Example: "properties.storage.versioning.enabled" becomes
 //
 //	properties["storage"]["versioning"]["enabled"]
+//
+// Bare fields like "type" are normalized to "properties.type" first.
 func fieldAccess(dotPath string) string {
+	dotPath = normalizePath(dotPath)
 	parts := strings.Split(dotPath, ".")
 	if len(parts) <= 1 {
 		return dotPath
@@ -92,10 +117,12 @@ func fieldAccess(dotPath string) string {
 //	"storage" in properties &&
 //	"versioning" in properties["storage"] &&
 //	"enabled" in properties["storage"]["versioning"]
+//
+// Bare fields like "type" are normalized to "properties.type" first.
 func hasField(dotPath string) string {
+	dotPath = normalizePath(dotPath)
 	parts := strings.Split(dotPath, ".")
 	if len(parts) <= 1 {
-		// Top-level variable — always exists in the activation
 		return "true"
 	}
 

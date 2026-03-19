@@ -342,6 +342,8 @@ func scopedHasField(dotPath, scopeVar string) string {
 }
 
 // literal converts a Go value to a CEL literal string.
+// String values "true"/"false" are emitted as boolean literals to match
+// the observation property normalizer's coercion behavior.
 func literal(v any) string {
 	switch val := v.(type) {
 	case bool:
@@ -350,6 +352,13 @@ func literal(v any) string {
 		}
 		return "false"
 	case string:
+		// Normalize boolean strings to match property normalizer
+		switch strings.ToLower(strings.TrimSpace(val)) {
+		case "true":
+			return "true"
+		case "false":
+			return "false"
+		}
 		return fmt.Sprintf("%q", val)
 	case float64:
 		if val == float64(int64(val)) {

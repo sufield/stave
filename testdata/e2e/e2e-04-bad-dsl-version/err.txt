@@ -1,7 +1,7 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (1 files, 37ms)
+Done:    apply controls against observations (1 files, 13ms)
 [ERR] Command failed (INTERNAL_ERROR)
-  Message: evaluation runner: failed to load controls: control "testdataCTL.EXP.DURATION.001.yaml": schema validation failed: validation failed: 1 errors, 0 warnings: UNSUPPORTED_SCHEMA_VERSION
+  Message: failed to load controls: control "testdataCTL.EXP.DURATION.001.yaml": schema validation failed: validation failed: 1 errors, 0 warnings: UNSUPPORTED_SCHEMA_VERSION
 Next: stave validate --controls ./controls --observations ./observations
 More info: run 'stave docs search validate schema validation failed'
   Fix:     Try `stave validate --controls ./controls --observations ./observations`. Check the command arguments and rerun with -v or -vv for additional context.
