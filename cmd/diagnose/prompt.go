@@ -2,97 +2,22 @@ package diagnose
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"strings"
 
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
-	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
-	"github.com/sufield/stave/internal/cli/ui"
+	diagprompt "github.com/sufield/stave/internal/diagnose/prompt"
 	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-// PromptConfig defines the parameters for generating an LLM prompt.
-type PromptConfig struct {
-	EvalFile        string
-	AssetID         string
-	ControlsDir     string
-	ObservationsDir string
-	Format          ui.OutputFormat
-	Quiet           bool
-	Stdout          io.Writer
-	Stderr          io.Writer
-}
-
-// PromptResult represents the structured JSON output for a prompt.
-type PromptResult struct {
-	Prompt     string   `json:"prompt"`
-	FindingIDs []string `json:"finding_ids"`
-	AssetID    string   `json:"asset_id"`
-}
-
-// PromptRunner orchestrates collection of context and generation of prompts.
-type PromptRunner struct {
-	Provider *compose.Provider
-}
-
-// NewPromptRunner creates a runner with the provided dependency provider.
-func NewPromptRunner(p *compose.Provider) *PromptRunner {
-	return &PromptRunner{Provider: p}
-}
-
-// Run generates an LLM prompt based on evaluation findings.
-func (r *PromptRunner) Run(ctx context.Context, cfg PromptConfig) error {
-	if cfg.EvalFile == "" {
-		return fmt.Errorf("--evaluation-file is required")
-	}
-	if cfg.AssetID == "" {
-		return fmt.Errorf("--asset-id is required")
-	}
-
-	evalResult, err := evaljson.NewLoader().LoadFromFile(cfg.EvalFile)
-	if err != nil {
-		return fmt.Errorf("load evaluation file: %w", err)
-	}
-
-	assetID := asset.ID(cfg.AssetID)
-	matched := lo.Filter(evalResult.Findings, func(v evaluation.Finding, _ int) bool { return v.AssetID == assetID })
-	if len(matched) == 0 {
-		return fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
-	}
-
-	ctlByID, err := r.loadControlsMap(ctx, cfg.ControlsDir)
-	if err != nil {
-		return err
-	}
-
-	var assetPropsJSON string
-	if cfg.ObservationsDir != "" {
-		assetPropsJSON, err = r.loadAssetProperties(ctx, cfg.ObservationsDir, asset.ID(cfg.AssetID))
-		if err != nil {
-			return err
-		}
-	}
-
-	builder := &promptout.PromptBuilder{
-		AssetID:        cfg.AssetID,
-		ControlsByID:   ctlByID,
-		AssetPropsJSON: assetPropsJSON,
-	}
-	data := builder.Build(matched)
-	rendered := promptout.RenderPrompt(data)
-
-	return r.write(cfg, rendered, data)
-}
 
 // --- CLI bridge ---
 
@@ -180,16 +105,35 @@ Examples:
 				return fmtErr
 			}
 
-			runner := NewPromptRunner(p)
-			return runner.Run(cmd.Context(), PromptConfig{
-				EvalFile:        fsutil.CleanUserPath(evalFile),
-				AssetID:         strings.TrimSpace(assetID),
-				ControlsDir:     fsutil.CleanUserPath(controlsDir),
-				ObservationsDir: fsutil.CleanUserPath(obsDir),
-				Format:          fmtValue,
-				Quiet:           quietMode || cmdutil.GetGlobalFlags(cmd).Quiet,
-				Stdout:          cmd.OutOrStdout(),
-				Stderr:          cmd.ErrOrStderr(),
+			ctx := cmd.Context()
+
+			ctlByID, err := loadControlsMap(ctx, p, fsutil.CleanUserPath(controlsDir))
+			if err != nil {
+				return err
+			}
+
+			var assetPropsJSON string
+			cleanObsDir := fsutil.CleanUserPath(obsDir)
+			if cleanObsDir != "" {
+				assetPropsJSON, err = loadAssetProperties(ctx, p, cleanObsDir, asset.ID(strings.TrimSpace(assetID)))
+				if err != nil {
+					return err
+				}
+			}
+
+			dctx := diagprompt.DiagnosticContext{
+				ControlsByID:   ctlByID,
+				AssetPropsJSON: assetPropsJSON,
+			}
+
+			runner := diagprompt.NewRunner(dctx)
+			return runner.Run(ctx, diagprompt.Config{
+				EvalFile: fsutil.CleanUserPath(evalFile),
+				AssetID:  strings.TrimSpace(assetID),
+				Format:   fmtValue,
+				Quiet:    quietMode || cmdutil.GetGlobalFlags(cmd).Quiet,
+				Stdout:   cmd.OutOrStdout(),
+				Stderr:   cmd.ErrOrStderr(),
 			})
 		},
 	}
@@ -206,4 +150,50 @@ Examples:
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd
+}
+
+// loadControlsMap loads control definitions and indexes them by ID.
+func loadControlsMap(ctx context.Context, p *compose.Provider, dir string) (map[kernel.ControlID]*policy.ControlDefinition, error) {
+	repo, err := p.NewControlRepo()
+	if err != nil {
+		return nil, err
+	}
+	controls, err := repo.LoadControls(ctx, dir)
+	if err != nil {
+		return nil, fmt.Errorf("loading controls: %w", err)
+	}
+
+	ctlByID := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
+	for i := range controls {
+		ctlByID[controls[i].ID] = &controls[i]
+	}
+	return ctlByID, nil
+}
+
+// loadAssetProperties extracts the properties of a specific asset from the latest snapshot.
+func loadAssetProperties(ctx context.Context, p *compose.Provider, dir string, assetID asset.ID) (string, error) {
+	snapshots, err := p.LoadSnapshots(ctx, dir)
+	if err != nil {
+		return "", err
+	}
+	if len(snapshots) == 0 {
+		return "", nil
+	}
+
+	latest := snapshots[0]
+	for _, s := range snapshots[1:] {
+		if s.CapturedAt.After(latest.CapturedAt) {
+			latest = s
+		}
+	}
+	for _, a := range latest.Assets {
+		if a.ID == assetID {
+			propsJSON, marshalErr := json.MarshalIndent(a.Properties, "", "  ")
+			if marshalErr != nil {
+				return "", fmt.Errorf("marshal asset properties: %w", marshalErr)
+			}
+			return string(propsJSON), nil
+		}
+	}
+	return "", nil
 }

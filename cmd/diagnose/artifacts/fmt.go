@@ -4,7 +4,6 @@ package artifacts
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -15,10 +14,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"gopkg.in/yaml.v3"
 )
 
 // FormatConfig defines the behavior of the formatting operation.
@@ -80,7 +78,7 @@ func (f *Formatter) processFile(path string, cfg FormatConfig) (bool, error) {
 		return false, fmt.Errorf("reading %s: %w", path, err)
 	}
 
-	formatted, err := f.formatByExtension(path, orig)
+	formatted, err := artifacts.FormatByExtension(path, orig)
 	if err != nil {
 		return false, fmt.Errorf("parsing %s: %w", path, err)
 	}
@@ -103,17 +101,6 @@ func (f *Formatter) processFile(path string, cfg FormatConfig) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (f *Formatter) formatByExtension(path string, data []byte) ([]byte, error) {
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".json":
-		return f.formatJSON(data)
-	case ".yaml", ".yml":
-		return f.formatYAML(data)
-	default:
-		return nil, nil
-	}
 }
 
 func (f *Formatter) collectTargets(target string) ([]string, error) {
@@ -147,33 +134,6 @@ func (f *Formatter) collectTargets(target string) ([]string, error) {
 
 	slices.Sort(files)
 	return files, err
-}
-
-func (f *Formatter) formatJSON(data []byte) ([]byte, error) {
-	var snap asset.Snapshot
-	if err := json.Unmarshal(data, &snap); err != nil {
-		return nil, fmt.Errorf("parse observation json: %w", err)
-	}
-	out, err := json.MarshalIndent(snap, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-	return append(out, '\n'), nil
-}
-
-func (f *Formatter) formatYAML(data []byte) ([]byte, error) {
-	var dto any
-	if err := yaml.Unmarshal(data, &dto); err != nil {
-		return nil, fmt.Errorf("parse control yaml: %w", err)
-	}
-	out, err := yaml.Marshal(dto)
-	if err != nil {
-		return nil, fmt.Errorf("parse control yaml: %w", err)
-	}
-	if len(out) == 0 || out[len(out)-1] != '\n' {
-		out = append(out, '\n')
-	}
-	return out, nil
 }
 
 // --- Cobra Command Constructor ---

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	textout "github.com/sufield/stave/internal/adapters/output/text"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation/risk"
@@ -103,14 +102,6 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 	}
 }
 
-func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
-	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	out := textout.RenderUpcomingMarkdown(nil, textout.UpcomingSummary{}, textout.UpcomingRenderOptions{Now: now, DueSoonThreshold: 24 * time.Hour})
-	if !strings.Contains(out, "No upcoming snapshot action items.") {
-		t.Fatalf("expected no-items message, got: %s", out)
-	}
-}
-
 func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
 	items := []Item{
@@ -123,14 +114,10 @@ func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	if s.Overdue != 1 || s.DueNow != 1 || s.DueSoon != 1 || s.Later != 1 || s.Total != 4 {
 		t.Fatalf("unexpected summary: %+v", s)
 	}
-	md := textout.RenderUpcomingSummaryMarkdown(toAdapterSummary(s), 6*time.Hour)
-	if !strings.Contains(md, "Due soon (<= 6h): **1**") {
-		t.Fatalf("expected due-soon line in summary markdown, got: %s", md)
-	}
 }
 
 func TestNewUpcomingFilter_InvalidStatus(t *testing.T) {
-	_, err := newUpcomingFilter(FilterCriteria{Statuses: []string{"later"}})
+	_, err := NewUpcomingFilter(FilterCriteria{Statuses: []string{"later"}})
 	if err == nil {
 		t.Fatal("expected invalid status error")
 	}
@@ -164,7 +151,7 @@ func TestRiskItemsFilter(t *testing.T) {
 			Remaining: -1 * time.Hour,
 		},
 	}
-	filter, err := newUpcomingFilter(FilterCriteria{
+	filter, err := NewUpcomingFilter(FilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.TEST.A.001"},
 		AssetTypes: []kernel.AssetType{"res:aws:s3:bucket"},
 		Statuses:   []string{"OVERDUE", "UPCOMING"},
@@ -186,7 +173,7 @@ func TestRiskItemsFilter(t *testing.T) {
 }
 
 func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
-	criteria, err := newUpcomingFilter(FilterCriteria{
+	criteria, err := NewUpcomingFilter(FilterCriteria{
 		ControlIDs: []kernel.ControlID{"CTL.A"},
 		AssetTypes: []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		Statuses:   []string{"OVERDUE"},

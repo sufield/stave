@@ -1,4 +1,4 @@
-package diagnose
+package prompt
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func (r *PromptRunner) write(cfg PromptConfig, rendered string, data promptout.PromptData) error {
+func (r *Runner) write(cfg Config, rendered string, data promptout.PromptData) error {
 	out := cfg.Stdout
 	if cfg.Quiet && !cfg.Format.IsJSON() {
 		out = io.Discard
@@ -20,7 +20,7 @@ func (r *PromptRunner) write(cfg PromptConfig, rendered string, data promptout.P
 		for i, f := range data.Findings {
 			findingIDs[i] = string(f.ControlID)
 		}
-		res := PromptResult{
+		res := Result{
 			Prompt:     rendered,
 			FindingIDs: findingIDs,
 			AssetID:    data.AssetID,

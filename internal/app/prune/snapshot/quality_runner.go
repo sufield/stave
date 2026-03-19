@@ -2,42 +2,39 @@ package snapshot
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/domain/asset"
 )
 
 // QualityConfig defines the resolved parameters for a quality assessment.
 type QualityConfig struct {
-	ObservationsDir   string
+	Snapshots         []asset.Snapshot
+	Now               time.Time
 	MinSnapshots      int
 	MaxStaleness      time.Duration
 	MaxGap            time.Duration
 	RequiredResources []string
 	Strict            bool
-	Now               time.Time
 	Format            ui.OutputFormat
 	Quiet             bool
 	Stdout            io.Writer
 }
 
 // QualityRunner orchestrates the evaluation and reporting of snapshot readiness.
-type QualityRunner struct {
-	Provider *compose.Provider
+type QualityRunner struct{}
+
+// NewQualityRunner creates a new quality assessment runner.
+func NewQualityRunner() *QualityRunner {
+	return &QualityRunner{}
 }
 
 // Run executes the quality assessment workflow.
-func (r *QualityRunner) Run(ctx context.Context, cfg QualityConfig) error {
-	snapshots, err := compose.LoadSnapshots(ctx, r.Provider, cfg.ObservationsDir)
-	if err != nil {
-		return fmt.Errorf("loading snapshots from %q: %w", cfg.ObservationsDir, err)
-	}
-
+func (r *QualityRunner) Run(_ context.Context, cfg QualityConfig) error {
 	report := assessQuality(qualityParams{
-		Snapshots:         snapshots,
+		Snapshots:         cfg.Snapshots,
 		Now:               cfg.Now,
 		MinSnapshots:      cfg.MinSnapshots,
 		MaxStaleness:      cfg.MaxStaleness,

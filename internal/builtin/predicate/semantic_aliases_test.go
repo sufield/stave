@@ -3,6 +3,7 @@ package predicate
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/sufield/stave/internal/domain/policy"
@@ -187,13 +188,7 @@ func TestCompositeResolver(t *testing.T) {
 
 	// ListAliases includes both.
 	names := composite.ListAliases("")
-	found := false
-	for _, n := range names {
-		if n == "custom.test_alias" {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(names, "custom.test_alias")
 	if !found {
 		t.Error("expected custom.test_alias in composite list")
 	}
