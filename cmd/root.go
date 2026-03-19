@@ -9,9 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/sanitize"
@@ -74,11 +72,6 @@ type App struct {
 	// NewApp to swap adapters in tests or custom entry points.
 	Provider *compose.Provider
 
-	// ConfigKeyService is the config-key resolution service used by the
-	// "stave config" command tree. It is passed explicitly to NewConfigCmd so
-	// the config handlers do not depend on the projconfig package-level global.
-	ConfigKeyService *configservice.Service
-
 	// sanitizer is initialized from CLI flags during bootstrap and used for
 	// path/message sanitization in error handling and panic recovery.
 	sanitizer *sanitize.Sanitizer
@@ -89,10 +82,9 @@ type App struct {
 func NewApp(opts ...AppOption) *App {
 	logging.InitDefaultLogger()
 	app := &App{
-		Edition:          EditionProd,
-		ExitFunc:         os.Exit,
-		Provider:         compose.NewDefaultProvider(),
-		ConfigKeyService: projconfig.ConfigKeyService,
+		Edition:  EditionProd,
+		ExitFunc: os.Exit,
+		Provider: compose.NewDefaultProvider(),
 	}
 	app.Root = &cobra.Command{
 		Use:               CLIName,

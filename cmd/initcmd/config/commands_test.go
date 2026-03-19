@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-
-	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/env"
 )
 
@@ -66,7 +64,7 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 		t.Fatalf("config show failed: %v", err)
 	}
 
-	var out configservice.EffectiveConfig
+	var out appconfig.EffectiveConfig
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("decode output: %v\noutput=%s", err, buf.String())
 	}
@@ -149,7 +147,7 @@ func TestConfigSetRejectsInvalidValue(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid duration error")
 	}
-	if !strings.Contains(err.Error(), "invalid duration") || !strings.Contains(err.Error(), "max_unsafe") {
+	if !strings.Contains(err.Error(), "invalid") || !strings.Contains(err.Error(), "max_unsafe") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

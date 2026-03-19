@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/domain/predicate"
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) {
@@ -225,9 +224,12 @@ func TestRiskFilterCriteria_EmptyPassesAll(t *testing.T) {
 	}
 }
 
-func TestRiskFilterCriteria_ViaFpToSet(t *testing.T) {
+func TestRiskFilterCriteria_ViaInlineToSet(t *testing.T) {
 	controlIDs := []kernel.ControlID{"CTL.A", "CTL.B"}
-	set := fp.ToSet(controlIDs)
+	set := make(map[kernel.ControlID]struct{}, len(controlIDs))
+	for _, item := range controlIDs {
+		set[item] = struct{}{}
+	}
 	if len(set) != 2 {
 		t.Fatalf("expected set of 2, got %d", len(set))
 	}

@@ -60,7 +60,7 @@ func (r *PredicateRule) collectFields(ctx EvalContext, results *[]Misconfigurati
 		return
 	}
 
-	val, _ := getFieldValueByParts(ctx, r.Field.Parts())
+	val, _ := resolvePropertyValue(ctx.Properties, r.Field.Parts())
 
 	*results = append(*results, Misconfiguration{
 		Property:    r.Field.TrimPrefix(propertiesPathPrefix),

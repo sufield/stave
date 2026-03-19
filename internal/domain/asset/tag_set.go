@@ -2,10 +2,9 @@ package asset
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
-
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 // TagConflict records a case-insensitive key collision in a TagSet.
@@ -46,7 +45,7 @@ func NewTagSet(raw map[string]string) TagSet {
 	winners := make(map[string]string)
 	conflictDiscarded := make(map[string][]string)
 
-	keys := fp.SortedKeys(raw)
+	keys := slices.Sorted(maps.Keys(raw))
 
 	for _, key := range keys {
 		normalizedKey := tagKey(key).normalize()
@@ -62,7 +61,7 @@ func NewTagSet(raw map[string]string) TagSet {
 		winners[norm] = key
 	}
 
-	conflictKeys := fp.SortedKeys(conflictDiscarded)
+	conflictKeys := slices.Sorted(maps.Keys(conflictDiscarded))
 	conflicts := make([]TagConflict, len(conflictKeys))
 	for i, norm := range conflictKeys {
 		conflicts[i] = TagConflict{

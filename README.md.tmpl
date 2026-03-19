@@ -45,28 +45,6 @@ git clone https://github.com/sufield/stave.git
 cd stave && make build
 ```
 
-### Demo with sample data
-
-```bash
-stave demo
-cat stave-report.json
-```
-
-Expected output:
-
-```
-Found 1 violation: CTL.S3.PUBLIC.001
-Asset: s3://demo-public-bucket
-Evidence: BlockPublicAccess=false, ACL=public-read
-Fix: enable account/bucket Block Public Access + deny public principals
-```
-
-Compare with a safe configuration:
-
-```bash
-stave demo --fixture known-good
-```
-
 ### Full workflow
 
 ```bash
@@ -79,13 +57,17 @@ stave diagnose
 ## How it works
 
 ```
-Capture → Validate → Apply → Act
+Extract → Validate → Apply → Act
 
-1. Capture    Export asset configurations as JSON snapshots
+1. Extract    Capture asset configs as obs.v0.1 JSON (extractor is external)
 2. Validate   Check inputs are well-formed and complete
 3. Apply      Evaluate snapshots against safety controls, produce findings
 4. Act        Review findings, remediate, re-evaluate
 ```
+
+**Extraction is out of scope.** Stave's core engine only evaluates observations — it does not fetch or extract data from cloud providers. Extractors are separate programs that produce `obs.v0.1` JSON and can be written in any language (Python, Go, Rust, shell scripts, Terraform plan parsers, etc.). The only requirement is conforming to the [observation contract](docs/observation-contract.md).
+
+See [Building an Extractor](docs/extractor-prompt.md) for a jumpstart template that works with any LLM to generate a working extractor in minutes.
 
 Snapshots must conform to the [observation contract](docs/observation-contract.md). You need at least two snapshots (two points in time) for Stave to calculate unsafe duration windows.
 
@@ -93,11 +75,11 @@ Snapshots must conform to the [observation contract](docs/observation-contract.m
 
 The core engine is vendor-neutral and asset-type-agnostic. To evaluate a new asset type:
 
-1. **Capture** — export asset configurations as JSON conforming to `obs.v0.1` (any vendor, any asset type, arbitrary JSON properties)
+1. **Extract** — write an extractor in any language that outputs JSON conforming to `obs.v0.1` (any vendor, any asset type, arbitrary JSON properties)
 2. **Author controls** — write YAML controls using the `ctrl.v1` schema with predicates over your asset's property paths
 3. **Evaluate** — `stave apply --controls ./my-controls --observations ./my-snapshots`
 
-No code changes required. The predicate engine resolves dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
+No code changes to Stave required. The predicate engine resolves dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
 
 ## How Stave compares
 
@@ -154,36 +136,54 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 
 ## CLI commands
 
+### Core workflow
+
 | Command | Purpose |
 |---------|---------|
-| `demo` | Run a demo with bundled sample data |
-| `quickstart` | Auto-detect snapshots and evaluate |
-| `status` | Project state and next steps |
-| `doctor` | Environment readiness check |
-| `init` | Project scaffolding |
-| `validate` | Input correctness |
-| `plan` | Readiness gate |
-| `apply` | Evaluate controls, produce findings |
-| `diagnose` | Explain unexpected results |
-| `trace` | Clause-level predicate detail |
-| `controls list` | List available controls |
+| `init` | Create a starter project layout |
+| `validate` | Check inputs are well-formed |
+| `apply` | Evaluate controls against observations, produce findings |
+| `verify` | Compare before/after evaluations to check remediation |
+| `diagnose` | Explain unexpected evaluation results |
 | `explain` | Show fields a control requires |
-| `lint` | Control quality checks |
-| `snapshot upcoming` | Next snapshot schedule |
-| `snapshot prune` | Bounded snapshot retention |
-| `snapshot diff` | Drift triage between snapshots |
-| `ci baseline` | Save finding baseline |
-| `ci gate` | Fail CI on new violations |
-| `ci fix-loop` | Verify remediation in CI |
+
+### CI/CD
+
+| Command | Purpose |
+|---------|---------|
+| `ci baseline` | Save finding baseline for fail-on-new workflows |
+| `ci gate` | Enforce CI failure policy |
+| `ci fix` | Show machine-readable fix plan for a finding |
+| `ci fix-loop` | Run apply-before/apply-after/verify in one command |
+| `ci diff` | Compare two evaluations and report new findings |
+
+### Snapshot lifecycle
+
+| Command | Purpose |
+|---------|---------|
+| `snapshot quality` | Check snapshot quality before evaluation |
+| `snapshot plan` | Preview or execute multi-tier retention |
+| `snapshot diff` | Compare the latest two observation snapshots |
+| `snapshot upcoming` | Upcoming snapshot action items for unsafe assets |
+| `snapshot archive` | Archive stale snapshots |
+| `snapshot hygiene` | Weekly lifecycle hygiene report |
+| `snapshot manifest` | Generate and sign observation integrity manifests |
+
+### Other
+
+| Command | Purpose |
+|---------|---------|
+| `status` | Project state and next steps |
+| `generate` | Generate starter artifacts |
+| `report` | Structured findings output |
+| `enforce` | Generate enforcement artifacts |
+| `config` | Manage project and user configuration |
 
 ```
-validate → plan → apply → diagnose
-   ↓         ↓       ↓        ↓
- Inputs    Ready?  Findings  Insights
-  OK?               Found?    Why?
-                                ↓
-                              trace
-                           (clause detail)
+validate → apply → diagnose
+   ↓         ↓        ↓
+ Inputs   Findings  Insights
+  OK?      Found?    Why?
 ```
 
 ## Concepts
@@ -193,6 +193,7 @@ validate → plan → apply → diagnose
 | **Snapshot** | Point-in-time observation of infrastructure assets (JSON) |
 | **Asset** | A single infrastructure component with a vendor, type, and arbitrary JSON properties |
 | **Control** | A safety rule assets must satisfy (YAML, `ctrl.v1` schema) |
+| **Extractor** | An external program (any language) that produces `obs.v0.1` JSON from a data source |
 | **Unsafe predicate** | Conditions that mark an asset as unsafe |
 | **Finding** | A detected violation with evidence and remediation guidance |
 | **Episode** | A contiguous period where an asset remained unsafe |
@@ -215,6 +216,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 - Engine supports any vendor and asset type
 - Built-in control pack: AWS S3 ({{.TotalControls}} controls)
 - Custom controls and observations supported for any asset type
+- Extractors are external — write in any language, conform to `obs.v0.1`
 - Offline evaluation only
 
 ### Schema stability
@@ -239,6 +241,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 - [Start here](docs/start-here.md)
 - [Time to first finding](docs/time-to-first-finding.md)
+- [Building an extractor](docs/extractor-prompt.md)
 - [FAQ](docs/faq.md)
 - [Design philosophy](docs/design-philosophy.md)
 - [System Invariant as Code](docs/system-invariant-as-code.md)

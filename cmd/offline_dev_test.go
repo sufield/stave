@@ -17,7 +17,6 @@ func TestOfflineHelpSuffix_DevCommands(t *testing.T) {
 		{"bug-report"},
 		{"controls"},
 		{"capabilities"},
-		{"security-audit"},
 	}
 
 	for _, path := range required {

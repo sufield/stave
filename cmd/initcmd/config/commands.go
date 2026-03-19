@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log/slog"
+
 	"github.com/spf13/cobra"
 	appconfig "github.com/sufield/stave/internal/app/config"
 
@@ -10,7 +12,6 @@ import (
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/configservice"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -18,17 +19,9 @@ import (
 //
 // rt is the output runtime; pass ui.DefaultRuntime() to use the process's
 // standard streams. If nil, DefaultRuntime() is used automatically.
-//
-// svc is the config-key resolution service and must not be nil. Pass
-// projconfig.ConfigKeyService for the standard default. Passing nil panics
-// immediately so the programming error surfaces at construction time rather
-// than as an opaque nil-pointer dereference during command execution.
-func NewConfigCmd(rt *ui.Runtime, svc *configservice.Service) *cobra.Command {
+func NewConfigCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
 		rt = ui.DefaultRuntime()
-	}
-	if svc == nil {
-		panic("NewConfigCmd: svc must not be nil; pass projconfig.ConfigKeyService for the default")
 	}
 
 	var format string
@@ -43,11 +36,11 @@ func NewConfigCmd(rt *ui.Runtime, svc *configservice.Service) *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 
 	cmd.AddCommand(
-		newGetCmd(rt, svc, &format),
-		newSetCmd(rt, svc, &format),
-		newDeleteCmd(rt, svc, &format),
-		newShowCmd(rt, svc, &format),
-		newExplainCmd(rt, svc, &format),
+		newGetCmd(rt, &format),
+		newSetCmd(rt, &format),
+		newDeleteCmd(rt, &format),
+		newShowCmd(rt, &format),
+		newExplainCmd(rt, &format),
 		contextcmd.NewContextCmd(),
 		initenv.NewEnvCmd(),
 	)
@@ -55,9 +48,8 @@ func NewConfigCmd(rt *ui.Runtime, svc *configservice.Service) *cobra.Command {
 	return cmd
 }
 
-func newRunner(rt *ui.Runtime, svc *configservice.Service, cmd *cobra.Command) *Runner {
+func newRunner(rt *ui.Runtime, cmd *cobra.Command) *Runner {
 	return &Runner{
-		Svc:    svc,
 		RT:     rt,
 		Stdout: cmd.OutOrStdout(),
 		Stderr: cmd.ErrOrStderr(),
@@ -74,7 +66,28 @@ func mutationOptsFrom(gf cmdutil.GlobalFlags, format ui.OutputFormat) MutationOp
 	}
 }
 
-func newGetCmd(rt *ui.Runtime, svc *configservice.Service, format *string) *cobra.Command {
+// configKeyCompletions returns config key completions including retention tier
+// variants from the project config.
+func configKeyCompletions() []string {
+	tiers := []string{appconfig.DefaultRetentionTier}
+
+	if cfg, ok, cfgErr := projconfig.FindProjectConfig(); cfgErr != nil {
+		slog.Warn("failed to load project config for completions", "error", cfgErr)
+	} else if ok {
+		if t := appconfig.NormalizeTier(cfg.RetentionTier); t != "" {
+			tiers = append(tiers, t)
+		}
+		for tier := range cfg.RetentionTiers {
+			if t := appconfig.NormalizeTier(tier); t != "" {
+				tiers = append(tiers, t)
+			}
+		}
+	}
+
+	return appconfig.BuildKeyCompletions(tiers)
+}
+
+func newGetCmd(rt *ui.Runtime, format *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get a config value",
@@ -90,14 +103,14 @@ Supported keys:
   snapshot_retention_tiers.<tier>` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-			return projconfig.ConfigKeyCompletionsFrom(svc), cobra.ShellCompDirectiveNoFileComp
+			return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, *format)
 			if err != nil {
 				return err
 			}
-			runner := newRunner(rt, svc, cmd)
+			runner := newRunner(rt, cmd)
 			return runner.Get(cmd.Context(), GetRequest{Key: args[0], Format: fmtValue})
 		},
 		SilenceUsage:  true,
@@ -105,7 +118,7 @@ Supported keys:
 	}
 }
 
-func newSetCmd(rt *ui.Runtime, svc *configservice.Service, format *string) *cobra.Command {
+func newSetCmd(rt *ui.Runtime, format *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "set <key> <value>",
 		Short: "Set a project config value in stave.yaml",
@@ -123,7 +136,7 @@ Supported keys:
 		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return projconfig.ConfigKeyCompletionsFrom(svc), cobra.ShellCompDirectiveNoFileComp
+				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			if len(args) == 1 && args[0] == "ci_failure_policy" {
 				return []string{string(appconfig.GatePolicyAny), string(appconfig.GatePolicyNew), string(appconfig.GatePolicyOverdue)}, cobra.ShellCompDirectiveNoFileComp
@@ -139,7 +152,7 @@ Supported keys:
 				return err
 			}
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := newRunner(rt, svc, cmd)
+			runner := newRunner(rt, cmd)
 			return runner.Set(cmd.Context(), SetRequest{
 				Key:   args[0],
 				Value: args[1],
@@ -150,7 +163,7 @@ Supported keys:
 	}
 }
 
-func newDeleteCmd(rt *ui.Runtime, svc *configservice.Service, format *string) *cobra.Command {
+func newDeleteCmd(rt *ui.Runtime, format *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <key>",
 		Short: "Remove a project config key (reverts to default)",
@@ -159,7 +172,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return projconfig.ConfigKeyCompletionsFrom(svc), cobra.ShellCompDirectiveNoFileComp
+				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 			}
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		},
@@ -169,7 +182,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 				return err
 			}
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := newRunner(rt, svc, cmd)
+			runner := newRunner(rt, cmd)
 			return runner.Delete(cmd.Context(), DeleteRequest{
 				Key: args[0],
 			}, mutationOptsFrom(gf, fmtValue))
@@ -179,7 +192,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 	}
 }
 
-func newShowCmd(rt *ui.Runtime, svc *configservice.Service, format *string) *cobra.Command {
+func newShowCmd(rt *ui.Runtime, format *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show",
 		Short: "Show effective project configuration and value sources",
@@ -195,7 +208,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(rt, svc, cmd)
+			runner := newRunner(rt, cmd)
 			return runner.Show(cmd.Context(), fmtValue)
 		},
 		SilenceUsage:  true,
@@ -203,7 +216,7 @@ Examples:
 	}
 }
 
-func newExplainCmd(rt *ui.Runtime, svc *configservice.Service, format *string) *cobra.Command {
+func newExplainCmd(rt *ui.Runtime, format *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "explain",
 		Short: "Explain resolved config values and sources",
@@ -215,7 +228,7 @@ their resolution source (flag/env/project/user/default).` + metadata.OfflineHelp
 			if err != nil {
 				return err
 			}
-			runner := newRunner(rt, svc, cmd)
+			runner := newRunner(rt, cmd)
 			return runner.Show(cmd.Context(), fmtValue)
 		},
 		SilenceUsage:  true,

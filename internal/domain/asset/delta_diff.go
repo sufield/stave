@@ -1,12 +1,13 @@
 package asset
 
 import (
+	"maps"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/pkg/fp"
 )
 
 type assetDiffInput struct {
@@ -114,5 +115,8 @@ func uniqueSortedKeys[V any](a, b map[string]V) []string {
 		keySet[k] = struct{}{}
 	}
 
-	return fp.SortedKeys(keySet)
+	if len(keySet) == 0 {
+		return nil
+	}
+	return slices.Sorted(maps.Keys(keySet))
 }

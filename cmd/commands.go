@@ -70,7 +70,7 @@ func WireProdCommands(app *App) {
 	root.AddCommand(diagreport.NewReportCmd())
 
 	// Settings
-	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime(), app.ConfigKeyService))
+	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))
 }
 
 func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {

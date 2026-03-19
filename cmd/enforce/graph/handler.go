@@ -8,6 +8,9 @@ import (
 	"io"
 	"strings"
 
+	"maps"
+	"slices"
+
 	"github.com/samber/lo"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -16,7 +19,6 @@ import (
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
@@ -126,7 +128,10 @@ func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eva
 
 func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
 	assetMap := lo.KeyBy(assets, func(a asset.Asset) string { return a.ID.String() })
-	return assetMap, fp.SortedKeys(assetMap)
+	if len(assetMap) == 0 {
+		return assetMap, nil
+	}
+	return assetMap, slices.Sorted(maps.Keys(assetMap))
 }
 
 func coverageControlIDs(controls []policy.ControlDefinition) []string {

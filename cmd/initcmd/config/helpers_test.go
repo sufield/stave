@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -23,6 +22,6 @@ func getTestRootCmd() *cobra.Command {
 	root.PersistentFlags().String("path-mode", "base", "Path rendering mode")
 	root.PersistentFlags().String("log-file", "", "Log file path")
 	root.PersistentFlags().Bool("require-offline", false, "Require offline execution")
-	root.AddCommand(NewConfigCmd(ui.DefaultRuntime(), projconfig.ConfigKeyService))
+	root.AddCommand(NewConfigCmd(ui.DefaultRuntime()))
 	return root
 }

@@ -2,13 +2,14 @@ package plan
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/retention"
-	"github.com/sufield/stave/internal/pkg/fp"
 	"github.com/sufield/stave/internal/pruner"
 )
 
@@ -156,7 +157,10 @@ func groupSnapshotFilesByTier(
 }
 
 func sortedSnapshotTierNames(byTier map[string][]pruner.SnapshotFile) []string {
-	return fp.SortedKeys(byTier)
+	if len(byTier) == 0 {
+		return nil
+	}
+	return slices.Sorted(maps.Keys(byTier))
 }
 
 type tierCfg struct {
