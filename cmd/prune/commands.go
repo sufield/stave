@@ -23,4 +23,3 @@ func Commands(p *compose.Provider) []*cobra.Command {
 		manifest.NewCmd(),
 	}
 }
-

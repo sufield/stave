@@ -94,7 +94,7 @@ func (m *ArtifactManager) writeJSON(path string, value any) error {
 	if !m.Options.Overwrite {
 		flags |= os.O_EXCL
 	}
-	f, err := os.OpenFile(path, flags, 0o600)
+	f, err := os.OpenFile(path, flags, 0o600) //nolint:gosec // path is constructed from hardcoded filenames, not user input
 	if err != nil {
 		return fmt.Errorf("opening %s: %w", path, err)
 	}
@@ -107,9 +107,9 @@ func (m *ArtifactManager) writeJSON(path string, value any) error {
 
 // EnvelopeBuilder handles the transformation and enrichment of domain results.
 type EnvelopeBuilder struct {
-	Sanitizer      kernel.Sanitizer
-	IDGen          ports.IdentityGenerator
-	BuildEnvelope  EnvelopeBuilderFunc
+	Sanitizer     kernel.Sanitizer
+	IDGen         ports.IdentityGenerator
+	BuildEnvelope EnvelopeBuilderFunc
 }
 
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
