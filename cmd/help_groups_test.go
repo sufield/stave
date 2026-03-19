@@ -19,7 +19,6 @@ func TestRootHelpGroupsAssigned(t *testing.T) {
 		"ci":       groupWorkflow,
 		"snapshot": groupWorkflow,
 		"status":   groupWorkflow,
-		"ingest":   groupArtifacts,
 		"enforce":  groupArtifacts,
 		"report":   groupArtifacts,
 		"config":   groupSettings,
@@ -42,7 +41,6 @@ func TestDevHelpGroupsAssigned(t *testing.T) {
 	devChecks := map[string]string{
 		"doctor":         groupDevTools,
 		"bug-report":     groupDevTools,
-		"extractor":      groupDevTools,
 		"prompt":         groupDevTools,
 		"trace":          groupDevTools,
 		"controls":       groupDevTools,

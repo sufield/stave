@@ -11,7 +11,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/ingest"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -88,7 +87,6 @@ func TestNoOsCreateInOutputFiles(t *testing.T) {
 		file string
 	}{
 		{"apply", "handler.go"},
-		{"ingest", "s3_runner.go"},
 	}
 
 	for _, c := range checks {
@@ -112,7 +110,6 @@ func TestNoWorldReadableDirs(t *testing.T) {
 		file string
 	}{
 		{"apply", "handler.go"},
-		{"ingest", "s3_runner.go"},
 	}
 
 	for _, c := range checks {
@@ -125,17 +122,6 @@ func TestNoWorldReadableDirs(t *testing.T) {
 		content := string(data)
 		if contains(content, "0o755") || contains(content, "0755") {
 			t.Errorf("%s/%s still uses 0o755 for MkdirAll — should use 0o700", c.dir, c.file)
-		}
-	}
-}
-
-// TestExtractFlagRegistered verifies --force and --dry-run flags exist.
-func TestExtractS3FlagRegistered(t *testing.T) {
-	flags := []string{"force", "dry-run"}
-	for _, name := range flags {
-		f := ingest.NewIngestCmd(ui.DefaultRuntime()).Flags().Lookup(name)
-		if f == nil {
-			t.Errorf("extract missing --%s flag", name)
 		}
 	}
 }

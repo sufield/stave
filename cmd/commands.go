@@ -10,7 +10,6 @@ import (
 	"github.com/sufield/stave/cmd/diagnose"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/ingest"
 	"github.com/sufield/stave/cmd/initcmd"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/prune"
@@ -66,7 +65,6 @@ func WireProdCommands(app *App) {
 	wireCISubtree(ciCmd, p)
 
 	// Data & Artifacts
-	root.AddCommand(ingest.NewIngestCmd(ui.DefaultRuntime()))
 	root.AddCommand(enforce.NewGenerateCmd())
 	root.AddCommand(diagreport.NewReportCmd())
 

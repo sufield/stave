@@ -166,7 +166,6 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 | `apply` | Evaluate controls, produce findings |
 | `diagnose` | Explain unexpected results |
 | `trace` | Clause-level predicate detail |
-| `ingest` | Convert AWS snapshots to observations |
 | `controls list` | List available controls |
 | `explain` | Show fields a control requires |
 | `lint` | Control quality checks |
@@ -215,7 +214,6 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 - Engine supports any vendor and asset type
 - Built-in control pack: AWS S3 (43 controls)
-- Built-in extraction: AWS S3 (`stave ingest --profile aws-s3`)
 - Custom controls and observations supported for any asset type
 - Offline evaluation only
 
