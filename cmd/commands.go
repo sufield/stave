@@ -22,6 +22,7 @@ const (
 	groupWorkflow       = "workflow"
 	groupArtifacts      = "artifacts"
 	groupSettings       = "settings"
+	groupDevTools       = "dev-tools"
 )
 
 // WireProdCommands attaches the production command tree to the root command.

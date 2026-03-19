@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/prune/archive"
-	"github.com/sufield/stave/cmd/prune/cleanup"
 	"github.com/sufield/stave/cmd/prune/hygiene"
 	"github.com/sufield/stave/cmd/prune/manifest"
 	"github.com/sufield/stave/cmd/prune/snapshot"
@@ -25,9 +24,3 @@ func Commands(p *compose.Provider) []*cobra.Command {
 	}
 }
 
-// DevCommands returns snapshot commands that are too destructive for production.
-func DevCommands(p *compose.Provider) []*cobra.Command {
-	return []*cobra.Command{
-		cleanup.NewCmd(p),
-	}
-}

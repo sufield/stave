@@ -51,11 +51,11 @@ build: sync-schemas sync-controls
 
 ## build-dev: Build the dev binary with all commands
 build-dev: sync-schemas sync-controls
-	$(GOBUILD) $(LDFLAGS) -o stave-dev ./cmd/stave-dev
+	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
-## test: Run all tests
+## test: Run all tests (includes dev-only packages via build tag)
 test: sync-schemas sync-controls
-	$(GOTEST) -v ./...
+	$(GOTEST) -tags stavedev -v ./...
 
 ## test-coverage: Run tests with coverage
 test-coverage:

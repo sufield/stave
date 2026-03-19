@@ -1,3 +1,5 @@
+//go:build stavedev
+
 package doctor
 
 import (
