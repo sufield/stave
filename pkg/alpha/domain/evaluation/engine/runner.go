@@ -31,11 +31,9 @@ type Runner struct {
 	ToolVersion     string
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
-
 	// CELEvaluator evaluates predicates using the CEL engine.
 	// Required — the built-in predicate evaluator has been removed.
 	CELEvaluator PredicateEvaluator
-
 	// identitiesByTime maps snapshot capture times to their identities.
 	// Set during Evaluate so finding generation can look up the identities
 	// from the snapshot where the asset was last seen unsafe.
@@ -92,20 +90,16 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 	}
 	sorted := e.normalizeSnapshots(snapshots)
 	now := e.deterministicNow(sorted)
-
 	e.identitiesByTime = make(map[time.Time][]asset.CloudIdentity, len(sorted))
 	for i := range sorted {
 		e.identitiesByTime[sorted[i].CapturedAt] = sorted[i].Identities
 	}
-
 	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
-
 	assetHint := 0
 	if len(sorted) > 0 {
 		assetHint = len(sorted[0].Assets)
 	}
 	acc := NewAccumulator(assetHint)
-
 	for _, ctl := range e.Controls {
 		// Skip control types the evaluator cannot process.
 		if !ctl.IsEvaluatable() {
@@ -116,10 +110,8 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 			)
 			continue
 		}
-
 		e.evaluateControl(&ctl, timelinesPerInv[ctl.ID], now, acc)
 	}
-
 	return e.buildResult(acc, now, len(snapshots)), nil
 }
 
@@ -131,17 +123,14 @@ func (e *Runner) evaluateControl(
 	acc *Accumulator,
 ) {
 	strategy := e.strategyFor(ctl)
-
 	// Deterministic iteration: sort asset IDs first.
 	assetIDs := make([]asset.ID, 0, len(timelines))
 	for id := range timelines {
 		assetIDs = append(assetIDs, id)
 	}
 	slices.Sort(assetIDs)
-
 	for _, assetID := range assetIDs {
 		timeline := timelines[assetID]
-
 		// Check if asset is exempted.
 		if rule := e.Exemptions.ShouldExempt(string(assetID)); rule != nil {
 			if acc.TrackExemption(assetID) {
@@ -158,14 +147,11 @@ func (e *Runner) evaluateControl(
 			})
 			continue
 		}
-
 		// Track assets that were actually evaluated (not exempted).
 		acc.seenAssets.Add(assetID)
-
 		if timeline.CurrentlyUnsafe() {
 			acc.unsafeAssets.Add(assetID)
 		}
-
 		row, findings := strategy.Evaluate(timeline, now)
 		acc.AddRow(row)
 		acc.AddFindings(findings)
@@ -176,12 +162,10 @@ func (e *Runner) evaluateControl(
 func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int) evaluation.Result {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
-
 	// Sort exempted assets for deterministic output.
 	slices.SortFunc(acc.exemptedByAst, func(a, b asset.ExemptedAsset) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
-
 	// Sort rows for deterministic output (by control_id, then asset_id).
 	slices.SortFunc(acc.rows, func(a, b evaluation.Row) int {
 		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
@@ -189,9 +173,7 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 		}
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
-
 	regularFindings, exceptedFindings := e.partitionFindings(acc.findings, now)
-
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
 			ToolVersion: e.ToolVersion,
@@ -249,4 +231,13 @@ func (e *Runner) computePackHash() kernel.Digest {
 	}
 	slices.Sort(ids)
 	return e.Hasher.Digest(ids, '\n')
+}
+
+const defaultRunnerMaxGapThreshold = 12 * time.Hour
+
+func (e *Runner) maxGapThreshold() time.Duration {
+	if e.MaxGapThreshold > 0 {
+		return e.MaxGapThreshold
+	}
+	return defaultRunnerMaxGapThreshold
 }
