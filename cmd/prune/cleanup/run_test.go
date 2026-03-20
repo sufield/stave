@@ -5,13 +5,13 @@ import (
 	"time"
 
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
-	"github.com/sufield/stave/internal/adapters/pruner"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 func TestPlanPrune_RespectsKeepMin(t *testing.T) {
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{Name: "a.json", CapturedAt: now.AddDate(0, 0, -40)},
 		{Name: "b.json", CapturedAt: now.AddDate(0, 0, -35)},
 		{Name: "c.json", CapturedAt: now.AddDate(0, 0, -20)},
@@ -29,7 +29,7 @@ func TestPlanPrune_RespectsKeepMin(t *testing.T) {
 
 func TestPlanPrune_NoDeletionsWhenWouldDropBelowKeepMin(t *testing.T) {
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{Name: "a.json", CapturedAt: now.AddDate(0, 0, -40)},
 		{Name: "b.json", CapturedAt: now.AddDate(0, 0, -35)},
 	}

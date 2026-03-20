@@ -10,7 +10,7 @@ import (
 
 // listSnapshotFilesRecursive identifies snapshot files by traversing the directory tree.
 // It requires an explicit SnapshotReader to avoid reliance on global providers.
-func listSnapshotFilesRecursive(ctx context.Context, loader appcontracts.SnapshotReader, dir string, excludeDirs []string) ([]pruner.SnapshotFile, error) {
+func listSnapshotFilesRecursive(ctx context.Context, loader appcontracts.SnapshotReader, dir string, excludeDirs []string) ([]appcontracts.SnapshotFile, error) {
 	files, err := pruner.ListSnapshotFilesRecursiveWithLoader(ctx, dir, excludeDirs, loader)
 	if err != nil {
 		return nil, fmt.Errorf("listing snapshots in %q: %w", dir, err)

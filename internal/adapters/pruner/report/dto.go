@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/adapters/pruner"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -59,8 +60,8 @@ type CleanupInput struct {
 	Tier            string
 	OlderThan       time.Duration
 	KeepMin         int
-	AllFiles        []pruner.SnapshotFile
-	CandidateFiles  []pruner.SnapshotFile
+	AllFiles        []appcontracts.SnapshotFile
+	CandidateFiles  []appcontracts.SnapshotFile
 }
 
 // ArchiveOutputInput holds all data needed to build archive output.
@@ -102,7 +103,7 @@ func BuildArchiveOutput(input ArchiveOutputInput) ArchiveOutput {
 	}
 }
 
-func toCleanupFiles(in []pruner.SnapshotFile) []CleanupFile {
+func toCleanupFiles(in []appcontracts.SnapshotFile) []CleanupFile {
 	out := make([]CleanupFile, 0, len(in))
 	for _, sf := range in {
 		out = append(out, CleanupFile{

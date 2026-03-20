@@ -29,12 +29,14 @@ func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotRea
 
 // ListSnapshotFilesFlatWithLoader lists snapshot files directly under observationsDir
 // and resolves captured_at via the provided loader.
-func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string, loader appcontracts.SnapshotReader) ([]SnapshotFile, error) {
+func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string, loader appcontracts.SnapshotReader) ([]appcontracts.SnapshotFile, error) {
 	if loader == nil {
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
-	return ListSnapshotFilesFlat(observationsDir, func(path, name string) (time.Time, error) {
-		return loadSnapshotCapturedAt(ctx, loader, path, name)
+	return ListSnapshotFilesFlat(observationsDir, ScannerOptions{
+		MetadataLoader: func(path, name string) (time.Time, error) {
+			return loadSnapshotCapturedAt(ctx, loader, path, name)
+		},
 	})
 }
 
@@ -45,11 +47,14 @@ func ListSnapshotFilesRecursiveWithLoader(
 	observationsDir string,
 	excludeDirs []string,
 	loader appcontracts.SnapshotReader,
-) ([]SnapshotFile, error) {
+) ([]appcontracts.SnapshotFile, error) {
 	if loader == nil {
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
-	return ListSnapshotFilesRecursive(observationsDir, excludeDirs, func(path, name string) (time.Time, error) {
-		return loadSnapshotCapturedAt(ctx, loader, path, name)
+	return ListSnapshotFilesRecursive(observationsDir, ScannerOptions{
+		MetadataLoader: func(path, name string) (time.Time, error) {
+			return loadSnapshotCapturedAt(ctx, loader, path, name)
+		},
+		ExcludeDirs: excludeDirs,
 	})
 }

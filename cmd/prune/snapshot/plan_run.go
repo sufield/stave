@@ -7,12 +7,12 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
-func listPlanFiles(ctx context.Context, p *compose.Provider, observationsRoot, archiveDir string) ([]pruner.SnapshotFile, error) {
+func listPlanFiles(ctx context.Context, p *compose.Provider, observationsRoot, archiveDir string) ([]appcontracts.SnapshotFile, error) {
 	loader, err := p.NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
