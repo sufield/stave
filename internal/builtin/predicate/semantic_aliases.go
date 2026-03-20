@@ -17,7 +17,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
-// ── Phase 1.1: Alias Name Constants ──────────────────────────────────
+// ── Alias Name Constants ──────────────────────────────────
 
 const (
 	S3IsPublicReadable               = "s3.is_public_readable"
@@ -41,7 +41,7 @@ const (
 	S3ObjectLockNotComplianceMode    = "s3.object_lock_not_compliance_mode"
 )
 
-// ── Phase 2.1: Categories ────────────────────────────────────────────
+// ── Categories ────────────────────────────────────────────
 
 const (
 	CategoryPublicExposure      = "Public Exposure"
@@ -55,7 +55,7 @@ const (
 	CategoryObjectLock          = "Object Lock"
 )
 
-// ── Phase 2.1: Alias Entry ──────────────────────────────────────────
+// ── Alias Entry ──────────────────────────────────────────
 
 // aliasEntry bundles a predicate with human-readable metadata.
 type aliasEntry struct {
@@ -65,7 +65,7 @@ type aliasEntry struct {
 	Service     string // Phase 4.1: service grouping key
 }
 
-// ── Phase 2.3: Error Type ────────────────────────────────────────────
+// ── Error Type ────────────────────────────────────────────
 
 // UnknownAliasError is returned when an alias cannot be resolved.
 // If a close match exists, Suggestion is populated.
@@ -81,7 +81,7 @@ func (e *UnknownAliasError) Error() string {
 	return fmt.Sprintf("unknown alias %q", e.Name)
 }
 
-// ── Phase 4.2: Resolver Interface ────────────────────────────────────
+// ── Resolver Interface ────────────────────────────────────
 
 // Resolver resolves alias names to expanded predicates. Adopters can
 // implement this interface to provide custom aliases alongside the
@@ -96,7 +96,7 @@ type Resolver interface {
 	ListAliases(category string) []string
 }
 
-// ── Phase 4.1: Multi-Service Registry ────────────────────────────────
+// ── Multi-Service Registry ────────────────────────────────
 
 // Registry is a multi-service alias registry. Aliases are grouped by
 // service internally but maintain a flat naming convention (e.g.
@@ -173,7 +173,7 @@ func (r *Registry) AliasResolverFunc() policy.AliasResolver {
 	}
 }
 
-// ── Phase 4.2: Composite Resolver ────────────────────────────────────
+// ── Composite Resolver ────────────────────────────────────
 
 // CompositeResolver chains multiple resolvers, trying each in order.
 // This lets adopters layer custom aliases on top of the built-in set.
@@ -237,7 +237,7 @@ func ResolverFunc() policy.AliasResolver {
 	return defaultRegistry.AliasResolverFunc()
 }
 
-// ── Phase 1.3: Init-time integrity check ─────────────────────────────
+// ── Init-time integrity check ─────────────────────────────
 
 func init() {
 	for name, entry := range defaultRegistry.entries {
@@ -271,7 +271,7 @@ func validateRule(alias, block string, idx int, rule policy.PredicateRule) {
 	}
 }
 
-// ── Phase 1.2: Deep clone ────────────────────────────────────────────
+// ── Deep clone ────────────────────────────────────────────
 
 func clonePredicate(in policy.UnsafePredicate) policy.UnsafePredicate {
 	return policy.UnsafePredicate{
@@ -302,7 +302,7 @@ func cloneRule(r policy.PredicateRule) policy.PredicateRule {
 	}
 }
 
-// ── Phase 2.3: Fuzzy suggestion ──────────────────────────────────────
+// ── Fuzzy suggestion ──────────────────────────────────────
 
 func (r *Registry) suggestError(name string) *UnknownAliasError {
 	best := ""

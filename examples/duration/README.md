@@ -32,7 +32,7 @@ duration/
 ```bash
 cd stave
 
-./stave plan \
+./stave apply --dry-run \
   --controls examples/duration/controls \
   --observations examples/duration/observations \
   --max-unsafe 12h \
