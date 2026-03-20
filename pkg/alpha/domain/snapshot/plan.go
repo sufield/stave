@@ -1,4 +1,12 @@
-package plan
+// Package snapshot provides retention planning for observation snapshots.
+//
+// It computes multi-tier retention plans from snapshot file metadata and
+// retention configuration. The resulting [PlanOutput] describes which files
+// to keep, prune, or archive based on age thresholds and minimum-keep floors.
+//
+// This package is a pure domain kernel: it has zero I/O dependencies and can
+// be imported by adopters to build custom retention tools.
+package snapshot
 
 import (
 	"fmt"
@@ -8,10 +16,17 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
+
+// File represents one snapshot file discovered on disk.
+type File struct {
+	Path       string
+	RelPath    string
+	Name       string
+	CapturedAt time.Time
+}
 
 // PlanAction is an alias for the domain retention PlanAction type.
 type PlanAction = retention.PlanAction
@@ -33,8 +48,8 @@ const (
 	ModeArchive = retention.ModeArchive
 )
 
-// SnapshotPlanFile is one file row in the generated snapshot plan.
-type SnapshotPlanFile struct {
+// PlanFile is one file row in the generated snapshot plan.
+type PlanFile struct {
 	RelPath    string     `json:"rel_path"`
 	CapturedAt time.Time  `json:"captured_at"`
 	Tier       string     `json:"tier"`
@@ -42,8 +57,8 @@ type SnapshotPlanFile struct {
 	Reason     string     `json:"reason"`
 }
 
-// SnapshotPlanTierSummary aggregates plan counts per tier.
-type SnapshotPlanTierSummary struct {
+// PlanTierSummary aggregates plan counts per tier.
+type PlanTierSummary struct {
 	Tier        string `json:"tier"`
 	OlderThan   string `json:"older_than"`
 	KeepMin     int    `json:"keep_min"`
@@ -52,31 +67,37 @@ type SnapshotPlanTierSummary struct {
 	ActionCount int    `json:"action_count"`
 }
 
-// SnapshotPlanOutput is the materialized retention plan.
-type SnapshotPlanOutput struct {
-	SchemaVersion    kernel.Schema             `json:"schema_version"`
-	Kind             kernel.OutputKind         `json:"kind"`
-	GeneratedAt      time.Time                 `json:"generated_at"`
-	ObservationsRoot string                    `json:"observations_root"`
-	ArchiveDir       string                    `json:"archive_dir,omitempty"`
-	Mode             PlanMode                  `json:"mode"`
-	Applied          bool                      `json:"applied"`
-	DefaultTier      string                    `json:"default_tier"`
-	TierSummaries    []SnapshotPlanTierSummary `json:"tier_summaries"`
-	TotalFiles       int                       `json:"total_files"`
-	TotalActions     int                       `json:"total_actions"`
-	Files            []SnapshotPlanFile        `json:"files"`
+// PlanOutput is the materialized retention plan.
+type PlanOutput struct {
+	SchemaVersion    kernel.Schema     `json:"schema_version"`
+	Kind             kernel.OutputKind `json:"kind"`
+	GeneratedAt      time.Time         `json:"generated_at"`
+	ObservationsRoot string            `json:"observations_root"`
+	ArchiveDir       string            `json:"archive_dir,omitempty"`
+	Mode             PlanMode          `json:"mode"`
+	Applied          bool              `json:"applied"`
+	DefaultTier      string            `json:"default_tier"`
+	TierSummaries    []PlanTierSummary `json:"tier_summaries"`
+	TotalFiles       int               `json:"total_files"`
+	TotalActions     int               `json:"total_actions"`
+	Files            []PlanFile        `json:"files"`
 }
 
-// BuildSnapshotPlanParams holds inputs for BuildSnapshotPlan.
-type BuildSnapshotPlanParams struct {
+// PlanEntry is a single snapshot plan row for execution.
+type PlanEntry struct {
+	RelPath string
+	Action  PlanAction
+}
+
+// BuildPlanParams holds inputs for BuildPlan.
+type BuildPlanParams struct {
 	Now                time.Time
 	ObsRoot            string
 	ArchiveDir         string
 	DefaultTier        string
 	TierRules          []retention.MappingRule
 	Tiers              map[string]retention.TierConfig
-	Files              []pruner.SnapshotFile
+	Files              []File
 	Apply              bool
 	Force              bool
 	DefaultOlderThan   string
@@ -85,14 +106,14 @@ type BuildSnapshotPlanParams struct {
 	ResolveTierForPath func(relPath string, rules []retention.MappingRule, defaultTier string) string
 }
 
-// BuildSnapshotPlan computes a snapshot prune/archive plan from retention config.
-func BuildSnapshotPlan(params BuildSnapshotPlanParams) SnapshotPlanOutput {
-	mode, applied := resolveSnapshotPlanMode(params.Apply, params.Force, params.ArchiveDir)
-	byTier := groupSnapshotFilesByTier(params.Files, params.TierRules, params.DefaultTier, params.ResolveTierForPath)
-	tierNames := sortedSnapshotTierNames(byTier)
+// BuildPlan computes a snapshot prune/archive plan from retention config.
+func BuildPlan(params BuildPlanParams) PlanOutput {
+	mode, applied := resolvePlanMode(params.Apply, params.Force, params.ArchiveDir)
+	byTier := groupFilesByTier(params.Files, params.TierRules, params.DefaultTier, params.ResolveTierForPath)
+	tierNames := sortedTierNames(byTier)
 
-	allEntries := make([]SnapshotPlanFile, 0, len(params.Files))
-	summaries := make([]SnapshotPlanTierSummary, 0, len(tierNames))
+	allEntries := make([]PlanFile, 0, len(params.Files))
+	summaries := make([]PlanTierSummary, 0, len(tierNames))
 	totalActions := 0
 
 	for _, tierName := range tierNames {
@@ -102,7 +123,7 @@ func BuildSnapshotPlan(params BuildSnapshotPlanParams) SnapshotPlanOutput {
 		totalActions += tierPlan.actionCount
 	}
 
-	return SnapshotPlanOutput{
+	return PlanOutput{
 		SchemaVersion:    kernel.SchemaSnapshotPlan,
 		Kind:             kernel.KindSnapshotPlan,
 		GeneratedAt:      params.Now.UTC(),
@@ -119,12 +140,12 @@ func BuildSnapshotPlan(params BuildSnapshotPlanParams) SnapshotPlanOutput {
 }
 
 type tierPlanResult struct {
-	entries     []SnapshotPlanFile
-	summary     SnapshotPlanTierSummary
+	entries     []PlanFile
+	summary     PlanTierSummary
 	actionCount int
 }
 
-func resolveSnapshotPlanMode(apply, force bool, archiveDir string) (PlanMode, bool) {
+func resolvePlanMode(apply, force bool, archiveDir string) (PlanMode, bool) {
 	if !apply || !force {
 		return ModePreview, false
 	}
@@ -134,20 +155,17 @@ func resolveSnapshotPlanMode(apply, force bool, archiveDir string) (PlanMode, bo
 	return ModePrune, true
 }
 
-func groupSnapshotFilesByTier(
-	files []pruner.SnapshotFile,
+func groupFilesByTier(
+	files []File,
 	rules []retention.MappingRule,
 	defaultTier string,
 	resolver func(relPath string, rules []retention.MappingRule, defaultTier string) string,
-) map[string][]pruner.SnapshotFile {
+) map[string][]File {
 	if resolver == nil {
 		resolver = func(_ string, _ []retention.MappingRule, fallback string) string { return fallback }
 	}
-
-	// Pre-trim default tier once instead of per-file.
 	trimmedDefault := strings.TrimSpace(defaultTier)
-
-	return lo.GroupBy(files, func(sf pruner.SnapshotFile) string {
+	return lo.GroupBy(files, func(sf File) string {
 		tier := strings.TrimSpace(resolver(sf.RelPath, rules, defaultTier))
 		if tier == "" {
 			return trimmedDefault
@@ -156,7 +174,7 @@ func groupSnapshotFilesByTier(
 	})
 }
 
-func sortedSnapshotTierNames(byTier map[string][]pruner.SnapshotFile) []string {
+func sortedTierNames(byTier map[string][]File) []string {
 	if len(byTier) == 0 {
 		return nil
 	}
@@ -169,8 +187,8 @@ type tierCfg struct {
 	olderThan    time.Duration
 }
 
-func buildTierPlan(params BuildSnapshotPlanParams, tierName string, files []pruner.SnapshotFile) tierPlanResult {
-	cfg, err := resolveTierPlanConfig(params, tierName)
+func buildTierPlan(params BuildPlanParams, tierName string, files []File) tierPlanResult {
+	cfg, err := resolveTierConfig(params, tierName)
 	if err != nil {
 		return buildInvalidTierPlan(tierName, files, cfg.olderThanStr, cfg.keepMin)
 	}
@@ -187,7 +205,7 @@ func buildTierPlan(params BuildSnapshotPlanParams, tierName string, files []prun
 		OlderThan: cfg.olderThan,
 		KeepMin:   cfg.keepMin,
 	})
-	candidateSet := buildPlanCandidateSet(candidates)
+	candidateSet := buildCandidateSet(candidates)
 
 	action := ActionPrune
 	if params.ArchiveDir != "" {
@@ -197,7 +215,7 @@ func buildTierPlan(params BuildSnapshotPlanParams, tierName string, files []prun
 	entries, actionCount := buildTierEntries(files, candidateSet, tierName, action, cfg.olderThanStr, cfg.olderThan, params.Now)
 	return tierPlanResult{
 		entries: entries,
-		summary: SnapshotPlanTierSummary{
+		summary: PlanTierSummary{
 			Tier:        tierName,
 			OlderThan:   cfg.olderThanStr,
 			KeepMin:     cfg.keepMin,
@@ -209,22 +227,18 @@ func buildTierPlan(params BuildSnapshotPlanParams, tierName string, files []prun
 	}
 }
 
-func resolveTierPlanConfig(params BuildSnapshotPlanParams, tierName string) (tierCfg, error) {
+func resolveTierConfig(params BuildPlanParams, tierName string) (tierCfg, error) {
 	cfg := tierCfg{
 		olderThanStr: params.DefaultOlderThan,
 		keepMin:      params.DefaultKeepMin,
 	}
-
-	// Override with tier-specific settings if they exist.
 	if tc, ok := params.Tiers[tierName]; ok {
 		cfg.keepMin = effectiveKeepMin(tc.KeepMin, params.DefaultKeepMin)
 		if strings.TrimSpace(tc.OlderThan) != "" {
 			cfg.olderThanStr = tc.OlderThan
 		}
 	}
-
-	// Single parse point for the resolved duration string.
-	olderThan, err := parseSnapshotDuration(cfg.olderThanStr, params.ParseDuration)
+	olderThan, err := parseDuration(cfg.olderThanStr, params.ParseDuration)
 	if err != nil {
 		return cfg, err
 	}
@@ -232,7 +246,7 @@ func resolveTierPlanConfig(params BuildSnapshotPlanParams, tierName string) (tie
 	return cfg, nil
 }
 
-func parseSnapshotDuration(raw string, parseFn func(string) (time.Duration, error)) (time.Duration, error) {
+func parseDuration(raw string, parseFn func(string) (time.Duration, error)) (time.Duration, error) {
 	if parseFn == nil {
 		return 0, fmt.Errorf("duration parser is required")
 	}
@@ -246,10 +260,10 @@ func effectiveKeepMin(value, fallback int) int {
 	return value
 }
 
-func buildInvalidTierPlan(tierName string, files []pruner.SnapshotFile, olderThanStr string, keepMin int) tierPlanResult {
-	entries := make([]SnapshotPlanFile, 0, len(files))
+func buildInvalidTierPlan(tierName string, files []File, olderThanStr string, keepMin int) tierPlanResult {
+	entries := make([]PlanFile, 0, len(files))
 	for _, sf := range files {
-		entries = append(entries, SnapshotPlanFile{
+		entries = append(entries, PlanFile{
 			RelPath:    sf.RelPath,
 			CapturedAt: sf.CapturedAt.UTC(),
 			Tier:       tierName,
@@ -257,10 +271,9 @@ func buildInvalidTierPlan(tierName string, files []pruner.SnapshotFile, olderTha
 			Reason:     "invalid tier config",
 		})
 	}
-
 	return tierPlanResult{
 		entries: entries,
-		summary: SnapshotPlanTierSummary{
+		summary: PlanTierSummary{
 			Tier:        tierName,
 			OlderThan:   olderThanStr,
 			KeepMin:     keepMin,
@@ -272,7 +285,7 @@ func buildInvalidTierPlan(tierName string, files []pruner.SnapshotFile, olderTha
 	}
 }
 
-func buildPlanCandidateSet(candidates []retention.Candidate) map[int]struct{} {
+func buildCandidateSet(candidates []retention.Candidate) map[int]struct{} {
 	candidateSet := make(map[int]struct{}, len(candidates))
 	for _, c := range candidates {
 		candidateSet[c.Index] = struct{}{}
@@ -281,19 +294,19 @@ func buildPlanCandidateSet(candidates []retention.Candidate) map[int]struct{} {
 }
 
 func buildTierEntries(
-	files []pruner.SnapshotFile,
+	files []File,
 	candidateSet map[int]struct{},
 	tierName string, action PlanAction, olderThanStr string,
 	olderThan time.Duration,
 	now time.Time,
-) ([]SnapshotPlanFile, int) {
-	entries := make([]SnapshotPlanFile, 0, len(files))
+) ([]PlanFile, int) {
+	entries := make([]PlanFile, 0, len(files))
 	actionCount := 0
 	cutoff := now.UTC().Add(-olderThan)
 	pruneReason := "older than " + olderThanStr
 
 	for i, sf := range files {
-		entry := SnapshotPlanFile{
+		entry := PlanFile{
 			RelPath:    sf.RelPath,
 			CapturedAt: sf.CapturedAt.UTC(),
 			Tier:       tierName,

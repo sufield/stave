@@ -3,7 +3,7 @@ package asset
 import (
 	"math"
 
-	"github.com/sufield/stave/internal/pkg/maps"
+	"github.com/sufield/stave/pkg/alpha/domain/maps"
 )
 
 // Metadata provides a typed view over identity properties.

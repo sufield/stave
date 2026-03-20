@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -122,4 +123,19 @@ type PackRegistry interface {
 	ResolveEnabledPacks(names []string) ([]string, error)
 	RegistryVersion() (string, error)
 	RegistryHash() (string, error)
+}
+
+// SnapshotFile represents a discovered snapshot file with its metadata.
+// This type is defined in contracts (not in the adapter) so that both the app
+// layer and the adapter layer can reference it without creating a dependency cycle.
+type SnapshotFile struct {
+	Path       string
+	RelPath    string
+	Name       string
+	CapturedAt time.Time
+}
+
+// SnapshotFileLister discovers snapshot files in a directory.
+type SnapshotFileLister interface {
+	ListSnapshotFiles(ctx context.Context, dir string) ([]SnapshotFile, error)
 }

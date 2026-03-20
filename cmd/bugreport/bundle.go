@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"regexp"
-
 	"gopkg.in/yaml.v3"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -179,20 +177,16 @@ func (g *Generator) addLogArtifact(bundle *bundleWriter, path string, tailCount 
 	return nil
 }
 
-var (
-	akiaMatch    = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
-	urlCredMatch = regexp.MustCompile(`(?i)(https?://[^/\s:@]+:)[^@/\s]+@`)
-)
-
 // SanitizeLogTail truncates log data to the last N lines and scrubs credentials.
+// Credential patterns are defined centrally in the scrub package.
 func SanitizeLogTail(data []byte, maxLines int) []byte {
 	tail := TailBytesByLine(data, maxLines)
 	if len(tail) == 0 {
 		return tail
 	}
-	sanitized := []byte("[SANITIZED]")
-	tail = akiaMatch.ReplaceAll(tail, sanitized)
-	tail = urlCredMatch.ReplaceAll(tail, []byte("${1}[SANITIZED]@"))
+	sanitized := []byte(scrub.SanitizedValue)
+	tail = scrub.AKIAPattern.ReplaceAll(tail, sanitized)
+	tail = scrub.URLCredPattern.ReplaceAll(tail, []byte("${1}"+scrub.SanitizedValue+"@"))
 	return tail
 }
 

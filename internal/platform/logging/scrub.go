@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"path/filepath"
 	"slices"
+
+	"github.com/sufield/stave/internal/sanitize/scrub"
 )
 
 // Scrub transforms a slog.Attr based on the config's logging policy:
@@ -22,7 +24,7 @@ func (c Config) Scrub(groups []string, a slog.Attr) slog.Attr {
 	}
 
 	if isSensitiveLogKey(groups, a.Key) {
-		return slog.String(a.Key, SanitizedValue)
+		return slog.String(a.Key, scrub.SanitizedValue)
 	}
 
 	return a

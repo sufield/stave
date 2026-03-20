@@ -6,17 +6,17 @@ import (
 	"io"
 	"time"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/pruner"
-	"github.com/sufield/stave/internal/pruner/plan"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 // PlanConfig defines the resolved parameters for multi-tier snapshot retention.
 type PlanConfig struct {
 	// Pre-loaded data.
-	Files       []pruner.SnapshotFile
+	Files       []appcontracts.SnapshotFile
 	Tiers       map[string]retention.TierConfig
 	TierRules   []retention.MappingRule
 	DefaultTier string
@@ -34,11 +34,13 @@ type PlanConfig struct {
 }
 
 // PlanRunner orchestrates the recursive inspection and lifecycle execution.
-type PlanRunner struct{}
+type PlanRunner struct {
+	ApplyFn PlanApplyFunc
+}
 
-// NewPlanRunner creates a new plan runner.
-func NewPlanRunner() *PlanRunner {
-	return &PlanRunner{}
+// NewPlanRunner creates a new plan runner with the given apply function.
+func NewPlanRunner(applyFn PlanApplyFunc) *PlanRunner {
+	return &PlanRunner{ApplyFn: applyFn}
 }
 
 // Run executes the multi-tier planning workflow.
@@ -59,12 +61,12 @@ func (r *PlanRunner) Run(_ context.Context, cfg PlanConfig) error {
 		return err
 	}
 	if p.Applied {
-		return applyPlan(p, cfg.ObservationsRoot, cfg.ArchiveDir, cfg.AllowSymlink)
+		return applyPlan(r.ApplyFn, p, cfg.ObservationsRoot, cfg.ArchiveDir, cfg.AllowSymlink)
 	}
 	return nil
 }
 
-func writePlanOutput(cfg PlanConfig, p plan.SnapshotPlanOutput) error {
+func writePlanOutput(cfg PlanConfig, p snapshotdomain.PlanOutput) error {
 	if cfg.Quiet {
 		return nil
 	}
@@ -75,7 +77,7 @@ func writePlanOutput(cfg PlanConfig, p plan.SnapshotPlanOutput) error {
 		}
 		return nil
 	}
-	if err := plan.RenderSnapshotPlanText(w, p); err != nil {
+	if err := snapshotdomain.RenderPlanText(w, p); err != nil {
 		return fmt.Errorf("write plan output: %w", err)
 	}
 	return nil

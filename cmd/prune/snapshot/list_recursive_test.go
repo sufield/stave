@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/adapters/pruner"
 )
 
 // testListRecursive is a test helper that creates a loader and delegates.

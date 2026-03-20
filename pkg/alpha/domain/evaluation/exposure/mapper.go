@@ -1,8 +1,8 @@
 package exposure
 
 import (
-	"github.com/sufield/stave/internal/pkg/maps"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/maps"
 )
 
 // FactsFromStorage extracts prefix exposure facts from storage properties.

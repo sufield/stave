@@ -3,8 +3,8 @@ package report
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/adapters/pruner"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 

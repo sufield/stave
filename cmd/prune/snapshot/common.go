@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sufield/stave/internal/adapters/pruner"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pruner"
 )
 
 // listSnapshotFilesRecursive identifies snapshot files by traversing the directory tree.

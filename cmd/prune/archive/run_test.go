@@ -7,8 +7,8 @@ import (
 	"time"
 
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
-	"github.com/sufield/stave/internal/pruner"
-	"github.com/sufield/stave/internal/pruner/fsops"
+	"github.com/sufield/stave/internal/adapters/pruner"
+	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 

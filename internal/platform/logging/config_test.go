@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/internal/sanitize/scrub"
 )
 
 func TestLevelFromVerbosity(t *testing.T) {
@@ -239,7 +241,7 @@ func TestNewLogger_RedactsSensitiveKeys(t *testing.T) {
 	if strings.Contains(output, "abc123") {
 		t.Fatalf("sensitive value leaked in output: %s", output)
 	}
-	if !strings.Contains(output, "api_token="+SanitizedValue) {
+	if !strings.Contains(output, "api_token="+scrub.SanitizedValue) {
 		t.Fatalf("sensitive field not sanitized: %s", output)
 	}
 	if !strings.Contains(output, "field=ok") {

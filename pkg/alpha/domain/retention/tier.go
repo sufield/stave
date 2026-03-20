@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // DefaultKeepMin is the fallback keep_min value when none is configured.
@@ -23,7 +23,7 @@ func (c TierConfig) ParseDuration() (time.Duration, error) {
 	if c.OlderThan == "" {
 		return 0, fmt.Errorf("older_than is empty")
 	}
-	return timeutil.ParseDuration(c.OlderThan)
+	return kernel.ParseDuration(c.OlderThan)
 }
 
 // EffectiveKeepMin returns the keep_min value, using DefaultKeepMin as fallback.

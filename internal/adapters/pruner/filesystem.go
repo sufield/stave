@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 // maxSnapshotFiles is the safety cap on snapshot file enumeration.
@@ -21,13 +23,9 @@ var maxSnapshotFiles = 100_000
 // enumeration safety limit.
 var ErrTooManySnapshots = errors.New("too many snapshot files")
 
-// SnapshotFile represents one snapshot file discovered on disk.
-type SnapshotFile struct {
-	Path       string
-	RelPath    string
-	Name       string
-	CapturedAt time.Time
-}
+// SnapshotFile is a type alias for the contracts type, allowing the adapter
+// to use it locally while the app layer imports from contracts.
+type SnapshotFile = appcontracts.SnapshotFile
 
 // LoadCapturedAtFunc resolves captured_at for the snapshot file at path.
 type LoadCapturedAtFunc func(path, name string) (time.Time, error)

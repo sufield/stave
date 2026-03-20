@@ -7,8 +7,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 

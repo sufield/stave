@@ -1,7 +1,51 @@
 // Package scrub provides snapshot-level scrubbing of sensitive data.
 // It applies scrub profiles to observation snapshots before persistence
 // or display, removing or sanitizing sensitive property values.
+//
+// This package also serves as the single source of truth for what constitutes
+// "sensitive data" across the entire CLI: credential patterns, sensitive flag
+// names, and property keys are all defined here and imported by the logging
+// and bug-report subsystems.
 package scrub
+
+import "regexp"
+
+// SanitizedValue is the canonical placeholder for redacted values.
+const SanitizedValue = "[SANITIZED]"
+
+// --- Credential patterns (used by bug-report log scrubbing) ---
+
+// AKIAPattern matches AWS access key IDs embedded in text.
+var AKIAPattern = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
+
+// URLCredPattern matches credentials embedded in URLs (user:pass@host).
+var URLCredPattern = regexp.MustCompile(`(?i)(https?://[^/\s:@]+:)[^@/\s]+@`)
+
+// --- Sensitive flag/key detection (used by logging argument sanitization) ---
+
+// SensitiveArgNames are complete flag names (normalized, lowercase) known to
+// carry sensitive values.
+var SensitiveArgNames = map[string]struct{}{
+	"private_key":          {},
+	"private_key_out":      {},
+	"integrity_public_key": {},
+	"public_key_out":       {},
+	"authorization":        {},
+}
+
+// SensitiveTokens are individual words that mark a compound flag name as
+// sensitive when they appear as a discrete segment (split on _-.:).
+var SensitiveTokens = map[string]struct{}{
+	"token":      {},
+	"secret":     {},
+	"password":   {},
+	"credential": {},
+	"auth":       {},
+	"bearer":     {},
+	"key":        {},
+}
+
+// --- Property scrub profiles (used by snapshot scrubbing) ---
 
 // Profile defines which property keys to remove or sanitize during scrubbing.
 type Profile struct {

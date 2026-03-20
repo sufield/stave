@@ -8,11 +8,11 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/adapters/pruner"
+	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/pruner"
-	"github.com/sufield/stave/internal/pruner/report"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 

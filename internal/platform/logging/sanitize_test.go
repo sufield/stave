@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/sufield/stave/internal/sanitize/scrub"
 )
 
 func TestSanitizePath(t *testing.T) {
@@ -66,19 +68,19 @@ func TestSanitizeArgs(t *testing.T) {
 		},
 		{
 			[]string{"--password", "secret123"},
-			[]string{"--password", SanitizedValue},
+			[]string{"--password", scrub.SanitizedValue},
 		},
 		{
 			[]string{"--api-key=my-secret-key"},
-			[]string{"--api-key=" + SanitizedValue},
+			[]string{"--api-key=" + scrub.SanitizedValue},
 		},
 		{
 			[]string{"--token", "abc123", "--path", "/home"},
-			[]string{"--token", SanitizedValue, "--path", "/home"},
+			[]string{"--token", scrub.SanitizedValue, "--path", "/home"},
 		},
 		{
 			[]string{"-v", "--secret-file", "/path/to/secret"},
-			[]string{"-v", "--secret-file", SanitizedValue},
+			[]string{"-v", "--secret-file", scrub.SanitizedValue},
 		},
 		{
 			[]string{"--file=mykey.txt"},
@@ -90,11 +92,11 @@ func TestSanitizeArgs(t *testing.T) {
 		},
 		{
 			[]string{"--token", "-1"},
-			[]string{"--token", SanitizedValue},
+			[]string{"--token", scrub.SanitizedValue},
 		},
 		{
 			[]string{"--ACCESS-TOKEN", "abc123"},
-			[]string{"--ACCESS-TOKEN", SanitizedValue},
+			[]string{"--ACCESS-TOKEN", scrub.SanitizedValue},
 		},
 	}
 
