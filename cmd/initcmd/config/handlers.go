@@ -76,59 +76,78 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 		return err
 	}
 
-	var res ValueResult
-
-	if parsed.TierName != "" {
-		// Tier key resolution
-		if parsed.SubField != "" {
-			// Specific sub-field: read directly from config
-			val, source, tierErr := tierSubFieldResolution(cfg, cfgPath, parsed)
-			if tierErr != nil {
-				return tierErr
-			}
-			res = ValueResult{Key: key, Value: val, Source: source}
-		} else {
-			// Tier retention duration: resolve via evaluator
-			v := eval.ResolveSnapshotRetention(parsed.TierName)
-			res = ValueResult{Key: key, Value: v.Value, Source: v.Source}
-		}
-	} else if parsed.TopLevel == "snapshot_retention" {
-		// snapshot_retention needs the fallback tier
-		v := eval.ResolveSnapshotRetention(eval.RetentionTier())
-		res = ValueResult{Key: key, Value: v.Value, Source: v.Source}
-	} else if parsed.TopLevel == "capture_cadence" {
-		if cfg == nil || cfg.CaptureCadence == "" {
-			return fmt.Errorf("key %q: not set in %s", key, appconfig.ProjectConfigFile)
-		}
-		res = ValueResult{Key: key, Value: cfg.CaptureCadence, Source: cfgPath + ":capture_cadence"}
-	} else if parsed.TopLevel == "snapshot_filename_template" {
-		if cfg == nil || cfg.SnapshotFilenameTemplate == "" {
-			return fmt.Errorf("key %q: not set in %s", key, appconfig.ProjectConfigFile)
-		}
-		res = ValueResult{Key: key, Value: cfg.SnapshotFilenameTemplate, Source: cfgPath + ":snapshot_filename_template"}
-	} else {
-		// Standard top-level key: try reflection-based resolver first,
-		// fall back to direct config field read for simple fields without
-		// a Resolve* method (e.g., debug_mode).
-		v, ok := appconfig.ResolveKey(eval, key)
-		if ok {
-			res = ValueResult{Key: key, Value: v.Value, Source: v.Source}
-		} else if cfg != nil {
-			val, found := appconfig.GetConfigValue(cfg, key)
-			if !found {
-				return fmt.Errorf("key %q: not set in %s", key, appconfig.ProjectConfigFile)
-			}
-			res = ValueResult{Key: key, Value: val, Source: cfgPath + ":" + key}
-		} else {
-			return fmt.Errorf("key %q: not set", key)
-		}
+	res, err := resolveConfigValue(cfg, cfgPath, eval, parsed)
+	if err != nil {
+		return err
 	}
 
-	if req.Format.IsJSON() {
+	return r.presentValue(res, req.Format)
+}
+
+func (r *Runner) presentValue(res ValueResult, format ui.OutputFormat) error {
+	if format.IsJSON() {
 		return jsonutil.WriteIndented(r.Stdout, res)
 	}
-	_, err = fmt.Fprintf(r.Stdout, "%s\n", res.Value)
+	_, err := fmt.Fprintf(r.Stdout, "%s\n", res.Value)
 	return err
+}
+
+// resolveConfigValue dispatches key resolution to the appropriate strategy.
+func resolveConfigValue(cfg *appconfig.ProjectConfig, cfgPath string, eval *appconfig.Evaluator, parsed appconfig.ParsedKey) (ValueResult, error) {
+	key := parsed.Raw
+
+	// Tier keys: snapshot_retention_tiers.<tier>[.<field>]
+	if parsed.TierName != "" {
+		return resolveTierKey(cfg, cfgPath, eval, parsed)
+	}
+
+	// Known keys with special resolution logic.
+	if resolver, ok := specialResolvers[parsed.TopLevel]; ok {
+		return resolver(cfg, cfgPath, eval, parsed)
+	}
+
+	// Generic top-level key: evaluator method or direct config field.
+	if v, ok := appconfig.ResolveKey(eval, key); ok {
+		return ValueResult{Key: key, Value: v.Value, Source: v.Source}, nil
+	}
+	if cfg != nil {
+		if val, found := appconfig.GetConfigValue(cfg, key); found {
+			return ValueResult{Key: key, Value: val, Source: cfgPath + ":" + key}, nil
+		}
+	}
+	return ValueResult{}, fmt.Errorf("key %q: not set", key)
+}
+
+// specialResolvers maps top-level keys that need custom resolution logic.
+var specialResolvers = map[string]func(*appconfig.ProjectConfig, string, *appconfig.Evaluator, appconfig.ParsedKey) (ValueResult, error){
+	"snapshot_retention": func(_ *appconfig.ProjectConfig, _ string, eval *appconfig.Evaluator, p appconfig.ParsedKey) (ValueResult, error) {
+		v := eval.ResolveSnapshotRetention(eval.RetentionTier())
+		return ValueResult{Key: p.Raw, Value: v.Value, Source: v.Source}, nil
+	},
+	"capture_cadence": func(cfg *appconfig.ProjectConfig, cfgPath string, _ *appconfig.Evaluator, p appconfig.ParsedKey) (ValueResult, error) {
+		if cfg == nil || cfg.CaptureCadence == "" {
+			return ValueResult{}, fmt.Errorf("key %q: not set in %s", p.Raw, appconfig.ProjectConfigFile)
+		}
+		return ValueResult{Key: p.Raw, Value: cfg.CaptureCadence, Source: cfgPath + ":capture_cadence"}, nil
+	},
+	"snapshot_filename_template": func(cfg *appconfig.ProjectConfig, cfgPath string, _ *appconfig.Evaluator, p appconfig.ParsedKey) (ValueResult, error) {
+		if cfg == nil || cfg.SnapshotFilenameTemplate == "" {
+			return ValueResult{}, fmt.Errorf("key %q: not set in %s", p.Raw, appconfig.ProjectConfigFile)
+		}
+		return ValueResult{Key: p.Raw, Value: cfg.SnapshotFilenameTemplate, Source: cfgPath + ":snapshot_filename_template"}, nil
+	},
+}
+
+func resolveTierKey(cfg *appconfig.ProjectConfig, cfgPath string, eval *appconfig.Evaluator, parsed appconfig.ParsedKey) (ValueResult, error) {
+	if parsed.SubField != "" {
+		val, source, err := tierSubFieldResolution(cfg, cfgPath, parsed)
+		if err != nil {
+			return ValueResult{}, err
+		}
+		return ValueResult{Key: parsed.Raw, Value: val, Source: source}, nil
+	}
+	v := eval.ResolveSnapshotRetention(parsed.TierName)
+	return ValueResult{Key: parsed.Raw, Value: v.Value, Source: v.Source}, nil
 }
 
 // tierSubFieldResolution reads a specific tier sub-field directly from config.
