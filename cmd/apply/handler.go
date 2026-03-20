@@ -20,28 +20,27 @@ import (
 // All cobra state has already been extracted into cs.
 func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if err := opts.validate(); err != nil {
-		return err
+		return fmt.Errorf("validate options: %w", err)
 	}
 
 	resolver, err := projctx.NewResolver()
 	if err != nil {
-		return err
+		return fmt.Errorf("resolve project context: %w", err)
 	}
 	if _, err = resolver.ResolveSelected(); err != nil {
-		return err
+		return fmt.Errorf("resolve selected context: %w", err)
 	}
 
 	if opts.DryRun {
-		var planCfg PlanConfig
-		planCfg, err = opts.ResolveDryRun(cs)
-		if err != nil {
-			return err
+		planCfg, planErr := opts.ResolveDryRun(cs)
+		if planErr != nil {
+			return fmt.Errorf("resolve dry-run config: %w", planErr)
 		}
 		return runDryRun(cs.Ctx, p, planCfg)
 	}
 
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
-		return err
+		return err // already wrapped inside runStrictIntegrityCheck
 	}
 
 	cfg, err := opts.Resolve(cs)
@@ -56,7 +55,7 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 
 	sio, err := opts.ResolveStandardIO(cs)
 	if err != nil {
-		return err
+		return fmt.Errorf("resolve output config: %w", err)
 	}
 	return runStandardApply(cs.Ctx, p, opts, cfg.Params, sio)
 }
@@ -102,31 +101,22 @@ func executeEvaluation(
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	builder := &Builder{
-		Ctx:           ctx,
-		Stdout:        sio.Stdout,
-		Stderr:        sio.Stderr,
-		Sanitizer:     sio.Sanitizer,
-		IsJSON:        sio.IsJSON,
-		Opts:          opts,
-		Params:        params,
-		Provider:      p,
-		OnObsProgress: progress.Update,
-	}
+	builder := NewBuilder(ctx, p, opts, params, sio)
+	builder.OnObsProgress = progress.Update
 
 	deps, err := builder.Build(plan)
 	if err != nil {
-		return EvaluateResult{}, err
+		return EvaluateResult{}, fmt.Errorf("build evaluation dependencies: %w", err)
 	}
 	defer deps.Close()
 
 	result, status, err := deps.Runner.ExecuteAndReturn(ctx, deps.Config)
 	if err != nil {
-		return EvaluateResult{}, err
+		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
 
 	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, logger); err != nil {
-		return EvaluateResult{}, err
+		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 
 	return BuildEvaluateResult(status, deps.Config.ControlsDir, deps.Config.ObservationsDir), nil

@@ -47,6 +47,20 @@ type Builder struct {
 	OnObsProgress func(processed, total int)
 }
 
+// NewBuilder constructs a Builder from the standard apply execution context.
+func NewBuilder(ctx context.Context, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) *Builder {
+	return &Builder{
+		Ctx:       ctx,
+		Stdout:    sio.Stdout,
+		Stderr:    sio.Stderr,
+		Sanitizer: sio.Sanitizer,
+		IsJSON:    sio.IsJSON,
+		Opts:      opts,
+		Params:    params,
+		Provider:  p,
+	}
+}
+
 // Build constructs ApplyDeps from a pre-existing evaluation plan.
 func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error) {
 	if plan == nil {
