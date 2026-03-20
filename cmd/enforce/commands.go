@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
 	"github.com/sufield/stave/cmd/enforce/generate"
+	"github.com/sufield/stave/cmd/enforce/graph"
 	"github.com/sufield/stave/cmd/enforce/status"
 )
 
@@ -23,6 +24,7 @@ func NewGateCmd(p *compose.Provider) *cobra.Command    { return gate.NewCmd(p) }
 func NewCiDiffCmd() *cobra.Command                     { return cidiff.NewCmd() }
 func NewBaselineCmd() *cobra.Command                   { return baseline.NewCmd() }
 func NewStatusCmd() *cobra.Command                     { return status.NewCmd() }
+func NewGraphCmd(p *compose.Provider) *cobra.Command   { return graph.NewCmd(p) }
 
 // NextCommandForProject provides a high-level recommendation for the next
 // action to take in a project. It delegates to the status Runner.

@@ -45,3 +45,11 @@ func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (ui
 	formatRaw := cmdutil.ResolveFormatPure(raw, formatChanged, isJSONMode)
 	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
 }
+
+// EmptyDash returns "-" if the string is whitespace-only.
+func EmptyDash(s string) string {
+	if strings.TrimSpace(s) == "" {
+		return "-"
+	}
+	return s
+}
