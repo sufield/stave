@@ -65,15 +65,7 @@ func (s Schema) IsValid() bool {
 	return ok
 }
 
-// Internal Registry Keys
-// These are used by the loader to locate embedded .schema.json files.
-// They are NOT wire-format strings and never appear in JSON output.
-const (
-	// RegistryLayoutStandard is the directory key for modern schemas
-	// (control, observation, finding, diagnose).
-	RegistryLayoutStandard = "v1"
-
-	// RegistryLayoutLegacyOutput is the directory key for the output schema,
-	// published under a separate layout.
-	RegistryLayoutLegacyOutput = "v0.1"
-)
+// RegistryLayoutStandard is the directory key used by the schema loader to
+// locate embedded .schema.json files. All schema kinds use this layout.
+// This is NOT a wire-format string and never appears in JSON output.
+const RegistryLayoutStandard = "v1"

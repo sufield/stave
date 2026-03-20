@@ -23,7 +23,7 @@ public-bucket/
 ```bash
 cd stave
 
-./stave plan \
+./stave apply --dry-run \
   --controls examples/public-bucket/controls \
   --observations examples/public-bucket/observations \
   --max-unsafe 12h \

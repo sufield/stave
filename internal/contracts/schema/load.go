@@ -35,7 +35,7 @@ var registry = map[Kind]map[string]string{
 		kernel.RegistryLayoutStandard: "embedded/finding/v1/finding.schema.json",
 	},
 	KindOutput: {
-		kernel.RegistryLayoutLegacyOutput: "embedded/output/v0.1/output.schema.json",
+		kernel.RegistryLayoutStandard: "embedded/output/v1/output.schema.json",
 	},
 	KindDiagnose: {
 		kernel.RegistryLayoutStandard: "embedded/diagnose/v1/diagnose.schema.json",
@@ -47,7 +47,7 @@ var defaultVersions = map[Kind]string{
 	KindControl:     kernel.RegistryLayoutStandard,
 	KindObservation: kernel.RegistryLayoutStandard,
 	KindFinding:     kernel.RegistryLayoutStandard,
-	KindOutput:      kernel.RegistryLayoutLegacyOutput,
+	KindOutput:      kernel.RegistryLayoutStandard,
 	KindDiagnose:    kernel.RegistryLayoutStandard,
 }
 

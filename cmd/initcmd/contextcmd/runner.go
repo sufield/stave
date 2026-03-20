@@ -155,5 +155,3 @@ func (r *Runner) Delete(_ context.Context, st *contexts.Store, name string) erro
 	fmt.Fprintf(r.Stdout, "Deleted context: %s\n", name)
 	return nil
 }
-
-// --- CLI Bridge ---

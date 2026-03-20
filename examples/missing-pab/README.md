@@ -23,7 +23,7 @@ missing-pab/
 ```bash
 cd stave
 
-./stave plan \
+./stave apply --dry-run \
   --controls examples/missing-pab/controls \
   --observations examples/missing-pab/observations \
   --max-unsafe 12h \

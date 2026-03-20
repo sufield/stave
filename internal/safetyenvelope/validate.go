@@ -11,11 +11,11 @@ import (
 )
 
 func ValidateEvaluation(payload Evaluation) error {
-	return validate(string(schemas.KindOutput), kernel.RegistryLayoutLegacyOutput, payload, "evaluation output")
+	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload, "evaluation output")
 }
 
 func ValidateVerification(payload Verification) error {
-	return validate(string(schemas.KindOutput), kernel.RegistryLayoutLegacyOutput, payload, "verification output")
+	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload, "verification output")
 }
 
 func ValidateDiagnose(payload Diagnose) error {
