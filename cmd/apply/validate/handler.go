@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appservice "github.com/sufield/stave/internal/app/service"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )

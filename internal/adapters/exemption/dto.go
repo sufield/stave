@@ -1,4 +1,4 @@
-package yaml
+package exemption
 
 import "github.com/sufield/stave/pkg/alpha/domain/policy"
 

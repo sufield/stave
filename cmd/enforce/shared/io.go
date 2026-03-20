@@ -1,7 +1,7 @@
 package shared
 
 import (
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"

@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
@@ -39,10 +39,10 @@ func (p *Provider) NewCELEvaluator() (policy.PredicateEval, error) {
 func NewDefaultProvider() *Provider {
 	return &Provider{
 		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
-			return obsjson.NewObservationLoader(), nil
+			return observations.NewObservationLoader(), nil
 		},
 		StdinObsRepoFunc: func(r io.Reader) (appcontracts.ObservationRepository, error) {
-			return obsjson.NewStdinObservationLoader(obsjson.NewObservationLoader(), r), nil
+			return observations.NewStdinObservationLoader(observations.NewObservationLoader(), r), nil
 		},
 		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
 			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.ResolverFunc()))
@@ -53,7 +53,7 @@ func NewDefaultProvider() *Provider {
 }
 
 // Compile-time check that ObservationLoader satisfies the composed snapshot interface.
-var _ SnapshotObservationRepository = (*obsjson.ObservationLoader)(nil)
+var _ SnapshotObservationRepository = (*observations.ObservationLoader)(nil)
 
 // SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
 type SnapshotObservationRepository interface {

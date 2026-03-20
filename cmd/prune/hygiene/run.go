@@ -7,7 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"

@@ -8,7 +8,7 @@ import (
 )
 
 func testRegistry() *Registry {
-	return NewRegistry(embeddedControls, "embedded")
+	return NewRegistry(EmbeddedFS(), "embedded")
 }
 
 func TestLoadAll(t *testing.T) {

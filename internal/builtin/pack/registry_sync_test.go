@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	ctl "github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	ctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 )
 
 func TestRegistryPacksAreValid(t *testing.T) {
@@ -75,7 +75,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 		t.Fatalf("resolve module root: %v", err)
 	}
 
-	embeddedRoot := filepath.Join(root, "internal", "adapters", "input", "controls", "builtin", "embedded")
+	embeddedRoot := filepath.Join(root, "internal", "controldata", "embedded")
 	paths, err := collectEmbeddedControlPaths(embeddedRoot)
 	if err != nil {
 		t.Fatalf("collect embedded controls: %v", err)

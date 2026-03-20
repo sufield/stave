@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"

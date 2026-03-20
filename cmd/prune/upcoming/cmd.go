@@ -6,7 +6,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"

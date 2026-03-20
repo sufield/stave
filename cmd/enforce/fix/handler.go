@@ -6,7 +6,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/adapters/output"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"

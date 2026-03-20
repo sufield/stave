@@ -10,13 +10,11 @@ import (
 	"strings"
 	"sync"
 
-	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	controlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
-
-//go:embed embedded/s3/**/*.yaml
-var embeddedControls embed.FS
 
 // Registry manages the lifecycle and retrieval of embedded control definitions.
 // It loads controls lazily on first access and returns cloned slices to prevent
@@ -126,5 +124,5 @@ func (r *Registry) isYAML(path string) bool {
 // EmbeddedFS exposes the bundled built-in control files for cross-package
 // validation and strict integrity checks.
 func EmbeddedFS() embed.FS {
-	return embeddedControls
+	return controldata.FS
 }

@@ -1,4 +1,4 @@
-package json
+package observations
 
 import (
 	"strconv"

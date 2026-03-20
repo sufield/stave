@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"testing"
 
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )

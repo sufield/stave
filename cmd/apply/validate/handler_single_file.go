@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/cli/ui"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
