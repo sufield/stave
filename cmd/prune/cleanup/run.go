@@ -8,9 +8,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
-	"github.com/sufield/stave/internal/adapters/pruner"
 	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -39,8 +39,8 @@ type Config struct {
 
 // executionPlan holds the calculated state of what will be pruned.
 type executionPlan struct {
-	allFiles       []pruner.SnapshotFile
-	candidateFiles []pruner.SnapshotFile
+	allFiles       []appcontracts.SnapshotFile
+	candidateFiles []appcontracts.SnapshotFile
 	output         report.PruneOutput
 }
 

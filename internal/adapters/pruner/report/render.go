@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/sufield/stave/internal/adapters/pruner"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -20,8 +20,8 @@ type SnapshotCleanupRenderInput struct {
 	SummaryPrefix  string
 	Action         CleanupAction
 	DryRun         bool
-	AllFiles       []pruner.SnapshotFile
-	CandidateFiles []pruner.SnapshotFile
+	AllFiles       []appcontracts.SnapshotFile
+	CandidateFiles []appcontracts.SnapshotFile
 	OlderThan      time.Duration
 	KeepMin        int
 	Tier           string

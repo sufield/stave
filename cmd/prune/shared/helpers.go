@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/pruner"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
@@ -27,8 +28,8 @@ type CleanupPlan struct {
 	Tier            string
 	OlderThan       time.Duration
 	KeepMin         int
-	AllFiles        []pruner.SnapshotFile
-	CandidateFiles  []pruner.SnapshotFile
+	AllFiles        []appcontracts.SnapshotFile
+	CandidateFiles  []appcontracts.SnapshotFile
 }
 
 // CleanupRunInput holds the fields shared by delete and archive resolved inputs.
@@ -45,7 +46,7 @@ type CleanupRunInput struct {
 }
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
-func ListObservationSnapshotFiles(ctx context.Context, p *compose.Provider, observationsDir string) ([]pruner.SnapshotFile, error) {
+func ListObservationSnapshotFiles(ctx context.Context, p *compose.Provider, observationsDir string) ([]appcontracts.SnapshotFile, error) {
 	loader, err := p.NewSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
@@ -58,7 +59,7 @@ func ListObservationSnapshotFiles(ctx context.Context, p *compose.Provider, obse
 }
 
 // PlanPrune determines which snapshot files should be pruned based on the given criteria.
-func PlanPrune(files []pruner.SnapshotFile, criteria retention.Criteria) []pruner.SnapshotFile {
+func PlanPrune(files []appcontracts.SnapshotFile, criteria retention.Criteria) []appcontracts.SnapshotFile {
 	items := make([]retention.Candidate, len(files))
 	for i, sf := range files {
 		items[i] = retention.Candidate{
@@ -67,7 +68,7 @@ func PlanPrune(files []pruner.SnapshotFile, criteria retention.Criteria) []prune
 		}
 	}
 	selected := retention.PlanPrune(items, criteria)
-	out := make([]pruner.SnapshotFile, 0, len(selected))
+	out := make([]appcontracts.SnapshotFile, 0, len(selected))
 	for _, item := range selected {
 		if item.Index >= 0 && item.Index < len(files) {
 			out = append(out, files[item.Index])

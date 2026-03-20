@@ -8,7 +8,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/adapters/pruner"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -132,7 +131,7 @@ func buildSnapshotStats(
 	cfg Config,
 	activeSnapshots []asset.Snapshot,
 	archiveSnapshots []asset.Snapshot,
-	files []pruner.SnapshotFile,
+	files []appcontracts.SnapshotFile,
 ) appcontracts.SnapshotStats {
 	pruneCandidates := pruneshared.PlanPrune(files, retention.Criteria{
 		Now:       cfg.Now,

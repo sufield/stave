@@ -10,10 +10,6 @@ import (
 )
 
 func TestListSnapshotFilesFlat_RejectsExcessiveFileCount(t *testing.T) {
-	old := maxSnapshotFiles
-	maxSnapshotFiles = 3
-	t.Cleanup(func() { maxSnapshotFiles = old })
-
 	dir := t.TempDir()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	for i := range 4 {
@@ -23,11 +19,10 @@ func TestListSnapshotFilesFlat_RejectsExcessiveFileCount(t *testing.T) {
 		}
 	}
 
-	loader := func(path, name string) (time.Time, error) {
-		return base, nil
-	}
-
-	_, err := ListSnapshotFilesFlat(dir, loader)
+	_, err := ListSnapshotFilesFlat(dir, ScannerOptions{
+		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MaxFiles:       3,
+	})
 	if err == nil {
 		t.Fatal("expected ErrTooManySnapshots")
 	}
@@ -37,10 +32,6 @@ func TestListSnapshotFilesFlat_RejectsExcessiveFileCount(t *testing.T) {
 }
 
 func TestListSnapshotFilesFlat_AcceptsWithinLimit(t *testing.T) {
-	old := maxSnapshotFiles
-	maxSnapshotFiles = 3
-	t.Cleanup(func() { maxSnapshotFiles = old })
-
 	dir := t.TempDir()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	for i := range 3 {
@@ -50,11 +41,12 @@ func TestListSnapshotFilesFlat_AcceptsWithinLimit(t *testing.T) {
 		}
 	}
 
-	loader := func(path, name string) (time.Time, error) {
-		return base.Add(time.Duration(name[4]-'0') * time.Hour), nil
-	}
-
-	files, err := ListSnapshotFilesFlat(dir, loader)
+	files, err := ListSnapshotFilesFlat(dir, ScannerOptions{
+		MetadataLoader: func(path, name string) (time.Time, error) {
+			return base.Add(time.Duration(name[4]-'0') * time.Hour), nil
+		},
+		MaxFiles: 3,
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -64,13 +56,8 @@ func TestListSnapshotFilesFlat_AcceptsWithinLimit(t *testing.T) {
 }
 
 func TestListSnapshotFilesRecursive_RejectsExcessiveFileCount(t *testing.T) {
-	old := maxSnapshotFiles
-	maxSnapshotFiles = 3
-	t.Cleanup(func() { maxSnapshotFiles = old })
-
 	dir := t.TempDir()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	// Spread across subdirectories to exercise the recursive walker.
 	for i := range 4 {
 		sub := filepath.Join(dir, fmt.Sprintf("env%d", i))
 		if err := os.MkdirAll(sub, 0o755); err != nil {
@@ -82,11 +69,10 @@ func TestListSnapshotFilesRecursive_RejectsExcessiveFileCount(t *testing.T) {
 		}
 	}
 
-	loader := func(path, name string) (time.Time, error) {
-		return base, nil
-	}
-
-	_, err := ListSnapshotFilesRecursive(dir, nil, loader)
+	_, err := ListSnapshotFilesRecursive(dir, ScannerOptions{
+		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MaxFiles:       3,
+	})
 	if err == nil {
 		t.Fatal("expected ErrTooManySnapshots")
 	}

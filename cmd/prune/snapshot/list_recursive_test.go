@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/pruner"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 // testListRecursive is a test helper that creates a loader and delegates.
-func testListRecursive(ctx context.Context, dir string, excludeDirs []string) ([]pruner.SnapshotFile, error) {
+func testListRecursive(ctx context.Context, dir string, excludeDirs []string) ([]appcontracts.SnapshotFile, error) {
 	loader, err := compose.NewDefaultProvider().NewSnapshotRepo()
 	if err != nil {
 		return nil, err
