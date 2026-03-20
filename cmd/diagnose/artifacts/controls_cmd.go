@@ -9,7 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
-	"github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/app/catalog"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"

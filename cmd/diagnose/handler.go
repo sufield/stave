@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/adapters/output"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	apptrace "github.com/sufield/stave/internal/app/trace"

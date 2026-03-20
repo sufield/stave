@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	ctl "github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	ctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 )
 
 func testRegistry(t *testing.T) *Registry {
@@ -90,7 +90,7 @@ packs:
       - CTL.S3.MISSING.999
 controls:
   CTL.S3.PUBLIC.001:
-    path: internal/adapters/input/controls/builtin/embedded/s3/CTL.S3.PUBLIC.001.yaml
+    path: internal/controldata/embedded/s3/CTL.S3.PUBLIC.001.yaml
     summary: Public access blocked
 `))
 	if err == nil {
@@ -118,7 +118,7 @@ packs:
       - CTL.S3.PUBLIC.001
 controls:
   CTL.S3.PUBLIC.001:
-    path: internal/adapters/input/controls/builtin/embedded/s3/public/DOES_NOT_EXIST.yaml
+    path: internal/controldata/embedded/s3/public/DOES_NOT_EXIST.yaml
     summary: Public access blocked
 `))
 	if err != nil {

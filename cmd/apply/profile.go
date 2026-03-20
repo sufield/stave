@@ -9,8 +9,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/observations"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -80,7 +80,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	snapshots, err := obsjson.LoadBundle(cfg.InputFile)
+	snapshots, err := observations.LoadBundle(cfg.InputFile)
 	if err != nil {
 		return err
 	}

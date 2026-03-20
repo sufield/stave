@@ -11,7 +11,7 @@ import (
 
 	"github.com/sufield/stave/internal/cli/ui"
 
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	diagprompt "github.com/sufield/stave/internal/app/diagnose/prompt"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"

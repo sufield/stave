@@ -10,9 +10,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
-	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	obsjson "github.com/sufield/stave/internal/adapters/input/observations/json"
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/observations"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -151,7 +151,7 @@ func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appc
 		return b.Provider.NewStdinObsRepo(os.Stdin)
 	}
 
-	loader := obsjson.NewObservationLoader()
+	loader := observations.NewObservationLoader()
 
 	if b.Opts.IntegrityManifest != "" {
 		loader.ConfigureIntegrityCheck(b.Opts.IntegrityManifest, b.Opts.IntegrityPublicKey)

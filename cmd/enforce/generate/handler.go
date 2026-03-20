@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	outenforce "github.com/sufield/stave/internal/adapters/output/enforcement"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"

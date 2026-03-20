@@ -15,7 +15,6 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"gopkg.in/yaml.v3"
 )
 
 // SchemaValidator validates raw control YAML against the contract schema.
@@ -122,11 +121,10 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 		return policy.ControlDefinition{}, fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 
-	var dto yamlControlDefinition
-	if err := yaml.Unmarshal(data, &dto); err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("yaml parse error: %w", err)
+	ctl, unmarshalErr := UnmarshalControlDefinition(data)
+	if unmarshalErr != nil {
+		return policy.ControlDefinition{}, fmt.Errorf("yaml parse error: %w", unmarshalErr)
 	}
-	ctl := controlDefinitionToDomain(dto)
 
 	if err := l.enrichAndPrepare(&ctl); err != nil {
 		return policy.ControlDefinition{}, err

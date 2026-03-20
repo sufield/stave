@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	ctlbuiltin "github.com/sufield/stave/internal/adapters/input/controls/builtin"
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"

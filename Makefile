@@ -19,7 +19,7 @@ SCHEMA_DST=internal/contracts/schema/embedded
 
 # Control sync (canonical controls → embedded runtime copy)
 CONTROL_SRC=controls
-CONTROL_DST=internal/adapters/input/controls/builtin/embedded
+CONTROL_DST=internal/controldata/embedded
 
 # Version from VERSION file
 VERSION=$(shell cat VERSION)
@@ -246,11 +246,11 @@ imports-check:
 
 ## fuzz: Run Go native fuzz tests (30s per target)
 fuzz: sync-schemas sync-controls
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/s3/policy/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/input/observations/json/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./pkg/alpha/domain/s3/policy/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/observations/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/contracts/validator/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/predicate/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/domain/kernel/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./pkg/alpha/domain/predicate/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./pkg/alpha/domain/kernel/
 
 ## help: Show this help
 help:
