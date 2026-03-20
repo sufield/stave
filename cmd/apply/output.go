@@ -1,11 +1,14 @@
 package apply
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
@@ -73,4 +76,24 @@ func (r *Reporter) printReadinessIssue(issue validation.Issue) {
 	if cmd := strings.TrimSpace(issue.Command); cmd != "" {
 		fmt.Fprintf(r.Stdout, "    Command: %s\n", cmd)
 	}
+}
+
+// decorateError maps domain-specific errors to user-facing remediation hints.
+// This is presentation logic — it translates domain errors into CLI guidance.
+func decorateError(err error) error {
+	var hint error
+	switch {
+	case errors.Is(err, appeval.ErrNoControls):
+		hint = ui.ErrHintNoControls
+	case errors.Is(err, appeval.ErrNoSnapshots):
+		hint = ui.ErrHintNoSnapshots
+	case errors.Is(err, appeval.ErrSourceTypeMissing),
+		errors.Is(err, appeval.ErrSourceTypeUnsupported):
+		hint = ui.ErrHintSourceType
+	case errors.Is(err, contractvalidator.ErrSchemaValidationFailed):
+		hint = ui.ErrHintSchemaValidation
+	default:
+		return err
+	}
+	return ui.EvaluateErrorWithHint(ui.WithHint(err, hint))
 }
