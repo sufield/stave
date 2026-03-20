@@ -55,23 +55,25 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 
 	a, err := b.buildAdapters()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build adapters: %w", err)
 	}
 
 	exemptionCfg, err := LoadExemptionConfig(b.Opts.ExemptionFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load exemption config: %w", err)
 	}
 
-	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
-	if err != nil {
-		return nil, fmt.Errorf("load project config: %w", err)
+	// Load project config once — both the parsed config and its path are
+	// needed downstream (path for git audit, config for evaluation input).
+	projCfg, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
+	if cfgErr != nil {
+		return nil, fmt.Errorf("load project config: %w", cfgErr)
 	}
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
 
-	projCfgInput, projCfgErr := b.buildProjectConfig()
+	projCfgInput, projCfgErr := b.buildProjectConfigFromLoaded(projCfg)
 	if projCfgErr != nil {
-		return nil, fmt.Errorf("load project config: %w", projCfgErr)
+		return nil, fmt.Errorf("resolve project config: %w", projCfgErr)
 	}
 
 	celEval, celErr := stavecel.NewPredicateEval()
@@ -117,16 +119,16 @@ type adapters struct {
 func (b *Builder) buildAdapters() (adapters, error) {
 	format, err := ui.ParseOutputFormat(b.Opts.Format)
 	if err != nil {
-		return adapters{}, err
+		return adapters{}, fmt.Errorf("parse output format: %w", err)
 	}
 	marshaler, err := b.Provider.NewFindingWriter(format, b.IsJSON)
 	if err != nil {
-		return adapters{}, err
+		return adapters{}, fmt.Errorf("create finding writer: %w", err)
 	}
 
 	obsLoader, err := b.buildObservationLoader(b.Params.source)
 	if err != nil {
-		return adapters{}, err
+		return adapters{}, fmt.Errorf("create observation loader: %w", err)
 	}
 
 	ctlLoader, err := b.Provider.NewControlRepo()
@@ -164,18 +166,21 @@ func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appc
 	return loader, nil
 }
 
-// buildProjectConfig assembles project configuration input from the project config file.
-func (b *Builder) buildProjectConfig() (appeval.ProjectConfigInput, error) {
-	projCfg, ok, cfgErr := projconfig.FindProjectConfig()
-	if cfgErr != nil {
-		return appeval.ProjectConfigInput{}, cfgErr
-	}
-	if !ok {
+// buildProjectConfigFromLoaded assembles project configuration input from
+// an already-loaded config. This avoids duplicate I/O — the config is loaded
+// once in Build() and passed here.
+func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig) (appeval.ProjectConfigInput, error) {
+	if projCfg == nil {
 		return appeval.ProjectConfigInput{}, nil
 	}
 
 	builtinRegistry := ctlbuiltin.NewRegistry(ctlbuiltin.EmbeddedFS(), "embedded")
-	reg, _ := pack.NewEmbeddedRegistry()
+
+	reg, err := pack.NewEmbeddedRegistry()
+	if err != nil {
+		return appeval.ProjectConfigInput{}, fmt.Errorf("initialize embedded pack registry: %w", err)
+	}
+
 	return appeval.ProjectConfigInput{
 		Exceptions:          b.mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
