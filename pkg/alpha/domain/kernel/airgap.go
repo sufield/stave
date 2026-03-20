@@ -38,6 +38,9 @@ func DefaultPolicy() AirgapPolicy {
 			"internal/adapters/govulncheck/runner.go": {
 				`"os/exec"`: {},
 			},
+			"internal/cli/ui/template.go": {
+				`"text/template"`: {},
+			},
 		},
 		bannedCredentialKeys: []string{
 			"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
