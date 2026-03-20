@@ -10,12 +10,14 @@ import (
 	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
-// PlanEntry is a type alias for the domain snapshot PlanEntry.
-type PlanEntry = snapshotdomain.PlanEntry
+// EntryProcessor handles the filesystem action for a single plan entry.
+type EntryProcessor interface {
+	Process(entry snapshotdomain.PlanEntry) error
+}
 
 // SnapshotPlanApplyInput defines apply inputs for snapshot plan execution.
 type SnapshotPlanApplyInput struct {
-	Entries          []PlanEntry
+	Entries          []snapshotdomain.PlanEntry
 	ObservationsRoot string
 	ArchiveDir       string
 	AllowSymlink     bool
@@ -30,72 +32,99 @@ type SnapshotPlanApplyResult struct {
 
 // ApplySnapshotPlan executes snapshot plan actions against the filesystem.
 func ApplySnapshotPlan(in SnapshotPlanApplyInput) (SnapshotPlanApplyResult, error) {
-	result := SnapshotPlanApplyResult{}
-	isArchive := in.ArchiveDir != ""
-	if isArchive {
-		if err := fsutil.SafeMkdirAll(in.ArchiveDir, fsutil.WriteOptions{
-			Perm:         0o700,
-			AllowSymlink: in.AllowSymlink,
-		}); err != nil {
-			return result, fmt.Errorf("create archive directory: %w", err)
-		}
+	processor, err := newProcessor(in)
+	if err != nil {
+		return SnapshotPlanApplyResult{}, err
 	}
 
-	// Cache parent directories already created to avoid redundant syscalls.
-	createdDirs := make(map[string]struct{})
-
+	result := SnapshotPlanApplyResult{}
 	for _, entry := range in.Entries {
 		if entry.Action == snapshotdomain.ActionKeep {
 			continue
 		}
-		if isArchive {
-			if err := archiveEntry(entry, in.ObservationsRoot, in.ArchiveDir, in.AllowSymlink, createdDirs); err != nil {
-				return result, err
-			}
-			result.Applied++
+		if err := processor.Process(entry); err != nil {
+			return result, fmt.Errorf("entry %s: %w", entry.RelPath, err)
+		}
+		result.Applied++
+		if in.ArchiveDir != "" {
 			result.Archived++
 		} else {
-			if err := deleteEntry(entry, in.ObservationsRoot); err != nil {
-				return result, err
-			}
-			result.Applied++
 			result.Deleted++
 		}
 	}
-
 	return result, nil
 }
 
-// archiveEntry moves a single snapshot file from obsRoot into archiveDir.
-// createdDirs caches parent directories already created during this run.
-func archiveEntry(entry PlanEntry, obsRoot, archiveDir string, allowSymlink bool, createdDirs map[string]struct{}) error {
-	src, err := fsutil.JoinWithinRoot(obsRoot, entry.RelPath)
+func newProcessor(in SnapshotPlanApplyInput) (EntryProcessor, error) {
+	if in.ArchiveDir != "" {
+		return newArchiver(in.ObservationsRoot, in.ArchiveDir, in.AllowSymlink)
+	}
+	return &deleter{obsRoot: in.ObservationsRoot}, nil
+}
+
+// archiver moves snapshot files from observations to an archive directory.
+type archiver struct {
+	obsRoot      string
+	archiveDir   string
+	allowSymlink bool
+	createdDirs  map[string]struct{}
+}
+
+func newArchiver(obsRoot, archiveDir string, allowSymlink bool) (*archiver, error) {
+	if err := fsutil.SafeMkdirAll(archiveDir, fsutil.WriteOptions{
+		Perm:         0o700,
+		AllowSymlink: allowSymlink,
+	}); err != nil {
+		return nil, fmt.Errorf("create archive directory: %w", err)
+	}
+	return &archiver{
+		obsRoot:      obsRoot,
+		archiveDir:   archiveDir,
+		allowSymlink: allowSymlink,
+		createdDirs:  make(map[string]struct{}),
+	}, nil
+}
+
+func (a *archiver) Process(entry snapshotdomain.PlanEntry) error {
+	src, err := fsutil.JoinWithinRoot(a.obsRoot, entry.RelPath)
 	if err != nil {
 		return fmt.Errorf("archive %s: source: %w", entry.RelPath, err)
 	}
-	dst, err := fsutil.JoinWithinRoot(archiveDir, entry.RelPath)
+	dst, err := fsutil.JoinWithinRoot(a.archiveDir, entry.RelPath)
 	if err != nil {
 		return fmt.Errorf("archive %s: destination: %w", entry.RelPath, err)
 	}
-	parentDir := filepath.Dir(dst)
-	if _, ok := createdDirs[parentDir]; !ok {
-		if err := fsutil.SafeMkdirAll(parentDir, fsutil.WriteOptions{
-			Perm:         0o700,
-			AllowSymlink: allowSymlink,
-		}); err != nil {
-			return fmt.Errorf("archive create parent for %s: %w", entry.RelPath, err)
-		}
-		createdDirs[parentDir] = struct{}{}
+	if err := a.ensureParentDir(dst, entry.RelPath); err != nil {
+		return err
 	}
-	if err := fsops.MoveSnapshotFile(src, dst, fsops.MoveOptions{AllowSymlink: allowSymlink}); err != nil {
+	if err := fsops.MoveSnapshotFile(src, dst, fsops.MoveOptions{AllowSymlink: a.allowSymlink}); err != nil {
 		return fmt.Errorf("archive %s: %w", entry.RelPath, err)
 	}
 	return nil
 }
 
-// deleteEntry removes a single snapshot file from obsRoot.
-func deleteEntry(entry PlanEntry, obsRoot string) error {
-	src, err := fsutil.JoinWithinRoot(obsRoot, entry.RelPath)
+func (a *archiver) ensureParentDir(dst, relPath string) error {
+	parentDir := filepath.Dir(dst)
+	if _, ok := a.createdDirs[parentDir]; ok {
+		return nil
+	}
+	if err := fsutil.SafeMkdirAll(parentDir, fsutil.WriteOptions{
+		Perm:         0o700,
+		AllowSymlink: a.allowSymlink,
+	}); err != nil {
+		return fmt.Errorf("archive create parent for %s: %w", relPath, err)
+	}
+	a.createdDirs[parentDir] = struct{}{}
+	return nil
+}
+
+// deleter removes snapshot files from the observations directory.
+type deleter struct {
+	obsRoot string
+}
+
+func (d *deleter) Process(entry snapshotdomain.PlanEntry) error {
+	src, err := fsutil.JoinWithinRoot(d.obsRoot, entry.RelPath)
 	if err != nil {
 		return fmt.Errorf("prune %s: %w", entry.RelPath, err)
 	}
