@@ -2,7 +2,6 @@ package apply
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -14,7 +13,6 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
-	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
@@ -73,27 +71,21 @@ func runStandardApply(ctx context.Context, p *compose.Provider, opts *ApplyOptio
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
-	if plan != nil {
-		logging.SetDefaultLogger(cmdutil.SetupLoggingWithRunID(
-			logging.DefaultLogger(),
-			plan.ObservationsHash.String(),
-			plan.ControlsHash.String(),
-		))
-	}
 
-	results, err := executeEvaluation(ctx, p, opts, params, sio, plan)
-	if err != nil {
-		return decorateError(err)
+	logger := logging.DefaultLogger()
+	if plan != nil {
+		logger = cmdutil.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
 	}
 
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
-	rep := &Reporter{
-		Stdout:  sio.Stdout,
-		Stderr:  sio.Stderr,
-		Runtime: rt,
-		Quiet:   sio.Quiet,
+
+	results, err := executeEvaluation(ctx, p, opts, params, sio, plan, rt, logger)
+	if err != nil {
+		return decorateError(err)
 	}
+
+	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
 	return rep.ReportApply(results)
 }
 
@@ -104,9 +96,9 @@ func executeEvaluation(
 	params applyParams,
 	sio standardIO,
 	plan *appeval.EvaluationPlan,
+	rt *ui.Runtime,
+	logger *slog.Logger,
 ) (EvaluateResult, error) {
-	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
-	rt.Quiet = sio.Quiet
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
@@ -133,7 +125,7 @@ func executeEvaluation(
 		return EvaluateResult{}, err
 	}
 
-	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, slog.Default()); err != nil {
+	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, logger); err != nil {
 		return EvaluateResult{}, err
 	}
 
@@ -158,23 +150,4 @@ func runStrictIntegrityCheck(strict bool, stdout, stderr io.Writer) error {
 		return ui.WithNextCommand(err, "stave packs list")
 	}
 	return nil
-}
-
-// decorateError maps domain-specific errors to user-facing remediation hints.
-func decorateError(err error) error {
-	var hint error
-	switch {
-	case errors.Is(err, appeval.ErrNoControls):
-		hint = ui.ErrHintNoControls
-	case errors.Is(err, appeval.ErrNoSnapshots):
-		hint = ui.ErrHintNoSnapshots
-	case errors.Is(err, appeval.ErrSourceTypeMissing),
-		errors.Is(err, appeval.ErrSourceTypeUnsupported):
-		hint = ui.ErrHintSourceType
-	case errors.Is(err, contractvalidator.ErrSchemaValidationFailed):
-		hint = ui.ErrHintSchemaValidation
-	default:
-		return err
-	}
-	return ui.EvaluateErrorWithHint(ui.WithHint(err, hint))
 }
