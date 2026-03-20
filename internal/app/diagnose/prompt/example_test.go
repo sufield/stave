@@ -3,13 +3,18 @@ package prompt_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	diagprompt "github.com/sufield/stave/internal/diagnose/prompt"
+
+	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
+	diagprompt "github.com/sufield/stave/internal/app/diagnose/prompt"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
@@ -35,20 +40,58 @@ func writeEvalFile(t *testing.T, dir string) string {
 	return path
 }
 
+func testLoadEval(path string) (*evaluation.Result, error) {
+	return evaljson.NewLoader().LoadFromFile(path)
+}
+
+func testBuildPrompt(
+	assetID string,
+	controlsByID map[kernel.ControlID]*policy.ControlDefinition,
+	assetPropsJSON string,
+	matched []evaluation.Finding,
+) diagprompt.PromptOutput {
+	builder := &promptout.PromptBuilder{
+		AssetID:        assetID,
+		ControlsByID:   controlsByID,
+		AssetPropsJSON: assetPropsJSON,
+	}
+	data := builder.Build(matched)
+	rendered := promptout.RenderPrompt(data)
+
+	findingIDs := make([]kernel.ControlID, len(data.Findings))
+	for i, f := range data.Findings {
+		findingIDs[i] = f.ControlID
+	}
+	return diagprompt.PromptOutput{
+		Rendered:   rendered,
+		FindingIDs: findingIDs,
+		AssetID:    data.AssetID,
+	}
+}
+
+func testContext(ctlByID map[kernel.ControlID]*policy.ControlDefinition, propsJSON string) diagprompt.DiagnosticContext {
+	return diagprompt.DiagnosticContext{
+		ControlsByID:   ctlByID,
+		AssetPropsJSON: propsJSON,
+		LoadEval:       testLoadEval,
+		BuildPrompt:    testBuildPrompt,
+	}
+}
+
 func TestNewRunnerRun(t *testing.T) {
 	dir := t.TempDir()
 	evalFile := writeEvalFile(t, dir)
 
-	dctx := diagprompt.DiagnosticContext{
-		ControlsByID: map[kernel.ControlID]*policy.ControlDefinition{
+	dctx := testContext(
+		map[kernel.ControlID]*policy.ControlDefinition{
 			"CTL.S3.PUBLIC.001": {
 				ID:          "CTL.S3.PUBLIC.001",
 				Name:        "S3 Public Access",
 				Description: "S3 bucket allows public read access",
 			},
 		},
-		AssetPropsJSON: `{"public_access": true}`,
-	}
+		`{"public_access": true}`,
+	)
 
 	var stdout, stderr bytes.Buffer
 	runner := diagprompt.NewRunner(dctx)
@@ -79,7 +122,8 @@ func TestNewRunnerRunNoFindings(t *testing.T) {
 	dir := t.TempDir()
 	evalFile := writeEvalFile(t, dir)
 
-	runner := diagprompt.NewRunner(diagprompt.DiagnosticContext{})
+	dctx := testContext(nil, "")
+	runner := diagprompt.NewRunner(dctx)
 	err := runner.Run(context.Background(), diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::nonexistent-bucket",
@@ -92,7 +136,8 @@ func TestNewRunnerRunNoFindings(t *testing.T) {
 }
 
 func TestNewRunnerRunValidation(t *testing.T) {
-	runner := diagprompt.NewRunner(diagprompt.DiagnosticContext{})
+	dctx := testContext(nil, "")
+	runner := diagprompt.NewRunner(dctx)
 
 	t.Run("missing eval file", func(t *testing.T) {
 		err := runner.Run(context.Background(), diagprompt.Config{
@@ -121,14 +166,15 @@ func TestNewRunnerRunJSON(t *testing.T) {
 	dir := t.TempDir()
 	evalFile := writeEvalFile(t, dir)
 
-	dctx := diagprompt.DiagnosticContext{
-		ControlsByID: map[kernel.ControlID]*policy.ControlDefinition{
+	dctx := testContext(
+		map[kernel.ControlID]*policy.ControlDefinition{
 			"CTL.S3.PUBLIC.001": {
 				ID:   "CTL.S3.PUBLIC.001",
 				Name: "S3 Public Access",
 			},
 		},
-	}
+		"",
+	)
 
 	var stdout bytes.Buffer
 	runner := diagprompt.NewRunner(dctx)
@@ -148,5 +194,24 @@ func TestNewRunnerRunJSON(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Errorf("JSON output missing %q", want)
 		}
+	}
+}
+
+func TestNewRunnerRunLoadError(t *testing.T) {
+	dctx := diagprompt.DiagnosticContext{
+		LoadEval: func(string) (*evaluation.Result, error) {
+			return nil, fmt.Errorf("simulated load error")
+		},
+		BuildPrompt: testBuildPrompt,
+	}
+	runner := diagprompt.NewRunner(dctx)
+	err := runner.Run(context.Background(), diagprompt.Config{
+		EvalFile: "nonexistent.json",
+		AssetID:  "x",
+		Stdout:   &bytes.Buffer{},
+		Stderr:   &bytes.Buffer{},
+	})
+	if err == nil || !strings.Contains(err.Error(), "simulated load error") {
+		t.Fatalf("expected load error, got: %v", err)
 	}
 }

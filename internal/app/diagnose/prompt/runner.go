@@ -5,16 +5,32 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/samber/lo"
-
-	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
-	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 )
+
+// EvalLoadFunc loads an evaluation result from a file path.
+// Injected by the cmd layer (typically backed by evaljson.NewLoader).
+type EvalLoadFunc func(path string) (*evaluation.Result, error)
+
+// PromptOutput contains the assembled prompt and metadata.
+type PromptOutput struct {
+	Rendered   string
+	FindingIDs []kernel.ControlID
+	AssetID    string
+}
+
+// BuildFunc assembles matched findings into a rendered prompt.
+// Injected by the cmd layer (typically backed by adapters/output/prompt).
+type BuildFunc func(
+	assetID string,
+	controlsByID map[kernel.ControlID]*policy.ControlDefinition,
+	assetPropsJSON string,
+	matched []evaluation.Finding,
+) PromptOutput
 
 // DiagnosticContext holds pre-loaded state the prompt generator needs
 // to produce rich, context-aware prompts.
@@ -26,6 +42,12 @@ type DiagnosticContext struct {
 	// AssetPropsJSON is the JSON-serialized asset properties from the
 	// latest observation snapshot. Empty if observations were not provided.
 	AssetPropsJSON string
+
+	// LoadEval loads an evaluation result from a file path.
+	LoadEval EvalLoadFunc
+
+	// BuildPrompt assembles findings into a rendered prompt.
+	BuildPrompt BuildFunc
 }
 
 // Config defines parameters for generating an LLM prompt.
@@ -56,7 +78,7 @@ func NewRunner(dctx DiagnosticContext) *Runner {
 }
 
 // Run generates an LLM prompt based on evaluation findings.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *Runner) Run(_ context.Context, cfg Config) error {
 	if cfg.EvalFile == "" {
 		return fmt.Errorf("--evaluation-file is required")
 	}
@@ -64,24 +86,22 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("--asset-id is required")
 	}
 
-	evalResult, err := evaljson.NewLoader().LoadFromFile(cfg.EvalFile)
+	evalResult, err := r.Ctx.LoadEval(cfg.EvalFile)
 	if err != nil {
 		return fmt.Errorf("load evaluation file: %w", err)
 	}
 
 	assetID := asset.ID(cfg.AssetID)
-	matched := lo.Filter(evalResult.Findings, func(v evaluation.Finding, _ int) bool { return v.AssetID == assetID })
+	var matched []evaluation.Finding
+	for _, f := range evalResult.Findings {
+		if f.AssetID == assetID {
+			matched = append(matched, f)
+		}
+	}
 	if len(matched) == 0 {
 		return fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
 	}
 
-	builder := &promptout.PromptBuilder{
-		AssetID:        cfg.AssetID,
-		ControlsByID:   r.Ctx.ControlsByID,
-		AssetPropsJSON: r.Ctx.AssetPropsJSON,
-	}
-	data := builder.Build(matched)
-	rendered := promptout.RenderPrompt(data)
-
-	return r.write(cfg, rendered, data)
+	out := r.Ctx.BuildPrompt(cfg.AssetID, r.Ctx.ControlsByID, r.Ctx.AssetPropsJSON, matched)
+	return r.write(cfg, out)
 }
