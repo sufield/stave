@@ -9,7 +9,7 @@ import (
 // SetStore defines the data operations required for config set mutations.
 type SetStore[T any] interface {
 	LoadOrCreate() (cfg *T, path string, err error)
-	CurrentValue(cfg *T, key, path string) string
+	CurrentValue(cfg *T, key, path string) (string, bool)
 	Set(cfg *T, key, value string) error
 	Write(path string, cfg *T) error
 }
@@ -47,7 +47,10 @@ func (m *Editor[T]) Set(key, value string) (MutationResult, error) {
 		return MutationResult{}, err
 	}
 
-	oldValue := m.SetStore.CurrentValue(cfg, key, cfgPath)
+	oldValue, oldSet := m.SetStore.CurrentValue(cfg, key, cfgPath)
+	if !oldSet {
+		oldValue = "(not set)"
+	}
 
 	if err := m.SetStore.Set(cfg, key, value); err != nil {
 		return MutationResult{}, err
