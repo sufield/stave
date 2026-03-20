@@ -1,6 +1,7 @@
 package kernel
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 )
@@ -25,4 +26,23 @@ func NewVendor(raw string) (Vendor, error) {
 		return "", errors.New("vendor identifier cannot be empty")
 	}
 	return v, nil
+}
+
+// UnmarshalJSON normalizes and validates the vendor during deserialization.
+func (v *Vendor) UnmarshalJSON(b []byte) error {
+	var raw string
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	parsed, err := NewVendor(raw)
+	if err != nil {
+		return err
+	}
+	*v = parsed
+	return nil
+}
+
+// MarshalJSON serializes the vendor as its string representation.
+func (v Vendor) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.String())
 }

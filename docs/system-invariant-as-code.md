@@ -137,7 +137,7 @@ For normal adoption, teams should only change:
 
 Teams should not need to modify:
 
-- `internal/domain` evaluator logic
+- `pkg/alpha/domain` evaluator logic
 - app use-case orchestration
 - input/output adapters
 
