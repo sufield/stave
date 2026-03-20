@@ -1,37 +1,6 @@
 package version
 
-import "runtime/debug"
-
-// Build metadata defaults. Release builds override these with ldflags.
-var (
-	Version    = "dev"
-	Prerelease = ""
-	Commit     = ""
-	Date       = ""
-	BuiltBy    = ""
-)
-
-func init() {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return
-	}
-	dirty := false
-	for _, setting := range info.Settings {
-		switch setting.Key {
-		case "vcs.revision":
-			if Commit == "" {
-				Commit = setting.Value
-			}
-		case "vcs.time":
-			if Date == "" {
-				Date = setting.Value
-			}
-		case "vcs.modified":
-			dirty = setting.Value == "true"
-		}
-	}
-	if dirty && Commit != "" {
-		Commit += "-dirty"
-	}
-}
+// Version is the build version string. Release builds override it with ldflags:
+//
+//	go build -ldflags "-X github.com/sufield/stave/internal/version.Version=0.0.3"
+var Version = "dev"

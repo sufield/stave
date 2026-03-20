@@ -1,0 +1,13 @@
+dsl_version: ctrl.v1
+id: CTL.TEST.GOLDEN.001
+name: Golden File Test Control
+description: Minimal valid control for schema compatibility testing.
+type: unsafe_state
+severity: low
+scope_tags:
+  - test
+unsafe_predicate:
+  any:
+    - field: properties.test_field
+      op: eq
+      value: true
