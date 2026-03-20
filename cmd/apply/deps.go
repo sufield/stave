@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/exemption"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -25,6 +27,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // Builder encapsulates the cmd-layer resolution needed before building
@@ -72,7 +75,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		return nil, fmt.Errorf("build adapters: %w", err)
 	}
 
-	exemptionCfg, err := LoadExemptionConfig(b.Opts.ExemptionFile)
+	exemptionCfg, err := loadExemptionConfig(b.Opts.ExemptionFile)
 	if err != nil {
 		return nil, fmt.Errorf("load exemption config: %w", err)
 	}
@@ -227,4 +230,16 @@ func (b *Builder) wrapError(err error) error {
 		return ui.WithHint(err, ui.ErrHintControlSourceConflict)
 	}
 	return err
+}
+
+// loadExemptionConfig loads exemptions from a YAML file. Returns nil if path is empty.
+func loadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, nil
+	}
+	cfg, err := exemption.NewLoader().Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("loading exemptions from %q: %w", path, err)
+	}
+	return cfg, nil
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	appapply "github.com/sufield/stave/internal/app/apply"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -142,7 +143,7 @@ func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 	}
 
 	return appeval.Options{
-		ContextName:        ResolveContextName(root, selectedContext),
+		ContextName:        appapply.ResolveContextName(root, selectedContext),
 		ProjectRoot:        root,
 		ControlsDir:        o.ControlsDir,
 		ConfigPath:         cfgPath,

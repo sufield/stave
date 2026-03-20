@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
+	appartifacts "github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/app/catalog"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
@@ -65,7 +66,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			return formatOutput(stdout, cfg, rows)
+			return appartifacts.FormatControlOutput(stdout, cfg, rows)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
