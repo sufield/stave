@@ -30,67 +30,70 @@ stave/
 │       ├── apply/          apply command tree (handler, options, deps, validate, verify)
 │       ├── diagnose/       diagnose command tree (artifacts, docs, report)
 │       ├── enforce/        CI commands (baseline, cidiff, diff, fix, gate, graph)
-│       ├── ingest/         ingest command + profile dispatch
+│       ├── inspect/        inspect command tree (policy, acl, exposure, risk, compliance, aliases)
 │       ├── initcmd/        init command (alias, config, context, env)
-│       ├── prune/          snapshot lifecycle (archive, cleanup, hygiene, upcoming)
-│       ├── bugreport/      bug-report command + doctor checks
-│       ├── fixtures/       demo command + fixture data
-│       ├── templates/      Go template helpers
+│       ├── prune/          snapshot lifecycle (archive, cleanup, hygiene, upcoming, plan)
+│       ├── bugreport/      bug-report command
 │       └── cmdutil/        Shared CLI utilities
 │
+├── pkg/alpha/domain/       Core business logic (no I/O, importable by adopters)
+│   ├── evaluation/         Evaluation engine (engine, exposure, diagnosis, risk, remediation)
+│   ├── snapshot/           Snapshot retention planning
+│   ├── diag/               Diagnose engine
+│   ├── predicate/          Predicate operators (15 ops)
+│   ├── asset/              Asset model
+│   ├── kernel/             Core domain types
+│   ├── policy/             Policy types
+│   ├── retention/          Retention policies
+│   ├── ports/              Port interfaces
+│   ├── maps/               Map parsing utilities
+│   ├── s3/                 S3-specific analysis (policy, ACL)
+│   └── validation/         Domain validation rules
+│
 ├── internal/
-│   ├── domain/             Core business logic (no I/O)
-│   │   ├── evaluation/     Evaluation engine (engine, exposure, diagnosis, risk, remediation)
-│   │   ├── diag/           Diagnose engine
-│   │   ├── predicate/      Predicate operators (15 ops)
-│   │   ├── asset/          Asset model
-│   │   ├── kernel/         Core domain types
-│   │   ├── policy/         Policy types
-│   │   ├── ports/          Port interfaces
-│   │   ├── securityaudit/  Security audit report types
-│   │   └── validation/     Domain validation rules
-│   │
 │   ├── app/                Use-case orchestration
 │   │   ├── eval/           Wire inputs → evaluator → output (pipeline)
 │   │   ├── validation/     Wire inputs → schema checks
 │   │   ├── diagnose/       Wire inputs → diagnostics
 │   │   ├── capabilities/   Capabilities query
-│   │   ├── contracts/      Port interfaces (FindingMarshaler, EnrichFunc)
+│   │   ├── contracts/      Port interfaces (FindingMarshaler, EnrichFunc, SnapshotFile)
 │   │   ├── service/        Shared app services (evaluation, readiness)
 │   │   ├── workflow/       Envelope assembly
-│   │   ├── ingest/         Snapshot ingestion
 │   │   ├── hygiene/        Snapshot lifecycle reporting
-│   │   ├── project/        Project init and enforcement runners
-│   │   ├── securityaudit/  Security audit builders
-│   │   └── support/        Bug report and diagnose runners
+│   │   └── prune/          Snapshot planning orchestration
 │   │
 │   ├── adapters/
-│   │   ├── input/          File loaders (JSON observations, YAML controls, S3 extractors)
-│   │   ├── output/         JSON/text/SARIF output marshalers
-│   │   ├── gitinfo/        Git repository metadata
-│   │   └── govulncheck/    Vulnerability checking
+│   │   ├── controls/       Control loaders (builtin embedded, YAML filesystem)
+│   │   ├── observations/   JSON observation snapshot loaders
+│   │   ├── evaluation/     Evaluation result loaders
+│   │   ├── exemption/      Exemption config loaders
+│   │   ├── pruner/         Snapshot filesystem operations (archive, delete, plan apply)
+│   │   ├── output/         JSON/text/SARIF output marshalers, DTOs, report rendering
+│   │   └── gitinfo/        Git repository metadata
 │   │
+│   ├── controldata/        Embedded control YAML files (synced from controls/)
 │   ├── contracts/          Schema validation (obs.v0.1, ctrl.v1 via JSON Schema)
+│   ├── cel/                CEL predicate compiler and evaluator
 │   ├── cli/                CLI error types, config, and UI utilities
-│   ├── sanitize/           --sanitize implementation
+│   ├── sanitize/           --sanitize implementation + scrub profiles
 │   ├── safetyenvelope/     Output envelope types and validation
 │   ├── integrity/          Manifest integrity verification
 │   ├── compliance/         Compliance mapping
 │   ├── config/             Configuration loading
-│   ├── builtin/            Embedded control packs and predicates
+│   ├── builtin/            Embedded control packs and predicate aliases
 │   └── platform/           Platform utilities (crypto, fsutil, logging, state)
 │
 ├── schemas/                Schema source of truth (JSON Schema files)
 ├── controls/s3/            S3 control packs (YAML files)
-└── examples/               Example observations and controls
+└── testdata/               Test fixtures and e2e scenarios
 ```
 
 ### Layer Rules
 
-- **`domain/`** contains pure business logic with no file I/O, no CLI dependencies, and no external packages beyond the standard library.
-- **`app/`** orchestrates use cases by wiring domain logic to adapters. It handles the flow: load inputs → validate → apply → format output.
-- **`adapters/`** handle all I/O: reading files, parsing formats, writing output.
-- **`cmd/`** handles only CLI concerns: flag parsing, exit codes, error formatting.
+- **`pkg/alpha/domain/`** contains pure business logic with no file I/O, no CLI dependencies, and no `internal/` imports. Importable by adopters.
+- **`internal/app/`** orchestrates use cases by wiring domain logic to adapters. It has zero direct dependencies on the adapter layer (enforced by architecture tests with zero exceptions).
+- **`internal/adapters/`** handle all I/O: reading files, parsing formats, writing output, filesystem operations.
+- **`cmd/`** handles only CLI concerns: flag parsing, exit codes, error formatting. It wires adapters into the app layer via dependency injection.
 
 ## Trust Boundaries
 
@@ -136,14 +139,15 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 
 | Command | Entry Point | App Layer | Domain Layer |
 |---------|-------------|-----------|--------------|
-| `apply` | `cmd/apply/` | `app/eval/` | `domain/evaluation/` |
+| `apply` | `cmd/apply/` | `app/eval/` | `pkg/alpha/domain/evaluation/` |
 | `validate` | `cmd/apply/validate/` | `app/validation/` | `contracts/` |
-| `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `domain/diag/` |
-| _(extraction is external)_ | — | — | Use an extractor to produce `obs.v0.1` JSON |
+| `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `pkg/alpha/domain/diag/` |
 | `verify` | `cmd/apply/verify/` | — | Before/after comparison |
+| `inspect *` | `cmd/inspect/` | — | `pkg/alpha/domain/s3/`, `evaluation/exposure/`, `evaluation/risk/` |
+| `snapshot plan` | `cmd/prune/snapshot/` | `app/prune/snapshot/` | `pkg/alpha/domain/snapshot/` |
 | `snapshot hygiene` | `cmd/prune/hygiene/` | `app/hygiene/` | Weekly lifecycle report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
-| `capabilities` | `cmd/commands.go` | `app/capabilities/` | — |
+| `capabilities` | `cmd/commands_dev.go` | `app/capabilities/` | — |
 | `graph coverage` | `cmd/enforce/graph/` | — | Predicate matching |
 
 ## Schema Lifecycle

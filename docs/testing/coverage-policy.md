@@ -15,7 +15,7 @@ The following packages are required to meet minimum statement coverage on every 
 
 - `./internal/app`: **>= 25%**
 - `./internal/predicate`: **>= 40%**
-- `./internal/domain`: **>= 70%**
+- `./pkg/alpha/domain`: **>= 70%**
 
 The gate is implemented in `.github/workflows/coverage.yml` under
 `Enforce core package coverage policy`.

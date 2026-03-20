@@ -222,8 +222,9 @@ func TestObservationLoader_RejectsTopLevelIdentityFields(t *testing.T) {
 	}
 }
 
-// TestObservationLoader_RejectsWhitespaceVendor tests the adapter-level
-// semantic normalization pass after schema validation.
+// TestObservationLoader_RejectsWhitespaceVendor verifies that a whitespace-only
+// vendor is rejected. With Vendor.UnmarshalJSON, this now fails during unmarshal
+// rather than in a separate normalization pass.
 func TestObservationLoader_RejectsWhitespaceVendor(t *testing.T) {
 	dir := t.TempDir()
 	content := `{
@@ -240,10 +241,10 @@ func TestObservationLoader_RejectsWhitespaceVendor(t *testing.T) {
 	loader := NewObservationLoader()
 	_, err := loader.LoadSnapshots(context.Background(), dir)
 	if err == nil {
-		t.Fatal("expected semantic validation error for whitespace vendor")
+		t.Fatal("expected error for whitespace vendor")
 	}
-	if !strings.Contains(err.Error(), "invalid observation semantics") {
-		t.Errorf("error should mention semantic validation, got: %s", err.Error())
+	if !strings.Contains(err.Error(), "vendor") {
+		t.Errorf("error should mention vendor, got: %s", err.Error())
 	}
 }
 

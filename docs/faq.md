@@ -281,7 +281,7 @@ The dev binary provides tools for **authoring, debugging, and inspecting** the c
 
 **Deep debugging** — `trace`, `prompt`. When a control produces an unexpected finding, `trace` walks you through the predicate evaluation step-by-step for a single asset. `prompt` generates an LLM-ready context from results. These are investigation tools, not operational ones.
 
-**Security posture** — `security-audit`, `bug-report`. Security-audit generates SBOM, vulnerability scans, and compliance matrices for the tool itself. Bug-report collects a sanitized diagnostic bundle. Both produce artifacts about Stave, not about your infrastructure.
+**Supportability** — `bug-report`, `doctor`. Bug-report collects a sanitized diagnostic bundle. Doctor checks local environment readiness. Both produce artifacts about Stave, not about your infrastructure.
 
 **Introspection** — `schemas`, `capabilities`, `version` (verbose), `doctor`. These answer "what does this build of Stave support?" — schema versions, source types, pack metadata, local environment readiness. Useful when onboarding, upgrading, or filing issues.
 
@@ -387,12 +387,12 @@ Build and debug the evaluation system. Used at a workstation, not in a pipeline.
 | `capabilities` | Supported schemas, source types, packs |
 | `version` | Verbose version with schema and lockfile details |
 
-**Security posture** — audit Stave itself and collect diagnostics.
+**Supportability** — diagnostics and environment checks.
 
 | Command | Purpose |
 |---|---|
-| `security-audit` | SBOM, vulnerability scan, compliance matrix |
 | `bug-report` | Collect sanitized diagnostic bundle |
+| `doctor` | Check local environment readiness |
 
 **Productivity** — shortcuts and documentation lookup.
 

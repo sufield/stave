@@ -212,3 +212,154 @@ func TestNormalizeProperties_EmptyMap(t *testing.T) {
 		t.Errorf("empty map should stay empty")
 	}
 }
+
+func TestNormalizeValue_TableDriven(t *testing.T) {
+	tests := []struct {
+		name string
+		in   any
+		want any
+	}{
+		// Booleans
+		{"true lowercase", "true", true},
+		{"false lowercase", "false", false},
+		{"TRUE uppercase", "TRUE", true},
+		{"FALSE uppercase", "FALSE", false},
+		{"true padded", "  true  ", true},
+		{"false padded", " false ", false},
+		{"true trailing space", "true ", true},
+
+		// Numbers — standard
+		{"integer", "42", float64(42)},
+		{"negative integer", "-1", float64(-1)},
+		{"zero", "0", float64(0)},
+		{"decimal", "3.14", float64(3.14)},
+		{"negative decimal", "-0.5", float64(-0.5)},
+		{"padded number", "  100  ", float64(100)},
+
+		// Numbers — scientific notation
+		{"scientific 1e10", "1e10", float64(1e10)},
+		{"scientific 2.5E3", "2.5E3", float64(2.5e3)},
+		{"scientific negative", "-1.5e-3", float64(-1.5e-3)},
+
+		// Numbers — leading zero (JSON-style, not octal)
+		{"leading zero 08", "08", float64(8)},
+		{"leading zero 007", "007", float64(7)},
+		{"dot prefix", ".5", float64(0.5)},
+
+		// Strings preserved — not numeric
+		{"s3 uri", "s3://my-bucket", "s3://my-bucket"},
+		{"arn", "arn:aws:s3:::my-bucket", "arn:aws:s3:::my-bucket"},
+		{"region", "us-east-1", "us-east-1"},
+		{"empty", "", ""},
+		{"whitespace only", "   ", "   "},
+		{"hex rejected", "0xFF", "0xFF"},
+		{"octal rejected", "0o777", "0o777"},
+		{"binary rejected", "0b1010", "0b1010"},
+		{"version string", "v1.2.3", "v1.2.3"},
+		{"uuid", "550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440000"},
+		{"ip address", "192.168.1.1", "192.168.1.1"},
+		{"date", "2026-01-15", "2026-01-15"},
+		{"mixed text", "bucket-42-prod", "bucket-42-prod"},
+
+		// Already typed — pass through
+		{"already bool true", true, true},
+		{"already bool false", false, false},
+		{"already float64", float64(3.14), float64(3.14)},
+		{"already int", 42, 42},
+		{"nil preserved", nil, nil},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeValue(tc.in)
+			if got != tc.want {
+				t.Errorf("normalizeValue(%v [%T]) = %v [%T], want %v [%T]",
+					tc.in, tc.in, got, got, tc.want, tc.want)
+			}
+		})
+	}
+}
+
+func TestNormalizeValue_DeepNesting(t *testing.T) {
+	// 4 levels deep — ensures recursion works correctly
+	m := map[string]any{
+		"l1": map[string]any{
+			"l2": map[string]any{
+				"l3": map[string]any{
+					"flag":  "true",
+					"count": "99",
+					"name":  "deep",
+				},
+			},
+		},
+	}
+	normalizeProperties(m)
+
+	deep := m["l1"].(map[string]any)["l2"].(map[string]any)["l3"].(map[string]any)
+	if deep["flag"] != true {
+		t.Errorf("deep flag: got %v (%T), want true", deep["flag"], deep["flag"])
+	}
+	if deep["count"] != float64(99) {
+		t.Errorf("deep count: got %v (%T), want 99", deep["count"], deep["count"])
+	}
+	if deep["name"] != "deep" {
+		t.Errorf("deep name: got %v, want 'deep'", deep["name"])
+	}
+}
+
+func TestNormalizeValue_SliceOfMaps(t *testing.T) {
+	m := map[string]any{
+		"items": []any{
+			map[string]any{"enabled": "true", "count": "5"},
+			map[string]any{"enabled": "false", "count": "0"},
+		},
+	}
+	normalizeProperties(m)
+
+	items := m["items"].([]any)
+	first := items[0].(map[string]any)
+	if first["enabled"] != true {
+		t.Errorf("items[0].enabled: got %v (%T)", first["enabled"], first["enabled"])
+	}
+	if first["count"] != float64(5) {
+		t.Errorf("items[0].count: got %v (%T)", first["count"], first["count"])
+	}
+	second := items[1].(map[string]any)
+	if second["enabled"] != false {
+		t.Errorf("items[1].enabled: got %v (%T)", second["enabled"], second["enabled"])
+	}
+}
+
+func TestIsNumericCandidate_EdgeCases(t *testing.T) {
+	tests := []struct {
+		input string
+		want  bool
+	}{
+		{"", false},
+		{"0", true},
+		{"-1", true},
+		{".5", true},
+		{"0xFF", false},
+		{"0o777", false},
+		{"0b1010", false},
+		{"0X1A", false},
+		{"0O755", false},
+		{"0B1111", false},
+		{"42", true},
+		{"3.14", true},
+		{"-0.5", true},
+		{"1e10", true},
+		{"abc", false},
+		{"s3://bucket", false},
+		{"us-east-1", false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			got := isNumericCandidate(tc.input)
+			if got != tc.want {
+				t.Errorf("isNumericCandidate(%q) = %v, want %v", tc.input, got, tc.want)
+			}
+		})
+	}
+}

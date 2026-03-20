@@ -34,7 +34,7 @@ Exit codes are part of the public API and will not change within a major version
 | 4 | Internal error | Yes |
 | 130 | Interrupted (SIGINT) | Yes |
 
-Exit code 1 is reserved for security-audit gating, not for violations. Exit code 3 means violations.
+Exit code 1 is not used for violations. Exit code 3 means violations.
 
 ## CLI Flag Stability
 

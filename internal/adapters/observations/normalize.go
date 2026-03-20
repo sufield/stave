@@ -2,9 +2,6 @@ package observations
 
 import (
 	"errors"
-	"fmt"
-
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
@@ -18,7 +15,12 @@ var (
 	ErrMissingTimestamp = errors.New("captured_at must be a non-zero RFC3339 timestamp")
 )
 
-// normalizeSnapshotTypes enforces domain-level type parsing after schema validation.
+// normalizeSnapshotTypes performs post-unmarshal normalization on a snapshot.
+//
+// AssetType and Vendor are already normalized during json.Unmarshal via their
+// UnmarshalJSON methods. This function handles the remaining concerns:
+//   - nil snapshot and missing timestamp validation
+//   - property value coercion (string-encoded bools/numbers from sloppy extractors)
 func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 	if snapshot == nil {
 		return ErrNilSnapshot
@@ -27,31 +29,9 @@ func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 		return ErrMissingTimestamp
 	}
 	for i := range snapshot.Assets {
-		if err := normalizeTypeAndVendor(&snapshot.Assets[i].Type, &snapshot.Assets[i].Vendor, "assets", i); err != nil {
-			return fmt.Errorf("normalize snapshot assets: %w", err)
-		}
 		if snapshot.Assets[i].Properties != nil {
 			normalizeProperties(snapshot.Assets[i].Properties)
 		}
 	}
-	for i := range snapshot.Identities {
-		if err := normalizeTypeAndVendor(&snapshot.Identities[i].Type, &snapshot.Identities[i].Vendor, "identities", i); err != nil {
-			return fmt.Errorf("normalize snapshot identities: %w", err)
-		}
-	}
-	return nil
-}
-
-func normalizeTypeAndVendor(t *kernel.AssetType, v *kernel.Vendor, label string, index int) error {
-	rt := kernel.NewAssetType(t.String())
-	if err := rt.Validate(); err != nil {
-		return fmt.Errorf("%s[%d].type: %w", label, index, err)
-	}
-	vendor, err := kernel.NewVendor(v.String())
-	if err != nil {
-		return fmt.Errorf("%s[%d].vendor: %w", label, index, err)
-	}
-	*t = rt
-	*v = vendor
 	return nil
 }

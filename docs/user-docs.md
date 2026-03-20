@@ -132,7 +132,7 @@ Use this table when you know your goal but want the fastest path to the right co
 | Visualize which controls cover which assets | `stave graph coverage --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
 | Debug why a specific control matched or didn't match an asset | `stave trace --control CTL.S3.PUBLIC.001 --observation obs/snap.json --asset-id my-bucket` | [`README.md`](../README.md) |
 | Generate a human-readable report from evaluation output | `stave report --in output/evaluation.json` | [`README.md`](../README.md) |
-| Produce an auditor-ready self-audit bundle | `stave security-audit --format markdown --out ./audit/security-report.md --out-dir ./audit/security-bundle` | [`README.md`](../README.md) |
+| Analyze a bucket policy directly | `stave inspect policy --file policy.json` | [Command Reference](command-reference.md) |
 | Extract specific fields from evaluation output | `stave apply --template '{{.Summary.Violations}} violations'` | [`README.md`](../README.md) |
 | Create a shortcut for a frequently used command | `stave alias set ev "apply --controls controls/s3 --observations observations --max-unsafe 24h"` | [`README.md`](../README.md) |
 
@@ -205,7 +205,7 @@ Stave provides these commands:
 | `apply` | Enforcement | Detect violations, produce findings |
 | `diagnose` | Explanation | Understand unexpected results |
 | `trace` | Predicate debugging | Step-by-step PASS/FAIL trace of a single control against a single asset |
-| `security-audit` | Tool self-audit | Generate enterprise-ready security evidence bundle and gate by severity |
+| `inspect` | Domain analysis | Low-level policy, ACL, exposure, risk, and compliance analysis |
 | `doctor` | Environment readiness | Check prerequisites before first run |
 | `init` | Project scaffolding | Create project structure with `--profile`, `--dir`, `--capture-cadence` |
 | `plan` | Readiness gate | Confirm prerequisites and input readiness before apply |
@@ -739,75 +739,40 @@ stave capabilities
 - `path`: Directory containing pack controls
 - `version`: Pack version
 
-**Security audit capabilities:** The `security_audit` field lists supported formats, SBOM options, vulnerability evidence sources, fail-on levels, and compliance frameworks for `stave security-audit`.
+### inspect
 
-### security-audit
-
-Generates an auditor-ready self-audit report for Stave in JSON, Markdown, or SARIF and writes an evidence bundle.
+Low-level domain analysis primitives. Each subcommand reads JSON from `--file` or stdin and outputs JSON. These are building blocks for custom tooling.
 
 ```bash
-stave security-audit [flags]
+stave inspect <subcommand> [flags]
 ```
 
-**Flags:**
+**Subcommands:**
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--format` | `json` | Output format: `json`, `markdown`, or `sarif` |
-| `--out` | (none) | Main report output path (defaults to `<out-dir>/security-report.<ext>`) |
-| `--out-dir` | `./security-audit-<timestamp>/` | Bundle output directory |
-| `--severity` | `CRITICAL,HIGH` | Included severities in report output |
-| `--sbom` | `spdx` | SBOM format: `spdx` or `cyclonedx` |
-| `--compliance-framework` | all | Repeatable: `nist_800_53`, `cis_aws_v1.4.0`, `soc2`, `pci_dss_v3.2.1` |
-| `--vuln-source` | `hybrid` | Vulnerability evidence source: `hybrid`, `local`, `ci` |
-| `--live-vuln-scan` | `false` | Run local `govulncheck` (opt-in) |
-| `--release-bundle-dir` | (none) | Release artifact directory for checksum/signature evidence checks |
-| `--privacy-mode` | `false` | Enforce strict privacy assertions |
-| `--fail-on` | `HIGH` | Gate threshold: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NONE` |
-
-**Exit Codes:**
-
-| Code | Meaning |
-|------|---------|
-| 0 | Success, no findings at/above `--fail-on` |
-| 1 | Findings exist at/above `--fail-on` |
-| 2 | Operational/config/runtime error during audit execution |
+| Subcommand | Purpose | Input |
+|------------|---------|-------|
+| `policy` | S3 bucket policy analysis | Raw bucket policy JSON |
+| `acl` | S3 ACL grant analysis | JSON array of grants |
+| `exposure` | Exposure classification | Normalized resource inputs |
+| `risk` | Risk scoring | Statement context JSON |
+| `compliance` | Compliance framework crosswalk | Crosswalk YAML (`--file`, required) |
+| `aliases` | Predicate alias listing | None (optional `--category`) |
 
 **Examples:**
 
 ```bash
-# Default JSON report + bundle
-stave security-audit
+# Analyze a bucket policy
+stave inspect policy --file policy.json
 
-# Markdown report file for auditors
-stave security-audit \
-  --format markdown \
-  --out ./audit/security-report.md \
-  --out-dir ./audit/security-bundle
+# Pipe ACL grants from stdin
+cat grants.json | stave inspect acl
 
-# SARIF for code-scanning ingestion
-stave security-audit \
-  --format sarif \
-  --out ./audit/security-report.sarif \
-  --fail-on CRITICAL
+# Resolve compliance crosswalk for NIST
+stave inspect compliance --file crosswalk.yaml --framework nist_800_53
 
-# Strict offline behavior with explicit no-gate run
-stave security-audit \
-  --require-offline \
-  --fail-on NONE
+# List all predicate aliases
+stave inspect aliases
 ```
-
-**Bundle Artifacts (`--out-dir`):**
-
-- `security-report.json|md|sarif` (main report)
-- `build_info.json`
-- `sbom.spdx.json` or `sbom.cdx.json`
-- `vuln_report.json`
-- `binary_checksums.json`
-- `network_egress_declaration.json`
-- `filesystem_access_declaration.json`
-- `control_crosswalk_resolution.json`
-- `run_manifest.json`
 
 ### diagnose
 
