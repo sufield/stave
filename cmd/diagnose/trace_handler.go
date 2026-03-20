@@ -1,11 +1,11 @@
+//go:build stavedev
+
 package diagnose
 
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,111 +13,13 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	stavecel "github.com/sufield/stave/internal/cel"
+	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-// TraceRequest defines the parameters for tracing a predicate evaluation.
-type TraceRequest struct {
-	ControlID       string
-	ControlsDir     string
-	ObservationPath string
-	AssetID         string
-	Format          ui.OutputFormat
-	Quiet           bool
-	Stdout          io.Writer
-}
-
-// TraceRunner orchestrates evaluation trace generation for a specific asset.
-type TraceRunner struct {
-	Provider *compose.Provider
-}
-
-// NewTraceRunner creates a runner with the provided dependency provider.
-func NewTraceRunner(p *compose.Provider) *TraceRunner {
-	return &TraceRunner{Provider: p}
-}
-
-// Run executes the trace workflow.
-func (r *TraceRunner) Run(ctx context.Context, req TraceRequest) error {
-	if req.Quiet {
-		return nil
-	}
-
-	control, err := r.loadControl(ctx, req.ControlsDir, req.ControlID)
-	if err != nil {
-		return err
-	}
-
-	snapshot, err := r.loadSnapshot(ctx, req.ObservationPath)
-	if err != nil {
-		return err
-	}
-
-	found, err := findTraceAsset(snapshot, asset.ID(req.AssetID), req.ObservationPath)
-	if err != nil {
-		return err
-	}
-
-	result := stavecel.BuildTrace(&control, found, snapshot)
-	if result == nil {
-		return fmt.Errorf("trace: no result produced")
-	}
-
-	if req.Format.IsJSON() {
-		return result.RenderJSON(req.Stdout)
-	}
-	return result.RenderText(req.Stdout)
-}
-
-func (r *TraceRunner) loadControl(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
-	ctl, err := compose.LoadControlByID(ctx, r.Provider, dir, id)
-	if err != nil {
-		return policy.ControlDefinition{}, ui.WithNextCommand(err,
-			fmt.Sprintf("stave explain --controls %s <control-id>", dir))
-	}
-	return ctl, nil
-}
-
-func (r *TraceRunner) loadSnapshot(ctx context.Context, path string) (*asset.Snapshot, error) {
-	obsLoader, err := r.Provider.NewSnapshotRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create observation loader: %w", err)
-	}
-	// #nosec G304 -- path is an explicit CLI-provided local file path.
-	f, err := os.Open(fsutil.CleanUserPath(path))
-	if err != nil {
-		return nil, fmt.Errorf("open observation file: %w", err)
-	}
-	defer f.Close()
-
-	snapshot, err := obsLoader.LoadSnapshotFromReader(ctx, f, path)
-	if err != nil {
-		return nil, fmt.Errorf("load observation: %w", err)
-	}
-	return &snapshot, nil
-}
-
-func findTraceAsset(snapshot *asset.Snapshot, assetID asset.ID, path string) (*asset.Asset, error) {
-	for i := range snapshot.Assets {
-		if snapshot.Assets[i].ID == assetID {
-			return &snapshot.Assets[i], nil
-		}
-	}
-	available := make([]string, 0, len(snapshot.Assets))
-	for _, a := range snapshot.Assets {
-		available = append(available, a.ID.String())
-	}
-	slices.Sort(available)
-	return nil, fmt.Errorf("asset %q not found in %s\nAvailable assets: %s",
-		assetID, path, strings.Join(available, ", "))
-}
-
-// --- CLI bridge ---
 
 // NewTraceCmd constructs the trace command.
 func NewTraceCmd(p *compose.Provider) *cobra.Command {
@@ -157,12 +59,30 @@ Examples:
 				return fmtErr
 			}
 
-			runner := NewTraceRunner(p)
-			return runner.Run(cmd.Context(), TraceRequest{
-				ControlID:       strings.TrimSpace(controlID),
-				ControlsDir:     fsutil.CleanUserPath(strings.TrimSpace(controlsDir)),
-				ObservationPath: fsutil.CleanUserPath(strings.TrimSpace(observation)),
+			ctx := cmd.Context()
+			cleanCtlDir := fsutil.CleanUserPath(strings.TrimSpace(controlsDir))
+			cleanObsPath := fsutil.CleanUserPath(strings.TrimSpace(observation))
+			trimmedCtlID := strings.TrimSpace(controlID)
+
+			// Load control via Provider
+			control, err := loadTraceControl(ctx, p, cleanCtlDir, trimmedCtlID)
+			if err != nil {
+				return err
+			}
+
+			// Load snapshot via Provider
+			snapshot, err := loadTraceSnapshot(ctx, p, cleanObsPath)
+			if err != nil {
+				return err
+			}
+
+			// Delegate to internal runner
+			runner := apptrace.NewRunner()
+			return runner.Run(ctx, apptrace.Config{
+				Control:         control,
+				Snapshot:        snapshot,
 				AssetID:         strings.TrimSpace(assetID),
+				ObservationPath: cleanObsPath,
 				Format:          fmtValue,
 				Quiet:           quiet || cmdutil.GetGlobalFlags(cmd).Quiet,
 				Stdout:          cmd.OutOrStdout(),
@@ -184,4 +104,34 @@ Examples:
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd
+}
+
+// loadTraceControl loads a specific control by ID via Provider.
+func loadTraceControl(ctx context.Context, p *compose.Provider, dir, id string) (policy.ControlDefinition, error) {
+	ctl, err := compose.LoadControlByID(ctx, p, dir, id)
+	if err != nil {
+		return policy.ControlDefinition{}, ui.WithNextCommand(err,
+			fmt.Sprintf("stave explain --controls %s <control-id>", dir))
+	}
+	return ctl, nil
+}
+
+// loadTraceSnapshot loads a single snapshot file via Provider.
+func loadTraceSnapshot(ctx context.Context, p *compose.Provider, path string) (*asset.Snapshot, error) {
+	obsLoader, err := p.NewSnapshotRepo()
+	if err != nil {
+		return nil, fmt.Errorf("create observation loader: %w", err)
+	}
+	// #nosec G304 -- path is an explicit CLI-provided local file path.
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open observation file: %w", err)
+	}
+	defer f.Close()
+
+	snapshot, err := obsLoader.LoadSnapshotFromReader(ctx, f, path)
+	if err != nil {
+		return nil, fmt.Errorf("load observation: %w", err)
+	}
+	return &snapshot, nil
 }

@@ -1,3 +1,5 @@
+//go:build stavedev
+
 package diagnose
 
 import (
@@ -11,8 +13,11 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	diagprompt "github.com/sufield/stave/internal/diagnose/prompt"
+	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
+	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
+	diagprompt "github.com/sufield/stave/internal/app/diagnose/prompt"
 	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
@@ -124,6 +129,10 @@ Examples:
 			dctx := diagprompt.DiagnosticContext{
 				ControlsByID:   ctlByID,
 				AssetPropsJSON: assetPropsJSON,
+				LoadEval: func(path string) (*evaluation.Result, error) {
+					return evaljson.NewLoader().LoadFromFile(path)
+				},
+				BuildPrompt: buildPromptAdapter,
 			}
 
 			runner := diagprompt.NewRunner(dctx)
@@ -150,6 +159,33 @@ Examples:
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd
+}
+
+// buildPromptAdapter bridges the app-layer BuildFunc contract to the
+// adapters/output/prompt implementation.
+func buildPromptAdapter(
+	assetID string,
+	controlsByID map[kernel.ControlID]*policy.ControlDefinition,
+	assetPropsJSON string,
+	matched []evaluation.Finding,
+) diagprompt.PromptOutput {
+	builder := &promptout.PromptBuilder{
+		AssetID:        assetID,
+		ControlsByID:   controlsByID,
+		AssetPropsJSON: assetPropsJSON,
+	}
+	data := builder.Build(matched)
+	rendered := promptout.RenderPrompt(data)
+
+	findingIDs := make([]kernel.ControlID, len(data.Findings))
+	for i, f := range data.Findings {
+		findingIDs[i] = f.ControlID
+	}
+	return diagprompt.PromptOutput{
+		Rendered:   rendered,
+		FindingIDs: findingIDs,
+		AssetID:    data.AssetID,
+	}
 }
 
 // loadControlsMap loads control definitions and indexes them by ID.

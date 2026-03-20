@@ -5,30 +5,29 @@ import (
 	"io"
 	"runtime"
 
-	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func (r *Runner) write(cfg Config, rendered string, data promptout.PromptData) error {
-	out := cfg.Stdout
+func (r *Runner) write(cfg Config, out PromptOutput) error {
+	w := cfg.Stdout
 	if cfg.Quiet && !cfg.Format.IsJSON() {
-		out = io.Discard
+		w = io.Discard
 	}
 
 	if cfg.Format.IsJSON() {
-		findingIDs := make([]string, len(data.Findings))
-		for i, f := range data.Findings {
-			findingIDs[i] = string(f.ControlID)
+		findingIDs := make([]string, len(out.FindingIDs))
+		for i, id := range out.FindingIDs {
+			findingIDs[i] = string(id)
 		}
 		res := Result{
-			Prompt:     rendered,
+			Prompt:     out.Rendered,
 			FindingIDs: findingIDs,
-			AssetID:    data.AssetID,
+			AssetID:    out.AssetID,
 		}
-		return jsonutil.WriteIndented(out, res)
+		return jsonutil.WriteIndented(w, res)
 	}
 
-	if _, err := fmt.Fprint(out, rendered); err != nil {
+	if _, err := fmt.Fprint(w, out.Rendered); err != nil {
 		return err
 	}
 	writeClipboardHint(cfg.Stderr, cfg.Quiet)
