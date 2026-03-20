@@ -14,11 +14,8 @@
 //   - [capabilities]: Capability registry advertising supported observation
 //     schemas, control DSL versions, source types, and control packs.
 //   - [contracts]: Dependency-injection interfaces (ObservationRepository,
-//     ControlRepository, FindingMarshaler).
-//   - [ingest]: Snapshot ingestion and persistence for S3 observations.
-//
-// # Version Support
-//
-// The package tracks supported versions for observation schemas (e.g., "obs.v0.1"),
-// control DSL versions (e.g., "ctrl.v1"), and input source types.
+//     ControlRepository, FindingMarshaler, SnapshotFile).
+//   - [hygiene]: Snapshot lifecycle reporting and risk computation.
+//   - [prune]: Snapshot retention planning orchestration.
+//   - [trace]: Predicate evaluation tracing orchestration.
 package app

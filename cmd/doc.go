@@ -1,27 +1,31 @@
 // Package cmd implements the Stave command-line interface using [cobra.Command].
 //
-// The production binary (stave) includes commands organized into four groups:
+// All commands ship in a single binary. [WireCommands] registers the full
+// command tree organized into groups:
 //
 // Getting Started: init, generate
 //
-// Control Engine: validate, apply (--dry-run), diagnose, explain, verify
+// Control Engine: validate, apply (--dry-run), diagnose, explain, trace, verify
+//
+// Remediation: prompt from-finding
 //
 // Workflow & CI: ci (baseline/gate/fix-loop/diff/fix), snapshot, status
 //
-// Data & Artifacts: ingest, enforce, report
+// Data & Artifacts: enforce, report, controls, packs, lint, fmt
 //
-// Settings: config (get/set/show/delete/explain/context/env)
+// Introspection: inspect (policy/acl/exposure/risk/compliance/aliases)
 //
-// The dev binary (stave-dev) adds a Developer Tools group:
+// Supportability: doctor, bug-report, graph, capabilities, schemas, version, docs
 //
-// Developer Tools: doctor, bug-report, extractor, prompt, trace, controls,
-// packs, graph, lint, fmt, docs, alias, schemas, capabilities, security-audit,
-// version
+// Settings: config, alias, completion
+//
+// The dev edition binary (stave-dev) has identical commands but sets a
+// different edition label, which activates the production guard when
+// STAVE_ENV=production is detected.
 //
 // # Exit Codes
 //
 //   - 0: Success
-//   - 1: Security-audit gating failure
 //   - 2: Input error (invalid flags, parse failure)
 //   - 3: Violations detected (apply command)
 //   - 4: Internal error
