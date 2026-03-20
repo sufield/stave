@@ -49,7 +49,9 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	}
 
 	if cfg.Mode == runModeProfile {
-		runner := NewRunner(p, cfg.profileClock, cfg.Profile.Quiet)
+		rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
+		rt.Quiet = cfg.Profile.Quiet
+		runner := NewRunner(p, cfg.profileClock, rt)
 		return runner.Run(cs.Ctx, cfg.Profile)
 	}
 

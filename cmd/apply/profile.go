@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
@@ -15,8 +14,6 @@ import (
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/version"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -62,14 +59,12 @@ type Runner struct {
 	Provider *compose.Provider
 }
 
-// NewRunner initializes a runner with default dependencies.
-func NewRunner(p *compose.Provider, clock ports.Clock, quiet bool) *Runner {
-	progress := ui.DefaultRuntime()
-	progress.Quiet = quiet
+// NewRunner initializes a runner with injected dependencies.
+func NewRunner(p *compose.Provider, clock ports.Clock, rt *ui.Runtime) *Runner {
 	return &Runner{
 		Clock:    clock,
 		Hasher:   crypto.NewHasher(),
-		UI:       progress,
+		UI:       rt,
 		Provider: p,
 	}
 }
@@ -77,12 +72,12 @@ func NewRunner(p *compose.Provider, clock ports.Clock, quiet bool) *Runner {
 // Run executes the profile evaluation workflow.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	if err := r.validateInput(cfg.InputFile); err != nil {
-		return err
+		return err // already wrapped with --input context
 	}
 
 	snapshots, err := observations.LoadBundle(cfg.InputFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("load observation bundle: %w", err)
 	}
 
 	filtered := r.filterSnapshots(cfg, snapshots)
@@ -92,10 +87,8 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	ctlDir, controls, err := r.loadControls(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("load controls: %w", err)
 	}
-
-	r.setupRunLogging(cfg.InputFile, ctlDir)
 
 	celEval, err := r.Provider.NewCELEvaluator()
 	if err != nil {
@@ -115,7 +108,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	})
 	done()
 	if err != nil {
-		return err
+		return fmt.Errorf("evaluate: %w", err)
 	}
 
 	if err := r.writeResults(ctx, cfg, result); err != nil {
@@ -154,16 +147,6 @@ func (r *Runner) loadControls(ctx context.Context) (string, []policy.ControlDefi
 	}
 
 	return ctlDir, controls, nil
-}
-
-func (r *Runner) setupRunLogging(inputFile, ctlDir string) {
-	inputsHash, _ := fsutil.HashFile(inputFile)
-	controlsHash, _ := fsutil.HashDirByExt(ctlDir, ".yaml", ".yml")
-	logging.SetDefaultLogger(cmdutil.SetupLoggingWithRunID(
-		logging.DefaultLogger(),
-		inputsHash.String(),
-		controlsHash.String(),
-	))
 }
 
 func getControlsBaseDir() string {
