@@ -2,10 +2,10 @@ package output
 
 import (
 	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // SanitizeReport returns a sanitized copy of a diagnosis report.

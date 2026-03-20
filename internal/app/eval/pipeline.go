@@ -8,7 +8,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 // Pipeline chains context-aware steps with short-circuit error handling.

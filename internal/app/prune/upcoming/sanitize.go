@@ -1,8 +1,8 @@
 package upcoming
 
 import (
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func sanitizeItems(s kernel.Sanitizer, items []Item) []Item {

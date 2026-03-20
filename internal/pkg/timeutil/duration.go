@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // FormatDuration formats a duration for CLI flags and evidence strings.

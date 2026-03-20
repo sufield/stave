@@ -3,8 +3,8 @@ package contracts
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
 
 // ReportRequest bundles all data required to generate a hygiene report.

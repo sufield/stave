@@ -4,16 +4,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 
 	apptrace "github.com/sufield/stave/internal/app/trace"
 	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 func TestBuildFindingDetail_Success(t *testing.T) {

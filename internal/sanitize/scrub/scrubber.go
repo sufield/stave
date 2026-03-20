@@ -1,8 +1,8 @@
 package scrub
 
 import (
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Scrubber sanitizes observation snapshots by removing or replacing

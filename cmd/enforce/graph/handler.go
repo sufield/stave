@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package graph
 
 import (
@@ -16,10 +14,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // Format represents a validated graph output format.

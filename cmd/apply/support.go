@@ -6,7 +6,7 @@ import (
 
 	exemptionyaml "github.com/sufield/stave/internal/adapters/input/exemption/yaml"
 	appapply "github.com/sufield/stave/internal/app/apply"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // ResolveContextName provides the default logic for naming the evaluation run.

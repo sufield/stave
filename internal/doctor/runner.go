@@ -45,8 +45,3 @@ func (r *Registry) Run(ctx *Context) ([]Check, bool) {
 
 	return results, success
 }
-
-// RunWithRegistry is a convenience wrapper for running a specific registry.
-func RunWithRegistry(ctx *Context, registry *Registry) ([]Check, bool) {
-	return registry.Run(ctx)
-}

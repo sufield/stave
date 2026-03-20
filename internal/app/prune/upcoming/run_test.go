@@ -5,12 +5,11 @@ import (
 	"testing"
 	"time"
 
-	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) {
@@ -78,7 +77,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 		Snapshots:       snapshots,
 		GlobalMaxUnsafe: 168 * time.Hour,
 		Now:             now,
-		PredicateEval:   stavecel.MustPredicateEval(),
+		PredicateEval:   mustPredicateEval(),
 	})
 	items := mapRiskItems(riskItems)
 	if len(items) != 2 {

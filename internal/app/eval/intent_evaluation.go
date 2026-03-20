@@ -8,9 +8,9 @@ import (
 
 	"github.com/sufield/stave/internal/app/capabilities"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // IntentEvaluation orchestrates preflight checks over incoming artifacts before

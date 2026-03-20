@@ -8,8 +8,8 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
-	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"gopkg.in/yaml.v3"
 )
 
@@ -42,11 +42,6 @@ func resolveOptions(opts []Option) options {
 		fn(&o)
 	}
 	return o
-}
-
-// IsUnknownFieldDiagnostic checks if a diagnostic refers to additional/unknown fields.
-func IsUnknownFieldDiagnostic(d Diagnostic) bool {
-	return classify(d) == CatAdditionalProperties
 }
 
 // DiagnosticsResult converts engine-level diagnostics into a domain diag.Result.

@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package diagnose
 
 import (
@@ -15,10 +13,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // NewTraceCmd constructs the trace command.

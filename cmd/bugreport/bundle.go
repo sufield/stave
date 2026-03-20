@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package bugreport
 
 import (
@@ -19,10 +17,13 @@ import (
 
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/doctor"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/sanitize"
+	"github.com/sufield/stave/internal/sanitize/scrub"
 	staveversion "github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Config defines the inputs required to generate a bug report.
@@ -62,6 +63,9 @@ func (g *Generator) Generate(_ context.Context, w io.Writer, cfg Config) error {
 	if err := g.addCoreArtifacts(bundle, cfg); err != nil {
 		return err
 	}
+	if err := g.addScrubDemo(bundle); err != nil {
+		return err
+	}
 	if err := g.addConfigArtifact(bundle, cfg.ConfigPath); err != nil {
 		return err
 	}
@@ -96,6 +100,42 @@ func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
 		return fmt.Errorf("write args.json: %w", err)
 	}
 	return nil
+}
+
+func (g *Generator) addScrubDemo(bundle *bundleWriter) error {
+	s := sanitize.New()
+	sc := scrub.NewScrubber(s)
+
+	demo := sc.ScrubSnapshot(asset.Snapshot{
+		SchemaVersion: kernel.SchemaObservation,
+		CapturedAt:    g.now(),
+		Assets: []asset.Asset{
+			{
+				ID:     "arn:aws:s3:::demo-bucket",
+				Type:   kernel.NewAssetType("aws_s3_bucket"),
+				Vendor: "aws",
+				Properties: map[string]any{
+					"bucket_name": "demo-bucket",
+					"arn":         "arn:aws:s3:::demo-bucket",
+					"tags":        map[string]any{"env": "prod"},
+					"policy_json": `{"Version":"2012-10-17"}`,
+				},
+			},
+		},
+		Identities: []asset.CloudIdentity{
+			{
+				ID:     "arn:aws:iam::123456789012:user/demo",
+				Type:   kernel.NewAssetType("aws_iam_user"),
+				Vendor: "aws",
+				Properties: map[string]any{
+					"owner":   "security-team",
+					"purpose": "read-only-audit",
+				},
+			},
+		},
+	})
+
+	return bundle.addJSON("scrub_demo.json", demo)
 }
 
 func (g *Generator) addConfigArtifact(bundle *bundleWriter, path string) error {

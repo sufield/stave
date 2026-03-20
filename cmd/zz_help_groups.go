@@ -8,6 +8,7 @@ func wireProdHelpGroups(root *cobra.Command) {
 		&cobra.Group{ID: groupCore, Title: "Control Engine"},
 		&cobra.Group{ID: groupWorkflow, Title: "Workflow & CI"},
 		&cobra.Group{ID: groupArtifacts, Title: "Data & Artifacts"},
+		&cobra.Group{ID: groupIntrospection, Title: "Introspection"},
 		&cobra.Group{ID: groupSettings, Title: "Settings"},
 	)
 
@@ -16,6 +17,7 @@ func wireProdHelpGroups(root *cobra.Command) {
 		groupCore:           {"validate", "apply", "diagnose", "explain", "verify"},
 		groupWorkflow:       {"ci", "snapshot", "status"},
 		groupArtifacts:      {"enforce", "report"},
+		groupIntrospection:  {"inspect"},
 		groupSettings:       {"config"},
 	}
 	for groupID, names := range groupMap {

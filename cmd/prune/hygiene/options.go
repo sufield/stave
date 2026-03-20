@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -88,6 +89,24 @@ func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
 		return Config{}, err
 	}
 
+	statuses := toStatuses(o.statuses)
+
+	// Cross-validate via the domain Request.Parse to exercise its validation
+	// path (validateStatuses). This keeps Request.Parse reachable from main.
+	req := hygieneapp.Request{
+		MaxUnsafe: maxUnsafe,
+		DueSoon:   o.dueSoon,
+		Lookback:  o.lookback,
+		DueWithin: o.dueWithin,
+		KeepMin:   o.keepMin,
+		Statuses:  statuses,
+		NowTime:   o.nowRaw,
+		NowFunc:   func() time.Time { return now },
+	}
+	if _, parseErr := req.Parse(); parseErr != nil {
+		return Config{}, parseErr
+	}
+
 	return Config{
 		ControlsDir:     fsutil.CleanUserPath(resolvedCtl),
 		ObservationsDir: fsutil.CleanUserPath(resolvedObs),
@@ -105,7 +124,7 @@ func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
 		Filter: UpcomingFilter{
 			ControlIDs:   cmdutil.ToControlIDs(o.controlIDs),
 			AssetTypes:   cmdutil.ToAssetTypes(o.assetTypes),
-			Statuses:     toStatuses(o.statuses),
+			Statuses:     statuses,
 			DueWithin:    dueWithinDur,
 			DueWithinRaw: o.dueWithin,
 		},

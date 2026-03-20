@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // QualityConfig defines the resolved parameters for a quality assessment.

@@ -7,9 +7,14 @@ import (
 	"time"
 
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/internal/pruner/fsops"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
+
+func moveSnapshotFile(src, dst string) error {
+	return fsops.MoveSnapshotFile(src, dst, fsops.MoveOptions{})
+}
 
 func TestPlanPruneForArchive_RespectsKeepMin(t *testing.T) {
 	now := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)

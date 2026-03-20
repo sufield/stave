@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package diagnose
 
 import (
@@ -16,12 +14,12 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	diagprompt "github.com/sufield/stave/internal/app/diagnose/prompt"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // --- CLI bridge ---

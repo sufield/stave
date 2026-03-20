@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/retention"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // NormalizeTier standardizes a tier name string.

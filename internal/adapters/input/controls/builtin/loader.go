@@ -11,8 +11,8 @@ import (
 	"sync"
 
 	controlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 //go:embed embedded/s3/**/*.yaml

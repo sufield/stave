@@ -5,12 +5,11 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
@@ -31,7 +30,7 @@ func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
 		Statuses:         []risk.Status{risk.StatusUpcoming},
 		AssetTypes:       []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		DueWithin:        &dueSoon,
-		CELEvaluator:     stavecel.MustPredicateEval(),
+		CELEvaluator:     mustPredicateEval(),
 	})
 	if summary.Total != 1 || summary.DueSoon != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
@@ -55,7 +54,7 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 		Now:              now,
 		DueSoonThreshold: 2 * time.Hour,
 		ToolVersion:      "test",
-		CELEvaluator:     stavecel.MustPredicateEval(),
+		CELEvaluator:     mustPredicateEval(),
 	})
 	if stats.CurrentViolations == 0 {
 		t.Fatalf("expected violations in risk stats, got %+v", stats)
@@ -92,7 +91,7 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		DueSoonThreshold: 90 * time.Minute,
 		Statuses:         []risk.Status{risk.StatusUpcoming},
 		AssetTypes:       []kernel.AssetType{kernel.AssetType("storage_bucket")},
-		CELEvaluator:     stavecel.MustPredicateEval(),
+		CELEvaluator:     mustPredicateEval(),
 	}
 
 	summary := computeUpcomingSummary(controls, snapshots, opts)

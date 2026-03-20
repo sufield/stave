@@ -3,7 +3,7 @@ package builtin
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 func TestParseSelector(t *testing.T) {

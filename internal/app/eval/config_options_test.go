@@ -3,7 +3,7 @@ package eval
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 func TestWithGitMetadata(t *testing.T) {

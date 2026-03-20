@@ -2,7 +2,7 @@ package cmdutil
 
 import (
 	"github.com/sufield/stave/internal/doctor"
-	"github.com/sufield/stave/internal/domain/validation"
+	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
 // DoctorPrereqChecks runs system health checks and transforms them into domain-level

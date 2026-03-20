@@ -1,8 +1,8 @@
 package compose
 
 import (
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // ResolveClock returns a FixedClock if a timestamp is provided, otherwise RealClock.

@@ -4,7 +4,7 @@ import (
 	"slices"
 
 	"github.com/sufield/stave/internal/compliance"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 const (

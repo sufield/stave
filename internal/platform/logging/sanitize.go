@@ -1,9 +1,7 @@
 package logging
 
 import (
-	"path/filepath"
 	"strings"
-	"unicode/utf8"
 )
 
 // SanitizedValue is the placeholder for sensitive values.
@@ -67,33 +65,6 @@ func isSensitiveKey(key string) bool {
 	}
 
 	return false
-}
-
-// SanitizePath returns the base name of a path unless fullPaths is true.
-func SanitizePath(path string, fullPaths bool) string {
-	if fullPaths || path == "" {
-		return path
-	}
-	return filepath.Base(path)
-}
-
-// truncateString truncates a string to maxLen runes, adding "..." if truncated.
-func truncateString(s string, maxLen int) string {
-	if maxLen <= 0 {
-		return ""
-	}
-	// Fast exit: if byte length fits, rune count fits too.
-	if len(s) <= maxLen {
-		return s
-	}
-	if utf8.RuneCountInString(s) <= maxLen {
-		return s
-	}
-	runes := []rune(s)
-	if maxLen <= 3 {
-		return string(runes[:maxLen])
-	}
-	return string(runes[:maxLen-3]) + "..."
 }
 
 // SanitizeArgs sanitizes sensitive values from command arguments.

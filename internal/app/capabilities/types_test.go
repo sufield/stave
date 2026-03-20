@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/app/capabilities"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func TestCapabilities_SourceTypeCount(t *testing.T) {

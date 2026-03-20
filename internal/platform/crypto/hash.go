@@ -4,10 +4,9 @@ package crypto
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"io"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // HashBytes returns the SHA-256 hex digest of data.
@@ -53,14 +52,4 @@ func (*sha256Hasher) Digest(components []string, sep byte) kernel.Digest {
 
 func (*sha256Hasher) GenerateID(prefix string, components ...string) string {
 	return StableID(prefix, strings.Join(components, "|"))
-}
-
-// HashReader returns the SHA-256 hex digest of data read from r.
-// It streams input into the hasher to avoid loading all bytes into memory.
-func HashReader(r io.Reader) (kernel.Digest, error) {
-	h := sha256.New()
-	if _, err := io.Copy(h, r); err != nil {
-		return "", err
-	}
-	return kernel.Digest(hex.EncodeToString(h.Sum(nil))), nil
 }

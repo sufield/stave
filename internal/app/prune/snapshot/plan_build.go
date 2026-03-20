@@ -5,10 +5,10 @@ import (
 	"time"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/internal/pruner/plan"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // planBuildParams holds all inputs for buildPlan (pure, testable).

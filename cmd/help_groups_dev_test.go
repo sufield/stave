@@ -1,36 +1,31 @@
-//go:build stavedev
-
 package cmd
 
 import "testing"
 
-func TestDevHelpGroupsAssigned(t *testing.T) {
-	root := GetDevRootCmd()
+func TestPromotedCommandsRegistered(t *testing.T) {
+	root := NewApp().Root
 
-	devChecks := map[string]string{
-		"doctor":       groupDevTools,
-		"bug-report":   groupDevTools,
-		"prompt":       groupDevTools,
-		"trace":        groupDevTools,
-		"controls":     groupDevTools,
-		"packs":        groupDevTools,
-		"graph":        groupDevTools,
-		"lint":         groupDevTools,
-		"fmt":          groupDevTools,
-		"docs":         groupDevTools,
-		"alias":        groupDevTools,
-		"schemas":      groupDevTools,
-		"capabilities": groupDevTools,
-		"version":      groupDevTools,
+	promoted := []string{
+		"doctor",
+		"bug-report",
+		"graph",
+		"docs",
+		"alias",
+		"schemas",
+		"capabilities",
+		"version",
+		"trace",
+		"prompt",
+		"lint",
+		"fmt",
+		"controls",
+		"packs",
 	}
 
-	for use, wantGroup := range devChecks {
+	for _, use := range promoted {
 		cmd, _, err := root.Find([]string{use})
-		if err != nil {
-			t.Fatalf("expected dev command %q: %v", use, err)
-		}
-		if cmd.GroupID != wantGroup {
-			t.Fatalf("dev command %q group=%q, want %q", use, cmd.GroupID, wantGroup)
+		if err != nil || cmd == nil {
+			t.Fatalf("expected command %q to be registered in production tree", use)
 		}
 	}
 }

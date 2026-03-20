@@ -11,9 +11,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/retention"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // Constants for config files and built-in defaults.

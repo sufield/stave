@@ -3,8 +3,8 @@ package eval
 import (
 	"fmt"
 
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // ControlFilter selects which controls to evaluate.

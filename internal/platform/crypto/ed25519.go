@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 var (

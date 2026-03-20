@@ -3,8 +3,8 @@ package service
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/validation"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
 func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, error) {

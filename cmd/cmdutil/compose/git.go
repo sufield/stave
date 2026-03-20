@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/adapters/gitinfo"
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 // AuditGitStatus gathers git metadata for specific paths.

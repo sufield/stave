@@ -15,7 +15,7 @@ import (
 func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 	root := findModuleRoot(t)
 	targets := []string{
-		filepath.Join("internal", "domain"),
+		filepath.Join("pkg", "alpha", "domain"),
 		filepath.Join("internal", "app"),
 	}
 
@@ -76,7 +76,7 @@ func TestCoreTestsAreIsolated(t *testing.T) {
 	root := findModuleRoot(t)
 
 	targets := []string{
-		filepath.Join("internal", "domain"),
+		filepath.Join("pkg", "alpha", "domain"),
 		filepath.Join("internal", "app"),
 		filepath.Join("internal", "app", "service"),
 	}

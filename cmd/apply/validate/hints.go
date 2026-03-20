@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/sufield/stave/internal/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
 )
 
 // hintContext provides values used to format remediation hints.

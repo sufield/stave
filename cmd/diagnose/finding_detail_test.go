@@ -14,12 +14,12 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
-	clockadp "github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {

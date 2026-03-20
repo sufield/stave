@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pruner"
 	pruneplan "github.com/sufield/stave/internal/pruner/plan"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 func TestBuildSnapshotPlan_SingleTier(t *testing.T) {

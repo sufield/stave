@@ -26,7 +26,7 @@ func TestAttachRunIDFromPlan(t *testing.T) {
 		ObservationsHash: "obs-hash",
 		ControlsHash:     "ctl-hash",
 	}
-	app.attachRunIDFromPlan(plan)
+	app.testAttachRunIDFromPlan(plan)
 	app.Logger.Info("test message")
 
 	out := buf.String()
@@ -47,7 +47,7 @@ func TestAttachRunIDFromPlanNil(t *testing.T) {
 		Logger: slog.New(slog.NewTextHandler(&buf, nil)),
 	}
 
-	app.attachRunIDFromPlan(nil)
+	app.testAttachRunIDFromPlan(nil)
 	app.Logger.Info("test message")
 
 	out := buf.String()

@@ -140,8 +140,3 @@ func (a *App) initSanitizer() {
 func GetVersion() string {
 	return staveversion.Version
 }
-
-// GetRootCmd returns a fully-wired root cobra command for tests and doc generation.
-func GetRootCmd() *cobra.Command {
-	return NewApp().Root
-}

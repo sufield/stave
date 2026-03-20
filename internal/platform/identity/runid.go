@@ -1,8 +1,6 @@
 package identity
 
 import (
-	"sort"
-
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
 
@@ -23,22 +21,4 @@ func ComputeRunIDParts(parts ...string) string {
 		return digest[:RunIDLength]
 	}
 	return digest
-}
-
-// HashString computes SHA256 hash of a string.
-func HashString(s string) string {
-	return string(platformcrypto.HashBytes([]byte(s)))
-}
-
-// HashStrings computes a combined hash of multiple strings.
-// Strings are sorted for determinism and delimited to avoid concatenation ambiguity.
-func HashStrings(strs []string) string {
-	if len(strs) == 0 {
-		return ""
-	}
-
-	sorted := append([]string(nil), strs...)
-	sort.Strings(sorted)
-
-	return string(platformcrypto.HashDelimited(sorted, 0))
 }

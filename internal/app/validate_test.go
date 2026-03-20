@@ -9,7 +9,7 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // stubControlRepo always returns an error to trigger evidence creation.

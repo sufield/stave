@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // NewCmd constructs the diff command.

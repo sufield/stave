@@ -1,7 +1,7 @@
 package eval
 
 import (
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 // Option applies a configuration setting to an EvaluateConfig.

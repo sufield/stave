@@ -9,14 +9,13 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
-	clockadp "github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 type evalControlRepoStub struct {
@@ -136,7 +135,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 			MaxUnsafe:    30 * time.Minute,
 			Clock:        clockadp.FixedClock(now),
 			Output:       &bytes.Buffer{},
-			CELEvaluator: stavecel.MustPredicateEval(),
+			CELEvaluator: mustPredicateEval(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -171,7 +170,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 			MaxUnsafe:    30 * time.Minute,
 			Clock:        clockadp.FixedClock(now),
 			Output:       &bytes.Buffer{},
-			CELEvaluator: stavecel.MustPredicateEval(),
+			CELEvaluator: mustPredicateEval(),
 		})
 		if err == nil || !strings.Contains(err.Error(), "failed to write findings") {
 			t.Fatalf("unexpected err: %v", err)

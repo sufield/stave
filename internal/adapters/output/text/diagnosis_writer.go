@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
 )
 
 // LabelFunc formats a severity label for display.

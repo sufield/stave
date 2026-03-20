@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/platform/shlex"
 )
 
@@ -40,16 +37,4 @@ func (a *App) expandAliasIfMatch() {
 	}
 	newArgs := append(tokens, os.Args[2:]...)
 	a.Root.SetArgs(newArgs)
-}
-
-func (a *App) attachRunIDFromPlan(plan *appeval.EvaluationPlan) {
-	if plan == nil {
-		return
-	}
-	a.Logger = cmdutil.SetupLoggingWithRunID(
-		a.Logger,
-		plan.ObservationsHash.String(),
-		plan.ControlsHash.String(),
-	)
-	logging.SetDefaultLogger(a.Logger)
 }

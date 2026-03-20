@@ -9,9 +9,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // resolvedConfig holds CLI-resolved parameters before asset loading.

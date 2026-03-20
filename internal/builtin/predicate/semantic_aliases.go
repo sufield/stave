@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 // ── Phase 1.1: Alias Name Constants ──────────────────────────────────

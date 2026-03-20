@@ -3,8 +3,8 @@ package yaml
 import (
 	"fmt"
 
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"gopkg.in/yaml.v3"
 )
 

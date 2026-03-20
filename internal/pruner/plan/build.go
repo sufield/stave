@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // PlanAction is an alias for the domain retention PlanAction type.

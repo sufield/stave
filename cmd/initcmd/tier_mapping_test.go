@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/domain/retention"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 func TestResolveTierForPath_FirstMatchWins(t *testing.T) {
