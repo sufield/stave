@@ -5,9 +5,9 @@ import (
 	"slices"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -16,9 +16,9 @@ const (
 	msgTimeSpanShorterThanThreshold = "Time span shorter than threshold"
 )
 
-// fmtd is a shorthand for timeutil.FormatDuration to keep diagnostic lines concise.
+// fmtd is a shorthand for kernel.FormatDuration to keep diagnostic lines concise.
 func fmtd(d time.Duration) string {
-	return timeutil.FormatDuration(d)
+	return kernel.FormatDuration(d)
 }
 
 func checkTimeSpan(input Input) *Issue {

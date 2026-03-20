@@ -5,10 +5,10 @@ import (
 	"io"
 	"time"
 
+	"github.com/sufield/stave/internal/adapters/pruner"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/pruner"
 )
 
 // SnapshotCleanupRenderInput configures text/json rendering for prune/archive plan.

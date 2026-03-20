@@ -1,6 +1,6 @@
 package asset
 
-import "github.com/sufield/stave/internal/pkg/maps"
+import "github.com/sufield/stave/pkg/alpha/domain/maps"
 
 // Metadata provides a typed view over vendor-specific asset properties.
 func (r Asset) Metadata() maps.Value {

@@ -2,38 +2,12 @@ package logging
 
 import (
 	"strings"
+
+	"github.com/sufield/stave/internal/sanitize/scrub"
 )
 
-// SanitizedValue is the placeholder for sensitive values.
-const SanitizedValue = "[SANITIZED]"
-
-// sensitiveArgNames are complete flag names (normalized, lowercase) known to
-// carry sensitive values. Add entries here when stave gains flags that accept
-// secrets, tokens, or key material.
-var sensitiveArgNames = map[string]struct{}{
-	"private_key":          {},
-	"private_key_out":      {},
-	"integrity_public_key": {},
-	"public_key_out":       {},
-	"authorization":        {},
-}
-
-// sensitiveTokens are individual words that mark a compound flag name as
-// sensitive when they appear as a discrete segment (split on _-.:).
-// Only exact token matches apply — no substring matching.
-var sensitiveTokens = map[string]struct{}{
-	"token":      {},
-	"secret":     {},
-	"password":   {},
-	"credential": {},
-	"auth":       {},
-	"bearer":     {},
-	"key":        {},
-}
-
 // isSensitiveKey reports whether a flag name indicates its value is sensitive.
-// Uses exact flag name matching and token-based matching only — no substring
-// matching, which avoids false positives like "auth" matching "author".
+// Sensitive names and tokens are defined centrally in the scrub package.
 func isSensitiveKey(key string) bool {
 	if key == "" {
 		return false
@@ -50,7 +24,7 @@ func isSensitiveKey(key string) bool {
 	}
 
 	// Exact match against known sensitive flag names.
-	if _, ok := sensitiveArgNames[norm]; ok {
+	if _, ok := scrub.SensitiveArgNames[norm]; ok {
 		return true
 	}
 
@@ -59,7 +33,7 @@ func isSensitiveKey(key string) bool {
 		return r == '_' || r == '-' || r == '.' || r == ':'
 	})
 	for _, t := range tokens {
-		if _, ok := sensitiveTokens[t]; ok {
+		if _, ok := scrub.SensitiveTokens[t]; ok {
 			return true
 		}
 	}
@@ -77,14 +51,14 @@ func SanitizeArgs(args []string) []string {
 
 		if name, _, hasEq := strings.Cut(arg, "="); hasEq {
 			if isSensitiveKey(name) {
-				result[i] = name + "=" + SanitizedValue
+				result[i] = name + "=" + scrub.SanitizedValue
 			}
 			continue
 		}
 
 		if isSensitiveKey(arg) {
 			if i+1 < len(args) && !isLikelyFlagToken(args[i+1]) {
-				result[i+1] = SanitizedValue
+				result[i+1] = scrub.SanitizedValue
 				i++
 			}
 		}

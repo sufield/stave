@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	reportrender "github.com/sufield/stave/internal/report"
+	reportrender "github.com/sufield/stave/internal/adapters/output/report"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"

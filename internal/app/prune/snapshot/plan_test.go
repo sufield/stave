@@ -4,14 +4,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/pruner"
-	pruneplan "github.com/sufield/stave/internal/pruner/plan"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "2026-02-20.json", Name: "2026-02-20.json", CapturedAt: now.AddDate(0, 0, -3)},
 		{RelPath: "2026-01-01.json", Name: "2026-01-01.json", CapturedAt: now.AddDate(0, 0, -53)},
 	}
@@ -33,14 +33,14 @@ func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 		// keep-min=2 means we can't prune even though one is older than 30d
 		t.Fatalf("TotalActions=%d, want 0 (keep-min floor)", plan.TotalActions)
 	}
-	if plan.Mode != pruneplan.ModePreview {
+	if plan.Mode != snapshotdomain.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW", plan.Mode)
 	}
 }
 
 func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "2026-02-20.json", Name: "2026-02-20.json", CapturedAt: now.AddDate(0, 0, -3)},
 		{RelPath: "2026-02-15.json", Name: "2026-02-15.json", CapturedAt: now.AddDate(0, 0, -8)},
 		{RelPath: "2026-01-01.json", Name: "2026-01-01.json", CapturedAt: now.AddDate(0, 0, -53)},
@@ -63,9 +63,9 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 		t.Fatalf("TotalActions=%d, want 1", plan.TotalActions)
 	}
 
-	var pruned []pruneplan.SnapshotPlanFile
+	var pruned []snapshotdomain.PlanFile
 	for _, f := range plan.Files {
-		if f.Action == pruneplan.ActionPrune {
+		if f.Action == snapshotdomain.ActionPrune {
 			pruned = append(pruned, f)
 		}
 	}
@@ -76,7 +76,7 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 
 func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "prod/2026-02-20.json", CapturedAt: now.AddDate(0, 0, -3)},
 		{RelPath: "prod/2026-01-01.json", CapturedAt: now.AddDate(0, 0, -53)},
 		{RelPath: "prod/2026-01-15.json", CapturedAt: now.AddDate(0, 0, -39)},
@@ -109,8 +109,8 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 	}
 
 	// critical: 3 files, 1 older than 30d (2 left ≥ keep_min=2) → 1 prune
-	var critSummary *pruneplan.SnapshotPlanTierSummary
-	var ncSummary *pruneplan.SnapshotPlanTierSummary
+	var critSummary *snapshotdomain.PlanTierSummary
+	var ncSummary *snapshotdomain.PlanTierSummary
 	for i := range plan.TierSummaries {
 		switch plan.TierSummaries[i].Tier {
 		case "critical":
@@ -143,7 +143,7 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 
 func TestBuildSnapshotPlan_PerTierKeepMin(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "prod/new1.json", CapturedAt: now.AddDate(0, 0, -1)},
 		{RelPath: "prod/new2.json", CapturedAt: now.AddDate(0, 0, -2)},
 		{RelPath: "prod/new3.json", CapturedAt: now.AddDate(0, 0, -3)},
@@ -169,7 +169,7 @@ func TestBuildSnapshotPlan_PerTierKeepMin(t *testing.T) {
 
 func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "new.json", CapturedAt: now.AddDate(0, 0, -1)},
 		{RelPath: "old1.json", CapturedAt: now.AddDate(0, 0, -40)},
 		{RelPath: "old2.json", CapturedAt: now.AddDate(0, 0, -50)},
@@ -188,7 +188,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 		Force: true,
 	})
 
-	if plan.Mode != pruneplan.ModeArchive {
+	if plan.Mode != snapshotdomain.ModeArchive {
 		t.Fatalf("Mode=%q, want ARCHIVE", plan.Mode)
 	}
 	if !plan.Applied {
@@ -197,7 +197,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 
 	archiveCount := 0
 	for _, f := range plan.Files {
-		if f.Action == pruneplan.ActionArchive {
+		if f.Action == snapshotdomain.ActionArchive {
 			archiveCount++
 		}
 	}
@@ -208,7 +208,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 
 func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "staging/file.json", CapturedAt: now.AddDate(0, 0, -1)},
 	}
 
@@ -275,7 +275,7 @@ func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 		Force: false,
 	})
 
-	if plan.Mode != pruneplan.ModePreview {
+	if plan.Mode != snapshotdomain.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW (--apply without --force)", plan.Mode)
 	}
 	if plan.Applied {
@@ -285,7 +285,7 @@ func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 
 func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []pruner.SnapshotFile{
+	files := []appcontracts.SnapshotFile{
 		{RelPath: "new.json", CapturedAt: now.AddDate(0, 0, -1)},
 		{RelPath: "old.json", CapturedAt: now.AddDate(0, 0, -50)},
 	}
@@ -302,13 +302,13 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 		Force: true,
 	})
 
-	if plan.Mode != pruneplan.ModePrune {
+	if plan.Mode != snapshotdomain.ModePrune {
 		t.Fatalf("Mode=%q, want PRUNE", plan.Mode)
 	}
 
 	pruneCount := 0
 	for _, f := range plan.Files {
-		if f.Action == pruneplan.ActionPrune {
+		if f.Action == snapshotdomain.ActionPrune {
 			pruneCount++
 		}
 	}

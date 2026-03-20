@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 func TestApplySnapshotPlan_Delete(t *testing.T) {
@@ -19,7 +21,7 @@ func TestApplySnapshotPlan_Delete(t *testing.T) {
 
 	res, err := ApplySnapshotPlan(SnapshotPlanApplyInput{
 		Entries: []PlanEntry{
-			{RelPath: "old.json", Action: ActionPrune},
+			{RelPath: "old.json", Action: snapshotdomain.ActionPrune},
 		},
 		ObservationsRoot: obsRoot,
 	})
@@ -51,7 +53,7 @@ func TestApplySnapshotPlan_Archive(t *testing.T) {
 	archiveDir := filepath.Join(tmp, "archive")
 	res, err := ApplySnapshotPlan(SnapshotPlanApplyInput{
 		Entries: []PlanEntry{
-			{RelPath: filepath.Join("nested", "old.json"), Action: ActionArchive},
+			{RelPath: filepath.Join("nested", "old.json"), Action: snapshotdomain.ActionArchive},
 		},
 		ObservationsRoot: obsRoot,
 		ArchiveDir:       archiveDir,

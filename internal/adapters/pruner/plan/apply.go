@@ -5,15 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/pruner/fsops"
+	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
-// PlanEntry is a single snapshot plan row.
-type PlanEntry struct {
-	RelPath string
-	Action  PlanAction
-}
+// PlanEntry is a type alias for the domain snapshot PlanEntry.
+type PlanEntry = snapshotdomain.PlanEntry
 
 // SnapshotPlanApplyInput defines apply inputs for snapshot plan execution.
 type SnapshotPlanApplyInput struct {
@@ -47,7 +45,7 @@ func ApplySnapshotPlan(in SnapshotPlanApplyInput) (SnapshotPlanApplyResult, erro
 	createdDirs := make(map[string]struct{})
 
 	for _, entry := range in.Entries {
-		if entry.Action == ActionKeep {
+		if entry.Action == snapshotdomain.ActionKeep {
 			continue
 		}
 		if isArchive {

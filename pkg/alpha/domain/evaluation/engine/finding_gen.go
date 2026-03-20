@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/maps"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/maps"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 

@@ -1,4 +1,4 @@
-package plan
+package snapshot
 
 import (
 	"fmt"
@@ -6,16 +6,16 @@ import (
 	"time"
 )
 
-// RenderSnapshotPlanText writes a human-readable snapshot plan report.
-func RenderSnapshotPlanText(w io.Writer, plan SnapshotPlanOutput) error {
+// RenderPlanText writes a human-readable snapshot plan report.
+func RenderPlanText(w io.Writer, plan PlanOutput) error {
 	ew := &errWriter{w: w}
-	writeSnapshotPlanHeader(ew, plan)
-	writeSnapshotPlanTierSections(ew, plan)
-	writeSnapshotPlanSummary(ew, plan)
+	writePlanHeader(ew, plan)
+	writePlanTierSections(ew, plan)
+	writePlanSummary(ew, plan)
 	return ew.err
 }
 
-func writeSnapshotPlanHeader(ew *errWriter, plan SnapshotPlanOutput) {
+func writePlanHeader(ew *errWriter, plan PlanOutput) {
 	ew.println("Snapshot Retention Plan")
 	ew.println("=======================")
 	ew.printf("Generated: %s\n", plan.GeneratedAt.Format(time.RFC3339))
@@ -27,25 +27,24 @@ func writeSnapshotPlanHeader(ew *errWriter, plan SnapshotPlanOutput) {
 	ew.printf("Mode:      %s%s\n", plan.Mode, modeHint)
 }
 
-func writeSnapshotPlanTierSections(ew *errWriter, plan SnapshotPlanOutput) {
+func writePlanTierSections(ew *errWriter, plan PlanOutput) {
 	if plan.TotalFiles == 0 {
 		ew.println("\nNo snapshots found.")
 		return
 	}
 
-	// Pre-group files by tier to avoid O(tiers × files) scanning.
-	byTier := make(map[string][]SnapshotPlanFile, len(plan.TierSummaries))
+	byTier := make(map[string][]PlanFile, len(plan.TierSummaries))
 	for i := range plan.Files {
 		f := &plan.Files[i]
 		byTier[f.Tier] = append(byTier[f.Tier], *f)
 	}
 
 	for _, tierSummary := range plan.TierSummaries {
-		writeSnapshotPlanTier(ew, tierSummary, byTier[tierSummary.Tier])
+		writePlanTier(ew, tierSummary, byTier[tierSummary.Tier])
 	}
 }
 
-func writeSnapshotPlanTier(ew *errWriter, tierSummary SnapshotPlanTierSummary, files []SnapshotPlanFile) {
+func writePlanTier(ew *errWriter, tierSummary PlanTierSummary, files []PlanFile) {
 	ew.printf("\nTier: %s (older_than=%s, keep_min=%d)\n", tierSummary.Tier, tierSummary.OlderThan, tierSummary.KeepMin)
 	for _, file := range files {
 		ew.printf("  %-8s %s  captured=%s  %s\n",
@@ -53,13 +52,11 @@ func writeSnapshotPlanTier(ew *errWriter, tierSummary SnapshotPlanTierSummary, f
 	}
 }
 
-func writeSnapshotPlanSummary(ew *errWriter, plan SnapshotPlanOutput) {
+func writePlanSummary(ew *errWriter, plan PlanOutput) {
 	actionWord := "prune"
 	if plan.ArchiveDir != "" {
 		actionWord = "archive"
 	}
-	// Derive keep count from tier summaries for cross-validation
-	// rather than subtracting from totals.
 	keepCount := 0
 	for _, ts := range plan.TierSummaries {
 		keepCount += ts.KeepCount
@@ -68,8 +65,6 @@ func writeSnapshotPlanSummary(ew *errWriter, plan SnapshotPlanOutput) {
 		plan.TotalFiles, keepCount, plan.TotalActions, actionWord)
 }
 
-// errWriter is a sticky-error writer that absorbs fmt.Fprint errors,
-// allowing rendering code to stay concise without per-call error checks.
 type errWriter struct {
 	w   io.Writer
 	err error

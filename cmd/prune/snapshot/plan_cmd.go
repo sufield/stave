@@ -5,9 +5,11 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/adapters/pruner/plan"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 // NewPlanCmd constructs the plan command.
@@ -72,7 +74,7 @@ Examples:
 			}
 
 			// Delegate to internal runner
-			runner := appsnapshot.NewPlanRunner()
+			runner := appsnapshot.NewPlanRunner(adaptPlanApply)
 			return runner.Run(ctx, appsnapshot.PlanConfig{
 				Files:            files,
 				Tiers:            tiers,
@@ -102,4 +104,16 @@ Examples:
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
 
 	return cmd
+}
+
+// adaptPlanApply bridges the domain PlanEntry type to the adapter's
+// ApplySnapshotPlan function, keeping the app layer adapter-free.
+func adaptPlanApply(entries []snapshotdomain.PlanEntry, obsRoot, archiveDir string, allowSymlink bool) error {
+	_, err := plan.ApplySnapshotPlan(plan.SnapshotPlanApplyInput{
+		Entries:          entries,
+		ObservationsRoot: obsRoot,
+		ArchiveDir:       archiveDir,
+		AllowSymlink:     allowSymlink,
+	})
+	return err
 }

@@ -8,13 +8,13 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	"github.com/sufield/stave/internal/adapters/pruner"
+	"github.com/sufield/stave/internal/adapters/pruner/fsops"
+	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/pruner"
-	"github.com/sufield/stave/internal/pruner/fsops"
-	"github.com/sufield/stave/internal/pruner/report"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
