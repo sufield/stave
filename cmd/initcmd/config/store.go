@@ -53,66 +53,64 @@ func (s projectConfigStore) LoadOrCreate() (*appconfig.ProjectConfig, string, er
 	return &appconfig.ProjectConfig{}, filepath.Join(baseDir, appconfig.ProjectConfigFile), nil
 }
 
-// CurrentValue resolves the effective value of a key for display during interactive editing.
-func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgPath string) string {
+// CurrentValue resolves the effective value of a key for display during
+// interactive editing. Returns (value, true) when set, or ("", false)
+// when unset, following Go's comma-ok idiom.
+func (s projectConfigStore) CurrentValue(cfg *appconfig.ProjectConfig, key, cfgPath string) (string, bool) {
 	if cfg == nil {
-		return "(not set)"
+		return "", false
 	}
 	eval := appconfig.NewEvaluator(cfg, cfgPath, nil, "")
 
 	parsed, err := appconfig.ParseConfigKey(key)
 	if err != nil {
-		return "(not set)"
+		return "", false
 	}
 
-	// Tier keys: resolve with tier name as fallback
 	if parsed.TierName != "" {
 		if parsed.SubField != "" {
 			return s.tierSubFieldValue(cfg, parsed)
 		}
 		v := eval.ResolveSnapshotRetention(parsed.TierName)
 		if v.Value == "" {
-			return "(not set)"
+			return "", false
 		}
-		return v.Value
+		return v.Value, true
 	}
 
-	// snapshot_retention needs fallback tier
 	if parsed.TopLevel == "snapshot_retention" {
 		v := eval.ResolveSnapshotRetention(eval.RetentionTier())
 		if v.Value == "" {
-			return "(not set)"
+			return "", false
 		}
-		return v.Value
+		return v.Value, true
 	}
 
-	// Other top-level keys: use reflection
 	v, ok := appconfig.ResolveKey(eval, key)
 	if !ok || v.Value == "" {
-		return "(not set)"
+		return "", false
 	}
-	return v.Value
+	return v.Value, true
 }
 
-// tierSubFieldValue reads a specific tier sub-field directly from config.
-func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, parsed appconfig.ParsedKey) string {
+func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, parsed appconfig.ParsedKey) (string, bool) {
 	if cfg == nil || len(cfg.RetentionTiers) == 0 {
-		return "(not set)"
+		return "", false
 	}
 	tc, exists := cfg.RetentionTiers[parsed.TierName]
 	if !exists {
-		return "(not set)"
+		return "", false
 	}
 	switch parsed.SubField {
 	case "older_than":
 		if tc.OlderThan == "" {
-			return "(not set)"
+			return "", false
 		}
-		return tc.OlderThan
+		return tc.OlderThan, true
 	case "keep_min":
-		return strconv.Itoa(retention.TierConfig{KeepMin: tc.KeepMin}.EffectiveKeepMin())
+		return strconv.Itoa(retention.TierConfig{KeepMin: tc.KeepMin}.EffectiveKeepMin()), true
 	default:
-		return "(not set)"
+		return "", false
 	}
 }
 
