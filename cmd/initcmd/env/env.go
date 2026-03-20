@@ -29,31 +29,26 @@ type Entry struct {
 	Description  string `json:"description"`
 	Category     string `json:"category"`
 	Value        string `json:"value"`
+	IsSet        bool   `json:"is_set"`
 	DefaultValue string `json:"default_value,omitempty"`
 }
 
-// --- Runner ---
-
-// Runner orchestrates the discovery and display of supported environment variables.
-type Runner struct{}
-
-// List retrieves all supported STAVE_* variables and renders them.
-func (r *Runner) List(_ context.Context, cfg ListConfig) error {
+// listEnvVars retrieves all supported STAVE_* variables and renders them.
+func listEnvVars(_ context.Context, cfg ListConfig) error {
 	vars := staveenv.All()
 	entries := make([]Entry, len(vars))
 	for i, v := range vars {
 		val := v.Value()
-		if val == "" {
+		isSet := val != ""
+		if !isSet {
 			val = v.DefaultValue
-		}
-		if val == "" {
-			val = "(not set)"
 		}
 		entries[i] = Entry{
 			Name:         v.Name,
 			Description:  v.Description,
 			Category:     v.Category,
 			Value:        val,
+			IsSet:        isSet || v.DefaultValue != "",
 			DefaultValue: v.DefaultValue,
 		}
 	}
@@ -61,10 +56,10 @@ func (r *Runner) List(_ context.Context, cfg ListConfig) error {
 	if cfg.Format.IsJSON() {
 		return jsonutil.WriteIndented(cfg.Stdout, entries)
 	}
-	return r.renderText(cfg.Stdout, entries)
+	return renderEnvText(cfg.Stdout, entries)
 }
 
-func (r *Runner) renderText(w io.Writer, entries []Entry) error {
+func renderEnvText(w io.Writer, entries []Entry) error {
 	fmt.Fprintln(w, "STAVE_* Environment Variables")
 	fmt.Fprintln(w, "-----------------------------")
 
@@ -84,7 +79,11 @@ func (r *Runner) renderText(w io.Writer, entries []Entry) error {
 			if e.Category != cat.key {
 				continue
 			}
-			fmt.Fprintf(tw, "  %s\t%s\t%s\n", e.Name, e.Description, e.Value)
+			display := e.Value
+			if !e.IsSet {
+				display = "(not set)"
+			}
+			fmt.Fprintf(tw, "  %s\t%s\t%s\n", e.Name, e.Description, display)
 		}
 		if err := tw.Flush(); err != nil {
 			return err
@@ -131,8 +130,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := &Runner{}
-			return runner.List(cmd.Context(), ListConfig{
+			return listEnvVars(cmd.Context(), ListConfig{
 				Format: fmtValue,
 				Stdout: cmd.OutOrStdout(),
 			})
