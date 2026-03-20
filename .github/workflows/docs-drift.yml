@@ -1,0 +1,57 @@
+name: Docs Drift
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'stave/docs/**'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'stave/docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check for stale references
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Detect stale paths and terms in docs
+        run: |
+          set -euo pipefail
+          bad=0
+
+          check_pattern() {
+            local pattern="$1"
+            local reason="$2"
+            if grep -rn "$pattern" docs/ --include='*.md' 2>/dev/null; then
+              echo "::error::Stale reference: $reason (pattern: $pattern)"
+              bad=1
+            fi
+          }
+
+          # Paths that were moved or removed
+          check_pattern 'internal/domain/'          'domain moved to pkg/alpha/domain/'
+          check_pattern 'internal/adapters/input/'   'adapters/input/ flattened to adapters/'
+          check_pattern 'internal/report/'           'report moved to adapters/output/report/'
+          check_pattern 'internal/pruner/'           'pruner moved to adapters/pruner/'
+          check_pattern 'internal/testutil/'         'testutil was deleted'
+
+          # Commands that were removed
+          check_pattern 'stave ingest'               'ingest command was removed'
+          check_pattern 'stave-dev extractor'        'extractor command was removed'
+          check_pattern 'security-audit'             'security-audit command does not exist'
+
+          # Stale binary split language
+          check_pattern 'stave-dev only'             'no dev-only commands — all ship in one binary'
+          check_pattern 'Developer Commands.*dev'    'no separate developer command set'
+
+          exit $bad
