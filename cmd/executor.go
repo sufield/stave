@@ -18,9 +18,9 @@ func Execute() {
 	app.execute()
 }
 
-// ExecuteDev runs the dev root command with all developer-only commands enabled.
+// ExecuteDev runs the root command with the "dev" edition label.
 func ExecuteDev() {
-	app := NewApp(WithDevCommands())
+	app := NewApp(WithDevEdition())
 	app.execute()
 }
 

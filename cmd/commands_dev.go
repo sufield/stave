@@ -20,10 +20,6 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// WireDevCommands is retained for the dev binary edition tagging.
-// All commands are now registered in WireProdCommands.
-func WireDevCommands(_ *App) {}
-
 // ---------------------------------------------------------------------------
 // VersionRunner — extracted orchestrator for the version command
 // ---------------------------------------------------------------------------

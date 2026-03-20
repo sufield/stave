@@ -221,192 +221,74 @@ Yes. Observation snapshots are evidence — they prove what state your infrastru
 
 Stave's snapshot lifecycle commands give you the tooling to manage retention. They do not make compliance decisions for you — your retention settings must reflect your regulatory obligations.
 
-## How do I prevent `stave-dev` from being used against production?
+## How does Stave protect against accidental destruction in production?
 
-Three layers of defense, used together:
+Stave uses a **two-key safety model** for destructive commands like `snapshot prune`. Both conditions must be true for the production guard to activate:
 
-**Layer 1: Environment variable (`STAVE_ENV`)**
+1. **Key 1: Edition** — the binary must be built with the dev edition label (`stave-dev`)
+2. **Key 2: Environment** — the runtime must be detected as production (`STAVE_ENV=production` or a context with `production: true`)
 
-Set `STAVE_ENV=production` in your production CI/CD runners and deployment environments. The dev binary checks this automatically:
+This is defense-in-depth. A single misconfiguration cannot cause a disaster:
 
-- Read-only commands (doctor, trace, explain) print a warning but proceed — this allows break-glass debugging.
-- Destructive commands (prune) are hard-blocked with an error.
+| Scenario | Binary | Environment | Guard activates? | Result |
+|---|---|---|---|---|
+| CI pipeline | `stave` | production | No | All commands run freely (standard deployment) |
+| Developer laptop | `stave` or `stave-dev` | not production | No | All commands run freely (local sandbox) |
+| Shared environment | `stave-dev` | production | **Yes** | Destructive commands blocked, read-only commands warn |
+| Accidental env var | `stave` | production | No | Safe — production binary never activates guard |
 
-```bash
-export STAVE_ENV=production
-stave-dev snapshot prune --force   # BLOCKED: "command 'prune' is blocked in production"
-stave-dev doctor                   # WARNING, then runs (read-only)
-stave apply ...                    # No guard — production binary is always safe
-```
+**Why two keys instead of one?** If the guard only checked `STAVE_ENV`, then unsetting the variable (or a typo) would silently disable protection. Requiring the dev edition binary as the first key means the standard `stave` binary is always safe regardless of environment configuration. You have to **intentionally deploy the dev binary** to a production-marked environment for the guard to matter.
 
-**Layer 2: Context metadata (`production: true`)**
+### Layer 1: Environment detection
 
-Mark production contexts in your contexts config:
+Set `STAVE_ENV=production` in production CI/CD runners and deployment environments, or mark contexts as production:
 
 ```yaml
 contexts:
   prod-us-east:
     project_root: /ops/stave
     production: true
-  dev-sandbox:
-    project_root: /home/user/stave
-    production: false
 ```
 
-The dev binary reads the active context and applies the same guards as `STAVE_ENV`.
+When detected, the dev binary:
+- **Hard-blocks** destructive commands (`snapshot prune`) with a clear error
+- **Warns** on read-only commands (allows break-glass debugging)
 
-**Layer 3: IAM boundaries (the gold standard)**
+```bash
+export STAVE_ENV=production
+stave-dev snapshot prune --force   # BLOCKED: "command 'prune' is blocked in production"
+stave-dev doctor                   # WARNING printed, then runs (read-only)
+```
 
-The most robust defense is ensuring developer credentials cannot modify production data:
+### Layer 2: IAM boundaries (the gold standard)
 
-- The IAM role used by developers should have **read-only** access to production snapshot storage.
-- Only the production service account (used by the `stave` binary in CI/CD) should have write/delete permissions on the production archive.
-- This ensures that even if someone bypasses the CLI guards, the cloud layer blocks the operation.
+The most robust defense ensures developer credentials cannot modify production data at the cloud layer:
 
 | Environment | Binary | Credentials | Can read | Can write/delete |
 |---|---|---|---|---|
 | CI/CD pipeline | `stave` | Service account | Yes | Yes (archive only) |
 | Developer laptop | `stave-dev` | Developer IAM role | Yes (break-glass) | No |
-| Local sandbox | `stave-dev` | Sandbox credentials | Yes | Yes |
+| Local sandbox | `stave` or `stave-dev` | Sandbox credentials | Yes | Yes |
 
-**When is it okay for `stave-dev` to read production data?**
+## Why are there two binaries (`stave` and `stave-dev`)?
 
-Break-glass debugging. If a production evaluation fails and logs don't explain why, a senior engineer may need `stave-dev trace` or `stave-dev diagnose` against production snapshots to identify the exact predicate logic that failed. The read-only warning acknowledges this is happening without blocking it.
+Both binaries contain **identical commands**. Every command — `apply`, `diagnose`, `trace`, `controls`, `lint`, `inspect`, `doctor`, `snapshot prune` — ships in both.
 
-## Why is there a separate `stave-dev` binary?
+The only difference is the **edition label**:
 
-The dev binary provides tools for **authoring, debugging, and inspecting** the control evaluation system itself — things an operator running evaluations in CI never needs.
+| | `stave` | `stave-dev` |
+|---|---|---|
+| Edition | `production` | `dev` |
+| `--version` output | `0.0.3 (production)` | `0.0.3 (dev)` |
+| Production guard | Never activates | Activates when `STAVE_ENV=production` |
+| Panic recovery message | Suggests `doctor` | Suggests `bug-report` |
 
-**Control authoring** — `controls list`, `packs show`, `lint`, `fmt`, `graph`. You need these when writing new controls or modifying existing ones. A production pipeline consumes controls; it doesn't author them.
+**Why not a single binary with a flag?** The two-key model requires the safety decision to be made at **build time** (which binary to deploy), not at **runtime** (which flag to pass). A `--dev` flag could be accidentally included in a CI script. A deployment that installs `stave` instead of `stave-dev` is safe by construction — there is no flag to discover, no config to override.
 
-**Deep debugging** — `trace`, `prompt`. When a control produces an unexpected finding, `trace` walks you through the predicate evaluation step-by-step for a single asset. `prompt` generates an LLM-ready context from results. These are investigation tools, not operational ones.
+**When to use which:**
 
-**Supportability** — `bug-report`, `doctor`. Bug-report collects a sanitized diagnostic bundle. Doctor checks local environment readiness. Both produce artifacts about Stave, not about your infrastructure.
-
-**Introspection** — `schemas`, `capabilities`, `version` (verbose), `doctor`. These answer "what does this build of Stave support?" — schema versions, source types, pack metadata, local environment readiness. Useful when onboarding, upgrading, or filing issues.
-
-**Extractor development** — `extractor scaffold`, `extractor validate`. For building custom observation extractors for new source types beyond AWS S3.
-
-**Productivity** — `alias`, `docs search`, `docs open`. Developer conveniences that have no place in an automated pipeline.
-
-**Destructive maintenance** — `snapshot prune`. Permanently deletes observation snapshots. This is the only write-destructive dev command and is blocked from running against production environments.
-
-**Why a separate binary instead of hidden flags or feature gates?** The separation is at the compile level. The production binary does not contain the code for these commands. There is no `--enable-dev` flag to discover, no environment variable to flip, no config to override. The attack surface, the help output, and the dependency tree are all smaller by construction. A compromised CI runner cannot use `stave` to delete evidence, exfiltrate diagnostics, or run extractors against production APIs — because those capabilities do not exist in the binary.
-
-### Production binary (`stave`)
-
-Runs evaluations safely. Cannot delete evidence, cannot introspect the tool itself, cannot author controls.
-
-**Setup** — run once when starting a new project.
-
-| Command | Purpose |
-|---|---|
-| `init` | Scaffold a new project |
-| `generate` | Create starter controls and observations |
-| `config` | Manage project settings, contexts, and environment variables |
-| `status` | Show next recommended workflow step |
-
-**Data preparation** — run before every evaluation.
-
-| Command | Purpose |
-|---|---|
-| `validate` | Pre-flight check that inputs are well-formed |
-
-**Evaluation** — the core loop: evaluate, understand, fix, confirm.
-
-| Command | Purpose |
-|---|---|
-| `apply` | Run control evaluation (with `--dry-run` for readiness checks) |
-| `diagnose` | Root-cause guidance when results are unexpected |
-| `explain` | Show how a specific control evaluates |
-| `verify` | Confirm a remediation resolved a finding |
-
-**CI/CD** — automated pipeline gates and regression analysis.
-
-| Command | Purpose |
-|---|---|
-| `ci baseline` | Save/check accepted findings baseline |
-| `ci gate` | Pass/fail gate for pipelines |
-| `ci diff` | Regression analysis between two evaluations |
-| `ci fix` | Machine-readable fix plan for a finding |
-| `ci fix-loop` | Apply-before, apply-after, verify in one command |
-
-**Remediation artifacts** — generate outputs for stakeholders and IaC.
-
-| Command | Purpose |
-|---|---|
-| `enforce` | Generate Terraform/SCP remediation templates |
-| `report` | Plain-text summary for stakeholders and auditors |
-
-**Snapshot lifecycle** — manage observation history without destroying evidence.
-
-| Command | Purpose |
-|---|---|
-| `snapshot plan` | Preview retention actions |
-| `snapshot quality` | Check staleness, cadence gaps, missing fields |
-| `snapshot upcoming` | Snapshots approaching retention deadlines |
-| `snapshot archive` | Move aged snapshots to cold storage (non-destructive) |
-| `snapshot hygiene` | Orphaned files, naming inconsistencies |
-| `snapshot diff` | Drift detection between two snapshots |
-| `snapshot manifest` | Generate and sign integrity manifests |
-
-### Dev binary (`stave-dev`) — adds
-
-Build and debug the evaluation system. Used at a workstation, not in a pipeline. Blocked from production environments by default.
-
-**Control authoring** — write, validate, and visualize controls.
-
-| Command | Purpose |
-|---|---|
-| `controls list` | Inventory of built-in controls |
-| `packs show` | Pack metadata: version, control count, paths |
-| `lint` | Design-quality linting of control YAML |
-| `fmt` | Deterministic formatting |
-| `graph` | Visualize control-to-asset relationships |
-
-**Debugging** — investigate why a control matched or didn't.
-
-| Command | Purpose |
-|---|---|
-| `trace` | Step-by-step predicate evaluation for one asset |
-| `prompt` | Generate LLM-ready context from results |
-
-**Extractor development** — build extractors for new source types.
-
-| Command | Purpose |
-|---|---|
-| `extractor scaffold` | Generate boilerplate for a custom extractor |
-| `extractor validate` | Validate extractor output against obs.v0.1 |
-
-**Introspection** — understand what this build of Stave supports.
-
-| Command | Purpose |
-|---|---|
-| `doctor` | Local environment readiness checks |
-| `schemas` | List all wire-format contract schemas |
-| `capabilities` | Supported schemas, source types, packs |
-| `version` | Verbose version with schema and lockfile details |
-
-**Supportability** — diagnostics and environment checks.
-
-| Command | Purpose |
-|---|---|
-| `bug-report` | Collect sanitized diagnostic bundle |
-| `doctor` | Check local environment readiness |
-
-**Productivity** — shortcuts and documentation lookup.
-
-| Command | Purpose |
-|---|---|
-| `alias` | Create/list/delete command shortcuts |
-| `docs search` | Full-text search across Stave documentation |
-| `docs open` | Open a docs page in the browser |
-
-**Destructive maintenance** — evidence deletion, blocked in production.
-
-| Command | Purpose |
-|---|---|
-| `snapshot prune` | Permanently delete old snapshots |
+- **`stave`** — standard deployment for CI pipelines, production evaluation, and automated workflows. The production guard never activates, so all commands run without warnings or blocks.
+- **`stave-dev`** — for shared environments where you want the production guard active. Deploy alongside `STAVE_ENV=production` or production-marked contexts to block destructive commands while allowing break-glass debugging.
 
 ## What does Stave *not* do?
 

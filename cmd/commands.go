@@ -32,10 +32,8 @@ const (
 	groupDevTools       = "dev-tools"
 )
 
-// WireProdCommands attaches the full command tree to the root command.
-// All commands are production-ready. The dev binary (stave-dev) adds
-// edition metadata via WithDevCommands but no additional commands.
-func WireProdCommands(app *App) {
+// WireCommands attaches the full command tree to the root command.
+func WireCommands(app *App) {
 	root := app.Root
 	p := app.Provider
 

@@ -2,7 +2,7 @@ package cmd
 
 import "github.com/spf13/cobra"
 
-func wireProdHelpGroups(root *cobra.Command) {
+func wireHelpGroups(root *cobra.Command) {
 	root.AddGroup(
 		&cobra.Group{ID: groupGettingStarted, Title: "Getting Started"},
 		&cobra.Group{ID: groupCore, Title: "Control Engine"},

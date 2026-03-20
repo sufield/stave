@@ -39,15 +39,14 @@ type globalFlagsType struct {
 }
 
 // AppOption configures optional behaviour on an App before it is returned
-// from NewApp. Use WithDevCommands to build the full developer binary.
+// from NewApp. Use WithDevEdition to build the full developer binary.
 type AppOption func(*App)
 
-// WithDevCommands returns an AppOption that registers all developer-only
-// commands and sets the binary edition to "dev".
-func WithDevCommands() AppOption {
+// WithDevEdition returns an AppOption that sets the binary edition to "dev".
+// All commands are registered in WireCommands regardless of edition.
+func WithDevEdition() AppOption {
 	return func(app *App) {
 		app.Edition = EditionDev
-		WireDevCommands(app)
 	}
 }
 
@@ -78,7 +77,7 @@ type App struct {
 }
 
 // NewApp creates a fully-wired CLI application.
-// Pass WithDevCommands() to build the stave-dev binary with all commands.
+// Pass WithDevEdition() to build the stave-dev binary with all commands.
 func NewApp(opts ...AppOption) *App {
 	logging.InitDefaultLogger()
 	app := &App{
@@ -96,14 +95,14 @@ func NewApp(opts ...AppOption) *App {
 		Long:              rootLongHelp,
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
-	WireProdCommands(app)
+	WireCommands(app)
 
 	for _, opt := range opts {
 		opt(app)
 	}
 
 	app.Root.Version = fmt.Sprintf("%s (%s)", GetVersion(), string(app.Edition))
-	wireProdHelpGroups(app.Root)
+	wireHelpGroups(app.Root)
 	return app
 }
 

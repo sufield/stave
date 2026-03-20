@@ -24,7 +24,7 @@ func getRootCmd() *cobra.Command {
 
 // getDevRootCmd returns a fully-wired root cobra command with all dev commands.
 func getDevRootCmd() *cobra.Command {
-	return NewApp(WithDevCommands()).Root
+	return NewApp(WithDevEdition()).Root
 }
 
 // testAttachRunIDFromPlan attaches a run ID from the evaluation plan to the app logger.
