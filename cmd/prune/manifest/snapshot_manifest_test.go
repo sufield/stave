@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func TestCollectObservationHashes_FiltersNonObservationAndManifestArtifacts(t *testing.T) {

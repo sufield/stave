@@ -6,7 +6,7 @@ import (
 	service "github.com/sufield/stave/internal/app/service"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
 )
 
 // SchemaValidator defines the schema validation operations needed by content validators.

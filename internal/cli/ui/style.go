@@ -107,7 +107,3 @@ func (r *Runtime) CanColor(out io.Writer) bool {
 	ttyCache.Store(key, enabled)
 	return enabled
 }
-
-func resetTTYCacheForTest() {
-	ttyCache = sync.Map{}
-}

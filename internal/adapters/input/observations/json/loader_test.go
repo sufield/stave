@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // TestObservationLoader_RejectsMissingSchemaVersion tests that LoadSnapshots returns an error

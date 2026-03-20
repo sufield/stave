@@ -14,9 +14,9 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/input/evaluation/json"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	diagprompt "github.com/sufield/stave/internal/app/diagnose/prompt"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // writeEvalFile creates a minimal evaluation JSON file for testing.

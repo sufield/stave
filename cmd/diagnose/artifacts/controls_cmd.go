@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package artifacts
 
 import (
@@ -18,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // NewControlsCmd constructs the controls command tree with closure-scoped flags.
@@ -44,6 +43,7 @@ Examples:
 
 func newControlsListCmd(p *compose.Provider) *cobra.Command {
 	cfg := catalog.ListConfig{}
+	var filterPatterns []string
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -53,14 +53,15 @@ func newControlsListCmd(p *compose.Provider) *cobra.Command {
 Examples:
   stave controls list --controls ./controls
   stave controls list --controls ./controls --format json
-  stave controls list --controls ./controls --format csv --columns id,name` + metadata.OfflineHelpSuffix,
+  stave controls list --controls ./controls --format csv --columns id,name
+  stave controls list --built-in --filter aws/s3/severity:high+` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			stdout := cmd.OutOrStdout()
 			if cfg.ListPacks {
 				return runListPacks(stdout, cfg)
 			}
-			rows, err := listControlRows(cmd.Context(), p, cfg)
+			rows, err := listControlRows(cmd.Context(), p, cfg, filterPatterns)
 			if err != nil {
 				return err
 			}
@@ -77,14 +78,31 @@ Examples:
 	cmd.Flags().BoolVar(&cfg.NoHeaders, "no-headers", false, "Hide headers for table/csv output")
 	cmd.Flags().BoolVar(&cfg.UseBuiltIn, "built-in", false, "List built-in embedded controls instead of filesystem")
 	cmd.Flags().BoolVar(&cfg.ListPacks, "packs", false, "List built-in control packs instead of controls")
+	cmd.Flags().StringSliceVar(&filterPatterns, "filter", nil, "Filter controls by selector (e.g. aws/s3/severity:high+)")
 
 	return cmd
 }
 
-func listControlRows(ctx context.Context, p *compose.Provider, cfg catalog.ListConfig) ([]catalog.ControlRow, error) {
+func listControlRows(ctx context.Context, p *compose.Provider, cfg catalog.ListConfig, filterPatterns []string) ([]catalog.ControlRow, error) {
 	if cfg.UseBuiltIn {
 		registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded")
-		controls, err := registry.All(ctx)
+
+		var controls []policy.ControlDefinition
+		var err error
+
+		if len(filterPatterns) > 0 {
+			selectors := make([]builtin.Selector, 0, len(filterPatterns))
+			for _, pat := range filterPatterns {
+				sel, parseErr := builtin.ParseSelector(pat)
+				if parseErr != nil {
+					return nil, fmt.Errorf("invalid filter %q: %w", pat, parseErr)
+				}
+				selectors = append(selectors, sel)
+			}
+			controls, err = registry.Filtered(ctx, selectors)
+		} else {
+			controls, err = registry.All(ctx)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("load built-in controls: %w", err)
 		}

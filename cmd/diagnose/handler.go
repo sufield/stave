@@ -13,10 +13,10 @@ import (
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Config holds the inputs for the diagnostic engine.
@@ -99,7 +99,7 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 	}
 
 	report = output.SanitizeReport(cfg.Sanitizer, report)
-	report = FilterReport(report, Filter{
+	report = appdiagnose.FilterReport(report, appdiagnose.Filter{
 		Cases:          cfg.Cases,
 		SignalContains: cfg.SignalContains,
 	})

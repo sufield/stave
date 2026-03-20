@@ -11,8 +11,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/domain/ports"
-	"github.com/sufield/stave/internal/testutil"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 func TestParseGatePolicy(t *testing.T) {
@@ -208,5 +207,23 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 
 func testdataDir(t *testing.T, name string) string {
 	t.Helper()
-	return testutil.E2EDir(t, name)
+	return filepath.Join(findRepoRoot(t), "testdata", "e2e", name)
+}
+
+func findRepoRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("cannot get working directory: %v", err)
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("cannot find repo root (no go.mod found)")
+		}
+		dir = parent
+	}
 }

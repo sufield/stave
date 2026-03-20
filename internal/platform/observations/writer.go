@@ -2,8 +2,8 @@
 package observations
 
 import (
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // WriteRequest controls how observations are serialized and persisted.

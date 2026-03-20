@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package cmd
 
 import (
@@ -10,7 +8,7 @@ import (
 // TestOfflineHelpSuffix_DevCommands verifies dev-only commands that should
 // display the offline guarantee.
 func TestOfflineHelpSuffix_DevCommands(t *testing.T) {
-	root := GetDevRootCmd()
+	root := getDevRootCmd()
 
 	required := [][]string{
 		{"doctor"},

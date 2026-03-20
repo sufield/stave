@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // LoadSnapshots is a convenience wrapper that loads snapshots via the given provider.

@@ -3,9 +3,9 @@ package upcoming
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Item represents a single upcoming snapshot action item.

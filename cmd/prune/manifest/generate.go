@@ -11,11 +11,11 @@ import (
 
 	appeval "github.com/sufield/stave/internal/app/eval"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // GenerateConfig defines the parameters for manifest generation.

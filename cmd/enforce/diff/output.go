@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // writeOutput dispatches rendering of the delta based on format and quiet mode.

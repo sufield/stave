@@ -3,9 +3,9 @@ package report
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // CleanupAction is an alias for the shared pruner CleanupAction type.

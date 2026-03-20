@@ -4,8 +4,8 @@ import (
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 // Builder implements evaluation.FindingTraceBuilder using the CEL engine.

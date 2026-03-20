@@ -7,8 +7,8 @@ import (
 
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 func TestFilterSnapshotsBefore(t *testing.T) {

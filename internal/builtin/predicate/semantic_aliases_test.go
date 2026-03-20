@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // ── Phase 3.1: Comprehensive Unit Test ───────────────────────────────

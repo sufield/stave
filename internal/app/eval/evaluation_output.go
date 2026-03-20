@@ -7,13 +7,8 @@ import (
 	"log/slog"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
-
-// writeOutput writes findings using the Enrich → Marshal → Write pipeline.
-func (e *EvaluateRun) writeOutput(ctx context.Context, out io.Writer, result evaluation.Result) error {
-	return RunOutputPipeline(ctx, out, result, e.Marshaler, e.EnrichFn, e.Logger)
-}
 
 // RunOutputPipeline executes the Enrich → Marshal → Write pipeline for
 // evaluation results.

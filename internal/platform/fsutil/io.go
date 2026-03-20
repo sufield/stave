@@ -15,8 +15,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/sufield/stave/internal/domain/kernel"
 )
 
 // maxInputFileBytes is the hardcoded safety limit for input files (256 MB).
@@ -116,19 +114,6 @@ func JoinWithinRoot(root, relPath string) (string, error) {
 }
 
 // --- WRITE SAFETY ---
-
-// IsSymlink returns true if path exists and is a symbolic link.
-// Returns (false, nil) if the path does not exist.
-func IsSymlink(path string) (bool, error) {
-	fi, err := os.Lstat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	return fi.Mode()&os.ModeSymlink != 0, nil
-}
 
 // SafeCreateFile creates a file using provided write options, enforcing:
 //   - Symlink protection: refuses if target is a symlink (unless AllowSymlink),
@@ -265,14 +250,6 @@ func verifyHandle(f *os.File, path string) error {
 		return fmt.Errorf("%w: %s (path changed between check and open)", ErrSymlinkForbidden, path)
 	}
 	return nil
-}
-
-// --- VALIDATION ---
-
-// ValidateBucket checks that a bucket name is safe for use in file paths and URLs.
-// It delegates to kernel.BucketRef.Validate for the canonical validation logic.
-func ValidateBucket(name string) error {
-	return kernel.NewBucketRef(name).Validate()
 }
 
 // --- ATOMIC WRITES ---

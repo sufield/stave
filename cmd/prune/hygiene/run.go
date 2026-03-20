@@ -11,15 +11,15 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 	staveversion "github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // --- Config ---

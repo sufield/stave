@@ -6,12 +6,18 @@ import (
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
+	"github.com/sufield/stave/cmd/bugreport"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
+	"github.com/sufield/stave/cmd/diagnose/artifacts"
+	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
+	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/initcmd"
+	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
+	"github.com/sufield/stave/cmd/inspect"
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -22,13 +28,13 @@ const (
 	groupWorkflow       = "workflow"
 	groupArtifacts      = "artifacts"
 	groupSettings       = "settings"
+	groupIntrospection  = "introspection"
 	groupDevTools       = "dev-tools"
 )
 
-// WireProdCommands attaches the production command tree to the root command.
-// Dev-only commands (doctor, bug-report, extractor, controls, packs, graph,
-// lint, fmt, trace, prompt, docs, alias, schemas, capabilities, version
-// subcommand, security-audit) are wired separately by WireDevCommands.
+// WireProdCommands attaches the full command tree to the root command.
+// All commands are production-ready. The dev binary (stave-dev) adds
+// edition metadata via WithDevCommands but no additional commands.
 func WireProdCommands(app *App) {
 	root := app.Root
 	p := app.Provider
@@ -43,6 +49,8 @@ func WireProdCommands(app *App) {
 	root.AddCommand(applyverify.NewCmd(p, ui.DefaultRuntime()))
 	root.AddCommand(diagnose.NewDiagnoseCmd(p))
 	root.AddCommand(diagnose.NewExplainCmd(p))
+	root.AddCommand(diagnose.NewTraceCmd(p))
+	root.AddCommand(diagnose.NewPromptCmd(p))
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())
@@ -68,6 +76,32 @@ func WireProdCommands(app *App) {
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
 	root.AddCommand(diagreport.NewReportCmd())
+	root.AddCommand(artifacts.NewLintCmd())
+	root.AddCommand(artifacts.NewFmtCmd())
+	root.AddCommand(artifacts.NewControlsCmd(p))
+	root.AddCommand(artifacts.NewPacksCmd())
+
+	// Introspection
+	root.AddCommand(inspect.NewInspectCmd())
+
+	// Supportability
+	root.AddCommand(doctor.NewCmd())
+	root.AddCommand(bugreport.NewCmd())
+	root.AddCommand(enforce.NewGraphCmd(p))
+	root.AddCommand(initalias.NewCmd(root))
+	root.AddCommand(newCapabilitiesCmd())
+	root.AddCommand(newSchemasCmd())
+	root.AddCommand(newVersionCmd(app.Edition))
+
+	// Documentation
+	docsCmd := &cobra.Command{
+		Use:   "docs",
+		Short: "Documentation workflow commands",
+		Long:  "Grouped docs commands: search, open." + OfflineHelpSuffix,
+		Args:  cobra.NoArgs,
+	}
+	docsCmd.AddCommand(diagdocs.NewDocsSearchCmd(), diagdocs.NewDocsOpenCmd())
+	root.AddCommand(docsCmd)
 
 	// Settings
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))
@@ -76,6 +110,9 @@ func WireProdCommands(app *App) {
 func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
 	snapshotCmd.AddCommand(enforce.NewDiffCmd(p))
 	for _, subCmd := range prune.Commands(p) {
+		snapshotCmd.AddCommand(subCmd)
+	}
+	for _, subCmd := range prune.DevCommands(p) {
 		snapshotCmd.AddCommand(subCmd)
 	}
 }

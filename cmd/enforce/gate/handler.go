@@ -11,10 +11,10 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/input/controls/yaml"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Config defines the parameters for enforcing a CI failure policy.

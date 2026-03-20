@@ -7,8 +7,8 @@ import (
 	"unicode"
 
 	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // BucketTarget represents one S3 bucket remediation target.

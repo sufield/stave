@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package cmd
 
 import (
@@ -13,74 +11,18 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/bugreport"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/cmd/diagnose"
-	"github.com/sufield/stave/cmd/diagnose/artifacts"
-	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
-	"github.com/sufield/stave/cmd/doctor"
-	"github.com/sufield/stave/cmd/enforce"
-	initalias "github.com/sufield/stave/cmd/initcmd/alias"
-	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/internal/app/capabilities"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// WireDevCommands attaches developer-only commands to an already prod-wired App.
-// Commands are assigned to the dev-tools group declaratively at construction
-// time rather than retroactively by string lookup.
-func WireDevCommands(app *App) {
-	root := app.Root
-	p := app.Provider
-
-	// Create the developer group
-	root.AddGroup(&cobra.Group{ID: groupDevTools, Title: "Developer Tools"})
-
-	// Build the dev command set
-	devCmds := []*cobra.Command{
-		doctor.NewCmd(),
-		diagnose.NewTraceCmd(p),
-		artifacts.NewLintCmd(),
-		artifacts.NewFmtCmd(),
-		artifacts.NewControlsCmd(p),
-		artifacts.NewPacksCmd(),
-		enforce.NewGraphCmd(p),
-		bugreport.NewCmd(),
-		initalias.NewCmd(root),
-		diagnose.NewPromptCmd(p),
-		newCapabilitiesCmd(),
-		newSchemasCmd(),
-		newVersionCmd(app.Edition),
-	}
-
-	// Attach all dev commands with group assignment
-	for _, c := range devCmds {
-		c.GroupID = groupDevTools
-		root.AddCommand(c)
-	}
-
-	// Docs subtree
-	docsCmd := &cobra.Command{
-		Use:     "docs",
-		Short:   "Documentation workflow commands",
-		Long:    "Grouped docs commands: search, open." + OfflineHelpSuffix,
-		Args:    cobra.NoArgs,
-		GroupID: groupDevTools,
-	}
-	docsCmd.AddCommand(diagdocs.NewDocsSearchCmd(), diagdocs.NewDocsOpenCmd())
-	root.AddCommand(docsCmd)
-
-	// Attach destructive snapshot commands to existing snapshot subtree
-	if snapshotCmd, _, err := root.Find([]string{"snapshot"}); err == nil && snapshotCmd != nil {
-		for _, c := range prune.DevCommands(p) {
-			snapshotCmd.AddCommand(c)
-		}
-	}
-}
+// WireDevCommands is retained for the dev binary edition tagging.
+// All commands are now registered in WireProdCommands.
+func WireDevCommands(_ *App) {}
 
 // ---------------------------------------------------------------------------
 // VersionRunner — extracted orchestrator for the version command

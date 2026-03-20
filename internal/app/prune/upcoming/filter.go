@@ -1,8 +1,8 @@
 package upcoming
 
 import (
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // NewUpcomingFilter transforms raw input criteria into a validated domain filter.

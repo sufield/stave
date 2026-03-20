@@ -3,9 +3,9 @@ package service
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // ValidationInput holds loaded models and runtime options for validation processing.

@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/retention"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 func TestNormalizeTier(t *testing.T) {

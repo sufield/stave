@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Kind identifies the functional category of a schema.

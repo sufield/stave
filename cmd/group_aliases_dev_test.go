@@ -1,11 +1,9 @@
-//go:build stavedev
-
 package cmd
 
 import "testing"
 
 func TestGroupedCommandAliasesExist_Dev(t *testing.T) {
-	root := GetDevRootCmd()
+	root := getDevRootCmd()
 
 	paths := [][]string{
 		{"docs"},

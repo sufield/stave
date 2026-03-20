@@ -3,9 +3,9 @@ package sanitize
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func TestToken_Deterministic(t *testing.T) {

@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package cleanup
 
 import (

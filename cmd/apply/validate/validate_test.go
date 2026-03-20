@@ -8,20 +8,39 @@ import (
 	"strings"
 	"testing"
 
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	appservice "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/testutil"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // testdataDir returns the path to a testdata e2e fixture directory.
 func testdataDir(t *testing.T, name string) string {
 	t.Helper()
-	return testutil.E2EDir(t, name)
+	return filepath.Join(findRepoRoot(t), "testdata", "e2e", name)
+}
+
+func findRepoRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("cannot get working directory: %v", err)
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("cannot find repo root (no go.mod found)")
+		}
+		dir = parent
+	}
 }
 
 // testReporter creates a Reporter writing to buf with the given options.

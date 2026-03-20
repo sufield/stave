@@ -11,7 +11,7 @@ const StartupTarget = 500 * time.Millisecond
 
 func BenchmarkCLIStartupHelp(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		root := GetRootCmd()
+		root := getRootCmd()
 		root.SetArgs([]string{"--help"})
 		start := time.Now()
 		if _, err := root.ExecuteC(); err != nil {

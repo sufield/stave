@@ -3,7 +3,7 @@ package apply
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 func TestBuildEvaluateResult_Safe(t *testing.T) {

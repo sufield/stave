@@ -7,12 +7,12 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	service "github.com/sufield/stave/internal/app/service"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Config holds configuration for the diagnose use case.

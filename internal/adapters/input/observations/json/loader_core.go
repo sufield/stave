@@ -13,15 +13,15 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // ObservationValidator validates raw observation JSON against the contract schema.

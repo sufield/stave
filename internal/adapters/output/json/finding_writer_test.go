@@ -9,12 +9,12 @@ import (
 
 	appeval "github.com/sufield/stave/internal/app/eval"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {

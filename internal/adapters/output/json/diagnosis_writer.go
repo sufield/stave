@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/sufield/stave/internal/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
 )
 
 // WriteDiagnosis writes a diagnosis report as JSON.

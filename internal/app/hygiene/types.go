@@ -4,9 +4,9 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/risk"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // HygieneFilters captures the active filter criteria for a hygiene report.

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 )

@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/enforce/shared"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 )
 
 func writeEvalJSON(t *testing.T, dir, name string, violations []remediation.Finding) string {

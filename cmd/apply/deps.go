@@ -19,12 +19,12 @@ import (
 	"github.com/sufield/stave/internal/builtin/pack"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Builder encapsulates the cmd-layer resolution needed before building
@@ -45,19 +45,6 @@ type Builder struct {
 	// OnObsProgress is called by the observation loader after each file
 	// with (processed, total) counts. Optional.
 	OnObsProgress func(processed, total int)
-}
-
-// BuildWithNewPlan creates a new evaluation plan and builds dependencies from it.
-func (b *Builder) BuildWithNewPlan() (*appeval.ApplyDeps, error) {
-	evalInput, err := b.Opts.buildEvaluatorInput()
-	if err != nil {
-		return nil, err
-	}
-	plan, err := appeval.NewPlan(evalInput)
-	if err != nil {
-		return nil, err
-	}
-	return b.Build(plan)
 }
 
 // Build constructs ApplyDeps from a pre-existing evaluation plan.

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func TestCleanUserPath(t *testing.T) {

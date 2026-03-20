@@ -7,8 +7,8 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	service "github.com/sufield/stave/internal/app/service"
-	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // Config holds configuration for the validate use case.

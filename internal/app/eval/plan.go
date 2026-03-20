@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // EvaluationPlan holds resolved paths and content hashes for an evaluation run.

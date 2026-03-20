@@ -10,7 +10,7 @@ import (
 
 	"github.com/sufield/stave/internal/builtin/predicate"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // TestControlLoader_RejectsMissingDSLVersion tests that LoadControls returns an error

@@ -3,7 +3,7 @@ package cmd
 import "testing"
 
 func TestRootHelpGroupsAssigned(t *testing.T) {
-	root := GetRootCmd()
+	root := getRootCmd()
 	if len(root.Groups()) == 0 {
 		t.Fatal("expected root command groups to be configured")
 	}

@@ -12,8 +12,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appfix "github.com/sufield/stave/internal/app/fix"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 func TestBuildFixLoopReport(t *testing.T) {

@@ -7,18 +7,37 @@ import (
 	"testing"
 	"time"
 
+	"os"
+
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	clockadp "github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/sanitize"
-	"github.com/sufield/stave/internal/testutil"
+	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // testdataDir returns the path to a testdata e2e fixture directory.
 func testdataDir(t *testing.T, name string) string {
 	t.Helper()
-	return testutil.E2EDir(t, name)
+	return filepath.Join(findRepoRoot(t), "testdata", "e2e", name)
+}
+
+func findRepoRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("cannot get working directory: %v", err)
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("cannot find repo root (no go.mod found)")
+		}
+		dir = parent
+	}
 }
 
 func TestResolveApplyOptions(t *testing.T) {
@@ -188,6 +207,20 @@ func TestResolveApplyOptions(t *testing.T) {
 	})
 }
 
+// buildWithNewPlan is a test-only helper that creates a new evaluation plan
+// and builds dependencies from it.
+func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
+	evalInput, err := b.Opts.buildEvaluatorInput()
+	if err != nil {
+		return nil, err
+	}
+	plan, err := appeval.NewPlan(evalInput)
+	if err != nil {
+		return nil, err
+	}
+	return b.Build(plan)
+}
+
 func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
 	return &Builder{
 		Ctx:       context.Background(),
@@ -218,7 +251,7 @@ func TestBuildApplyDeps(t *testing.T) {
 			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		deps, err := testBuilder(opts, params).BuildWithNewPlan()
+		deps, err := buildWithNewPlan(testBuilder(opts, params))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -250,7 +283,7 @@ func TestBuildApplyDeps(t *testing.T) {
 			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		deps, err := testBuilder(opts, params).BuildWithNewPlan()
+		deps, err := buildWithNewPlan(testBuilder(opts, params))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -276,7 +309,7 @@ func TestBuildApplyDeps(t *testing.T) {
 			source:      appeval.ObservationSource(opts.ObservationsDir),
 		}
 
-		_, err := testBuilder(opts, params).BuildWithNewPlan()
+		_, err := buildWithNewPlan(testBuilder(opts, params))
 		if err == nil {
 			t.Fatal("expected error for invalid output format")
 		}

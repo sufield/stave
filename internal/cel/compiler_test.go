@@ -3,8 +3,8 @@ package cel
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 func TestCompile_SimpleAllPredicate(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/cel-go/cel"
 
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
 
 // CompiledPredicate holds a compiled CEL program and its source expression.

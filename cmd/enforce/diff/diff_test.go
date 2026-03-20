@@ -4,8 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
+
+// newDiffFilter constructs a filter from raw flag values (test helper).
+func newDiffFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
+	opts := Options{
+		ChangeTypes: changeTypes,
+		AssetTypes:  assetTypes,
+		AssetID:     assetID,
+	}
+	return opts.buildFilter()
+}
 
 func TestComputeObservationDelta_DetectsAddedRemovedModified(t *testing.T) {
 	t1 := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)

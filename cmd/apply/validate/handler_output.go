@@ -10,8 +10,8 @@ import (
 	appservice "github.com/sufield/stave/internal/app/service"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/diag"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Reporter handles the formatting and writing of validation results.

@@ -1,5 +1,3 @@
-//go:build stavedev
-
 package cleanup
 
 import (
@@ -7,8 +5,8 @@ import (
 	"time"
 
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pruner"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 func TestPlanPrune_RespectsKeepMin(t *testing.T) {

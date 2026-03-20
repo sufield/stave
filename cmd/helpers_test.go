@@ -6,11 +6,39 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/policy"
+	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
+
+// getRootCmd returns a fully-wired root cobra command for tests.
+func getRootCmd() *cobra.Command {
+	return NewApp().Root
+}
+
+// getDevRootCmd returns a fully-wired root cobra command with all dev commands.
+func getDevRootCmd() *cobra.Command {
+	return NewApp(WithDevCommands()).Root
+}
+
+// testAttachRunIDFromPlan attaches a run ID from the evaluation plan to the app logger.
+func (a *App) testAttachRunIDFromPlan(plan *appeval.EvaluationPlan) {
+	if plan == nil {
+		return
+	}
+	a.Logger = cmdutil.SetupLoggingWithRunID(
+		a.Logger,
+		plan.ObservationsHash.String(),
+		plan.ControlsHash.String(),
+	)
+	logging.SetDefaultLogger(a.Logger)
+}
 
 func TestResolveNow_Empty(t *testing.T) {
 	before := time.Now().UTC()

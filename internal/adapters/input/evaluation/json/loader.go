@@ -7,11 +7,11 @@ import (
 	"io"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // ErrNoFindings is returned when input JSON does not contain evaluation findings.

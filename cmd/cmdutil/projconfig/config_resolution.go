@@ -7,27 +7,6 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
 
-// ConfigKeyCompletions returns config key completions including retention tier
-// variants from the project config.
-func ConfigKeyCompletions() []string {
-	tiers := []string{appconfig.DefaultRetentionTier}
-
-	if cfg, ok, cfgErr := FindProjectConfig(); cfgErr != nil {
-		slog.Warn("failed to load project config for completions", "error", cfgErr)
-	} else if ok {
-		if t := appconfig.NormalizeTier(cfg.RetentionTier); t != "" {
-			tiers = append(tiers, t)
-		}
-		for tier := range cfg.RetentionTiers {
-			if t := appconfig.NormalizeTier(tier); t != "" {
-				tiers = append(tiers, t)
-			}
-		}
-	}
-
-	return appconfig.BuildKeyCompletions(tiers)
-}
-
 // DefaultEvaluator is the package-level evaluator set during initialization.
 // Use Global() to access it safely.
 var DefaultEvaluator *appconfig.Evaluator

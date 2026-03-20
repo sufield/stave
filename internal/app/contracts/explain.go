@@ -1,6 +1,6 @@
 package contracts
 
-import "github.com/sufield/stave/internal/domain/predicate"
+import "github.com/sufield/stave/pkg/alpha/domain/predicate"
 
 // ExplainResult holds the structured output of an explain analysis.
 type ExplainResult struct {

@@ -10,10 +10,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/retention"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/pruner"
 	"github.com/sufield/stave/internal/pruner/report"
+	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // CleanupPlan holds the fields shared by delete and archive execution plans.

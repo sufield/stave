@@ -3,7 +3,7 @@ package apply
 import (
 	"fmt"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 func (r *Runner) resolveScopeFilter(cfg Config) asset.AssetPredicate {

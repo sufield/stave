@@ -3,7 +3,7 @@ package cmdutil
 import (
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // ToControlIDs converts a string slice to kernel.ControlID slice.

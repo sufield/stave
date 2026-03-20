@@ -9,9 +9,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // options represents the raw CLI flag inputs.

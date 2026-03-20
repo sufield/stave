@@ -5,19 +5,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/predicate"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 
-	"github.com/sufield/stave/internal/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	service "github.com/sufield/stave/internal/app/service"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/policy"
-	clockadp "github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // TestEvaluateOutput_ByteIdentical runs the same evaluation twice and verifies

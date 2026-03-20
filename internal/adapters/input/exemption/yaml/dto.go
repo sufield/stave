@@ -1,6 +1,6 @@
 package yaml
 
-import "github.com/sufield/stave/internal/domain/policy"
+import "github.com/sufield/stave/pkg/alpha/domain/policy"
 
 // yamlExemptionConfig is the YAML wire-format for policy.ExemptionConfig.
 type yamlExemptionConfig struct {

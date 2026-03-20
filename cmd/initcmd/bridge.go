@@ -6,12 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/spf13/cobra"
 	appconfig "github.com/sufield/stave/internal/app/config"
-
-	"github.com/sufield/stave/cmd/cmdutil"
-	initconfig "github.com/sufield/stave/cmd/initcmd/config"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -32,35 +27,6 @@ const (
 
 // slugRegexp matches one or more non-alphanumeric characters for slug generation.
 var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
-
-// GetRootCmd builds a minimal root *cobra.Command with initcmd subcommands
-// attached. It is used by package-level tests that need to exercise commands
-// via root.Execute() without importing the parent cmd package (which would
-// create a circular dependency).
-func GetRootCmd() *cobra.Command {
-	root := &cobra.Command{
-		Use:           "stave",
-		SilenceErrors: true,
-		SilenceUsage:  true,
-	}
-
-	p := root.PersistentFlags()
-	p.String(cmdutil.FlagOutput, "text", "Output format: json or text")
-	p.Bool(cmdutil.FlagQuiet, false, "Suppress output")
-	p.CountP("verbose", "v", "Increase verbosity")
-	p.Bool(cmdutil.FlagForce, false, "Allow overwrite operations")
-	p.Bool(cmdutil.FlagSymlink, false, "Allow writing through symlinks")
-	p.Bool(cmdutil.FlagSanitize, false, "Sanitize identifiers")
-	p.String(cmdutil.FlagPathMode, "base", "Path rendering mode")
-	p.String(cmdutil.FlagLogFile, "", "Log file path")
-	p.Bool(cmdutil.FlagOffline, false, "Require offline execution")
-
-	root.AddCommand(NewInitCmd())
-	root.AddCommand(NewGenerateCmd())
-	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))
-
-	return root
-}
 
 // GetVersion returns the CLI version string.
 func GetVersion() string { return version.Version }

@@ -9,9 +9,9 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	service "github.com/sufield/stave/internal/app/service"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/policy"
-	"github.com/sufield/stave/internal/domain/ports"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // LoadConfig holds configuration for loading evaluation artifacts from the filesystem.
@@ -61,20 +61,6 @@ func NewEvaluateRun(
 		Marshaler:       marshaler,
 		EnrichFn:        enrichFn,
 	}
-}
-
-// Execute runs the evaluation, writes output via the pipeline, and returns the safety status.
-func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluation.SafetyStatus, error) {
-	result, status, err := e.ExecuteAndReturn(ctx, cfg)
-	if err != nil {
-		return "", err
-	}
-
-	if err := e.writeOutput(ctx, cfg.Output, result); err != nil {
-		return "", fmt.Errorf("failed to write findings: %w", err)
-	}
-
-	return status, nil
 }
 
 // ExecuteAndReturn runs the evaluation and returns the Result alongside SafetyStatus

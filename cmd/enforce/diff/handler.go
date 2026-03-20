@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Config defines the parameters for comparing observation snapshots.

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/validation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
 // Reporter handles the visual presentation of results to the user.

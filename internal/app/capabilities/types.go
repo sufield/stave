@@ -1,8 +1,8 @@
 package capabilities
 
 import (
-	"github.com/sufield/stave/internal/domain/kernel"
 	staveversion "github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // IsSourceTypeSupported checks if a source type is supported.

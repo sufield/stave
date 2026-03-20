@@ -13,8 +13,8 @@ import (
 	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // Provider manages the instantiation of various adapters and repositories.

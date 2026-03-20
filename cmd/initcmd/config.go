@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/env"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 //go:embed templates/gitignore.txt

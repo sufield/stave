@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // Options holds the raw input from CLI flags.
@@ -98,14 +98,4 @@ func parseChangeTypes(raw []string) ([]asset.ChangeType, error) {
 		}
 	}
 	return out, nil
-}
-
-// newDiffFilter is a test helper that constructs a filter from raw flag values.
-func newDiffFilter(changeTypes, assetTypes []string, assetID string) (asset.FilterOptions, error) {
-	opts := Options{
-		ChangeTypes: changeTypes,
-		AssetTypes:  assetTypes,
-		AssetID:     assetID,
-	}
-	return opts.buildFilter()
 }

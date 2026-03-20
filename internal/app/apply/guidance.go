@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sufield/stave/internal/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 // EvaluateResult provides structured execution outcomes and user guidance.

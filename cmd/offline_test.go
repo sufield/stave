@@ -4,13 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // TestOfflineHelpSuffix_ProdCommands verifies that every production command
 // that should display the offline guarantee does so, preventing drift.
 func TestOfflineHelpSuffix_ProdCommands(t *testing.T) {
-	root := GetRootCmd()
+	root := getRootCmd()
 
 	// Command paths that must contain the offline help text in the prod binary.
 	required := [][]string{

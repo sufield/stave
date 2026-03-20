@@ -13,8 +13,8 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/samber/lo"
-	"github.com/sufield/stave/internal/domain/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // ErrEmptyRegistry is returned when a registry index contains no packs.

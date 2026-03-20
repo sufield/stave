@@ -10,10 +10,10 @@ import (
 	"github.com/sufield/stave/internal/adapters/output"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Runner is a thin CLI wrapper that delegates to internal/app/fix.Service.

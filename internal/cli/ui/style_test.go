@@ -4,8 +4,13 @@ import (
 	"bytes"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 )
+
+func resetTTYCacheForTest() {
+	ttyCache = sync.Map{}
+}
 
 func TestSeverityLabel_NoColorWriter(t *testing.T) {
 	var buf bytes.Buffer

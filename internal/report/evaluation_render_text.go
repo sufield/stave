@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 type reportTemplateMetadata struct {

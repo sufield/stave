@@ -12,9 +12,9 @@ import (
 	"github.com/sufield/stave/internal/adapters/output/text"
 	appexplain "github.com/sufield/stave/internal/app/explain"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/policy"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // ExplainRequest holds the inputs for the explain workflow.

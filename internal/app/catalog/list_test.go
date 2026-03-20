@@ -6,7 +6,7 @@ import (
 
 	"fmt"
 
-	"github.com/sufield/stave/internal/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 type stubRepo struct {

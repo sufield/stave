@@ -9,12 +9,12 @@ import (
 	"github.com/sufield/stave/cmd/enforce/shared"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/domain/evaluation"
-	"github.com/sufield/stave/internal/domain/evaluation/remediation"
-	"github.com/sufield/stave/internal/domain/kernel"
-	"github.com/sufield/stave/internal/domain/ports"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Config defines the parameters for the CI diff operation.
