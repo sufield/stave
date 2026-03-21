@@ -16,26 +16,26 @@ func TestDeriveRootCauses(t *testing.T) {
 	}{
 		{
 			name:  "identity only",
-			props: []policy.Misconfiguration{{Property: "storage.access.read_via_identity", ActualValue: true}},
+			props: []policy.Misconfiguration{{Property: "storage.access.read_via_identity", ActualValue: true, Category: policy.CategoryIdentity}},
 			want:  []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},
 		{
 			name:  "resource only",
-			props: []policy.Misconfiguration{{Property: "storage.access.read_via_resource", ActualValue: true}},
+			props: []policy.Misconfiguration{{Property: "storage.access.read_via_resource", ActualValue: true, Category: policy.CategoryResource}},
 			want:  []evaluation.RootCause{evaluation.RootCauseResource},
 		},
 		{
 			name: "both identity and resource",
 			props: []policy.Misconfiguration{
-				{Property: "storage.access.read_via_resource", ActualValue: true},
-				{Property: "storage.access.read_via_identity", ActualValue: true},
+				{Property: "storage.access.read_via_resource", ActualValue: true, Category: policy.CategoryResource},
+				{Property: "storage.access.read_via_identity", ActualValue: true, Category: policy.CategoryIdentity},
 			},
 			want: []evaluation.RootCause{evaluation.RootCauseIdentity, evaluation.RootCauseResource},
 		},
 		{
-			name:  "no mechanism markers",
-			props: []policy.Misconfiguration{{Property: "storage.access.public_read", ActualValue: true}},
-			want:  nil,
+			name:  "no mechanism markers (general fallback)",
+			props: []policy.Misconfiguration{{Property: "storage.access.public_read", ActualValue: true, Category: policy.CategoryUnknown}},
+			want:  []evaluation.RootCause{evaluation.RootCauseGeneral},
 		},
 		{
 			name:  "empty props",
@@ -50,8 +50,8 @@ func TestDeriveRootCauses(t *testing.T) {
 		{
 			name: "multiple identity keys deduplicated",
 			props: []policy.Misconfiguration{
-				{Property: "storage.access.list_via_identity", ActualValue: true},
-				{Property: "storage.access.read_via_identity", ActualValue: true},
+				{Property: "storage.access.list_via_identity", ActualValue: true, Category: policy.CategoryIdentity},
+				{Property: "storage.access.read_via_identity", ActualValue: true, Category: policy.CategoryIdentity},
 			},
 			want: []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},

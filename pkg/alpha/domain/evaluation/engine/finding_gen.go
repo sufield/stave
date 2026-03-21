@@ -2,75 +2,65 @@ package engine
 
 import (
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/maps"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-const (
-	pathPolicyStatements = "source_evidence.policy_public_statements"
-	pathACLGrantees      = "source_evidence.acl_public_grantees"
-
-	suffixIdentity = "_via_identity"
-	suffixResource = "_via_resource"
-)
+// DurationFindingInput groups the data required to build a duration-based violation finding.
+type DurationFindingInput struct {
+	Timeline        *asset.Timeline
+	Control         *policy.ControlDefinition
+	Threshold       time.Duration
+	Now             time.Time
+	Identities      []asset.CloudIdentity
+	PredicateParser policy.PredicateParser
+}
 
 // CreateDurationFinding generates a violation finding specifically for duration-based controls.
-// Identities and predicateParser are required for correct evidence extraction
-// on controls that use any_match or identity-based predicates.
-func CreateDurationFinding(
-	t *asset.Timeline,
-	ctl *policy.ControlDefinition,
-	threshold time.Duration,
-	now time.Time,
-	identities []asset.CloudIdentity,
-	predicateParser func(any) (*policy.UnsafePredicate, error),
-) *evaluation.Finding {
-	a := t.Asset()
-	duration := t.UnsafeDuration(now)
-	ctx := policy.NewAssetEvalContext(a, ctl.Params, identities...)
-	ctx.PredicateParser = predicateParser
-	misconfigs := policy.ExtractMisconfigurations(&ctl.UnsafePredicate, ctx)
+func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
+	a := in.Timeline.Asset()
+	duration := in.Timeline.UnsafeDuration(in.Now)
+	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.Identities...)
+	ctx.PredicateParser = in.PredicateParser
+	misconfigs := policy.ExtractMisconfigurations(&in.Control.UnsafePredicate, ctx)
 	causes := DeriveRootCauses(misconfigs)
 
-	f := newBaseFinding(ctl, t)
+	f := newBaseFinding(in.Control, in.Timeline)
 	f.Evidence = evaluation.Evidence{
-		FirstUnsafeAt:       t.FirstUnsafeAt(),
-		LastSeenUnsafeAt:    t.LastSeenUnsafeAt(),
+		FirstUnsafeAt:       in.Timeline.FirstUnsafeAt(),
+		LastSeenUnsafeAt:    in.Timeline.LastSeenUnsafeAt(),
 		UnsafeDurationHours: duration.Hours(),
-		ThresholdHours:      threshold.Hours(),
+		ThresholdHours:      in.Threshold.Hours(),
 		Misconfigurations:   misconfigs,
 		RootCauses:          causes,
 		SourceEvidence:      ExtractSourceEvidence(a, causes),
-		WhyNow:              t.FormatUnsafeSummary(threshold, now),
+		WhyNow:              in.Timeline.FormatUnsafeSummary(in.Threshold, in.Now),
 	}
 	return f
 }
 
-// DeriveRootCauses maps misconfiguration property paths to high-level mechanism labels.
-// Stable order: policy before acl. Returns nil if no mechanisms detected.
+// DeriveRootCauses maps misconfiguration categories to high-level mechanism labels.
+// Stable order: identity before resource. Returns [RootCauseGeneral] if
+// misconfigurations exist but none are categorized.
 func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCause {
-	var hasIdentity, hasResource bool
+	found := make(map[policy.Category]bool)
 	for _, mc := range misconfigs {
-		if strings.Contains(mc.Property, suffixIdentity) {
-			hasIdentity = true
-		}
-		if strings.Contains(mc.Property, suffixResource) {
-			hasResource = true
-		}
+		found[mc.Category] = true
 	}
 
 	var causes []evaluation.RootCause
-	if hasIdentity {
+	if found[policy.CategoryIdentity] {
 		causes = append(causes, evaluation.RootCauseIdentity)
 	}
-	if hasResource {
+	if found[policy.CategoryResource] {
 		causes = append(causes, evaluation.RootCauseResource)
+	}
+	if len(causes) == 0 && len(misconfigs) > 0 {
+		causes = append(causes, evaluation.RootCauseGeneral)
 	}
 	return causes
 }
@@ -81,15 +71,14 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 		return nil
 	}
 
-	props := maps.ParseMap(a.Properties)
 	evidence := &evaluation.SourceEvidence{}
 
 	for _, cause := range causes {
 		switch cause {
 		case evaluation.RootCauseIdentity:
-			evidence.IdentityStatements = getSortedIDs[kernel.StatementID](props, pathPolicyStatements)
+			evidence.IdentityStatements = toSorted[kernel.StatementID](a.PolicyStatementIDs())
 		case evaluation.RootCauseResource:
-			evidence.ResourceGrantees = getSortedIDs[kernel.GranteeID](props, pathACLGrantees)
+			evidence.ResourceGrantees = toSorted[kernel.GranteeID](a.ACLGranteeIDs())
 		}
 	}
 
@@ -99,15 +88,15 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 	return evidence
 }
 
-// getSortedIDs extracts a string slice from a property path, converts to typed IDs, and sorts.
-func getSortedIDs[T ~string](props maps.Value, path string) []T {
-	values := props.GetPath(path).StringSlice()
+// toSorted clones a string slice, sorts it, and converts to typed IDs.
+func toSorted[T ~string](values []string) []T {
 	if len(values) == 0 {
 		return nil
 	}
-	slices.Sort(values)
-	ids := make([]T, len(values))
-	for i, v := range values {
+	sorted := slices.Clone(values)
+	slices.Sort(sorted)
+	ids := make([]T, len(sorted))
+	for i, v := range sorted {
 		ids[i] = T(v)
 	}
 	return ids
