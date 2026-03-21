@@ -119,7 +119,7 @@ func TestParsePrivateKeyPEM_WrongType(t *testing.T) {
 	}
 }
 
-func TestEd25519Verifier_Verify(t *testing.T) {
+func TestVerifier_Verify(t *testing.T) {
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("generate key: %v", err)
@@ -127,13 +127,13 @@ func TestEd25519Verifier_Verify(t *testing.T) {
 	data := []byte("manifest")
 	sig := kernel.Signature(hex.EncodeToString(ed25519.Sign(privateKey, data)))
 
-	v := &Ed25519Verifier{PublicKey: publicKey}
+	v := &Verifier{PublicKey: publicKey}
 	if err := v.Verify(data, sig); err != nil {
 		t.Fatalf("Verify() error = %v", err)
 	}
 }
 
-func TestEd25519Verifier_Verify_InvalidInputs(t *testing.T) {
+func TestVerifier_Verify_InvalidInputs(t *testing.T) {
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("generate key: %v", err)
@@ -143,7 +143,7 @@ func TestEd25519Verifier_Verify_InvalidInputs(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		verifier  *Ed25519Verifier
+		verifier  *Verifier
 		sig       kernel.Signature
 		data      []byte
 		wantIs    error
@@ -158,35 +158,35 @@ func TestEd25519Verifier_Verify_InvalidInputs(t *testing.T) {
 		},
 		{
 			name:     "invalid public key length",
-			verifier: &Ed25519Verifier{PublicKey: ed25519.PublicKey("short")},
+			verifier: &Verifier{PublicKey: ed25519.PublicKey("short")},
 			sig:      goodSig,
 			data:     data,
 			wantIs:   ErrInvalidKeyType,
 		},
 		{
 			name:      "empty signature",
-			verifier:  &Ed25519Verifier{PublicKey: publicKey},
+			verifier:  &Verifier{PublicKey: publicKey},
 			sig:       kernel.Signature(" "),
 			data:      data,
 			wantInErr: "empty signature",
 		},
 		{
 			name:      "non-hex signature",
-			verifier:  &Ed25519Verifier{PublicKey: publicKey},
+			verifier:  &Verifier{PublicKey: publicKey},
 			sig:       kernel.Signature("not-hex"),
 			data:      data,
 			wantInErr: "hex-encoded",
 		},
 		{
 			name:      "wrong signature length",
-			verifier:  &Ed25519Verifier{PublicKey: publicKey},
+			verifier:  &Verifier{PublicKey: publicKey},
 			sig:       kernel.Signature("aa"),
 			data:      data,
 			wantInErr: "invalid signature length",
 		},
 		{
 			name:     "invalid cryptographic signature",
-			verifier: &Ed25519Verifier{PublicKey: publicKey},
+			verifier: &Verifier{PublicKey: publicKey},
 			sig:      goodSig,
 			data:     []byte("tampered"),
 			wantIs:   ErrInvalidSignature,

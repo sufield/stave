@@ -22,15 +22,15 @@ var (
 	ErrInvalidSignature = errors.New("cryptographic signature invalid: manifest has been tampered with")
 )
 
-// Ed25519Verifier verifies Ed25519 signatures.
-type Ed25519Verifier struct {
+// Verifier verifies Ed25519 signatures.
+type Verifier struct {
 	PublicKey ed25519.PublicKey
 }
 
-var _ ports.Verifier = (*Ed25519Verifier)(nil)
+var _ ports.Verifier = (*Verifier)(nil)
 
 // Verify validates an Ed25519 signature over data.
-func (v *Ed25519Verifier) Verify(data []byte, sig kernel.Signature) error {
+func (v *Verifier) Verify(data []byte, sig kernel.Signature) error {
 	if v == nil {
 		return fmt.Errorf("%w: nil verifier", ErrInvalidKeyType)
 	}
@@ -93,6 +93,28 @@ func ParsePrivateKeyPEM(data []byte) (ed25519.PrivateKey, error) {
 func Sign(privateKey ed25519.PrivateKey, data []byte) kernel.Signature {
 	signature := ed25519.Sign(privateKey, data)
 	return kernel.Signature(hex.EncodeToString(signature))
+}
+
+// GenerateSigningKeyPair generates a new Ed25519 keypair and returns
+// the private and public keys as PEM-encoded bytes.
+func GenerateSigningKeyPair() (privatePEM, publicPEM []byte, err error) {
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("generate Ed25519 keypair: %w", err)
+	}
+
+	privatePKCS8, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		return nil, nil, fmt.Errorf("marshal private key: %w", err)
+	}
+	publicPKIX, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return nil, nil, fmt.Errorf("marshal public key: %w", err)
+	}
+
+	privatePEM = pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privatePKCS8})
+	publicPEM = pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicPKIX})
+	return privatePEM, publicPEM, nil
 }
 
 func decodePEM(data []byte, expectedType string) (*pem.Block, error) {
