@@ -12,12 +12,6 @@ type PrefixSet struct {
 	prefixes []kernel.ObjectPrefix
 }
 
-// NewPrefixSet constructs a PrefixSet from raw strings (YAML boundary).
-// It trims whitespace, ensures trailing slashes, deduplicates, and removes redundant sub-paths.
-func NewPrefixSet(raw []string) PrefixSet {
-	return PrefixSet{prefixes: normalizePrefixes(raw)}
-}
-
 // NewPrefixSetFromPrefixes constructs a PrefixSet from already-typed prefixes.
 func NewPrefixSetFromPrefixes(prefixes []kernel.ObjectPrefix) PrefixSet {
 	raw := make([]string, len(prefixes))

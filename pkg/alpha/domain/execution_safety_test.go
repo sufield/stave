@@ -1,3 +1,5 @@
+//go:build architecture_tests
+
 package domain
 
 import (

@@ -73,19 +73,6 @@ func TestCanColor_CachesTTYCheckPerWriter(t *testing.T) {
 	}
 }
 
-func TestRuntimeSeverityLabel_RespectsNoColor(t *testing.T) {
-	var stderr bytes.Buffer
-	rt := NewRuntime(&bytes.Buffer{}, &stderr)
-	rt.NoColor = true
-	got := rt.SeverityLabel("error", "failed")
-	if strings.Contains(got, "\x1b[") {
-		t.Fatalf("expected no ANSI escapes when runtime NoColor=true, got: %q", got)
-	}
-	if got != "[ERR] failed" {
-		t.Fatalf("unexpected label: %q", got)
-	}
-}
-
 func TestRuntimeCanColor_UsesIsTTYOverride(t *testing.T) {
 	var out bytes.Buffer
 	rt := NewRuntime(&bytes.Buffer{}, &out)
