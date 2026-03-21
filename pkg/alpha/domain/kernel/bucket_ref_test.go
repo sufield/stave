@@ -131,18 +131,3 @@ func TestBucketRefValidateInvalid(t *testing.T) {
 		}
 	}
 }
-
-func TestNamespaceClaimIsSafe(t *testing.T) {
-	if (NamespaceClaim{}).IsSafe() {
-		t.Error("zero value should not be safe")
-	}
-	if (NamespaceClaim{Exists: true}).IsSafe() {
-		t.Error("exists but not owned should not be safe")
-	}
-	if (NamespaceClaim{Owned: true}).IsSafe() {
-		t.Error("owned but not exists should not be safe")
-	}
-	if !(NamespaceClaim{Exists: true, Owned: true}).IsSafe() {
-		t.Error("exists and owned should be safe")
-	}
-}

@@ -45,32 +45,3 @@ type EffectiveVisibility struct {
 	IsLatent       bool // True if the access is blocked by governance
 	PrincipalScope kernel.PrincipalScope
 }
-
-// IsExposed returns true if any capability is effectively reachable.
-func (v EffectiveVisibility) IsExposed() bool {
-	return v.Read || v.Write || v.List || v.Delete || v.AdminRead || v.AdminWrite
-}
-
-// ToPermission converts the effective flags into a bitmask for logic operations.
-func (v EffectiveVisibility) ToPermission() Permission {
-	var m Permission
-	if v.Read {
-		m |= PermRead
-	}
-	if v.Write {
-		m |= PermWrite
-	}
-	if v.List {
-		m |= PermList
-	}
-	if v.Delete {
-		m |= PermDelete
-	}
-	if v.AdminRead {
-		m |= PermMetadataRead
-	}
-	if v.AdminWrite {
-		m |= PermMetadataWrite
-	}
-	return m
-}

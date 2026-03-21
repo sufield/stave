@@ -6,6 +6,9 @@ import (
 	"slices"
 )
 
+// Redacted is the placeholder shown in place of sensitive data in public outputs.
+const Redacted = "[SANITIZED]"
+
 // Ensure SanitizableMap implements standard interfaces.
 var (
 	_ json.Marshaler   = SanitizableMap{}

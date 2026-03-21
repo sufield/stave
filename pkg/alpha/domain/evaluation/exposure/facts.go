@@ -126,8 +126,3 @@ func (facts Facts) CheckExposure(prefix kernel.ObjectPrefix) Result {
 
 	return SafeResult
 }
-
-// ScopeMatchesPrefix reports whether scope covers prefix.
-func ScopeMatchesPrefix(scope, prefix kernel.ObjectPrefix) bool {
-	return scope.Matches(prefix)
-}
