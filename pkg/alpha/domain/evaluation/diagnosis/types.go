@@ -128,4 +128,3 @@ func (i *Input) buildSummary() Summary {
 
 	return s
 }
-
