@@ -53,7 +53,7 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 		GlobalMaxUnsafe:  30 * time.Minute,
 		Now:              now,
 		DueSoonThreshold: 2 * time.Hour,
-		ToolVersion:      "test",
+		StaveVersion:     "test",
 		CELEvaluator:     mustPredicateEval(),
 	})
 	if stats.CurrentViolations == 0 {

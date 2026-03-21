@@ -121,7 +121,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		if evalErr != nil {
 			t.Fatalf("run %d: Evaluate failed: %v", i, evalErr)
 		}
-		result.Run.ToolVersion = "test-v1"
+		result.Run.StaveVersion = "test-v1"
 		result.Run.InputHashes = &evaluation.InputHashes{
 			Overall: "abc123",
 			Files: map[evaluation.FilePath]kernel.Digest{
@@ -203,7 +203,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		if evalErr != nil {
 			t.Fatalf("run %d: Evaluate failed: %v", i, evalErr)
 		}
-		result.Run.ToolVersion = "test-v1"
+		result.Run.StaveVersion = "test-v1"
 
 		writer := outjson.NewFindingWriter(true)
 		enriched := appeval.Enrich(enricher, nil, result)

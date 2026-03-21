@@ -36,7 +36,7 @@ type reportTemplateData struct {
 
 // RenderTextOptions configures text report rendering.
 type RenderTextOptions struct {
-	ToolVersion     string
+	StaveVersion    string
 	DefaultTemplate string
 	TemplatePath    string
 	Writer          io.Writer
@@ -55,7 +55,7 @@ func RenderText(eval safetyenvelope.Evaluation, opts RenderTextOptions) error {
 		tplText = string(b)
 	}
 
-	data := buildReportTemplateData(eval, opts.ToolVersion)
+	data := buildReportTemplateData(eval, opts.StaveVersion)
 	var buf strings.Builder
 	if err := ui.ExecuteTemplate(&buf, tplText, data); err != nil {
 		return fmt.Errorf("render report template: %w", err)

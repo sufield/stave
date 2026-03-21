@@ -112,7 +112,7 @@ func MarshalSARIFReport(report domain.Report) ([]byte, error) {
 				Tool: sarifTool{
 					Driver: sarifDriver{
 						Name:    "stave-security-audit",
-						Version: report.ToolVersion,
+						Version: report.StaveVersion,
 						Rules:   rules,
 					},
 				},

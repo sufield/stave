@@ -102,7 +102,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		MaxUnsafe:       0,
 		Clock:           r.Clock,
 		Hasher:          r.Hasher,
-		ToolVersion:     version.Version,
+		StaveVersion:    version.String,
 		PredicateParser: ctlyaml.ParsePredicate,
 		CELEvaluator:    celEval,
 	})

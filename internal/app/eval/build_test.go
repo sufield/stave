@@ -128,8 +128,8 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 			ControlLoader:     ctlRepo,
 		},
 		Runtime: RuntimeConfig{
-			MaxUnsafe:   time.Hour,
-			ToolVersion: "test",
+			MaxUnsafe:    time.Hour,
+			StaveVersion: "test",
 		},
 	})
 	if err != nil {

@@ -47,7 +47,7 @@ func (r *SecurityAuditRunner) Run(
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}
 	if r.diagnostics.Run != nil {
-		r.diagnostics.Run(req.Cwd, req.BinaryPath, req.ToolVersion)
+		r.diagnostics.Run(req.Cwd, req.BinaryPath, req.StaveVersion)
 	}
 
 	params := req.toParams()

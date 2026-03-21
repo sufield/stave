@@ -39,7 +39,7 @@ type Summary struct {
 type Report struct {
 	SchemaVersion kernel.Schema `json:"schema_version"`
 	GeneratedAt   string        `json:"generated_at"`
-	ToolVersion   string        `json:"tool_version"`
+	StaveVersion  string        `json:"tool_version"`
 	Summary       Summary       `json:"summary"`
 	Findings      []Finding     `json:"findings"`
 	EvidenceIndex []EvidenceRef `json:"evidence_index"`

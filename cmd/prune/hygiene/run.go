@@ -173,7 +173,7 @@ func buildRiskOptions(cfg Config) hygieneapp.RiskOptions {
 		GlobalMaxUnsafe:  cfg.MaxUnsafe,
 		Now:              cfg.Now,
 		DueSoonThreshold: cfg.DueSoon,
-		ToolVersion:      staveversion.Version,
+		StaveVersion:     staveversion.String,
 		ControlIDs:       cfg.Filter.ControlIDs,
 		AssetTypes:       cfg.Filter.AssetTypes,
 		Statuses:         cfg.Filter.Statuses,

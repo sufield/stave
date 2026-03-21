@@ -13,7 +13,7 @@ import (
 // and the hashes of the inputs (observations and controls).
 func GenerateRunID(inputsHash, controlsHash string) string {
 	return identity.ComputeRunID(
-		version.Version,
+		version.String,
 		strings.TrimSpace(inputsHash),
 		strings.TrimSpace(controlsHash),
 	)

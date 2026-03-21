@@ -11,7 +11,7 @@ import (
 // SecurityAuditRequest defines all inputs for a full enterprise audit run.
 type SecurityAuditRequest struct {
 	Now                  time.Time
-	ToolVersion          string
+	StaveVersion         string
 	Cwd                  string
 	BinaryPath           string
 	OutDir               string
@@ -30,8 +30,8 @@ func normalizeSecurityAuditRequest(req SecurityAuditRequest) SecurityAuditReques
 	if req.Now.IsZero() {
 		req.Now = time.Now().UTC()
 	}
-	if strings.TrimSpace(req.ToolVersion) == "" {
-		req.ToolVersion = "unknown"
+	if strings.TrimSpace(req.StaveVersion) == "" {
+		req.StaveVersion = "unknown"
 	}
 	if strings.TrimSpace(req.Cwd) == "" {
 		req.Cwd = "."

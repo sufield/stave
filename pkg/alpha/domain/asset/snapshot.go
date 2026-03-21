@@ -38,7 +38,7 @@ func (s Snapshot) HasTimestamp() bool {
 type GeneratedBy struct {
 	SourceType      kernel.ObservationSourceType `json:"source_type"`
 	Tool            string                       `json:"tool,omitempty"`
-	ToolVersion     string                       `json:"tool_version,omitempty"`
+	StaveVersion    string                       `json:"tool_version,omitempty"`
 	Provider        string                       `json:"provider,omitempty"`
 	ProviderVersion string                       `json:"provider_version,omitempty"`
 }

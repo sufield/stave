@@ -14,11 +14,11 @@ import (
 func TestValidateEvaluationAndVerification(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	run := evaluation.RunInfo{
-		ToolVersion: "test",
-		Offline:     true,
-		Now:         now,
-		MaxUnsafe:   kernel.Duration(24 * time.Hour),
-		Snapshots:   1,
+		StaveVersion: "test",
+		Offline:      true,
+		Now:          now,
+		MaxUnsafe:    kernel.Duration(24 * time.Hour),
+		Snapshots:    1,
 	}
 	summary := evaluation.Summary{
 		AssetsEvaluated: 1,
@@ -54,7 +54,7 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 
 	verification := NewVerification(VerificationRequest{
 		Run: VerificationRunInfo{
-			ToolVersion:     "test",
+			StaveVersion:    "test",
 			Offline:         true,
 			Now:             now,
 			MaxUnsafe:       24 * time.Hour,

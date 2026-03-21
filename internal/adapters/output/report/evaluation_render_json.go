@@ -15,7 +15,7 @@ import (
 
 type reportOutput struct {
 	GeneratedAt        string                           `json:"generated_at"`
-	ToolVersion        string                           `json:"tool_version"`
+	StaveVersion       string                           `json:"tool_version"`
 	Run                reportRun                        `json:"run"`
 	Summary            reportSummary                    `json:"summary"`
 	FindingsBySeverity map[string]int                   `json:"findings_by_severity"`
@@ -99,8 +99,8 @@ func buildReportViewModel(eval safetyenvelope.Evaluation, toolVersion string) re
 func newReportOutput(eval safetyenvelope.Evaluation, toolVersion string) reportOutput {
 	generated := eval.Run.Now.UTC()
 	return reportOutput{
-		GeneratedAt: generated.Format(time.RFC3339),
-		ToolVersion: toolVersion,
+		GeneratedAt:  generated.Format(time.RFC3339),
+		StaveVersion: toolVersion,
 		Run: reportRun{
 			EvaluationTime: eval.Run.Now.Format(time.RFC3339),
 			MaxUnsafe:      eval.Run.MaxUnsafe.String(),

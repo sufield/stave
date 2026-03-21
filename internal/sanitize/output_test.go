@@ -35,11 +35,11 @@ func makeTestResult() evaluation.Result {
 	t2 := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
-			Now:         t2,
-			Offline:     true,
-			MaxUnsafe:   0,
-			Snapshots:   2,
-			ToolVersion: "test",
+			Now:          t2,
+			Offline:      true,
+			MaxUnsafe:    0,
+			Snapshots:    2,
+			StaveVersion: "test",
 			InputHashes: &evaluation.InputHashes{
 				Overall: "abc123",
 				Files: map[evaluation.FilePath]kernel.Digest{

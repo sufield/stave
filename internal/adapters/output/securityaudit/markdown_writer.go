@@ -40,7 +40,7 @@ func writeOptionalField(b *strings.Builder, label, value string) {
 
 func renderHeader(b *strings.Builder, report domain.Report) {
 	writeBullet(b, "Generated", report.GeneratedAt)
-	writeBullet(b, "Tool Version", report.ToolVersion)
+	writeBullet(b, "Tool Version", report.StaveVersion)
 	writeBullet(b, "Schema", report.SchemaVersion)
 	writeBullet(b, "Fail Threshold", report.Summary.FailOn)
 	writeBullet(b, "Vulnerability Evidence Source", report.Summary.VulnSourceUsed)

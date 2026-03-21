@@ -16,7 +16,7 @@ builds:
       - -trimpath
     ldflags:
       - -s -w -buildid=
-      - -X github.com/sufield/stave/internal/version.Version=v{{ .Version }}
+      - -X github.com/sufield/stave/internal/version.String=v{{ .Version }}
       - -X github.com/sufield/stave/internal/version.Commit={{ .Commit }}
       - -X github.com/sufield/stave/internal/version.Date={{ .Date }}
       - -X github.com/sufield/stave/internal/version.BuiltBy=goreleaser

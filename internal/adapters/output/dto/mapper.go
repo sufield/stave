@@ -154,12 +154,12 @@ func fromRemediationAction(a evaluation.RemediationAction) RemediationActionDTO 
 
 func fromRunInfo(r evaluation.RunInfo) RunInfoDTO {
 	dto := RunInfoDTO{
-		ToolVersion: r.ToolVersion,
-		Offline:     r.Offline,
-		Now:         r.Now,
-		MaxUnsafe:   r.MaxUnsafe,
-		Snapshots:   r.Snapshots,
-		PackHash:    r.PackHash,
+		StaveVersion: r.StaveVersion,
+		Offline:      r.Offline,
+		Now:          r.Now,
+		MaxUnsafe:    r.MaxUnsafe,
+		Snapshots:    r.Snapshots,
+		PackHash:     r.PackHash,
 	}
 	if r.InputHashes != nil {
 		dto.InputHashes = fromInputHashes(r.InputHashes)

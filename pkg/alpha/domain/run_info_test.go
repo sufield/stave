@@ -12,11 +12,11 @@ import (
 // TestRunInfo_OfflineField verifies the offline field is always present and true in JSON.
 func TestRunInfo_OfflineField(t *testing.T) {
 	info := evaluation.RunInfo{
-		ToolVersion: "test",
-		Offline:     true,
-		Now:         time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-		MaxUnsafe:   kernel.Duration(168 * time.Hour),
-		Snapshots:   2,
+		StaveVersion: "test",
+		Offline:      true,
+		Now:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+		MaxUnsafe:    kernel.Duration(168 * time.Hour),
+		Snapshots:    2,
 	}
 
 	data, err := json.Marshal(info)

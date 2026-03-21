@@ -42,7 +42,7 @@ func Compare(req CompareRequest) (CompareResult, error) {
 
 	v := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
-			ToolVersion:     staveversion.Version,
+			StaveVersion:    staveversion.String,
 			Offline:         true,
 			Now:             req.Now,
 			MaxUnsafe:       req.MaxUnsafe,

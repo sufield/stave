@@ -32,7 +32,7 @@ type EvaluateConfig struct {
 	Output          io.Writer
 	ExemptionConfig *policy.ExemptionConfig
 	ExceptionConfig *policy.ExceptionConfig
-	ToolVersion     string
+	StaveVersion    string
 	Metadata        evaluation.Metadata
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator    policy.PredicateEval
@@ -84,7 +84,7 @@ func (e *EvaluateRun) ExecuteAndReturn(ctx context.Context, cfg EvaluateConfig) 
 		Hasher:          cfg.Hasher,
 		ExemptionConfig: cfg.ExemptionConfig,
 		ExceptionConfig: cfg.ExceptionConfig,
-		ToolVersion:     cfg.ToolVersion,
+		StaveVersion:    cfg.StaveVersion,
 		InputHashes:     preflight.Hashes,
 		PredicateParser: cfg.PredicateParser,
 		CELEvaluator:    cfg.CELEvaluator,
