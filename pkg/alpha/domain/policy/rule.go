@@ -67,5 +67,6 @@ func (r *PredicateRule) collectFields(ctx EvalContext, results *[]Misconfigurati
 		ActualValue: val,
 		Operator:    r.Op,
 		UnsafeValue: r.Value.Raw(),
+		Category:    classifyProperty(r.Field.String()),
 	})
 }

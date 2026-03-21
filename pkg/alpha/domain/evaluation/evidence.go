@@ -16,6 +16,8 @@ const (
 	RootCauseIdentity RootCause = "identity"
 	// RootCauseResource indicates a resource-bound policy (e.g., Bucket Policy, ACL) is the cause.
 	RootCauseResource RootCause = "resource"
+	// RootCauseGeneral indicates misconfigurations exist but none are categorized.
+	RootCauseGeneral RootCause = "general"
 )
 
 func (rc RootCause) String() string {

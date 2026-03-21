@@ -11,6 +11,31 @@ import (
 // propertiesPathPrefix is the internal namespace for asset-specific data.
 const propertiesPathPrefix = "properties."
 
+// Category identifies the architectural layer of a misconfiguration.
+type Category int
+
+const (
+	CategoryUnknown  Category = iota
+	CategoryIdentity          // Identity-bound policies (IAM, RBAC)
+	CategoryResource          // Resource-bound policies (Bucket ACLs)
+)
+
+const (
+	suffixIdentity = "_via_identity"
+	suffixResource = "_via_resource"
+)
+
+// classifyProperty derives the category from the property path suffix.
+func classifyProperty(property string) Category {
+	if strings.Contains(property, suffixIdentity) {
+		return CategoryIdentity
+	}
+	if strings.Contains(property, suffixResource) {
+		return CategoryResource
+	}
+	return CategoryUnknown
+}
+
 // Misconfiguration describes a specific property-level condition that triggered
 // a security violation. It provides the "Logic Proof" for the finding.
 type Misconfiguration struct {
@@ -25,6 +50,9 @@ type Misconfiguration struct {
 
 	// UnsafeValue is the value or threshold defined in the policy that triggered the violation.
 	UnsafeValue any `json:"unsafe_value,omitempty"`
+
+	// Category classifies the architectural layer (identity vs resource). Internal only.
+	Category Category `json:"-"`
 }
 
 // DisplayProperty returns the property path without the internal "properties." prefix.
