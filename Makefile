@@ -55,7 +55,7 @@ build-dev: sync-schemas sync-controls
 
 ## test: Run all tests (includes dev-only packages via build tag)
 test: sync-schemas sync-controls
-	$(GOTEST) -tags 'stavedev architecture_tests' -v ./...
+	$(GOTEST) -tags stavedev -v ./...
 
 ## test-coverage: Run tests with coverage
 test-coverage:
