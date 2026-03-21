@@ -170,6 +170,9 @@ func (rt *Timeline) UnsafeDuration(now time.Time) (time.Duration, error) {
 	return now.Sub(rt.activeEpisode.StartAt()), nil
 }
 
+// checkContracts panics on invariant violations that indicate a programming error.
+// NewTimeline validates the ID at construction; this guard catches corruption
+// from unsafe internal mutations, not from external data.
 func (rt *Timeline) checkContracts() {
 	if rt.ID.IsEmpty() {
 		panic("contract violated: Timeline.ID must be non-empty")

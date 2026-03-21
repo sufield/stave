@@ -40,10 +40,10 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 // resolveGlobalFlagDefaults fills global persistent flags with project-config
 // defaults when the user did not set them explicitly on the command line.
 func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command) {
+	// Boundary: this is the single production call site for projconfig.Global().
+	// The evaluator is resolved here and stored in Cobra's context so all
+	// downstream commands retrieve it via cmdutil.EvaluatorFromCmd(cmd).
 	eval := projconfig.Global()
-
-	// Store the evaluator in Cobra's context so commands can retrieve it
-	// via cmdutil.EvaluatorFromCmd(cmd) instead of calling projconfig.Global().
 	ctx := cmdutil.WithEvaluator(cmd.Context(), eval)
 	cmd.SetContext(ctx)
 

@@ -12,6 +12,9 @@ import (
 )
 
 // AuditGitStatus gathers git metadata for specific paths.
+// Best-effort: if baseDir is empty, falls back to os.Getwd(). If that also
+// fails, returns nil (no git metadata). This is metadata for output enrichment,
+// not a critical path — callers should always pass a resolved baseDir.
 func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 	if strings.TrimSpace(baseDir) == "" {
 		baseDir, _ = os.Getwd()

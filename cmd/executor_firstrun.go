@@ -11,6 +11,8 @@ import (
 	"github.com/sufield/stave/internal/platform/state"
 )
 
+// prepareFirstRunHint uses os.Stderr directly because it runs before
+// the Cobra command tree is initialized — no cmd.ErrOrStderr() is available.
 func prepareFirstRunHint(args []string) (bool, string) {
 	if ui.ShouldSkipFirstRunHint(args) {
 		return false, ""

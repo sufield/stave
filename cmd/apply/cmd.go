@@ -2,6 +2,7 @@ package apply
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -88,6 +89,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 			opts.resolveApplyConfigDefaults(cmd)
 			cs := cobraState{
 				Ctx:           cmd.Context(),
+				Logger:        slog.Default(),
 				Stdout:        cmd.OutOrStdout(),
 				Stderr:        cmd.ErrOrStderr(),
 				GlobalFlags:   cmdutil.GetGlobalFlags(cmd),

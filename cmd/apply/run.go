@@ -13,7 +13,6 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/platform/logging"
 )
 
 // runApply is the single dispatch function called by the thin RunE wrapper.
@@ -59,11 +58,11 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
-	return runStandardApply(cs.Ctx, p, opts, cfg.Params, sio)
+	return runStandardApply(cs.Ctx, cs.Logger, p, opts, cfg.Params, sio)
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) error {
+func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) error {
 	evalInput, err := opts.buildEvaluatorInput()
 	if err != nil {
 		return decorateError(fmt.Errorf("failed to build evaluator input: %w", err))
@@ -73,7 +72,6 @@ func runStandardApply(ctx context.Context, p *compose.Provider, opts *ApplyOptio
 		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
 	}
 
-	logger := logging.DefaultLogger()
 	if plan != nil {
 		logger = cmdutil.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
 	}

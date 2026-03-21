@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -22,6 +23,7 @@ import (
 // Populated once in RunE; all downstream functions are cobra-free.
 type cobraState struct {
 	Ctx           context.Context
+	Logger        *slog.Logger
 	Stdout        io.Writer
 	Stderr        io.Writer
 	GlobalFlags   cmdutil.GlobalFlags
