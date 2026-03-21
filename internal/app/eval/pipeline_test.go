@@ -20,8 +20,8 @@ func TestRunOutputPipeline_Success(t *testing.T) {
 		&buf,
 		evaluation.Result{Run: evaluation.RunInfo{StaveVersion: "test"}},
 		&outputMarshalerStub{data: []byte(`{"ok":true}`)},
-		func(r evaluation.Result) appcontracts.EnrichedResult {
-			return appcontracts.EnrichedResult{Result: r, Run: r.Run}
+		func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
+			return appcontracts.EnrichedResult{Result: r, Run: r.Run}, nil
 		},
 		nil,
 	)
@@ -41,8 +41,8 @@ func TestRunOutputPipeline_MarshalError(t *testing.T) {
 		&bytes.Buffer{},
 		evaluation.Result{},
 		&outputMarshalerStub{err: sentinel},
-		func(r evaluation.Result) appcontracts.EnrichedResult {
-			return appcontracts.EnrichedResult{}
+		func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
+			return appcontracts.EnrichedResult{}, nil
 		},
 		nil,
 	)
@@ -66,8 +66,8 @@ func TestRunOutputPipeline_CancelledContext(t *testing.T) {
 		&bytes.Buffer{},
 		evaluation.Result{},
 		&outputMarshalerStub{data: []byte(`{}`)},
-		func(r evaluation.Result) appcontracts.EnrichedResult {
-			return appcontracts.EnrichedResult{}
+		func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
+			return appcontracts.EnrichedResult{}, nil
 		},
 		nil,
 	)

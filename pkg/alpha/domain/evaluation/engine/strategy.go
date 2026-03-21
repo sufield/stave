@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -58,7 +59,13 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evalua
 		return row, nil
 	}
 
-	if t.ExceedsUnsafeThreshold(now, maxUnsafe) {
+	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
+	if threshErr != nil {
+		slog.Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		row.MarkInconclusive("threshold check error")
+		return row, nil
+	}
+	if exceeds {
 		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
 			Timeline:        t,
@@ -84,7 +91,13 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (eva
 	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
 
 	// 1. Violation Check (Always takes precedence)
-	if t.ExceedsUnsafeThreshold(now, maxUnsafe) {
+	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
+	if threshErr != nil {
+		slog.Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		row.MarkInconclusive("threshold check error")
+		return row, nil
+	}
+	if exceeds {
 		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
 			Timeline:        t,

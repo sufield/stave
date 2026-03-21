@@ -14,7 +14,10 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		return "", err
 	}
 
-	enriched := e.EnrichFn(result)
+	enriched, enrichErr := e.EnrichFn(result)
+	if enrichErr != nil {
+		return "", fmt.Errorf("failed to enrich findings: %w", enrichErr)
+	}
 	data, marshalErr := e.Marshaler.MarshalFindings(enriched)
 	if marshalErr != nil {
 		return "", fmt.Errorf("failed to write findings: %w", marshalErr)

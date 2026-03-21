@@ -1003,7 +1003,10 @@ func TestTimeline_CoverageMetrics(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
 	// Get timelines directly to check coverage metrics
-	timelines := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
+	timelines, btErr := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
+	if btErr != nil {
+		t.Fatal(btErr)
+	}
 	timeline := timelines["CTL.COVERAGE.001"]["bucket"]
 
 	if timeline == nil {
@@ -1083,7 +1086,10 @@ func TestTimeline_CoverageWithAbsence(t *testing.T) {
 	clock := clockadp.FixedClock(mustParseTime("2026-01-10T00:00:00Z"))
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 
-	timelines := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
+	timelines, btErr := engine.BuildTimelinesPerControl(evaluator.Controls(), snapshots, nil)
+	if btErr != nil {
+		t.Fatal(btErr)
+	}
 	timeline := timelines["CTL.COVERAGE.002"]["bucket"]
 
 	if timeline == nil {

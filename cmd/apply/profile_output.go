@@ -20,7 +20,7 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 	}
 
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	enrichFn := func(res evaluation.Result) appcontracts.EnrichedResult {
+	enrichFn := func(res evaluation.Result) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}
 

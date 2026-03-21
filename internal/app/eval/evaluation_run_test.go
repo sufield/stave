@@ -53,13 +53,13 @@ func (s *marshalerStub) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	return []byte(`{"ok":true}`), nil
 }
 
-func testEnrichFn(result evaluation.Result) appcontracts.EnrichedResult {
+func testEnrichFn(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
 		Findings:       []remediation.Finding{},
 		ExemptedAssets: result.ExemptedAssets,
 		Run:            result.Run,
-	}
+	}, nil
 }
 
 func TestLoadControls(t *testing.T) {

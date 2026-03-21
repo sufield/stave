@@ -14,7 +14,11 @@ func TestComputePostureDrift(t *testing.T) {
 	t2 := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
 
 	newTimeline := func() *asset.Timeline {
-		return asset.NewTimeline(asset.Asset{ID: "res:test"})
+		tl, err := asset.NewTimeline(asset.Asset{ID: "res:test"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return tl
 	}
 
 	tests := []struct {
@@ -27,14 +31,14 @@ func TestComputePostureDrift(t *testing.T) {
 		{
 			name: "not currently unsafe returns nil",
 			setup: func(tl *asset.Timeline) {
-				tl.RecordObservation(t0, false)
+				_ = tl.RecordObservation(t0, false)
 			},
 			wantNil: true,
 		},
 		{
 			name: "persistent: unsafe since first observation",
 			setup: func(tl *asset.Timeline) {
-				tl.RecordObservation(t0, true)
+				_ = tl.RecordObservation(t0, true)
 			},
 			wantPattern:    "persistent",
 			wantEpisodeCnt: 1,
@@ -42,8 +46,8 @@ func TestComputePostureDrift(t *testing.T) {
 		{
 			name: "degraded: was safe before first unsafe",
 			setup: func(tl *asset.Timeline) {
-				tl.RecordObservation(t0, false)
-				tl.RecordObservation(t1, true)
+				_ = tl.RecordObservation(t0, false)
+				_ = tl.RecordObservation(t1, true)
 			},
 			wantPattern:    "degraded",
 			wantEpisodeCnt: 1,
@@ -51,9 +55,9 @@ func TestComputePostureDrift(t *testing.T) {
 		{
 			name: "intermittent: one closed episode plus open",
 			setup: func(tl *asset.Timeline) {
-				tl.RecordObservation(t0, true)
-				tl.RecordObservation(t1, false)
-				tl.RecordObservation(t2, true)
+				_ = tl.RecordObservation(t0, true)
+				_ = tl.RecordObservation(t1, false)
+				_ = tl.RecordObservation(t2, true)
 			},
 			wantPattern:    "intermittent",
 			wantEpisodeCnt: 2,
@@ -61,11 +65,11 @@ func TestComputePostureDrift(t *testing.T) {
 		{
 			name: "intermittent: two closed episodes plus open",
 			setup: func(tl *asset.Timeline) {
-				tl.RecordObservation(t0, true)
-				tl.RecordObservation(t1, false)
-				tl.RecordObservation(t1, true)
-				tl.RecordObservation(t2, false)
-				tl.RecordObservation(t2, true)
+				_ = tl.RecordObservation(t0, true)
+				_ = tl.RecordObservation(t1, false)
+				_ = tl.RecordObservation(t1, true)
+				_ = tl.RecordObservation(t2, false)
+				_ = tl.RecordObservation(t2, true)
 			},
 			wantPattern:    "intermittent",
 			wantEpisodeCnt: 3,

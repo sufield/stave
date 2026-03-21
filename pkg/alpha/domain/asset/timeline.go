@@ -26,14 +26,15 @@ type Timeline struct {
 }
 
 // NewTimeline constructs an empty timeline for an asset.
-func NewTimeline(a Asset) *Timeline {
+// Returns an error if the asset ID is empty (e.g. from malformed observation data).
+func NewTimeline(a Asset) (*Timeline, error) {
 	if a.ID.IsEmpty() {
-		panic("precondition failed: NewTimeline requires non-empty asset ID")
+		return nil, fmt.Errorf("NewTimeline requires non-empty asset ID")
 	}
 	return &Timeline{
 		ID:    a.ID,
 		asset: a,
-	}
+	}, nil
 }
 
 // Asset returns the latest observed asset state for this timeline.
@@ -61,18 +62,22 @@ func (rt *Timeline) History() *EpisodeHistory {
 }
 
 // RecordObservation updates continuity metrics and applies the unsafe/safe transition.
-func (rt *Timeline) RecordObservation(t time.Time, isUnsafe bool) {
+// Returns an error if the timestamp is zero (e.g. from malformed observation data).
+func (rt *Timeline) RecordObservation(t time.Time, isUnsafe bool) error {
 	if t.IsZero() {
-		panic("precondition failed: Timeline.RecordObservation requires non-zero time")
+		return fmt.Errorf("Timeline.RecordObservation requires non-zero time")
 	}
 
-	rt.stats.RecordObservation(t)
+	if err := rt.stats.RecordObservation(t); err != nil {
+		return err
+	}
 	if isUnsafe {
 		rt.handleUnsafe(t)
 	} else {
 		rt.handleSafe(t)
 	}
 	rt.checkContracts()
+	return nil
 }
 
 // CurrentlySafe reports whether the asset is in a safe state.
@@ -154,14 +159,15 @@ func (rt *Timeline) HasOpenEpisode() bool {
 
 // UnsafeDuration calculates the duration of the current open episode.
 // Returns 0 if there is no open episode.
-func (rt *Timeline) UnsafeDuration(now time.Time) time.Duration {
+// Returns an error if 'now' is before the episode start time.
+func (rt *Timeline) UnsafeDuration(now time.Time) (time.Duration, error) {
 	if !rt.HasOpenEpisode() {
-		return 0
+		return 0, nil
 	}
 	if !now.IsZero() && now.Before(rt.activeEpisode.StartAt()) {
-		panic("precondition failed: UnsafeDuration 'now' must not be before episode start")
+		return 0, fmt.Errorf("UnsafeDuration 'now' (%s) must not be before episode start (%s)", now.Format(time.RFC3339), rt.activeEpisode.StartAt().Format(time.RFC3339))
 	}
-	return now.Sub(rt.activeEpisode.StartAt())
+	return now.Sub(rt.activeEpisode.StartAt()), nil
 }
 
 func (rt *Timeline) checkContracts() {
@@ -172,8 +178,12 @@ func (rt *Timeline) checkContracts() {
 
 // ExceedsUnsafeThreshold reports whether the current unsafe duration exceeds
 // the given threshold. Returns false when there is no open episode.
-func (rt *Timeline) ExceedsUnsafeThreshold(now time.Time, maxUnsafe time.Duration) bool {
-	return rt.UnsafeDuration(now) > maxUnsafe
+func (rt *Timeline) ExceedsUnsafeThreshold(now time.Time, maxUnsafe time.Duration) (bool, error) {
+	d, err := rt.UnsafeDuration(now)
+	if err != nil {
+		return false, err
+	}
+	return d > maxUnsafe, nil
 }
 
 // FormatUnsafeSummary builds a user-facing explanation for the current unsafe state.
@@ -182,9 +192,10 @@ func (rt *Timeline) FormatUnsafeSummary(threshold time.Duration, now time.Time) 
 		return "Asset is currently in an unsafe state."
 	}
 
+	d, _ := rt.UnsafeDuration(now)
 	return fmt.Sprintf(
 		"Asset has been unsafe for %d hours (threshold: %d hours). Unsafe since %s.",
-		int(math.Round(rt.UnsafeDuration(now).Hours())),
+		int(math.Round(d.Hours())),
 		int(math.Round(threshold.Hours())),
 		rt.FirstUnsafeAt().Format(time.RFC3339),
 	)

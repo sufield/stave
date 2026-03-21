@@ -30,13 +30,13 @@ func (depsMarshalerStub) MarshalFindings(appcontracts.EnrichedResult) ([]byte, e
 	return []byte(`{}`), nil
 }
 
-func depsEnrichFn(result evaluation.Result) appcontracts.EnrichedResult {
+func depsEnrichFn(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
 		Findings:       []remediation.Finding{},
 		ExemptedAssets: result.ExemptedAssets,
 		Run:            result.Run,
-	}
+	}, nil
 }
 
 func TestBuildDependencies_ValidationErrors(t *testing.T) {

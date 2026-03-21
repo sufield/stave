@@ -182,7 +182,10 @@ func (r *Runner) Set(_ context.Context, req SetRequest, opts MutationOpts) error
 		return fmt.Errorf("value cannot be empty")
 	}
 
-	editor := r.newEditor(opts)
+	editor, err := r.newEditor(opts)
+	if err != nil {
+		return err
+	}
 	result, err := editor.Set(key, value)
 	if err != nil {
 		return err
@@ -200,7 +203,10 @@ func (r *Runner) Set(_ context.Context, req SetRequest, opts MutationOpts) error
 func (r *Runner) Delete(_ context.Context, req DeleteRequest, opts MutationOpts) error {
 	key := strings.TrimSpace(req.Key)
 
-	editor := r.newEditor(opts)
+	editor, err := r.newEditor(opts)
+	if err != nil {
+		return err
+	}
 	result, err := editor.Delete(key)
 	if err != nil {
 		return err
@@ -223,8 +229,11 @@ func (r *Runner) Show(_ context.Context, format ui.OutputFormat) error {
 
 // --- Internal Helpers ---
 
-func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[appconfig.ProjectConfig] {
-	cfgResolver, _ := projconfig.NewResolver()
+func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.ProjectConfig], error) {
+	cfgResolver, err := projconfig.NewResolver()
+	if err != nil {
+		return nil, fmt.Errorf("resolve project context: %w", err)
+	}
 	store := projectConfigStore{resolver: cfgResolver, allowSymlink: opts.AllowSymlink}
 	return &cliconfig.Editor[appconfig.ProjectConfig]{
 		SetStore:    store,
@@ -233,7 +242,7 @@ func (r *Runner) newEditor(opts MutationOpts) *cliconfig.Editor[appconfig.Projec
 		Force:       opts.Force,
 		IsTTY:       func() bool { return opts.IsTTY },
 		Confirm:     ui.NewPrompter(os.Stdin, os.Stderr).Confirm,
-	}
+	}, nil
 }
 
 func (r *Runner) presentMutation(opts MutationOpts, res ValueResult, text string, showHint bool) error {

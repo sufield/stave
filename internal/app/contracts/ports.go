@@ -77,7 +77,7 @@ type FindingMarshaler interface {
 
 // EnrichFunc produces an EnrichedResult from an evaluation result.
 // Implementations close over the enricher and sanitizer.
-type EnrichFunc func(result evaluation.Result) EnrichedResult
+type EnrichFunc func(result evaluation.Result) (EnrichedResult, error)
 
 // FileResultLoader loads an evaluation result from a file path.
 type FileResultLoader interface {

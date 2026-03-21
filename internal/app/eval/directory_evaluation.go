@@ -32,9 +32,6 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 		return nil, 0, fmt.Errorf("observation loader is required")
 	}
 	ctx := req.Context
-	if ctx == nil {
-		ctx = context.Background()
-	}
 
 	loadResult, err := req.ObservationLoader.LoadSnapshots(ctx, req.ObservationsDir)
 	if err != nil {

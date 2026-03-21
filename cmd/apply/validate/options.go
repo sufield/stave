@@ -2,7 +2,6 @@ package validate
 
 import (
 	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -123,21 +122,18 @@ func (o *options) validate() error {
 }
 
 // prepareEnvironment handles Git audits and verbose context logging.
-func (o *options) prepareEnvironment(cmd *cobra.Command) {
+func (o *options) prepareEnvironment(cmd *cobra.Command) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
 	resolver, resolverErr := projctx.NewResolver()
 	if resolverErr != nil {
-		slog.Warn("failed to create project resolver", "error", resolverErr)
+		return fmt.Errorf("resolve project context: %w", resolverErr)
 	}
 
 	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
-		slog.Warn("failed to load project config", "error", err)
+		return fmt.Errorf("load project config: %w", err)
 	}
-	root := ""
-	if resolver != nil {
-		root = resolver.ProjectRoot()
-	}
+	root := resolver.ProjectRoot()
 	gitMeta := compose.AuditGitStatus(root, []string{o.Controls, cfgPath})
 	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", o.Quiet || gf.Quiet)
 
@@ -155,6 +151,7 @@ func (o *options) prepareEnvironment(cmd *cobra.Command) {
 		fmt.Fprintf(cmd.ErrOrStderr(), "context=%s config=%s controls=%s observations=%s\n",
 			ctxName, compose.EmptyDash(cfgPath), o.Controls, o.Observations)
 	}
+	return nil
 }
 
 // validateParams holds the fully parsed domain types.

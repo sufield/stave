@@ -166,12 +166,8 @@ func NewCmd(rootCmd *cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func newResolver() *projconfig.Resolver {
-	res, _ := projconfig.NewResolver()
-	if res == nil {
-		res = &projconfig.Resolver{}
-	}
-	return res
+func newResolver() (*projconfig.Resolver, error) {
+	return projconfig.NewResolver()
 }
 
 func newSetCmd(rootCmd *cobra.Command) *cobra.Command {
@@ -188,8 +184,12 @@ Examples:
   stave alias set q "apply --quiet"` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			res, err := newResolver()
+			if err != nil {
+				return fmt.Errorf("resolve project context: %w", err)
+			}
 			runner := &Runner{
-				Resolver: newResolver(),
+				Resolver: res,
 				Finder:   &cobraFinder{root: rootCmd},
 				Stderr:   cmd.ErrOrStderr(),
 			}
@@ -209,8 +209,12 @@ func newListCmd() *cobra.Command {
 		Long:  "List all defined aliases from user config." + metadata.OfflineHelpSuffix,
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			res, err := newResolver()
+			if err != nil {
+				return fmt.Errorf("resolve project context: %w", err)
+			}
 			runner := &Runner{
-				Resolver: newResolver(),
+				Resolver: res,
 				Stdout:   cmd.OutOrStdout(),
 			}
 			return runner.List(cmd.Context(), format, cmd)
@@ -232,8 +236,12 @@ func newDeleteCmd() *cobra.Command {
 		Long:  "Delete removes an alias from user config." + metadata.OfflineHelpSuffix,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			res, err := newResolver()
+			if err != nil {
+				return fmt.Errorf("resolve project context: %w", err)
+			}
 			runner := &Runner{
-				Resolver: newResolver(),
+				Resolver: res,
 				Stderr:   cmd.ErrOrStderr(),
 			}
 			return runner.Delete(cmd.Context(), args[0])

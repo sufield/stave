@@ -131,7 +131,10 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 		}
 
 		writer := outjson.NewFindingWriter(true) // indent=true
-		enriched := appeval.Enrich(enricher, nil, result)
+		enriched, err := appeval.Enrich(enricher, nil, result)
+		if err != nil {
+			t.Fatal(err)
+		}
 		data, err := writer.MarshalFindings(enriched)
 		if err != nil {
 			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)
@@ -206,7 +209,10 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 		result.Run.StaveVersion = "test-v1"
 
 		writer := outjson.NewFindingWriter(true)
-		enriched := appeval.Enrich(enricher, nil, result)
+		enriched, err := appeval.Enrich(enricher, nil, result)
+		if err != nil {
+			t.Fatal(err)
+		}
 		data, err := writer.MarshalFindings(enriched)
 		if err != nil {
 			t.Fatalf("run %d: MarshalFindings failed: %v", i, err)

@@ -13,7 +13,10 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	t.Run("no coverage data", func(t *testing.T) {
-		timeline := asset.NewTimeline(asset.Asset{ID: "res-1"})
+		timeline, err := asset.NewTimeline(asset.Asset{ID: "res-1"})
+		if err != nil {
+			t.Fatal(err)
+		}
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
 			MaxAllowedGap:   12 * time.Hour,
@@ -28,9 +31,16 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("coverage span below required threshold", func(t *testing.T) {
-		timeline := asset.NewTimeline(asset.Asset{ID: "res-1"})
-		timeline.RecordObservation(base, false)
-		timeline.RecordObservation(base.Add(6*time.Hour), false)
+		timeline, err := asset.NewTimeline(asset.Asset{ID: "res-1"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base, false); err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base.Add(6*time.Hour), false); err != nil {
+			t.Fatal(err)
+		}
 
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
@@ -46,10 +56,19 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("max gap exceeds threshold", func(t *testing.T) {
-		timeline := asset.NewTimeline(asset.Asset{ID: "res-1"})
-		timeline.RecordObservation(base, false)
-		timeline.RecordObservation(base.Add(13*time.Hour), false)
-		timeline.RecordObservation(base.Add(26*time.Hour), false)
+		timeline, err := asset.NewTimeline(asset.Asset{ID: "res-1"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base, false); err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base.Add(13*time.Hour), false); err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base.Add(26*time.Hour), false); err != nil {
+			t.Fatal(err)
+		}
 
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
@@ -65,11 +84,22 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	})
 
 	t.Run("coverage sufficient", func(t *testing.T) {
-		timeline := asset.NewTimeline(asset.Asset{ID: "res-1"})
-		timeline.RecordObservation(base, false)
-		timeline.RecordObservation(base.Add(10*time.Hour), false)
-		timeline.RecordObservation(base.Add(20*time.Hour), false)
-		timeline.RecordObservation(base.Add(30*time.Hour), false)
+		timeline, err := asset.NewTimeline(asset.Asset{ID: "res-1"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base, false); err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base.Add(10*time.Hour), false); err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base.Add(20*time.Hour), false); err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(base.Add(30*time.Hour), false); err != nil {
+			t.Fatal(err)
+		}
 
 		v := CoverageValidator{
 			MinRequiredSpan: 24 * time.Hour,
