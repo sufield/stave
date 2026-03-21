@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
-	"github.com/sufield/stave/internal/adapters/output"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -98,7 +97,9 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	report = output.SanitizeReport(cfg.Sanitizer, report)
+	if cfg.Sanitizer != nil && report != nil {
+		report = report.Sanitized(cfg.Sanitizer)
+	}
 	report = appdiagnose.FilterReport(report, appdiagnose.Filter{
 		Cases:          cfg.Cases,
 		SignalContains: cfg.SignalContains,
