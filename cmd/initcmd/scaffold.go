@@ -2,10 +2,13 @@ package initcmd
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
 	projectapp "github.com/sufield/stave/internal/app/project"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // InitRequest defines the parameters for project initialization.
@@ -73,4 +76,18 @@ func (r *InitRunner) Run(_ context.Context, req *InitRequest) error {
 		DryRun:  result.DryRun,
 	}, r.Quiet)
 	return nil
+}
+
+func validateScaffoldInputs(rawDir, profile, cadence string) (string, error) {
+	dir := fsutil.CleanUserPath(rawDir)
+	if dir == "" {
+		return "", &ui.UserError{Err: fmt.Errorf("--dir cannot be empty")}
+	}
+	if profile != "" && profile != profileAWSS3 {
+		return "", &ui.UserError{Err: fmt.Errorf("unsupported --profile %q (supported: aws-s3)", profile)}
+	}
+	if cadence != cadenceDaily && cadence != cadenceHourly {
+		return "", &ui.UserError{Err: fmt.Errorf("unsupported --capture-cadence %q (supported: daily, hourly)", cadence)}
+	}
+	return dir, nil
 }
