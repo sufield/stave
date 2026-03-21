@@ -64,10 +64,11 @@ func BuildTrace(
 
 	cp, err := compiler.Compile(ctl.UnsafePredicate)
 	if err != nil {
+		expr, _ := PredicateToExpr(ctl.UnsafePredicate)
 		return &TraceResult{
 			ControlID:  ctl.ID,
 			AssetID:    a.ID,
-			Expression: PredicateToExpr(ctl.UnsafePredicate),
+			Expression: expr,
 			Error:      fmt.Sprintf("CEL compile: %v", err),
 		}
 	}

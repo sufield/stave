@@ -392,3 +392,54 @@ func TestCompile_AnyMatch(t *testing.T) {
 		t.Fatal("expected safe (false) for non-shared bucket")
 	}
 }
+
+func TestCompile_AnyMatchTypedPredicate(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Build an any_match predicate with a typed UnsafePredicate value
+	// (instead of map[string]any from YAML).
+	nestedPred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("type"), Op: predicate.OpEq, Value: policy.Str("app_signer")},
+			{Field: predicate.NewFieldPath("id"), Op: predicate.OpContains, Value: policy.Str("appsigner:s3:")},
+		},
+	}
+
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("bucket")},
+			{
+				Field: predicate.NewFieldPath("identities"),
+				Op:    predicate.OpAnyMatch,
+				Value: policy.NewOperand(nestedPred),
+			},
+		},
+	}
+
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+	t.Logf("expression: %s", cp.Expression)
+
+	props := map[string]any{
+		"storage": map[string]any{"kind": "bucket"},
+	}
+	identities := []any{
+		map[string]any{
+			"id":   "appsigner:s3:uploads",
+			"type": "app_signer",
+		},
+	}
+
+	result, err := evaluateWithParams(cp, props, nil, identities)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if !result {
+		t.Fatal("expected unsafe (true) for typed predicate any_match path")
+	}
+}
