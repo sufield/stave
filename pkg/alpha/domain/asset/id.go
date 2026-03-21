@@ -20,28 +20,6 @@ func (id ID) IsEmpty() bool {
 	return id == ""
 }
 
-// Sanitize returns a sanitized copy of the identifier. The tokenFunc parameter
-// produces a deterministic short token from a string (e.g. crypto.ShortToken).
-// ARN structure is preserved: "arn:aws:s3:::SANITIZED_<token>/path".
-// Plain names become "SANITIZED_<token>".
-func (id ID) Sanitize(tokenFunc func(string) string) ID {
-	raw := string(id)
-	if raw == "" {
-		return id
-	}
-
-	if name, ok := strings.CutPrefix(raw, "arn:aws:s3:::"); ok {
-		bucket, path := name, ""
-		if idx := strings.IndexByte(name, '/'); idx >= 0 {
-			bucket, path = name[:idx], name[idx:]
-		}
-		// Single three-operand concat: one allocation (path is "" when absent).
-		return ID("arn:aws:s3:::SANITIZED_" + tokenFunc(bucket) + path)
-	}
-
-	return ID("SANITIZED_" + tokenFunc(raw))
-}
-
 // ParseID validates and returns a domain-safe ID.
 func ParseID(raw string) (ID, error) {
 	if err := validateID(raw); err != nil {

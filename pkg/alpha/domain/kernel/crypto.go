@@ -33,7 +33,7 @@ func isLowerHex(s string) bool {
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		// Standard hex check: 0-9 or a-f
-		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+		if c < '0' || (c > '9' && c < 'a') || c > 'f' {
 			return false
 		}
 	}
