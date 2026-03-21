@@ -56,7 +56,7 @@ func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
 
 	runner := appsa.NewSecurityAuditRunner(buildRunnerDeps())
 
-	report, artifacts, err := runner.Run(ctx, appsa.SecurityAuditRequest{
+	report, artifacts, err := runner.Run(ctx, appsa.Request{
 		Now:                  cfg.Now,
 		StaveVersion:         staveversion.String,
 		Cwd:                  cwd,

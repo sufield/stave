@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -35,7 +36,7 @@ type PlanConfig struct {
 }
 
 // ValidatorFactory creates the validation function used during assessment.
-type ValidatorFactory func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error)
+type ValidatorFactory func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.Result, error)
 
 // Planner orchestrates the "plan/readiness" workflow.
 type Planner struct {
@@ -100,15 +101,21 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 // runDryRun performs only readiness checks (replacing the removed plan command).
 // It is invoked by apply --dry-run.
 func runDryRun(ctx context.Context, p *compose.Provider, cfg PlanConfig) error {
-	factory := func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
+	factory := func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.Result, error) {
 		return applyvalidate.NewReadinessValidator(ctx, p, ctlDir, obsDir, sanitize)
 	}
 	planner := NewPlanner(factory)
 	return planner.Execute(cfg)
 }
 
-func doctorPrereqs() []validation.PrereqCheck {
-	cwd, _ := os.Getwd()
-	exe, _ := os.Executable()
-	return cmdutil.DoctorPrereqChecks(cwd, exe)
+func doctorPrereqs() ([]validation.PrereqCheck, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("resolve working directory: %w", err)
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("resolve executable path: %w", err)
+	}
+	return cmdutil.DoctorPrereqChecks(cwd, exe), nil
 }

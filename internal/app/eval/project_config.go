@@ -85,6 +85,8 @@ func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedP
 		return ResolvedProjectConfig{}, err
 	}
 
+	// Best-effort: registry metadata is informational, not on the critical path.
+	// Version and hash enrich evaluation output but do not affect correctness.
 	v, _ := in.PackRegistry.RegistryVersion()
 	h, _ := in.PackRegistry.RegistryHash()
 	result.PreloadedControls = loaded

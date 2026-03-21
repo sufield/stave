@@ -17,7 +17,7 @@ func (m *runMockRunner) Execute(_ context.Context, _ EvaluateConfig) (evaluation
 	return m.returnStatus, m.returnErr
 }
 
-func TestRun(t *testing.T) {
+func TestRunnerExecute(t *testing.T) {
 	tests := []struct {
 		name       string
 		status     evaluation.SafetyStatus
@@ -52,10 +52,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			runner := &runMockRunner{returnStatus: tt.status}
 
-			status, err := Run(context.Background(), RunInput{
-				Runner: runner,
-				Config: tt.config,
-			})
+			status, err := runner.Execute(context.Background(), tt.config)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -67,14 +64,11 @@ func TestRun(t *testing.T) {
 	}
 }
 
-func TestRun_PropagatesRunnerError(t *testing.T) {
+func TestRunnerExecute_PropagatesError(t *testing.T) {
 	wantErr := errors.New("boom")
 	runner := &runMockRunner{returnStatus: evaluation.StatusSafe, returnErr: wantErr}
 
-	_, err := Run(context.Background(), RunInput{
-		Runner: runner,
-		Config: EvaluateConfig{},
-	})
+	_, err := runner.Execute(context.Background(), EvaluateConfig{})
 	if !errors.Is(err, wantErr) {
 		t.Fatalf("expected wrapped error %v, got %v", wantErr, err)
 	}

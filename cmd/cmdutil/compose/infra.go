@@ -25,6 +25,7 @@ type Provider struct {
 	ControlRepoFunc   func() (appcontracts.ControlRepository, error)
 	FindingWriterFunc func(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error)
 	CELEvalFunc       func() (policy.PredicateEval, error)
+	SnapshotRepoFunc  func() (SnapshotObservationRepository, error)
 }
 
 // NewCELEvaluator returns the CEL predicate evaluator from the provider.
@@ -49,6 +50,9 @@ func NewDefaultProvider() *Provider {
 		},
 		FindingWriterFunc: DefaultFindingWriter,
 		CELEvalFunc:       stavecel.NewPredicateEval,
+		SnapshotRepoFunc: func() (SnapshotObservationRepository, error) {
+			return observations.NewObservationLoader(), nil
+		},
 	}
 }
 
@@ -80,6 +84,10 @@ func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationReposit
 
 // NewSnapshotRepo creates a snapshot observation repository.
 func (p *Provider) NewSnapshotRepo() (SnapshotObservationRepository, error) {
+	if p.SnapshotRepoFunc != nil {
+		return p.SnapshotRepoFunc()
+	}
+	// Fallback for providers that only set ObsRepoFunc.
 	repo, err := p.ObsRepoFunc()
 	if err != nil {
 		return nil, err

@@ -68,7 +68,7 @@ func (r *InitRunner) Run(_ context.Context, req *InitRequest) error {
 		return err
 	}
 
-	printScaffoldSummary(r.Stdout, scaffoldSummaryRequest{
+	printScaffoldSummary(r.Stdout, r.Stderr, scaffoldSummaryRequest{
 		BaseDir: result.BaseDir,
 		Dirs:    result.Dirs,
 		Created: result.Created,

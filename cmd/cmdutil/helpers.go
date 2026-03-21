@@ -157,11 +157,14 @@ func CollectVisibleFlags(cmd *cobra.Command) []string {
 
 // --- Internal Utilities ---
 
+// Best-effort: pflag always returns a usable zero value; the error is vestigial
+// (only fires for type mismatch or unregistered flag, both caught by Cobra).
 func getStr(fs *pflag.FlagSet, name string) string {
 	val, _ := fs.GetString(name)
 	return val
 }
 
+// Best-effort: pflag always returns a usable zero value; the error is vestigial.
 func getBool(fs *pflag.FlagSet, name string) bool {
 	val, _ := fs.GetBool(name)
 	return val

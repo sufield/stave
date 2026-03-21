@@ -82,7 +82,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	return nil
 }
 
-func readinessDiagnostics(val validation.ValidationResult) *diag.Result {
+func readinessDiagnostics(val validation.Result) *diag.Result {
 	if val.Diagnostics != nil {
 		return val.Diagnostics
 	}

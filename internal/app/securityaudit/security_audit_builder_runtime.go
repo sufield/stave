@@ -45,7 +45,7 @@ func findingFromRuntimeNetwork(in evidence.PolicyInspectionSnapshot, err error) 
 	}
 }
 
-func findingFromOffline(in evidence.PolicyInspectionSnapshot, req SecurityAuditRequest, err error) securityaudit.Finding {
+func findingFromOffline(in evidence.PolicyInspectionSnapshot, req Request, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckOfflineEnforcement,

@@ -3,7 +3,6 @@ package initcmd
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -19,7 +18,7 @@ type scaffoldSummaryRequest struct {
 	DryRun  bool
 }
 
-func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest, quiet bool) {
+func printScaffoldSummary(w io.Writer, stderr io.Writer, req scaffoldSummaryRequest, quiet bool) {
 	absBaseDir, err := filepath.Abs(req.BaseDir)
 	if err != nil {
 		absBaseDir = req.BaseDir
@@ -53,7 +52,7 @@ func printScaffoldSummary(w io.Writer, req scaffoldSummaryRequest, quiet bool) {
 		fmt.Fprintln(w, "No files were written (dry-run).")
 	}
 
-	rt := ui.NewRuntime(w, os.Stderr)
+	rt := ui.NewRuntime(w, stderr)
 	rt.Quiet = quiet
 	rt.PrintNextSteps(
 		"Run `stave doctor` to verify your local environment.",

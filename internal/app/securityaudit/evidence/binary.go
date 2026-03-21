@@ -71,10 +71,12 @@ func (d DefaultBinaryInspector) Inspect(req Params, buildInfo BuildInfoSnapshot)
 			Detail:           signatureDetail,
 			GeneratedAt:      req.Now.UTC().Format(time.RFC3339),
 		}
-		signatureJSON, _ = json.MarshalIndent(signaturePayload, "", "  ")
-		if len(signatureJSON) > 0 {
-			signatureJSON = append(signatureJSON, '\n')
+		var marshalErr error
+		signatureJSON, marshalErr = json.MarshalIndent(signaturePayload, "", "  ")
+		if marshalErr != nil {
+			return BinaryInspectionSnapshot{}, fmt.Errorf("marshal signature payload: %w", marshalErr)
 		}
+		signatureJSON = append(signatureJSON, '\n')
 	}
 
 	hardeningStatus, hardeningDetail := evaluateBuildHardening(buildInfo)

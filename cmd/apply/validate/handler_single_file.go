@@ -81,15 +81,15 @@ func normalizeKind(raw string) (schemas.Kind, error) {
 
 // NewReadinessValidator creates a validation function for plan/apply commands.
 // It removes the dependency on cobra.Command by accepting the sanitize flag directly.
-func NewReadinessValidator(ctx context.Context, p *compose.Provider, ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.ValidationResult, error) {
-	return func(maxUnsafeDur time.Duration, now time.Time) (validation.ValidationResult, error) {
+func NewReadinessValidator(ctx context.Context, p *compose.Provider, ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.Result, error) {
+	return func(maxUnsafeDur time.Duration, now time.Time) (validation.Result, error) {
 		obsRepo, err := p.NewObservationRepo()
 		if err != nil {
-			return validation.ValidationResult{}, err
+			return validation.Result{}, err
 		}
 		ctlRepo, err := p.NewControlRepo()
 		if err != nil {
-			return validation.ValidationResult{}, err
+			return validation.Result{}, err
 		}
 
 		runner := appvalidation.NewRun(obsRepo, ctlRepo)
@@ -102,12 +102,12 @@ func NewReadinessValidator(ctx context.Context, p *compose.Provider, ctlDir, obs
 			PredicateParser: ctlyaml.ParsePredicate,
 		})
 		if err != nil {
-			return validation.ValidationResult{}, err
+			return validation.Result{}, err
 		}
 
 		result.Diagnostics.AddAll(PackConfigIssues())
 
-		var vr validation.ValidationResult
+		var vr validation.Result
 		vr.Diagnostics = result.Diagnostics
 		vr.Summary.ControlsLoaded = result.Summary.ControlsLoaded
 		vr.Summary.SnapshotsLoaded = result.Summary.SnapshotsLoaded

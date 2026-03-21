@@ -94,7 +94,7 @@ var (
 )
 
 // toParams extracts the evidence collection parameters from a full audit request.
-func (req SecurityAuditRequest) toParams() evidence.Params {
+func (req Request) toParams() evidence.Params {
 	return evidence.Params{
 		Now:                  req.Now,
 		Cwd:                  req.Cwd,

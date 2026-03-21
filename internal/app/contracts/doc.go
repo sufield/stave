@@ -3,5 +3,5 @@
 //
 // Key interfaces include [ObservationRepository] and [ControlRepository] for
 // loading inputs, [FindingMarshaler] for output, and
-// [FileResultLoader] / [ReaderResultLoader] for loading prior evaluation results.
+// [FileResultLoader] and [ReaderResultLoader] for loading prior evaluation results.
 package contracts

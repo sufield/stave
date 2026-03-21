@@ -5,7 +5,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
-func buildFindings(ev evidence.Bundle, req SecurityAuditRequest) []securityaudit.Finding {
+func buildFindings(ev evidence.Bundle, req Request) []securityaudit.Finding {
 	findings := make([]securityaudit.Finding, 0, len(securityaudit.AllCheckIDs())+1)
 	findings = append(findings, findingFromBuildInfo(ev.BuildInfo))
 	findings = append(findings, findingFromSBOM(ev.SBOM, ev.SBOMErr))
