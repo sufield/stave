@@ -78,54 +78,6 @@ func TestFieldPath_JSONRoundTrip(t *testing.T) {
 
 // --- Operator tests ---
 
-func TestOperator_IsStandard(t *testing.T) {
-	standard := []Operator{OpEq, OpNe, OpGt, OpLt, OpGte, OpLte, OpMissing, OpPresent, OpIn, OpListEmpty, OpContains}
-	for _, op := range standard {
-		if !op.IsStandard() {
-			t.Errorf("%s should be standard", op)
-		}
-	}
-	nonStandard := []Operator{OpNeqField, OpNotInField, OpNotSubsetOfField, OpAnyMatch}
-	for _, op := range nonStandard {
-		if op.IsStandard() {
-			t.Errorf("%s should not be standard", op)
-		}
-	}
-}
-
-func TestOperator_IsFieldRef(t *testing.T) {
-	fieldRefs := []Operator{OpNeqField, OpNotInField, OpNotSubsetOfField}
-	for _, op := range fieldRefs {
-		if !op.IsFieldRef() {
-			t.Errorf("%s should be field ref", op)
-		}
-	}
-	if OpEq.IsFieldRef() {
-		t.Error("eq should not be field ref")
-	}
-}
-
-func TestOperator_IsPresenceBased(t *testing.T) {
-	if !OpMissing.IsPresenceBased() {
-		t.Error("missing should be presence-based")
-	}
-	if !OpPresent.IsPresenceBased() {
-		t.Error("present should be presence-based")
-	}
-	if OpEq.IsPresenceBased() {
-		t.Error("eq should not be presence-based")
-	}
-}
-
-func TestOperator_RequiresNestedPredicate(t *testing.T) {
-	if !OpAnyMatch.RequiresNestedPredicate() {
-		t.Error("any_match should require nested predicate")
-	}
-	if OpEq.RequiresNestedPredicate() {
-		t.Error("eq should not require nested predicate")
-	}
-}
-
 func TestIsSupported(t *testing.T) {
 	for _, op := range ListSupported() {
 		if !IsSupported(op) {

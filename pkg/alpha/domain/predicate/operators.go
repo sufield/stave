@@ -27,48 +27,16 @@ const (
 	OpAnyMatch         Operator = "any_match"
 )
 
-// --- Operator behavior methods ---
-
-// IsStandard reports whether the operator is handled entirely by EvaluateOperator
-// (i.e. requires no external context such as field-to-field comparison).
-func (op Operator) IsStandard() bool {
-	switch op {
-	case OpEq, OpNe, OpGt, OpLt, OpGte, OpLte,
-		OpMissing, OpPresent, OpIn, OpListEmpty, OpContains:
-		return true
-	}
-	return false
-}
-
-// IsFieldRef reports whether the operator compares the field's value against
-// another field's value (e.g. neq_field, not_in_field, not_subset_of_field).
-func (op Operator) IsFieldRef() bool {
-	switch op {
-	case OpNeqField, OpNotInField, OpNotSubsetOfField:
-		return true
-	}
-	return false
-}
-
-// IsPresenceBased reports whether the operator checks field presence or absence
-// rather than comparing field values (missing, present).
-func (op Operator) IsPresenceBased() bool {
-	switch op {
-	case OpMissing, OpPresent:
-		return true
-	}
-	return false
-}
-
-// RequiresNestedPredicate reports whether the operator expects a nested
-// predicate structure as its comparison value (any_match).
-func (op Operator) RequiresNestedPredicate() bool {
-	return op == OpAnyMatch
-}
-
 // IsSupported reports whether the operator is recognized by the engine.
 func IsSupported(op Operator) bool {
-	return op.IsStandard() || op.IsFieldRef() || op.RequiresNestedPredicate()
+	switch op {
+	case OpEq, OpNe, OpGt, OpLt, OpGte, OpLte,
+		OpMissing, OpPresent, OpIn, OpListEmpty, OpContains,
+		OpNeqField, OpNotInField, OpNotSubsetOfField,
+		OpAnyMatch:
+		return true
+	}
+	return false
 }
 
 // ListSupported returns all supported operators in deterministic order.
