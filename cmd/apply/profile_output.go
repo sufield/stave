@@ -24,14 +24,7 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}
 
-	return appeval.NewPipeline(ctx, &appeval.PipelineData{
-		Result: result,
-		Output: cfg.Stdout,
-	}).
-		Then(appeval.EnrichStep(enrichFn)).
-		Then(appeval.MarshalStep(marshaler)).
-		Then(appeval.WriteStep()).
-		Error()
+	return appeval.RunOutputPipeline(ctx, cfg.Stdout, result, marshaler, enrichFn, nil)
 }
 
 func (r *Runner) finalize(cfg Config, results evaluation.Result, snapshots []asset.Snapshot, ctlDir string) error {
