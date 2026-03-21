@@ -19,6 +19,7 @@ import (
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
 	"github.com/sufield/stave/cmd/prune"
+	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -81,6 +82,9 @@ func WireCommands(app *App) {
 
 	// Introspection
 	root.AddCommand(inspect.NewInspectCmd())
+
+	// Security
+	root.AddCommand(securityaudit.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd())

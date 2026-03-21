@@ -70,3 +70,29 @@ func (p AirgapPolicy) ProxyEnvVars() []string {
 func (p AirgapPolicy) ProviderPermissions(provider string) []string {
 	return slices.Clone(p.cloudPermissions[provider])
 }
+
+// IsImportAllowed reports whether a banned import is explicitly
+// allowlisted for a specific file.
+func (p AirgapPolicy) IsImportAllowed(relPath, imp string) bool {
+	if allowed, ok := p.allowedImports[relPath]; ok {
+		_, allowed := allowed[imp]
+		return allowed
+	}
+	return false
+}
+
+// ProtectedPaths returns the file paths that define this policy.
+func (p AirgapPolicy) ProtectedPaths() []string {
+	return slices.Clone(p.protectedPaths)
+}
+
+// BannedImports returns the import strings banned under this policy.
+func (p AirgapPolicy) BannedImports() []string {
+	return slices.Clone(p.bannedImports)
+}
+
+// BannedCredentialKeys returns the list of sensitive environment variables
+// that should not be present in an air-gapped environment.
+func (p AirgapPolicy) BannedCredentialKeys() []string {
+	return slices.Clone(p.bannedCredentialKeys)
+}
