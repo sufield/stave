@@ -5,6 +5,7 @@ package sanitize
 import (
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -45,21 +46,44 @@ func (s *Sanitizer) hash(val string) string {
 	return crypto.ShortToken(val)
 }
 
+// preservedPrefixes lists infrastructure namespaces whose structure is kept
+// visible after sanitization (e.g. "arn:aws:s3:::"). Only the name component
+// following the prefix is replaced with a deterministic token.
+var preservedPrefixes = []string{
+	"arn:aws:s3:::",
+}
+
+// sanitizeRaw applies prefix-aware sanitization to a raw identifier string.
+// For each preserved prefix, the first path segment after the prefix is
+// tokenised while the rest of the path is kept intact. Identifiers that
+// match no prefix become "SANITIZED_<token>".
+func (s *Sanitizer) sanitizeRaw(raw string) string {
+	for _, prefix := range preservedPrefixes {
+		if name, ok := strings.CutPrefix(raw, prefix); ok {
+			bucket, path := name, ""
+			if idx := strings.IndexByte(name, '/'); idx >= 0 {
+				bucket, path = name[:idx], name[idx:]
+			}
+			return prefix + "SANITIZED_" + s.hash(bucket) + path
+		}
+	}
+	return "SANITIZED_" + s.hash(raw)
+}
+
 // ID sanitizes a plain string identifier. Implements kernel.Sanitizer.
 func (s *Sanitizer) ID(id string) string {
 	if !s.idEnabled() || id == "" {
 		return id
 	}
-	return string(asset.ID(id).Sanitize(s.hash))
+	return s.sanitizeRaw(id)
 }
 
 // Asset sanitizes an asset identifier.
-// Delegates to AssetID.Sanitize (Tell, Don't Ask).
 func (s *Sanitizer) Asset(id asset.ID) asset.ID {
 	if !s.idEnabled() {
 		return id
 	}
-	return id.Sanitize(s.hash)
+	return asset.ID(s.sanitizeRaw(id.String()))
 }
 
 // Value sanitizes an arbitrary string value.
