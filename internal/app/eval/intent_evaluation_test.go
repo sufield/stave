@@ -22,7 +22,7 @@ func TestIntentEvaluationLoadArtifacts_LoadsBoth(t *testing.T) {
 	}}
 	snapshots := []asset.Snapshot{{
 		CapturedAt:  now,
-		GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeTerraformPlanJSON},
+		GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeAWSS3Snapshot},
 	}}
 
 	intent := NewIntentEvaluation(

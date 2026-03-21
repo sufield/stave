@@ -37,12 +37,12 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	}
 	snapshots := []asset.Snapshot{
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeTerraformPlanJSON},
+			GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-2 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeTerraformPlanJSON},
+			GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-1 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},

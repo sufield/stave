@@ -10,7 +10,7 @@ import (
 func TestCapabilities_SourceTypeCount(t *testing.T) {
 	caps := capabilities.GetCapabilities("test-v1")
 	got := len(caps.Inputs.SourceTypes)
-	want := 2
+	want := 1
 	if got != want {
 		t.Errorf("source type count = %d, want %d (update this test when adding source types)", got, want)
 	}
@@ -25,7 +25,6 @@ func TestCapabilities_SourceTypesExpectedSet(t *testing.T) {
 	}
 
 	want := []kernel.ObservationSourceType{
-		kernel.SourceTypeTerraformPlanJSON,
 		kernel.SourceTypeAWSS3Snapshot,
 	}
 

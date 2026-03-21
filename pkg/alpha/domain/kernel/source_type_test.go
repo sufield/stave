@@ -7,7 +7,6 @@ func TestObservationSourceTypeString(t *testing.T) {
 		st   ObservationSourceType
 		want string
 	}{
-		{SourceTypeTerraformPlanJSON, "terraform.plan_json"},
 		{SourceTypeAWSS3Snapshot, "aws-s3-snapshot"},
 	}
 	for _, tt := range tests {
@@ -20,8 +19,5 @@ func TestObservationSourceTypeString(t *testing.T) {
 func TestObservationSourceTypeIsEmpty(t *testing.T) {
 	if !ObservationSourceType("").IsEmpty() {
 		t.Error("empty string should be empty")
-	}
-	if SourceTypeTerraformPlanJSON.IsEmpty() {
-		t.Error("SourceTypeTerraformPlanJSON should not be empty")
 	}
 }

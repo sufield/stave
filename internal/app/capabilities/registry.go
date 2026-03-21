@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	terraformPlanMinVersion = "1.5.0"
-	terraformPlanFormat     = "terraform show -json"
-
 	s3PackName = "s3"
 	s3PackPath = "controls/s3"
 )
@@ -66,12 +63,6 @@ func newRegistry() *registry {
 	slices.Sort(dslVersions)
 
 	sourceTypes := []SourceTypeSupport{
-		{
-			Type:           kernel.SourceTypeTerraformPlanJSON,
-			Description:    "Terraform plan JSON output",
-			ToolMinVersion: terraformPlanMinVersion,
-			PlanFormat:     terraformPlanFormat,
-		},
 		{
 			Type:        kernel.SourceTypeAWSS3Snapshot,
 			Description: "S3 snapshot JSON observations",

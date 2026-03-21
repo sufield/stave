@@ -1,7 +1,7 @@
 {
   "schema_version": "obs.v0.1",
   "generated_by": {
-    "source_type": "terraform.plan_json",
+    "source_type": "aws-s3-snapshot",
     "tool": "stave-test",
     "tool_version": "1.0.0"
   },

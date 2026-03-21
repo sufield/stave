@@ -44,12 +44,10 @@ type InputSupport struct {
 	SourceTypes []SourceTypeSupport `json:"source_types"`
 }
 
-// SourceTypeSupport describes a supported source type and its version constraints.
+// SourceTypeSupport describes a supported observation source type.
 type SourceTypeSupport struct {
-	Type           kernel.ObservationSourceType `json:"type"`
-	Description    string                       `json:"description"`
-	ToolMinVersion string                       `json:"tool_min_version,omitempty"`
-	PlanFormat     string                       `json:"plan_format,omitempty"`
+	Type        kernel.ObservationSourceType `json:"type"`
+	Description string                       `json:"description"`
 }
 
 // SecurityAuditSupport describes the supported security-audit command features.
