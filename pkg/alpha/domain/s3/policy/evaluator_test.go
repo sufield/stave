@@ -3,6 +3,7 @@ package policy
 import (
 	"testing"
 
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
 
@@ -16,7 +17,7 @@ func mustParse(t *testing.T, jsonPolicy string) *Document {
 }
 
 func TestEvaluatorNilDocument(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	report := e.Evaluate(nil)
 
 	if report.Score != risk.ScoreSafe {
@@ -25,7 +26,7 @@ func TestEvaluatorNilDocument(t *testing.T) {
 }
 
 func TestEvaluatorEmptyPolicy(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	doc := mustParse(t, "")
 	report := e.Evaluate(doc)
 
@@ -35,7 +36,7 @@ func TestEvaluatorEmptyPolicy(t *testing.T) {
 }
 
 func TestEvaluatorPublicWriteUnscoped(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
@@ -61,7 +62,7 @@ func TestEvaluatorPublicWriteUnscoped(t *testing.T) {
 }
 
 func TestEvaluatorPublicReadUnscoped(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
@@ -81,7 +82,7 @@ func TestEvaluatorPublicReadUnscoped(t *testing.T) {
 }
 
 func TestEvaluatorPublicReadNetworkScoped(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
@@ -104,7 +105,7 @@ func TestEvaluatorPublicReadNetworkScoped(t *testing.T) {
 }
 
 func TestEvaluatorAuthenticatedFullControl(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[
@@ -127,7 +128,7 @@ func TestEvaluatorAuthenticatedFullControl(t *testing.T) {
 }
 
 func TestEvaluator_DenyStatementSkipped(t *testing.T) {
-	e := NewEvaluator(nil)
+	e := NewEvaluator(nil, s3resolver.NewResolver())
 	doc := mustParse(t, `{
 		"Version":"2012-10-17",
 		"Statement":[

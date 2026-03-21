@@ -1,6 +1,10 @@
 package policy
 
-import "testing"
+import (
+	"testing"
+
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
+)
 
 func FuzzEvaluate(f *testing.F) {
 	seeds := []string{
@@ -18,7 +22,7 @@ func FuzzEvaluate(f *testing.F) {
 		f.Add(s)
 	}
 
-	eval := NewEvaluator(nil)
+	eval := NewEvaluator(nil, s3resolver.NewResolver())
 
 	f.Fuzz(func(t *testing.T, input string) {
 		doc, _ := Parse(input)

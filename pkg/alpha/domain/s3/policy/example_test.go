@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/pkg/alpha/domain/s3/policy"
 )
 
@@ -38,7 +39,7 @@ func ExampleNewEvaluator() {
 		}]
 	}`)
 
-	report := policy.NewEvaluator(nil).Evaluate(doc)
+	report := policy.NewEvaluator(nil, s3resolver.NewResolver()).Evaluate(doc)
 	out, _ := json.Marshal(report.Score)
 	fmt.Println("risk_score:", string(out))
 	// Output: risk_score: 90

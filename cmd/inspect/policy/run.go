@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	s3policy "github.com/sufield/stave/pkg/alpha/domain/s3/policy"
@@ -34,7 +35,7 @@ func run(cmd *cobra.Command, file string) error {
 	report := PolicyReport{
 		Assessment:  doc.Assess(),
 		PrefixScope: doc.PrefixScopeAnalysis(),
-		Risk:        s3policy.NewEvaluator(nil).Evaluate(doc),
+		Risk:        s3policy.NewEvaluator(nil, s3resolver.NewResolver()).Evaluate(doc),
 		RequiredIAM: s3policy.MinimumS3IngestIAMActions(),
 	}
 
