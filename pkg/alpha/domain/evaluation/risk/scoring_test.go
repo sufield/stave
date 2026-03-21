@@ -30,18 +30,21 @@ func TestPermissionOverlap(t *testing.T) {
 	}
 }
 
-func TestAnalyzeActions(t *testing.T) {
-	actionMap := map[string]Permission{
-		"*":               PermFullControl,
-		"s3:getobject":    PermRead,
-		"s3:putobject":    PermWrite,
-		"s3:listbucket":   PermList,
-		"s3:putobjectacl": PermAdminWrite,
-	}
-	prefixRules := []PrefixRule{
-		{Prefix: "s3:put", Perm: PermWrite},
-		{Prefix: "s3:delete", Perm: PermDelete},
-	}
+type testResolver struct {
+	perms map[string]Permission
+}
+
+func (r testResolver) Resolve(action string) Permission {
+	return r.perms[action]
+}
+
+func TestResolveActions(t *testing.T) {
+	resolver := testResolver{perms: map[string]Permission{
+		"*":            PermFullControl,
+		"s3:getobject": PermRead,
+		"s3:putobject": PermWrite,
+		"s3:deletefoo": PermDelete,
+	}}
 
 	tests := []struct {
 		name    string
@@ -50,15 +53,42 @@ func TestAnalyzeActions(t *testing.T) {
 	}{
 		{"wildcard", []string{"*"}, PermFullControl},
 		{"single read", []string{"s3:getobject"}, PermRead},
-		{"write via prefix", []string{"s3:putfoo"}, PermWrite},
-		{"delete via prefix", []string{"s3:deletefoo"}, PermDelete},
-		{"combined", []string{"s3:getobject", "s3:putobjectacl"}, PermRead | PermWrite | PermAdminWrite},
+		{"combined", []string{"s3:getobject", "s3:putobject"}, PermRead | PermWrite},
+		{"unknown", []string{"ec2:run"}, 0},
+		{"early exit on full control", []string{"*", "s3:getobject"}, PermFullControl},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := AnalyzeActions(tt.actions, actionMap, prefixRules)
+			got := ResolveActions(tt.actions, resolver)
 			if got != tt.want {
-				t.Errorf("AnalyzeActions(%v) = %v, want %v", tt.actions, got, tt.want)
+				t.Errorf("ResolveActions(%v) = %v, want %v", tt.actions, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPermissionScore(t *testing.T) {
+	cases := []struct {
+		name string
+		perm Permission
+		want int
+	}{
+		{"zero", 0, 0},
+		{"full control", PermFullControl, 10},
+		{"admin write", PermAdminWrite, 9},
+		{"delete", PermDelete, 8},
+		{"admin read", PermAdminRead, 7},
+		{"write", PermWrite, 6},
+		{"read", PermRead, 3},
+		{"list", PermList, 2},
+		{"read|write returns write score", PermRead | PermWrite, 6},
+		{"admin write|read returns admin write score", PermAdminWrite | PermRead, 9},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.perm.Score()
+			if got != tc.want {
+				t.Errorf("Permission(%d).Score() = %d, want %d", tc.perm, got, tc.want)
 			}
 		})
 	}

@@ -7,11 +7,12 @@ import (
 // Evaluator encapsulates policy scoring rules.
 type Evaluator struct {
 	TrustedCIDRs []string
+	Resolver     risk.PermissionResolver
 }
 
 // NewEvaluator constructs a new policy evaluator.
-func NewEvaluator(trusted []string) *Evaluator {
-	return &Evaluator{TrustedCIDRs: trusted}
+func NewEvaluator(trusted []string, resolver risk.PermissionResolver) *Evaluator {
+	return &Evaluator{TrustedCIDRs: trusted, Resolver: resolver}
 }
 
 // Evaluate computes a policy risk report from a pre-parsed Document.
@@ -29,7 +30,7 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 		}
 
 		actions := risk.NormalizeActions([]string(stmt.Action))
-		perms := risk.AnalyzeActions(actions, risk.S3ActionMap, risk.S3PrefixRules)
+		perms := risk.ResolveActions(actions, e.Resolver)
 		report.Permissions |= perms
 
 		isPublic, isAuth := classifyPolicyPrincipal(stmt.principalAny())

@@ -1,9 +1,5 @@
 package risk
 
-import (
-	"strings"
-)
-
 // Score quantifies policy risk from 0 (Safe) to 100 (Catastrophic).
 type Score int
 
@@ -56,20 +52,12 @@ type StatementContext struct {
 	IsAllow         bool
 }
 
-// AnalyzeActions maps raw action strings to aggregate Permission bits.
-func AnalyzeActions(actions []string, actionMap map[string]Permission, prefixRules []PrefixRule) Permission {
+// ResolveActions maps raw action strings to aggregate Permission bits
+// using a PermissionResolver for vendor-specific lookups.
+func ResolveActions(actions []string, resolver PermissionResolver) Permission {
 	var total Permission
 	for _, action := range actions {
-		// Exact match
-		if p, ok := actionMap[action]; ok {
-			total |= p
-		}
-		// Prefix match
-		for _, rule := range prefixRules {
-			if strings.HasPrefix(action, rule.Prefix) {
-				total |= rule.Perm
-			}
-		}
+		total |= resolver.Resolve(action)
 		if total == PermFullControl {
 			break
 		}
@@ -77,10 +65,28 @@ func AnalyzeActions(actions []string, actionMap map[string]Permission, prefixRul
 	return total
 }
 
-// PrefixRule maps a string prefix (e.g. "s3:Get") to a domain permission.
-type PrefixRule struct {
-	Prefix string
-	Perm   Permission
+// Score returns the highest-risk score for the permission bits.
+func (p Permission) Score() int {
+	switch {
+	case p == 0:
+		return 0
+	case p.Has(PermFullControl):
+		return 10
+	case p.Has(PermAdminWrite):
+		return 9
+	case p.Has(PermDelete):
+		return 8
+	case p.Has(PermAdminRead):
+		return 7
+	case p.Has(PermWrite):
+		return 6
+	case p.Has(PermRead):
+		return 3
+	case p.Has(PermList):
+		return 2
+	default:
+		return 1
+	}
 }
 
 // Result represents the risk contribution of a single statement.

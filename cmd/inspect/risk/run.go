@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	domainrisk "github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
@@ -49,7 +50,7 @@ func run(cmd *cobra.Command, file string) error {
 	}
 
 	normalized := domainrisk.NormalizeActions(in.Actions)
-	perms := domainrisk.AnalyzeActions(normalized, domainrisk.S3ActionMap, domainrisk.S3PrefixRules)
+	perms := domainrisk.ResolveActions(normalized, s3resolver.NewResolver())
 
 	ctx := domainrisk.StatementContext{
 		Permissions:     perms,
