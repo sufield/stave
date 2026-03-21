@@ -173,46 +173,6 @@ func (r *Registry) AliasResolverFunc() policy.AliasResolver {
 	}
 }
 
-// ── Composite Resolver ────────────────────────────────────
-
-// CompositeResolver chains multiple resolvers, trying each in order.
-// This lets adopters layer custom aliases on top of the built-in set.
-type CompositeResolver struct {
-	resolvers []Resolver
-}
-
-// NewCompositeResolver creates a resolver that tries each delegate in order.
-func NewCompositeResolver(resolvers ...Resolver) *CompositeResolver {
-	return &CompositeResolver{resolvers: resolvers}
-}
-
-// Resolve tries each delegate in order and returns the first match.
-func (c *CompositeResolver) Resolve(name string) (policy.UnsafePredicate, error) {
-	for _, r := range c.resolvers {
-		pred, err := r.Resolve(name)
-		if err == nil {
-			return pred, nil
-		}
-	}
-	return policy.UnsafePredicate{}, &UnknownAliasError{Name: name}
-}
-
-// ListAliases merges and deduplicates aliases from all delegates.
-func (c *CompositeResolver) ListAliases(category string) []string {
-	seen := make(map[string]struct{})
-	var out []string
-	for _, r := range c.resolvers {
-		for _, name := range r.ListAliases(category) {
-			if _, ok := seen[name]; !ok {
-				seen[name] = struct{}{}
-				out = append(out, name)
-			}
-		}
-	}
-	slices.Sort(out)
-	return out
-}
-
 // ── Default (built-in) registry ──────────────────────────────────────
 
 var defaultRegistry = newBuiltinRegistry()

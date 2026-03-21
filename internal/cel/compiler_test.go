@@ -58,7 +58,7 @@ func TestCompile_EvaluateMatching(t *testing.T) {
 		},
 	}
 
-	result, err := EvaluateWithParams(cp, props, nil, nil)
+	result, err := evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestCompile_EvaluateNonMatching(t *testing.T) {
 		},
 	}
 
-	result, err := EvaluateWithParams(cp, props, nil, nil)
+	result, err := evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestCompile_MissingField(t *testing.T) {
 		},
 	}
 
-	result, err := EvaluateWithParams(cp, props, nil, nil)
+	result, err := evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestCompile_MissingOperator(t *testing.T) {
 	// Field is absent
 	props := map[string]any{}
 
-	result, err := EvaluateWithParams(cp, props, nil, nil)
+	result, err := evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestCompile_NestedAnyAll(t *testing.T) {
 		},
 	}
 
-	result, err := EvaluateWithParams(cp, props, nil, nil)
+	result, err := evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -236,7 +236,7 @@ func TestCompile_ContainsOperator(t *testing.T) {
 	}
 
 	props := map[string]any{"name": "my-public-bucket"}
-	result, err := EvaluateWithParams(cp, props, nil, nil)
+	result, err := evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -245,7 +245,7 @@ func TestCompile_ContainsOperator(t *testing.T) {
 	}
 
 	props = map[string]any{"name": "my-private-bucket"}
-	result, err = EvaluateWithParams(cp, props, nil, nil)
+	result, err = evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -347,7 +347,7 @@ func TestCompile_AnyMatch(t *testing.T) {
 		},
 	}
 
-	result, err := EvaluateWithParams(cp, props, nil, identities)
+	result, err := evaluateWithParams(cp, props, nil, identities)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -365,7 +365,7 @@ func TestCompile_AnyMatch(t *testing.T) {
 		},
 	}
 
-	result, err = EvaluateWithParams(cp, props, nil, identities)
+	result, err = evaluateWithParams(cp, props, nil, identities)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -374,7 +374,7 @@ func TestCompile_AnyMatch(t *testing.T) {
 	}
 
 	// Safe: shared bucket with no identities
-	result, err = EvaluateWithParams(cp, props, nil, nil)
+	result, err = evaluateWithParams(cp, props, nil, nil)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}
@@ -384,7 +384,7 @@ func TestCompile_AnyMatch(t *testing.T) {
 
 	// Safe: non-shared bucket (tenant_mode not "shared")
 	props["storage"].(map[string]any)["tags"].(map[string]any)["tenant_mode"] = "single"
-	result, err = EvaluateWithParams(cp, props, nil, identities)
+	result, err = evaluateWithParams(cp, props, nil, identities)
 	if err != nil {
 		t.Fatalf("eval: %v", err)
 	}

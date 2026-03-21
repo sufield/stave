@@ -3,7 +3,6 @@ package predicate
 import (
 	"errors"
 	"fmt"
-	"slices"
 	"testing"
 
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -156,41 +155,6 @@ func TestRegistry_ListAliasInfo(t *testing.T) {
 		if info.Service == "" {
 			t.Errorf("AliasInfo %q has empty Service", info.Name)
 		}
-	}
-}
-
-func TestCompositeResolver(t *testing.T) {
-	custom := &Registry{entries: map[string]aliasEntry{
-		"custom.test_alias": {
-			Description: "Test alias",
-			Category:    "Custom",
-			Service:     "custom",
-			Predicate:   policy.UnsafePredicate{Any: []policy.PredicateRule{{}}},
-		},
-	}}
-
-	composite := NewCompositeResolver(defaultRegistry, custom)
-
-	// Built-in alias resolves.
-	if _, err := composite.Resolve(S3IsPublicReadable); err != nil {
-		t.Errorf("built-in alias failed: %v", err)
-	}
-
-	// Custom alias resolves.
-	if _, err := composite.Resolve("custom.test_alias"); err != nil {
-		t.Errorf("custom alias failed: %v", err)
-	}
-
-	// Unknown fails.
-	if _, err := composite.Resolve("nope"); err == nil {
-		t.Error("expected error for unknown alias")
-	}
-
-	// ListAliases includes both.
-	names := composite.ListAliases("")
-	found := slices.Contains(names, "custom.test_alias")
-	if !found {
-		t.Error("expected custom.test_alias in composite list")
 	}
 }
 
