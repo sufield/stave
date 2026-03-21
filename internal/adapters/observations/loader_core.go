@@ -63,7 +63,8 @@ var (
 // NewObservationLoader creates a new JSON observation loader with the default contract validator.
 func NewObservationLoader() *ObservationLoader {
 	return &ObservationLoader{
-		validator: &contractObservationValidator{v: contractvalidator.New()},
+		validator:  &contractObservationValidator{v: contractvalidator.New()},
+		OnProgress: func(int, int) {},
 	}
 }
 
@@ -76,15 +77,10 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		return appcontracts.LoadResult{}, err
 	}
 
-	entries, err := os.ReadDir(dir)
+	entries, err := listObservationFiles(dir)
 	if err != nil {
-		return appcontracts.LoadResult{}, fmt.Errorf("read observations: %w", err)
+		return appcontracts.LoadResult{}, err
 	}
-
-	entries = filterJSONFiles(entries)
-	slices.SortFunc(entries, func(a, b os.DirEntry) int {
-		return strings.Compare(a.Name(), b.Name())
-	})
 
 	var snapshots []asset.Snapshot
 	fileHashes := make(map[string]string, len(entries))
@@ -111,9 +107,7 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		snapshots = append(snapshots, snap)
 		fileHashes[entry.Name()] = hash
 
-		if l.OnProgress != nil {
-			l.OnProgress(i+1, total)
-		}
+		l.OnProgress(i+1, total)
 	}
 
 	if joinedErr != nil {
@@ -140,11 +134,20 @@ func (l *ObservationLoader) ConfigureIntegrityCheck(manifestPath, publicKeyPath 
 	l.integrityPublicKeyPath = publicKeyPath
 }
 
-// filterJSONFiles returns only non-directory entries with a .json suffix.
-func filterJSONFiles(entries []os.DirEntry) []os.DirEntry {
-	return slices.DeleteFunc(entries, func(e os.DirEntry) bool {
+// listObservationFiles reads a directory and returns JSON file entries
+// sorted by name for deterministic loading.
+func listObservationFiles(dir string) ([]os.DirEntry, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("read observations: %w", err)
+	}
+	entries = slices.DeleteFunc(entries, func(e os.DirEntry) bool {
 		return e.IsDir() || !strings.HasSuffix(e.Name(), ".json")
 	})
+	slices.SortFunc(entries, func(a, b os.DirEntry) int {
+		return strings.Compare(a.Name(), b.Name())
+	})
+	return entries, nil
 }
 
 // process is the single processing pipeline: hash → validate → unmarshal.

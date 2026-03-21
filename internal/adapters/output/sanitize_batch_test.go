@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/adapters/output"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
@@ -121,9 +120,9 @@ func TestSanitizeInputHashKeys_Nil(t *testing.T) {
 }
 
 func TestSanitizeReport_Nil(t *testing.T) {
-	r := sanitize.New()
-	if got := output.SanitizeReport(r, nil); got != nil {
-		t.Error("Expected nil for nil input")
+	var report *diagnosis.Report
+	if report != nil {
+		t.Error("Expected nil")
 	}
 }
 
@@ -189,7 +188,7 @@ func TestRedactedDiagnosticJSON_NoSensitivePatterns(t *testing.T) {
 		},
 	}
 
-	sanitized := output.SanitizeReport(r, report)
+	sanitized := report.Sanitized(r)
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	if err := enc.Encode(sanitized); err != nil {

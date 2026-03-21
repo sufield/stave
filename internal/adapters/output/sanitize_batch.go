@@ -1,30 +1,22 @@
 package output
 
 import (
-	"github.com/samber/lo"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
-
-// SanitizeReport returns a sanitized copy of a diagnosis report.
-func SanitizeReport(s kernel.Sanitizer, r *diagnosis.Report) *diagnosis.Report {
-	if r == nil {
-		return nil
-	}
-	return r.Sanitized(s)
-}
 
 // SanitizeBaselineEntries returns copies with asset IDs sanitized.
 func SanitizeBaselineEntries(s kernel.Sanitizer, entries []evaluation.BaselineEntry) []evaluation.BaselineEntry {
 	if s == nil || len(entries) == 0 {
 		return entries
 	}
-	return lo.Map(entries, func(e evaluation.BaselineEntry, _ int) evaluation.BaselineEntry {
+	res := make([]evaluation.BaselineEntry, len(entries))
+	for i, e := range entries {
 		e.AssetID = asset.ID(s.ID(string(e.AssetID)))
-		return e
-	})
+		res[i] = e
+	}
+	return res
 }
 
 // SanitizeObservationDelta returns a copy with asset IDs in changes sanitized.
