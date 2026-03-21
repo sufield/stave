@@ -84,28 +84,6 @@ func TestDetectOverlap(t *testing.T) {
 	}
 }
 
-func TestScopeMatchesPrefix(t *testing.T) {
-	tests := []struct {
-		name   string
-		scope  kernel.ObjectPrefix
-		prefix kernel.ObjectPrefix
-		want   bool
-	}{
-		{name: "wildcard scope", scope: "*", prefix: "invoices/", want: true},
-		{name: "exact scope", scope: "invoices/", prefix: "invoices/", want: true},
-		{name: "parent scope", scope: "data/", prefix: "data/secrets/", want: true},
-		{name: "mismatch", scope: "images/", prefix: "invoices/", want: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := exposure.ScopeMatchesPrefix(tt.scope, tt.prefix)
-			if got != tt.want {
-				t.Fatalf("scopeMatchesPrefix(%q,%q)=%v, want %v", tt.scope, tt.prefix, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCheckExposure(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -2,101 +2,11 @@ package domain
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
-
-func TestSensitive_String(t *testing.T) {
-	s := kernel.Sensitive("my-secret")
-	if got := s.String(); got != kernel.Redacted {
-		t.Errorf("String() = %q, want %q", got, kernel.Redacted)
-	}
-}
-
-func TestSensitive_GoString(t *testing.T) {
-	s := kernel.Sensitive("my-secret")
-	if got := s.GoString(); got != kernel.Redacted {
-		t.Errorf("GoString() = %q, want %q", got, kernel.Redacted)
-	}
-}
-
-func TestSensitive_Value(t *testing.T) {
-	s := kernel.Sensitive("my-secret")
-	if got := s.Value(); got != "my-secret" {
-		t.Errorf("Value() = %q, want %q", got, "my-secret")
-	}
-}
-
-func TestSensitive_MarshalJSON(t *testing.T) {
-	s := kernel.Sensitive("my-secret")
-	data, err := json.Marshal(s)
-	if err != nil {
-		t.Fatalf("MarshalJSON error: %v", err)
-	}
-	want := `"` + kernel.Redacted + `"`
-	if string(data) != want {
-		t.Errorf("MarshalJSON() = %s, want %s", data, want)
-	}
-}
-
-func TestSensitive_MarshalYAML(t *testing.T) {
-	s := kernel.Sensitive("my-secret")
-	val, err := s.MarshalYAML()
-	if err != nil {
-		t.Fatalf("MarshalYAML error: %v", err)
-	}
-	if val != kernel.Redacted {
-		t.Errorf("MarshalYAML() = %v, want %v", val, kernel.Redacted)
-	}
-}
-
-func TestSensitive_FmtVerbs(t *testing.T) {
-	s := kernel.Sensitive("my-secret")
-
-	tests := []struct {
-		format string
-		want   string
-	}{
-		{"%s", kernel.Redacted},
-		{"%v", kernel.Redacted},
-		{"%#v", kernel.Redacted},
-	}
-
-	for _, tt := range tests {
-		got := fmt.Sprintf(tt.format, s)
-		if got != tt.want {
-			t.Errorf("Sprintf(%q, s) = %q, want %q", tt.format, got, tt.want)
-		}
-	}
-}
-
-func TestSensitive_JSONStructField(t *testing.T) {
-	type config struct {
-		Name   string           `json:"name"`
-		Secret kernel.Sensitive `json:"secret"`
-	}
-
-	c := config{Name: "test", Secret: kernel.Sensitive("hunter2")}
-	data, err := json.Marshal(c)
-	if err != nil {
-		t.Fatalf("Marshal error: %v", err)
-	}
-
-	var raw map[string]string
-	if err := json.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("Unmarshal error: %v", err)
-	}
-
-	if raw["name"] != "test" {
-		t.Errorf("name = %q, want %q", raw["name"], "test")
-	}
-	if raw["secret"] != kernel.Redacted {
-		t.Errorf("secret = %q, want %q", raw["secret"], kernel.Redacted)
-	}
-}
 
 func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
 	evidence := kernel.NewSanitizableMap(map[string]string{

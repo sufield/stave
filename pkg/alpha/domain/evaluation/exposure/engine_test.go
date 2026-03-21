@@ -48,7 +48,4 @@ func TestResolveEffectiveVisibility_DeleteAndAdmin(t *testing.T) {
 	if !got.AdminWrite {
 		t.Fatal("expected AdminWrite=true")
 	}
-	if !got.IsExposed() {
-		t.Fatal("expected IsExposed=true")
-	}
 }

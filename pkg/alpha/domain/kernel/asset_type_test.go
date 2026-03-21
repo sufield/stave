@@ -37,16 +37,6 @@ func TestAssetTypeValidate(t *testing.T) {
 	}
 }
 
-func TestParseAssetType(t *testing.T) {
-	got, err := ParseAssetType("  APP_SIGNER ")
-	if err != nil {
-		t.Fatalf("ParseAssetType() error = %v", err)
-	}
-	if got != AssetType("app_signer") {
-		t.Fatalf("got %q, want %q", got, "app_signer")
-	}
-}
-
 func TestAssetTypeDomain(t *testing.T) {
 	tests := []struct {
 		name string

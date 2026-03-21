@@ -57,15 +57,6 @@ func (a AssetType) Validate() error {
 	return nil
 }
 
-// ParseAssetType validates and normalizes an asset type value.
-func ParseAssetType(s string) (AssetType, error) {
-	t := NewAssetType(s)
-	if err := t.Validate(); err != nil {
-		return "", err
-	}
-	return t, nil
-}
-
 // MarshalJSON ensures the type is always serialized in its canonical string form.
 func (a AssetType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.String())

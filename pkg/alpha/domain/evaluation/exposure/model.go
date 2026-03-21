@@ -31,11 +31,6 @@ func (c Capabilities) ToMask() Permission {
 	return m
 }
 
-// IsFullControl returns true when all capabilities are granted.
-func (c Capabilities) IsFullControl() bool {
-	return c.Read && c.Write && c.List && c.Delete && c.Admin
-}
-
 // Visibility represents who can access the resource.
 type Visibility struct {
 	Public        Capabilities

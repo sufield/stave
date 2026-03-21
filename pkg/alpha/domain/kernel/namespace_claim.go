@@ -6,6 +6,3 @@ type NamespaceClaim struct {
 	Exists bool // bucket exists in S3 namespace
 	Owned  bool // bucket is owned by the expected account
 }
-
-// IsSafe reports whether the claim indicates no takeover risk.
-func (c NamespaceClaim) IsSafe() bool { return c.Exists && c.Owned }

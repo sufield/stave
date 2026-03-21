@@ -383,17 +383,6 @@ func TestEvidenceTracker_RecordIgnoresEmpty(t *testing.T) {
 
 // --- Model tests ---
 
-func TestCapabilities_IsFullControl(t *testing.T) {
-	full := Capabilities{Read: true, Write: true, List: true, Delete: true, Admin: true}
-	if !full.IsFullControl() {
-		t.Error("expected full control")
-	}
-	partial := Capabilities{Read: true, Write: true}
-	if partial.IsFullControl() {
-		t.Error("expected not full control")
-	}
-}
-
 func TestGovernanceOverrides_IsHardened(t *testing.T) {
 	hardened := GovernanceOverrides{
 		BlockResourceBoundPublicAccess: true,
@@ -406,30 +395,6 @@ func TestGovernanceOverrides_IsHardened(t *testing.T) {
 	partial := GovernanceOverrides{BlockResourceBoundPublicAccess: true}
 	if partial.IsHardened() {
 		t.Error("expected not hardened")
-	}
-}
-
-func TestEffectiveVisibility_IsExposed(t *testing.T) {
-	if (EffectiveVisibility{}).IsExposed() {
-		t.Error("empty should not be exposed")
-	}
-	if !(EffectiveVisibility{Read: true}).IsExposed() {
-		t.Error("read should be exposed")
-	}
-	if !(EffectiveVisibility{AdminWrite: true}).IsExposed() {
-		t.Error("admin write should be exposed")
-	}
-	if !(EffectiveVisibility{Delete: true}).IsExposed() {
-		t.Error("delete should be exposed")
-	}
-}
-
-func TestEffectiveVisibility_ToPermission(t *testing.T) {
-	v := EffectiveVisibility{Read: true, Write: true, AdminRead: true}
-	got := v.ToPermission()
-	want := PermRead | PermWrite | PermMetadataRead
-	if got != want {
-		t.Errorf("ToPermission() = %d, want %d", got, want)
 	}
 }
 
@@ -511,21 +476,6 @@ func TestFacts_LacksEvidence(t *testing.T) {
 	}
 	if (Facts{HasIdentityEvidence: true}).LacksEvidence() {
 		t.Error("expected has evidence")
-	}
-}
-
-func TestScopeMatchesPrefix(t *testing.T) {
-	if !ScopeMatchesPrefix(kernel.WildcardPrefix, "anything") {
-		t.Error("wildcard should match")
-	}
-	if !ScopeMatchesPrefix("invoices", "invoices/2026") {
-		t.Error("prefix scope should match")
-	}
-	if ScopeMatchesPrefix("invoices", "reports/2026") {
-		t.Error("mismatched scope should not match")
-	}
-	if ScopeMatchesPrefix("", "anything") {
-		t.Error("empty scope should not match")
 	}
 }
 

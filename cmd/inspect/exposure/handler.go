@@ -9,7 +9,6 @@ import (
 
 	"github.com/sufield/stave/internal/platform/fsutil"
 	domainexposure "github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // ExposureInput is the JSON input for exposure classification.
@@ -29,6 +28,38 @@ type ResourceInput struct {
 	ResourcePerms      uint32 `json:"resource_perms"`
 	WriteSourceHasGet  bool   `json:"write_source_has_get"`
 	WriteSourceHasList bool   `json:"write_source_has_list"`
+}
+
+// ToDomain converts the CLI input into the domain's NormalizedResourceInput.
+func (r ResourceInput) ToDomain() domainexposure.NormalizedResourceInput {
+	tracker := domainexposure.NewEvidenceTracker()
+	for _, ev := range []struct {
+		cat  domainexposure.EvidenceCategory
+		path string
+	}{
+		{domainexposure.EvIdentityRead, "input.identity_perms"},
+		{domainexposure.EvResourceRead, "input.resource_perms"},
+		{domainexposure.EvIdentityWrite, "input.identity_perms"},
+		{domainexposure.EvResourceWrite, "input.resource_perms"},
+		{domainexposure.EvDiscovery, "input.resource_perms"},
+		{domainexposure.EvResourceAdminRead, "input.resource_perms"},
+		{domainexposure.EvDelete, "input.resource_perms"},
+	} {
+		tracker.Record(ev.cat, []string{ev.path})
+	}
+
+	return domainexposure.NormalizedResourceInput{
+		Name:                r.Name,
+		Exists:              r.Exists,
+		ExternalReference:   r.ExternalReference,
+		WebsiteEnabled:      r.WebsiteEnabled,
+		IsAuthenticatedOnly: r.IsAuthOnly,
+		IdentityPerms:       domainexposure.Permission(r.IdentityPerms),
+		ResourcePerms:       domainexposure.Permission(r.ResourcePerms),
+		WriteSourceHasGet:   r.WriteSourceHasGet,
+		WriteSourceHasList:  r.WriteSourceHasList,
+		Evidence:            tracker,
+	}
 }
 
 // AccessInput is the input for BucketAccess resolution.
@@ -59,16 +90,6 @@ type ExposureOutput struct {
 	Classifications []domainexposure.ExposureClassification `json:"classifications"`
 	BucketAccess    *domainexposure.BucketAccess            `json:"bucket_access,omitempty"`
 	Visibility      *domainexposure.VisibilityResult        `json:"visibility,omitempty"`
-	KernelInfo      KernelInfo                              `json:"kernel_info"`
-}
-
-// KernelInfo exercises kernel types that need explicit wiring.
-type KernelInfo struct {
-	ParsedAssetType string   `json:"parsed_asset_type"`
-	NamespaceSafe   bool     `json:"namespace_safe"`
-	NetworkScopes   []string `json:"network_scopes"`
-	TrustBoundaries []string `json:"trust_boundaries"`
-	SensitiveDemo   string   `json:"sensitive_demo"`
 }
 
 func run(cmd *cobra.Command, file string) error {
@@ -82,47 +103,15 @@ func run(cmd *cobra.Command, file string) error {
 		return fmt.Errorf("parse exposure input: %w", err)
 	}
 
-	// Build NormalizedResourceInputs and classify exposure.
-	var resources []domainexposure.NormalizedResourceInput
-	for _, r := range in.Resources {
-		tracker := domainexposure.NewEvidenceTracker()
-		tracker.Record(domainexposure.EvIdentityRead, []string{"input.identity_perms"})
-		tracker.Record(domainexposure.EvResourceRead, []string{"input.resource_perms"})
-		tracker.Record(domainexposure.EvIdentityWrite, []string{"input.identity_perms"})
-		tracker.Record(domainexposure.EvResourceWrite, []string{"input.resource_perms"})
-		tracker.Record(domainexposure.EvDiscovery, []string{"input.resource_perms"})
-		tracker.Record(domainexposure.EvResourceAdminRead, []string{"input.resource_perms"})
-		tracker.Record(domainexposure.EvDelete, []string{"input.resource_perms"})
-
-		resources = append(resources, domainexposure.NormalizedResourceInput{
-			Name:                r.Name,
-			Exists:              r.Exists,
-			ExternalReference:   r.ExternalReference,
-			WebsiteEnabled:      r.WebsiteEnabled,
-			IsAuthenticatedOnly: r.IsAuthOnly,
-			IdentityPerms:       domainexposure.Permission(r.IdentityPerms),
-			ResourcePerms:       domainexposure.Permission(r.ResourcePerms),
-			WriteSourceHasGet:   r.WriteSourceHasGet,
-			WriteSourceHasList:  r.WriteSourceHasList,
-			Evidence:            tracker,
-		})
+	// Transform input to domain types.
+	resources := make([]domainexposure.NormalizedResourceInput, len(in.Resources))
+	for i, r := range in.Resources {
+		resources[i] = r.ToDomain()
 	}
 
-	classifications := domainexposure.ClassifyExposure(resources)
-
-	// Exercise EvidenceTracker.Get.
-	if len(resources) > 0 && resources[0].Evidence != nil {
-		_ = resources[0].Evidence.Get(domainexposure.EvIdentityRead)
-	}
-
-	// Exercise ScopeMatchesPrefix.
-	_ = domainexposure.ScopeMatchesPrefix(kernel.WildcardPrefix, "test/")
-
-	// Exercise NewSource.
-	_ = domainexposure.NewSource(domainexposure.SourceIdentity, "test-stmt")
-
+	// Classify exposure.
 	output := ExposureOutput{
-		Classifications: classifications,
+		Classifications: domainexposure.ClassifyExposure(resources),
 	}
 
 	// Resolve bucket access if access input provided.
@@ -142,21 +131,8 @@ func run(cmd *cobra.Command, file string) error {
 			EnforceStrictPublicInheritance: a.EnforceStrict,
 		}
 
-		// Exercise GovernanceOverrides.IsHardened.
-		_ = gov.IsHardened()
-
-		// Exercise Capabilities.ToMask and IsFullControl.
-		_ = identity.Public.ToMask()
-		_ = identity.Public.IsFullControl()
-
-		// Exercise BuildVisibilityResult.
 		vis := domainexposure.BuildVisibilityResult(identity, resource, gov)
 		output.Visibility = &vis
-
-		// Exercise EffectiveVisibility methods.
-		effective := domainexposure.ResolveEffectiveVisibility(identity, resource, gov)
-		_ = effective.IsExposed()
-		_ = effective.ToPermission()
 
 		bucketAccess := domainexposure.ResolveBucketAccess(domainexposure.BucketAccessInput{
 			Identity:          identity,
@@ -169,60 +145,6 @@ func run(cmd *cobra.Command, file string) error {
 			},
 		})
 		output.BucketAccess = &bucketAccess
-
-		// Exercise SelectReadExposure and SelectWriteExposure.
-		_ = domainexposure.SelectReadExposure(domainexposure.ReadExposureInput{
-			ResourceID:           "demo",
-			IsExternallyReadable: vis.PublicRead,
-			HasIdentityRead:      vis.ReadViaIdentity,
-			HasResourceRead:      vis.ReadViaResource,
-			PrincipalScope:       kernel.ScopePublic,
-			Actions:              []string{domainexposure.ActionRead},
-		})
-		_ = domainexposure.SelectWriteExposure(domainexposure.WriteExposureInput{
-			ResourceID:       "demo",
-			IsPubliclyWrite:  vis.PublicWrite,
-			HasResourceWrite: vis.WriteViaResource,
-			PrincipalScope:   kernel.ScopePublic,
-			BaseActions:      []string{domainexposure.ActionWrite},
-		})
-	}
-
-	// Exercise kernel types.
-	at, _ := kernel.ParseAssetType("aws_s3_bucket")
-	claim := kernel.NamespaceClaim{Exists: true, Owned: true}
-
-	// Exercise Sensitive type.
-	sensitive := kernel.Sensitive("test-credential")
-	_ = sensitive.Value()
-	sensitiveStr := sensitive.String()
-	_ = sensitive.GoString()
-	sensitiveJSON, _ := json.Marshal(sensitive)
-
-	// Exercise ParseNetworkScope.
-	scopes := []string{"public", "vpc-restricted", "ip-restricted", "org-restricted"}
-	var scopeStrings []string
-	for _, s := range scopes {
-		ns, _ := kernel.ParseNetworkScope(s)
-		scopeStrings = append(scopeStrings, ns.String())
-		_ = ns.Rank()
-		_ = ns.WeakerThan(kernel.NetworkScopeVPCRestricted)
-	}
-
-	// Exercise ParseTrustBoundary.
-	boundaries := []string{"external", "cross_account", "internal"}
-	var boundaryStrings []string
-	for _, b := range boundaries {
-		tb, _ := kernel.ParseTrustBoundary(b)
-		boundaryStrings = append(boundaryStrings, tb.String())
-	}
-
-	output.KernelInfo = KernelInfo{
-		ParsedAssetType: at.String(),
-		NamespaceSafe:   claim.IsSafe(),
-		NetworkScopes:   scopeStrings,
-		TrustBoundaries: boundaryStrings,
-		SensitiveDemo:   sensitiveStr + " " + string(sensitiveJSON),
 	}
 
 	enc := json.NewEncoder(cmd.OutOrStdout())
