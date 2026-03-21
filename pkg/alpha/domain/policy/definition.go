@@ -51,29 +51,12 @@ func (ctl *ControlDefinition) HasCompliance(key string) bool {
 	return ctl.Compliance.HasFramework(key)
 }
 
-// ResolveAndPrepare expands a predicate alias (if set) and prepares
-// the control for evaluation. If resolve is nil, alias expansion is skipped.
-func (ctl *ControlDefinition) ResolveAndPrepare(resolve AliasResolver) error {
-	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
-	if alias != "" {
-		if resolve == nil {
-			return fmt.Errorf("unsafe_predicate_alias %q requires an alias resolver", alias)
-		}
-		if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
-			return fmt.Errorf("cannot set both unsafe_predicate and unsafe_predicate_alias")
-		}
-		expanded, ok := resolve(alias)
-		if !ok {
-			return fmt.Errorf("unknown unsafe_predicate_alias %q", alias)
-		}
-		ctl.UnsafePredicate = expanded
-	}
-	return ctl.Prepare()
-}
-
 // Prepare extracts and validates typed parameters from the raw Params map.
-// This must be called exactly once after the control is loaded.
+// Idempotent — safe to call multiple times.
 func (ctl *ControlDefinition) Prepare() error {
+	if ctl.Prepared.Ready {
+		return nil
+	}
 	// 1. Duration Handling
 	if raw := ctl.Params.String("max_unsafe_duration"); raw != "" {
 		d, err := kernel.ParseDuration(raw)
@@ -117,21 +100,21 @@ func toObjectPrefixes(raw []string) []kernel.ObjectPrefix {
 
 // RecurrencePolicy returns the parsed recurrence parameters.
 func (ctl *ControlDefinition) RecurrencePolicy() RecurrencePolicy {
-	ctl.mustBePrepared()
+	ctl.ensurePrepared()
 	return ctl.Prepared.Recurrence
 }
 
 // MaxUnsafeDuration returns the per-control max_unsafe_duration param.
 // Returns 0 if not set (caller should apply CLI default fallback).
 func (ctl *ControlDefinition) MaxUnsafeDuration() time.Duration {
-	ctl.mustBePrepared()
+	ctl.ensurePrepared()
 	return ctl.Prepared.MaxUnsafeDuration
 }
 
 // EffectiveMaxUnsafe returns the per-control max_unsafe_duration if explicitly set,
 // otherwise returns the provided fallback (typically the CLI --max-unsafe value).
 func (ctl *ControlDefinition) EffectiveMaxUnsafe(fallback time.Duration) time.Duration {
-	ctl.mustBePrepared()
+	ctl.ensurePrepared()
 	if ctl.Prepared.HasMaxUnsafeDuration {
 		return ctl.Prepared.MaxUnsafeDuration
 	}
@@ -140,14 +123,17 @@ func (ctl *ControlDefinition) EffectiveMaxUnsafe(fallback time.Duration) time.Du
 
 // ExposurePrefixes returns the typed prefix lists for prefix_exposure controls.
 func (ctl *ControlDefinition) ExposurePrefixes() PrefixExposureParams {
-	ctl.mustBePrepared()
+	ctl.ensurePrepared()
 	return ctl.Prepared.PrefixExposure
 }
 
-func (ctl *ControlDefinition) mustBePrepared() {
-	if !ctl.Prepared.Ready {
-		panic(fmt.Sprintf("logic error: Control %s accessed before calling Prepare()", ctl.ID))
+// ensurePrepared lazily calls Prepare() on first access.
+// Follows the same pattern as ExceptionConfig.ShouldExcept (exception.go:104-106).
+func (ctl *ControlDefinition) ensurePrepared() {
+	if ctl.Prepared.Ready {
+		return
 	}
+	_ = ctl.Prepare()
 }
 
 // --- Parameter Handling ---
@@ -193,15 +179,23 @@ func (p ControlParams) HasKey(key string) bool {
 	return ok
 }
 
+// getParam performs a type assertion on a parameter value.
+// Returns the zero value of T if the key is missing or the type does not match.
+func getParam[T any](m map[string]any, key string) T {
+	var zero T
+	if m == nil {
+		return zero
+	}
+	v, ok := m[key].(T)
+	if !ok {
+		return zero
+	}
+	return v
+}
+
 // String returns a string parameter or empty string if not found.
 func (p ControlParams) String(key string) string {
-	if p.m == nil {
-		return ""
-	}
-	if v, ok := p.m[key].(string); ok {
-		return v
-	}
-	return ""
+	return getParam[string](p.m, key)
 }
 
 // Int returns an int parameter or 0 if not found.
@@ -223,13 +217,7 @@ func (p ControlParams) Int(key string) int {
 
 // Bool returns a bool parameter or false if not found.
 func (p ControlParams) Bool(key string) bool {
-	if p.m == nil {
-		return false
-	}
-	if v, ok := p.m[key].(bool); ok {
-		return v
-	}
-	return false
+	return getParam[bool](p.m, key)
 }
 
 // StringSlice handles the common case where YAML unmarshals a list into []any.
