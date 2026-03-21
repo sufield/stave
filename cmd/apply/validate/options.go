@@ -16,6 +16,18 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 )
 
+// resolveConfigDefaults fills flag values from project config when the user
+// did not set them explicitly on the command line.
+func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
+	eval := cmdutil.EvaluatorFromCmd(cmd)
+	if !cmd.Flags().Changed("max-unsafe") {
+		o.MaxUnsafe = eval.MaxUnsafe()
+	}
+	if !cmd.Flags().Changed("quiet") {
+		o.Quiet = eval.Quiet()
+	}
+}
+
 type options struct {
 	// Paths
 	Controls     string
@@ -38,14 +50,13 @@ type options struct {
 	Quiet    bool
 }
 
-// newOptions initializes defaults from project configuration.
+// newOptions initializes defaults with zero values for config-derived fields.
+// Call resolveConfigDefaults after flag parsing to fill in project-config defaults.
 func newOptions() *options {
 	return &options{
 		Controls:     "controls/s3",
 		Observations: "observations",
-		MaxUnsafe:    projconfig.Global().MaxUnsafe(),
 		Format:       "text",
-		Quiet:        projconfig.Global().Quiet(),
 	}
 }
 
@@ -53,12 +64,12 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.Controls, "controls", "i", o.Controls, "Path to control definitions (inferred if omitted)")
 	f.StringVarP(&o.Observations, "observations", "o", o.Observations, "Path to observation snapshots (inferred if omitted)")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", o.MaxUnsafe, cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.BoolVar(&o.Strict, "strict", false, "Treat warnings as errors (exit 2)")
 	f.BoolVar(&o.FixHints, "fix-hints", false, "Print remediation hints after issues")
-	f.BoolVar(&o.Quiet, "quiet", o.Quiet, cmdutil.WithDynamicDefaultHelp("Suppress output"))
+	f.BoolVar(&o.Quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output"))
 	f.StringVar(&o.InputPath, "in", "", "Single input file or '-' for stdin")
 	f.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version override")
 	f.StringVar(&o.Kind, "kind", "", "Contract kind: control|observation|finding")

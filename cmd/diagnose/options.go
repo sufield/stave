@@ -8,7 +8,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -38,10 +37,10 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
 	f.StringVarP(&o.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", "text", "Output format: text or json")
-	f.BoolVar(&o.Quiet, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	f.BoolVar(&o.Quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	f.StringSliceVar(&o.Cases, "case", nil, "Filter to one or more diagnostic case values")
 	f.StringVar(&o.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
 	f.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
@@ -53,6 +52,18 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 		string(diagnosis.ScenarioViolationEvidence),
 		string(diagnosis.ScenarioEmptyFindings),
 	))
+}
+
+// resolveConfigDefaults fills flag values from project config when the user
+// did not set them explicitly on the command line.
+func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {
+	eval := cmdutil.EvaluatorFromCmd(cmd)
+	if !cmd.Flags().Changed("max-unsafe") {
+		o.MaxUnsafe = eval.MaxUnsafe()
+	}
+	if !cmd.Flags().Changed("quiet") {
+		o.Quiet = eval.Quiet()
+	}
 }
 
 // ToConfig converts raw CLI options into a validated Config.

@@ -48,7 +48,8 @@ Examples:
 
 			ret, err := pruneshared.ResolveRetention(
 				pruneshared.RawRetentionOpts{OlderThan: olderThan, Tier: tier, NowRaw: nowRaw, FormatFlag: formatFlag},
-				cmd.Flags().Changed("older-than"), cmd.Flags().Changed("format"), gf.IsJSONMode(),
+				cmdutil.EvaluatorFromCmd(cmd),
+				cmd.Flags().Changed("older-than"), cmd.Flags().Changed("retention-tier"), cmd.Flags().Changed("format"), gf.IsJSONMode(),
 			)
 			if err != nil {
 				return err
@@ -87,9 +88,3 @@ Examples:
 
 	return cmd
 }
-
-// ResolveOlderThanForTest is exposed for test compatibility with pruneshared.
-var ResolveOlderThanForTest = pruneshared.ResolveOlderThan
-
-// ValidateRetentionTierForTest is exposed for test compatibility with pruneshared.
-var ValidateRetentionTierForTest = pruneshared.ValidateRetentionTier

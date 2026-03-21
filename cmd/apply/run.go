@@ -103,7 +103,7 @@ func executeEvaluation(
 	progress := rt.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	builder := NewBuilder(ctx, p, opts, params, sio)
+	builder := NewBuilder(ctx, logger, p, opts, params, sio)
 	builder.OnObsProgress = progress.Update
 
 	deps, err := builder.Build(plan)

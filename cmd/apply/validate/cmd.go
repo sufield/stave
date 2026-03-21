@@ -28,6 +28,7 @@ What it checks:
   - Duration format and feasibility` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			opts.resolveConfigDefaults(cmd)
 			if err := opts.normalize(cmd); err != nil {
 				return err
 			}

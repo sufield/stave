@@ -37,6 +37,7 @@ import (
 // to BuildApplyDeps (local to this package).
 type Builder struct {
 	Ctx       context.Context
+	Logger    *slog.Logger
 	Stdout    io.Writer
 	Stderr    io.Writer
 	Sanitizer kernel.Sanitizer
@@ -52,9 +53,10 @@ type Builder struct {
 }
 
 // NewBuilder constructs a Builder from the standard apply execution context.
-func NewBuilder(ctx context.Context, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) *Builder {
+func NewBuilder(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) *Builder {
 	return &Builder{
 		Ctx:       ctx,
+		Logger:    logger,
 		Stdout:    sio.Stdout,
 		Stderr:    sio.Stderr,
 		Sanitizer: sio.Sanitizer,
@@ -101,7 +103,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 
 	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
 		Ctx:               b.Ctx,
-		Logger:            slog.Default(),
+		Logger:            b.Logger,
 		Stdout:            b.Stdout,
 		Stderr:            b.Stderr,
 		Plan:              *plan,

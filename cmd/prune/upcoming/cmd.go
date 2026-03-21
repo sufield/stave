@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -42,10 +41,9 @@ Examples:
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cmdutil.GetGlobalFlags(cmd)
-			eval := projconfig.Global()
 
-			if maxUnsafe == "" {
-				maxUnsafe = eval.MaxUnsafe()
+			if !cmd.Flags().Changed("max-unsafe") {
+				maxUnsafe = cmdutil.EvaluatorFromCmd(cmd).MaxUnsafe()
 			}
 
 			cleanObsDir := fsutil.CleanUserPath(obsDir)

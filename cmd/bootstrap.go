@@ -20,6 +20,7 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.startCPUProfile(); err != nil {
 		return err
 	}
+	a.resolveGlobalFlagDefaults(cmd)
 	if err := a.validateOutputMode(); err != nil {
 		return err
 	}
@@ -34,6 +35,31 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	}
 	a.initSanitizer()
 	return a.initLogger()
+}
+
+// resolveGlobalFlagDefaults fills global persistent flags with project-config
+// defaults when the user did not set them explicitly on the command line.
+func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command) {
+	eval := projconfig.Global()
+
+	// Store the evaluator in Cobra's context so commands can retrieve it
+	// via cmdutil.EvaluatorFromCmd(cmd) instead of calling projconfig.Global().
+	ctx := cmdutil.WithEvaluator(cmd.Context(), eval)
+	cmd.SetContext(ctx)
+
+	p := cmd.Root().PersistentFlags()
+	if !p.Changed(cmdutil.FlagOutput) {
+		a.Flags.OutputMode = eval.OutputMode()
+	}
+	if !p.Changed(cmdutil.FlagQuiet) {
+		a.Flags.Quiet = eval.Quiet()
+	}
+	if !p.Changed(cmdutil.FlagSanitize) {
+		a.Flags.Sanitize = eval.Sanitize()
+	}
+	if !p.Changed(cmdutil.FlagPathMode) {
+		a.Flags.PathMode = eval.PathMode()
+	}
 }
 
 // checkConfigHealth enforces config loading errors for commands that need config.

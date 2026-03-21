@@ -68,7 +68,7 @@ Examples:
 			}
 
 			// Load retention config
-			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig()
+			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig(cmdutil.EvaluatorFromCmd(cmd))
 			if err != nil {
 				return err
 			}

@@ -28,6 +28,7 @@ func NewCmd(p *compose.Provider, _ *ui.Runtime) *cobra.Command {
 which remain, and which are newly introduced.` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			opts.resolveConfigDefaults(cmd)
 			opts.normalize()
 			return opts.validate()
 		},

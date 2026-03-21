@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -56,8 +55,6 @@ func NewFixLoopCmd(p *compose.Provider) *cobra.Command {
 		allowUnknown bool
 		outDir       string
 	)
-	allowUnknown = projconfig.Global().AllowUnknownInput()
-
 	cmd := &cobra.Command{
 		Use:   "fix-loop",
 		Short: "Run apply-before/apply-after/verify in one command",
@@ -93,6 +90,13 @@ Examples:
       { "before_violations": 5, "after_violations": 2, "resolved": 3, "remaining": 2, "introduced": 0 }` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			eval := cmdutil.EvaluatorFromCmd(cmd)
+			if !cmd.Flags().Changed("max-unsafe") {
+				maxUnsafeRaw = eval.MaxUnsafe()
+			}
+			if !cmd.Flags().Changed("allow-unknown-input") {
+				allowUnknown = eval.AllowUnknownInput()
+			}
 			maxUnsafe, err := timeutil.ParseDurationFlag(maxUnsafeRaw, "--max-unsafe")
 			if err != nil {
 				return err
@@ -130,9 +134,9 @@ Examples:
 	f.StringVarP(&beforeDir, "before", "b", "", "Path to before-remediation observations (required)")
 	f.StringVarP(&afterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	f.StringVarP(&controlsDir, "controls", "i", "controls", "Path to control definitions directory")
-	f.StringVar(&maxUnsafeRaw, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&maxUnsafeRaw, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&nowRaw, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	f.BoolVar(&allowUnknown, "allow-unknown-input", allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
+	f.BoolVar(&allowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 	f.StringVar(&outDir, "out", "", "Write remediation artifacts to this directory")
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")

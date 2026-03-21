@@ -96,23 +96,22 @@ type ResolvedRetention struct {
 // ResolveRetention transforms raw CLI flag values into fully resolved retention
 // parameters. olderThanChanged and formatChanged indicate whether the respective
 // flags were explicitly set by the user. isJSONMode indicates global JSON output mode.
-func ResolveRetention(raw RawRetentionOpts, olderThanChanged, formatChanged, isJSONMode bool) (ResolvedRetention, error) {
-	eval := projconfig.Global()
-
+// tierChanged indicates whether --retention-tier was explicitly set.
+func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, olderThanChanged, tierChanged, formatChanged, isJSONMode bool) (ResolvedRetention, error) {
 	olderThan := raw.OlderThan
-	if olderThan == "" {
+	if !olderThanChanged {
 		olderThan = eval.SnapshotRetention()
 	}
 	tier := raw.Tier
-	if tier == "" {
+	if !tierChanged {
 		tier = eval.RetentionTier()
 	}
 
-	validTier, err := ValidateRetentionTier(tier)
+	validTier, err := ValidateRetentionTierWith(eval, tier)
 	if err != nil {
 		return ResolvedRetention{}, err
 	}
-	resolvedOlderThan, err := ResolveOlderThan(olderThan, olderThanChanged, validTier)
+	resolvedOlderThan, err := ResolveOlderThanWith(eval, olderThan, olderThanChanged, validTier)
 	if err != nil {
 		return ResolvedRetention{}, err
 	}
@@ -133,16 +132,13 @@ func ResolveRetention(raw RawRetentionOpts, olderThanChanged, formatChanged, isJ
 	}, nil
 }
 
-// ValidateRetentionTier normalizes and validates a retention tier name.
-func ValidateRetentionTier(rawTier string) (string, error) {
+// ValidateRetentionTierWith normalizes and validates a retention tier name
+// using the supplied evaluator instead of the global singleton.
+func ValidateRetentionTierWith(eval *appconfig.Evaluator, rawTier string) (string, error) {
 	tier := appconfig.NormalizeTier(rawTier)
 	if tier == "" {
 		return "", fmt.Errorf("--retention-tier cannot be empty")
 	}
-	if err := projconfig.GlobalConfigError(); err != nil {
-		return "", fmt.Errorf("cannot validate retention tier: %w", err)
-	}
-	eval := projconfig.Global()
 	if !eval.HasConfiguredTier(tier) {
 		cfg, ok, cfgErr := projconfig.FindProjectConfig()
 		if cfgErr != nil {
@@ -156,12 +152,11 @@ func ValidateRetentionTier(rawTier string) (string, error) {
 	return tier, nil
 }
 
-// ResolveOlderThan resolves the --older-than duration from the flag value or tier config.
-// If flagChanged is false, the tier-specific retention from project config is used instead.
-func ResolveOlderThan(flagValue string, flagChanged bool, tier string) (time.Duration, error) {
+// ResolveOlderThanWith resolves the --older-than duration using the supplied evaluator.
+func ResolveOlderThanWith(eval *appconfig.Evaluator, flagValue string, flagChanged bool, tier string) (time.Duration, error) {
 	raw := flagValue
 	if !flagChanged {
-		raw = projconfig.Global().SnapshotRetentionForTier(tier)
+		raw = eval.SnapshotRetentionForTier(tier)
 	}
 	dur, err := timeutil.ParseDuration(raw)
 	if err != nil {

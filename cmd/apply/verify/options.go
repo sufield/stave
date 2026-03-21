@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -24,12 +23,23 @@ type options struct {
 	AllowUnknown bool
 }
 
-// newOptions initializes options with project-aware defaults.
+// newOptions initializes options with zero values for config-derived fields.
+// Call resolveConfigDefaults after flag parsing to fill in project-config defaults.
 func newOptions() *options {
 	return &options{
-		ControlsDir:  "controls",
-		MaxUnsafe:    projconfig.Global().MaxUnsafe(),
-		AllowUnknown: projconfig.Global().AllowUnknownInput(),
+		ControlsDir: "controls",
+	}
+}
+
+// resolveConfigDefaults fills flag values from project config when the user
+// did not set them explicitly on the command line.
+func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
+	eval := cmdutil.EvaluatorFromCmd(cmd)
+	if !cmd.Flags().Changed("max-unsafe") {
+		o.MaxUnsafe = eval.MaxUnsafe()
+	}
+	if !cmd.Flags().Changed("allow-unknown-input") {
+		o.AllowUnknown = eval.AllowUnknownInput()
 	}
 }
 
@@ -40,9 +50,9 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.AfterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", o.MaxUnsafe, cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.Now, "now", "", "Override current time (RFC3339) for deterministic output")
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", o.AllowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
+	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")

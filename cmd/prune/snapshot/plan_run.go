@@ -26,12 +26,12 @@ func listPlanFiles(ctx context.Context, p *compose.Provider, observationsRoot, a
 	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
 }
 
-func resolvePlanRetentionConfig() (map[string]retention.TierConfig, []retention.MappingRule, string, error) {
+func resolvePlanRetentionConfig(eval *appconfig.Evaluator) (map[string]retention.TierConfig, []retention.MappingRule, string, error) {
 	cfg, _, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("load project config: %w", err)
 	}
-	defaultTier := projconfig.Global().RetentionTier()
+	defaultTier := eval.RetentionTier()
 	var tiers map[string]retention.TierConfig
 	var tierRules []retention.MappingRule
 	if cfg != nil {

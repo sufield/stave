@@ -5,7 +5,6 @@ import (
 	"io"
 	"slices"
 
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -84,8 +83,8 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 }
 
 // buildShowOutput resolves the current effective configuration state.
-func buildShowOutput() appconfig.EffectiveConfig {
-	return projconfig.Global().BuildEffectiveConfig()
+func buildShowOutput(eval *appconfig.Evaluator) appconfig.EffectiveConfig {
+	return eval.BuildEffectiveConfig()
 }
 
 func configFileLine(configFile string) string {

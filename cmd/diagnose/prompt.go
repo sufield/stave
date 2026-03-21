@@ -10,7 +10,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
 	diagprompt "github.com/sufield/stave/internal/app/diagnose/prompt"
@@ -103,6 +102,9 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if !cmd.Flags().Changed("quiet") {
+				quietMode = cmdutil.EvaluatorFromCmd(cmd).Quiet()
+			}
 			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
 			if fmtErr != nil {
 				return fmtErr
@@ -150,7 +152,7 @@ Examples:
 	cmd.Flags().StringVarP(&controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	cmd.Flags().StringVarP(&obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&quietMode, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	cmd.Flags().BoolVar(&quietMode, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = cmd.MarkFlagRequired("evaluation-file")
 	_ = cmd.MarkFlagRequired("asset-id")
