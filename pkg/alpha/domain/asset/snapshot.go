@@ -83,6 +83,37 @@ func (s Snapshots) FindFirstUnsortedPair() (unsortedPair, bool) {
 	return unsortedPair{}, false
 }
 
+// TemporalBounds returns the earliest and latest CapturedAt timestamps.
+func (s Snapshots) TemporalBounds() (min, max time.Time) {
+	if len(s) == 0 {
+		return
+	}
+	min, max = s[0].CapturedAt, s[0].CapturedAt
+	for _, snap := range s {
+		if snap.CapturedAt.Before(min) {
+			min = snap.CapturedAt
+		}
+		if snap.CapturedAt.After(max) {
+			max = snap.CapturedAt
+		}
+	}
+	return
+}
+
+// UniqueAssetCount returns the number of distinct asset IDs across all snapshots.
+func (s Snapshots) UniqueAssetCount() int {
+	if len(s) == 0 {
+		return 0
+	}
+	unique := make(map[ID]struct{}, len(s[0].Assets))
+	for _, snap := range s {
+		for _, a := range snap.Assets {
+			unique[a.ID] = struct{}{}
+		}
+	}
+	return len(unique)
+}
+
 // CountUnprovablySafe counts assets whose safety cannot be proven.
 func CountUnprovablySafe(snapshots []Snapshot) int {
 	count := 0

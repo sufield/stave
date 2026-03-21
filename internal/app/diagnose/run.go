@@ -69,11 +69,11 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 	input := diagnosis.NewInput(
 		loaded.snapshots,
 		loaded.controls,
-		result.Findings,
-		result,
+		toDiagnosticFindings(result.Findings),
+		len(result.Findings),
+		result.Summary.AttackSurface,
 		cfg.MaxUnsafe,
 		cfg.Clock.Now(),
-		cfg.PredicateParser,
 		cfg.PredicateEval,
 	)
 
@@ -155,4 +155,19 @@ func (d *Run) resolveResult(
 		return nil, err
 	}
 	return &result, nil
+}
+
+func toDiagnosticFindings(findings []evaluation.Finding) []diagnosis.DiagnosticFinding {
+	out := make([]diagnosis.DiagnosticFinding, len(findings))
+	for i, f := range findings {
+		out[i] = diagnosis.DiagnosticFinding{
+			AssetID:             f.AssetID,
+			ControlID:           f.ControlID,
+			FirstUnsafeAt:       f.Evidence.FirstUnsafeAt,
+			LastSeenUnsafeAt:    f.Evidence.LastSeenUnsafeAt,
+			UnsafeDurationHours: f.Evidence.UnsafeDurationHours,
+			ThresholdHours:      f.Evidence.ThresholdHours,
+		}
+	}
+	return out
 }

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
@@ -63,7 +62,7 @@ func buildNowSkewIssue(now, maxCapturedAt time.Time) *Issue {
 	}
 }
 
-func buildTopFindingIssues(findings []evaluation.Finding, limit int) []Issue {
+func buildTopFindingIssues(findings []DiagnosticFinding, limit int) []Issue {
 	count := min(len(findings), limit)
 	if count <= 0 {
 		return nil
@@ -71,7 +70,6 @@ func buildTopFindingIssues(findings []evaluation.Finding, limit int) []Issue {
 
 	entries := make([]Issue, 0, count)
 	for _, f := range findings[:count] {
-		ev := f.Evidence
 		entries = append(entries, Issue{
 			Case:    ScenarioViolationEvidence,
 			Signal:  msgContinuousUnsafeStreak,
@@ -79,10 +77,10 @@ func buildTopFindingIssues(findings []evaluation.Finding, limit int) []Issue {
 			Evidence: fmt.Sprintf("asset=%s control=%s first_unsafe=%s last_unsafe=%s duration=%.1fh threshold=%.1fh",
 				f.AssetID,
 				f.ControlID,
-				fmtTime(ev.FirstUnsafeAt),
-				fmtTime(ev.LastSeenUnsafeAt),
-				ev.UnsafeDurationHours,
-				ev.ThresholdHours),
+				fmtTime(f.FirstUnsafeAt),
+				fmtTime(f.LastSeenUnsafeAt),
+				f.UnsafeDurationHours,
+				f.ThresholdHours),
 			Action: "If asset was safe briefly, ensure a snapshot captured that safe state",
 		})
 	}

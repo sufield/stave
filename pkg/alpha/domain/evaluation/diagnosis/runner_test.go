@@ -6,7 +6,6 @@ import (
 
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/predicate"
@@ -44,7 +43,7 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(48*time.Hour), nil, mustPredicateEval())
+	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(48*time.Hour), mustPredicateEval())
 
 	report := Explain(input)
 
@@ -97,7 +96,7 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(24*time.Hour), nil, mustPredicateEval())
+	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(24*time.Hour), mustPredicateEval())
 
 	report := Explain(input)
 
@@ -145,7 +144,7 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(200*time.Hour), nil, mustPredicateEval())
+	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(200*time.Hour), mustPredicateEval())
 
 	report := Explain(input)
 
@@ -174,19 +173,17 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 		{CapturedAt: latestSnapshot, Assets: []asset.Asset{{ID: "res:1", Type: kernel.AssetType("storage_bucket")}}},
 	}
 
-	findings := []evaluation.Finding{
+	findings := []DiagnosticFinding{
 		{
-			AssetID: "res:1",
-			Evidence: evaluation.Evidence{
-				FirstUnsafeAt:       baseTime,
-				LastSeenUnsafeAt:    latestSnapshot,
-				UnsafeDurationHours: 200,
-				ThresholdHours:      168,
-			},
+			AssetID:             "res:1",
+			FirstUnsafeAt:       baseTime,
+			LastSeenUnsafeAt:    latestSnapshot,
+			UnsafeDurationHours: 200,
+			ThresholdHours:      168,
 		},
 	}
 
-	input := NewInput(snapshots, []policy.ControlDefinition{{ID: "CTL.TEST"}}, findings, nil, 168*time.Hour, baseTime.Add(100*time.Hour), nil, mustPredicateEval())
+	input := NewInput(snapshots, []policy.ControlDefinition{{ID: "CTL.TEST"}}, findings, 1, 0, 168*time.Hour, baseTime.Add(100*time.Hour), mustPredicateEval())
 
 	report := Explain(input)
 
@@ -230,7 +227,7 @@ func TestRun_Summary(t *testing.T) {
 		{ID: "CTL.2", Name: "Test2"},
 	}
 
-	input := NewInput(snapshots, controls, []evaluation.Finding{}, nil, 168*time.Hour, baseTime.Add(240*time.Hour), nil, mustPredicateEval())
+	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(240*time.Hour), mustPredicateEval())
 
 	report := Explain(input)
 

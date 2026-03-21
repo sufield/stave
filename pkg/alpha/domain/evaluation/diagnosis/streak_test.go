@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/predicate"
 )
@@ -37,7 +36,7 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 	}
 
 	s := newSession(NewInput(
-		snapshots, []policy.ControlDefinition{ctl}, []evaluation.Finding{}, nil, 0, base.Add(1*time.Hour), nil, mustPredicateEval(),
+		snapshots, []policy.ControlDefinition{ctl}, nil, 0, 0, 0, base.Add(1*time.Hour), mustPredicateEval(),
 	), 0)
 	maxStreak, ctlID := s.globalMaxStreak()
 
