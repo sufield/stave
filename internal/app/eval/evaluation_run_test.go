@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -101,12 +102,12 @@ func TestEvaluateRunExecute(t *testing.T) {
 	}
 	snapshots := []asset.Snapshot{
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeAWSS3Snapshot},
+			GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-2 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeAWSS3Snapshot},
+			GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-1 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},

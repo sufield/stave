@@ -3,6 +3,7 @@ package capabilities_test
 import (
 	"testing"
 
+	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -25,7 +26,7 @@ func TestCapabilities_SourceTypesExpectedSet(t *testing.T) {
 	}
 
 	want := []kernel.ObservationSourceType{
-		kernel.SourceTypeAWSS3Snapshot,
+		s3.SourceTypeAWSS3Snapshot,
 	}
 
 	for _, sourceType := range want {

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -22,7 +22,7 @@ func TestIntentEvaluationLoadArtifacts_LoadsBoth(t *testing.T) {
 	}}
 	snapshots := []asset.Snapshot{{
 		CapturedAt:  now,
-		GeneratedBy: &asset.GeneratedBy{SourceType: kernel.SourceTypeAWSS3Snapshot},
+		GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
 	}}
 
 	intent := NewIntentEvaluation(

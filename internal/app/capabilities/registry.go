@@ -64,7 +64,7 @@ func newRegistry() *registry {
 
 	sourceTypes := []SourceTypeSupport{
 		{
-			Type:        kernel.SourceTypeAWSS3Snapshot,
+			Type:        kernel.ObservationSourceType("aws-s3-snapshot"),
 			Description: "S3 snapshot JSON observations",
 		},
 	}
