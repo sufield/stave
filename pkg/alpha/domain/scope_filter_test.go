@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
-func TestScopeFilter_AllowlistMatchesIDAndARN(t *testing.T) {
+func TestScopeFilter_AllowlistMatchesIDAndExternalID(t *testing.T) {
 	f := asset.NewScopeFilter([]string{"bucket-allowed", "arn:aws:s3:::arn-allowed"}, nil)
 
 	if !f.IsInScope(asset.Asset{ID: "bucket-allowed"}) {
@@ -17,10 +17,10 @@ func TestScopeFilter_AllowlistMatchesIDAndARN(t *testing.T) {
 	if !f.IsInScope(asset.Asset{
 		ID: "other",
 		Properties: map[string]any{
-			"arn": "arn:aws:s3:::arn-allowed",
+			"external_id": "arn:aws:s3:::arn-allowed",
 		},
 	}) {
-		t.Fatal("expected resource ARN allowlist match")
+		t.Fatal("expected external ID allowlist match")
 	}
 
 	if f.IsInScope(asset.Asset{ID: "not-allowed"}) {

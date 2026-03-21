@@ -85,7 +85,7 @@ func AssetProfile() Profile {
 		},
 		Sanitize: map[string]struct{}{
 			"bucket_name": {},
-			"arn":         {},
+			"external_id": {},
 		},
 	}
 }

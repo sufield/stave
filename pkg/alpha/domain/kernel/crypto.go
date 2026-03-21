@@ -30,9 +30,10 @@ func (s Signature) IsValid() bool {
 
 // isLowerHex checks if a string consists only of decimal digits and lowercase a-f.
 func isLowerHex(s string) bool {
-	for i := range len(s) {
+	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+		// Standard hex check: 0-9 or a-f
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
 			return false
 		}
 	}
