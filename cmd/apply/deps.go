@@ -114,7 +114,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		ExemptionConfig:   exemptionCfg,
 		PredicateParser:   ctlyaml.ParsePredicate,
 		CELEvaluator:      celEval,
-		ToolVersion:       version.Version,
+		StaveVersion:      version.String,
 		ControlsDir:       b.Opts.ControlsDir,
 		ProjectConfig:     projCfgInput,
 		GitMetadata:       gitMeta,

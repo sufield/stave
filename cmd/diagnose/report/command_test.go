@@ -65,7 +65,7 @@ func TestOutputReportTextDefaultTemplate(t *testing.T) {
 	eval := sampleEvaluation()
 	var buf bytes.Buffer
 	if err := reportrender.RenderText(eval, reportrender.RenderTextOptions{
-		ToolVersion:     "test-version",
+		StaveVersion:    "test-version",
 		DefaultTemplate: defaultReportTemplate,
 		Writer:          &buf,
 	}); err != nil {
@@ -94,7 +94,7 @@ func TestOutputReportTextCustomTemplate(t *testing.T) {
 {{range .Findings}}{{ .ControlID }}{{ "\n" }}{{end}}`
 	var buf bytes.Buffer
 	if err := reportrender.RenderText(eval, reportrender.RenderTextOptions{
-		ToolVersion:     "test-version",
+		StaveVersion:    "test-version",
 		DefaultTemplate: customTpl,
 		Writer:          &buf,
 	}); err != nil {
@@ -115,7 +115,7 @@ func TestOutputReportTextInvalidTemplate(t *testing.T) {
 
 	eval := sampleEvaluation()
 	err := reportrender.RenderText(eval, reportrender.RenderTextOptions{
-		ToolVersion:     "test-version",
+		StaveVersion:    "test-version",
 		DefaultTemplate: defaultReportTemplate,
 		TemplatePath:    tpl,
 		Writer:          &bytes.Buffer{},

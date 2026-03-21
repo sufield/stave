@@ -27,8 +27,8 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 	if cfg.ControlsDir != plan.ControlsPath || cfg.ObservationsDir != plan.ObservationsPath {
 		t.Fatalf("unexpected dirs: %+v", cfg)
 	}
-	if cfg.ToolVersion != "test" {
-		t.Fatalf("ToolVersion = %q, want test", cfg.ToolVersion)
+	if cfg.StaveVersion != "test" {
+		t.Fatalf("StaveVersion = %q, want test", cfg.StaveVersion)
 	}
 	if cfg.Metadata.ControlSource.Source != "dir" {
 		t.Fatalf("ControlSource.Source = %q, want dir", cfg.Metadata.ControlSource.Source)

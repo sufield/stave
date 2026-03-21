@@ -21,7 +21,7 @@ type DirectoryEvaluationRequest struct {
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
 	AllowUnknownType  bool
-	ToolVersion       string
+	StaveVersion      string
 	ObservationLoader appcontracts.ObservationRepository
 	CELEvaluator      policy.PredicateEval
 }
@@ -54,7 +54,7 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 		Snapshots:    snapshots,
 		MaxUnsafe:    req.MaxUnsafe,
 		Clock:        req.Clock,
-		ToolVersion:  req.ToolVersion,
+		StaveVersion: req.StaveVersion,
 		CELEvaluator: req.CELEvaluator,
 	})
 	if err != nil {

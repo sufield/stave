@@ -28,7 +28,7 @@ type Runner struct {
 	Hasher          ports.Digester
 	Exemptions      *policy.ExemptionConfig
 	Exceptions      *policy.ExceptionConfig
-	ToolVersion     string
+	StaveVersion    string
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	// CELEvaluator evaluates predicates using the CEL engine.
@@ -176,13 +176,13 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 	regularFindings, exceptedFindings := e.partitionFindings(acc.findings, now)
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
-			ToolVersion: e.ToolVersion,
-			Offline:     true,
-			Now:         now,
-			MaxUnsafe:   kernel.Duration(e.MaxUnsafe),
-			Snapshots:   snapshotCount,
-			InputHashes: e.InputHashes,
-			PackHash:    e.computePackHash(),
+			StaveVersion: e.StaveVersion,
+			Offline:      true,
+			Now:          now,
+			MaxUnsafe:    kernel.Duration(e.MaxUnsafe),
+			Snapshots:    snapshotCount,
+			InputHashes:  e.InputHashes,
+			PackHash:     e.computePackHash(),
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: len(acc.seenAssets),

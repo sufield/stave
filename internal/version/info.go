@@ -1,6 +1,6 @@
 package version
 
-// Version is the build version string. Release builds override it with ldflags:
+// String is the build version. Release builds override it with ldflags:
 //
-//	go build -ldflags "-X github.com/sufield/stave/internal/version.Version=0.0.3"
-var Version = "dev"
+//	go build -ldflags "-X github.com/sufield/stave/internal/version.String=0.0.3"
+var String = "dev"

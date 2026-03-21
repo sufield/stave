@@ -14,7 +14,7 @@ func assembleReport(req SecurityAuditRequest, findings []securityaudit.Finding, 
 	report := securityaudit.Report{
 		SchemaVersion: kernel.SchemaSecurityAudit,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
-		ToolVersion:   req.ToolVersion,
+		StaveVersion:  req.StaveVersion,
 		Summary: securityaudit.Summary{
 			BySeverity:        map[securityaudit.Severity]int{},
 			FailOn:            req.FailOn,

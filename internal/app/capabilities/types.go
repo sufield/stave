@@ -63,7 +63,7 @@ type SecurityAuditSupport struct {
 // GetCapabilities returns the capabilities of this Stave version.
 func GetCapabilities(version string) Capabilities {
 	if version == "" {
-		version = staveversion.Version
+		version = staveversion.String
 	}
 
 	return Capabilities{

@@ -48,7 +48,7 @@ type Runner struct {
 // NewRunner initializes a report runner with default settings.
 func NewRunner() *Runner {
 	return &Runner{
-		Version:         staveversion.Version,
+		Version:         staveversion.String,
 		DefaultTemplate: defaultReportTemplate,
 	}
 }
@@ -71,7 +71,7 @@ func (r *Runner) Run(_ context.Context, req Request) error {
 	}
 
 	return reportrender.RenderText(*eval, reportrender.RenderTextOptions{
-		ToolVersion:     r.Version,
+		StaveVersion:    r.Version,
 		DefaultTemplate: r.DefaultTemplate,
 		TemplatePath:    fsutil.CleanUserPath(req.TemplateFile),
 		Writer:          req.Stdout,

@@ -92,7 +92,7 @@ type Verification struct {
 
 // VerificationRunInfo contains metadata about the verification run.
 type VerificationRunInfo struct {
-	ToolVersion     string        `json:"tool_version"`
+	StaveVersion    string        `json:"tool_version"`
 	Offline         bool          `json:"offline"`
 	Now             time.Time     `json:"now"`
 	MaxUnsafe       time.Duration `json:"-"`

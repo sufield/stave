@@ -9,10 +9,10 @@ import (
 )
 
 func TestCapabilitiesJSONContract(t *testing.T) {
-	origVersion := staveversion.Version
-	staveversion.Version = "contract-test-version"
+	origVersion := staveversion.String
+	staveversion.String = "contract-test-version"
 	t.Cleanup(func() {
-		staveversion.Version = origVersion
+		staveversion.String = origVersion
 	})
 
 	var out bytes.Buffer

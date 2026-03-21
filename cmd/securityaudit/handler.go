@@ -58,7 +58,7 @@ func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
 
 	report, artifacts, err := runner.Run(ctx, appsa.SecurityAuditRequest{
 		Now:                  cfg.Now,
-		ToolVersion:          staveversion.Version,
+		StaveVersion:         staveversion.String,
 		Cwd:                  cwd,
 		BinaryPath:           exe,
 		OutDir:               bundleDir,

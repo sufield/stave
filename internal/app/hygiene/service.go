@@ -18,7 +18,7 @@ type RiskOptions struct {
 	GlobalMaxUnsafe  time.Duration
 	Now              time.Time
 	DueSoonThreshold time.Duration
-	ToolVersion      string
+	StaveVersion     string
 	// Optional filters for upcoming metrics (empty = no filter).
 	ControlIDs      []kernel.ControlID
 	AssetTypes      []kernel.AssetType
@@ -62,7 +62,7 @@ func (s *Service) ComputeRisk(
 			Snapshots:       snapshots,
 			MaxUnsafe:       opts.GlobalMaxUnsafe,
 			Clock:           fixedClock{now: opts.Now},
-			ToolVersion:     opts.ToolVersion,
+			StaveVersion:    opts.StaveVersion,
 			PredicateParser: opts.PredicateParser,
 			CELEvaluator:    opts.CELEvaluator,
 		})

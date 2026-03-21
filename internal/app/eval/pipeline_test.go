@@ -18,7 +18,7 @@ func TestRunOutputPipeline_Success(t *testing.T) {
 	err := RunOutputPipeline(
 		context.Background(),
 		&buf,
-		evaluation.Result{Run: evaluation.RunInfo{ToolVersion: "test"}},
+		evaluation.Result{Run: evaluation.RunInfo{StaveVersion: "test"}},
 		&outputMarshalerStub{data: []byte(`{"ok":true}`)},
 		func(r evaluation.Result) appcontracts.EnrichedResult {
 			return appcontracts.EnrichedResult{Result: r, Run: r.Run}

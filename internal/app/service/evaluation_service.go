@@ -19,7 +19,7 @@ type EvaluateInput struct {
 	Hasher          ports.Digester
 	ExemptionConfig *policy.ExemptionConfig
 	ExceptionConfig *policy.ExceptionConfig
-	ToolVersion     string
+	StaveVersion    string
 	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	Metadata        evaluation.Metadata
@@ -37,7 +37,7 @@ func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 		Hasher:          input.Hasher,
 		Exemptions:      input.ExemptionConfig,
 		Exceptions:      input.ExceptionConfig,
-		ToolVersion:     input.ToolVersion,
+		StaveVersion:    input.StaveVersion,
 		InputHashes:     input.InputHashes,
 		PredicateParser: input.PredicateParser,
 		CELEvaluator:    input.CELEvaluator,

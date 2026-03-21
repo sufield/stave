@@ -137,5 +137,5 @@ func (a *App) initSanitizer() {
 
 // GetVersion returns the version string.
 func GetVersion() string {
-	return staveversion.Version
+	return staveversion.String
 }

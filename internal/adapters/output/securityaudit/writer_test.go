@@ -12,7 +12,7 @@ func sampleReport() domain.Report {
 	return domain.Report{
 		SchemaVersion: "security-audit.v1",
 		GeneratedAt:   "2026-02-28T00:00:00Z",
-		ToolVersion:   "v0.0.0-test",
+		StaveVersion:  "v0.0.0-test",
 		Summary: domain.Summary{
 			Total:      1,
 			Pass:       0,

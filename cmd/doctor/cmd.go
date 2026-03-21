@@ -38,7 +38,7 @@ type Runner struct {
 // NewRunner initializes a doctor runner.
 func NewRunner() *Runner {
 	return &Runner{
-		Version: staveversion.Version,
+		Version: staveversion.String,
 	}
 }
 

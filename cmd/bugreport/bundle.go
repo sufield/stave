@@ -83,7 +83,7 @@ func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
 	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:          cfg.Cwd,
 		BinaryPath:   cfg.BinaryPath,
-		StaveVersion: staveversion.Version,
+		StaveVersion: staveversion.String,
 	})
 	if err := bundle.addJSON("doctor.json", DoctorResult{Ready: ok, Checks: checks}); err != nil {
 		return fmt.Errorf("write doctor.json: %w", err)
@@ -196,7 +196,7 @@ func (g *Generator) addManifest(bundle *bundleWriter) error {
 	m := manifest{
 		BundleVersion: kernel.SchemaBugReport,
 		GeneratedAt:   g.now(),
-		StaveVersion:  staveversion.Version,
+		StaveVersion:  staveversion.String,
 		Sanitized:     true,
 		Files:         manifestFiles,
 		Warnings:      bundle.warnings,

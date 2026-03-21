@@ -116,7 +116,7 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 				Tool: sarifTool{
 					Driver: sarifDriver{
 						Name:    w.toolName,
-						Version: enriched.Result.Run.ToolVersion,
+						Version: enriched.Result.Run.StaveVersion,
 						Rules:   rules,
 					},
 				},

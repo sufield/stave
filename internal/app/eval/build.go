@@ -27,7 +27,7 @@ type RuntimeConfig struct {
 	MaxUnsafe         time.Duration
 	Clock             ports.Clock
 	Hasher            ports.Digester
-	ToolVersion       string
+	StaveVersion      string
 	AllowUnknownInput bool
 	ExemptionConfig   *policy.ExemptionConfig
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
@@ -94,7 +94,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	output, stderr := resolveOutputWriters(in.Writers.Stdout, in.Writers.Stderr)
 
 	opts := []Option{
-		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.ToolVersion),
+		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.StaveVersion),
 		WithMaxUnsafe(in.Runtime.MaxUnsafe),
 		WithHasher(in.Runtime.Hasher),
 		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
@@ -201,7 +201,7 @@ type ApplyBuilderInput struct {
 	ExemptionConfig   *policy.ExemptionConfig
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator      policy.PredicateEval
-	ToolVersion       string
+	StaveVersion      string
 
 	// Project scope
 	ControlsDir    string
@@ -230,7 +230,7 @@ func BuildApplyDeps(in ApplyBuilderInput) (*ApplyDeps, error) {
 			MaxUnsafe:         in.MaxUnsafe,
 			Clock:             in.Clock,
 			Hasher:            in.Hasher,
-			ToolVersion:       in.ToolVersion,
+			StaveVersion:      in.StaveVersion,
 			AllowUnknownInput: in.AllowUnknownInput,
 			ExemptionConfig:   in.ExemptionConfig,
 			PredicateParser:   in.PredicateParser,

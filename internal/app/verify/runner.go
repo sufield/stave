@@ -118,7 +118,7 @@ func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.Control
 		MaxUnsafe:         req.MaxUnsafe,
 		Clock:             req.Clock,
 		AllowUnknownType:  req.AllowUnknown,
-		ToolVersion:       staveversion.Version,
+		StaveVersion:      staveversion.String,
 		ObservationLoader: loader,
 		CELEvaluator:      req.CELEvaluator,
 	})

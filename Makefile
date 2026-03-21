@@ -28,7 +28,7 @@ VERSION=$(shell cat VERSION)
 GO_VERSION=$(shell grep '^toolchain' go.mod | sed 's/toolchain go//')
 
 # Build flags
-LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.Version=$(VERSION)"
+LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(VERSION)"
 
 # Default target
 all: lint test build
@@ -166,7 +166,7 @@ reproduce-release: sync-schemas
 		echo "Building $$bin"; \
 		CGO_ENABLED=0 GOOS="$$os" GOARCH="$$arch" \
 			$(GOBUILD) -trimpath \
-			-ldflags "-s -w -buildid= -X github.com/sufield/stave/internal/version.Version=v$(VERSION)" \
+			-ldflags "-s -w -buildid= -X github.com/sufield/stave/internal/version.String=v$(VERSION)" \
 			-o "dist-local/$$bin" \
 			./cmd/stave; \
 	done

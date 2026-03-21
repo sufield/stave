@@ -17,7 +17,7 @@ type EvaluationRequest struct {
 	MaxUnsafe       time.Duration
 	Clock           ports.Clock
 	Hasher          ports.Digester
-	ToolVersion     string
+	StaveVersion    string
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator    policy.PredicateEval
 }
@@ -35,7 +35,7 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 		MaxUnsafe:       req.MaxUnsafe,
 		Clock:           req.Clock,
 		Hasher:          req.Hasher,
-		ToolVersion:     req.ToolVersion,
+		StaveVersion:    req.StaveVersion,
 		PredicateParser: req.PredicateParser,
 		CELEvaluator:    req.CELEvaluator,
 	})

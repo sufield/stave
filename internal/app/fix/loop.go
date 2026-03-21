@@ -161,7 +161,7 @@ func (s *Service) evaluateState(
 		MaxUnsafe:         req.MaxUnsafe,
 		Clock:             s.Clock,
 		AllowUnknownType:  req.AllowUnknown,
-		ToolVersion:       version.Version,
+		StaveVersion:      version.String,
 		ObservationLoader: loader,
 		CELEvaluator:      s.CELEvaluator,
 	})

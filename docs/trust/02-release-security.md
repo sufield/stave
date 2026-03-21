@@ -297,7 +297,7 @@ Stave uses deterministic build flags so that anyone with the same Go version can
 
 - **Go version**: Must match the release workflow exactly (see `go-version` in `.github/workflows/release.yml`)
 - **Build flags**: `CGO_ENABLED=0 -trimpath -buildid= -ldflags "-s -w"`
-- **Version injection**: `-X github.com/sufield/stave/internal/version.Version=v<VERSION>`
+- **Version injection**: `-X github.com/sufield/stave/internal/version.String=v<VERSION>`
 
 ### Reproduce locally
 

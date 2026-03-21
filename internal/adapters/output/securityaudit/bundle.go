@@ -39,7 +39,7 @@ type RunManifest struct {
 	GeneratedAt       string         `json:"generated_at"`
 	MainReport        string         `json:"main_report"`
 	BundleDir         string         `json:"bundle_dir"`
-	ToolVersion       string         `json:"tool_version"`
+	StaveVersion      string         `json:"tool_version"`
 	FailOn            string         `json:"fail_on"`
 	Gated             bool           `json:"gated"`
 	GatedFindings     int            `json:"gated_findings"`
@@ -125,7 +125,7 @@ func writeRunManifest(opts BundleWriteOpts, path string, now time.Time, bundleDi
 		GeneratedAt:       now.Format(time.RFC3339),
 		MainReport:        mainReport,
 		BundleDir:         bundleDir,
-		ToolVersion:       report.ToolVersion,
+		StaveVersion:      report.StaveVersion,
 		FailOn:            string(report.Summary.FailOn),
 		Gated:             report.Summary.Gated,
 		GatedFindings:     report.Summary.GatedFindingCount,

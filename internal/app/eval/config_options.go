@@ -15,7 +15,7 @@ func WithRuntime(output, stderr io.Writer, clock ports.Clock, toolVersion string
 		cfg.Output = output
 		cfg.Stderr = stderr
 		cfg.Clock = clock
-		cfg.ToolVersion = toolVersion
+		cfg.StaveVersion = toolVersion
 	}
 }
 

@@ -39,8 +39,8 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	if err := json.Unmarshal(stdout, &actual); err != nil {
 		return
 	}
-	stripToolVersion(golden)
-	stripToolVersion(actual)
+	stripStaveVersion(golden)
+	stripStaveVersion(actual)
 	goldenNorm, _ := json.Marshal(golden)
 	actualNorm, _ := json.Marshal(actual)
 	if !bytes.Equal(goldenNorm, actualNorm) {
@@ -49,9 +49,9 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	}
 }
 
-// stripToolVersion removes run.tool_version from a parsed JSON value so that
+// stripStaveVersion removes run.tool_version from a parsed JSON value so that
 // golden comparisons are not sensitive to the build version.
-func stripToolVersion(v any) {
+func stripStaveVersion(v any) {
 	m, ok := v.(map[string]any)
 	if !ok {
 		return

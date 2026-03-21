@@ -29,7 +29,7 @@ const (
 var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
 
 // GetVersion returns the CLI version string.
-func GetVersion() string { return version.Version }
+func GetVersion() string { return version.String }
 
 // ---------------------------------------------------------------------------
 // Utility helpers shared across init sub-files.
