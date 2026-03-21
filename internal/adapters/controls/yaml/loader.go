@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
@@ -135,8 +136,31 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 
 // enrichAndPrepare resolves predicate aliases and prepares the control for use.
 func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
-	if err := ctl.ResolveAndPrepare(l.aliasResolver); err != nil {
+	if err := l.resolveAlias(ctl); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
+	if err := ctl.Prepare(); err != nil {
+		return fmt.Errorf("semantic error: %w", err)
+	}
+	return nil
+}
+
+// resolveAlias expands a predicate alias if set on the control definition.
+func (l *ControlLoader) resolveAlias(ctl *policy.ControlDefinition) error {
+	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
+	if alias == "" {
+		return nil
+	}
+	if l.aliasResolver == nil {
+		return fmt.Errorf("unsafe_predicate_alias %q requires an alias resolver", alias)
+	}
+	if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
+		return fmt.Errorf("cannot set both unsafe_predicate and unsafe_predicate_alias")
+	}
+	expanded, ok := l.aliasResolver(alias)
+	if !ok {
+		return fmt.Errorf("unknown unsafe_predicate_alias %q", alias)
+	}
+	ctl.UnsafePredicate = expanded
 	return nil
 }
