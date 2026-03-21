@@ -137,3 +137,95 @@ func hasField(dotPath string) string {
 	}
 	return strings.Join(checks, " && ")
 }
+
+// --- Scope-aware field helpers ---
+
+// scopedFieldAccess generates a CEL field access expression.
+// When scopeVar is empty, uses the field's first segment as the root variable.
+// When scopeVar is set (e.g., "__id"), all segments are indexed from that variable.
+func scopedFieldAccess(dotPath, scopeVar string) string {
+	if scopeVar == "" {
+		return fieldAccess(dotPath)
+	}
+	// In scoped mode, the entire field path is relative to scopeVar.
+	// "type" → __id["type"]
+	// "purpose" → __id["purpose"]
+	// "grants.has_wildcard" → __id["grants"]["has_wildcard"]
+	parts := strings.Split(dotPath, ".")
+	var result strings.Builder
+	result.WriteString(scopeVar)
+	for _, p := range parts {
+		fmt.Fprintf(&result, "[%q]", p)
+	}
+	return result.String()
+}
+
+// scopedHasField generates a CEL existence check for a field.
+// When scopeVar is empty, uses the standard hasField logic.
+// When scopeVar is set, checks each segment relative to scopeVar.
+func scopedHasField(dotPath, scopeVar string) string {
+	if scopeVar == "" {
+		return hasField(dotPath)
+	}
+	// In scoped mode, check existence at each nesting level from scopeVar.
+	// "type" → "type" in __id
+	// "grants.has_wildcard" → "grants" in __id && "has_wildcard" in __id["grants"]
+	parts := strings.Split(dotPath, ".")
+	checks := make([]string, 0, len(parts))
+	for i := range parts {
+		var base strings.Builder
+		base.WriteString(scopeVar)
+		for j := range i {
+			fmt.Fprintf(&base, "[%q]", parts[j])
+		}
+		checks = append(checks, fmt.Sprintf("%q in %s", parts[i], base.String()))
+	}
+	return strings.Join(checks, " && ")
+}
+
+// literal converts a Go value to a CEL literal string.
+// String values "true"/"false" are emitted as boolean literals to match
+// the observation property normalizer's coercion behavior.
+func literal(v any) string {
+	switch val := v.(type) {
+	case bool:
+		if val {
+			return "true"
+		}
+		return "false"
+	case string:
+		// Normalize boolean strings to match property normalizer
+		switch strings.ToLower(strings.TrimSpace(val)) {
+		case "true":
+			return "true"
+		case "false":
+			return "false"
+		}
+		return fmt.Sprintf("%q", val)
+	case float64:
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d", int64(val))
+		}
+		return fmt.Sprintf("%g", val)
+	case int:
+		return fmt.Sprintf("%d", val)
+	case int64:
+		return fmt.Sprintf("%d", val)
+	case []string:
+		quoted := make([]string, len(val))
+		for i, s := range val {
+			quoted[i] = fmt.Sprintf("%q", s)
+		}
+		return "[" + strings.Join(quoted, ", ") + "]"
+	case []any:
+		items := make([]string, len(val))
+		for i, item := range val {
+			items[i] = literal(item)
+		}
+		return "[" + strings.Join(items, ", ") + "]"
+	case nil:
+		return "null"
+	default:
+		return fmt.Sprintf("%v", val)
+	}
+}
