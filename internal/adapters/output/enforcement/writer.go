@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/samber/lo"
+	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -59,7 +60,7 @@ func RenderSCP(targets []BucketTarget) (string, error) {
 
 	resources := make([]string, 0, len(targets))
 	for _, t := range targets {
-		resources = append(resources, t.BucketName.ARN())
+		resources = append(resources, s3.ARN(t.BucketName))
 	}
 	doc := policy{
 		Version: "2012-10-17",
@@ -100,7 +101,7 @@ func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
 		if assetID == "" {
 			return BucketTarget{}, false
 		}
-		return BucketTarget{AssetID: assetID, BucketName: kernel.NewBucketRef(assetID)}, true
+		return BucketTarget{AssetID: assetID, BucketName: s3.ParseS3Reference(assetID)}, true
 	})
 	targets = lo.UniqBy(targets, func(t BucketTarget) string { return t.AssetID })
 	SortTargets(targets)

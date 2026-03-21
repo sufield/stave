@@ -7,38 +7,24 @@ import (
 	"strings"
 )
 
-// ErrInvalidBucket indicates the bucket name is not a valid S3 bucket name.
+// ErrInvalidBucket indicates the bucket name is not valid.
 var ErrInvalidBucket = errors.New("invalid bucket name")
 
 // bucketNameRe is an RFC 1123-style regex used by common object stores.
 var bucketNameRe = regexp.MustCompile(`^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$`)
 
-// BucketRef is a normalized S3 bucket identity value object.
-// It consolidates bucket name extraction from ARN, model ID, and S3 URI formats.
+// BucketRef is a normalized storage container identity value object.
 type BucketRef struct {
 	name string
 }
 
-// NewBucketRef creates a BucketRef by stripping any known S3 prefix and normalizing.
-func NewBucketRef(input string) BucketRef {
-	s := strings.ToLower(strings.TrimSpace(input))
-	s = strings.TrimPrefix(s, "arn:aws:s3:::")
-	s = strings.TrimPrefix(s, "aws:s3:::")
-	s = strings.TrimPrefix(s, "s3://")
-	if i := strings.IndexByte(s, '/'); i >= 0 {
-		s = s[:i]
-	}
-	return BucketRef{name: s}
+// NewBucketRef creates a BucketRef from a bare bucket name.
+func NewBucketRef(name string) BucketRef {
+	return BucketRef{name: strings.ToLower(strings.TrimSpace(name))}
 }
 
 // Name returns the bare bucket name.
 func (r BucketRef) Name() string { return r.name }
-
-// ARN returns the full S3 ARN: "arn:aws:s3:::<name>".
-func (r BucketRef) ARN() string { return "arn:aws:s3:::" + r.name }
-
-// ModelID returns the storage model identifier: "aws:s3:::<name>".
-func (r BucketRef) ModelID() string { return "aws:s3:::" + r.name }
 
 // String returns the bare bucket name.
 func (r BucketRef) String() string { return r.name }
@@ -50,8 +36,8 @@ func (r BucketRef) IsEmpty() bool { return r.name == "" }
 func (r BucketRef) Equals(other BucketRef) bool { return r.name == other.name }
 
 // Validate checks that the normalized bucket name is safe for use in
-// file paths and URLs. It applies the same RFC 1123-style rules that S3
-// enforces: 3-63 lowercase alphanumeric/hyphen/dot characters, no "..".
+// file paths and URLs. It applies RFC 1123-style rules used by common
+// object stores: 3-63 lowercase alphanumeric/hyphen/dot characters, no "..".
 func (r BucketRef) Validate() error {
 	if strings.Contains(r.name, "..") || !bucketNameRe.MatchString(r.name) {
 		return fmt.Errorf("%w: %q", ErrInvalidBucket, r.name)
