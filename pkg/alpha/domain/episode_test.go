@@ -82,9 +82,16 @@ func TestTimeline_RecordObservation_FloorsArchivedEpisodeEnd(t *testing.T) {
 	start := time.Date(2026, 2, 1, 10, 0, 0, 0, time.UTC)
 	outOfOrderSafe := start.Add(-1 * time.Hour)
 
-	timeline := asset.NewTimeline(asset.Asset{ID: "res:test"})
-	timeline.RecordObservation(start, true)
-	timeline.RecordObservation(outOfOrderSafe, false)
+	timeline, err := asset.NewTimeline(asset.Asset{ID: "res:test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := timeline.RecordObservation(start, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := timeline.RecordObservation(outOfOrderSafe, false); err != nil {
+		t.Fatal(err)
+	}
 
 	if timeline.HasOpenEpisode() {
 		t.Fatal("expected no open episode after safe transition")

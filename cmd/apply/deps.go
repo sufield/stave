@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -100,6 +101,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 
 	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
 		Ctx:               b.Ctx,
+		Logger:            slog.Default(),
 		Stdout:            b.Stdout,
 		Stderr:            b.Stderr,
 		Plan:              *plan,
@@ -158,7 +160,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 
 func (b *Builder) buildEnrichFn() appcontracts.EnrichFunc {
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	return func(result evaluation.Result) appcontracts.EnrichedResult {
+	return func(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, b.Sanitizer, result)
 	}
 }

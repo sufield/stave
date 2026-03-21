@@ -3,6 +3,7 @@ package engine
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"slices"
 	"time"
 
@@ -94,7 +95,10 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 	for i := range sorted {
 		e.identitiesByTime[sorted[i].CapturedAt] = sorted[i].Identities
 	}
-	timelinesPerInv := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
+	timelinesPerInv, err := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
+	if err != nil {
+		return evaluation.Result{}, fmt.Errorf("build timelines: %w", err)
+	}
 	assetHint := 0
 	if len(sorted) > 0 {
 		assetHint = len(sorted[0].Assets)

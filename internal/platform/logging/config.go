@@ -88,6 +88,9 @@ func DefaultConfig() Config {
 }
 
 // SetDefaultLogger updates the global slog default logger.
+// This should only be called from the bootstrap phase (cmd/bootstrap.go).
+// Application-layer code should receive a logger via injection (struct field
+// or context) rather than reading slog.Default().
 func SetDefaultLogger(logger *slog.Logger) {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{

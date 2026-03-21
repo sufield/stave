@@ -26,7 +26,7 @@ func RunOutputPipeline(
 	}
 
 	enriched, err := runStep(logger, "enrich", func() (appcontracts.EnrichedResult, error) {
-		return enrichFn(result), nil
+		return enrichFn(result)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to write findings: %w", err)

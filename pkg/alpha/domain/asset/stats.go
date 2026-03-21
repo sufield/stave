@@ -1,6 +1,9 @@
 package asset
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // ObservationStats tracks continuity metrics for asset observations.
 // It is agnostic to whether an asset is safe or unsafe.
@@ -50,19 +53,20 @@ func (s *ObservationStats) MaxGap() time.Duration {
 }
 
 // RecordObservation updates continuity metrics with a new observation time.
+// Returns an error if the timestamp is zero (e.g. from malformed observation data).
 // CONTRACT: out-of-order timestamps are ignored.
-func (s *ObservationStats) RecordObservation(t time.Time) {
+func (s *ObservationStats) RecordObservation(t time.Time) error {
 	if t.IsZero() {
-		panic("precondition failed: RecordObservation requires non-zero time")
+		return fmt.Errorf("RecordObservation requires non-zero time")
 	}
 
 	if s.observationCount == 0 {
 		s.firstSeenAt, s.lastSeenAt, s.prevSeenAt = t, t, t
 		s.observationCount = 1
-		return
+		return nil
 	}
 	if t.Before(s.prevSeenAt) {
-		return
+		return nil
 	}
 	if gap := t.Sub(s.prevSeenAt); gap > s.maxGap {
 		s.maxGap = gap
@@ -74,6 +78,7 @@ func (s *ObservationStats) RecordObservation(t time.Time) {
 	s.prevSeenAt = t
 
 	s.checkContracts()
+	return nil
 }
 
 func (s *ObservationStats) checkContracts() {

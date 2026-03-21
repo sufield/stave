@@ -225,8 +225,13 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 				"storage": storage,
 			},
 		}
-		timeline := asset.NewTimeline(resource)
-		timeline.RecordObservation(now, true)
+		timeline, err := asset.NewTimeline(resource)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := timeline.RecordObservation(now, true); err != nil {
+			t.Fatal(err)
+		}
 		return timeline
 	}
 

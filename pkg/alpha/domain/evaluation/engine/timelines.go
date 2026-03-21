@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -11,7 +13,7 @@ func BuildTimelinesPerControl(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	celEval PredicateEvaluator,
-) map[kernel.ControlID]map[asset.ID]*asset.Timeline {
+) (map[kernel.ControlID]map[asset.ID]*asset.Timeline, error) {
 
 	timelinesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.Timeline, len(controls))
 	for _, ctl := range controls {
@@ -27,18 +29,24 @@ func BuildTimelinesPerControl(
 
 				t, exists := timelines[a.ID]
 				if !exists {
-					t = asset.NewTimeline(a)
+					var err error
+					t, err = asset.NewTimeline(a)
+					if err != nil {
+						return nil, fmt.Errorf("build timeline for control %s: %w", ctl.ID, err)
+					}
 					timelines[a.ID] = t
 				}
 
 				isUnsafe := checkUnsafe(ctl, a, snap, celEval)
-				t.RecordObservation(captureTime, isUnsafe)
+				if err := t.RecordObservation(captureTime, isUnsafe); err != nil {
+					return nil, fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
+				}
 				t.SetAsset(a)
 			}
 		}
 	}
 
-	return timelinesByControl
+	return timelinesByControl, nil
 }
 
 // checkUnsafe evaluates an asset against a control predicate using the CEL evaluator.

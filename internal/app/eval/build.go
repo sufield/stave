@@ -55,6 +55,7 @@ type ProjectScope struct {
 type BuildDependenciesInput struct {
 	Plan    EvaluationPlan
 	Context context.Context
+	Logger  *slog.Logger
 
 	Adapters Adapters
 	Runtime  RuntimeConfig
@@ -77,9 +78,6 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	}
 
 	ctx := in.Context
-	if ctx == nil {
-		ctx = context.Background()
-	}
 
 	resolved, err := ResolveProjectConfig(ctx, in.Project.Config)
 	if err != nil {
@@ -112,7 +110,11 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	cfg := NewConfig(in.Plan, opts...)
 
 	runner := NewEvaluateRun(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
-	runner.Logger = slog.Default()
+	if in.Logger != nil {
+		runner.Logger = in.Logger
+	} else {
+		runner.Logger = slog.Default()
+	}
 
 	return BuildDependenciesOutput{
 		Runner: runner,
@@ -182,6 +184,7 @@ func (d *ApplyDeps) Close() {}
 // lookup, git status, exemption loading) must be done by the caller.
 type ApplyBuilderInput struct {
 	Ctx    context.Context
+	Logger *slog.Logger
 	Stdout io.Writer
 	Stderr io.Writer
 
@@ -213,13 +216,11 @@ type ApplyBuilderInput struct {
 // BuildApplyDeps assembles ApplyDeps from fully resolved inputs.
 func BuildApplyDeps(in ApplyBuilderInput) (*ApplyDeps, error) {
 	ctx := in.Ctx
-	if ctx == nil {
-		ctx = context.Background()
-	}
 
 	built, err := BuildDependencies(BuildDependenciesInput{
 		Plan:    in.Plan,
 		Context: ctx,
+		Logger:  in.Logger,
 		Adapters: Adapters{
 			FindingMarshaler:  in.Marshaler,
 			EnrichFn:          in.EnrichFn,

@@ -17,7 +17,9 @@ import (
 // runValidate is the primary entry point for the cobra command.
 func runValidate(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *options) error {
 	// 1. Prepare environment (git audit, verbose logging)
-	opts.prepareEnvironment(cmd)
+	if err := opts.prepareEnvironment(cmd); err != nil {
+		return err
+	}
 
 	// 2. Resolve format
 	gf := cmdutil.GetGlobalFlags(cmd)

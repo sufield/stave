@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -198,7 +197,11 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 
 // validateDirs ensures directories exist unless using packs or stdin.
 func (o *ApplyOptions) validateDirs() error {
-	if !o.isUsingPacks() {
+	packs, err := o.isUsingPacks()
+	if err != nil {
+		return err
+	}
+	if !packs {
 		if err := cmdutil.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
@@ -213,16 +216,15 @@ func (o *ApplyOptions) validateDirs() error {
 	return nil
 }
 
-func (o *ApplyOptions) isUsingPacks() bool {
+func (o *ApplyOptions) isUsingPacks() (bool, error) {
 	if o.ControlsSet {
-		return false
+		return false, nil
 	}
 	cfg, ok, err := projconfig.FindProjectConfig()
 	if err != nil {
-		slog.Warn("failed to load project config", "error", err)
-		return false
+		return false, fmt.Errorf("load project config: %w", err)
 	}
-	return ok && len(cfg.EnabledControlPacks) > 0
+	return ok && len(cfg.EnabledControlPacks) > 0, nil
 }
 
 // standardIO holds resolved IO and format state for the standard apply path.
@@ -284,9 +286,11 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
 	}
 
 	hasPacks := false
-	if cfg, ok, err := projconfig.FindProjectConfig(); err != nil {
-		slog.Warn("failed to load project config", "error", err)
-	} else if ok && len(cfg.EnabledControlPacks) > 0 {
+	cfg, ok, cfgErr := projconfig.FindProjectConfig()
+	if cfgErr != nil {
+		return PlanConfig{}, fmt.Errorf("load project config: %w", cfgErr)
+	}
+	if ok && len(cfg.EnabledControlPacks) > 0 {
 		hasPacks = true
 	}
 

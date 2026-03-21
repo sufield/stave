@@ -113,10 +113,13 @@ type EnvelopeBuilder struct {
 }
 
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
-func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) safetyenvelope.Evaluation {
+func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) (safetyenvelope.Evaluation, error) {
 	enricher := remediation.NewMapper(b.IDGen)
-	enriched := appeval.Enrich(enricher, b.Sanitizer, result)
-	return b.BuildEnvelope(enriched)
+	enriched, err := appeval.Enrich(enricher, b.Sanitizer, result)
+	if err != nil {
+		return safetyenvelope.Evaluation{}, fmt.Errorf("enrich evaluation: %w", err)
+	}
+	return b.BuildEnvelope(enriched), nil
 }
 
 // --- Data Models ---

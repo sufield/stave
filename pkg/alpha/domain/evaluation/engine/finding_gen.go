@@ -23,7 +23,7 @@ type DurationFindingInput struct {
 // CreateDurationFinding generates a violation finding specifically for duration-based controls.
 func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 	a := in.Timeline.Asset()
-	duration := in.Timeline.UnsafeDuration(in.Now)
+	duration, _ := in.Timeline.UnsafeDuration(in.Now)
 	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.Identities...)
 	ctx.PredicateParser = in.PredicateParser
 	misconfigs := policy.ExtractMisconfigurations(&in.Control.UnsafePredicate, ctx)

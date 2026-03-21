@@ -99,7 +99,10 @@ func assertNoSensitive(t *testing.T, label, output string) {
 func TestJSONWriter_WriteFindings_NoRedact(t *testing.T) {
 	w := outjson.NewFindingWriter(true)
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	enriched := appeval.Enrich(enricher, nil, makeTestResult())
+	enriched, err := appeval.Enrich(enricher, nil, makeTestResult())
+	if err != nil {
+		t.Fatal(err)
+	}
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatal(err)
@@ -115,7 +118,10 @@ func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New()
 	w := outjson.NewFindingWriter(true)
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	enriched := appeval.Enrich(enricher, r, makeTestResult())
+	enriched, err := appeval.Enrich(enricher, r, makeTestResult())
+	if err != nil {
+		t.Fatal(err)
+	}
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatal(err)
@@ -138,7 +144,10 @@ func TestTextWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New()
 	w := outtext.NewFindingWriter()
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	enriched := appeval.Enrich(enricher, r, makeTestResult())
+	enriched, err := appeval.Enrich(enricher, r, makeTestResult())
+	if err != nil {
+		t.Fatal(err)
+	}
 	data, err := w.MarshalFindings(enriched)
 	if err != nil {
 		t.Fatal(err)
