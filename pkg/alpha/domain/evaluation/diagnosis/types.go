@@ -1,11 +1,9 @@
 package diagnosis
 
 import (
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
@@ -29,18 +27,6 @@ type Issue struct {
 	AssetID  asset.ID `json:"asset_id,omitempty"`
 }
 
-// Sanitized returns a copy with asset identifiers replaced by deterministic tokens.
-func (d Issue) Sanitized(r kernel.IDSanitizer) Issue {
-	if d.AssetID == "" {
-		return d
-	}
-	raw := string(d.AssetID)
-	token := r.ID(raw)
-	d.AssetID = asset.ID(token)
-	d.Evidence = strings.ReplaceAll(d.Evidence, raw, token)
-	return d
-}
-
 // Summary contains aggregate metrics about the diagnostic input.
 type Summary struct {
 	TotalSnapshots     int             `json:"total_snapshots"`
@@ -61,29 +47,27 @@ type Report struct {
 	Summary Summary `json:"summary"`
 }
 
-// Sanitized returns a deep copy with asset identifiers replaced by
-// deterministic tokens.
-func (dr *Report) Sanitized(r kernel.IDSanitizer) *Report {
-	if dr == nil {
-		return nil
-	}
-	out := *dr
-	out.Issues = make([]Issue, len(dr.Issues))
-	for i, d := range dr.Issues {
-		out.Issues[i] = d.Sanitized(r)
-	}
-	return &out
+// DiagnosticFinding is a lightweight view of an evaluation finding,
+// carrying only the fields the diagnosis package needs. This avoids
+// importing the evaluation package.
+type DiagnosticFinding struct {
+	AssetID             asset.ID         `json:"asset_id"`
+	ControlID           kernel.ControlID `json:"control_id"`
+	FirstUnsafeAt       time.Time        `json:"first_unsafe_at"`
+	LastSeenUnsafeAt    time.Time        `json:"last_seen_unsafe_at"`
+	UnsafeDurationHours float64          `json:"unsafe_duration_hours"`
+	ThresholdHours      float64          `json:"threshold_hours"`
 }
 
 // Input encapsulates all data required to run a diagnosis.
 type Input struct {
 	Snapshots       asset.Snapshots
 	Controls        []policy.ControlDefinition
-	Findings        []evaluation.Finding
-	Result          *evaluation.Result
+	Findings        []DiagnosticFinding
+	ViolationsFound int
+	AttackSurface   int
 	MaxUnsafe       time.Duration
 	Now             time.Time
-	PredicateParser policy.PredicateParser
 	PredicateEval   policy.PredicateEval
 
 	// cached summary computed at creation
@@ -94,21 +78,21 @@ type Input struct {
 func NewInput(
 	snapshots asset.Snapshots,
 	controls []policy.ControlDefinition,
-	findings []evaluation.Finding,
-	result *evaluation.Result,
+	findings []DiagnosticFinding,
+	violationsFound int,
+	attackSurface int,
 	maxUnsafe time.Duration,
 	now time.Time,
-	parser policy.PredicateParser,
 	eval policy.PredicateEval,
 ) Input {
 	i := Input{
 		Snapshots:       snapshots,
 		Controls:        controls,
 		Findings:        findings,
-		Result:          result,
+		ViolationsFound: violationsFound,
+		AttackSurface:   attackSurface,
 		MaxUnsafe:       maxUnsafe,
 		Now:             now,
-		PredicateParser: parser,
 		PredicateEval:   eval,
 	}
 	i.summary = i.buildSummary()
@@ -135,49 +119,13 @@ func (i *Input) buildSummary() Summary {
 		return s
 	}
 
-	s.MinCapturedAt, s.MaxCapturedAt = i.calculateTemporalBounds()
+	s.MinCapturedAt, s.MaxCapturedAt = i.Snapshots.TemporalBounds()
 	s.TimeSpan = kernel.Duration(s.MaxCapturedAt.Sub(s.MinCapturedAt))
-	s.TotalAssets = i.countUniqueAssets()
+	s.TotalAssets = i.Snapshots.UniqueAssetCount()
 
-	if i.Result != nil {
-		s.ViolationsFound = len(i.Result.Findings)
-		s.AttackSurface = i.Result.Summary.AttackSurface
-	}
+	s.ViolationsFound = i.ViolationsFound
+	s.AttackSurface = i.AttackSurface
 
 	return s
 }
 
-func (i *Input) calculateTemporalBounds() (minT, maxT time.Time) {
-	if len(i.Snapshots) == 0 {
-		return
-	}
-
-	minT = i.Snapshots[0].CapturedAt
-	maxT = i.Snapshots[0].CapturedAt
-
-	for _, snap := range i.Snapshots {
-		if snap.CapturedAt.Before(minT) {
-			minT = snap.CapturedAt
-		}
-		if snap.CapturedAt.After(maxT) {
-			maxT = snap.CapturedAt
-		}
-	}
-	return
-}
-
-func (i *Input) countUniqueAssets() int {
-	if len(i.Snapshots) == 0 {
-		return 0
-	}
-
-	capacity := len(i.Snapshots[0].Assets)
-	unique := make(map[asset.ID]struct{}, capacity)
-
-	for _, snap := range i.Snapshots {
-		for _, a := range snap.Assets {
-			unique[a.ID] = struct{}{}
-		}
-	}
-	return len(unique)
-}

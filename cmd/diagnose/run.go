@@ -98,7 +98,7 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 	}
 
 	if cfg.Sanitizer != nil && report != nil {
-		report = report.Sanitized(cfg.Sanitizer)
+		report = appdiagnose.SanitizeDiagnosisReport(cfg.Sanitizer, report)
 	}
 	report = appdiagnose.FilterReport(report, appdiagnose.Filter{
 		Cases:          cfg.Cases,
