@@ -1,56 +1,57 @@
 package acl
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+)
 
 func TestAssess_PublicAndAuthenticatedGrants(t *testing.T) {
 	grants := []Grant{
-		{Grantee: AllUsersGranteeURI, Permission: "READ"},
-		{Grantee: AuthenticatedUsersGranteeURI, Permission: "FULL_CONTROL"},
+		{Grantee: allUsersURI, Permission: "READ"},
+		{Grantee: authenticatedUsersURI, Permission: "FULL_CONTROL"},
 	}
 
 	got := Assess(grants)
 
-	if !got.AllowsPublicRead {
+	if !got.Permissions[AudienceAllUsers].Overlap(risk.PermRead) {
 		t.Fatal("expected public read to be allowed")
 	}
-	if got.AllowsPublicWrite {
+	if got.Permissions[AudienceAllUsers].Overlap(risk.PermWrite) {
 		t.Fatal("expected public write to be false for authenticated-only full control")
 	}
-	if !got.AllowsAuthenticatedRead {
+	if !got.Permissions[AudienceAuthenticatedOnly].Overlap(risk.PermRead) {
 		t.Fatal("expected authenticated read to be allowed")
 	}
-	if !got.AllowsAuthenticatedWrite {
+	if !got.Permissions[AudienceAuthenticatedOnly].Overlap(risk.PermWrite) {
 		t.Fatal("expected authenticated write to be allowed via full control")
 	}
-	if got.HasFullControlPublic {
-		t.Fatal("expected full control public to remain false")
-	}
-	if !got.HasFullControlAuthenticated {
-		t.Fatal("expected full control authenticated to be true")
+	if !got.Permissions[AudienceAuthenticatedOnly].Has(risk.PermRead | risk.PermWrite | risk.PermAdminRead | risk.PermAdminWrite) {
+		t.Fatal("expected authenticated to have all four ACL permission bits via full control")
 	}
 }
 
 func TestAssess_ACLPermissions(t *testing.T) {
 	grants := []Grant{
-		{Grantee: AllUsersGranteeURI, Permission: "WRITE_ACP"},
-		{Grantee: AuthenticatedUsersGranteeURI, Permission: "READ_ACP"},
+		{Grantee: allUsersURI, Permission: "WRITE_ACP"},
+		{Grantee: authenticatedUsersURI, Permission: "READ_ACP"},
 	}
 
 	got := Assess(grants)
 
-	if !got.AllowsPublicACLWrite {
+	if !got.Permissions[AudienceAllUsers].Overlap(risk.PermAdminWrite) {
 		t.Fatal("expected public ACL write to be allowed")
 	}
-	if !got.AllowsAuthenticatedACLRead {
+	if !got.Permissions[AudienceAuthenticatedOnly].Overlap(risk.PermAdminRead) {
 		t.Fatal("expected authenticated ACL read to be allowed")
 	}
 }
 
 func TestIsPublicGrantee(t *testing.T) {
-	if !IsPublicGrantee(AllUsersGranteeURI) {
+	if !IsPublicGrantee(allUsersURI) {
 		t.Fatal("expected all-users URI to be public")
 	}
-	if !IsPublicGrantee(AuthenticatedUsersGranteeURI) {
+	if !IsPublicGrantee(authenticatedUsersURI) {
 		t.Fatal("expected authenticated-users URI to be public")
 	}
 	if IsPublicGrantee("http://example.com/private") {

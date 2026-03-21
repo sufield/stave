@@ -1,6 +1,11 @@
 package acl
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+)
 
 // AWS canonical permission strings.
 const (
@@ -22,6 +27,40 @@ const (
 	// AudienceAuthenticatedOnly targets any authenticated AWS user.
 	AudienceAuthenticatedOnly
 )
+
+// String returns the text label for the audience.
+func (a Audience) String() string {
+	switch a {
+	case AudienceAllUsers:
+		return "all_users"
+	case AudienceAuthenticatedOnly:
+		return "authenticated"
+	default:
+		return "private"
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler for consistent output
+// across all text-based serialization formats.
+func (a Audience) MarshalText() ([]byte, error) {
+	return []byte(a.String()), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler for consistent input
+// across all text-based serialization formats.
+func (a *Audience) UnmarshalText(text []byte) error {
+	switch string(text) {
+	case "all_users":
+		*a = AudienceAllUsers
+	case "authenticated":
+		*a = AudienceAuthenticatedOnly
+	case "private":
+		*a = AudiencePrivate
+	default:
+		return fmt.Errorf("invalid audience %q", text)
+	}
+	return nil
+}
 
 // Grant represents a single entry in an S3 Access Control List.
 type Grant struct {
@@ -70,19 +109,19 @@ func (g Grant) HasFullControl() bool {
 	return strings.ToUpper(strings.TrimSpace(g.Permission)) == permFullControl
 }
 
-// Permissions maps the raw permission string to the domain bitmask.
-func (g Grant) Permissions() Permission {
+// Permissions maps the raw permission string to the risk permission bitmask.
+func (g Grant) Permissions() risk.Permission {
 	switch strings.ToUpper(strings.TrimSpace(g.Permission)) {
 	case permRead:
-		return aclPermRead
+		return risk.PermRead
 	case permWrite:
-		return aclPermWrite
+		return risk.PermWrite
 	case permReadACP:
-		return aclPermReadACP
+		return risk.PermAdminRead
 	case permWriteACP:
-		return aclPermWriteACP
+		return risk.PermAdminWrite
 	case permFullControl:
-		return aclPermFullControl
+		return risk.PermRead | risk.PermWrite | risk.PermAdminRead | risk.PermAdminWrite
 	default:
 		return 0
 	}

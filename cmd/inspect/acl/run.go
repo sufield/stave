@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	s3acl "github.com/sufield/stave/pkg/alpha/domain/s3/acl"
 )
 
@@ -19,12 +20,12 @@ type ACLReport struct {
 
 // GrantDetail describes per-grant analysis.
 type GrantDetail struct {
-	Grantee      string           `json:"grantee"`
-	Permission   string           `json:"permission"`
-	Audience     string           `json:"audience"`
-	IsPublic     bool             `json:"is_public"`
-	HasFullCtrl  bool             `json:"has_full_control"`
-	PermissionID s3acl.Permission `json:"permission_mask"`
+	Grantee      string          `json:"grantee"`
+	Permission   string          `json:"permission"`
+	Audience     string          `json:"audience"`
+	IsPublic     bool            `json:"is_public"`
+	HasFullCtrl  bool            `json:"has_full_control"`
+	PermissionID risk.Permission `json:"permission_mask"`
 }
 
 func run(cmd *cobra.Command, file string) error {
@@ -51,7 +52,7 @@ func run(cmd *cobra.Command, file string) error {
 		details = append(details, GrantDetail{
 			Grantee:      g.Grantee,
 			Permission:   g.Permission,
-			Audience:     audienceString(g.Audience()),
+			Audience:     g.Audience().String(),
 			IsPublic:     g.IsPublic(),
 			HasFullCtrl:  g.HasFullControl(),
 			PermissionID: g.Permissions(),
@@ -68,17 +69,6 @@ func run(cmd *cobra.Command, file string) error {
 	enc := json.NewEncoder(cmd.OutOrStdout())
 	enc.SetIndent("", "  ")
 	return enc.Encode(report)
-}
-
-func audienceString(a s3acl.Audience) string {
-	switch a {
-	case s3acl.AudienceAllUsers:
-		return "all_users"
-	case s3acl.AudienceAuthenticatedOnly:
-		return "authenticated"
-	default:
-		return "private"
-	}
 }
 
 func readInput(file string, stdin io.Reader) ([]byte, error) {
