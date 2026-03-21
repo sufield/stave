@@ -3,7 +3,6 @@ package policy
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
