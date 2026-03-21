@@ -30,7 +30,7 @@ Examples:
   stave snapshot hygiene --controls ./controls --observations ./observations --now 2026-01-20T00:00:00Z` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.resolve(cmd)
+			cfg, err := opts.resolve(cmd, cmdutil.EvaluatorFromCmd(cmd))
 			if err != nil {
 				return err
 			}

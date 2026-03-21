@@ -34,6 +34,7 @@ Examples:
   stave ci gate --policy fail_on_overdue_upcoming --controls ./controls --observations ./observations` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			opts.resolveConfigDefaults(cmd)
 			cfg, err := opts.ToConfig(cmd)
 			if err != nil {
 				return err

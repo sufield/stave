@@ -6,10 +6,28 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
+
+// resolveConfigDefaults fills flag values from project config when the user
+// did not set them explicitly on the command line.
+func (o *SharedOptions) resolveConfigDefaults(cmd *cobra.Command, eval *appconfig.Evaluator) {
+	if !cmd.Flags().Changed("max-unsafe") {
+		o.MaxUnsafe = eval.MaxUnsafe()
+	}
+}
+
+// resolveApplyConfigDefaults fills apply-specific flag values from project
+// config when the user did not set them explicitly on the command line.
+func (o *ApplyOptions) resolveApplyConfigDefaults(cmd *cobra.Command) {
+	eval := cmdutil.EvaluatorFromCmd(cmd)
+	o.resolveConfigDefaults(cmd, eval)
+	if !cmd.Flags().Changed("allow-unknown-input") {
+		o.AllowUnknown = eval.AllowUnknownInput()
+	}
+}
 
 // SharedOptions contains flags common to both plan and apply.
 type SharedOptions struct {
@@ -28,7 +46,7 @@ func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
 	cmdutil.RegisterControlsFlag(cmd, &o.ControlsDir, "controls/s3", "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", projconfig.Global().MaxUnsafe(), cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", defaultFormat, "Output format (text, json, or sarif)")
 }
@@ -67,6 +85,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 			opts.normalize()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			opts.resolveApplyConfigDefaults(cmd)
 			cs := cobraState{
 				Ctx:           cmd.Context(),
 				Stdout:        cmd.OutOrStdout(),
@@ -91,7 +110,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 
 func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", projconfig.Global().AllowUnknownInput(), cmdutil.WithDynamicDefaultHelp("Allow unknown source types"))
+	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow unknown source types"))
 	f.StringVar(&o.ExemptionFile, "exemption-file", "", "Path to asset exemption list YAML file")
 	f.StringVar(&o.IntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected hashes")
 	f.StringVar(&o.IntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")

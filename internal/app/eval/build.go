@@ -110,11 +110,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 	cfg := NewConfig(in.Plan, opts...)
 
 	runner := NewEvaluateRun(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
-	if in.Logger != nil {
-		runner.Logger = in.Logger
-	} else {
-		runner.Logger = slog.Default()
-	}
+	runner.Logger = in.Logger
 
 	return BuildDependenciesOutput{
 		Runner: runner,

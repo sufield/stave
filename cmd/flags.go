@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -14,18 +13,11 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 		return &ui.UserError{Err: ui.SuggestFlagParseError(err, cmdutil.CollectVisibleFlags(cmd))}
 	})
 
-	// Resolve dynamic defaults from project/user configuration.
-	eval := projconfig.Global()
-	flags.OutputMode = eval.OutputMode()
-	flags.Quiet = eval.Quiet()
-	flags.Sanitize = eval.Sanitize()
-	flags.PathMode = eval.PathMode()
-
 	p := root.PersistentFlags()
 
-	// Output
-	p.StringVar(&flags.OutputMode, cmdutil.FlagOutput, flags.OutputMode, cmdutil.WithDynamicDefaultHelp("Output format: json or text"))
-	p.BoolVar(&flags.Quiet, cmdutil.FlagQuiet, flags.Quiet, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	// Output — zero defaults; project config resolved in PersistentPreRunE via resolveGlobalFlagDefaults.
+	p.StringVar(&flags.OutputMode, cmdutil.FlagOutput, "", cmdutil.WithDynamicDefaultHelp("Output format: json or text"))
+	p.BoolVar(&flags.Quiet, cmdutil.FlagQuiet, false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	p.BoolVar(&flags.NoColor, "no-color", false, "Disable ANSI colors in output")
 
 	// Logging
@@ -36,9 +28,9 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	p.BoolVar(&flags.LogTimestamps, "log-timestamps", false, "Include timestamps in logs (breaks determinism)")
 	p.BoolVar(&flags.LogTimings, "log-timings", false, "Include timing information (breaks determinism)")
 
-	// Safety
-	p.BoolVar(&flags.Sanitize, cmdutil.FlagSanitize, flags.Sanitize, cmdutil.WithDynamicDefaultHelp("Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output"))
-	p.StringVar(&flags.PathMode, cmdutil.FlagPathMode, flags.PathMode, cmdutil.WithDynamicDefaultHelp("Path rendering in errors/logs: base (basename only) or full (absolute paths)"))
+	// Safety — zero defaults; project config resolved in PersistentPreRunE via resolveGlobalFlagDefaults.
+	p.BoolVar(&flags.Sanitize, cmdutil.FlagSanitize, false, cmdutil.WithDynamicDefaultHelp("Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output"))
+	p.StringVar(&flags.PathMode, cmdutil.FlagPathMode, "", cmdutil.WithDynamicDefaultHelp("Path rendering in errors/logs: base (basename only) or full (absolute paths)"))
 	p.BoolVar(&flags.Force, cmdutil.FlagForce, false, "Allow overwriting existing output files")
 	p.BoolVar(&flags.AllowSymlinkOut, cmdutil.FlagSymlink, false, "Allow writing output through symlinks (default: refuse)")
 	p.BoolVar(&flags.RequireOffline, cmdutil.FlagOffline, false, "Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set")

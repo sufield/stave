@@ -10,7 +10,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -52,6 +51,9 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if !cmd.Flags().Changed("quiet") {
+				quiet = cmdutil.EvaluatorFromCmd(cmd).Quiet()
+			}
 			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
 			if fmtErr != nil {
 				return fmtErr
@@ -93,7 +95,7 @@ Examples:
 	cmd.Flags().StringVar(&observation, "observation", "", "Path to single observation JSON file (required)")
 	cmd.Flags().StringVar(&assetID, "asset-id", "", "Asset ID to trace against (required)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&quiet, "quiet", projconfig.Global().Quiet(), cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	cmd.Flags().BoolVar(&quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = cmd.MarkFlagRequired("control")
 	_ = cmd.MarkFlagRequired("observation")

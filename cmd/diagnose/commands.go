@@ -80,6 +80,7 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			opts.resolveConfigDefaults(cmd)
 			cfg, err := opts.ToConfig(cmd)
 			if err != nil {
 				return err

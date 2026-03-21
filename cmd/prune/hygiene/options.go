@@ -8,9 +8,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -27,9 +27,8 @@ type rawOptions struct {
 }
 
 // resolve parses and validates all raw flag values into a ready-to-use Config.
-func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
+func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Config, error) {
 	gf := cmdutil.GetGlobalFlags(cmd)
-	eval := projconfig.Global()
 
 	// Path inference
 	res, resolverErr := projctx.NewResolver()
@@ -40,26 +39,26 @@ func (o *rawOptions) resolve(cmd *cobra.Command) (Config, error) {
 	resolvedCtl := engine.InferDir("controls", o.ctlDir)
 	resolvedObs := engine.InferDir("observations", o.obsDir)
 
-	// Dynamic defaults
+	// Dynamic defaults — resolve from project config when flags were not set.
 	maxUnsafe := o.maxUnsafe
-	if maxUnsafe == "" {
+	if !cmd.Flags().Changed("max-unsafe") {
 		maxUnsafe = eval.MaxUnsafe()
 	}
 	olderThan := o.olderThan
-	if olderThan == "" {
+	if !cmd.Flags().Changed("older-than") {
 		olderThan = eval.SnapshotRetention()
 	}
 	tier := o.tier
-	if tier == "" {
+	if !cmd.Flags().Changed("retention-tier") {
 		tier = eval.RetentionTier()
 	}
 
 	// Boundary parsing
-	validTier, err := pruneshared.ValidateRetentionTier(tier)
+	validTier, err := pruneshared.ValidateRetentionTierWith(eval, tier)
 	if err != nil {
 		return Config{}, err
 	}
-	retentionDur, err := pruneshared.ResolveOlderThan(olderThan, cmd.Flags().Changed("older-than"), validTier)
+	retentionDur, err := pruneshared.ResolveOlderThanWith(eval, olderThan, cmd.Flags().Changed("older-than"), validTier)
 	if err != nil {
 		return Config{}, err
 	}

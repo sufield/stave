@@ -7,7 +7,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -26,28 +25,39 @@ type gateOptions struct {
 }
 
 // DefaultOptions returns the standard defaults for the gate command.
+// Config-derived fields (PolicyRaw, MaxUnsafe) start as zero values;
+// call resolveConfigDefaults after flag parsing to fill them from project config.
 func DefaultOptions() gateOptions {
-	defaults := projconfig.Global()
 	return gateOptions{
-		PolicyRaw: string(defaults.CIFailurePolicy()),
 		InPath:    "output/evaluation.json",
 		BasePath:  "output/baseline.json",
 		CtlDir:    "controls/s3",
 		ObsDir:    "observations",
-		MaxUnsafe: defaults.MaxUnsafe(),
 		FormatRaw: "text",
+	}
+}
+
+// resolveConfigDefaults fills flag values from project config when the user
+// did not set them explicitly on the command line.
+func (o *gateOptions) resolveConfigDefaults(cmd *cobra.Command) {
+	eval := cmdutil.EvaluatorFromCmd(cmd)
+	if !cmd.Flags().Changed("policy") {
+		o.PolicyRaw = string(eval.CIFailurePolicy())
+	}
+	if !cmd.Flags().Changed("max-unsafe") {
+		o.MaxUnsafe = eval.MaxUnsafe()
 	}
 }
 
 // BindFlags attaches the options to a Cobra command.
 func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringVar(&o.PolicyRaw, "policy", o.PolicyRaw, cmdutil.WithDynamicDefaultHelp("CI failure policy mode: fail_on_any_violation, fail_on_new_violation, fail_on_overdue_upcoming"))
+	f.StringVar(&o.PolicyRaw, "policy", "", cmdutil.WithDynamicDefaultHelp("CI failure policy mode: fail_on_any_violation, fail_on_new_violation, fail_on_overdue_upcoming"))
 	f.StringVar(&o.InPath, "in", o.InPath, "Path to evaluation JSON (required for fail_on_any_violation and fail_on_new_violation)")
 	f.StringVar(&o.BasePath, "baseline", o.BasePath, "Path to baseline JSON (required for fail_on_new_violation)")
 	f.StringVarP(&o.CtlDir, "controls", "i", o.CtlDir, "Path to control definitions directory (used by fail_on_overdue_upcoming)")
 	f.StringVarP(&o.ObsDir, "observations", "o", o.ObsDir, "Path to observation snapshots directory (used by fail_on_overdue_upcoming)")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", o.MaxUnsafe, cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
 	f.StringVar(&o.NowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&o.FormatRaw, "format", "f", o.FormatRaw, "Output format: text or json")
 }

@@ -209,7 +209,7 @@ Examples:
 				return err
 			}
 			runner := newRunner(rt, cmd)
-			return runner.Show(cmd.Context(), fmtValue)
+			return runner.Show(cmd.Context(), cmd, fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -229,7 +229,7 @@ their resolution source (flag/env/project/user/default).` + metadata.OfflineHelp
 				return err
 			}
 			runner := newRunner(rt, cmd)
-			return runner.Show(cmd.Context(), fmtValue)
+			return runner.Show(cmd.Context(), cmd, fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
