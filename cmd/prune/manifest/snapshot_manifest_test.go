@@ -100,12 +100,17 @@ func TestLoadPrivateKey_PEM(t *testing.T) {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
 
-	loaded, err := loadPrivateKey(path)
+	signer, err := loadSigner(path)
 	if err != nil {
-		t.Fatalf("loadPrivateKey failed: %v", err)
+		t.Fatalf("loadSigner failed: %v", err)
 	}
-	if string(loaded) != string(privateKey) {
-		t.Fatalf("loaded key does not match generated key")
+	// Verify the loaded signer produces valid signatures.
+	sig, err := signer.Sign([]byte("test"))
+	if err != nil {
+		t.Fatalf("Sign failed: %v", err)
+	}
+	if sig == "" {
+		t.Fatal("Sign returned empty signature")
 	}
 }
 

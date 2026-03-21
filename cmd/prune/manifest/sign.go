@@ -2,7 +2,6 @@ package manifest
 
 import (
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -40,7 +39,7 @@ func (r *SignRunner) Run(_ context.Context, cfg SignConfig) error {
 		return fmt.Errorf("invalid manifest %q: %w", cfg.InPath, err)
 	}
 
-	privateKey, err := loadPrivateKey(cfg.PrivateKeyPath)
+	signer, err := loadSigner(cfg.PrivateKeyPath)
 	if err != nil {
 		return fmt.Errorf("load private key %q: %w", cfg.PrivateKeyPath, err)
 	}
@@ -49,7 +48,10 @@ func (r *SignRunner) Run(_ context.Context, cfg SignConfig) error {
 	if err != nil {
 		return fmt.Errorf("marshal manifest for signing: %w", err)
 	}
-	sig := platformcrypto.Sign(privateKey, message)
+	sig, err := signer.Sign(message)
+	if err != nil {
+		return fmt.Errorf("sign manifest: %w", err)
+	}
 
 	signed := integrity.SignedManifest{
 		Manifest:  manifest,
@@ -69,14 +71,14 @@ func (r *SignRunner) Run(_ context.Context, cfg SignConfig) error {
 	return nil
 }
 
-func loadPrivateKey(path string) (ed25519.PrivateKey, error) {
+func loadSigner(path string) (platformcrypto.Signer, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, err
 	}
-	privateKey, err := platformcrypto.ParsePrivateKeyPEM(data)
+	signer, err := platformcrypto.ParsePrivateKeyPEM(data)
 	if err != nil {
 		return nil, fmt.Errorf("unsupported key encoding; expected PEM private key: %w", err)
 	}
-	return privateKey, nil
+	return signer, nil
 }
