@@ -11,9 +11,9 @@ import (
 const (
 	topFindingLimit = 3
 
-	msgNoPredicateMatches    = "No resources matched any unsafe_predicate"
-	msgMatchesUnderThreshold = "Matches exist but under threshold"
-	msgAssetsResetBeforeMax  = "Assets became safe before exceeding threshold"
+	msgNoPredicateMatches     = "No resources matched any unsafe_predicate"
+	msgMatchesUnderThreshold  = "Matches exist but under threshold"
+	msgAssetsResetBeforeMax   = "Assets became safe before exceeding threshold"
 	msgSkewedEvaluationTime   = "Evaluation time before latest snapshot"
 	msgContinuousUnsafeStreak = "Violation due to continuous unsafe streak"
 )
