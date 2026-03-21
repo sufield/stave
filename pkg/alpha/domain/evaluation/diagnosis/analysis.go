@@ -11,10 +11,9 @@ import (
 const (
 	topFindingLimit = 3
 
-	msgThresholdExceedsObserved = "Threshold exceeds observed unsafe duration"
-	msgNoPredicateMatches       = "No resources matched any unsafe_predicate"
-	// msgMatchesUnderThreshold    = "Matches exist but under threshold"
-	msgAssetsResetBeforeMax   = "Assets became safe before exceeding threshold"
+	msgNoPredicateMatches    = "No resources matched any unsafe_predicate"
+	msgMatchesUnderThreshold = "Matches exist but under threshold"
+	msgAssetsResetBeforeMax  = "Assets became safe before exceeding threshold"
 	msgSkewedEvaluationTime   = "Evaluation time before latest snapshot"
 	msgContinuousUnsafeStreak = "Violation due to continuous unsafe streak"
 )
@@ -92,14 +91,15 @@ func (s *session) diagnoseThresholdGaps() []Issue {
 	var issues []Issue
 	maxStreak, ctlID := s.globalMaxStreak()
 
-	// Case: Matches found, but none long enough
-	if maxStreak > 0 && maxStreak < s.input.MaxUnsafe {
+	// Case: Matches found, but none long enough to trigger a violation.
+	// Stave uses strict ">" so duration must exceed --max-unsafe, not equal it.
+	if maxStreak > 0 && maxStreak <= s.input.MaxUnsafe {
 		issues = append(issues, Issue{
-			Case:   ScenarioExpectedNone,
-			Signal: msgThresholdExceedsObserved,
+			Case:   ScenarioEmptyFindings,
+			Signal: msgMatchesUnderThreshold,
 			Evidence: fmt.Sprintf("Max observed streak: %s (control %s); threshold: %s",
 				fmtd(maxStreak), ctlID, fmtd(s.input.MaxUnsafe)),
-			Action:  fmt.Sprintf("Lower --max-unsafe to %s or shorter", fmtd(maxStreak)),
+			Action:  fmt.Sprintf("Lower --max-unsafe to below %s to trigger a violation", fmtd(maxStreak)),
 			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
 		})
 	}

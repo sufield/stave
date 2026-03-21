@@ -55,13 +55,13 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 
 	found := false
 	for _, d := range report.Issues {
-		if d.Signal == "Threshold exceeds observed unsafe duration" {
+		if d.Signal == "Matches exist but under threshold" {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Error("expected threshold mismatch diagnostic")
+		t.Error("expected matches-under-threshold diagnostic")
 	}
 }
 
