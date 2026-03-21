@@ -38,7 +38,7 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		ControlRepo: controlRepo,
 	}
 
-	am := &appfix.ArtifactManager{
+	am := &appfix.ArtifactWriter{
 		OutDir: req.OutDir,
 		Options: appfix.WriteOptions{
 			Overwrite:     r.FileOptions.Overwrite,

@@ -46,7 +46,7 @@ type evaluationState struct {
 }
 
 // Loop executes the apply-before, apply-after, and verify sequence.
-func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *ArtifactManager, eb *EnvelopeBuilder) error {
+func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *ArtifactWriter, eb *EnvelopeBuilder) error {
 	rem := deps.Remediator
 	if rem == nil {
 		rem = NopRemediator{}

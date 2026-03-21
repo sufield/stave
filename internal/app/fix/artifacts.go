@@ -29,15 +29,15 @@ type WriteOptions struct {
 	DirPerms      fs.FileMode
 }
 
-// ArtifactManager handles the persistence of verification results to the filesystem.
-type ArtifactManager struct {
+// ArtifactWriter persists verification results to the filesystem.
+type ArtifactWriter struct {
 	OutDir  string
 	Options WriteOptions
 	Stdout  io.Writer
 }
 
 // PersistVerification writes the full suite of verification artifacts to disk.
-func (m *ArtifactManager) PersistVerification(
+func (m *ArtifactWriter) PersistVerification(
 	before safetyenvelope.Evaluation,
 	after safetyenvelope.Evaluation,
 	verification safetyenvelope.Verification,
@@ -73,7 +73,7 @@ func (m *ArtifactManager) PersistVerification(
 }
 
 // PersistReport writes the summary report to disk and stdout.
-func (m *ArtifactManager) PersistReport(report *LoopReport) error {
+func (m *ArtifactWriter) PersistReport(report *LoopReport) error {
 	if m.OutDir != "" {
 		report.Artifacts.Report = filepath.Join(m.OutDir, "remediation-report.json")
 		if err := m.writeJSON(report.Artifacts.Report, report); err != nil {
@@ -89,7 +89,7 @@ func (m *ArtifactManager) PersistReport(report *LoopReport) error {
 	return jsonutil.WriteIndented(m.Stdout, report)
 }
 
-func (m *ArtifactManager) writeJSON(path string, value any) error {
+func (m *ArtifactWriter) writeJSON(path string, value any) error {
 	flags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 	if !m.Options.Overwrite {
 		flags |= os.O_EXCL
