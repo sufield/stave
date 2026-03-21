@@ -86,7 +86,7 @@ func TestNoOsCreateInOutputFiles(t *testing.T) {
 		dir  string
 		file string
 	}{
-		{"apply", "handler.go"},
+		{"apply", "run.go"},
 	}
 
 	for _, c := range checks {
@@ -109,7 +109,7 @@ func TestNoWorldReadableDirs(t *testing.T) {
 		dir  string
 		file string
 	}{
-		{"apply", "handler.go"},
+		{"apply", "run.go"},
 	}
 
 	for _, c := range checks {
