@@ -4,8 +4,7 @@ package kernel
 type ObservationSourceType string
 
 const (
-	SourceTypeTerraformPlanJSON ObservationSourceType = "terraform.plan_json"
-	SourceTypeAWSS3Snapshot     ObservationSourceType = "aws-s3-snapshot"
+	SourceTypeAWSS3Snapshot ObservationSourceType = "aws-s3-snapshot"
 )
 
 func (t ObservationSourceType) String() string { return string(t) }

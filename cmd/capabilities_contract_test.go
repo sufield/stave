@@ -89,7 +89,6 @@ func TestCapabilitiesJSONContract(t *testing.T) {
 
 func validateSourceTypes(t *testing.T, sourceTypes []any) {
 	t.Helper()
-	foundTerraform := false
 	foundS3Snapshot := false
 	for i, raw := range sourceTypes {
 		obj, ok := raw.(map[string]any)
@@ -100,15 +99,9 @@ func validateSourceTypes(t *testing.T, sourceTypes []any) {
 		if !ok || typ == "" {
 			t.Fatalf("inputs.source_types[%d].type must be a non-empty string", i)
 		}
-		switch typ {
-		case "terraform.plan_json":
-			foundTerraform = true
-		case "aws-s3-snapshot":
+		if typ == "aws-s3-snapshot" {
 			foundS3Snapshot = true
 		}
-	}
-	if !foundTerraform {
-		t.Fatal("inputs.source_types missing terraform.plan_json")
 	}
 	if !foundS3Snapshot {
 		t.Fatal("inputs.source_types missing aws-s3-snapshot")
