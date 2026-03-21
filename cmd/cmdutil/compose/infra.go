@@ -83,20 +83,12 @@ func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationReposit
 }
 
 // NewSnapshotRepo creates a snapshot observation repository.
+// Requires SnapshotRepoFunc to be set (always true via NewDefaultProvider).
 func (p *Provider) NewSnapshotRepo() (SnapshotObservationRepository, error) {
-	if p.SnapshotRepoFunc != nil {
-		return p.SnapshotRepoFunc()
+	if p.SnapshotRepoFunc == nil {
+		return nil, fmt.Errorf("SnapshotRepoFunc not configured on Provider")
 	}
-	// Fallback for providers that only set ObsRepoFunc.
-	repo, err := p.ObsRepoFunc()
-	if err != nil {
-		return nil, err
-	}
-	sr, ok := repo.(SnapshotObservationRepository)
-	if !ok {
-		return nil, fmt.Errorf("observation repository does not implement SnapshotReader")
-	}
-	return sr, nil
+	return p.SnapshotRepoFunc()
 }
 
 // NewFindingWriter creates a finding marshaler for the given output format.

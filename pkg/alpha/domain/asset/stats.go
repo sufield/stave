@@ -81,6 +81,9 @@ func (s *ObservationStats) RecordObservation(t time.Time) error {
 	return nil
 }
 
+// checkContracts panics on invariant violations that indicate a programming error.
+// These conditions cannot be triggered by external data — RecordObservation validates
+// input before mutation. Panics here mean the internal state machine is broken.
 func (s *ObservationStats) checkContracts() {
 	if s.observationCount < 0 {
 		panic("contract violated: ObservationStats.observationCount must be >= 0")

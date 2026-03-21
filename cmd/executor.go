@@ -39,6 +39,8 @@ func (a *App) execute() {
 	a.finalizeExecute(args, showFirstRunHint, firstRunMarkerPath)
 }
 
+// installInterruptHandler uses os.Stderr directly because signal handlers
+// run outside the Cobra command lifecycle — cmd.ErrOrStderr() is not available.
 func (a *App) installInterruptHandler() func() {
 	sigCh := make(chan os.Signal, 1)
 	done := make(chan struct{})

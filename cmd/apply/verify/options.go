@@ -102,10 +102,6 @@ func (o *options) Complete(ctx context.Context) (Execution, error) {
 		return Execution{}, err
 	}
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	return Execution{
 		Context:      ctx,
 		BeforeDir:    o.BeforeDir,

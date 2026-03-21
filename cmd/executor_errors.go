@@ -51,11 +51,12 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 	}
 }
 
+// writeErrorInfo uses os.Stderr directly because this runs after command
+// execution completes — the Cobra command and its writers may no longer be valid.
 func (a *App) writeErrorInfo(errInfo *ui.ErrorInfo) {
 	if errInfo == nil {
 		return
 	}
-	// Best-effort: if we can't display the error, there's nothing else to try.
 	if a.isJSONMode() {
 		_ = ui.WriteErrorJSON(os.Stderr, errInfo)
 	} else {
