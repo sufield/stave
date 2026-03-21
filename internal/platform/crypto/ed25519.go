@@ -72,8 +72,9 @@ func ParsePublicKeyPEM(data []byte) (ed25519.PublicKey, error) {
 	return publicKey, nil
 }
 
-// ParsePrivateKeyPEM parses a PEM-encoded Ed25519 private key.
-func ParsePrivateKeyPEM(data []byte) (ed25519.PrivateKey, error) {
+// ParsePrivateKeyPEM parses a PEM-encoded private key and returns a Signer.
+// The caller does not need to know the underlying algorithm.
+func ParsePrivateKeyPEM(data []byte) (Signer, error) {
 	block, err := decodePEM(data, "PRIVATE KEY")
 	if err != nil {
 		return nil, err
@@ -86,13 +87,23 @@ func ParsePrivateKeyPEM(data []byte) (ed25519.PrivateKey, error) {
 	if !ok {
 		return nil, ErrInvalidKeyType
 	}
-	return edKey, nil
+	return &ed25519Signer{key: edKey}, nil
 }
 
-// Sign produces a hex-encoded Ed25519 signature.
-func Sign(privateKey ed25519.PrivateKey, data []byte) kernel.Signature {
-	signature := ed25519.Sign(privateKey, data)
-	return kernel.Signature(hex.EncodeToString(signature))
+// Signer produces cryptographic signatures. Implementations hide the
+// algorithm so callers don't need to import crypto/ed25519.
+type Signer interface {
+	Sign(message []byte) (kernel.Signature, error)
+}
+
+// ed25519Signer wraps an Ed25519 private key behind the Signer interface.
+type ed25519Signer struct {
+	key ed25519.PrivateKey
+}
+
+func (s *ed25519Signer) Sign(message []byte) (kernel.Signature, error) {
+	sig := ed25519.Sign(s.key, message)
+	return kernel.Signature(hex.EncodeToString(sig)), nil
 }
 
 // GenerateSigningKeyPair generates a new Ed25519 keypair and returns

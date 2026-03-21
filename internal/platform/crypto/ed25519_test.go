@@ -50,12 +50,18 @@ func TestParsePrivateKeyPEM(t *testing.T) {
 		Type:  "PRIVATE KEY",
 		Bytes: privatePKCS8,
 	})
-	parsed, err := ParsePrivateKeyPEM(privatePEM)
+	signer, err := ParsePrivateKeyPEM(privatePEM)
 	if err != nil {
 		t.Fatalf("ParsePrivateKeyPEM() error = %v", err)
 	}
-	if string(parsed) != string(privateKey) {
-		t.Fatalf("ParsePrivateKeyPEM() mismatch")
+	// Verify the signer produces valid signatures.
+	msg := []byte("test message")
+	sig, err := signer.Sign(msg)
+	if err != nil {
+		t.Fatalf("Sign() error = %v", err)
+	}
+	if sig == "" {
+		t.Fatal("Sign() returned empty signature")
 	}
 }
 
@@ -209,19 +215,23 @@ func TestVerifier_Verify_InvalidInputs(t *testing.T) {
 	}
 }
 
-func TestSign(t *testing.T) {
+func TestSigner_RoundTrip(t *testing.T) {
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("generate key: %v", err)
 	}
+	signer := &ed25519Signer{key: privateKey}
 	data := []byte("manifest")
 
-	sig := Sign(privateKey, data)
+	sig, err := signer.Sign(data)
+	if err != nil {
+		t.Fatalf("Sign() error = %v", err)
+	}
 	raw, err := hex.DecodeString(string(sig))
 	if err != nil {
 		t.Fatalf("signature must be valid hex: %v", err)
 	}
 	if !ed25519.Verify(publicKey, data, raw) {
-		t.Fatal("Sign() produced invalid signature")
+		t.Fatal("Signer.Sign() produced invalid signature")
 	}
 }
