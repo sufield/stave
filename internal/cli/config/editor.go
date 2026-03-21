@@ -108,6 +108,10 @@ func (m *Editor[T]) confirmDeleteChange(key, path string) bool {
 	return false
 }
 
+// stderr returns the configured stderr writer, falling back to os.Stderr.
+// This fallback is acceptable at the CLI layer — Editor is always instantiated
+// by command handlers that can inject stderr, but the fallback prevents nil panics
+// if a caller omits it.
 func (m *Editor[T]) stderr() io.Writer {
 	if m.Stderr == nil {
 		return os.Stderr

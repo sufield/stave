@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"runtime"
@@ -74,8 +75,14 @@ func (d DefaultPolicyInspector) Inspect(_ context.Context, req Params) (PolicyIn
 		Writes:      writes,
 		GeneratedAt: req.Now.UTC().Format(time.RFC3339),
 	}
-	networkJSON, _ := json.MarshalIndent(networkDecl, "", "  ")
-	filesystemJSON, _ := json.MarshalIndent(filesystemDecl, "", "  ")
+	networkJSON, err := json.MarshalIndent(networkDecl, "", "  ")
+	if err != nil {
+		return PolicyInspectionSnapshot{}, fmt.Errorf("marshal network declaration: %w", err)
+	}
+	filesystemJSON, err := json.MarshalIndent(filesystemDecl, "", "  ")
+	if err != nil {
+		return PolicyInspectionSnapshot{}, fmt.Errorf("marshal filesystem declaration: %w", err)
+	}
 
 	redactionPath := filepath.Join(root, "internal", "sanitize")
 	_, redactionErr := d.StatFile(redactionPath)

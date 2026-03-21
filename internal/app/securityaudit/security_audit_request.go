@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
-// SecurityAuditRequest defines all inputs for a full enterprise audit run.
-type SecurityAuditRequest struct {
+// Request defines all inputs for a full enterprise audit run.
+type Request struct {
 	Now                  time.Time
 	StaveVersion         string
 	Cwd                  string
@@ -26,7 +26,7 @@ type SecurityAuditRequest struct {
 	RequireOffline       bool
 }
 
-func normalizeSecurityAuditRequest(req SecurityAuditRequest) SecurityAuditRequest {
+func normalizeRequest(req Request) Request {
 	if req.Now.IsZero() {
 		req.Now = time.Now().UTC()
 	}
@@ -59,7 +59,7 @@ func normalizeSecurityAuditRequest(req SecurityAuditRequest) SecurityAuditReques
 	return req
 }
 
-func validateSecurityAuditRequest(req SecurityAuditRequest) error {
+func validateRequest(req Request) error {
 	if req.SBOMFormat != SBOMFormatSPDX && req.SBOMFormat != SBOMFormatCycloneDX {
 		return fmt.Errorf("invalid SBOM format %q (use spdx or cyclonedx)", req.SBOMFormat)
 	}

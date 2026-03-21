@@ -46,10 +46,18 @@ func NewRunner() *Runner {
 // If Cwd or BinaryPath are empty, they are resolved from the current process.
 func (r *Runner) Run(_ context.Context, cfg Config) error {
 	if cfg.Cwd == "" {
-		cfg.Cwd, _ = os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("resolve working directory: %w", err)
+		}
+		cfg.Cwd = cwd
 	}
 	if cfg.BinaryPath == "" {
-		cfg.BinaryPath, _ = os.Executable()
+		exe, err := os.Executable()
+		if err != nil {
+			return fmt.Errorf("resolve executable path: %w", err)
+		}
+		cfg.BinaryPath = exe
 	}
 
 	checks, ok := doctor.Run(&doctor.Context{

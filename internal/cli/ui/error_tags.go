@@ -27,6 +27,8 @@ var (
 	ErrHintSchemaValidation          = errors.New("hints: schema validation")
 	ErrHintSourceType                = errors.New("hints: source_type mismatch")
 	ErrHintControlSourceConflict     = errors.New("hints: control source conflict")
+	ErrHintProjectContext            = errors.New("hints: project context resolution failed")
+	ErrHintProjectConfig             = errors.New("hints: project config invalid")
 )
 
 type hintRule struct {
@@ -107,6 +109,24 @@ var hintRegistry = []hintRule{
 			Reason:      "Two control sources were selected at once (CLI directory and project packs).",
 			NextCommand: "stave status",
 			SearchQuery: "enabled_control_packs explicit controls conflict",
+		},
+	},
+	{
+		err:      ErrHintProjectContext,
+		patterns: []string{"resolve project context"},
+		hint: RemediationHint{
+			Reason:      "Could not resolve the project root or working directory.",
+			NextCommand: "stave init",
+			SearchQuery: "init project context",
+		},
+	},
+	{
+		err:      ErrHintProjectConfig,
+		patterns: []string{"load project config", "parse project config"},
+		hint: RemediationHint{
+			Reason:      "Project configuration (stave.yaml) is missing or invalid.",
+			NextCommand: "stave init",
+			SearchQuery: "init project config stave.yaml",
 		},
 	},
 }

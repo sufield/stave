@@ -40,10 +40,10 @@ func NewSecurityAuditRunner(deps RunnerDeps) *SecurityAuditRunner {
 // Run executes the full security audit and returns the report + artifact bundle manifest.
 func (r *SecurityAuditRunner) Run(
 	ctx context.Context,
-	req SecurityAuditRequest,
+	req Request,
 ) (securityaudit.Report, securityaudit.ArtifactManifest, error) {
-	req = normalizeSecurityAuditRequest(req)
-	if err := validateSecurityAuditRequest(req); err != nil {
+	req = normalizeRequest(req)
+	if err := validateRequest(req); err != nil {
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}
 	if r.diagnostics.Run != nil {

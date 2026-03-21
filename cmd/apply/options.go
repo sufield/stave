@@ -123,13 +123,19 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
-		return appeval.Options{}, fmt.Errorf("resolve project context: %w", err)
+		return appeval.Options{}, ui.WithHint(
+			fmt.Errorf("resolve project context: %w", err),
+			ui.ErrHintProjectContext,
+		)
 	}
 	root := resolver.ProjectRoot()
 
 	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
-		return appeval.Options{}, fmt.Errorf("load project config: %w", err)
+		return appeval.Options{}, ui.WithHint(
+			fmt.Errorf("load project config: %w", err),
+			ui.ErrHintProjectConfig,
+		)
 	}
 	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
 	if uErr != nil {
@@ -294,6 +300,11 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
 		hasPacks = true
 	}
 
+	prereqs, prereqErr := doctorPrereqs()
+	if prereqErr != nil {
+		return PlanConfig{}, prereqErr
+	}
+
 	return PlanConfig{
 		ControlsDir:     ctlDir,
 		ObservationsDir: obsDir,
@@ -306,6 +317,6 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
 		Stderr:          cs.Stderr,
 		ControlsFlagSet: o.ControlsSet,
 		HasEnabledPacks: hasPacks,
-		PrereqChecks:    doctorPrereqs(),
+		PrereqChecks:    prereqs,
 	}, nil
 }

@@ -241,7 +241,7 @@ func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.Proje
 		Stderr:      r.Stderr,
 		Force:       opts.Force,
 		IsTTY:       func() bool { return opts.IsTTY },
-		Confirm:     ui.NewPrompter(os.Stdin, os.Stderr).Confirm,
+		Confirm:     ui.NewPrompter(os.Stdin, r.Stderr).Confirm,
 	}, nil
 }
 

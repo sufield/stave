@@ -89,12 +89,6 @@ type ReaderResultLoader interface {
 	LoadFromReader(r io.Reader, sourceName string) (*evaluation.Result, error)
 }
 
-// ResultLoader combines file and reader loading into a single interface.
-type ResultLoader interface {
-	FileResultLoader
-	ReaderResultLoader
-}
-
 // FileEnvelopeLoader loads a safety-envelope evaluation from a file path.
 type FileEnvelopeLoader interface {
 	LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, error)

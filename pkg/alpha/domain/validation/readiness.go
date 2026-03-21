@@ -87,7 +87,7 @@ func (r *ReadinessReport) RecordIssue(issue Issue) {
 	r.issues = append(r.issues, issue)
 }
 
-type ValidationResult struct {
+type Result struct {
 	Diagnostics *diag.Result
 	Summary     struct {
 		ControlsLoaded          int
@@ -104,5 +104,5 @@ type ReadinessInput struct {
 	ControlsFlagSet       bool
 	HasEnabledControlPack bool
 	PrereqChecks          []PrereqCheck
-	Validate              func(maxUnsafe time.Duration, now time.Time) (ValidationResult, error)
+	Validate              func(maxUnsafe time.Duration, now time.Time) (Result, error)
 }

@@ -29,6 +29,8 @@ func NewResolver() (*Resolver, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolve working directory: %w", err)
 	}
+	// Best-effort: HomeDir is optional — only needed for user config (~/.config/stave/).
+	// If UserHomeDir fails, project config discovery still works via WorkingDir.
 	home, _ := os.UserHomeDir()
 	return &Resolver{
 		WorkingDir: wd,
