@@ -64,14 +64,6 @@ func SeverityLabel(level, message string, out io.Writer) string {
 	return renderSeverityLabel(level, message, CanColor(out))
 }
 
-// SeverityLabel formats a message using Runtime state and stderr stream by default.
-func (r *Runtime) SeverityLabel(level, message string) string {
-	if r == nil {
-		return SeverityLabel(level, message, os.Stderr)
-	}
-	return renderSeverityLabel(level, message, r.CanColor(r.stderr()))
-}
-
 // CanColor reports whether ANSI color output should be used for this writer.
 func CanColor(out io.Writer) bool {
 	return DefaultRuntime().CanColor(out)
