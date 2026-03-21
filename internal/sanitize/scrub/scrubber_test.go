@@ -24,7 +24,7 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 				Properties: map[string]any{
 					"public":      true,
 					"bucket_name": "my-phi-bucket",
-					"arn":         "arn:aws:s3:::my-phi-bucket",
+					"external_id": "arn:aws:s3:::my-phi-bucket",
 					"tags":        map[string]any{"env": "prod"},
 					"policy_json": `{"Statement":[]}`,
 					"acl_grants":  []any{"grant1"},

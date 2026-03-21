@@ -114,7 +114,7 @@ func (g *Generator) addScrubDemo(bundle *bundleWriter) error {
 				Vendor: "aws",
 				Properties: map[string]any{
 					"bucket_name": "demo-bucket",
-					"arn":         "arn:aws:s3:::demo-bucket",
+					"external_id": "arn:aws:s3:::demo-bucket",
 					"tags":        map[string]any{"env": "prod"},
 					"policy_json": `{"Version":"2012-10-17"}`,
 				},

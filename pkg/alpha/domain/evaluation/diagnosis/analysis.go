@@ -13,10 +13,10 @@ const (
 
 	msgThresholdExceedsObserved = "Threshold exceeds observed unsafe duration"
 	msgNoPredicateMatches       = "No resources matched any unsafe_predicate"
-	msgMatchesUnderThreshold    = "Matches exist but under threshold"
-	msgAssetsResetBeforeMax     = "Assets became safe before exceeding threshold"
-	msgSkewedEvaluationTime     = "Evaluation time before latest snapshot"
-	msgContinuousUnsafeStreak   = "Violation due to continuous unsafe streak"
+	// msgMatchesUnderThreshold    = "Matches exist but under threshold"
+	msgAssetsResetBeforeMax   = "Assets became safe before exceeding threshold"
+	msgSkewedEvaluationTime   = "Evaluation time before latest snapshot"
+	msgContinuousUnsafeStreak = "Violation due to continuous unsafe streak"
 )
 
 type controlStat struct {

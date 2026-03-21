@@ -7,16 +7,16 @@ func (r Asset) Metadata() maps.Value {
 	return maps.ParseMap(r.Properties)
 }
 
-// ARN returns the asset ARN when present in properties.
-func (r Asset) ARN() string {
-	return r.Metadata().GetPath("arn").String()
+// ExternalID returns a secondary identifier provided by the infrastructure.
+func (r Asset) ExternalID() string {
+	return r.Metadata().GetPath("external_id").String()
 }
 
 // Identities returns all identifiers a scope allowlist may match for this asset.
 func (r Asset) Identities() []string {
 	identities := []string{r.ID.String()}
-	if arn := r.ARN(); arn != "" {
-		identities = append(identities, arn)
+	if ext := r.ExternalID(); ext != "" {
+		identities = append(identities, ext)
 	}
 	return identities
 }
