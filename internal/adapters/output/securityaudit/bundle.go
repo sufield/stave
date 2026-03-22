@@ -48,40 +48,52 @@ type RunManifest struct {
 	VulnSourceUsed    string         `json:"vuln_source_used"`
 }
 
+// BundleRequest groups the parameters for WriteBundle.
+type BundleRequest struct {
+	Opts           BundleWriteOpts
+	Now            time.Time
+	BundleDir      string
+	MainName       string
+	MainData       []byte
+	Report         domain.Report
+	Artifacts      domain.ArtifactManifest
+	ResolveOutPath func(string) string
+}
+
 // WriteBundle writes the report, artifacts, and manifest into a bundle directory.
-func WriteBundle(opts BundleWriteOpts, now time.Time, bundleDir, mainName string, mainData []byte, report domain.Report, artifacts domain.ArtifactManifest, resolveOutPath func(string) string) (string, error) {
-	if err := fsutil.SafeMkdirAll(bundleDir, fsutil.WriteOptions{
+func WriteBundle(req BundleRequest) (string, error) {
+	if err := fsutil.SafeMkdirAll(req.BundleDir, fsutil.WriteOptions{
 		Perm:         0o700,
-		AllowSymlink: opts.AllowSymlink,
+		AllowSymlink: req.Opts.AllowSymlink,
 	}); err != nil {
 		return "", fmt.Errorf("create bundle directory: %w", err)
 	}
 
 	var written []WrittenFile
 
-	mainBundlePath := filepath.Join(bundleDir, mainName)
-	if err := writeOutputFile(opts, mainBundlePath, mainData); err != nil {
+	mainBundlePath := filepath.Join(req.BundleDir, req.MainName)
+	if err := writeOutputFile(req.Opts, mainBundlePath, req.MainData); err != nil {
 		return "", err
 	}
-	written = append(written, WrittenFile{Name: mainName, Content: mainData})
+	written = append(written, WrittenFile{Name: req.MainName, Content: req.MainData})
 
-	mainOutPath := resolveOutPath(mainBundlePath)
+	mainOutPath := req.ResolveOutPath(mainBundlePath)
 	if mainOutPath != mainBundlePath {
-		if err := writeOutputFile(opts, mainOutPath, mainData); err != nil {
+		if err := writeOutputFile(req.Opts, mainOutPath, req.MainData); err != nil {
 			return "", err
 		}
 	}
 
-	for _, artifact := range artifacts.Files {
-		target := filepath.Join(bundleDir, artifact.Path)
-		if err := writeOutputFile(opts, target, artifact.Content); err != nil {
+	for _, artifact := range req.Artifacts.Files {
+		target := filepath.Join(req.BundleDir, artifact.Path)
+		if err := writeOutputFile(req.Opts, target, artifact.Content); err != nil {
 			return "", err
 		}
 		written = append(written, WrittenFile{Name: artifact.Path, Content: artifact.Content})
 	}
 
-	runManifestPath := filepath.Join(bundleDir, "run_manifest.json")
-	if err := writeRunManifest(opts, runManifestPath, now, bundleDir, mainName, written, report); err != nil {
+	runManifestPath := filepath.Join(req.BundleDir, "run_manifest.json")
+	if err := writeRunManifest(req.Opts, runManifestPath, req.Now, req.BundleDir, req.MainName, written, req.Report); err != nil {
 		return "", err
 	}
 

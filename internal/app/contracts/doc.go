@@ -2,6 +2,5 @@
 // dependency injection.
 //
 // Key interfaces include [ObservationRepository] and [ControlRepository] for
-// loading inputs, [FindingMarshaler] for output, and
-// [FileResultLoader] and [ReaderResultLoader] for loading prior evaluation results.
+// loading inputs, and [FindingMarshaler] for output.
 package contracts

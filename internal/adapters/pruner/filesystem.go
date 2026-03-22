@@ -2,6 +2,7 @@ package pruner
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -91,7 +92,7 @@ func ListSnapshotFilesFlat(observationsDir string, opts ScannerOptions) ([]appco
 // ListSnapshotFilesRecursive walks observationsDir recursively using WalkDir.
 // Directories starting with "_" are skipped. Symlinks are skipped.
 // RelPath uses forward slashes and is relative to observationsDir.
-func ListSnapshotFilesRecursive(observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
+func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil {
 		return nil, fmt.Errorf("snapshot metadata loader is required")
 	}
@@ -112,6 +113,9 @@ func ListSnapshotFilesRecursive(observationsDir string, opts ScannerOptions) ([]
 	var files []appcontracts.SnapshotFile
 
 	walkErr := filepath.WalkDir(absRoot, func(path string, d os.DirEntry, err error) error {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		if err != nil {
 			return err
 		}

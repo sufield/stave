@@ -2,12 +2,10 @@ package validation
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	service "github.com/sufield/stave/internal/app/service"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -42,24 +40,18 @@ func NewRun(
 
 // Execute loads data and runs domain validation.
 // App layer handles file I/O; domain handles validation logic.
-func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResult, error) {
+func (v *Run) Execute(ctx context.Context, cfg Config) (*ValidationResult, error) {
 	controls, ctlErr := appcontracts.LoadControls(ctx, v.ControlRepo, cfg.ControlsDir)
+	if ctlErr != nil {
+		return nil, fmt.Errorf("load controls from %s: %w", cfg.ControlsDir, ctlErr)
+	}
 	obsResult, obsErr := appcontracts.LoadSnapshots(ctx, v.ObservationRepo, cfg.ObservationsDir)
+	if obsErr != nil {
+		return nil, fmt.Errorf("load observations from %s: %w", cfg.ObservationsDir, obsErr)
+	}
 	snapshots := obsResult.Snapshots
 
-	loadErrors := diag.NewResult()
-	loadErrors.Merge(cfg.diagnoseLoad(ctlErr, diag.CodeControlLoadFailed,
-		"Check that the controls directory exists and contains valid YAML files",
-		cfg.ControlsDir))
-	loadErrors.Merge(cfg.diagnoseLoad(obsErr, diag.CodeObservationLoadFailed,
-		"Check that the observations directory exists and contains valid JSON files",
-		cfg.ObservationsDir))
-
-	if len(loadErrors.Issues) > 0 {
-		return &service.ValidationResult{Diagnostics: loadErrors}, nil
-	}
-
-	serviceResult := service.ValidateLoaded(service.ValidationInput{
+	serviceResult := ValidateLoaded(ValidationInput{
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
@@ -68,24 +60,4 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResul
 		PredicateEval:     cfg.PredicateEval,
 	})
 	return &serviceResult, nil
-}
-
-// diagnoseLoad converts a load error into a diagnostic result.
-// Config is the receiver so SanitizePaths is available without passing it as a parameter.
-func (c Config) diagnoseLoad(err error, code diag.Code, action string, path string) *diag.Result {
-	if err == nil {
-		return nil
-	}
-	if res, ok := errors.AsType[*diag.Result](err); ok {
-		return res
-	}
-	result := diag.NewResult()
-	builder := diag.New(code).Error().Action(action)
-	if c.SanitizePaths {
-		builder.WithSensitive("directory", path)
-	} else {
-		builder.With("directory", path)
-	}
-	result.Add(builder.WithSensitive("error", err.Error()).Build())
-	return result
 }

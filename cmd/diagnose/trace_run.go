@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -52,7 +53,7 @@ Examples:
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if !cmd.Flags().Changed("quiet") {
-				quiet = cmdutil.EvaluatorFromCmd(cmd).Quiet()
+				quiet = cmdctx.EvaluatorFromCmd(cmd).Quiet()
 			}
 			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
 			if fmtErr != nil {
@@ -77,7 +78,7 @@ Examples:
 			}
 
 			// Delegate to internal runner
-			runner := apptrace.NewRunner()
+			runner := &apptrace.Runner{}
 			return runner.Run(ctx, apptrace.Config{
 				Control:         control,
 				Snapshot:        snapshot,

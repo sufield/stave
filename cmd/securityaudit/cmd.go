@@ -36,11 +36,37 @@ func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "security-audit",
 		Short: "Generate enterprise security posture evidence for Stave",
-		Long: `Security-audit generates auditor-ready artifacts for supply-chain, runtime,
-privacy, and internal security controls.
+		Long: `Generate enterprise security posture evidence for auditors and compliance workflows.
 
-It produces deterministic evidence bundles when --now is set and supports JSON, markdown,
-and SARIF output formats.
+Security-audit produces auditor-ready artifacts covering supply-chain integrity,
+runtime security controls, vulnerability assessments, and optional privacy assertions.
+It produces deterministic evidence bundles when --now is set and supports JSON,
+markdown, and SARIF output formats.
+
+Inputs:
+  --format                   Report format: json, markdown, or sarif (default: json)
+  --out                      Main report output file path
+  --out-dir                  Artifact bundle output directory
+  --severity                 Comma-separated severities to include (default: CRITICAL,HIGH,MEDIUM,LOW)
+  --sbom                     SBOM format: spdx or cyclonedx (default: spdx)
+  --compliance-framework     Compliance frameworks (repeatable)
+  --vuln-source              Vulnerability evidence source: hybrid, local, or ci (default: hybrid)
+  --live-vuln-check          Run local govulncheck live check (opt-in)
+  --release-bundle-dir       Directory with release verification artifacts
+  --privacy-mode             Enable strict privacy assertions
+  --fail-on                  Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE (default: HIGH)
+  --now                      Override current time (RFC3339) for deterministic output
+
+Outputs:
+  stdout                     Security report (when --out is not set)
+  --out / --out-dir          Written report file(s) and artifact bundle
+  stderr                     Error messages (if any)
+
+Exit Codes:
+  0   - Audit passed; no findings at or above the --fail-on threshold
+  1   - Gated findings detected at or above the --fail-on threshold
+  2   - Invalid input or configuration error
+  130 - Interrupted (SIGINT)
 
 Examples:
   stave security-audit --format json
@@ -87,7 +113,7 @@ Examples:
 				VulnSource:       parsedVuln,
 				LiveVulnCheck:    liveVuln,
 				ReleaseBundleDir: fsutil.CleanUserPath(releaseDir),
-				PrivacyMode:      privacy,
+				PrivacyEnabled:   privacy,
 				FailOn:           failOnSev,
 				Now:              now,
 				Force:            gf.Force,

@@ -232,8 +232,8 @@ type CrosswalkResolver interface {
 // WalkFunc is the callback signature for directory walking.
 type WalkFunc func(path string, info fs.FileInfo, err error) error
 
-// GovulncheckRunner executes govulncheck and returns its combined output.
-type GovulncheckRunner func(ctx context.Context, cwd string) ([]byte, error)
+// VulnerabilityScanner executes govulncheck and returns its combined output.
+type VulnerabilityScanner func(ctx context.Context, cwd string) ([]byte, error)
 
 // CrosswalkResult holds the resolved crosswalk mapping.
 type CrosswalkResult struct {
@@ -244,15 +244,15 @@ type CrosswalkResult struct {
 
 // Deps holds injectable infrastructure dependencies for evidence collectors.
 type Deps struct {
-	ReadFile          func(path string) ([]byte, error)
-	HashFile          func(path string) (kernel.Digest, error)
-	GovulncheckRunner GovulncheckRunner
-	SignatureVerifier ports.Verifier
-	StatFile          func(string) (fs.FileInfo, error)
-	Getenv            func(string) string
-	IsPrivileged      func() bool
-	WalkDir           func(string, WalkFunc) error
-	ResolveCrosswalk  func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
+	ReadFile             func(path string) ([]byte, error)
+	HashFile             func(path string) (kernel.Digest, error)
+	VulnerabilityScanner VulnerabilityScanner
+	SignatureVerifier    ports.Verifier
+	StatFile             func(string) (fs.FileInfo, error)
+	Getenv               func(string) string
+	IsPrivileged         func() bool
+	WalkDir              func(string, WalkFunc) error
+	ResolveCrosswalk     func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
 }
 
 // Collectors holds the configured evidence provider implementations.
@@ -270,7 +270,7 @@ func NewCollectors(deps Deps) Collectors {
 	return Collectors{
 		BuildInfo: DefaultBuildInfoProvider{},
 		SBOM:      DefaultSBOMGenerator{},
-		Vuln:      DefaultVulnProvider{RunGovulncheck: deps.GovulncheckRunner, ReadFile: deps.ReadFile, StatFile: deps.StatFile},
+		Vuln:      DefaultVulnProvider{RunGovulncheck: deps.VulnerabilityScanner, ReadFile: deps.ReadFile, StatFile: deps.StatFile},
 		Binary:    DefaultBinaryInspector{SignatureVerifier: deps.SignatureVerifier, HashFile: deps.HashFile, ReadFile: deps.ReadFile, StatFile: deps.StatFile},
 		Policy:    DefaultPolicyInspector{ReadFile: deps.ReadFile, StatFile: deps.StatFile, Getenv: deps.Getenv, IsPrivileged: deps.IsPrivileged, WalkDir: deps.WalkDir},
 		Crosswalk: DefaultCrosswalkResolver{ReadFile: deps.ReadFile, ResolveFn: deps.ResolveCrosswalk, StatFile: deps.StatFile},

@@ -8,8 +8,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/convert"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -54,11 +55,11 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Con
 	}
 
 	// Boundary parsing
-	validTier, err := pruneshared.ValidateRetentionTierWith(eval, tier)
+	validTier, err := pruneretention.ValidateRetentionTierWith(eval, tier)
 	if err != nil {
 		return Config{}, err
 	}
-	retentionDur, err := pruneshared.ResolveOlderThanWith(eval, olderThan, cmd.Flags().Changed("older-than"), validTier)
+	retentionDur, err := pruneretention.ResolveOlderThanWith(eval, olderThan, cmd.Flags().Changed("older-than"), validTier)
 	if err != nil {
 		return Config{}, err
 	}
@@ -121,8 +122,8 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Con
 		Quiet:             gf.Quiet,
 		Stdout:            cmd.OutOrStdout(),
 		Filter: UpcomingFilter{
-			ControlIDs:   cmdutil.ToControlIDs(o.controlIDs),
-			AssetTypes:   cmdutil.ToAssetTypes(o.assetTypes),
+			ControlIDs:   convert.ToControlIDs(o.controlIDs),
+			AssetTypes:   convert.ToAssetTypes(o.assetTypes),
 			Statuses:     statuses,
 			DueWithin:    dueWithinDur,
 			DueWithinRaw: o.dueWithin,

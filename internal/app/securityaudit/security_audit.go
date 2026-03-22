@@ -9,28 +9,28 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
-// SecurityAuditRunner orchestrates security-audit evidence collection.
-type SecurityAuditRunner struct {
+// Runner orchestrates security-audit evidence collection.
+type Runner struct {
 	collectors  evidence.Collectors
 	diagnostics evidence.DefaultDiagnosticsService
 	hashBytes   func([]byte) kernel.Digest
 }
 
-// NewSecurityAuditRunner wires default dependencies.
+// NewRunner wires default dependencies.
 // All platform and infrastructure operations are injected via RunnerDeps
 // so the app layer never imports platform, adapter, or infrastructure packages.
-func NewSecurityAuditRunner(deps RunnerDeps) *SecurityAuditRunner {
-	return &SecurityAuditRunner{
+func NewRunner(deps RunnerDeps) *Runner {
+	return &Runner{
 		collectors: evidence.NewCollectors(evidence.Deps{
-			ReadFile:          deps.ReadFile,
-			HashFile:          deps.HashFile,
-			GovulncheckRunner: deps.GovulncheckRunner,
-			SignatureVerifier: deps.SignatureVerifier,
-			StatFile:          deps.StatFile,
-			Getenv:            deps.Getenv,
-			IsPrivileged:      deps.IsPrivileged,
-			WalkDir:           deps.WalkDir,
-			ResolveCrosswalk:  deps.ResolveCrosswalk,
+			ReadFile:             deps.ReadFile,
+			HashFile:             deps.HashFile,
+			VulnerabilityScanner: deps.VulnerabilityScanner,
+			SignatureVerifier:    deps.SignatureVerifier,
+			StatFile:             deps.StatFile,
+			Getenv:               deps.Getenv,
+			IsPrivileged:         deps.IsPrivileged,
+			WalkDir:              deps.WalkDir,
+			ResolveCrosswalk:     deps.ResolveCrosswalk,
 		}),
 		diagnostics: evidence.DefaultDiagnosticsService{Run: deps.RunDiagnostics},
 		hashBytes:   deps.HashBytes,
@@ -38,7 +38,7 @@ func NewSecurityAuditRunner(deps RunnerDeps) *SecurityAuditRunner {
 }
 
 // Run executes the full security audit and returns the report + artifact bundle manifest.
-func (r *SecurityAuditRunner) Run(
+func (r *Runner) Run(
 	ctx context.Context,
 	req Request,
 ) (securityaudit.Report, securityaudit.ArtifactManifest, error) {
@@ -62,7 +62,7 @@ func (r *SecurityAuditRunner) Run(
 	return report, artifacts, nil
 }
 
-func (r *SecurityAuditRunner) collectEvidence(ctx context.Context, params evidence.Params) (evidence.Bundle, error) {
+func (r *Runner) collectEvidence(ctx context.Context, params evidence.Params) (evidence.Bundle, error) {
 	buildInfo, err := r.collectors.BuildInfo.Collect(params.Now)
 	if err != nil {
 		return evidence.Bundle{}, fmt.Errorf("collect build info: %w", err)

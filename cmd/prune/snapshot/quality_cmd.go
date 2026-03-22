@@ -82,7 +82,7 @@ Examples:
 			}
 
 			// Delegate to internal runner
-			runner := appsnapshot.NewQualityRunner()
+			runner := &appsnapshot.QualityRunner{}
 			return runner.Run(ctx, appsnapshot.QualityConfig{
 				Snapshots:         snapshots,
 				Now:               now,

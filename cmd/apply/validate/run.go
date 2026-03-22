@@ -11,30 +11,29 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	appservice "github.com/sufield/stave/internal/app/service"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
 // runValidate is the primary entry point for the cobra command.
 func runValidate(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *options) error {
 	// 1. Prepare environment (git audit, verbose logging)
-	if err := opts.prepareEnvironment(cmd); err != nil {
+	if err := opts.prepareAndLogEnvironment(cmd); err != nil {
 		return err
 	}
 
-	// 2. Resolve format
+	// 2. Resolve format via shared helper
 	gf := cmdutil.GetGlobalFlags(cmd)
-	format := opts.Format
-	if !cmd.Flags().Changed("format") && gf.IsJSONMode() {
-		format = "json"
+	resolvedFormat, fmtErr := compose.ResolveFormatValue(cmd, opts.Format)
+	if fmtErr != nil {
+		return fmtErr
 	}
 
 	// 3. Initialize Reporter
 	quiet := opts.Quiet || gf.Quiet
 	rt.Quiet = quiet
-	out := compose.ResolveStdout(cmd.OutOrStdout(), quiet, ui.OutputFormat(format))
+	out := compose.ResolveStdout(cmd.OutOrStdout(), quiet, resolvedFormat)
 
-	f := format
+	f := string(resolvedFormat)
 	if opts.Template != "" {
 		f = opts.Template
 	}
@@ -59,8 +58,10 @@ func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime,
 	params := opts.parseParams()
 	if len(params.issues) > 0 {
 		// If flag parsing itself generated diagnostic issues
-		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
-		_ = rep.Write(result, opts.hintCtx())
+		result := &appvalidation.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
+		if err := rep.Write(result, opts.hintCtx()); err != nil {
+			return err
+		}
 		return rep.ExitStatus(result)
 	}
 
@@ -93,7 +94,7 @@ func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime,
 	return exitErr
 }
 
-func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validateParams, opts *options) (*appservice.ValidationResult, error) {
+func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validateParams, opts *options) (*appvalidation.ValidationResult, error) {
 	// Setup Repositories
 	obsLoader, err := p.NewObservationRepo()
 	if err != nil {

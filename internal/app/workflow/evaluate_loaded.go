@@ -3,7 +3,6 @@ package workflow
 import (
 	"time"
 
-	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -29,7 +28,7 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 		req.Clock = ports.NewRealClock()
 	}
 
-	return service.Evaluate(service.EvaluateInput{
+	return Evaluate(EvaluateInput{
 		Controls:          req.Controls,
 		Snapshots:         req.Snapshots,
 		MaxUnsafeDuration: req.MaxUnsafeDuration,

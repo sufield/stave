@@ -7,7 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -19,7 +21,7 @@ import (
 // resolveConfigDefaults fills flag values from project config when the user
 // did not set them explicitly on the command line.
 func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
-	eval := cmdutil.EvaluatorFromCmd(cmd)
+	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
@@ -58,7 +60,7 @@ func (o *options) hintCtx() hintContext {
 // Call resolveConfigDefaults after flag parsing to fill in project-config defaults.
 func newOptions() *options {
 	return &options{
-		Controls:     "controls/s3",
+		Controls:     "controls",
 		Observations: "observations",
 		Format:       "text",
 	}
@@ -140,10 +142,10 @@ func (o *options) validate() error {
 
 	// Ensure directories exist if in project mode
 	if o.InputPath == "" {
-		if err := cmdutil.ValidateFlagDir("--controls", o.Controls, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
+		if err := dircheck.ValidateFlagDir("--controls", o.Controls, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
-		if err := cmdutil.ValidateFlagDir("--observations", o.Observations, "", ui.ErrHintObservationsNotAccessible, nil); err != nil {
+		if err := dircheck.ValidateFlagDir("--observations", o.Observations, "", ui.ErrHintObservationsNotAccessible, nil); err != nil {
 			return err
 		}
 	}
@@ -151,8 +153,8 @@ func (o *options) validate() error {
 	return nil
 }
 
-// prepareEnvironment handles Git audits and verbose context logging.
-func (o *options) prepareEnvironment(cmd *cobra.Command) error {
+// prepareAndLogEnvironment handles Git audits and verbose context logging.
+func (o *options) prepareAndLogEnvironment(cmd *cobra.Command) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
 	resolver, resolverErr := projctx.NewResolver()
 	if resolverErr != nil {

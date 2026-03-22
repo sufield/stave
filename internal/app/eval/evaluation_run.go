@@ -8,7 +8,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	service "github.com/sufield/stave/internal/app/service"
+	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -76,7 +76,7 @@ func (e *EvaluateRun) ExecuteAndReturn(ctx context.Context, cfg EvaluateConfig) 
 	}
 	snapshots := preflight.Snapshots
 
-	result, err := service.Evaluate(service.EvaluateInput{
+	result, err := appworkflow.Evaluate(appworkflow.EvaluateInput{
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,

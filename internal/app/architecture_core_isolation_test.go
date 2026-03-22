@@ -78,7 +78,7 @@ func TestCoreTestsAreIsolated(t *testing.T) {
 	targets := []string{
 		filepath.Join("pkg", "alpha", "domain"),
 		filepath.Join("internal", "app"),
-		filepath.Join("internal", "app", "service"),
+		filepath.Join("internal", "app", "readiness"),
 	}
 
 	forbiddenImports := []string{

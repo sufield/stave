@@ -6,9 +6,9 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	"github.com/sufield/stave/cmd/cmdutil/runid"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
@@ -84,7 +84,7 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	}
 
 	if plan != nil {
-		logger = cmdutil.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
+		logger = runid.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
 	}
 
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)

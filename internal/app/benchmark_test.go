@@ -9,7 +9,7 @@ import (
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 
-	service "github.com/sufield/stave/internal/app/service"
+	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
 )
@@ -81,7 +81,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = service.Evaluate(service.EvaluateInput{
+		_, _ = appworkflow.Evaluate(appworkflow.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: maxUnsafe,
@@ -151,7 +151,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 
 	// Run evaluation and measure time
 	start := time.Now()
-	_, _ = service.Evaluate(service.EvaluateInput{
+	_, _ = appworkflow.Evaluate(appworkflow.EvaluateInput{
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: maxUnsafe,
@@ -218,7 +218,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	maxUnsafe := 168 * time.Hour
 
 	start := time.Now()
-	result, err := service.Evaluate(service.EvaluateInput{
+	result, err := appworkflow.Evaluate(appworkflow.EvaluateInput{
 		Controls:          controls,
 		Snapshots:         []asset.Snapshot{snapshot},
 		MaxUnsafeDuration: maxUnsafe,

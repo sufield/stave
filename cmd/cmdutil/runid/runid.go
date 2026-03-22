@@ -1,4 +1,4 @@
-package cmdutil
+package runid
 
 import (
 	"log/slog"

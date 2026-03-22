@@ -103,7 +103,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 
 func TestSummarizeUpcoming_DueSoonBuckets(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
-	items := []Item{
+	items := []UpcomingSnapshot{
 		{Status: risk.StatusOverdue, Remaining: -2 * time.Hour, DueAt: now.Add(-2 * time.Hour)},
 		{Status: risk.StatusDueNow, Remaining: 0, DueAt: now},
 		{Status: risk.StatusUpcoming, Remaining: 3 * time.Hour, DueAt: now.Add(3 * time.Hour)},

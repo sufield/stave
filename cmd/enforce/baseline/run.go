@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/enforce/shared"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
+	"github.com/sufield/stave/cmd/enforce/artifact"
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -34,12 +34,12 @@ type CheckConfig struct {
 type Runner struct {
 	Clock       ports.Clock
 	Sanitizer   kernel.Sanitizer
-	FileOptions cmdutil.FileOptions
+	FileOptions fileout.FileOptions
 	Stdout      io.Writer
 }
 
 // NewRunner initializes a baseline runner with required dependencies.
-func NewRunner(clock ports.Clock, san kernel.Sanitizer, fileOpts cmdutil.FileOptions, stdout io.Writer) *Runner {
+func NewRunner(clock ports.Clock, san kernel.Sanitizer, fileOpts fileout.FileOptions, stdout io.Writer) *Runner {
 	return &Runner{
 		Clock:       clock,
 		Sanitizer:   san,
@@ -53,7 +53,7 @@ func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	outPath := fsutil.CleanUserPath(cfg.OutPath)
 
-	eval, err := shared.NewLoader().Evaluation(inPath)
+	eval, err := artifact.NewLoader().Evaluation(inPath)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 		Findings:         entries,
 	}
 
-	f, err := cmdutil.OpenOutputFile(outPath, r.FileOptions)
+	f, err := fileout.OpenOutputFile(outPath, r.FileOptions)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", outPath, err)
 	}
@@ -86,14 +86,14 @@ func (r *Runner) Check(_ context.Context, cfg CheckConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
-	eval, err := shared.NewLoader().Evaluation(inPath)
+	eval, err := artifact.NewLoader().Evaluation(inPath)
 	if err != nil {
 		return err
 	}
 	current := remediation.BaselineEntriesFromFindings(eval.Findings)
 	current = output.SanitizeBaselineEntries(r.Sanitizer, current)
 
-	base, err := shared.NewLoader().Baseline(baselinePath, kernel.KindBaseline)
+	base, err := artifact.NewLoader().Baseline(baselinePath, kernel.KindBaseline)
 	if err != nil {
 		return err
 	}

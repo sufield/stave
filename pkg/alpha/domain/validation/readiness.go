@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -66,14 +65,10 @@ func NewReadinessReport(controlsDir, observationsDir string) *ReadinessReport {
 // Issues returns the recorded issues. Use RecordIssue to append.
 func (r *ReadinessReport) Issues() []Issue { return r.issues }
 
-// Finalize sets NextCommand based on the report's ready state.
-func (r *ReadinessReport) Finalize() {
-	if r.Ready {
-		r.NextCommand = fmt.Sprintf("stave apply --controls %s --observations %s", r.ControlsDir, r.ObservationsDir)
-	} else {
-		r.NextCommand = "stave plan"
-	}
-}
+// Finalize marks the report as complete. NextCommand should be set by
+// the caller based on the Ready state — the domain layer does not know
+// about CLI command names.
+func (r *ReadinessReport) Finalize() {}
 
 // RecordIssue appends an issue and updates Ready and Summary counters.
 func (r *ReadinessReport) RecordIssue(issue Issue) {
@@ -97,12 +92,12 @@ type Result struct {
 }
 
 type ReadinessInput struct {
-	ControlsDir           string
-	ObservationsDir       string
-	MaxUnsafeDuration     time.Duration
-	Now                   time.Time
-	ControlsFlagSet       bool
-	HasEnabledControlPack bool
-	PrereqChecks          []PrereqCheck
-	Validate              func(maxUnsafeDuration time.Duration, now time.Time) (Result, error)
+	ControlsDir            string
+	ObservationsDir        string
+	MaxUnsafeDuration      time.Duration
+	Now                    time.Time
+	ControlsFlagSet        bool
+	HasEnabledControlPacks bool
+	PrereqChecks           []PrereqCheck
+	Validate               func(maxUnsafeDuration time.Duration, now time.Time) (Result, error)
 }

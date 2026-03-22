@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
-	appservice "github.com/sufield/stave/internal/app/service"
+	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -92,9 +92,9 @@ func TestExitCode(t *testing.T) {
 			expected: 3,
 		},
 		{
-			name:     "unknown error returns 2 (input error)",
+			name:     "unknown error returns 4 (internal)",
 			err:      errors.New("some other error"),
-			expected: 2,
+			expected: 4,
 		},
 	}
 
@@ -141,9 +141,9 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 // TestOutputAndExit_Clean tests Reporter with a clean validation result (no errors or warnings).
 func TestOutputAndExit_Clean(t *testing.T) {
 	// No errors, no warnings → exit 0
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{}},
-		Summary: appservice.ValidationSummary{
+		Summary: appvalidation.ValidationSummary{
 			ControlsLoaded:          2,
 			SnapshotsLoaded:         3,
 			AssetObservationsLoaded: 10,
@@ -169,7 +169,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 // TestOutputAndExit_Errors tests Reporter with validation errors (should return exit code 2).
 func TestOutputAndExit_Errors(t *testing.T) {
 	// Has errors → exit 2
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeControlMissingID,
@@ -177,7 +177,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 				Action: "Add id field",
 			},
 		}},
-		Summary: appservice.ValidationSummary{
+		Summary: appvalidation.ValidationSummary{
 			ControlsLoaded: 1,
 		},
 	}
@@ -201,7 +201,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 // TestOutputAndExit_WarningsOnly tests Reporter with only warnings (should return exit code 2).
 func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	// Warnings only, no errors → exit 2
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeSingleSnapshot,
@@ -214,7 +214,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 				Action: "Reduce max-unsafe",
 			},
 		}},
-		Summary: appservice.ValidationSummary{
+		Summary: appvalidation.ValidationSummary{
 			SnapshotsLoaded: 1,
 		},
 	}
@@ -238,7 +238,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 // TestOutputAndExit_ErrorsAndWarnings tests Reporter with both errors and warnings (errors take precedence, exit code 2).
 func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	// Has both errors and warnings → exit 2 (errors take precedence)
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeControlMissingID,
@@ -251,7 +251,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 				Action: "Add more snapshots",
 			},
 		}},
-		Summary: appservice.ValidationSummary{
+		Summary: appvalidation.ValidationSummary{
 			ControlsLoaded:  1,
 			SnapshotsLoaded: 1,
 		},
@@ -277,7 +277,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 func TestOutputAndExit_JSONOutput(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = false
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeSingleSnapshot,
@@ -288,7 +288,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 				Action: "Add more snapshots",
 			},
 		}},
-		Summary: appservice.ValidationSummary{
+		Summary: appvalidation.ValidationSummary{
 			SnapshotsLoaded: 1,
 		},
 	}
@@ -324,7 +324,7 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	opts.Controls = "./controls"
 	opts.Observations = "./observations"
 
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeObservationLoadFailed,
@@ -355,7 +355,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = true
 
-	result := &appservice.ValidationResult{
+	result := &appvalidation.ValidationResult{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:    "INVALID_MAX_UNSAFE",
@@ -392,7 +392,7 @@ func TestValidateHelpText(t *testing.T) {
 // TestDiagnoseHelpText verifies diagnose command help contains required sections.
 func TestDiagnoseHelpText(t *testing.T) {
 	help := diagnose.NewDiagnoseCmd(compose.NewDefaultProvider()).Long
-	required := []string{"Purpose:", "Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
+	required := []string{"Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {
 			t.Errorf("diagnose help missing required section: %s", section)

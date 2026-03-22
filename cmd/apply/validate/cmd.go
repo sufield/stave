@@ -7,14 +7,54 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-const validateLongHelp = `Validate checks controls, observations, and configuration for correctness
-without running the full evaluation.
+const validateLongHelp = `Validate controls, observations, and configuration for correctness without evaluation.
+
+Validate checks structural and semantic correctness of all evaluation inputs
+before running the full apply pipeline. It catches schema violations, invalid
+timestamps, and cross-file inconsistencies early, reducing time spent debugging
+failed evaluations.
 
 What it checks:
   - Control schema (id, name, description)
   - Observation schema and timestamps
   - Cross-file consistency and time sanity
-  - Duration format and feasibility` + metadata.OfflineHelpSuffix
+  - Duration format and feasibility
+
+Inputs:
+  --controls, -i       Path to control definitions (default: controls/s3)
+  --observations, -o   Path to observation snapshots (default: observations)
+  --in                 Single input file or '-' for stdin
+  --kind               Contract kind: control|observation|finding (requires --in)
+  --schema-version     Contract schema version override
+  --max-unsafe         Maximum allowed unsafe duration
+  --now                Override current time (RFC3339) for deterministic output
+  --format, -f         Output format: text or json (default: text)
+  --strict             Treat warnings as errors (exit 2)
+  --fix-hints          Print remediation hints after issues
+  --quiet              Suppress output
+  --template           Custom output template
+
+Outputs:
+  stdout               Validation report listing issues found (text or JSON)
+  stderr               Error messages (if any)
+
+Exit Codes:
+  0   - All inputs are valid; no issues found
+  2   - Invalid input or validation failure (also used in --strict mode for warnings)
+  130 - Interrupted (SIGINT)
+
+Examples:
+  # Validate project controls and observations
+  stave validate
+
+  # Validate with JSON output
+  stave validate --format json
+
+  # Validate a single file from stdin
+  cat control.yaml | stave validate --in - --kind control
+
+  # Strict mode: treat warnings as errors
+  stave validate --strict` + metadata.OfflineHelpSuffix
 
 // NewCmd builds the validate command.
 // Panics if rt is nil — command wiring is a programming error, not a user error.

@@ -5,7 +5,7 @@ import (
 	"io"
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
-	appservice "github.com/sufield/stave/internal/app/service"
+	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -22,7 +22,7 @@ type Reporter struct {
 
 // Write outputs the validation result based on reporter configuration.
 // Returns an error if result is nil.
-func (r *Reporter) Write(result *appservice.ValidationResult, hc hintContext) error {
+func (r *Reporter) Write(result *appvalidation.ValidationResult, hc hintContext) error {
 	if result == nil {
 		return fmt.Errorf("validation result is nil")
 	}
@@ -41,7 +41,7 @@ func (r *Reporter) Write(result *appservice.ValidationResult, hc hintContext) er
 
 // ExitStatus determines if the validation should result in a CLI error.
 // Returns an error if result is nil.
-func (r *Reporter) ExitStatus(result *appservice.ValidationResult) error {
+func (r *Reporter) ExitStatus(result *appvalidation.ValidationResult) error {
 	if result == nil {
 		return fmt.Errorf("validation result is nil")
 	}
@@ -59,7 +59,7 @@ func (r *Reporter) ExitStatus(result *appservice.ValidationResult) error {
 
 // --- Internal Presentation Logic ---
 
-func (r *Reporter) writeText(res *appservice.ValidationResult, report Report) error {
+func (r *Reporter) writeText(res *appvalidation.ValidationResult, report Report) error {
 	diagnostics := diagnosticsOf(res)
 
 	if err := printHeader(r.Writer, res.Valid(), len(report.Errors), len(report.Warnings)); err != nil {
@@ -171,7 +171,7 @@ type ReportSummary struct {
 	IdentityObservationsChecked int `json:"identity_observations_checked"`
 }
 
-func buildReport(res *appservice.ValidationResult, includeHints bool, hc hintContext) Report {
+func buildReport(res *appvalidation.ValidationResult, includeHints bool, hc hintContext) Report {
 	d := diagnosticsOf(res)
 	report := Report{
 		SchemaVersion: kernel.SchemaValidate,
@@ -194,7 +194,7 @@ func buildReport(res *appservice.ValidationResult, includeHints bool, hc hintCon
 
 // --- Helpers ---
 
-func diagnosticsOf(result *appservice.ValidationResult) *diag.Result {
+func diagnosticsOf(result *appvalidation.ValidationResult) *diag.Result {
 	if result == nil || result.Diagnostics == nil {
 		return diag.NewResult()
 	}

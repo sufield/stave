@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -30,7 +31,7 @@ Examples:
   stave snapshot hygiene --controls ./controls --observations ./observations --now 2026-01-20T00:00:00Z` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.resolve(cmd, cmdutil.EvaluatorFromCmd(cmd))
+			cfg, err := opts.resolve(cmd, cmdctx.EvaluatorFromCmd(cmd))
 			if err != nil {
 				return err
 			}

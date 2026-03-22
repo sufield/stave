@@ -4,7 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/convert"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -43,23 +45,26 @@ Examples:
 			gf := cmdutil.GetGlobalFlags(cmd)
 
 			if !cmd.Flags().Changed("max-unsafe") {
-				maxUnsafe = cmdutil.EvaluatorFromCmd(cmd).MaxUnsafeDuration()
+				maxUnsafe = cmdctx.EvaluatorFromCmd(cmd).MaxUnsafeDuration()
 			}
 
 			cleanObsDir := fsutil.CleanUserPath(obsDir)
 			cleanCtlDir := fsutil.CleanUserPath(ctlDir)
 
-			cfg, err := gatherUpcomingConfig(
-				cleanObsDir, cleanCtlDir,
-				maxUnsafe, dueSoon, nowRaw, formatFlag, dueWithin,
-				cmdutil.ToControlIDs(controlIDs),
-				cmdutil.ToAssetTypes(assetTypes),
-				statuses,
-				gf.GetSanitizer(),
-				gf.Quiet,
-				cmd.OutOrStdout(),
-				func(raw string) (ui.OutputFormat, error) { return compose.ResolveFormatValue(cmd, raw) },
-			)
+			cfg, err := gatherUpcomingConfig(upcomingConfigInput{
+				MaxUnsafeRaw:  maxUnsafe,
+				DueSoonRaw:    dueSoon,
+				NowRaw:        nowRaw,
+				FormatRaw:     formatFlag,
+				DueWithinRaw:  dueWithin,
+				ControlIDs:    convert.ToControlIDs(controlIDs),
+				AssetTypes:    convert.ToAssetTypes(assetTypes),
+				Statuses:      statuses,
+				Sanitizer:     gf.GetSanitizer(),
+				Quiet:         gf.Quiet,
+				Stdout:        cmd.OutOrStdout(),
+				ResolveFormat: func(raw string) (ui.OutputFormat, error) { return compose.ResolveFormatValue(cmd, raw) },
+			})
 			if err != nil {
 				return err
 			}
@@ -72,21 +77,25 @@ Examples:
 			}
 
 			// Delegate to internal runner
-			runner := appupcoming.NewRunner()
-			output, err := runner.Run(ctx, appupcoming.Config{
-				Controls:             loaded.Controls,
-				Snapshots:            loaded.Snapshots,
-				MaxUnsafeDuration:    cfg.MaxUnsafeDuration,
-				MaxUnsafeDurationRaw: cfg.MaxUnsafeDurationRaw,
-				DueSoon:              cfg.DueSoon,
-				DueSoonRaw:           cfg.DueSoonRaw,
-				Now:                  cfg.Now,
-				Filter:               cfg.Filter,
-				Sanitizer:            cfg.Sanitizer,
-				PredicateParser:      ctlyaml.ParsePredicate,
-				ControlsDir:          cleanCtlDir,
-				ObservationsDir:      cleanObsDir,
-			})
+			runner := &appupcoming.Runner{}
+			output, err := runner.Run(
+				appupcoming.EvalConfig{
+					Controls:          loaded.Controls,
+					Snapshots:         loaded.Snapshots,
+					MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+					DueSoon:           cfg.DueSoon,
+					Now:               cfg.Now,
+					Filter:            cfg.Filter,
+					Sanitizer:         cfg.Sanitizer,
+					PredicateParser:   ctlyaml.ParsePredicate,
+				},
+				appupcoming.OutputMetadata{
+					ControlsDir:          cleanCtlDir,
+					ObservationsDir:      cleanObsDir,
+					MaxUnsafeDurationRaw: cfg.MaxUnsafeDurationRaw,
+					DueSoonRaw:           cfg.DueSoonRaw,
+				},
+			)
 			if err != nil {
 				return err
 			}

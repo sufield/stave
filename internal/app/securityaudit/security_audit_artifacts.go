@@ -11,7 +11,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
-func (r *SecurityAuditRunner) buildArtifactManifest(req Request, ev evidence.Bundle) securityaudit.ArtifactManifest {
+func (r *Runner) buildArtifactManifest(req Request, ev evidence.Bundle) securityaudit.ArtifactManifest {
 	manifest := securityaudit.ArtifactManifest{
 		SchemaVersion: kernel.SchemaSecurityAuditArtifacts,
 		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),

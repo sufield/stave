@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strings"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -27,6 +26,13 @@ type ExceptionInput struct {
 	Expires   string
 }
 
+// PackRegistry resolves built-in control packs from the embedded registry.
+type PackRegistry interface {
+	ResolveEnabledPacks(names []string) ([]string, error)
+	RegistryVersion() (string, error)
+	RegistryHash() (string, error)
+}
+
 // ProjectConfigInput holds project configuration from stave.yaml.
 type ProjectConfigInput struct {
 	Exceptions          []ExceptionInput
@@ -34,7 +40,7 @@ type ProjectConfigInput struct {
 	ExcludeControls     []kernel.ControlID
 	ControlsFlagSet     bool
 	BuiltinLoader       func(ctx context.Context) ([]policy.ControlDefinition, error)
-	PackRegistry        appcontracts.PackRegistry
+	PackRegistry        PackRegistry
 }
 
 // ResolvedProjectConfig holds pre-resolved project configuration.

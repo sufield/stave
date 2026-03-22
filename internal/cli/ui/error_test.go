@@ -50,9 +50,9 @@ func TestExitCode(t *testing.T) {
 			expected: ExitInterrupted,
 		},
 		{
-			name:     "unrecognized errors return 2 (input error)",
+			name:     "unrecognized errors return 4 (internal)",
 			err:      errors.New("some error"),
-			expected: ExitInputError,
+			expected: ExitInternal,
 		},
 	}
 

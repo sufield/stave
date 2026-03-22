@@ -1,6 +1,7 @@
 package pruner
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -69,7 +70,7 @@ func TestListSnapshotFilesRecursive_RejectsExcessiveFileCount(t *testing.T) {
 		}
 	}
 
-	_, err := ListSnapshotFilesRecursive(dir, ScannerOptions{
+	_, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
 		MaxFiles:       3,
 	})

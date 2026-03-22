@@ -2,7 +2,6 @@ package app_test
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-// stubControlRepo always returns an error to trigger evidence creation.
+// stubControlRepo always returns an error to trigger load failure.
 type stubControlRepo struct{}
 
 func (s stubControlRepo) LoadControls(_ context.Context, _ string) ([]policy.ControlDefinition, error) {
@@ -30,7 +29,7 @@ type stubLoadError struct{ msg string }
 
 func (e *stubLoadError) Error() string { return e.msg }
 
-func TestValidateEvidence_RedactPaths_False(t *testing.T) {
+func TestValidateEvidence_LoadFailure_IncludesPath(t *testing.T) {
 	run := appvalidation.NewRun(stubObservationRepo{}, stubControlRepo{})
 	cfg := appvalidation.Config{
 		ControlsDir:       "/home/user/secret/controls",
@@ -39,22 +38,18 @@ func TestValidateEvidence_RedactPaths_False(t *testing.T) {
 		SanitizePaths:     false,
 	}
 
-	result, err := run.Execute(context.Background(), cfg)
-	if err != nil {
-		t.Fatalf("Execute: %v", err)
+	_, err := run.Execute(context.Background(), cfg)
+	if err == nil {
+		t.Fatal("expected error for load failure")
 	}
 
-	// Without sanitization, directory paths should appear in JSON
-	for _, issue := range result.Diagnostics.Issues {
-		data, _ := json.Marshal(issue.Evidence)
-		jsonStr := string(data)
-		if !strings.Contains(jsonStr, "/home/user/secret/") {
-			t.Errorf("expected full path in evidence without sanitization, got: %s", jsonStr)
-		}
+	// Error message should include the directory path
+	if !strings.Contains(err.Error(), "/home/user/secret/controls") {
+		t.Errorf("expected controls path in error, got: %v", err)
 	}
 }
 
-func TestValidateEvidence_RedactPaths_True(t *testing.T) {
+func TestValidateEvidence_LoadFailure_ReturnsError(t *testing.T) {
 	run := appvalidation.NewRun(stubObservationRepo{}, stubControlRepo{})
 	cfg := appvalidation.Config{
 		ControlsDir:       "/home/user/secret/controls",
@@ -63,20 +58,13 @@ func TestValidateEvidence_RedactPaths_True(t *testing.T) {
 		SanitizePaths:     true,
 	}
 
-	result, err := run.Execute(context.Background(), cfg)
-	if err != nil {
-		t.Fatalf("Execute: %v", err)
+	_, err := run.Execute(context.Background(), cfg)
+	if err == nil {
+		t.Fatal("expected error for load failure")
 	}
 
-	// With sanitization, directory paths should be [SANITIZED] in JSON
-	for _, issue := range result.Diagnostics.Issues {
-		data, _ := json.Marshal(issue.Evidence)
-		jsonStr := string(data)
-		if strings.Contains(jsonStr, "/home/user/secret/") {
-			t.Errorf("expected path to be sanitized, got: %s", jsonStr)
-		}
-		if !strings.Contains(jsonStr, "[SANITIZED]") {
-			t.Errorf("expected [SANITIZED] in evidence, got: %s", jsonStr)
-		}
+	// Load failures should be returned as errors, not diagnostics
+	if !strings.Contains(err.Error(), "no such directory") {
+		t.Errorf("expected underlying error in message, got: %v", err)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/pruner/plan"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
@@ -68,7 +69,7 @@ Examples:
 			}
 
 			// Load retention config
-			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig(cmdutil.EvaluatorFromCmd(cmd))
+			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig(cmdctx.EvaluatorFromCmd(cmd))
 			if err != nil {
 				return err
 			}

@@ -11,22 +11,22 @@ import (
 )
 
 type assetDiffInput struct {
-	ID      string
-	Prev    Asset
-	HasPrev bool
-	Curr    Asset
-	HasCurr bool
+	ID          string
+	Prev        Asset
+	HasPrevious bool
+	Curr        Asset
+	HasCurrent  bool
 }
 
 func diffAsset(in assetDiffInput) *AssetDiff {
 	switch {
-	case !in.HasPrev && in.HasCurr:
+	case !in.HasPrevious && in.HasCurrent:
 		return &AssetDiff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeAdded,
 			ToType:     in.Curr.Type,
 		}
-	case in.HasPrev && !in.HasCurr:
+	case in.HasPrevious && !in.HasCurrent:
 		return &AssetDiff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeRemoved,

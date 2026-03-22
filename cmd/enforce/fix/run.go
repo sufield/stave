@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/adapters/output"
 	appfix "github.com/sufield/stave/internal/app/fix"
@@ -21,7 +21,7 @@ type Runner struct {
 	Provider    *compose.Provider
 	Clock       ports.Clock
 	Sanitizer   kernel.Sanitizer
-	FileOptions cmdutil.FileOptions
+	FileOptions fileout.FileOptions
 	service     *appfix.Service
 }
 

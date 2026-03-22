@@ -10,8 +10,8 @@ import (
 	"slices"
 
 	"github.com/samber/lo"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -76,10 +76,10 @@ type coverageResult struct {
 
 // Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	if err := cmdutil.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
+	if err := dircheck.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
 		return err
 	}
-	if err := cmdutil.ValidateFlagDir("--observations", cfg.ObservationsDir, "", nil, nil); err != nil {
+	if err := dircheck.ValidateFlagDir("--observations", cfg.ObservationsDir, "", nil, nil); err != nil {
 		return err
 	}
 

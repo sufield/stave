@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/convert"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -210,7 +210,7 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig)
 	return appeval.ProjectConfigInput{
 		Exceptions:          mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
-		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
+		ExcludeControls:     convert.ToControlIDs(projCfg.ExcludeControls),
 		ControlsFlagSet:     b.Opts.controlsSet,
 		BuiltinLoader:       builtinRegistry.All,
 		PackRegistry:        reg,

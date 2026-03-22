@@ -9,16 +9,16 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
-// RunnerDeps holds injectable infrastructure dependencies for SecurityAuditRunner.
+// RunnerDeps holds injectable infrastructure dependencies for Runner.
 // Each field replaces a direct import of a platform or adapter package.
 type RunnerDeps struct {
-	ReadFile          func(path string) ([]byte, error)
-	HashFile          func(path string) (kernel.Digest, error)
-	HashBytes         func(data []byte) kernel.Digest
-	GovulncheckRunner evidence.GovulncheckRunner
-	SignatureVerifier ports.Verifier
-	RunDiagnostics    func(cwd, binaryPath, staveVersion string)
-	ResolveCrosswalk  func(raw []byte, frameworks, checkIDs []string, now time.Time) (evidence.CrosswalkResult, error)
+	ReadFile             func(path string) ([]byte, error)
+	HashFile             func(path string) (kernel.Digest, error)
+	HashBytes            func(data []byte) kernel.Digest
+	VulnerabilityScanner evidence.VulnerabilityScanner
+	SignatureVerifier    ports.Verifier
+	RunDiagnostics       func(cwd, binaryPath, staveVersion string)
+	ResolveCrosswalk     func(raw []byte, frameworks, checkIDs []string, now time.Time) (evidence.CrosswalkResult, error)
 
 	// OS-level functions injected to keep the app layer free of direct os.* calls.
 	StatFile     func(string) (fs.FileInfo, error)
@@ -28,8 +28,8 @@ type RunnerDeps struct {
 	Getwd        func() (string, error)
 }
 
-// GovulncheckRunner is an alias for the evidence package type.
-type GovulncheckRunner = evidence.GovulncheckRunner
+// VulnerabilityScanner is an alias for the evidence package type.
+type VulnerabilityScanner = evidence.VulnerabilityScanner
 
 // CrosswalkResult is an alias for the evidence package type.
 type CrosswalkResult = evidence.CrosswalkResult

@@ -1,17 +1,26 @@
-package shared
+package artifact
 
 import (
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
+// fileEnvelopeLoader loads a safety-envelope evaluation from a file path.
+type fileEnvelopeLoader interface {
+	LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, error)
+}
+
+// fileBaselineLoader loads an evaluation baseline from a file path.
+type fileBaselineLoader interface {
+	LoadBaselineFromFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error)
+}
+
 // Loader handles the retrieval and validation of Stave artifacts from the filesystem.
 type Loader struct {
-	envelope appcontracts.FileEnvelopeLoader
-	baseline appcontracts.FileBaselineLoader
+	envelope fileEnvelopeLoader
+	baseline fileBaselineLoader
 }
 
 // NewLoader initializes a standard artifact loader.

@@ -1,7 +1,6 @@
 package upcoming
 
 import (
-	"context"
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -10,37 +9,32 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-// Config defines the resolved parameters for upcoming action analysis.
-type Config struct {
-	// Pre-loaded data.
-	Controls  []policy.ControlDefinition
-	Snapshots []asset.Snapshot
+// EvalConfig holds domain computation inputs for upcoming risk analysis.
+type EvalConfig struct {
+	Controls          []policy.ControlDefinition
+	Snapshots         []asset.Snapshot
+	MaxUnsafeDuration time.Duration
+	DueSoon           time.Duration
+	Now               time.Time
+	Filter            risk.FilterCriteria
+	Sanitizer         kernel.Sanitizer
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+}
 
-	// Resolved parameters.
-	MaxUnsafeDuration    time.Duration
+// OutputMetadata holds presentation-only fields for the report envelope.
+// These values are echoed in the JSON output but not used for computation.
+type OutputMetadata struct {
+	ControlsDir          string
+	ObservationsDir      string
 	MaxUnsafeDurationRaw string
-	DueSoon              time.Duration
 	DueSoonRaw           string
-	Now                  time.Time
-	Filter               risk.FilterCriteria
-	Sanitizer            kernel.Sanitizer
-	PredicateParser      func(any) (*policy.UnsafePredicate, error)
-
-	// Output metadata (echoed in JSON output).
-	ControlsDir     string
-	ObservationsDir string
 }
 
 // Runner orchestrates the risk analysis and timeline projection.
 type Runner struct{}
 
-// NewRunner creates a new upcoming analysis runner.
-func NewRunner() *Runner {
-	return &Runner{}
-}
-
 // Run computes upcoming action items and returns the assembled output.
-func (r *Runner) Run(_ context.Context, cfg Config) (Output, error) {
+func (r *Runner) Run(cfg EvalConfig, meta OutputMetadata) (UpcomingReport, error) {
 	riskItems := risk.ComputeItems(risk.Request{
 		Controls:                cfg.Controls,
 		Snapshots:               cfg.Snapshots,
@@ -50,21 +44,19 @@ func (r *Runner) Run(_ context.Context, cfg Config) (Output, error) {
 	})
 	riskItems = riskItems.Filter(cfg.Filter)
 
-	// Map domain items to display DTOs
 	items := mapRiskItems(riskItems)
 	if cfg.Sanitizer != nil {
 		items = sanitizeItems(cfg.Sanitizer, items)
 	}
 	summary := summarizeUpcoming(items, cfg.DueSoon)
 
-	// Assemble final output
-	output := Output{
+	output := UpcomingReport{
 		GeneratedAt:       cfg.Now,
-		ControlsDir:       cfg.ControlsDir,
-		Observations:      cfg.ObservationsDir,
-		MaxUnsafeDuration: cfg.MaxUnsafeDurationRaw,
-		DueSoon:           cfg.DueSoonRaw,
-		Summary:           summary,
+		ControlsDir:       meta.ControlsDir,
+		Observations:      meta.ObservationsDir,
+		MaxUnsafeDuration: meta.MaxUnsafeDurationRaw,
+		DueSoon:           meta.DueSoonRaw,
+		UpcomingSummary:   summary,
 		Items:             items,
 	}
 	return output, nil

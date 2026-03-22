@@ -4,7 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -90,7 +92,7 @@ Examples:
       { "before_violations": 5, "after_violations": 2, "resolved": 3, "remaining": 2, "introduced": 0 }` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			eval := cmdutil.EvaluatorFromCmd(cmd)
+			eval := cmdctx.EvaluatorFromCmd(cmd)
 			if !cmd.Flags().Changed("max-unsafe") {
 				maxUnsafeRaw = eval.MaxUnsafeDuration()
 			}
@@ -109,7 +111,7 @@ Examples:
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := NewRunner(p, clock)
 			runner.Sanitizer = gf.GetSanitizer()
-			runner.FileOptions = cmdutil.FileOptions{
+			runner.FileOptions = fileout.FileOptions{
 				Overwrite:     gf.Force,
 				AllowSymlinks: gf.AllowSymlinkOut,
 				DirPerms:      0o700,

@@ -1,7 +1,6 @@
 package doctor
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -44,7 +43,7 @@ func NewRunner() *Runner {
 
 // Run executes the doctor checks and reports the results based on the config.
 // If Cwd or BinaryPath are empty, they are resolved from the current process.
-func (r *Runner) Run(_ context.Context, cfg Config) error {
+func (r *Runner) Run(cfg Config) error {
 	if cfg.Cwd == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -126,11 +125,24 @@ func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Check local environment readiness for Stave workflows",
-		Long: `Doctor runs a quick local readiness check for first-time usage and day-to-day
-developer workflows.
+		Long: `Check local environment readiness for Stave workflows.
 
-It validates local prerequisites and reports copy-paste fixes when something is
-missing.
+Doctor runs a quick local readiness check for first-time usage and day-to-day
+developer workflows. It validates local prerequisites such as required tools,
+file permissions, and project structure. When something is missing, it reports
+copy-paste fixes so you can resolve issues without searching documentation.
+
+Inputs:
+  --format, -f   Output format: text or json (default: text)
+
+Outputs:
+  stdout         Readiness report listing each check with pass/fail status
+  stderr         Error messages (if any)
+
+Exit Codes:
+  0   - All checks passed; environment is ready
+  3   - One or more required checks failed
+  130 - Interrupted (SIGINT)
 
 Examples:
   stave doctor
@@ -142,7 +154,7 @@ Examples:
 				return err
 			}
 
-			return NewRunner().Run(cmd.Context(), Config{
+			return NewRunner().Run(Config{
 				Format: fmtValue,
 				Quiet:  cmdutil.GetGlobalFlags(cmd).Quiet,
 				Stdout: cmd.OutOrStdout(),

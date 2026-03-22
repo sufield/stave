@@ -28,48 +28,54 @@ type resolvedConfig struct {
 	Stdout               io.Writer
 }
 
-func gatherUpcomingConfig(
-	obsDir, ctlDir string,
-	maxUnsafeRaw, dueSoonRaw, nowRaw, formatRaw, dueWithinRaw string,
-	controlIDs []kernel.ControlID,
-	assetTypes []kernel.AssetType,
-	statuses []string,
-	san kernel.Sanitizer,
-	quiet bool,
-	stdout io.Writer,
-	resolveFormat func(string) (ui.OutputFormat, error),
-) (resolvedConfig, error) {
-	maxUnsafeDur, err := parsePositiveDuration(maxUnsafeRaw, "--max-unsafe")
+// upcomingConfigInput groups the raw CLI flag values for upcoming config resolution.
+type upcomingConfigInput struct {
+	MaxUnsafeRaw  string
+	DueSoonRaw    string
+	NowRaw        string
+	FormatRaw     string
+	DueWithinRaw  string
+	ControlIDs    []kernel.ControlID
+	AssetTypes    []kernel.AssetType
+	Statuses      []string
+	Sanitizer     kernel.Sanitizer
+	Quiet         bool
+	Stdout        io.Writer
+	ResolveFormat func(string) (ui.OutputFormat, error)
+}
+
+func gatherUpcomingConfig(in upcomingConfigInput) (resolvedConfig, error) {
+	maxUnsafeDur, err := parsePositiveDuration(in.MaxUnsafeRaw, "--max-unsafe")
 	if err != nil {
 		return resolvedConfig{}, err
 	}
-	dueSoonDur, err := parsePositiveDuration(dueSoonRaw, "--due-soon")
+	dueSoonDur, err := parsePositiveDuration(in.DueSoonRaw, "--due-soon")
 	if err != nil {
 		return resolvedConfig{}, err
 	}
 
 	var dueWithinDur time.Duration
-	if strings.TrimSpace(dueWithinRaw) != "" {
-		parsed, parseErr := parsePositiveDuration(dueWithinRaw, "--due-within")
+	if strings.TrimSpace(in.DueWithinRaw) != "" {
+		parsed, parseErr := parsePositiveDuration(in.DueWithinRaw, "--due-within")
 		if parseErr != nil {
 			return resolvedConfig{}, parseErr
 		}
 		dueWithinDur = parsed
 	}
 
-	now, err := compose.ResolveNow(nowRaw)
+	now, err := compose.ResolveNow(in.NowRaw)
 	if err != nil {
 		return resolvedConfig{}, err
 	}
-	format, err := resolveFormat(formatRaw)
+	format, err := in.ResolveFormat(in.FormatRaw)
 	if err != nil {
 		return resolvedConfig{}, err
 	}
 
 	filter, err := appupcoming.NewUpcomingFilter(appupcoming.FilterCriteria{
-		ControlIDs: controlIDs,
-		AssetTypes: assetTypes,
-		Statuses:   statuses,
+		ControlIDs: in.ControlIDs,
+		AssetTypes: in.AssetTypes,
+		Statuses:   in.Statuses,
 		DueWithin:  dueWithinDur,
 	})
 	if err != nil {
@@ -78,15 +84,15 @@ func gatherUpcomingConfig(
 
 	return resolvedConfig{
 		MaxUnsafeDuration:    maxUnsafeDur,
-		MaxUnsafeDurationRaw: maxUnsafeRaw,
+		MaxUnsafeDurationRaw: in.MaxUnsafeRaw,
 		DueSoon:              dueSoonDur,
-		DueSoonRaw:           dueSoonRaw,
+		DueSoonRaw:           in.DueSoonRaw,
 		Now:                  now,
 		Format:               format,
 		Filter:               filter,
-		Sanitizer:            san,
-		Quiet:                quiet,
-		Stdout:               stdout,
+		Sanitizer:            in.Sanitizer,
+		Quiet:                in.Quiet,
+		Stdout:               in.Stdout,
 	}, nil
 }
 

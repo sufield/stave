@@ -1,4 +1,4 @@
-package service
+package diagnose
 
 import (
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
