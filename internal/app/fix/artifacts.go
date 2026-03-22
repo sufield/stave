@@ -1,6 +1,7 @@
 package fix
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -34,6 +35,14 @@ type ArtifactWriter struct {
 	OutDir  string
 	Options WriteOptions
 	Stdout  io.Writer
+
+	// MkdirAllFn creates directories. Injected by the cmd layer to use
+	// fsutil.SafeMkdirAll for symlink protection. Defaults to os.MkdirAll.
+	MkdirAllFn func(path string, perm fs.FileMode) error
+
+	// WriteFileFn writes data to a file. Injected by the cmd layer to use
+	// fsutil.SafeWriteFile. Defaults to os.WriteFile.
+	WriteFileFn func(path string, data []byte, perm fs.FileMode) error
 }
 
 // PersistVerification writes the full suite of verification artifacts to disk.
@@ -47,7 +56,11 @@ func (m *ArtifactWriter) PersistVerification(
 		return artifacts, nil
 	}
 
-	if err := os.MkdirAll(m.OutDir, m.Options.DirPerms); err != nil {
+	mkdirAll := m.MkdirAllFn
+	if mkdirAll == nil {
+		mkdirAll = os.MkdirAll
+	}
+	if err := mkdirAll(m.OutDir, m.Options.DirPerms); err != nil {
 		return artifacts, fmt.Errorf("output directory access error: %w", err)
 	}
 
@@ -90,17 +103,16 @@ func (m *ArtifactWriter) PersistReport(report *LoopReport) error {
 }
 
 func (m *ArtifactWriter) writeJSON(path string, value any) error {
-	flags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	if !m.Options.Overwrite {
-		flags |= os.O_EXCL
-	}
-	f, err := os.OpenFile(path, flags, 0o600) //nolint:gosec // path is constructed from hardcoded filenames, not user input
+	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
-		return fmt.Errorf("opening %s: %w", path, err)
+		return fmt.Errorf("marshal json for %s: %w", path, err)
 	}
-	defer f.Close()
-	if err := jsonutil.WriteIndented(f, value); err != nil {
-		return fmt.Errorf("writing json to %s: %w", path, err)
+	writeFile := m.WriteFileFn
+	if writeFile == nil {
+		writeFile = os.WriteFile
+	}
+	if err := writeFile(path, data, 0o600); err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
 	}
 	return nil
 }

@@ -71,9 +71,10 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 	return data, nil
 }
 
-// CleanUserPath normalizes a user-supplied path by cleaning . and ..
-// segments and duplicate separators. It does NOT resolve symlinks.
-// Empty strings are returned as-is.
+// CleanUserPath performs lexical path cleanup via filepath.Clean.
+// It does NOT expand ~ (tilde), does NOT resolve symlinks, and does NOT
+// make paths absolute. Use filepath.Abs() when absolute paths are needed.
+// Returns the input unchanged for empty strings and "-" (stdin sentinel).
 func CleanUserPath(p string) string {
 	if p == "" || p == "-" {
 		return p

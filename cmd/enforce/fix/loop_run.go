@@ -3,11 +3,13 @@ package fix
 import (
 	"context"
 	"io"
+	"io/fs"
 	"time"
 
 	"github.com/sufield/stave/internal/app/contracts"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // LoopRequest defines the inputs for the fix-loop workflow.
@@ -46,6 +48,19 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 			DirPerms:      r.FileOptions.DirPerms,
 		},
 		Stdout: req.Stdout,
+		MkdirAllFn: func(path string, perm fs.FileMode) error {
+			return fsutil.SafeMkdirAll(path, fsutil.WriteOptions{
+				Perm:         perm,
+				AllowSymlink: r.FileOptions.AllowSymlinks,
+			})
+		},
+		WriteFileFn: func(path string, data []byte, perm fs.FileMode) error {
+			return fsutil.SafeWriteFile(path, data, fsutil.WriteOptions{
+				Perm:         perm,
+				Overwrite:    r.FileOptions.Overwrite,
+				AllowSymlink: r.FileOptions.AllowSymlinks,
+			})
+		},
 	}
 
 	eb := r.newEnvelopeBuilder()
