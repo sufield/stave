@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	appapply "github.com/sufield/stave/internal/app/apply"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -47,6 +48,11 @@ type RunConfig struct {
 	Params       *applyParams // non-nil in standard mode
 	Profile      *Config      // non-nil in profile mode
 	profileClock ports.Clock  // used by profile mode
+
+	// Pre-loaded project config, resolved once during Resolve().
+	// Shared by buildEvaluatorInput and Build to avoid repeated disk reads.
+	projectConfig     *appconfig.ProjectConfig
+	projectConfigPath string
 }
 
 // applyParams holds validated and parsed domain types.
@@ -113,7 +119,16 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		return RunConfig{}, err
 	}
 
-	if err := o.validateDirs(); err != nil {
+	// Load project config once — shared by validateDirs, buildEvaluatorInput, and Build.
+	projCfg, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
+	if cfgErr != nil {
+		return RunConfig{}, ui.WithHint(
+			fmt.Errorf("load project config: %w", cfgErr),
+			ui.ErrHintProjectConfig,
+		)
+	}
+
+	if err := o.validateDirsWithConfig(projCfg); err != nil {
 		return RunConfig{}, err
 	}
 
@@ -122,7 +137,12 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		clock:             o.buildClock(parsed.Now),
 		source:            parsed.Source,
 	}
-	return RunConfig{Mode: runModeStandard, Params: params}, nil
+	return RunConfig{
+		Mode:              runModeStandard,
+		Params:            params,
+		projectConfig:     projCfg,
+		projectConfigPath: cfgPath,
+	}, nil
 }
 
 func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
@@ -160,7 +180,8 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 }
 
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
-func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
+// cfgPath is the pre-resolved project config path from Resolve().
+func (o *ApplyOptions) buildEvaluatorInput(cfgPath string) (appeval.Options, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
 		return appeval.Options{}, ui.WithHint(
@@ -170,13 +191,6 @@ func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 	}
 	root := resolver.ProjectRoot()
 
-	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
-	if err != nil {
-		return appeval.Options{}, ui.WithHint(
-			fmt.Errorf("load project config: %w", err),
-			ui.ErrHintProjectConfig,
-		)
-	}
 	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
 	if uErr != nil {
 		return appeval.Options{}, ui.WithHint(
@@ -220,13 +234,11 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 	return parsed, nil
 }
 
-// validateDirs ensures directories exist unless using packs or stdin.
-func (o *ApplyOptions) validateDirs() error {
-	packs, err := o.controlsFromPacks()
-	if err != nil {
-		return err
-	}
-	if !packs {
+// validateDirsWithConfig ensures directories exist unless using packs or stdin.
+// Uses a pre-loaded project config to check for enabled packs without re-reading disk.
+func (o *ApplyOptions) validateDirsWithConfig(projCfg *appconfig.ProjectConfig) error {
+	hasPacks := !o.controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
+	if !hasPacks {
 		if err := dircheck.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
@@ -239,22 +251,6 @@ func (o *ApplyOptions) validateDirs() error {
 	}
 
 	return nil
-}
-
-// controlsFromPacks reports whether controls come from enabled control packs
-// in the project config (and --controls was not explicitly set by the user).
-func (o *ApplyOptions) controlsFromPacks() (bool, error) {
-	if o.controlsSet {
-		return false, nil
-	}
-	cfg, ok, err := projconfig.FindProjectConfig()
-	if err != nil {
-		return false, ui.WithHint(
-			fmt.Errorf("load project config: %w", err),
-			ui.ErrHintProjectConfig,
-		)
-	}
-	return ok && len(cfg.EnabledControlPacks) > 0, nil
 }
 
 // standardIO holds resolved IO and format state for the standard apply path.

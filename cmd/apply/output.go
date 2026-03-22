@@ -123,5 +123,5 @@ func decorateError(err error) error {
 	default:
 		return err
 	}
-	return ui.EvaluateErrorWithHint(ui.WithHint(err, hint))
+	return &ui.UserError{Err: ui.EvaluateErrorWithHint(ui.WithHint(err, hint))}
 }

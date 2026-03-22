@@ -101,12 +101,31 @@ func executeAudit(ctx context.Context, cfg AuditConfig, cwd, exe, bundleDir stri
 
 // writeAndReport renders the report, writes the bundle, prints the summary,
 // and returns a gating error if findings exceed the threshold.
+//
+// When neither --out nor --out-dir is set: report goes to stdout (matching
+// how apply --format json works). No bundle is written.
+// When --out or --out-dir is set: report goes to file, summary to stdout.
 func writeAndReport(cfg AuditConfig, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, bundleDir string) error {
 	mainData, mainName, err := renderReport(cfg.Format, report)
 	if err != nil {
 		return err
 	}
 
+	// Stdout mode: no explicit output file, write report to stdout directly.
+	if strings.TrimSpace(cfg.OutPath) == "" && strings.TrimSpace(cfg.OutDir) == "" {
+		if _, err := cfg.Stdout.Write(mainData); err != nil {
+			return fmt.Errorf("write report to stdout: %w", err)
+		}
+		if _, err := cfg.Stdout.Write([]byte("\n")); err != nil {
+			return err
+		}
+		if report.Summary.Gated {
+			return ui.ErrSecurityAuditFindings
+		}
+		return nil
+	}
+
+	// File mode: write bundle to disk, summary to stdout.
 	outPathResolver := func(defaultPath string) string {
 		p := fsutil.CleanUserPath(cfg.OutPath)
 		if strings.TrimSpace(p) == "" {

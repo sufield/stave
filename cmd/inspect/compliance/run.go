@@ -3,6 +3,8 @@ package compliance
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -12,7 +14,7 @@ import (
 )
 
 func run(cmd *cobra.Command, file string, frameworks, checkIDs []string) error {
-	raw, err := readInput(file)
+	raw, err := readInput(file, os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -64,9 +66,9 @@ func extractCheckIDs(raw []byte) ([]string, error) {
 	return nil, nil
 }
 
-func readInput(file string) ([]byte, error) {
+func readInput(file string, stdin io.Reader) ([]byte, error) {
 	if file == "" {
-		return nil, fmt.Errorf("--file is required for compliance crosswalk")
+		return io.ReadAll(stdin)
 	}
 	data, err := fsutil.ReadFileLimited(file)
 	if err != nil {
