@@ -6,7 +6,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	service "github.com/sufield/stave/internal/app/service"
+	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
@@ -102,7 +102,7 @@ func (d *Run) ExecuteFindingDetail(ctx context.Context, cfg FindingDetailConfig)
 		return nil, fmt.Errorf("resolve result: %w", err)
 	}
 
-	return service.BuildFindingDetail(service.FindingDetailInput{
+	return BuildFindingDetail(FindingDetailInput{
 		ControlID:    cfg.ControlID,
 		AssetID:      cfg.AssetID,
 		Controls:     loaded.controls,
@@ -143,7 +143,7 @@ func (d *Run) resolveResult(
 		return cfg.PreviousResult, nil
 	}
 
-	result, err := service.Evaluate(service.EvaluateInput{
+	result, err := appworkflow.Evaluate(appworkflow.EvaluateInput{
 		Controls:          artifacts.controls,
 		Snapshots:         artifacts.snapshots,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -57,7 +57,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 
 	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
 	runner := NewRunner(compose.NewDefaultProvider(), clock)
-	runner.FileOptions = cmdutil.FileOptions{
+	runner.FileOptions = fileout.FileOptions{
 		Overwrite: true,
 		DirPerms:  0o700,
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -27,7 +28,7 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 	}
 
 	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out, time.Time{}))
-	f, err := cmdutil.OpenOutputFile(outPath, cmdutil.FileOptions{
+	f, err := fileout.OpenOutputFile(outPath, fileout.FileOptions{
 		Overwrite:     gf.Force,
 		AllowSymlinks: gf.AllowSymlinkOut,
 		DirPerms:      0o700,

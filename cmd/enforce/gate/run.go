@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/enforce/shared"
+	"github.com/sufield/stave/cmd/enforce/artifact"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -103,7 +103,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) runPolicyAny(cfg Config) (Result, error) {
-	eval, err := shared.NewLoader().Evaluation(cfg.InPath)
+	eval, err := artifact.NewLoader().Evaluation(cfg.InPath)
 	if err != nil {
 		return Result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
@@ -126,15 +126,15 @@ func (r *Runner) runPolicyAny(cfg Config) (Result, error) {
 }
 
 func (r *Runner) runPolicyNew(cfg Config) (Result, error) {
-	eval, err := shared.NewLoader().Evaluation(cfg.InPath)
+	eval, err := artifact.NewLoader().Evaluation(cfg.InPath)
 	if err != nil {
 		return Result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
-	base, err := shared.NewLoader().Baseline(cfg.BaselinePath, kernel.KindBaseline)
+	base, err := artifact.NewLoader().Baseline(cfg.BaselinePath, kernel.KindBaseline)
 	if err != nil {
 		return Result{}, fmt.Errorf("loading baseline: %w", err)
 	}
-	bc := shared.CompareAgainstBaseline(cfg.Sanitizer, base.Findings, eval.Findings)
+	bc := artifact.CompareAgainstBaseline(cfg.Sanitizer, base.Findings, eval.Findings)
 	newCount := len(bc.Comparison.New)
 	pass := newCount == 0
 	reason := fmt.Sprintf("new findings=%d", newCount)

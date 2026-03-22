@@ -69,16 +69,25 @@ type SnapshotObservationRepository interface {
 
 // NewObservationRepo creates a new observation repository.
 func (p *Provider) NewObservationRepo() (appcontracts.ObservationRepository, error) {
+	if p.ObsRepoFunc == nil {
+		return nil, fmt.Errorf("ObsRepoFunc not configured on Provider")
+	}
 	return p.ObsRepoFunc()
 }
 
 // NewControlRepo creates a new control repository.
 func (p *Provider) NewControlRepo() (appcontracts.ControlRepository, error) {
+	if p.ControlRepoFunc == nil {
+		return nil, fmt.Errorf("ControlRepoFunc not configured on Provider")
+	}
 	return p.ControlRepoFunc()
 }
 
 // NewStdinObsRepo creates an observation repository that reads from stdin.
 func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationRepository, error) {
+	if p.StdinObsRepoFunc == nil {
+		return nil, fmt.Errorf("StdinObsRepoFunc not configured on Provider")
+	}
 	return p.StdinObsRepoFunc(r)
 }
 
@@ -93,6 +102,9 @@ func (p *Provider) NewSnapshotRepo() (SnapshotObservationRepository, error) {
 
 // NewFindingWriter creates a finding marshaler for the given output format.
 func (p *Provider) NewFindingWriter(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+	if p.FindingWriterFunc == nil {
+		return nil, fmt.Errorf("FindingWriterFunc not configured on Provider")
+	}
 	return p.FindingWriterFunc(format, jsonMode)
 }
 

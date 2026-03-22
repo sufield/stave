@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -40,7 +41,7 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 
 	// Store the logger in Cobra's context so commands retrieve it via
 	// cmdutil.LoggerFromCmd(cmd) instead of reading slog.Default().
-	ctx := cmdutil.WithLogger(cmd.Context(), a.Logger)
+	ctx := cmdctx.WithLogger(cmd.Context(), a.Logger)
 	cmd.SetContext(ctx)
 
 	return nil
@@ -53,7 +54,7 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command) {
 	// The evaluator is resolved here and stored in Cobra's context so all
 	// downstream commands retrieve it via cmdutil.EvaluatorFromCmd(cmd).
 	eval := projconfig.Global()
-	ctx := cmdutil.WithEvaluator(cmd.Context(), eval)
+	ctx := cmdctx.WithEvaluator(cmd.Context(), eval)
 	cmd.SetContext(ctx)
 
 	p := cmd.Root().PersistentFlags()

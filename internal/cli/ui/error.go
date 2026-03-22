@@ -102,8 +102,9 @@ func ExitCode(err error) int {
 		return ExitInputError
 	}
 
-	// Unknown errors default to ExitInputError (2) in CLI contexts.
-	return ExitInputError
+	// Unknown errors are internal failures — if we can't classify it,
+	// it's not a user input problem.
+	return ExitInternal
 }
 
 // NewErrorInfo creates an ErrorInfo with the given code and message.
@@ -205,7 +206,11 @@ func IsSentinel(err error) bool {
 	if err == nil {
 		return false
 	}
-	return ExitCode(err) != ExitInputError ||
+	return errors.Is(err, ErrViolationsFound) ||
+		errors.Is(err, ErrDiagnosticsFound) ||
 		errors.Is(err, ErrValidationWarnings) ||
-		errors.Is(err, ErrValidationFailed)
+		errors.Is(err, ErrValidationFailed) ||
+		errors.Is(err, ErrSecurityAuditFindings) ||
+		errors.Is(err, ErrInterrupted) ||
+		errors.Is(err, ErrInternal)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/metadata"
@@ -22,7 +23,7 @@ func (o *SharedOptions) resolveConfigDefaults(cmd *cobra.Command, eval *appconfi
 // resolveApplyConfigDefaults fills apply-specific flag values from project
 // config when the user did not set them explicitly on the command line.
 func (o *ApplyOptions) resolveApplyConfigDefaults(cmd *cobra.Command) {
-	eval := cmdutil.EvaluatorFromCmd(cmd)
+	eval := cmdctx.EvaluatorFromCmd(cmd)
 	o.resolveConfigDefaults(cmd, eval)
 	if !cmd.Flags().Changed("allow-unknown-input") {
 		o.AllowUnknown = eval.AllowUnknownInput()
@@ -41,9 +42,6 @@ type SharedOptions struct {
 	// Derived from Cobra in PreRunE; not a user-facing flag.
 	controlsSet bool
 }
-
-// ControlsSet reports whether the user explicitly set --controls.
-func (o *SharedOptions) ControlsSet() bool { return o.controlsSet }
 
 func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
 	f := cmd.Flags()
@@ -102,7 +100,7 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cs := cobraState{
 				Ctx:           cmd.Context(),
-				Logger:        cmdutil.LoggerFromCmd(cmd),
+				Logger:        cmdctx.LoggerFromCmd(cmd),
 				Stdout:        cmd.OutOrStdout(),
 				Stderr:        cmd.ErrOrStderr(),
 				GlobalFlags:   cmdutil.GetGlobalFlags(cmd),

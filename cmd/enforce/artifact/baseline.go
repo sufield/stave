@@ -1,4 +1,4 @@
-package shared
+package artifact
 
 import (
 	output "github.com/sufield/stave/internal/adapters/output"

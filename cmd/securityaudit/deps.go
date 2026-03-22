@@ -21,8 +21,8 @@ func buildRunnerDeps() appsa.RunnerDeps {
 		HashBytes: func(data []byte) kernel.Digest {
 			return platformcrypto.HashBytes(data)
 		},
-		GovulncheckRunner: govulncheck.Run,
-		SignatureVerifier: nil,
+		VulnerabilityScanner: govulncheck.Run,
+		SignatureVerifier:    nil,
 		RunDiagnostics: func(cwd, binaryPath, staveVersion string) {
 			_, _ = doctor.Run(&doctor.Context{
 				Cwd:          cwd,

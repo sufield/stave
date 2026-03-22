@@ -21,7 +21,7 @@ type Request struct {
 	VulnSource           VulnSource
 	LiveVulnCheck        bool
 	ReleaseBundleDir     string
-	PrivacyMode          bool
+	PrivacyEnabled       bool
 	FailOn               securityaudit.Severity
 	RequireOffline       bool
 }

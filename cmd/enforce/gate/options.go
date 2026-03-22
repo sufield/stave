@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -40,7 +41,7 @@ func DefaultOptions() gateOptions {
 // resolveConfigDefaults fills flag values from project config when the user
 // did not set them explicitly on the command line.
 func (o *gateOptions) resolveConfigDefaults(cmd *cobra.Command) {
-	eval := cmdutil.EvaluatorFromCmd(cmd)
+	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("policy") {
 		o.PolicyRaw = string(eval.CIFailurePolicy())
 	}

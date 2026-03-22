@@ -6,7 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -34,7 +36,7 @@ func newOptions() *options {
 // resolveConfigDefaults fills flag values from project config when the user
 // did not set them explicitly on the command line.
 func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
-	eval := cmdutil.EvaluatorFromCmd(cmd)
+	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
@@ -67,13 +69,13 @@ func (o *options) normalize() {
 
 // validate ensures all required paths exist and are accessible.
 func (o *options) validate() error {
-	if err := cmdutil.ValidateFlagDir("--before", o.BeforeDir, "", nil, nil); err != nil {
+	if err := dircheck.ValidateFlagDir("--before", o.BeforeDir, "", nil, nil); err != nil {
 		return err
 	}
-	if err := cmdutil.ValidateFlagDir("--after", o.AfterDir, "", nil, nil); err != nil {
+	if err := dircheck.ValidateFlagDir("--after", o.AfterDir, "", nil, nil); err != nil {
 		return err
 	}
-	if err := cmdutil.ValidateFlagDir("--controls", o.ControlsDir, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
+	if err := dircheck.ValidateFlagDir("--controls", o.ControlsDir, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
 		return err
 	}
 	return nil

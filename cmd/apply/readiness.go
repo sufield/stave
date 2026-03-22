@@ -8,10 +8,10 @@ import (
 	"time"
 
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/prereq"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
-	service "github.com/sufield/stave/internal/app/service"
+	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
@@ -35,9 +35,9 @@ type ReadinessConfig struct {
 	Stdout            io.Writer
 	Stderr            io.Writer
 
-	ControlsFlagSet bool
-	HasEnabledPacks bool
-	PrereqChecks    []validation.PrereqCheck
+	ControlsFlagSet        bool
+	HasEnabledControlPacks bool
+	PrereqChecks           []validation.PrereqCheck
 }
 
 // ReadinessRunner orchestrates the readiness assessment workflow.
@@ -55,15 +55,15 @@ func NewReadinessRunner(factory ReadinessValidatorFactory) *ReadinessRunner {
 
 // Execute performs the readiness assessment and writes the report.
 func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
-	report, err := service.AssessReadiness(validation.ReadinessInput{
-		ControlsDir:           cfg.ControlsDir,
-		ObservationsDir:       cfg.ObservationsDir,
-		MaxUnsafeDuration:     cfg.MaxUnsafeDuration,
-		Now:                   cfg.Now,
-		ControlsFlagSet:       cfg.ControlsFlagSet,
-		HasEnabledControlPack: cfg.HasEnabledPacks,
-		PrereqChecks:          cfg.PrereqChecks,
-		Validate:              r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
+	report, err := readiness.AssessReadiness(validation.ReadinessInput{
+		ControlsDir:            cfg.ControlsDir,
+		ObservationsDir:        cfg.ObservationsDir,
+		MaxUnsafeDuration:      cfg.MaxUnsafeDuration,
+		Now:                    cfg.Now,
+		ControlsFlagSet:        cfg.ControlsFlagSet,
+		HasEnabledControlPacks: cfg.HasEnabledControlPacks,
+		PrereqChecks:           cfg.PrereqChecks,
+		Validate:               r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
 	})
 	if err != nil {
 		return err
@@ -108,5 +108,5 @@ func doctorPrereqs() ([]validation.PrereqCheck, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolve executable path: %w", err)
 	}
-	return cmdutil.DoctorPrereqChecks(cwd, exe), nil
+	return prereq.DoctorPrereqChecks(cwd, exe), nil
 }

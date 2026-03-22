@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/cmd/enforce/shared"
+	"github.com/sufield/stave/cmd/enforce/artifact"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -56,7 +56,7 @@ func NewRunner() *Runner {
 // Run executes the report generation process.
 func (r *Runner) Run(_ context.Context, req Request) error {
 	inputFile := fsutil.CleanUserPath(req.InputFile)
-	eval, err := shared.NewLoader().Evaluation(inputFile)
+	eval, err := artifact.NewLoader().Evaluation(inputFile)
 	if err != nil {
 		return fmt.Errorf("loading evaluation: %w", err)
 	}

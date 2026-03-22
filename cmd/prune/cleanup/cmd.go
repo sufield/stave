@@ -6,8 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -57,9 +58,9 @@ Examples:
 					"before proceeding.")
 			}
 
-			ret, err := pruneshared.ResolveRetention(
-				pruneshared.RawRetentionOpts{OlderThan: olderThan, Tier: tier, NowRaw: nowRaw, FormatFlag: formatFlag},
-				cmdutil.EvaluatorFromCmd(cmd),
+			ret, err := pruneretention.ResolveRetention(
+				pruneretention.RawRetentionOpts{OlderThan: olderThan, Tier: tier, NowRaw: nowRaw, FormatFlag: formatFlag},
+				cmdctx.EvaluatorFromCmd(cmd),
 				cmd.Flags().Changed("older-than"), cmd.Flags().Changed("retention-tier"), cmd.Flags().Changed("format"), gf.IsJSONMode(),
 			)
 			if err != nil {

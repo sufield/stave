@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -19,13 +18,6 @@ var ErrNoFindings = errors.New("input JSON does not contain evaluation findings"
 
 // Loader reads evaluation result artifacts from JSON.
 type Loader struct{}
-
-var (
-	_ appcontracts.FileResultLoader   = (*Loader)(nil)
-	_ appcontracts.ReaderResultLoader = (*Loader)(nil)
-	_ appcontracts.FileEnvelopeLoader = (*Loader)(nil)
-	_ appcontracts.FileBaselineLoader = (*Loader)(nil)
-)
 
 // NewLoader creates a new evaluation result JSON loader.
 func NewLoader() *Loader {

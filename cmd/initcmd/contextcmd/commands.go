@@ -54,7 +54,12 @@ func newContextCreateCmd() *cobra.Command {
 		Short: "Create or update a named context",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runContextCreate(cmd, args, dir, configFile, controls, observations)
+			return runContextCreate(cmd, args, contextCreateInput{
+				Dir:             dir,
+				ConfigFile:      configFile,
+				ControlsDir:     controls,
+				ObservationsDir: observations,
+			})
 		},
 	}
 	cmd.Flags().StringVarP(&dir, "dir", "d", ".", "Project root directory for this context")
@@ -96,6 +101,14 @@ func newContextDeleteCmd() *cobra.Command {
 	}
 }
 
+// contextCreateInput groups the parameters for runContextCreate.
+type contextCreateInput struct {
+	Dir             string
+	ConfigFile      string
+	ControlsDir     string
+	ObservationsDir string
+}
+
 // --- Bridge Functions ---
 
 func runContextList(cmd *cobra.Command, rawFormat string) error {
@@ -111,8 +124,8 @@ func runContextList(cmd *cobra.Command, rawFormat string) error {
 	return runner.List(cmd.Context(), st, format)
 }
 
-func runContextCreate(cmd *cobra.Command, args []string, dir, configFile, controls, observations string) error {
-	rootAbs, err := filepath.Abs(strings.TrimSpace(dir))
+func runContextCreate(cmd *cobra.Command, args []string, in contextCreateInput) error {
+	rootAbs, err := filepath.Abs(strings.TrimSpace(in.Dir))
 	if err != nil {
 		return fmt.Errorf("resolve --dir: %w", err)
 	}
@@ -127,9 +140,9 @@ func runContextCreate(cmd *cobra.Command, args []string, dir, configFile, contro
 	}
 
 	c := contexts.Context{ProjectRoot: rootAbs}
-	c.ProjectConfig = strings.TrimSpace(configFile)
-	c.Defaults.ControlsDir = strings.TrimSpace(controls)
-	c.Defaults.ObservationsDir = strings.TrimSpace(observations)
+	c.ProjectConfig = strings.TrimSpace(in.ConfigFile)
+	c.Defaults.ControlsDir = strings.TrimSpace(in.ControlsDir)
+	c.Defaults.ObservationsDir = strings.TrimSpace(in.ObservationsDir)
 
 	runner := &Runner{Stdout: cmd.OutOrStdout()}
 	return runner.Create(cmd.Context(), st, args[0], c)

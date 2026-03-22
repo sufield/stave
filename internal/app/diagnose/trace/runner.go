@@ -30,11 +30,6 @@ type Config struct {
 // Runner orchestrates evaluation trace generation for a specific asset.
 type Runner struct{}
 
-// NewRunner creates a new trace runner.
-func NewRunner() *Runner {
-	return &Runner{}
-}
-
 // Run executes the trace workflow.
 func (r *Runner) Run(_ context.Context, cfg Config) error {
 	if cfg.Quiet {

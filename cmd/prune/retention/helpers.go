@@ -1,4 +1,4 @@
-package pruneshared
+package retention
 
 import (
 	"context"

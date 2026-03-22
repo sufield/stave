@@ -1,4 +1,4 @@
-// Package govulncheck provides a concrete GovulncheckRunner that executes
+// Package govulncheck provides a concrete VulnerabilityScanner that executes
 // the govulncheck binary via os/exec.
 package govulncheck
 

@@ -147,16 +147,16 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 	}
 
 	for _, id := range ids {
-		pr, hasPrev := prevByID[id]
-		cr, hasCurr := currByID[id]
+		pr, hasPrevious := prevByID[id]
+		cr, hasCurrent := currByID[id]
 
 		// TELL: Let the asset identify its own property-level differences.
 		diff := diffAsset(assetDiffInput{
-			ID:      id,
-			Prev:    pr,
-			HasPrev: hasPrev,
-			Curr:    cr,
-			HasCurr: hasCurr,
+			ID:          id,
+			Prev:        pr,
+			HasPrevious: hasPrevious,
+			Curr:        cr,
+			HasCurrent:  hasCurrent,
 		})
 		if diff == nil {
 			continue

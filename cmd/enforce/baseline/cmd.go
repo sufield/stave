@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
@@ -43,7 +44,7 @@ func newRunner(cmd *cobra.Command) *Runner {
 	return NewRunner(
 		ports.RealClock{},
 		gf.GetSanitizer(),
-		cmdutil.FileOptions{
+		fileout.FileOptions{
 			Overwrite:     gf.Force,
 			AllowSymlinks: gf.AllowSymlinkOut,
 			DirPerms:      0o700,
@@ -90,7 +91,7 @@ func newCheckCmd() *cobra.Command {
 			return NewRunner(
 				ports.RealClock{},
 				cmdutil.GetGlobalFlags(cmd).GetSanitizer(),
-				cmdutil.FileOptions{},
+				fileout.FileOptions{},
 				cmd.OutOrStdout(),
 			).Check(cmd.Context(), cfg)
 		},

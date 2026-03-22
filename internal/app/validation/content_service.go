@@ -3,7 +3,6 @@ package validation
 import (
 	"bytes"
 
-	service "github.com/sufield/stave/internal/app/service"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
@@ -19,7 +18,7 @@ type SchemaValidator interface {
 // ContentValidator defines the behavior of a validatable piece of content.
 // Each concrete type encapsulates its own validation strategy.
 type ContentValidator interface {
-	Validate(v SchemaValidator) (*service.ValidationResult, error)
+	Validate(v SchemaValidator) (*ValidationResult, error)
 }
 
 // ExplicitRequest validates content against a named schema kind.
@@ -31,7 +30,7 @@ type ExplicitRequest struct {
 }
 
 // Validate resolves the schema for the given kind and validates the data against it.
-func (r ExplicitRequest) Validate(v SchemaValidator) (*service.ValidationResult, error) {
+func (r ExplicitRequest) Validate(v SchemaValidator) (*ValidationResult, error) {
 	version, err := schemas.ResolveVersion(r.Kind, r.SchemaVersion)
 	if err != nil {
 		return nil, err
@@ -45,7 +44,7 @@ func (r ExplicitRequest) Validate(v SchemaValidator) (*service.ValidationResult,
 	if err != nil {
 		return nil, err
 	}
-	return &service.ValidationResult{
+	return &ValidationResult{
 		Diagnostics: contractvalidator.DiagnosticsResult(diags, "Fix input to match selected contract schema", r.Strict),
 	}, nil
 }
@@ -56,7 +55,7 @@ type AutoRequest struct {
 }
 
 // Validate detects the content format and validates accordingly.
-func (r AutoRequest) Validate(v SchemaValidator) (*service.ValidationResult, error) {
+func (r AutoRequest) Validate(v SchemaValidator) (*ValidationResult, error) {
 	if isLikelyJSONContent(r.Data) {
 		return validateObservationContent(v, r.Data)
 	}
@@ -77,7 +76,7 @@ func NewContentService(factory func() SchemaValidator) *ContentService {
 }
 
 // Validate creates a validator and delegates to the request's validation strategy.
-func (s *ContentService) Validate(req ContentValidator) (*service.ValidationResult, error) {
+func (s *ContentService) Validate(req ContentValidator) (*ValidationResult, error) {
 	return req.Validate(s.newValidator())
 }
 
@@ -86,19 +85,19 @@ func isLikelyJSONContent(data []byte) bool {
 	return len(trimmed) > 0 && (trimmed[0] == '{' || trimmed[0] == '[')
 }
 
-func validateObservationContent(v SchemaValidator, data []byte) (*service.ValidationResult, error) {
+func validateObservationContent(v SchemaValidator, data []byte) (*ValidationResult, error) {
 	issues, err := v.ValidateObservationJSON(data)
 	if err != nil {
 		return nil, err
 	}
-	result := &service.ValidationResult{Diagnostics: issues}
+	result := &ValidationResult{Diagnostics: issues}
 	if !issues.HasErrors() && !issues.HasWarnings() {
 		result.Summary.SnapshotsLoaded = 1
 	}
 	return result, nil
 }
 
-func validateControlContent(v SchemaValidator, data []byte) (*service.ValidationResult, error) {
+func validateControlContent(v SchemaValidator, data []byte) (*ValidationResult, error) {
 	issues, err := v.ValidateControlYAML(data)
 	if err != nil {
 		return nil, err
@@ -106,7 +105,7 @@ func validateControlContent(v SchemaValidator, data []byte) (*service.Validation
 	if issues == nil {
 		issues = diag.NewResult()
 	}
-	result := &service.ValidationResult{Diagnostics: issues}
+	result := &ValidationResult{Diagnostics: issues}
 	if !issues.HasErrors() && !issues.HasWarnings() {
 		result.Summary.ControlsLoaded = 1
 	}

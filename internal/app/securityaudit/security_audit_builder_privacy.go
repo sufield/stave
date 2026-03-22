@@ -131,7 +131,7 @@ func findingFromPrivacyMode(in evidence.PolicyInspectionSnapshot, req Request, e
 			Recommendation: "Rerun with source checkout and full artifact generation.",
 		}
 	}
-	if !req.PrivacyMode {
+	if !req.PrivacyEnabled {
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckPrivacyMode,
 			Pillar:         securityaudit.PillarPrivacy,

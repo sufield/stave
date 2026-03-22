@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/runid"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/platform/logging"
@@ -32,7 +32,7 @@ func (a *App) testAttachRunIDFromPlan(plan *appeval.EvaluationPlan) {
 	if plan == nil {
 		return
 	}
-	a.Logger = cmdutil.SetupLoggingWithRunID(
+	a.Logger = runid.SetupLoggingWithRunID(
 		a.Logger,
 		plan.ObservationsHash.String(),
 		plan.ControlsHash.String(),

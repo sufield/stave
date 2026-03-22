@@ -14,10 +14,11 @@ func NewDiagnoseCmd(p *compose.Provider) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diagnose",
 		Short: "Diagnose evaluation inputs and results",
-		Long: `Diagnose analyzes evaluation inputs and results to identify likely causes
-when results don't match expectations.
+		Long: `Diagnose evaluation inputs and results to identify likely causes of unexpected findings.
 
-Purpose: Understand why evaluation produced (or didn't produce) certain findings.
+Diagnose analyzes controls, observations, and optional prior output to explain
+why an evaluation produced (or did not produce) certain findings. It is useful
+for troubleshooting threshold mismatches, clock skew, and predicate logic.
 
 Inputs:
   --controls      Directory containing YAML control definitions

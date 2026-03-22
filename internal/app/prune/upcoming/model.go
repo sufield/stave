@@ -9,7 +9,7 @@ import (
 )
 
 // Item represents a single upcoming snapshot action item.
-type Item struct {
+type UpcomingSnapshot struct {
 	DueAt          time.Time
 	Status         risk.Status
 	ControlID      kernel.ControlID
@@ -21,8 +21,8 @@ type Item struct {
 	Remaining      time.Duration
 }
 
-// Summary holds aggregate counts for upcoming items by status.
-type Summary struct {
+// UpcomingSummary holds aggregate counts for upcoming items by status.
+type UpcomingSummary struct {
 	Overdue int
 	DueNow  int
 	DueSoon int
@@ -30,15 +30,15 @@ type Summary struct {
 	Total   int
 }
 
-// Output is the JSON-serializable output for the upcoming command.
-type Output struct {
-	GeneratedAt       time.Time `json:"generated_at"`
-	ControlsDir       string    `json:"controls_dir"`
-	Observations      string    `json:"observations_dir"`
-	MaxUnsafeDuration string    `json:"max_unsafe"`
-	DueSoon           string    `json:"due_soon"`
-	Summary           Summary   `json:"summary"`
-	Items             []Item    `json:"items"`
+// UpcomingReport is the JSON-serializable output for the upcoming command.
+type UpcomingReport struct {
+	GeneratedAt       time.Time          `json:"generated_at"`
+	ControlsDir       string             `json:"controls_dir"`
+	Observations      string             `json:"observations_dir"`
+	MaxUnsafeDuration string             `json:"max_unsafe"`
+	DueSoon           string             `json:"due_soon"`
+	UpcomingSummary   UpcomingSummary    `json:"summary"`
+	Items             []UpcomingSnapshot `json:"items"`
 }
 
 // FilterCriteria holds filter rules for upcoming action items.

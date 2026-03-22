@@ -51,7 +51,7 @@ func ListSnapshotFilesRecursiveWithLoader(
 	if loader == nil {
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
-	return ListSnapshotFilesRecursive(observationsDir, ScannerOptions{
+	return ListSnapshotFilesRecursive(ctx, observationsDir, ScannerOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) {
 			return loadSnapshotCapturedAt(ctx, loader, path, name)
 		},

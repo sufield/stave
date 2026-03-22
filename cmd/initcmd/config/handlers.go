@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -224,10 +224,9 @@ func (r *Runner) Delete(_ context.Context, req DeleteRequest, opts MutationOpts)
 
 // Show renders the full suite of effective values and their sources.
 func (r *Runner) Show(_ context.Context, cmd *cobra.Command, format ui.OutputFormat) error {
-	eval := cmdutil.EvaluatorFromCmd(cmd)
+	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if eval == nil {
-		// Fallback for tolerant commands and tests: discover config from cwd.
-		eval = projconfig.Global()
+		return fmt.Errorf("project config evaluator not available; ensure bootstrap runs before this command")
 	}
 	out := buildShowOutput(eval)
 	presenter := &ShowPresenter{Stdout: r.Stdout}

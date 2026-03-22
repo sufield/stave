@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -34,7 +35,7 @@ Supported Modes:
 
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := NewRunner()
-			runner.FileOptions = cmdutil.FileOptions{
+			runner.FileOptions = fileout.FileOptions{
 				Overwrite:     gf.Force,
 				AllowSymlinks: gf.AllowSymlinkOut,
 				DirPerms:      0o700,

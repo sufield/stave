@@ -8,6 +8,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/convert"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -72,7 +73,7 @@ func (o *Options) buildFilter() (asset.FilterOptions, error) {
 	}
 	return asset.FilterOptions{
 		ChangeTypes: changeTypes,
-		AssetTypes:  cmdutil.ToAssetTypes(o.AssetTypes),
+		AssetTypes:  convert.ToAssetTypes(o.AssetTypes),
 		AssetID:     strings.TrimSpace(o.AssetID),
 	}, nil
 }

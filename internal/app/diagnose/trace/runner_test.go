@@ -43,7 +43,7 @@ func testSnapshot() *asset.Snapshot {
 
 func TestRunnerRun_Text(t *testing.T) {
 	var buf bytes.Buffer
-	runner := NewRunner()
+	runner := &Runner{}
 	err := runner.Run(context.Background(), Config{
 		Control:         testControl(),
 		Snapshot:        testSnapshot(),
@@ -62,7 +62,7 @@ func TestRunnerRun_Text(t *testing.T) {
 
 func TestRunnerRun_JSON(t *testing.T) {
 	var buf bytes.Buffer
-	runner := NewRunner()
+	runner := &Runner{}
 	err := runner.Run(context.Background(), Config{
 		Control:         testControl(),
 		Snapshot:        testSnapshot(),
@@ -81,7 +81,7 @@ func TestRunnerRun_JSON(t *testing.T) {
 
 func TestRunnerRun_Quiet(t *testing.T) {
 	var buf bytes.Buffer
-	runner := NewRunner()
+	runner := &Runner{}
 	err := runner.Run(context.Background(), Config{
 		Control:  testControl(),
 		Snapshot: testSnapshot(),

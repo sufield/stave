@@ -37,7 +37,7 @@ Examples:
 			}
 
 			runner := NewRunner(resolver)
-			return runner.Run(cmd.Context(), Config{
+			return runner.Run(Config{
 				Dir:    dirFlag,
 				Format: format,
 				Stdout: cmd.OutOrStdout(),

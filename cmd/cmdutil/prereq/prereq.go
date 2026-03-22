@@ -1,4 +1,4 @@
-package cmdutil
+package prereq
 
 import (
 	"github.com/sufield/stave/internal/doctor"

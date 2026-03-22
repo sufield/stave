@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/timeutil"
@@ -55,7 +55,7 @@ func TestDiagnosePathNormalization(t *testing.T) {
 		t.Fatalf("CleanUserPath = %q, want %q", cleaned, ctlDir)
 	}
 
-	if err := cmdutil.CheckDir(ctlDir); err != nil {
+	if err := dircheck.CheckDir(ctlDir); err != nil {
 		t.Fatalf("CheckDir(%q) error = %v", ctlDir, err)
 	}
 }
@@ -67,7 +67,7 @@ func TestDiagnosePathNormalization_DirErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := cmdutil.CheckDir(notDir); err == nil || !strings.Contains(err.Error(), "is not a directory") {
+	if err := dircheck.CheckDir(notDir); err == nil || !strings.Contains(err.Error(), "is not a directory") {
 		t.Fatalf("expected directory error, got %v", err)
 	}
 }

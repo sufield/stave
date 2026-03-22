@@ -8,7 +8,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	appservice "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
@@ -125,7 +124,7 @@ func NewReadinessValidator(
 }
 
 // toValidationResult converts an app-layer validation result to the domain type.
-func toValidationResult(result *appservice.ValidationResult) validation.Result {
+func toValidationResult(result *appvalidation.ValidationResult) validation.Result {
 	return validation.Result{
 		Diagnostics: result.Diagnostics,
 		Summary: struct {

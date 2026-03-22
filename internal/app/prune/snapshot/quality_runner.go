@@ -26,11 +26,6 @@ type QualityConfig struct {
 // QualityRunner orchestrates the evaluation and reporting of snapshot readiness.
 type QualityRunner struct{}
 
-// NewQualityRunner creates a new quality assessment runner.
-func NewQualityRunner() *QualityRunner {
-	return &QualityRunner{}
-}
-
 // Run executes the quality assessment workflow.
 func (r *QualityRunner) Run(_ context.Context, cfg QualityConfig) error {
 	report := assessQuality(qualityParams{

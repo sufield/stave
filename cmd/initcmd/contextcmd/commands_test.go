@@ -15,7 +15,7 @@ func TestContextCreateUseShowDeleteFlow(t *testing.T) {
 	project := t.TempDir()
 
 	createCmd := &cobra.Command{}
-	if err := runContextCreate(createCmd, []string{"prod"}, project, "stave.yaml", "controls", "observations"); err != nil {
+	if err := runContextCreate(createCmd, []string{"prod"}, contextCreateInput{Dir: project, ConfigFile: "stave.yaml", ControlsDir: "controls", ObservationsDir: "observations"}); err != nil {
 		t.Fatalf("create: %v", err)
 	}
 
@@ -45,10 +45,10 @@ func TestContextListSorted(t *testing.T) {
 	t.Setenv("STAVE_CONTEXTS_FILE", filepath.Join(t.TempDir(), "contexts.yaml"))
 
 	project := t.TempDir()
-	if err := runContextCreate(&cobra.Command{}, []string{"zeta"}, project, "stave.yaml", "controls", "observations"); err != nil {
+	if err := runContextCreate(&cobra.Command{}, []string{"zeta"}, contextCreateInput{Dir: project, ConfigFile: "stave.yaml", ControlsDir: "controls", ObservationsDir: "observations"}); err != nil {
 		t.Fatalf("create zeta: %v", err)
 	}
-	if err := runContextCreate(&cobra.Command{}, []string{"alpha"}, project, "stave.yaml", "controls", "observations"); err != nil {
+	if err := runContextCreate(&cobra.Command{}, []string{"alpha"}, contextCreateInput{Dir: project, ConfigFile: "stave.yaml", ControlsDir: "controls", ObservationsDir: "observations"}); err != nil {
 		t.Fatalf("create alpha: %v", err)
 	}
 	listCmd := &cobra.Command{}

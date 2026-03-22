@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
@@ -83,7 +83,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	files, err := pruneshared.ListObservationSnapshotFiles(ctx, r.Provider, cfg.ObservationsDir)
+	files, err := pruneretention.ListObservationSnapshotFiles(ctx, r.Provider, cfg.ObservationsDir)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func buildSnapshotStats(
 	archiveSnapshots []asset.Snapshot,
 	files []appcontracts.SnapshotFile,
 ) appcontracts.SnapshotStats {
-	pruneCandidates := pruneshared.PlanPrune(files, retention.Criteria{
+	pruneCandidates := pruneretention.PlanPrune(files, retention.Criteria{
 		Now:       cfg.Now,
 		OlderThan: cfg.OlderThan,
 		KeepMin:   cfg.KeepMin,

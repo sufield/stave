@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	pruneshared "github.com/sufield/stave/cmd/prune/shared"
+	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -52,7 +52,6 @@ type executionPlan struct {
 // It holds the calculated plan between BuildPlan and Apply phases.
 type Runner struct {
 	Provider *compose.Provider
-	ctx      context.Context
 	cfg      Config
 	plan     *executionPlan
 }
@@ -70,20 +69,19 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	cfg.ObservationsDir = obsDir
 	cfg.ArchiveDir = archiveDir
 	cfg.DryRun = cfg.DryRun || !cfg.Force
-	r.ctx = ctx
 	r.cfg = cfg
 
-	return appeval.RunCleanup(r)
+	return appeval.RunCleanup(ctx, r)
 }
 
 // BuildPlan identifies which snapshots meet the criteria for archiving.
-func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
-	allFiles, err := pruneshared.ListObservationSnapshotFiles(r.ctx, r.Provider, r.cfg.ObservationsDir)
+func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
+	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.Provider, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}
 
-	candidates := pruneshared.PlanPrune(allFiles, retention.Criteria{
+	candidates := pruneretention.PlanPrune(allFiles, retention.Criteria{
 		Now:       r.cfg.Now,
 		OlderThan: r.cfg.OlderThan,
 		KeepMin:   r.cfg.KeepMin,
@@ -120,7 +118,7 @@ func (r *Runner) BuildPlan() (appeval.CleanupPlan, error) {
 }
 
 // Render outputs the plan to the user in the requested format.
-func (r *Runner) Render(_ appeval.CleanupPlan) error {
+func (r *Runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
 		Format:         r.cfg.Format,
 		Output:         r.plan.output,
@@ -140,7 +138,7 @@ func (r *Runner) Render(_ appeval.CleanupPlan) error {
 }
 
 // Apply executes the file moves.
-func (r *Runner) Apply(_ appeval.CleanupPlan) error {
+func (r *Runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
 	_, err := fsops.ApplyArchive(fsops.ArchiveInput{
 		ArchiveDir: r.plan.archiveDir,
 		Moves:      r.toArchiveMoves(),

@@ -6,11 +6,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -79,26 +77,6 @@ type FindingMarshaler interface {
 // Implementations close over the enricher and sanitizer.
 type EnrichFunc func(result evaluation.Result) (EnrichedResult, error)
 
-// FileResultLoader loads an evaluation result from a file path.
-type FileResultLoader interface {
-	LoadFromFile(path string) (*evaluation.Result, error)
-}
-
-// ReaderResultLoader loads an evaluation result from an io.Reader.
-type ReaderResultLoader interface {
-	LoadFromReader(r io.Reader, sourceName string) (*evaluation.Result, error)
-}
-
-// FileEnvelopeLoader loads a safety-envelope evaluation from a file path.
-type FileEnvelopeLoader interface {
-	LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, error)
-}
-
-// FileBaselineLoader loads an evaluation baseline from a file path.
-type FileBaselineLoader interface {
-	LoadBaselineFromFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error)
-}
-
 // IntegrityCheckConfigurer allows observation loaders to accept manifest
 // verification configuration. Implementations must configure integrity
 // checking before any snapshot listing calls.
@@ -112,13 +90,6 @@ type ContentHasher interface {
 	HashFile(path string) (string, error)
 }
 
-// PackRegistry resolves built-in control packs from the embedded registry.
-type PackRegistry interface {
-	ResolveEnabledPacks(names []string) ([]string, error)
-	RegistryVersion() (string, error)
-	RegistryHash() (string, error)
-}
-
 // SnapshotFile represents a discovered snapshot file with its metadata.
 // This type is defined in contracts (not in the adapter) so that both the app
 // layer and the adapter layer can reference it without creating a dependency cycle.
@@ -127,9 +98,4 @@ type SnapshotFile struct {
 	RelPath    string
 	Name       string
 	CapturedAt time.Time
-}
-
-// SnapshotFileLister discovers snapshot files in a directory.
-type SnapshotFileLister interface {
-	ListSnapshotFiles(ctx context.Context, dir string) ([]SnapshotFile, error)
 }

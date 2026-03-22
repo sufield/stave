@@ -1,7 +1,6 @@
 package status
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	appstatus "github.com/sufield/stave/internal/app/status"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -24,67 +24,11 @@ type Config struct {
 	Stderr io.Writer
 }
 
-// --- Domain Models ---
-
-// Summary captures metadata about a group of files (e.g., controls or observations).
-type Summary struct {
-	Count     int       `json:"count"`
-	Latest    time.Time `json:"latest"`
-	HasLatest bool      `json:"has_latest"`
-}
-
-// State represents the point-in-time health and progress of a project.
+// State extends the domain ProjectState with CLI-specific session info.
 type State struct {
-	Root         string                `json:"project_root"`
-	LastSession  *projctx.SessionState `json:"last_session,omitempty"`
-	Controls     Summary               `json:"controls"`
-	RawSnapshots Summary               `json:"snapshots_raw"`
-	Observations Summary               `json:"observations"`
-	EvalTime     time.Time             `json:"evaluation_time"`
-	HasEval      bool                  `json:"has_evaluation"`
+	appstatus.ProjectState
+	LastSession *projctx.SessionState `json:"last_session,omitempty"`
 }
-
-// RecommendNext returns a string command suggesting the most logical next step.
-func (s State) RecommendNext() string {
-	ctlDir := filepath.Join(s.Root, "controls")
-	obsDir := filepath.Join(s.Root, "observations")
-	outPath := filepath.Join(s.Root, "output", "evaluation.json")
-
-	if s.RawSnapshots.Count > 0 && (s.Observations.Count == 0 || s.isRawNewerThanObs()) {
-		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)
-	}
-	if s.Controls.Count == 0 {
-		return fmt.Sprintf("stave generate control --id CTL.S3.PUBLIC.901 --out %s", filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml"))
-	}
-	if s.Observations.Count == 0 {
-		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)
-	}
-	if s.needsReevaluation() {
-		return fmt.Sprintf("stave validate --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",
-			ctlDir, obsDir, ctlDir, obsDir, outPath)
-	}
-	return fmt.Sprintf("stave diagnose --controls %s --observations %s --previous-output %s",
-		ctlDir, obsDir, outPath)
-}
-
-func (s State) isRawNewerThanObs() bool {
-	return s.RawSnapshots.HasLatest &&
-		s.Observations.HasLatest &&
-		s.RawSnapshots.Latest.After(s.Observations.Latest)
-}
-
-func (s State) needsReevaluation() bool {
-	if !s.HasEval {
-		return true
-	}
-	latestInput := s.Controls.Latest
-	if s.Observations.HasLatest && s.Observations.Latest.After(latestInput) {
-		latestInput = s.Observations.Latest
-	}
-	return latestInput.After(s.EvalTime)
-}
-
-// --- Logic Runner ---
 
 // Runner orchestrates the collection of project state and its presentation.
 type Runner struct {
@@ -97,7 +41,7 @@ func NewRunner(r *projctx.Resolver) *Runner {
 }
 
 // Run executes the project inspection and writes the report to the output stream.
-func (r *Runner) Run(_ context.Context, cfg Config) error {
+func (r *Runner) Run(cfg Config) error {
 	dir := fsutil.CleanUserPath(cfg.Dir)
 
 	root, err := r.Resolver.DetectProjectRoot(dir)
@@ -118,7 +62,7 @@ func (r *Runner) Run(_ context.Context, cfg Config) error {
 	if cfg.Format.IsJSON() {
 		return jsonutil.WriteIndented(cfg.Stdout, result)
 	}
-	return r.presentText(cfg.Stdout, result.State, result.NextCommand)
+	return r.presentText(cfg.Stdout, state, result.NextCommand)
 }
 
 // statusResult is the JSON-serializable output combining state and recommendation.
@@ -127,11 +71,7 @@ type statusResult struct {
 	NextCommand string `json:"next_command"`
 }
 
-// --- Infrastructure: Filesystem Scanner ---
-
 // Scan collects project artifact metadata from the filesystem.
-// Missing directories are treated as empty (valid for new projects).
-// Permission or other filesystem errors are surfaced.
 func (r *Runner) Scan(root string) (State, error) {
 	controls, err := r.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
 	if err != nil && !os.IsNotExist(err) {
@@ -155,18 +95,26 @@ func (r *Runner) Scan(root string) (State, error) {
 	}
 
 	return State{
-		Root:         root,
-		LastSession:  last,
-		Controls:     controls,
-		RawSnapshots: raw,
-		Observations: obs,
-		EvalTime:     evalTime,
-		HasEval:      hasEval,
+		ProjectState: appstatus.ProjectState{
+			Root:         root,
+			Controls:     appstatus.Summary(controls),
+			RawSnapshots: appstatus.Summary(raw),
+			Observations: appstatus.Summary(obs),
+			EvalTime:     evalTime,
+			HasEval:      hasEval,
+		},
+		LastSession: last,
 	}, nil
 }
 
-func (r *Runner) summarize(dir string, exts ...string) (Summary, error) {
-	var s Summary
+type localSummary struct {
+	Count     int
+	Latest    time.Time
+	HasLatest bool
+}
+
+func (r *Runner) summarize(dir string, exts ...string) (localSummary, error) {
+	var s localSummary
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return s, err
@@ -191,15 +139,14 @@ func (r *Runner) summarize(dir string, exts ...string) (Summary, error) {
 	return s, nil
 }
 
-// summarizeRecursive walks a directory tree and counts files matching the given extensions.
-func (r *Runner) summarizeRecursive(dir string, exts ...string) (Summary, error) {
-	var s Summary
+func (r *Runner) summarizeRecursive(dir string, exts ...string) (localSummary, error) {
+	var s localSummary
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				return nil
 			}
-			return err // surface permission and other real errors
+			return err
 		}
 		if d.IsDir() {
 			return nil

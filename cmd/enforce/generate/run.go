@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	outenforce "github.com/sufield/stave/internal/adapters/output/enforcement"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -53,7 +53,7 @@ type Config struct {
 
 // Runner orchestrates reading evaluation data and writing enforcement templates.
 type Runner struct {
-	FileOptions cmdutil.FileOptions
+	FileOptions fileout.FileOptions
 }
 
 // NewRunner initializes a generate runner.
@@ -159,7 +159,7 @@ func (r *Runner) writeDryRun(w io.Writer, res result) error {
 }
 
 func (r *Runner) writeOutputFile(outPath, rendered string) error {
-	file, err := cmdutil.OpenOutputFile(outPath, r.FileOptions)
+	file, err := fileout.OpenOutputFile(outPath, r.FileOptions)
 	if err != nil {
 		return err
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	appapply "github.com/sufield/stave/internal/app/apply"
@@ -98,11 +99,14 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 	if err != nil {
 		return RunConfig{}, err
 	}
+	// Intentional receiver mutation: parseDomain, validateDirs, and
+	// buildEvaluatorInput (called later in the run pipeline) all read
+	// ControlsDir/ObservationsDir from the receiver.
 	o.ControlsDir = ctlDir
 	o.ObservationsDir = obsDir
 
-	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
-	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
+	// IntegrityManifest and IntegrityPublicKey are already cleaned by
+	// normalize() in PreRunE — no duplicate cleaning needed here.
 
 	parsed, err := o.parseDomain()
 	if err != nil {
@@ -223,13 +227,13 @@ func (o *ApplyOptions) validateDirs() error {
 		return err
 	}
 	if !packs {
-		if err := cmdutil.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
+		if err := dircheck.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
 	}
 
 	if o.ObservationsDir != "-" {
-		if err := cmdutil.ValidateFlagDir("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
+		if err := dircheck.ValidateFlagDir("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
 			return err
 		}
 	}
@@ -326,17 +330,17 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
 	}
 
 	return ReadinessConfig{
-		ControlsDir:       ctlDir,
-		ObservationsDir:   obsDir,
-		MaxUnsafeDuration: maxUnsafe,
-		Now:               now,
-		Format:            format,
-		Quiet:             cs.GlobalFlags.Quiet,
-		Sanitize:          cs.GlobalFlags.Sanitize,
-		Stdout:            cs.Stdout,
-		Stderr:            cs.Stderr,
-		ControlsFlagSet:   o.controlsSet,
-		HasEnabledPacks:   hasPacks,
-		PrereqChecks:      prereqs,
+		ControlsDir:            ctlDir,
+		ObservationsDir:        obsDir,
+		MaxUnsafeDuration:      maxUnsafe,
+		Now:                    now,
+		Format:                 format,
+		Quiet:                  cs.GlobalFlags.Quiet,
+		Sanitize:               cs.GlobalFlags.Sanitize,
+		Stdout:                 cs.Stdout,
+		Stderr:                 cs.Stderr,
+		ControlsFlagSet:        o.controlsSet,
+		HasEnabledControlPacks: hasPacks,
+		PrereqChecks:           prereqs,
 	}, nil
 }

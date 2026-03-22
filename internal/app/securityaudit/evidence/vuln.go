@@ -48,7 +48,7 @@ type vulnFallbackEnvelope struct {
 }
 
 type DefaultVulnProvider struct {
-	RunGovulncheck GovulncheckRunner
+	RunGovulncheck VulnerabilityScanner
 	ReadFile       func(path string) ([]byte, error)
 	StatFile       func(string) (fs.FileInfo, error)
 }
@@ -107,7 +107,7 @@ func resolveVulnFallback(req Params, readFile func(string) ([]byte, error), stat
 	}, req.Now), nil
 }
 
-func executeGovulncheck(ctx context.Context, cwd string, run GovulncheckRunner, now time.Time) (VulnerabilitySnapshot, error) {
+func executeGovulncheck(ctx context.Context, cwd string, run VulnerabilityScanner, now time.Time) (VulnerabilitySnapshot, error) {
 	output, err := run(ctx, cwd)
 	if err != nil {
 		return VulnerabilitySnapshot{}, fmt.Errorf("govulncheck failed: %w", err)
