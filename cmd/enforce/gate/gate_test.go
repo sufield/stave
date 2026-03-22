@@ -174,11 +174,11 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	runner := NewRunner(compose.NewDefaultProvider())
 
 	result, err := runner.runPolicyOverdue(context.Background(), Config{
-		ControlsDir:     controlsDir,
-		ObservationsDir: observationsDir,
-		MaxUnsafe:       500 * time.Hour,
-		Clock:           ports.FixedClock(now),
-		Stdout:          &bytes.Buffer{},
+		ControlsDir:       controlsDir,
+		ObservationsDir:   observationsDir,
+		MaxUnsafeDuration: 500 * time.Hour,
+		Clock:             ports.FixedClock(now),
+		Stdout:            &bytes.Buffer{},
 	})
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
@@ -188,11 +188,11 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	}
 
 	result, err = runner.runPolicyOverdue(context.Background(), Config{
-		ControlsDir:     controlsDir,
-		ObservationsDir: observationsDir,
-		MaxUnsafe:       24 * time.Hour,
-		Clock:           ports.FixedClock(now),
-		Stdout:          &bytes.Buffer{},
+		ControlsDir:       controlsDir,
+		ObservationsDir:   observationsDir,
+		MaxUnsafeDuration: 24 * time.Hour,
+		Clock:             ports.FixedClock(now),
+		Stdout:            &bytes.Buffer{},
 	})
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)

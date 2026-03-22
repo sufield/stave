@@ -3,15 +3,18 @@ package apply
 import (
 	"context"
 	"io"
+	"log/slog"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
-
-	"os"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
 )
@@ -53,9 +56,9 @@ func TestResolveApplyOptions(t *testing.T) {
 	t.Run("valid flags with defaults", func(t *testing.T) {
 		opts := &ApplyOptions{
 			SharedOptions: SharedOptions{
-				ControlsDir:     filepath.Join(fixture, "controls"),
-				ObservationsDir: filepath.Join(fixture, "observations"),
-				MaxUnsafe:       "168h",
+				ControlsDir:       filepath.Join(fixture, "controls"),
+				ObservationsDir:   filepath.Join(fixture, "observations"),
+				MaxUnsafeDuration: "168h",
 			},
 		}
 
@@ -63,8 +66,8 @@ func TestResolveApplyOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if cfg.Params.maxDuration != 168*time.Hour {
-			t.Errorf("maxDuration = %v, want 168h", cfg.Params.maxDuration)
+		if cfg.Params.maxUnsafeDuration != 168*time.Hour {
+			t.Errorf("maxUnsafeDuration = %v, want 168h", cfg.Params.maxUnsafeDuration)
 		}
 		if cfg.Params.source.IsStdin() {
 			t.Error("source should not be stdin")
@@ -78,10 +81,10 @@ func TestResolveApplyOptions(t *testing.T) {
 	t.Run("valid flags with --now", func(t *testing.T) {
 		opts := &ApplyOptions{
 			SharedOptions: SharedOptions{
-				ControlsDir:     filepath.Join(fixture, "controls"),
-				ObservationsDir: filepath.Join(fixture, "observations"),
-				MaxUnsafe:       "7d",
-				NowTime:         "2026-01-15T00:00:00Z",
+				ControlsDir:       filepath.Join(fixture, "controls"),
+				ObservationsDir:   filepath.Join(fixture, "observations"),
+				MaxUnsafeDuration: "7d",
+				NowTime:           "2026-01-15T00:00:00Z",
 			},
 		}
 
@@ -89,8 +92,8 @@ func TestResolveApplyOptions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if cfg.Params.maxDuration != 7*24*time.Hour {
-			t.Errorf("maxDuration = %v, want 168h (7d)", cfg.Params.maxDuration)
+		if cfg.Params.maxUnsafeDuration != 7*24*time.Hour {
+			t.Errorf("maxUnsafeDuration = %v, want 168h (7d)", cfg.Params.maxUnsafeDuration)
 		}
 		fc, ok := cfg.Params.clock.(clockadp.FixedClock)
 		if !ok {
@@ -105,9 +108,9 @@ func TestResolveApplyOptions(t *testing.T) {
 	t.Run("stdin mode", func(t *testing.T) {
 		opts := &ApplyOptions{
 			SharedOptions: SharedOptions{
-				ControlsDir:     filepath.Join(fixture, "controls"),
-				ObservationsDir: "-",
-				MaxUnsafe:       "168h",
+				ControlsDir:       filepath.Join(fixture, "controls"),
+				ObservationsDir:   "-",
+				MaxUnsafeDuration: "168h",
 			},
 		}
 
@@ -129,9 +132,9 @@ func TestResolveApplyOptions(t *testing.T) {
 			name: "controls dir not found",
 			opts: ApplyOptions{
 				SharedOptions: SharedOptions{
-					ControlsDir:     "/nonexistent/path",
-					ObservationsDir: filepath.Join(fixture, "observations"),
-					MaxUnsafe:       "168h",
+					ControlsDir:       "/nonexistent/path",
+					ObservationsDir:   filepath.Join(fixture, "observations"),
+					MaxUnsafeDuration: "168h",
 				},
 			},
 			wantContain: "--controls path",
@@ -140,9 +143,9 @@ func TestResolveApplyOptions(t *testing.T) {
 			name: "observations dir not found",
 			opts: ApplyOptions{
 				SharedOptions: SharedOptions{
-					ControlsDir:     filepath.Join(fixture, "controls"),
-					ObservationsDir: "/nonexistent/path",
-					MaxUnsafe:       "168h",
+					ControlsDir:       filepath.Join(fixture, "controls"),
+					ObservationsDir:   "/nonexistent/path",
+					MaxUnsafeDuration: "168h",
 				},
 			},
 			wantContain: "--observations path",
@@ -151,9 +154,9 @@ func TestResolveApplyOptions(t *testing.T) {
 			name: "invalid max-unsafe",
 			opts: ApplyOptions{
 				SharedOptions: SharedOptions{
-					ControlsDir:     filepath.Join(fixture, "controls"),
-					ObservationsDir: filepath.Join(fixture, "observations"),
-					MaxUnsafe:       "not-a-duration",
+					ControlsDir:       filepath.Join(fixture, "controls"),
+					ObservationsDir:   filepath.Join(fixture, "observations"),
+					MaxUnsafeDuration: "not-a-duration",
 				},
 			},
 			wantContain: "invalid --max-unsafe",
@@ -162,10 +165,10 @@ func TestResolveApplyOptions(t *testing.T) {
 			name: "invalid --now format",
 			opts: ApplyOptions{
 				SharedOptions: SharedOptions{
-					ControlsDir:     filepath.Join(fixture, "controls"),
-					ObservationsDir: filepath.Join(fixture, "observations"),
-					MaxUnsafe:       "168h",
-					NowTime:         "not-a-time",
+					ControlsDir:       filepath.Join(fixture, "controls"),
+					ObservationsDir:   filepath.Join(fixture, "observations"),
+					MaxUnsafeDuration: "168h",
+					NowTime:           "not-a-time",
 				},
 			},
 			wantContain: "invalid timestamp",
@@ -191,9 +194,9 @@ func TestResolveApplyOptions(t *testing.T) {
 		}
 		opts := &ApplyOptions{
 			SharedOptions: SharedOptions{
-				ControlsDir:     files[0],
-				ObservationsDir: filepath.Join(fixture, "observations"),
-				MaxUnsafe:       "168h",
+				ControlsDir:       files[0],
+				ObservationsDir:   filepath.Join(fixture, "observations"),
+				MaxUnsafeDuration: "168h",
 			},
 		}
 
@@ -222,11 +225,18 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 }
 
 func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
+	format, _ := ui.ParseOutputFormat(opts.Format)
+	hasher := crypto.NewHasher()
 	return &Builder{
 		Ctx:       context.Background(),
+		Logger:    slog.Default(),
 		Stdout:    io.Discard,
 		Stderr:    io.Discard,
+		Stdin:     strings.NewReader(""),
 		Sanitizer: sanitize.New(),
+		Format:    format,
+		Digester:  hasher,
+		IDGen:     hasher,
 		Opts:      opts,
 		Params:    params,
 		Provider:  compose.NewDefaultProvider(),
@@ -246,9 +256,9 @@ func TestBuildApplyDeps(t *testing.T) {
 		}
 
 		params := applyParams{
-			maxDuration: 168 * time.Hour,
-			clock:       clockadp.RealClock{},
-			source:      appeval.ObservationSource(opts.ObservationsDir),
+			maxUnsafeDuration: 168 * time.Hour,
+			clock:             clockadp.RealClock{},
+			source:            appeval.ObservationSource(opts.ObservationsDir),
 		}
 
 		deps, err := buildWithNewPlan(testBuilder(opts, params))
@@ -260,8 +270,8 @@ func TestBuildApplyDeps(t *testing.T) {
 		if deps.Config.ControlsDir != opts.ControlsDir {
 			t.Errorf("ControlsDir = %q, want %q", deps.Config.ControlsDir, opts.ControlsDir)
 		}
-		if deps.Config.MaxUnsafe != 168*time.Hour {
-			t.Errorf("MaxUnsafe = %v, want 168h", deps.Config.MaxUnsafe)
+		if deps.Config.MaxUnsafeDuration != 168*time.Hour {
+			t.Errorf("MaxUnsafe = %v, want 168h", deps.Config.MaxUnsafeDuration)
 		}
 		if deps.Runner == nil {
 			t.Error("Runner should not be nil")
@@ -278,9 +288,9 @@ func TestBuildApplyDeps(t *testing.T) {
 		}
 
 		params := applyParams{
-			maxDuration: 24 * time.Hour,
-			clock:       clockadp.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
-			source:      appeval.ObservationSource(opts.ObservationsDir),
+			maxUnsafeDuration: 24 * time.Hour,
+			clock:             clockadp.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
+			source:            appeval.ObservationSource(opts.ObservationsDir),
 		}
 
 		deps, err := buildWithNewPlan(testBuilder(opts, params))
@@ -304,9 +314,9 @@ func TestBuildApplyDeps(t *testing.T) {
 		}
 
 		params := applyParams{
-			maxDuration: 168 * time.Hour,
-			clock:       clockadp.RealClock{},
-			source:      appeval.ObservationSource(opts.ObservationsDir),
+			maxUnsafeDuration: 168 * time.Hour,
+			clock:             clockadp.RealClock{},
+			source:            appeval.ObservationSource(opts.ObservationsDir),
 		}
 
 		_, err := buildWithNewPlan(testBuilder(opts, params))

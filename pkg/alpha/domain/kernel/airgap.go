@@ -51,9 +51,14 @@ func DefaultPolicy() AirgapPolicy {
 		cloudPermissions: map[string][]string{
 			"aws": {
 				"s3:GetBucketAcl",
+				"s3:GetBucketLogging",
+				"s3:GetBucketObjectLockConfiguration",
 				"s3:GetBucketPolicy",
 				"s3:GetBucketPublicAccessBlock",
 				"s3:GetBucketTagging",
+				"s3:GetBucketVersioning",
+				"s3:GetEncryptionConfiguration",
+				"s3:GetLifecycleConfiguration",
 				"s3:ListAllMyBuckets",
 			},
 		},

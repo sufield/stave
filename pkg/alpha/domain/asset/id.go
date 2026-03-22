@@ -28,7 +28,7 @@ func ParseID(raw string) (ID, error) {
 	return ID(raw), nil
 }
 
-// UnmarshalJSON validates asset identifiers at ingest time.
+// UnmarshalJSON validates asset identifiers during JSON deserialization.
 func (id *ID) UnmarshalJSON(data []byte) error {
 	var raw string
 	if err := json.Unmarshal(data, &raw); err != nil {

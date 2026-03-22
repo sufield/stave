@@ -58,7 +58,7 @@ func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Result) {
 	d.ln("==================")
 	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n\n",
 		result.Run.Now.Format("2006-01-02 15:04:05 UTC"),
-		result.Run.MaxUnsafe.String(),
+		result.Run.MaxUnsafeDuration.String(),
 		result.Run.Snapshots)
 	d.ln("Summary")
 	d.ln("-------")

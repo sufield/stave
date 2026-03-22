@@ -13,7 +13,9 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
-// Reporter handles the visual presentation of results to the user.
+// Reporter handles the visual presentation of evaluation and readiness
+// results to the user. It writes structured output to Stdout and
+// progress/hint messages to Stderr.
 type Reporter struct {
 	Stdout  io.Writer
 	Stderr  io.Writer
@@ -26,13 +28,15 @@ type Reporter struct {
 func (r *Reporter) ReportApply(res EvaluateResult) error {
 	if res.SafetyStatus == evaluation.StatusSafe {
 		if !r.Quiet {
-			fmt.Fprintln(r.Stderr, "Evaluation complete. No violations found.")
+			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations found."); err != nil {
+				return err
+			}
 		}
 		return nil
 	}
 
 	if !r.Quiet {
-		ui.WriteHint(r.Stderr, res.DiagnoseHint)
+		ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 		r.Runtime.PrintNextSteps(res.NextSteps...)
 	}
 
@@ -45,41 +49,65 @@ func (r *Reporter) ReportPlan(report validation.ReadinessReport) error {
 		return nil
 	}
 
-	fmt.Fprintf(r.Stdout, "Plan Summary\n------------\n")
-	fmt.Fprintf(r.Stdout, "Ready:        %t\n", report.Ready)
-	fmt.Fprintf(r.Stdout, "Controls:     %s\n", report.ControlsDir)
-	fmt.Fprintf(r.Stdout, "Observations: %s\n", report.ObservationsDir)
-	fmt.Fprintf(r.Stdout, "Checked:      %d controls, %d snapshots, %d asset observations\n",
+	w := r.Stdout
+	if _, err := fmt.Fprintf(w, "Plan Summary\n------------\n"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "Ready:        %t\n", report.Ready); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "Controls:     %s\n", report.ControlsDir); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "Observations: %s\n", report.ObservationsDir); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "Checked:      %d controls, %d snapshots, %d asset observations\n",
 		report.Summary.ControlsChecked,
 		report.Summary.SnapshotsChecked,
-		report.Summary.AssetObservationsChecked)
+		report.Summary.AssetObservationsChecked); err != nil {
+		return err
+	}
 
 	issues := report.Issues()
 	if len(issues) > 0 {
-		fmt.Fprintln(r.Stdout, "\nIssues:")
+		if _, err := fmt.Fprintln(w, "\nIssues:"); err != nil {
+			return err
+		}
 		for _, issue := range issues {
-			r.printReadinessIssue(issue)
+			if err := printReadinessIssue(w, issue); err != nil {
+				return err
+			}
 		}
 	}
 
-	fmt.Fprintf(r.Stdout, "\nNext: %s\n", report.NextCommand)
-	return nil
+	_, err := fmt.Fprintf(w, "\nNext: %s\n", report.NextCommand)
+	return err
 }
 
-func (r *Reporter) printReadinessIssue(issue validation.Issue) {
-	fmt.Fprintf(r.Stdout, "  [%s] %s: %s\n", issue.Status.Label(), issue.Name, issue.Message)
+func printReadinessIssue(w io.Writer, issue validation.Issue) error {
+	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", issue.Status.Label(), issue.Name, issue.Message); err != nil {
+		return err
+	}
 
 	if fix := strings.TrimSpace(issue.Fix); fix != "" {
-		fmt.Fprintf(r.Stdout, "    Fix: %s\n", fix)
+		if _, err := fmt.Fprintf(w, "    Fix: %s\n", fix); err != nil {
+			return err
+		}
 	}
 
 	if cmd := strings.TrimSpace(issue.Command); cmd != "" {
-		fmt.Fprintf(r.Stdout, "    Command: %s\n", cmd)
+		if _, err := fmt.Fprintf(w, "    Command: %s\n", cmd); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 // decorateError maps domain-specific errors to user-facing remediation hints.
-// This is presentation logic — it translates domain errors into CLI guidance.
+// This is presentation logic — it translates domain errors into CLI guidance
+// using sentinel error matching via errors.Is.
 func decorateError(err error) error {
 	var hint error
 	switch {

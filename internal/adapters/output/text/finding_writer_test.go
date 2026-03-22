@@ -22,11 +22,11 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "test",
-			Offline:      true,
-			Now:          time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
-			MaxUnsafe:    kernel.Duration(24 * time.Hour),
-			Snapshots:    2,
+			StaveVersion:      "test",
+			Offline:           true,
+			Now:               time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			Snapshots:         2,
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 2,
@@ -63,11 +63,11 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "test",
-			Offline:      true,
-			Now:          now,
-			MaxUnsafe:    kernel.Duration(24 * time.Hour),
-			Snapshots:    3,
+			StaveVersion:      "test",
+			Offline:           true,
+			Now:               now,
+			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			Snapshots:         3,
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 3,
@@ -155,11 +155,11 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "test",
-			Offline:      true,
-			Now:          now,
-			MaxUnsafe:    kernel.Duration(24 * time.Hour),
-			Snapshots:    2,
+			StaveVersion:      "test",
+			Offline:           true,
+			Now:               now,
+			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			Snapshots:         2,
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 2,

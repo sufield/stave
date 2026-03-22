@@ -21,7 +21,6 @@ Stave is an offline configuration safety evaluator. This page defines what it do
 |---------|---------|
 | `apply` | Detect violations against control rules |
 | `apply --profile aws-s3` | Evaluate S3 observations against the healthcare control profile |
-| `ingest --profile aws-s3` | Convert AWS S3 snapshots to observation format |
 | `validate` | Verify inputs are well-formed before evaluation |
 | `diagnose` | Explain unexpected evaluation results |
 | `verify` | Compare before/after snapshots to confirm a fix |
@@ -42,7 +41,7 @@ Stave is an offline configuration safety evaluator. This page defines what it do
 
 ### Snapshot sensitivity
 
-Terraform plan/state exports and AWS CLI snapshots may contain embedded credentials or sensitive values in rare cases. Stave treats all asset properties as opaque data and does not detect or filter secrets within snapshots. Use `--sanitize` and `ingest --profile aws-s3 --scrub` when sharing outputs.
+Terraform plan/state exports and AWS CLI snapshots may contain embedded credentials or sensitive values in rare cases. Stave treats all asset properties as opaque data and does not detect or filter secrets within snapshots. Use `--sanitize` when sharing outputs.
 
 ### Duration requires two snapshots
 

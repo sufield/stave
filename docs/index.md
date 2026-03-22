@@ -43,7 +43,7 @@
 - [Execution Safety](trust/execution-safety.md) — Runtime safety properties
 - [Data Flow and I/O](trust/data-flow-and-io.md) — What data goes where
 - [Threat Model](security/threat-model.md)
-- [Minimum IAM for S3 Ingest](security/iam-minimum-s3-ingest.md)
+- [Minimum IAM for S3 Observation Collection](security/iam-minimum-s3-observation.md)
 
 ## Release and Verification
 

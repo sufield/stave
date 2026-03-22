@@ -15,7 +15,7 @@ This scaffold assumes snapshots are captured from **production** to remediate
 Project-wide unsafe-duration threshold:
 ```text
 {{ .ProjectConfigFile }}
-max_unsafe: {{ .MaxUnsafe }}
+max_unsafe: {{ .MaxUnsafeDuration }}
 snapshot_retention: {{ .Retention }}
 default_retention_tier: {{ .RetentionTier }}
 snapshot_retention_tiers:

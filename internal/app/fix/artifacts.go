@@ -134,16 +134,16 @@ type LoopArtifacts struct {
 
 // LoopReport is the structured output of a fix-loop run.
 type LoopReport struct {
-	SchemaVersion kernel.Schema                      `json:"schema_version"`
-	Kind          kernel.OutputKind                  `json:"kind"`
-	CheckedAt     time.Time                          `json:"checked_at"`
-	Pass          bool                               `json:"pass"`
-	Reason        string                             `json:"reason"`
-	MaxUnsafe     string                             `json:"max_unsafe"`
-	Before        ObservationSummary                 `json:"before"`
-	After         ObservationSummary                 `json:"after"`
-	Verification  safetyenvelope.VerificationSummary `json:"verification"`
-	Artifacts     LoopArtifacts                      `json:"artifacts,omitzero"`
+	SchemaVersion     kernel.Schema                      `json:"schema_version"`
+	Kind              kernel.OutputKind                  `json:"kind"`
+	CheckedAt         time.Time                          `json:"checked_at"`
+	Pass              bool                               `json:"pass"`
+	Reason            string                             `json:"reason"`
+	MaxUnsafeDuration string                             `json:"max_unsafe"`
+	Before            ObservationSummary                 `json:"before"`
+	After             ObservationSummary                 `json:"after"`
+	Verification      safetyenvelope.VerificationSummary `json:"verification"`
+	Artifacts         LoopArtifacts                      `json:"artifacts,omitzero"`
 }
 
 // ObservationSummary captures snapshot and violation counts for one side.

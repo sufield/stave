@@ -46,7 +46,6 @@ jobs:
           check_pattern 'internal/testutil/'         'testutil was deleted'
 
           # Commands that were removed
-          check_pattern 'stave ingest'               'ingest command was removed'
           check_pattern 'stave-dev extractor'        'extractor command was removed'
           check_pattern 'security-audit'             'security-audit command does not exist'
 

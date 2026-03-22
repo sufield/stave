@@ -48,7 +48,7 @@ type unsafeStateStrategy struct {
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
-	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
+	maxUnsafe := s.runner.getMaxUnsafeDurationForControl(s.ctl)
 
 	if t.CurrentlySafe() {
 		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
@@ -88,7 +88,7 @@ type unsafeDurationStrategy struct {
 
 func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
-	maxUnsafe := s.runner.getMaxUnsafeForControl(s.ctl)
+	maxUnsafe := s.runner.getMaxUnsafeDurationForControl(s.ctl)
 
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)

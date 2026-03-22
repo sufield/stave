@@ -26,17 +26,17 @@ type VerifyDeps struct {
 
 // VerifyRequest holds the fully-resolved parameters for a verify run.
 type VerifyRequest struct {
-	Ctx          context.Context
-	BeforeDir    string
-	AfterDir     string
-	ControlsDir  string
-	MaxUnsafe    time.Duration
-	Clock        ports.Clock
-	AllowUnknown bool
-	Quiet        bool
-	Sanitizer    kernel.Sanitizer
-	Stdout       io.Writer
-	CELEvaluator policy.PredicateEval
+	Ctx               context.Context
+	BeforeDir         string
+	AfterDir          string
+	ControlsDir       string
+	MaxUnsafeDuration time.Duration
+	Clock             ports.Clock
+	AllowUnknown      bool
+	Quiet             bool
+	Sanitizer         kernel.Sanitizer
+	Stdout            io.Writer
+	CELEvaluator      policy.PredicateEval
 }
 
 // RunVerify executes the before/after comparison workflow.
@@ -67,13 +67,13 @@ func RunVerify(deps VerifyDeps, req VerifyRequest) error {
 
 	// 3. Compare
 	cmp, err := Compare(CompareRequest{
-		BeforeFindings:  before.result.Findings,
-		AfterFindings:   after.result.Findings,
-		BeforeSnapshots: before.snapshotCount,
-		AfterSnapshots:  after.snapshotCount,
-		MaxUnsafe:       req.MaxUnsafe,
-		Now:             req.Clock.Now(),
-		Sanitizer:       req.Sanitizer,
+		BeforeFindings:    before.result.Findings,
+		AfterFindings:     after.result.Findings,
+		BeforeSnapshots:   before.snapshotCount,
+		AfterSnapshots:    after.snapshotCount,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
+		Now:               req.Clock.Now(),
+		Sanitizer:         req.Sanitizer,
 	})
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.Control
 		Context:           req.Ctx,
 		ObservationsDir:   obsDir,
 		Controls:          controls,
-		MaxUnsafe:         req.MaxUnsafe,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
 		Clock:             req.Clock,
 		AllowUnknownType:  req.AllowUnknown,
 		StaveVersion:      staveversion.String,

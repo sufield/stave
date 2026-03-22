@@ -16,7 +16,7 @@ func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
-	got := projconfig.Global().MaxUnsafe()
+	got := projconfig.Global().MaxUnsafeDuration()
 	if got != appconfig.DefaultMaxUnsafeDuration {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, appconfig.DefaultMaxUnsafeDuration)
 	}
@@ -31,7 +31,7 @@ func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.Global().MaxUnsafe()
+	got := projconfig.Global().MaxUnsafeDuration()
 	if got != "24h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "24h")
 	}
@@ -51,7 +51,7 @@ func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
 	}
 	chdirForTest(t, nested)
 
-	got := projconfig.Global().MaxUnsafe()
+	got := projconfig.Global().MaxUnsafeDuration()
 	if got != "36h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "36h")
 	}
@@ -68,7 +68,7 @@ func TestResolveMaxUnsafeDefault_UserConfigFallback(t *testing.T) {
 	}
 	chdirForTest(t, tmp)
 
-	got := projconfig.Global().MaxUnsafe()
+	got := projconfig.Global().MaxUnsafeDuration()
 	if got != "60h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "60h")
 	}

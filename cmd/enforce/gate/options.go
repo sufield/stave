@@ -14,18 +14,18 @@ import (
 
 // gateOptions holds the raw CLI flag values before validation.
 type gateOptions struct {
-	PolicyRaw string
-	InPath    string
-	BasePath  string
-	CtlDir    string
-	ObsDir    string
-	MaxUnsafe string
-	NowRaw    string
-	FormatRaw string
+	PolicyRaw         string
+	InPath            string
+	BasePath          string
+	CtlDir            string
+	ObsDir            string
+	MaxUnsafeDuration string
+	NowRaw            string
+	FormatRaw         string
 }
 
 // DefaultOptions returns the standard defaults for the gate command.
-// Config-derived fields (PolicyRaw, MaxUnsafe) start as zero values;
+// Config-derived fields (PolicyRaw, MaxUnsafeDuration) start as zero values;
 // call resolveConfigDefaults after flag parsing to fill them from project config.
 func DefaultOptions() gateOptions {
 	return gateOptions{
@@ -45,7 +45,7 @@ func (o *gateOptions) resolveConfigDefaults(cmd *cobra.Command) {
 		o.PolicyRaw = string(eval.CIFailurePolicy())
 	}
 	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafe = eval.MaxUnsafe()
+		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
 }
 
@@ -57,7 +57,7 @@ func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.BasePath, "baseline", o.BasePath, "Path to baseline JSON (required for fail_on_new_violation)")
 	f.StringVarP(&o.CtlDir, "controls", "i", o.CtlDir, "Path to control definitions directory (used by fail_on_overdue_upcoming)")
 	f.StringVarP(&o.ObsDir, "observations", "o", o.ObsDir, "Path to observation snapshots directory (used by fail_on_overdue_upcoming)")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
 	f.StringVar(&o.NowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&o.FormatRaw, "format", "f", o.FormatRaw, "Output format: text or json")
 }
@@ -81,7 +81,7 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 
 	var maxUnsafeDur time.Duration
 	if policy == appconfig.GatePolicyOverdue {
-		maxUnsafeDur, err = timeutil.ParseDurationFlag(o.MaxUnsafe, "--max-unsafe")
+		maxUnsafeDur, err = timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 		if err != nil {
 			return Config{}, err
 		}
@@ -90,17 +90,17 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 	gf := cmdutil.GetGlobalFlags(cmd)
 
 	return Config{
-		Policy:          policy,
-		InPath:          fsutil.CleanUserPath(o.InPath),
-		BaselinePath:    fsutil.CleanUserPath(o.BasePath),
-		ControlsDir:     fsutil.CleanUserPath(o.CtlDir),
-		ObservationsDir: fsutil.CleanUserPath(o.ObsDir),
-		MaxUnsafe:       maxUnsafeDur,
-		Format:          format,
-		Quiet:           gf.Quiet,
-		Clock:           clock,
-		Sanitizer:       gf.GetSanitizer(),
-		Stdout:          cmd.OutOrStdout(),
-		Stderr:          cmd.ErrOrStderr(),
+		Policy:            policy,
+		InPath:            fsutil.CleanUserPath(o.InPath),
+		BaselinePath:      fsutil.CleanUserPath(o.BasePath),
+		ControlsDir:       fsutil.CleanUserPath(o.CtlDir),
+		ObservationsDir:   fsutil.CleanUserPath(o.ObsDir),
+		MaxUnsafeDuration: maxUnsafeDur,
+		Format:            format,
+		Quiet:             gf.Quiet,
+		Clock:             clock,
+		Sanitizer:         gf.GetSanitizer(),
+		Stdout:            cmd.OutOrStdout(),
+		Stderr:            cmd.ErrOrStderr(),
 	}, nil
 }

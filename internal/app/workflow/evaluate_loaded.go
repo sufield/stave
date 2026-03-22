@@ -12,14 +12,14 @@ import (
 
 // EvaluationRequest encapsulates loaded models and runtime options for evaluation.
 type EvaluationRequest struct {
-	Controls        []policy.ControlDefinition
-	Snapshots       []asset.Snapshot
-	MaxUnsafe       time.Duration
-	Clock           ports.Clock
-	Hasher          ports.Digester
-	StaveVersion    string
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	CELEvaluator    policy.PredicateEval
+	Controls          []policy.ControlDefinition
+	Snapshots         []asset.Snapshot
+	MaxUnsafeDuration time.Duration
+	Clock             ports.Clock
+	Hasher            ports.Digester
+	StaveVersion      string
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator      policy.PredicateEval
 }
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
@@ -30,13 +30,13 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 	}
 
 	return service.Evaluate(service.EvaluateInput{
-		Controls:        req.Controls,
-		Snapshots:       req.Snapshots,
-		MaxUnsafe:       req.MaxUnsafe,
-		Clock:           req.Clock,
-		Hasher:          req.Hasher,
-		StaveVersion:    req.StaveVersion,
-		PredicateParser: req.PredicateParser,
-		CELEvaluator:    req.CELEvaluator,
+		Controls:          req.Controls,
+		Snapshots:         req.Snapshots,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
+		Clock:             req.Clock,
+		Hasher:            req.Hasher,
+		StaveVersion:      req.StaveVersion,
+		PredicateParser:   req.PredicateParser,
+		CELEvaluator:      req.CELEvaluator,
 	})
 }

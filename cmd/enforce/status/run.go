@@ -47,18 +47,17 @@ type State struct {
 // RecommendNext returns a string command suggesting the most logical next step.
 func (s State) RecommendNext() string {
 	ctlDir := filepath.Join(s.Root, "controls")
-	rawDir := filepath.Join(s.Root, "snapshots", "raw", "aws-s3")
 	obsDir := filepath.Join(s.Root, "observations")
 	outPath := filepath.Join(s.Root, "output", "evaluation.json")
 
 	if s.RawSnapshots.Count > 0 && (s.Observations.Count == 0 || s.isRawNewerThanObs()) {
-		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
+		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)
 	}
 	if s.Controls.Count == 0 {
 		return fmt.Sprintf("stave generate control --id CTL.S3.PUBLIC.901 --out %s", filepath.Join(ctlDir, "CTL.S3.PUBLIC.901.yaml"))
 	}
 	if s.Observations.Count == 0 {
-		return fmt.Sprintf("stave ingest --profile aws-s3 --input %s --out %s", rawDir, obsDir)
+		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)
 	}
 	if s.needsReevaluation() {
 		return fmt.Sprintf("stave validate --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",

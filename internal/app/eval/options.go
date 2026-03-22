@@ -35,7 +35,7 @@ type Options struct {
 	ControlsDir        string
 	ConfigPath         string
 	UserConfigPath     string
-	MaxUnsafe          string
+	MaxUnsafeDuration  string
 	NowTime            string
 	ObservationsSource ObservationSource
 	IntegrityManifest  string
@@ -46,10 +46,10 @@ type Options struct {
 // ParsedOptions holds validated, parsed values ready for use.
 // Now is the parsed --now time; a zero value means "use real clock".
 type ParsedOptions struct {
-	ContextName string
-	MaxDuration time.Duration
-	Now         time.Time
-	Source      ObservationSource
+	ContextName       string
+	MaxUnsafeDuration time.Duration
+	Now               time.Time
+	Source            ObservationSource
 }
 
 // Validate normalizes string fields, checks cross-flag constraints,
@@ -78,10 +78,10 @@ func (o Options) Validate() (ParsedOptions, error) {
 	}
 
 	return ParsedOptions{
-		ContextName: o.resolveContextName(),
-		MaxDuration: maxDuration,
-		Now:         now,
-		Source:      o.ObservationsSource,
+		ContextName:       o.resolveContextName(),
+		MaxUnsafeDuration: maxDuration,
+		Now:               now,
+		Source:            o.ObservationsSource,
 	}, nil
 }
 
@@ -93,7 +93,7 @@ func (o Options) normalize() Options {
 	o.ControlsDir = strings.TrimSpace(o.ControlsDir)
 	o.ConfigPath = strings.TrimSpace(o.ConfigPath)
 	o.UserConfigPath = strings.TrimSpace(o.UserConfigPath)
-	o.MaxUnsafe = strings.TrimSpace(o.MaxUnsafe)
+	o.MaxUnsafeDuration = strings.TrimSpace(o.MaxUnsafeDuration)
 	o.NowTime = strings.TrimSpace(o.NowTime)
 	o.IntegrityManifest = strings.TrimSpace(o.IntegrityManifest)
 	o.IntegrityPublicKey = strings.TrimSpace(o.IntegrityPublicKey)
@@ -133,7 +133,7 @@ func validateFilePath(path, flag string) error {
 }
 
 func (o Options) parseMaxUnsafeDuration() (time.Duration, error) {
-	d, err := timeutil.ParseDuration(o.MaxUnsafe)
+	d, err := timeutil.ParseDuration(o.MaxUnsafeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("invalid --max-unsafe: %w", err)
 	}

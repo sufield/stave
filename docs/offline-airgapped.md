@@ -39,7 +39,6 @@ These activities are outside runtime execution and may require network:
 
 - Treat observation and output files as sensitive.
 - Use `--sanitize` for shared outputs.
-- Use `ingest --profile aws-s3 --scrub` before sharing extracted observations.
 - Prefer deterministic runs in CI with `--now`.
 
 ## Related Docs

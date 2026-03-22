@@ -19,7 +19,7 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 	}
 	clock := clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC))
 	cfg := NewConfig(plan,
-		WithMaxUnsafe(24*time.Hour),
+		WithMaxUnsafeDuration(24*time.Hour),
 		WithRuntime(io.Discard, io.Discard, clock, "test"),
 		WithAllowUnknownInput(true),
 	)
@@ -61,7 +61,7 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 	})
 
 	cfg := NewConfig(plan,
-		WithMaxUnsafe(24*time.Hour),
+		WithMaxUnsafeDuration(24*time.Hour),
 		WithRuntime(io.Discard, io.Discard, clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)), "test"),
 		WithExceptionConfig(exceptionCfg),
 		WithPreloadedControls(filtered),

@@ -7,10 +7,20 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
+const validateLongHelp = `Validate checks controls, observations, and configuration for correctness
+without running the full evaluation.
+
+What it checks:
+  - Control schema (id, name, description)
+  - Observation schema and timestamps
+  - Cross-file consistency and time sanity
+  - Duration format and feasibility` + metadata.OfflineHelpSuffix
+
 // NewCmd builds the validate command.
+// Panics if rt is nil — command wiring is a programming error, not a user error.
 func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
-		rt = ui.DefaultRuntime()
+		panic("validate.NewCmd: nil runtime")
 	}
 
 	opts := newOptions()
@@ -18,21 +28,10 @@ func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate inputs without evaluation",
-		Long: `Validate checks controls, observations, and configuration for correctness
-without running the full evaluation.
-
-What it checks:
-  - Control schema (id, name, description)
-  - Observation schema and timestamps
-  - Cross-file consistency and time sanity
-  - Duration format and feasibility` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Long:  validateLongHelp,
+		Args:  cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			opts.resolveConfigDefaults(cmd)
-			if err := opts.normalize(cmd); err != nil {
-				return err
-			}
-			return opts.validate()
+			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runValidate(cmd, p, rt, opts)

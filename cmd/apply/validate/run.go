@@ -2,6 +2,7 @@ package validate
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -38,16 +39,16 @@ func runValidate(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *
 		f = opts.Template
 	}
 	rep := &Reporter{
-		Writer:   out,
-		Format:   f,
-		Strict:   opts.Strict,
-		FixHints: opts.FixHints,
-		IsJSON:   gf.IsJSONMode(),
+		Writer:     out,
+		Format:     f,
+		Strict:     opts.Strict,
+		FixHints:   opts.FixHints,
+		GlobalJSON: gf.IsJSONMode(),
 	}
 
 	// 4. Branch: Single File vs. Full Project
 	if opts.InputPath != "" {
-		return runValidateSingleFile(rep, opts)
+		return runValidateSingleFile(os.Stdin, rep, opts)
 	}
 
 	return runValidateProject(cmd, p, rt, rep, opts)
@@ -59,7 +60,7 @@ func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime,
 	if len(params.issues) > 0 {
 		// If flag parsing itself generated diagnostic issues
 		result := &appservice.ValidationResult{Diagnostics: &diag.Result{Issues: params.issues}}
-		_ = rep.Write(result, opts)
+		_ = rep.Write(result, opts.hintCtx())
 		return rep.ExitStatus(result)
 	}
 
@@ -76,7 +77,7 @@ func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime,
 	result.Diagnostics.AddAll(PackConfigIssues())
 
 	// Write Output
-	if err := rep.Write(result, opts); err != nil {
+	if err := rep.Write(result, opts.hintCtx()); err != nil {
 		return err
 	}
 
@@ -110,13 +111,13 @@ func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validate
 	// Execute Domain Logic
 	runner := appvalidation.NewRun(obsLoader, ctlLoader)
 	cfg := appvalidation.Config{
-		ControlsDir:     opts.Controls,
-		ObservationsDir: opts.Observations,
-		MaxUnsafe:       *params.maxUnsafe,
-		NowTime:         params.nowTime,
-		SanitizePaths:   cmdutil.GetGlobalFlags(cmd).Sanitize,
-		PredicateParser: ctlyaml.ParsePredicate,
-		PredicateEval:   celEval,
+		ControlsDir:       opts.Controls,
+		ObservationsDir:   opts.Observations,
+		MaxUnsafeDuration: *params.maxUnsafe,
+		NowTime:           params.nowTime,
+		SanitizePaths:     cmdutil.GetGlobalFlags(cmd).Sanitize,
+		PredicateParser:   ctlyaml.ParsePredicate,
+		PredicateEval:     celEval,
 	}
 
 	return runner.Execute(compose.CommandContext(cmd), cfg)

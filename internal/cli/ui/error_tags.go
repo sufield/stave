@@ -53,8 +53,8 @@ var hintRegistry = []hintRule{
 		patterns: []string{"--observations not accessible"},
 		hint: RemediationHint{
 			Reason:      "Observation snapshots are missing or unreadable.",
-			NextCommand: "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations",
-			SearchQuery: "ingest observations directory not accessible",
+			NextCommand: "stave validate --controls ./controls --observations ./observations",
+			SearchQuery: "observations directory not accessible",
 		},
 	},
 	{
@@ -80,8 +80,8 @@ var hintRegistry = []hintRule{
 		patterns: []string{"no snapshots in"},
 		hint: RemediationHint{
 			Reason:      "No observation snapshots found for evaluation.",
-			NextCommand: "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations",
-			SearchQuery: "ingest no snapshots",
+			NextCommand: "stave validate --controls ./controls --observations ./observations",
+			SearchQuery: "no observation snapshots",
 		},
 	},
 	{

@@ -26,16 +26,16 @@ type LoadConfig struct {
 // EvaluateConfig holds configuration for the evaluate use case.
 type EvaluateConfig struct {
 	LoadConfig
-	MaxUnsafe       time.Duration
-	Clock           ports.Clock
-	Hasher          ports.Digester
-	Output          io.Writer
-	ExemptionConfig *policy.ExemptionConfig
-	ExceptionConfig *policy.ExceptionConfig
-	StaveVersion    string
-	Metadata        evaluation.Metadata
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	CELEvaluator    policy.PredicateEval
+	MaxUnsafeDuration time.Duration
+	Clock             ports.Clock
+	Hasher            ports.Digester
+	Output            io.Writer
+	ExemptionConfig   *policy.ExemptionConfig
+	ExceptionConfig   *policy.ExceptionConfig
+	StaveVersion      string
+	Metadata          evaluation.Metadata
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator      policy.PredicateEval
 }
 
 // EvaluateRun executes the evaluation use case.
@@ -77,18 +77,18 @@ func (e *EvaluateRun) ExecuteAndReturn(ctx context.Context, cfg EvaluateConfig) 
 	snapshots := preflight.Snapshots
 
 	result, err := service.Evaluate(service.EvaluateInput{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		MaxUnsafe:       cfg.MaxUnsafe,
-		Clock:           cfg.Clock,
-		Hasher:          cfg.Hasher,
-		ExemptionConfig: cfg.ExemptionConfig,
-		ExceptionConfig: cfg.ExceptionConfig,
-		StaveVersion:    cfg.StaveVersion,
-		InputHashes:     preflight.Hashes,
-		PredicateParser: cfg.PredicateParser,
-		CELEvaluator:    cfg.CELEvaluator,
-		Metadata:        cfg.Metadata,
+		Controls:          controls,
+		Snapshots:         snapshots,
+		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Clock:             cfg.Clock,
+		Hasher:            cfg.Hasher,
+		ExemptionConfig:   cfg.ExemptionConfig,
+		ExceptionConfig:   cfg.ExceptionConfig,
+		StaveVersion:      cfg.StaveVersion,
+		InputHashes:       preflight.Hashes,
+		PredicateParser:   cfg.PredicateParser,
+		CELEvaluator:      cfg.CELEvaluator,
+		Metadata:          cfg.Metadata,
 	})
 	if err != nil {
 		return evaluation.Result{}, "", fmt.Errorf("evaluation failed: %w", err)

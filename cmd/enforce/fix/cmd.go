@@ -92,7 +92,7 @@ Examples:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			eval := cmdutil.EvaluatorFromCmd(cmd)
 			if !cmd.Flags().Changed("max-unsafe") {
-				maxUnsafeRaw = eval.MaxUnsafe()
+				maxUnsafeRaw = eval.MaxUnsafeDuration()
 			}
 			if !cmd.Flags().Changed("allow-unknown-input") {
 				allowUnknown = eval.AllowUnknownInput()
@@ -116,14 +116,14 @@ Examples:
 			}
 
 			return runner.Loop(cmd.Context(), LoopRequest{
-				BeforeDir:    fsutil.CleanUserPath(beforeDir),
-				AfterDir:     fsutil.CleanUserPath(afterDir),
-				ControlsDir:  fsutil.CleanUserPath(controlsDir),
-				OutDir:       fsutil.CleanUserPath(outDir),
-				MaxUnsafe:    maxUnsafe,
-				AllowUnknown: allowUnknown,
-				Stdout:       cmd.OutOrStdout(),
-				Stderr:       cmd.ErrOrStderr(),
+				BeforeDir:         fsutil.CleanUserPath(beforeDir),
+				AfterDir:          fsutil.CleanUserPath(afterDir),
+				ControlsDir:       fsutil.CleanUserPath(controlsDir),
+				OutDir:            fsutil.CleanUserPath(outDir),
+				MaxUnsafeDuration: maxUnsafe,
+				AllowUnknown:      allowUnknown,
+				Stdout:            cmd.OutOrStdout(),
+				Stderr:            cmd.ErrOrStderr(),
 			})
 		},
 		SilenceUsage:  true,

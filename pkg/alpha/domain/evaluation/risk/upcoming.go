@@ -147,12 +147,12 @@ func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {
 
 // Request provides the inputs required to compute upcoming risk.
 type Request struct {
-	Controls        []policy.ControlDefinition
-	Snapshots       []asset.Snapshot
-	GlobalMaxUnsafe time.Duration
-	Now             time.Time
-	PredicateParser func(any) (*policy.UnsafePredicate, error) // kept for signature compat
-	PredicateEval   policy.PredicateEval
+	Controls                []policy.ControlDefinition
+	Snapshots               []asset.Snapshot
+	GlobalMaxUnsafeDuration time.Duration
+	Now                     time.Time
+	PredicateParser         func(any) (*policy.UnsafePredicate, error) // kept for signature compat
+	PredicateEval           policy.PredicateEval
 }
 
 type assetState struct {
@@ -181,7 +181,7 @@ func ComputeItems(req Request) Items {
 			continue
 		}
 
-		threshold := ctl.EffectiveMaxUnsafe(req.GlobalMaxUnsafe)
+		threshold := ctl.EffectiveMaxUnsafeDuration(req.GlobalMaxUnsafeDuration)
 		states := computeAssetStates(ctl, sortedSnaps, req.PredicateEval)
 
 		// 3. Convert states to risk items

@@ -17,13 +17,13 @@ import (
 
 // Config holds configuration for the diagnose use case.
 type Config struct {
-	ControlsDir     string
-	ObservationsDir string
-	PreviousResult  *evaluation.Result // Optional: pre-loaded evaluation result (resolved by cmd layer).
-	MaxUnsafe       time.Duration
-	Clock           ports.Clock
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	PredicateEval   policy.PredicateEval
+	ControlsDir       string
+	ObservationsDir   string
+	PreviousResult    *evaluation.Result // Optional: pre-loaded evaluation result (resolved by cmd layer).
+	MaxUnsafeDuration time.Duration
+	Clock             ports.Clock
+	PredicateParser   func(any) (*policy.UnsafePredicate, error)
+	PredicateEval     policy.PredicateEval
 }
 
 // Run executes the diagnose use case.
@@ -72,7 +72,7 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		toDiagnosticFindings(result.Findings),
 		len(result.Findings),
 		result.Summary.AttackSurface,
-		cfg.MaxUnsafe,
+		cfg.MaxUnsafeDuration,
 		cfg.Clock.Now(),
 		cfg.PredicateEval,
 	)
@@ -144,12 +144,12 @@ func (d *Run) resolveResult(
 	}
 
 	result, err := service.Evaluate(service.EvaluateInput{
-		Controls:        artifacts.controls,
-		Snapshots:       artifacts.snapshots,
-		MaxUnsafe:       cfg.MaxUnsafe,
-		Clock:           cfg.Clock,
-		PredicateParser: cfg.PredicateParser,
-		CELEvaluator:    cfg.PredicateEval,
+		Controls:          artifacts.controls,
+		Snapshots:         artifacts.snapshots,
+		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Clock:             cfg.Clock,
+		PredicateParser:   cfg.PredicateParser,
+		CELEvaluator:      cfg.PredicateEval,
 	})
 	if err != nil {
 		return nil, err

@@ -166,7 +166,7 @@ func findingFromIAM(in evidence.PolicyInspectionSnapshot, err error) securityaud
 			Title:          "IAM minimum permissions missing",
 			Details:        "No required S3 IAM actions were declared.",
 			AuditorHint:    "Permissions transparency requires explicit minimum-action list.",
-			Recommendation: "Populate manifest_iam.go and regenerate docs/security/iam-minimum-s3-ingest.md.",
+			Recommendation: "Populate manifest_iam.go and regenerate docs/security/iam-minimum-s3-observation.md.",
 		}
 	}
 	return securityaudit.Finding{
@@ -175,7 +175,7 @@ func findingFromIAM(in evidence.PolicyInspectionSnapshot, err error) securityaud
 		Status:         securityaudit.StatusPass,
 		Severity:       securityaudit.SeverityHigh,
 		Title:          "IAM minimum permissions declared",
-		Details:        fmt.Sprintf("%d S3 IAM actions declared for ingest.", len(in.IAMActions)),
+		Details:        fmt.Sprintf("%d S3 IAM actions declared for observation collection.", len(in.IAMActions)),
 		AuditorHint:    "Least-privilege review can be performed against documented action set.",
 		Recommendation: "Compare this action list with deployed IAM policy statements.",
 	}

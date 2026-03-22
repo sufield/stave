@@ -12,14 +12,14 @@ import (
 
 // LoopRequest defines the inputs for the fix-loop workflow.
 type LoopRequest struct {
-	BeforeDir    string
-	AfterDir     string
-	ControlsDir  string
-	OutDir       string
-	MaxUnsafe    time.Duration
-	AllowUnknown bool
-	Stdout       io.Writer
-	Stderr       io.Writer
+	BeforeDir         string
+	AfterDir          string
+	ControlsDir       string
+	OutDir            string
+	MaxUnsafeDuration time.Duration
+	AllowUnknown      bool
+	Stdout            io.Writer
+	Stderr            io.Writer
 }
 
 // Loop delegates to the app-layer fix-loop service.
@@ -51,14 +51,14 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 	eb := r.newEnvelopeBuilder()
 
 	err = r.service.Loop(ctx, appfix.LoopRequest{
-		BeforeDir:    req.BeforeDir,
-		AfterDir:     req.AfterDir,
-		ControlsDir:  req.ControlsDir,
-		OutDir:       req.OutDir,
-		MaxUnsafe:    req.MaxUnsafe,
-		AllowUnknown: req.AllowUnknown,
-		Stdout:       req.Stdout,
-		Stderr:       req.Stderr,
+		BeforeDir:         req.BeforeDir,
+		AfterDir:          req.AfterDir,
+		ControlsDir:       req.ControlsDir,
+		OutDir:            req.OutDir,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
+		AllowUnknown:      req.AllowUnknown,
+		Stdout:            req.Stdout,
+		Stderr:            req.Stderr,
 	}, deps, am, eb)
 
 	if err == appfix.ErrViolationsRemaining {

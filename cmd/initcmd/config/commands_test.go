@@ -72,11 +72,11 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 	if configBase != appconfig.ProjectConfigFile {
 		t.Fatalf("config file base=%q want %q", configBase, appconfig.ProjectConfigFile)
 	}
-	if out.MaxUnsafe.Value != "96h" {
-		t.Fatalf("max_unsafe=%q want 96h", out.MaxUnsafe.Value)
+	if out.MaxUnsafeDuration.Value != "96h" {
+		t.Fatalf("max_unsafe=%q want 96h", out.MaxUnsafeDuration.Value)
 	}
-	if !strings.HasSuffix(out.MaxUnsafe.Source, appconfig.ProjectConfigFile+":max_unsafe") {
-		t.Fatalf("max_unsafe source=%q", out.MaxUnsafe.Source)
+	if !strings.HasSuffix(out.MaxUnsafeDuration.Source, appconfig.ProjectConfigFile+":max_unsafe") {
+		t.Fatalf("max_unsafe source=%q", out.MaxUnsafeDuration.Source)
 	}
 	if out.SnapshotRetention.Value != "7d" {
 		t.Fatalf("snapshot_retention=%q want 7d", out.SnapshotRetention.Value)

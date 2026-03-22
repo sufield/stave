@@ -41,12 +41,12 @@ func (h *InputHashes) Sanitized(s kernel.PathSanitizer) *InputHashes {
 
 // RunInfo captures the execution context and configuration of a specific evaluation run.
 type RunInfo struct {
-	StaveVersion string          `json:"tool_version"`
-	Offline      bool            `json:"offline"`
-	Now          time.Time       `json:"now"`
-	MaxUnsafe    kernel.Duration `json:"max_unsafe"`
-	Snapshots    int             `json:"snapshots"`
-	InputHashes  *InputHashes    `json:"input_hashes,omitempty"`
+	StaveVersion      string          `json:"tool_version"`
+	Offline           bool            `json:"offline"`
+	Now               time.Time       `json:"now"`
+	MaxUnsafeDuration kernel.Duration `json:"max_unsafe"`
+	Snapshots         int             `json:"snapshots"`
+	InputHashes       *InputHashes    `json:"input_hashes,omitempty"`
 	// PackHash is a fingerprint of the exact control set used during the run,
 	// ensuring that the evaluation logic itself is auditable.
 	PackHash kernel.Digest `json:"pack_hash,omitempty"`

@@ -25,12 +25,12 @@ import (
 func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
 	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
 	cfg := Config{
-		ControlID: "",
-		AssetID:   "res-1",
-		MaxUnsafe: 24 * time.Hour,
-		Format:    ui.OutputFormatText,
-		Stdout:    &bytes.Buffer{},
-		Stderr:    &bytes.Buffer{},
+		ControlID:         "",
+		AssetID:           "res-1",
+		MaxUnsafeDuration: 24 * time.Hour,
+		Format:            ui.OutputFormatText,
+		Stdout:            &bytes.Buffer{},
+		Stderr:            &bytes.Buffer{},
 	}
 	err := runner.Run(context.Background(), cfg)
 	if err == nil || !strings.Contains(err.Error(), "detail mode requires both") {
@@ -137,15 +137,15 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 	var out bytes.Buffer
 	runner := NewRunner(provider, clockadp.FixedClock(now))
 	cfg := Config{
-		ControlsDir:     "ctl",
-		ObservationsDir: "obs",
-		PreviousOutput:  evalFile,
-		MaxUnsafe:       time.Hour,
-		Format:          ui.OutputFormatJSON,
-		ControlID:       "CTL.TEST.A.001",
-		AssetID:         "res-1",
-		Stdout:          &out,
-		Stderr:          &bytes.Buffer{},
+		ControlsDir:       "ctl",
+		ObservationsDir:   "obs",
+		PreviousOutput:    evalFile,
+		MaxUnsafeDuration: time.Hour,
+		Format:            ui.OutputFormatJSON,
+		ControlID:         "CTL.TEST.A.001",
+		AssetID:           "res-1",
+		Stdout:            &out,
+		Stderr:            &bytes.Buffer{},
 	}
 
 	if runErr := runner.Run(context.Background(), cfg); runErr != nil {

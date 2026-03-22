@@ -15,12 +15,12 @@ import (
 
 // options represents the raw CLI flag inputs.
 type options struct {
-	BeforeDir    string
-	AfterDir     string
-	ControlsDir  string
-	MaxUnsafe    string
-	Now          string
-	AllowUnknown bool
+	BeforeDir         string
+	AfterDir          string
+	ControlsDir       string
+	MaxUnsafeDuration string
+	Now               string
+	AllowUnknown      bool
 }
 
 // newOptions initializes options with zero values for config-derived fields.
@@ -36,7 +36,7 @@ func newOptions() *options {
 func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
 	eval := cmdutil.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafe = eval.MaxUnsafe()
+		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
 	if !cmd.Flags().Changed("allow-unknown-input") {
 		o.AllowUnknown = eval.AllowUnknownInput()
@@ -50,7 +50,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.AfterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.Now, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 
@@ -81,18 +81,18 @@ func (o *options) validate() error {
 
 // Execution contains the resolved domain objects ready for the application layer.
 type Execution struct {
-	Context      context.Context
-	BeforeDir    string
-	AfterDir     string
-	ControlsDir  string
-	MaxUnsafe    time.Duration
-	Clock        ports.Clock
-	AllowUnknown bool
+	Context           context.Context
+	BeforeDir         string
+	AfterDir          string
+	ControlsDir       string
+	MaxUnsafeDuration time.Duration
+	Clock             ports.Clock
+	AllowUnknown      bool
 }
 
 // Complete transforms the raw options into a validated Execution object.
 func (o *options) Complete(ctx context.Context) (Execution, error) {
-	maxDuration, err := timeutil.ParseDurationFlag(o.MaxUnsafe, "--max-unsafe")
+	maxDuration, err := timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return Execution{}, err
 	}
@@ -103,12 +103,12 @@ func (o *options) Complete(ctx context.Context) (Execution, error) {
 	}
 
 	return Execution{
-		Context:      ctx,
-		BeforeDir:    o.BeforeDir,
-		AfterDir:     o.AfterDir,
-		ControlsDir:  o.ControlsDir,
-		MaxUnsafe:    maxDuration,
-		Clock:        clock,
-		AllowUnknown: o.AllowUnknown,
+		Context:           ctx,
+		BeforeDir:         o.BeforeDir,
+		AfterDir:          o.AfterDir,
+		ControlsDir:       o.ControlsDir,
+		MaxUnsafeDuration: maxDuration,
+		Clock:             clock,
+		AllowUnknown:      o.AllowUnknown,
 	}, nil
 }

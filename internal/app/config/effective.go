@@ -19,7 +19,7 @@ type EffectiveConfig struct {
 	ConfigFile               string                          `json:"config_file,omitempty"`
 	UserConfigFile           string                          `json:"user_config_file,omitempty"`
 	ProjectRoot              string                          `json:"project_root,omitempty"`
-	MaxUnsafe                ResolvedField                   `json:"max_unsafe"`
+	MaxUnsafeDuration        ResolvedField                   `json:"max_unsafe"`
 	SnapshotRetention        ResolvedField                   `json:"snapshot_retention"`
 	DefaultRetentionTier     ResolvedField                   `json:"default_retention_tier"`
 	CIFailurePolicy          ResolvedField                   `json:"ci_failure_policy"`
@@ -43,7 +43,7 @@ func (e *Evaluator) BuildEffectiveConfig() EffectiveConfig {
 	retTier := e.ResolveRetentionTier()
 	out := EffectiveConfig{
 		DefaultRetentionTier:     toResolvedField(retTier),
-		MaxUnsafe:                toResolvedField(e.ResolveMaxUnsafe()),
+		MaxUnsafeDuration:        toResolvedField(e.ResolveMaxUnsafeDuration()),
 		SnapshotRetention:        toResolvedField(e.ResolveSnapshotRetention(retTier.Value)),
 		CIFailurePolicy:          toResolvedField(e.ResolveCIFailurePolicy()),
 		CLIOutput:                toResolvedField(e.ResolveCLIOutput()),

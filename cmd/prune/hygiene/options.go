@@ -42,7 +42,7 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Con
 	// Dynamic defaults — resolve from project config when flags were not set.
 	maxUnsafe := o.maxUnsafe
 	if !cmd.Flags().Changed("max-unsafe") {
-		maxUnsafe = eval.MaxUnsafe()
+		maxUnsafe = eval.MaxUnsafeDuration()
 	}
 	olderThan := o.olderThan
 	if !cmd.Flags().Changed("older-than") {
@@ -93,33 +93,33 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Con
 	// Cross-validate via the domain Request.Parse to exercise its validation
 	// path (validateStatuses). This keeps Request.Parse reachable from main.
 	req := hygieneapp.Request{
-		MaxUnsafe: maxUnsafe,
-		DueSoon:   o.dueSoon,
-		Lookback:  o.lookback,
-		DueWithin: o.dueWithin,
-		KeepMin:   o.keepMin,
-		Statuses:  statuses,
-		NowTime:   o.nowRaw,
-		NowFunc:   func() time.Time { return now },
+		MaxUnsafeDuration: maxUnsafe,
+		DueSoon:           o.dueSoon,
+		Lookback:          o.lookback,
+		DueWithin:         o.dueWithin,
+		KeepMin:           o.keepMin,
+		Statuses:          statuses,
+		NowTime:           o.nowRaw,
+		NowFunc:           func() time.Time { return now },
 	}
 	if _, parseErr := req.Parse(); parseErr != nil {
 		return Config{}, parseErr
 	}
 
 	return Config{
-		ControlsDir:     fsutil.CleanUserPath(resolvedCtl),
-		ObservationsDir: fsutil.CleanUserPath(resolvedObs),
-		ArchiveDir:      fsutil.CleanUserPath(o.arcDir),
-		MaxUnsafe:       maxUnsafeDur,
-		DueSoon:         dueSoonDur,
-		Lookback:        lookbackDur,
-		OlderThan:       retentionDur,
-		RetentionTier:   validTier,
-		KeepMin:         o.keepMin,
-		Now:             now,
-		Format:          format,
-		Quiet:           gf.Quiet,
-		Stdout:          cmd.OutOrStdout(),
+		ControlsDir:       fsutil.CleanUserPath(resolvedCtl),
+		ObservationsDir:   fsutil.CleanUserPath(resolvedObs),
+		ArchiveDir:        fsutil.CleanUserPath(o.arcDir),
+		MaxUnsafeDuration: maxUnsafeDur,
+		DueSoon:           dueSoonDur,
+		Lookback:          lookbackDur,
+		OlderThan:         retentionDur,
+		RetentionTier:     validTier,
+		KeepMin:           o.keepMin,
+		Now:               now,
+		Format:            format,
+		Quiet:             gf.Quiet,
+		Stdout:            cmd.OutOrStdout(),
 		Filter: UpcomingFilter{
 			ControlIDs:   cmdutil.ToControlIDs(o.controlIDs),
 			AssetTypes:   cmdutil.ToAssetTypes(o.assetTypes),

@@ -17,14 +17,14 @@ type Config struct {
 	Snapshots []asset.Snapshot
 
 	// Resolved parameters.
-	MaxUnsafe       time.Duration
-	MaxUnsafeRaw    string
-	DueSoon         time.Duration
-	DueSoonRaw      string
-	Now             time.Time
-	Filter          risk.FilterCriteria
-	Sanitizer       kernel.Sanitizer
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
+	MaxUnsafeDuration    time.Duration
+	MaxUnsafeDurationRaw string
+	DueSoon              time.Duration
+	DueSoonRaw           string
+	Now                  time.Time
+	Filter               risk.FilterCriteria
+	Sanitizer            kernel.Sanitizer
+	PredicateParser      func(any) (*policy.UnsafePredicate, error)
 
 	// Output metadata (echoed in JSON output).
 	ControlsDir     string
@@ -42,11 +42,11 @@ func NewRunner() *Runner {
 // Run computes upcoming action items and returns the assembled output.
 func (r *Runner) Run(_ context.Context, cfg Config) (Output, error) {
 	riskItems := risk.ComputeItems(risk.Request{
-		Controls:        cfg.Controls,
-		Snapshots:       cfg.Snapshots,
-		GlobalMaxUnsafe: cfg.MaxUnsafe,
-		Now:             cfg.Now,
-		PredicateParser: cfg.PredicateParser,
+		Controls:                cfg.Controls,
+		Snapshots:               cfg.Snapshots,
+		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Now:                     cfg.Now,
+		PredicateParser:         cfg.PredicateParser,
 	})
 	riskItems = riskItems.Filter(cfg.Filter)
 
@@ -59,13 +59,13 @@ func (r *Runner) Run(_ context.Context, cfg Config) (Output, error) {
 
 	// Assemble final output
 	output := Output{
-		GeneratedAt:  cfg.Now,
-		ControlsDir:  cfg.ControlsDir,
-		Observations: cfg.ObservationsDir,
-		MaxUnsafe:    cfg.MaxUnsafeRaw,
-		DueSoon:      cfg.DueSoonRaw,
-		Summary:      summary,
-		Items:        items,
+		GeneratedAt:       cfg.Now,
+		ControlsDir:       cfg.ControlsDir,
+		Observations:      cfg.ObservationsDir,
+		MaxUnsafeDuration: cfg.MaxUnsafeDurationRaw,
+		DueSoon:           cfg.DueSoonRaw,
+		Summary:           summary,
+		Items:             items,
 	}
 	return output, nil
 }

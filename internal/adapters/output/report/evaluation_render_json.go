@@ -32,10 +32,10 @@ type reportComplianceEntry struct {
 }
 
 type reportRun struct {
-	EvaluationTime string `json:"evaluation_time"`
-	MaxUnsafe      string `json:"max_unsafe"`
-	Snapshots      int    `json:"snapshots"`
-	Offline        bool   `json:"offline"`
+	EvaluationTime    string `json:"evaluation_time"`
+	MaxUnsafeDuration string `json:"max_unsafe"`
+	Snapshots         int    `json:"snapshots"`
+	Offline           bool   `json:"offline"`
 }
 
 type reportSummary struct {
@@ -102,10 +102,10 @@ func newReportOutput(eval safetyenvelope.Evaluation, toolVersion string) reportO
 		GeneratedAt:  generated.Format(time.RFC3339),
 		StaveVersion: toolVersion,
 		Run: reportRun{
-			EvaluationTime: eval.Run.Now.Format(time.RFC3339),
-			MaxUnsafe:      eval.Run.MaxUnsafe.String(),
-			Snapshots:      eval.Run.Snapshots,
-			Offline:        eval.Run.Offline,
+			EvaluationTime:    eval.Run.Now.Format(time.RFC3339),
+			MaxUnsafeDuration: eval.Run.MaxUnsafeDuration.String(),
+			Snapshots:         eval.Run.Snapshots,
+			Offline:           eval.Run.Offline,
 		},
 		Summary: reportSummary{
 			AssetsEvaluated: eval.Summary.AssetsEvaluated,

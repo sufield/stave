@@ -50,11 +50,11 @@ func testReporter(buf *bytes.Buffer, jsonOutput bool, opts *options) *Reporter {
 		format = "json"
 	}
 	return &Reporter{
-		Writer:   buf,
-		Format:   format,
-		Strict:   opts.Strict,
-		FixHints: opts.FixHints,
-		IsJSON:   jsonOutput,
+		Writer:     buf,
+		Format:     format,
+		Strict:     opts.Strict,
+		FixHints:   opts.FixHints,
+		GlobalJSON: jsonOutput,
 	}
 }
 
@@ -111,11 +111,11 @@ func TestExitCode(t *testing.T) {
 func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 	opts := &options{
-		Controls:     filepath.Join(fixture, "controls"),
-		Observations: filepath.Join(fixture, "observations"),
-		MaxUnsafe:    "168h",
-		NowTime:      "2026-01-15T00:00:00Z",
-		Format:       "text",
+		Controls:          filepath.Join(fixture, "controls"),
+		Observations:      filepath.Join(fixture, "observations"),
+		MaxUnsafeDuration: "168h",
+		NowTime:           "2026-01-15T00:00:00Z",
+		Format:            "text",
 	}
 
 	cmd := &cobra.Command{Use: "test"}
@@ -153,7 +153,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 	var buf bytes.Buffer
 	opts := newOptions()
 	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts); err != nil {
+	if err := r.Write(result, opts.hintCtx()); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 	err := r.ExitStatus(result)
@@ -185,7 +185,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 	var buf bytes.Buffer
 	opts := newOptions()
 	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts); err != nil {
+	if err := r.Write(result, opts.hintCtx()); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 	err := r.ExitStatus(result)
@@ -222,7 +222,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	var buf bytes.Buffer
 	opts := newOptions()
 	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts); err != nil {
+	if err := r.Write(result, opts.hintCtx()); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 	err := r.ExitStatus(result)
@@ -260,7 +260,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	var buf bytes.Buffer
 	opts := newOptions()
 	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts); err != nil {
+	if err := r.Write(result, opts.hintCtx()); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 	err := r.ExitStatus(result)
@@ -295,7 +295,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 
 	var buf bytes.Buffer
 	r := testReporter(&buf, true, opts)
-	if err := r.Write(result, opts); err != nil {
+	if err := r.Write(result, opts.hintCtx()); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 	err := r.ExitStatus(result)
@@ -339,15 +339,15 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 
 	var buf bytes.Buffer
 	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts); err != nil {
+	if err := r.Write(result, opts.hintCtx()); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 	out := buf.String()
 	if !strings.Contains(out, "Suggested next commands:") {
 		t.Fatalf("expected fix hints section, got: %s", out)
 	}
-	if !strings.Contains(out, "stave ingest --profile aws-s3") {
-		t.Fatalf("expected ingest hint, got: %s", out)
+	if !strings.Contains(out, "Place observation JSON files") {
+		t.Fatalf("expected observation hint, got: %s", out)
 	}
 }
 
@@ -368,7 +368,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 
 	var buf bytes.Buffer
 	r := testReporter(&buf, true, opts)
-	_ = r.Write(result, opts)
+	_ = r.Write(result, opts.hintCtx())
 	out := buf.String()
 	if !strings.Contains(out, `"fix_hints"`) {
 		t.Fatalf("expected fix_hints in json output, got: %s", out)

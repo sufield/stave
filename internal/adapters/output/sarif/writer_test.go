@@ -19,10 +19,10 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "0.1.0",
-			Now:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-			MaxUnsafe:    kernel.Duration(12 * time.Hour),
-			Snapshots:    2,
+			StaveVersion:      "0.1.0",
+			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
 		},
 	}
 
@@ -65,10 +65,10 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "0.2.0",
-			Now:          now,
-			MaxUnsafe:    kernel.Duration(12 * time.Hour),
-			Snapshots:    2,
+			StaveVersion:      "0.2.0",
+			Now:               now,
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -166,10 +166,10 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "0.1.0",
-			Now:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-			MaxUnsafe:    kernel.Duration(12 * time.Hour),
-			Snapshots:    2,
+			StaveVersion:      "0.1.0",
+			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -249,10 +249,10 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "0.1.0",
-			Now:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-			MaxUnsafe:    kernel.Duration(12 * time.Hour),
-			Snapshots:    2,
+			StaveVersion:      "0.1.0",
+			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
 		},
 		Findings: []evaluation.Finding{
 			{

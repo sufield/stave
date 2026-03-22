@@ -43,7 +43,7 @@ Examples:
 			gf := cmdutil.GetGlobalFlags(cmd)
 
 			if !cmd.Flags().Changed("max-unsafe") {
-				maxUnsafe = cmdutil.EvaluatorFromCmd(cmd).MaxUnsafe()
+				maxUnsafe = cmdutil.EvaluatorFromCmd(cmd).MaxUnsafeDuration()
 			}
 
 			cleanObsDir := fsutil.CleanUserPath(obsDir)
@@ -74,18 +74,18 @@ Examples:
 			// Delegate to internal runner
 			runner := appupcoming.NewRunner()
 			output, err := runner.Run(ctx, appupcoming.Config{
-				Controls:        loaded.Controls,
-				Snapshots:       loaded.Snapshots,
-				MaxUnsafe:       cfg.MaxUnsafe,
-				MaxUnsafeRaw:    cfg.MaxUnsafeRaw,
-				DueSoon:         cfg.DueSoon,
-				DueSoonRaw:      cfg.DueSoonRaw,
-				Now:             cfg.Now,
-				Filter:          cfg.Filter,
-				Sanitizer:       cfg.Sanitizer,
-				PredicateParser: ctlyaml.ParsePredicate,
-				ControlsDir:     cleanCtlDir,
-				ObservationsDir: cleanObsDir,
+				Controls:             loaded.Controls,
+				Snapshots:            loaded.Snapshots,
+				MaxUnsafeDuration:    cfg.MaxUnsafeDuration,
+				MaxUnsafeDurationRaw: cfg.MaxUnsafeDurationRaw,
+				DueSoon:              cfg.DueSoon,
+				DueSoonRaw:           cfg.DueSoonRaw,
+				Now:                  cfg.Now,
+				Filter:               cfg.Filter,
+				Sanitizer:            cfg.Sanitizer,
+				PredicateParser:      ctlyaml.ParsePredicate,
+				ControlsDir:          cleanCtlDir,
+				ObservationsDir:      cleanObsDir,
 			})
 			if err != nil {
 				return err

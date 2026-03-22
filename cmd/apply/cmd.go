@@ -2,7 +2,6 @@ package apply
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -16,7 +15,7 @@ import (
 // did not set them explicitly on the command line.
 func (o *SharedOptions) resolveConfigDefaults(cmd *cobra.Command, eval *appconfig.Evaluator) {
 	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafe = eval.MaxUnsafe()
+		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
 }
 
@@ -32,22 +31,26 @@ func (o *ApplyOptions) resolveApplyConfigDefaults(cmd *cobra.Command) {
 
 // SharedOptions contains flags common to both plan and apply.
 type SharedOptions struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       string
-	NowTime         string
-	Format          string
+	ControlsDir       string
+	ObservationsDir   string
+	MaxUnsafeDuration string
+	NowTime           string
+	Format            string
 
-	// ControlsSet tracks whether --controls was explicitly set by the user.
-	ControlsSet bool
+	// controlsSet tracks whether --controls was explicitly set by the user.
+	// Derived from Cobra in PreRunE; not a user-facing flag.
+	controlsSet bool
 }
+
+// ControlsSet reports whether the user explicitly set --controls.
+func (o *SharedOptions) ControlsSet() bool { return o.controlsSet }
 
 func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
 	f := cmd.Flags()
 	cmdutil.RegisterControlsFlag(cmd, &o.ControlsDir, "controls/s3", "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", defaultFormat, "Output format (text, json, or sarif)")
 }
@@ -71,6 +74,15 @@ type ApplyOptions struct {
 	IncludeAll         bool
 }
 
+// normalize cleans all user-supplied paths in one pass.
+func (o *ApplyOptions) normalize() {
+	o.SharedOptions.normalize()
+	o.ExemptionFile = fsutil.CleanUserPath(o.ExemptionFile)
+	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
+	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
+	o.InputFile = fsutil.CleanUserPath(o.InputFile)
+}
+
 // NewApplyCmd constructs the apply command.
 func NewApplyCmd(p *compose.Provider) *cobra.Command {
 	opts := &ApplyOptions{}
@@ -81,15 +93,16 @@ func NewApplyCmd(p *compose.Provider) *cobra.Command {
 		Long: `Apply executes control evaluation only after readiness checks pass.
 Use --dry-run to preview what will be evaluated without running the full evaluation.` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			opts.ControlsSet = cmdutil.ControlsFlagChanged(cmd)
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			opts.controlsSet = cmdutil.ControlsFlagChanged(cmd)
 			opts.normalize()
+			opts.resolveApplyConfigDefaults(cmd)
+			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			opts.resolveApplyConfigDefaults(cmd)
 			cs := cobraState{
 				Ctx:           cmd.Context(),
-				Logger:        slog.Default(),
+				Logger:        cmdutil.LoggerFromCmd(cmd),
 				Stdout:        cmd.OutOrStdout(),
 				Stderr:        cmd.ErrOrStderr(),
 				GlobalFlags:   cmdutil.GetGlobalFlags(cmd),
@@ -105,6 +118,8 @@ Use --dry-run to preview what will be evaluated without running the full evaluat
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Run readiness checks only, without evaluating controls")
 	opts.bindCommon(cmd, "json")
 	opts.bindApplySpecific(cmd)
+	// Completion registration is best-effort — if it fails, help output
+	// loses tab completion but the command still works.
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
 
 	return cmd

@@ -33,10 +33,10 @@ func (e *stubLoadError) Error() string { return e.msg }
 func TestValidateEvidence_RedactPaths_False(t *testing.T) {
 	run := appvalidation.NewRun(stubObservationRepo{}, stubControlRepo{})
 	cfg := appvalidation.Config{
-		ControlsDir:     "/home/user/secret/controls",
-		ObservationsDir: "/home/user/secret/observations",
-		MaxUnsafe:       168 * time.Hour,
-		SanitizePaths:   false,
+		ControlsDir:       "/home/user/secret/controls",
+		ObservationsDir:   "/home/user/secret/observations",
+		MaxUnsafeDuration: 168 * time.Hour,
+		SanitizePaths:     false,
 	}
 
 	result, err := run.Execute(context.Background(), cfg)
@@ -57,10 +57,10 @@ func TestValidateEvidence_RedactPaths_False(t *testing.T) {
 func TestValidateEvidence_RedactPaths_True(t *testing.T) {
 	run := appvalidation.NewRun(stubObservationRepo{}, stubControlRepo{})
 	cfg := appvalidation.Config{
-		ControlsDir:     "/home/user/secret/controls",
-		ObservationsDir: "/home/user/secret/observations",
-		MaxUnsafe:       168 * time.Hour,
-		SanitizePaths:   true,
+		ControlsDir:       "/home/user/secret/controls",
+		ObservationsDir:   "/home/user/secret/observations",
+		MaxUnsafeDuration: 168 * time.Hour,
+		SanitizePaths:     true,
 	}
 
 	result, err := run.Execute(context.Background(), cfg)

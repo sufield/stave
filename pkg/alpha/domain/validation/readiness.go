@@ -99,10 +99,10 @@ type Result struct {
 type ReadinessInput struct {
 	ControlsDir           string
 	ObservationsDir       string
-	MaxUnsafe             time.Duration
+	MaxUnsafeDuration     time.Duration
 	Now                   time.Time
 	ControlsFlagSet       bool
 	HasEnabledControlPack bool
 	PrereqChecks          []PrereqCheck
-	Validate              func(maxUnsafe time.Duration, now time.Time) (Result, error)
+	Validate              func(maxUnsafeDuration time.Duration, now time.Time) (Result, error)
 }

@@ -133,10 +133,10 @@ func TestEvaluateRunExecute(t *testing.T) {
 				ControlsDir:     "ctl",
 				ObservationsDir: "obs",
 			},
-			MaxUnsafe:    30 * time.Minute,
-			Clock:        clockadp.FixedClock(now),
-			Output:       &bytes.Buffer{},
-			CELEvaluator: mustPredicateEval(),
+			MaxUnsafeDuration: 30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
+			Output:            &bytes.Buffer{},
+			CELEvaluator:      mustPredicateEval(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -168,10 +168,10 @@ func TestEvaluateRunExecute(t *testing.T) {
 				ControlsDir:     "ctl",
 				ObservationsDir: "obs",
 			},
-			MaxUnsafe:    30 * time.Minute,
-			Clock:        clockadp.FixedClock(now),
-			Output:       &bytes.Buffer{},
-			CELEvaluator: mustPredicateEval(),
+			MaxUnsafeDuration: 30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
+			Output:            &bytes.Buffer{},
+			CELEvaluator:      mustPredicateEval(),
 		})
 		if err == nil || !strings.Contains(err.Error(), "failed to write findings") {
 			t.Fatalf("unexpected err: %v", err)

@@ -34,7 +34,16 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	a.initSanitizer()
-	return a.initLogger()
+	if err := a.initLogger(); err != nil {
+		return err
+	}
+
+	// Store the logger in Cobra's context so commands retrieve it via
+	// cmdutil.LoggerFromCmd(cmd) instead of reading slog.Default().
+	ctx := cmdutil.WithLogger(cmd.Context(), a.Logger)
+	cmd.SetContext(ctx)
+
+	return nil
 }
 
 // resolveGlobalFlagDefaults fills global persistent flags with project-config

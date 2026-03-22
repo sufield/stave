@@ -2,11 +2,12 @@ package apply
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
-func (r *Runner) resolveScopeFilter(cfg Config) asset.AssetPredicate {
+func resolveScopeFilter(cfg Config) asset.AssetPredicate {
 	if cfg.IncludeAll {
 		return asset.UniversalFilter
 	}
@@ -16,19 +17,19 @@ func (r *Runner) resolveScopeFilter(cfg Config) asset.AssetPredicate {
 	return asset.DefaultHealthcareScopeFilter()
 }
 
-func (r *Runner) filterSnapshots(cfg Config, snapshots []asset.Snapshot) []asset.Snapshot {
+func filterSnapshots(stderr io.Writer, quiet bool, cfg Config, snapshots []asset.Snapshot) []asset.Snapshot {
 	if len(snapshots) == 0 {
-		if !cfg.Quiet {
-			fmt.Fprintln(cfg.Stderr, "No snapshots in observations file")
+		if !quiet {
+			fmt.Fprintln(stderr, "No snapshots in observations file")
 		}
 		return nil
 	}
 
-	scopeFilter := r.resolveScopeFilter(cfg)
+	scopeFilter := resolveScopeFilter(cfg)
 	filtered := asset.FilterSnapshots(scopeFilter, snapshots)
 	if len(filtered) == 0 {
-		if !cfg.Quiet {
-			fmt.Fprintln(cfg.Stderr, "No S3 buckets matching health scope found in observations")
+		if !quiet {
+			fmt.Fprintln(stderr, "No S3 buckets matching configured scope found in observations")
 		}
 		return nil
 	}

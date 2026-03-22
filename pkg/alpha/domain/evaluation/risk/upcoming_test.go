@@ -35,11 +35,11 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 	var expected []Item
 	for i := range 20 {
 		items := ComputeItems(Request{
-			Controls:        controls,
-			Snapshots:       snapshots,
-			GlobalMaxUnsafe: 4 * time.Hour,
-			Now:             base.Add(time.Hour),
-			PredicateEval:   celEval,
+			Controls:                controls,
+			Snapshots:               snapshots,
+			GlobalMaxUnsafeDuration: 4 * time.Hour,
+			Now:                     base.Add(time.Hour),
+			PredicateEval:           celEval,
 		})
 		if len(items) != 2 {
 			t.Fatalf("iteration %d: items len = %d, want 2", i, len(items))
@@ -72,11 +72,11 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 	}
 
 	items := ComputeItems(Request{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: 6 * time.Hour,
-		Now:             base.Add(2 * time.Hour),
-		PredicateEval:   mustPredicateEval(),
+		Controls:                controls,
+		Snapshots:               snapshots,
+		GlobalMaxUnsafeDuration: 6 * time.Hour,
+		Now:                     base.Add(2 * time.Hour),
+		PredicateEval:           mustPredicateEval(),
 	})
 	if len(items) != 1 {
 		t.Fatalf("items len = %d, want 1", len(items))
@@ -101,11 +101,11 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 	celEval := mustPredicateEval()
 	invalid := []policy.ControlDefinition{testControl("CTL.A", "not-a-duration")}
 	items := ComputeItems(Request{
-		Controls:        invalid,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: 5 * time.Hour,
-		Now:             base.Add(time.Hour),
-		PredicateEval:   celEval,
+		Controls:                invalid,
+		Snapshots:               snapshots,
+		GlobalMaxUnsafeDuration: 5 * time.Hour,
+		Now:                     base.Add(time.Hour),
+		PredicateEval:           celEval,
 	})
 	if len(items) != 1 {
 		t.Fatalf("items len = %d, want 1", len(items))
@@ -116,11 +116,11 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 
 	zero := []policy.ControlDefinition{testControl("CTL.B", "0h")}
 	items = ComputeItems(Request{
-		Controls:        zero,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: 5 * time.Hour,
-		Now:             base.Add(time.Hour),
-		PredicateEval:   celEval,
+		Controls:                zero,
+		Snapshots:               snapshots,
+		GlobalMaxUnsafeDuration: 5 * time.Hour,
+		Now:                     base.Add(time.Hour),
+		PredicateEval:           celEval,
 	})
 	if len(items) != 1 {
 		t.Fatalf("zero-threshold items len = %d, want 1", len(items))

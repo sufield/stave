@@ -3,6 +3,7 @@ package apply
 import (
 	"context"
 	"fmt"
+	"io"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -27,21 +28,26 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 	return appeval.RunOutputPipeline(ctx, cfg.Stdout, result, marshaler, enrichFn, nil)
 }
 
-func (r *Runner) finalize(cfg Config, results evaluation.Result, snapshots []asset.Snapshot, ctlDir string) error {
+// finalizeProfileEvaluation reports warnings and returns the appropriate exit error.
+func finalizeProfileEvaluation(stderr io.Writer, quiet bool, results evaluation.Result, snapshots []asset.Snapshot, ctlDir, inputFile string) error {
 	unprovable := asset.CountUnprovablySafe(snapshots)
-	if unprovable > 0 && !cfg.Quiet {
-		fmt.Fprintf(cfg.Stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", unprovable)
+	if unprovable > 0 && !quiet {
+		if _, err := fmt.Fprintf(stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", unprovable); err != nil {
+			return err
+		}
 	}
 
 	if len(results.Findings) > 0 {
-		if !cfg.Quiet {
-			ui.WriteHint(cfg.Stderr, fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, cfg.InputFile))
+		if !quiet {
+			ui.WriteHint(stderr, fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, inputFile))
 		}
 		return ui.ErrViolationsFound
 	}
 
-	if !cfg.Quiet {
-		fmt.Fprintln(cfg.Stderr, "Evaluation complete. No violations found.")
+	if !quiet {
+		if _, err := fmt.Fprintln(stderr, "Evaluation complete. No violations found."); err != nil {
+			return err
+		}
 	}
 	return nil
 }

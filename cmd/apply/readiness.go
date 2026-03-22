@@ -13,73 +13,64 @@ import (
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	service "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
-// PlanConfig defines the parameters for assessing readiness.
-type PlanConfig struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       string
-	Now             string
-	Format          ui.OutputFormat
-	Quiet           bool
-	Sanitize        bool
-	Stdout          io.Writer
-	Stderr          io.Writer
+// ReadinessValidator evaluates controls against observations and returns a result.
+type ReadinessValidator func(maxUnsafe time.Duration, now time.Time) (validation.Result, error)
+
+// ReadinessValidatorFactory creates the validation function used during assessment.
+type ReadinessValidatorFactory func(ctlDir, obsDir string, sanitize bool) ReadinessValidator
+
+// ReadinessConfig defines the parsed, validated parameters for readiness assessment.
+// All fields are native types — flag string parsing happens before construction.
+type ReadinessConfig struct {
+	ControlsDir       string
+	ObservationsDir   string
+	MaxUnsafeDuration time.Duration
+	Now               time.Time
+	Format            ui.OutputFormat
+	Quiet             bool
+	Sanitize          bool
+	Stdout            io.Writer
+	Stderr            io.Writer
 
 	ControlsFlagSet bool
 	HasEnabledPacks bool
 	PrereqChecks    []validation.PrereqCheck
 }
 
-// ValidatorFactory creates the validation function used during assessment.
-type ValidatorFactory func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.Result, error)
-
-// Planner orchestrates the "plan/readiness" workflow.
-type Planner struct {
-	CreateValidator ValidatorFactory
+// ReadinessRunner orchestrates the readiness assessment workflow.
+// Invoked by apply --dry-run.
+type ReadinessRunner struct {
+	CreateValidator ReadinessValidatorFactory
 }
 
-// NewPlanner returns a planner with default dependencies.
-func NewPlanner(factory ValidatorFactory) *Planner {
-	return &Planner{
+// NewReadinessRunner returns a runner with the given validator factory.
+func NewReadinessRunner(factory ReadinessValidatorFactory) *ReadinessRunner {
+	return &ReadinessRunner{
 		CreateValidator: factory,
 	}
 }
 
 // Execute performs the readiness assessment and writes the report.
-func (p *Planner) Execute(cfg PlanConfig) error {
-	ctlDir := fsutil.CleanUserPath(cfg.ControlsDir)
-	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
-
-	maxUnsafe, err := timeutil.ParseDurationFlag(cfg.MaxUnsafe, "--max-unsafe")
-	if err != nil {
-		return ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
-	}
-	now, err := compose.ResolveNow(cfg.Now)
-	if err != nil {
-		return err
-	}
-
+func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 	report, err := service.AssessReadiness(validation.ReadinessInput{
-		ControlsDir:           ctlDir,
-		ObservationsDir:       obsDir,
-		MaxUnsafe:             maxUnsafe,
-		Now:                   now,
+		ControlsDir:           cfg.ControlsDir,
+		ObservationsDir:       cfg.ObservationsDir,
+		MaxUnsafeDuration:     cfg.MaxUnsafeDuration,
+		Now:                   cfg.Now,
 		ControlsFlagSet:       cfg.ControlsFlagSet,
 		HasEnabledControlPack: cfg.HasEnabledPacks,
 		PrereqChecks:          cfg.PrereqChecks,
-		Validate:              p.CreateValidator(ctlDir, obsDir, cfg.Sanitize),
+		Validate:              r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
 	})
 	if err != nil {
 		return err
 	}
 
 	if !cfg.Quiet {
-		if err := p.writeReport(cfg, report); err != nil {
+		if err := r.writeReport(cfg, report); err != nil {
 			return err
 		}
 	}
@@ -90,7 +81,7 @@ func (p *Planner) Execute(cfg PlanConfig) error {
 	return nil
 }
 
-func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport) error {
+func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.ReadinessReport) error {
 	if cfg.Format.IsJSON() {
 		return jsonout.WriteReadinessJSON(cfg.Stdout, report)
 	}
@@ -100,12 +91,12 @@ func (p *Planner) writeReport(cfg PlanConfig, report validation.ReadinessReport)
 
 // runDryRun performs only readiness checks (replacing the removed plan command).
 // It is invoked by apply --dry-run.
-func runDryRun(ctx context.Context, p *compose.Provider, cfg PlanConfig) error {
-	factory := func(ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.Result, error) {
-		return applyvalidate.NewReadinessValidator(ctx, p, ctlDir, obsDir, sanitize)
+func runDryRun(ctx context.Context, p *compose.Provider, cfg ReadinessConfig) error {
+	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
+		return applyvalidate.NewReadinessValidator(ctx, p, ctlDir, obsDir, sanitize, applyvalidate.PackConfigIssues)
 	}
-	planner := NewPlanner(factory)
-	return planner.Execute(cfg)
+	runner := NewReadinessRunner(factory)
+	return runner.Execute(cfg)
 }
 
 func doctorPrereqs() ([]validation.PrereqCheck, error) {

@@ -92,15 +92,15 @@ type Verification struct {
 
 // VerificationRunInfo contains metadata about the verification run.
 type VerificationRunInfo struct {
-	StaveVersion    string        `json:"tool_version"`
-	Offline         bool          `json:"offline"`
-	Now             time.Time     `json:"now"`
-	MaxUnsafe       time.Duration `json:"-"`
-	BeforeSnapshots int           `json:"before_snapshots"`
-	AfterSnapshots  int           `json:"after_snapshots"`
+	StaveVersion      string        `json:"tool_version"`
+	Offline           bool          `json:"offline"`
+	Now               time.Time     `json:"now"`
+	MaxUnsafeDuration time.Duration `json:"-"`
+	BeforeSnapshots   int           `json:"before_snapshots"`
+	AfterSnapshots    int           `json:"after_snapshots"`
 }
 
-// MarshalJSON ensures MaxUnsafe outputs as a duration string (e.g. "168h0m0s")
+// MarshalJSON ensures MaxUnsafeDuration outputs as a duration string (e.g. "168h0m0s")
 // instead of raw nanoseconds.
 func (v VerificationRunInfo) MarshalJSON() ([]byte, error) {
 	type alias VerificationRunInfo
@@ -108,7 +108,7 @@ func (v VerificationRunInfo) MarshalJSON() ([]byte, error) {
 		MaxUnsafe string `json:"max_unsafe"`
 		alias
 	}{
-		MaxUnsafe: v.MaxUnsafe.String(),
+		MaxUnsafe: v.MaxUnsafeDuration.String(),
 		alias:     alias(v),
 	})
 }

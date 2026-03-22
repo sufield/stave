@@ -108,7 +108,7 @@ These risks are acknowledged but not fully mitigated by Stave:
 
 | Risk | Impact | Remediation Guidance |
 |------|--------|-------------------|
-| **Snapshot sensitivity** | Terraform exports may contain embedded secrets | Use `--sanitize` and `ingest --profile aws-s3 --scrub` when sharing output. Do not include raw secrets in state files passed to Stave. |
+| **Snapshot sensitivity** | Terraform exports may contain embedded secrets | Use `--sanitize` when sharing output. Do not include raw secrets in state files passed to Stave. |
 | **Umask on shared systems** | Weak umask may expose output files | Set `umask 077` before running Stave. Write to a private directory. |
 | **Provenance requires network** | `gh attestation verify` needs GitHub API access | Checksum + Cosign verification are sufficient for offline environments. Provenance adds defense-in-depth when connectivity is available. |
 | **Control tampering** | Modified controls change evaluation semantics | Ship controls from a trusted source. Validate with `stave validate` before evaluation. Use version control. |

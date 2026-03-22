@@ -42,10 +42,10 @@ func NewEvaluator(controls []policy.ControlDefinition, maxUnsafe time.Duration, 
 	}
 	return &testEvaluator{
 		runner: engine.Runner{
-			Controls:     controls,
-			MaxUnsafe:    maxUnsafe,
-			Clock:        clock,
-			CELEvaluator: testCELEvaluator(),
+			Controls:          controls,
+			MaxUnsafeDuration: maxUnsafe,
+			Clock:             clock,
+			CELEvaluator:      testCELEvaluator(),
 		},
 	}
 }

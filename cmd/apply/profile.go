@@ -71,8 +71,8 @@ func NewRunner(p *compose.Provider, clock ports.Clock, rt *ui.Runtime) *Runner {
 
 // Run executes the profile evaluation workflow.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	if err := r.validateInput(cfg.InputFile); err != nil {
-		return err // already wrapped with --input context
+	if err := validateInput(cfg.InputFile); err != nil {
+		return err
 	}
 
 	snapshots, err := observations.LoadBundle(cfg.InputFile)
@@ -80,7 +80,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("load observation bundle: %w", err)
 	}
 
-	filtered := r.filterSnapshots(cfg, snapshots)
+	filtered := filterSnapshots(cfg.Stderr, cfg.Quiet, cfg, snapshots)
 	if len(filtered) == 0 {
 		return nil
 	}
@@ -96,17 +96,18 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	}
 
 	done := r.UI.BeginProgress("apply profile observations")
+	defer done()
+
 	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
-		Controls:        controls,
-		Snapshots:       filtered,
-		MaxUnsafe:       0,
-		Clock:           r.Clock,
-		Hasher:          r.Hasher,
-		StaveVersion:    version.String,
-		PredicateParser: ctlyaml.ParsePredicate,
-		CELEvaluator:    celEval,
+		Controls:          controls,
+		Snapshots:         filtered,
+		MaxUnsafeDuration: 0,
+		Clock:             r.Clock,
+		Hasher:            r.Hasher,
+		StaveVersion:      version.String,
+		PredicateParser:   ctlyaml.ParsePredicate,
+		CELEvaluator:      celEval,
 	})
-	done()
 	if err != nil {
 		return fmt.Errorf("evaluate: %w", err)
 	}
@@ -115,22 +116,22 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("write findings: %w", err)
 	}
 
-	return r.finalize(cfg, result, filtered, ctlDir)
+	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, result, filtered, ctlDir, cfg.InputFile)
 }
 
-func (r *Runner) validateInput(path string) error {
+func validateInput(path string) error {
 	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("--input not found: %s", path)
+			return fmt.Errorf("--input not found: %q", path)
 		}
 		if os.IsPermission(err) {
-			return fmt.Errorf("--input not readable: %s (check file permissions)", path)
+			return fmt.Errorf("--input not readable: %q (check file permissions)", path)
 		}
 		return fmt.Errorf("cannot access --input %q: %w", path, err)
 	}
 	if fi.IsDir() {
-		return fmt.Errorf("--input must be a file, got directory: %s", path)
+		return fmt.Errorf("--input must be a file, got directory: %q", path)
 	}
 	return nil
 }
