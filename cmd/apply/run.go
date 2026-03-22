@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/cmdutil/runid"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -58,23 +59,25 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
-	return runStandardApply(cs.Ctx, cs.Logger, p, opts, *cfg.Params, sio)
+	return runStandardApply(cs.Ctx, cs.Logger, p, opts, *cfg.Params, sio, cfg.projectConfig, cfg.projectConfigPath)
 }
 
 // evalContext groups the parameters needed by the evaluation pipeline.
 type evalContext struct {
-	Provider *compose.Provider
-	Opts     *ApplyOptions
-	Params   applyParams
-	IO       standardIO
-	Plan     *appeval.EvaluationPlan
-	Runtime  *ui.Runtime
-	Logger   *slog.Logger
+	Provider          *compose.Provider
+	Opts              *ApplyOptions
+	Params            applyParams
+	IO                standardIO
+	Plan              *appeval.EvaluationPlan
+	Runtime           *ui.Runtime
+	Logger            *slog.Logger
+	ProjectConfig     *appconfig.ProjectConfig
+	ProjectConfigPath string
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) error {
-	evalInput, err := opts.buildEvaluatorInput()
+func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO, projCfg *appconfig.ProjectConfig, cfgPath string) error {
+	evalInput, err := opts.buildEvaluatorInput(cfgPath)
 	if err != nil {
 		return decorateError(fmt.Errorf("build evaluator input: %w", err))
 	}
@@ -91,13 +94,15 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	rt.Quiet = sio.Quiet
 
 	ec := evalContext{
-		Provider: p,
-		Opts:     opts,
-		Params:   params,
-		IO:       sio,
-		Plan:     plan,
-		Runtime:  rt,
-		Logger:   logger,
+		Provider:          p,
+		Opts:              opts,
+		Params:            params,
+		IO:                sio,
+		Plan:              plan,
+		Runtime:           rt,
+		Logger:            logger,
+		ProjectConfig:     projCfg,
+		ProjectConfigPath: cfgPath,
 	}
 
 	results, err := executeEvaluation(ctx, ec)
@@ -115,6 +120,8 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	defer progress.Done()
 
 	builder := NewBuilder(ctx, ec.Logger, ec.Provider, ec.Opts, ec.Params, ec.IO)
+	builder.ProjectConfig = ec.ProjectConfig
+	builder.ProjectConfigPath = ec.ProjectConfigPath
 	builder.OnObsProgress = progress.Update
 
 	deps, err := builder.Build(ec.Plan)

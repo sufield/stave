@@ -11,7 +11,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/exemption"
@@ -51,6 +50,10 @@ type Builder struct {
 	Opts     *ApplyOptions
 	Params   applyParams
 	Provider *compose.Provider
+
+	// Pre-loaded project config from Resolve(), shared across the pipeline.
+	ProjectConfig     *appconfig.ProjectConfig
+	ProjectConfigPath string
 
 	// OnObsProgress is called by the observation loader after each file
 	// with (processed, total) counts. Optional.
@@ -92,13 +95,9 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		return nil, fmt.Errorf("load exemption config: %w", err)
 	}
 
-	projCfg, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
-	if cfgErr != nil {
-		return nil, fmt.Errorf("load project config: %w", cfgErr)
-	}
-	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, cfgPath})
+	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, b.ProjectConfigPath})
 
-	projCfgInput, projCfgErr := b.buildProjectConfigFromLoaded(projCfg)
+	projCfgInput, projCfgErr := b.buildProjectConfigFromLoaded(b.ProjectConfig)
 	if projCfgErr != nil {
 		return nil, fmt.Errorf("resolve project config: %w", projCfgErr)
 	}

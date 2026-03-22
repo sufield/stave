@@ -2,6 +2,7 @@ package validate
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -169,20 +170,17 @@ func (o *options) prepareAndLogEnvironment(cmd *cobra.Command) error {
 	gitMeta := compose.AuditGitStatus(root, []string{o.Controls, cfgPath})
 	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", o.Quiet || gf.Quiet)
 
-	verbosity := 0
-	if cmd != nil {
-		verbosity, _ = cmd.Root().PersistentFlags().GetCount("verbose")
-	}
-	if verbosity > 0 && !o.Quiet && !gf.Quiet {
-		ctxName := "none"
-		if resolver != nil {
-			if sc, err := resolver.ResolveSelected(); err == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
-				ctxName = sc.Name
-			}
+	ctxName := "none"
+	if resolver != nil {
+		if sc, err := resolver.ResolveSelected(); err == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
+			ctxName = sc.Name
 		}
-		fmt.Fprintf(cmd.ErrOrStderr(), "context=%s config=%s controls=%s observations=%s\n",
-			ctxName, compose.EmptyDash(cfgPath), o.Controls, o.Observations)
 	}
+	slog.Debug("validate environment",
+		"context", ctxName,
+		"config", compose.EmptyDash(cfgPath),
+		"controls", o.Controls,
+		"observations", o.Observations)
 	return nil
 }
 

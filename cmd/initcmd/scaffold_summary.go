@@ -19,6 +19,9 @@ type scaffoldSummaryRequest struct {
 }
 
 func printScaffoldSummary(w io.Writer, stderr io.Writer, req scaffoldSummaryRequest, quiet bool) {
+	if quiet {
+		return
+	}
 	absBaseDir, err := filepath.Abs(req.BaseDir)
 	if err != nil {
 		absBaseDir = req.BaseDir

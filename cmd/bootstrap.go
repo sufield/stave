@@ -34,6 +34,7 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.checkConfigHealth(cmd); err != nil {
 		return err
 	}
+	ui.SetNoColor(a.Flags.NoColor)
 	a.initSanitizer()
 	if err := a.initLogger(); err != nil {
 		return err

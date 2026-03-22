@@ -64,8 +64,17 @@ func SeverityLabel(level, message string, out io.Writer) string {
 	return renderSeverityLabel(level, message, CanColor(out))
 }
 
+// globalNoColor is set by the CLI bootstrap when --no-color is passed.
+var globalNoColor bool
+
+// SetNoColor sets the global no-color flag. Call once during CLI bootstrap.
+func SetNoColor(v bool) { globalNoColor = v }
+
 // CanColor reports whether ANSI color output should be used for this writer.
 func CanColor(out io.Writer) bool {
+	if globalNoColor {
+		return false
+	}
 	return DefaultRuntime().CanColor(out)
 }
 

@@ -213,7 +213,7 @@ func TestResolveApplyOptions(t *testing.T) {
 // buildWithNewPlan is a test-only helper that creates a new evaluation plan
 // and builds dependencies from it.
 func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
-	evalInput, err := b.Opts.buildEvaluatorInput()
+	evalInput, err := b.Opts.buildEvaluatorInput("")
 	if err != nil {
 		return nil, err
 	}
