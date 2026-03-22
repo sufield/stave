@@ -113,11 +113,11 @@ func writeAndReport(cfg AuditConfig, report domainsecurityaudit.Report, artifact
 
 	// Stdout mode: no explicit output file, write report to stdout directly.
 	if strings.TrimSpace(cfg.OutPath) == "" && strings.TrimSpace(cfg.OutDir) == "" {
-		if _, err := cfg.Stdout.Write(mainData); err != nil {
-			return fmt.Errorf("write report to stdout: %w", err)
+		if _, writeErr := cfg.Stdout.Write(mainData); writeErr != nil {
+			return fmt.Errorf("write report to stdout: %w", writeErr)
 		}
-		if _, err := cfg.Stdout.Write([]byte("\n")); err != nil {
-			return err
+		if _, writeErr := cfg.Stdout.Write([]byte("\n")); writeErr != nil {
+			return writeErr
 		}
 		if report.Summary.Gated {
 			return ui.ErrSecurityAuditFindings

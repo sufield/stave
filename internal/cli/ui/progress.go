@@ -8,7 +8,7 @@ import (
 )
 
 // CountedProgress reports file-level progress to stderr with file counts.
-// It is safe for concurrent use via Update().
+// Update() is safe for concurrent use. Done() is safe to call multiple times.
 // A nil *CountedProgress is valid and all methods are no-ops.
 type CountedProgress struct {
 	mu         sync.Mutex
@@ -20,27 +20,38 @@ type CountedProgress struct {
 	isTTY      bool
 	stopCh     chan struct{}
 	finishedCh chan struct{}
-	closed     bool
+	once       sync.Once // guards Done to prevent double-close of stopCh
 }
 
 // Update reports the current progress. Safe to call concurrently.
 func (cp *CountedProgress) Update(processed, total int) {
-	if cp == nil || cp.closed {
+	if cp == nil {
 		return
 	}
 	cp.mu.Lock()
+	defer cp.mu.Unlock()
+	// Check if already done via the stop channel (non-blocking).
+	select {
+	case <-cp.stopCh:
+		return
+	default:
+	}
 	cp.processed = processed
 	cp.total = total
-	cp.mu.Unlock()
 }
 
 // Done stops the progress display and prints a completion message.
-// Safe to call multiple times; only the first call has effect.
+// Safe to call from multiple goroutines; only the first call has effect.
 func (cp *CountedProgress) Done() {
-	if cp == nil || cp.closed {
+	if cp == nil {
 		return
 	}
-	cp.closed = true
+	cp.once.Do(func() {
+		cp.finishProgress()
+	})
+}
+
+func (cp *CountedProgress) finishProgress() {
 	elapsed := time.Since(cp.start).Round(time.Millisecond)
 	cp.mu.Lock()
 	total := cp.total
