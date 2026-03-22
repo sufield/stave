@@ -20,7 +20,6 @@ Stave is stateless. Every command reads from files or stdin, writes to stdout/st
 | `verify` | `--before` dir, `--after` dir, `--controls` dir | stdout (JSON), optional `--out` dir → `verification.json` | stdout primary; `--out` creates dir (0700) and file (0600) |
 | `snapshot hygiene` | `--controls` dir, `--observations` dir, optional `--archive-dir` dir | stdout (markdown), optional `--out` file | stdout primary; `--out` creates dir (0700) and file (0600) |
 | `ci fix-loop` | `--before` dir, `--after` dir, `--controls` dir | stdout (JSON), optional `--out` dir → `evaluation.before.json`, `evaluation.after.json`, `verification.json`, `remediation-report.json` | stdout primary; `--out` creates dir (0700) and files (0600) |
-| `ingest --profile aws-s3` | `--input` snapshot dir | `--out` file (default: `observations.json`) | Refuses overwrite without `--force`; file perms 0600 |
 | `enforce` | `--in` evaluation JSON file | `--out` dir → `enforcement/aws/pab.tf` or `scp.json` | Creates dir (0700) and file (0600) |
 | `capabilities` | (none) | stdout (JSON) | stdout only |
 | `graph coverage` | `--controls` dir, `--observations` dir | stdout (DOT/JSON) | stdout only |
@@ -61,7 +60,7 @@ Logging configuration (`config.go`) uses `0644` for log files, which are less se
 
 All write commands refuse to overwrite existing files by default. Use `--force` to allow overwriting.
 
-The `--force` flag is available globally and also as a per-command flag on `ingest --profile aws-s3`.
+The `--force` flag is available globally.
 
 ## Symlink Protection
 
@@ -79,7 +78,6 @@ Integrity paths (`--integrity-manifest`, `--integrity-public-key`) are normalize
 
 The `--dry-run` flag is available on commands that modify the filesystem:
 
-- `ingest --profile aws-s3 --dry-run` — prints planned output path, creates no files
 - `enforce --dry-run` — prints planned artifact path, creates no files
 - `snapshot prune --dry-run` — lists snapshots that would be deleted, removes nothing
 - `snapshot archive --dry-run` — lists snapshots that would be moved, moves nothing

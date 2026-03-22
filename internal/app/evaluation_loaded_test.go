@@ -11,11 +11,11 @@ import (
 
 func TestEvaluateLoaded_DefaultsClockWhenNil(t *testing.T) {
 	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
-		Controls:     nil,
-		Snapshots:    nil,
-		MaxUnsafe:    24 * time.Hour,
-		Clock:        nil,
-		StaveVersion: "test-version",
+		Controls:          nil,
+		Snapshots:         nil,
+		MaxUnsafeDuration: 24 * time.Hour,
+		Clock:             nil,
+		StaveVersion:      "test-version",
 	})
 	if err != nil {
 		t.Fatalf("EvaluateLoaded returned error: %v", err)
@@ -27,7 +27,7 @@ func TestEvaluateLoaded_DefaultsClockWhenNil(t *testing.T) {
 	if result.Run.Now.IsZero() {
 		t.Fatal("expected run.now to be set when clock is nil")
 	}
-	if result.Run.MaxUnsafe != kernel.Duration(24*time.Hour) {
-		t.Fatalf("max_unsafe=%s, want %s", result.Run.MaxUnsafe, kernel.Duration(24*time.Hour))
+	if result.Run.MaxUnsafeDuration != kernel.Duration(24*time.Hour) {
+		t.Fatalf("max_unsafe=%s, want %s", result.Run.MaxUnsafeDuration, kernel.Duration(24*time.Hour))
 	}
 }

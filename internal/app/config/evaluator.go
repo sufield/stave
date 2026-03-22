@@ -64,8 +64,12 @@ func (e *Evaluator) resolve(
 
 func passthrough(v string) string { return v }
 
-// ResolveMaxUnsafe returns the max-unsafe value with provenance.
-func (e *Evaluator) ResolveMaxUnsafe() Value[string] {
+// ResolveMaxUnsafe is the reflection target for config key "max_unsafe".
+// Called by ResolveKey via reflect.MethodByName("ResolveMaxUnsafe").
+func (e *Evaluator) ResolveMaxUnsafe() Value[string] { return e.ResolveMaxUnsafeDuration() }
+
+// ResolveMaxUnsafeDuration returns the max-unsafe value with provenance.
+func (e *Evaluator) ResolveMaxUnsafeDuration() Value[string] {
 	return e.resolve(env.MaxUnsafe, "max_unsafe",
 		func(c *ProjectConfig) string { return c.MaxUnsafe },
 		func(c *UserConfig) string { return c.MaxUnsafe },
@@ -175,9 +179,9 @@ func (e *Evaluator) ResolveCLIAllowUnknownInput() Value[bool] {
 
 // --- Value-Only Accessors ---
 
-// MaxUnsafe returns the effective max-unsafe duration string.
-func (e *Evaluator) MaxUnsafe() string {
-	return e.ResolveMaxUnsafe().Value
+// MaxUnsafeDuration returns the effective max-unsafe duration string.
+func (e *Evaluator) MaxUnsafeDuration() string {
+	return e.ResolveMaxUnsafeDuration().Value
 }
 
 // SnapshotRetention returns the retention for the current default tier.

@@ -19,14 +19,14 @@ import (
 
 // Config defines the parameters for enforcing a CI failure policy.
 type Config struct {
-	Policy          appconfig.GatePolicy
-	InPath          string
-	BaselinePath    string
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       time.Duration
-	Format          ui.OutputFormat
-	Quiet           bool
+	Policy            appconfig.GatePolicy
+	InPath            string
+	BaselinePath      string
+	ControlsDir       string
+	ObservationsDir   string
+	MaxUnsafeDuration time.Duration
+	Format            ui.OutputFormat
+	Quiet             bool
 
 	Clock     ports.Clock
 	Sanitizer kernel.Sanitizer
@@ -166,12 +166,12 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, erro
 	}
 	now := cfg.Clock.Now().UTC()
 	items := risk.ComputeItems(risk.Request{
-		Controls:        loaded.Controls,
-		Snapshots:       loaded.Snapshots,
-		GlobalMaxUnsafe: cfg.MaxUnsafe,
-		Now:             now,
-		PredicateParser: ctlyaml.ParsePredicate,
-		PredicateEval:   celEval,
+		Controls:                loaded.Controls,
+		Snapshots:               loaded.Snapshots,
+		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Now:                     now,
+		PredicateParser:         ctlyaml.ParsePredicate,
+		PredicateEval:           celEval,
 	})
 	overdueCount := items.CountOverdue()
 	pass := overdueCount == 0

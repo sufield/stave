@@ -11,21 +11,21 @@ import (
 func TestRequestParse(t *testing.T) {
 	t.Run("parses complete request", func(t *testing.T) {
 		req := Request{
-			MaxUnsafe: "7d",
-			DueSoon:   "24h",
-			Lookback:  "7d",
-			DueWithin: "48h",
-			KeepMin:   2,
-			NowTime:   "2026-01-20T12:30:00+05:00",
-			Statuses:  []risk.Status{risk.StatusOverdue, risk.StatusDueNow, risk.StatusUpcoming},
+			MaxUnsafeDuration: "7d",
+			DueSoon:           "24h",
+			Lookback:          "7d",
+			DueWithin:         "48h",
+			KeepMin:           2,
+			NowTime:           "2026-01-20T12:30:00+05:00",
+			Statuses:          []risk.Status{risk.StatusOverdue, risk.StatusDueNow, risk.StatusUpcoming},
 		}
 
 		parsed, err := req.Parse()
 		if err != nil {
 			t.Fatalf("Parse() error = %v", err)
 		}
-		if parsed.MaxUnsafe != 168*time.Hour {
-			t.Fatalf("MaxUnsafe = %s, want %s", parsed.MaxUnsafe, 168*time.Hour)
+		if parsed.MaxUnsafeDuration != 168*time.Hour {
+			t.Fatalf("MaxUnsafe = %s, want %s", parsed.MaxUnsafeDuration, 168*time.Hour)
 		}
 		if parsed.DueSoon != 24*time.Hour {
 			t.Fatalf("DueSoon = %s, want %s", parsed.DueSoon, 24*time.Hour)
@@ -44,10 +44,10 @@ func TestRequestParse(t *testing.T) {
 
 	t.Run("uses wall clock when now omitted", func(t *testing.T) {
 		req := Request{
-			MaxUnsafe: "7d",
-			DueSoon:   "24h",
-			Lookback:  "7d",
-			KeepMin:   0,
+			MaxUnsafeDuration: "7d",
+			DueSoon:           "24h",
+			Lookback:          "7d",
+			KeepMin:           0,
 		}
 		before := time.Now().UTC()
 		parsed, err := req.Parse()
@@ -68,11 +68,11 @@ func TestRequestParse(t *testing.T) {
 func TestRequestParseUsesNowFunc(t *testing.T) {
 	fixed := time.Date(2026, 6, 15, 10, 0, 0, 0, time.UTC)
 	req := Request{
-		MaxUnsafe: "7d",
-		DueSoon:   "24h",
-		Lookback:  "7d",
-		KeepMin:   0,
-		NowFunc:   func() time.Time { return fixed },
+		MaxUnsafeDuration: "7d",
+		DueSoon:           "24h",
+		Lookback:          "7d",
+		KeepMin:           0,
+		NowFunc:           func() time.Time { return fixed },
 	}
 	parsed, err := req.Parse()
 	if err != nil {
@@ -86,10 +86,10 @@ func TestRequestParseUsesNowFunc(t *testing.T) {
 func TestRequestParseErrors(t *testing.T) {
 	t.Run("invalid keep-min", func(t *testing.T) {
 		req := Request{
-			MaxUnsafe: "7d",
-			DueSoon:   "24h",
-			Lookback:  "7d",
-			KeepMin:   -1,
+			MaxUnsafeDuration: "7d",
+			DueSoon:           "24h",
+			Lookback:          "7d",
+			KeepMin:           -1,
 		}
 
 		_, err := req.Parse()
@@ -103,11 +103,11 @@ func TestRequestParseErrors(t *testing.T) {
 
 	t.Run("invalid status", func(t *testing.T) {
 		req := Request{
-			MaxUnsafe: "7d",
-			DueSoon:   "24h",
-			Lookback:  "7d",
-			KeepMin:   0,
-			Statuses:  []risk.Status{"BOGUS"},
+			MaxUnsafeDuration: "7d",
+			DueSoon:           "24h",
+			Lookback:          "7d",
+			KeepMin:           0,
+			Statuses:          []risk.Status{"BOGUS"},
 		}
 
 		_, err := req.Parse()
@@ -121,11 +121,11 @@ func TestRequestParseErrors(t *testing.T) {
 
 	t.Run("invalid now", func(t *testing.T) {
 		req := Request{
-			MaxUnsafe: "7d",
-			DueSoon:   "24h",
-			Lookback:  "7d",
-			KeepMin:   0,
-			NowTime:   "not-rfc3339",
+			MaxUnsafeDuration: "7d",
+			DueSoon:           "24h",
+			Lookback:          "7d",
+			KeepMin:           0,
+			NowTime:           "not-rfc3339",
 		}
 
 		_, err := req.Parse()

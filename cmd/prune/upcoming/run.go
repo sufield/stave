@@ -16,16 +16,16 @@ import (
 
 // resolvedConfig holds CLI-resolved parameters before asset loading.
 type resolvedConfig struct {
-	MaxUnsafe    time.Duration
-	MaxUnsafeRaw string
-	DueSoon      time.Duration
-	DueSoonRaw   string
-	Now          time.Time
-	Format       ui.OutputFormat
-	Filter       risk.FilterCriteria
-	Sanitizer    kernel.Sanitizer
-	Quiet        bool
-	Stdout       io.Writer
+	MaxUnsafeDuration    time.Duration
+	MaxUnsafeDurationRaw string
+	DueSoon              time.Duration
+	DueSoonRaw           string
+	Now                  time.Time
+	Format               ui.OutputFormat
+	Filter               risk.FilterCriteria
+	Sanitizer            kernel.Sanitizer
+	Quiet                bool
+	Stdout               io.Writer
 }
 
 func gatherUpcomingConfig(
@@ -77,16 +77,16 @@ func gatherUpcomingConfig(
 	}
 
 	return resolvedConfig{
-		MaxUnsafe:    maxUnsafeDur,
-		MaxUnsafeRaw: maxUnsafeRaw,
-		DueSoon:      dueSoonDur,
-		DueSoonRaw:   dueSoonRaw,
-		Now:          now,
-		Format:       format,
-		Filter:       filter,
-		Sanitizer:    san,
-		Quiet:        quiet,
-		Stdout:       stdout,
+		MaxUnsafeDuration:    maxUnsafeDur,
+		MaxUnsafeDurationRaw: maxUnsafeRaw,
+		DueSoon:              dueSoonDur,
+		DueSoonRaw:           dueSoonRaw,
+		Now:                  now,
+		Format:               format,
+		Filter:               filter,
+		Sanitizer:            san,
+		Quiet:                quiet,
+		Stdout:               stdout,
 	}, nil
 }
 

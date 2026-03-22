@@ -137,7 +137,6 @@ Terraform plan/state exports and AWS CLI snapshots may contain embedded credenti
 **Recommendations:**
 - Do not include raw secrets in Terraform state/plan exports passed to Stave.
 - Use `--sanitize` when sharing evaluation output to replace infrastructure identifiers with deterministic tokens.
-- Use `ingest --profile aws-s3 --scrub` to remove sensitive fields (tags, raw policies, ACL grants) from observations before sharing.
 - Treat all snapshot files as sensitive data and apply your organization's data handling policies.
 
 See [Sharing Outputs Safely](docs/sanitization.md) for details on sanitization and scrubbing.
@@ -148,7 +147,7 @@ All AWS account IDs (e.g., `123456789012`, `777666555444`), ARNs, and bucket nam
 
 ## Sharing Outputs Safely
 
-When sharing Stave outputs for review, use `--sanitize` to replace infrastructure identifiers with deterministic tokens and `ingest --profile aws-s3 --scrub` to remove sensitive fields from observations. See [Sharing Outputs Safely](docs/sanitization.md) for details.
+When sharing Stave outputs for review, use `--sanitize` to replace infrastructure identifiers with deterministic tokens. See [Sharing Outputs Safely](docs/sanitization.md) for details.
 
 ## Output Sanitization Reference
 
@@ -194,8 +193,7 @@ Use `--path-mode=full` to include absolute paths in errors and logs.
 # Sanitize identifiers and use basename-only paths
 stave apply --controls ./controls --observations ./obs --sanitize
 
-# Full sanitization with scrubbed observations
-stave ingest --profile aws-s3 --input ./snapshot --out obs.json --scrub
+# Evaluate with sanitized output
 stave apply --profile aws-s3 --input obs.json --sanitize > report.json
 
 # Diagnostics in JSON with sanitization

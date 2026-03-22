@@ -60,11 +60,11 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	t.Run("uses previous result when provided", func(t *testing.T) {
 		previousResult := &evaluation.Result{Findings: []evaluation.Finding{}}
 		report, err := run.Execute(context.Background(), appdiagnose.Config{
-			ControlsDir:     "ctl",
-			ObservationsDir: "obs",
-			PreviousResult:  previousResult,
-			MaxUnsafe:       30 * time.Minute,
-			Clock:           clockadp.FixedClock(now),
+			ControlsDir:       "ctl",
+			ObservationsDir:   "obs",
+			PreviousResult:    previousResult,
+			MaxUnsafeDuration: 30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -89,10 +89,10 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 			t.Fatal(newErr)
 		}
 		report, err := preparedRun.Execute(context.Background(), appdiagnose.Config{
-			ControlsDir:     "ctl",
-			ObservationsDir: "obs",
-			MaxUnsafe:       30 * time.Minute,
-			Clock:           clockadp.FixedClock(now),
+			ControlsDir:       "ctl",
+			ObservationsDir:   "obs",
+			MaxUnsafeDuration: 30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -123,10 +123,10 @@ func TestDiagnoseExecute_NilPreviousResultRunsFreshEvaluation(t *testing.T) {
 	}
 
 	report, err := run.Execute(context.Background(), appdiagnose.Config{
-		ControlsDir:     "ctl",
-		ObservationsDir: "obs",
-		MaxUnsafe:       time.Hour,
-		Clock:           clockadp.FixedClock(now),
+		ControlsDir:       "ctl",
+		ObservationsDir:   "obs",
+		MaxUnsafeDuration: time.Hour,
+		Clock:             clockadp.FixedClock(now),
 	})
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)

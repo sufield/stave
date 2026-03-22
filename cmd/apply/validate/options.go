@@ -21,7 +21,7 @@ import (
 func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
 	eval := cmdutil.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafe = eval.MaxUnsafe()
+		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
 	if !cmd.Flags().Changed("quiet") {
 		o.Quiet = eval.Quiet()
@@ -35,9 +35,9 @@ type options struct {
 	InputPath    string // --in
 
 	// Configuration
-	MaxUnsafe string
-	NowTime   string
-	Strict    bool
+	MaxUnsafeDuration string
+	NowTime           string
+	Strict            bool
 
 	// Metadata Overrides
 	Kind          string
@@ -48,6 +48,10 @@ type options struct {
 	Template string
 	FixHints bool
 	Quiet    bool
+}
+
+func (o *options) hintCtx() hintContext {
+	return hintContext{ControlsDir: o.Controls, ObservationsDir: o.Observations}
 }
 
 // newOptions initializes defaults with zero values for config-derived fields.
@@ -64,7 +68,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.Controls, "controls", "i", o.Controls, "Path to control definitions (inferred if omitted)")
 	f.StringVarP(&o.Observations, "observations", "o", o.Observations, "Path to observation snapshots (inferred if omitted)")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.BoolVar(&o.Strict, "strict", false, "Treat warnings as errors (exit 2)")
@@ -76,8 +80,23 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.Template, "template", "", "Custom output template")
 }
 
+// Prepare resolves config defaults, normalizes paths, and validates flag
+// combinations. This is the single "option lifecycle" entry point called
+// from PreRunE.
+func (o *options) Prepare(cmd *cobra.Command) error {
+	o.resolveConfigDefaults(cmd)
+	if err := o.normalize(
+		cmd.Flags().Changed("controls"),
+		cmd.Flags().Changed("observations"),
+	); err != nil {
+		return err
+	}
+	return o.validate()
+}
+
 // normalize cleans user input and applies project-root inference.
-func (o *options) normalize(cmd *cobra.Command) error {
+// controlsChanged/obsChanged indicate whether the user explicitly set those flags.
+func (o *options) normalize(controlsChanged, obsChanged bool) error {
 	o.Controls = fsutil.CleanUserPath(o.Controls)
 	o.Observations = fsutil.CleanUserPath(o.Observations)
 	o.InputPath = fsutil.CleanUserPath(o.InputPath)
@@ -91,12 +110,12 @@ func (o *options) normalize(cmd *cobra.Command) error {
 			return fmt.Errorf("resolve project context: %w", err)
 		}
 		engine := projctx.NewInferenceEngine(resolver)
-		if !cmd.Flags().Changed("controls") {
+		if !controlsChanged {
 			if inferred := engine.InferDir("controls", ""); inferred != "" {
 				o.Controls = inferred
 			}
 		}
-		if !cmd.Flags().Changed("observations") {
+		if !obsChanged {
 			if inferred := engine.InferDir("observations", ""); inferred != "" {
 				o.Observations = inferred
 			}
@@ -176,13 +195,13 @@ type validateParams struct {
 func (o *options) parseParams() validateParams {
 	var p validateParams
 
-	dur, err := timeutil.ParseDuration(o.MaxUnsafe)
+	dur, err := timeutil.ParseDuration(o.MaxUnsafeDuration)
 	if err != nil {
 		p.issues = append(p.issues, diag.New(diag.CodeInvalidMaxUnsafe).
 			Error().
 			Action("Use format like 168h, 7d, or 1d12h").
 			Command("stave validate --max-unsafe 168h").
-			With("value", o.MaxUnsafe).
+			With("value", o.MaxUnsafeDuration).
 			WithSensitive("error", err.Error()).
 			Build())
 	} else {

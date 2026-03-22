@@ -89,31 +89,10 @@ aws s3api get-bucket-policy --bucket company-docs | jq '{
             public_read: (
               (.Policy | fromjson).Statement
               | any(.Principal == "*" and (.Action == "s3:GetObject" or .Action == "s3:*"))
-            ),
-            public_list: false,
-            public_write: false,
-            read_via_identity: false,
-            read_via_resource: true,
-            list_via_identity: false,
-            latent_public_read: false,
-            latent_public_list: false
+            )
           },
           controls: {
-            public_access_fully_blocked: false,
-            public_access_block: {
-              block_public_acls: false,
-              ignore_public_acls: false,
-              block_public_policy: false,
-              restrict_public_buckets: false
-            }
-          }
-        },
-        vendor: {
-          aws: {
-            s3: {
-              arn: "arn:aws:s3:::company-docs",
-              policy_json: .Policy
-            }
+            public_access_fully_blocked: false
           }
         }
       }
@@ -122,9 +101,12 @@ aws s3api get-bucket-policy --bucket company-docs | jq '{
 }' > observations/bad-snapshot.json
 ```
 
-Key fields that Stave controls check:
+The observation only includes the fields these two controls check:
 - `properties.storage.access.public_read` — checked by `CTL.S3.PUBLIC.001`
-- `properties.storage.controls.public_access_fully_blocked` — checked by `CTL.S3.CONTROLS.001`
+- `properties.storage.kind` + `properties.storage.controls.public_access_fully_blocked` — checked by `CTL.S3.CONTROLS.001`
+
+You do not need to populate fields that no control in your evaluation uses.
+Later articles add more fields as they introduce more controls.
 
 ## Step 3: Create the Observation Files
 
@@ -138,8 +120,8 @@ Save the **bad** snapshot as `observations/2026-03-20T000000Z.json`:
   "schema_version": "obs.v0.1",
   "generated_by": {
     "source_type": "aws-s3-snapshot",
-    "tool": "manual-extract",
-    "tool_version": "1.0.0"
+    "tool": "aws-cli",
+    "tool_version": "2.x"
   },
   "captured_at": "2026-03-20T00:00:00Z",
   "assets": [
@@ -152,31 +134,10 @@ Save the **bad** snapshot as `observations/2026-03-20T000000Z.json`:
           "kind": "bucket",
           "name": "company-docs",
           "access": {
-            "public_read": true,
-            "public_list": false,
-            "public_write": false,
-            "read_via_identity": false,
-            "read_via_resource": true,
-            "list_via_identity": false,
-            "latent_public_read": false,
-            "latent_public_list": false
+            "public_read": true
           },
           "controls": {
-            "public_access_fully_blocked": false,
-            "public_access_block": {
-              "block_public_acls": false,
-              "ignore_public_acls": false,
-              "block_public_policy": false,
-              "restrict_public_buckets": false
-            }
-          }
-        },
-        "vendor": {
-          "aws": {
-            "s3": {
-              "arn": "arn:aws:s3:::company-docs",
-              "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::company-docs/*\"}]}"
-            }
+            "public_access_fully_blocked": false
           }
         }
       }
@@ -218,8 +179,8 @@ Save the **good** snapshot in a separate directory, `observations-after/2026-03-
   "schema_version": "obs.v0.1",
   "generated_by": {
     "source_type": "aws-s3-snapshot",
-    "tool": "manual-extract",
-    "tool_version": "1.0.0"
+    "tool": "aws-cli",
+    "tool_version": "2.x"
   },
   "captured_at": "2026-03-22T00:00:00Z",
   "assets": [
@@ -232,31 +193,10 @@ Save the **good** snapshot in a separate directory, `observations-after/2026-03-
           "kind": "bucket",
           "name": "company-docs",
           "access": {
-            "public_read": false,
-            "public_list": false,
-            "public_write": false,
-            "read_via_identity": false,
-            "read_via_resource": false,
-            "list_via_identity": false,
-            "latent_public_read": false,
-            "latent_public_list": false
+            "public_read": false
           },
           "controls": {
-            "public_access_fully_blocked": true,
-            "public_access_block": {
-              "block_public_acls": true,
-              "ignore_public_acls": true,
-              "block_public_policy": true,
-              "restrict_public_buckets": true
-            }
-          }
-        },
-        "vendor": {
-          "aws": {
-            "s3": {
-              "arn": "arn:aws:s3:::company-docs",
-              "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::123456789012:role/AppReadRole\"},\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::company-docs/*\"}]}"
-            }
+            "public_access_fully_blocked": true
           }
         }
       }
@@ -332,10 +272,8 @@ the change. `stave verify` makes that relationship explicit.
 
 | Field | Before (bad) | After (good) |
 |-------|-------------|-------------|
-| `access.public_read` | `true` | `false` |
-| `controls.public_access_fully_blocked` | `false` | `true` |
-| `controls.public_access_block.*` | All `false` | All `true` |
-| `vendor.aws.s3.policy_json` Principal | `"*"` (anyone) | Named IAM role |
+| `storage.access.public_read` | `true` | `false` |
+| `storage.controls.public_access_fully_blocked` | `false` | `true` |
 
 ## Summary
 

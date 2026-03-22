@@ -18,7 +18,7 @@ type DirectoryEvaluationRequest struct {
 	Context           context.Context
 	ObservationsDir   string
 	Controls          []policy.ControlDefinition
-	MaxUnsafe         time.Duration
+	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
 	AllowUnknownType  bool
 	StaveVersion      string
@@ -47,12 +47,12 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 	}
 
 	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
-		Controls:     req.Controls,
-		Snapshots:    snapshots,
-		MaxUnsafe:    req.MaxUnsafe,
-		Clock:        req.Clock,
-		StaveVersion: req.StaveVersion,
-		CELEvaluator: req.CELEvaluator,
+		Controls:          req.Controls,
+		Snapshots:         snapshots,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
+		Clock:             req.Clock,
+		StaveVersion:      req.StaveVersion,
+		CELEvaluator:      req.CELEvaluator,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("evaluation failed: %w", err)

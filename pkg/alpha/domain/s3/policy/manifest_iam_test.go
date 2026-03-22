@@ -31,7 +31,7 @@ func TestMinimumS3IngestIAMActions_MatchesManifest(t *testing.T) {
 
 func TestIAMMinimumDocs_MatchesManifest(t *testing.T) {
 	root := findRepoRoot(t)
-	docPath := filepath.Join(root, "docs", "security", "iam-minimum-s3-ingest.md")
+	docPath := filepath.Join(root, "docs", "security", "iam-minimum-s3-observation.md")
 	data, err := os.ReadFile(docPath)
 	if err != nil {
 		t.Fatalf("read iam docs: %v", err)

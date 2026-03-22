@@ -37,7 +37,7 @@ unsafe_predicate:
 
 	var buf bytes.Buffer
 	r := testReporter(&buf, false, opts)
-	if err := runValidateSingleFile(r, opts); err != nil {
+	if err := runValidateSingleFile(strings.NewReader(""), r, opts); err != nil {
 		t.Fatalf("expected contract validate success, got %v", err)
 	}
 	if !strings.Contains(buf.String(), "Validation passed") {
@@ -73,7 +73,7 @@ unexpected: true
 
 	var buf bytes.Buffer
 	r := testReporter(&buf, false, opts)
-	err := runValidateSingleFile(r, opts)
+	err := runValidateSingleFile(strings.NewReader(""), r, opts)
 	if err == nil {
 		t.Fatal("expected strict contract validation failure")
 	}
@@ -105,7 +105,7 @@ expect: disabled
 
 	var buf bytes.Buffer
 	r := testReporter(&buf, false, opts)
-	err := runValidateSingleFile(r, opts)
+	err := runValidateSingleFile(strings.NewReader(""), r, opts)
 	if err == nil {
 		t.Fatal("expected contract validation failure for invalid shape")
 	}

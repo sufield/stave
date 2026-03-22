@@ -15,10 +15,10 @@ import (
 // RiskOptions configures how risk metrics should be computed for a
 // hygiene report.
 type RiskOptions struct {
-	GlobalMaxUnsafe  time.Duration
-	Now              time.Time
-	DueSoonThreshold time.Duration
-	StaveVersion     string
+	GlobalMaxUnsafeDuration time.Duration
+	Now                     time.Time
+	DueSoonThreshold        time.Duration
+	StaveVersion            string
 	// Optional filters for upcoming metrics (empty = no filter).
 	ControlIDs      []kernel.ControlID
 	AssetTypes      []kernel.AssetType
@@ -58,13 +58,13 @@ func (s *Service) ComputeRisk(
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
 		result, err := service.Evaluate(service.EvaluateInput{
-			Controls:        controls,
-			Snapshots:       snapshots,
-			MaxUnsafe:       opts.GlobalMaxUnsafe,
-			Clock:           fixedClock{now: opts.Now},
-			StaveVersion:    opts.StaveVersion,
-			PredicateParser: opts.PredicateParser,
-			CELEvaluator:    opts.CELEvaluator,
+			Controls:          controls,
+			Snapshots:         snapshots,
+			MaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,
+			Clock:             fixedClock{now: opts.Now},
+			StaveVersion:      opts.StaveVersion,
+			PredicateParser:   opts.PredicateParser,
+			CELEvaluator:      opts.CELEvaluator,
 		})
 		if err != nil {
 			return appcontracts.RiskStats{}
@@ -82,12 +82,12 @@ func computeUpcomingSummary(
 	opts RiskOptions,
 ) risk.Summary {
 	items := risk.ComputeItems(risk.Request{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: opts.GlobalMaxUnsafe,
-		Now:             opts.Now,
-		PredicateParser: opts.PredicateParser,
-		PredicateEval:   opts.CELEvaluator,
+		Controls:                controls,
+		Snapshots:               snapshots,
+		GlobalMaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,
+		Now:                     opts.Now,
+		PredicateParser:         opts.PredicateParser,
+		PredicateEval:           opts.CELEvaluator,
 	})
 	var controlIDSet map[kernel.ControlID]struct{}
 	if len(opts.ControlIDs) > 0 {

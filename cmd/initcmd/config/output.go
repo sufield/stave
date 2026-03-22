@@ -35,7 +35,7 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 		lines = append(lines, fmt.Sprintf("User config: %s", out.UserConfigFile))
 	}
 	lines = append(lines,
-		fmt.Sprintf("max_unsafe: %s (%s)", out.MaxUnsafe.Value, out.MaxUnsafe.Source),
+		fmt.Sprintf("max_unsafe: %s (%s)", out.MaxUnsafeDuration.Value, out.MaxUnsafeDuration.Source),
 		fmt.Sprintf("snapshot_retention: %s (%s)", out.SnapshotRetention.Value, out.SnapshotRetention.Source),
 		fmt.Sprintf("default_retention_tier: %s (%s)", out.DefaultRetentionTier.Value, out.DefaultRetentionTier.Source),
 		fmt.Sprintf("ci_failure_policy: %s (%s)", out.CIFailurePolicy.Value, out.CIFailurePolicy.Source),

@@ -23,7 +23,7 @@ func sampleEvaluation() safetyenvelope.Evaluation {
 	return safetyenvelope.Evaluation{
 		SchemaVersion: "out.v0.1",
 		Kind:          safetyenvelope.KindEvaluation,
-		Run:           evaluation.RunInfo{Now: now, MaxUnsafe: kernel.Duration(24 * time.Hour), Snapshots: 2, Offline: true},
+		Run:           evaluation.RunInfo{Now: now, MaxUnsafeDuration: kernel.Duration(24 * time.Hour), Snapshots: 2, Offline: true},
 		Summary:       evaluation.Summary{AssetsEvaluated: 10, AttackSurface: 2, Violations: 2},
 		Findings: []remediation.Finding{
 			{

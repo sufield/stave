@@ -20,8 +20,8 @@ type PredicateEvaluator = policy.PredicateEval
 
 // Runner executes evaluation logic over snapshots.
 type Runner struct {
-	Controls  []policy.ControlDefinition
-	MaxUnsafe time.Duration
+	Controls          []policy.ControlDefinition
+	MaxUnsafeDuration time.Duration
 	// MaxGapThreshold controls when sparse observations become INCONCLUSIVE.
 	// If zero, defaultRunnerMaxGapThreshold is used.
 	MaxGapThreshold time.Duration
@@ -60,10 +60,10 @@ func (e *Runner) identitiesAt(t time.Time) []asset.CloudIdentity {
 	return nil
 }
 
-// getMaxUnsafeForControl returns the max unsafe duration for a control.
+// getMaxUnsafeDurationForControl returns the max unsafe duration for a control.
 // Uses per-control override if set, otherwise falls back to CLI default.
-func (e *Runner) getMaxUnsafeForControl(ctl *policy.ControlDefinition) time.Duration {
-	return ctl.EffectiveMaxUnsafe(e.MaxUnsafe)
+func (e *Runner) getMaxUnsafeDurationForControl(ctl *policy.ControlDefinition) time.Duration {
+	return ctl.EffectiveMaxUnsafeDuration(e.MaxUnsafeDuration)
 }
 
 // normalizeSnapshots returns a copy of snapshots sorted by captured_at ascending.
@@ -180,13 +180,13 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 	regularFindings, exceptedFindings := e.partitionFindings(acc.findings, now)
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: e.StaveVersion,
-			Offline:      true,
-			Now:          now,
-			MaxUnsafe:    kernel.Duration(e.MaxUnsafe),
-			Snapshots:    snapshotCount,
-			InputHashes:  e.InputHashes,
-			PackHash:     e.computePackHash(),
+			StaveVersion:      e.StaveVersion,
+			Offline:           true,
+			Now:               now,
+			MaxUnsafeDuration: kernel.Duration(e.MaxUnsafeDuration),
+			Snapshots:         snapshotCount,
+			InputHashes:       e.InputHashes,
+			PackHash:          e.computePackHash(),
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: len(acc.seenAssets),

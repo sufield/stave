@@ -14,6 +14,7 @@ import (
 	appapply "github.com/sufield/stave/internal/app/apply"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -39,21 +40,53 @@ const (
 )
 
 // RunConfig holds the fully resolved execution state.
+// Exactly one of Params or Profile is meaningful, determined by Mode.
 type RunConfig struct {
-	Mode    runMode
-	Params  applyParams
-	Profile Config
-
-	// profileClock is used by profile mode; ignored otherwise.
-	profileClock ports.Clock
+	Mode         runMode
+	Params       *applyParams // non-nil in standard mode
+	Profile      *Config      // non-nil in profile mode
+	profileClock ports.Clock  // used by profile mode
 }
 
 // applyParams holds validated and parsed domain types.
 type applyParams struct {
-	maxDuration time.Duration
-	clock       ports.Clock
-	source      appeval.ObservationSource
+	maxUnsafeDuration time.Duration
+	clock             ports.Clock
+	source            appeval.ObservationSource
 }
+
+// --- Path inference (shared by standard + dry-run) ---
+
+// inferredDirs resolves controls and observations directories from the project
+// root when the user did not set them explicitly via flags.
+func (o *ApplyOptions) inferredDirs(obsChanged bool) (ctlDir, obsDir string, err error) {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return "", "", ui.WithHint(
+			fmt.Errorf("resolve project context: %w", err),
+			ui.ErrHintProjectContext,
+		)
+	}
+	engine := projctx.NewInferenceEngine(resolver)
+
+	ctlDir = fsutil.CleanUserPath(o.ControlsDir)
+	if !o.controlsSet {
+		if inferred := engine.InferDir("controls", ""); inferred != "" {
+			ctlDir = inferred
+		}
+	}
+
+	obsDir = fsutil.CleanUserPath(o.ObservationsDir)
+	if o.ObservationsDir != "-" && !obsChanged {
+		if inferred := engine.InferDir("observations", ""); inferred != "" {
+			obsDir = inferred
+		}
+	}
+
+	return ctlDir, obsDir, nil
+}
+
+// --- Standard mode resolution ---
 
 // Resolve transforms raw CLI options into a RunConfig.
 func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
@@ -61,9 +94,15 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		return o.resolveProfileMode(cs)
 	}
 
-	if err := o.normalizeApplyPaths(cs.ObsChanged); err != nil {
+	ctlDir, obsDir, err := o.inferredDirs(cs.ObsChanged)
+	if err != nil {
 		return RunConfig{}, err
 	}
+	o.ControlsDir = ctlDir
+	o.ObservationsDir = obsDir
+
+	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
+	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
 
 	parsed, err := o.parseDomain()
 	if err != nil {
@@ -74,14 +113,12 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		return RunConfig{}, err
 	}
 
-	return RunConfig{
-		Mode: runModeStandard,
-		Params: applyParams{
-			maxDuration: parsed.MaxDuration,
-			clock:       o.buildClock(parsed.Now),
-			source:      parsed.Source,
-		},
-	}, nil
+	params := &applyParams{
+		maxUnsafeDuration: parsed.MaxUnsafeDuration,
+		clock:             o.buildClock(parsed.Now),
+		source:            parsed.Source,
+	}
+	return RunConfig{Mode: runModeStandard, Params: params}, nil
 }
 
 func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
@@ -104,21 +141,18 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 		return RunConfig{}, err
 	}
 
-	return RunConfig{
-		Mode: runModeProfile,
-		Profile: Config{
-			InputFile:       o.InputFile,
-			BucketAllowlist: o.BucketAllowlist,
-			IncludeAll:      o.IncludeAll,
-			OutputFormat:    format,
-			Quiet:           cs.GlobalFlags.Quiet,
-			Stdout:          compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
-			Stderr:          cs.Stderr,
-			IsJSONMode:      cs.GlobalFlags.IsJSONMode(),
-			Sanitizer:       cs.GlobalFlags.GetSanitizer(),
-		},
-		profileClock: clock,
-	}, nil
+	cfg := &Config{
+		InputFile:       o.InputFile,
+		BucketAllowlist: o.BucketAllowlist,
+		IncludeAll:      o.IncludeAll,
+		OutputFormat:    format,
+		Quiet:           cs.GlobalFlags.Quiet,
+		Stdout:          compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
+		Stderr:          cs.Stderr,
+		IsJSONMode:      cs.GlobalFlags.IsJSONMode(),
+		Sanitizer:       cs.GlobalFlags.GetSanitizer(),
+	}
+	return RunConfig{Mode: runModeProfile, Profile: cfg, profileClock: clock}, nil
 }
 
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
@@ -141,7 +175,10 @@ func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 	}
 	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
 	if uErr != nil {
-		return appeval.Options{}, fmt.Errorf("load user config: %w", uErr)
+		return appeval.Options{}, ui.WithHint(
+			fmt.Errorf("load user config: %w", uErr),
+			ui.ErrHintProjectConfig,
+		)
 	}
 
 	selectedContext := ""
@@ -155,7 +192,7 @@ func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 		ControlsDir:        o.ControlsDir,
 		ConfigPath:         cfgPath,
 		UserConfigPath:     userPath,
-		MaxUnsafe:          o.MaxUnsafe,
+		MaxUnsafeDuration:  o.MaxUnsafeDuration,
 		NowTime:            o.NowTime,
 		ObservationsSource: appeval.ObservationSource(o.ObservationsDir),
 		IntegrityManifest:  o.IntegrityManifest,
@@ -164,34 +201,10 @@ func (o *ApplyOptions) buildEvaluatorInput() (appeval.Options, error) {
 	}, nil
 }
 
-// normalizeApplyPaths cleans user-supplied paths and applies project-root
-// inference for controls and observations directories.
-func (o *ApplyOptions) normalizeApplyPaths(obsChanged bool) error {
-	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
-	o.IntegrityPublicKey = fsutil.CleanUserPath(o.IntegrityPublicKey)
-
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return fmt.Errorf("resolve project context: %w", err)
-	}
-	engine := projctx.NewInferenceEngine(resolver)
-	if !o.ControlsSet {
-		if inferred := engine.InferDir("controls", ""); inferred != "" {
-			o.ControlsDir = inferred
-		}
-	}
-	if o.ObservationsDir != "-" && !obsChanged {
-		if inferred := engine.InferDir("observations", ""); inferred != "" {
-			o.ObservationsDir = inferred
-		}
-	}
-	return nil
-}
-
 // parseDomain handles the conversion of strings to domain-specific types.
 func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 	parsed, err := (appeval.Options{
-		MaxUnsafe:          o.MaxUnsafe,
+		MaxUnsafeDuration:  o.MaxUnsafeDuration,
 		NowTime:            o.NowTime,
 		ObservationsSource: appeval.ObservationSource(o.ObservationsDir),
 		IntegrityManifest:  o.IntegrityManifest,
@@ -205,7 +218,7 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 
 // validateDirs ensures directories exist unless using packs or stdin.
 func (o *ApplyOptions) validateDirs() error {
-	packs, err := o.isUsingPacks()
+	packs, err := o.controlsFromPacks()
 	if err != nil {
 		return err
 	}
@@ -224,13 +237,18 @@ func (o *ApplyOptions) validateDirs() error {
 	return nil
 }
 
-func (o *ApplyOptions) isUsingPacks() (bool, error) {
-	if o.ControlsSet {
+// controlsFromPacks reports whether controls come from enabled control packs
+// in the project config (and --controls was not explicitly set by the user).
+func (o *ApplyOptions) controlsFromPacks() (bool, error) {
+	if o.controlsSet {
 		return false, nil
 	}
 	cfg, ok, err := projconfig.FindProjectConfig()
 	if err != nil {
-		return false, fmt.Errorf("load project config: %w", err)
+		return false, ui.WithHint(
+			fmt.Errorf("load project config: %w", err),
+			ui.ErrHintProjectConfig,
+		)
 	}
 	return ok && len(cfg.EnabledControlPacks) > 0, nil
 }
@@ -268,35 +286,35 @@ func (o *ApplyOptions) buildClock(now time.Time) ports.Clock {
 	return ports.RealClock{}
 }
 
-// ResolveDryRun converts raw CLI options into a PlanConfig for dry-run mode.
-func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
+// ResolveDryRun converts raw CLI options into a ReadinessConfig for dry-run mode.
+// Flag strings are parsed to native types here so the config struct is ready to use.
+func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
 	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
 	if err != nil {
-		return PlanConfig{}, err
+		return ReadinessConfig{}, err
 	}
 
-	resolver, err := projctx.NewResolver()
+	ctlDir, obsDir, err := o.inferredDirs(cs.ObsChanged)
 	if err != nil {
-		return PlanConfig{}, err
+		return ReadinessConfig{}, err
 	}
-	engine := projctx.NewInferenceEngine(resolver)
-	ctlDir := fsutil.CleanUserPath(o.ControlsDir)
-	if !o.ControlsSet {
-		if inferred := engine.InferDir("controls", ""); inferred != "" {
-			ctlDir = inferred
-		}
+
+	maxUnsafe, err := timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+	if err != nil {
+		return ReadinessConfig{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
 	}
-	obsDir := fsutil.CleanUserPath(o.ObservationsDir)
-	if !cs.ObsChanged {
-		if inferred := engine.InferDir("observations", ""); inferred != "" {
-			obsDir = inferred
-		}
+	now, err := compose.ResolveNow(o.NowTime)
+	if err != nil {
+		return ReadinessConfig{}, err
 	}
 
 	hasPacks := false
 	cfg, ok, cfgErr := projconfig.FindProjectConfig()
 	if cfgErr != nil {
-		return PlanConfig{}, fmt.Errorf("load project config: %w", cfgErr)
+		return ReadinessConfig{}, ui.WithHint(
+			fmt.Errorf("load project config: %w", cfgErr),
+			ui.ErrHintProjectConfig,
+		)
 	}
 	if ok && len(cfg.EnabledControlPacks) > 0 {
 		hasPacks = true
@@ -304,21 +322,21 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (PlanConfig, error) {
 
 	prereqs, prereqErr := doctorPrereqs()
 	if prereqErr != nil {
-		return PlanConfig{}, prereqErr
+		return ReadinessConfig{}, prereqErr
 	}
 
-	return PlanConfig{
-		ControlsDir:     ctlDir,
-		ObservationsDir: obsDir,
-		MaxUnsafe:       o.MaxUnsafe,
-		Now:             o.NowTime,
-		Format:          format,
-		Quiet:           cs.GlobalFlags.Quiet,
-		Sanitize:        cs.GlobalFlags.Sanitize,
-		Stdout:          cs.Stdout,
-		Stderr:          cs.Stderr,
-		ControlsFlagSet: o.ControlsSet,
-		HasEnabledPacks: hasPacks,
-		PrereqChecks:    prereqs,
+	return ReadinessConfig{
+		ControlsDir:       ctlDir,
+		ObservationsDir:   obsDir,
+		MaxUnsafeDuration: maxUnsafe,
+		Now:               now,
+		Format:            format,
+		Quiet:             cs.GlobalFlags.Quiet,
+		Sanitize:          cs.GlobalFlags.Sanitize,
+		Stdout:            cs.Stdout,
+		Stderr:            cs.Stderr,
+		ControlsFlagSet:   o.controlsSet,
+		HasEnabledPacks:   hasPacks,
+		PrereqChecks:      prereqs,
 	}, nil
 }

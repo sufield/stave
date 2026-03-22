@@ -13,13 +13,13 @@ import (
 
 // Config holds configuration for the validate use case.
 type Config struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       time.Duration
-	NowTime         time.Time
-	SanitizePaths   bool // When true, directory/file paths in evidence are marked sensitive.
-	PredicateParser policy.PredicateParser
-	PredicateEval   policy.PredicateEval
+	ControlsDir       string
+	ObservationsDir   string
+	MaxUnsafeDuration time.Duration
+	NowTime           time.Time
+	SanitizePaths     bool // When true, directory/file paths in evidence are marked sensitive.
+	PredicateParser   policy.PredicateParser
+	PredicateEval     policy.PredicateEval
 }
 
 // Run orchestrates the validation use case.
@@ -60,12 +60,12 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*service.ValidationResul
 	}
 
 	serviceResult := service.ValidateLoaded(service.ValidationInput{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		MaxUnsafe:       cfg.MaxUnsafe,
-		NowTime:         cfg.NowTime,
-		PredicateParser: cfg.PredicateParser,
-		PredicateEval:   cfg.PredicateEval,
+		Controls:          controls,
+		Snapshots:         snapshots,
+		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		NowTime:           cfg.NowTime,
+		PredicateParser:   cfg.PredicateParser,
+		PredicateEval:     cfg.PredicateEval,
 	})
 	return &serviceResult, nil
 }

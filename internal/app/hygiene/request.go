@@ -14,36 +14,36 @@ import (
 // It is intentionally decoupled from CLI libraries to enable deterministic tests
 // and reuse from other entrypoints (e.g. APIs).
 type Request struct {
-	ControlsDir     string
-	ObservationsDir string
-	ArchiveDir      string
-	MaxUnsafe       string
-	DueSoon         string
-	Lookback        string
-	DueWithin       string
-	OlderThan       string
-	RetentionTier   string
-	KeepMin         int
-	NowTime         string
-	ControlIDs      []kernel.ControlID
-	AssetTypes      []kernel.AssetType
-	Statuses        []risk.Status
-	NowFunc         func() time.Time // nil → time.Now().UTC()
+	ControlsDir       string
+	ObservationsDir   string
+	ArchiveDir        string
+	MaxUnsafeDuration string
+	DueSoon           string
+	Lookback          string
+	DueWithin         string
+	OlderThan         string
+	RetentionTier     string
+	KeepMin           int
+	NowTime           string
+	ControlIDs        []kernel.ControlID
+	AssetTypes        []kernel.AssetType
+	Statuses          []risk.Status
+	NowFunc           func() time.Time // nil → time.Now().UTC()
 }
 
 // ParsedRequest holds the validated, typed values produced by Parse.
 type ParsedRequest struct {
-	MaxUnsafe time.Duration
-	DueSoon   time.Duration
-	Lookback  time.Duration
-	DueWithin *time.Duration
-	Now       time.Time
+	MaxUnsafeDuration time.Duration
+	DueSoon           time.Duration
+	Lookback          time.Duration
+	DueWithin         *time.Duration
+	Now               time.Time
 }
 
 // Parse validates and converts raw request fields into typed values used by
 // hygiene orchestration code.
 func (r *Request) Parse() (ParsedRequest, error) {
-	maxUnsafe, err := timeutil.ParseDuration(r.MaxUnsafe)
+	maxUnsafe, err := timeutil.ParseDuration(r.MaxUnsafeDuration)
 	if err != nil {
 		return ParsedRequest{}, fmt.Errorf("invalid max-unsafe: %w", err)
 	}
@@ -89,11 +89,11 @@ func (r *Request) Parse() (ParsedRequest, error) {
 		}
 	}
 	return ParsedRequest{
-		MaxUnsafe: maxUnsafe,
-		DueSoon:   dueSoon,
-		Lookback:  lookback,
-		DueWithin: dueWithin,
-		Now:       now,
+		MaxUnsafeDuration: maxUnsafe,
+		DueSoon:           dueSoon,
+		Lookback:          lookback,
+		DueWithin:         dueWithin,
+		Now:               now,
 	}, nil
 }
 

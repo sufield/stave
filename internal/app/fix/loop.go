@@ -19,14 +19,14 @@ import (
 
 // LoopRequest defines the inputs for the fix-loop workflow.
 type LoopRequest struct {
-	BeforeDir    string
-	AfterDir     string
-	ControlsDir  string
-	OutDir       string
-	MaxUnsafe    time.Duration
-	AllowUnknown bool
-	Stdout       io.Writer
-	Stderr       io.Writer
+	BeforeDir         string
+	AfterDir          string
+	ControlsDir       string
+	OutDir            string
+	MaxUnsafeDuration time.Duration
+	AllowUnknown      bool
+	Stdout            io.Writer
+	Stderr            io.Writer
 }
 
 // LoopDeps holds the injectable dependencies for the fix-loop workflow.
@@ -80,13 +80,13 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 
 	// 5. Verify (compare before/after)
 	cmp, err := appverify.Compare(appverify.CompareRequest{
-		BeforeFindings:  before.Result.Findings,
-		AfterFindings:   after.Result.Findings,
-		BeforeSnapshots: before.Snapshots,
-		AfterSnapshots:  after.Snapshots,
-		MaxUnsafe:       req.MaxUnsafe,
-		Now:             s.Clock.Now().UTC(),
-		Sanitizer:       s.Sanitizer,
+		BeforeFindings:    before.Result.Findings,
+		AfterFindings:     after.Result.Findings,
+		BeforeSnapshots:   before.Snapshots,
+		AfterSnapshots:    after.Snapshots,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
+		Now:               s.Clock.Now().UTC(),
+		Sanitizer:         s.Sanitizer,
 	})
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func (s *Service) evaluateState(
 		Context:           ctx,
 		ObservationsDir:   dir,
 		Controls:          controls,
-		MaxUnsafe:         req.MaxUnsafe,
+		MaxUnsafeDuration: req.MaxUnsafeDuration,
 		Clock:             s.Clock,
 		AllowUnknownType:  req.AllowUnknown,
 		StaveVersion:      version.String,
@@ -186,15 +186,15 @@ func BuildReport(req LoopRequest, clock interface{ Now() time.Time }, v safetyen
 		reason = fmt.Sprintf("remaining=%d introduced=%d", v.Summary.Remaining, v.Summary.Introduced)
 	}
 	return LoopReport{
-		SchemaVersion: kernel.SchemaFixLoop,
-		Kind:          kernel.KindRemediationReport,
-		CheckedAt:     v.Run.Now,
-		Pass:          pass,
-		Reason:        reason,
-		MaxUnsafe:     req.MaxUnsafe.String(),
-		Before:        ObservationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.BeforeViolations},
-		After:         ObservationSummary{Directory: req.AfterDir, Snapshots: v.Run.AfterSnapshots, Violations: v.Summary.AfterViolations},
-		Verification:  v.Summary,
-		Artifacts:     artifacts,
+		SchemaVersion:     kernel.SchemaFixLoop,
+		Kind:              kernel.KindRemediationReport,
+		CheckedAt:         v.Run.Now,
+		Pass:              pass,
+		Reason:            reason,
+		MaxUnsafeDuration: req.MaxUnsafeDuration.String(),
+		Before:            ObservationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.BeforeViolations},
+		After:             ObservationSummary{Directory: req.AfterDir, Snapshots: v.Run.AfterSnapshots, Violations: v.Summary.AfterViolations},
+		Verification:      v.Summary,
+		Artifacts:         artifacts,
 	}
 }

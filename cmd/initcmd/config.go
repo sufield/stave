@@ -31,7 +31,7 @@ type ScaffoldData struct {
 	ObsConvertCmd     string
 	ProjectConfigFile string
 	UserConfigEnv     string
-	MaxUnsafe         string
+	MaxUnsafeDuration string
 	Retention         string
 	RetentionTier     string
 	CIFailurePolicy   string
@@ -44,9 +44,9 @@ type Scaffolder struct {
 
 // NewScaffolder creates a Scaffolder from scaffold options.
 func NewScaffolder(opts scaffoldOptions) *Scaffolder {
-	obsCmd := "stave ingest --profile aws-s3 --input ./snapshots/raw/snapshot.json --out ./observations"
+	obsCmd := "Place observation JSON files in ./observations (see 'stave explain' for required fields)"
 	if opts.Profile == profileAWSS3 {
-		obsCmd = "stave ingest --profile aws-s3 --input ./snapshots/raw/aws-s3 --out ./observations"
+		obsCmd = "Create observation JSON files in ./observations from your AWS S3 environment data"
 	}
 	return &Scaffolder{
 		Data: ScaffoldData{
@@ -57,7 +57,7 @@ func NewScaffolder(opts scaffoldOptions) *Scaffolder {
 			ObsConvertCmd:     obsCmd,
 			ProjectConfigFile: projectConfigFile,
 			UserConfigEnv:     env.UserConfig.Name,
-			MaxUnsafe:         defaultMaxUnsafeDuration,
+			MaxUnsafeDuration: defaultMaxUnsafeDuration,
 			Retention:         defaultSnapshotRetention,
 			RetentionTier:     defaultRetentionTier,
 			CIFailurePolicy:   defaultCIFailurePolicy,

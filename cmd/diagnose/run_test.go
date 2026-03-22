@@ -197,12 +197,12 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 
 	// Test observation loader error.
 	cfg := Config{
-		ControlsDir:     ctlDir,
-		ObservationsDir: obsDir,
-		MaxUnsafe:       24 * time.Hour,
-		Format:          ui.OutputFormatText,
-		Stdout:          &bytes.Buffer{},
-		Stderr:          &bytes.Buffer{},
+		ControlsDir:       ctlDir,
+		ObservationsDir:   obsDir,
+		MaxUnsafeDuration: 24 * time.Hour,
+		Format:            ui.OutputFormatText,
+		Stdout:            &bytes.Buffer{},
+		Stderr:            &bytes.Buffer{},
 	}
 	badProvider := &compose.Provider{
 		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {

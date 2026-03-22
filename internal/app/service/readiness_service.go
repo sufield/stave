@@ -12,10 +12,10 @@ func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, 
 	recordPrereqIssues(report, in.PrereqChecks)
 	recordControlSourceIssue(report, in)
 	if err := recordValidationIssues(readinessValidationRequest{
-		Report:    report,
-		Input:     in,
-		MaxUnsafe: in.MaxUnsafe,
-		Now:       in.Now,
+		Report:            report,
+		Input:             in,
+		MaxUnsafeDuration: in.MaxUnsafeDuration,
+		Now:               in.Now,
 	}); err != nil {
 		return validation.ReadinessReport{}, err
 	}
@@ -51,10 +51,10 @@ func recordControlSourceIssue(report *validation.ReadinessReport, in validation.
 }
 
 type readinessValidationRequest struct {
-	Report    *validation.ReadinessReport
-	Input     validation.ReadinessInput
-	MaxUnsafe time.Duration
-	Now       time.Time
+	Report            *validation.ReadinessReport
+	Input             validation.ReadinessInput
+	MaxUnsafeDuration time.Duration
+	Now               time.Time
 }
 
 func recordValidationIssues(req readinessValidationRequest) error {
@@ -62,7 +62,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 		return nil
 	}
 
-	val, err := req.Input.Validate(req.MaxUnsafe, req.Now)
+	val, err := req.Input.Validate(req.MaxUnsafeDuration, req.Now)
 	if err != nil {
 		return err
 	}

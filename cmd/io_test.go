@@ -59,7 +59,7 @@ func TestFilePermissions0o600(t *testing.T) {
 }
 
 // TestWriteFilePermissions0o600 verifies that os.WriteFile with 0o600
-// creates files with correct permissions (used by ingest --profile aws-s3).
+// creates files with correct permissions (used when writing observation files).
 func TestWriteFilePermissions0o600(t *testing.T) {
 	tmpDir := t.TempDir()
 	outFile := filepath.Join(tmpDir, "obs.json")

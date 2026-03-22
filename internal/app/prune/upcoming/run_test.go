@@ -73,11 +73,11 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 	controls := []policy.ControlDefinition{ctl24h, ctl48h}
 
 	riskItems := risk.ComputeItems(risk.Request{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		GlobalMaxUnsafe: 168 * time.Hour,
-		Now:             now,
-		PredicateEval:   mustPredicateEval(),
+		Controls:                controls,
+		Snapshots:               snapshots,
+		GlobalMaxUnsafeDuration: 168 * time.Hour,
+		Now:                     now,
+		PredicateEval:           mustPredicateEval(),
 	})
 	items := mapRiskItems(riskItems)
 	if len(items) != 2 {

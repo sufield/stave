@@ -29,19 +29,24 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Builder encapsulates the cmd-layer resolution needed before building
 // apply dependencies. It resolves adapters from the compose provider,
 // loads exemptions, audits git status, and delegates final assembly
-// to BuildApplyDeps (local to this package).
+// to BuildApplyDeps.
 type Builder struct {
 	Ctx       context.Context
 	Logger    *slog.Logger
 	Stdout    io.Writer
 	Stderr    io.Writer
+	Stdin     io.Reader
 	Sanitizer kernel.Sanitizer
+	Format    ui.OutputFormat
 	IsJSON    bool
+	Digester  ports.Digester
+	IDGen     ports.IdentityGenerator
 
 	Opts     *ApplyOptions
 	Params   applyParams
@@ -59,8 +64,12 @@ func NewBuilder(ctx context.Context, logger *slog.Logger, p *compose.Provider, o
 		Logger:    logger,
 		Stdout:    sio.Stdout,
 		Stderr:    sio.Stderr,
+		Stdin:     os.Stdin,
 		Sanitizer: sio.Sanitizer,
+		Format:    sio.Format,
 		IsJSON:    sio.IsJSON,
+		Digester:  crypto.NewHasher(),
+		IDGen:     crypto.NewHasher(),
 		Opts:      opts,
 		Params:    params,
 		Provider:  p,
@@ -83,8 +92,6 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		return nil, fmt.Errorf("load exemption config: %w", err)
 	}
 
-	// Load project config once — both the parsed config and its path are
-	// needed downstream (path for git audit, config for evaluation input).
 	projCfg, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
 	if cfgErr != nil {
 		return nil, fmt.Errorf("load project config: %w", cfgErr)
@@ -110,10 +117,10 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		Marshaler:         a.marshaler,
 		ObsLoader:         a.obsLoader,
 		CtlLoader:         a.ctlLoader,
-		EnrichFn:          b.buildEnrichFn(),
-		MaxUnsafe:         b.Params.maxDuration,
+		EnrichFn:          buildEnrichFn(b.Sanitizer, b.IDGen),
+		MaxUnsafeDuration: b.Params.maxUnsafeDuration,
 		Clock:             b.Params.clock,
-		Hasher:            crypto.NewHasher(),
+		Hasher:            b.Digester,
 		AllowUnknownInput: b.Opts.AllowUnknown,
 		ExemptionConfig:   exemptionCfg,
 		PredicateParser:   ctlyaml.ParsePredicate,
@@ -125,7 +132,7 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 		ControlFilters:    appeval.ControlFilter{},
 	})
 	if err != nil {
-		return nil, b.wrapError(err)
+		return nil, wrapBuildError(err)
 	}
 
 	return deps, nil
@@ -138,11 +145,7 @@ type adapters struct {
 }
 
 func (b *Builder) buildAdapters() (adapters, error) {
-	format, err := ui.ParseOutputFormat(b.Opts.Format)
-	if err != nil {
-		return adapters{}, fmt.Errorf("parse output format: %w", err)
-	}
-	marshaler, err := b.Provider.NewFindingWriter(format, b.IsJSON)
+	marshaler, err := b.Provider.NewFindingWriter(b.Format, b.IsJSON)
 	if err != nil {
 		return adapters{}, fmt.Errorf("create finding writer: %w", err)
 	}
@@ -160,10 +163,12 @@ func (b *Builder) buildAdapters() (adapters, error) {
 	return adapters{marshaler: marshaler, obsLoader: obsLoader, ctlLoader: ctlLoader}, nil
 }
 
-func (b *Builder) buildEnrichFn() appcontracts.EnrichFunc {
-	enricher := remediation.NewMapper(crypto.NewHasher())
+// buildEnrichFn creates the enrichment function that maps evaluation results
+// into findings with remediation plans. Pure function — no closure over builder state.
+func buildEnrichFn(sanitizer kernel.Sanitizer, hasher ports.IdentityGenerator) appcontracts.EnrichFunc {
+	enricher := remediation.NewMapper(hasher)
 	return func(result evaluation.Result) (appcontracts.EnrichedResult, error) {
-		return appeval.Enrich(enricher, b.Sanitizer, result)
+		return appeval.Enrich(enricher, sanitizer, result)
 	}
 }
 
@@ -171,7 +176,7 @@ func (b *Builder) buildEnrichFn() appcontracts.EnrichFunc {
 // selecting stdin or file mode and applying integrity checks if configured.
 func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
 	if source.IsStdin() {
-		return b.Provider.NewStdinObsRepo(os.Stdin)
+		return b.Provider.NewStdinObsRepo(b.Stdin)
 	}
 
 	loader := observations.NewObservationLoader()
@@ -203,16 +208,17 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig)
 	}
 
 	return appeval.ProjectConfigInput{
-		Exceptions:          b.mapExceptions(projCfg.Exceptions),
+		Exceptions:          mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     cmdutil.ToControlIDs(projCfg.ExcludeControls),
-		ControlsFlagSet:     b.Opts.ControlsSet,
+		ControlsFlagSet:     b.Opts.controlsSet,
 		BuiltinLoader:       builtinRegistry.All,
 		PackRegistry:        reg,
 	}, nil
 }
 
-func (b *Builder) mapExceptions(in []appconfig.ExceptionRule) []appeval.ExceptionInput {
+// mapExceptions converts config exception rules to the app-layer input format.
+func mapExceptions(in []appconfig.ExceptionRule) []appeval.ExceptionInput {
 	if len(in) == 0 {
 		return nil
 	}
@@ -228,12 +234,9 @@ func (b *Builder) mapExceptions(in []appconfig.ExceptionRule) []appeval.Exceptio
 	return out
 }
 
-// wrapError enriches known dependency errors with user-facing hints.
-func (b *Builder) wrapError(err error) error {
-	if errors.Is(err, appeval.ErrConfigConflict) {
-		return ui.WithHint(err, ui.ErrHintControlSourceConflict)
-	}
-	return err
+// wrapBuildError enriches known dependency errors with user-facing hints.
+func wrapBuildError(err error) error {
+	return decorateError(err)
 }
 
 // loadExemptionConfig loads exemptions from a YAML file. Returns nil if path is empty.

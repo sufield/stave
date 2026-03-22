@@ -113,10 +113,10 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 	var outputs [2][]byte
 	for i := range 2 {
 		result, evalErr := service.Evaluate(service.EvaluateInput{
-			Controls:  controls,
-			Snapshots: snapshots,
-			MaxUnsafe: maxUnsafe,
-			Clock:     clock,
+			Controls:          controls,
+			Snapshots:         snapshots,
+			MaxUnsafeDuration: maxUnsafe,
+			Clock:             clock,
 		})
 		if evalErr != nil {
 			t.Fatalf("run %d: Evaluate failed: %v", i, evalErr)
@@ -198,10 +198,10 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 	var outputs [10][]byte
 	for i := range 10 {
 		result, evalErr := service.Evaluate(service.EvaluateInput{
-			Controls:  controls,
-			Snapshots: snapshots,
-			MaxUnsafe: maxUnsafe,
-			Clock:     clock,
+			Controls:          controls,
+			Snapshots:         snapshots,
+			MaxUnsafeDuration: maxUnsafe,
+			Clock:             clock,
 		})
 		if evalErr != nil {
 			t.Fatalf("run %d: Evaluate failed: %v", i, evalErr)

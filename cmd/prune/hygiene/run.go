@@ -25,19 +25,19 @@ import (
 
 // Config defines the resolved parameters for the hygiene report.
 type Config struct {
-	ControlsDir     string
-	ObservationsDir string
-	ArchiveDir      string
-	MaxUnsafe       time.Duration
-	DueSoon         time.Duration
-	Lookback        time.Duration
-	OlderThan       time.Duration
-	RetentionTier   string
-	KeepMin         int
-	Now             time.Time
-	Format          ui.OutputFormat
-	Quiet           bool
-	Stdout          io.Writer
+	ControlsDir       string
+	ObservationsDir   string
+	ArchiveDir        string
+	MaxUnsafeDuration time.Duration
+	DueSoon           time.Duration
+	Lookback          time.Duration
+	OlderThan         time.Duration
+	RetentionTier     string
+	KeepMin           int
+	Now               time.Time
+	Format            ui.OutputFormat
+	Quiet             bool
+	Stdout            io.Writer
 
 	Filter UpcomingFilter
 }
@@ -170,14 +170,14 @@ func computeRiskTrend(
 
 func buildRiskOptions(cfg Config) hygieneapp.RiskOptions {
 	return hygieneapp.RiskOptions{
-		GlobalMaxUnsafe:  cfg.MaxUnsafe,
-		Now:              cfg.Now,
-		DueSoonThreshold: cfg.DueSoon,
-		StaveVersion:     staveversion.String,
-		ControlIDs:       cfg.Filter.ControlIDs,
-		AssetTypes:       cfg.Filter.AssetTypes,
-		Statuses:         cfg.Filter.Statuses,
-		DueWithin:        cfg.Filter.DueWithinPtr(),
-		PredicateParser:  ctlyaml.ParsePredicate,
+		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Now:                     cfg.Now,
+		DueSoonThreshold:        cfg.DueSoon,
+		StaveVersion:            staveversion.String,
+		ControlIDs:              cfg.Filter.ControlIDs,
+		AssetTypes:              cfg.Filter.AssetTypes,
+		Statuses:                cfg.Filter.Statuses,
+		DueWithin:               cfg.Filter.DueWithinPtr(),
+		PredicateParser:         ctlyaml.ParsePredicate,
 	}
 }

@@ -24,7 +24,7 @@ type Adapters struct {
 
 // RuntimeConfig holds evaluation parameters that control behavior.
 type RuntimeConfig struct {
-	MaxUnsafe         time.Duration
+	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
 	Hasher            ports.Digester
 	StaveVersion      string
@@ -93,7 +93,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 
 	opts := []Option{
 		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.StaveVersion),
-		WithMaxUnsafe(in.Runtime.MaxUnsafe),
+		WithMaxUnsafeDuration(in.Runtime.MaxUnsafeDuration),
 		WithHasher(in.Runtime.Hasher),
 		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
 		WithExemptionConfig(in.Runtime.ExemptionConfig),
@@ -193,7 +193,7 @@ type ApplyBuilderInput struct {
 	EnrichFn  appcontracts.EnrichFunc
 
 	// Runtime parameters
-	MaxUnsafe         time.Duration
+	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
 	Hasher            ports.Digester
 	AllowUnknownInput bool
@@ -224,7 +224,7 @@ func BuildApplyDeps(in ApplyBuilderInput) (*ApplyDeps, error) {
 			ControlLoader:     in.CtlLoader,
 		},
 		Runtime: RuntimeConfig{
-			MaxUnsafe:         in.MaxUnsafe,
+			MaxUnsafeDuration: in.MaxUnsafeDuration,
 			Clock:             in.Clock,
 			Hasher:            in.Hasher,
 			StaveVersion:      in.StaveVersion,

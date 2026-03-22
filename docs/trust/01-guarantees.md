@@ -121,8 +121,6 @@ What is preserved: control IDs, names, rule IDs, counts, durations, timestamps, 
 | `base` (default) | Absolute paths replaced with basenames |
 | `full` | Paths shown as-is |
 
-**`ingest --profile aws-s3 --scrub`** removes sensitive fields (tags, raw policies, ACL grants) from observations before sharing.
-
 ## 7. Supply-Chain Integrity
 
 Every release includes verification artifacts:

@@ -20,9 +20,9 @@ func TestBuildFixLoopReport(t *testing.T) {
 	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
 
 	req := appfix.LoopRequest{
-		BeforeDir: "./before",
-		AfterDir:  "./after",
-		MaxUnsafe: 7 * 24 * time.Hour,
+		BeforeDir:         "./before",
+		AfterDir:          "./after",
+		MaxUnsafeDuration: 7 * 24 * time.Hour,
 	}
 	v := safetyenvelope.Verification{
 		Run: safetyenvelope.VerificationRunInfo{
@@ -43,8 +43,8 @@ func TestBuildFixLoopReport(t *testing.T) {
 	if report.Pass {
 		t.Fatalf("expected report to fail when remaining findings exist")
 	}
-	if report.MaxUnsafe != "168h0m0s" {
-		t.Fatalf("unexpected max_unsafe: %s", report.MaxUnsafe)
+	if report.MaxUnsafeDuration != "168h0m0s" {
+		t.Fatalf("unexpected max_unsafe: %s", report.MaxUnsafeDuration)
 	}
 	if report.Verification.Remaining != 1 {
 		t.Fatalf("unexpected remaining count: %d", report.Verification.Remaining)
@@ -63,14 +63,14 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	}
 
 	loopErr := runner.Loop(context.Background(), LoopRequest{
-		BeforeDir:    filepath.Join(fixture, "before"),
-		AfterDir:     filepath.Join(fixture, "after"),
-		ControlsDir:  filepath.Join(fixture, "controls"),
-		OutDir:       outDir,
-		MaxUnsafe:    168 * time.Hour,
-		AllowUnknown: false,
-		Stdout:       &bytes.Buffer{},
-		Stderr:       &bytes.Buffer{},
+		BeforeDir:         filepath.Join(fixture, "before"),
+		AfterDir:          filepath.Join(fixture, "after"),
+		ControlsDir:       filepath.Join(fixture, "controls"),
+		OutDir:            outDir,
+		MaxUnsafeDuration: 168 * time.Hour,
+		AllowUnknown:      false,
+		Stdout:            &bytes.Buffer{},
+		Stderr:            &bytes.Buffer{},
 	})
 	if loopErr != nil {
 		t.Fatalf("Loop returned error: %v", loopErr)

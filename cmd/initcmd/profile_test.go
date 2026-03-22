@@ -26,8 +26,8 @@ func TestInitProfileAWSS3AddsProfileStructure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read README.md: %v", err)
 	}
-	if !strings.Contains(string(readme), "--input ./snapshots/raw/aws-s3") {
-		t.Fatalf("expected profile-specific README command, got: %s", string(readme))
+	if !strings.Contains(string(readme), "Create observation JSON files in ./observations from your AWS S3 environment data") {
+		t.Fatalf("expected profile-specific README observation hint, got: %s", string(readme))
 	}
 }
 

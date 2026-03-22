@@ -3,34 +3,33 @@ package validate
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	appservice "github.com/sufield/stave/internal/app/service"
 	"github.com/sufield/stave/internal/cli/ui"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/validation"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
 // runValidateSingleFile handles the orchestration of validating a single input.
-func runValidateSingleFile(reporter *Reporter, opts *options) error {
-	// 1. Read Input
-	data, source, err := ui.ReadInput(os.Stdin, opts.InputPath)
+func runValidateSingleFile(stdin io.Reader, reporter *Reporter, opts *options) error {
+	data, source, err := ui.ReadInput(stdin, opts.InputPath)
 	if err != nil {
-		return fmt.Errorf("failed to read input %q: %w", source, err)
+		return fmt.Errorf("read input %q: %w", source, err)
 	}
 
-	// 2. Prepare Request
 	req, err := buildValidationRequest(data, opts)
 	if err != nil {
 		return err
 	}
 
-	// 3. Execute Service
 	service := appvalidation.NewContentService(func() appvalidation.SchemaValidator {
 		return contractvalidator.New()
 	})
@@ -39,8 +38,7 @@ func runValidateSingleFile(reporter *Reporter, opts *options) error {
 		return fmt.Errorf("validation failed for %q: %w", source, err)
 	}
 
-	// 4. Report Results
-	if err := reporter.Write(result, opts); err != nil {
+	if err := reporter.Write(result, opts.hintCtx()); err != nil {
 		return err
 	}
 	return reporter.ExitStatus(result)
@@ -65,24 +63,37 @@ func buildValidationRequest(data []byte, opts *options) (appvalidation.ContentVa
 	}, nil
 }
 
+// kindAliases maps CLI input to canonical schema kinds.
+var kindAliases = map[string]schemas.Kind{
+	"control":     schemas.KindControl,
+	"controls":    schemas.KindControl,
+	"observation": schemas.KindObservation,
+	"obs":         schemas.KindObservation,
+	"snapshot":    schemas.KindObservation,
+	"snapshots":   schemas.KindObservation,
+	"finding":     schemas.KindFinding,
+	"findings":    schemas.KindFinding,
+}
+
 // normalizeKind converts various CLI aliases into canonical domain kinds.
 func normalizeKind(raw string) (schemas.Kind, error) {
-	switch ui.NormalizeToken(raw) {
-	case "control", "controls":
-		return schemas.KindControl, nil
-	case "observation", "obs", "snapshot", "snapshots":
-		return schemas.KindObservation, nil
-	case "finding", "findings":
-		return schemas.KindFinding, nil
-	default:
-		return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
+	if k, ok := kindAliases[ui.NormalizeToken(raw)]; ok {
+		return k, nil
 	}
+	return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
 }
 
 // NewReadinessValidator creates a validation function for plan/apply commands.
-// It removes the dependency on cobra.Command by accepting the sanitize flag directly.
-func NewReadinessValidator(ctx context.Context, p *compose.Provider, ctlDir, obsDir string, sanitize bool) func(time.Duration, time.Time) (validation.Result, error) {
-	return func(maxUnsafeDur time.Duration, now time.Time) (validation.Result, error) {
+// extraChecks provides additional diagnostic checks (e.g. pack config validation)
+// that run after the core evaluation.
+func NewReadinessValidator(
+	ctx context.Context,
+	p *compose.Provider,
+	ctlDir, obsDir string,
+	sanitize bool,
+	extraChecks func() []diag.Issue,
+) func(time.Duration, time.Time) (validation.Result, error) {
+	return func(maxUnsafeDuration time.Duration, now time.Time) (validation.Result, error) {
 		obsRepo, err := p.NewObservationRepo()
 		if err != nil {
 			return validation.Result{}, err
@@ -94,24 +105,37 @@ func NewReadinessValidator(ctx context.Context, p *compose.Provider, ctlDir, obs
 
 		runner := appvalidation.NewRun(obsRepo, ctlRepo)
 		result, err := runner.Execute(ctx, appvalidation.Config{
-			ControlsDir:     ctlDir,
-			ObservationsDir: obsDir,
-			MaxUnsafe:       maxUnsafeDur,
-			NowTime:         now,
-			SanitizePaths:   sanitize,
-			PredicateParser: ctlyaml.ParsePredicate,
+			ControlsDir:       ctlDir,
+			ObservationsDir:   obsDir,
+			MaxUnsafeDuration: maxUnsafeDuration,
+			NowTime:           now,
+			SanitizePaths:     sanitize,
+			PredicateParser:   ctlyaml.ParsePredicate,
 		})
 		if err != nil {
 			return validation.Result{}, err
 		}
 
-		result.Diagnostics.AddAll(PackConfigIssues())
+		if extraChecks != nil {
+			result.Diagnostics.AddAll(extraChecks())
+		}
 
-		var vr validation.Result
-		vr.Diagnostics = result.Diagnostics
-		vr.Summary.ControlsLoaded = result.Summary.ControlsLoaded
-		vr.Summary.SnapshotsLoaded = result.Summary.SnapshotsLoaded
-		vr.Summary.AssetObservationsLoaded = result.Summary.AssetObservationsLoaded
-		return vr, nil
+		return toValidationResult(result), nil
+	}
+}
+
+// toValidationResult converts an app-layer validation result to the domain type.
+func toValidationResult(result *appservice.ValidationResult) validation.Result {
+	return validation.Result{
+		Diagnostics: result.Diagnostics,
+		Summary: struct {
+			ControlsLoaded          int
+			SnapshotsLoaded         int
+			AssetObservationsLoaded int
+		}{
+			ControlsLoaded:          result.Summary.ControlsLoaded,
+			SnapshotsLoaded:         result.Summary.SnapshotsLoaded,
+			AssetObservationsLoaded: result.Summary.AssetObservationsLoaded,
+		},
 	}
 }

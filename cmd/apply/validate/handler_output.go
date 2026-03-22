@@ -3,12 +3,9 @@ package validate
 import (
 	"fmt"
 	"io"
-	"strings"
 
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appservice "github.com/sufield/stave/internal/app/service"
-	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -16,22 +13,25 @@ import (
 
 // Reporter handles the formatting and writing of validation results.
 type Reporter struct {
-	Writer   io.Writer
-	Format   string // "text", "json", or path to template
-	Strict   bool
-	FixHints bool
-	IsJSON   bool // Global CLI --json mode
+	Writer     io.Writer
+	Format     string // "text", "json", or path to template
+	Strict     bool
+	FixHints   bool
+	GlobalJSON bool // Global CLI --json mode (affects JSON envelope)
 }
 
 // Write outputs the validation result based on reporter configuration.
-func (r *Reporter) Write(result *appservice.ValidationResult, opts *options) error {
-	// 1. Build the portable report DTO
-	report := buildReport(result, r.FixHints, opts)
+// Returns an error if result is nil.
+func (r *Reporter) Write(result *appservice.ValidationResult, hc hintContext) error {
+	if result == nil {
+		return fmt.Errorf("validation result is nil")
+	}
 
-	// 2. Route to correct formatter
+	report := buildReport(result, r.FixHints, hc)
+
 	switch {
 	case r.Format == "json":
-		return outjson.WriteValidation(r.Writer, report, r.IsJSON, result.Valid())
+		return outjson.WriteValidation(r.Writer, report, r.GlobalJSON, result.Valid())
 	case r.Format != "" && r.Format != "text":
 		return ui.ExecuteTemplate(r.Writer, r.Format, report)
 	default:
@@ -40,7 +40,11 @@ func (r *Reporter) Write(result *appservice.ValidationResult, opts *options) err
 }
 
 // ExitStatus determines if the validation should result in a CLI error.
+// Returns an error if result is nil.
 func (r *Reporter) ExitStatus(result *appservice.ValidationResult) error {
+	if result == nil {
+		return fmt.Errorf("validation result is nil")
+	}
 	if !result.Valid() {
 		return ui.ErrValidationFailed
 	}
@@ -58,40 +62,48 @@ func (r *Reporter) ExitStatus(result *appservice.ValidationResult) error {
 func (r *Reporter) writeText(res *appservice.ValidationResult, report Report) error {
 	diagnostics := diagnosticsOf(res)
 
-	// Header
-	if err := r.printHeader(res.Valid(), len(report.Errors), len(report.Warnings)); err != nil {
+	if err := printHeader(r.Writer, res.Valid(), len(report.Errors), len(report.Warnings)); err != nil {
 		return err
 	}
 
-	// Issues
 	for _, issue := range diagnostics.Issues {
-		r.printIssue(issue)
+		if err := printIssue(r.Writer, issue); err != nil {
+			return err
+		}
 	}
 
-	// Summary
-	fmt.Fprintf(r.Writer, "---\nChecked: %d controls, %d snapshots, %d asset observations",
+	if _, err := fmt.Fprintf(r.Writer, "---\nChecked: %d controls, %d snapshots, %d asset observations",
 		res.Summary.ControlsLoaded,
 		res.Summary.SnapshotsLoaded,
-		res.Summary.AssetObservationsLoaded)
+		res.Summary.AssetObservationsLoaded); err != nil {
+		return err
+	}
 
 	if res.Summary.IdentityObservationsLoaded > 0 {
-		fmt.Fprintf(r.Writer, ", %d identity observations", res.Summary.IdentityObservationsLoaded)
+		if _, err := fmt.Fprintf(r.Writer, ", %d identity observations", res.Summary.IdentityObservationsLoaded); err != nil {
+			return err
+		}
 	}
-	fmt.Fprintln(r.Writer)
+	if _, err := fmt.Fprintln(r.Writer); err != nil {
+		return err
+	}
 
-	// Fix Hints
 	if r.FixHints && len(report.FixHints) > 0 {
-		fmt.Fprintln(r.Writer, "\nSuggested next commands:")
+		if _, err := fmt.Fprintln(r.Writer, "\nSuggested next commands:"); err != nil {
+			return err
+		}
 		for _, h := range report.FixHints {
-			fmt.Fprintf(r.Writer, "  - %s\n", h)
+			if _, err := fmt.Fprintf(r.Writer, "  - %s\n", h); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-func (r *Reporter) printHeader(valid bool, eCount, wCount int) error {
+func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 	if valid && wCount == 0 {
-		_, err := fmt.Fprintln(r.Writer, "Validation passed")
+		_, err := fmt.Fprintln(w, "Validation passed")
 		return err
 	}
 
@@ -100,38 +112,48 @@ func (r *Reporter) printHeader(valid bool, eCount, wCount int) error {
 		status = "failed"
 	}
 
-	msg := fmt.Sprintf("Validation %s (%d error%s", status, eCount, plural(eCount))
 	if wCount > 0 {
-		msg += fmt.Sprintf(", %d warning%s", wCount, plural(wCount))
+		_, err := fmt.Fprintf(w, "Validation %s (%d error%s, %d warning%s)\n",
+			status, eCount, plural(eCount), wCount, plural(wCount))
+		return err
 	}
-	msg += ")\n"
-	_, err := fmt.Fprint(r.Writer, msg)
+	_, err := fmt.Fprintf(w, "Validation %s (%d error%s)\n", status, eCount, plural(eCount))
 	return err
 }
 
-func (r *Reporter) printIssue(issue diag.Issue) {
+func printIssue(w io.Writer, issue diag.Issue) error {
 	level := "WARNING"
 	if issue.Signal == diag.SignalError {
 		level = "ERROR"
 	}
 
-	fmt.Fprintln(r.Writer, ui.SeverityLabel(level, string(issue.Code), r.Writer))
+	if _, err := fmt.Fprintln(w, ui.SeverityLabel(level, string(issue.Code), w)); err != nil {
+		return err
+	}
 
 	for _, key := range issue.Evidence.Keys() {
-		fmt.Fprintf(r.Writer, "  %s=%s\n", key, issue.Evidence.Sanitized(key))
+		if _, err := fmt.Fprintf(w, "  %s=%s\n", key, issue.Evidence.Sanitized(key)); err != nil {
+			return err
+		}
 	}
 	if issue.Action != "" {
-		fmt.Fprintf(r.Writer, "  Fix: %s\n", issue.Action)
+		if _, err := fmt.Fprintf(w, "  Fix: %s\n", issue.Action); err != nil {
+			return err
+		}
 	}
 	if issue.Command != "" {
-		fmt.Fprintf(r.Writer, "  Example: %s\n", issue.Command)
+		if _, err := fmt.Fprintf(w, "  Example: %s\n", issue.Command); err != nil {
+			return err
+		}
 	}
-	fmt.Fprintln(r.Writer)
+	_, err := fmt.Fprintln(w)
+	return err
 }
 
 // --- Data Models (DTOs) ---
 
-// Report is a clean DTO that maps the internal service result to the external output format.
+// Report is a clean DTO that maps the internal service result to the external
+// output format. diag.Issue is the stable public contract for validation issues.
 type Report struct {
 	SchemaVersion kernel.Schema `json:"schema_version"`
 	Valid         bool          `json:"valid"`
@@ -149,7 +171,7 @@ type ReportSummary struct {
 	IdentityObservationsChecked int `json:"identity_observations_checked"`
 }
 
-func buildReport(res *appservice.ValidationResult, includeHints bool, opts *options) Report {
+func buildReport(res *appservice.ValidationResult, includeHints bool, hc hintContext) Report {
 	d := diagnosticsOf(res)
 	report := Report{
 		SchemaVersion: kernel.SchemaValidate,
@@ -165,10 +187,7 @@ func buildReport(res *appservice.ValidationResult, includeHints bool, opts *opti
 	}
 
 	if includeHints {
-		report.FixHints = collectHints(d, hintContext{
-			ControlsDir:     opts.Controls,
-			ObservationsDir: opts.Observations,
-		})
+		report.FixHints = collectHints(d, hc)
 	}
 	return report
 }
@@ -187,49 +206,4 @@ func plural(n int) string {
 		return ""
 	}
 	return "s"
-}
-
-// PackConfigIssues checks for unknown control pack names in the project config.
-func PackConfigIssues() []diag.Issue {
-	cfg, ok, cfgErr := projconfig.FindProjectConfig()
-	if cfgErr != nil {
-		return []diag.Issue{
-			diag.New(diag.CodeProjectConfigLoadFailed).
-				Error().
-				Action("Check stave.yaml for syntax errors").
-				WithSensitive("error", cfgErr.Error()).
-				Build(),
-		}
-	}
-	if !ok || len(cfg.EnabledControlPacks) == 0 {
-		return nil
-	}
-	reg, err := packs.NewEmbeddedRegistry()
-	if err != nil {
-		return []diag.Issue{
-			diag.New(diag.CodePackRegistryLoadFailed).
-				Error().
-				Action("Reinstall Stave binary or verify embedded registry integrity").
-				WithSensitive("error", err.Error()).
-				Build(),
-		}
-	}
-	known := reg.PackNames()
-	knownSet := map[string]bool{}
-	for _, name := range known {
-		knownSet[name] = true
-	}
-	issues := make([]diag.Issue, 0)
-	for _, raw := range cfg.EnabledControlPacks {
-		name := strings.TrimSpace(raw)
-		if name == "" || knownSet[name] {
-			continue
-		}
-		issues = append(issues, diag.New(diag.CodeUnknownControlPack).
-			Error().
-			Action(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
-			With("pack", name).
-			Build())
-	}
-	return issues
 }

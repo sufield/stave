@@ -33,12 +33,12 @@ func checkTimeSpan(input Input) *Issue {
 	snapshots := sortedSnapshots(input.Snapshots)
 	span := snapshots[len(snapshots)-1].CapturedAt.Sub(snapshots[0].CapturedAt)
 
-	if span < input.MaxUnsafe {
+	if span < input.MaxUnsafeDuration {
 		return &Issue{
 			Case:   ScenarioExpectedNone,
 			Signal: msgTimeSpanShorterThanThreshold,
 			Evidence: fmt.Sprintf("Snapshots span %s; threshold is %s",
-				fmtd(span), fmtd(input.MaxUnsafe)),
+				fmtd(span), fmtd(input.MaxUnsafeDuration)),
 			Action:  "Collect snapshots over a longer period, or reduce --max-unsafe",
 			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(span)),
 		}

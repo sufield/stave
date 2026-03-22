@@ -24,13 +24,13 @@ func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
 	}
 
 	summary := computeUpcomingSummary(controls, snapshots, RiskOptions{
-		GlobalMaxUnsafe:  4 * time.Hour,
-		Now:              base.Add(1 * time.Hour),
-		DueSoonThreshold: 90 * time.Minute,
-		Statuses:         []risk.Status{risk.StatusUpcoming},
-		AssetTypes:       []kernel.AssetType{kernel.AssetType("storage_bucket")},
-		DueWithin:        &dueSoon,
-		CELEvaluator:     mustPredicateEval(),
+		GlobalMaxUnsafeDuration: 4 * time.Hour,
+		Now:                     base.Add(1 * time.Hour),
+		DueSoonThreshold:        90 * time.Minute,
+		Statuses:                []risk.Status{risk.StatusUpcoming},
+		AssetTypes:              []kernel.AssetType{kernel.AssetType("storage_bucket")},
+		DueWithin:               &dueSoon,
+		CELEvaluator:            mustPredicateEval(),
 	})
 	if summary.Total != 1 || summary.DueSoon != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
@@ -50,11 +50,11 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 
 	svc := NewService()
 	stats := svc.ComputeRisk(controls, snapshots, RiskOptions{
-		GlobalMaxUnsafe:  30 * time.Minute,
-		Now:              now,
-		DueSoonThreshold: 2 * time.Hour,
-		StaveVersion:     "test",
-		CELEvaluator:     mustPredicateEval(),
+		GlobalMaxUnsafeDuration: 30 * time.Minute,
+		Now:                     now,
+		DueSoonThreshold:        2 * time.Hour,
+		StaveVersion:            "test",
+		CELEvaluator:            mustPredicateEval(),
 	})
 	if stats.CurrentViolations == 0 {
 		t.Fatalf("expected violations in risk stats, got %+v", stats)
@@ -67,9 +67,9 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 func TestComputeRisk_EmptyInput(t *testing.T) {
 	svc := NewService()
 	stats := svc.ComputeRisk(nil, nil, RiskOptions{
-		GlobalMaxUnsafe:  24 * time.Hour,
-		Now:              time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC),
-		DueSoonThreshold: time.Hour,
+		GlobalMaxUnsafeDuration: 24 * time.Hour,
+		Now:                     time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC),
+		DueSoonThreshold:        time.Hour,
 	})
 	if stats != (appcontracts.RiskStats{}) {
 		t.Fatalf("empty risk expected, got %+v", stats)
@@ -86,12 +86,12 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 	opts := RiskOptions{
-		GlobalMaxUnsafe:  4 * time.Hour,
-		Now:              base.Add(1 * time.Hour),
-		DueSoonThreshold: 90 * time.Minute,
-		Statuses:         []risk.Status{risk.StatusUpcoming},
-		AssetTypes:       []kernel.AssetType{kernel.AssetType("storage_bucket")},
-		CELEvaluator:     mustPredicateEval(),
+		GlobalMaxUnsafeDuration: 4 * time.Hour,
+		Now:                     base.Add(1 * time.Hour),
+		DueSoonThreshold:        90 * time.Minute,
+		Statuses:                []risk.Status{risk.StatusUpcoming},
+		AssetTypes:              []kernel.AssetType{kernel.AssetType("storage_bucket")},
+		CELEvaluator:            mustPredicateEval(),
 	}
 
 	summary := computeUpcomingSummary(controls, snapshots, opts)

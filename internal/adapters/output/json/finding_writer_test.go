@@ -25,11 +25,11 @@ func TestWriteFindings_WithEnvelopeAndRedaction(t *testing.T) {
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "test",
-			Offline:      true,
-			Now:          now,
-			MaxUnsafe:    kernel.Duration(24 * time.Hour),
-			Snapshots:    1,
+			StaveVersion:      "test",
+			Offline:           true,
+			Now:               now,
+			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			Snapshots:         1,
 			InputHashes: &evaluation.InputHashes{
 				Files: map[evaluation.FilePath]kernel.Digest{
 					"/tmp/observations/a.json": "abc123",
@@ -118,11 +118,11 @@ func TestWriteFindings_WithoutEnvelope(t *testing.T) {
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion: "test",
-			Offline:      true,
-			Now:          time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
-			MaxUnsafe:    kernel.Duration(24 * time.Hour),
-			Snapshots:    0,
+			StaveVersion:      "test",
+			Offline:           true,
+			Now:               time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
+			Snapshots:         0,
 		},
 		Summary: evaluation.Summary{
 			AssetsEvaluated: 0,

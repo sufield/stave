@@ -111,9 +111,9 @@ func (ctl *ControlDefinition) MaxUnsafeDuration() time.Duration {
 	return ctl.Prepared.MaxUnsafeDuration
 }
 
-// EffectiveMaxUnsafe returns the per-control max_unsafe_duration if explicitly set,
+// EffectiveMaxUnsafeDuration returns the per-control max_unsafe_duration if explicitly set,
 // otherwise returns the provided fallback (typically the CLI --max-unsafe value).
-func (ctl *ControlDefinition) EffectiveMaxUnsafe(fallback time.Duration) time.Duration {
+func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration) time.Duration {
 	ctl.ensurePrepared()
 	if ctl.Prepared.HasMaxUnsafeDuration {
 		return ctl.Prepared.MaxUnsafeDuration

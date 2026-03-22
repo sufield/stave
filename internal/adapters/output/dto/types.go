@@ -132,13 +132,13 @@ type ExemptedAssetDTO struct {
 
 // RunInfoDTO mirrors evaluation.RunInfo.
 type RunInfoDTO struct {
-	StaveVersion string          `json:"tool_version"`
-	Offline      bool            `json:"offline"`
-	Now          time.Time       `json:"now"`
-	MaxUnsafe    kernel.Duration `json:"max_unsafe"`
-	Snapshots    int             `json:"snapshots"`
-	InputHashes  *InputHashesDTO `json:"input_hashes,omitempty"`
-	PackHash     kernel.Digest   `json:"pack_hash,omitempty"`
+	StaveVersion      string          `json:"tool_version"`
+	Offline           bool            `json:"offline"`
+	Now               time.Time       `json:"now"`
+	MaxUnsafeDuration kernel.Duration `json:"max_unsafe"`
+	Snapshots         int             `json:"snapshots"`
+	InputHashes       *InputHashesDTO `json:"input_hashes,omitempty"`
+	PackHash          kernel.Digest   `json:"pack_hash,omitempty"`
 }
 
 // InputHashesDTO mirrors evaluation.InputHashes.

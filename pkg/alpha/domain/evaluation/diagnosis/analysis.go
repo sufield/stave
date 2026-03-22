@@ -93,12 +93,12 @@ func (s *session) diagnoseThresholdGaps() []Issue {
 
 	// Case: Matches found, but none long enough to trigger a violation.
 	// Stave uses strict ">" so duration must exceed --max-unsafe, not equal it.
-	if maxStreak > 0 && maxStreak <= s.input.MaxUnsafe {
+	if maxStreak > 0 && maxStreak <= s.input.MaxUnsafeDuration {
 		issues = append(issues, Issue{
 			Case:   ScenarioEmptyFindings,
 			Signal: msgMatchesUnderThreshold,
 			Evidence: fmt.Sprintf("Max observed streak: %s (control %s); threshold: %s",
-				fmtd(maxStreak), ctlID, fmtd(s.input.MaxUnsafe)),
+				fmtd(maxStreak), ctlID, fmtd(s.input.MaxUnsafeDuration)),
 			Action:  fmt.Sprintf("Lower --max-unsafe to below %s to trigger a violation", fmtd(maxStreak)),
 			Command: fmt.Sprintf("stave apply --max-unsafe %s", fmtd(maxStreak)),
 		})

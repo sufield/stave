@@ -12,8 +12,8 @@ func TestEvaluateErrorWithHint_MissingObservations(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "Next: stave ingest --profile aws-s3") {
-		t.Fatalf("expected ingest hint, got: %v", err)
+	if !strings.Contains(err.Error(), "Next: stave validate --controls ./controls --observations ./observations") {
+		t.Fatalf("expected validate hint, got: %v", err)
 	}
 	if !strings.Contains(err.Error(), "More info: run 'stave docs search") {
 		t.Fatalf("expected local docs reference, got: %v", err)
@@ -75,8 +75,8 @@ func TestSuggestForError_UsesSentinelLookup(t *testing.T) {
 	if hint.NextCommand == "" {
 		t.Fatalf("expected sentinel hint, got: %+v", hint)
 	}
-	if !strings.Contains(hint.NextCommand, "stave ingest") {
-		t.Fatalf("expected ingest command, got: %q", hint.NextCommand)
+	if !strings.Contains(hint.NextCommand, "stave validate") {
+		t.Fatalf("expected validate command, got: %q", hint.NextCommand)
 	}
 }
 

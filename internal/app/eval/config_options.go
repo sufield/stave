@@ -19,9 +19,9 @@ func WithRuntime(output, stderr io.Writer, clock ports.Clock, toolVersion string
 	}
 }
 
-func WithMaxUnsafe(maxUnsafe time.Duration) Option {
+func WithMaxUnsafeDuration(maxUnsafeDuration time.Duration) Option {
 	return func(cfg *EvaluateConfig) {
-		cfg.MaxUnsafe = maxUnsafe
+		cfg.MaxUnsafeDuration = maxUnsafeDuration
 	}
 }
 

@@ -16,7 +16,7 @@ import (
 )
 
 // runApply is the single dispatch function called by the thin RunE wrapper.
-// All cobra state has already been extracted into cs.
+// All CLI state has already been extracted into cs.
 func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate options: %w", err)
@@ -31,11 +31,11 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	}
 
 	if opts.DryRun {
-		planCfg, planErr := opts.ResolveDryRun(cs)
-		if planErr != nil {
-			return fmt.Errorf("resolve dry-run config: %w", planErr)
+		dryCfg, dryErr := opts.ResolveDryRun(cs)
+		if dryErr != nil {
+			return fmt.Errorf("resolve dry-run config: %w", dryErr)
 		}
-		return runDryRun(cs.Ctx, p, planCfg)
+		return runDryRun(cs.Ctx, p, dryCfg)
 	}
 
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
@@ -51,25 +51,36 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 		rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
 		rt.Quiet = cfg.Profile.Quiet
 		runner := NewRunner(p, cfg.profileClock, rt)
-		return runner.Run(cs.Ctx, cfg.Profile)
+		return runner.Run(cs.Ctx, *cfg.Profile)
 	}
 
 	sio, err := opts.ResolveStandardIO(cs)
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
-	return runStandardApply(cs.Ctx, cs.Logger, p, opts, cfg.Params, sio)
+	return runStandardApply(cs.Ctx, cs.Logger, p, opts, *cfg.Params, sio)
+}
+
+// evalContext groups the parameters needed by the evaluation pipeline.
+type evalContext struct {
+	Provider *compose.Provider
+	Opts     *ApplyOptions
+	Params   applyParams
+	IO       standardIO
+	Plan     *appeval.EvaluationPlan
+	Runtime  *ui.Runtime
+	Logger   *slog.Logger
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
 func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) error {
 	evalInput, err := opts.buildEvaluatorInput()
 	if err != nil {
-		return decorateError(fmt.Errorf("failed to build evaluator input: %w", err))
+		return decorateError(fmt.Errorf("build evaluator input: %w", err))
 	}
 	plan, err := appeval.NewPlan(evalInput)
 	if err != nil {
-		return decorateError(fmt.Errorf("failed to resolve evaluation plan: %w", err))
+		return decorateError(fmt.Errorf("resolve evaluation plan: %w", err))
 	}
 
 	if plan != nil {
@@ -79,7 +90,17 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
 
-	results, err := executeEvaluation(ctx, p, opts, params, sio, plan, rt, logger)
+	ec := evalContext{
+		Provider: p,
+		Opts:     opts,
+		Params:   params,
+		IO:       sio,
+		Plan:     plan,
+		Runtime:  rt,
+		Logger:   logger,
+	}
+
+	results, err := executeEvaluation(ctx, ec)
 	if err != nil {
 		return decorateError(err)
 	}
@@ -88,23 +109,15 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	return rep.ReportApply(results)
 }
 
-func executeEvaluation(
-	ctx context.Context,
-	p *compose.Provider,
-	opts *ApplyOptions,
-	params applyParams,
-	sio standardIO,
-	plan *appeval.EvaluationPlan,
-	rt *ui.Runtime,
-	logger *slog.Logger,
-) (EvaluateResult, error) {
-	progress := rt.BeginCountedProgress("apply controls against observations")
+// executeEvaluation builds dependencies, runs the evaluation, and writes output.
+func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, error) {
+	progress := ec.Runtime.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	builder := NewBuilder(ctx, logger, p, opts, params, sio)
+	builder := NewBuilder(ctx, ec.Logger, ec.Provider, ec.Opts, ec.Params, ec.IO)
 	builder.OnObsProgress = progress.Update
 
-	deps, err := builder.Build(plan)
+	deps, err := builder.Build(ec.Plan)
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("build evaluation dependencies: %w", err)
 	}
@@ -115,7 +128,7 @@ func executeEvaluation(
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
 
-	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, logger); err != nil {
+	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, ec.Logger); err != nil {
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 

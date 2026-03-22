@@ -17,25 +17,25 @@ import (
 // EvaluationContextInput holds raw flag values before parsing.
 // All fields are strings — they come directly from Cobra flags.
 type EvaluationContextInput struct {
-	ControlsDir     string
-	ObservationsDir string
-	MaxUnsafe       string
-	NowTime         string
-	Format          string
+	ControlsDir       string
+	ObservationsDir   string
+	MaxUnsafeDuration string
+	NowTime           string
+	Format            string
 }
 
 // PreparedEvaluationContext holds parsed, validated evaluation parameters.
 // It replaces the inline setup sequences that each command handler previously
 // built independently.
 type PreparedEvaluationContext struct {
-	Clock           ports.Clock
-	MaxUnsafe       time.Duration
-	Format          ui.OutputFormat
-	Sanitizer       kernel.Sanitizer
-	ControlsDir     string
-	ObservationsDir string
-	Logger          *slog.Logger
-	Evaluator       *appconfig.Evaluator
+	Clock             ports.Clock
+	MaxUnsafeDuration time.Duration
+	Format            ui.OutputFormat
+	Sanitizer         kernel.Sanitizer
+	ControlsDir       string
+	ObservationsDir   string
+	Logger            *slog.Logger
+	Evaluator         *appconfig.Evaluator
 }
 
 // PrepareEvaluationContext parses and validates raw flag values into a
@@ -51,13 +51,13 @@ func PrepareEvaluationContext(
 	ctlDir := fsutil.CleanUserPath(input.ControlsDir)
 	obsDir := fsutil.CleanUserPath(input.ObservationsDir)
 
-	var maxUnsafe time.Duration
-	if input.MaxUnsafe != "" {
-		d, err := timeutil.ParseDurationFlag(input.MaxUnsafe, "--max-unsafe")
+	var maxUnsafeDuration time.Duration
+	if input.MaxUnsafeDuration != "" {
+		d, err := timeutil.ParseDurationFlag(input.MaxUnsafeDuration, "--max-unsafe")
 		if err != nil {
 			return PreparedEvaluationContext{}, err
 		}
-		maxUnsafe = d
+		maxUnsafeDuration = d
 	}
 
 	clock, err := ResolveClock(input.NowTime)
@@ -71,13 +71,13 @@ func PrepareEvaluationContext(
 	}
 
 	return PreparedEvaluationContext{
-		Clock:           clock,
-		MaxUnsafe:       maxUnsafe,
-		Format:          format,
-		Sanitizer:       sanitizer,
-		ControlsDir:     ctlDir,
-		ObservationsDir: obsDir,
-		Logger:          logger,
-		Evaluator:       evaluator,
+		Clock:             clock,
+		MaxUnsafeDuration: maxUnsafeDuration,
+		Format:            format,
+		Sanitizer:         sanitizer,
+		ControlsDir:       ctlDir,
+		ObservationsDir:   obsDir,
+		Logger:            logger,
+		Evaluator:         evaluator,
 	}, nil
 }

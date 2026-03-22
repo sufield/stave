@@ -61,14 +61,14 @@ type DiagnosticFinding struct {
 
 // Input encapsulates all data required to run a diagnosis.
 type Input struct {
-	Snapshots       asset.Snapshots
-	Controls        []policy.ControlDefinition
-	Findings        []DiagnosticFinding
-	ViolationsFound int
-	AttackSurface   int
-	MaxUnsafe       time.Duration
-	Now             time.Time
-	PredicateEval   policy.PredicateEval
+	Snapshots         asset.Snapshots
+	Controls          []policy.ControlDefinition
+	Findings          []DiagnosticFinding
+	ViolationsFound   int
+	AttackSurface     int
+	MaxUnsafeDuration time.Duration
+	Now               time.Time
+	PredicateEval     policy.PredicateEval
 
 	// cached summary computed at creation
 	summary Summary
@@ -86,14 +86,14 @@ func NewInput(
 	eval policy.PredicateEval,
 ) Input {
 	i := Input{
-		Snapshots:       snapshots,
-		Controls:        controls,
-		Findings:        findings,
-		ViolationsFound: violationsFound,
-		AttackSurface:   attackSurface,
-		MaxUnsafe:       maxUnsafe,
-		Now:             now,
-		PredicateEval:   eval,
+		Snapshots:         snapshots,
+		Controls:          controls,
+		Findings:          findings,
+		ViolationsFound:   violationsFound,
+		AttackSurface:     attackSurface,
+		MaxUnsafeDuration: maxUnsafe,
+		Now:               now,
+		PredicateEval:     eval,
 	}
 	i.summary = i.buildSummary()
 	return i
@@ -111,7 +111,7 @@ func (i *Input) buildSummary() Summary {
 	s := Summary{
 		TotalSnapshots:     len(i.Snapshots),
 		TotalControls:      len(i.Controls),
-		MaxUnsafeThreshold: kernel.Duration(i.MaxUnsafe),
+		MaxUnsafeThreshold: kernel.Duration(i.MaxUnsafeDuration),
 		EvaluationTime:     i.Now,
 	}
 

@@ -17,18 +17,18 @@ import (
 
 // diagnoseOptions holds the raw CLI flag values before validation.
 type diagnoseOptions struct {
-	ControlsDir     string
-	ObservationsDir string
-	PreviousOutput  string
-	MaxUnsafe       string
-	NowTime         string
-	Format          string
-	Quiet           bool
-	Cases           []string
-	SignalContains  string
-	Template        string
-	ControlID       string
-	AssetID         string
+	ControlsDir       string
+	ObservationsDir   string
+	PreviousOutput    string
+	MaxUnsafeDuration string
+	NowTime           string
+	Format            string
+	Quiet             bool
+	Cases             []string
+	SignalContains    string
+	Template          string
+	ControlID         string
+	AssetID           string
 }
 
 // BindFlags attaches the options to a Cobra command.
@@ -37,7 +37,7 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
 	f.StringVarP(&o.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", "text", "Output format: text or json")
 	f.BoolVar(&o.Quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
@@ -59,7 +59,7 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {
 	eval := cmdutil.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafe = eval.MaxUnsafe()
+		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
 	if !cmd.Flags().Changed("quiet") {
 		o.Quiet = eval.Quiet()
@@ -104,7 +104,7 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		return Config{}, err
 	}
 
-	maxUnsafe, err := timeutil.ParseDurationFlag(o.MaxUnsafe, "--max-unsafe")
+	maxUnsafe, err := timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return Config{}, err
 	}
@@ -112,22 +112,22 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 	flags := cmdutil.GetGlobalFlags(cmd)
 
 	return Config{
-		ControlsDir:     controlsDir,
-		ObservationsDir: obsDir,
-		PreviousOutput:  fsutil.CleanUserPath(o.PreviousOutput),
-		MaxUnsafe:       maxUnsafe,
-		Format:          fmtValue,
-		Quiet:           o.Quiet,
-		Cases:           o.Cases,
-		SignalContains:  o.SignalContains,
-		Template:        o.Template,
-		ControlID:       strings.TrimSpace(o.ControlID),
-		AssetID:         strings.TrimSpace(o.AssetID),
-		Stdout:          cmd.OutOrStdout(),
-		Stderr:          cmd.ErrOrStderr(),
-		Stdin:           cmd.InOrStdin(),
-		Clock:           clock,
-		Sanitizer:       flags.GetSanitizer(),
-		EnvelopeMode:    flags.IsJSONMode(),
+		ControlsDir:       controlsDir,
+		ObservationsDir:   obsDir,
+		PreviousOutput:    fsutil.CleanUserPath(o.PreviousOutput),
+		MaxUnsafeDuration: maxUnsafe,
+		Format:            fmtValue,
+		Quiet:             o.Quiet,
+		Cases:             o.Cases,
+		SignalContains:    o.SignalContains,
+		Template:          o.Template,
+		ControlID:         strings.TrimSpace(o.ControlID),
+		AssetID:           strings.TrimSpace(o.AssetID),
+		Stdout:            cmd.OutOrStdout(),
+		Stderr:            cmd.ErrOrStderr(),
+		Stdin:             cmd.InOrStdin(),
+		Clock:             clock,
+		Sanitizer:         flags.GetSanitizer(),
+		EnvelopeMode:      flags.IsJSONMode(),
 	}, nil
 }

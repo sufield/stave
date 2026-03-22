@@ -20,15 +20,15 @@ import (
 
 // Config holds the inputs for the diagnostic engine.
 type Config struct {
-	ControlsDir     string
-	ObservationsDir string
-	PreviousOutput  string
-	MaxUnsafe       time.Duration
-	Format          ui.OutputFormat
-	Quiet           bool
-	Cases           []string
-	SignalContains  string
-	Template        string
+	ControlsDir       string
+	ObservationsDir   string
+	PreviousOutput    string
+	MaxUnsafeDuration time.Duration
+	Format            ui.OutputFormat
+	Quiet             bool
+	Cases             []string
+	SignalContains    string
+	Template          string
 
 	// Detail Mode (single-finding deep dive)
 	ControlID string
@@ -88,7 +88,7 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafe)
+	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafeDuration)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafe)
+	baseCfg, err := r.buildAppConfig(cfg, cfg.MaxUnsafeDuration)
 	if err != nil {
 		return err
 	}
@@ -160,11 +160,11 @@ func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
 
 func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagnose.Config, error) {
 	appCfg := appdiagnose.Config{
-		ControlsDir:     cfg.ControlsDir,
-		ObservationsDir: cfg.ObservationsDir,
-		MaxUnsafe:       maxDuration,
-		Clock:           r.Clock,
-		PredicateParser: ctlyaml.ParsePredicate,
+		ControlsDir:       cfg.ControlsDir,
+		ObservationsDir:   cfg.ObservationsDir,
+		MaxUnsafeDuration: maxDuration,
+		Clock:             r.Clock,
+		PredicateParser:   ctlyaml.ParsePredicate,
 	}
 
 	loader := evaljson.NewLoader()

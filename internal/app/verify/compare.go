@@ -14,13 +14,13 @@ import (
 
 // CompareRequest defines the inputs for a before/after comparison.
 type CompareRequest struct {
-	BeforeFindings  []evaluation.Finding
-	AfterFindings   []evaluation.Finding
-	BeforeSnapshots int
-	AfterSnapshots  int
-	MaxUnsafe       time.Duration
-	Now             time.Time
-	Sanitizer       kernel.Sanitizer
+	BeforeFindings    []evaluation.Finding
+	AfterFindings     []evaluation.Finding
+	BeforeSnapshots   int
+	AfterSnapshots    int
+	MaxUnsafeDuration time.Duration
+	Now               time.Time
+	Sanitizer         kernel.Sanitizer
 }
 
 // CompareResult holds the comparison outcome.
@@ -42,12 +42,12 @@ func Compare(req CompareRequest) (CompareResult, error) {
 
 	v := safetyenvelope.NewVerification(safetyenvelope.VerificationRequest{
 		Run: safetyenvelope.VerificationRunInfo{
-			StaveVersion:    staveversion.String,
-			Offline:         true,
-			Now:             req.Now,
-			MaxUnsafe:       req.MaxUnsafe,
-			BeforeSnapshots: req.BeforeSnapshots,
-			AfterSnapshots:  req.AfterSnapshots,
+			StaveVersion:      staveversion.String,
+			Offline:           true,
+			Now:               req.Now,
+			MaxUnsafeDuration: req.MaxUnsafeDuration,
+			BeforeSnapshots:   req.BeforeSnapshots,
+			AfterSnapshots:    req.AfterSnapshots,
 		},
 		Summary: safetyenvelope.VerificationSummary{
 			BeforeViolations: len(req.BeforeFindings),
