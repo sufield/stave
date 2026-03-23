@@ -21,8 +21,8 @@ import (
 
 // --- Config ---
 
-// Config defines the resolved parameters for a snapshot prune operation.
-type Config struct {
+// config defines the resolved parameters for a snapshot prune operation.
+type config struct {
 	ObservationsDir string
 	OlderThan       time.Duration
 	RetentionTier   string
@@ -44,16 +44,16 @@ type executionPlan struct {
 	output         report.PruneOutput
 }
 
-// Runner orchestrates the identification and removal of stale snapshot files.
+// runner orchestrates the identification and removal of stale snapshot files.
 // It implements appeval.CleanupOrchestrator directly.
-type Runner struct {
+type runner struct {
 	NewSnapshotRepo compose.SnapshotRepoFactory
-	cfg             Config
+	cfg             config
 	plan            *executionPlan
 }
 
 // Run executes the full pruning workflow via the appeval.RunCleanup lifecycle.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *runner) Run(ctx context.Context, cfg config) error {
 	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
 	if obsDir == "" {
 		return fmt.Errorf("--observations cannot be empty")
@@ -70,7 +70,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 // BuildPlan identifies which snapshots meet the criteria for pruning.
-func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
+func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
@@ -119,7 +119,7 @@ func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 }
 
 // Render outputs the plan to the user in the requested format.
-func (r *Runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
+func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
 		Format:         r.cfg.Format,
 		Output:         r.plan.output,
@@ -139,7 +139,7 @@ func (r *Runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 }
 
 // Apply executes the file deletions.
-func (r *Runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
+func (r *runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
 	deletion, err := fsops.ApplyDelete(fsops.DeleteInput{
 		ObservationsDir: r.cfg.ObservationsDir,
 		Files:           r.toDeleteFiles(),
@@ -156,7 +156,7 @@ func (r *Runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
 
 // --- Helpers ---
 
-func (r *Runner) toDeleteFiles() []fsops.DeleteFile {
+func (r *runner) toDeleteFiles() []fsops.DeleteFile {
 	out := make([]fsops.DeleteFile, 0, len(r.plan.candidateFiles))
 	for _, sf := range r.plan.candidateFiles {
 		out = append(out, fsops.DeleteFile{Path: sf.Path})

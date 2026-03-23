@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-// ValidationInput holds loaded models and runtime options for validation processing.
-type ValidationInput struct {
+// Input holds loaded models and runtime options for validation processing.
+type Input struct {
 	Controls          []policy.ControlDefinition
 	Snapshots         []asset.Snapshot
 	MaxUnsafeDuration time.Duration
@@ -18,31 +18,31 @@ type ValidationInput struct {
 	PredicateEval     policy.PredicateEval
 }
 
-// ValidationSummary provides counts over loaded models.
-type ValidationSummary struct {
+// Summary provides counts over loaded models.
+type Summary struct {
 	ControlsLoaded             int
 	SnapshotsLoaded            int
 	AssetObservationsLoaded    int
 	IdentityObservationsLoaded int
 }
 
-// ValidationResult contains validation issues plus computed summary counts.
-type ValidationResult struct {
+// Result contains validation issues plus computed summary counts.
+type Result struct {
 	Diagnostics *diag.Result
-	Summary     ValidationSummary
+	Summary     Summary
 }
 
 // Valid returns true if there are no error diagnostics.
-func (r *ValidationResult) Valid() bool {
+func (r *Result) Valid() bool {
 	return !r.ensureDiagnostics().HasErrors()
 }
 
 // HasWarnings returns true if there are warning diagnostics.
-func (r *ValidationResult) HasWarnings() bool {
+func (r *Result) HasWarnings() bool {
 	return r.ensureDiagnostics().HasWarnings()
 }
 
-func (r *ValidationResult) ensureDiagnostics() *diag.Result {
+func (r *Result) ensureDiagnostics() *diag.Result {
 	if r == nil {
 		return diag.NewResult()
 	}
@@ -53,8 +53,8 @@ func (r *ValidationResult) ensureDiagnostics() *diag.Result {
 }
 
 // ValidateLoaded runs domain validation over already-loaded inputs.
-func ValidateLoaded(input ValidationInput) ValidationResult {
-	summary := ValidationSummary{
+func ValidateLoaded(input Input) Result {
+	summary := Summary{
 		ControlsLoaded:  len(input.Controls),
 		SnapshotsLoaded: len(input.Snapshots),
 	}
@@ -85,7 +85,7 @@ func ValidateLoaded(input ValidationInput) ValidationResult {
 		issues.AddAll(policy.CheckControlEffectiveness(input.Controls, input.Snapshots, input.PredicateEval))
 	}
 
-	return ValidationResult{
+	return Result{
 		Diagnostics: issues,
 		Summary:     summary,
 	}

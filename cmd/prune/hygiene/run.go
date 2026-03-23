@@ -23,8 +23,8 @@ import (
 
 // --- Config ---
 
-// Config defines the resolved parameters for the hygiene report.
-type Config struct {
+// config defines the resolved parameters for the hygiene report.
+type config struct {
 	ControlsDir       string
 	ObservationsDir   string
 	ArchiveDir        string
@@ -62,15 +62,15 @@ func (f UpcomingFilter) DueWithinPtr() *time.Duration {
 
 // --- Runner ---
 
-// Runner orchestrates the multi-domain hygiene report.
-type Runner struct {
+// runner orchestrates the multi-domain hygiene report.
+type runner struct {
 	LoadAssets      compose.AssetLoaderFunc
 	NewObsRepo      compose.ObsRepoFactory
 	NewSnapshotRepo compose.SnapshotRepoFactory
 }
 
 // Run executes the hygiene analysis and renders the report.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *runner) Run(ctx context.Context, cfg config) error {
 	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 // --- Internal Helpers ---
 
 func buildSnapshotStats(
-	cfg Config,
+	cfg config,
 	activeSnapshots []asset.Snapshot,
 	archiveSnapshots []asset.Snapshot,
 	files []appcontracts.SnapshotFile,
@@ -140,25 +140,25 @@ func buildSnapshotStats(
 		OlderThan: cfg.OlderThan,
 		KeepMin:   cfg.KeepMin,
 	})
-	return appcontracts.NewSnapshotStats(
-		len(activeSnapshots),
-		len(archiveSnapshots),
-		len(pruneCandidates),
-		cfg.KeepMin,
-		cfg.RetentionTier,
-		cfg.OlderThan,
-	)
+	return appcontracts.SnapshotStats{
+		Active:            len(activeSnapshots),
+		Archived:          len(archiveSnapshots),
+		PruneCandidates:   len(pruneCandidates),
+		RetentionTier:     cfg.RetentionTier,
+		RetentionDuration: cfg.OlderThan,
+		KeepMin:           cfg.KeepMin,
+	}
 }
 
 func computeRiskTrend(
-	cfg Config,
+	cfg config,
 	previousNow time.Time,
 	controls []policy.ControlDefinition,
 	activeSnapshots []asset.Snapshot,
 ) (appcontracts.RiskStats, []evaluation.TrendMetric) {
 	riskOpts := buildRiskOptions(cfg)
 
-	svc := hygieneapp.NewService()
+	svc := &hygieneapp.Service{}
 	currentRisk := svc.ComputeRisk(controls, activeSnapshots, riskOpts)
 
 	previousSnapshots := filterSnapshotsBefore(activeSnapshots, previousNow)
@@ -170,7 +170,7 @@ func computeRiskTrend(
 	return currentRisk, trend
 }
 
-func buildRiskOptions(cfg Config) hygieneapp.RiskOptions {
+func buildRiskOptions(cfg config) hygieneapp.RiskOptions {
 	return hygieneapp.RiskOptions{
 		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
 		Now:                     cfg.Now,

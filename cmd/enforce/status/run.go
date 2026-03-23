@@ -16,8 +16,8 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// Config defines the parameters for the status check.
-type Config struct {
+// config defines the parameters for the status check.
+type config struct {
 	Dir    string
 	Format ui.OutputFormat
 	Stdout io.Writer
@@ -41,7 +41,7 @@ func NewRunner(r *projctx.Resolver) *Runner {
 }
 
 // Run executes the project inspection and writes the report to the output stream.
-func (r *Runner) Run(cfg Config) error {
+func (r *Runner) Run(cfg config) error {
 	dir := fsutil.CleanUserPath(cfg.Dir)
 
 	root, err := r.Resolver.DetectProjectRoot(dir)

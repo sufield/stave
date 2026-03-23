@@ -32,7 +32,7 @@ func newPacksListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runner.List(cmd.Context())
+			return runner.List()
 		},
 	}
 }
@@ -47,7 +47,7 @@ func newPacksShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runner.Show(cmd.Context(), args[0])
+			return runner.Show(args[0])
 		},
 	}
 }

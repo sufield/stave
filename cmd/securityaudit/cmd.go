@@ -101,8 +101,8 @@ Examples:
 				return &ui.UserError{Err: err}
 			}
 
-			runner := &AuditRunner{}
-			return runner.Run(cmd.Context(), AuditConfig{
+			runner := &auditRunner{}
+			return runner.Run(cmd.Context(), auditConfig{
 				Format:           format,
 				OutPath:          opts.OutPath,
 				OutDir:           opts.OutDir,

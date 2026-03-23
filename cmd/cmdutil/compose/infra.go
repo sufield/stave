@@ -25,7 +25,7 @@ type Provider struct {
 	ControlRepoFunc   func() (appcontracts.ControlRepository, error)
 	FindingWriterFunc func(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error)
 	CELEvalFunc       func() (policy.PredicateEval, error)
-	SnapshotRepoFunc  func() (SnapshotObservationRepository, error)
+	SnapshotRepoFunc  func() (appcontracts.SnapshotReader, error)
 }
 
 // NewCELEvaluator returns the CEL predicate evaluator from the provider.
@@ -50,19 +50,10 @@ func NewDefaultProvider() *Provider {
 		},
 		FindingWriterFunc: DefaultFindingWriter,
 		CELEvalFunc:       stavecel.NewPredicateEval,
-		SnapshotRepoFunc: func() (SnapshotObservationRepository, error) {
+		SnapshotRepoFunc: func() (appcontracts.SnapshotReader, error) {
 			return observations.NewObservationLoader(), nil
 		},
 	}
-}
-
-// Compile-time check that ObservationLoader satisfies the composed snapshot interface.
-var _ SnapshotObservationRepository = (*observations.ObservationLoader)(nil)
-
-// SnapshotObservationRepository extends ObservationRepository with single-snapshot reader loading.
-type SnapshotObservationRepository interface {
-	appcontracts.ObservationRepository
-	appcontracts.SnapshotReader
 }
 
 // Factory types for narrow dependency injection. Commands accept these
@@ -70,7 +61,7 @@ type SnapshotObservationRepository interface {
 type (
 	ObsRepoFactory       = func() (appcontracts.ObservationRepository, error)
 	CtlRepoFactory       = func() (appcontracts.ControlRepository, error)
-	SnapshotRepoFactory  = func() (SnapshotObservationRepository, error)
+	SnapshotRepoFactory  = func() (appcontracts.SnapshotReader, error)
 	CELEvaluatorFactory  = func() (policy.PredicateEval, error)
 	FindingWriterFactory = func(ui.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
 	SnapshotLoader       = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
@@ -103,9 +94,9 @@ func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationReposit
 	return p.StdinObsRepoFunc(r)
 }
 
-// NewSnapshotRepo creates a snapshot observation repository.
+// NewSnapshotRepo creates a snapshot reader.
 // Requires SnapshotRepoFunc to be set (always true via NewDefaultProvider).
-func (p *Provider) NewSnapshotRepo() (SnapshotObservationRepository, error) {
+func (p *Provider) NewSnapshotRepo() (appcontracts.SnapshotReader, error) {
 	if p.SnapshotRepoFunc == nil {
 		return nil, fmt.Errorf("SnapshotRepoFunc not configured on Provider")
 	}
@@ -130,6 +121,12 @@ type Assets struct {
 
 // LoadAssets concurrently fetches observations and controls.
 func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Assets, error) {
+	if p.ObsRepoFunc == nil {
+		return Assets{}, fmt.Errorf("ObsRepoFunc not configured on Provider")
+	}
+	if p.ControlRepoFunc == nil {
+		return Assets{}, fmt.Errorf("ControlRepoFunc not configured on Provider")
+	}
 	obsRepo, err := p.ObsRepoFunc()
 	if err != nil {
 		return Assets{}, fmt.Errorf("create observation loader: %w", err)

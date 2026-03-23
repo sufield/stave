@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
-func resolveScopeFilter(cfg Config) asset.AssetPredicate {
+func resolveScopeFilter(cfg Config) *asset.ScopeFilter {
 	if cfg.IncludeAll {
 		return asset.UniversalFilter
 	}

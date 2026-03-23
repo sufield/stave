@@ -29,9 +29,7 @@ func runValidateSingleFile(stdin io.Reader, reporter *Reporter, opts *options) e
 		return err
 	}
 
-	service := appvalidation.NewContentService(func() appvalidation.SchemaValidator {
-		return contractvalidator.New()
-	})
+	service := appvalidation.NewContentService(contractvalidator.New)
 	result, err := service.Validate(req)
 	if err != nil {
 		return fmt.Errorf("validation failed for %q: %w", source, err)
@@ -125,7 +123,7 @@ func NewReadinessValidator(
 }
 
 // toValidationResult converts an app-layer validation result to the domain type.
-func toValidationResult(result *appvalidation.ValidationResult) validation.Result {
+func toValidationResult(result *appvalidation.Result) validation.Result {
 	return validation.Result{
 		Diagnostics: result.Diagnostics,
 		Summary: struct {

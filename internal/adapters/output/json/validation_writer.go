@@ -6,7 +6,6 @@ import (
 
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
-	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
 // WriteValidation writes a validation report as JSON.
@@ -21,7 +20,8 @@ func WriteValidation(w io.Writer, report any, useEnvelope bool, isValid bool) er
 	return enc.Encode(report)
 }
 
-// WriteReadinessJSON encodes a ReadinessReport as indented JSON.
-func WriteReadinessJSON(w io.Writer, report validation.ReadinessReport) error {
+// WriteReadinessJSON encodes a readiness report as indented JSON.
+// Accepts any type so callers can pass enriched wrappers.
+func WriteReadinessJSON(w io.Writer, report any) error {
 	return jsonutil.WriteIndented(w, report)
 }

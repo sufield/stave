@@ -1,7 +1,6 @@
 package eval
 
 import (
-	"context"
 	"testing"
 
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
@@ -20,7 +19,7 @@ func defaultPackRegistry(t *testing.T) *pack.Registry {
 }
 
 func TestResolveProjectConfig_InvalidExceptionExpiry(t *testing.T) {
-	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+	_, err := ResolveProjectConfig(ProjectConfigInput{
 		Exceptions: []ExceptionInput{
 			{
 				ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
@@ -36,7 +35,7 @@ func TestResolveProjectConfig_InvalidExceptionExpiry(t *testing.T) {
 }
 
 func TestResolveProjectConfig_PackSelectionConflict(t *testing.T) {
-	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+	_, err := ResolveProjectConfig(ProjectConfigInput{
 		EnabledControlPacks: []string{"s3/public-exposure"},
 		ControlsFlagSet:     true,
 	})
@@ -46,7 +45,7 @@ func TestResolveProjectConfig_PackSelectionConflict(t *testing.T) {
 }
 
 func TestResolveProjectConfig_UnknownPack(t *testing.T) {
-	_, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+	_, err := ResolveProjectConfig(ProjectConfigInput{
 		EnabledControlPacks: []string{"does-not-exist"},
 		PackRegistry:        defaultPackRegistry(t),
 	})
@@ -56,7 +55,7 @@ func TestResolveProjectConfig_UnknownPack(t *testing.T) {
 }
 
 func TestResolveProjectConfig_LoadsEnabledPack(t *testing.T) {
-	got, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{
+	got, err := ResolveProjectConfig(ProjectConfigInput{
 		EnabledControlPacks: []string{"s3/public-exposure"},
 		BuiltinLoader:       builtin.NewRegistry(builtin.EmbeddedFS(), "embedded").All,
 		PackRegistry:        defaultPackRegistry(t),
@@ -73,7 +72,7 @@ func TestResolveProjectConfig_LoadsEnabledPack(t *testing.T) {
 }
 
 func TestResolveProjectConfig_NoPacks(t *testing.T) {
-	got, err := ResolveProjectConfig(context.Background(), ProjectConfigInput{})
+	got, err := ResolveProjectConfig(ProjectConfigInput{})
 	if err != nil {
 		t.Fatalf("ResolveProjectConfig() error = %v", err)
 	}

@@ -131,7 +131,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		DiagnoseConfig: baseCfg,
 		ControlID:      kernel.ControlID(cfg.ControlID),
 		AssetID:        asset.ID(cfg.AssetID),
-		TraceBuilder:   apptrace.NewFindingTraceBuilder(),
+		TraceBuilder:   &apptrace.Builder{},
 		IDGen:          crypto.NewHasher(),
 	})
 	if err != nil {
@@ -169,7 +169,7 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagn
 		PredicateParser:   ctlyaml.ParsePredicate,
 	}
 
-	loader := evaljson.NewLoader()
+	loader := &evaljson.Loader{}
 	switch {
 	case cfg.PreviousOutput == "-":
 		result, err := loader.LoadFromReader(cfg.Stdin, "stdin")

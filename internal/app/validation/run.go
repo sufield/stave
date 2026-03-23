@@ -40,7 +40,7 @@ func NewRun(
 
 // Execute loads data and runs domain validation.
 // App layer handles file I/O; domain handles validation logic.
-func (v *Run) Execute(ctx context.Context, cfg Config) (*ValidationResult, error) {
+func (v *Run) Execute(ctx context.Context, cfg Config) (*Result, error) {
 	controls, ctlErr := appcontracts.LoadControls(ctx, v.ControlRepo, cfg.ControlsDir)
 	if ctlErr != nil {
 		return nil, fmt.Errorf("load controls from %s: %w", cfg.ControlsDir, ctlErr)
@@ -51,7 +51,7 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*ValidationResult, error
 	}
 	snapshots := obsResult.Snapshots
 
-	serviceResult := ValidateLoaded(ValidationInput{
+	serviceResult := ValidateLoaded(Input{
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,

@@ -3,7 +3,6 @@ package initcmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -46,7 +45,7 @@ Examples:
 				AllowSymlink: gf.AllowSymlinkOut,
 				Quiet:        gf.Quiet,
 			}
-			return runner.Run(compose.CommandContext(cmd), &req)
+			return runner.Run(&req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

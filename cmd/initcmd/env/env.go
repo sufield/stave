@@ -1,7 +1,6 @@
 package env
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"text/tabwriter"
@@ -34,7 +33,7 @@ type Entry struct {
 }
 
 // listEnvVars retrieves all supported STAVE_* variables and renders them.
-func listEnvVars(_ context.Context, cfg ListConfig) error {
+func listEnvVars(cfg ListConfig) error {
 	vars := staveenv.All()
 	entries := make([]Entry, len(vars))
 	for i, v := range vars {
@@ -130,7 +129,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			return listEnvVars(cmd.Context(), ListConfig{
+			return listEnvVars(ListConfig{
 				Format: fmtValue,
 				Stdout: cmd.OutOrStdout(),
 			})

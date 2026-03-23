@@ -12,15 +12,10 @@ import (
 	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
-// CommandContext returns cmd.Context() with a fallback to context.Background().
+// CommandContext returns cmd.Context(). Panics if cmd is nil —
+// a missing command indicates a programming error, not a runtime condition.
 func CommandContext(cmd *cobra.Command) context.Context {
-	if cmd == nil {
-		return context.Background()
-	}
-	if ctx := cmd.Context(); ctx != nil {
-		return ctx
-	}
-	return context.Background()
+	return cmd.Context()
 }
 
 // ResolveNow parses a --now flag value. Returns wall clock UTC when raw is empty.

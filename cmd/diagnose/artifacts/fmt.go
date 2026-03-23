@@ -38,7 +38,7 @@ Use --check to verify formatting without writing files.` + metadata.OfflineHelpS
 					return fsutil.SafeWriteFile(path, data, opts)
 				},
 			}
-			formatter := appartifacts.NewFormatter()
+			formatter := &appartifacts.Formatter{}
 			_, err := formatter.Run(cfg)
 			return err
 		},

@@ -69,8 +69,8 @@ Exit Codes:
 				return err
 			}
 
-			runner := &Runner{NewSnapshotRepo: p.NewSnapshotRepo}
-			return runner.Run(cmd.Context(), Config{
+			runner := &runner{NewSnapshotRepo: p.NewSnapshotRepo}
+			return runner.Run(cmd.Context(), config{
 				ObservationsDir: opts.ObsDir,
 				OlderThan:       ret.OlderThan,
 				RetentionTier:   ret.RetentionTier,

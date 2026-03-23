@@ -19,11 +19,6 @@ var ErrNoFindings = errors.New("input JSON does not contain evaluation findings"
 // Loader reads evaluation result artifacts from JSON.
 type Loader struct{}
 
-// NewLoader creates a new evaluation result JSON loader.
-func NewLoader() *Loader {
-	return &Loader{}
-}
-
 // LoadFromFile loads an evaluation result from a JSON file.
 func (l *Loader) LoadFromFile(path string) (*evaluation.Result, error) {
 	path = fsutil.CleanUserPath(path)

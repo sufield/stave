@@ -1,7 +1,6 @@
 package baseline
 
 import (
-	"context"
 	"fmt"
 	"io"
 
@@ -49,7 +48,7 @@ func NewRunner(clock ports.Clock, san kernel.Sanitizer, fileOpts fileout.FileOpt
 }
 
 // Save captures current evaluation findings into a baseline file.
-func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
+func (r *Runner) Save(cfg SaveConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	outPath := fsutil.CleanUserPath(cfg.OutPath)
 
@@ -82,7 +81,7 @@ func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 }
 
 // Check compares evaluation findings against an existing baseline.
-func (r *Runner) Check(_ context.Context, cfg CheckConfig) error {
+func (r *Runner) Check(cfg CheckConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 

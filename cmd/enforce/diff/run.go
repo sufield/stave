@@ -13,8 +13,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// Config defines the parameters for comparing observation snapshots.
-type Config struct {
+// config defines the parameters for comparing observation snapshots.
+type config struct {
 	ObservationsDir string
 	Format          ui.OutputFormat
 	Filter          asset.FilterOptions
@@ -24,19 +24,19 @@ type Config struct {
 	Stderr          io.Writer
 }
 
-// Runner orchestrates the loading and comparison of observation snapshots.
-type Runner struct {
+// runner orchestrates the loading and comparison of observation snapshots.
+type runner struct {
 	LoadSnapshots compose.SnapshotLoader
 }
 
-// NewRunner initializes a diff runner with the given snapshot loader.
-func NewRunner(load compose.SnapshotLoader) *Runner {
-	return &Runner{LoadSnapshots: load}
+// newRunner initializes a diff runner with the given snapshot loader.
+func newRunner(load compose.SnapshotLoader) *runner {
+	return &runner{LoadSnapshots: load}
 }
 
 // Run executes the diffing workflow: loading the two latest snapshots,
 // calculating the delta, applying filters, and rendering the output.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *runner) Run(ctx context.Context, cfg config) error {
 	progress := ui.NewRuntime(cfg.Stdout, cfg.Stderr)
 	progress.Quiet = cfg.Quiet
 	stop := progress.BeginProgress("Computing observation delta")
@@ -51,7 +51,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	return writeOutput(cfg.Stdout, cfg.Format, cfg.Quiet, delta)
 }
 
-func (r *Runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
+func (r *runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
 	snapshots, err := r.LoadSnapshots(ctx, dir)
 	if err != nil {
 		return asset.ObservationDelta{}, fmt.Errorf("loading snapshots: %w", err)

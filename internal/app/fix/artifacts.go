@@ -2,6 +2,7 @@ package fix
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -166,4 +167,4 @@ type ObservationSummary struct {
 }
 
 // ErrViolationsRemaining is returned when the fix-loop finds unresolved violations.
-var ErrViolationsRemaining = fmt.Errorf("remaining or introduced violations exist")
+var ErrViolationsRemaining = errors.New("remaining or introduced violations exist")

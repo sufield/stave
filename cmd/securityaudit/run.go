@@ -16,8 +16,8 @@ import (
 	domainsecurityaudit "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
-// AuditConfig defines the resolved parameters for a security audit.
-type AuditConfig struct {
+// auditConfig defines the resolved parameters for a security audit.
+type auditConfig struct {
 	Format           string
 	OutPath          string
 	OutDir           string
@@ -38,12 +38,12 @@ type AuditConfig struct {
 	Stdout         io.Writer
 }
 
-// AuditRunner orchestrates security evidence collection.
-type AuditRunner struct{}
+// auditRunner orchestrates security evidence collection.
+type auditRunner struct{}
 
 // Run executes the security audit workflow as a 3-step pipeline:
 // resolve environment, execute audit, write output and gate.
-func (r *AuditRunner) Run(ctx context.Context, cfg AuditConfig) error {
+func (r *auditRunner) Run(ctx context.Context, cfg auditConfig) error {
 	cwd, exe, err := resolveAuditEnvironment()
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func resolveAuditEnvironment() (cwd string, exe string, err error) {
 
 // executeAudit builds the runner and executes the audit, returning the report
 // and artifact manifest.
-func executeAudit(ctx context.Context, cfg AuditConfig, cwd, exe, bundleDir string) (domainsecurityaudit.Report, domainsecurityaudit.ArtifactManifest, error) {
+func executeAudit(ctx context.Context, cfg auditConfig, cwd, exe, bundleDir string) (domainsecurityaudit.Report, domainsecurityaudit.ArtifactManifest, error) {
 	runner := appsa.NewRunner(buildRunnerDeps())
 
 	report, artifacts, err := runner.Run(ctx, appsa.Request{
@@ -105,7 +105,7 @@ func executeAudit(ctx context.Context, cfg AuditConfig, cwd, exe, bundleDir stri
 // When neither --out nor --out-dir is set: report goes to stdout (matching
 // how apply --format json works). No bundle is written.
 // When --out or --out-dir is set: report goes to file, summary to stdout.
-func writeAndReport(cfg AuditConfig, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, bundleDir string) error {
+func writeAndReport(cfg auditConfig, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, bundleDir string) error {
 	mainData, mainName, err := renderReport(cfg.Format, report)
 	if err != nil {
 		return err

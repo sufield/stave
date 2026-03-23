@@ -42,7 +42,7 @@ func (o ScannerOptions) maxFiles() int {
 }
 
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.
-func ListSnapshotFilesFlat(observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
+func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil {
 		return nil, fmt.Errorf("snapshot metadata loader is required")
 	}
@@ -56,6 +56,9 @@ func ListSnapshotFilesFlat(observationsDir string, opts ScannerOptions) ([]appco
 	files := make([]appcontracts.SnapshotFile, 0, min(len(entries), limit))
 
 	for _, entry := range entries {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
 		}

@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// AssetPredicate is the domain-level evaluation-time filter.
+// ScopeFilter is the domain-level evaluation-time filter.
 // It operates on Asset objects after extraction is complete.
 //
 // This is intentionally separate from the adapter-level ScopeConfig
@@ -12,13 +12,8 @@ import (
 // using raw tags and bucket names. The two serve different hexagonal
 // layers and are not a duplication bug.
 
-// AssetPredicate decides whether a single asset is in scope.
-type AssetPredicate interface {
-	IsInScope(a Asset) bool
-}
-
-// scopeFilter is the private implementation of AssetPredicate.
-type scopeFilter struct {
+// ScopeFilter decides whether a single asset is in scope.
+type ScopeFilter struct {
 	includeAll   bool
 	allowlist    map[string]struct{}
 	requiredTags map[string]map[string]struct{} // key -> allowed lowercase values
@@ -26,12 +21,10 @@ type scopeFilter struct {
 }
 
 // UniversalFilter is a null-object predicate that admits all assets.
-var UniversalFilter AssetPredicate = &scopeFilter{includeAll: true}
-
-var _ AssetPredicate = (*scopeFilter)(nil)
+var UniversalFilter = &ScopeFilter{includeAll: true}
 
 // DefaultHealthcareScopeFilter returns the default healthcare scope predicate.
-func DefaultHealthcareScopeFilter() AssetPredicate {
+func DefaultHealthcareScopeFilter() *ScopeFilter {
 	return NewScopeFilter(nil, map[string][]string{
 		"DataDomain":  {"health"},
 		"containsPHI": {"true"},
@@ -39,12 +32,12 @@ func DefaultHealthcareScopeFilter() AssetPredicate {
 }
 
 // NewScopeFilterFromAllowlist creates a scope predicate with an explicit bucket allowlist.
-func NewScopeFilterFromAllowlist(buckets []string) AssetPredicate {
+func NewScopeFilterFromAllowlist(buckets []string) *ScopeFilter {
 	return NewScopeFilter(buckets, nil)
 }
 
 // NewScopeFilter creates a pre-indexed predicate for O(1) lookups.
-func NewScopeFilter(allowlist []string, tagSpecs map[string][]string) AssetPredicate {
+func NewScopeFilter(allowlist []string, tagSpecs map[string][]string) *ScopeFilter {
 	if hasNoScopeConstraints(allowlist, tagSpecs) {
 		return UniversalFilter
 	}
@@ -60,15 +53,15 @@ func NewScopeFilter(allowlist []string, tagSpecs map[string][]string) AssetPredi
 	return f
 }
 
-func newScopeFilter(allowlist []string, tagSpecs map[string][]string) *scopeFilter {
-	return &scopeFilter{
+func newScopeFilter(allowlist []string, tagSpecs map[string][]string) *ScopeFilter {
+	return &ScopeFilter{
 		allowlist:    make(map[string]struct{}, len(allowlist)),
 		requiredTags: make(map[string]map[string]struct{}, len(tagSpecs)),
 		requiredKeys: make(map[string]struct{}),
 	}
 }
 
-func (f *scopeFilter) indexAllowlist(allowlist []string) {
+func (f *ScopeFilter) indexAllowlist(allowlist []string) {
 	for _, item := range allowlist {
 		normalized := allowlistEntry(item).normalize()
 		if normalized.isDiscardable() {
@@ -78,13 +71,13 @@ func (f *scopeFilter) indexAllowlist(allowlist []string) {
 	}
 }
 
-func (f *scopeFilter) indexTagSpecs(tagSpecs map[string][]string) {
+func (f *ScopeFilter) indexTagSpecs(tagSpecs map[string][]string) {
 	for key, values := range tagSpecs {
 		f.indexTagSpec(key, values)
 	}
 }
 
-func (f *scopeFilter) indexTagSpec(key string, values []string) {
+func (f *ScopeFilter) indexTagSpec(key string, values []string) {
 	normalizedKey := tagKey(key).normalize()
 	if normalizedKey.isDiscardable() {
 		return
@@ -120,7 +113,7 @@ func hasNoScopeConstraints(allowlist []string, tagSpecs map[string][]string) boo
 }
 
 // IsInScope checks if an asset is in the healthcare scope.
-func (f *scopeFilter) IsInScope(a Asset) bool {
+func (f *ScopeFilter) IsInScope(a Asset) bool {
 	if f.isUniversal() {
 		return true
 	}
@@ -132,19 +125,19 @@ func (f *scopeFilter) IsInScope(a Asset) bool {
 	return f.satisfiesTagRequirements(a)
 }
 
-func (f *scopeFilter) isUniversal() bool {
+func (f *ScopeFilter) isUniversal() bool {
 	return f != nil && f.includeAll
 }
 
-func (f *scopeFilter) hasAllowlist() bool {
+func (f *ScopeFilter) hasAllowlist() bool {
 	return len(f.allowlist) > 0
 }
 
-func (f *scopeFilter) isConstraintFree() bool {
+func (f *ScopeFilter) isConstraintFree() bool {
 	return len(f.allowlist) == 0 && len(f.requiredTags) == 0 && len(f.requiredKeys) == 0
 }
 
-func (f *scopeFilter) isAllowedByIdentity(a Asset) bool {
+func (f *ScopeFilter) isAllowedByIdentity(a Asset) bool {
 	for _, identity := range a.Identities() {
 		if _, ok := f.allowlist[identity]; ok {
 			return true
@@ -153,7 +146,7 @@ func (f *scopeFilter) isAllowedByIdentity(a Asset) bool {
 	return false
 }
 
-func (f *scopeFilter) satisfiesTagRequirements(a Asset) bool {
+func (f *ScopeFilter) satisfiesTagRequirements(a Asset) bool {
 	for key, allowedValues := range f.requiredTags {
 		if a.HasTagMatch(key, allowedValues) {
 			return true
@@ -170,7 +163,7 @@ func (f *scopeFilter) satisfiesTagRequirements(a Asset) bool {
 }
 
 // FilterSnapshots filters snapshots to only include assets matching the predicate.
-func FilterSnapshots(predicate AssetPredicate, snapshots []Snapshot) []Snapshot {
+func FilterSnapshots(predicate *ScopeFilter, snapshots []Snapshot) []Snapshot {
 	if predicate == nil || predicate == UniversalFilter {
 		return snapshots
 	}
@@ -186,7 +179,7 @@ func FilterSnapshots(predicate AssetPredicate, snapshots []Snapshot) []Snapshot 
 
 // FilteredBy returns a snapshot with assets retained by the given predicate.
 // The second return value reports whether any assets remain after filtering.
-func (s Snapshot) FilteredBy(filter AssetPredicate) (Snapshot, bool) {
+func (s Snapshot) FilteredBy(filter *ScopeFilter) (Snapshot, bool) {
 	if filter == nil {
 		return s, len(s.Assets) > 0
 	}

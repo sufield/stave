@@ -1,7 +1,6 @@
 package artifacts
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -28,7 +27,7 @@ func NewPackRunner(stdout io.Writer) (*PackRunner, error) {
 }
 
 // List prints all available built-in packs in a formatted table.
-func (r *PackRunner) List(_ context.Context) error {
+func (r *PackRunner) List() error {
 	items := r.Registry.ListPacks()
 
 	if len(items) == 0 {
@@ -47,7 +46,7 @@ func (r *PackRunner) List(_ context.Context) error {
 }
 
 // Show prints the detailed configuration of a specific pack as JSON.
-func (r *PackRunner) Show(_ context.Context, name string) error {
+func (r *PackRunner) Show(name string) error {
 	name = strings.TrimSpace(name)
 	pack, ok := r.Registry.LookupPack(name)
 

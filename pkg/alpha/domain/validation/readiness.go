@@ -69,11 +69,6 @@ func NewReadinessReport(controlsDir, observationsDir string) *ReadinessReport {
 // Issues returns the recorded issues. Use RecordIssue to append.
 func (r *ReadinessReport) Issues() []Issue { return r.issues }
 
-// Finalize marks the report as complete. NextCommand should be set by
-// the caller based on the Ready state — the domain layer does not know
-// about CLI command names.
-func (r *ReadinessReport) Finalize() {}
-
 // RecordIssue appends an issue and updates Ready and Summary counters.
 func (r *ReadinessReport) RecordIssue(issue Issue) {
 	switch issue.Status {

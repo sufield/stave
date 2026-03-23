@@ -88,8 +88,45 @@ func NewApplyCmd(p *compose.Provider) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Run control evaluation after plan checks pass",
-		Long: `Apply executes control evaluation only after readiness checks pass.
-Use --dry-run to preview what will be evaluated without running the full evaluation.` + metadata.OfflineHelpSuffix,
+		Long: `Apply executes control evaluation and produces safety findings.
+
+Modes:
+  Default        Evaluate observations against controls in a project directory.
+  --dry-run      Run readiness checks only, without evaluating controls.
+  --profile      Evaluate a bundled observations file against a built-in control pack.
+                 Requires --input. Example: stave apply --profile aws-s3 --input obs.json
+
+Inputs:
+  --controls, -i            Path to control definitions directory (default: controls)
+  --observations, -o        Path to observation snapshots directory (default: observations)
+  --profile, -p             Evaluation profile (e.g., aws-s3)
+  --input                   Path to observations bundle file (required with --profile)
+  --max-unsafe              Maximum allowed unsafe duration (default: from project config)
+  --now                     Override current time (RFC3339) for deterministic output
+  --format, -f              Output format: json, text, or sarif (default: json)
+  --dry-run                 Run readiness checks only
+  --allow-unknown-input     Allow observations with unknown source types
+
+Outputs:
+  stdout                    Evaluation findings (JSON, text, or SARIF)
+  stderr                    Progress and diagnostic messages
+
+Exit Codes:
+  0   - Evaluation completed with no violations
+  2   - Invalid input or configuration error
+  3   - Violations found
+  4   - Internal error
+  130 - Interrupted (SIGINT)
+
+Examples:
+  # Standard evaluation
+  stave apply --controls ./controls --observations ./obs --format json
+
+  # Readiness check only (dry run)
+  stave apply --dry-run
+
+  # Profile-based evaluation with bundled observations
+  stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			opts.controlsSet = cmdutil.ControlsFlagChanged(cmd)

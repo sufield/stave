@@ -17,7 +17,7 @@ func newKeygenCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := &KeygenRunner{}
-			return runner.Run(cmd.Context(), KeygenConfig{
+			return runner.Run(KeygenConfig{
 				PrivateKeyPath: fsutil.CleanUserPath(privateKeyOut),
 				PublicKeyPath:  fsutil.CleanUserPath(publicKeyOut),
 				TextOutput:     gf.TextOutputEnabled(),

@@ -48,20 +48,20 @@ func (o *Options) Prepare(_ *cobra.Command) error {
 }
 
 // ToConfig converts raw CLI options into a validated logic configuration.
-func (o *Options) ToConfig(cmd *cobra.Command) (Config, error) {
+func (o *Options) ToConfig(cmd *cobra.Command) (config, error) {
 	obsDir := o.ObservationsDir
 	format, err := compose.ResolveFormatValue(cmd, o.Format)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	filter, err := o.buildFilter()
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	gf := cmdutil.GetGlobalFlags(cmd)
-	return Config{
+	return config{
 		ObservationsDir: obsDir,
 		Format:          format,
 		Filter:          filter,

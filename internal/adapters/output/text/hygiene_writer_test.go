@@ -24,8 +24,8 @@ func TestWriteHygieneReport(t *testing.T) {
 			Lookback:    7 * 24 * time.Hour,
 			DueSoon:     24 * time.Hour,
 		},
-		Snapshots: appcontracts.SnapshotStats{Active: 3, Archived: 1, Total: 4, PruneCandidates: 0, RetentionTier: "critical", RetentionDuration: 30 * 24 * time.Hour, KeepMin: 2},
-		Risks:     appcontracts.RiskStats{CurrentViolations: 10, Overdue: 2, DueNow: 0, DueSoon: 1, Later: 0, UpcomingTotal: 3},
+		Snapshots: appcontracts.SnapshotStats{Active: 3, Archived: 1, PruneCandidates: 0, RetentionTier: "critical", RetentionDuration: 30 * 24 * time.Hour, KeepMin: 2},
+		Risks:     appcontracts.RiskStats{CurrentViolations: 10, Overdue: 2, DueNow: 0, DueSoon: 1, Later: 0},
 		Trends:    trends,
 	}
 

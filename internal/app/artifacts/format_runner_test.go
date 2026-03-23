@@ -17,7 +17,7 @@ func TestFormatterRun_CheckOnly(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	f := NewFormatter()
+	f := &Formatter{}
 	_, err := f.Run(FormatConfig{
 		Target:    dir,
 		CheckOnly: true,
@@ -40,7 +40,7 @@ func TestFormatterRun_FormatWrites(t *testing.T) {
 
 	var written []byte
 	var buf bytes.Buffer
-	f := NewFormatter()
+	f := &Formatter{}
 	result, err := f.Run(FormatConfig{
 		Target:   dir,
 		Stdout:   &buf,
@@ -71,7 +71,7 @@ func TestFormatterRun_AlreadyFormatted(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	f := NewFormatter()
+	f := &Formatter{}
 	result, err := f.Run(FormatConfig{
 		Target:    dir,
 		CheckOnly: true,

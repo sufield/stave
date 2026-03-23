@@ -83,10 +83,21 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 
 func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.ReadinessReport) error {
 	if cfg.Format.IsJSON() {
-		return jsonout.WriteReadinessJSON(cfg.Stdout, report)
+		return jsonout.WriteReadinessJSON(cfg.Stdout, readinessJSONReport{
+			ReadinessReport: report,
+			NextCommand:     readinessNextCommand(report),
+		})
 	}
 	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}
 	return rep.ReportPlan(report)
+}
+
+// readinessJSONReport enriches the domain ReadinessReport with the CLI-specific
+// next_command field for JSON output. The domain type intentionally omits this
+// field because CLI command names are a presentation concern.
+type readinessJSONReport struct {
+	validation.ReadinessReport
+	NextCommand string `json:"next_command"`
 }
 
 // runDryRun performs only readiness checks (replacing the removed plan command).

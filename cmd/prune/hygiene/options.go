@@ -28,13 +28,13 @@ type rawOptions struct {
 }
 
 // resolve parses and validates all raw flag values into a ready-to-use Config.
-func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Config, error) {
+func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (config, error) {
 	gf := cmdutil.GetGlobalFlags(cmd)
 
 	// Path inference
 	res, resolverErr := projctx.NewResolver()
 	if resolverErr != nil {
-		return Config{}, fmt.Errorf("resolve project context: %w", resolverErr)
+		return config{}, fmt.Errorf("resolve project context: %w", resolverErr)
 	}
 	engine := projctx.NewInferenceEngine(res)
 	resolvedCtl := engine.InferDir("controls", o.ctlDir)
@@ -57,36 +57,36 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Con
 	// Boundary parsing
 	validTier, err := pruneretention.ValidateRetentionTierWith(eval, tier)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	retentionDur, err := pruneretention.ResolveOlderThanWith(eval, olderThan, cmd.Flags().Changed("older-than"), validTier)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	now, err := compose.ResolveNow(o.nowRaw)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	format, err := compose.ResolveFormatValue(cmd, o.formatFlag)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	maxUnsafeDur, err := timeutil.ParseDurationFlag(maxUnsafe, "--max-unsafe")
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	dueSoonDur, err := timeutil.ParseDurationFlag(o.dueSoon, "--due-soon")
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	lookbackDur, err := timeutil.ParseDurationFlag(o.lookback, "--lookback")
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	dueWithinDur, err := parseDueWithin(o.dueWithin)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	statuses := toStatuses(o.statuses)
@@ -104,10 +104,10 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (Con
 		NowFunc:           func() time.Time { return now },
 	}
 	if _, parseErr := req.Parse(); parseErr != nil {
-		return Config{}, parseErr
+		return config{}, parseErr
 	}
 
-	return Config{
+	return config{
 		ControlsDir:       fsutil.CleanUserPath(resolvedCtl),
 		ObservationsDir:   fsutil.CleanUserPath(resolvedObs),
 		ArchiveDir:        fsutil.CleanUserPath(o.arcDir),

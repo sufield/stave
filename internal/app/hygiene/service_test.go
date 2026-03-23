@@ -48,7 +48,7 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
-	svc := NewService()
+	svc := &Service{}
 	stats := svc.ComputeRisk(controls, snapshots, RiskOptions{
 		GlobalMaxUnsafeDuration: 30 * time.Minute,
 		Now:                     now,
@@ -59,13 +59,13 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 	if stats.CurrentViolations == 0 {
 		t.Fatalf("expected violations in risk stats, got %+v", stats)
 	}
-	if stats.UpcomingTotal == 0 {
+	if stats.UpcomingTotal() == 0 {
 		t.Fatalf("expected upcoming metrics in risk stats, got %+v", stats)
 	}
 }
 
 func TestComputeRisk_EmptyInput(t *testing.T) {
-	svc := NewService()
+	svc := &Service{}
 	stats := svc.ComputeRisk(nil, nil, RiskOptions{
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
 		Now:                     time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC),

@@ -13,7 +13,6 @@ func TestCalculateTrend(t *testing.T) {
 		DueNow:            1,
 		DueSoon:           2,
 		Later:             0,
-		UpcomingTotal:     4,
 	}
 	previous := appcontracts.RiskStats{
 		CurrentViolations: 6,
@@ -21,7 +20,6 @@ func TestCalculateTrend(t *testing.T) {
 		DueNow:            0,
 		DueSoon:           1,
 		Later:             1,
-		UpcomingTotal:     4,
 	}
 
 	got := CalculateTrend(current, previous)

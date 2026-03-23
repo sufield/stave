@@ -33,11 +33,6 @@ type RiskOptions struct {
 // frontends (CLI, APIs, tests).
 type Service struct{}
 
-// NewService constructs a new Service.
-func NewService() *Service {
-	return &Service{}
-}
-
 type fixedClock struct {
 	now time.Time
 }

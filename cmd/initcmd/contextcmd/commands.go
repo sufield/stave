@@ -121,7 +121,7 @@ func runContextList(cmd *cobra.Command, rawFormat string) error {
 		return fmtErr
 	}
 	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.List(cmd.Context(), st, format)
+	return runner.List(st, format)
 }
 
 func runContextCreate(cmd *cobra.Command, args []string, in contextCreateInput) error {
@@ -145,7 +145,7 @@ func runContextCreate(cmd *cobra.Command, args []string, in contextCreateInput) 
 	c.Defaults.ObservationsDir = strings.TrimSpace(in.ObservationsDir)
 
 	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Create(cmd.Context(), st, args[0], c)
+	return runner.Create(st, args[0], c)
 }
 
 func runContextUse(cmd *cobra.Command, args []string) error {
@@ -154,7 +154,7 @@ func runContextUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Use(cmd.Context(), st, args[0])
+	return runner.Use(st, args[0])
 }
 
 func runContextShow(cmd *cobra.Command, rawFormat string) error {
@@ -181,7 +181,7 @@ func runContextShow(cmd *cobra.Command, rawFormat string) error {
 	}
 
 	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Show(cmd.Context(), format, ShowResult{
+	return runner.Show(format, ShowResult{
 		StoreFile:     path,
 		SelectedBy:    selectedBy,
 		Name:          name,
@@ -198,7 +198,7 @@ func runContextDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	runner := &Runner{Stdout: cmd.OutOrStdout()}
-	return runner.Delete(cmd.Context(), st, args[0])
+	return runner.Delete(st, args[0])
 }
 
 func emptyDash(s string) string {

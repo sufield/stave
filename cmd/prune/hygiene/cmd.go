@@ -35,7 +35,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := &Runner{
+			runner := &runner{
 				LoadAssets:      p.LoadAssets,
 				NewObsRepo:      p.NewObservationRepo,
 				NewSnapshotRepo: p.NewSnapshotRepo,

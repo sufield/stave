@@ -18,8 +18,8 @@ func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
 	outPath := filepath.Join(tmp, "security-report.json")
 	outDir := filepath.Join(tmp, "bundle")
 
-	runner := &AuditRunner{}
-	err := runner.Run(context.Background(), AuditConfig{
+	runner := &auditRunner{}
+	err := runner.Run(context.Background(), auditConfig{
 		Format:         "json",
 		OutPath:        outPath,
 		OutDir:         outDir,
@@ -56,8 +56,8 @@ func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
 func TestRunSecurityAudit_FailOnHighReturnsSentinel(t *testing.T) {
 	tmp := t.TempDir()
 
-	runner := &AuditRunner{}
-	err := runner.Run(context.Background(), AuditConfig{
+	runner := &auditRunner{}
+	err := runner.Run(context.Background(), auditConfig{
 		Format:         "json",
 		OutPath:        filepath.Join(tmp, "security-report.json"),
 		OutDir:         filepath.Join(tmp, "bundle"),

@@ -79,7 +79,7 @@ Examples:
 
 			// Delegate to internal runner
 			runner := &apptrace.Runner{}
-			return runner.Run(ctx, apptrace.Config{
+			return runner.Run(apptrace.Config{
 				Control:         control,
 				Snapshot:        snapshot,
 				AssetID:         strings.TrimSpace(assetID),

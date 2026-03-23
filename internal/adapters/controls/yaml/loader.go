@@ -13,19 +13,13 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-// SchemaValidator validates raw control YAML against the contract schema.
-type SchemaValidator interface {
-	ValidateControlYAML(raw []byte, opts ...contractvalidator.Option) (*diag.Result, error)
-}
-
 // ControlLoader loads control definitions from YAML files.
 type ControlLoader struct {
-	validator     SchemaValidator
+	validator     *contractvalidator.Validator
 	aliasResolver policy.AliasResolver
 	onProgress    func(processed, total int)
 }

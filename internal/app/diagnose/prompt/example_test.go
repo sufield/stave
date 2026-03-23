@@ -2,7 +2,6 @@ package prompt_test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -41,7 +40,7 @@ func writeEvalFile(t *testing.T, dir string) string {
 }
 
 func testLoadEval(path string) (*evaluation.Result, error) {
-	return evaljson.NewLoader().LoadFromFile(path)
+	return (&evaljson.Loader{}).LoadFromFile(path)
 }
 
 func testBuildPrompt(
@@ -95,7 +94,7 @@ func TestNewRunnerRun(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(context.Background(), diagprompt.Config{
+	err := runner.Run(diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
 		Stdout:   &stdout,
@@ -124,7 +123,7 @@ func TestNewRunnerRunNoFindings(t *testing.T) {
 
 	dctx := testContext(nil, "")
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(context.Background(), diagprompt.Config{
+	err := runner.Run(diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::nonexistent-bucket",
 		Stdout:   &bytes.Buffer{},
@@ -140,7 +139,7 @@ func TestNewRunnerRunValidation(t *testing.T) {
 	runner := diagprompt.NewRunner(dctx)
 
 	t.Run("missing eval file", func(t *testing.T) {
-		err := runner.Run(context.Background(), diagprompt.Config{
+		err := runner.Run(diagprompt.Config{
 			AssetID: "x",
 			Stdout:  &bytes.Buffer{},
 			Stderr:  &bytes.Buffer{},
@@ -151,7 +150,7 @@ func TestNewRunnerRunValidation(t *testing.T) {
 	})
 
 	t.Run("missing asset id", func(t *testing.T) {
-		err := runner.Run(context.Background(), diagprompt.Config{
+		err := runner.Run(diagprompt.Config{
 			EvalFile: "x.json",
 			Stdout:   &bytes.Buffer{},
 			Stderr:   &bytes.Buffer{},
@@ -178,7 +177,7 @@ func TestNewRunnerRunJSON(t *testing.T) {
 
 	var stdout bytes.Buffer
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(context.Background(), diagprompt.Config{
+	err := runner.Run(diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
 		Format:   appcontracts.FormatJSON,
@@ -205,7 +204,7 @@ func TestNewRunnerRunLoadError(t *testing.T) {
 		BuildPrompt: testBuildPrompt,
 	}
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(context.Background(), diagprompt.Config{
+	err := runner.Run(diagprompt.Config{
 		EvalFile: "nonexistent.json",
 		AssetID:  "x",
 		Stdout:   &bytes.Buffer{},

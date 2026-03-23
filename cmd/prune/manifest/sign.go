@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,7 +24,7 @@ type SignRunner struct{}
 
 // Run loads an unsigned manifest and a private key, computes a signature,
 // and persists the signed envelope.
-func (r *SignRunner) Run(_ context.Context, cfg SignConfig) error {
+func (r *SignRunner) Run(cfg SignConfig) error {
 	manifestData, err := fsutil.ReadFileLimited(cfg.InPath)
 	if err != nil {
 		return fmt.Errorf("read manifest %q: %w", cfg.InPath, err)

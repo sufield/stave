@@ -1,7 +1,6 @@
 package snapshot
 
 import (
-	"context"
 	"io"
 	"time"
 
@@ -27,7 +26,7 @@ type QualityConfig struct {
 type QualityRunner struct{}
 
 // Run executes the quality assessment workflow.
-func (r *QualityRunner) Run(_ context.Context, cfg QualityConfig) error {
+func (r *QualityRunner) Run(cfg QualityConfig) error {
 	report := assessQuality(qualityParams{
 		Snapshots:         cfg.Snapshots,
 		Now:               cfg.Now,

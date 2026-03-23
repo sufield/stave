@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"context"
 	"fmt"
 	"io"
 
@@ -78,7 +77,7 @@ func NewRunner(dctx DiagnosticContext) *Runner {
 }
 
 // Run generates an LLM prompt based on evaluation findings.
-func (r *Runner) Run(_ context.Context, cfg Config) error {
+func (r *Runner) Run(cfg Config) error {
 	if cfg.EvalFile == "" {
 		return fmt.Errorf("--evaluation-file is required")
 	}

@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"context"
 	"fmt"
 	"io"
 
@@ -21,7 +20,7 @@ type KeygenConfig struct {
 type KeygenRunner struct{}
 
 // Run generates a new Ed25519 keypair and persists the keys to disk.
-func (r *KeygenRunner) Run(_ context.Context, cfg KeygenConfig) error {
+func (r *KeygenRunner) Run(cfg KeygenConfig) error {
 	privatePEM, publicPEM, err := crypto.GenerateSigningKeyPair()
 	if err != nil {
 		return fmt.Errorf("generate keypair: %w", err)

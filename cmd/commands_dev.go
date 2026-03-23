@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -31,7 +30,7 @@ type VersionRunner struct {
 }
 
 // Run produces version output in text or JSON format.
-func (r *VersionRunner) Run(_ context.Context, edition Edition, verbose bool) error {
+func (r *VersionRunner) Run(edition Edition, verbose bool) error {
 	out := versionOutput{
 		Version:           GetVersion(),
 		Edition:           string(edition),
@@ -100,7 +99,7 @@ func newVersionCmd(edition Edition) *cobra.Command {
 				Stdout: cmd.OutOrStdout(),
 				Flags:  cmdutil.GetGlobalFlags(cmd),
 			}
-			return runner.Run(cmd.Context(), edition, verbose)
+			return runner.Run(edition, verbose)
 		},
 	}
 	cmd.Flags().BoolVar(&verbose, "verbose", false, "Include schema and lockfile status")

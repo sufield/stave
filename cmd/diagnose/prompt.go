@@ -131,13 +131,13 @@ Examples:
 				ControlsByID:   ctlByID,
 				AssetPropsJSON: assetPropsJSON,
 				LoadEval: func(path string) (*evaluation.Result, error) {
-					return evaljson.NewLoader().LoadFromFile(path)
+					return (&evaljson.Loader{}).LoadFromFile(path)
 				},
 				BuildPrompt: buildPromptAdapter,
 			}
 
 			runner := diagprompt.NewRunner(dctx)
-			return runner.Run(ctx, diagprompt.Config{
+			return runner.Run(diagprompt.Config{
 				EvalFile: fsutil.CleanUserPath(evalFile),
 				AssetID:  strings.TrimSpace(assetID),
 				Format:   fmtValue,

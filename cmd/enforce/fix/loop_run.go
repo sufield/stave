@@ -2,6 +2,7 @@ package fix
 
 import (
 	"context"
+	"errors"
 	"io"
 	"io/fs"
 	"time"
@@ -76,7 +77,7 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		Stderr:            req.Stderr,
 	}, deps, am, eb)
 
-	if err == appfix.ErrViolationsRemaining {
+	if errors.Is(err, appfix.ErrViolationsRemaining) {
 		return ui.ErrViolationsFound
 	}
 	return err
