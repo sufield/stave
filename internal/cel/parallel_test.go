@@ -17,6 +17,9 @@ import (
 // and reports compile/eval failures. This validates that the CEL compiler
 // produces results for all built-in controls.
 func TestCELParallelEvaluation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping: walks all e2e fixtures for parallel CEL evaluation")
+	}
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -37,8 +40,6 @@ func TestCELParallelEvaluation(t *testing.T) {
 
 	totalChecks := 0
 	celOK := 0
-	compileSkips := 0
-	evalSkips := 0
 
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -67,16 +68,15 @@ func TestCELParallelEvaluation(t *testing.T) {
 						}
 						totalChecks++
 
-						// CEL evaluation
 						cp, compileErr := compiler.Compile(ctl.UnsafePredicate)
 						if compileErr != nil {
-							compileSkips++
+							t.Errorf("compile failed for control %s: %v", ctl.ID, compileErr)
 							continue
 						}
 
 						_, evalErr := Evaluate(cp, a, snap.Identities)
 						if evalErr != nil {
-							evalSkips++
+							t.Errorf("eval failed for control %s on asset %s: %v", ctl.ID, a.ID, evalErr)
 							continue
 						}
 
@@ -87,8 +87,7 @@ func TestCELParallelEvaluation(t *testing.T) {
 		})
 	}
 
-	t.Logf("CEL parallel run: %d checks, %d successful, %d compile-skips, %d eval-skips",
-		totalChecks, celOK, compileSkips, evalSkips)
+	t.Logf("CEL parallel run: %d checks, %d successful", totalChecks, celOK)
 	if totalChecks == 0 {
 		t.Fatal("expected at least one parallel check")
 	}
@@ -126,7 +125,7 @@ func loadSnapshotsFromDir(t *testing.T, dir string) []asset.Snapshot {
 		}
 		var snap asset.Snapshot
 		if jsonErr := json.Unmarshal(data, &snap); jsonErr != nil {
-			t.Logf("skip snapshot %s: %v", entry.Name(), jsonErr)
+			t.Errorf("cannot unmarshal snapshot %s: %v", entry.Name(), jsonErr)
 			continue
 		}
 		snapshots = append(snapshots, snap)

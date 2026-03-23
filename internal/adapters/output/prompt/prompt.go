@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -142,7 +141,11 @@ func BuildRootCausesSummary(causes []evaluation.RootCause) string {
 	if len(causes) == 0 {
 		return ""
 	}
-	return strings.Join(lo.Map(causes, func(c evaluation.RootCause, _ int) string { return string(c) }), ", ")
+	strs := make([]string, len(causes))
+	for i, c := range causes {
+		strs[i] = string(c)
+	}
+	return strings.Join(strs, ", ")
 }
 
 // BuildGuidanceSummary creates readable action guidance from control metadata.

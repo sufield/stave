@@ -23,7 +23,8 @@ import (
 )
 
 func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
-	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
+	p := compose.NewDefaultProvider()
+	runner := NewRunner(p.NewObservationRepo, p.NewControlRepo, clockadp.RealClock{})
 	cfg := Config{
 		ControlID:         "",
 		AssetID:           "res-1",
@@ -125,17 +126,15 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 		t.Fatal(writeErr)
 	}
 
-	provider := &compose.Provider{
-		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
-			return diagnoseObsRepoStub{snapshots: snapshots}, nil
-		},
-		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
-			return diagnoseInvRepoStub{controls: controls}, nil
-		},
+	newObsRepo := func() (appcontracts.ObservationRepository, error) {
+		return diagnoseObsRepoStub{snapshots: snapshots}, nil
+	}
+	newCtlRepo := func() (appcontracts.ControlRepository, error) {
+		return diagnoseInvRepoStub{controls: controls}, nil
 	}
 
 	var out bytes.Buffer
-	runner := NewRunner(provider, clockadp.FixedClock(now))
+	runner := NewRunner(newObsRepo, newCtlRepo, clockadp.FixedClock(now))
 	cfg := Config{
 		ControlsDir:       "ctl",
 		ObservationsDir:   "obs",

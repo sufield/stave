@@ -58,6 +58,11 @@ type Config struct {
 	// FullPaths logs full file paths instead of base names.
 	// Disabled by default for privacy.
 	FullPaths bool
+
+	// SanitizeInfraKeys scrubs infrastructure identifier values (asset,
+	// control, bucket, arn, account) from log attributes. Enabled when
+	// the --sanitize CLI flag is active.
+	SanitizeInfraKeys bool
 }
 
 // suppressTimestamps reports whether timestamps should be stripped for deterministic output.

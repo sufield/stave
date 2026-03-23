@@ -12,8 +12,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
-func listPlanFiles(ctx context.Context, p *compose.Provider, observationsRoot, archiveDir string) ([]appcontracts.SnapshotFile, error) {
-	loader, err := p.NewSnapshotRepo()
+func listPlanFiles(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFactory, observationsRoot, archiveDir string) ([]appcontracts.SnapshotFile, error) {
+	loader, err := newSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

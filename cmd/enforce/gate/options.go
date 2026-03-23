@@ -50,6 +50,12 @@ func (o *gateOptions) resolveConfigDefaults(cmd *cobra.Command) {
 	}
 }
 
+// Prepare resolves config defaults. Called from PreRunE.
+func (o *gateOptions) Prepare(cmd *cobra.Command) error {
+	o.resolveConfigDefaults(cmd)
+	return nil
+}
+
 // BindFlags attaches the options to a Cobra command.
 func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()

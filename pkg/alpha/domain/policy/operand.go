@@ -10,8 +10,6 @@ import (
 // []string, []any, map[string]any, or nil.
 type Operand struct{ raw any }
 
-// --- Constructors ---
-
 // Bool creates an Operand holding a bool.
 func Bool(v bool) Operand { return Operand{raw: v} }
 
@@ -20,8 +18,6 @@ func Str(v string) Operand { return Operand{raw: v} }
 
 // NewOperand creates an Operand from a dynamic value (e.g. YAML unmarshal output).
 func NewOperand(v any) Operand { return Operand{raw: v} }
-
-// --- Accessors ---
 
 // Raw returns the underlying value for operator evaluation.
 func (o Operand) Raw() any { return o.raw }
@@ -55,8 +51,6 @@ func (o Operand) AsStringSlice() ([]string, bool) {
 	v, ok := o.raw.([]string)
 	return v, ok
 }
-
-// --- Interfaces ---
 
 // String implements fmt.Stringer.
 func (o Operand) String() string { return fmt.Sprint(o.raw) }

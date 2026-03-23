@@ -47,9 +47,11 @@ type Builder struct {
 	Digester  ports.Digester
 	IDGen     ports.IdentityGenerator
 
-	Opts     *ApplyOptions
-	Params   applyParams
-	Provider *compose.Provider
+	Opts             *ApplyOptions
+	Params           applyParams
+	NewFindingWriter compose.FindingWriterFactory
+	NewCtlRepo       compose.CtlRepoFactory
+	NewStdinObsRepo  func(io.Reader) (appcontracts.ObservationRepository, error)
 
 	// Pre-loaded project config from Resolve(), shared across the pipeline.
 	ProjectConfig     *appconfig.ProjectConfig
@@ -63,19 +65,21 @@ type Builder struct {
 // NewBuilder constructs a Builder from the standard apply execution context.
 func NewBuilder(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) *Builder {
 	return &Builder{
-		Ctx:       ctx,
-		Logger:    logger,
-		Stdout:    sio.Stdout,
-		Stderr:    sio.Stderr,
-		Stdin:     os.Stdin,
-		Sanitizer: sio.Sanitizer,
-		Format:    sio.Format,
-		IsJSON:    sio.IsJSON,
-		Digester:  crypto.NewHasher(),
-		IDGen:     crypto.NewHasher(),
-		Opts:      opts,
-		Params:    params,
-		Provider:  p,
+		Ctx:              ctx,
+		Logger:           logger,
+		Stdout:           sio.Stdout,
+		Stderr:           sio.Stderr,
+		Stdin:            os.Stdin,
+		Sanitizer:        sio.Sanitizer,
+		Format:           sio.Format,
+		IsJSON:           sio.IsJSON,
+		Digester:         crypto.NewHasher(),
+		IDGen:            crypto.NewHasher(),
+		Opts:             opts,
+		Params:           params,
+		NewFindingWriter: p.NewFindingWriter,
+		NewCtlRepo:       p.NewControlRepo,
+		NewStdinObsRepo:  p.NewStdinObsRepo,
 	}
 }
 
@@ -144,7 +148,7 @@ type adapters struct {
 }
 
 func (b *Builder) buildAdapters() (adapters, error) {
-	marshaler, err := b.Provider.NewFindingWriter(b.Format, b.IsJSON)
+	marshaler, err := b.NewFindingWriter(b.Format, b.IsJSON)
 	if err != nil {
 		return adapters{}, fmt.Errorf("create finding writer: %w", err)
 	}
@@ -154,7 +158,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 		return adapters{}, fmt.Errorf("create observation loader: %w", err)
 	}
 
-	ctlLoader, err := b.Provider.NewControlRepo()
+	ctlLoader, err := b.NewCtlRepo()
 	if err != nil {
 		return adapters{}, fmt.Errorf("create control loader: %w", err)
 	}
@@ -175,7 +179,7 @@ func buildEnrichFn(sanitizer kernel.Sanitizer, hasher ports.IdentityGenerator) a
 // selecting stdin or file mode and applying integrity checks if configured.
 func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appcontracts.ObservationRepository, error) {
 	if source.IsStdin() {
-		return b.Provider.NewStdinObsRepo(b.Stdin)
+		return b.NewStdinObsRepo(b.Stdin)
 	}
 
 	loader := observations.NewObservationLoader()

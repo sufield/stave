@@ -104,7 +104,8 @@ func TestDiagnoseParseHelpers(t *testing.T) {
 }
 
 func TestRunnerBuildAppConfig(t *testing.T) {
-	runner := NewRunner(compose.NewDefaultProvider(), clockadp.RealClock{})
+	p := compose.NewDefaultProvider()
+	runner := NewRunner(p.NewObservationRepo, p.NewControlRepo, clockadp.RealClock{})
 
 	fakeStdin := strings.NewReader(`{"findings":[]}`)
 	cfg := Config{
@@ -204,15 +205,13 @@ func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
 		Stdout:            &bytes.Buffer{},
 		Stderr:            &bytes.Buffer{},
 	}
-	badProvider := &compose.Provider{
-		ObsRepoFunc: func() (appcontracts.ObservationRepository, error) {
-			return nil, os.ErrPermission
-		},
-		ControlRepoFunc: func() (appcontracts.ControlRepository, error) {
-			return nil, nil
-		},
+	badObsRepo := func() (appcontracts.ObservationRepository, error) {
+		return nil, os.ErrPermission
 	}
-	runner := NewRunner(badProvider, clockadp.RealClock{})
+	goodCtlRepo := func() (appcontracts.ControlRepository, error) {
+		return nil, nil
+	}
+	runner := NewRunner(badObsRepo, goodCtlRepo, clockadp.RealClock{})
 	if err := runner.Run(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "create observation loader") {
 		t.Fatalf("expected observation loader error, got %v", err)
 	}

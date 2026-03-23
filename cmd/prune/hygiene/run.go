@@ -64,17 +64,19 @@ func (f UpcomingFilter) DueWithinPtr() *time.Duration {
 
 // Runner orchestrates the multi-domain hygiene report.
 type Runner struct {
-	Provider *compose.Provider
+	LoadAssets      compose.AssetLoaderFunc
+	NewObsRepo      compose.ObsRepoFactory
+	NewSnapshotRepo compose.SnapshotRepoFactory
 }
 
 // Run executes the hygiene analysis and renders the report.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	loaded, err := r.Provider.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
+	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
 		return err
 	}
 
-	obsRepo, err := r.Provider.NewObservationRepo()
+	obsRepo, err := r.NewObsRepo()
 	if err != nil {
 		return err
 	}
@@ -83,7 +85,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	files, err := pruneretention.ListObservationSnapshotFiles(ctx, r.Provider, cfg.ObservationsDir)
+	files, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, cfg.ObservationsDir)
 	if err != nil {
 		return err
 	}

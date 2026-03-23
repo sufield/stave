@@ -6,8 +6,6 @@ import (
 	"slices"
 	"sort"
 	"strings"
-
-	"github.com/samber/lo"
 )
 
 type assetDiffInput struct {
@@ -103,7 +101,11 @@ func appendPropertyPath(base, segment string) string {
 }
 
 func assetMap(resources []Asset) map[string]Asset {
-	return lo.KeyBy(resources, func(r Asset) string { return r.ID.String() })
+	m := make(map[string]Asset, len(resources))
+	for _, r := range resources {
+		m[r.ID.String()] = r
+	}
+	return m
 }
 
 func uniqueSortedKeys[V any](a, b map[string]V) []string {

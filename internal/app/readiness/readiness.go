@@ -1,7 +1,6 @@
 package readiness
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
@@ -21,17 +20,6 @@ func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, 
 		return validation.ReadinessReport{}, err
 	}
 	report.Finalize()
-
-	// Set NextCommand at the app layer — CLI command names don't belong
-	// in the domain type.
-	if report.Ready {
-		report.NextCommand = fmt.Sprintf("stave apply --controls %s --observations %s",
-			in.ControlsDir, in.ObservationsDir)
-	} else {
-		report.NextCommand = fmt.Sprintf("stave validate --controls %s --observations %s",
-			in.ControlsDir, in.ObservationsDir)
-	}
-
 	return *report, nil
 }
 

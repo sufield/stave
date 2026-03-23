@@ -19,7 +19,28 @@ type qualityIssue struct {
 	Code     string          `json:"code"`
 	Severity qualitySeverity `json:"severity"`
 	Message  string          `json:"message"`
-	Evidence map[string]any  `json:"evidence,omitempty"`
+	Evidence *issueEvidence  `json:"evidence,omitempty"`
+}
+
+// issueEvidence holds typed evidence fields for quality issues.
+// Each issue type populates only its relevant fields; the rest
+// serialize as absent via omitempty.
+type issueEvidence struct {
+	// TOO_FEW_SNAPSHOTS
+	MinSnapshots *int `json:"min_snapshots,omitempty"`
+	Actual       *int `json:"actual,omitempty"`
+
+	// LATEST_SNAPSHOT_STALE
+	LatestCapturedAt string `json:"latest_captured_at,omitempty"`
+	Age              string `json:"age,omitempty"`
+	MaxStaleness     string `json:"max_staleness,omitempty"`
+
+	// SNAPSHOT_GAP_TOO_LARGE
+	MaxGapObserved string `json:"max_gap_observed,omitempty"`
+	MaxGapAllowed  string `json:"max_gap_allowed,omitempty"`
+
+	// MISSING_REQUIRED_RESOURCES
+	MissingResources []string `json:"missing_resources,omitempty"`
 }
 
 type qualitySummary struct {

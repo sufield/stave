@@ -119,16 +119,17 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	}
 
 	cmd := &cobra.Command{Use: "test"}
-	var buf bytes.Buffer
-	cmd.SetOut(&buf)
-	cmd.SetErr(&buf)
+	var stdout, stderr bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetErr(&stderr)
 
 	// Exercise full validate command flow (directory mode).
-	err := runValidate(cmd, compose.NewDefaultProvider(), ui.DefaultRuntime(), opts)
+	p := compose.NewDefaultProvider()
+	err := runValidate(cmd, p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, ui.DefaultRuntime(), opts)
 	if err != nil {
-		t.Fatalf("expected directory validate to pass, got: %v", err)
+		t.Fatalf("expected directory validate to pass, got: %v\nstderr: %s", err, stderr.String())
 	}
-	output := buf.String()
+	output := stdout.String()
 
 	if !strings.Contains(output, "Validation passed") {
 		t.Fatalf("expected validation success output, got: %s", output)

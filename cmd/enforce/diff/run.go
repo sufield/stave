@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -25,12 +26,12 @@ type Config struct {
 
 // Runner orchestrates the loading and comparison of observation snapshots.
 type Runner struct {
-	Provider *compose.Provider
+	LoadSnapshots compose.SnapshotLoader
 }
 
-// NewRunner initializes a diff runner with the provided dependency provider.
-func NewRunner(p *compose.Provider) *Runner {
-	return &Runner{Provider: p}
+// NewRunner initializes a diff runner with the given snapshot loader.
+func NewRunner(load compose.SnapshotLoader) *Runner {
+	return &Runner{LoadSnapshots: load}
 }
 
 // Run executes the diffing workflow: loading the two latest snapshots,
@@ -51,7 +52,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
-	snapshots, err := r.Provider.LoadSnapshots(ctx, dir)
+	snapshots, err := r.LoadSnapshots(ctx, dir)
 	if err != nil {
 		return asset.ObservationDelta{}, fmt.Errorf("loading snapshots: %w", err)
 	}

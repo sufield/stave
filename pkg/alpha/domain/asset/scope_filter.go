@@ -2,8 +2,6 @@ package asset
 
 import (
 	"strings"
-
-	"github.com/samber/lo"
 )
 
 // AssetPredicate is the domain-level evaluation-time filter.
@@ -193,7 +191,12 @@ func (s Snapshot) FilteredBy(filter AssetPredicate) (Snapshot, bool) {
 		return s, len(s.Assets) > 0
 	}
 
-	kept := lo.Filter(s.Assets, func(a Asset, _ int) bool { return filter.IsInScope(a) })
+	kept := make([]Asset, 0, len(s.Assets))
+	for _, a := range s.Assets {
+		if filter.IsInScope(a) {
+			kept = append(kept, a)
+		}
+	}
 	if len(kept) == 0 {
 		return Snapshot{}, false
 	}

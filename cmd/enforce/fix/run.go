@@ -13,29 +13,29 @@ import (
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Runner is a thin CLI wrapper that delegates to internal/app/fix.Service.
 type Runner struct {
-	Provider    *compose.Provider
 	Clock       ports.Clock
 	Sanitizer   kernel.Sanitizer
 	FileOptions fileout.FileOptions
 	service     *appfix.Service
+	// Loop dependencies (set by caller before Loop()).
+	NewCtlRepo compose.CtlRepoFactory
+	NewObsRepo compose.ObsRepoFactory
 }
 
-// NewRunner initializes a runner with required dependencies.
-func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
+// NewRunner initializes a runner with a pre-resolved CEL evaluator.
+func NewRunner(celEval policy.PredicateEval, clock ports.Clock) *Runner {
 	svc := appfix.NewService(clock, remediation.NewPlanner(crypto.NewHasher()))
 	svc.ParseFindings = evaljson.ParseFindings
-	if celEval, err := p.NewCELEvaluator(); err == nil {
-		svc.CELEvaluator = celEval
-	}
+	svc.CELEvaluator = celEval
 	return &Runner{
-		Provider: p,
-		Clock:    clock,
-		service:  svc,
+		Clock:   clock,
+		service: svc,
 	}
 }
 

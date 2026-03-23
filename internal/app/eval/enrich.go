@@ -3,7 +3,6 @@ package eval
 import (
 	"fmt"
 
-	"github.com/samber/lo"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -50,12 +49,20 @@ func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sani
 
 // SanitizeFindings returns sanitized copies of a slice of findings.
 func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []remediation.Finding {
-	return lo.Map(findings, func(f remediation.Finding, _ int) remediation.Finding { return f.Sanitized(s) })
+	out := make([]remediation.Finding, len(findings))
+	for i, f := range findings {
+		out[i] = f.Sanitized(s)
+	}
+	return out
 }
 
 // SanitizeExemptedAssets returns sanitized copies of exempted assets.
 func SanitizeExemptedAssets(s kernel.Sanitizer, assets []asset.ExemptedAsset) []asset.ExemptedAsset {
-	return lo.Map(assets, func(a asset.ExemptedAsset, _ int) asset.ExemptedAsset { return a.Sanitized(s) })
+	out := make([]asset.ExemptedAsset, len(assets))
+	for i, a := range assets {
+		out[i] = a.Sanitized(s)
+	}
+	return out
 }
 
 // SanitizeInputHashKeys returns a copy with file keys sanitized to basenames.

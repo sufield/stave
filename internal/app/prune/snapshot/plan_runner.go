@@ -7,7 +7,6 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
@@ -28,7 +27,7 @@ type PlanConfig struct {
 	Apply            bool
 	Force            bool
 	AllowSymlink     bool
-	Format           ui.OutputFormat
+	Format           appcontracts.OutputFormat
 	Quiet            bool
 	Stdout           io.Writer
 }

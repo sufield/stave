@@ -28,14 +28,14 @@ type LoopRequest struct {
 func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 	r.service.Sanitizer = r.Sanitizer
 
-	controlRepo, err := r.Provider.NewControlRepo()
+	controlRepo, err := r.NewCtlRepo()
 	if err != nil {
 		return err
 	}
 
 	deps := appfix.LoopDeps{
 		ObservationRepoFactory: func() (contracts.ObservationRepository, error) {
-			return r.Provider.NewObservationRepo()
+			return r.NewObsRepo()
 		},
 		ControlRepo: controlRepo,
 	}

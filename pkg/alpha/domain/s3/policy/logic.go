@@ -1,10 +1,11 @@
+// Package policy provides S3 bucket policy analysis including action classification,
+// principal extraction, and network scope evaluation.
 package policy
 
 import (
 	"regexp"
 	"strings"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
@@ -111,9 +112,12 @@ func classifyPolicyAction(action string) (policyActionMask, bool) {
 }
 
 func hasWildcardResource(resources []string) bool {
-	return lo.SomeBy(resources, func(res string) bool {
-		return res == policyWildcard || res == policyS3GlobalResource
-	})
+	for _, res := range resources {
+		if res == policyWildcard || res == policyS3GlobalResource {
+			return true
+		}
+	}
+	return false
 }
 
 // isAccountIDOnly identifies whether the principal is a specific AWS account ID.
@@ -155,9 +159,12 @@ func extractPrincipalARNs(principal any) []string {
 
 // filterConcreteARNs removes empty strings and wildcards from ARN lists.
 func filterConcreteARNs(arns []string) []string {
-	out := lo.Filter(arns, func(arn string, _ int) bool {
-		return arn != "" && arn != policyWildcard
-	})
+	var out []string
+	for _, arn := range arns {
+		if arn != "" && arn != policyWildcard {
+			out = append(out, arn)
+		}
+	}
 	if len(out) == 0 {
 		return nil
 	}
@@ -201,10 +208,13 @@ func NormalizeStringOrSlice(v any) []string {
 	case string:
 		return []string{val}
 	case []any:
-		return lo.FilterMap(val, func(item any, _ int) (string, bool) {
-			s, ok := item.(string)
-			return s, ok
-		})
+		out := make([]string, 0, len(val))
+		for _, item := range val {
+			if s, ok := item.(string); ok {
+				out = append(out, s)
+			}
+		}
+		return out
 	case []string:
 		return val
 	}

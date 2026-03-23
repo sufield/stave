@@ -14,9 +14,9 @@ func TestDocsOpenCommand_TextOutput(t *testing.T) {
 	writeTestFile(t, docPath, "# User Docs\nUse snapshot upcoming to plan actions in order.\n")
 
 	root := getTestRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
+	var stdout, stderr bytes.Buffer
+	root.SetOut(&stdout)
+	root.SetErr(&stderr)
 	root.SetArgs([]string{
 		"docs", "open", "snapshot upcoming",
 		"--docs-root", temp,
@@ -25,9 +25,9 @@ func TestDocsOpenCommand_TextOutput(t *testing.T) {
 	})
 
 	if err := root.Execute(); err != nil {
-		t.Fatalf("docs open command failed: %v", err)
+		t.Fatalf("docs open command failed: %v\nstderr: %s", err, stderr.String())
 	}
-	out := buf.String()
+	out := stdout.String()
 	if !strings.Contains(out, `Topic: "snapshot upcoming"`) {
 		t.Fatalf("expected topic header, got: %s", out)
 	}
@@ -45,9 +45,9 @@ func TestDocsOpenCommand_JSONOutput(t *testing.T) {
 	writeTestFile(t, docPath, "stave ci gate enforces CI failure policy.\n")
 
 	root := getTestRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
+	var stdout, stderr bytes.Buffer
+	root.SetOut(&stdout)
+	root.SetErr(&stderr)
 	root.SetArgs([]string{
 		"docs", "open", "ci gate",
 		"--docs-root", temp,
@@ -56,12 +56,12 @@ func TestDocsOpenCommand_JSONOutput(t *testing.T) {
 	})
 
 	if err := root.Execute(); err != nil {
-		t.Fatalf("docs open command failed: %v", err)
+		t.Fatalf("docs open command failed: %v\nstderr: %s", err, stderr.String())
 	}
 
 	var out OpenResult
-	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
-		t.Fatalf("failed to decode json output: %v\noutput=%s", err, buf.String())
+	if err := json.Unmarshal(stdout.Bytes(), &out); err != nil {
+		t.Fatalf("failed to decode json output: %v\noutput=%s", err, stdout.String())
 	}
 	if out.Path != docPath {
 		t.Fatalf("unexpected path: %q", out.Path)

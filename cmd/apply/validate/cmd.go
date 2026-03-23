@@ -1,3 +1,4 @@
+// Package validate implements the validate command.
 package validate
 
 import (
@@ -74,7 +75,7 @@ func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runValidate(cmd, p, rt, opts)
+			return runValidate(cmd, p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, rt, opts)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

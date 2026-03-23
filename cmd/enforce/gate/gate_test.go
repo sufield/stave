@@ -45,7 +45,8 @@ func TestParseGatePolicy(t *testing.T) {
 func TestRunGatePolicyAny(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	tmp := t.TempDir()
-	runner := NewRunner(compose.NewDefaultProvider())
+	p := compose.NewDefaultProvider()
+	runner := NewRunner(p.LoadAssets, p.NewCELEvaluator)
 
 	withFindings := filepath.Join(tmp, "with-findings.json")
 	if err := os.WriteFile(withFindings, []byte(`{
@@ -96,7 +97,8 @@ func TestRunGatePolicyAny(t *testing.T) {
 func TestRunGatePolicyNew(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	tmp := t.TempDir()
-	runner := NewRunner(compose.NewDefaultProvider())
+	p := compose.NewDefaultProvider()
+	runner := NewRunner(p.LoadAssets, p.NewCELEvaluator)
 
 	evalPath := filepath.Join(tmp, "evaluation.json")
 	basePath := filepath.Join(tmp, "baseline.json")
@@ -171,7 +173,8 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	observationsDir := filepath.Join(fixture, "observations")
 
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
-	runner := NewRunner(compose.NewDefaultProvider())
+	p := compose.NewDefaultProvider()
+	runner := NewRunner(p.LoadAssets, p.NewCELEvaluator)
 
 	result, err := runner.runPolicyOverdue(context.Background(), Config{
 		ControlsDir:       controlsDir,

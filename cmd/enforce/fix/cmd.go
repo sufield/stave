@@ -4,33 +4,55 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/timeutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // NewFixCmd constructs the fix command.
 func NewFixCmd(p *compose.Provider) *cobra.Command {
-	var (
-		inputPath  string
-		findingRef string
-	)
+	opts := &fixOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "fix",
 		Short: "Show machine-readable fix plan for a finding",
 		Long: `Fix reads an evaluation artifact and prints deterministic remediation guidance
-for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffix,
+for a single finding. It never modifies user files.
+
+Inputs:
+  --input       Path to evaluation JSON file (required)
+  --finding     Finding selector: <control_id>@<asset_id> (required)
+
+Outputs:
+  stdout        Remediation guidance JSON for the selected finding
+
+Exit Codes:
+  0   - Guidance emitted successfully
+  2   - Invalid input (missing file, bad selector)
+  4   - Internal error
+  130 - Interrupted (SIGINT)
+
+Examples:
+  # Show fix plan for a specific finding
+  stave ci fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@res:aws:s3:bucket:my-bucket
+
+  # Pipe to jq for structured inspection
+  stave ci fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@res:aws:s3:bucket:my-bucket | jq .` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			runner := NewRunner(p, ports.RealClock{})
+			celEval, err := p.NewCELEvaluator()
+			if err != nil {
+				return err
+			}
+			runner := NewRunner(celEval, ports.RealClock{})
 			return runner.Run(cmd.Context(), Request{
-				InputPath:  inputPath,
-				FindingRef: findingRef,
+				InputPath:  opts.InputPath,
+				FindingRef: opts.FindingRef,
 				Stdout:     cmd.OutOrStdout(),
 			})
 		},
@@ -38,25 +60,17 @@ for a single finding. It never modifies user files.` + metadata.OfflineHelpSuffi
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&inputPath, "input", "", "Path to evaluation JSON (required)")
-	cmd.Flags().StringVar(&findingRef, "finding", "", "Finding selector: <control_id>@<asset_id> (required)")
-	_ = cmd.MarkFlagRequired("input")
-	_ = cmd.MarkFlagRequired("finding")
+	opts.BindFlags(cmd)
 
 	return cmd
 }
 
 // NewFixLoopCmd constructs the fix-loop command.
 func NewFixLoopCmd(p *compose.Provider) *cobra.Command {
-	var (
-		beforeDir    string
-		afterDir     string
-		controlsDir  string
-		maxUnsafeRaw string
-		nowRaw       string
-		allowUnknown bool
-		outDir       string
-	)
+	opts := &loopOptions{
+		ControlsDir: "controls",
+	}
+
 	cmd := &cobra.Command{
 		Use:   "fix-loop",
 		Short: "Run apply-before/apply-after/verify in one command",
@@ -91,25 +105,27 @@ Examples:
     Sample output:
       { "before_violations": 5, "after_violations": 2, "resolved": 3, "remaining": 2, "introduced": 0 }` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			eval := cmdctx.EvaluatorFromCmd(cmd)
-			if !cmd.Flags().Changed("max-unsafe") {
-				maxUnsafeRaw = eval.MaxUnsafeDuration()
-			}
-			if !cmd.Flags().Changed("allow-unknown-input") {
-				allowUnknown = eval.AllowUnknownInput()
-			}
-			maxUnsafe, err := timeutil.ParseDurationFlag(maxUnsafeRaw, "--max-unsafe")
+			maxUnsafe, err := timeutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
 			if err != nil {
 				return err
 			}
-			clock, err := compose.ResolveClock(nowRaw)
+			clock, err := compose.ResolveClock(opts.NowRaw)
 			if err != nil {
 				return err
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner(p, clock)
+			celEval, celErr := p.NewCELEvaluator()
+			if celErr != nil {
+				return celErr
+			}
+			runner := NewRunner(celEval, clock)
+			runner.NewCtlRepo = p.NewControlRepo
+			runner.NewObsRepo = p.NewObservationRepo
 			runner.Sanitizer = gf.GetSanitizer()
 			runner.FileOptions = fileout.FileOptions{
 				Overwrite:     gf.Force,
@@ -118,12 +134,12 @@ Examples:
 			}
 
 			return runner.Loop(cmd.Context(), LoopRequest{
-				BeforeDir:         fsutil.CleanUserPath(beforeDir),
-				AfterDir:          fsutil.CleanUserPath(afterDir),
-				ControlsDir:       fsutil.CleanUserPath(controlsDir),
-				OutDir:            fsutil.CleanUserPath(outDir),
+				BeforeDir:         opts.BeforeDir,
+				AfterDir:          opts.AfterDir,
+				ControlsDir:       opts.ControlsDir,
+				OutDir:            opts.OutDir,
 				MaxUnsafeDuration: maxUnsafe,
-				AllowUnknown:      allowUnknown,
+				AllowUnknown:      opts.AllowUnknown,
 				Stdout:            cmd.OutOrStdout(),
 				Stderr:            cmd.ErrOrStderr(),
 			})
@@ -132,16 +148,7 @@ Examples:
 		SilenceErrors: true,
 	}
 
-	f := cmd.Flags()
-	f.StringVarP(&beforeDir, "before", "b", "", "Path to before-remediation observations (required)")
-	f.StringVarP(&afterDir, "after", "a", "", "Path to after-remediation observations (required)")
-	f.StringVarP(&controlsDir, "controls", "i", "controls", "Path to control definitions directory")
-	f.StringVar(&maxUnsafeRaw, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	f.StringVar(&nowRaw, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	f.BoolVar(&allowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
-	f.StringVar(&outDir, "out", "", "Write remediation artifacts to this directory")
-	_ = cmd.MarkFlagRequired("before")
-	_ = cmd.MarkFlagRequired("after")
+	opts.BindFlags(cmd)
 
 	return cmd
 }

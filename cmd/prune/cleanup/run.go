@@ -47,9 +47,9 @@ type executionPlan struct {
 // Runner orchestrates the identification and removal of stale snapshot files.
 // It implements appeval.CleanupOrchestrator directly.
 type Runner struct {
-	Provider *compose.Provider
-	cfg      Config
-	plan     *executionPlan
+	NewSnapshotRepo compose.SnapshotRepoFactory
+	cfg             Config
+	plan            *executionPlan
 }
 
 // Run executes the full pruning workflow via the appeval.RunCleanup lifecycle.
@@ -71,7 +71,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 // BuildPlan identifies which snapshots meet the criteria for pruning.
 func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
-	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.Provider, r.cfg.ObservationsDir)
+	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}

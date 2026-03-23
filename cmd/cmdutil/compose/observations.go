@@ -7,11 +7,6 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
-// LoadSnapshots is a convenience wrapper that loads snapshots via the given provider.
-func LoadSnapshots(ctx context.Context, p *Provider, dir string) ([]asset.Snapshot, error) {
-	return p.LoadSnapshots(ctx, dir)
-}
-
 // LoadSnapshots loads observations from the specified directory using
 // the provider's configured repository.
 func (p *Provider) LoadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {

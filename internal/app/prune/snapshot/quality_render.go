@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func writeQualityOutput(w io.Writer, format ui.OutputFormat, report qualityReport, quiet bool) error {
+func writeQualityOutput(w io.Writer, format appcontracts.OutputFormat, report qualityReport, quiet bool) error {
 	if quiet {
 		return nil
 	}
@@ -54,8 +54,7 @@ func renderQualityText(w io.Writer, report qualityReport) error {
 	printf("\nIssues:\n")
 	for _, issue := range report.Issues {
 		severity := strings.ToUpper(string(issue.Severity))
-		label := ui.SeverityLabel(string(issue.Severity), severity, w)
-		printf("- [%s] %s: %s\n", label, issue.Code, issue.Message)
+		printf("- [%s] %s: %s\n", severity, issue.Code, issue.Message)
 	}
 
 	return err

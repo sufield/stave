@@ -21,6 +21,7 @@ func (s Status) Label() string {
 	return strings.ToUpper(string(s))
 }
 
+// PrereqCheck represents a single prerequisite validation with its status and remediation guidance.
 type PrereqCheck struct {
 	Name    string
 	Status  Status
@@ -28,6 +29,7 @@ type PrereqCheck struct {
 	Fix     string
 }
 
+// Issue describes a validation issue with severity and suggested fix.
 type Issue struct {
 	Name    string `json:"name"`
 	Status  Status `json:"status"`
@@ -36,6 +38,7 @@ type Issue struct {
 	Command string `json:"command,omitempty"`
 }
 
+// Summary aggregates the counts of checks, errors, and warnings from a readiness assessment.
 type Summary struct {
 	Errors                   int `json:"errors"`
 	Warnings                 int `json:"warnings"`
@@ -44,11 +47,12 @@ type Summary struct {
 	AssetObservationsChecked int `json:"asset_observations_checked"`
 }
 
+// ReadinessReport holds the result of a readiness assessment including prerequisites and issues.
+// NextCommand is not set here — CLI command names are a presentation concern owned by the cmd layer.
 type ReadinessReport struct {
 	Ready           bool    `json:"ready"`
 	ControlsDir     string  `json:"controls_dir"`
 	ObservationsDir string  `json:"observations_dir"`
-	NextCommand     string  `json:"next_command"`
 	Summary         Summary `json:"summary"`
 	issues          []Issue
 }
@@ -82,6 +86,7 @@ func (r *ReadinessReport) RecordIssue(issue Issue) {
 	r.issues = append(r.issues, issue)
 }
 
+// Result contains diagnostics and summary counts from a validation run.
 type Result struct {
 	Diagnostics *diag.Result
 	Summary     struct {
@@ -91,6 +96,7 @@ type Result struct {
 	}
 }
 
+// ReadinessInput provides the parameters needed to perform a readiness assessment.
 type ReadinessInput struct {
 	ControlsDir            string
 	ObservationsDir        string

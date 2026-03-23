@@ -72,16 +72,15 @@ func ParseGatePolicy(raw string) (GatePolicy, error) {
 // --- Configuration Structs ---
 
 // ProjectConfig represents the schema for the stave.yaml file.
-// Fields with validate tags are exposed to `stave config set/get/delete`.
 type ProjectConfig struct {
-	MaxUnsafe                string                          `yaml:"max_unsafe" validate:"omitempty,stave_duration"`
-	SnapshotRetention        string                          `yaml:"snapshot_retention" validate:"omitempty,stave_duration"`
-	RetentionTier            string                          `yaml:"default_retention_tier" validate:"omitempty,min=1"`
+	MaxUnsafe                string                          `yaml:"max_unsafe"`
+	SnapshotRetention        string                          `yaml:"snapshot_retention"`
+	RetentionTier            string                          `yaml:"default_retention_tier"`
 	RetentionTiers           map[string]retention.TierConfig `yaml:"snapshot_retention_tiers"`
 	ObservationTierMapping   []retention.MappingRule         `yaml:"observation_tier_mapping"`
-	CIFailurePolicy          string                          `yaml:"ci_failure_policy" validate:"omitempty,stave_policy"`
-	CaptureCadence           string                          `yaml:"capture_cadence" validate:"omitempty,stave_cadence"`
-	SnapshotFilenameTemplate string                          `yaml:"snapshot_filename_template" validate:"omitempty,min=1"`
+	CIFailurePolicy          string                          `yaml:"ci_failure_policy"`
+	CaptureCadence           string                          `yaml:"capture_cadence"`
+	SnapshotFilenameTemplate string                          `yaml:"snapshot_filename_template"`
 	Exceptions               []ExceptionRule                 `yaml:"exceptions"`
 	EnabledControlPacks      []string                        `yaml:"enabled_control_packs"`
 	ExcludeControls          []string                        `yaml:"exclude_controls"`

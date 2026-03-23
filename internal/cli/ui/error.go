@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 // Exit codes following the platform contract.
@@ -36,7 +38,7 @@ const (
 
 // Sentinel errors used for logic-based exit code mapping.
 var (
-	ErrViolationsFound       = errors.New("violations found")
+	ErrViolationsFound       = appcontracts.ErrViolationsFound
 	ErrValidationWarnings    = errors.New("validation warnings")
 	ErrValidationFailed      = errors.New("validation failed")
 	ErrDiagnosticsFound      = errors.New("diagnostics found")

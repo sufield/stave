@@ -65,14 +65,14 @@ Examples:
 			cleanObsPath := fsutil.CleanUserPath(strings.TrimSpace(observation))
 			trimmedCtlID := strings.TrimSpace(controlID)
 
-			// Load control via Provider
-			control, err := loadTraceControl(ctx, p, cleanCtlDir, trimmedCtlID)
+			// Load control via factory
+			control, err := loadTraceControl(ctx, p.NewControlRepo, cleanCtlDir, trimmedCtlID)
 			if err != nil {
 				return err
 			}
 
-			// Load snapshot via Provider
-			snapshot, err := loadTraceSnapshot(ctx, p, cleanObsPath)
+			// Load snapshot via factory
+			snapshot, err := loadTraceSnapshot(ctx, p.NewSnapshotRepo, cleanObsPath)
 			if err != nil {
 				return err
 			}
@@ -107,19 +107,31 @@ Examples:
 	return cmd
 }
 
-// loadTraceControl loads a specific control by ID via Provider.
-func loadTraceControl(ctx context.Context, p *compose.Provider, dir, id string) (policy.ControlDefinition, error) {
-	ctl, err := compose.LoadControlByID(ctx, p, dir, id)
+// loadTraceControl loads a specific control by ID via factory.
+func loadTraceControl(ctx context.Context, newCtlRepo compose.CtlRepoFactory, dir, id string) (policy.ControlDefinition, error) {
+	repo, err := newCtlRepo()
 	if err != nil {
-		return policy.ControlDefinition{}, ui.WithNextCommand(err,
+		return policy.ControlDefinition{}, err
+	}
+	controls, err := repo.LoadControls(ctx, dir)
+	if err != nil {
+		return policy.ControlDefinition{}, ui.WithNextCommand(
+			fmt.Errorf("loading controls from %s: %w", dir, err),
 			fmt.Sprintf("stave explain --controls %s <control-id>", dir))
 	}
-	return ctl, nil
+	for _, c := range controls {
+		if c.ID.String() == id {
+			return c, nil
+		}
+	}
+	return policy.ControlDefinition{}, ui.WithNextCommand(
+		fmt.Errorf("%w: %q in %s", compose.ErrControlNotFound, id, dir),
+		fmt.Sprintf("stave explain --controls %s <control-id>", dir))
 }
 
-// loadTraceSnapshot loads a single snapshot file via Provider.
-func loadTraceSnapshot(ctx context.Context, p *compose.Provider, path string) (*asset.Snapshot, error) {
-	obsLoader, err := p.NewSnapshotRepo()
+// loadTraceSnapshot loads a single snapshot file via factory.
+func loadTraceSnapshot(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFactory, path string) (*asset.Snapshot, error) {
+	obsLoader, err := newSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

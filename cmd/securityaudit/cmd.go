@@ -1,8 +1,8 @@
+// Package securityaudit implements the security-audit command.
 package securityaudit
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -10,28 +10,19 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	domainsecurityaudit "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
 // NewCmd constructs the security-audit command.
 func NewCmd() *cobra.Command {
-	var (
-		formatRaw   string
-		outPath     string
-		outDir      string
-		severityRaw string
-		sbomFormat  string
-		frameworks  []string
-		vulnSource  string
-		liveVuln    bool
-		releaseDir  string
-		privacy     bool
-		failOn      string
-		nowRaw      string
-	)
+	opts := &options{
+		FormatRaw:   "json",
+		SeverityRaw: "CRITICAL,HIGH,MEDIUM,LOW",
+		SBOMFormat:  "spdx",
+		VulnSource:  "hybrid",
+		FailOn:      "HIGH",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "security-audit",
@@ -69,35 +60,43 @@ Exit Codes:
   130 - Interrupted (SIGINT)
 
 Examples:
+  # Print JSON report to stdout (pipe to jq for filtering)
   stave security-audit --format json
+
+  # Write markdown report to a file
   stave security-audit --format markdown --out ./audit/security-report.md
+
+  # Write SARIF report and full evidence bundle, gate on CRITICAL only
   stave security-audit --format sarif --out-dir ./audit --fail-on CRITICAL` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cmdutil.GetGlobalFlags(cmd)
 
-			format, err := parseFormat(formatRaw)
+			format, err := parseFormat(opts.FormatRaw)
 			if err != nil {
 				return err
 			}
-			severityFilter, err := domainsecurityaudit.ParseSeverityList(severityRaw)
+			severityFilter, err := domainsecurityaudit.ParseSeverityList(opts.SeverityRaw)
 			if err != nil {
 				return &ui.UserError{Err: fmt.Errorf("invalid --severity: %w", err)}
 			}
-			failOnSev, err := domainsecurityaudit.ParseSeverity(failOn)
+			failOnSev, err := domainsecurityaudit.ParseSeverity(opts.FailOn)
 			if err != nil {
 				return &ui.UserError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
 			}
-			now, err := compose.ResolveNow(nowRaw)
+			now, err := compose.ResolveNow(opts.NowRaw)
 			if err != nil {
 				return &ui.UserError{Err: err}
 			}
 
-			parsedSBOM, err := appsa.ParseSBOMFormat(sbomFormat)
+			parsedSBOM, err := appsa.ParseSBOMFormat(opts.SBOMFormat)
 			if err != nil {
 				return &ui.UserError{Err: err}
 			}
-			parsedVuln, err := appsa.ParseVulnSource(vulnSource)
+			parsedVuln, err := appsa.ParseVulnSource(opts.VulnSource)
 			if err != nil {
 				return &ui.UserError{Err: err}
 			}
@@ -105,15 +104,15 @@ Examples:
 			runner := &AuditRunner{}
 			return runner.Run(cmd.Context(), AuditConfig{
 				Format:           format,
-				OutPath:          outPath,
-				OutDir:           outDir,
+				OutPath:          opts.OutPath,
+				OutDir:           opts.OutDir,
 				SeverityFilter:   severityFilter,
 				SBOMFormat:       parsedSBOM,
-				Frameworks:       frameworks,
+				Frameworks:       opts.Frameworks,
 				VulnSource:       parsedVuln,
-				LiveVulnCheck:    liveVuln,
-				ReleaseBundleDir: fsutil.CleanUserPath(releaseDir),
-				PrivacyEnabled:   privacy,
+				LiveVulnCheck:    opts.LiveVuln,
+				ReleaseBundleDir: opts.ReleaseDir,
+				PrivacyEnabled:   opts.Privacy,
 				FailOn:           failOnSev,
 				Now:              now,
 				Force:            gf.Force,
@@ -127,23 +126,7 @@ Examples:
 		SilenceErrors: true,
 	}
 
-	f := cmd.Flags()
-	f.StringVar(&formatRaw, "format", "json", "Report format: json, markdown, or sarif")
-	f.StringVar(&outPath, "out", "", "Main report output file path (default: <out-dir>/security-report.<ext>)")
-	f.StringVar(&outDir, "out-dir", "", "Artifact bundle output directory (default: ./security-audit-<timestamp>)")
-	f.StringVar(&severityRaw, "severity", "CRITICAL,HIGH,MEDIUM,LOW", "Comma-separated severities to include: CRITICAL,HIGH,MEDIUM,LOW")
-	f.StringVar(&sbomFormat, "sbom", "spdx", "SBOM format: spdx or cyclonedx")
-	f.StringSliceVar(&frameworks, "compliance-framework", nil,
-		"Compliance frameworks (repeatable): "+strings.Join(
-			compliance.FrameworkStrings(compliance.SupportedFrameworks()), ", ",
-		),
-	)
-	f.StringVar(&vulnSource, "vuln-source", "hybrid", "Vulnerability evidence source: hybrid, local, or ci")
-	f.BoolVar(&liveVuln, "live-vuln-check", false, "Run local govulncheck live check (opt-in)")
-	f.StringVar(&releaseDir, "release-bundle-dir", "", "Directory with release verification artifacts (SHA256SUMS and signatures)")
-	f.BoolVar(&privacy, "privacy-mode", false, "Enable strict privacy assertions")
-	f.StringVar(&failOn, "fail-on", "HIGH", "Gate threshold: CRITICAL, HIGH, MEDIUM, LOW, or NONE")
-	f.StringVar(&nowRaw, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	opts.BindFlags(cmd)
 
 	return cmd
 }

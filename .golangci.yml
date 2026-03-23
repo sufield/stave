@@ -42,7 +42,6 @@ linters:
       exclude-functions:
         - fmt.Fprintf
         - fmt.Fprintln
-        - fmt.Printf
         - (io.Closer).Close
         - (*os.File).Close
         - os.Remove

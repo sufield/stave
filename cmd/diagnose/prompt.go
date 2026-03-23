@@ -113,7 +113,7 @@ Examples:
 
 			ctx := cmd.Context()
 
-			ctlByID, err := loadControlsMap(ctx, p, fsutil.CleanUserPath(controlsDir))
+			ctlByID, err := loadControlsMap(ctx, p.NewControlRepo, fsutil.CleanUserPath(controlsDir))
 			if err != nil {
 				return err
 			}
@@ -121,7 +121,7 @@ Examples:
 			var assetPropsJSON string
 			cleanObsDir := fsutil.CleanUserPath(obsDir)
 			if cleanObsDir != "" {
-				assetPropsJSON, err = loadAssetProperties(ctx, p, cleanObsDir, asset.ID(strings.TrimSpace(assetID)))
+				assetPropsJSON, err = loadAssetProperties(ctx, p.LoadSnapshots, cleanObsDir, asset.ID(strings.TrimSpace(assetID)))
 				if err != nil {
 					return err
 				}
@@ -190,8 +190,8 @@ func buildPromptAdapter(
 }
 
 // loadControlsMap loads control definitions and indexes them by ID.
-func loadControlsMap(ctx context.Context, p *compose.Provider, dir string) (map[kernel.ControlID]*policy.ControlDefinition, error) {
-	repo, err := p.NewControlRepo()
+func loadControlsMap(ctx context.Context, newCtlRepo compose.CtlRepoFactory, dir string) (map[kernel.ControlID]*policy.ControlDefinition, error) {
+	repo, err := newCtlRepo()
 	if err != nil {
 		return nil, err
 	}
@@ -208,8 +208,8 @@ func loadControlsMap(ctx context.Context, p *compose.Provider, dir string) (map[
 }
 
 // loadAssetProperties extracts the properties of a specific asset from the latest snapshot.
-func loadAssetProperties(ctx context.Context, p *compose.Provider, dir string, assetID asset.ID) (string, error) {
-	snapshots, err := p.LoadSnapshots(ctx, dir)
+func loadAssetProperties(ctx context.Context, loadSnapshots compose.SnapshotLoader, dir string, assetID asset.ID) (string, error) {
+	snapshots, err := loadSnapshots(ctx, dir)
 	if err != nil {
 		return "", err
 	}

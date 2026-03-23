@@ -9,12 +9,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
+	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
+
+func newTestRunner(t *testing.T) *Runner {
+	t.Helper()
+	celEval, err := stavecel.NewPredicateEval()
+	if err != nil {
+		t.Fatalf("create CEL evaluator: %v", err)
+	}
+	return NewRunner(celEval, ports.RealClock{})
+}
 
 func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 	dir := t.TempDir()
@@ -46,7 +55,7 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 	}
 
 	buf := &bytes.Buffer{}
-	runner := NewRunner(compose.NewDefaultProvider(), ports.RealClock{})
+	runner := newTestRunner(t)
 	if err := runner.Run(context.Background(), Request{
 		InputPath:  in,
 		FindingRef: "CTL.S3.PUBLIC.001@bucket-a",
@@ -76,7 +85,7 @@ func TestRunFix_MissingFinding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	runner := NewRunner(compose.NewDefaultProvider(), ports.RealClock{})
+	runner := newTestRunner(t)
 	err := runner.Run(context.Background(), Request{
 		InputPath:  in,
 		FindingRef: "CTL.S3.PUBLIC.001@missing",

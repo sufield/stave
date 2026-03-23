@@ -9,7 +9,6 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -50,14 +49,18 @@ type Config struct {
 	PredicateEval   policy.PredicateEval
 }
 
+// ControlLoaderFunc loads controls from a directory.
+type ControlLoaderFunc func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
+
 // Runner orchestrates loading assets and generating coverage graphs.
 type Runner struct {
-	Provider *compose.Provider
+	LoadControls  ControlLoaderFunc
+	LoadSnapshots compose.SnapshotLoader
 }
 
 // NewRunner initializes a graph runner.
-func NewRunner(p *compose.Provider) *Runner {
-	return &Runner{Provider: p}
+func NewRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *Runner {
+	return &Runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
 }
 
 // coverageEdge represents a single control→asset coverage relationship.
@@ -92,11 +95,11 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	controls, err := compose.LoadControls(ctx, r.Provider, controlsDir)
+	controls, err := r.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
-	snapshots, err := compose.LoadSnapshots(ctx, r.Provider, observationsDir)
+	snapshots, err := r.LoadSnapshots(ctx, observationsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err
 	}
@@ -125,7 +128,10 @@ func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eva
 }
 
 func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
-	assetMap := lo.KeyBy(assets, func(a asset.Asset) string { return a.ID.String() })
+	assetMap := make(map[string]asset.Asset, len(assets))
+	for _, a := range assets {
+		assetMap[a.ID.String()] = a
+	}
 	if len(assetMap) == 0 {
 		return assetMap, nil
 	}
@@ -133,7 +139,11 @@ func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
 }
 
 func coverageControlIDs(controls []policy.ControlDefinition) []string {
-	return lo.Map(controls, func(ctl policy.ControlDefinition, _ int) string { return ctl.ID.String() })
+	ids := make([]string, len(controls))
+	for i, ctl := range controls {
+		ids[i] = ctl.ID.String()
+	}
+	return ids
 }
 
 func coverageEdges(
@@ -163,7 +173,13 @@ func coverageEdges(
 }
 
 func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string {
-	return lo.Reject(assetIDs, func(rid string, _ int) bool { return coveredAssets[rid] })
+	var out []string
+	for _, rid := range assetIDs {
+		if !coveredAssets[rid] {
+			out = append(out, rid)
+		}
+	}
+	return out
 }
 
 func writeResult(w io.Writer, format Format, result coverageResult, sanitizer kernel.Sanitizer) error {

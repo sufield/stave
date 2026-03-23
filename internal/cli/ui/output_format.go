@@ -2,18 +2,21 @@ package ui
 
 import (
 	"fmt"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
-// OutputFormat represents a validated output format for command output.
-type OutputFormat string
+// OutputFormat is an alias for appcontracts.OutputFormat so that existing cmd/
+// code referencing ui.OutputFormat continues to compile without changes.
+type OutputFormat = appcontracts.OutputFormat
 
 const (
 	// OutputFormatJSON selects JSON output.
-	OutputFormatJSON OutputFormat = "json"
+	OutputFormatJSON = appcontracts.FormatJSON
 	// OutputFormatText selects human-readable text output.
-	OutputFormatText OutputFormat = "text"
+	OutputFormatText = appcontracts.FormatText
 	// OutputFormatSARIF selects SARIF v2.1.0 output for GitHub Code Scanning.
-	OutputFormatSARIF OutputFormat = "sarif"
+	OutputFormatSARIF = appcontracts.FormatSARIF
 )
 
 // ParseOutputFormat validates and returns an OutputFormat value.
@@ -29,16 +32,6 @@ func ParseOutputFormat(s string) (OutputFormat, error) {
 		}
 		return "", fmt.Errorf("invalid --format %q (use text, json, or sarif)", s)
 	}
-}
-
-// String implements fmt.Stringer.
-func (f OutputFormat) String() string {
-	return string(f)
-}
-
-// IsJSON returns true if the format is JSON.
-func (f OutputFormat) IsJSON() bool {
-	return f == OutputFormatJSON
 }
 
 // ParseOutputMode validates the global --output flag value (json or text only).

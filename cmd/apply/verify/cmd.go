@@ -17,7 +17,7 @@ import (
 )
 
 // NewCmd builds the verify command.
-func NewCmd(p *compose.Provider, _ *ui.Runtime) *cobra.Command {
+func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 	opts := newOptions()
 
 	cmd := &cobra.Command{
@@ -89,6 +89,7 @@ Examples:
 					WriteVerification: func(w io.Writer, v safetyenvelope.Verification) error {
 						return outjson.WriteVerification(w, v)
 					},
+					BeginProgress: rt.BeginProgress,
 				},
 				appverify.VerifyRequest{
 					Ctx:               exec.Context,

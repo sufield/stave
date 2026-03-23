@@ -51,9 +51,9 @@ type executionPlan struct {
 // Runner orchestrates the snapshot archiving process.
 // It holds the calculated plan between BuildPlan and Apply phases.
 type Runner struct {
-	Provider *compose.Provider
-	cfg      Config
-	plan     *executionPlan
+	NewSnapshotRepo compose.SnapshotRepoFactory
+	cfg             Config
+	plan            *executionPlan
 }
 
 // Run executes the full archiving workflow via the appeval.RunCleanup lifecycle.
@@ -76,7 +76,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 // BuildPlan identifies which snapshots meet the criteria for archiving.
 func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
-	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.Provider, r.cfg.ObservationsDir)
+	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}

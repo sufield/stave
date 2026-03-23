@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/sufield/stave/internal/cli/ui"
@@ -68,7 +69,13 @@ func (a *App) executeRootCommand(args []string) {
 		return
 	}
 	if a.Logger != nil {
-		a.Logger.Debug("command failed", "error", err.Error())
+		// Log only the root error message, not presentation decoration
+		// (Next: …, More info: … lines appended by hint wrappers).
+		msg := err.Error()
+		if idx := strings.Index(msg, "\n"); idx > 0 {
+			msg = msg[:idx]
+		}
+		a.Logger.Debug("command failed", "error", msg, "exit_code", ExitCode(err))
 	}
 	if !isSentinelError(err) {
 		a.writeCommandError(err, args)

@@ -23,6 +23,26 @@ Supported policies:
   - fail_on_new_violation
   - fail_on_overdue_upcoming
 
+Inputs:
+  --policy          CI failure policy mode (default: from project config)
+  --in              Path to evaluation JSON (required for fail_on_any/new)
+  --baseline        Path to baseline JSON (required for fail_on_new_violation)
+  --controls, -i    Path to control definitions directory (used by fail_on_overdue_upcoming)
+  --observations, -o Path to observation snapshots directory (used by fail_on_overdue_upcoming)
+  --max-unsafe      Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)
+  --now             Reference time (RFC3339). If omitted, uses wall clock
+  --format, -f      Output format: text or json (default: text)
+
+Outputs:
+  stdout            Gate result summary (text or JSON)
+  stderr            Error messages (if any)
+
+Exit Codes:
+  0   - Policy passed; no violations detected
+  2   - Invalid input or configuration error
+  3   - Policy failed; violations detected
+  130 - Interrupted (SIGINT)
+
 Examples:
   # Fail on any findings in evaluation output
   stave ci gate --policy fail_on_any_violation --in output/evaluation.json
@@ -33,13 +53,15 @@ Examples:
   # Fail when any upcoming action is already overdue
   stave ci gate --policy fail_on_overdue_upcoming --controls ./controls --observations ./observations` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			opts.resolveConfigDefaults(cmd)
 			cfg, err := opts.ToConfig(cmd)
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(p)
+			runner := NewRunner(p.LoadAssets, p.NewCELEvaluator)
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

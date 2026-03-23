@@ -37,14 +37,14 @@ func getTestRootCmd() *cobra.Command {
 func execDocsSearch(t *testing.T, args ...string) string {
 	t.Helper()
 	root := getTestRootCmd()
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetErr(buf)
+	var stdout, stderr bytes.Buffer
+	root.SetOut(&stdout)
+	root.SetErr(&stderr)
 	root.SetArgs(append([]string{"docs", "search"}, args...))
 	if err := root.Execute(); err != nil {
-		t.Fatalf("docs search command failed: %v", err)
+		t.Fatalf("docs search command failed: %v\nstderr: %s", err, stderr.String())
 	}
-	return buf.String()
+	return stdout.String()
 }
 
 func writeTestFile(t *testing.T, path, content string) {

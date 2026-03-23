@@ -87,17 +87,18 @@ func normalizeKind(raw string) (schemas.Kind, error) {
 // that run after the core evaluation.
 func NewReadinessValidator(
 	ctx context.Context,
-	p *compose.Provider,
+	newObsRepo compose.ObsRepoFactory,
+	newCtlRepo compose.CtlRepoFactory,
 	ctlDir, obsDir string,
 	sanitize bool,
 	extraChecks func() []diag.Issue,
 ) func(time.Duration, time.Time) (validation.Result, error) {
 	return func(maxUnsafeDuration time.Duration, now time.Time) (validation.Result, error) {
-		obsRepo, err := p.NewObservationRepo()
+		obsRepo, err := newObsRepo()
 		if err != nil {
 			return validation.Result{}, err
 		}
-		ctlRepo, err := p.NewControlRepo()
+		ctlRepo, err := newCtlRepo()
 		if err != nil {
 			return validation.Result{}, err
 		}

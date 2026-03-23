@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
@@ -181,7 +181,7 @@ func TestNewRunnerRunJSON(t *testing.T) {
 	err := runner.Run(context.Background(), diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
-		Format:   ui.OutputFormatJSON,
+		Format:   appcontracts.FormatJSON,
 		Stdout:   &stdout,
 		Stderr:   &bytes.Buffer{},
 	})

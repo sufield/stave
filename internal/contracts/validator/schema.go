@@ -1,3 +1,4 @@
+// Package validator provides JSON schema validation for observation and control contracts.
 package validator
 
 import (

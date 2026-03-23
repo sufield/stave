@@ -65,6 +65,18 @@ type SnapshotObservationRepository interface {
 	appcontracts.SnapshotReader
 }
 
+// Factory types for narrow dependency injection. Commands accept these
+// instead of *Provider so their dependencies are explicit.
+type (
+	ObsRepoFactory       = func() (appcontracts.ObservationRepository, error)
+	CtlRepoFactory       = func() (appcontracts.ControlRepository, error)
+	SnapshotRepoFactory  = func() (SnapshotObservationRepository, error)
+	CELEvaluatorFactory  = func() (policy.PredicateEval, error)
+	FindingWriterFactory = func(ui.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
+	SnapshotLoader       = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
+	AssetLoaderFunc      = func(ctx context.Context, obsDir, ctlDir string) (Assets, error)
+)
+
 // --- Provider Repository Methods ---
 
 // NewObservationRepo creates a new observation repository.

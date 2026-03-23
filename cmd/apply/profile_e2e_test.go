@@ -30,14 +30,14 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	t.Helper()
 	goldenData, err := os.ReadFile(goldenFile)
 	if err != nil {
-		return // golden file not found, skip comparison
+		t.Fatalf("golden file missing (must be committed): %s", goldenFile)
 	}
 	var golden, actual any
 	if err := json.Unmarshal(goldenData, &golden); err != nil {
-		return
+		t.Fatalf("golden file contains invalid JSON: %v", err)
 	}
 	if err := json.Unmarshal(stdout, &actual); err != nil {
-		return
+		t.Fatalf("command stdout is not valid JSON: %v\noutput: %s", err, string(stdout))
 	}
 	stripStaveVersion(golden)
 	stripStaveVersion(actual)
@@ -63,6 +63,9 @@ func stripStaveVersion(v any) {
 
 // TestApplyProfileE2E runs e2e golden file tests for apply --profile aws-s3.
 func TestApplyProfileE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping: builds CLI binary and runs e2e golden-file checks")
+	}
 	_, filename, _, _ := runtime.Caller(0)
 	projectRoot := filepath.Join(filepath.Dir(filename), "..", "..")
 
