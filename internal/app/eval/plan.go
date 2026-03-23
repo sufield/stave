@@ -2,6 +2,7 @@ package eval
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -55,14 +56,19 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 	if hasher == nil {
 		return nil
 	}
-	h, err := hasher.HashDir(plan.ControlsPath, ".yaml", ".yml")
-	if err != nil {
-		return fmt.Errorf("controls directory %s: %w", plan.ControlsPath, err)
+	// Skip controls directory hashing when the path doesn't exist on disk.
+	// This happens when controls come from built-in packs (enabled_control_packs)
+	// rather than from a local directory.
+	if _, statErr := os.Stat(plan.ControlsPath); statErr == nil {
+		h, err := hasher.HashDir(plan.ControlsPath, ".yaml", ".yml")
+		if err != nil {
+			return fmt.Errorf("controls directory %s: %w", plan.ControlsPath, err)
+		}
+		plan.ControlsHash = kernel.Digest(h)
 	}
-	plan.ControlsHash = kernel.Digest(h)
 
 	if plan.ObservationsPath != "" {
-		h, err = hasher.HashDir(plan.ObservationsPath, ".json")
+		h, err := hasher.HashDir(plan.ObservationsPath, ".json")
 		if err != nil {
 			return fmt.Errorf("observations directory %s: %w", plan.ObservationsPath, err)
 		}
@@ -70,7 +76,7 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 	}
 
 	if plan.ConfigPath != "" {
-		h, err = hasher.HashFile(plan.ConfigPath)
+		h, err := hasher.HashFile(plan.ConfigPath)
 		if err != nil {
 			return fmt.Errorf("config file %s: %w", plan.ConfigPath, err)
 		}

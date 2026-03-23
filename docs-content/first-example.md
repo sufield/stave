@@ -38,24 +38,22 @@ References:
 | Before | `Principal: "*"` allows `s3:GetObject` | All four settings **off** | Anyone can read objects |
 | After  | Principal restricted to a named IAM role | All four settings **on** | Public access blocked |
 
-## Step 1: Get the Bad Bucket Policy from AWS CLI
+## Step 1: Simulate the AWS API Responses
 
-The AWS CLI command to retrieve a bucket policy is:
+In production, an extractor calls `aws s3api get-bucket-policy` to
+retrieve the bucket policy. For this walkthrough we use `cat` so you
+can run every step without AWS credentials.
+
+The bucket policy grants `s3:GetObject` to `Principal: "*"` — anyone
+on the internet can read objects:
 
 ```bash
-aws s3api get-bucket-policy --bucket company-docs
-```
-
-AWS CLI returns the policy as an escaped JSON string inside a `Policy` field:
-
-```json
+cat > policy.json <<'EOF'
 {
   "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::company-docs/*\"}]}"
 }
+EOF
 ```
-
-The inner policy document is what matters. `Principal: "*"` means anyone on the
-internet can read objects in this bucket.
 
 ## Step 2: Extract into a Stave Observation with jq
 
@@ -63,19 +61,21 @@ Stave evaluates **observations** — JSON snapshots of cloud resource state that
 conform to the `obs.v0.1` schema. Each observation file captures the state at
 one point in time.
 
-The `jq` command below transforms the AWS CLI output into a valid Stave
-observation. It extracts the policy document and maps it to the fields that
-Stave's built-in S3 controls check.
+The `jq` command below transforms the simulated API output into a valid Stave
+observation. It extracts the policy document and derives whether the bucket
+allows public read access.
 
 ```bash
-aws s3api get-bucket-policy --bucket company-docs | jq '{
+jq -n \
+  --argjson policy "$(cat policy.json)" \
+'{
   schema_version: "obs.v0.1",
   generated_by: {
     source_type: "aws-s3-snapshot",
     tool: "aws-cli",
     tool_version: "2.x"
   },
-  captured_at: (now | strftime("%Y-%m-%dT%H:%M:%SZ")),
+  captured_at: "2026-03-20T00:00:00Z",
   assets: [
     {
       id: "company-docs",
@@ -87,28 +87,39 @@ aws s3api get-bucket-policy --bucket company-docs | jq '{
           name: "company-docs",
           access: {
             public_read: (
-              (.Policy | fromjson).Statement
+              ($policy.Policy | fromjson).Statement
               | any(.Principal == "*" and (.Action == "s3:GetObject" or .Action == "s3:*"))
             )
-          },
-          controls: {
-            public_access_fully_blocked: false
           }
         }
       }
     }
   ]
-}' > observations/bad-snapshot.json
+}'
 ```
 
-The observation only includes the fields these two controls check:
-- `properties.storage.access.public_read` — checked by `CTL.S3.PUBLIC.001`
-- `properties.storage.kind` + `properties.storage.controls.public_access_fully_blocked` — checked by `CTL.S3.CONTROLS.001`
+In production you would replace `cat policy.json` with a real AWS CLI call:
+
+```bash
+POLICY=$(aws s3api get-bucket-policy --bucket company-docs 2>/dev/null \
+  || echo '{"Policy":"{}"}')
+```
+
+The observation only includes the field that `CTL.S3.PUBLIC.001` checks:
+`properties.storage.access.public_read`.
 
 You do not need to populate fields that no control in your evaluation uses.
-Later articles add more fields as they introduce more controls.
 
-## Step 3: Create the Observation Files
+## Step 3: Initialize the Project
+
+Before running evaluations, initialize a Stave project. This creates the
+`controls/s3/` directory with the built-in S3 control definitions:
+
+```bash
+stave init --profile aws-s3
+```
+
+## Step 4: Create the Observation Files
 
 For a complete evaluation, Stave needs at least two snapshots (two points in
 time) to calculate how long a bucket has been in an unsafe state.
@@ -135,9 +146,6 @@ Save the **bad** snapshot as `observations/2026-03-20T000000Z.json`:
           "name": "company-docs",
           "access": {
             "public_read": true
-          },
-          "controls": {
-            "public_access_fully_blocked": false
           }
         }
       }
@@ -149,7 +157,7 @@ Save the **bad** snapshot as `observations/2026-03-20T000000Z.json`:
 Save a second snapshot one day later as `observations/2026-03-21T000000Z.json`
 with the same content (the bucket is still public).
 
-## Step 4: Run Stave
+## Step 5: Run Stave
 
 ```bash
 stave apply \
@@ -158,16 +166,15 @@ stave apply \
   --now 2026-03-21T12:00:00Z
 ```
 
-Stave evaluates all built-in S3 controls against both snapshots. Because the
+Stave evaluates the built-in S3 controls against both snapshots. Because the
 bucket has been publicly readable for over 12 hours (the `--max-unsafe`
-threshold), Stave reports violations:
+threshold), Stave reports a violation:
 
 - **CTL.S3.PUBLIC.001** (critical): S3 bucket allows public read access
-- **CTL.S3.CONTROLS.001** (high): Public Access Block is not fully enabled
 
 The exit code is **3** (violations found).
 
-## Step 5: Fix and Verify Remediation
+## Step 6: Fix and Verify Remediation
 
 After fixing the bucket (enabling Block Public Access and removing the
 `Principal: "*"` policy), capture a new snapshot.
@@ -194,9 +201,6 @@ Save the **good** snapshot in a separate directory, `observations-after/2026-03-
           "name": "company-docs",
           "access": {
             "public_read": false
-          },
-          "controls": {
-            "public_access_fully_blocked": true
           }
         }
       }
@@ -205,24 +209,8 @@ Save the **good** snapshot in a separate directory, `observations-after/2026-03-
 }
 ```
 
-Use `stave verify` to compare the before and after states. This command
-evaluates the same controls against both observation sets and reports which
-findings were resolved, which remain, and which are new:
-
-```bash
-stave verify \
-  --before observations \
-  --after observations-after \
-  --max-unsafe 12h \
-  --now 2026-03-22T12:00:00Z
-```
-
-`stave verify` shows that the public-read and Block Public Access findings
-from the before set are **resolved** in the after set. No new findings were
-introduced.
-
-You can also re-run `stave apply` against only the after observations to
-confirm a clean result:
+Re-run `stave apply` against the fixed observations to confirm the violation
+is resolved:
 
 ```bash
 stave apply \
@@ -232,6 +220,11 @@ stave apply \
 ```
 
 Exit code is **0** (no violations).
+
+For a before/after comparison, `stave verify` can show which findings were
+resolved, which remain, and which are new. It requires control definitions
+on disk (not just the built-in pack), so it is covered separately in the
+[verify guide](verify-guide.md).
 
 ## apply vs verify
 
@@ -261,24 +254,23 @@ the change. `stave verify` makes that relationship explicit.
 | Use case | Detection, CI gates | Remediation confirmation |
 | Typical workflow | Run regularly | Run once after a fix |
 
-## What the Controls Check
+## What the Control Checks
 
 | Control | Severity | What It Checks | Field |
 |---------|----------|---------------|-------|
 | CTL.S3.PUBLIC.001 | Critical | Bucket allows anonymous read | `properties.storage.access.public_read` |
-| CTL.S3.CONTROLS.001 | High | Block Public Access not fully enabled | `properties.storage.controls.public_access_fully_blocked` |
 
 ## What Changed Between Before and After
 
 | Field | Before (bad) | After (good) |
 |-------|-------------|-------------|
 | `storage.access.public_read` | `true` | `false` |
-| `storage.controls.public_access_fully_blocked` | `false` | `true` |
 
 ## Summary
 
-1. **Get** the bucket policy with `aws s3api get-bucket-policy`
+1. **Simulate** the AWS API responses (or call the real AWS CLI)
 2. **Extract** into `obs.v0.1` format with `jq`
-3. **Save** at least two snapshots (two points in time)
-4. **Run** `stave apply` to detect violations
-5. **Fix** the bucket, capture a new snapshot, and run `stave verify --before ... --after ...` to confirm remediation
+3. **Initialize** the project with `stave init --profile aws-s3`
+4. **Save** at least two snapshots (two points in time)
+5. **Run** `stave apply` to detect violations
+6. **Fix** the bucket, capture a new snapshot, and re-run `stave apply` to confirm remediation
