@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -54,7 +54,7 @@ type DiagnosticContext struct {
 type Config struct {
 	EvalFile string
 	AssetID  string
-	Format   ui.OutputFormat
+	Format   appcontracts.OutputFormat
 	Quiet    bool
 	Stdout   io.Writer
 	Stderr   io.Writer

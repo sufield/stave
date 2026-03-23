@@ -62,8 +62,8 @@ Examples:
 			cleanObsRoot := fsutil.CleanUserPath(obsRoot)
 			cleanArchiveDir := fsutil.CleanUserPath(archiveDir)
 
-			// Load files via Provider
-			files, err := listPlanFiles(ctx, p, cleanObsRoot, cleanArchiveDir)
+			// Load files via factory
+			files, err := listPlanFiles(ctx, p.NewSnapshotRepo, cleanObsRoot, cleanArchiveDir)
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,4 @@
-// Package json provides JSON-based loading functionality for observation snapshots.
-// It handles parsing and validation of snapshot JSON files used in safety evaluations,
-// using JSON Schema validation for contract enforcement.
+// Package observations loads and validates observation snapshot files.
 package observations
 
 import (

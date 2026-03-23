@@ -56,6 +56,12 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	))
 }
 
+// Prepare resolves config defaults. Called from PreRunE.
+func (o *diagnoseOptions) Prepare(cmd *cobra.Command) error {
+	o.resolveConfigDefaults(cmd)
+	return nil
+}
+
 // resolveConfigDefaults fills flag values from project config when the user
 // did not set them explicitly on the command line.
 func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {

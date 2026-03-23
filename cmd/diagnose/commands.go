@@ -80,13 +80,15 @@ Examples:
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			opts.resolveConfigDefaults(cmd)
 			cfg, err := opts.ToConfig(cmd)
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(p, cfg.Clock)
+			runner := NewRunner(p.NewObservationRepo, p.NewControlRepo, cfg.Clock)
 			return runner.Run(cmd.Context(), cfg)
 		},
 	}

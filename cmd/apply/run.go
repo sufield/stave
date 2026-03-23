@@ -14,6 +14,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // runApply is the single dispatch function called by the thin RunE wrapper.
@@ -51,7 +52,15 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if cfg.Mode == runModeProfile {
 		rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
 		rt.Quiet = cfg.Profile.Quiet
-		runner := NewRunner(p, cfg.profileClock, rt)
+		runner := NewRunner(
+			p.NewCELEvaluator,
+			func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+				return compose.LoadControls(ctx, p, dir)
+			},
+			p.NewFindingWriter,
+			cfg.profileClock,
+			rt,
+		)
 		return runner.Run(cs.Ctx, *cfg.Profile)
 	}
 

@@ -41,9 +41,15 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.AssetID, "asset-id", "", "Filter by asset ID substring")
 }
 
+// Prepare normalizes paths. Called from PreRunE.
+func (o *Options) Prepare(_ *cobra.Command) error {
+	o.ObservationsDir = fsutil.CleanUserPath(o.ObservationsDir)
+	return nil
+}
+
 // ToConfig converts raw CLI options into a validated logic configuration.
 func (o *Options) ToConfig(cmd *cobra.Command) (Config, error) {
-	obsDir := fsutil.CleanUserPath(o.ObservationsDir)
+	obsDir := o.ObservationsDir
 	format, err := compose.ResolveFormatValue(cmd, o.Format)
 	if err != nil {
 		return Config{}, err

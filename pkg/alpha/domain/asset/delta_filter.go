@@ -3,7 +3,6 @@ package asset
 import (
 	"strings"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
@@ -36,11 +35,15 @@ func filterAssetDiffs(changes []AssetDiff, opt FilterOptions) []AssetDiff {
 	assetTypes := buildAssetTypeSet(opt.AssetTypes)
 	assetID := strings.TrimSpace(opt.AssetID)
 
-	return lo.Filter(changes, func(change AssetDiff, _ int) bool {
-		return matchesChangeType(change.ChangeType, changeTypes) &&
+	result := make([]AssetDiff, 0, len(changes))
+	for _, change := range changes {
+		if matchesChangeType(change.ChangeType, changeTypes) &&
 			matchesAssetType(change, assetTypes) &&
-			matchesID(change, assetID)
-	})
+			matchesID(change, assetID) {
+			result = append(result, change)
+		}
+	}
+	return result
 }
 
 func buildChangeTypeSet(types []ChangeType) map[ChangeType]struct{} {

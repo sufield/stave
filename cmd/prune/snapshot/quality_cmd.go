@@ -73,10 +73,10 @@ Examples:
 				return err
 			}
 
-			// Load snapshots via Provider
+			// Load snapshots via factory
 			ctx := compose.CommandContext(cmd)
 			cleanObsDir := fsutil.CleanUserPath(obsDir)
-			snapshots, err := compose.LoadSnapshots(ctx, p, cleanObsDir)
+			snapshots, err := p.LoadSnapshots(ctx, cleanObsDir)
 			if err != nil {
 				return fmt.Errorf("loading snapshots from %q: %w", cleanObsDir, err)
 			}

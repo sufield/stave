@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/predicate"
@@ -49,7 +49,7 @@ func TestRunnerRun_Text(t *testing.T) {
 		Snapshot:        testSnapshot(),
 		AssetID:         "aws:s3:::test-bucket",
 		ObservationPath: "test.json",
-		Format:          ui.OutputFormatText,
+		Format:          appcontracts.FormatText,
 		Stdout:          &buf,
 	})
 	if err != nil {
@@ -68,7 +68,7 @@ func TestRunnerRun_JSON(t *testing.T) {
 		Snapshot:        testSnapshot(),
 		AssetID:         "aws:s3:::test-bucket",
 		ObservationPath: "test.json",
-		Format:          ui.OutputFormatJSON,
+		Format:          appcontracts.FormatJSON,
 		Stdout:          &buf,
 	})
 	if err != nil {

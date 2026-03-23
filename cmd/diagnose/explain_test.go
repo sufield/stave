@@ -38,7 +38,8 @@ unsafe_predicate:
 	}
 
 	var buf bytes.Buffer
-	explainer := NewExplainer(compose.NewDefaultProvider())
+	p := compose.NewDefaultProvider()
+	explainer := NewExplainer(p.NewControlRepo)
 	err := explainer.Run(context.Background(), ExplainRequest{
 		ControlID:   "CTL.S3.PUBLIC.001",
 		ControlsDir: ctlDir,
@@ -68,7 +69,8 @@ func TestExplainNotFound(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	explainer := NewExplainer(compose.NewDefaultProvider())
+	p := compose.NewDefaultProvider()
+	explainer := NewExplainer(p.NewControlRepo)
 	err := explainer.Run(context.Background(), ExplainRequest{
 		ControlID:   "CTL.MISSING.001",
 		ControlsDir: ctlDir,

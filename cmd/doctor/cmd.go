@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/metadata"
@@ -120,7 +119,9 @@ func (r *Runner) reportText(w io.Writer, checks []doctor.Check) error {
 
 // NewCmd constructs the doctor command.
 func NewCmd() *cobra.Command {
-	var format string
+	opts := &options{
+		Format: "text",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "doctor",
@@ -148,8 +149,11 @@ Examples:
   stave doctor
   stave doctor --format json` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmtValue, err := compose.ResolveFormatValue(cmd, format)
+			fmtValue, err := opts.resolveFormat(cmd)
 			if err != nil {
 				return err
 			}
@@ -164,7 +168,7 @@ Examples:
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
+	opts.BindFlags(cmd)
 
 	return cmd
 }

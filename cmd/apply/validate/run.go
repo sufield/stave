@@ -15,7 +15,7 @@ import (
 )
 
 // runValidate is the primary entry point for the cobra command.
-func runValidate(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *options) error {
+func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime, opts *options) error {
 	// 1. Prepare environment (git audit, verbose logging)
 	if err := opts.prepareAndLogEnvironment(cmd); err != nil {
 		return err
@@ -50,10 +50,10 @@ func runValidate(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, opts *
 		return runValidateSingleFile(os.Stdin, rep, opts)
 	}
 
-	return runValidateProject(cmd, p, rt, rep, opts)
+	return runValidateProject(cmd, newObsRepo, newCtlRepo, newCELEvaluator, rt, rep, opts)
 }
 
-func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime, rep *Reporter, opts *options) error {
+func runValidateProject(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime, rep *Reporter, opts *options) error {
 	// Prepare parameters (MaxUnsafe, Time, etc)
 	params := opts.parseParams()
 	if len(params.issues) > 0 {
@@ -67,7 +67,7 @@ func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime,
 
 	// Start progress UI
 	done := rt.BeginProgress("validate artifacts")
-	result, err := executeValidateRun(cmd, p, params, opts)
+	result, err := executeValidateRun(cmd, newObsRepo, newCtlRepo, newCELEvaluator, params, opts)
 	done()
 
 	if err != nil {
@@ -94,17 +94,17 @@ func runValidateProject(cmd *cobra.Command, p *compose.Provider, rt *ui.Runtime,
 	return exitErr
 }
 
-func executeValidateRun(cmd *cobra.Command, p *compose.Provider, params validateParams, opts *options) (*appvalidation.ValidationResult, error) {
+func executeValidateRun(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, params validateParams, opts *options) (*appvalidation.ValidationResult, error) {
 	// Setup Repositories
-	obsLoader, err := p.NewObservationRepo()
+	obsLoader, err := newObsRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init observation repository: %w", err)
 	}
-	ctlLoader, err := p.NewControlRepo()
+	ctlLoader, err := newCtlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}
-	celEval, err := p.NewCELEvaluator()
+	celEval, err := newCELEvaluator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init CEL evaluator: %w", err)
 	}

@@ -51,21 +51,28 @@ type Config struct {
 	Sanitizer       kernel.Sanitizer
 }
 
+// ControlLoaderFunc loads controls from a directory.
+type ControlLoaderFunc func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
+
 // Runner handles the execution of the profile apply logic.
 type Runner struct {
-	Clock    ports.Clock
-	Hasher   ports.Digester
-	UI       *ui.Runtime
-	Provider *compose.Provider
+	Clock            ports.Clock
+	Hasher           ports.Digester
+	UI               *ui.Runtime
+	NewCELEvaluator  compose.CELEvaluatorFactory
+	LoadControls     ControlLoaderFunc
+	newFindingWriter compose.FindingWriterFactory
 }
 
 // NewRunner initializes a runner with injected dependencies.
-func NewRunner(p *compose.Provider, clock ports.Clock, rt *ui.Runtime) *Runner {
+func NewRunner(newCELEvaluator compose.CELEvaluatorFactory, loadControls ControlLoaderFunc, newFindingWriter compose.FindingWriterFactory, clock ports.Clock, rt *ui.Runtime) *Runner {
 	return &Runner{
-		Clock:    clock,
-		Hasher:   crypto.NewHasher(),
-		UI:       rt,
-		Provider: p,
+		Clock:            clock,
+		Hasher:           crypto.NewHasher(),
+		UI:               rt,
+		NewCELEvaluator:  newCELEvaluator,
+		LoadControls:     loadControls,
+		newFindingWriter: newFindingWriter,
 	}
 }
 
@@ -90,7 +97,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("load controls: %w", err)
 	}
 
-	celEval, err := r.Provider.NewCELEvaluator()
+	celEval, err := r.NewCELEvaluator()
 	if err != nil {
 		return fmt.Errorf("init CEL evaluator: %w", err)
 	}
@@ -139,7 +146,7 @@ func validateInput(path string) error {
 func (r *Runner) loadControls(ctx context.Context) (string, []policy.ControlDefinition, error) {
 	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
 
-	controls, err := compose.LoadControls(ctx, r.Provider, ctlDir)
+	controls, err := r.LoadControls(ctx, ctlDir)
 	if err != nil {
 		return "", nil, err
 	}

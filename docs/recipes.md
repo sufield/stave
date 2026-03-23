@@ -219,28 +219,15 @@ stave apply \
 
 ## 7. Custom Output with --template
 
-**When to use:** You want to extract specific fields from evaluation, diagnose, or validate output without jq.
+**When to use:** You want to extract specific fields from diagnose or validate output without jq.
 
-**One-line violation count:**
-
-```bash
-stave apply \
-  --controls controls/s3 \
-  --observations observations/ \
-  --max-unsafe 168h \
-  --now 2026-02-22T00:00:00Z \
-  --template '{{.Summary.Violations}} violations across {{.Summary.AssetsEvaluated}} assets'
-```
-
-**CSV export of findings:**
+**Validate summary as JSON:**
 
 ```bash
-stave apply \
+stave validate \
   --controls controls/s3 \
   --observations observations/ \
-  --max-unsafe 168h \
-  --now 2026-02-22T00:00:00Z \
-  --template '{{range .Violations}}{{.ControlID}},{{.AssetID}}{{"\n"}}{{end}}'
+  --template '{{json .Summary}}'
 ```
 
 **Diagnose summary:**

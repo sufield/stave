@@ -73,9 +73,9 @@ func (a *qualityAssessor) checkCount() {
 		"TOO_FEW_SNAPSHOTS",
 		severityError,
 		fmt.Sprintf("Need at least %d snapshots, found %d.", params.MinSnapshots, snapshotCount),
-		map[string]any{
-			"min_snapshots": params.MinSnapshots,
-			"actual":        snapshotCount,
+		&issueEvidence{
+			MinSnapshots: new(params.MinSnapshots),
+			Actual:       new(snapshotCount),
 		},
 	)
 }
@@ -92,10 +92,10 @@ func (a *qualityAssessor) checkStaleness() {
 		"LATEST_SNAPSHOT_STALE",
 		severityError,
 		"Latest snapshot is older than allowed staleness threshold.",
-		map[string]any{
-			"latest_captured_at": latest.Format(time.RFC3339),
-			"age":                timeutil.FormatDurationHuman(age),
-			"max_staleness":      timeutil.FormatDurationHuman(params.MaxStaleness),
+		&issueEvidence{
+			LatestCapturedAt: latest.Format(time.RFC3339),
+			Age:              timeutil.FormatDurationHuman(age),
+			MaxStaleness:     timeutil.FormatDurationHuman(params.MaxStaleness),
 		},
 	)
 }
@@ -113,9 +113,9 @@ func (a *qualityAssessor) checkGap() {
 		"SNAPSHOT_GAP_TOO_LARGE",
 		severityWarning,
 		"Gap between snapshots exceeds recommended maximum.",
-		map[string]any{
-			"max_gap_observed": timeutil.FormatDurationHuman(maxObservedGap),
-			"max_gap_allowed":  timeutil.FormatDurationHuman(params.MaxGap),
+		&issueEvidence{
+			MaxGapObserved: timeutil.FormatDurationHuman(maxObservedGap),
+			MaxGapAllowed:  timeutil.FormatDurationHuman(params.MaxGap),
 		},
 	)
 }
@@ -135,11 +135,11 @@ func (a *qualityAssessor) checkRequiredAssets() {
 		"MISSING_REQUIRED_RESOURCES",
 		severityError,
 		"Required resources are missing in latest snapshot.",
-		map[string]any{"missing_resources": missing},
+		&issueEvidence{MissingResources: missing},
 	)
 }
 
-func (r *qualityReport) addIssue(code string, severity qualitySeverity, message string, evidence map[string]any) {
+func (r *qualityReport) addIssue(code string, severity qualitySeverity, message string, evidence *issueEvidence) {
 	if r == nil {
 		return
 	}

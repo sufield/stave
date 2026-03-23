@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -76,7 +75,7 @@ func fromFindings(fs []remediation.Finding) []FindingDTO {
 	if fs != nil && len(fs) == 0 {
 		return []FindingDTO{}
 	}
-	return lo.Map(fs, func(f remediation.Finding, _ int) FindingDTO { return FromFinding(f) })
+	return mapSlice(fs, func(f remediation.Finding) FindingDTO { return FromFinding(f) })
 }
 
 func fromEvidence(e evaluation.Evidence) EvidenceDTO {
@@ -94,11 +93,11 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 	}
 
 	if len(e.Misconfigurations) > 0 {
-		dto.Misconfigurations = lo.Map(e.Misconfigurations, func(m policy.Misconfiguration, _ int) MisconfigurationDTO { return fromMisconfiguration(m) })
+		dto.Misconfigurations = mapSlice(e.Misconfigurations, func(m policy.Misconfiguration) MisconfigurationDTO { return fromMisconfiguration(m) })
 	}
 
 	if len(e.RootCauses) > 0 {
-		dto.RootCauses = lo.Map(e.RootCauses, func(c evaluation.RootCause, _ int) string { return c.String() })
+		dto.RootCauses = mapSlice(e.RootCauses, func(c evaluation.RootCause) string { return c.String() })
 	}
 
 	if e.SourceEvidence != nil {
@@ -139,7 +138,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 		ExpectedEffect: p.ExpectedEffect,
 	}
 	if len(p.Actions) > 0 {
-		dto.Actions = lo.Map(p.Actions, func(a evaluation.RemediationAction, _ int) RemediationActionDTO { return fromRemediationAction(a) })
+		dto.Actions = mapSlice(p.Actions, func(a evaluation.RemediationAction) RemediationActionDTO { return fromRemediationAction(a) })
 	}
 	return dto
 }
@@ -171,8 +170,12 @@ func fromInputHashes(h *evaluation.InputHashes) *InputHashesDTO {
 	if h == nil {
 		return nil
 	}
+	files := make(map[string]kernel.Digest, len(h.Files))
+	for k, v := range h.Files {
+		files[string(k)] = v
+	}
 	return &InputHashesDTO{
-		Files:   lo.MapKeys(h.Files, func(_ kernel.Digest, k evaluation.FilePath) string { return string(k) }),
+		Files:   files,
 		Overall: h.Overall,
 	}
 }
@@ -189,7 +192,7 @@ func fromExceptedFindings(fs []evaluation.ExceptedFinding) []ExceptedFindingDTO 
 	if len(fs) == 0 {
 		return nil
 	}
-	return lo.Map(fs, func(f evaluation.ExceptedFinding, _ int) ExceptedFindingDTO {
+	return mapSlice(fs, func(f evaluation.ExceptedFinding) ExceptedFindingDTO {
 		return ExceptedFindingDTO{
 			ControlID: f.ControlID,
 			AssetID:   f.AssetID,
@@ -203,7 +206,7 @@ func fromRemediationGroups(gs []remediation.Group) []RemediationGroupDTO {
 	if len(gs) == 0 {
 		return nil
 	}
-	return lo.Map(gs, func(g remediation.Group, _ int) RemediationGroupDTO {
+	return mapSlice(gs, func(g remediation.Group) RemediationGroupDTO {
 		return RemediationGroupDTO{
 			AssetID:              g.AssetID,
 			AssetType:            g.AssetType,
@@ -218,7 +221,7 @@ func fromSkippedControls(cs []evaluation.SkippedControl) []SkippedControlDTO {
 	if len(cs) == 0 {
 		return nil
 	}
-	return lo.Map(cs, func(c evaluation.SkippedControl, _ int) SkippedControlDTO {
+	return mapSlice(cs, func(c evaluation.SkippedControl) SkippedControlDTO {
 		return SkippedControlDTO{
 			ControlID:   c.ControlID,
 			ControlName: c.ControlName,
@@ -231,13 +234,24 @@ func fromExemptedAssets(as []asset.ExemptedAsset) []ExemptedAssetDTO {
 	if len(as) == 0 {
 		return nil
 	}
-	return lo.Map(as, func(a asset.ExemptedAsset, _ int) ExemptedAssetDTO {
+	return mapSlice(as, func(a asset.ExemptedAsset) ExemptedAssetDTO {
 		return ExemptedAssetDTO{
 			AssetID: a.ID,
 			Pattern: a.Pattern,
 			Reason:  a.Reason,
 		}
 	})
+}
+
+func mapSlice[T, U any](s []T, f func(T) U) []U {
+	if s == nil {
+		return nil
+	}
+	out := make([]U, len(s))
+	for i, v := range s {
+		out[i] = f(v)
+	}
+	return out
 }
 
 func fromExtensions(e *evaluation.Extensions) *ExtensionsDTO {

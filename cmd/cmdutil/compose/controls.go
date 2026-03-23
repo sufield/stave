@@ -46,20 +46,3 @@ func LoadControls(ctx context.Context, p *Provider, dir string) ([]policy.Contro
 	}
 	return l.LoadControls(ctx, dir)
 }
-
-// LoadControlByID retrieves a single control by its ID.
-// Note: If calling this multiple times, prefer using LoadMappedControls for efficiency.
-func LoadControlByID(ctx context.Context, p *Provider, dir, id string) (policy.ControlDefinition, error) {
-	controls, err := LoadControls(ctx, p, dir)
-	if err != nil {
-		return policy.ControlDefinition{}, err
-	}
-
-	for _, c := range controls {
-		if c.ID.String() == id {
-			return c, nil
-		}
-	}
-
-	return policy.ControlDefinition{}, fmt.Errorf("%w: %q in %s", ErrControlNotFound, id, dir)
-}

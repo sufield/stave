@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
@@ -165,13 +164,15 @@ func groupFilesByTier(
 		resolver = func(_ string, _ []retention.MappingRule, fallback string) string { return fallback }
 	}
 	trimmedDefault := strings.TrimSpace(defaultTier)
-	return lo.GroupBy(files, func(sf File) string {
+	groups := make(map[string][]File, len(files))
+	for _, sf := range files {
 		tier := strings.TrimSpace(resolver(sf.RelPath, rules, defaultTier))
 		if tier == "" {
-			return trimmedDefault
+			tier = trimmedDefault
 		}
-		return tier
-	})
+		groups[tier] = append(groups[tier], sf)
+	}
+	return groups
 }
 
 func sortedTierNames(byTier map[string][]File) []string {

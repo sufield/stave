@@ -15,7 +15,7 @@ import (
 )
 
 func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
-	marshaler, err := r.Provider.NewFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
+	marshaler, err := r.newFindingWriter(cfg.OutputFormat, cfg.IsJSONMode)
 	if err != nil {
 		return err
 	}

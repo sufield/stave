@@ -7,28 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
-
-var validate = validator.New()
-
-func init() {
-	_ = validate.RegisterValidation("stave_duration", func(fl validator.FieldLevel) bool {
-		_, err := kernel.ParseDuration(fl.Field().String())
-		return err == nil
-	})
-	_ = validate.RegisterValidation("stave_policy", func(fl validator.FieldLevel) bool {
-		_, err := ParseGatePolicy(fl.Field().String())
-		return err == nil
-	})
-	_ = validate.RegisterValidation("stave_cadence", func(fl validator.FieldLevel) bool {
-		v := fl.Field().String()
-		return v == "daily" || v == "hourly"
-	})
-}
 
 // ConfigKeys is the set of top-level config keys exposed to `stave config`.
 // Derived automatically from ProjectConfig fields that have a yaml tag and
@@ -126,11 +107,69 @@ func SetConfigValue(cfg *ProjectConfig, key, value string) error {
 	// Validate only the changed field
 	fieldName := structFieldNameByYAMLTag(cfg, key)
 	if fieldName != "" {
-		if err := validate.StructPartial(cfg, fieldName); err != nil {
+		if err := validateField(cfg, fieldName); err != nil {
 			// Revert on validation failure
 			field.Set(reflect.Zero(field.Type()))
 			return fmt.Errorf("invalid value %q for %s: %w", value, key, err)
 		}
+	}
+	return nil
+}
+
+func validateField(cfg *ProjectConfig, fieldName string) error {
+	switch fieldName {
+	case "MaxUnsafe":
+		return validateDuration(cfg.MaxUnsafe, "max_unsafe")
+	case "SnapshotRetention":
+		return validateDuration(cfg.SnapshotRetention, "snapshot_retention")
+	case "RetentionTier":
+		return validateNonEmpty(cfg.RetentionTier, "default_retention_tier")
+	case "CIFailurePolicy":
+		return validatePolicy(cfg.CIFailurePolicy)
+	case "CaptureCadence":
+		return validateCadence(cfg.CaptureCadence)
+	case "SnapshotFilenameTemplate":
+		return validateNonEmpty(cfg.SnapshotFilenameTemplate, "snapshot_filename_template")
+	}
+	return nil
+}
+
+func validateDuration(v, name string) error {
+	if v == "" {
+		return nil
+	}
+	if _, err := kernel.ParseDuration(v); err != nil {
+		return fmt.Errorf("invalid %s duration: %w", name, err)
+	}
+	return nil
+}
+
+func validatePolicy(v string) error {
+	if v == "" {
+		return nil
+	}
+	if _, err := ParseGatePolicy(v); err != nil {
+		return fmt.Errorf("invalid ci_failure_policy: %w", err)
+	}
+	return nil
+}
+
+func validateCadence(v string) error {
+	if v == "" {
+		return nil
+	}
+	if v != "daily" && v != "hourly" {
+		return fmt.Errorf("capture_cadence must be 'daily' or 'hourly', got %q", v)
+	}
+	return nil
+}
+
+func validateNonEmpty(v, name string) error {
+	if v == "" {
+		return nil
+	}
+	if strings.TrimSpace(v) == "" {
+		return fmt.Errorf("%s must not be blank", name)
 	}
 	return nil
 }

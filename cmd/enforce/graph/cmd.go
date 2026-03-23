@@ -1,11 +1,13 @@
 package graph
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 func NewCmd(p *compose.Provider) *cobra.Command {
@@ -21,12 +23,11 @@ func NewCmd(p *compose.Provider) *cobra.Command {
 }
 
 func newCoverageCmd(p *compose.Provider) *cobra.Command {
-	var (
-		ctlDir       string
-		obsDir       string
-		formatRaw    string
-		allowUnknown bool
-	)
+	opts := &coverageOptions{
+		ControlsDir: "controls/s3",
+		ObsDir:      "observations",
+		FormatRaw:   "dot",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "coverage",
@@ -54,22 +55,36 @@ Examples:
   stave graph coverage --controls ./controls --observations ./obs --format json | jq .
 
   # Sanitize asset identifiers
-  stave graph coverage --controls ./controls --observations ./obs --sanitize` + metadata.OfflineHelpSuffix,
+  stave graph coverage --controls ./controls --observations ./obs --sanitize
+
+Exit Codes:
+  0   - Coverage graph generated successfully
+  2   - Invalid input or configuration error
+  4   - Internal error
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			format, err := ParseFormat(formatRaw)
+			format, err := ParseFormat(opts.FormatRaw)
 			if err != nil {
 				return err
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner(p)
+			runner := NewRunner(
+				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
+					return compose.LoadControls(ctx, p, dir)
+				},
+				p.LoadSnapshots,
+			)
 
 			return runner.Run(cmd.Context(), Config{
-				ControlsDir:     fsutil.CleanUserPath(ctlDir),
-				ObservationsDir: fsutil.CleanUserPath(obsDir),
+				ControlsDir:     opts.ControlsDir,
+				ObservationsDir: opts.ObsDir,
 				Format:          format,
-				AllowUnknown:    allowUnknown,
+				AllowUnknown:    opts.AllowUnknown,
 				Sanitizer:       gf.GetSanitizer(),
 				Stdout:          cmd.OutOrStdout(),
 			})
@@ -78,12 +93,7 @@ Examples:
 		SilenceErrors: true,
 	}
 
-	f := cmd.Flags()
-	f.StringVarP(&ctlDir, "controls", "i", "controls/s3", "Path to control definitions directory")
-	f.StringVarP(&obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	f.StringVarP(&formatRaw, "format", "f", "dot", "Output format: dot or json")
-	f.BoolVar(&allowUnknown, "allow-unknown-input", allowUnknown, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
-
+	opts.BindFlags(cmd)
 	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("dot", "json"))
 
 	return cmd

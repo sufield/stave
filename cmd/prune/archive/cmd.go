@@ -4,24 +4,18 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	"github.com/sufield/stave/internal/metadata"
 )
 
 // NewCmd constructs the archive command.
 func NewCmd(p *compose.Provider) *cobra.Command {
-	var (
-		obsDir     string
-		archiveDir string
-		olderThan  string
-		tier       string
-		nowRaw     string
-		keepMin    int
-		dryRun     bool
-		formatFlag string
-	)
+	opts := &options{
+		ObsDir:     "observations",
+		ArchiveDir: "observations/archive",
+		KeepMin:    2,
+		FormatFlag: "text",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "archive",
@@ -42,29 +36,37 @@ Examples:
   stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 30d --force
 
   # Deterministic retention window
-  stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 14d --now 2026-01-20T00:00:00Z --dry-run` + metadata.OfflineHelpSuffix,
+  stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 14d --now 2026-01-20T00:00:00Z --dry-run
+
+Outputs:
+  stdout        Summary: "Archived N snapshot(s) to <dir>" (or dry-run preview)
+  stderr        Error messages (if any)
+
+Exit Codes:
+  0   - Archive completed successfully (or dry-run previewed)
+  2   - Invalid input or configuration error
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cmdutil.GetGlobalFlags(cmd)
 
-			ret, err := pruneretention.ResolveRetention(
-				pruneretention.RawRetentionOpts{OlderThan: olderThan, Tier: tier, NowRaw: nowRaw, FormatFlag: formatFlag},
-				cmdctx.EvaluatorFromCmd(cmd),
-				cmd.Flags().Changed("older-than"), cmd.Flags().Changed("retention-tier"), cmd.Flags().Changed("format"), gf.IsJSONMode(),
-			)
+			ret, err := opts.resolveRetention(cmd)
 			if err != nil {
 				return err
 			}
 
-			runner := &Runner{Provider: p}
+			runner := &Runner{NewSnapshotRepo: p.NewSnapshotRepo}
 			return runner.Run(cmd.Context(), Config{
-				ObservationsDir: obsDir,
-				ArchiveDir:      archiveDir,
+				ObservationsDir: opts.ObsDir,
+				ArchiveDir:      opts.ArchiveDir,
 				OlderThan:       ret.OlderThan,
 				RetentionTier:   ret.RetentionTier,
 				Now:             ret.Now,
-				KeepMin:         keepMin,
-				DryRun:          dryRun,
+				KeepMin:         opts.KeepMin,
+				DryRun:          opts.DryRun,
 				Force:           gf.Force,
 				Quiet:           gf.Quiet,
 				Format:          ret.Format,
@@ -76,16 +78,7 @@ Examples:
 		SilenceErrors: true,
 	}
 
-	f := cmd.Flags()
-	f.StringVarP(&obsDir, "observations", "o", "observations", "Path to active observation snapshots directory")
-	f.StringVar(&archiveDir, "archive-dir", "observations/archive", "Path to archive directory")
-	f.StringVar(&olderThan, "older-than", "", cmdutil.WithDynamicDefaultHelp("Archive snapshots older than this age (e.g., 14d, 720h)"))
-	f.StringVar(&tier, "retention-tier", "", cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
-	f.StringVar(&nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
-	f.IntVar(&keepMin, "keep-min", 2, "Minimum number of snapshots to keep in active observations")
-	f.BoolVar(&dryRun, "dry-run", false, "Preview planned file operations without applying them")
-	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	opts.BindFlags(cmd)
 
 	return cmd
 }

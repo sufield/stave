@@ -34,15 +34,15 @@ Examples:
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newControlsListCmd(p))
-	cmd.AddCommand(newControlsExplainCmd(p))
+	cmd.AddCommand(newControlsListCmd(p.NewControlRepo))
+	cmd.AddCommand(newControlsExplainCmd(p.NewControlRepo))
 	cmd.AddCommand(newControlsAliasesCmd())
 	cmd.AddCommand(newControlsAliasExplainCmd())
 
 	return cmd
 }
 
-func newControlsListCmd(p *compose.Provider) *cobra.Command {
+func newControlsListCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	cfg := catalog.ListConfig{}
 	var filterPatterns []string
 
@@ -62,7 +62,7 @@ Examples:
 			if cfg.ListPacks {
 				return runListPacks(stdout, cfg)
 			}
-			rows, err := listControlRows(cmd.Context(), p, cfg, filterPatterns)
+			rows, err := listControlRows(cmd.Context(), newCtlRepo, cfg, filterPatterns)
 			if err != nil {
 				return err
 			}
@@ -84,7 +84,7 @@ Examples:
 	return cmd
 }
 
-func listControlRows(ctx context.Context, p *compose.Provider, cfg catalog.ListConfig, filterPatterns []string) ([]catalog.ControlRow, error) {
+func listControlRows(ctx context.Context, newCtlRepo compose.CtlRepoFactory, cfg catalog.ListConfig, filterPatterns []string) ([]catalog.ControlRow, error) {
 	if cfg.UseBuiltIn {
 		registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded")
 
@@ -114,7 +114,7 @@ func listControlRows(ctx context.Context, p *compose.Provider, cfg catalog.ListC
 		return rows, nil
 	}
 
-	repo, err := p.NewControlRepo()
+	repo, err := newCtlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}
@@ -145,7 +145,7 @@ func runListPacks(w interface{ Write([]byte) (int, error) }, cfg catalog.ListCon
 	return nil
 }
 
-func newControlsExplainCmd(p *compose.Provider) *cobra.Command {
+func newControlsExplainCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	var controlsDir string
 
 	cmd := &cobra.Command{
@@ -159,7 +159,7 @@ Examples:
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls --format json` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			explainer := diagnose.NewExplainer(p)
+			explainer := diagnose.NewExplainer(newCtlRepo)
 			return explainer.Run(cmd.Context(), diagnose.ExplainRequest{
 				ControlID:   args[0],
 				ControlsDir: controlsDir,

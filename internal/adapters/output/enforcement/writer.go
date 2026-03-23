@@ -6,7 +6,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/samber/lo"
 	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -93,17 +92,22 @@ type FindingRef struct {
 // ExtractBucketTargets filters findings to S3 public-exposure controls,
 // deduplicates by asset ID, and returns sorted bucket targets.
 func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
-	targets := lo.FilterMap(findings, func(f FindingRef, _ int) (BucketTarget, bool) {
+	seen := make(map[string]struct{})
+	var targets []BucketTarget
+	for _, f := range findings {
 		if !strings.HasPrefix(string(f.ControlID), "CTL.S3.PUBLIC.") {
-			return BucketTarget{}, false
+			continue
 		}
 		assetID := strings.TrimSpace(f.AssetID.String())
 		if assetID == "" {
-			return BucketTarget{}, false
+			continue
 		}
-		return BucketTarget{AssetID: assetID, BucketName: s3.ParseS3Reference(assetID)}, true
-	})
-	targets = lo.UniqBy(targets, func(t BucketTarget) string { return t.AssetID })
+		if _, dup := seen[assetID]; dup {
+			continue
+		}
+		seen[assetID] = struct{}{}
+		targets = append(targets, BucketTarget{AssetID: assetID, BucketName: s3.ParseS3Reference(assetID)})
+	}
 	SortTargets(targets)
 	return targets
 }

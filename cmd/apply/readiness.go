@@ -93,7 +93,7 @@ func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Rea
 // It is invoked by apply --dry-run.
 func runDryRun(ctx context.Context, p *compose.Provider, cfg ReadinessConfig) error {
 	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
-		return applyvalidate.NewReadinessValidator(ctx, p, ctlDir, obsDir, sanitize, applyvalidate.PackConfigIssues)
+		return applyvalidate.NewReadinessValidator(ctx, p.NewObservationRepo, p.NewControlRepo, ctlDir, obsDir, sanitize, applyvalidate.PackConfigIssues)
 	}
 	runner := NewReadinessRunner(factory)
 	return runner.Execute(cfg)

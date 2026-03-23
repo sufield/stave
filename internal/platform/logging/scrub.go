@@ -23,7 +23,7 @@ func (c Config) Scrub(groups []string, a slog.Attr) slog.Attr {
 		}
 	}
 
-	if isSensitiveLogKey(groups, a.Key) {
+	if c.isSensitiveLogKey(groups, a.Key) {
 		return slog.String(a.Key, scrub.SanitizedValue)
 	}
 
@@ -40,12 +40,27 @@ func (c Config) sanitizeSource(a slog.Attr) slog.Attr {
 	return slog.Any(a.Key, &cp)
 }
 
-func isSensitiveLogKey(groups []string, key string) bool {
+// infraKeys are log attribute keys that carry infrastructure identifiers.
+// These are scrubbed only when SanitizeInfraKeys is enabled (--sanitize).
+var infraKeys = map[string]struct{}{
+	"asset":   {},
+	"control": {},
+	"bucket":  {},
+	"arn":     {},
+	"account": {},
+}
+
+func (c Config) isSensitiveLogKey(groups []string, key string) bool {
 	if key == "" {
 		return false
 	}
 	if isSensitiveKey(key) {
 		return true
+	}
+	if c.SanitizeInfraKeys {
+		if _, ok := infraKeys[key]; ok {
+			return true
+		}
 	}
 	return slices.ContainsFunc(groups, isSensitiveKey)
 }

@@ -52,15 +52,17 @@ func (c Config) IsDetailMode() bool {
 
 // Runner orchestrates the diagnostic analysis.
 type Runner struct {
-	Provider *compose.Provider
-	Clock    ports.Clock
+	NewObsRepo compose.ObsRepoFactory
+	NewCtlRepo compose.CtlRepoFactory
+	Clock      ports.Clock
 }
 
 // NewRunner initializes a runner with the required dependencies.
-func NewRunner(p *compose.Provider, clock ports.Clock) *Runner {
+func NewRunner(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, clock ports.Clock) *Runner {
 	return &Runner{
-		Provider: p,
-		Clock:    clock,
+		NewObsRepo: newObsRepo,
+		NewCtlRepo: newCtlRepo,
+		Clock:      clock,
 	}
 }
 
@@ -147,11 +149,11 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
-	obsLoader, err := r.Provider.NewObservationRepo()
+	obsLoader, err := r.NewObsRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	ctlLoader, err := r.Provider.NewControlRepo()
+	ctlLoader, err := r.NewCtlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create control loader: %w", err)
 	}

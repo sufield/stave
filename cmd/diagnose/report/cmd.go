@@ -83,20 +83,47 @@ func (r *Runner) Run(_ context.Context, req Request) error {
 
 // NewReportCmd constructs the report command.
 func NewReportCmd() *cobra.Command {
-	var (
-		inputFile    string
-		formatFlag   string
-		templateFile string
-	)
+	opts := &options{
+		Format: "text",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "report",
 		Short: "Generate a plain-text report from evaluation output",
-		Long:  `Report reads evaluation JSON and renders plaintext output.` + metadata.OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
+		Long: `Report reads evaluation JSON and renders a formatted summary of findings,
+controls evaluated, and asset coverage.
+
+Inputs:
+  --in, -i            Path to evaluation JSON file (required)
+  --format, -f        Output format: text or json (default: text)
+  --template-file     Path to custom Go template for text output
+
+Outputs:
+  stdout              Rendered report (text or JSON)
+  stderr              Error messages and git-dirty warnings (if any)
+
+Exit Codes:
+  0   - Report generated successfully
+  2   - Invalid input (missing file, bad format)
+  4   - Internal error
+  130 - Interrupted (SIGINT)
+
+Examples:
+  # Render text report from evaluation output
+  stave report --in output/evaluation.json
+
+  # JSON report for scripting
+  stave report --in output/evaluation.json --format json | jq .summary
+
+  # Use a custom template
+  stave report --in output/evaluation.json --template-file ./my-template.tmpl` + metadata.OfflineHelpSuffix,
+		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.Prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			flags := cmdutil.GetGlobalFlags(cmd)
-			fmtValue, err := compose.ResolveFormatValue(cmd, formatFlag)
+			fmtValue, err := opts.resolveFormat(cmd)
 			if err != nil {
 				return err
 			}
@@ -114,8 +141,8 @@ func NewReportCmd() *cobra.Command {
 			}
 
 			req := Request{
-				InputFile:    inputFile,
-				TemplateFile: templateFile,
+				InputFile:    opts.InputFile,
+				TemplateFile: opts.TemplateFile,
 				Format:       fmtValue,
 				Quiet:        flags.Quiet,
 				Stdout:       cmd.OutOrStdout(),
@@ -130,11 +157,7 @@ func NewReportCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&inputFile, "in", "i", "", "Path to evaluation JSON file (required)")
-	cmd.Flags().StringVarP(&formatFlag, "format", "f", "text", "Output format (text|json)")
-	cmd.Flags().StringVar(&templateFile, "template-file", "", "Path to custom Go template")
-	_ = cmd.MarkFlagRequired("in")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	opts.BindFlags(cmd)
 
 	return cmd
 }

@@ -1,3 +1,5 @@
+// Package gitinfo provides git repository inspection utilities for
+// detecting repo roots, reading HEAD commits, and checking dirty state.
 package gitinfo
 
 import (
@@ -13,6 +15,7 @@ func hasGit() bool {
 	return err == nil
 }
 
+// DetectRepoRoot returns the git repository root containing dir, or false if dir is not inside a git working tree.
 func DetectRepoRoot(dir string) (string, bool) {
 	if !hasGit() {
 		return "", false
@@ -30,6 +33,7 @@ func DetectRepoRoot(dir string) (string, bool) {
 	return root, true
 }
 
+// HeadCommit returns the commit hash of HEAD in the repository at repoRoot.
 func HeadCommit(repoRoot string) (string, error) {
 	if !hasGit() {
 		return "", nil
@@ -43,6 +47,7 @@ func HeadCommit(repoRoot string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
+// IsDirty reports whether any of the given paths have uncommitted changes in the repository at repoRoot.
 func IsDirty(repoRoot string, paths []string) (bool, []string, error) {
 	if !hasGit() {
 		return false, nil, nil
@@ -79,6 +84,7 @@ func IsDirty(repoRoot string, paths []string) (bool, []string, error) {
 	return len(list) > 0, list, nil
 }
 
+// InitRepo initializes a new git repository in dir.
 func InitRepo(dir string) error {
 	if !hasGit() {
 		return exec.ErrNotFound

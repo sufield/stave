@@ -27,12 +27,12 @@ type ExplainRequest struct {
 
 // Explainer analyzes a control and explains its predicate structure.
 type Explainer struct {
-	Provider *compose.Provider
+	NewCtlRepo compose.CtlRepoFactory
 }
 
-// NewExplainer creates an Explainer with the given provider.
-func NewExplainer(p *compose.Provider) *Explainer {
-	return &Explainer{Provider: p}
+// NewExplainer creates an Explainer with the given control repo factory.
+func NewExplainer(newCtlRepo compose.CtlRepoFactory) *Explainer {
+	return &Explainer{NewCtlRepo: newCtlRepo}
 }
 
 // Run executes the explain workflow.
@@ -42,7 +42,7 @@ func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
 		return &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
 	}
 
-	finder := &composeFinder{provider: e.Provider}
+	finder := &composeFinder{newCtlRepo: e.NewCtlRepo}
 	runner := &appexplain.Explainer{Finder: finder}
 	result, err := runner.Run(ctx, appexplain.ExplainInput{
 		ControlID:   req.ControlID,
@@ -58,18 +58,28 @@ func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
 	return text.WriteExplainText(req.Stdout, result)
 }
 
-// composeFinder adapts compose.LoadControlByID to the ControlFinder interface.
+// composeFinder implements the ControlFinder interface using a control repository factory.
 type composeFinder struct {
-	provider *compose.Provider
+	newCtlRepo compose.CtlRepoFactory
 }
 
 func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
-	ctl, err := compose.LoadControlByID(ctx, f.provider, dir, id)
+	repo, err := f.newCtlRepo()
 	if err != nil {
-		return policy.ControlDefinition{}, ui.WithNextCommand(err,
-			fmt.Sprintf("stave validate --controls %s", dir))
+		return policy.ControlDefinition{}, err
 	}
-	return ctl, nil
+	controls, err := repo.LoadControls(ctx, dir)
+	if err != nil {
+		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
+	}
+	for _, c := range controls {
+		if c.ID.String() == id {
+			return c, nil
+		}
+	}
+	return policy.ControlDefinition{}, ui.WithNextCommand(
+		fmt.Errorf("%w: %q in %s", compose.ErrControlNotFound, id, dir),
+		fmt.Sprintf("stave validate --controls %s", dir))
 }
 
 // NewExplainCmd constructs the explain command.
@@ -99,7 +109,7 @@ Examples:
 			if fmtErr != nil {
 				return fmtErr
 			}
-			explainer := NewExplainer(p)
+			explainer := NewExplainer(p.NewControlRepo)
 			return explainer.Run(cmd.Context(), ExplainRequest{
 				ControlID:   args[0],
 				ControlsDir: controlsDir,

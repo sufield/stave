@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
@@ -18,7 +18,7 @@ type QualityConfig struct {
 	MaxGap            time.Duration
 	RequiredResources []string
 	Strict            bool
-	Format            ui.OutputFormat
+	Format            appcontracts.OutputFormat
 	Quiet             bool
 	Stdout            io.Writer
 }
@@ -42,7 +42,7 @@ func (r *QualityRunner) Run(_ context.Context, cfg QualityConfig) error {
 		return err
 	}
 	if !report.Pass {
-		return ui.ErrViolationsFound
+		return appcontracts.ErrViolationsFound
 	}
 	return nil
 }

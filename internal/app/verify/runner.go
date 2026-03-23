@@ -8,7 +8,6 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	staveversion "github.com/sufield/stave/internal/version"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -22,6 +21,10 @@ type VerifyDeps struct {
 	LoadControls       func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 	NewObservationRepo func() (appcontracts.ObservationRepository, error)
 	WriteVerification  func(w io.Writer, v safetyenvelope.Verification) error
+
+	// BeginProgress starts a progress indicator with the given label and returns
+	// a stop function. If nil, progress reporting is silently skipped.
+	BeginProgress func(label string) func()
 }
 
 // VerifyRequest holds the fully-resolved parameters for a verify run.
@@ -41,8 +44,10 @@ type VerifyRequest struct {
 
 // RunVerify executes the before/after comparison workflow.
 func RunVerify(deps VerifyDeps, req VerifyRequest) error {
-	rt := ui.NewRuntime(req.Stdout, io.Discard)
-	rt.Quiet = req.Quiet
+	beginProgress := deps.BeginProgress
+	if beginProgress == nil {
+		beginProgress = func(string) func() { return func() {} }
+	}
 
 	// 1. Load controls
 	controls, err := loadControls(req.Ctx, deps.LoadControls, req.ControlsDir)
@@ -51,14 +56,14 @@ func RunVerify(deps VerifyDeps, req VerifyRequest) error {
 	}
 
 	// 2. Run evaluations
-	before, err := runStep(rt, "apply before observations", func() (evalResult, error) {
+	before, err := runStep(beginProgress, "apply before observations", func() (evalResult, error) {
 		return runEvaluation(deps, req, controls, req.BeforeDir)
 	})
 	if err != nil {
 		return fmt.Errorf("before evaluation: %w", err)
 	}
 
-	after, err := runStep(rt, "apply after observations", func() (evalResult, error) {
+	after, err := runStep(beginProgress, "apply after observations", func() (evalResult, error) {
 		return runEvaluation(deps, req, controls, req.AfterDir)
 	})
 	if err != nil {
@@ -84,7 +89,7 @@ func RunVerify(deps VerifyDeps, req VerifyRequest) error {
 		return fmt.Errorf("failed to write JSON output: %w", err)
 	}
 
-	return handleExit(rt, cmp)
+	return handleExit(cmp)
 }
 
 // --- Internal ---
@@ -128,21 +133,15 @@ func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.Control
 	return evalResult{result: res, snapshotCount: snaps}, nil
 }
 
-func handleExit(rt *ui.Runtime, outcome CompareResult) error {
+func handleExit(outcome CompareResult) error {
 	if outcome.RemainingCount == 0 && outcome.IntroducedCount == 0 {
 		return nil
 	}
-
-	rt.PrintNextSteps(
-		"Run `stave diagnose` against the after observations to investigate remaining violations.",
-		"Check `introduced` findings to ensure remediation didn't create new security gaps.",
-	)
-
-	return ui.ErrViolationsFound
+	return appcontracts.ErrViolationsFound
 }
 
-func runStep[T any](rt *ui.Runtime, label string, fn func() (T, error)) (T, error) {
-	done := rt.BeginProgress(label)
+func runStep[T any](beginProgress func(string) func(), label string, fn func() (T, error)) (T, error) {
+	done := beginProgress(label)
 	res, err := fn()
 	done()
 	return res, err

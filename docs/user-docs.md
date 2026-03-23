@@ -133,7 +133,7 @@ Use this table when you know your goal but want the fastest path to the right co
 | Debug why a specific control matched or didn't match an asset | `stave trace --control CTL.S3.PUBLIC.001 --observation obs/snap.json --asset-id my-bucket` | [`README.md`](../README.md) |
 | Generate a human-readable report from evaluation output | `stave report --in output/evaluation.json` | [`README.md`](../README.md) |
 | Analyze a bucket policy directly | `stave inspect policy --file policy.json` | [Command Reference](command-reference.md) |
-| Extract specific fields from evaluation output | `stave apply --template '{{.Summary.Violations}} violations'` | [`README.md`](../README.md) |
+| Extract specific fields from validation output | `stave validate --template '{{json .Summary}}'` | [`README.md`](../README.md) |
 | Create a shortcut for a frequently used command | `stave alias set ev "apply --controls controls/s3 --observations observations --max-unsafe 24h"` | [`README.md`](../README.md) |
 
 Need something not listed in this table?
@@ -250,14 +250,14 @@ For snapshot operations, use the lifecycle command set:
 ### Recommended Workflow
 
 ```
-validate → plan → apply → diagnose
-   ↓          ↓          ↓
- Inputs    Findings   Insights
-  OK?       Found?    Why?
+validate → apply → diagnose
+   ↓         ↓         ↓
+ Inputs   Findings   Insights
+  OK?      Found?     Why?
 ```
 
 1. **validate** - Run first to catch input errors early (malformed YAML, missing fields, timestamp issues)
-2. **apply** - Run to detect safety violations and produce findings
+2. **apply** - Run with `--dry-run` to check readiness, then without it to detect violations
 3. **diagnose** - Run when evaluation output differs from what you expected from your controls, snapshots, or prior runs
 4. **trace** - Run for clause-level detail on why a specific control matched or didn't match a single asset
 
@@ -613,7 +613,6 @@ stave apply [flags]
 | `--allow-unknown-input` | `false` | Allow observations with unknown source types |
 | `--integrity-manifest` | (none) | Verify loaded observation files against expected SHA-256 hashes in a manifest JSON |
 | `--integrity-public-key` | (none) | Verify signed manifest with Ed25519 public key (requires `--integrity-manifest`) |
-| `--template` | (none) | Go-style template string for custom output (bypasses --format) |
 | `--min-severity` | (none) | Only evaluate controls at or above this severity level |
 | `--control-id` | (none) | Evaluate only this specific control |
 | `--exclude-control-id` | (none) | Exclude specific controls (repeatable) |
@@ -1132,42 +1131,6 @@ stave generate observation > observations/template.json
 
 ---
 
-### plan
-
-Readiness gate before running `apply`. Checks prerequisites and input readiness.
-
-```bash
-stave plan [flags]
-```
-
-**Flags:**
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--controls` | `controls/s3` | Path to control definitions directory |
-| `--observations` | `observations` | Path to observation snapshots directory |
-| `--format` | `text` | Output format: `text` or `json` |
-| `--now` | (current time) | Override evaluation time |
-| `--max-unsafe` | `168h` | Maximum allowed unsafe duration |
-| `--quiet` | `false` | Suppress output (exit code only) |
-
-**Exit Codes:**
-
-| Code | Meaning |
-|------|---------|
-| 0 | Ready to apply |
-| 2 | Blockers found (missing inputs, schema issues) |
-
-**Examples:**
-
-```bash
-stave plan
-stave plan --controls ./controls --observations ./observations
-stave plan --format json
-```
-
----
-
 ### explain
 
 Shows what fields a control needs from observations, helping you understand predicate requirements.
@@ -1502,7 +1465,7 @@ Note: Also available as the `--version` global flag (`stave --version`).
 
 ### Output Templating (`--template`)
 
-The `apply`, `diagnose`, and `validate` commands accept a `--template` flag for custom output formatting. Templates bypass `--format` and render directly against the command's output struct.
+The `diagnose` and `validate` commands accept a `--template` flag for custom output formatting. Templates bypass `--format` and render directly against the command's output struct.
 
 **Supported syntax:**
 
@@ -1519,14 +1482,6 @@ Fields resolve by struct field name or JSON tag name.
 **Examples:**
 
 ```bash
-# Count violations
-stave apply --controls ./controls --observations ./obs \
-  --template '{{.Summary.Violations}} violations, {{.Summary.AssetsEvaluated}} assets'
-
-# CSV of violated control + asset
-stave apply --controls ./controls --observations ./obs \
-  --template '{{range .Violations}}{{.ControlID}},{{.AssetID}}{{"\n"}}{{end}}'
-
 # Diagnose summary line
 stave diagnose --controls ./controls --observations ./obs \
   --template '{{.Report.Summary.Snapshots}} snapshots, {{.Report.Summary.Diagnostics}} diagnostics'

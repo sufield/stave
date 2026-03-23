@@ -46,8 +46,8 @@ type CleanupRunInput struct {
 }
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
-func ListObservationSnapshotFiles(ctx context.Context, p *compose.Provider, observationsDir string) ([]appcontracts.SnapshotFile, error) {
-	loader, err := p.NewSnapshotRepo()
+func ListObservationSnapshotFiles(ctx context.Context, newRepo compose.SnapshotRepoFactory, observationsDir string) ([]appcontracts.SnapshotFile, error) {
+	loader, err := newRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}

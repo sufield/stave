@@ -36,13 +36,15 @@ type Config struct {
 
 // Runner orchestrates CI policy enforcement.
 type Runner struct {
-	Provider *compose.Provider
+	LoadAssets      compose.AssetLoaderFunc
+	NewCELEvaluator compose.CELEvaluatorFactory
 }
 
 // NewRunner initializes a gate runner with required dependencies.
-func NewRunner(p *compose.Provider) *Runner {
+func NewRunner(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *Runner {
 	return &Runner{
-		Provider: p,
+		LoadAssets:      loadAssets,
+		NewCELEvaluator: newCELEvaluator,
 	}
 }
 
@@ -156,11 +158,11 @@ func (r *Runner) runPolicyNew(cfg Config) (Result, error) {
 }
 
 func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, error) {
-	loaded, err := r.Provider.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
+	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
 		return Result{}, err
 	}
-	celEval, err := r.Provider.NewCELEvaluator()
+	celEval, err := r.NewCELEvaluator()
 	if err != nil {
 		return Result{}, fmt.Errorf("init CEL evaluator: %w", err)
 	}

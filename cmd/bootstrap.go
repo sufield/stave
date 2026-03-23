@@ -191,6 +191,7 @@ func (a *App) initLogger() error {
 	cfg.Timestamps = a.Flags.LogTimestamps
 	cfg.Timings = a.Flags.LogTimings
 	cfg.AllowSymlink = a.Flags.AllowSymlinkOut
+	cfg.SanitizeInfraKeys = a.Flags.Sanitize
 
 	lc, err := logging.NewLogger(cfg)
 	if err != nil {

@@ -11,6 +11,9 @@ import (
 )
 
 func TestVerifyOutputByteIdentical(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping: builds CLI binary and runs determinism check")
+	}
 	_, filename, _, _ := runtime.Caller(0)
 	projectRoot := filepath.Join(filepath.Dir(filename), "../../..")
 

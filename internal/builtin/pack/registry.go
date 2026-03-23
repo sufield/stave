@@ -12,7 +12,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/samber/lo"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -110,7 +109,11 @@ func (r *Registry) loadPacks(specs map[string]packSpec) error {
 
 // ListPacks returns all available packs in stable name order.
 func (r *Registry) ListPacks() []Pack {
-	return lo.Map(r.packNames, func(name string, _ int) Pack { return clonePack(r.packs[name]) })
+	out := make([]Pack, len(r.packNames))
+	for i, name := range r.packNames {
+		out[i] = clonePack(r.packs[name])
+	}
+	return out
 }
 
 // PackNames returns all pack names in stable order.

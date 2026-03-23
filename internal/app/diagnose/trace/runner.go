@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
@@ -22,7 +22,7 @@ type Config struct {
 	// Parameters.
 	AssetID         string
 	ObservationPath string // used in error messages
-	Format          ui.OutputFormat
+	Format          appcontracts.OutputFormat
 	Quiet           bool
 	Stdout          io.Writer
 }

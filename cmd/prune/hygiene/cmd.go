@@ -35,7 +35,11 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := &Runner{Provider: p}
+			runner := &Runner{
+				LoadAssets:      p.LoadAssets,
+				NewObsRepo:      p.NewObservationRepo,
+				NewSnapshotRepo: p.NewSnapshotRepo,
+			}
 			return runner.Run(compose.CommandContext(cmd), cfg)
 		},
 		SilenceUsage:  true,

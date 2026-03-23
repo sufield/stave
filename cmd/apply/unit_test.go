@@ -227,19 +227,22 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
 	format, _ := ui.ParseOutputFormat(opts.Format)
 	hasher := crypto.NewHasher()
+	p := compose.NewDefaultProvider()
 	return &Builder{
-		Ctx:       context.Background(),
-		Logger:    slog.Default(),
-		Stdout:    io.Discard,
-		Stderr:    io.Discard,
-		Stdin:     strings.NewReader(""),
-		Sanitizer: sanitize.New(),
-		Format:    format,
-		Digester:  hasher,
-		IDGen:     hasher,
-		Opts:      opts,
-		Params:    params,
-		Provider:  compose.NewDefaultProvider(),
+		Ctx:              context.Background(),
+		Logger:           slog.Default(),
+		Stdout:           io.Discard,
+		Stderr:           io.Discard,
+		Stdin:            strings.NewReader(""),
+		Sanitizer:        sanitize.New(),
+		Format:           format,
+		Digester:         hasher,
+		IDGen:            hasher,
+		Opts:             opts,
+		Params:           params,
+		NewFindingWriter: p.NewFindingWriter,
+		NewCtlRepo:       p.NewControlRepo,
+		NewStdinObsRepo:  p.NewStdinObsRepo,
 	}
 }
 
