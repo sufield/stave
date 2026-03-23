@@ -43,17 +43,12 @@ Or build from source:
 ```bash
 git clone https://github.com/sufield/stave.git
 cd stave && make build
-
-# Run tests
-make test
 ```
 
 ### Full workflow
 
 ```bash
 stave init --profile aws-s3
-# Generate observation snapshots (see docs/extractor-prompt.md)
-# Place JSON files in ./observations/
 stave validate
 stave apply --format json > output/evaluation.json
 stave diagnose
