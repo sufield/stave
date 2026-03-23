@@ -104,6 +104,7 @@ func (e *EvaluateRun) loadEvaluationArtifacts(ctx context.Context, cfg LoadConfi
 		ControlsDir:       cfg.ControlsDir,
 		ObservationsDir:   cfg.ObservationsDir,
 		RequireControls:   cfg.PreloadedControls == nil,
+		SkipControlsLoad:  cfg.PreloadedControls != nil,
 		AllowUnknownInput: cfg.AllowUnknownInput,
 		Stderr:            cfg.Stderr,
 	})

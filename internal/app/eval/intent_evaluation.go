@@ -35,6 +35,7 @@ type IntentEvaluationConfig struct {
 	ControlsDir         string
 	ObservationsDir     string
 	RequireControls     bool
+	SkipControlsLoad    bool // true when controls come from packs, not disk
 	OptionalSnapshots   bool
 	SkipSourceTypeCheck bool
 	AllowUnknownInput   bool
@@ -77,6 +78,11 @@ func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluati
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
+		// When controls come from built-in packs, the controls directory
+		// may not exist on disk. Skip loading entirely.
+		if cfg.SkipControlsLoad {
+			return
+		}
 		controls, ctlErr = appcontracts.LoadControls(ctx, i.ControlRepo, cfg.ControlsDir)
 		if ctlErr == nil && cfg.RequireControls && len(controls) == 0 {
 			ctlErr = fmt.Errorf("%w: no controls in %s (expected .yaml files with dsl_version: ctrl.v1)", ErrNoControls, cfg.ControlsDir)

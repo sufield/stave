@@ -9,7 +9,11 @@ packs:
   s3:
     description: Default S3 built-in pack for MVP
     controls:
+      - CTL.S3.CONTROLS.001
+      - CTL.S3.ENCRYPT.001
+      - CTL.S3.LOG.001
       - CTL.S3.PUBLIC.001
+      - CTL.S3.VERSION.001
       - CTL.S3.PUBLIC.002
       - CTL.S3.PUBLIC.003
       - CTL.S3.PUBLIC.004
