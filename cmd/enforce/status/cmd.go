@@ -52,7 +52,7 @@ Examples:
 			}
 
 			runner := NewRunner(resolver)
-			return runner.Run(Config{
+			return runner.Run(config{
 				Dir:    opts.Dir,
 				Format: format,
 				Stdout: cmd.OutOrStdout(),

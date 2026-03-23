@@ -79,7 +79,7 @@ func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, erro
 
 	ctx := in.Context
 
-	resolved, err := ResolveProjectConfig(ctx, in.Project.Config)
+	resolved, err := ResolveProjectConfig(in.Project.Config)
 	if err != nil {
 		return BuildDependenciesOutput{}, err
 	}

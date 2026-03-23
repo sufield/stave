@@ -56,11 +56,6 @@ type Runner struct {
 	FileOptions fileout.FileOptions
 }
 
-// NewRunner initializes a generate runner.
-func NewRunner() *Runner {
-	return &Runner{}
-}
-
 type result struct {
 	SchemaVersion kernel.Schema     `json:"schema_version"`
 	Kind          kernel.OutputKind `json:"kind"`

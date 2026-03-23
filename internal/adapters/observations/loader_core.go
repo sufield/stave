@@ -22,30 +22,9 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// ObservationValidator validates raw observation JSON against the contract schema.
-type ObservationValidator interface {
-	ValidateObservation(data []byte, source string) error
-}
-
-// contractObservationValidator adapts contractvalidator.Validator to ObservationValidator.
-type contractObservationValidator struct {
-	v *contractvalidator.Validator
-}
-
-func (c *contractObservationValidator) ValidateObservation(data []byte, source string) error {
-	issues, err := c.v.ValidateObservationJSON(data, contractvalidator.WithPrefix(source))
-	if err != nil {
-		return fmt.Errorf("schema validation error: %w", err)
-	}
-	if issues.HasErrors() || issues.HasWarnings() {
-		return fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
-	}
-	return nil
-}
-
 // ObservationLoader loads snapshots from JSON files.
 type ObservationLoader struct {
-	validator              ObservationValidator
+	validator              *contractvalidator.Validator
 	integrityManifestPath  string
 	integrityPublicKeyPath string
 	// OnProgress is called after each file is processed with (processed, total) counts.
@@ -61,7 +40,7 @@ var (
 // NewObservationLoader creates a new JSON observation loader with the default contract validator.
 func NewObservationLoader() *ObservationLoader {
 	return &ObservationLoader{
-		validator:  &contractObservationValidator{v: contractvalidator.New()},
+		validator:  contractvalidator.New(),
 		OnProgress: func(int, int) {},
 	}
 }
@@ -152,8 +131,12 @@ func listObservationFiles(dir string) ([]os.DirEntry, error) {
 func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot, string, error) {
 	hash := string(platformcrypto.HashBytes(data))
 
-	if err := l.validator.ValidateObservation(data, source); err != nil {
-		return asset.Snapshot{}, "", err
+	issues, err := l.validator.ValidateObservationJSON(data, contractvalidator.WithPrefix(source))
+	if err != nil {
+		return asset.Snapshot{}, "", fmt.Errorf("schema validation error: %w", err)
+	}
+	if issues.HasErrors() || issues.HasWarnings() {
+		return asset.Snapshot{}, "", fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 
 	var snap asset.Snapshot

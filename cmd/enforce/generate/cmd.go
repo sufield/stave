@@ -34,7 +34,7 @@ Supported Modes:
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner()
+			runner := &Runner{}
 			runner.FileOptions = fileout.FileOptions{
 				Overwrite:     gf.Force,
 				AllowSymlinks: gf.AllowSymlinkOut,

@@ -22,7 +22,7 @@ What it checks:
   - Duration format and feasibility
 
 Inputs:
-  --controls, -i       Path to control definitions (default: controls/s3)
+  --controls, -i       Path to control definitions (default: controls)
   --observations, -o   Path to observation snapshots (default: observations)
   --in                 Single input file or '-' for stdin
   --kind               Contract kind: control|observation|finding (requires --in)

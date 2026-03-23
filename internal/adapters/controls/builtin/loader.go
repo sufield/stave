@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"cmp"
-	"context"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -37,7 +36,7 @@ func NewRegistry(fsys fs.FS, root string) *Registry {
 
 // All returns all control definitions. It performs a lazy load on the first
 // call and returns a shallow clone of the cache for subsequent calls.
-func (r *Registry) All(_ context.Context) ([]policy.ControlDefinition, error) {
+func (r *Registry) All() ([]policy.ControlDefinition, error) {
 	r.once.Do(func() {
 		r.mu.Lock()
 		defer r.mu.Unlock()
@@ -54,8 +53,8 @@ func (r *Registry) All(_ context.Context) ([]policy.ControlDefinition, error) {
 }
 
 // Filtered returns controls matching at least one selector.
-func (r *Registry) Filtered(ctx context.Context, selectors []Selector) ([]policy.ControlDefinition, error) {
-	all, err := r.All(ctx)
+func (r *Registry) Filtered(selectors []Selector) ([]policy.ControlDefinition, error) {
+	all, err := r.All()
 	if err != nil || len(selectors) == 0 {
 		return all, err
 	}

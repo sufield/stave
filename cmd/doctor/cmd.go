@@ -2,7 +2,6 @@ package doctor
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,10 +16,11 @@ import (
 )
 
 // ErrDoctorRequiredIssues is returned when the doctor detects critical environment issues.
-var ErrDoctorRequiredIssues = errors.New("doctor found required issues")
+// It wraps ErrDiagnosticsFound so ExitCode maps it to exit 3 (violations/diagnostics).
+var ErrDoctorRequiredIssues = fmt.Errorf("doctor found required issues: %w", ui.ErrDiagnosticsFound)
 
-// Config holds the parameters for the environment check.
-type Config struct {
+// config holds the parameters for the environment check.
+type config struct {
 	Cwd        string
 	BinaryPath string
 	Format     ui.OutputFormat
@@ -28,21 +28,21 @@ type Config struct {
 	Stdout     io.Writer
 }
 
-// Runner handles the execution of environment readiness checks.
-type Runner struct {
+// runner handles the execution of environment readiness checks.
+type runner struct {
 	Version string
 }
 
-// NewRunner initializes a doctor runner.
-func NewRunner() *Runner {
-	return &Runner{
+// newRunner initializes a doctor runner.
+func newRunner() *runner {
+	return &runner{
 		Version: staveversion.String,
 	}
 }
 
 // Run executes the doctor checks and reports the results based on the config.
 // If Cwd or BinaryPath are empty, they are resolved from the current process.
-func (r *Runner) Run(cfg Config) error {
+func (r *runner) Run(cfg config) error {
 	if cfg.Cwd == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -81,14 +81,14 @@ func (r *Runner) Run(cfg Config) error {
 	return nil
 }
 
-func (r *Runner) report(cfg Config, checks []doctor.Check, ok bool) error {
+func (r *runner) report(cfg config, checks []doctor.Check, ok bool) error {
 	if cfg.Format.IsJSON() {
 		return r.reportJSON(cfg.Stdout, checks, ok)
 	}
 	return r.reportText(cfg.Stdout, checks)
 }
 
-func (r *Runner) reportJSON(w io.Writer, checks []doctor.Check, ok bool) error {
+func (r *runner) reportJSON(w io.Writer, checks []doctor.Check, ok bool) error {
 	payload := struct {
 		Ready  bool           `json:"ready"`
 		Checks []doctor.Check `json:"checks"`
@@ -101,7 +101,7 @@ func (r *Runner) reportJSON(w io.Writer, checks []doctor.Check, ok bool) error {
 	return enc.Encode(payload)
 }
 
-func (r *Runner) reportText(w io.Writer, checks []doctor.Check) error {
+func (r *runner) reportText(w io.Writer, checks []doctor.Check) error {
 	for _, c := range checks {
 		if _, err := fmt.Fprintf(w, "[%s] %s: %s\n", c.Status, c.Name, c.Message); err != nil {
 			return err
@@ -158,7 +158,7 @@ Examples:
 				return err
 			}
 
-			return NewRunner().Run(Config{
+			return newRunner().Run(config{
 				Format: fmtValue,
 				Quiet:  cmdutil.GetGlobalFlags(cmd).Quiet,
 				Stdout: cmd.OutOrStdout(),

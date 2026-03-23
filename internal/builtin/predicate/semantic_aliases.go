@@ -81,22 +81,7 @@ func (e *UnknownAliasError) Error() string {
 	return fmt.Sprintf("unknown alias %q", e.Name)
 }
 
-// ── Resolver Interface ────────────────────────────────────
-
-// Resolver resolves alias names to expanded predicates. Adopters can
-// implement this interface to provide custom aliases alongside the
-// built-in S3 set.
-type Resolver interface {
-	// Resolve returns a deep copy of the expanded predicate for an alias.
-	// Returns an *UnknownAliasError if the alias is not found.
-	Resolve(name string) (policy.UnsafePredicate, error)
-
-	// ListAliases returns alias names in sorted order. Pass "" for all
-	// aliases, or a category name to filter.
-	ListAliases(category string) []string
-}
-
-// ── Multi-Service Registry ────────────────────────────────
+// ── Registry ──────────────────────────────────────────────
 
 // Registry is a multi-service alias registry. Aliases are grouped by
 // service internally but maintain a flat naming convention (e.g.
@@ -104,9 +89,6 @@ type Resolver interface {
 type Registry struct {
 	entries map[string]aliasEntry
 }
-
-// compile-time interface check.
-var _ Resolver = (*Registry)(nil)
 
 // Resolve returns a deep copy of the expanded predicate for an alias.
 func (r *Registry) Resolve(name string) (policy.UnsafePredicate, error) {

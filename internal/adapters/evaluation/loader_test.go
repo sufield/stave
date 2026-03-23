@@ -9,7 +9,7 @@ import (
 )
 
 func TestLoader(t *testing.T) {
-	loader := NewLoader()
+	loader := &Loader{}
 
 	t.Run("file loader errors", func(t *testing.T) {
 		_, err := loader.LoadFromFile("does-not-exist.json")

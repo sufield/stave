@@ -2,7 +2,6 @@ package artifacts
 
 import (
 	"bytes"
-	"context"
 	"strings"
 	"testing"
 )
@@ -13,7 +12,7 @@ func TestPackRunnerList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewPackRunner: %v", err)
 	}
-	if err := runner.List(context.Background()); err != nil {
+	if err := runner.List(); err != nil {
 		t.Fatalf("List: %v", err)
 	}
 	out := buf.String()
@@ -28,7 +27,7 @@ func TestPackRunnerShowUnknown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewPackRunner: %v", err)
 	}
-	if err := runner.Show(context.Background(), "nonexistent-pack"); err == nil {
+	if err := runner.Show("nonexistent-pack"); err == nil {
 		t.Fatal("expected error for unknown pack")
 	}
 }

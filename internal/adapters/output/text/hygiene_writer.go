@@ -44,7 +44,7 @@ func WriteHygieneReport(w io.Writer, req appcontracts.ReportRequest) error {
 func writeLifecycleTable(h *hygieneWriter, stats appcontracts.SnapshotStats) {
 	h.f("## Lifecycle Inventory\n\n")
 	h.f("| Metric | Value |\n| :--- | :--- |\n")
-	h.f("| Total snapshots | %d |\n", stats.Total)
+	h.f("| Total snapshots | %d |\n", stats.Total())
 	h.f("| Active snapshots | %d |\n", stats.Active)
 	h.f("| Archived snapshots | %d |\n", stats.Archived)
 	h.f("| Prune candidates (current) | %d |\n", stats.PruneCandidates)
@@ -61,7 +61,7 @@ func writeRiskTable(h *hygieneWriter, risk appcontracts.RiskStats, dueSoon time.
 	h.f("| Upcoming due now | %d |\n", risk.DueNow)
 	h.f("| Upcoming due soon (<= %s) | %d |\n", dueSoon, risk.DueSoon)
 	h.f("| Upcoming later | %d |\n", risk.Later)
-	h.f("| Upcoming total | %d |\n\n", risk.UpcomingTotal)
+	h.f("| Upcoming total | %d |\n\n", risk.UpcomingTotal())
 }
 
 func writeTrendTable(h *hygieneWriter, trends []evaluation.TrendMetric) {

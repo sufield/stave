@@ -20,8 +20,8 @@ import (
 
 // --- Config ---
 
-// Config defines the resolved parameters for a snapshot archive operation.
-type Config struct {
+// config defines the resolved parameters for a snapshot archive operation.
+type config struct {
 	ObservationsDir string
 	ArchiveDir      string
 	OlderThan       time.Duration
@@ -48,16 +48,16 @@ type executionPlan struct {
 	dryRun         bool
 }
 
-// Runner orchestrates the snapshot archiving process.
+// runner orchestrates the snapshot archiving process.
 // It holds the calculated plan between BuildPlan and Apply phases.
-type Runner struct {
+type runner struct {
 	NewSnapshotRepo compose.SnapshotRepoFactory
-	cfg             Config
+	cfg             config
 	plan            *executionPlan
 }
 
 // Run executes the full archiving workflow via the appeval.RunCleanup lifecycle.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *runner) Run(ctx context.Context, cfg config) error {
 	obsDir, archiveDir, err := resolveArchivePaths(cfg.ObservationsDir, cfg.ArchiveDir)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 // BuildPlan identifies which snapshots meet the criteria for archiving.
-func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
+func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
@@ -118,7 +118,7 @@ func (r *Runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 }
 
 // Render outputs the plan to the user in the requested format.
-func (r *Runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
+func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
 		Format:         r.cfg.Format,
 		Output:         r.plan.output,
@@ -138,7 +138,7 @@ func (r *Runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 }
 
 // Apply executes the file moves.
-func (r *Runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
+func (r *runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
 	_, err := fsops.ApplyArchive(fsops.ArchiveInput{
 		ArchiveDir: r.plan.archiveDir,
 		Moves:      r.toArchiveMoves(),
@@ -160,7 +160,7 @@ func (r *Runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
 
 // --- Helpers ---
 
-func (r *Runner) toArchiveMoves() []fsops.ArchiveMove {
+func (r *runner) toArchiveMoves() []fsops.ArchiveMove {
 	moves := make([]fsops.ArchiveMove, 0, len(r.plan.candidateFiles))
 	for _, sf := range r.plan.candidateFiles {
 		moves = append(moves, fsops.ArchiveMove{

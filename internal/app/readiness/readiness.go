@@ -19,7 +19,6 @@ func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, 
 	}); err != nil {
 		return validation.ReadinessReport{}, err
 	}
-	report.Finalize()
 	return *report, nil
 }
 

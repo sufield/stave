@@ -92,7 +92,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Controls:     policy.ControlDefinitions{ctl},
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
 		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
-		TraceBuilder: apptrace.NewFindingTraceBuilder(),
+		TraceBuilder: &apptrace.Builder{},
 		IDGen:        crypto.NewHasher(),
 	})
 	if err != nil {

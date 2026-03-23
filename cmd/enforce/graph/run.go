@@ -38,8 +38,8 @@ func ParseFormat(s string) (Format, error) {
 	}
 }
 
-// Config holds the validated parameters for graph generation.
-type Config struct {
+// config holds the validated parameters for graph generation.
+type config struct {
 	ControlsDir     string
 	ObservationsDir string
 	Format          Format
@@ -52,15 +52,15 @@ type Config struct {
 // ControlLoaderFunc loads controls from a directory.
 type ControlLoaderFunc func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 
-// Runner orchestrates loading assets and generating coverage graphs.
-type Runner struct {
+// runner orchestrates loading assets and generating coverage graphs.
+type runner struct {
 	LoadControls  ControlLoaderFunc
 	LoadSnapshots compose.SnapshotLoader
 }
 
-// NewRunner initializes a graph runner.
-func NewRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *Runner {
-	return &Runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
+// newRunner initializes a graph runner.
+func newRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *runner {
+	return &runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
 }
 
 // coverageEdge represents a single control→asset coverage relationship.
@@ -78,7 +78,7 @@ type coverageResult struct {
 }
 
 // Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *runner) Run(ctx context.Context, cfg config) error {
 	if err := dircheck.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	return writeResult(cfg.Stdout, cfg.Format, result, cfg.Sanitizer)
 }
 
-func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
+func (r *runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
 	controls, err := r.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, asset.Snapshot{}, err

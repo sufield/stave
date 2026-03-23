@@ -17,7 +17,7 @@ func newSignCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := &SignRunner{}
-			return runner.Run(cmd.Context(), SignConfig{
+			return runner.Run(SignConfig{
 				InPath:         fsutil.CleanUserPath(inPath),
 				PrivateKeyPath: fsutil.CleanUserPath(privateKeyPath),
 				OutPath:        fsutil.CleanUserPath(outPath),

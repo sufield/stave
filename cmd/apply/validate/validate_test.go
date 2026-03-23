@@ -2,6 +2,7 @@ package validate
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"path/filepath"
@@ -119,6 +120,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	}
 
 	cmd := &cobra.Command{Use: "test"}
+	cmd.SetContext(context.Background())
 	var stdout, stderr bytes.Buffer
 	cmd.SetOut(&stdout)
 	cmd.SetErr(&stderr)
@@ -142,9 +144,9 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 // TestOutputAndExit_Clean tests Reporter with a clean validation result (no errors or warnings).
 func TestOutputAndExit_Clean(t *testing.T) {
 	// No errors, no warnings → exit 0
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{}},
-		Summary: appvalidation.ValidationSummary{
+		Summary: appvalidation.Summary{
 			ControlsLoaded:          2,
 			SnapshotsLoaded:         3,
 			AssetObservationsLoaded: 10,
@@ -170,7 +172,7 @@ func TestOutputAndExit_Clean(t *testing.T) {
 // TestOutputAndExit_Errors tests Reporter with validation errors (should return exit code 2).
 func TestOutputAndExit_Errors(t *testing.T) {
 	// Has errors → exit 2
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeControlMissingID,
@@ -178,7 +180,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 				Action: "Add id field",
 			},
 		}},
-		Summary: appvalidation.ValidationSummary{
+		Summary: appvalidation.Summary{
 			ControlsLoaded: 1,
 		},
 	}
@@ -202,7 +204,7 @@ func TestOutputAndExit_Errors(t *testing.T) {
 // TestOutputAndExit_WarningsOnly tests Reporter with only warnings (should return exit code 2).
 func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	// Warnings only, no errors → exit 2
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeSingleSnapshot,
@@ -215,7 +217,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 				Action: "Reduce max-unsafe",
 			},
 		}},
-		Summary: appvalidation.ValidationSummary{
+		Summary: appvalidation.Summary{
 			SnapshotsLoaded: 1,
 		},
 	}
@@ -239,7 +241,7 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 // TestOutputAndExit_ErrorsAndWarnings tests Reporter with both errors and warnings (errors take precedence, exit code 2).
 func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	// Has both errors and warnings → exit 2 (errors take precedence)
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeControlMissingID,
@@ -252,7 +254,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 				Action: "Add more snapshots",
 			},
 		}},
-		Summary: appvalidation.ValidationSummary{
+		Summary: appvalidation.Summary{
 			ControlsLoaded:  1,
 			SnapshotsLoaded: 1,
 		},
@@ -278,7 +280,7 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 func TestOutputAndExit_JSONOutput(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = false
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeSingleSnapshot,
@@ -289,7 +291,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 				Action: "Add more snapshots",
 			},
 		}},
-		Summary: appvalidation.ValidationSummary{
+		Summary: appvalidation.Summary{
 			SnapshotsLoaded: 1,
 		},
 	}
@@ -325,7 +327,7 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	opts.Controls = "./controls"
 	opts.Observations = "./observations"
 
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:   diag.CodeObservationLoadFailed,
@@ -356,7 +358,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = true
 
-	result := &appvalidation.ValidationResult{
+	result := &appvalidation.Result{
 		Diagnostics: &diag.Result{Issues: []diag.Issue{
 			{
 				Code:    "INVALID_MAX_UNSAFE",

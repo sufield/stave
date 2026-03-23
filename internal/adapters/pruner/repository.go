@@ -33,7 +33,7 @@ func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string
 	if loader == nil {
 		return nil, fmt.Errorf("snapshot loader is required")
 	}
-	return ListSnapshotFilesFlat(observationsDir, ScannerOptions{
+	return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) {
 			return loadSnapshotCapturedAt(ctx, loader, path, name)
 		},

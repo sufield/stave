@@ -49,7 +49,10 @@ type FixRequest struct {
 }
 
 // Fix reads an evaluation artifact and generates a remediation plan for one finding.
-func (s *Service) Fix(_ context.Context, req FixRequest) error {
+func (s *Service) Fix(ctx context.Context, req FixRequest) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	needle := strings.TrimSpace(req.FindingRef)
 	if needle == "" {
 		return fmt.Errorf("finding reference selector cannot be empty")

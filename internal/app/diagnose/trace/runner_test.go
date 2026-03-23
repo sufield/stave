@@ -2,7 +2,6 @@ package trace
 
 import (
 	"bytes"
-	"context"
 	"strings"
 	"testing"
 
@@ -44,7 +43,7 @@ func testSnapshot() *asset.Snapshot {
 func TestRunnerRun_Text(t *testing.T) {
 	var buf bytes.Buffer
 	runner := &Runner{}
-	err := runner.Run(context.Background(), Config{
+	err := runner.Run(Config{
 		Control:         testControl(),
 		Snapshot:        testSnapshot(),
 		AssetID:         "aws:s3:::test-bucket",
@@ -63,7 +62,7 @@ func TestRunnerRun_Text(t *testing.T) {
 func TestRunnerRun_JSON(t *testing.T) {
 	var buf bytes.Buffer
 	runner := &Runner{}
-	err := runner.Run(context.Background(), Config{
+	err := runner.Run(Config{
 		Control:         testControl(),
 		Snapshot:        testSnapshot(),
 		AssetID:         "aws:s3:::test-bucket",
@@ -82,7 +81,7 @@ func TestRunnerRun_JSON(t *testing.T) {
 func TestRunnerRun_Quiet(t *testing.T) {
 	var buf bytes.Buffer
 	runner := &Runner{}
-	err := runner.Run(context.Background(), Config{
+	err := runner.Run(Config{
 		Control:  testControl(),
 		Snapshot: testSnapshot(),
 		AssetID:  "aws:s3:::test-bucket",

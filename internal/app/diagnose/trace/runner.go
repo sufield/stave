@@ -1,7 +1,6 @@
 package trace
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"slices"
@@ -31,7 +30,7 @@ type Config struct {
 type Runner struct{}
 
 // Run executes the trace workflow.
-func (r *Runner) Run(_ context.Context, cfg Config) error {
+func (r *Runner) Run(cfg Config) error {
 	if cfg.Quiet {
 		return nil
 	}

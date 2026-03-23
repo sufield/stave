@@ -76,7 +76,7 @@ Examples:
 
 			// Delegate to internal runner
 			runner := appsnapshot.NewPlanRunner(adaptPlanApply)
-			return runner.Run(ctx, appsnapshot.PlanConfig{
+			return runner.Run(appsnapshot.PlanConfig{
 				Files:            files,
 				Tiers:            tiers,
 				TierRules:        tierRules,

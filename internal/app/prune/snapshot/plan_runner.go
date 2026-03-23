@@ -1,7 +1,6 @@
 package snapshot
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"time"
@@ -43,7 +42,7 @@ func NewPlanRunner(applyFn PlanApplyFunc) *PlanRunner {
 }
 
 // Run executes the multi-tier planning workflow.
-func (r *PlanRunner) Run(_ context.Context, cfg PlanConfig) error {
+func (r *PlanRunner) Run(cfg PlanConfig) error {
 	p := buildPlan(planBuildParams{
 		Now:         cfg.Now,
 		ObsRoot:     cfg.ObservationsRoot,

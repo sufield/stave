@@ -1,7 +1,6 @@
 package initcmd
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -36,7 +35,7 @@ type InitRunner struct {
 }
 
 // Run executes the project initialization workflow.
-func (r *InitRunner) Run(_ context.Context, req *InitRequest) error {
+func (r *InitRunner) Run(req *InitRequest) error {
 	result, err := projectapp.RunInit(projectapp.InitRequest{
 		Dir:               req.Dir,
 		Profile:           req.Profile,

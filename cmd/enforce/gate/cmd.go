@@ -61,7 +61,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(p.LoadAssets, p.NewCELEvaluator)
+			runner := newRunner(p.LoadAssets, p.NewCELEvaluator)
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

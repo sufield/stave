@@ -40,7 +40,6 @@ func TestRenderMarkdown(t *testing.T) {
 		Snapshots: appcontracts.SnapshotStats{
 			Active:            6,
 			Archived:          2,
-			Total:             8,
 			PruneCandidates:   1,
 			RetentionTier:     "critical",
 			RetentionDuration: 30 * 24 * time.Hour,
@@ -52,7 +51,6 @@ func TestRenderMarkdown(t *testing.T) {
 			DueNow:            1,
 			DueSoon:           2,
 			Later:             0,
-			UpcomingTotal:     4,
 		},
 		Trends: []evaluation.TrendMetric{
 			{Name: "Current violations", Current: 4, Previous: 6},

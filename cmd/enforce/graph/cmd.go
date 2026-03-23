@@ -73,14 +73,14 @@ Exit Codes:
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			runner := NewRunner(
+			runner := newRunner(
 				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 					return compose.LoadControls(ctx, p, dir)
 				},
 				p.LoadSnapshots,
 			)
 
-			return runner.Run(cmd.Context(), Config{
+			return runner.Run(cmd.Context(), config{
 				ControlsDir:     opts.ControlsDir,
 				ObservationsDir: opts.ObsDir,
 				Format:          format,

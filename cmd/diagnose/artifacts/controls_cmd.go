@@ -100,9 +100,9 @@ func listControlRows(ctx context.Context, newCtlRepo compose.CtlRepoFactory, cfg
 				}
 				selectors = append(selectors, sel)
 			}
-			controls, err = registry.Filtered(ctx, selectors)
+			controls, err = registry.Filtered(selectors)
 		} else {
-			controls, err = registry.All(ctx)
+			controls, err = registry.All()
 		}
 		if err != nil {
 			return nil, fmt.Errorf("load built-in controls: %w", err)

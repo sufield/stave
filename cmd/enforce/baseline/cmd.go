@@ -65,7 +65,7 @@ func newSaveCmd() *cobra.Command {
 		Short: "Save evaluation findings as baseline",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return newRunner(cmd).Save(cmd.Context(), cfg)
+			return newRunner(cmd).Save(cfg)
 		},
 	}
 
@@ -93,7 +93,7 @@ func newCheckCmd() *cobra.Command {
 				cmdutil.GetGlobalFlags(cmd).GetSanitizer(),
 				fileout.FileOptions{},
 				cmd.OutOrStdout(),
-			).Check(cmd.Context(), cfg)
+			).Check(cfg)
 		},
 	}
 

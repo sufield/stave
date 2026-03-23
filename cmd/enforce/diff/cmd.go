@@ -54,7 +54,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(p.LoadSnapshots)
+			runner := newRunner(p.LoadSnapshots)
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

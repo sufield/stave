@@ -1,7 +1,6 @@
 package builtin
 
 import (
-	"context"
 	"testing"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -12,7 +11,7 @@ func testRegistry() *Registry {
 }
 
 func TestLoadAll(t *testing.T) {
-	controls, err := testRegistry().All(context.Background())
+	controls, err := testRegistry().All()
 	if err != nil {
 		t.Fatalf("All failed: %v", err)
 	}
@@ -50,7 +49,7 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 	selectors := []Selector{
 		{Tags: []string{"aws", "s3"}},
 	}
-	controls, err := testRegistry().Filtered(context.Background(), selectors)
+	controls, err := testRegistry().Filtered(selectors)
 	if err != nil {
 		t.Fatalf("Filtered failed: %v", err)
 	}
@@ -72,11 +71,11 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 
 func TestLoadFiltered_EmptySelectors(t *testing.T) {
 	reg := testRegistry()
-	all, err := reg.All(context.Background())
+	all, err := reg.All()
 	if err != nil {
 		t.Fatalf("All failed: %v", err)
 	}
-	filtered, err := reg.Filtered(context.Background(), nil)
+	filtered, err := reg.Filtered(nil)
 	if err != nil {
 		t.Fatalf("Filtered(nil) failed: %v", err)
 	}
@@ -86,7 +85,7 @@ func TestLoadFiltered_EmptySelectors(t *testing.T) {
 }
 
 func TestLoadAll_NoDuplicateIDs(t *testing.T) {
-	controls, err := testRegistry().All(context.Background())
+	controls, err := testRegistry().All()
 	if err != nil {
 		t.Fatalf("All failed: %v", err)
 	}

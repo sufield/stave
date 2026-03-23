@@ -35,11 +35,6 @@ type FormatResult struct {
 // Formatter manages the deterministic formatting of Stave artifacts.
 type Formatter struct{}
 
-// NewFormatter creates a new Formatter.
-func NewFormatter() *Formatter {
-	return &Formatter{}
-}
-
 // Run executes the formatting process based on the provided configuration.
 func (f *Formatter) Run(cfg FormatConfig) (FormatResult, error) {
 	files, err := CollectFormatTargets(cfg.Target)

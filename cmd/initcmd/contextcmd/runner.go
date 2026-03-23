@@ -1,7 +1,6 @@
 package contextcmd
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -43,7 +42,7 @@ type Runner struct {
 }
 
 // List retrieves all contexts from the store and renders them.
-func (r *Runner) List(_ context.Context, st *contexts.Store, format ui.OutputFormat) error {
+func (r *Runner) List(st *contexts.Store, format ui.OutputFormat) error {
 	names := st.Names()
 	active := strings.TrimSpace(st.Active)
 
@@ -83,7 +82,7 @@ func (r *Runner) List(_ context.Context, st *contexts.Store, format ui.OutputFor
 }
 
 // Create adds or updates a named context in the store.
-func (r *Runner) Create(_ context.Context, st *contexts.Store, name string, c contexts.Context) error {
+func (r *Runner) Create(st *contexts.Store, name string, c contexts.Context) error {
 	name = contexts.NormalizeName(name)
 	if name == "" {
 		return &ui.UserError{Err: fmt.Errorf("context name cannot be empty")}
@@ -103,7 +102,7 @@ func (r *Runner) Create(_ context.Context, st *contexts.Store, name string, c co
 }
 
 // Use sets a context as the active default in the store.
-func (r *Runner) Use(_ context.Context, st *contexts.Store, name string) error {
+func (r *Runner) Use(st *contexts.Store, name string) error {
 	name = contexts.NormalizeName(name)
 	if _, ok := st.Contexts[name]; !ok {
 		return &ui.UserError{Err: fmt.Errorf("context %q not found (available: %s)", name, strings.Join(st.Names(), ", "))}
@@ -119,7 +118,7 @@ func (r *Runner) Use(_ context.Context, st *contexts.Store, name string) error {
 }
 
 // Show renders the currently selected context.
-func (r *Runner) Show(_ context.Context, format ui.OutputFormat, res ShowResult) error {
+func (r *Runner) Show(format ui.OutputFormat, res ShowResult) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(r.Stdout, res)
 	}
@@ -137,7 +136,7 @@ func (r *Runner) Show(_ context.Context, format ui.OutputFormat, res ShowResult)
 }
 
 // Delete removes a context from the store.
-func (r *Runner) Delete(_ context.Context, st *contexts.Store, name string) error {
+func (r *Runner) Delete(st *contexts.Store, name string) error {
 	name = contexts.NormalizeName(name)
 	if _, ok := st.Contexts[name]; !ok {
 		return &ui.UserError{Err: fmt.Errorf("context %q not found", name)}

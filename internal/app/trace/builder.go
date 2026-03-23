@@ -11,12 +11,6 @@ import (
 // Builder implements evaluation.FindingTraceBuilder using the CEL engine.
 type Builder struct{}
 
-// NewFindingTraceBuilder creates a Builder that satisfies the
-// evaluation.FindingTraceBuilder interface.
-func NewFindingTraceBuilder() *Builder {
-	return &Builder{}
-}
-
 // BuildTrace builds a CEL-based predicate evaluation trace for the given request.
 func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTrace {
 	if req.Control == nil {

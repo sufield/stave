@@ -26,8 +26,8 @@ func CalculateTrend(current, previous appcontracts.RiskStats) []evaluation.Trend
 		},
 		{
 			Name:     "Upcoming total",
-			Current:  current.UpcomingTotal,
-			Previous: previous.UpcomingTotal,
+			Current:  current.UpcomingTotal(),
+			Previous: previous.UpcomingTotal(),
 		},
 	}
 }

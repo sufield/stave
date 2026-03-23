@@ -70,33 +70,33 @@ func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 }
 
 // ToConfig converts raw CLI options into a validated Config.
-func (o *gateOptions) ToConfig(cmd *cobra.Command) (Config, error) {
+func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 	policy, err := appconfig.ParseGatePolicy(o.PolicyRaw)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	clock, err := compose.ResolveClock(o.NowRaw)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	format, err := compose.ResolveFormatValue(cmd, o.FormatRaw)
 	if err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 
 	var maxUnsafeDur time.Duration
 	if policy == appconfig.GatePolicyOverdue {
 		maxUnsafeDur, err = timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 		if err != nil {
-			return Config{}, err
+			return config{}, err
 		}
 	}
 
 	gf := cmdutil.GetGlobalFlags(cmd)
 
-	return Config{
+	return config{
 		Policy:            policy,
 		InPath:            fsutil.CleanUserPath(o.InPath),
 		BaselinePath:      fsutil.CleanUserPath(o.BasePath),

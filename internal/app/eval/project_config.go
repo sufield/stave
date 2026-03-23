@@ -2,7 +2,6 @@ package eval
 
 import (
 	"cmp"
-	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -39,7 +38,7 @@ type ProjectConfigInput struct {
 	EnabledControlPacks []string
 	ExcludeControls     []kernel.ControlID
 	ControlsFlagSet     bool
-	BuiltinLoader       func(ctx context.Context) ([]policy.ControlDefinition, error)
+	BuiltinLoader       func() ([]policy.ControlDefinition, error)
 	PackRegistry        PackRegistry
 }
 
@@ -55,7 +54,7 @@ type ResolvedProjectConfig struct {
 // ResolveProjectConfig validates and resolves project configuration.
 // It parses exception rules, resolves enabled packs, and loads
 // built-in controls. All I/O happens here, not in options.
-func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedProjectConfig, error) {
+func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) {
 	var result ResolvedProjectConfig
 
 	if len(in.Exceptions) > 0 {
@@ -86,7 +85,7 @@ func ResolveProjectConfig(ctx context.Context, in ProjectConfigInput) (ResolvedP
 	if err != nil {
 		return ResolvedProjectConfig{}, fmt.Errorf("resolve enabled_control_packs: %w", err)
 	}
-	loaded, err := loadBuiltInControlsByID(ctx, in.BuiltinLoader, resolvedIDs, in.ExcludeControls)
+	loaded, err := loadBuiltInControlsByID(in.BuiltinLoader, resolvedIDs, in.ExcludeControls)
 	if err != nil {
 		return ResolvedProjectConfig{}, err
 	}
@@ -124,12 +123,11 @@ func resolveExceptionRules(in []ExceptionInput) ([]policy.ExceptionRule, error) 
 }
 
 func loadBuiltInControlsByID(
-	ctx context.Context,
-	loader func(ctx context.Context) ([]policy.ControlDefinition, error),
+	loader func() ([]policy.ControlDefinition, error),
 	controlIDs []string,
 	excludeIDs []kernel.ControlID,
 ) ([]policy.ControlDefinition, error) {
-	allBuiltIns, err := loader(ctx)
+	allBuiltIns, err := loader()
 	if err != nil {
 		return nil, fmt.Errorf("load built-in controls: %w", err)
 	}

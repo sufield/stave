@@ -9,7 +9,6 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/adapters/output"
 	appfix "github.com/sufield/stave/internal/app/fix"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -48,15 +47,11 @@ type Request struct {
 
 // Run delegates to the app-layer fix service.
 func (r *Runner) Run(ctx context.Context, req Request) error {
-	err := r.service.Fix(ctx, appfix.FixRequest{
+	return r.service.Fix(ctx, appfix.FixRequest{
 		InputPath:  req.InputPath,
 		FindingRef: req.FindingRef,
 		Stdout:     req.Stdout,
 	})
-	if err != nil {
-		return &ui.UserError{Err: err}
-	}
-	return nil
 }
 
 // newEnvelopeBuilder creates an EnvelopeBuilder with adapter wiring.

@@ -17,8 +17,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
-// Config defines the parameters for enforcing a CI failure policy.
-type Config struct {
+// config defines the parameters for enforcing a CI failure policy.
+type config struct {
 	Policy            appconfig.GatePolicy
 	InPath            string
 	BaselinePath      string
@@ -34,22 +34,22 @@ type Config struct {
 	Stderr    io.Writer
 }
 
-// Runner orchestrates CI policy enforcement.
-type Runner struct {
+// runner orchestrates CI policy enforcement.
+type runner struct {
 	LoadAssets      compose.AssetLoaderFunc
 	NewCELEvaluator compose.CELEvaluatorFactory
 }
 
-// NewRunner initializes a gate runner with required dependencies.
-func NewRunner(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *Runner {
-	return &Runner{
+// newRunner initializes a gate runner with required dependencies.
+func newRunner(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *runner {
+	return &runner{
 		LoadAssets:      loadAssets,
 		NewCELEvaluator: newCELEvaluator,
 	}
 }
 
-// Result represents the structured output of a gate evaluation.
-type Result struct {
+// result represents the structured output of a gate evaluation.
+type result struct {
 	SchemaVersion kernel.Schema        `json:"schema_version"`
 	Kind          kernel.OutputKind    `json:"kind"`
 	CheckedAt     time.Time            `json:"checked_at"`
@@ -68,9 +68,9 @@ type Result struct {
 }
 
 // Run executes the configured gate policy.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
+func (r *runner) Run(ctx context.Context, cfg config) error {
 	var (
-		res Result
+		res result
 		err error
 	)
 
@@ -104,10 +104,10 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	return nil
 }
 
-func (r *Runner) runPolicyAny(cfg Config) (Result, error) {
+func (r *runner) runPolicyAny(cfg config) (result, error) {
 	eval, err := artifact.NewLoader().Evaluation(cfg.InPath)
 	if err != nil {
-		return Result{}, fmt.Errorf("loading evaluation: %w", err)
+		return result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
 	count := len(eval.Findings)
 	pass := count == 0
@@ -115,7 +115,7 @@ func (r *Runner) runPolicyAny(cfg Config) (Result, error) {
 	if pass {
 		reason = "no current findings"
 	}
-	return Result{
+	return result{
 		SchemaVersion:     kernel.SchemaGate,
 		Kind:              kernel.KindGateCheck,
 		CheckedAt:         cfg.Clock.Now().UTC(),
@@ -127,14 +127,14 @@ func (r *Runner) runPolicyAny(cfg Config) (Result, error) {
 	}, nil
 }
 
-func (r *Runner) runPolicyNew(cfg Config) (Result, error) {
+func (r *runner) runPolicyNew(cfg config) (result, error) {
 	eval, err := artifact.NewLoader().Evaluation(cfg.InPath)
 	if err != nil {
-		return Result{}, fmt.Errorf("loading evaluation: %w", err)
+		return result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
 	base, err := artifact.NewLoader().Baseline(cfg.BaselinePath, kernel.KindBaseline)
 	if err != nil {
-		return Result{}, fmt.Errorf("loading baseline: %w", err)
+		return result{}, fmt.Errorf("loading baseline: %w", err)
 	}
 	bc := artifact.CompareAgainstBaseline(cfg.Sanitizer, base.Findings, eval.Findings)
 	newCount := len(bc.Comparison.New)
@@ -143,7 +143,7 @@ func (r *Runner) runPolicyNew(cfg Config) (Result, error) {
 	if pass {
 		reason = "no new findings compared to baseline"
 	}
-	return Result{
+	return result{
 		SchemaVersion:     kernel.SchemaGate,
 		Kind:              kernel.KindGateCheck,
 		CheckedAt:         cfg.Clock.Now().UTC(),
@@ -157,14 +157,14 @@ func (r *Runner) runPolicyNew(cfg Config) (Result, error) {
 	}, nil
 }
 
-func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, error) {
+func (r *runner) runPolicyOverdue(ctx context.Context, cfg config) (result, error) {
 	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
-		return Result{}, err
+		return result{}, err
 	}
 	celEval, err := r.NewCELEvaluator()
 	if err != nil {
-		return Result{}, fmt.Errorf("init CEL evaluator: %w", err)
+		return result{}, fmt.Errorf("init CEL evaluator: %w", err)
 	}
 	now := cfg.Clock.Now().UTC()
 	items := risk.ComputeItems(risk.Request{
@@ -181,7 +181,7 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, erro
 	if pass {
 		reason = "no overdue upcoming actions"
 	}
-	return Result{
+	return result{
 		SchemaVersion:    kernel.SchemaGate,
 		Kind:             kernel.KindGateCheck,
 		CheckedAt:        now,
@@ -194,7 +194,7 @@ func (r *Runner) runPolicyOverdue(ctx context.Context, cfg Config) (Result, erro
 	}, nil
 }
 
-func (r *Runner) report(cfg Config, res Result) error {
+func (r *runner) report(cfg config, res result) error {
 	if cfg.Format.IsJSON() {
 		return jsonutil.WriteIndented(cfg.Stdout, res)
 	}
