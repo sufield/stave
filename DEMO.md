@@ -77,6 +77,25 @@ This shows:
 
 Exit code 0 (no violations).
 
+### AWS Trusted Advisor blind spots
+
+Three scenarios that demonstrate S3 risks Trusted Advisor cannot detect:
+
+```bash
+docker run --rm stave-tutorials --blind-spots
+docker run --rm stave-tutorials --blind-spots --fixed
+```
+
+| # | Blind Spot | Control | What Trusted Advisor Does | What Stave Does |
+|---|-----------|---------|--------------------------|-----------------|
+| 8 | Policy-denied scanning | CTL.S3.INCOMPLETE.001 | Reports green — scanning role was denied access to bucket policy, ACL, and Public Access Block APIs. The bucket is fully public but the scanner cannot see it. | Flags missing data as unsafe. If required fields are absent from the observation, the bucket cannot be proven safe. |
+| 23 | Latent exposure behind PAB | CTL.S3.PUBLIC.005 | Reports safe — Public Access Block is on. But the underlying policy grants `Principal: "*"`. Removing PAB (one toggle) makes the bucket instantly public. | Flags the underlying public policy as latent exposure even when PAB masks it. |
+| 18 | ACL escalation (WRITE_ACP) | CTL.S3.ACL.ESCALATION.001 | Not checked. Trusted Advisor checks public read access but not whether the public can modify the ACL itself. | Flags WRITE_ACP grants to AllUsers. Anyone can call PutBucketAcl, grant themselves FULL_CONTROL, then read every object. |
+
+References:
+- [Fog Security: Mistrusted Advisor (Aug 2025)](https://www.fogsecurity.io/blog/mistrusted-advisor-public-s3-buckets)
+- [SecurityWeek: AWS Trusted Advisor Tricked](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/)
+
 ### Pass-through to stave
 
 ```bash

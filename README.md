@@ -92,7 +92,7 @@ The core engine is vendor-neutral and asset-type-agnostic. To evaluate a new ass
 
 1. **Extract** — write an extractor in any language that outputs JSON conforming to `obs.v0.1` (any vendor, any asset type, arbitrary JSON properties)
 2. **Author controls** — write YAML controls using the `ctrl.v1` schema with predicates over your asset's property paths
-3. **Evaluate** — `stave apply --observations ./my-snapshots` (with built-in packs or `--controls ./my-controls`)
+3. **Evaluate** — `stave apply --observations ./my-snapshots` (with built-in packs or `--controls ./my-controls` for your own custom controls)
 
 No code changes to Stave required. The `ctrl.v1` predicates compile to CEL expressions that resolve dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
 
