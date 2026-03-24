@@ -149,23 +149,32 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	fa := scopedFieldAccess(field, scopeVar)
 	hf := scopedHasField(field, scopeVar)
 
+	// resolveValueExpr resolves values that reference params (e.g., "params.min_retention_days")
+	// as CEL field accesses instead of string literals.
+	resolveValueExpr := func(v any) string {
+		if s, ok := v.(string); ok && strings.HasPrefix(s, "params.") {
+			return s // emit as-is — CEL resolves params.X from the activation map
+		}
+		return literal(v)
+	}
+
 	switch op {
 	case predicate.OpEq:
-		return fmt.Sprintf("(%s && %s == %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && %s == %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpNe:
-		return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpGt:
-		return fmt.Sprintf("(%s && %s > %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && %s > %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpLt:
-		return fmt.Sprintf("(%s && %s < %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && %s < %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpGte:
-		return fmt.Sprintf("(%s && %s >= %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && %s >= %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpLte:
-		return fmt.Sprintf("(%s && %s <= %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && %s <= %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpIn:
-		return fmt.Sprintf("(%s && %s in %s)", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && %s in %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpContains:
-		return fmt.Sprintf("(%s && string(%s).contains(%s))", hf, fa, literal(val)), nil
+		return fmt.Sprintf("(%s && string(%s).contains(%s))", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpMissing:
 		isMissing := fmt.Sprintf("(!(%s) || missing(%s))", hf, fa)
 		if wantMissing, ok := val.(bool); ok && !wantMissing {

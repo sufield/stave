@@ -84,7 +84,7 @@ Each uses one AWS CLI command and maps directly to one observation field.
 
 **1. CTL.S3.PUBLIC.001 — No Public S3 Bucket Read**
 
-File: `first-example.md` (already written)
+File: `1.md` 
 
 Bucket policy grants `s3:GetObject` to `Principal: "*"`. Anyone can read objects.
 
@@ -133,8 +133,6 @@ Field: `properties.storage.versioning.enabled`
 Fix: Enable versioning.
 
 ---
-
-START FROM HERE
 
 **6. CTL.S3.VERSION.002 — Backup Buckets Must Have MFA Delete Enabled**
 
@@ -569,3 +567,16 @@ Each article must include:
 7. **jq extraction**: complete command producing valid `obs.v0.1` (good observation)
 8. **`stave verify --before ... --after ...`**: showing the finding is resolved
 9. **Control reference**: control ID, severity, observation field checked
+
+---
+
+Missing item numbers:
+
+**1, 3, 11, 17**
+
+They are:
+
+* **1** — No Public S3 Bucket Read
+* **3** — Encryption at Rest Required
+* **11** — No Public List via Policy
+* **17** — No Public Write via ACL

@@ -19,8 +19,9 @@ import (
 // It loads controls lazily on first access and returns cloned slices to prevent
 // callers from mutating the shared cache.
 type Registry struct {
-	fsys fs.FS
-	root string
+	fsys          fs.FS
+	root          string
+	aliasResolver policy.AliasResolver
 
 	mu    sync.RWMutex
 	cache []policy.ControlDefinition
@@ -30,8 +31,21 @@ type Registry struct {
 
 // NewRegistry creates a registry backed by the given filesystem.
 // Pass any fs.FS (embed.FS, fstest.MapFS, os.DirFS) for testing flexibility.
-func NewRegistry(fsys fs.FS, root string) *Registry {
-	return &Registry{fsys: fsys, root: root}
+func NewRegistry(fsys fs.FS, root string, opts ...RegistryOption) *Registry {
+	r := &Registry{fsys: fsys, root: root}
+	for _, o := range opts {
+		o(r)
+	}
+	return r
+}
+
+// RegistryOption configures optional behavior for the builtin registry.
+type RegistryOption func(*Registry)
+
+// WithAliasResolver sets the predicate alias resolver used to expand
+// unsafe_predicate_alias fields in embedded control definitions.
+func WithAliasResolver(resolver policy.AliasResolver) RegistryOption {
+	return func(r *Registry) { r.aliasResolver = resolver }
 }
 
 // All returns all control definitions. It performs a lazy load on the first
@@ -110,10 +124,30 @@ func (r *Registry) unmarshal(path string, data []byte) (policy.ControlDefinition
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("parsing YAML in %q: %w", path, err)
 	}
+	if err := r.resolveAlias(&ctl); err != nil {
+		return policy.ControlDefinition{}, fmt.Errorf("resolving alias in %q: %w", path, err)
+	}
 	if err := ctl.Prepare(); err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("preparing %q: %w", path, err)
 	}
 	return ctl, nil
+}
+
+// resolveAlias expands unsafe_predicate_alias into unsafe_predicate.
+func (r *Registry) resolveAlias(ctl *policy.ControlDefinition) error {
+	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
+	if alias == "" {
+		return nil
+	}
+	if r.aliasResolver == nil {
+		return fmt.Errorf("unsafe_predicate_alias %q requires an alias resolver", alias)
+	}
+	expanded, ok := r.aliasResolver(alias)
+	if !ok {
+		return fmt.Errorf("unknown unsafe_predicate_alias %q", alias)
+	}
+	ctl.UnsafePredicate = expanded
+	return nil
 }
 
 func (r *Registry) isYAML(path string) bool {

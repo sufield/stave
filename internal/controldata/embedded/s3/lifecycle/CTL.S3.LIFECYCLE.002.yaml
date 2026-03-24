@@ -15,15 +15,20 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
-params: {}
+params:
+  # Minimum retention period in days. Default is 2190 (6 years, HIPAA minimum).
+  # To customize: copy this control to your controls directory and change the
+  # value 2190 in the predicate below to match your organization's policy.
+  min_retention_days: 2190
 remediation:
   description: >
     PHI bucket has a lifecycle expiration rule that deletes data before
-    the HIPAA minimum retention period of 6 years (2190 days).
+    the configured minimum retention period.
   action: >
-    Increase the lifecycle expiration period to at least 2190 days.
-    If the current rule is for storage class transition, ensure the
-    expiration rule is separate and meets the minimum retention period.
+    Increase the lifecycle expiration period to at least the configured
+    min_retention_days value. If the current rule is for storage class
+    transition, ensure the expiration rule is separate and meets the
+    minimum retention period.
   example: |
     {
       "storage": {
@@ -46,4 +51,4 @@ unsafe_predicate:
       value: true
     - field: properties.storage.lifecycle.min_expiration_days
       op: lt
-      value: 2190
+      value: params.min_retention_days

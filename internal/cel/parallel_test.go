@@ -74,7 +74,7 @@ func TestCELParallelEvaluation(t *testing.T) {
 							continue
 						}
 
-						_, evalErr := Evaluate(cp, a, snap.Identities)
+						_, evalErr := Evaluate(cp, a, snap.Identities, ctl.Params.Raw())
 						if evalErr != nil {
 							t.Errorf("eval failed for control %s on asset %s: %v", ctl.ID, a.ID, evalErr)
 							continue

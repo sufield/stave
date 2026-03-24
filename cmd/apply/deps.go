@@ -19,6 +19,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/builtin/pack"
+	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -203,7 +204,7 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig)
 		return appeval.ProjectConfigInput{}, nil
 	}
 
-	builtinRegistry := ctlbuiltin.NewRegistry(ctlbuiltin.EmbeddedFS(), "embedded")
+	builtinRegistry := ctlbuiltin.NewRegistry(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
 
 	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {

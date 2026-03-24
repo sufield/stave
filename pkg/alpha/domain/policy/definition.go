@@ -144,6 +144,9 @@ type ControlParams struct{ m map[string]any }
 // NewParams wraps a raw map in a ControlParams struct.
 func NewParams(m map[string]any) ControlParams { return ControlParams{m: m} }
 
+// Raw returns the underlying map. Returns nil for zero-value ControlParams.
+func (p ControlParams) Raw() map[string]any { return p.m }
+
 // Get retrieves a value by key. Safe to call on a zero-value ControlParams.
 func (p ControlParams) Get(key string) (any, bool) {
 	if p.m == nil {
@@ -166,9 +169,6 @@ func (p ControlParams) Len() int { return len(p.m) }
 
 // IsZero reports whether the inner map is nil.
 func (p ControlParams) IsZero() bool { return p.m == nil }
-
-// Raw returns the underlying map for adapter-layer access.
-func (p ControlParams) Raw() map[string]any { return p.m }
 
 // HasKey returns true if the parameter key exists.
 func (p ControlParams) HasKey(key string) bool {

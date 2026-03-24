@@ -9,7 +9,8 @@ import (
 
 // Evaluate runs a compiled CEL predicate against asset properties.
 // Returns true if the asset matches the unsafe predicate (i.e., is unsafe).
-func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
+// params are the control's configured parameters (e.g., min_retention_days).
+func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdentity, params map[string]any) (bool, error) {
 	props := stringifyNamedTypes(a.Map())
 
 	// Build identity list as []map[string]any for CEL
@@ -18,9 +19,13 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 		idList[i] = stringifyNamedTypes(id.Map())
 	}
 
+	if params == nil {
+		params = map[string]any{}
+	}
+
 	activation := map[string]any{
 		"properties": props,
-		"params":     map[string]any{},
+		"params":     params,
 		"identities": idList,
 		"identity":   map[string]any{},
 	}

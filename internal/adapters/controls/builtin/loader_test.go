@@ -3,11 +3,12 @@ package builtin
 import (
 	"testing"
 
+	"github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func testRegistry() *Registry {
-	return NewRegistry(EmbeddedFS(), "embedded")
+	return NewRegistry(EmbeddedFS(), "embedded", WithAliasResolver(predicate.ResolverFunc()))
 }
 
 func TestLoadAll(t *testing.T) {
@@ -95,5 +96,21 @@ func TestLoadAll_NoDuplicateIDs(t *testing.T) {
 			t.Errorf("duplicate control ID: %s", ctl.ID)
 		}
 		seen[ctl.ID] = true
+	}
+}
+
+func TestLoadAll_AliasesAreExpanded(t *testing.T) {
+	controls, err := testRegistry().All()
+	if err != nil {
+		t.Fatalf("All failed: %v", err)
+	}
+	for _, ctl := range controls {
+		if ctl.UnsafePredicateAlias == "" {
+			continue
+		}
+		if len(ctl.UnsafePredicate.Any) == 0 && len(ctl.UnsafePredicate.All) == 0 {
+			t.Errorf("control %s has unsafe_predicate_alias %q but UnsafePredicate was not expanded",
+				ctl.ID, ctl.UnsafePredicateAlias)
+		}
 	}
 }
