@@ -6,6 +6,9 @@ WORK_DIR="/work"
 ALL_CONTROLS="/scenarios/all_controls.txt"
 INIT_DONE="$WORK_DIR/.init_done"
 
+# Trusted Advisor blind spot scenarios
+BLIND_SPOT_SCENARIOS=(8 23 18)
+
 usage() {
   cat <<'HELP'
 Stave Tutorial Demo — 44 S3 security scenarios
@@ -14,6 +17,7 @@ Usage:
   docker run stave-tutorials --list                  List all scenarios
   docker run stave-tutorials --scenario 1            Run bad config (shows violations)
   docker run stave-tutorials --scenario 1 --fixed    Run fixed config (shows remediation)
+  docker run stave-tutorials --blind-spots           Run the 3 Trusted Advisor blind spots
   docker run stave-tutorials -- stave <args>         Pass-through to stave
 
 Each scenario uses the same project structure. Observations are swapped
@@ -22,6 +26,7 @@ per scenario, then stave apply runs against the observations/ directory.
 Examples:
   docker run stave-tutorials --scenario 10           # CTL.S3.PUBLIC.007 violation
   docker run stave-tutorials --scenario 10 --fixed   # CTL.S3.PUBLIC.007 remediated
+  docker run stave-tutorials --blind-spots           # 3 AWS Trusted Advisor blind spots
   docker run stave-tutorials --list                  # Show all 44 scenarios
 HELP
 }
@@ -168,7 +173,79 @@ run_scenario() {
     fi
   fi
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  exit "$rc"
+
+  return "$rc"
+}
+
+run_blind_spots() {
+  local mode="${1:-bad}"
+
+  cat <<'INTRO'
+================================================================
+  AWS Trusted Advisor Blind Spots
+================================================================
+
+AWS Trusted Advisor checks whether S3 buckets are publicly
+accessible. These three scenarios demonstrate risks that
+Trusted Advisor cannot see.
+
+  #8   Policy-Denied Scanning (Fog Security Bypass)
+       An attacker denies the scanning role access to bucket
+       policy, ACL, and Public Access Block APIs. Trusted
+       Advisor reports green. The bucket is fully public.
+       Stave flags missing data as unsafe.
+
+  #23  Latent Public Exposure Behind Public Access Block
+       A bucket has Public Access Block enabled but an
+       underlying policy grants Principal: "*". Trusted
+       Advisor reports safe. Removing PAB — one toggle —
+       makes the bucket instantly public.
+
+  #18  ACL Escalation (WRITE_ACP)
+       A bucket ACL grants WRITE_ACP to AllUsers. Anyone
+       can call PutBucketAcl, grant themselves FULL_CONTROL,
+       then read every object. Trusted Advisor does not
+       check whether the public can modify the ACL itself.
+
+INTRO
+
+  if [ "$mode" = "fixed" ]; then
+    echo "Running all three with FIXED observations..."
+  else
+    echo "Running all three with BAD observations..."
+  fi
+  echo ""
+
+  local any_failed=0
+  for num in "${BLIND_SPOT_SCENARIOS[@]}"; do
+    rc=0
+    run_scenario "$num" "$mode" || rc=$?
+    echo ""
+    if [ "$rc" -ne 0 ] && [ "$mode" = "fixed" ]; then
+      any_failed=1
+    fi
+  done
+
+  echo "================================================================"
+  echo "  Blind Spot Summary"
+  echo "================================================================"
+  echo ""
+  printf "  %-4s %-28s %-10s %s\n" "#" "Blind Spot" "Control" "Trusted Advisor"
+  printf "  %-4s %-28s %-10s %s\n" "---" "----------" "-------" "---------------"
+  printf "  %-4s %-28s %-10s %s\n" "8"  "Policy-denied scanning"     "INCOMPLETE.001"  "Reports green"
+  printf "  %-4s %-28s %-10s %s\n" "23" "Latent exposure behind PAB" "PUBLIC.005"      "Reports safe"
+  printf "  %-4s %-28s %-10s %s\n" "18" "ACL escalation (WRITE_ACP)" "ESCALATION.001" "Not checked"
+  echo ""
+
+  if [ "$mode" = "bad" ]; then
+    echo "Stave detected all three. Trusted Advisor missed all three."
+    echo ""
+    echo "To see the fixes:"
+    echo "  docker run --rm stave-tutorials --blind-spots --fixed"
+  else
+    echo "All three blind spots remediated."
+  fi
+  echo "================================================================"
 }
 
 case "${1:-}" in
@@ -186,6 +263,14 @@ case "${1:-}" in
       mode="fixed"
     fi
     run_scenario "$num" "$mode"
+    exit $?
+    ;;
+  --blind-spots)
+    mode="bad"
+    if [ "${2:-}" = "--fixed" ] || [ "${2:-}" = "-f" ]; then
+      mode="fixed"
+    fi
+    run_blind_spots "$mode"
     ;;
   --help|-h|"")
     usage
