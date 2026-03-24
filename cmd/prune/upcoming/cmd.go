@@ -1,3 +1,5 @@
+// Package upcoming implements the snapshot upcoming command, which generates
+// action items for currently unsafe assets based on when their next snapshot is due.
 package upcoming
 
 import (
@@ -18,7 +20,7 @@ func NewCmd(p *compose.Provider) *cobra.Command {
 		CtlDir:     "controls/s3",
 		ObsDir:     "observations",
 		DueSoon:    "24h",
-		FormatFlag: "text",
+		FormatFlag: "markdown",
 	}
 
 	cmd := &cobra.Command{
@@ -34,7 +36,7 @@ Inputs:
   --max-unsafe        Maximum allowed unsafe duration (default: from project config)
   --now               Override current time (RFC3339). If omitted, uses wall clock
   --due-soon          Threshold for "due soon" reminders (default: 24h)
-  --format, -f        Output format: text or json (default: text)
+  --format, -f        Output format: markdown or json (default: markdown)
   --control-id        Filter to one or more control IDs (repeatable)
   --asset-type        Filter to one or more asset types (repeatable)
   --status            Filter status: OVERDUE, DUE_NOW, UPCOMING (repeatable)

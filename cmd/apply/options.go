@@ -29,6 +29,7 @@ type cobraState struct {
 	Logger        *slog.Logger
 	Stdout        io.Writer
 	Stderr        io.Writer
+	Stdin         io.Reader
 	GlobalFlags   cmdutil.GlobalFlags
 	FormatChanged bool
 	ObsChanged    bool
@@ -160,7 +161,7 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 		return RunConfig{}, err
 	}
 
-	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
+	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
 		return RunConfig{}, err
 	}
@@ -173,7 +174,6 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 		Quiet:           cs.GlobalFlags.Quiet,
 		Stdout:          compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
 		Stderr:          cs.Stderr,
-		IsJSONMode:      cs.GlobalFlags.IsJSONMode(),
 		Sanitizer:       cs.GlobalFlags.GetSanitizer(),
 	}
 	return RunConfig{Mode: runModeProfile, Profile: cfg, profileClock: clock}, nil
@@ -257,24 +257,24 @@ func (o *ApplyOptions) validateDirsWithConfig(projCfg *appconfig.ProjectConfig) 
 type standardIO struct {
 	Stdout    io.Writer
 	Stderr    io.Writer
+	Stdin     io.Reader
 	Sanitizer kernel.Sanitizer
 	Format    ui.OutputFormat
-	IsJSON    bool
 	Quiet     bool
 }
 
 // ResolveStandardIO extracts IO and format state for the standard apply path.
 func (o *ApplyOptions) ResolveStandardIO(cs cobraState) (standardIO, error) {
-	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
+	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
 		return standardIO{}, err
 	}
 	return standardIO{
 		Stdout:    compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
 		Stderr:    cs.Stderr,
+		Stdin:     cs.Stdin,
 		Sanitizer: cs.GlobalFlags.GetSanitizer(),
 		Format:    format,
-		IsJSON:    cs.GlobalFlags.IsJSONMode(),
 		Quiet:     cs.GlobalFlags.Quiet,
 	}, nil
 }
@@ -289,7 +289,7 @@ func (o *ApplyOptions) buildClock(now time.Time) ports.Clock {
 // ResolveDryRun converts raw CLI options into a ReadinessConfig for dry-run mode.
 // Flag strings are parsed to native types here so the config struct is ready to use.
 func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
-	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, cs.GlobalFlags.IsJSONMode())
+	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
 		return ReadinessConfig{}, err
 	}

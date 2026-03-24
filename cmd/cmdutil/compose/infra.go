@@ -136,7 +136,9 @@ func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Asset
 		return Assets{}, fmt.Errorf("create control loader: %w", err)
 	}
 
-	var res Assets
+	var snapshots []asset.Snapshot
+	var controls []policy.ControlDefinition
+
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
@@ -144,7 +146,7 @@ func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Asset
 		if loadErr != nil {
 			return fmt.Errorf("load observations from %q: %w", obsDir, loadErr)
 		}
-		res.Snapshots = loadResult.Snapshots
+		snapshots = loadResult.Snapshots
 		return nil
 	})
 
@@ -153,12 +155,12 @@ func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Asset
 		if loadErr != nil {
 			return fmt.Errorf("load controls from %q: %w", ctlDir, loadErr)
 		}
-		res.Controls = ctls
+		controls = ctls
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
 		return Assets{}, err
 	}
-	return res, nil
+	return Assets{Snapshots: snapshots, Controls: controls}, nil
 }

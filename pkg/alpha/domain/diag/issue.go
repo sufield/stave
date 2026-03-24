@@ -37,26 +37,31 @@ func New(code Code) *Builder {
 	}
 }
 
+// Error sets the issue signal to error severity.
 func (b *Builder) Error() *Builder {
 	b.issue.Signal = SignalError
 	return b
 }
 
+// Warning sets the issue signal to warning severity.
 func (b *Builder) Warning() *Builder {
 	b.issue.Signal = SignalWarn
 	return b
 }
 
+// Msg sets the human-readable issue message.
 func (b *Builder) Msg(message string) *Builder {
 	b.issue.Message = message
 	return b
 }
 
+// Action sets the recommended remediation action.
 func (b *Builder) Action(action string) *Builder {
 	b.issue.Action = action
 	return b
 }
 
+// Command sets the suggested CLI command to resolve the issue.
 func (b *Builder) Command(command string) *Builder {
 	b.issue.Command = command
 	return b

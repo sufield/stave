@@ -143,7 +143,7 @@ func TestRunnerBuildAppConfig(t *testing.T) {
 	}
 }
 
-func TestPresenterRenderReport_EnvelopeMode(t *testing.T) {
+func TestPresenterRenderReport_BareJSON(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{Case: diagnosis.ScenarioEmptyFindings, Signal: "s", Evidence: "e", Action: "a"},
@@ -163,7 +163,7 @@ func TestPresenterRenderReport_EnvelopeMode(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{Stdout: &buf, Format: ui.OutputFormatJSON, EnvelopeMode: true}
+	p := &Presenter{Stdout: &buf, Format: ui.OutputFormatJSON}
 	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("RenderReport() error = %v", err)
 	}
@@ -172,17 +172,12 @@ func TestPresenterRenderReport_EnvelopeMode(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("unmarshal diagnose json: %v", err)
 	}
-	if _, ok := out["ok"]; !ok {
-		t.Fatalf("expected envelope output, got %s", buf.String())
+	// Bare JSON should NOT have an envelope "ok" field
+	if _, ok := out["ok"]; ok {
+		t.Fatalf("did not expect envelope in bare JSON mode: %s", buf.String())
 	}
-
-	buf.Reset()
-	p.EnvelopeMode = false
-	if err := p.RenderReport(report); err != nil {
-		t.Fatalf("RenderReport() no-envelope error = %v", err)
-	}
-	if strings.Contains(buf.String(), "\"ok\"") {
-		t.Fatalf("did not expect envelope in non-envelope mode: %s", buf.String())
+	if _, ok := out["schema_version"]; !ok {
+		t.Fatalf("expected schema_version in bare JSON output, got %s", buf.String())
 	}
 }
 

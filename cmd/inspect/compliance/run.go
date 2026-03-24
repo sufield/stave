@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ import (
 )
 
 func run(cmd *cobra.Command, file string, frameworks, checkIDs []string) error {
-	raw, err := readInput(file, os.Stdin)
+	raw, err := readInput(file, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

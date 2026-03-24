@@ -10,6 +10,8 @@ const (
 	FormatJSON OutputFormat = "json"
 	// FormatSARIF selects SARIF v2.1.0 output for GitHub Code Scanning.
 	FormatSARIF OutputFormat = "sarif"
+	// FormatMarkdown selects Markdown output (headings + pipe tables).
+	FormatMarkdown OutputFormat = "markdown"
 )
 
 // String implements fmt.Stringer.

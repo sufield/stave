@@ -48,6 +48,7 @@ var infraKeys = map[string]struct{}{
 	"bucket":  {},
 	"arn":     {},
 	"account": {},
+	"error":   {},
 }
 
 func (c Config) isSensitiveLogKey(groups []string, key string) bool {

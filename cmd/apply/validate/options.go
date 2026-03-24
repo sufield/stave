@@ -26,9 +26,6 @@ func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
-	if !cmd.Flags().Changed("quiet") {
-		o.Quiet = eval.Quiet()
-	}
 }
 
 type options struct {
@@ -50,7 +47,6 @@ type options struct {
 	Format   string
 	Template string
 	FixHints bool
-	Quiet    bool
 }
 
 func (o *options) hintCtx() hintContext {
@@ -76,7 +72,6 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.BoolVar(&o.Strict, "strict", false, "Treat warnings as errors (exit 2)")
 	f.BoolVar(&o.FixHints, "fix-hints", false, "Print remediation hints after issues")
-	f.BoolVar(&o.Quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output"))
 	f.StringVar(&o.InputPath, "in", "", "Single input file or '-' for stdin")
 	f.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version override")
 	f.StringVar(&o.Kind, "kind", "", "Contract kind: control|observation|finding")
@@ -168,7 +163,7 @@ func (o *options) prepareAndLogEnvironment(cmd *cobra.Command) error {
 	}
 	root := resolver.ProjectRoot()
 	gitMeta := compose.AuditGitStatus(root, []string{o.Controls, cfgPath})
-	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", o.Quiet || gf.Quiet)
+	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", gf.Quiet)
 
 	ctxName := "none"
 	if resolver != nil {

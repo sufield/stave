@@ -25,7 +25,6 @@ type diagnoseOptions struct {
 	MaxUnsafeDuration string
 	NowTime           string
 	Format            string
-	Quiet             bool
 	Cases             []string
 	SignalContains    string
 	Template          string
@@ -42,7 +41,6 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", "text", "Output format: text or json")
-	f.BoolVar(&o.Quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	f.StringSliceVar(&o.Cases, "case", nil, "Filter to one or more diagnostic case values")
 	f.StringVar(&o.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
 	f.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
@@ -68,9 +66,6 @@ func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {
 	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
-	}
-	if !cmd.Flags().Changed("quiet") {
-		o.Quiet = eval.Quiet()
 	}
 }
 
@@ -125,7 +120,7 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		PreviousOutput:    fsutil.CleanUserPath(o.PreviousOutput),
 		MaxUnsafeDuration: maxUnsafe,
 		Format:            fmtValue,
-		Quiet:             o.Quiet,
+		Quiet:             flags.Quiet,
 		Cases:             o.Cases,
 		SignalContains:    o.SignalContains,
 		Template:          o.Template,
@@ -136,6 +131,5 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		Stdin:             cmd.InOrStdin(),
 		Clock:             clock,
 		Sanitizer:         flags.GetSanitizer(),
-		EnvelopeMode:      flags.IsJSONMode(),
 	}, nil
 }

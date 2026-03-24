@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/app/capabilities"
@@ -26,7 +25,6 @@ import (
 // VersionRunner collects version, schema, and project metadata for display.
 type VersionRunner struct {
 	Stdout io.Writer
-	Flags  cmdutil.GlobalFlags
 }
 
 // Run produces version output in text or JSON format.
@@ -41,10 +39,6 @@ func (r *VersionRunner) Run(edition Edition, verbose bool) error {
 
 	if verbose {
 		r.enrichWithProjectInfo(&out)
-	}
-
-	if r.Flags.IsJSONMode() {
-		return jsonutil.WriteIndented(r.Stdout, out)
 	}
 
 	if !verbose {
@@ -97,7 +91,6 @@ func newVersionCmd(edition Edition) *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			runner := &VersionRunner{
 				Stdout: cmd.OutOrStdout(),
-				Flags:  cmdutil.GetGlobalFlags(cmd),
 			}
 			return runner.Run(edition, verbose)
 		},

@@ -51,11 +51,10 @@ func testReporter(buf *bytes.Buffer, jsonOutput bool, opts *options) *Reporter {
 		format = "json"
 	}
 	return &Reporter{
-		Writer:     buf,
-		Format:     format,
-		Strict:     opts.Strict,
-		FixHints:   opts.FixHints,
-		GlobalJSON: jsonOutput,
+		Writer:   buf,
+		Format:   format,
+		Strict:   opts.Strict,
+		FixHints: opts.FixHints,
 	}
 }
 

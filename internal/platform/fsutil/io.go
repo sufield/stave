@@ -266,6 +266,13 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	dir := filepath.Dir(path)
 	base := filepath.Base(path)
 
+	// Create parent directory if it does not exist.
+	if dir != "" && dir != "." {
+		if mkErr := SafeMkdirAll(dir, WriteOptions{Perm: 0o700}); mkErr != nil {
+			return fmt.Errorf("create parent directory for atomic write %q: %w", dir, mkErr)
+		}
+	}
+
 	tmpFile, err := os.CreateTemp(dir, "."+base+".tmp-*")
 	if err != nil {
 		return fmt.Errorf("create temp file for atomic write: %w", err)

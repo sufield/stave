@@ -40,9 +40,8 @@ type Config struct {
 	Stdin  io.Reader
 
 	// Dependencies resolved by the CLI layer.
-	Clock        ports.Clock
-	Sanitizer    kernel.Sanitizer
-	EnvelopeMode bool
+	Clock     ports.Clock
+	Sanitizer kernel.Sanitizer
 }
 
 // IsDetailMode returns true if both IDs are provided for a deep-dive analysis.
@@ -189,10 +188,9 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagn
 
 func (r *Runner) newPresenter(cfg Config) *Presenter {
 	return &Presenter{
-		Stdout:       cfg.Stdout,
-		Format:       cfg.Format,
-		Quiet:        cfg.Quiet,
-		Template:     cfg.Template,
-		EnvelopeMode: cfg.EnvelopeMode,
+		Stdout:   cfg.Stdout,
+		Format:   cfg.Format,
+		Quiet:    cfg.Quiet,
+		Template: cfg.Template,
 	}
 }

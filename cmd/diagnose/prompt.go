@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
@@ -45,7 +44,6 @@ func newPromptFromFindingCmd(p *compose.Provider) *cobra.Command {
 		controlsDir string
 		obsDir      string
 		format      string
-		quietMode   bool
 	)
 
 	cmd := &cobra.Command{
@@ -103,9 +101,6 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if !cmd.Flags().Changed("quiet") {
-				quietMode = cmdctx.EvaluatorFromCmd(cmd).Quiet()
-			}
 			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
 			if fmtErr != nil {
 				return fmtErr
@@ -141,7 +136,7 @@ Examples:
 				EvalFile: fsutil.CleanUserPath(evalFile),
 				AssetID:  strings.TrimSpace(assetID),
 				Format:   fmtValue,
-				Quiet:    quietMode || cmdutil.GetGlobalFlags(cmd).Quiet,
+				Quiet:    cmdutil.GetGlobalFlags(cmd).Quiet,
 				Stdout:   cmd.OutOrStdout(),
 				Stderr:   cmd.ErrOrStderr(),
 			})
@@ -153,7 +148,6 @@ Examples:
 	cmd.Flags().StringVarP(&controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
 	cmd.Flags().StringVarP(&obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&quietMode, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = cmd.MarkFlagRequired("evaluation-file")
 	_ = cmd.MarkFlagRequired("asset-id")

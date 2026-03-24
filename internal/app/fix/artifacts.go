@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -31,19 +30,30 @@ type WriteOptions struct {
 	DirPerms      fs.FileMode
 }
 
+// FileSystem is a port for filesystem operations. Implementations must
+// provide safe directory creation and file writing (e.g., symlink
+// protection, overwrite control). The platform layer provides
+// SafeFileSystem; tests can use a mock.
+type FileSystem interface {
+	MkdirAll(path string, perm fs.FileMode) error
+	WriteFile(path string, data []byte, perm fs.FileMode) error
+}
+
 // ArtifactWriter persists verification results to the filesystem.
 type ArtifactWriter struct {
 	OutDir  string
 	Options WriteOptions
 	Stdout  io.Writer
+	fs      FileSystem
+}
 
-	// MkdirAllFn creates directories. Injected by the cmd layer to use
-	// fsutil.SafeMkdirAll for symlink protection. Defaults to os.MkdirAll.
-	MkdirAllFn func(path string, perm fs.FileMode) error
-
-	// WriteFileFn writes data to a file. Injected by the cmd layer to use
-	// fsutil.SafeWriteFile. Defaults to os.WriteFile.
-	WriteFileFn func(path string, data []byte, perm fs.FileMode) error
+// NewArtifactWriter constructs an ArtifactWriter with a required FileSystem.
+// The cmd layer must inject a FileSystem backed by safe platform functions.
+func NewArtifactWriter(outDir string, opts WriteOptions, stdout io.Writer, fs FileSystem) *ArtifactWriter {
+	if fs == nil {
+		panic("fix.NewArtifactWriter: FileSystem implementation is required")
+	}
+	return &ArtifactWriter{OutDir: outDir, Options: opts, Stdout: stdout, fs: fs}
 }
 
 // PersistVerification writes the full suite of verification artifacts to disk.
@@ -57,11 +67,7 @@ func (m *ArtifactWriter) PersistVerification(
 		return artifacts, nil
 	}
 
-	mkdirAll := m.MkdirAllFn
-	if mkdirAll == nil {
-		mkdirAll = os.MkdirAll
-	}
-	if err := mkdirAll(m.OutDir, m.Options.DirPerms); err != nil {
+	if err := m.fs.MkdirAll(m.OutDir, m.Options.DirPerms); err != nil {
 		return artifacts, fmt.Errorf("output directory access error: %w", err)
 	}
 
@@ -108,11 +114,7 @@ func (m *ArtifactWriter) writeJSON(path string, value any) error {
 	if err != nil {
 		return fmt.Errorf("marshal json for %s: %w", path, err)
 	}
-	writeFile := m.WriteFileFn
-	if writeFile == nil {
-		writeFile = os.WriteFile
-	}
-	if err := writeFile(path, data, 0o600); err != nil {
+	if err := m.fs.WriteFile(path, data, 0o600); err != nil {
 		return fmt.Errorf("writing %s: %w", path, err)
 	}
 	return nil

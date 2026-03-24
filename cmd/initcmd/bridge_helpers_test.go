@@ -20,7 +20,6 @@ func GetRootCmd() *cobra.Command {
 	}
 
 	p := root.PersistentFlags()
-	p.String(cmdutil.FlagOutput, "text", "Output format: json or text")
 	p.Bool(cmdutil.FlagQuiet, false, "Suppress output")
 	p.CountP("verbose", "v", "Increase verbosity")
 	p.Bool(cmdutil.FlagForce, false, "Allow overwrite operations")

@@ -5,13 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
 // Flag constants to prevent typos across the CLI tree.
 const (
-	FlagOutput        = "output"
 	FlagFormat        = "format"
 	FlagQuiet         = "quiet"
 	FlagForce         = "force"
@@ -29,7 +27,6 @@ const DynamicDefaultHelpSuffix = " Resolved default may come from STAVE_* env va
 
 // GlobalFlags represents the state of persistent flags registered at the root.
 type GlobalFlags struct {
-	Output            ui.OutputFormat
 	Quiet             bool
 	Force             bool
 	Sanitize          bool
@@ -49,11 +46,7 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 	}
 	rootFlags := cmd.Root().PersistentFlags()
 
-	outputRaw := getStr(rootFlags, FlagOutput)
-	outputMode, _ := ui.ParseOutputMode(outputRaw)
-
 	return GlobalFlags{
-		Output:          outputMode,
 		Quiet:           getBool(rootFlags, FlagQuiet),
 		Force:           getBool(rootFlags, FlagForce),
 		Sanitize:        getBool(rootFlags, FlagSanitize),
@@ -67,14 +60,9 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 
 // --- Logic Helpers (Decoupled from Cobra) ---
 
-// IsJSONMode returns true if the output mode is set to JSON.
-func (g GlobalFlags) IsJSONMode() bool {
-	return g.Output == ui.OutputFormatJSON
-}
-
 // TextOutputEnabled returns true if human-readable text should be printed.
 func (g GlobalFlags) TextOutputEnabled() bool {
-	return !g.Quiet && !g.IsJSONMode()
+	return !g.Quiet
 }
 
 // GetSanitizer returns a configured sanitizer based on the global flags.
@@ -120,23 +108,13 @@ func ControlsFlagChanged(cmd *cobra.Command) bool {
 	return cmd.Flags().Changed(FlagControls)
 }
 
-// ResolveFormat calculates the effective output format, accounting for JSON mode overrides.
-func ResolveFormat(cmd *cobra.Command, rawFormat string) string {
-	if cmd == nil {
-		return rawFormat
-	}
-	if !cmd.Flags().Changed(FlagFormat) && GetGlobalFlags(cmd).IsJSONMode() {
-		return "json"
-	}
+// ResolveFormat returns the trimmed format string.
+func ResolveFormat(_ *cobra.Command, rawFormat string) string {
 	return strings.TrimSpace(rawFormat)
 }
 
-// ResolveFormatPure calculates the effective output format without cobra.
-// formatChanged indicates whether --format was explicitly set.
-func ResolveFormatPure(rawFormat string, formatChanged bool, isJSONMode bool) string {
-	if !formatChanged && isJSONMode {
-		return "json"
-	}
+// ResolveFormatPure returns the trimmed format string without cobra.
+func ResolveFormatPure(rawFormat string, _ bool, _ bool) string {
 	return strings.TrimSpace(rawFormat)
 }
 

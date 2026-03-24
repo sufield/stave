@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -27,7 +26,6 @@ func NewTraceCmd(p *compose.Provider) *cobra.Command {
 		observation string
 		assetID     string
 		format      string
-		quiet       bool
 	)
 
 	cmd := &cobra.Command{
@@ -52,9 +50,6 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if !cmd.Flags().Changed("quiet") {
-				quiet = cmdctx.EvaluatorFromCmd(cmd).Quiet()
-			}
 			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
 			if fmtErr != nil {
 				return fmtErr
@@ -85,7 +80,7 @@ Examples:
 				AssetID:         strings.TrimSpace(assetID),
 				ObservationPath: cleanObsPath,
 				Format:          fmtValue,
-				Quiet:           quiet || cmdutil.GetGlobalFlags(cmd).Quiet,
+				Quiet:           cmdutil.GetGlobalFlags(cmd).Quiet,
 				Stdout:          cmd.OutOrStdout(),
 			})
 		},
@@ -96,7 +91,6 @@ Examples:
 	cmd.Flags().StringVar(&observation, "observation", "", "Path to single observation JSON file (required)")
 	cmd.Flags().StringVar(&assetID, "asset-id", "", "Asset ID to trace against (required)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().BoolVar(&quiet, "quiet", false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 
 	_ = cmd.MarkFlagRequired("control")
 	_ = cmd.MarkFlagRequired("observation")

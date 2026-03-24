@@ -13,11 +13,10 @@ import (
 
 // Reporter handles the formatting and writing of validation results.
 type Reporter struct {
-	Writer     io.Writer
-	Format     string // "text", "json", or path to template
-	Strict     bool
-	FixHints   bool
-	GlobalJSON bool // Global CLI --json mode (affects JSON envelope)
+	Writer   io.Writer
+	Format   string // "text", "json", or path to template
+	Strict   bool
+	FixHints bool
 }
 
 // Write outputs the validation result based on reporter configuration.
@@ -31,7 +30,7 @@ func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
 
 	switch {
 	case r.Format == "json":
-		return outjson.WriteValidation(r.Writer, report, r.GlobalJSON, result.Valid())
+		return outjson.WriteValidation(r.Writer, report)
 	case r.Format != "" && r.Format != "text":
 		return ui.ExecuteTemplate(r.Writer, r.Format, report)
 	default:

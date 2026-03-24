@@ -18,11 +18,10 @@ import (
 
 // Presenter handles formatting and writing diagnostic results.
 type Presenter struct {
-	Stdout       io.Writer
-	Format       ui.OutputFormat
-	Quiet        bool
-	Template     string
-	EnvelopeMode bool
+	Stdout   io.Writer
+	Format   ui.OutputFormat
+	Quiet    bool
+	Template string
 }
 
 // RenderReport writes a standard diagnostic report.
@@ -33,7 +32,7 @@ func (p *Presenter) RenderReport(report *diagnosis.Report) error {
 	}
 	out := compose.ResolveStdout(p.Stdout, p.Quiet, p.Format)
 	if p.Format.IsJSON() {
-		return outjson.WriteDiagnosis(out, report, p.EnvelopeMode)
+		return outjson.WriteDiagnosis(out, report)
 	}
 	return outtext.WriteDiagnosisReport(out, report, func(level, msg string) string {
 		return ui.SeverityLabel(level, msg, out)

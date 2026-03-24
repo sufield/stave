@@ -2,7 +2,6 @@ package projconfig
 
 import (
 	"errors"
-	"log/slog"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
@@ -15,6 +14,11 @@ var DefaultEvaluator *appconfig.Evaluator
 // package-level evaluator. Commands should call GlobalConfigError() early
 // in their RunE/PreRunE to fail fast on malformed config files.
 var configLoadErr error
+
+// configWarnings holds config-load warnings for deferred replay.
+// These are collected during lazy init (before the logger is configured)
+// and replayed by bootstrap after initLogger().
+var configWarnings []error
 
 // Global returns the package-level evaluator. Use of this should be minimized
 // in favor of passing a local Evaluator instance where possible.
@@ -38,6 +42,14 @@ func GlobalConfigError() error {
 	return configLoadErr
 }
 
+// ConfigWarnings returns config-load warnings collected during lazy init.
+// Bootstrap calls this after initLogger() to replay warnings through the
+// configured logger instead of the pre-bootstrap default.
+func ConfigWarnings() []error {
+	_ = Global() // force lazy init
+	return configWarnings
+}
+
 // defaultEvaluator creates a fresh evaluator from the filesystem.
 // Any loading errors are stored in configLoadErr so that callers
 // of GlobalConfigError() can detect degraded operation.
@@ -46,15 +58,14 @@ func defaultEvaluator() *appconfig.Evaluator {
 
 	pCfg, pPath, err := FindProjectConfigWithPath("")
 	if err != nil {
-		slog.Warn("failed to load project config", "error", err)
 		errs = append(errs, err)
 	}
 	uCfg, uPath, _, uErr := FindUserConfigWithPath()
 	if uErr != nil {
-		slog.Warn("failed to load user config", "error", uErr)
 		errs = append(errs, uErr)
 	}
 
 	configLoadErr = errors.Join(errs...)
+	configWarnings = errs
 	return appconfig.NewEvaluator(pCfg, pPath, uCfg, uPath)
 }

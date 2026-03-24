@@ -1,3 +1,5 @@
+// Package prune implements snapshot lifecycle commands: archive, prune, plan,
+// quality, upcoming, hygiene, manifest, and diff.
 package prune
 
 import (

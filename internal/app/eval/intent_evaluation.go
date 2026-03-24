@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"sync"
 
 	"github.com/sufield/stave/internal/app/capabilities"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -65,40 +64,30 @@ func (r IntentEvaluationResult) FirstError() error {
 }
 
 // LoadArtifacts performs preflight artifact loading and optional compatibility checks.
-// Controls and observations are loaded concurrently since they are independent I/O.
 func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluationConfig) IntentEvaluationResult {
 	var (
 		controls   []policy.ControlDefinition
 		ctlErr     error
 		loadResult appcontracts.LoadResult
 		obsErr     error
-		wg         sync.WaitGroup
 	)
 
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		// When controls come from built-in packs, the controls directory
-		// may not exist on disk. Skip loading entirely.
-		if cfg.SkipControlsLoad {
-			return
-		}
+	// Load controls (skip when using built-in packs).
+	if !cfg.SkipControlsLoad {
 		controls, ctlErr = appcontracts.LoadControls(ctx, i.ControlRepo, cfg.ControlsDir)
 		if ctlErr == nil && cfg.RequireControls && len(controls) == 0 {
 			ctlErr = fmt.Errorf("%w: no controls in %s (expected .yaml files with dsl_version: ctrl.v1)", ErrNoControls, cfg.ControlsDir)
 		}
-	}()
-	go func() {
-		defer wg.Done()
-		loadResult, obsErr = appcontracts.LoadSnapshots(ctx, i.ObservationRepo, cfg.ObservationsDir)
-		if obsErr == nil && !cfg.OptionalSnapshots && len(loadResult.Snapshots) == 0 {
-			obsErr = fmt.Errorf("%w: no snapshots in %s (expected .json files with schema_version: obs.v0.1)", ErrNoSnapshots, cfg.ObservationsDir)
-		}
-		if obsErr == nil && !cfg.SkipSourceTypeCheck {
-			obsErr = validateSourceTypeCompatibility(loadResult.Snapshots, cfg.AllowUnknownInput, stderrWarnf(cfg.Stderr))
-		}
-	}()
-	wg.Wait()
+	}
+
+	// Load observations.
+	loadResult, obsErr = appcontracts.LoadSnapshots(ctx, i.ObservationRepo, cfg.ObservationsDir)
+	if obsErr == nil && !cfg.OptionalSnapshots && len(loadResult.Snapshots) == 0 {
+		obsErr = fmt.Errorf("%w: no snapshots in %s (expected .json files with schema_version: obs.v0.1)", ErrNoSnapshots, cfg.ObservationsDir)
+	}
+	if obsErr == nil && !cfg.SkipSourceTypeCheck {
+		obsErr = validateSourceTypeCompatibility(loadResult.Snapshots, cfg.AllowUnknownInput, stderrWarnf(cfg.Stderr))
+	}
 
 	return IntentEvaluationResult{
 		Controls:       controls,

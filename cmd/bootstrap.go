@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -18,13 +19,17 @@ import (
 )
 
 func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
+	// Create cancelable root context for graceful signal handling.
+	// The signal handler calls a.cancel() instead of os.Exit(),
+	// allowing deferred cleanup to run.
+	ctx, cancel := context.WithCancel(cmd.Context()) //nolint:gosec // cancel is stored on a.cancel and called by the signal handler
+	a.cancel = cancel
+	cmd.SetContext(ctx)
+
 	if err := a.startCPUProfile(); err != nil {
 		return err
 	}
 	a.resolveGlobalFlagDefaults(cmd)
-	if err := a.validateOutputMode(); err != nil {
-		return err
-	}
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
@@ -40,9 +45,16 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	// Replay config-load warnings through the configured logger.
+	// These were collected during resolveGlobalFlagDefaults before
+	// the logger was initialized.
+	for _, w := range projconfig.ConfigWarnings() {
+		a.Logger.Warn("config load warning", "error", w)
+	}
+
 	// Store the logger in Cobra's context so commands retrieve it via
 	// cmdutil.LoggerFromCmd(cmd) instead of reading slog.Default().
-	ctx := cmdctx.WithLogger(cmd.Context(), a.Logger)
+	ctx = cmdctx.WithLogger(cmd.Context(), a.Logger)
 	cmd.SetContext(ctx)
 
 	return nil
@@ -59,9 +71,6 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command) {
 	cmd.SetContext(ctx)
 
 	p := cmd.Root().PersistentFlags()
-	if !p.Changed(cmdutil.FlagOutput) {
-		a.Flags.OutputMode = eval.OutputMode()
-	}
 	if !p.Changed(cmdutil.FlagQuiet) {
 		a.Flags.Quiet = eval.Quiet()
 	}
@@ -99,9 +108,6 @@ func (a *App) checkConfigHealth(cmd *cobra.Command) error {
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
 	a.stopCPUProfile()
 	a.writeMemProfile(cmd)
-	if !a.Flags.Quiet && !cmdutil.GetGlobalFlags(a.Root).IsJSONMode() {
-		fmt.Fprintln(cmd.ErrOrStderr(), "\nNeed help? Run 'stave bug-report' to create a diagnostic bundle.")
-	}
 	if a.LogCloser != nil {
 		_ = a.LogCloser.Close()
 	}
@@ -144,20 +150,22 @@ func (a *App) writeMemProfile(cmd *cobra.Command) {
 	opts.AllowSymlink = a.Flags.AllowSymlinkOut
 	f, err := fsutil.SafeCreateFile(fsutil.CleanUserPath(a.Flags.MemProfile), opts)
 	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: create memory profile: %v\n", err)
+		if a.Logger != nil {
+			a.Logger.Warn("failed to create memory profile", "error", err)
+		} else {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Warning: create memory profile: %v\n", err)
+		}
 		return
 	}
 	defer f.Close()
 	runtime.GC()
 	if err := pprof.WriteHeapProfile(f); err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Warning: write memory profile: %v\n", err)
+		if a.Logger != nil {
+			a.Logger.Warn("failed to write memory profile", "error", err)
+		} else {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Warning: write memory profile: %v\n", err)
+		}
 	}
-}
-
-// validateOutputMode validates the --output flag value early, before any command runs.
-func (a *App) validateOutputMode() error {
-	_, err := ui.ParseOutputMode(a.Flags.OutputMode)
-	return err
 }
 
 // checkRequireOffline validates the offline guarantee when --require-offline is set.

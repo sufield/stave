@@ -50,6 +50,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		Ctx:         cmd.Context(),
 		Stdout:      cmd.OutOrStdout(),
 		Stderr:      cmd.ErrOrStderr(),
+		Stdin:       cmd.InOrStdin(),
 		GlobalFlags: cmdutil.GetGlobalFlags(cmd),
 	}
 

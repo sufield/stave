@@ -1,3 +1,4 @@
+// Package jsonutil provides JSON encoding helpers for CLI output.
 package jsonutil
 
 import (
