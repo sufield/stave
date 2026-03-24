@@ -1,0 +1,1 @@
+CTL.S3.WRITE.SCOPE.001|high|S3 Signed Upload Must Bind To Exact Object Key

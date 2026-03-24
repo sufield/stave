@@ -1,0 +1,1 @@
+CTL.S3.PUBLIC.PREFIX.001|high|Protected Prefixes Must Not Be Publicly Readable

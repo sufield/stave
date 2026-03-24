@@ -1,0 +1,1 @@
+CTL.S3.PUBLIC.002|critical|No Public S3 Buckets With Sensitive Data

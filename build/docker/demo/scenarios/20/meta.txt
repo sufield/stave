@@ -1,0 +1,1 @@
+CTL.S3.AUTH.WRITE.001|high|No Authenticated-Users Write Access

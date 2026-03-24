@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-20T00:00:00Z",
+  "assets": [
+    {
+      "id": "static-site",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "static-site",
+          "access": {
+            "public_read": true
+          },
+          "content": {
+            "exposed_repo_artifacts": true
+          }
+        }
+      }
+    }
+  ]
+}

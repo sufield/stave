@@ -1,0 +1,1 @@
+CTL.S3.AUTH.READ.001|high|No Authenticated-Users Read Access

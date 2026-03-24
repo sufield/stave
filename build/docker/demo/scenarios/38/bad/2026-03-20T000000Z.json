@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "upload-policy-audit",
+    "tool": "manual",
+    "tool_version": "1.0"
+  },
+  "captured_at": "2026-03-20T00:00:00Z",
+  "assets": [
+    {
+      "id": "upload-endpoint-api-upload",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "s3_upload": {
+          "operation": "write",
+          "allowed_key_mode": "prefix"
+        }
+      }
+    }
+  ]
+}

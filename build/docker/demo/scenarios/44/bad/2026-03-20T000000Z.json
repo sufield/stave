@@ -1,0 +1,81 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-20T00:00:00Z",
+  "assets": [
+    {
+      "id": "production-data",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "production-data",
+          "tags": {
+            "data-classification": "confidential",
+            "retention": "7-years"
+          },
+          "controls": {
+            "public_access_fully_blocked": true
+          },
+          "access": {
+            "public_read": false,
+            "public_write": false,
+            "public_list": false,
+            "read_via_identity": false,
+            "list_via_identity": false,
+            "has_wildcard_policy": false,
+            "has_external_write": false,
+            "has_vpc_condition": false,
+            "has_ip_condition": false,
+            "effective_network_scope": "internet",
+            "external_account_ids": [],
+            "latent_public_read": false,
+            "latent_public_list": false,
+            "authenticated_read": false,
+            "authenticated_write": false,
+            "write_via_resource": false
+          },
+          "acl": {
+            "public_full_control": false,
+            "public_read_acp": false,
+            "public_write_acp": false
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "in_transit_enforced": false,
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/abcd1234-5678-90ab-cdef-1234567890ab"
+          },
+          "logging": {
+            "enabled": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete": false
+          },
+          "lifecycle": {
+            "rules_configured": true,
+            "has_expiration": false,
+            "min_expiration_days": 0
+          },
+          "object_lock": {
+            "enabled": true,
+            "mode": "COMPLIANCE",
+            "retention_days": 2555
+          },
+          "website": {
+            "enabled": false
+          },
+          "content": {
+            "exposed_repo_artifacts": false
+          }
+        }
+      }
+    }
+  ]
+}

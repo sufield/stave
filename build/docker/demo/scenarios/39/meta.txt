@@ -1,0 +1,1 @@
+CTL.S3.WRITE.CONTENT.001|high|S3 Signed Upload Must Restrict Content Types

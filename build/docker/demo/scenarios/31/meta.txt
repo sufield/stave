@@ -1,0 +1,1 @@
+CTL.S3.LIFECYCLE.002|medium|PHI Buckets Must Not Expire Data Before Minimum Retention

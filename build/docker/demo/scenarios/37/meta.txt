@@ -1,0 +1,1 @@
+CTL.S3.REPO.ARTIFACT.001|medium|Public Buckets Must Not Expose VCS Artifacts
