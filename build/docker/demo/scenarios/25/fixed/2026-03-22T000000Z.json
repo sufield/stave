@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-22T00:00:00Z",
+  "assets": [
+    {
+      "id": "compliance-reports",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "compliance-reports",
+          "access": {
+            "external_account_ids": [
+              "123456789012"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

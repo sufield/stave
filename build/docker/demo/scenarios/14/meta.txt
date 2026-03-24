@@ -1,0 +1,1 @@
+CTL.S3.NETWORK.001|high|Public-Principal Policies Must Have Network Conditions

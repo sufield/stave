@@ -1,0 +1,36 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-20T00:00:00Z",
+  "assets": [
+    {
+      "id": "tenant-data",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "tenant-data",
+          "tags": {
+            "tenant_mode": "shared",
+            "tenant_prefix": "org-123"
+          }
+        }
+      }
+    }
+  ],
+  "identities": [
+    {
+      "id": "appsigner:s3:uploads",
+      "type": "app_signer",
+      "vendor": "aws",
+      "properties": {
+        "purpose": "enforce_prefix=false allow_traversal=true"
+      }
+    }
+  ]
+}

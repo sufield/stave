@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-22T00:00:00Z",
+  "assets": [
+    {
+      "id": "mixed-content",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "mixed-content",
+          "prefix_exposure": {
+            "has_identity_evidence": true,
+            "has_resource_evidence": true,
+            "identity_read_scopes": [
+              "images/"
+            ],
+            "identity_source_by_scope": {
+              "images/": "PublicReadImages"
+            },
+            "identity_read_blocked": false,
+            "resource_read_all": false,
+            "resource_read_blocked": false
+          }
+        }
+      }
+    }
+  ]
+}

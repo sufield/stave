@@ -1,0 +1,1 @@
+CTL.S3.LOCK.001|medium|Compliance-Tagged Buckets Must Have Object Lock Enabled
