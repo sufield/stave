@@ -47,7 +47,6 @@ type Config struct {
 	Quiet           bool
 	Stdout          io.Writer
 	Stderr          io.Writer
-	IsJSONMode      bool
 	Sanitizer       kernel.Sanitizer
 }
 

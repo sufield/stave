@@ -1,8 +1,8 @@
 package compose
 
 import (
-	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,14 +53,12 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 	}
 }
 
-// WarnGitDirty prints a warning to stderr if the repository is dirty.
+// WarnGitDirty logs a warning if the repository is dirty.
 func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string, quiet bool) {
 	if git == nil || !git.Dirty || quiet {
 		return
 	}
-	if stderr == nil {
-		stderr = os.Stderr
-	}
-	fmt.Fprintf(stderr, "WARN: Uncommitted changes detected in %s inputs (%s). This run may not reflect committed state.\n",
-		label, strings.Join(git.DirtyList, ", "))
+	slog.Warn("uncommitted changes detected",
+		"scope", label,
+		"dirty_files", strings.Join(git.DirtyList, ", "))
 }

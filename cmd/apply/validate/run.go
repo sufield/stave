@@ -2,7 +2,6 @@ package validate
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -29,7 +28,7 @@ func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRe
 	}
 
 	// 3. Initialize Reporter
-	quiet := opts.Quiet || gf.Quiet
+	quiet := gf.Quiet
 	rt.Quiet = quiet
 	out := compose.ResolveStdout(cmd.OutOrStdout(), quiet, resolvedFormat)
 
@@ -38,16 +37,15 @@ func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRe
 		f = opts.Template
 	}
 	rep := &Reporter{
-		Writer:     out,
-		Format:     f,
-		Strict:     opts.Strict,
-		FixHints:   opts.FixHints,
-		GlobalJSON: gf.IsJSONMode(),
+		Writer:   out,
+		Format:   f,
+		Strict:   opts.Strict,
+		FixHints: opts.FixHints,
 	}
 
 	// 4. Branch: Single File vs. Full Project
 	if opts.InputPath != "" {
-		return runValidateSingleFile(os.Stdin, rep, opts)
+		return runValidateSingleFile(cmd.InOrStdin(), rep, opts)
 	}
 
 	return runValidateProject(cmd, newObsRepo, newCtlRepo, newCELEvaluator, rt, rep, opts)

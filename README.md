@@ -50,10 +50,26 @@ cd stave && make build
 ### Full workflow
 
 ```bash
+# 1. Initialize project with built-in S3 controls
 stave init --profile aws-s3
+
+# 2. Place observation snapshots (from your extractor) in observations/
+#    Stave needs at least two snapshots for duration-based controls.
+
+# 3. Validate inputs
 stave validate
+
+# 4. Evaluate and produce findings
 stave apply --format json > output/evaluation.json
+
+# 5. Investigate unexpected results
 stave diagnose
+```
+
+### Run tests
+
+```bash
+cd stave && make test
 ```
 
 ### Docker tutorial

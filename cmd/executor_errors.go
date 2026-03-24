@@ -57,12 +57,7 @@ func (a *App) writeErrorInfo(errInfo *ui.ErrorInfo) {
 	if errInfo == nil {
 		return
 	}
-	var writeErr error
-	if a.isJSONMode() {
-		writeErr = ui.WriteErrorJSON(os.Stderr, errInfo)
-	} else {
-		writeErr = ui.WriteErrorText(os.Stderr, errInfo)
-	}
+	writeErr := ui.WriteErrorText(os.Stderr, errInfo)
 	if writeErr != nil {
 		// Last resort: stderr write failed. Try a minimal fallback.
 		fmt.Fprintf(os.Stderr, "error: %s (additionally, writing error details failed: %v)\n", errInfo.Message, writeErr)

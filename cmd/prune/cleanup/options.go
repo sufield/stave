@@ -41,10 +41,9 @@ func (o *options) Prepare(_ *cobra.Command) error {
 
 // resolveRetention resolves the retention parameters from config and flags.
 func (o *options) resolveRetention(cmd *cobra.Command) (pruneretention.ResolvedRetention, error) {
-	gf := cmdutil.GetGlobalFlags(cmd)
 	return pruneretention.ResolveRetention(
 		pruneretention.RawRetentionOpts{OlderThan: o.OlderThan, Tier: o.Tier, NowRaw: o.NowRaw, FormatFlag: o.FormatFlag},
 		cmdctx.EvaluatorFromCmd(cmd),
-		cmd.Flags().Changed("older-than"), cmd.Flags().Changed("retention-tier"), cmd.Flags().Changed("format"), gf.IsJSONMode(),
+		cmd.Flags().Changed("older-than"), cmd.Flags().Changed("retention-tier"), cmd.Flags().Changed("format"), false,
 	)
 }

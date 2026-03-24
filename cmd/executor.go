@@ -37,6 +37,14 @@ func (a *App) execute() {
 	defer a.recoverExecutePanic()
 
 	a.executeRootCommand(args)
+
+	// If a signal canceled the root context, exit with the interrupt code.
+	// Deferred cleanup (cleanupInterrupt, recoverExecutePanic) runs normally.
+	if a.Root.Context() != nil && a.Root.Context().Err() != nil {
+		a.ExitFunc(ui.ExitInterrupted)
+		return
+	}
+
 	a.finalizeExecute(args, showFirstRunHint, firstRunMarkerPath)
 }
 
@@ -51,7 +59,12 @@ func (a *App) installInterruptHandler() func() {
 		select {
 		case <-sigCh:
 			fmt.Fprintln(os.Stderr, "Interrupted")
-			a.ExitFunc(ui.ExitInterrupted)
+			if a.cancel != nil {
+				a.cancel()
+			} else {
+				// Pre-bootstrap signal: context not yet available.
+				a.ExitFunc(ui.ExitInterrupted)
+			}
 		case <-done:
 			return
 		}

@@ -215,11 +215,6 @@ func (e *Evaluator) CIFailurePolicy() GatePolicy {
 
 // --- CLI Default Accessors ---
 
-// OutputMode returns the preferred CLI output format ("text" or "json").
-func (e *Evaluator) OutputMode() string {
-	return e.ResolveCLIOutput().Value
-}
-
 // Quiet returns whether quiet mode is enabled by default.
 func (e *Evaluator) Quiet() bool {
 	return e.ResolveCLIQuiet().Value

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -19,7 +20,6 @@ import (
 // globalFlagsType groups all persistent CLI flags into a single struct,
 // following the same pattern as applyFlagsType in cmd/apply/command.go.
 type globalFlagsType struct {
-	OutputMode      string // "json" or "text"
 	Quiet           bool   // suppress non-essential output
 	Verbosity       int    // -v count (0=WARN, 1=INFO, 2+=DEBUG)
 	LogLevel        string // explicit log level override
@@ -63,7 +63,8 @@ type App struct {
 	LogCloser      *logging.LogCloser
 	ExitFunc       func(int)
 	Root           *cobra.Command
-	cpuProfileFile *os.File // held open during execution, closed in postRun
+	cpuProfileFile *os.File           // held open during execution, closed in postRun
+	cancel         context.CancelFunc // set by bootstrap, called by signal handler
 
 	// Provider holds the adapter constructor wiring used by command handlers.
 	// It is initialised from compose.NewDefaultProvider() and threaded through
@@ -122,10 +123,6 @@ func cliCommand(command string) string {
 // ExitCode delegates to ui.ExitCode for centralized exit code logic.
 func ExitCode(err error) int {
 	return ui.ExitCode(err)
-}
-
-func (a *App) isJSONMode() bool {
-	return a.Flags.OutputMode == string(ui.OutputFormatJSON)
 }
 
 func (a *App) initSanitizer() {

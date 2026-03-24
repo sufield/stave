@@ -44,7 +44,7 @@ func openLogWriter(cfg Config) (io.WriteCloser, error) {
 		return nopCloser{os.Stderr}, nil
 	}
 	return fsutil.SafeOpenAppend(cfg.LogFile, fsutil.WriteOptions{
-		Perm:         0o644,
+		Perm:         0o600,
 		AllowSymlink: cfg.AllowSymlink,
 	})
 }

@@ -57,12 +57,12 @@ Examples:
 	f.StringVar(&opts.tier, "retention-tier", "", cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
 	f.IntVar(&opts.keepMin, "keep-min", 2, "Minimum number of snapshots assumed for prune-candidate estimate")
 	f.StringVar(&opts.nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
-	f.StringVarP(&opts.formatFlag, "format", "f", "text", "Output format: text or json")
+	f.StringVarP(&opts.formatFlag, "format", "f", "markdown", "Output format: markdown or json")
 	f.StringSliceVar(&opts.controlIDs, "control-id", nil, "Filter upcoming metrics to one or more control IDs")
 	f.StringSliceVar(&opts.assetTypes, "asset-type", nil, "Filter upcoming metrics to one or more asset types")
 	f.StringSliceVar(&opts.statuses, "status", nil, "Filter upcoming metrics by status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&opts.dueWithin, "due-within", "", "Filter upcoming metrics to items due within duration from --now (e.g., 24h, 3d)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("markdown", "json"))
 	_ = cmd.RegisterFlagCompletionFunc("status", cmdutil.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
 
 	return cmd

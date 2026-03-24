@@ -25,7 +25,6 @@ import (
 // FindingWriter marshals findings as JSON.
 type FindingWriter struct {
 	Indent           bool
-	UseEnvelope      bool // When true, wrap output in {"ok": true, "data": ...}
 	ValidateContract bool // When true, validate findings against the contract schema
 }
 
@@ -37,16 +36,6 @@ var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 func NewFindingWriter(indent bool) *FindingWriter {
 	return &FindingWriter{
 		Indent:           indent,
-		UseEnvelope:      false,
-		ValidateContract: shouldValidateFindingContract(),
-	}
-}
-
-// NewFindingWriterWithEnvelope creates a marshaler that wraps output in ok/data envelope.
-func NewFindingWriterWithEnvelope(indent bool) *FindingWriter {
-	return &FindingWriter{
-		Indent:           indent,
-		UseEnvelope:      true,
 		ValidateContract: shouldValidateFindingContract(),
 	}
 }
@@ -60,7 +49,7 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	resultDTO := dto.FromEvaluation(envelope)
 
 	var buf bytes.Buffer
-	if err := encodeJSON(&buf, w.Indent, w.UseEnvelope, resultDTO); err != nil {
+	if err := encodeJSON(&buf, w.Indent, resultDTO); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
@@ -82,18 +71,13 @@ func validateEvaluationEnvelope(output safetyenvelope.Evaluation, validateContra
 }
 
 // encodeJSON marshals the result DTO to JSON.
-func encodeJSON(out io.Writer, indent bool, useEnvelope bool, result dto.ResultDTO) error {
+func encodeJSON(out io.Writer, indent bool, result dto.ResultDTO) error {
 	encoder := json.NewEncoder(out)
 	if indent {
 		encoder.SetIndent("", "  ")
 	}
 
-	var toEncode any = result
-	if useEnvelope {
-		toEncode = safetyenvelope.JSONEnvelope[dto.ResultDTO]{OK: true, Data: result}
-	}
-
-	if err := encoder.Encode(toEncode); err != nil {
+	if err := encoder.Encode(result); err != nil {
 		return fmt.Errorf("failed to encode findings: %w", err)
 	}
 	return nil

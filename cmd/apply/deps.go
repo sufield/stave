@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -44,7 +43,6 @@ type Builder struct {
 	Stdin     io.Reader
 	Sanitizer kernel.Sanitizer
 	Format    ui.OutputFormat
-	IsJSON    bool
 	Digester  ports.Digester
 	IDGen     ports.IdentityGenerator
 
@@ -70,10 +68,9 @@ func NewBuilder(ctx context.Context, logger *slog.Logger, p *compose.Provider, o
 		Logger:           logger,
 		Stdout:           sio.Stdout,
 		Stderr:           sio.Stderr,
-		Stdin:            os.Stdin,
+		Stdin:            sio.Stdin,
 		Sanitizer:        sio.Sanitizer,
 		Format:           sio.Format,
-		IsJSON:           sio.IsJSON,
 		Digester:         crypto.NewHasher(),
 		IDGen:            crypto.NewHasher(),
 		Opts:             opts,
@@ -149,7 +146,7 @@ type adapters struct {
 }
 
 func (b *Builder) buildAdapters() (adapters, error) {
-	marshaler, err := b.NewFindingWriter(b.Format, b.IsJSON)
+	marshaler, err := b.NewFindingWriter(b.Format, false)
 	if err != nil {
 		return adapters{}, fmt.Errorf("create finding writer: %w", err)
 	}

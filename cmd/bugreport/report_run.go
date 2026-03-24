@@ -72,6 +72,9 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 	}
 
 	if !gf.Quiet {
+		if absOut, absErr := filepath.Abs(outPath); absErr == nil {
+			outPath = absOut
+		}
 		WriteSummary(cmd.OutOrStdout(), outPath)
 	}
 	return nil

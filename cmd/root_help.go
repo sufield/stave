@@ -21,7 +21,6 @@ Input Formats:
 Output Formats:
   --format json   Machine-readable JSON on commands that support format selection
   --format text   Human-readable summary on commands that support format selection
-  --output ...    Global fallback mode (prefer per-command --format)
 
 Logging:
   -v              Increase verbosity (INFO level)

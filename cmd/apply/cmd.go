@@ -97,7 +97,7 @@ Modes:
                  Requires --input. Example: stave apply --profile aws-s3 --input obs.json
 
 Inputs:
-  --controls, -i            Path to control definitions directory (default: controls)
+  --controls, -i            Path to control definitions directory (default: controls/s3)
   --observations, -o        Path to observation snapshots directory (default: observations)
   --profile, -p             Evaluation profile (e.g., aws-s3)
   --input                   Path to observations bundle file (required with --profile)
@@ -140,6 +140,7 @@ Examples:
 				Logger:        cmdctx.LoggerFromCmd(cmd),
 				Stdout:        cmd.OutOrStdout(),
 				Stderr:        cmd.ErrOrStderr(),
+				Stdin:         cmd.InOrStdin(),
 				GlobalFlags:   cmdutil.GetGlobalFlags(cmd),
 				FormatChanged: cmd.Flags().Changed("format"),
 				ObsChanged:    cmd.Flags().Changed("observations"),

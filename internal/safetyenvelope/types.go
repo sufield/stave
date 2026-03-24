@@ -19,12 +19,6 @@ const (
 	KindVerification EnvelopeKind = "verification"
 )
 
-// JSONEnvelope wraps data in the standard ok/data envelope used in JSON mode.
-type JSONEnvelope[T any] struct {
-	OK   bool `json:"ok"`
-	Data T    `json:"data"`
-}
-
 // EvaluationRequest bundles inputs for constructing an Evaluation envelope.
 type EvaluationRequest struct {
 	Run              evaluation.RunInfo

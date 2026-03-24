@@ -16,7 +16,6 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	p := root.PersistentFlags()
 
 	// Output — zero defaults; project config resolved in PersistentPreRunE via resolveGlobalFlagDefaults.
-	p.StringVar(&flags.OutputMode, cmdutil.FlagOutput, "", cmdutil.WithDynamicDefaultHelp("Output format: json or text"))
 	p.BoolVar(&flags.Quiet, cmdutil.FlagQuiet, false, cmdutil.WithDynamicDefaultHelp("Suppress output (exit code only)"))
 	p.BoolVar(&flags.NoColor, "no-color", false, "Disable ANSI colors in output")
 

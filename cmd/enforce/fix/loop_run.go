@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/fs"
 	"time"
 
 	"github.com/sufield/stave/internal/app/contracts"
@@ -41,28 +40,19 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		ControlRepo: controlRepo,
 	}
 
-	am := &appfix.ArtifactWriter{
-		OutDir: req.OutDir,
-		Options: appfix.WriteOptions{
+	am := appfix.NewArtifactWriter(
+		req.OutDir,
+		appfix.WriteOptions{
 			Overwrite:     r.FileOptions.Overwrite,
 			AllowSymlinks: r.FileOptions.AllowSymlinks,
 			DirPerms:      r.FileOptions.DirPerms,
 		},
-		Stdout: req.Stdout,
-		MkdirAllFn: func(path string, perm fs.FileMode) error {
-			return fsutil.SafeMkdirAll(path, fsutil.WriteOptions{
-				Perm:         perm,
-				AllowSymlink: r.FileOptions.AllowSymlinks,
-			})
+		req.Stdout,
+		fsutil.SafeFileSystem{
+			Overwrite:    r.FileOptions.Overwrite,
+			AllowSymlink: r.FileOptions.AllowSymlinks,
 		},
-		WriteFileFn: func(path string, data []byte, perm fs.FileMode) error {
-			return fsutil.SafeWriteFile(path, data, fsutil.WriteOptions{
-				Perm:         perm,
-				Overwrite:    r.FileOptions.Overwrite,
-				AllowSymlink: r.FileOptions.AllowSymlinks,
-			})
-		},
-	}
+	)
 
 	eb := r.newEnvelopeBuilder()
 

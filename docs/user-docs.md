@@ -121,7 +121,7 @@ Use this table when you know your goal but want the fastest path to the right co
 | Inspect effective project defaults and override sources | `stave config show --format json` | [`README.md`](../README.md) |
 | Query/update project config from terminal | `stave config get max_unsafe` / `stave config set max_unsafe 72h` | [`README.md`](../README.md) |
 | Check if snapshots are stale/sparse before evaluation | `stave snapshot quality --observations ./observations --strict` | [`README.md`](../README.md) |
-| Compare drift between latest snapshots | `stave snapshot diff --observations ./observations --format table` | [`README.md`](../README.md) |
+| Compare drift between latest snapshots | `stave snapshot diff --observations ./observations --format text` | [`README.md`](../README.md) |
 | Keep observations folder bounded | `stave snapshot prune --observations ./observations --dry-run` | [`README.md`](../README.md) |
 | Keep auditability while reducing active set | `stave snapshot archive --observations ./observations --archive-dir ./observations/archive --dry-run` | [`README.md`](../README.md) |
 | Fail CI only for policy-relevant findings | `stave ci gate --in output/evaluation.json --baseline output/baseline.json` | [`README.md`](../README.md) |

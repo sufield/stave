@@ -28,10 +28,6 @@ linters:
       min-complexity: 25
     revive:
       rules:
-        - name: package-comments
-          disabled: true
-        - name: exported
-          disabled: true
         - name: unused-parameter
           disabled: true
         - name: var-naming
@@ -39,6 +35,9 @@ linters:
         - name: receiver-naming
           disabled: true
     errcheck:
+      # fmt.Fprintf/Fprintln writes to stdout/stderr are best-effort terminal
+      # output — errors are not actionable. Close/Remove errors are similarly
+      # non-actionable in cleanup paths.
       exclude-functions:
         - fmt.Fprintf
         - fmt.Fprintln
