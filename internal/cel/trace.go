@@ -78,7 +78,7 @@ func BuildTrace(
 		identities = snapshot.Identities
 	}
 
-	result, evalErr := Evaluate(cp, *a, identities)
+	result, evalErr := Evaluate(cp, *a, identities, ctl.Params.Raw())
 
 	tr := &TraceResult{
 		ControlID:  ctl.ID,

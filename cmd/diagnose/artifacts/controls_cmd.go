@@ -86,7 +86,7 @@ Examples:
 
 func listControlRows(ctx context.Context, newCtlRepo compose.CtlRepoFactory, cfg catalog.ListConfig, filterPatterns []string) ([]catalog.ControlRow, error) {
 	if cfg.UseBuiltIn {
-		registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded")
+		registry := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded", builtin.WithAliasResolver(predicates.ResolverFunc()))
 
 		var controls []policy.ControlDefinition
 		var err error

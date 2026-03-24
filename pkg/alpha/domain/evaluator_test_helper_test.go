@@ -30,7 +30,7 @@ func testCELEvaluator() engine.PredicateEvaluator {
 		if err != nil {
 			return false, err
 		}
-		return stavecel.Evaluate(cp, a, identities)
+		return stavecel.Evaluate(cp, a, identities, ctl.Params.Raw())
 	}
 }
 

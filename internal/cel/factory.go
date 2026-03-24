@@ -17,6 +17,6 @@ func NewPredicateEval() (policy.PredicateEval, error) {
 		if compileErr != nil {
 			return false, compileErr
 		}
-		return Evaluate(cp, a, identities)
+		return Evaluate(cp, a, identities, ctl.Params.Raw())
 	}, nil
 }

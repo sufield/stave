@@ -393,6 +393,57 @@ func TestCompile_AnyMatch(t *testing.T) {
 	}
 }
 
+func TestCompile_ParamReferenceInLtOperator(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Predicate: min_expiration_days < params.min_retention_days
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.lifecycle.min_expiration_days"), Op: predicate.OpLt, Value: policy.Str("params.min_retention_days")},
+		},
+	}
+
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+	t.Logf("expression: %s", cp.Expression)
+
+	// Unsafe: 30 days < 2190 threshold
+	props := map[string]any{
+		"storage": map[string]any{
+			"lifecycle": map[string]any{
+				"min_expiration_days": 30,
+			},
+		},
+	}
+	params := map[string]any{
+		"min_retention_days": 2190,
+	}
+
+	result, err := evaluateWithParams(cp, props, params, nil)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if !result {
+		t.Fatal("expected unsafe (true) for 30 days < 2190 threshold")
+	}
+
+	// Safe: 2555 days >= 2190 threshold
+	props["storage"].(map[string]any)["lifecycle"].(map[string]any)["min_expiration_days"] = 2555
+
+	result, err = evaluateWithParams(cp, props, params, nil)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if result {
+		t.Fatal("expected safe (false) for 2555 days >= 2190 threshold")
+	}
+}
+
 func TestCompile_AnyMatchTypedPredicate(t *testing.T) {
 	compiler, err := NewCompiler()
 	if err != nil {
