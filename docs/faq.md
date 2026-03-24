@@ -290,6 +290,51 @@ The only difference is the **edition label**:
 - **`stave`** — standard deployment for CI pipelines, production evaluation, and automated workflows. The production guard never activates, so all commands run without warnings or blocks.
 - **`stave-dev`** — for shared environments where you want the production guard active. Deploy alongside `STAVE_ENV=production` or production-marked contexts to block destructive commands while allowing break-glass debugging.
 
+## What is the output contract schema (`out.v0.1`)?
+
+Every `stave apply` command produces JSON conforming to the `out.v0.1` schema. This is a stable machine-readable contract that downstream tools — CI pipelines, dashboards, SIEM integrations, custom scripts — can rely on.
+
+The schema defines two output kinds:
+
+- **`evaluation`** (`stave apply`) — findings from running controls against observations
+- **`verification`** (`stave verify`) — before/after comparison showing resolved, remaining, and introduced findings
+
+### Evaluation output structure
+
+| Field | Description |
+|-------|-------------|
+| `run` | Reproducibility metadata: tool version, `--now`, `--max-unsafe`, snapshot count, input file hashes |
+| `summary` | Aggregate counts: `assets_evaluated`, `attack_surface` (currently unsafe), `violations` (exceeded threshold) |
+| `findings[]` | Each violation with control ID, asset ID, evidence (timestamps, duration, misconfigurations), and remediation guidance |
+| `exempted_assets[]` | Assets skipped by exemption rules (with matched pattern and reason) |
+| `excepted_findings[]` | Findings suppressed by exception rules — still evaluated, but partitioned out of the violation count |
+| `remediation_groups[]` | Findings clustered by shared fix plan per asset |
+| `skipped[]` | Controls that could not be evaluated (e.g., missing asset types) |
+| `extensions` | Control source metadata, enabled packs, resolved control IDs |
+
+### Key design decisions
+
+- **Exemptions vs exceptions** — Exemptions skip entire assets before evaluation. Exceptions suppress specific control+asset findings after evaluation. Excepted findings appear in `excepted_findings`, not `findings`, so nothing is silently dropped.
+- **Input hashes** — SHA-256 hashes of every input file are included in `run.input_hashes` for audit reproducibility. Given the same files, the same output is produced.
+- **Remediation groups** — When multiple findings on the same asset share a fix plan, they are grouped together so the operator sees one remediation action, not redundant steps.
+
+### Accessing the output
+
+```bash
+# JSON output for piping to jq or other tools
+stave apply --observations observations --format json
+
+# Extract just the finding control IDs
+stave apply --observations observations --format json | jq '[.findings[].control_id]'
+
+# Count violations
+stave apply --observations observations --format json | jq '.summary.violations'
+```
+
+Full field-by-field reference: [Output Schema (out.v0.1)](schema/out.v0.1.md)
+
+JSON Schema source: `schemas/output/v1/output.schema.json`
+
 ## What does Stave *not* do?
 
 - **No live scanning** — it does not query cloud APIs during evaluation.

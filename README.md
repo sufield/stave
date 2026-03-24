@@ -1,8 +1,8 @@
 # Stave
 
-A configuration analysis engine that detects insecure configurations in your cloud environment using only local configuration snapshots — no cloud credentials required.
+A configuration safety engine that detects insecure configurations in your cloud environment using only local configuration snapshots — no cloud credentials required.
 
-[Docs](docs/index.md) | [FAQ](docs/faq.md) | [Quickstart](docs/time-to-first-finding.md) | [Releases](https://github.com/sufield/stave/releases) | [Security](SECURITY.md) | [Contributing](CONTRIBUTING.md)
+[Docs](docs/index.md) | [FAQ](docs/faq.md) | [Quickstart](docs/time-to-first-finding.md) | [Demo](DEMO.md) | [Releases](https://github.com/sufield/stave/releases) | [Security](SECURITY.md) | [Contributing](CONTRIBUTING.md)
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sufield/stave/badge)](https://securityscorecards.dev/viewer/?uri=github.com/sufield/stave)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
@@ -10,22 +10,24 @@ A configuration analysis engine that detects insecure configurations in your clo
 
 ## Why Stave exists
 
-Cloud security tools fall into two camps: runtime scanners that require credentials and network access, and IaC linters that only see templates before deployment. Neither evaluates actual running configurations offline, tracks how long misconfigurations persist, or lets you define custom safety invariants as composable logic.
+Cloud security tools fall into two camps: runtime scanners that require credentials and network access, and IaC linters that only see templates before deployment. Neither evaluates actual running configurations offline, tracks how long misconfigurations persist, or lets you define custom safety controls as composable logic.
 
-Stave fills this gap. Its evaluation engine operates on arbitrary asset properties using a generic predicate language — any vendor, any asset type, any JSON property shape. Controls are YAML-defined, composable, and evaluated deterministically from local snapshots. No API calls, no runtime agents, no network access at scan time.
+Stave fills this gap. Controls are YAML-defined using a `ctrl.v1` DSL that compiles to [CEL (Common Expression Language)](https://github.com/google/cel-go) at runtime — giving you a battle-tested expression engine with type safety and deterministic evaluation. Any vendor, any asset type, any JSON property shape. No API calls, no runtime agents, no network access at scan time.
 
-The first built-in control pack targets AWS S3 — where existing tools share a blind spot (treating Block Public Access as the sole signal for exposure, missing legacy ACL grants). But the engine is not S3-specific: the same predicate operators, duration tracking, and enforcement pipeline apply to any infrastructure asset you can capture as a JSON snapshot.
+The first built-in control pack targets AWS S3 — where existing tools share a blind spot (treating Block Public Access as the sole signal for exposure, missing legacy ACL grants). But the engine is not S3-specific: the same evaluation pipeline, duration tracking, and enforcement artifacts apply to any infrastructure asset you can capture as a JSON snapshot.
 
 ## What Stave does
 
 Stave reads point-in-time configuration snapshots and evaluates them against YAML-defined safety controls:
 
-- **Generic predicate engine** — evaluates arbitrary JSON properties using composable `any`/`all` logic with operators like `eq`, `ne`, `in`, `missing`, `contains`, field comparisons, and more
+- **CEL-powered evaluation** — `ctrl.v1` predicates compile to [CEL](https://github.com/google/cel-go) programs with operators like `eq`, `ne`, `in`, `missing`, `contains`, `any_match`, and composable `any`/`all` logic
+- **Parameterized controls** — controls accept `params` for configurable thresholds (e.g., `params.min_retention_days`) without forking the control definition
 - **Any vendor, any asset type** — observations carry a vendor string and asset type; the engine treats all assets uniformly
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across multiple snapshots
-- **Custom control authoring** — define safety invariants in YAML for any asset type without code changes
+- **Custom control authoring** — define safety controls in YAML for any asset type without code changes
 - **Deterministic output** — same input always produces same findings
 - **Enforcement artifacts** — generates fix plans with specific remediation actions
+- **Exemptions and exceptions** — exempt entire assets or suppress specific control+asset findings with audit trail and expiry dates
 - **43 built-in S3 controls** — first control pack covers public exposure, ACL escalation, encryption, versioning, lifecycle, object lock, logging, governance, and takeover prevention
 
 All evaluation runs locally. No cloud credentials. No network access. Air-gapped by design.
@@ -54,6 +56,19 @@ stave apply --format json > output/evaluation.json
 stave diagnose
 ```
 
+### Docker tutorial
+
+44 interactive S3 security scenarios — no AWS credentials required:
+
+```bash
+docker build -f stave/build/docker/demo/Dockerfile -t stave-tutorials .
+docker run --rm stave-tutorials --list
+docker run --rm stave-tutorials --scenario 10
+docker run --rm stave-tutorials --scenario 10 --fixed
+```
+
+See [DEMO.md](DEMO.md) for details.
+
 ## How it works
 
 ```
@@ -77,9 +92,9 @@ The core engine is vendor-neutral and asset-type-agnostic. To evaluate a new ass
 
 1. **Extract** — write an extractor in any language that outputs JSON conforming to `obs.v0.1` (any vendor, any asset type, arbitrary JSON properties)
 2. **Author controls** — write YAML controls using the `ctrl.v1` schema with predicates over your asset's property paths
-3. **Evaluate** — `stave apply --controls ./my-controls --observations ./my-snapshots`
+3. **Evaluate** — `stave apply --observations ./my-snapshots` (with built-in packs or `--controls ./my-controls`)
 
-No code changes to Stave required. The predicate engine resolves dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
+No code changes to Stave required. The `ctrl.v1` predicates compile to CEL expressions that resolve dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
 
 ## How Stave compares
 
@@ -92,11 +107,11 @@ No code changes to Stave required. The predicate engine resolves dot-notation fi
 
 | Feature | CSPM | IaC Policy | S3 Auditors | **Stave** |
 |---------|:---:|:---:|:---:|:---:|
-| No credentials needed | ❌ | ✅ | ❌ | ✅ |
-| Offline snapshots | ❌ | ❌ | ❌ | ✅ |
-| Deterministic | ❌ | ✅ | ❌ | ✅ |
-| Duration aware | ❌ | ❌ | ❌ | ✅ |
-| Enforcement | ⚠️ | ❌ | ❌ | ✅ |
+| No credentials needed | - | Yes | - | Yes |
+| Offline snapshots | - | - | - | Yes |
+| Deterministic | - | Yes | - | Yes |
+| Duration aware | - | - | - | Yes |
+| Enforcement | Partial | - | - | Yes |
 
 ## Security model
 
@@ -112,7 +127,7 @@ Details: [Security and Trust](docs/trust/01-security-and-trust.md) | [Threat Mod
 
 ## Built-in controls
 
-Stave ships 43 S3 controls across 15 categories as its first control pack. Custom controls for any asset type can be authored in the same YAML format and loaded from any directory (`stave apply --controls /path/to/controls/`).
+Stave ships 43 S3 controls across 15 categories as its first control pack. Custom controls for any asset type can be authored in the same YAML format.
 
 | Category | Controls | What they detect |
 |----------|:---:|-----------------|
@@ -169,15 +184,31 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 | `snapshot hygiene` | Weekly lifecycle hygiene report |
 | `snapshot manifest` | Generate and sign observation integrity manifests |
 
-### Other
+### Inspection and diagnostics
 
 | Command | Purpose |
 |---------|---------|
 | `status` | Project state and next steps |
+| `trace` | Trace predicate evaluation for a single control against a single asset |
+| `inspect` | Low-level security analysis primitives |
+| `controls list` | List available controls |
+| `packs` | Inspect built-in control packs |
+| `doctor` | Check local environment readiness |
+| `bug-report` | Collect a sanitized diagnostic bundle for support |
+
+### Other
+
+| Command | Purpose |
+|---------|---------|
 | `generate` | Generate starter artifacts |
 | `report` | Structured findings output |
 | `enforce` | Generate enforcement artifacts |
 | `config` | Manage project and user configuration |
+| `fmt` | Format control and observation files deterministically |
+| `lint` | Lint control files for design quality |
+| `graph` | Visualize control and asset relationships |
+| `security-audit` | Generate enterprise security posture evidence |
+| `prompt` | Generate LLM prompts from evaluation results |
 
 ```
 validate → apply → diagnose
@@ -192,20 +223,22 @@ validate → apply → diagnose
 |------|------------|
 | **Snapshot** | Point-in-time observation of infrastructure assets (JSON) |
 | **Asset** | A single infrastructure component with a vendor, type, and arbitrary JSON properties |
-| **Control** | A safety rule assets must satisfy (YAML, `ctrl.v1` schema) |
+| **Control** | A safety rule assets must satisfy (YAML, `ctrl.v1` schema, compiled to CEL) |
 | **Extractor** | An external program (any language) that produces `obs.v0.1` JSON from a data source |
-| **Unsafe predicate** | Conditions that mark an asset as unsafe |
+| **Unsafe predicate** | CEL expression that marks an asset as unsafe |
 | **Finding** | A detected violation with evidence and remediation guidance |
 | **Episode** | A contiguous period where an asset remained unsafe |
 | **Max unsafe duration** | Maximum time an asset may remain unsafe before violation |
+| **Exemption** | Skips an entire asset from evaluation (by asset ID pattern) |
+| **Exception** | Suppresses a specific control+asset finding with reason and expiry date |
 
 ## Data formats
 
 | Format | Schema | Purpose |
 |--------|--------|---------|
 | Observations | `obs.v0.1` | Normalized snapshots — flat JSON, one file per timestamp |
-| Controls | `ctrl.v1` | Safety rules — YAML with `unsafe_predicate` |
-| Output | `out.v0.1` | Findings — JSON with `summary` and `findings` array |
+| Controls | `ctrl.v1` | Safety rules — YAML with `unsafe_predicate` (compiled to CEL) |
+| Output | `out.v0.1` | Findings — JSON with `summary`, `findings`, `excepted_findings`, `remediation_groups` |
 
 Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/obs.v0.1.md) | [out.v0.1](docs/schema/out.v0.1.md)
 
@@ -215,6 +248,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 
 - Engine supports any vendor and asset type
 - Built-in control pack: AWS S3 (43 controls)
+- CEL-powered predicate evaluation with parameterized controls
 - Custom controls and observations supported for any asset type
 - Extractors are external — write in any language, conform to `obs.v0.1`
 - Offline evaluation only
@@ -232,6 +266,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
+| 1 | Security-audit gating failure |
 | 2 | Input error |
 | 3 | Violations found |
 | 4 | Internal error |
