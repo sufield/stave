@@ -7,7 +7,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -22,34 +21,37 @@ var (
 	ErrInvalidSignature = errors.New("cryptographic signature invalid: manifest has been tampered with")
 )
 
-// Verifier verifies Ed25519 signatures.
-type Verifier struct {
-	PublicKey ed25519.PublicKey
+// verifier verifies Ed25519 signatures.
+type verifier struct {
+	publicKey ed25519.PublicKey
 }
 
-var _ ports.Verifier = (*Verifier)(nil)
+var _ ports.Verifier = (*verifier)(nil)
+
+// NewVerifier returns a Verifier backed by the given Ed25519 public key.
+// The key is validated at construction time so callers of Verify do not
+// need to handle invalid-key errors.
+func NewVerifier(pub ed25519.PublicKey) (ports.Verifier, error) {
+	if len(pub) != ed25519.PublicKeySize {
+		return nil, fmt.Errorf("%w: invalid public key length %d", ErrInvalidKeyType, len(pub))
+	}
+	return &verifier{publicKey: pub}, nil
+}
 
 // Verify validates an Ed25519 signature over data.
-func (v *Verifier) Verify(data []byte, sig kernel.Signature) error {
-	if v == nil {
-		return fmt.Errorf("%w: nil verifier", ErrInvalidKeyType)
-	}
-	if len(v.PublicKey) != ed25519.PublicKeySize {
-		return fmt.Errorf("%w: invalid public key length %d", ErrInvalidKeyType, len(v.PublicKey))
-	}
-
-	raw := strings.TrimSpace(string(sig))
-	if raw == "" {
+func (v *verifier) Verify(data []byte, sig kernel.Signature) error {
+	if len(sig) == 0 {
 		return fmt.Errorf("signature must be hex-encoded: empty signature")
 	}
-	decoded, err := hex.DecodeString(raw)
+
+	decoded, err := hex.DecodeString(string(sig))
 	if err != nil {
 		return fmt.Errorf("signature must be hex-encoded: %w", err)
 	}
 	if len(decoded) != ed25519.SignatureSize {
 		return fmt.Errorf("invalid signature length: expected %d, got %d", ed25519.SignatureSize, len(decoded))
 	}
-	if !ed25519.Verify(v.PublicKey, data, decoded) {
+	if !ed25519.Verify(v.publicKey, data, decoded) {
 		return ErrInvalidSignature
 	}
 	return nil
@@ -128,15 +130,13 @@ func GenerateSigningKeyPair() (privatePEM, publicPEM []byte, err error) {
 	return privatePEM, publicPEM, nil
 }
 
+// decodePEM decodes PEM data and verifies the block type matches exactly.
 func decodePEM(data []byte, expectedType string) (*pem.Block, error) {
-	if strings.TrimSpace(string(data)) == "" {
-		return nil, ErrNotPEM
-	}
 	block, _ := pem.Decode(data)
 	if block == nil {
 		return nil, ErrNotPEM
 	}
-	if expectedType != "" && !strings.Contains(block.Type, expectedType) {
+	if expectedType != "" && block.Type != expectedType {
 		return nil, fmt.Errorf("%w: expected %s block, got %s", ErrInvalidKeyType, expectedType, block.Type)
 	}
 	return block, nil
