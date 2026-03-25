@@ -9,12 +9,8 @@ type Clock interface {
 }
 
 // RealClock implements Clock using the standard time package.
+// Use RealClock{} directly — no constructor needed for a zero-value type.
 type RealClock struct{}
-
-// NewRealClock returns a RealClock backed by the system wall clock.
-func NewRealClock() RealClock {
-	return RealClock{}
-}
 
 // Now returns the current time in UTC.
 func (RealClock) Now() time.Time {

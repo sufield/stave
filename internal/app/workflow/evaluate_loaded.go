@@ -25,7 +25,7 @@ type EvaluationRequest struct {
 // This keeps command adapters from directly constructing domain evaluators.
 func EvaluateLoaded(req EvaluationRequest) (evaluation.Result, error) {
 	if req.Clock == nil {
-		req.Clock = ports.NewRealClock()
+		req.Clock = ports.RealClock{}
 	}
 
 	return Evaluate(EvaluateInput{
