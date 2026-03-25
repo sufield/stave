@@ -25,11 +25,11 @@ const (
 )
 
 type ControlSourceInfo struct {
-	Source             ControlSourceMode `json:"source"`
-	EnabledPacks       []string          `json:"enabled_packs,omitempty"`
+	Source             ControlSourceMode  `json:"source"`
+	EnabledPacks       []string           `json:"enabled_packs,omitempty"`
 	ResolvedControlIDs []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	RegistryVersion    string             `json:"registry_version,omitempty"`
-	RegistryHash       kernel.Digest     `json:"registry_hash,omitempty"`
+	RegistryHash       kernel.Digest      `json:"registry_hash,omitempty"`
 }
 
 type GitInfo struct {
@@ -48,14 +48,14 @@ type ResolvedPaths struct {
 
 // Extensions represents the typed JSON structure for the out.v0.1 extensions block.
 type Extensions struct {
-	SelectedSource      string            `json:"selected_controls_source,omitempty"`
-	ContextName         string            `json:"context_name,omitempty"`
-	ResolvedPaths       map[string]string `json:"resolved_paths,omitempty"`
-	EnabledPacks        []string          `json:"enabled_control_packs,omitempty"`
+	SelectedSource      string             `json:"selected_controls_source,omitempty"`
+	ContextName         string             `json:"context_name,omitempty"`
+	ResolvedPaths       map[string]string  `json:"resolved_paths,omitempty"`
+	EnabledPacks        []string           `json:"enabled_control_packs,omitempty"`
 	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
-	PackRegistryHash    kernel.Digest     `json:"pack_registry_hash,omitempty"`
-	Git                 *GitMetadata      `json:"git,omitempty"`
+	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
+	Git                 *GitMetadata       `json:"git,omitempty"`
 }
 
 // GitMetadata captures git repository state at evaluation time.
