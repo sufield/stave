@@ -58,7 +58,7 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 // validateEvaluationEnvelope performs schema and optional contract validation.
 // The validateContract flag is captured at construction time (from env vars)
 // so this function remains pure.
-func validateEvaluationEnvelope(output safetyenvelope.Evaluation, validateContract bool) error {
+func validateEvaluationEnvelope(output *safetyenvelope.Evaluation, validateContract bool) error {
 	if err := safetyenvelope.ValidateEvaluation(output); err != nil {
 		return fmt.Errorf("failed to validate output schema: %w", err)
 	}

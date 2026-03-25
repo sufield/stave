@@ -10,15 +10,15 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-func ValidateEvaluation(payload Evaluation) error {
+func ValidateEvaluation(payload *Evaluation) error {
 	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload, "evaluation output")
 }
 
-func ValidateVerification(payload Verification) error {
+func ValidateVerification(payload *Verification) error {
 	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload, "verification output")
 }
 
-func ValidateDiagnose(payload Diagnose) error {
+func ValidateDiagnose(payload *Diagnose) error {
 	return validate(string(schemas.KindDiagnose), kernel.RegistryLayoutStandard, payload, "diagnose output")
 }
 

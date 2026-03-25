@@ -21,7 +21,7 @@ import (
 
 // EnvelopeBuilderFunc transforms an enriched result into a safety envelope.
 // Injected from the adapters layer by cmd/ callers.
-type EnvelopeBuilderFunc func(enriched contracts.EnrichedResult) safetyenvelope.Evaluation
+type EnvelopeBuilderFunc func(enriched contracts.EnrichedResult) *safetyenvelope.Evaluation
 
 // WriteOptions controls file output behavior.
 type WriteOptions struct {
@@ -58,9 +58,9 @@ func NewArtifactWriter(outDir string, opts WriteOptions, stdout io.Writer, fs Fi
 
 // PersistVerification writes the full suite of verification artifacts to disk.
 func (m *ArtifactWriter) PersistVerification(
-	before safetyenvelope.Evaluation,
-	after safetyenvelope.Evaluation,
-	verification safetyenvelope.Verification,
+	before *safetyenvelope.Evaluation,
+	after *safetyenvelope.Evaluation,
+	verification *safetyenvelope.Verification,
 ) (LoopArtifacts, error) {
 	artifacts := LoopArtifacts{}
 	if m.OutDir == "" {
@@ -128,11 +128,11 @@ type EnvelopeBuilder struct {
 }
 
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
-func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) (safetyenvelope.Evaluation, error) {
+func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) (*safetyenvelope.Evaluation, error) {
 	enricher := remediation.NewMapper(b.IDGen)
 	enriched, err := appeval.Enrich(enricher, b.Sanitizer, result)
 	if err != nil {
-		return safetyenvelope.Evaluation{}, fmt.Errorf("enrich evaluation: %w", err)
+		return nil, fmt.Errorf("enrich evaluation: %w", err)
 	}
 	return b.BuildEnvelope(enriched), nil
 }

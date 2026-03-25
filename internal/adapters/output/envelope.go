@@ -9,7 +9,7 @@ import (
 
 // BuildSafetyEnvelopeFromEnriched assembles a safety envelope from a
 // pipeline-produced EnrichedResult.
-func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) safetyenvelope.Evaluation {
+func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) *safetyenvelope.Evaluation {
 	findings := enriched.Findings
 	if findings == nil {
 		findings = []remediation.Finding{}

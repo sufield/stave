@@ -10,7 +10,7 @@ import (
 )
 
 // FromEvaluation projects a safetyenvelope.Evaluation into a ResultDTO.
-func FromEvaluation(e safetyenvelope.Evaluation) ResultDTO {
+func FromEvaluation(e *safetyenvelope.Evaluation) ResultDTO {
 	return ResultDTO{
 		SchemaVersion:     e.SchemaVersion,
 		Kind:              string(e.Kind),

@@ -86,7 +86,7 @@ Examples:
 					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
 						return newObsRepo()
 					},
-					WriteVerification: func(w io.Writer, v safetyenvelope.Verification) error {
+					WriteVerification: func(w io.Writer, v *safetyenvelope.Verification) error {
 						return outjson.WriteVerification(w, v)
 					},
 					BeginProgress: rt.BeginProgress,

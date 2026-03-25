@@ -179,7 +179,7 @@ func (s *Service) evaluateState(
 }
 
 // BuildReport creates a LoopReport from the verification results.
-func BuildReport(req LoopRequest, clock interface{ Now() time.Time }, v safetyenvelope.Verification, artifacts LoopArtifacts) LoopReport {
+func BuildReport(req LoopRequest, clock interface{ Now() time.Time }, v *safetyenvelope.Verification, artifacts LoopArtifacts) LoopReport {
 	pass := v.Summary.Remaining == 0 && v.Summary.Introduced == 0
 	reason := "all previously violating resources are now resolved"
 	if !pass {

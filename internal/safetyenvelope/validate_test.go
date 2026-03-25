@@ -75,7 +75,7 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 }
 
 func TestValidateDiagnose_ErrorLabel(t *testing.T) {
-	err := ValidateDiagnose(Diagnose{})
+	err := ValidateDiagnose(&Diagnose{})
 	if err == nil {
 		t.Fatal("expected validation error for empty diagnose payload")
 	}

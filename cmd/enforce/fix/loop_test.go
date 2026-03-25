@@ -39,7 +39,7 @@ func TestBuildFixLoopReport(t *testing.T) {
 		},
 	}
 
-	report := appfix.BuildReport(req, clock, v, appfix.LoopArtifacts{})
+	report := appfix.BuildReport(req, clock, &v, appfix.LoopArtifacts{})
 	if report.Passed {
 		t.Fatalf("expected report to fail when remaining findings exist")
 	}
