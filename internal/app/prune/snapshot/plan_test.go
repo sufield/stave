@@ -16,7 +16,7 @@ func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 		{RelPath: "2026-01-01.json", Name: "2026-01-01.json", CapturedAt: now.AddDate(0, 0, -53)},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -25,6 +25,9 @@ func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 		},
 		Files: files,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.TotalFiles != 2 {
 		t.Fatalf("TotalFiles=%d, want 2", plan.TotalFiles)
@@ -46,7 +49,7 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 		{RelPath: "2026-01-01.json", Name: "2026-01-01.json", CapturedAt: now.AddDate(0, 0, -53)},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -55,6 +58,9 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 		},
 		Files: files,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.TotalFiles != 3 {
 		t.Fatalf("TotalFiles=%d, want 3", plan.TotalFiles)
@@ -89,7 +95,7 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 		{Pattern: "dev/**", Tier: "non_critical"},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -100,6 +106,9 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 		},
 		Files: files,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.TotalFiles != 5 {
 		t.Fatalf("TotalFiles=%d, want 5", plan.TotalFiles)
@@ -151,7 +160,7 @@ func TestBuildSnapshotPlan_PerTierKeepMin(t *testing.T) {
 		{RelPath: "prod/old2.json", CapturedAt: now.AddDate(0, 0, -50)},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -161,6 +170,9 @@ func TestBuildSnapshotPlan_PerTierKeepMin(t *testing.T) {
 		},
 		Files: files,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.TotalActions != 2 {
 		t.Fatalf("TotalActions=%d, want 2 (5 files - keep_min=3 = 2 prunable)", plan.TotalActions)
@@ -175,7 +187,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 		{RelPath: "old2.json", CapturedAt: now.AddDate(0, 0, -50)},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		ArchiveDir:  "./observations/archive",
@@ -187,6 +199,9 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 		Apply: true,
 		Force: true,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.Mode != snapshotdomain.ModeArchive {
 		t.Fatalf("Mode=%q, want ARCHIVE", plan.Mode)
@@ -216,7 +231,7 @@ func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 		{Pattern: "prod/**", Tier: "critical"},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "non_critical",
@@ -227,6 +242,9 @@ func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 		},
 		Files: files,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if len(plan.Files) != 1 {
 		t.Fatalf("Files count=%d, want 1", len(plan.Files))
@@ -239,7 +257,7 @@ func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 func TestBuildSnapshotPlan_NoFiles(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -248,6 +266,9 @@ func TestBuildSnapshotPlan_NoFiles(t *testing.T) {
 		},
 		Files: nil,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.TotalFiles != 0 {
 		t.Fatalf("TotalFiles=%d, want 0", plan.TotalFiles)
@@ -263,7 +284,7 @@ func TestBuildSnapshotPlan_NoFiles(t *testing.T) {
 func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -274,6 +295,9 @@ func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 		Apply: true,
 		Force: false,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.Mode != snapshotdomain.ModePreview {
 		t.Fatalf("Mode=%q, want PREVIEW (--apply without --force)", plan.Mode)
@@ -290,7 +314,7 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 		{RelPath: "old.json", CapturedAt: now.AddDate(0, 0, -50)},
 	}
 
-	plan := buildPlan(planBuildParams{
+	plan, err := buildPlan(planBuildParams{
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
@@ -301,6 +325,9 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 		Apply: true,
 		Force: true,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if plan.Mode != snapshotdomain.ModePrune {
 		t.Fatalf("Mode=%q, want PRUNE", plan.Mode)

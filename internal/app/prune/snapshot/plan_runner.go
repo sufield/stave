@@ -43,7 +43,7 @@ func NewPlanRunner(applyFn PlanApplyFunc) *PlanRunner {
 
 // Run executes the multi-tier planning workflow.
 func (r *PlanRunner) Run(cfg PlanConfig) error {
-	p := buildPlan(planBuildParams{
+	p, err := buildPlan(planBuildParams{
 		Now:         cfg.Now,
 		ObsRoot:     cfg.ObservationsRoot,
 		ArchiveDir:  cfg.ArchiveDir,
@@ -54,6 +54,9 @@ func (r *PlanRunner) Run(cfg PlanConfig) error {
 		Apply:       cfg.Apply,
 		Force:       cfg.Force,
 	})
+	if err != nil {
+		return err
+	}
 
 	if err := writePlanOutput(cfg, p); err != nil {
 		return err
@@ -64,7 +67,7 @@ func (r *PlanRunner) Run(cfg PlanConfig) error {
 	return nil
 }
 
-func writePlanOutput(cfg PlanConfig, p snapshotdomain.PlanOutput) error {
+func writePlanOutput(cfg PlanConfig, p *snapshotdomain.PlanOutput) error {
 	if cfg.Quiet {
 		return nil
 	}

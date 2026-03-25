@@ -27,33 +27,31 @@ type File struct {
 	CapturedAt time.Time
 }
 
-// PlanAction is an alias for the domain retention PlanAction type.
-type PlanAction = retention.PlanAction
+// Action represents the fate of a snapshot file in a retention plan.
+type Action string
 
-// Action constants re-exported from domain retention.
 const (
-	ActionKeep    = retention.ActionKeep
-	ActionPrune   = retention.ActionPrune
-	ActionArchive = retention.ActionArchive
+	ActionKeep    Action = "KEEP"
+	ActionPrune   Action = "PRUNE"
+	ActionArchive Action = "ARCHIVE"
 )
 
-// PlanMode is an alias for the domain retention PlanMode type.
-type PlanMode = retention.PlanMode
+// Mode represents the execution mode of a retention plan.
+type Mode string
 
-// Mode constants re-exported from domain retention.
 const (
-	ModePreview = retention.ModePreview
-	ModePrune   = retention.ModePrune
-	ModeArchive = retention.ModeArchive
+	ModePreview Mode = "PREVIEW"
+	ModePrune   Mode = "PRUNE"
+	ModeArchive Mode = "ARCHIVE"
 )
 
 // PlanFile is one file row in the generated snapshot plan.
 type PlanFile struct {
-	RelPath    string     `json:"rel_path"`
-	CapturedAt time.Time  `json:"captured_at"`
-	Tier       string     `json:"tier"`
-	Action     PlanAction `json:"action"`
-	Reason     string     `json:"reason"`
+	RelPath    string    `json:"rel_path"`
+	CapturedAt time.Time `json:"captured_at"`
+	Tier       string    `json:"tier"`
+	Action     Action    `json:"action"`
+	Reason     string    `json:"reason"`
 }
 
 // PlanTierSummary aggregates plan counts per tier.
@@ -73,7 +71,7 @@ type PlanOutput struct {
 	GeneratedAt      time.Time         `json:"generated_at"`
 	ObservationsRoot string            `json:"observations_root"`
 	ArchiveDir       string            `json:"archive_dir,omitempty"`
-	Mode             PlanMode          `json:"mode"`
+	Mode             Mode              `json:"mode"`
 	Applied          bool              `json:"applied"`
 	DefaultTier      string            `json:"default_tier"`
 	TierSummaries    []PlanTierSummary `json:"tier_summaries"`
@@ -85,30 +83,47 @@ type PlanOutput struct {
 // PlanEntry is a single snapshot plan row for execution.
 type PlanEntry struct {
 	RelPath string
-	Action  PlanAction
+	Action  Action
 }
 
+// TierResolver maps a relative file path to a retention tier name.
+type TierResolver interface {
+	Resolve(relPath string) string
+}
+
+// TierResolverFunc adapts a plain function to the TierResolver interface.
+type TierResolverFunc func(string) string
+
+// Resolve implements TierResolver.
+func (f TierResolverFunc) Resolve(path string) string { return f(path) }
+
 // BuildPlanParams holds inputs for BuildPlan.
+// Duration fields use time.Duration (pre-parsed by the caller) so the
+// domain kernel does not handle string parsing.
 type BuildPlanParams struct {
-	Now                time.Time
-	ObsRoot            string
-	ArchiveDir         string
-	DefaultTier        string
-	TierRules          []retention.MappingRule
-	Tiers              map[string]retention.TierConfig
-	Files              []File
-	Apply              bool
-	Force              bool
-	DefaultOlderThan   string
-	DefaultKeepMin     int
-	ParseDuration      func(string) (time.Duration, error)
-	ResolveTierForPath func(relPath string, rules []retention.MappingRule, defaultTier string) string
+	Now              time.Time
+	ObsRoot          string
+	ArchiveDir       string
+	DefaultTier      string
+	Tiers            map[string]retention.TierConfig
+	Files            []File
+	Apply            bool
+	Force            bool
+	DefaultOlderThan time.Duration
+	DefaultKeepMin   int
+	TierResolver     TierResolver
 }
 
 // BuildPlan computes a snapshot prune/archive plan from retention config.
-func BuildPlan(params BuildPlanParams) PlanOutput {
-	mode, applied := resolvePlanMode(params.Apply, params.Force, params.ArchiveDir)
-	byTier := groupFilesByTier(params.Files, params.TierRules, params.DefaultTier, params.ResolveTierForPath)
+// Returns an error if tier configuration is invalid (e.g., unparseable
+// duration strings in TierConfig.OlderThan).
+func BuildPlan(params BuildPlanParams) (*PlanOutput, error) {
+	if params.Now.IsZero() {
+		params.Now = time.Now()
+	}
+
+	mode, applied := resolveMode(params.Apply, params.Force, params.ArchiveDir)
+	byTier := groupFilesByTier(params.Files, params.DefaultTier, params.TierResolver)
 	tierNames := sortedTierNames(byTier)
 
 	allEntries := make([]PlanFile, 0, len(params.Files))
@@ -116,13 +131,16 @@ func BuildPlan(params BuildPlanParams) PlanOutput {
 	totalActions := 0
 
 	for _, tierName := range tierNames {
-		tierPlan := buildTierPlan(params, tierName, byTier[tierName])
+		tierPlan, err := buildTierPlan(params, tierName, byTier[tierName])
+		if err != nil {
+			return nil, fmt.Errorf("tier %q: %w", tierName, err)
+		}
 		allEntries = append(allEntries, tierPlan.entries...)
 		summaries = append(summaries, tierPlan.summary)
 		totalActions += tierPlan.actionCount
 	}
 
-	return PlanOutput{
+	return &PlanOutput{
 		SchemaVersion:    kernel.SchemaSnapshotPlan,
 		Kind:             kernel.KindSnapshotPlan,
 		GeneratedAt:      params.Now.UTC(),
@@ -135,7 +153,7 @@ func BuildPlan(params BuildPlanParams) PlanOutput {
 		TotalFiles:       len(params.Files),
 		TotalActions:     totalActions,
 		Files:            allEntries,
-	}
+	}, nil
 }
 
 type tierPlanResult struct {
@@ -144,7 +162,7 @@ type tierPlanResult struct {
 	actionCount int
 }
 
-func resolvePlanMode(apply, force bool, archiveDir string) (PlanMode, bool) {
+func resolveMode(apply, force bool, archiveDir string) (Mode, bool) {
 	if !apply || !force {
 		return ModePreview, false
 	}
@@ -154,23 +172,18 @@ func resolvePlanMode(apply, force bool, archiveDir string) (PlanMode, bool) {
 	return ModePrune, true
 }
 
-func groupFilesByTier(
-	files []File,
-	rules []retention.MappingRule,
-	defaultTier string,
-	resolver func(relPath string, rules []retention.MappingRule, defaultTier string) string,
-) map[string][]File {
-	if resolver == nil {
-		resolver = func(_ string, _ []retention.MappingRule, fallback string) string { return fallback }
-	}
-	trimmedDefault := strings.TrimSpace(defaultTier)
-	groups := make(map[string][]File, len(files))
-	for _, sf := range files {
-		tier := strings.TrimSpace(resolver(sf.RelPath, rules, defaultTier))
-		if tier == "" {
-			tier = trimmedDefault
+func groupFilesByTier(files []File, defaultTier string, resolver TierResolver) map[string][]File {
+	groups := make(map[string][]File)
+	defaultTier = strings.TrimSpace(defaultTier)
+
+	for _, f := range files {
+		tier := defaultTier
+		if resolver != nil {
+			if resolved := resolver.Resolve(f.RelPath); resolved != "" {
+				tier = resolved
+			}
 		}
-		groups[tier] = append(groups[tier], sf)
+		groups[tier] = append(groups[tier], f)
 	}
 	return groups
 }
@@ -182,143 +195,66 @@ func sortedTierNames(byTier map[string][]File) []string {
 	return slices.Sorted(maps.Keys(byTier))
 }
 
-type tierCfg struct {
-	olderThanStr string
-	keepMin      int
-	olderThan    time.Duration
-}
+func buildTierPlan(params BuildPlanParams, tierName string, files []File) (tierPlanResult, error) {
+	keepMin := params.DefaultKeepMin
+	olderThan := params.DefaultOlderThan
 
-func buildTierPlan(params BuildPlanParams, tierName string, files []File) tierPlanResult {
-	cfg, err := resolveTierConfig(params, tierName)
-	if err != nil {
-		return buildInvalidTierPlan(tierName, files, cfg.olderThanStr, cfg.keepMin)
-	}
-
-	items := make([]retention.Candidate, 0, len(files))
-	for i, sf := range files {
-		items = append(items, retention.Candidate{
-			Index:      i,
-			CapturedAt: sf.CapturedAt,
-		})
-	}
-	candidates := retention.PlanPrune(items, retention.Criteria{
-		Now:       params.Now,
-		OlderThan: cfg.olderThan,
-		KeepMin:   cfg.keepMin,
-	})
-	candidateSet := buildCandidateSet(candidates)
-
-	action := ActionPrune
-	if params.ArchiveDir != "" {
-		action = ActionArchive
-	}
-
-	entries, actionCount := buildTierEntries(files, candidateSet, tierName, action, cfg.olderThanStr, cfg.olderThan, params.Now)
-	return tierPlanResult{
-		entries: entries,
-		summary: PlanTierSummary{
-			Tier:        tierName,
-			OlderThan:   cfg.olderThanStr,
-			KeepMin:     cfg.keepMin,
-			Total:       len(files),
-			KeepCount:   len(files) - actionCount,
-			ActionCount: actionCount,
-		},
-		actionCount: actionCount,
-	}
-}
-
-func resolveTierConfig(params BuildPlanParams, tierName string) (tierCfg, error) {
-	cfg := tierCfg{
-		olderThanStr: params.DefaultOlderThan,
-		keepMin:      params.DefaultKeepMin,
-	}
 	if tc, ok := params.Tiers[tierName]; ok {
-		cfg.keepMin = effectiveKeepMin(tc.KeepMin, params.DefaultKeepMin)
-		if strings.TrimSpace(tc.OlderThan) != "" {
-			cfg.olderThanStr = tc.OlderThan
+		if tc.KeepMin > 0 {
+			keepMin = tc.KeepMin
+		}
+		if raw := strings.TrimSpace(tc.OlderThan); raw != "" {
+			d, err := kernel.ParseDuration(raw)
+			if err != nil {
+				return tierPlanResult{}, fmt.Errorf("invalid duration %q: %w", raw, err)
+			}
+			olderThan = d
 		}
 	}
-	olderThan, err := parseDuration(cfg.olderThanStr, params.ParseDuration)
-	if err != nil {
-		return cfg, err
-	}
-	cfg.olderThan = olderThan
-	return cfg, nil
-}
 
-func parseDuration(raw string, parseFn func(string) (time.Duration, error)) (time.Duration, error) {
-	if parseFn == nil {
-		return 0, fmt.Errorf("duration parser is required")
-	}
-	return parseFn(raw)
-}
-
-func effectiveKeepMin(value, fallback int) int {
-	if value <= 0 {
-		return fallback
-	}
-	return value
-}
-
-func buildInvalidTierPlan(tierName string, files []File, olderThanStr string, keepMin int) tierPlanResult {
-	entries := make([]PlanFile, 0, len(files))
-	for _, sf := range files {
-		entries = append(entries, PlanFile{
-			RelPath:    sf.RelPath,
+	candidates := make([]retention.Candidate, len(files))
+	for i, sf := range files {
+		candidates[i] = retention.Candidate{
+			Index:      i,
 			CapturedAt: sf.CapturedAt.UTC(),
-			Tier:       tierName,
-			Action:     ActionKeep,
-			Reason:     "invalid tier config",
-		})
+		}
 	}
-	return tierPlanResult{
-		entries: entries,
-		summary: PlanTierSummary{
-			Tier:        tierName,
-			OlderThan:   olderThanStr,
-			KeepMin:     keepMin,
-			Total:       len(files),
-			KeepCount:   len(files),
-			ActionCount: 0,
-		},
-		actionCount: 0,
-	}
-}
 
-func buildCandidateSet(candidates []retention.Candidate) map[int]struct{} {
-	candidateSet := make(map[int]struct{}, len(candidates))
-	for _, c := range candidates {
-		candidateSet[c.Index] = struct{}{}
-	}
-	return candidateSet
-}
+	toProcess := retention.PlanPrune(candidates, retention.Criteria{
+		Now:       params.Now.UTC(),
+		OlderThan: olderThan,
+		KeepMin:   keepMin,
+	})
 
-func buildTierEntries(
-	files []File,
-	candidateSet map[int]struct{},
-	tierName string, action PlanAction, olderThanStr string,
-	olderThan time.Duration,
-	now time.Time,
-) ([]PlanFile, int) {
+	processedIdx := make(map[int]struct{}, len(toProcess))
+	for _, c := range toProcess {
+		processedIdx[c.Index] = struct{}{}
+	}
+
+	targetAction := ActionPrune
+	if params.ArchiveDir != "" {
+		targetAction = ActionArchive
+	}
+
 	entries := make([]PlanFile, 0, len(files))
 	actionCount := 0
-	cutoff := now.UTC().Add(-olderThan)
-	pruneReason := "older than " + olderThanStr
+	cutoff := params.Now.UTC().Add(-olderThan)
+	olderThanStr := olderThan.String()
 
-	for i, sf := range files {
+	for i, f := range files {
 		entry := PlanFile{
-			RelPath:    sf.RelPath,
-			CapturedAt: sf.CapturedAt.UTC(),
+			RelPath:    f.RelPath,
+			CapturedAt: f.CapturedAt.UTC(),
 			Tier:       tierName,
 		}
-		if _, ok := candidateSet[i]; ok {
-			entry.Action = action
-			entry.Reason = pruneReason
+
+		if _, ok := processedIdx[i]; ok {
+			entry.Action = targetAction
+			entry.Reason = "older than " + olderThanStr
 			actionCount++
 		} else {
 			entry.Action = ActionKeep
-			if sf.CapturedAt.Before(cutoff) {
+			if f.CapturedAt.UTC().Before(cutoff) {
 				entry.Reason = "keep-min floor"
 			} else {
 				entry.Reason = "within retention"
@@ -326,5 +262,17 @@ func buildTierEntries(
 		}
 		entries = append(entries, entry)
 	}
-	return entries, actionCount
+
+	return tierPlanResult{
+		entries:     entries,
+		actionCount: actionCount,
+		summary: PlanTierSummary{
+			Tier:        tierName,
+			OlderThan:   olderThanStr,
+			KeepMin:     keepMin,
+			Total:       len(files),
+			KeepCount:   len(files) - actionCount,
+			ActionCount: actionCount,
+		},
+	}, nil
 }
