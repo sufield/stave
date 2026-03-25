@@ -25,7 +25,7 @@ type CompareRequest struct {
 
 // CompareResult holds the comparison outcome.
 type CompareResult struct {
-	Verification    safetyenvelope.Verification
+	Verification    *safetyenvelope.Verification
 	RemainingCount  int
 	IntroducedCount int
 }

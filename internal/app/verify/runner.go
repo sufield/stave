@@ -20,7 +20,7 @@ import (
 type VerifyDeps struct {
 	LoadControls       func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 	NewObservationRepo func() (appcontracts.ObservationRepository, error)
-	WriteVerification  func(w io.Writer, v safetyenvelope.Verification) error
+	WriteVerification  func(w io.Writer, v *safetyenvelope.Verification) error
 
 	// BeginProgress starts a progress indicator with the given label and returns
 	// a stop function. If nil, progress reporting is silently skipped.

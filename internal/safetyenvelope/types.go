@@ -19,6 +19,8 @@ const (
 	KindVerification EnvelopeKind = "verification"
 )
 
+// --- Evaluation ---
+
 // EvaluationRequest bundles inputs for constructing an Evaluation envelope.
 type EvaluationRequest struct {
 	Run              evaluation.RunInfo
@@ -43,35 +45,22 @@ type Evaluation struct {
 	Extensions        *evaluation.Extensions       `json:"extensions,omitempty"`
 }
 
-func normalizeSlice[T any](in []T) []T {
-	if in == nil {
-		return []T{}
-	}
-	return in
-}
-
-func (e *Evaluation) normalize() {
-	e.Findings = normalizeSlice(e.Findings)
-	e.ExceptedFindings = normalizeSlice(e.ExceptedFindings)
-	e.RemediationGroups = normalizeSlice(e.RemediationGroups)
-	e.Skipped = normalizeSlice(e.Skipped)
-	e.ExemptedAssets = normalizeSlice(e.ExemptedAssets)
-}
-
-func NewEvaluation(req EvaluationRequest) Evaluation {
-	out := Evaluation{
+// NewEvaluation constructs an Evaluation envelope with normalized slices
+// (nil → [] for stable JSON output).
+func NewEvaluation(req EvaluationRequest) *Evaluation {
+	return &Evaluation{
 		SchemaVersion:    kernel.SchemaOutput,
 		Kind:             KindEvaluation,
 		Run:              req.Run,
 		Summary:          req.Summary,
-		Findings:         req.Findings,
-		ExceptedFindings: req.ExceptedFindings,
-		Skipped:          req.Skipped,
-		ExemptedAssets:   req.ExemptedAssets,
+		Findings:         emptyIfNil(req.Findings),
+		ExceptedFindings: emptyIfNil(req.ExceptedFindings),
+		Skipped:          emptyIfNil(req.Skipped),
+		ExemptedAssets:   emptyIfNil(req.ExemptedAssets),
 	}
-	out.normalize()
-	return out
 }
+
+// --- Verification ---
 
 // Verification is the out.v0.1 verification output envelope.
 type Verification struct {
@@ -94,8 +83,8 @@ type VerificationRunInfo struct {
 	AfterSnapshots    int           `json:"after_snapshots"`
 }
 
-// MarshalJSON ensures MaxUnsafeDuration outputs as a duration string (e.g. "168h0m0s")
-// instead of raw nanoseconds.
+// MarshalJSON renders MaxUnsafeDuration as a human-readable string
+// (e.g. "168h0m0s") instead of raw nanoseconds.
 func (v VerificationRunInfo) MarshalJSON() ([]byte, error) {
 	type alias VerificationRunInfo
 	return json.Marshal(&struct {
@@ -133,25 +122,20 @@ type VerificationRequest struct {
 	Introduced []VerificationEntry
 }
 
-func NewVerification(req VerificationRequest) Verification {
-	out := Verification{
+// NewVerification constructs a Verification envelope with normalized slices.
+func NewVerification(req VerificationRequest) *Verification {
+	return &Verification{
 		SchemaVersion: kernel.SchemaOutput,
 		Kind:          KindVerification,
 		Run:           req.Run,
 		Summary:       req.Summary,
-		Resolved:      req.Resolved,
-		Remaining:     req.Remaining,
-		Introduced:    req.Introduced,
+		Resolved:      emptyIfNil(req.Resolved),
+		Remaining:     emptyIfNil(req.Remaining),
+		Introduced:    emptyIfNil(req.Introduced),
 	}
-	out.normalize()
-	return out
 }
 
-func (v *Verification) normalize() {
-	v.Resolved = normalizeSlice(v.Resolved)
-	v.Remaining = normalizeSlice(v.Remaining)
-	v.Introduced = normalizeSlice(v.Introduced)
-}
+// --- Diagnose ---
 
 // Diagnose is the diagnose.v1 output envelope.
 type Diagnose struct {
@@ -159,18 +143,35 @@ type Diagnose struct {
 	Report        *diagnosis.Report `json:"report"`
 }
 
-func NewDiagnose(report *diagnosis.Report) Diagnose {
-	normalized := &diagnosis.Report{}
-	if report != nil {
-		cp := *report
-		if cp.Issues != nil {
-			cp.Issues = append([]diagnosis.Issue(nil), cp.Issues...)
+// NewDiagnose constructs a Diagnose envelope with a defensive copy of
+// the report to prevent caller-side mutation of the output.
+func NewDiagnose(report *diagnosis.Report) *Diagnose {
+	if report == nil {
+		return &Diagnose{
+			SchemaVersion: kernel.SchemaDiagnose,
+			Report:        &diagnosis.Report{Issues: []diagnosis.Issue{}},
 		}
-		normalized = &cp
 	}
-	normalized.Issues = normalizeSlice(normalized.Issues)
-	return Diagnose{
+
+	cp := *report
+	cp.Issues = append([]diagnosis.Issue(nil), report.Issues...)
+	if cp.Issues == nil {
+		cp.Issues = []diagnosis.Issue{}
+	}
+
+	return &Diagnose{
 		SchemaVersion: kernel.SchemaDiagnose,
-		Report:        normalized,
+		Report:        &cp,
 	}
+}
+
+// --- Helpers ---
+
+// emptyIfNil returns an empty non-nil slice when in is nil, ensuring
+// JSON marshaling produces [] instead of null.
+func emptyIfNil[T any](in []T) []T {
+	if in == nil {
+		return []T{}
+	}
+	return in
 }
