@@ -3,6 +3,7 @@ package securityaudit
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
@@ -39,7 +40,7 @@ func writeOptionalField(b *strings.Builder, label, value string) {
 }
 
 func renderHeader(b *strings.Builder, report domain.Report) {
-	writeBullet(b, "Generated", report.GeneratedAt)
+	writeBullet(b, "Generated", report.GeneratedAt.Format(time.RFC3339))
 	writeBullet(b, "Tool Version", report.StaveVersion)
 	writeBullet(b, "Schema", report.SchemaVersion)
 	writeBullet(b, "Fail Threshold", report.Summary.FailOn)
