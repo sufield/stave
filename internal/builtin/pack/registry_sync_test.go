@@ -25,7 +25,7 @@ func TestRegistryPacksAreValid(t *testing.T) {
 				t.Fatalf("pack %q has no controls", pack.Name)
 			}
 			for _, id := range pack.Controls {
-				if _, ok := refs[id]; !ok {
+				if _, ok := refs[string(id)]; !ok {
 					t.Fatalf("pack %q references control %q missing from index controls map", pack.Name, id)
 				}
 			}
@@ -85,7 +85,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 	var missing []string
 	for _, p := range paths {
 		id := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
-		if _, ok := refs[id]; !ok {
+		if _, ok := refs[string(id)]; !ok {
 			missing = append(missing, id)
 		}
 	}

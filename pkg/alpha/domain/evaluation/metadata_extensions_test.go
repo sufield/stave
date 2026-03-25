@@ -1,6 +1,10 @@
 package evaluation
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+)
 
 func TestToExtensions_EmptySource(t *testing.T) {
 	m := Metadata{}
@@ -49,7 +53,7 @@ func TestToExtensions_PacksSourceWithGit(t *testing.T) {
 		ControlSource: ControlSourceInfo{
 			Source:             ControlSourcePacks,
 			EnabledPacks:       []string{"core", "hipaa"},
-			ResolvedControlIDs: []string{"CTL.001", "CTL.002"},
+			ResolvedControlIDs: []kernel.ControlID{"CTL.001", "CTL.002"},
 			RegistryVersion:    "v1.0",
 			RegistryHash:       "abc123",
 		},

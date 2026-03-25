@@ -1,6 +1,10 @@
 package evaluation
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+)
 
 func TestEvaluationMetadataToMap_EmptySourceReturnsEmptyMap(t *testing.T) {
 	meta := Metadata{}
@@ -58,7 +62,7 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 		ControlSource: ControlSourceInfo{
 			Source:             ControlSourcePacks,
 			EnabledPacks:       []string{"s3"},
-			ResolvedControlIDs: []string{"CTL.S3.PUBLIC.001"},
+			ResolvedControlIDs: []kernel.ControlID{"CTL.S3.PUBLIC.001"},
 			RegistryVersion:    "v1",
 			RegistryHash:       "abc123",
 		},

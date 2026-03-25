@@ -27,7 +27,7 @@ type ExceptionInput struct {
 
 // PackRegistry resolves built-in control packs from the embedded registry.
 type PackRegistry interface {
-	ResolveEnabledPacks(names []string) ([]string, error)
+	ResolveEnabledPacks(names []string) ([]kernel.ControlID, error)
 	RegistryVersion() (string, error)
 	RegistryHash() (string, error)
 }
@@ -124,7 +124,7 @@ func resolveExceptionRules(in []ExceptionInput) ([]policy.ExceptionRule, error) 
 
 func loadBuiltInControlsByID(
 	loader func() ([]policy.ControlDefinition, error),
-	controlIDs []string,
+	controlIDs []kernel.ControlID,
 	excludeIDs []kernel.ControlID,
 ) ([]policy.ControlDefinition, error) {
 	allBuiltIns, err := loader()
@@ -135,7 +135,7 @@ func loadBuiltInControlsByID(
 	// allowed doubles as a "seen" tracker: true = wanted but unseen.
 	allowed := make(map[kernel.ControlID]bool, len(controlIDs))
 	for _, id := range controlIDs {
-		allowed[kernel.ControlID(id)] = true
+		allowed[id] = true
 	}
 	var excluded map[kernel.ControlID]struct{}
 	if len(excludeIDs) > 0 {
