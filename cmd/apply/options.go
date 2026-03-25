@@ -43,11 +43,17 @@ const (
 
 // RunConfig holds the fully resolved execution state.
 // Exactly one of Params or Profile is meaningful, determined by Mode.
+// All resolved values live here — no downstream code reads back from ApplyOptions.
 type RunConfig struct {
 	Mode         runMode
 	Params       *applyParams // non-nil in standard mode
 	Profile      *Config      // non-nil in profile mode
 	profileClock ports.Clock  // used by profile mode
+
+	// Resolved directory paths from inference. Used by buildEvaluatorInput
+	// instead of reading back from the mutable ApplyOptions receiver.
+	ControlsDir     string
+	ObservationsDir string
 
 	// Pre-loaded project config, resolved once during Resolve().
 	// Shared by buildEvaluatorInput and Build to avoid repeated disk reads.
@@ -91,16 +97,13 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 	if err != nil {
 		return RunConfig{}, err
 	}
-	// Intentional receiver mutation: parseDomain, validateDirs, and
-	// buildEvaluatorInput (called later in the run pipeline) all read
-	// ControlsDir/ObservationsDir from the receiver.
-	o.ControlsDir = ec.ControlsDir
-	o.ObservationsDir = ec.ObservationsDir
+	controlsDir := ec.ControlsDir
+	observationsDir := ec.ObservationsDir
 
 	// IntegrityManifest and IntegrityPublicKey are already cleaned by
 	// normalize() in PreRunE — no duplicate cleaning needed here.
 
-	parsed, err := o.parseDomain()
+	parsed, err := o.parseDomainWith(observationsDir)
 	if err != nil {
 		return RunConfig{}, err
 	}
@@ -114,7 +117,7 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		)
 	}
 
-	if err := o.validateDirsWithConfig(projCfg); err != nil {
+	if err := validateDirsWithConfig(controlsDir, observationsDir, o.controlsSet, projCfg); err != nil {
 		return RunConfig{}, err
 	}
 
@@ -126,6 +129,8 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 	return RunConfig{
 		Mode:              runModeStandard,
 		Params:            params,
+		ControlsDir:       controlsDir,
+		ObservationsDir:   observationsDir,
 		projectConfig:     projCfg,
 		projectConfigPath: cfgPath,
 	}, nil
@@ -165,8 +170,9 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 }
 
 // buildEvaluatorInput bridges CLI flags to the internal application layer options.
+// controlsDir and observationsDir are the resolved paths from RunConfig.
 // cfgPath is the pre-resolved project config path from Resolve().
-func (o *ApplyOptions) buildEvaluatorInput(cfgPath string) (appeval.Options, error) {
+func (o *ApplyOptions) buildEvaluatorInput(controlsDir, observationsDir, cfgPath string) (appeval.Options, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
 		return appeval.Options{}, ui.WithHint(
@@ -192,24 +198,25 @@ func (o *ApplyOptions) buildEvaluatorInput(cfgPath string) (appeval.Options, err
 	return appeval.Options{
 		ContextName:        appapply.ResolveContextName(root, selectedContext),
 		ProjectRoot:        root,
-		ControlsDir:        o.ControlsDir,
+		ControlsDir:        controlsDir,
 		ConfigPath:         cfgPath,
 		UserConfigPath:     userPath,
 		MaxUnsafeDuration:  o.MaxUnsafeDuration,
 		NowTime:            o.NowTime,
-		ObservationsSource: appeval.ObservationSource(o.ObservationsDir),
+		ObservationsSource: appeval.ObservationSource(observationsDir),
 		IntegrityManifest:  o.IntegrityManifest,
 		IntegrityPublicKey: o.IntegrityPublicKey,
 		Hasher:             fsutil.FSContentHasher{},
 	}, nil
 }
 
-// parseDomain handles the conversion of strings to domain-specific types.
-func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
+// parseDomainWith handles the conversion of strings to domain-specific types.
+// observationsDir is the resolved path from inference, not from the receiver.
+func (o *ApplyOptions) parseDomainWith(observationsDir string) (appeval.ParsedOptions, error) {
 	parsed, err := (appeval.Options{
 		MaxUnsafeDuration:  o.MaxUnsafeDuration,
 		NowTime:            o.NowTime,
-		ObservationsSource: appeval.ObservationSource(o.ObservationsDir),
+		ObservationsSource: appeval.ObservationSource(observationsDir),
 		IntegrityManifest:  o.IntegrityManifest,
 		IntegrityPublicKey: o.IntegrityPublicKey,
 	}).Validate()
@@ -221,16 +228,16 @@ func (o *ApplyOptions) parseDomain() (appeval.ParsedOptions, error) {
 
 // validateDirsWithConfig ensures directories exist unless using packs or stdin.
 // Uses a pre-loaded project config to check for enabled packs without re-reading disk.
-func (o *ApplyOptions) validateDirsWithConfig(projCfg *appconfig.ProjectConfig) error {
-	hasPacks := !o.controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
+func validateDirsWithConfig(controlsDir, observationsDir string, controlsSet bool, projCfg *appconfig.ProjectConfig) error {
+	hasPacks := !controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
 	if !hasPacks {
-		if err := dircheck.ValidateFlagDir("--controls", o.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
+		if err := dircheck.ValidateFlagDir("--controls", controlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return err
 		}
 	}
 
-	if o.ObservationsDir != "-" {
-		if err := dircheck.ValidateFlagDir("--observations", o.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
+	if observationsDir != "-" {
+		if err := dircheck.ValidateFlagDir("--observations", observationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
 			return err
 		}
 	}

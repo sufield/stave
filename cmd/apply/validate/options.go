@@ -128,34 +128,43 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 	return nil
 }
 
-// prepareAndLogEnvironment handles Git audits and verbose context logging.
-func (o *options) prepareAndLogEnvironment(cmd *cobra.Command) error {
+// auditGitStatus checks for uncommitted changes in control/config files
+// and emits a warning to stderr if the working tree is dirty.
+func (o *options) auditGitStatus(cmd *cobra.Command) error {
 	gf := cmdutil.GetGlobalFlags(cmd)
-	resolver, resolverErr := projctx.NewResolver()
-	if resolverErr != nil {
-		return fmt.Errorf("resolve project context: %w", resolverErr)
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return fmt.Errorf("resolve project context: %w", err)
 	}
 
-	_, cfgPath, err := projconfig.FindProjectConfigWithPath("")
-	if err != nil {
-		return fmt.Errorf("load project config: %w", err)
+	_, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
+	if cfgErr != nil {
+		return fmt.Errorf("load project config: %w", cfgErr)
 	}
+
 	root := resolver.ProjectRoot()
 	gitMeta := compose.AuditGitStatus(root, []string{o.Controls, cfgPath})
 	compose.WarnGitDirty(cmd.ErrOrStderr(), gitMeta, "validate", gf.Quiet)
+	return nil
+}
+
+// logEnvironment emits debug-level context information for troubleshooting.
+func (o *options) logEnvironment() {
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return
+	}
+	_, cfgPath, _ := projconfig.FindProjectConfigWithPath("")
 
 	ctxName := "none"
-	if resolver != nil {
-		if sc, err := resolver.ResolveSelected(); err == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
-			ctxName = sc.Name
-		}
+	if sc, scErr := resolver.ResolveSelected(); scErr == nil && sc.Active && strings.TrimSpace(sc.Name) != "" {
+		ctxName = sc.Name
 	}
 	slog.Debug("validate environment",
 		"context", ctxName,
 		"config", compose.EmptyDash(cfgPath),
 		"controls", o.Controls,
 		"observations", o.Observations)
-	return nil
 }
 
 // validateParams holds the fully parsed domain types.
