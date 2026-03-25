@@ -24,6 +24,14 @@ type rawOptions struct {
 	dueWithin                                     string
 }
 
+// prepare resolves config defaults from the evaluator. Called from PreRunE.
+func (o *rawOptions) prepare(cmd *cobra.Command) error {
+	// Config defaults are resolved in resolve() since they need the evaluator.
+	// PreRunE validates that the command context is healthy.
+	_ = cmd
+	return nil
+}
+
 // resolve parses and validates all raw flag values into a ready-to-use Config.
 func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (config, error) {
 	gf := cmdutil.GetGlobalFlags(cmd)

@@ -20,6 +20,32 @@ func NewCmd(p *compose.Provider) *cobra.Command {
 snapshot inventory, retention posture, current violations, upcoming action items,
 and trend vs last week.
 
+Inputs:
+  --controls, -i        Path to control definitions directory (inferred if omitted)
+  --observations, -o    Path to observation snapshots directory (default: observations)
+  --archive-dir         Path to archived observation snapshots (default: observations/archive)
+  --max-unsafe          Maximum allowed unsafe duration (from project config if omitted)
+  --due-soon            Threshold for due-soon actions (default: 24h)
+  --lookback            Trend comparison window (default: 7d)
+  --older-than          Retention window for prune-candidate estimate (from config if omitted)
+  --retention-tier      Retention tier from stave.yaml (from config if omitted)
+  --keep-min            Minimum snapshots assumed for prune estimate (default: 2)
+  --now                 Reference time (RFC3339). If omitted, uses wall clock
+  --format, -f          Output format: markdown or json (default: markdown)
+  --control-id          Filter upcoming metrics to specific control IDs (repeatable)
+  --asset-type          Filter upcoming metrics to specific asset types (repeatable)
+  --status              Filter upcoming by status: OVERDUE, DUE_NOW, UPCOMING (repeatable)
+  --due-within          Filter upcoming to items due within duration from --now
+
+Outputs:
+  stdout                Weekly hygiene report (markdown or JSON)
+
+Exit Codes:
+  0   - Report generated successfully
+  2   - Invalid input or configuration error
+  4   - Internal error
+  130 - Interrupted (SIGINT)
+
 Examples:
   # Print report to stdout
   stave snapshot hygiene --controls ./controls --observations ./observations
@@ -30,6 +56,9 @@ Examples:
   # Deterministic weekly report
   stave snapshot hygiene --controls ./controls --observations ./observations --now 2026-01-20T00:00:00Z` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return opts.prepare(cmd)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfg, err := opts.resolve(cmd, cmdctx.EvaluatorFromCmd(cmd))
 			if err != nil {
