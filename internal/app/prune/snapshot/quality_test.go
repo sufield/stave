@@ -17,7 +17,7 @@ func TestAssessSnapshotQuality_NoSnapshots(t *testing.T) {
 		RequiredResources: nil,
 		Strict:            false,
 	})
-	if report.Pass {
+	if report.Passed {
 		t.Fatal("expected fail when no snapshots exist")
 	}
 	if len(report.Issues) == 0 || report.Issues[0].Code != "NO_SNAPSHOTS" {
@@ -46,7 +46,7 @@ func TestAssessSnapshotQuality_StaleAndMissingRequired(t *testing.T) {
 		Strict:            false,
 	})
 
-	if report.Pass {
+	if report.Passed {
 		t.Fatal("expected fail for stale/too-few/missing-resource issues")
 	}
 	codes := map[string]bool{}
@@ -73,7 +73,7 @@ func TestAssessSnapshotQuality_WarningStrictMode(t *testing.T) {
 		MaxGap:       24 * time.Hour,
 		Strict:       false,
 	})
-	if !reportWarn.Pass {
+	if !reportWarn.Passed {
 		t.Fatalf("expected pass with warnings in non-strict mode, got fail: %+v", reportWarn)
 	}
 
@@ -85,7 +85,7 @@ func TestAssessSnapshotQuality_WarningStrictMode(t *testing.T) {
 		MaxGap:       24 * time.Hour,
 		Strict:       true,
 	})
-	if reportStrict.Pass {
+	if reportStrict.Passed {
 		t.Fatalf("expected strict mode fail on warning issue: %+v", reportStrict)
 	}
 }

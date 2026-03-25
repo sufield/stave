@@ -68,7 +68,7 @@ func (s RiskStats) MarshalJSON() ([]byte, error) {
 }
 
 // NewRiskStats creates RiskStats from current violations and a risk summary.
-func NewRiskStats(violations int, summary risk.Summary) RiskStats {
+func NewRiskStats(violations int, summary risk.ThresholdSummary) RiskStats {
 	return RiskStats{
 		CurrentViolations: violations,
 		Overdue:           summary.Overdue,

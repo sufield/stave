@@ -51,6 +51,7 @@ func NewConfigCmd(rt *ui.Runtime) *cobra.Command {
 func newRunner(rt *ui.Runtime, cmd *cobra.Command) *Runner {
 	return &Runner{
 		RT:     rt,
+		Stdin:  cmd.InOrStdin(),
 		Stdout: cmd.OutOrStdout(),
 		Stderr: cmd.ErrOrStderr(),
 	}

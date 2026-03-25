@@ -70,7 +70,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runPolicyAny: %v", err)
 	}
-	if result.Pass {
+	if result.Passed {
 		t.Fatalf("expected gate fail when findings exist, got pass")
 	}
 	if result.CurrentViolations != 1 {
@@ -89,7 +89,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runPolicyAny: %v", err)
 	}
-	if !result.Pass {
+	if !result.Passed {
 		t.Fatalf("expected gate pass when no findings exist, got fail")
 	}
 }
@@ -146,7 +146,7 @@ func TestRunGatePolicyNew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runPolicyNew: %v", err)
 	}
-	if result.Pass {
+	if result.Passed {
 		t.Fatalf("expected fail when new findings exist")
 	}
 	if result.NewViolations != 1 {
@@ -186,7 +186,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
-	if !result.Pass {
+	if !result.Passed {
 		t.Fatalf("expected pass at high threshold before overdue, got fail with reason: %s", result.Reason)
 	}
 
@@ -200,7 +200,7 @@ func TestRunGatePolicyOverdue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runPolicyOverdue: %v", err)
 	}
-	if result.Pass {
+	if result.Passed {
 		t.Fatalf("expected fail when overdue upcoming exists")
 	}
 	if result.OverdueUpcoming == 0 {

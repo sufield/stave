@@ -17,7 +17,7 @@ func TestRequestParse(t *testing.T) {
 			DueWithin:         "48h",
 			KeepMin:           2,
 			NowTime:           "2026-01-20T12:30:00+05:00",
-			Statuses:          []risk.Status{risk.StatusOverdue, risk.StatusDueNow, risk.StatusUpcoming},
+			Statuses:          []risk.ThresholdStatus{risk.StatusOverdue, risk.StatusDueNow, risk.StatusUpcoming},
 		}
 
 		parsed, err := req.Parse()
@@ -107,7 +107,7 @@ func TestRequestParseErrors(t *testing.T) {
 			DueSoon:           "24h",
 			Lookback:          "7d",
 			KeepMin:           0,
-			Statuses:          []risk.Status{"BOGUS"},
+			Statuses:          []risk.ThresholdStatus{"BOGUS"},
 		}
 
 		_, err := req.Parse()

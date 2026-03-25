@@ -54,7 +54,7 @@ type result struct {
 	Kind          kernel.OutputKind    `json:"kind"`
 	CheckedAt     time.Time            `json:"checked_at"`
 	Policy        appconfig.GatePolicy `json:"policy"`
-	Pass          bool                 `json:"pass"`
+	Passed        bool                 `json:"pass"`
 	Reason        string               `json:"reason"`
 
 	EvaluationPath   string `json:"evaluation_path,omitempty"`
@@ -98,7 +98,7 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	if err := r.report(cfg, res); err != nil {
 		return err
 	}
-	if !res.Pass {
+	if !res.Passed {
 		return ui.ErrViolationsFound
 	}
 	return nil
@@ -120,7 +120,7 @@ func (r *runner) runPolicyAny(cfg config) (result, error) {
 		Kind:              kernel.KindGateCheck,
 		CheckedAt:         cfg.Clock.Now().UTC(),
 		Policy:            appconfig.GatePolicyAny,
-		Pass:              pass,
+		Passed:            pass,
 		Reason:            reason,
 		EvaluationPath:    cfg.InPath,
 		CurrentViolations: count,
@@ -148,7 +148,7 @@ func (r *runner) runPolicyNew(cfg config) (result, error) {
 		Kind:              kernel.KindGateCheck,
 		CheckedAt:         cfg.Clock.Now().UTC(),
 		Policy:            appconfig.GatePolicyNew,
-		Pass:              pass,
+		Passed:            pass,
 		Reason:            reason,
 		EvaluationPath:    cfg.InPath,
 		BaselinePath:      cfg.BaselinePath,
@@ -167,7 +167,7 @@ func (r *runner) runPolicyOverdue(ctx context.Context, cfg config) (result, erro
 		return result{}, fmt.Errorf("init CEL evaluator: %w", err)
 	}
 	now := cfg.Clock.Now().UTC()
-	items := risk.ComputeItems(risk.Request{
+	items := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                loaded.Controls,
 		Snapshots:               loaded.Snapshots,
 		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
@@ -186,7 +186,7 @@ func (r *runner) runPolicyOverdue(ctx context.Context, cfg config) (result, erro
 		Kind:             kernel.KindGateCheck,
 		CheckedAt:        now,
 		Policy:           appconfig.GatePolicyOverdue,
-		Pass:             pass,
+		Passed:           pass,
 		Reason:           reason,
 		ControlsPath:     cfg.ControlsDir,
 		ObservationsPath: cfg.ObservationsDir,
@@ -202,7 +202,7 @@ func (r *runner) report(cfg config, res result) error {
 		return nil
 	}
 	status := "PASS"
-	if !res.Pass {
+	if !res.Passed {
 		status = "FAIL"
 	}
 	_, err := fmt.Fprintf(cfg.Stdout, "Gate %s (%s): %s\n", status, res.Policy, res.Reason)

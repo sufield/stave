@@ -22,7 +22,7 @@ type RiskOptions struct {
 	// Optional filters for upcoming metrics (empty = no filter).
 	ControlIDs      []kernel.ControlID
 	AssetTypes      []kernel.AssetType
-	Statuses        []risk.Status
+	Statuses        []risk.ThresholdStatus
 	DueWithin       *time.Duration
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	CELEvaluator    policy.PredicateEval
@@ -75,8 +75,8 @@ func computeUpcomingSummary(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
-) risk.Summary {
-	items := risk.ComputeItems(risk.Request{
+) risk.ThresholdSummary {
+	items := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                controls,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,
@@ -100,15 +100,15 @@ func computeUpcomingSummary(
 		}
 	}
 
-	var statusSet map[risk.Status]struct{}
+	var statusSet map[risk.ThresholdStatus]struct{}
 	if len(opts.Statuses) > 0 {
-		statusSet = make(map[risk.Status]struct{}, len(opts.Statuses))
+		statusSet = make(map[risk.ThresholdStatus]struct{}, len(opts.Statuses))
 		for _, item := range opts.Statuses {
 			statusSet[item] = struct{}{}
 		}
 	}
 
-	items = items.Filter(risk.FilterCriteria{
+	items = items.Filter(risk.ThresholdFilter{
 		ControlIDs:   controlIDSet,
 		AssetTypes:   assetTypeSet,
 		Statuses:     statusSet,

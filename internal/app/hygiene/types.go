@@ -11,10 +11,10 @@ import (
 
 // HygieneFilters captures the active filter criteria for a hygiene report.
 type HygieneFilters struct {
-	ControlIDs []kernel.ControlID `json:"control_ids"`
-	AssetTypes []kernel.AssetType `json:"asset_types"`
-	Statuses   []risk.Status      `json:"statuses"`
-	DueWithin  string             `json:"due_within"`
+	ControlIDs []kernel.ControlID     `json:"control_ids"`
+	AssetTypes []kernel.AssetType     `json:"asset_types"`
+	Statuses   []risk.ThresholdStatus `json:"statuses"`
+	DueWithin  string                 `json:"due_within"`
 }
 
 // Output is the structured representation of a hygiene report.

@@ -27,7 +27,7 @@ func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
 		GlobalMaxUnsafeDuration: 4 * time.Hour,
 		Now:                     base.Add(1 * time.Hour),
 		DueSoonThreshold:        90 * time.Minute,
-		Statuses:                []risk.Status{risk.StatusUpcoming},
+		Statuses:                []risk.ThresholdStatus{risk.StatusUpcoming},
 		AssetTypes:              []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		DueWithin:               &dueSoon,
 		CELEvaluator:            mustPredicateEval(),
@@ -89,7 +89,7 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		GlobalMaxUnsafeDuration: 4 * time.Hour,
 		Now:                     base.Add(1 * time.Hour),
 		DueSoonThreshold:        90 * time.Minute,
-		Statuses:                []risk.Status{risk.StatusUpcoming},
+		Statuses:                []risk.ThresholdStatus{risk.StatusUpcoming},
 		AssetTypes:              []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		CELEvaluator:            mustPredicateEval(),
 	}
@@ -99,7 +99,7 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}
 
-	manual := risk.Items{
+	manual := risk.ThresholdItems{
 		{Status: risk.StatusOverdue, Remaining: -time.Hour},
 		{Status: risk.StatusDueNow, Remaining: 0},
 		{Status: risk.StatusUpcoming, Remaining: 30 * time.Minute},

@@ -54,7 +54,7 @@ type qualityReport struct {
 	SchemaVersion kernel.Schema     `json:"schema_version"`
 	Kind          kernel.OutputKind `json:"kind"`
 	CheckedAt     time.Time         `json:"checked_at"`
-	Pass          bool              `json:"pass"`
+	Passed        bool              `json:"pass"`
 	Strict        bool              `json:"strict"`
 	Summary       qualitySummary    `json:"summary"`
 	Issues        []qualityIssue    `json:"issues"`

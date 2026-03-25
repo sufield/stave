@@ -40,7 +40,7 @@ func (r *QualityRunner) Run(cfg QualityConfig) error {
 	if err := writeQualityOutput(cfg.Stdout, cfg.Format, report, cfg.Quiet); err != nil {
 		return err
 	}
-	if !report.Pass {
+	if !report.Passed {
 		return appcontracts.ErrViolationsFound
 	}
 	return nil

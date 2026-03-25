@@ -57,7 +57,7 @@ const (
 )
 
 // ClassifySafetyStatus derives posture from violation counts and approaching risks.
-func ClassifySafetyStatus(violations int, upcoming risk.Items) SafetyStatus {
+func ClassifySafetyStatus(violations int, upcoming risk.ThresholdItems) SafetyStatus {
 	if violations > 0 {
 		return StatusUnsafe
 	}

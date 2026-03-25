@@ -189,7 +189,7 @@ func BuildReport(req LoopRequest, clock interface{ Now() time.Time }, v safetyen
 		SchemaVersion:     kernel.SchemaFixLoop,
 		Kind:              kernel.KindRemediationReport,
 		CheckedAt:         v.Run.Now,
-		Pass:              pass,
+		Passed:            pass,
 		Reason:            reason,
 		MaxUnsafeDuration: req.MaxUnsafeDuration.String(),
 		Before:            ObservationSummary{Directory: req.BeforeDir, Snapshots: v.Run.BeforeSnapshots, Violations: v.Summary.BeforeViolations},

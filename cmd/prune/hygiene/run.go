@@ -45,7 +45,7 @@ type config struct {
 type UpcomingFilter struct {
 	ControlIDs   []kernel.ControlID
 	AssetTypes   []kernel.AssetType
-	Statuses     []risk.Status
+	Statuses     []risk.ThresholdStatus
 	DueWithin    time.Duration
 	DueWithinRaw string
 }

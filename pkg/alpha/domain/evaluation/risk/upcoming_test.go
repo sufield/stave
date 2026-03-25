@@ -32,9 +32,9 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 	}
 
 	celEval := mustPredicateEval()
-	var expected []Item
+	var expected []ThresholdItem
 	for i := range 20 {
-		items := ComputeItems(Request{
+		items := ComputeItems(ThresholdRequest{
 			Controls:                controls,
 			Snapshots:               snapshots,
 			GlobalMaxUnsafeDuration: 4 * time.Hour,
@@ -71,7 +71,7 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 		{CapturedAt: base.Add(2 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
-	items := ComputeItems(Request{
+	items := ComputeItems(ThresholdRequest{
 		Controls:                controls,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 6 * time.Hour,
@@ -100,7 +100,7 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 
 	celEval := mustPredicateEval()
 	invalid := []policy.ControlDefinition{testControl("CTL.A", "not-a-duration")}
-	items := ComputeItems(Request{
+	items := ComputeItems(ThresholdRequest{
 		Controls:                invalid,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 5 * time.Hour,
@@ -115,7 +115,7 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 	}
 
 	zero := []policy.ControlDefinition{testControl("CTL.B", "0h")}
-	items = ComputeItems(Request{
+	items = ComputeItems(ThresholdRequest{
 		Controls:                zero,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 5 * time.Hour,
@@ -132,7 +132,7 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 
 func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 	due := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	items := []Item{
+	items := []ThresholdItem{
 		{DueAt: due, Status: StatusUpcoming, ControlID: "CTL.A", AssetID: "r1"},
 		{DueAt: due, Status: StatusDueNow, ControlID: "CTL.A", AssetID: "r1"},
 		{DueAt: due, Status: StatusOverdue, ControlID: "CTL.A", AssetID: "r1"},
@@ -140,7 +140,7 @@ func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 	sortItems(items)
 
 	// OVERDUE is most urgent, then DUE_NOW, then UPCOMING.
-	want := []Status{StatusOverdue, StatusDueNow, StatusUpcoming}
+	want := []ThresholdStatus{StatusOverdue, StatusDueNow, StatusUpcoming}
 	for i, w := range want {
 		if items[i].Status != w {
 			t.Fatalf("items[%d].Status = %s, want %s", i, items[i].Status, w)
@@ -149,15 +149,15 @@ func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 }
 
 func TestFilter_ByControlAndStatus(t *testing.T) {
-	items := Items{
+	items := ThresholdItems{
 		{ControlID: "CTL.A", AssetType: kernel.AssetType("storage_bucket"), Status: StatusOverdue, Remaining: -1 * time.Hour},
 		{ControlID: "CTL.B", AssetType: kernel.AssetType("iam_role"), Status: StatusUpcoming, Remaining: 4 * time.Hour},
 		{ControlID: "CTL.C", AssetType: kernel.AssetType("storage_bucket"), Status: StatusUpcoming, Remaining: 1 * time.Hour},
 	}
 
-	filtered := items.Filter(FilterCriteria{
+	filtered := items.Filter(ThresholdFilter{
 		AssetTypes:   map[kernel.AssetType]struct{}{kernel.AssetType("storage_bucket"): {}},
-		Statuses:     map[Status]struct{}{StatusUpcoming: {}},
+		Statuses:     map[ThresholdStatus]struct{}{StatusUpcoming: {}},
 		MaxRemaining: 2 * time.Hour,
 	})
 
@@ -170,11 +170,11 @@ func TestFilter_ByControlAndStatus(t *testing.T) {
 }
 
 func TestFilter_EmptyPassesAll(t *testing.T) {
-	items := Items{
+	items := ThresholdItems{
 		{ControlID: "CTL.A", Status: StatusOverdue},
 		{ControlID: "CTL.B", Status: StatusUpcoming},
 	}
-	filtered := items.Filter(FilterCriteria{})
+	filtered := items.Filter(ThresholdFilter{})
 	if len(filtered) != 2 {
 		t.Fatalf("empty filter should pass all items, got %d", len(filtered))
 	}

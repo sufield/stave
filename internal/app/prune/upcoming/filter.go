@@ -6,10 +6,10 @@ import (
 )
 
 // NewUpcomingFilter transforms raw input criteria into a validated domain filter.
-func NewUpcomingFilter(criteria FilterCriteria) (risk.FilterCriteria, error) {
+func NewUpcomingFilter(criteria FilterCriteria) (risk.ThresholdFilter, error) {
 	validated, err := risk.ValidateStatuses(criteria.Statuses)
 	if err != nil {
-		return risk.FilterCriteria{}, err
+		return risk.ThresholdFilter{}, err
 	}
 	var controlIDSet map[kernel.ControlID]struct{}
 	if len(criteria.ControlIDs) > 0 {
@@ -27,15 +27,15 @@ func NewUpcomingFilter(criteria FilterCriteria) (risk.FilterCriteria, error) {
 		}
 	}
 
-	var statusSet map[risk.Status]struct{}
+	var statusSet map[risk.ThresholdStatus]struct{}
 	if len(validated) > 0 {
-		statusSet = make(map[risk.Status]struct{}, len(validated))
+		statusSet = make(map[risk.ThresholdStatus]struct{}, len(validated))
 		for _, item := range validated {
 			statusSet[item] = struct{}{}
 		}
 	}
 
-	return risk.FilterCriteria{
+	return risk.ThresholdFilter{
 		ControlIDs:   controlIDSet,
 		AssetTypes:   assetTypeSet,
 		Statuses:     statusSet,
