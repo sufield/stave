@@ -15,16 +15,20 @@ import (
 )
 
 // BaseDir returns the base directory for path inference.
-// If STAVE_PROJECT_ROOT is set and points to a valid directory, it is returned.
-// Otherwise, the current working directory is returned.
-func BaseDir() (string, error) {
-	if root := os.Getenv(env.ProjectRoot.Name); root != "" {
-		// #nosec G703 -- STAVE_PROJECT_ROOT is an explicit local override and is only checked for existence/type.
+// If STAVE_PROJECT_ROOT is set and points to a valid directory, it is
+// returned. Otherwise, the current working directory is returned.
+// The environ parameter controls environment lookups (pass os.Getenv
+// in production; inject a stub in tests).
+func BaseDir(environ ...func(string) string) (string, error) {
+	lookup := os.Getenv
+	if len(environ) > 0 && environ[0] != nil {
+		lookup = environ[0]
+	}
+	if root := lookup(env.ProjectRoot.Name); root != "" {
 		fi, err := os.Stat(root)
 		if err == nil && fi.IsDir() {
 			return root, nil
 		}
-		// Invalid STAVE_PROJECT_ROOT — fall through to cwd
 	}
 	return os.Getwd()
 }
@@ -42,8 +46,8 @@ func BaseDir() (string, error) {
 // multiple matches are found, or nil otherwise.
 func Unique(base, name string, maxDepth int) (string, []string, error) {
 	direct := filepath.Join(base, name)
-	if directPath, ok := findDirectPath(direct); ok {
-		return directPath, nil, nil
+	if isDir(direct) {
+		return direct, nil, nil
 	}
 	candidates, err := dirCandidates(base, name, maxDepth)
 	if err != nil {
@@ -59,12 +63,9 @@ func Unique(base, name string, maxDepth int) (string, []string, error) {
 	})
 }
 
-func findDirectPath(path string) (string, bool) {
+func isDir(path string) bool {
 	fi, err := os.Stat(path)
-	if err == nil && fi.IsDir() {
-		return path, true
-	}
-	return "", false
+	return err == nil && fi.IsDir()
 }
 
 func dirCandidates(base, name string, maxDepth int) ([]string, error) {
@@ -90,12 +91,18 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
 	if walkErr != nil || !entry.IsDir() {
 		return nil
 	}
-	rel, ok := relativeWalkPath(s.base, path)
-	if !ok || rel == "." {
+
+	// Skip hidden directories (.git, .stave, etc.) to save I/O.
+	if name := entry.Name(); strings.HasPrefix(name, ".") && name != "." {
+		return fs.SkipDir
+	}
+
+	rel, err := filepath.Rel(s.base, path)
+	if err != nil || rel == "." {
 		return nil
 	}
-	// Use forward slashes for consistent depth counting across platforms.
-	depth := strings.Count(filepath.ToSlash(rel), "/")
+
+	depth := pathDepth(rel)
 	if entry.Name() == s.name {
 		if depth <= s.maxDepth {
 			s.candidates = append(s.candidates, path)
@@ -108,12 +115,14 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
 	return nil
 }
 
-func relativeWalkPath(base, path string) (string, bool) {
-	rel, err := filepath.Rel(base, path)
-	if err != nil {
-		return "", false
+// pathDepth counts directory separators in the cleaned relative path.
+// "a" = 0, "a/b" = 1, "a/b/c" = 2.
+func pathDepth(rel string) int {
+	rel = filepath.Clean(rel)
+	if rel == "." {
+		return 0
 	}
-	return rel, true
+	return strings.Count(rel, string(filepath.Separator))
 }
 
 type resolutionRequest struct {
@@ -134,7 +143,7 @@ func resolveCandidates(req resolutionRequest) (string, []string, error) {
 	case 1:
 		return req.Candidates[0], nil, nil
 	default:
-		relCandidates := relativeCandidatePaths(req.Base, req.Candidates)
+		relCandidates := relativePaths(req.Base, req.Candidates)
 		return "", relCandidates, fmt.Errorf(
 			"ambiguous: found %d %q directories under %s: %s",
 			len(req.Candidates), req.Name, req.Base, strings.Join(relCandidates, ", "),
@@ -142,15 +151,15 @@ func resolveCandidates(req resolutionRequest) (string, []string, error) {
 	}
 }
 
-func relativeCandidatePaths(base string, candidates []string) []string {
-	relative := make([]string, len(candidates))
-	for i, candidate := range candidates {
-		r, err := filepath.Rel(base, candidate)
+func relativePaths(base string, paths []string) []string {
+	out := make([]string, len(paths))
+	for i, p := range paths {
+		rel, err := filepath.Rel(base, p)
 		if err != nil {
-			relative[i] = candidate
+			out[i] = p
 			continue
 		}
-		relative[i] = r
+		out[i] = rel
 	}
-	return relative
+	return out
 }
