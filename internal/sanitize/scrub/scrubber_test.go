@@ -11,7 +11,7 @@ import (
 )
 
 func TestScrubSnapshot_Resources(t *testing.T) {
-	sc := scrub.NewScrubber(sanitize.New())
+	sc := scrub.NewScrubber(sanitize.New(sanitize.WithIDSanitization(true)))
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
@@ -86,7 +86,7 @@ func TestScrubSnapshot_Resources(t *testing.T) {
 }
 
 func TestScrubSnapshot_Identities(t *testing.T) {
-	sc := scrub.NewScrubber(sanitize.New())
+	sc := scrub.NewScrubber(sanitize.New(sanitize.WithIDSanitization(true)))
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",
 		CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
@@ -142,7 +142,7 @@ func TestScrubSnapshot_Identities(t *testing.T) {
 }
 
 func TestScrubSnapshot_PreservesTimestamp(t *testing.T) {
-	sc := scrub.NewScrubber(sanitize.New())
+	sc := scrub.NewScrubber(sanitize.New(sanitize.WithIDSanitization(true)))
 	ts := time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 	snap := asset.Snapshot{
 		SchemaVersion: "obs.v0.1",

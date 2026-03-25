@@ -21,24 +21,32 @@ var _ kernel.Sanitizer = (*Sanitizer)(nil)
 
 // Sanitizer sanitizes infrastructure identifiers from output.
 // It is deterministic: the same input value always produces the same token.
+// Sanitizer applies deterministic sanitization to identifiers and paths.
+// The zero value is usable: IDs are not sanitized and paths are stripped
+// to basenames.
 type Sanitizer struct {
-	disableIDs bool
-	pathMode   PathMode
+	sanitizeIDs bool
+	pathMode    PathMode
 }
 
-// New creates a new Sanitizer with default path mode.
-func New() *Sanitizer {
-	return &Sanitizer{pathMode: PathBase}
+// New returns a Sanitizer with sensible defaults. Pass options to
+// customize behavior.
+func New(opts ...Option) *Sanitizer {
+	s := &Sanitizer{}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 // idEnabled reports whether ID/asset/value sanitization is active.
 func (s *Sanitizer) idEnabled() bool {
-	return s != nil && !s.disableIDs
+	return s != nil && s.sanitizeIDs
 }
 
 // pathEnabled reports whether path-stripping logic should be applied.
 func (s *Sanitizer) pathEnabled() bool {
-	return s != nil && s.pathMode.Effective() == PathBase
+	return s != nil && s.pathMode != PathFull
 }
 
 // hash generates a deterministic 8-hex-char token from a value.

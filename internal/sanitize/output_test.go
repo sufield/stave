@@ -115,7 +115,7 @@ func TestJSONWriter_WriteFindings_NoRedact(t *testing.T) {
 }
 
 func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	w := outjson.NewFindingWriter(true)
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	enriched, err := appeval.Enrich(enricher, r, makeTestResult())
@@ -141,7 +141,7 @@ func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 // --- Text FindingWriter tests ---
 
 func TestTextWriter_WriteFindings_WithRedact(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	w := &outtext.FindingWriter{}
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	enriched, err := appeval.Enrich(enricher, r, makeTestResult())

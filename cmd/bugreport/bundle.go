@@ -101,7 +101,7 @@ func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
 }
 
 func (g *Generator) addScrubDemo(bundle *bundleWriter) error {
-	s := sanitize.New()
+	s := sanitize.New(sanitize.WithIDSanitization(true))
 	sc := scrub.NewScrubber(s)
 
 	demo := sc.ScrubSnapshot(asset.Snapshot{
