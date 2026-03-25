@@ -58,10 +58,10 @@ Examples:
   stave validate --strict` + metadata.OfflineHelpSuffix
 
 // NewCmd builds the validate command.
-// Panics if rt is nil — command wiring is a programming error, not a user error.
+// Returns nil if rt is nil — the caller (WireCommands) must provide a valid runtime.
 func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
-		panic("validate.NewCmd: nil runtime")
+		return nil
 	}
 
 	opts := newOptions()

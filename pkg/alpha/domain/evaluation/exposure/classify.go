@@ -23,8 +23,10 @@ const (
 	idPublicDelete        kernel.ControlID = "CTL.STORAGE.PUBLIC.DELETE.001"
 )
 
-func init() {
-	// Sanity check: Ensure hardcoded domain constants meet the required ID format.
+// ValidateControlIDs checks that all hardcoded exposure control ID constants
+// conform to the required format. Call this during bootstrap instead of
+// relying on init()-time panics.
+func ValidateControlIDs() error {
 	ids := []kernel.ControlID{
 		idResourceTakeover, idWebPublic, idAuthenticatedRead, idPublicRead,
 		idResourcePublicRead, idPublicList, idPublicWrite, idResourcePublicWrite,
@@ -32,9 +34,10 @@ func init() {
 	}
 	for _, id := range ids {
 		if err := kernel.ValidateControlIDFormat(id.String()); err != nil {
-			panic(fmt.Sprintf("invalid exposure control ID %q: %v", id, err))
+			return fmt.Errorf("invalid exposure control ID %q: %w", id, err)
 		}
 	}
+	return nil
 }
 
 // ClassifyExposure evaluates a set of normalized resource states and returns

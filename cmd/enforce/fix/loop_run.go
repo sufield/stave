@@ -40,7 +40,7 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		ControlRepo: controlRepo,
 	}
 
-	am := appfix.NewArtifactWriter(
+	am, amErr := appfix.NewArtifactWriter(
 		req.OutDir,
 		appfix.WriteOptions{
 			Overwrite:     r.FileOptions.Overwrite,
@@ -53,6 +53,9 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 			AllowSymlink: r.FileOptions.AllowSymlinks,
 		},
 	)
+	if amErr != nil {
+		return amErr
+	}
 
 	eb := r.newEnvelopeBuilder()
 

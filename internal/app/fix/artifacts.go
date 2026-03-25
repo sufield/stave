@@ -49,11 +49,11 @@ type ArtifactWriter struct {
 
 // NewArtifactWriter constructs an ArtifactWriter with a required FileSystem.
 // The cmd layer must inject a FileSystem backed by safe platform functions.
-func NewArtifactWriter(outDir string, opts WriteOptions, stdout io.Writer, fs FileSystem) *ArtifactWriter {
+func NewArtifactWriter(outDir string, opts WriteOptions, stdout io.Writer, fs FileSystem) (*ArtifactWriter, error) {
 	if fs == nil {
-		panic("fix.NewArtifactWriter: FileSystem implementation is required")
+		return nil, fmt.Errorf("fix.NewArtifactWriter: FileSystem implementation is required")
 	}
-	return &ArtifactWriter{OutDir: outDir, Options: opts, Stdout: stdout, fs: fs}
+	return &ArtifactWriter{OutDir: outDir, Options: opts, Stdout: stdout, fs: fs}, nil
 }
 
 // PersistVerification writes the full suite of verification artifacts to disk.
