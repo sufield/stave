@@ -1,6 +1,6 @@
-This is the ultimate way to leverage your "Contract-First" architecture. Since the obs.v0.1 schema is the only thing the engine cares about, you can provide a "Meta-Prompt" that turns any LLM into an Extractor Factory.
+This is the ultimate way to leverage Contract-First architecture. Since the obs.v0.1 schema is the only thing the engine cares about, you can use a "Meta-Prompt" that turns any LLM to generate code for an Extractor.
 
-Here is a template you can provide to your developers. They can paste this into Claude, ChatGPT, or GitHub Copilot to generate a working extractor in minutes.
+Here is a template for developers. You can paste this into Claude, ChatGPT, or GitHub Copilot to generate a working extractor in minutes.
 
 🚀 Stave Extractor Jumpstart Template
 
@@ -94,12 +94,10 @@ if __name__ == "__main__":
     extract()
 Why this is powerful for your project:
 
-Zero Onboarding: Developers don't need to learn your 88k-line Go codebase. They only need to know the 10-line JSON contract.
+Zero Onboarding: Developers don't need to learn 88k-line Stave Go codebase. They only need to know the 10-line JSON contract.
 
-Language Freedom: One team can use Python because they are data scientists; another can use Go because they are DevOps. Your core engine doesn't care.
+Language Freedom: One team can use Python because they are data scientists; another can use Go because they are DevOps. Stave core engine doesn't care.
 
 Unix Philosophy: It reinforces the pipe workflow.
 
-Instant Scaffolding: Since you removed the Go-specific scaffolding command (cmd/apply/extractor/), this Prompt Template becomes your new, language-agnostic "Scaffolder."
-
-Recommendation: Add this template to a docs/DEVELOPMENT.md file in your repo. It makes the "External Extractor" strategy a reality for your users.
+Instant Scaffolding: This Prompt Template is language-agnostic Scaffolder.
