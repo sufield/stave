@@ -60,7 +60,10 @@ func UnmarshalSigned(data []byte, pubKeyPEM []byte) (Manifest, error) {
 		return Manifest{}, fmt.Errorf("parse integrity public key: unsupported key encoding; expected PEM public key: %w", err)
 	}
 
-	verifier := &crypto.Verifier{PublicKey: publicKey}
+	verifier, err := crypto.NewVerifier(publicKey)
+	if err != nil {
+		return Manifest{}, fmt.Errorf("create verifier: %w", err)
+	}
 	if err = VerifySignedManifest(signed, verifier); err != nil {
 		return Manifest{}, fmt.Errorf("integrity check failed: %w", err)
 	}

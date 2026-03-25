@@ -125,6 +125,13 @@ func TestParsePrivateKeyPEM_WrongType(t *testing.T) {
 	}
 }
 
+func TestNewVerifier_InvalidKey(t *testing.T) {
+	_, err := NewVerifier(ed25519.PublicKey("short"))
+	if !errors.Is(err, ErrInvalidKeyType) {
+		t.Fatalf("expected ErrInvalidKeyType, got: %v", err)
+	}
+}
+
 func TestVerifier_Verify(t *testing.T) {
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -133,7 +140,10 @@ func TestVerifier_Verify(t *testing.T) {
 	data := []byte("manifest")
 	sig := kernel.Signature(hex.EncodeToString(ed25519.Sign(privateKey, data)))
 
-	v := &Verifier{PublicKey: publicKey}
+	v, err := NewVerifier(publicKey)
+	if err != nil {
+		t.Fatalf("NewVerifier: %v", err)
+	}
 	if err := v.Verify(data, sig); err != nil {
 		t.Fatalf("Verify() error = %v", err)
 	}
@@ -147,61 +157,47 @@ func TestVerifier_Verify_InvalidInputs(t *testing.T) {
 	data := []byte("manifest")
 	goodSig := kernel.Signature(hex.EncodeToString(ed25519.Sign(privateKey, data)))
 
+	v, err := NewVerifier(publicKey)
+	if err != nil {
+		t.Fatalf("NewVerifier: %v", err)
+	}
+
 	tests := []struct {
 		name      string
-		verifier  *Verifier
 		sig       kernel.Signature
 		data      []byte
 		wantIs    error
 		wantInErr string
 	}{
 		{
-			name:     "nil verifier",
-			verifier: nil,
-			sig:      goodSig,
-			data:     data,
-			wantIs:   ErrInvalidKeyType,
-		},
-		{
-			name:     "invalid public key length",
-			verifier: &Verifier{PublicKey: ed25519.PublicKey("short")},
-			sig:      goodSig,
-			data:     data,
-			wantIs:   ErrInvalidKeyType,
-		},
-		{
 			name:      "empty signature",
-			verifier:  &Verifier{PublicKey: publicKey},
-			sig:       kernel.Signature(" "),
+			sig:       kernel.Signature(""),
 			data:      data,
 			wantInErr: "empty signature",
 		},
 		{
 			name:      "non-hex signature",
-			verifier:  &Verifier{PublicKey: publicKey},
 			sig:       kernel.Signature("not-hex"),
 			data:      data,
 			wantInErr: "hex-encoded",
 		},
 		{
 			name:      "wrong signature length",
-			verifier:  &Verifier{PublicKey: publicKey},
 			sig:       kernel.Signature("aa"),
 			data:      data,
 			wantInErr: "invalid signature length",
 		},
 		{
-			name:     "invalid cryptographic signature",
-			verifier: &Verifier{PublicKey: publicKey},
-			sig:      goodSig,
-			data:     []byte("tampered"),
-			wantIs:   ErrInvalidSignature,
+			name:   "invalid cryptographic signature",
+			sig:    goodSig,
+			data:   []byte("tampered"),
+			wantIs: ErrInvalidSignature,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.verifier.Verify(tt.data, tt.sig)
+			err := v.Verify(tt.data, tt.sig)
 			if err == nil {
 				t.Fatal("expected verification error")
 			}
