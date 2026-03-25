@@ -13,9 +13,11 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	predicates "github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
@@ -28,6 +30,12 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	cmd.SetContext(ctx)
 
 	if err := a.startCPUProfile(); err != nil {
+		return err
+	}
+
+	// Validate built-in data integrity (aliases, control IDs) at startup
+	// so errors flow through the normal exit-code path instead of panicking.
+	if err := a.validateBuiltins(); err != nil {
 		return err
 	}
 
@@ -182,6 +190,18 @@ func (a *App) checkRequireOffline() error {
 		if val := os.Getenv(env); val != "" {
 			return fmt.Errorf("--require-offline: environment variable %s is set (%q); Stave makes zero network connections and proxy settings are unnecessary - unset it or remove --require-offline", env, val)
 		}
+	}
+	return nil
+}
+
+// validateBuiltins checks integrity of embedded data (aliases, control IDs)
+// at startup so errors flow through the normal exit-code path.
+func (a *App) validateBuiltins() error {
+	if err := predicates.ValidateAliases(); err != nil {
+		return fmt.Errorf("built-in alias validation failed: %w", err)
+	}
+	if err := exposure.ValidateControlIDs(); err != nil {
+		return fmt.Errorf("built-in control ID validation failed: %w", err)
 	}
 	return nil
 }

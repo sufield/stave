@@ -5,11 +5,12 @@
 // UnsafePredicate (e.g. checking public_read, read_via_identity,
 // and read_via_resource).
 //
-// The registry is immutable at runtime: init() validates every entry and
-// Resolve returns a deep copy so callers cannot mutate the backing data.
+// The registry is immutable at runtime: ValidateAliases checks every entry
+// and Resolve returns a deep copy so callers cannot mutate the backing data.
 package predicate
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -179,38 +180,56 @@ func ResolverFunc() policy.AliasResolver {
 	return defaultRegistry.AliasResolverFunc()
 }
 
-// ── Init-time integrity check ─────────────────────────────
+// ── Integrity check ───────────────────────────────────────
 
-func init() {
+// ValidateAliases checks that all built-in alias entries have valid
+// field paths and supported operators. Call this during bootstrap
+// instead of relying on init()-time panics.
+func ValidateAliases() error {
+	var errs []error
 	for name, entry := range defaultRegistry.entries {
-		validateEntry(name, entry)
+		if err := validateEntry(name, entry); err != nil {
+			errs = append(errs, err)
+		}
 	}
+	return errors.Join(errs...)
 }
 
-func validateEntry(name string, entry aliasEntry) {
+func validateEntry(name string, entry aliasEntry) error {
+	var errs []error
 	for i, rule := range entry.Predicate.Any {
-		validateRule(name, "any", i, rule)
+		if err := validateRule(name, "any", i, rule); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	for i, rule := range entry.Predicate.All {
-		validateRule(name, "all", i, rule)
+		if err := validateRule(name, "all", i, rule); err != nil {
+			errs = append(errs, err)
+		}
 	}
+	return errors.Join(errs...)
 }
 
-func validateRule(alias, block string, idx int, rule policy.PredicateRule) {
+func validateRule(alias, block string, idx int, rule policy.PredicateRule) error {
 	if !rule.Field.IsZero() {
 		if rule.Field.String() == "" {
-			panic(fmt.Sprintf("alias %q: %s[%d] has empty FieldPath", alias, block, idx))
+			return fmt.Errorf("alias %q: %s[%d] has empty FieldPath", alias, block, idx)
 		}
 		if !predicate.IsSupported(rule.Op) {
-			panic(fmt.Sprintf("alias %q: %s[%d] has unsupported operator %q", alias, block, idx, rule.Op))
+			return fmt.Errorf("alias %q: %s[%d] has unsupported operator %q", alias, block, idx, rule.Op)
 		}
 	}
 	for i, sub := range rule.Any {
-		validateRule(alias, fmt.Sprintf("%s[%d].any", block, idx), i, sub)
+		if err := validateRule(alias, fmt.Sprintf("%s[%d].any", block, idx), i, sub); err != nil {
+			return err
+		}
 	}
 	for i, sub := range rule.All {
-		validateRule(alias, fmt.Sprintf("%s[%d].all", block, idx), i, sub)
+		if err := validateRule(alias, fmt.Sprintf("%s[%d].all", block, idx), i, sub); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // ── Deep clone ────────────────────────────────────────────
