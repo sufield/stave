@@ -36,7 +36,7 @@ var principalHandlers = map[string]principalHandler{
 func (p Principal) Scope() kernel.PrincipalScope {
 	switch raw := p.raw.(type) {
 	case string:
-		if raw == policyWildcard {
+		if raw == wildcard {
 			return kernel.ScopePublic
 		}
 		return kernel.ScopeAccount
@@ -73,7 +73,7 @@ func handleAWSPrincipal(val any) kernel.PrincipalScope {
 
 	for _, v := range values {
 		switch {
-		case v == policyWildcard:
+		case v == wildcard:
 			return kernel.ScopePublic
 		case isAccountIDOnly(v):
 			// Account ID principals are private to a single account.

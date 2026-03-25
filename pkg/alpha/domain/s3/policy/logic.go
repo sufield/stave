@@ -9,22 +9,22 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-type policyActionMask uint8
+type actionMask uint8
 
 const (
-	policyActionRead policyActionMask = 1 << iota
-	policyActionList
-	policyActionWrite
-	policyActionDelete
-	policyActionACLRead
-	policyActionACLWrite
+	actionRead actionMask = 1 << iota
+	actionList
+	actionWrite
+	actionDelete
+	actionACLRead
+	actionACLWrite
 
-	policyActionAll = policyActionRead |
-		policyActionList |
-		policyActionWrite |
-		policyActionDelete |
-		policyActionACLRead |
-		policyActionACLWrite
+	actionAll = actionRead |
+		actionList |
+		actionWrite |
+		actionDelete |
+		actionACLRead |
+		actionACLWrite
 )
 
 type networkScope string
@@ -36,11 +36,11 @@ var (
 
 func (s networkScope) rank() int {
 	switch string(s) {
-	case policyScopeVPCRestricted:
+	case scopeVPCRestricted:
 		return 3
-	case policyScopeIPRestricted:
+	case scopeIPRestricted:
 		return 2
-	case policyScopeOrgRestricted:
+	case scopeOrgRestricted:
 		return 1
 	default:
 		return 0 // public
@@ -51,61 +51,61 @@ func (s networkScope) weakerThan(other networkScope) bool {
 	return s.rank() < other.rank()
 }
 
-var policyActionRegistry = map[string]policyActionMask{
-	policyWildcard:   policyActionAll,
-	policyS3Wildcard: policyActionAll,
+var actionRegistry = map[string]actionMask{
+	wildcard:   actionAll,
+	s3Wildcard: actionAll,
 
-	policyActionGetObject:          policyActionRead,
-	policyActionListBucket:         policyActionList,
-	policyActionListBucketVersions: policyActionList,
-	policyActionPutObject:          policyActionWrite,
-	policyActionPutObjectACL:       policyActionWrite | policyActionACLWrite,
-	policyActionPutBucketPolicy:    policyActionWrite,
-	policyActionDeleteObject:       policyActionDelete,
-	policyActionDeleteBucket:       policyActionDelete,
-	policyActionPutBucketACL:       policyActionACLWrite,
-	policyActionGetBucketACL:       policyActionACLRead,
-	policyActionGetObjectACL:       policyActionACLRead,
+	actionGetObject:          actionRead,
+	actionListBucket:         actionList,
+	actionListBucketVersions: actionList,
+	actionPutObject:          actionWrite,
+	actionPutObjectACL:       actionWrite | actionACLWrite,
+	actionPutBucketPolicy:    actionWrite,
+	actionDeleteObject:       actionDelete,
+	actionDeleteBucket:       actionDelete,
+	actionPutBucketACL:       actionACLWrite,
+	actionGetBucketACL:       actionACLRead,
+	actionGetObjectACL:       actionACLRead,
 }
 
-func (m policyActionMask) has(flag policyActionMask) bool {
+func (m actionMask) has(flag actionMask) bool {
 	return m&flag != 0
 }
 
-func (s Statement) ResolveActions() (policyActionMask, bool) {
+func (s Statement) ResolveActions() (actionMask, bool) {
 	return resolveActionMask([]string(s.Action))
 }
 
-func resolveActionMask(actions []string) (policyActionMask, bool) {
+func resolveActionMask(actions []string) (actionMask, bool) {
 	var (
-		mask            policyActionMask
+		mask            actionMask
 		hasFullWildcard bool
 	)
 
 	for _, action := range actions {
 		action = strings.ToLower(action)
-		actionMask, isFullWildcard := classifyPolicyAction(action)
-		mask |= actionMask
+		am, isFullWildcard := classifyPolicyAction(action)
+		mask |= am
 		hasFullWildcard = hasFullWildcard || isFullWildcard
 
-		if mask == policyActionAll && hasFullWildcard {
+		if mask == actionAll && hasFullWildcard {
 			break
 		}
 	}
 	return mask, hasFullWildcard
 }
 
-func classifyPolicyAction(action string) (policyActionMask, bool) {
-	if mask, ok := policyActionRegistry[action]; ok {
-		isFullWildcard := action == policyWildcard || action == policyS3Wildcard
+func classifyPolicyAction(action string) (actionMask, bool) {
+	if mask, ok := actionRegistry[action]; ok {
+		isFullWildcard := action == wildcard || action == s3Wildcard
 		return mask, isFullWildcard
 	}
 
 	switch {
-	case strings.HasPrefix(action, policyActionPrefixGet):
-		return policyActionRead, false
-	case strings.HasPrefix(action, policyActionPrefixList):
-		return policyActionList, false
+	case strings.HasPrefix(action, actionPrefixGet):
+		return actionRead, false
+	case strings.HasPrefix(action, actionPrefixList):
+		return actionList, false
 	default:
 		return 0, false
 	}
@@ -113,7 +113,7 @@ func classifyPolicyAction(action string) (policyActionMask, bool) {
 
 func hasWildcardResource(resources []string) bool {
 	for _, res := range resources {
-		if res == policyWildcard || res == policyS3GlobalResource {
+		if res == wildcard || res == s3GlobalResource {
 			return true
 		}
 	}
@@ -129,14 +129,14 @@ func isAccountIDOnly(principal string) bool {
 func isWriteAction(action string) bool {
 	action = strings.ToLower(action)
 	switch action {
-	case policyWildcard, policyS3Wildcard,
-		policyActionPutObject, policyActionDeleteObject,
-		policyActionPutBucketPolicy, policyActionDeleteBucket,
-		policyActionPutObjectACL, policyActionPutBucketACL:
+	case wildcard, s3Wildcard,
+		actionPutObject, actionDeleteObject,
+		actionPutBucketPolicy, actionDeleteBucket,
+		actionPutObjectACL, actionPutBucketACL:
 		return true
 	}
-	return strings.HasPrefix(action, policyActionPrefixPut) ||
-		strings.HasPrefix(action, policyActionPrefixDelete)
+	return strings.HasPrefix(action, actionPrefixPut) ||
+		strings.HasPrefix(action, actionPrefixDelete)
 }
 
 // extractPrincipalARNs extracts string ARNs from a Principal field, excluding "*".
@@ -147,7 +147,7 @@ func extractPrincipalARNs(principal any) []string {
 		raw = p
 	case map[string]any:
 		var ok bool
-		raw, ok = p[policyPrincipalAWS]
+		raw, ok = p[principalAWS]
 		if !ok {
 			return nil
 		}
@@ -161,7 +161,7 @@ func extractPrincipalARNs(principal any) []string {
 func filterConcreteARNs(arns []string) []string {
 	var out []string
 	for _, arn := range arns {
-		if arn != "" && arn != policyWildcard {
+		if arn != "" && arn != wildcard {
 			out = append(out, arn)
 		}
 	}
@@ -175,27 +175,27 @@ func filterConcreteARNs(arns []string) []string {
 // Precedence: vpc > ip > org.
 func conditionScope(ca ConditionAnalysis) networkScope {
 	if ca.HasVPCCondition {
-		return networkScope(policyScopeVPCRestricted)
+		return networkScope(scopeVPCRestricted)
 	}
 	if ca.HasIPCondition {
-		return networkScope(policyScopeIPRestricted)
+		return networkScope(scopeIPRestricted)
 	}
 	if ca.HasOrgCondition {
-		return networkScope(policyScopeOrgRestricted)
+		return networkScope(scopeOrgRestricted)
 	}
-	return networkScope(policyScopePublic)
+	return networkScope(scopePublic)
 }
 
 // toKernelNetworkScope maps the adapter-private networkScope to the domain type.
 func toKernelNetworkScope(s networkScope) kernel.NetworkScope {
 	switch string(s) {
-	case policyScopePublic:
+	case scopePublic:
 		return kernel.NetworkScopePublic
-	case policyScopeIPRestricted:
+	case scopeIPRestricted:
 		return kernel.NetworkScopeIPRestricted
-	case policyScopeVPCRestricted:
+	case scopeVPCRestricted:
 		return kernel.NetworkScopeVPCRestricted
-	case policyScopeOrgRestricted:
+	case scopeOrgRestricted:
 		return kernel.NetworkScopeOrgRestricted
 	default:
 		return kernel.NetworkScopeUnknown

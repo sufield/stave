@@ -79,7 +79,7 @@ func (d *Document) Assess() Assessment {
 			res.EnforcesHTTPS = true
 		}
 
-		if !stmt.IsAllow() {
+		if !stmt.Effect.IsAllow() {
 			continue
 		}
 
@@ -103,7 +103,7 @@ func (d *Document) Assess() Assessment {
 		// Action analysis
 		actionMask, _ := stmt.ResolveActions()
 		if actionMask != 0 {
-			res.PublicStatements = append(res.PublicStatements, stmt.ID(i))
+			res.PublicStatements = append(res.PublicStatements, stmt.StatementID(i))
 		}
 		res.HasWildcardActions = res.HasWildcardActions || stmt.HasWildcardActionsOnWildcardResources()
 
@@ -144,8 +144,8 @@ func (d *Document) extractExternalAccounts(res *Assessment, stmt Statement) {
 
 type analysisState struct {
 	weakestScope networkScope
-	publicPerms  policyActionMask
-	authPerms    policyActionMask
+	publicPerms  actionMask
+	authPerms    actionMask
 }
 
 func (s *analysisState) updateWeakestScope(scope networkScope) {
@@ -154,19 +154,19 @@ func (s *analysisState) updateWeakestScope(scope networkScope) {
 	}
 }
 
-func applyPermissionMasks(res *Assessment, publicPerms, authPerms policyActionMask) {
-	res.AllowsPublicRead = publicPerms.has(policyActionRead)
-	res.AllowsPublicList = publicPerms.has(policyActionList)
-	res.AllowsPublicWrite = publicPerms.has(policyActionWrite)
-	res.AllowsPublicDelete = publicPerms.has(policyActionDelete)
-	res.AllowsPublicACLWrite = publicPerms.has(policyActionACLWrite)
-	res.AllowsPublicACLRead = publicPerms.has(policyActionACLRead)
+func applyPermissionMasks(res *Assessment, publicPerms, authPerms actionMask) {
+	res.AllowsPublicRead = publicPerms.has(actionRead)
+	res.AllowsPublicList = publicPerms.has(actionList)
+	res.AllowsPublicWrite = publicPerms.has(actionWrite)
+	res.AllowsPublicDelete = publicPerms.has(actionDelete)
+	res.AllowsPublicACLWrite = publicPerms.has(actionACLWrite)
+	res.AllowsPublicACLRead = publicPerms.has(actionACLRead)
 
-	res.AllowsAuthenticatedRead = authPerms.has(policyActionRead)
-	res.AllowsAuthenticatedList = authPerms.has(policyActionList)
-	res.AllowsAuthenticatedWrite = authPerms.has(policyActionWrite)
-	res.AllowsAuthenticatedACLWrite = authPerms.has(policyActionACLWrite)
-	res.AllowsAuthenticatedACLRead = authPerms.has(policyActionACLRead)
+	res.AllowsAuthenticatedRead = authPerms.has(actionRead)
+	res.AllowsAuthenticatedList = authPerms.has(actionList)
+	res.AllowsAuthenticatedWrite = authPerms.has(actionWrite)
+	res.AllowsAuthenticatedACLWrite = authPerms.has(actionACLWrite)
+	res.AllowsAuthenticatedACLRead = authPerms.has(actionACLRead)
 }
 
 func extractAccountID(arn string) (string, bool) {
