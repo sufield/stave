@@ -21,7 +21,7 @@ import (
 )
 
 // NewControlsCmd constructs the controls command tree with closure-scoped flags.
-func NewControlsCmd(p *compose.Provider) *cobra.Command {
+func NewControlsCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "controls",
 		Short: "Work with control definitions",
@@ -34,8 +34,8 @@ Examples:
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newControlsListCmd(p.NewControlRepo))
-	cmd.AddCommand(newControlsExplainCmd(p.NewControlRepo))
+	cmd.AddCommand(newControlsListCmd(newCtlRepo))
+	cmd.AddCommand(newControlsExplainCmd(newCtlRepo))
 	cmd.AddCommand(newControlsAliasesCmd())
 	cmd.AddCommand(newControlsAliasExplainCmd())
 

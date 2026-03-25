@@ -59,7 +59,7 @@ Examples:
 
 // NewCmd builds the validate command.
 // Panics if rt is nil — command wiring is a programming error, not a user error.
-func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
+func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
 		panic("validate.NewCmd: nil runtime")
 	}
@@ -75,7 +75,7 @@ func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runValidate(cmd, p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, rt, opts)
+			return runValidate(cmd, newObsRepo, newCtlRepo, newCELEvaluator, rt, opts)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

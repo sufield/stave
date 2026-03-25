@@ -11,7 +11,7 @@ import (
 )
 
 // NewCmd constructs the prune command.
-func NewCmd(p *compose.Provider) *cobra.Command {
+func NewCmd(newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	opts := &options{
 		ObsDir:     "observations",
 		KeepMin:    2,
@@ -69,7 +69,7 @@ Exit Codes:
 				return err
 			}
 
-			runner := &runner{NewSnapshotRepo: p.NewSnapshotRepo}
+			runner := &runner{NewSnapshotRepo: newSnapshotRepo}
 			return runner.Run(cmd.Context(), config{
 				ObservationsDir: opts.ObsDir,
 				OlderThan:       ret.OlderThan,

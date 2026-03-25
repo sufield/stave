@@ -14,7 +14,7 @@ import (
 )
 
 // NewPlanCmd constructs the plan command.
-func NewPlanCmd(p *compose.Provider) *cobra.Command {
+func NewPlanCmd(newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	var (
 		obsRoot    string
 		archiveDir string
@@ -63,7 +63,7 @@ Examples:
 			cleanArchiveDir := fsutil.CleanUserPath(archiveDir)
 
 			// Load files via factory
-			files, err := listPlanFiles(ctx, p.NewSnapshotRepo, cleanObsRoot, cleanArchiveDir)
+			files, err := listPlanFiles(ctx, newSnapshotRepo, cleanObsRoot, cleanArchiveDir)
 			if err != nil {
 				return err
 			}

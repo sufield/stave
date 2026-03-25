@@ -25,7 +25,7 @@ func getTestRootCmd() *cobra.Command {
 	root.PersistentFlags().String("log-file", "", "Log file path")
 
 	p := compose.NewDefaultProvider()
-	root.AddCommand(NewControlsCmd(p))
+	root.AddCommand(NewControlsCmd(p.NewControlRepo))
 	root.AddCommand(NewPacksCmd())
 	root.AddCommand(NewLintCmd())
 	root.AddCommand(NewFmtCmd())

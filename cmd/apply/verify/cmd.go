@@ -17,7 +17,7 @@ import (
 )
 
 // NewCmd builds the verify command.
-func NewCmd(p *compose.Provider, rt *ui.Runtime) *cobra.Command {
+func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime) *cobra.Command {
 	opts := newOptions()
 
 	cmd := &cobra.Command{
@@ -71,7 +71,7 @@ Examples:
 				return err
 			}
 
-			celEval, err := p.NewCELEvaluator()
+			celEval, err := newCELEvaluator()
 			if err != nil {
 				return err
 			}
@@ -81,10 +81,10 @@ Examples:
 			return appverify.RunVerify(
 				appverify.VerifyDeps{
 					LoadControls: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-						return compose.LoadControls(ctx, p, dir)
+						return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 					},
 					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
-						return p.NewObservationRepo()
+						return newObsRepo()
 					},
 					WriteVerification: func(w io.Writer, v safetyenvelope.Verification) error {
 						return outjson.WriteVerification(w, v)

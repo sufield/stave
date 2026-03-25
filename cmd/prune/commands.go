@@ -17,11 +17,11 @@ import (
 // Commands returns the snapshot lifecycle commands.
 func Commands(p *compose.Provider) []*cobra.Command {
 	return []*cobra.Command{
-		archive.NewCmd(p),
+		archive.NewCmd(p.NewSnapshotRepo),
 		upcoming.NewCmd(p.LoadAssets),
-		snapshot.NewQualityCmd(p),
-		snapshot.NewPlanCmd(p),
-		hygiene.NewCmd(p),
+		snapshot.NewQualityCmd(p.LoadSnapshots),
+		snapshot.NewPlanCmd(p.NewSnapshotRepo),
+		hygiene.NewCmd(p.LoadAssets, p.NewObservationRepo, p.NewSnapshotRepo),
 		manifest.NewCmd(),
 	}
 }
@@ -30,6 +30,6 @@ func Commands(p *compose.Provider) []*cobra.Command {
 // guarded by the production safety check.
 func DevCommands(p *compose.Provider) []*cobra.Command {
 	return []*cobra.Command{
-		cleanup.NewCmd(p),
+		cleanup.NewCmd(p.NewSnapshotRepo),
 	}
 }

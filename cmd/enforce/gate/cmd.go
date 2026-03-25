@@ -10,7 +10,7 @@ import (
 )
 
 // NewCmd constructs the CI gate command.
-func NewCmd(p *compose.Provider) *cobra.Command {
+func NewCmd(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	opts := DefaultOptions()
 
 	cmd := &cobra.Command{
@@ -61,7 +61,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(p.LoadAssets, p.NewCELEvaluator)
+			runner := newRunner(loadAssets, newCELEvaluator)
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

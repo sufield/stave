@@ -43,9 +43,9 @@ func WireCommands(app *App) {
 	root.AddCommand(initcmd.NewGenerateCmd())
 
 	// Control Engine
-	root.AddCommand(applyvalidate.NewCmd(p, ui.DefaultRuntime()))
+	root.AddCommand(applyvalidate.NewCmd(p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, ui.DefaultRuntime()))
 	root.AddCommand(apply.NewApplyCmd(p))
-	root.AddCommand(applyverify.NewCmd(p, ui.DefaultRuntime()))
+	root.AddCommand(applyverify.NewCmd(p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, ui.DefaultRuntime()))
 	root.AddCommand(diagnose.NewDiagnoseCmd(p.NewObservationRepo, p.NewControlRepo))
 	root.AddCommand(diagnose.NewExplainCmd(p.NewControlRepo))
 	root.AddCommand(diagnose.NewTraceCmd(p.NewControlRepo, p.NewSnapshotRepo))
@@ -77,7 +77,7 @@ func WireCommands(app *App) {
 	root.AddCommand(diagreport.NewReportCmd())
 	root.AddCommand(artifacts.NewLintCmd())
 	root.AddCommand(artifacts.NewFmtCmd())
-	root.AddCommand(artifacts.NewControlsCmd(p))
+	root.AddCommand(artifacts.NewControlsCmd(p.NewControlRepo))
 	root.AddCommand(artifacts.NewPacksCmd())
 
 	// Introspection
@@ -89,7 +89,7 @@ func WireCommands(app *App) {
 	// Supportability
 	root.AddCommand(doctor.NewCmd())
 	root.AddCommand(bugreport.NewCmd())
-	root.AddCommand(enforce.NewGraphCmd(p))
+	root.AddCommand(enforce.NewGraphCmd(p.NewControlRepo, p.LoadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
 	root.AddCommand(newCapabilitiesCmd())
 	root.AddCommand(newSchemasCmd())
@@ -110,7 +110,7 @@ func WireCommands(app *App) {
 }
 
 func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
-	snapshotCmd.AddCommand(enforce.NewDiffCmd(p))
+	snapshotCmd.AddCommand(enforce.NewDiffCmd(p.LoadSnapshots))
 	for _, subCmd := range prune.Commands(p) {
 		snapshotCmd.AddCommand(subCmd)
 	}
@@ -121,10 +121,10 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
 
 func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	ciCmd.AddCommand(enforce.NewBaselineCmd())
-	ciCmd.AddCommand(enforce.NewGateCmd(p))
-	ciCmd.AddCommand(enforce.NewFixLoopCmd(p))
+	ciCmd.AddCommand(enforce.NewGateCmd(p.LoadAssets, p.NewCELEvaluator))
+	ciCmd.AddCommand(enforce.NewFixLoopCmd(p.NewCELEvaluator, p.NewControlRepo, p.NewObservationRepo))
 	ciCmd.AddCommand(enforce.NewCiDiffCmd())
-	ciCmd.AddCommand(enforce.NewFixCmd(p))
+	ciCmd.AddCommand(enforce.NewFixCmd(p.NewCELEvaluator))
 }
 
 func assignCommandGroup(root *cobra.Command, use, groupID string) {
