@@ -124,17 +124,10 @@ func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opt
 		}
 
 		if d.IsDir() {
-			abs, _ := filepath.Abs(path)
-			if excludes[abs] {
-				return filepath.SkipDir
-			}
-			if path != absRoot && strings.HasPrefix(d.Name(), "_") {
-				return filepath.SkipDir
-			}
-			return nil
+			return skipDir(path, absRoot, d, excludes)
 		}
 
-		if !strings.HasSuffix(d.Name(), ".json") || d.Type()&os.ModeSymlink != 0 {
+		if !isSnapshotFile(d) {
 			return nil
 		}
 		if len(files) >= limit {
@@ -176,4 +169,21 @@ func snapshotLimitError(dir string, limit int) error {
 	return fmt.Errorf("%w: directory %s contains more than %d JSON files; "+
 		"prune older snapshots first to reduce the count",
 		ErrTooManySnapshots, dir, limit)
+}
+
+// skipDir decides whether to skip a directory during recursive walk.
+func skipDir(path, root string, d os.DirEntry, excludes map[string]bool) error {
+	abs, _ := filepath.Abs(path)
+	if excludes[abs] {
+		return filepath.SkipDir
+	}
+	if path != root && strings.HasPrefix(d.Name(), "_") {
+		return filepath.SkipDir
+	}
+	return nil
+}
+
+// isSnapshotFile returns true if the entry is a non-symlink JSON file.
+func isSnapshotFile(d os.DirEntry) bool {
+	return strings.HasSuffix(d.Name(), ".json") && d.Type()&os.ModeSymlink == 0
 }

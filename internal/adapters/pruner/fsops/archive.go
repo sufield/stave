@@ -133,36 +133,48 @@ func tryAtomicMove(src, dst string, opts MoveOptions) (bool, error) {
 	return false, nil
 }
 
-// crossDeviceMove copies src to dst via a temp file and atomic rename,
-// preventing partial files on error and preserving source permissions.
-func crossDeviceMove(src, dst string, opts MoveOptions) error {
-	// Lstat source to detect symlinks before opening.
+// openVerifiedSource opens a file for reading after verifying it is not a
+// symlink (unless allowed). It closes the Lstat→Open TOCTOU window by
+// comparing the opened handle with the pre-open stat.
+func openVerifiedSource(src string, allowSymlink bool) (*os.File, os.FileInfo, error) {
 	srcInfo, err := os.Lstat(src)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	if !opts.AllowSymlink && srcInfo.Mode()&os.ModeSymlink != 0 {
-		return fmt.Errorf("source: %w: %s", fsutil.ErrSymlinkForbidden, src)
+	if !allowSymlink && srcInfo.Mode()&os.ModeSymlink != 0 {
+		return nil, nil, fmt.Errorf("source: %w: %s", fsutil.ErrSymlinkForbidden, src)
 	}
 
 	// #nosec G304 -- src comes from previously enumerated snapshot files.
 	in, err := os.Open(src)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	defer in.Close()
 
-	// Verify the opened handle matches Lstat to close the source TOCTOU window.
-	if !opts.AllowSymlink {
+	if !allowSymlink {
 		handleInfo, statErr := in.Stat()
 		if statErr != nil {
-			return fmt.Errorf("source security check failed: %w", statErr)
+			_ = in.Close()
+			return nil, nil, fmt.Errorf("source security check failed: %w", statErr)
 		}
 		if !os.SameFile(handleInfo, srcInfo) {
-			return fmt.Errorf("source: %w: %s (changed between check and open)",
+			_ = in.Close()
+			return nil, nil, fmt.Errorf("source: %w: %s (changed between check and open)",
 				fsutil.ErrSymlinkForbidden, src)
 		}
 	}
+
+	return in, srcInfo, nil
+}
+
+// crossDeviceMove copies src to dst via a temp file and atomic rename,
+// preventing partial files on error and preserving source permissions.
+func crossDeviceMove(src, dst string, opts MoveOptions) error {
+	in, srcInfo, err := openVerifiedSource(src, opts.AllowSymlink)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
 
 	// Write to a temp file in the destination directory so the final
 	// rename is same-filesystem and atomic.
