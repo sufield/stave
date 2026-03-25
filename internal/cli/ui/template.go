@@ -101,57 +101,32 @@ func walkNode(node parse.Node) error {
 	case *parse.ActionNode:
 		return walkPipe(n.Pipe)
 	case *parse.RangeNode:
-		if n.Pipe != nil {
-			if err := walkPipe(n.Pipe); err != nil {
-				return err
-			}
-		}
-		if n.List != nil {
-			if err := walkNodes(n.List.Nodes); err != nil {
-				return err
-			}
-		}
-		if n.ElseList != nil {
-			if err := walkNodes(n.ElseList.Nodes); err != nil {
-				return err
-			}
-		}
+		return walkBranch(n.Pipe, n.List, n.ElseList)
 	case *parse.IfNode:
-		if n.Pipe != nil {
-			if err := walkPipe(n.Pipe); err != nil {
-				return err
-			}
-		}
-		if n.List != nil {
-			if err := walkNodes(n.List.Nodes); err != nil {
-				return err
-			}
-		}
-		if n.ElseList != nil {
-			if err := walkNodes(n.ElseList.Nodes); err != nil {
-				return err
-			}
-		}
+		return walkBranch(n.Pipe, n.List, n.ElseList)
 	case *parse.WithNode:
-		if n.Pipe != nil {
-			if err := walkPipe(n.Pipe); err != nil {
-				return err
-			}
-		}
-		if n.List != nil {
-			if err := walkNodes(n.List.Nodes); err != nil {
-				return err
-			}
-		}
-		if n.ElseList != nil {
-			if err := walkNodes(n.ElseList.Nodes); err != nil {
-				return err
-			}
-		}
+		return walkBranch(n.Pipe, n.List, n.ElseList)
 	case *parse.TemplateNode:
-		// Nested {{template}} calls are not allowed — they could
-		// reference templates we haven't validated.
 		return fmt.Errorf("{{template}} is not allowed")
+	}
+	return nil
+}
+
+// walkBranch validates the common Pipe/List/ElseList structure shared by
+// if, range, and with nodes.
+func walkBranch(pipe *parse.PipeNode, list, elseList *parse.ListNode) error {
+	if err := walkPipe(pipe); err != nil {
+		return err
+	}
+	if list != nil {
+		if err := walkNodes(list.Nodes); err != nil {
+			return err
+		}
+	}
+	if elseList != nil {
+		if err := walkNodes(elseList.Nodes); err != nil {
+			return err
+		}
 	}
 	return nil
 }

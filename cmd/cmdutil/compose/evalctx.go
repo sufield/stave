@@ -65,54 +65,68 @@ type EvalContext struct {
 func PrepareEvaluationContext(req EvalContextRequest) (EvalContext, error) {
 	var ec EvalContext
 
-	// --- Path inference and validation ---
-	if !req.SkipPathInference {
-		resolver, err := projctx.NewResolver()
-		if err != nil {
-			return EvalContext{}, ui.WithHint(
-				fmt.Errorf("resolve project context: %w", err),
-				ui.ErrHintProjectContext,
-			)
-		}
-		engine := projctx.NewInferenceEngine(resolver)
-		ec.Resolver = resolver
-		ec.Engine = engine
-
-		ec.ControlsDir = fsutil.CleanUserPath(req.ControlsDir)
-		ec.ObservationsDir = fsutil.CleanUserPath(req.ObservationsDir)
-
-		if !req.ControlsChanged {
-			if inferred := engine.InferDir("controls", ""); inferred != "" {
-				ec.ControlsDir = inferred
-			}
-		}
-		if !req.ObsChanged {
-			if inferred := engine.InferDir("observations", ""); inferred != "" {
-				ec.ObservationsDir = inferred
-			}
-		}
-
-		if !req.SkipControlsValidation {
-			if err := dircheck.ValidateFlagDir("--controls", ec.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, engine.Log); err != nil {
-				return EvalContext{}, err
-			}
-		}
-		if !req.SkipObservationsValidation {
-			if err := dircheck.ValidateFlagDir("--observations", ec.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, engine.Log); err != nil {
-				return EvalContext{}, err
-			}
-		}
-	} else {
-		// No inference — just clean the paths.
-		ec.ControlsDir = fsutil.CleanUserPath(req.ControlsDir)
-		ec.ObservationsDir = fsutil.CleanUserPath(req.ObservationsDir)
+	if err := resolvePaths(&ec, req); err != nil {
+		return EvalContext{}, err
+	}
+	if err := resolveFlags(&ec, req); err != nil {
+		return EvalContext{}, err
 	}
 
-	// --- Common flag parsing ---
+	return ec, nil
+}
+
+// resolvePaths handles directory inference, cleaning, and validation.
+func resolvePaths(ec *EvalContext, req EvalContextRequest) error {
+	if req.SkipPathInference {
+		ec.ControlsDir = fsutil.CleanUserPath(req.ControlsDir)
+		ec.ObservationsDir = fsutil.CleanUserPath(req.ObservationsDir)
+		return nil
+	}
+
+	resolver, err := projctx.NewResolver()
+	if err != nil {
+		return ui.WithHint(
+			fmt.Errorf("resolve project context: %w", err),
+			ui.ErrHintProjectContext,
+		)
+	}
+	engine := projctx.NewInferenceEngine(resolver)
+	ec.Resolver = resolver
+	ec.Engine = engine
+
+	ec.ControlsDir = fsutil.CleanUserPath(req.ControlsDir)
+	ec.ObservationsDir = fsutil.CleanUserPath(req.ObservationsDir)
+
+	if !req.ControlsChanged {
+		if inferred := engine.InferDir("controls", ""); inferred != "" {
+			ec.ControlsDir = inferred
+		}
+	}
+	if !req.ObsChanged {
+		if inferred := engine.InferDir("observations", ""); inferred != "" {
+			ec.ObservationsDir = inferred
+		}
+	}
+
+	if !req.SkipControlsValidation {
+		if err := dircheck.ValidateFlagDir("--controls", ec.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, engine.Log); err != nil {
+			return err
+		}
+	}
+	if !req.SkipObservationsValidation {
+		if err := dircheck.ValidateFlagDir("--observations", ec.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, engine.Log); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// resolveFlags parses common flag values (max-unsafe, clock, format).
+func resolveFlags(ec *EvalContext, req EvalContextRequest) error {
 	if !req.SkipMaxUnsafe {
 		dur, err := cliflags.ParseDurationFlag(req.MaxUnsafeDuration, "--max-unsafe")
 		if err != nil {
-			return EvalContext{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
+			return ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
 		}
 		ec.MaxUnsafe = dur
 	}
@@ -120,13 +134,13 @@ func PrepareEvaluationContext(req EvalContextRequest) (EvalContext, error) {
 	if !req.SkipClock {
 		clock, err := ResolveClock(req.NowTime)
 		if err != nil {
-			return EvalContext{}, err
+			return err
 		}
 		ec.Clock = clock
 
 		now, err := ResolveNow(req.NowTime)
 		if err != nil {
-			return EvalContext{}, err
+			return err
 		}
 		ec.Now = now
 	}
@@ -134,10 +148,9 @@ func PrepareEvaluationContext(req EvalContextRequest) (EvalContext, error) {
 	if !req.SkipFormat {
 		format, err := ResolveFormatValuePure(req.Format, req.FormatChanged, req.IsJSONMode)
 		if err != nil {
-			return EvalContext{}, err
+			return err
 		}
 		ec.Format = format
 	}
-
-	return ec, nil
+	return nil
 }

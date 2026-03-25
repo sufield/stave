@@ -57,7 +57,7 @@ func (r *auditRunner) Run(ctx context.Context, cfg auditConfig) error {
 		return err
 	}
 
-	return writeAndReport(cfg, report, artifacts, bundleDir)
+	return outputReport(cfg, report, artifacts, bundleDir)
 }
 
 // resolveAuditEnvironment resolves the working directory and executable path.
@@ -100,13 +100,13 @@ func executeAudit(ctx context.Context, cfg auditConfig, cwd, exe, bundleDir stri
 	return report, artifacts, nil
 }
 
-// writeAndReport renders the report, writes the bundle, prints the summary,
+// outputReport renders the report, writes the bundle, prints the summary,
 // and returns a gating error if findings exceed the threshold.
 //
 // When neither --out nor --out-dir is set: report goes to stdout (matching
 // how apply --format json works). No bundle is written.
 // When --out or --out-dir is set: report goes to file, summary to stdout.
-func writeAndReport(cfg auditConfig, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, bundleDir string) error {
+func outputReport(cfg auditConfig, report domainsecurityaudit.Report, artifacts domainsecurityaudit.ArtifactManifest, bundleDir string) error {
 	mainData, mainName, err := renderReport(cfg.Format, report)
 	if err != nil {
 		return err
