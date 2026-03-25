@@ -312,7 +312,7 @@ The schema defines two output kinds:
 | `skipped[]` | Controls that could not be evaluated (e.g., missing asset types) |
 | `extensions` | Control source metadata, enabled packs, resolved control IDs |
 
-### Key design decisions
+### Design decisions
 
 - **Exemptions vs exceptions** — Exemptions skip entire assets before evaluation. Exceptions suppress specific control+asset findings after evaluation. Excepted findings appear in `excepted_findings`, not `findings`, so nothing is silently dropped.
 - **Input hashes** — SHA-256 hashes of every input file are included in `run.input_hashes` for audit reproducibility. Given the same files, the same output is produced.
