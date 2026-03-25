@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -64,7 +63,7 @@ func RenderUpcomingMarkdown(items []UpcomingItem, summary UpcomingSummary, opts 
 			item.AssetType,
 			item.FirstUnsafeAt.Format(time.RFC3339),
 			item.LastSeenUnsafe.Format(time.RFC3339),
-			timeutil.FormatDuration(item.Threshold),
+			kernel.FormatDuration(item.Threshold),
 			FormatRemaining(item.Remaining),
 		)
 	}
@@ -77,7 +76,7 @@ func RenderUpcomingSummaryMarkdown(summary UpcomingSummary, dueSoonThreshold tim
 	b.WriteString("## Snapshot SLA Summary\n\n")
 	fmt.Fprintf(&b, "- Overdue: **%d**\n", summary.Overdue)
 	fmt.Fprintf(&b, "- Due now: **%d**\n", summary.DueNow)
-	fmt.Fprintf(&b, "- Due soon (<= %s): **%d**\n", timeutil.FormatDurationHuman(dueSoonThreshold), summary.DueSoon)
+	fmt.Fprintf(&b, "- Due soon (<= %s): **%d**\n", kernel.FormatDurationHuman(dueSoonThreshold), summary.DueSoon)
 	fmt.Fprintf(&b, "- Later: **%d**\n", summary.Later)
 	fmt.Fprintf(&b, "- Total action items: **%d**\n", summary.Total)
 	return b.String()
@@ -89,8 +88,8 @@ func FormatRemaining(d time.Duration) string {
 	case d == 0:
 		return "0h"
 	case d < 0:
-		return "-" + timeutil.FormatDurationHuman(-d)
+		return "-" + kernel.FormatDurationHuman(-d)
 	default:
-		return timeutil.FormatDurationHuman(d)
+		return kernel.FormatDurationHuman(d)
 	}
 }

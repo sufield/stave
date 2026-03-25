@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -50,14 +49,14 @@ Examples:
 			if minSnapshots < 1 {
 				return fmt.Errorf("invalid --min-snapshots %d: must be >= 1", minSnapshots)
 			}
-			staleDur, err := timeutil.ParseDurationFlag(maxStaleness, "--max-staleness")
+			staleDur, err := cmdutil.ParseDurationFlag(maxStaleness, "--max-staleness")
 			if err != nil {
 				return err
 			}
 			if staleDur < 0 {
 				return fmt.Errorf("invalid --max-staleness %q: must be >= 0", maxStaleness)
 			}
-			gapDur, err := timeutil.ParseDurationFlag(maxGap, "--max-gap")
+			gapDur, err := cmdutil.ParseDurationFlag(maxGap, "--max-gap")
 			if err != nil {
 				return err
 			}

@@ -11,7 +11,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	staveversion "github.com/sufield/stave/internal/version"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -108,8 +107,8 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	jsonOut := hygieneapp.Output{
 		GeneratedAt:      cfg.Now,
 		LookbackStart:    previousNow,
-		LookbackDuration: timeutil.FormatDuration(cfg.Lookback),
-		DueSoonThreshold: timeutil.FormatDuration(cfg.DueSoon),
+		LookbackDuration: kernel.FormatDuration(cfg.Lookback),
+		DueSoonThreshold: kernel.FormatDuration(cfg.DueSoon),
 		Filters: hygieneapp.HygieneFilters{
 			ControlIDs: cfg.Filter.ControlIDs,
 			AssetTypes: cfg.Filter.AssetTypes,

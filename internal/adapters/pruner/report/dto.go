@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/pruner"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
@@ -87,7 +86,7 @@ func buildCleanupOutput(schema kernel.Schema, kind kernel.OutputKind, input Clea
 		Applied:         !input.DryRun && len(input.CandidateFiles) > 0,
 		ObservationsDir: input.ObservationsDir,
 		RetentionTier:   input.Tier,
-		OlderThan:       timeutil.FormatDuration(input.OlderThan),
+		OlderThan:       kernel.FormatDuration(input.OlderThan),
 		KeepMin:         input.KeepMin,
 		TotalSnapshots:  len(input.AllFiles),
 		Candidates:      len(input.CandidateFiles),

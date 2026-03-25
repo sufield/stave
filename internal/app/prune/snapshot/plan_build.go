@@ -6,7 +6,7 @@ import (
 
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
@@ -41,7 +41,7 @@ func buildPlan(params planBuildParams) snapshotdomain.PlanOutput {
 		Force:              params.Force,
 		DefaultOlderThan:   appconfig.DefaultSnapshotRetention,
 		DefaultKeepMin:     appconfig.DefaultTierKeepMin,
-		ParseDuration:      timeutil.ParseDuration,
+		ParseDuration:      kernel.ParseDuration,
 		ResolveTierForPath: appconfig.ResolveTierForPath,
 	})
 }

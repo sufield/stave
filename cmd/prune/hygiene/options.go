@@ -13,7 +13,6 @@ import (
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -71,15 +70,15 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 	if err != nil {
 		return config{}, err
 	}
-	maxUnsafeDur, err := timeutil.ParseDurationFlag(maxUnsafe, "--max-unsafe")
+	maxUnsafeDur, err := cmdutil.ParseDurationFlag(maxUnsafe, "--max-unsafe")
 	if err != nil {
 		return config{}, err
 	}
-	dueSoonDur, err := timeutil.ParseDurationFlag(o.dueSoon, "--due-soon")
+	dueSoonDur, err := cmdutil.ParseDurationFlag(o.dueSoon, "--due-soon")
 	if err != nil {
 		return config{}, err
 	}
-	lookbackDur, err := timeutil.ParseDurationFlag(o.lookback, "--lookback")
+	lookbackDur, err := cmdutil.ParseDurationFlag(o.lookback, "--lookback")
 	if err != nil {
 		return config{}, err
 	}
@@ -135,5 +134,5 @@ func parseDueWithin(raw string) (time.Duration, error) {
 	if raw == "" {
 		return 0, nil
 	}
-	return timeutil.ParseDurationFlag(raw, "--due-within")
+	return cmdutil.ParseDurationFlag(raw, "--due-within")
 }

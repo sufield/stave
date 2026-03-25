@@ -14,9 +14,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // resolveConfigDefaults fills flag values from project config when the user
@@ -190,7 +190,7 @@ type validateParams struct {
 func (o *options) parseParams() validateParams {
 	var p validateParams
 
-	dur, err := timeutil.ParseDuration(o.MaxUnsafeDuration)
+	dur, err := kernel.ParseDuration(o.MaxUnsafeDuration)
 	if err != nil {
 		p.issues = append(p.issues, diag.New(diag.CodeInvalidMaxUnsafe).
 			Error().
@@ -204,7 +204,7 @@ func (o *options) parseParams() validateParams {
 	}
 
 	if o.NowTime != "" {
-		t, parseErr := timeutil.ParseRFC3339(o.NowTime, "--now")
+		t, parseErr := cmdutil.ParseRFC3339(o.NowTime, "--now")
 		if parseErr != nil {
 			p.issues = append(p.issues, diag.New(diag.CodeInvalidNowTime).
 				Error().

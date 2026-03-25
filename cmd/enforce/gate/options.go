@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -88,7 +87,7 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 
 	var maxUnsafeDur time.Duration
 	if policy == appconfig.GatePolicyOverdue {
-		maxUnsafeDur, err = timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+		maxUnsafeDur, err = cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 		if err != nil {
 			return config{}, err
 		}

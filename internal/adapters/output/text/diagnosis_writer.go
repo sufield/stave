@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // LabelFunc formats a severity label for display.
@@ -40,8 +40,8 @@ func writeDiagnosisSummary(w io.Writer, report *diagnosis.Report) error {
 	writef("  Snapshots:        %d\n", report.Summary.TotalSnapshots)
 	writef("  Assets:           %d\n", report.Summary.TotalAssets)
 	writef("  Controls:         %d\n", report.Summary.TotalControls)
-	writef("  Time span:        %s\n", timeutil.FormatDurationHuman(report.Summary.TimeSpan.Std()))
-	writef("  Threshold:        %s\n", timeutil.FormatDurationHuman(report.Summary.MaxUnsafeThreshold.Std()))
+	writef("  Time span:        %s\n", kernel.FormatDurationHuman(report.Summary.TimeSpan.Std()))
+	writef("  Threshold:        %s\n", kernel.FormatDurationHuman(report.Summary.MaxUnsafeThreshold.Std()))
 	writef("  Violations:       %d\n", report.Summary.ViolationsFound)
 	writef("  Attack surface resources: %d\n", report.Summary.AttackSurface)
 	return err
