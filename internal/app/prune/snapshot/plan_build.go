@@ -28,25 +28,32 @@ type planBuildParams struct {
 	Force       bool
 }
 
-func buildPlan(params planBuildParams) snapshotdomain.PlanOutput {
+func buildPlan(params planBuildParams) (*snapshotdomain.PlanOutput, error) {
+	defaultOlderThan, err := kernel.ParseDuration(appconfig.DefaultSnapshotRetention)
+	if err != nil {
+		return nil, fmt.Errorf("parse default retention: %w", err)
+	}
+
+	resolver := snapshotdomain.TierResolverFunc(func(relPath string) string {
+		return appconfig.ResolveTierForPath(relPath, params.TierRules, params.DefaultTier)
+	})
+
 	return snapshotdomain.BuildPlan(snapshotdomain.BuildPlanParams{
-		Now:                params.Now,
-		ObsRoot:            params.ObsRoot,
-		ArchiveDir:         params.ArchiveDir,
-		DefaultTier:        params.DefaultTier,
-		TierRules:          params.TierRules,
-		Tiers:              params.Tiers,
-		Files:              toSnapshotFiles(params.Files),
-		Apply:              params.Apply,
-		Force:              params.Force,
-		DefaultOlderThan:   appconfig.DefaultSnapshotRetention,
-		DefaultKeepMin:     appconfig.DefaultTierKeepMin,
-		ParseDuration:      kernel.ParseDuration,
-		ResolveTierForPath: appconfig.ResolveTierForPath,
+		Now:              params.Now,
+		ObsRoot:          params.ObsRoot,
+		ArchiveDir:       params.ArchiveDir,
+		DefaultTier:      params.DefaultTier,
+		Tiers:            params.Tiers,
+		Files:            toSnapshotFiles(params.Files),
+		Apply:            params.Apply,
+		Force:            params.Force,
+		DefaultOlderThan: defaultOlderThan,
+		DefaultKeepMin:   appconfig.DefaultTierKeepMin,
+		TierResolver:     resolver,
 	})
 }
 
-func applyPlan(applyFn PlanApplyFunc, p snapshotdomain.PlanOutput, obsRoot, archiveDir string, allowSymlink bool) error {
+func applyPlan(applyFn PlanApplyFunc, p *snapshotdomain.PlanOutput, obsRoot, archiveDir string, allowSymlink bool) error {
 	entries := toPlanEntries(p.Files)
 	if err := applyFn(entries, obsRoot, archiveDir, allowSymlink); err != nil {
 		return fmt.Errorf("applying snapshot lifecycle plan: %w", err)

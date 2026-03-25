@@ -7,7 +7,7 @@ import (
 )
 
 // RenderPlanText writes a human-readable snapshot plan report.
-func RenderPlanText(w io.Writer, plan PlanOutput) error {
+func RenderPlanText(w io.Writer, plan *PlanOutput) error {
 	ew := &errWriter{w: w}
 	writePlanHeader(ew, plan)
 	writePlanTierSections(ew, plan)
@@ -15,7 +15,7 @@ func RenderPlanText(w io.Writer, plan PlanOutput) error {
 	return ew.err
 }
 
-func writePlanHeader(ew *errWriter, plan PlanOutput) {
+func writePlanHeader(ew *errWriter, plan *PlanOutput) {
 	ew.println("Snapshot Retention Plan")
 	ew.println("=======================")
 	ew.printf("Generated: %s\n", plan.GeneratedAt.Format(time.RFC3339))
@@ -27,7 +27,7 @@ func writePlanHeader(ew *errWriter, plan PlanOutput) {
 	ew.printf("Mode:      %s%s\n", plan.Mode, modeHint)
 }
 
-func writePlanTierSections(ew *errWriter, plan PlanOutput) {
+func writePlanTierSections(ew *errWriter, plan *PlanOutput) {
 	if plan.TotalFiles == 0 {
 		ew.println("\nNo snapshots found.")
 		return
@@ -52,7 +52,7 @@ func writePlanTier(ew *errWriter, tierSummary PlanTierSummary, files []PlanFile)
 	}
 }
 
-func writePlanSummary(ew *errWriter, plan PlanOutput) {
+func writePlanSummary(ew *errWriter, plan *PlanOutput) {
 	actionWord := "prune"
 	if plan.ArchiveDir != "" {
 		actionWord = "archive"
