@@ -45,7 +45,7 @@ func FromFinding(f remediation.Finding) FindingDTO {
 	}
 	if f.Exposure != nil {
 		dto.Exposure = &ExposureDTO{
-			Type:           f.Exposure.Type,
+			Type:           string(f.Exposure.Type),
 			PrincipalScope: f.Exposure.PrincipalScope.String(),
 		}
 	}

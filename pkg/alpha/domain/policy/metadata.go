@@ -1,6 +1,9 @@
 package policy
 
-import "github.com/sufield/stave/pkg/alpha/domain/kernel"
+import (
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+)
 
 // ComplianceMapping associates compliance framework identifiers (e.g., "hipaa", "nist_800_53")
 // with specific control or requirement indices.
@@ -23,7 +26,7 @@ func (cm ComplianceMapping) HasFramework(framework string) bool {
 // This metadata is only present on controls that detect visibility or reachability issues.
 type Exposure struct {
 	// Type classifies the specific risk (e.g., "public_read", "public_write", "resource_takeover").
-	Type string `json:"type"`
+	Type exposure.Type `json:"type"`
 
 	// PrincipalScope defines the reachability boundary (e.g., "public", "authenticated").
 	PrincipalScope kernel.PrincipalScope `json:"principal_scope"`

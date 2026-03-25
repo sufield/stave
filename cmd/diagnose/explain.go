@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -14,12 +13,13 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // ExplainRequest holds the inputs for the explain workflow.
 type ExplainRequest struct {
-	ControlID   string
+	ControlID   kernel.ControlID
 	ControlsDir string
 	Format      ui.OutputFormat
 	Stdout      io.Writer
@@ -37,8 +37,7 @@ func NewExplainer(newCtlRepo compose.CtlRepoFactory) *Explainer {
 
 // Run executes the explain workflow.
 func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
-	id := strings.TrimSpace(req.ControlID)
-	if id == "" {
+	if req.ControlID == "" {
 		return &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
 	}
 
@@ -63,7 +62,7 @@ type composeFinder struct {
 	newCtlRepo compose.CtlRepoFactory
 }
 
-func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error) {
+func (f *composeFinder) FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
 	repo, err := f.newCtlRepo()
 	if err != nil {
 		return policy.ControlDefinition{}, err
@@ -73,7 +72,7 @@ func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.Co
 		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
 	}
 	for _, c := range controls {
-		if c.ID.String() == id {
+		if c.ID == id {
 			return c, nil
 		}
 	}
@@ -111,7 +110,7 @@ Examples:
 			}
 			explainer := NewExplainer(newCtlRepo)
 			return explainer.Run(cmd.Context(), ExplainRequest{
-				ControlID:   args[0],
+				ControlID:   kernel.ControlID(args[0]),
 				ControlsDir: controlsDir,
 				Format:      fmtValue,
 				Stdout:      cmd.OutOrStdout(),

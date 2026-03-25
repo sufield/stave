@@ -58,7 +58,7 @@ func (ctl *ControlDefinition) Prepare() error {
 		return nil
 	}
 	// 1. Duration Handling
-	if raw := ctl.Params.String("max_unsafe_duration"); raw != "" {
+	if raw := ctl.Params.paramString("max_unsafe_duration"); raw != "" {
 		d, err := kernel.ParseDuration(raw)
 		if err != nil {
 			// Initialize other params so accessors don't panic, but bubble the error
@@ -80,8 +80,8 @@ func (ctl *ControlDefinition) Prepare() error {
 func (ctl *ControlDefinition) initializePreparedParams() {
 	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
 	ctl.Prepared.PrefixExposure = PrefixExposureParams{
-		AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.StringSlice("allowed_public_prefixes")),
-		ProtectedPrefixes:     toObjectPrefixes(ctl.Params.StringSlice("protected_prefixes")),
+		AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.paramStringSlice("allowed_public_prefixes")),
+		ProtectedPrefixes:     toObjectPrefixes(ctl.Params.paramStringSlice("protected_prefixes")),
 	}
 }
 
@@ -193,13 +193,13 @@ func getParam[T any](m map[string]any, key string) T {
 	return v
 }
 
-// String returns a string parameter or empty string if not found.
-func (p ControlParams) String(key string) string {
+// paramString returns a string parameter or empty string if not found.
+func (p ControlParams) paramString(key string) string {
 	return getParam[string](p.m, key)
 }
 
-// Int returns an int parameter or 0 if not found.
-func (p ControlParams) Int(key string) int {
+// paramInt returns an int parameter or 0 if not found.
+func (p ControlParams) paramInt(key string) int {
 	if p.m == nil {
 		return 0
 	}
@@ -215,13 +215,8 @@ func (p ControlParams) Int(key string) int {
 	}
 }
 
-// Bool returns a bool parameter or false if not found.
-func (p ControlParams) Bool(key string) bool {
-	return getParam[bool](p.m, key)
-}
-
-// StringSlice handles the common case where YAML unmarshals a list into []any.
-func (p ControlParams) StringSlice(key string) []string {
+// paramStringSlice handles the common case where YAML unmarshals a list into []any.
+func (p ControlParams) paramStringSlice(key string) []string {
 	if p.m == nil {
 		return nil
 	}
