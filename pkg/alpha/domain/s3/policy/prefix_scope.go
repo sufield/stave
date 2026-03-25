@@ -1,7 +1,6 @@
 package policy
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -13,91 +12,78 @@ type PrefixScopeAnalysis struct {
 	SourceByScope map[kernel.ObjectPrefix]kernel.StatementID
 }
 
-// PrefixScopeAnalysis extracts public-read prefix scopes from the parsed bucket policy.
-func (e *Document) PrefixScopeAnalysis() PrefixScopeAnalysis {
-	var scopes []kernel.ObjectPrefix
-	sourceByScope := make(map[kernel.ObjectPrefix]kernel.StatementID)
-	seen := make(map[kernel.ObjectPrefix]bool)
+// AnalyzeScopes extracts public-read prefix scopes from the parsed bucket policy.
+// It identifies which parts of the bucket are publicly accessible and which
+// statement grants the access.
+func (d *Document) AnalyzeScopes() PrefixScopeAnalysis {
+	analysis := PrefixScopeAnalysis{
+		Scopes:        []kernel.ObjectPrefix{},
+		SourceByScope: make(map[kernel.ObjectPrefix]kernel.StatementID),
+	}
+	seen := make(map[kernel.ObjectPrefix]struct{})
 
-	for i, stmt := range e.statements {
-		if !stmt.Effect.IsAllow() {
+	for i, stmt := range d.statements {
+		if !stmt.IsPubliclyExposed() {
 			continue
 		}
-		if !IsPublicPrincipal(stmt.decodeRaw(stmt.Principal)) {
+		if !hasPublicReadAction(stmt.Action) {
 			continue
 		}
 
-		actions := []string(stmt.Action)
-		if !hasPublicReadAction(actions) {
-			continue
+		for _, res := range stmt.Resource {
+			prefix := parseObjectPrefix(res)
+			if prefix == "" {
+				continue
+			}
+			if _, exists := seen[prefix]; exists {
+				continue
+			}
+			seen[prefix] = struct{}{}
+			analysis.Scopes = append(analysis.Scopes, prefix)
+			analysis.SourceByScope[prefix] = stmt.StatementID(i)
 		}
-
-		resources := []string(stmt.Resource)
-		scope := scopeFromResources(resources)
-		if scope == "" || seen[scope] {
-			continue
-		}
-		seen[scope] = true
-		scopes = append(scopes, scope)
-
-		trimmed := strings.TrimSpace(stmt.Sid)
-		var sid kernel.StatementID
-		if trimmed != "" {
-			sid = kernel.StatementID("sid:" + trimmed)
-		} else {
-			sid = kernel.StatementID("idx:" + strconv.Itoa(i))
-		}
-		sourceByScope[scope] = sid
 	}
 
-	return PrefixScopeAnalysis{
-		Scopes:        scopes,
-		SourceByScope: sourceByScope,
-	}
+	return analysis
 }
 
+// hasPublicReadAction checks for S3 actions that expose object data.
 func hasPublicReadAction(actions []string) bool {
 	for _, action := range actions {
-		a := strings.ToLower(strings.TrimSpace(action))
-		if a == "*" || a == "s3:*" || a == "s3:getobject" {
+		a := strings.ToLower(action)
+		if a == wildcard || a == s3Wildcard || a == actionGetObject {
 			return true
 		}
 	}
 	return false
 }
 
-func scopeFromResources(resources []string) kernel.ObjectPrefix {
-	for _, res := range resources {
-		scope := scopeFromResourcePattern(res)
-		if scope != "" {
-			return scope
-		}
+// parseObjectPrefix converts an AWS S3 ARN into a kernel.ObjectPrefix.
+// Example: "arn:aws:s3:::my-bucket/logs/*" → "logs/"
+func parseObjectPrefix(resource string) kernel.ObjectPrefix {
+	_, path, found := strings.Cut(resource, ":::")
+	if !found {
+		return ""
 	}
-	return ""
-}
 
-func scopeFromResourcePattern(resource string) kernel.ObjectPrefix {
-	parts := strings.SplitN(strings.TrimSpace(resource), ":::", 2)
-	if len(parts) != 2 {
+	_, key, found := strings.Cut(path, "/")
+	if !found {
 		return ""
 	}
-	after := parts[1]
-	_, path, hasPath := strings.Cut(after, "/")
-	if !hasPath {
-		return ""
-	}
-	if path == "*" {
+
+	if key == wildcard {
 		return kernel.WildcardPrefix
 	}
-	if before, ok := strings.CutSuffix(path, "/*"); ok {
-		scope := before
-		if scope == "" {
-			return kernel.WildcardPrefix
-		}
-		if !strings.HasSuffix(scope, "/") {
-			scope += "/"
-		}
-		return kernel.ObjectPrefix(scope)
+
+	prefix, found := strings.CutSuffix(key, "/*")
+	if !found {
+		return ""
 	}
-	return ""
+	if prefix == "" {
+		return kernel.WildcardPrefix
+	}
+	if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	return kernel.ObjectPrefix(prefix)
 }

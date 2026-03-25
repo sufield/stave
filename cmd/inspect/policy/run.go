@@ -34,7 +34,7 @@ func run(cmd *cobra.Command, file string) error {
 
 	report := PolicyReport{
 		Assessment:  doc.Assess(),
-		PrefixScope: doc.PrefixScopeAnalysis(),
+		PrefixScope: doc.AnalyzeScopes(),
 		Risk:        s3policy.NewEvaluator(nil, s3resolver.NewResolver()).Evaluate(doc),
 		RequiredIAM: s3policy.MinimumS3IngestIAMActions(),
 	}
