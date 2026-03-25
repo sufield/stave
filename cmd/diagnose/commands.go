@@ -10,7 +10,7 @@ import (
 )
 
 // NewDiagnoseCmd constructs the diagnose command.
-func NewDiagnoseCmd(p *compose.Provider) *cobra.Command {
+func NewDiagnoseCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	var opts diagnoseOptions
 
 	cmd := &cobra.Command{
@@ -90,7 +90,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(p.NewObservationRepo, p.NewControlRepo, cfg.Clock)
+			runner := NewRunner(newObsRepo, newCtlRepo, cfg.Clock)
 			return runner.Run(cmd.Context(), cfg)
 		},
 	}

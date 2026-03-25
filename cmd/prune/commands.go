@@ -18,7 +18,7 @@ import (
 func Commands(p *compose.Provider) []*cobra.Command {
 	return []*cobra.Command{
 		archive.NewCmd(p),
-		upcoming.NewCmd(p),
+		upcoming.NewCmd(p.LoadAssets),
 		snapshot.NewQualityCmd(p),
 		snapshot.NewPlanCmd(p),
 		hygiene.NewCmd(p),

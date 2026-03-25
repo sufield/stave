@@ -15,7 +15,7 @@ import (
 )
 
 // NewCmd constructs the upcoming command.
-func NewCmd(p *compose.Provider) *cobra.Command {
+func NewCmd(loadAssets compose.AssetLoaderFunc) *cobra.Command {
 	opts := &options{
 		CtlDir:     "controls/s3",
 		ObsDir:     "observations",
@@ -88,7 +88,7 @@ Examples:
 
 			// Load assets via Provider
 			ctx := compose.CommandContext(cmd)
-			loaded, err := p.LoadAssets(ctx, opts.ObsDir, opts.CtlDir)
+			loaded, err := loadAssets(ctx, opts.ObsDir, opts.CtlDir)
 			if err != nil {
 				return err
 			}

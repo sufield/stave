@@ -19,7 +19,7 @@ import (
 )
 
 // NewTraceCmd constructs the trace command.
-func NewTraceCmd(p *compose.Provider) *cobra.Command {
+func NewTraceCmd(newCtlRepo compose.CtlRepoFactory, newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	var (
 		controlID   string
 		controlsDir string
@@ -61,13 +61,13 @@ Examples:
 			trimmedCtlID := strings.TrimSpace(controlID)
 
 			// Load control via factory
-			control, err := loadTraceControl(ctx, p.NewControlRepo, cleanCtlDir, trimmedCtlID)
+			control, err := loadTraceControl(ctx, newCtlRepo, cleanCtlDir, trimmedCtlID)
 			if err != nil {
 				return err
 			}
 
 			// Load snapshot via factory
-			snapshot, err := loadTraceSnapshot(ctx, p.NewSnapshotRepo, cleanObsPath)
+			snapshot, err := loadTraceSnapshot(ctx, newSnapshotRepo, cleanObsPath)
 			if err != nil {
 				return err
 			}

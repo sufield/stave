@@ -46,10 +46,10 @@ func WireCommands(app *App) {
 	root.AddCommand(applyvalidate.NewCmd(p, ui.DefaultRuntime()))
 	root.AddCommand(apply.NewApplyCmd(p))
 	root.AddCommand(applyverify.NewCmd(p, ui.DefaultRuntime()))
-	root.AddCommand(diagnose.NewDiagnoseCmd(p))
-	root.AddCommand(diagnose.NewExplainCmd(p))
-	root.AddCommand(diagnose.NewTraceCmd(p))
-	root.AddCommand(diagnose.NewPromptCmd(p))
+	root.AddCommand(diagnose.NewDiagnoseCmd(p.NewObservationRepo, p.NewControlRepo))
+	root.AddCommand(diagnose.NewExplainCmd(p.NewControlRepo))
+	root.AddCommand(diagnose.NewTraceCmd(p.NewControlRepo, p.NewSnapshotRepo))
+	root.AddCommand(diagnose.NewPromptCmd(p.NewControlRepo, p.LoadSnapshots))
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())

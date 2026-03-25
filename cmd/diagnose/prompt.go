@@ -24,7 +24,7 @@ import (
 // --- CLI bridge ---
 
 // NewPromptCmd constructs the prompt command group.
-func NewPromptCmd(p *compose.Provider) *cobra.Command {
+func NewPromptCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: "Generate LLM prompts from evaluation results",
@@ -32,12 +32,12 @@ func NewPromptCmd(p *compose.Provider) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	promptCmd.AddCommand(newPromptFromFindingCmd(p))
+	promptCmd.AddCommand(newPromptFromFindingCmd(newCtlRepo, loadSnapshots))
 
 	return promptCmd
 }
 
-func newPromptFromFindingCmd(p *compose.Provider) *cobra.Command {
+func newPromptFromFindingCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	var (
 		evalFile    string
 		assetID     string
@@ -108,7 +108,7 @@ Examples:
 
 			ctx := cmd.Context()
 
-			ctlByID, err := loadControlsMap(ctx, p.NewControlRepo, fsutil.CleanUserPath(controlsDir))
+			ctlByID, err := loadControlsMap(ctx, newCtlRepo, fsutil.CleanUserPath(controlsDir))
 			if err != nil {
 				return err
 			}
@@ -116,7 +116,7 @@ Examples:
 			var assetPropsJSON string
 			cleanObsDir := fsutil.CleanUserPath(obsDir)
 			if cleanObsDir != "" {
-				assetPropsJSON, err = loadAssetProperties(ctx, p.LoadSnapshots, cleanObsDir, asset.ID(strings.TrimSpace(assetID)))
+				assetPropsJSON, err = loadAssetProperties(ctx, loadSnapshots, cleanObsDir, asset.ID(strings.TrimSpace(assetID)))
 				if err != nil {
 					return err
 				}
