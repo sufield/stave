@@ -4,9 +4,17 @@ package crypto
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"strings"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
+)
+
+// Compile-time interface guards.
+var (
+	_ ports.Digester          = (*sha256Hasher)(nil)
+	_ ports.IdentityGenerator = (*sha256Hasher)(nil)
 )
 
 // HashBytes returns the SHA-256 hex digest of data.
@@ -30,17 +38,21 @@ func StableID(prefix, input string) string {
 
 // HashDelimited computes the SHA-256 hex digest of parts joined by sep.
 // Each part is followed by sep (e.g. "a\nb\n" for sep='\n').
+// Uses io.WriteString to avoid per-part []byte allocations.
 func HashDelimited(parts []string, sep byte) kernel.Digest {
 	h := sha256.New()
+	var sepBuf [1]byte
+	sepBuf[0] = sep
 	for _, p := range parts {
-		h.Write([]byte(p))
-		h.Write([]byte{sep})
+		io.WriteString(h, p) //nolint:errcheck,gosec // hash.Write never returns an error
+		h.Write(sepBuf[:])
 	}
 	return kernel.Digest(hex.EncodeToString(h.Sum(nil)))
 }
 
-// NewHasher returns the default ports.Digester and ports.IdentityGenerator implementation.
-// This is the single point of change if the hashing algorithm is swapped.
+// NewHasher returns the default ports.Digester and ports.IdentityGenerator
+// implementation. This is the single point of change if the hashing
+// algorithm is swapped.
 func NewHasher() *sha256Hasher { return &sha256Hasher{} }
 
 // sha256Hasher implements ports.Digester and ports.IdentityGenerator using SHA-256.
