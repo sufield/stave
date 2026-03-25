@@ -18,7 +18,7 @@ import (
 )
 
 func TestFindingWriter_NoViolations(t *testing.T) {
-	w := NewFindingWriter()
+	w := &FindingWriter{}
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
@@ -57,7 +57,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 }
 
 func TestFindingWriter_ViolationsWithSections(t *testing.T) {
-	w := NewFindingWriter()
+	w := &FindingWriter{}
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	sanitizer := sanitize.New()
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
@@ -149,7 +149,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 }
 
 func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
-	w := NewFindingWriter()
+	w := &FindingWriter{}
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 

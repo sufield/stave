@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
@@ -29,14 +30,19 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	if err := a.startCPUProfile(); err != nil {
 		return err
 	}
-	a.resolveGlobalFlagDefaults(cmd)
+
+	// Build the evaluator explicitly from the filesystem. The result
+	// is stored in Cobra's context — no package-level global state.
+	evalResult := projconfig.BuildEvaluator()
+	a.resolveGlobalFlagDefaults(cmd, evalResult.Evaluator)
+
 	if err := a.checkRequireOffline(); err != nil {
 		return err
 	}
 	if err := a.checkDevProductionGuard(cmd); err != nil {
 		return err
 	}
-	if err := a.checkConfigHealth(cmd); err != nil {
+	if err := a.checkConfigHealth(cmd, evalResult.Err); err != nil {
 		return err
 	}
 	ui.SetNoColor(a.Flags.NoColor)
@@ -46,9 +52,9 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Replay config-load warnings through the configured logger.
-	// These were collected during resolveGlobalFlagDefaults before
-	// the logger was initialized.
-	for _, w := range projconfig.ConfigWarnings() {
+	// These were collected during BuildEvaluator before the logger
+	// was initialized.
+	for _, w := range evalResult.Warnings {
 		a.Logger.Warn("config load warning", "error", w)
 	}
 
@@ -62,11 +68,9 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 
 // resolveGlobalFlagDefaults fills global persistent flags with project-config
 // defaults when the user did not set them explicitly on the command line.
-func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command) {
-	// Boundary: this is the single production call site for projconfig.Global().
-	// The evaluator is resolved here and stored in Cobra's context so all
-	// downstream commands retrieve it via cmdutil.EvaluatorFromCmd(cmd).
-	eval := projconfig.Global()
+// The evaluator is stored in Cobra's context so all downstream commands
+// retrieve it via cmdctx.EvaluatorFromCmd(cmd).
+func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Evaluator) {
 	ctx := cmdctx.WithEvaluator(cmd.Context(), eval)
 	cmd.SetContext(ctx)
 
@@ -84,9 +88,8 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command) {
 
 // checkConfigHealth enforces config loading errors for commands that need config.
 // Commands that can operate without a project config (init, generate, help, etc.)
-// are tolerant of config failures.
-func (a *App) checkConfigHealth(cmd *cobra.Command) error {
-	cfgErr := projconfig.GlobalConfigError()
+// are tolerant of config failures. cfgErr is the error from BuildEvaluator().
+func (a *App) checkConfigHealth(cmd *cobra.Command, cfgErr error) error {
 	if cfgErr == nil {
 		return nil
 	}

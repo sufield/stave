@@ -106,7 +106,7 @@ func (r *Resolver) UserConfigPath() (string, error) {
 		return override, nil
 	}
 	if r.HomeDir == "" {
-		return "", errors.New("home directory not available")
+		return "", fmt.Errorf("%w: home directory not available", ErrConfigNotFound)
 	}
 	return filepath.Join(r.HomeDir, ".config", "stave", "config.yaml"), nil
 }
@@ -151,22 +151,22 @@ func (r *Resolver) WriteUserConfig(cfg *appconfig.UserConfig, path string) error
 // --- Package-level convenience functions ---
 
 // defaultResolver returns a resolver with system defaults.
-// Returns nil on error (callers fall through to not-found).
-func defaultResolver() *Resolver {
-	r, err := NewResolver()
-	if err != nil {
-		return nil
-	}
-	return r
+// Callers must handle the error — a non-nil error means the working
+// directory or home directory could not be determined.
+func defaultResolver() (*Resolver, error) {
+	return NewResolver()
 }
 
 // FindNearestFile walks up from cwd looking for filename.
-func FindNearestFile(filename string) (string, bool) {
-	r := defaultResolver()
-	if r == nil {
-		return "", false
+// Returns a non-nil error if the resolver cannot be constructed
+// (e.g., working directory or home directory unavailable).
+func FindNearestFile(filename string) (string, bool, error) {
+	r, err := defaultResolver()
+	if err != nil {
+		return "", false, fmt.Errorf("resolve environment: %w", err)
 	}
-	return r.NearestFile(filename)
+	path, ok := r.NearestFile(filename)
+	return path, ok, nil
 }
 
 // FindProjectConfig returns the nearest project config.
@@ -182,12 +182,12 @@ func FindProjectConfig() (*appconfig.ProjectConfig, bool, error) {
 
 // FindProjectConfigWithPath returns the config and its path.
 // Returns (nil, "", nil) when no config file is found (ErrConfigNotFound).
-// Returns a non-nil error for parse failures, permission errors, or
-// explicit context path load failures — these should not be silenced.
+// Returns a non-nil error for resolver construction failures, parse
+// failures, permission errors, or explicit context path load failures.
 func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, string, error) {
-	r := defaultResolver()
-	if r == nil {
-		return nil, "", nil
+	r, err := defaultResolver()
+	if err != nil {
+		return nil, "", fmt.Errorf("resolve environment: %w", err)
 	}
 	cfg, path, err := r.FindProjectConfig(contextPath)
 	if err != nil {
@@ -200,12 +200,13 @@ func FindProjectConfigWithPath(contextPath string) (*appconfig.ProjectConfig, st
 }
 
 // FindUserConfigWithPath returns the user config, path, and whether found.
-// Returns a non-nil error for parse or permission failures (as opposed to
-// the config simply not existing, which returns found=false with nil error).
+// Returns a non-nil error for resolver construction failures, parse
+// failures, or permission failures (as opposed to the config simply not
+// existing, which returns found=false with nil error).
 func FindUserConfigWithPath() (*appconfig.UserConfig, string, bool, error) {
-	r := defaultResolver()
-	if r == nil {
-		return nil, "", false, nil
+	r, err := defaultResolver()
+	if err != nil {
+		return nil, "", false, fmt.Errorf("resolve environment: %w", err)
 	}
 	cfg, path, err := r.LoadUserConfig()
 	if err != nil {

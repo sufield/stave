@@ -1,7 +1,6 @@
 package diagnose
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,9 +8,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/dircheck"
-	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
 )
@@ -70,43 +66,16 @@ func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {
 
 // ToConfig converts raw CLI options into a validated Config.
 func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
-	resolver, resolverErr := projctx.NewResolver()
-	if resolverErr != nil {
-		return Config{}, fmt.Errorf("resolve project context: %w", resolverErr)
-	}
-	engine := projctx.NewInferenceEngine(resolver)
-
-	clock, err := compose.ResolveClock(o.NowTime)
-	if err != nil {
-		return Config{}, err
-	}
-
-	controlsDir := fsutil.CleanUserPath(o.ControlsDir)
-	obsDir := fsutil.CleanUserPath(o.ObservationsDir)
-	if !cmd.Flags().Changed("controls") {
-		if inferred := engine.InferDir("controls", ""); inferred != "" {
-			controlsDir = inferred
-		}
-	}
-	if !cmd.Flags().Changed("observations") {
-		if inferred := engine.InferDir("observations", ""); inferred != "" {
-			obsDir = inferred
-		}
-	}
-
-	if dirErr := dircheck.ValidateFlagDir("--controls", controlsDir, "controls", ui.ErrHintControlsNotAccessible, engine.Log); dirErr != nil {
-		return Config{}, dirErr
-	}
-	if dirErr := dircheck.ValidateFlagDir("--observations", obsDir, "observations", ui.ErrHintObservationsNotAccessible, engine.Log); dirErr != nil {
-		return Config{}, dirErr
-	}
-
-	fmtValue, err := compose.ResolveFormatValue(cmd, o.Format)
-	if err != nil {
-		return Config{}, err
-	}
-
-	maxUnsafe, err := cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
+		ControlsDir:       o.ControlsDir,
+		ObservationsDir:   o.ObservationsDir,
+		ControlsChanged:   cmd.Flags().Changed("controls"),
+		ObsChanged:        cmd.Flags().Changed("observations"),
+		MaxUnsafeDuration: o.MaxUnsafeDuration,
+		NowTime:           o.NowTime,
+		Format:            o.Format,
+		FormatChanged:     cmd.Flags().Changed("format"),
+	})
 	if err != nil {
 		return Config{}, err
 	}
@@ -114,11 +83,11 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 	flags := cmdutil.GetGlobalFlags(cmd)
 
 	return Config{
-		ControlsDir:       controlsDir,
-		ObservationsDir:   obsDir,
+		ControlsDir:       ec.ControlsDir,
+		ObservationsDir:   ec.ObservationsDir,
 		PreviousOutput:    fsutil.CleanUserPath(o.PreviousOutput),
-		MaxUnsafeDuration: maxUnsafe,
-		Format:            fmtValue,
+		MaxUnsafeDuration: ec.MaxUnsafe,
+		Format:            ec.Format,
 		Quiet:             flags.Quiet,
 		Cases:             o.Cases,
 		SignalContains:    o.SignalContains,
@@ -128,7 +97,7 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		Stdout:            cmd.OutOrStdout(),
 		Stderr:            cmd.ErrOrStderr(),
 		Stdin:             cmd.InOrStdin(),
-		Clock:             clock,
+		Clock:             ec.Clock,
 		Sanitizer:         flags.GetSanitizer(),
 	}, nil
 }

@@ -17,7 +17,7 @@ func DefaultFindingWriter(format ui.OutputFormat, _ bool) (appcontracts.FindingM
 	const indented = true
 	switch format {
 	case ui.OutputFormatText:
-		return outtext.NewFindingWriter(), nil
+		return &outtext.FindingWriter{}, nil
 	case ui.OutputFormatJSON:
 		return outjson.NewFindingWriter(indented), nil
 	case ui.OutputFormatSARIF:

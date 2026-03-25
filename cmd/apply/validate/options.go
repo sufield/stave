@@ -10,10 +10,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -83,66 +81,47 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 // from PreRunE.
 func (o *options) Prepare(cmd *cobra.Command) error {
 	o.resolveConfigDefaults(cmd)
-	if err := o.normalize(
+	return o.normalizeAndValidate(
 		cmd.Flags().Changed("controls"),
 		cmd.Flags().Changed("observations"),
-	); err != nil {
-		return err
-	}
-	return o.validate()
+	)
 }
 
-// normalize cleans user input and applies project-root inference.
-// controlsChanged/obsChanged indicate whether the user explicitly set those flags.
-func (o *options) normalize(controlsChanged, obsChanged bool) error {
-	o.Controls = fsutil.CleanUserPath(o.Controls)
-	o.Observations = fsutil.CleanUserPath(o.Observations)
+// normalizeAndValidate cleans user input, applies project-root inference,
+// and validates flag combinations.
+func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 	o.InputPath = fsutil.CleanUserPath(o.InputPath)
 	o.Kind = strings.TrimSpace(o.Kind)
 	o.SchemaVersion = strings.TrimSpace(o.SchemaVersion)
-
-	// Apply inference if we are not in single-file mode
-	if o.InputPath == "" {
-		resolver, err := projctx.NewResolver()
-		if err != nil {
-			return fmt.Errorf("resolve project context: %w", err)
-		}
-		engine := projctx.NewInferenceEngine(resolver)
-		if !controlsChanged {
-			if inferred := engine.InferDir("controls", ""); inferred != "" {
-				o.Controls = inferred
-			}
-		}
-		if !obsChanged {
-			if inferred := engine.InferDir("observations", ""); inferred != "" {
-				o.Observations = inferred
-			}
-		}
-	}
-	return nil
-}
-
-// validate performs logical checks on flag combinations.
-func (o *options) validate() error {
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return err
-	}
-	if _, err = resolver.ResolveSelected(); err != nil {
-		return err
-	}
 
 	if o.Kind != "" && o.InputPath == "" {
 		return fmt.Errorf("flag --kind requires --in <file>")
 	}
 
-	// Ensure directories exist if in project mode
-	if o.InputPath == "" {
-		if err := dircheck.ValidateFlagDir("--controls", o.Controls, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
-			return err
-		}
-		if err := dircheck.ValidateFlagDir("--observations", o.Observations, "", ui.ErrHintObservationsNotAccessible, nil); err != nil {
-			return err
+	singleFileMode := o.InputPath != ""
+
+	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
+		ControlsDir:                o.Controls,
+		ObservationsDir:            o.Observations,
+		ControlsChanged:            controlsChanged,
+		ObsChanged:                 obsChanged,
+		SkipPathInference:          singleFileMode,
+		SkipControlsValidation:     singleFileMode,
+		SkipObservationsValidation: singleFileMode,
+		SkipMaxUnsafe:              true,
+		SkipClock:                  true,
+		SkipFormat:                 true,
+	})
+	if err != nil {
+		return err
+	}
+	o.Controls = ec.ControlsDir
+	o.Observations = ec.ObservationsDir
+
+	// Validate context resolution (fail-fast if context state is broken).
+	if ec.Resolver != nil {
+		if _, resolveErr := ec.Resolver.ResolveSelected(); resolveErr != nil {
+			return resolveErr
 		}
 	}
 

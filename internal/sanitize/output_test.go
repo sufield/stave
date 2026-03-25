@@ -142,7 +142,7 @@ func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 
 func TestTextWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New()
-	w := outtext.NewFindingWriter()
+	w := &outtext.FindingWriter{}
 	enricher := remediation.NewMapper(crypto.NewHasher())
 	enriched, err := appeval.Enrich(enricher, r, makeTestResult())
 	if err != nil {

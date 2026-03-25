@@ -62,35 +62,21 @@ type applyParams struct {
 	source            appeval.ObservationSource
 }
 
-// --- Path inference (shared by standard + dry-run) ---
-
-// inferredDirs resolves controls and observations directories from the project
-// root when the user did not set them explicitly via flags.
-func (o *ApplyOptions) inferredDirs(obsChanged bool) (ctlDir, obsDir string, err error) {
-	resolver, err := projctx.NewResolver()
-	if err != nil {
-		return "", "", ui.WithHint(
-			fmt.Errorf("resolve project context: %w", err),
-			ui.ErrHintProjectContext,
-		)
-	}
-	engine := projctx.NewInferenceEngine(resolver)
-
-	ctlDir = fsutil.CleanUserPath(o.ControlsDir)
-	if !o.controlsSet {
-		if inferred := engine.InferDir("controls", ""); inferred != "" {
-			ctlDir = inferred
-		}
-	}
-
-	obsDir = fsutil.CleanUserPath(o.ObservationsDir)
-	if o.ObservationsDir != "-" && !obsChanged {
-		if inferred := engine.InferDir("observations", ""); inferred != "" {
-			obsDir = inferred
-		}
-	}
-
-	return ctlDir, obsDir, nil
+// resolvePathInference resolves controls and observations directories using
+// PrepareEvaluationContext. Dir validation is deferred to validateDirsWithConfig
+// because it depends on the loaded project config (pack awareness).
+func (o *ApplyOptions) resolvePathInference(obsChanged bool) (compose.EvalContext, error) {
+	return compose.PrepareEvaluationContext(compose.EvalContextRequest{
+		ControlsDir:                o.ControlsDir,
+		ObservationsDir:            o.ObservationsDir,
+		ControlsChanged:            o.controlsSet,
+		ObsChanged:                 obsChanged || o.ObservationsDir == "-",
+		SkipControlsValidation:     true,
+		SkipObservationsValidation: true,
+		SkipMaxUnsafe:              true,
+		SkipClock:                  true,
+		SkipFormat:                 true,
+	})
 }
 
 // --- Standard mode resolution ---
@@ -101,15 +87,15 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		return o.resolveProfileMode(cs)
 	}
 
-	ctlDir, obsDir, err := o.inferredDirs(cs.ObsChanged)
+	ec, err := o.resolvePathInference(cs.ObsChanged)
 	if err != nil {
 		return RunConfig{}, err
 	}
 	// Intentional receiver mutation: parseDomain, validateDirs, and
 	// buildEvaluatorInput (called later in the run pipeline) all read
 	// ControlsDir/ObservationsDir from the receiver.
-	o.ControlsDir = ctlDir
-	o.ObservationsDir = obsDir
+	o.ControlsDir = ec.ControlsDir
+	o.ObservationsDir = ec.ObservationsDir
 
 	// IntegrityManifest and IntegrityPublicKey are already cleaned by
 	// normalize() in PreRunE — no duplicate cleaning needed here.
@@ -288,21 +274,18 @@ func (o *ApplyOptions) buildClock(now time.Time) ports.Clock {
 // ResolveDryRun converts raw CLI options into a ReadinessConfig for dry-run mode.
 // Flag strings are parsed to native types here so the config struct is ready to use.
 func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
-	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
-	if err != nil {
-		return ReadinessConfig{}, err
-	}
-
-	ctlDir, obsDir, err := o.inferredDirs(cs.ObsChanged)
-	if err != nil {
-		return ReadinessConfig{}, err
-	}
-
-	maxUnsafe, err := cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
-	if err != nil {
-		return ReadinessConfig{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
-	}
-	now, err := compose.ResolveNow(o.NowTime)
+	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
+		ControlsDir:                o.ControlsDir,
+		ObservationsDir:            o.ObservationsDir,
+		ControlsChanged:            o.controlsSet,
+		ObsChanged:                 cs.ObsChanged || o.ObservationsDir == "-",
+		MaxUnsafeDuration:          o.MaxUnsafeDuration,
+		NowTime:                    o.NowTime,
+		Format:                     o.Format,
+		FormatChanged:              cs.FormatChanged,
+		SkipControlsValidation:     true,
+		SkipObservationsValidation: true,
+	})
 	if err != nil {
 		return ReadinessConfig{}, err
 	}
@@ -325,11 +308,11 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
 	}
 
 	return ReadinessConfig{
-		ControlsDir:            ctlDir,
-		ObservationsDir:        obsDir,
-		MaxUnsafeDuration:      maxUnsafe,
-		Now:                    now,
-		Format:                 format,
+		ControlsDir:            ec.ControlsDir,
+		ObservationsDir:        ec.ObservationsDir,
+		MaxUnsafeDuration:      ec.MaxUnsafe,
+		Now:                    ec.Now,
+		Format:                 ec.Format,
 		Quiet:                  cs.GlobalFlags.Quiet,
 		Sanitize:               cs.GlobalFlags.Sanitize,
 		Stdout:                 cs.Stdout,

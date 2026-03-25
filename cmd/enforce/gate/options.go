@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
@@ -75,22 +73,18 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 		return config{}, err
 	}
 
-	clock, err := compose.ResolveClock(o.NowRaw)
+	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
+		ControlsDir:       o.CtlDir,
+		ObservationsDir:   o.ObsDir,
+		MaxUnsafeDuration: o.MaxUnsafeDuration,
+		NowTime:           o.NowRaw,
+		Format:            o.FormatRaw,
+		FormatChanged:     cmd.Flags().Changed("format"),
+		SkipPathInference: true,
+		SkipMaxUnsafe:     policy != appconfig.GatePolicyOverdue,
+	})
 	if err != nil {
 		return config{}, err
-	}
-
-	format, err := compose.ResolveFormatValue(cmd, o.FormatRaw)
-	if err != nil {
-		return config{}, err
-	}
-
-	var maxUnsafeDur time.Duration
-	if policy == appconfig.GatePolicyOverdue {
-		maxUnsafeDur, err = cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
-		if err != nil {
-			return config{}, err
-		}
 	}
 
 	gf := cmdutil.GetGlobalFlags(cmd)
@@ -99,12 +93,12 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 		Policy:            policy,
 		InPath:            fsutil.CleanUserPath(o.InPath),
 		BaselinePath:      fsutil.CleanUserPath(o.BasePath),
-		ControlsDir:       fsutil.CleanUserPath(o.CtlDir),
-		ObservationsDir:   fsutil.CleanUserPath(o.ObsDir),
-		MaxUnsafeDuration: maxUnsafeDur,
-		Format:            format,
+		ControlsDir:       ec.ControlsDir,
+		ObservationsDir:   ec.ObservationsDir,
+		MaxUnsafeDuration: ec.MaxUnsafe,
+		Format:            ec.Format,
 		Quiet:             gf.Quiet,
-		Clock:             clock,
+		Clock:             ec.Clock,
 		Sanitizer:         gf.GetSanitizer(),
 		Stdout:            cmd.OutOrStdout(),
 		Stderr:            cmd.ErrOrStderr(),

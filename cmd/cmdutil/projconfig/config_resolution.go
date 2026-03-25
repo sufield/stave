@@ -6,54 +6,31 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
 
-// DefaultEvaluator is the package-level evaluator set during initialization.
-// Use Global() to access it safely.
-var DefaultEvaluator *appconfig.Evaluator
+// EvaluatorResult holds the output of building an evaluator from the filesystem.
+type EvaluatorResult struct {
+	// Evaluator is always non-nil. When config loading fails, it is built
+	// with default values and Err indicates the degraded state.
+	Evaluator *appconfig.Evaluator
 
-// configLoadErr records any error encountered when lazily building the
-// package-level evaluator. Commands should call GlobalConfigError() early
-// in their RunE/PreRunE to fail fast on malformed config files.
-var configLoadErr error
+	// Err is non-nil when project or user configuration could not be loaded
+	// (parse errors, permission failures, resolver construction errors).
+	// Commands that depend on correct config values should check this
+	// early and abort if non-nil.
+	Err error
 
-// configWarnings holds config-load warnings for deferred replay.
-// These are collected during lazy init (before the logger is configured)
-// and replayed by bootstrap after initLogger().
-var configWarnings []error
+	// Warnings collects config-load issues for deferred replay through
+	// the structured logger. Bootstrap replays these after initLogger().
+	Warnings []error
+}
 
-// Global returns the package-level evaluator. Use of this should be minimized
-// in favor of passing a local Evaluator instance where possible.
+// BuildEvaluator constructs a config evaluator from the filesystem by loading
+// project and user configuration. It always returns a usable evaluator (never
+// nil), even if config loading failed — check Err to detect degraded operation.
 //
-// Global always returns a usable evaluator (never nil), even if config loading
-// failed. Call GlobalConfigError() to detect whether the evaluator was built
-// with degraded (default) values due to a parse or permission error.
-func Global() *appconfig.Evaluator {
-	if DefaultEvaluator == nil {
-		return defaultEvaluator()
-	}
-	return DefaultEvaluator
-}
-
-// GlobalConfigError returns any error that occurred when loading project or
-// user configuration for the package-level evaluator. Commands that depend on
-// correct config values should check this early and abort if non-nil.
-func GlobalConfigError() error {
-	// Force lazy init so configLoadErr is populated.
-	_ = Global()
-	return configLoadErr
-}
-
-// ConfigWarnings returns config-load warnings collected during lazy init.
-// Bootstrap calls this after initLogger() to replay warnings through the
-// configured logger instead of the pre-bootstrap default.
-func ConfigWarnings() []error {
-	_ = Global() // force lazy init
-	return configWarnings
-}
-
-// defaultEvaluator creates a fresh evaluator from the filesystem.
-// Any loading errors are stored in configLoadErr so that callers
-// of GlobalConfigError() can detect degraded operation.
-func defaultEvaluator() *appconfig.Evaluator {
+// This function is stateless: it does not cache the result or store it in
+// package-level variables. Callers should store the evaluator in Cobra's
+// context (via cmdctx.WithEvaluator) for downstream commands to retrieve.
+func BuildEvaluator() EvaluatorResult {
 	var errs []error
 
 	pCfg, pPath, err := FindProjectConfigWithPath("")
@@ -65,7 +42,9 @@ func defaultEvaluator() *appconfig.Evaluator {
 		errs = append(errs, uErr)
 	}
 
-	configLoadErr = errors.Join(errs...)
-	configWarnings = errs
-	return appconfig.NewEvaluator(pCfg, pPath, uCfg, uPath)
+	return EvaluatorResult{
+		Evaluator: appconfig.NewEvaluator(pCfg, pPath, uCfg, uPath),
+		Err:       errors.Join(errs...),
+		Warnings:  errs,
+	}
 }
