@@ -8,15 +8,15 @@ import (
 // DoctorPrereqChecks runs system health checks and transforms them into domain-level
 // prerequisite checks. It requires explicit paths to ensure testability and
 // environment awareness.
-func DoctorPrereqChecks(cwd, binaryPath string) []validation.PrereqCheck {
+func DoctorPrereqChecks(cwd, binaryPath string) []validation.Issue {
 	doctorChecks, _ := doctor.Run(&doctor.Context{
 		Cwd:        cwd,
 		BinaryPath: binaryPath,
 	})
 
-	out := make([]validation.PrereqCheck, 0, len(doctorChecks))
+	out := make([]validation.Issue, 0, len(doctorChecks))
 	for _, c := range doctorChecks {
-		out = append(out, validation.PrereqCheck{
+		out = append(out, validation.Issue{
 			Name:    c.Name,
 			Status:  mapDoctorStatus(c.Status),
 			Message: c.Message,

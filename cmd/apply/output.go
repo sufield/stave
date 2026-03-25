@@ -44,7 +44,7 @@ func (r *Reporter) ReportApply(res EvaluateResult) error {
 }
 
 // ReportPlan prints the readiness report (used by apply --dry-run).
-func (r *Reporter) ReportPlan(report validation.ReadinessReport) error {
+func (r *Reporter) ReportPlan(report validation.Report) error {
 	if r.Quiet {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (r *Reporter) ReportPlan(report validation.ReadinessReport) error {
 }
 
 // readinessNextCommand returns the recommended next CLI command based on readiness status.
-func readinessNextCommand(report validation.ReadinessReport) string {
+func readinessNextCommand(report validation.Report) string {
 	if report.Ready {
 		return fmt.Sprintf("stave apply --controls %s --observations %s",
 			report.ControlsDir, report.ObservationsDir)
@@ -97,7 +97,7 @@ func readinessNextCommand(report validation.ReadinessReport) string {
 }
 
 func printReadinessIssue(w io.Writer, issue validation.Issue) error {
-	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", issue.Status.Label(), issue.Name, issue.Message); err != nil {
+	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", issue.Status.String(), issue.Name, issue.Message); err != nil {
 		return err
 	}
 
