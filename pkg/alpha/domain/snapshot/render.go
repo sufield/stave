@@ -3,68 +3,91 @@ package snapshot
 import (
 	"fmt"
 	"io"
-	"time"
+	"text/tabwriter"
 )
 
-// RenderPlanText writes a human-readable snapshot plan report.
+// humanTime is easier to scan in CLI output than RFC3339.
+const humanTime = "2006-01-02 15:04:05"
+
+// RenderPlanText writes a human-readable snapshot plan report to w.
 func RenderPlanText(w io.Writer, plan *PlanOutput) error {
 	ew := &errWriter{w: w}
-	writePlanHeader(ew, plan)
-	writePlanTierSections(ew, plan)
-	writePlanSummary(ew, plan)
+
+	writeHeader(ew, plan)
+	writeTiers(ew, plan)
+	writeSummary(ew, plan)
+
 	return ew.err
 }
 
-func writePlanHeader(ew *errWriter, plan *PlanOutput) {
+func writeHeader(ew *errWriter, plan *PlanOutput) {
 	ew.println("Snapshot Retention Plan")
 	ew.println("=======================")
-	ew.printf("Generated: %s\n", plan.GeneratedAt.Format(time.RFC3339))
+	ew.printf("Generated: %s\n", plan.GeneratedAt.Format(humanTime))
 	ew.printf("Root:      %s\n", plan.ObservationsRoot)
+
 	modeHint := ""
 	if plan.Mode == ModePreview {
 		modeHint = " (use --apply --force to execute)"
 	}
 	ew.printf("Mode:      %s%s\n", plan.Mode, modeHint)
+
+	if plan.ArchiveDir != "" {
+		ew.printf("Archive:   %s\n", plan.ArchiveDir)
+	}
 }
 
-func writePlanTierSections(ew *errWriter, plan *PlanOutput) {
+func writeTiers(ew *errWriter, plan *PlanOutput) {
 	if plan.TotalFiles == 0 {
-		ew.println("\nNo snapshots found.")
+		ew.println("\nNo snapshots discovered.")
 		return
 	}
 
-	byTier := make(map[string][]PlanFile, len(plan.TierSummaries))
-	for i := range plan.Files {
-		f := &plan.Files[i]
-		byTier[f.Tier] = append(byTier[f.Tier], *f)
-	}
+	for _, summary := range plan.TierSummaries {
+		ew.printf("\nTier: %s (older_than: %s, keep_min: %d)\n",
+			summary.Tier, summary.OlderThan, summary.KeepMin)
 
-	for _, tierSummary := range plan.TierSummaries {
-		writePlanTier(ew, tierSummary, byTier[tierSummary.Tier])
+		tw := tabwriter.NewWriter(ew.w, 0, 0, 2, ' ', 0)
+
+		for _, f := range plan.Files {
+			if f.Tier != summary.Tier {
+				continue
+			}
+			fmt.Fprintf(tw, "  %s\t%s\tcaptured: %s\t%s\n",
+				f.Action,
+				f.RelPath,
+				f.CapturedAt.Format(humanTime),
+				f.Reason,
+			)
+		}
+
+		if err := tw.Flush(); err != nil && ew.err == nil {
+			ew.err = err
+		}
 	}
 }
 
-func writePlanTier(ew *errWriter, tierSummary PlanTierSummary, files []PlanFile) {
-	ew.printf("\nTier: %s (older_than=%s, keep_min=%d)\n", tierSummary.Tier, tierSummary.OlderThan, tierSummary.KeepMin)
-	for _, file := range files {
-		ew.printf("  %-8s %s  captured=%s  %s\n",
-			file.Action, file.RelPath, file.CapturedAt.Format(time.RFC3339), file.Reason)
+func writeSummary(ew *errWriter, plan *PlanOutput) {
+	actionVerb := "processed"
+	switch plan.Mode {
+	case ModeArchive:
+		actionVerb = "archived"
+	case ModePrune:
+		actionVerb = "pruned"
 	}
-}
 
-func writePlanSummary(ew *errWriter, plan *PlanOutput) {
-	actionWord := "prune"
-	if plan.ArchiveDir != "" {
-		actionWord = "archive"
-	}
 	keepCount := 0
 	for _, ts := range plan.TierSummaries {
 		keepCount += ts.KeepCount
 	}
-	ew.printf("\nSummary: %d files, %d keep, %d %s\n",
-		plan.TotalFiles, keepCount, plan.TotalActions, actionWord)
+
+	ew.println("\nSummary:")
+	ew.printf("  Total Files:   %d\n", plan.TotalFiles)
+	ew.printf("  Keep:          %d\n", keepCount)
+	ew.printf("  To %-11s %d\n", actionVerb+":", plan.TotalActions)
 }
 
+// errWriter is a sticky-error helper for multi-line writing.
 type errWriter struct {
 	w   io.Writer
 	err error
