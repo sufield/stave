@@ -6,7 +6,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
 
-func mapRiskItems(items risk.Items) []UpcomingSnapshot {
+func mapRiskItems(items risk.ThresholdItems) []UpcomingSnapshot {
 	if len(items) == 0 {
 		return nil
 	}
@@ -28,10 +28,10 @@ func mapRiskItems(items risk.Items) []UpcomingSnapshot {
 }
 
 func summarizeUpcoming(items []UpcomingSnapshot, dueSoonThreshold time.Duration) UpcomingSummary {
-	// Convert to risk.Items for canonical summarization.
-	riskItems := make(risk.Items, len(items))
+	// Convert to risk.ThresholdItems for canonical summarization.
+	riskItems := make(risk.ThresholdItems, len(items))
 	for i, item := range items {
-		riskItems[i] = risk.Item{
+		riskItems[i] = risk.ThresholdItem{
 			Status:    item.Status,
 			Remaining: item.Remaining,
 		}

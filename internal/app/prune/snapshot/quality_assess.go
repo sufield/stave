@@ -162,7 +162,7 @@ func (r qualityReport) finalize() qualityReport {
 		}
 	}
 
-	r.Pass = !hasErrors && (!r.Strict || !hasWarnings)
+	r.Passed = !hasErrors && (!r.Strict || !hasWarnings)
 	return r
 }
 

@@ -22,7 +22,7 @@ type resolvedConfig struct {
 	DueSoonRaw           string
 	Now                  time.Time
 	Format               ui.OutputFormat
-	Filter               risk.FilterCriteria
+	Filter               risk.ThresholdFilter
 	Sanitizer            kernel.Sanitizer
 	Quiet                bool
 	Stdout               io.Writer

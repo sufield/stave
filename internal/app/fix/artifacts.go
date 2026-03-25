@@ -100,7 +100,7 @@ func (m *ArtifactWriter) PersistReport(report *LoopReport) error {
 			return err
 		}
 	}
-	if !report.Pass {
+	if !report.Passed {
 		if err := jsonutil.WriteIndented(m.Stdout, report); err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ type LoopReport struct {
 	SchemaVersion     kernel.Schema                      `json:"schema_version"`
 	Kind              kernel.OutputKind                  `json:"kind"`
 	CheckedAt         time.Time                          `json:"checked_at"`
-	Pass              bool                               `json:"pass"`
+	Passed            bool                               `json:"pass"`
 	Reason            string                             `json:"reason"`
 	MaxUnsafeDuration string                             `json:"max_unsafe"`
 	Before            ObservationSummary                 `json:"before"`

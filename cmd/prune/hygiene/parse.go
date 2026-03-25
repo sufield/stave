@@ -6,16 +6,16 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
 
-// toStatuses converts raw CLI flag strings into validated risk.Status values.
+// toStatuses converts raw CLI flag strings into validated risk.ThresholdStatus values.
 // Invalid or empty entries are silently filtered out.
-func toStatuses(raw []string) []risk.Status {
-	out := make([]risk.Status, 0, len(raw))
+func toStatuses(raw []string) []risk.ThresholdStatus {
+	out := make([]risk.ThresholdStatus, 0, len(raw))
 	for _, s := range raw {
 		trimmed := strings.ToUpper(strings.TrimSpace(s))
 		if trimmed == "" {
 			continue
 		}
-		status := risk.Status(trimmed)
+		status := risk.ThresholdStatus(trimmed)
 		if isValidStatus(status) {
 			out = append(out, status)
 		}
@@ -23,7 +23,7 @@ func toStatuses(raw []string) []risk.Status {
 	return out
 }
 
-func isValidStatus(s risk.Status) bool {
+func isValidStatus(s risk.ThresholdStatus) bool {
 	switch s {
 	case risk.StatusOverdue, risk.StatusDueNow, risk.StatusUpcoming:
 		return true

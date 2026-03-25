@@ -16,7 +16,7 @@ type EvalConfig struct {
 	MaxUnsafeDuration time.Duration
 	DueSoon           time.Duration
 	Now               time.Time
-	Filter            risk.FilterCriteria
+	Filter            risk.ThresholdFilter
 	Sanitizer         kernel.Sanitizer
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
 }
@@ -35,7 +35,7 @@ type Runner struct{}
 
 // Run computes upcoming action items and returns the assembled output.
 func (r *Runner) Run(cfg EvalConfig, meta OutputMetadata) (UpcomingReport, error) {
-	riskItems := risk.ComputeItems(risk.Request{
+	riskItems := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                cfg.Controls,
 		Snapshots:               cfg.Snapshots,
 		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,

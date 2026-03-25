@@ -12,20 +12,20 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-// Status represents urgency for when an unsafe threshold is due.
-type Status string
+// ThresholdStatus represents urgency for when an unsafe threshold is due.
+type ThresholdStatus string
 
 const (
-	StatusOverdue  Status = "OVERDUE"
-	StatusDueNow   Status = "DUE_NOW"
-	StatusUpcoming Status = "UPCOMING"
+	StatusOverdue  ThresholdStatus = "OVERDUE"
+	StatusDueNow   ThresholdStatus = "DUE_NOW"
+	StatusUpcoming ThresholdStatus = "UPCOMING"
 )
 
 // ValidateStatuses normalizes and validates a slice of status strings.
-func ValidateStatuses(statuses []string) ([]Status, error) {
-	out := make([]Status, 0, len(statuses))
+func ValidateStatuses(statuses []string) ([]ThresholdStatus, error) {
+	out := make([]ThresholdStatus, 0, len(statuses))
 	for _, raw := range statuses {
-		norm := Status(strings.ToUpper(strings.TrimSpace(raw)))
+		norm := ThresholdStatus(strings.ToUpper(strings.TrimSpace(raw)))
 		switch norm {
 		case "":
 			continue
@@ -38,10 +38,10 @@ func ValidateStatuses(statuses []string) ([]Status, error) {
 	return out, nil
 }
 
-// Item captures one control/asset threshold approaching or exceeding its limit.
-type Item struct {
+// ThresholdItem captures one control/asset threshold approaching or exceeding its limit.
+type ThresholdItem struct {
 	DueAt          time.Time
-	Status         Status
+	Status         ThresholdStatus
 	Remaining      time.Duration
 	ControlID      kernel.ControlID
 	AssetID        asset.ID
@@ -51,11 +51,11 @@ type Item struct {
 	Threshold      time.Duration
 }
 
-// Items is a collection of upcoming risk items.
-type Items []Item
+// ThresholdItems is a collection of upcoming risk items.
+type ThresholdItems []ThresholdItem
 
 // CountOverdue returns the number of items with OVERDUE status.
-func (items Items) CountOverdue() int {
+func (items ThresholdItems) CountOverdue() int {
 	count := 0
 	for _, item := range items {
 		if item.Status == StatusOverdue {
@@ -66,12 +66,12 @@ func (items Items) CountOverdue() int {
 }
 
 // HasAnyRisk reports whether any item is overdue, due now, or upcoming.
-func (items Items) HasAnyRisk() bool {
+func (items ThresholdItems) HasAnyRisk() bool {
 	return len(items) > 0
 }
 
-// Summary holds aggregate counts of risk items bucketed by urgency.
-type Summary struct {
+// ThresholdSummary holds aggregate counts of risk items bucketed by urgency.
+type ThresholdSummary struct {
 	Overdue int
 	DueNow  int
 	DueSoon int
@@ -79,21 +79,21 @@ type Summary struct {
 	Total   int
 }
 
-// FilterCriteria specifies which items to include in a view.
-type FilterCriteria struct {
+// ThresholdFilter specifies which items to include in a view.
+type ThresholdFilter struct {
 	ControlIDs   map[kernel.ControlID]struct{}
 	AssetTypes   map[kernel.AssetType]struct{}
-	Statuses     map[Status]struct{}
+	Statuses     map[ThresholdStatus]struct{}
 	MaxRemaining time.Duration
 }
 
 // Filter returns items matching the criteria.
-func (items Items) Filter(c FilterCriteria) Items {
+func (items ThresholdItems) Filter(c ThresholdFilter) ThresholdItems {
 	if len(items) == 0 {
 		return nil
 	}
 
-	out := make(Items, 0, len(items))
+	out := make(ThresholdItems, 0, len(items))
 	for _, item := range items {
 		if c.matches(item) {
 			out = append(out, item)
@@ -102,7 +102,7 @@ func (items Items) Filter(c FilterCriteria) Items {
 	return out
 }
 
-func (c FilterCriteria) matches(item Item) bool {
+func (c ThresholdFilter) matches(item ThresholdItem) bool {
 	if len(c.ControlIDs) > 0 {
 		if _, ok := c.ControlIDs[item.ControlID]; !ok {
 			return false
@@ -125,8 +125,8 @@ func (c FilterCriteria) matches(item Item) bool {
 }
 
 // Summarize buckets items by urgency relative to a "due soon" threshold.
-func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {
-	var s Summary
+func (items ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSummary {
+	var s ThresholdSummary
 	s.Total = len(items)
 	for _, item := range items {
 		switch item.Status {
@@ -145,8 +145,8 @@ func (items Items) Summarize(dueSoonThreshold time.Duration) Summary {
 	return s
 }
 
-// Request provides the inputs required to compute upcoming risk.
-type Request struct {
+// ThresholdRequest provides the inputs required to compute upcoming risk.
+type ThresholdRequest struct {
 	Controls                []policy.ControlDefinition
 	Snapshots               []asset.Snapshot
 	GlobalMaxUnsafeDuration time.Duration
@@ -163,7 +163,7 @@ type assetState struct {
 }
 
 // ComputeItems returns deterministic upcoming threshold items for currently-unsafe assets.
-func ComputeItems(req Request) Items {
+func ComputeItems(req ThresholdRequest) ThresholdItems {
 	if len(req.Snapshots) == 0 || len(req.Controls) == 0 {
 		return nil
 	}
@@ -175,7 +175,7 @@ func ComputeItems(req Request) Items {
 	})
 
 	// 2. Identify relevant controls
-	var items Items
+	var items ThresholdItems
 	for _, ctl := range req.Controls {
 		if ctl.Type != policy.TypeUnsafeDuration && ctl.Type != policy.TypeUnsafeState {
 			continue
@@ -191,7 +191,7 @@ func ComputeItems(req Request) Items {
 			}
 
 			dueAt := st.FirstUnsafeAt.Add(threshold).UTC()
-			items = append(items, Item{
+			items = append(items, ThresholdItem{
 				DueAt:          dueAt,
 				Status:         classifyStatus(req.Now, dueAt),
 				Remaining:      dueAt.Sub(req.Now),
@@ -249,7 +249,7 @@ func computeAssetStates(
 	return states
 }
 
-func classifyStatus(now, dueAt time.Time) Status {
+func classifyStatus(now, dueAt time.Time) ThresholdStatus {
 	if now.After(dueAt) {
 		return StatusOverdue
 	}
@@ -259,8 +259,8 @@ func classifyStatus(now, dueAt time.Time) Status {
 	return StatusUpcoming
 }
 
-func sortItems(items Items) {
-	rank := func(s Status) int {
+func sortItems(items ThresholdItems) {
+	rank := func(s ThresholdStatus) int {
 		switch s {
 		case StatusOverdue:
 			return 0
@@ -271,7 +271,7 @@ func sortItems(items Items) {
 		}
 	}
 
-	slices.SortFunc(items, func(a, b Item) int {
+	slices.SortFunc(items, func(a, b ThresholdItem) int {
 		return cmp.Or(
 			a.DueAt.Compare(b.DueAt),
 			cmp.Compare(rank(a.Status), rank(b.Status)),

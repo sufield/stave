@@ -26,7 +26,7 @@ type Request struct {
 	NowTime           string
 	ControlIDs        []kernel.ControlID
 	AssetTypes        []kernel.AssetType
-	Statuses          []risk.Status
+	Statuses          []risk.ThresholdStatus
 	NowFunc           func() time.Time // nil → time.Now().UTC()
 }
 
@@ -97,7 +97,7 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	}, nil
 }
 
-func validateStatuses(statuses []risk.Status) error {
+func validateStatuses(statuses []risk.ThresholdStatus) error {
 	raw := make([]string, len(statuses))
 	for i, s := range statuses {
 		raw[i] = string(s)

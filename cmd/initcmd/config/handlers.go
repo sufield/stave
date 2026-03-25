@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -24,6 +23,7 @@ import (
 // Runner orchestrates the reading, writing, and inspection of Stave configuration.
 type Runner struct {
 	RT     *ui.Runtime
+	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
@@ -247,7 +247,7 @@ func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.Proje
 		Stderr:      r.Stderr,
 		Force:       opts.Force,
 		IsTTY:       func() bool { return opts.IsTTY },
-		Confirm:     ui.NewPrompter(os.Stdin, r.Stderr).Confirm,
+		Confirm:     ui.NewPrompter(r.Stdin, r.Stderr).Confirm,
 	}, nil
 }
 

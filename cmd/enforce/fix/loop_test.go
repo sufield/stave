@@ -40,7 +40,7 @@ func TestBuildFixLoopReport(t *testing.T) {
 	}
 
 	report := appfix.BuildReport(req, clock, v, appfix.LoopArtifacts{})
-	if report.Pass {
+	if report.Passed {
 		t.Fatalf("expected report to fail when remaining findings exist")
 	}
 	if report.MaxUnsafeDuration != "168h0m0s" {
@@ -100,7 +100,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	if err := json.Unmarshal(data, &report); err != nil {
 		t.Fatalf("parse remediation report: %v", err)
 	}
-	if !report.Pass {
+	if !report.Passed {
 		t.Fatalf("expected pass for e2e-s3-verify fixture, got fail: %s", report.Reason)
 	}
 	if report.Verification.Resolved == 0 {

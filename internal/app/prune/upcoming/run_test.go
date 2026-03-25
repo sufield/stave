@@ -72,7 +72,7 @@ func TestComputeAndMapItems_SortsChronologicallyAndComputesStatus(t *testing.T) 
 
 	controls := []policy.ControlDefinition{ctl24h, ctl48h}
 
-	riskItems := risk.ComputeItems(risk.Request{
+	riskItems := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                controls,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 168 * time.Hour,
@@ -127,7 +127,7 @@ func TestNewUpcomingFilter_InvalidStatus(t *testing.T) {
 
 func TestRiskItemsFilter(t *testing.T) {
 	now := time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC)
-	riskItems := risk.Items{
+	riskItems := risk.ThresholdItems{
 		{
 			DueAt:     now.Add(2 * time.Hour),
 			Status:    risk.StatusUpcoming,
@@ -199,11 +199,11 @@ func TestRiskFilterCriteria_FromNewUpcomingFilter(t *testing.T) {
 }
 
 func TestRiskFilterCriteria_EmptyPassesAll(t *testing.T) {
-	items := risk.Items{
+	items := risk.ThresholdItems{
 		{Status: risk.StatusOverdue, ControlID: "CTL.A"},
 		{Status: risk.StatusUpcoming, ControlID: "CTL.B"},
 	}
-	criteria := risk.FilterCriteria{}
+	criteria := risk.ThresholdFilter{}
 	filtered := items.Filter(criteria)
 	if len(filtered) != 2 {
 		t.Fatalf("empty filter should pass all items, got %d", len(filtered))
