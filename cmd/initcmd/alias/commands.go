@@ -180,7 +180,7 @@ Alias names must match [a-zA-Z0-9_-]+ and must not collide with
 existing command names.
 
 Examples:
-  stave alias set ap "apply --controls controls/s3 --observations examples/observations --max-unsafe 24h"
+  stave alias set ap "apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 24h --allow-unknown-input"
   stave alias set q "apply --quiet"` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
