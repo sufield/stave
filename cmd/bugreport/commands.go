@@ -23,9 +23,25 @@ func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bug-report",
 		Short: "Collect a sanitized diagnostic bundle for support and issue filing",
-		Long: `Bug-report collects a local diagnostics bundle that is safe to share in most
-cases. The bundle includes doctor checks, build info, selected environment
-variables, and optional sanitized project config/log tail.
+		Long: `Bug-report collects a local diagnostics bundle that is safe to share
+in issue reports and support requests. The bundle includes doctor checks,
+build info, selected environment variables, and optional sanitized project
+config/log tail.
+
+Inputs:
+  --out              Path to output bundle zip (default: ./stave-diag-<timestamp>.zip)
+  --tail-lines       Number of trailing log lines to include (default: 1000)
+  --include-config   Include project stave.yaml with sensitive values sanitized (default: true)
+
+Outputs:
+  file               Diagnostic bundle zip at the --out path
+  stdout             Bundle path confirmation
+
+Exit Codes:
+  0   - Bundle created successfully
+  2   - Invalid input or configuration error
+  4   - Internal error
+  130 - Interrupted (SIGINT)
 
 Examples:
   # Generate bundle in current directory

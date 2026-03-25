@@ -15,15 +15,24 @@ type Summary struct {
 }
 
 // ProjectState holds the artifact counts and timestamps needed to recommend
-// the next workflow step. This is the domain-layer projection — it does not
-// carry CLI-specific types like session state.
+// the next workflow step.
 type ProjectState struct {
-	Root         string
-	Controls     Summary
-	RawSnapshots Summary
-	Observations Summary
-	EvalTime     time.Time
-	HasEval      bool
+	Root         string    `json:"root"`
+	Controls     Summary   `json:"controls"`
+	RawSnapshots Summary   `json:"raw_snapshots"`
+	Observations Summary   `json:"observations"`
+	EvalTime     time.Time `json:"eval_time"`
+	HasEval      bool      `json:"has_eval"`
+
+	// Session info — populated by the caller after Scan, not by the scanner.
+	LastCommand     string    `json:"last_command,omitempty"`
+	LastCommandTime time.Time `json:"last_command_time"`
+}
+
+// Result combines project state with the recommended next command.
+type Result struct {
+	State       ProjectState `json:"state"`
+	NextCommand string       `json:"next_command"`
 }
 
 // RecommendNext returns a string command suggesting the most logical next step.

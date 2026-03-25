@@ -21,13 +21,25 @@ func NewCmd() *cobra.Command {
 requested compliance frameworks, producing a filtered mapping from
 internal checks to external control references.
 
-Input: crosswalk YAML from --file or stdin.
-Output: JSON crosswalk resolution.
+Inputs:
+  --file, -f    Path to crosswalk YAML file (default: stdin)
+  --framework   Compliance frameworks to include (repeatable; default: all)
+  --check-id    Check IDs to resolve (repeatable; default: all from file)
+
+Outputs:
+  stdout        JSON crosswalk resolution
+
+Exit Codes:
+  0   - Resolution completed successfully
+  2   - Invalid input (malformed YAML, unknown framework)
+  4   - Internal error
+  130 - Interrupted (SIGINT)
 
 Examples:
   stave inspect compliance --file crosswalk.yaml
   stave inspect compliance --file crosswalk.yaml --framework nist_800_53
-  cat crosswalk.yaml | stave inspect compliance` + metadata.OfflineHelpSuffix,
+  cat crosswalk.yaml | stave inspect compliance
+  stave inspect compliance --file crosswalk.yaml --check-id CTL.S3.PUBLIC.001 | jq .` + metadata.OfflineHelpSuffix,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file, frameworks, checkIDs) },
 		SilenceUsage:  true,
