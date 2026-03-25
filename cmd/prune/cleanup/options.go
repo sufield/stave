@@ -3,7 +3,7 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -24,13 +24,13 @@ type options struct {
 func (o *options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.ObsDir, "observations", "o", o.ObsDir, "Path to observation snapshots directory")
-	f.StringVar(&o.OlderThan, "older-than", "", cmdutil.WithDynamicDefaultHelp("Prune snapshots older than this age (e.g., 14d, 720h)"))
-	f.StringVar(&o.Tier, "retention-tier", "", cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
+	f.StringVar(&o.OlderThan, "older-than", "", cliflags.WithDynamicDefaultHelp("Prune snapshots older than this age (e.g., 14d, 720h)"))
+	f.StringVar(&o.Tier, "retention-tier", "", cliflags.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
 	f.StringVar(&o.NowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.IntVar(&o.KeepMin, "keep-min", o.KeepMin, "Minimum number of snapshots to keep")
 	f.BoolVar(&o.DryRun, "dry-run", false, "Preview planned file operations without applying them")
 	f.StringVarP(&o.FormatFlag, "format", "f", o.FormatFlag, "Output format: text or json")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 }
 
 // Prepare normalizes paths. Called from PreRunE.

@@ -3,7 +3,7 @@ package upcoming
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -27,7 +27,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.CtlDir, "controls", "i", o.CtlDir, "Path to control definitions directory")
 	f.StringVarP(&o.ObsDir, "observations", "o", o.ObsDir, "Path to observation snapshots directory")
-	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	f.StringVar(&o.MaxUnsafe, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	f.StringVar(&o.NowRaw, "now", "", "Override current time (RFC3339). If omitted, uses wall clock")
 	f.StringVar(&o.DueSoon, "due-soon", o.DueSoon, "Threshold for 'due soon' reminders (e.g., 4h, 1d)")
 	f.StringVarP(&o.FormatFlag, "format", "f", o.FormatFlag, "Output format: text or json")
@@ -35,8 +35,8 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringSliceVar(&o.AssetTypes, "asset-type", nil, "Filter to one or more asset types")
 	f.StringSliceVar(&o.Statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&o.DueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-	_ = cmd.RegisterFlagCompletionFunc("status", cmdutil.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
 }
 
 // Prepare resolves config defaults and normalizes paths. Called from PreRunE.

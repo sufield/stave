@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -80,7 +80,7 @@ Examples:
 				AssetID:         strings.TrimSpace(assetID),
 				ObservationPath: cleanObsPath,
 				Format:          fmtValue,
-				Quiet:           cmdutil.GetGlobalFlags(cmd).Quiet,
+				Quiet:           cliflags.GetGlobalFlags(cmd).Quiet,
 				Stdout:          cmd.OutOrStdout(),
 			})
 		},
@@ -96,7 +96,7 @@ Examples:
 	_ = cmd.MarkFlagRequired("observation")
 	_ = cmd.MarkFlagRequired("asset-id")
 
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 
 	return cmd
 }

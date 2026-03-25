@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -45,10 +45,10 @@ type SharedOptions struct {
 
 func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
 	f := cmd.Flags()
-	cmdutil.RegisterControlsFlag(cmd, &o.ControlsDir, "controls/s3", "Path to control definitions directory")
+	cliflags.RegisterControlsFlag(cmd, &o.ControlsDir, "controls/s3", "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
-	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", defaultFormat, "Output format (text, json, or sarif)")
 }
@@ -129,7 +129,7 @@ Examples:
   stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			opts.controlsSet = cmdutil.ControlsFlagChanged(cmd)
+			opts.controlsSet = cliflags.ControlsFlagChanged(cmd)
 			opts.normalize()
 			opts.resolveApplyConfigDefaults(cmd)
 			return opts.validate()
@@ -141,7 +141,7 @@ Examples:
 				Stdout:        cmd.OutOrStdout(),
 				Stderr:        cmd.ErrOrStderr(),
 				Stdin:         cmd.InOrStdin(),
-				GlobalFlags:   cmdutil.GetGlobalFlags(cmd),
+				GlobalFlags:   cliflags.GetGlobalFlags(cmd),
 				FormatChanged: cmd.Flags().Changed("format"),
 				ObsChanged:    cmd.Flags().Changed("observations"),
 			}
@@ -156,14 +156,14 @@ Examples:
 	opts.bindApplySpecific(cmd)
 	// Completion registration is best-effort — if it fails, help output
 	// loses tab completion but the command still works.
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("json", "text", "sarif"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("json", "text", "sarif"))
 
 	return cmd
 }
 
 func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow unknown source types"))
+	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow unknown source types"))
 	f.StringVar(&o.ExemptionFile, "exemption-file", "", "Path to asset exemption list YAML file")
 	f.StringVar(&o.IntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected hashes")
 	f.StringVar(&o.IntegrityPublicKey, "integrity-public-key", "", "Path to Ed25519 public key for signed manifests")

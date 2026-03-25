@@ -3,7 +3,7 @@ package cidiff
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
@@ -27,7 +27,7 @@ Example:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := NewRunner(
 				ports.RealClock{},
 				gf.GetSanitizer(),

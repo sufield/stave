@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -67,7 +67,7 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Store the logger in Cobra's context so commands retrieve it via
-	// cmdutil.LoggerFromCmd(cmd) instead of reading slog.Default().
+	// cliflags.LoggerFromCmd(cmd) instead of reading slog.Default().
 	ctx = cmdctx.WithLogger(cmd.Context(), a.Logger)
 	cmd.SetContext(ctx)
 
@@ -83,13 +83,13 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Eval
 	cmd.SetContext(ctx)
 
 	p := cmd.Root().PersistentFlags()
-	if !p.Changed(cmdutil.FlagQuiet) {
+	if !p.Changed(cliflags.FlagQuiet) {
 		a.Flags.Quiet = eval.Quiet()
 	}
-	if !p.Changed(cmdutil.FlagSanitize) {
+	if !p.Changed(cliflags.FlagSanitize) {
 		a.Flags.Sanitize = eval.Sanitize()
 	}
-	if !p.Changed(cmdutil.FlagPathMode) {
+	if !p.Changed(cliflags.FlagPathMode) {
 		a.Flags.PathMode = eval.PathMode()
 	}
 }

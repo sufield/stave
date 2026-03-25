@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
@@ -22,7 +22,7 @@ func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRe
 	opts.logEnvironment()
 
 	// 2. Resolve format via shared helper
-	gf := cmdutil.GetGlobalFlags(cmd)
+	gf := cliflags.GetGlobalFlags(cmd)
 	resolvedFormat, fmtErr := compose.ResolveFormatValue(cmd, opts.Format)
 	if fmtErr != nil {
 		return fmtErr
@@ -115,7 +115,7 @@ func executeValidateRun(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, n
 		ObservationsDir:   opts.Observations,
 		MaxUnsafeDuration: *params.maxUnsafe,
 		NowTime:           params.nowTime,
-		SanitizePaths:     cmdutil.GetGlobalFlags(cmd).Sanitize,
+		SanitizePaths:     cliflags.GetGlobalFlags(cmd).Sanitize,
 		PredicateParser:   ctlyaml.ParsePredicate,
 		PredicateEval:     celEval,
 	}

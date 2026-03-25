@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -33,7 +33,7 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
 	f.StringVarP(&o.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
-	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", "text", "Output format: text or json")
 	f.StringSliceVar(&o.Cases, "case", nil, "Filter to one or more diagnostic case values")
@@ -41,8 +41,8 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
 	f.StringVar(&o.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
 	f.StringVar(&o.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-	_ = cmd.RegisterFlagCompletionFunc("case", cmdutil.CompleteFixed(
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("case", cliflags.CompleteFixed(
 		string(diagnosis.ScenarioExpectedNone),
 		string(diagnosis.ScenarioViolationEvidence),
 		string(diagnosis.ScenarioEmptyFindings),
@@ -80,7 +80,7 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		return Config{}, err
 	}
 
-	flags := cmdutil.GetGlobalFlags(cmd)
+	flags := cliflags.GetGlobalFlags(cmd)
 
 	return Config{
 		ControlsDir:       ec.ControlsDir,

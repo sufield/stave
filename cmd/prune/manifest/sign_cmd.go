@@ -3,7 +3,7 @@ package manifest
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -38,7 +38,7 @@ Examples:
   stave manifest sign --in manifest.json --private-key keys/sign.pem --out build/signed.json` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &SignRunner{}
 			return runner.Run(SignConfig{
 				InPath:         fsutil.CleanUserPath(inPath),

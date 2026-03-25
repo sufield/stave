@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	promptout "github.com/sufield/stave/internal/adapters/output/prompt"
@@ -136,7 +136,7 @@ Examples:
 				EvalFile: fsutil.CleanUserPath(evalFile),
 				AssetID:  strings.TrimSpace(assetID),
 				Format:   fmtValue,
-				Quiet:    cmdutil.GetGlobalFlags(cmd).Quiet,
+				Quiet:    cliflags.GetGlobalFlags(cmd).Quiet,
 				Stdout:   cmd.OutOrStdout(),
 				Stderr:   cmd.ErrOrStderr(),
 			})
@@ -151,7 +151,7 @@ Examples:
 
 	_ = cmd.MarkFlagRequired("evaluation-file")
 	_ = cmd.MarkFlagRequired("asset-id")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 
 	return cmd
 }

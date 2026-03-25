@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -110,7 +110,7 @@ func PrepareEvaluationContext(req EvalContextRequest) (EvalContext, error) {
 
 	// --- Common flag parsing ---
 	if !req.SkipMaxUnsafe {
-		dur, err := cmdutil.ParseDurationFlag(req.MaxUnsafeDuration, "--max-unsafe")
+		dur, err := cliflags.ParseDurationFlag(req.MaxUnsafeDuration, "--max-unsafe")
 		if err != nil {
 			return EvalContext{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
 		}

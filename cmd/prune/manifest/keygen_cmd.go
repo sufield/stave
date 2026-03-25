@@ -3,7 +3,7 @@ package manifest
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -38,7 +38,7 @@ Examples:
   stave manifest keygen --private-key-out keys/sign.pem --public-key-out keys/verify.pem` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &KeygenRunner{}
 			return runner.Run(KeygenConfig{
 				PrivateKeyPath: fsutil.CleanUserPath(privateKeyOut),

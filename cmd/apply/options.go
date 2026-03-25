@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -29,7 +29,7 @@ type cobraState struct {
 	Stdout        io.Writer
 	Stderr        io.Writer
 	Stdin         io.Reader
-	GlobalFlags   cmdutil.GlobalFlags
+	GlobalFlags   cliflags.GlobalFlags
 	FormatChanged bool
 	ObsChanged    bool
 }

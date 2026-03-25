@@ -3,7 +3,7 @@ package fix
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
@@ -108,7 +108,7 @@ Examples:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			maxUnsafe, err := cmdutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
+			maxUnsafe, err := cliflags.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
 			if err != nil {
 				return err
 			}
@@ -117,7 +117,7 @@ Examples:
 				return err
 			}
 
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			celEval, celErr := newCELEvaluator()
 			if celErr != nil {
 				return celErr

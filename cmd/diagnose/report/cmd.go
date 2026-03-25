@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
@@ -122,7 +122,7 @@ Examples:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			flags := cmdutil.GetGlobalFlags(cmd)
+			flags := cliflags.GetGlobalFlags(cmd)
 			fmtValue, err := opts.resolveFormat(cmd)
 			if err != nil {
 				return err

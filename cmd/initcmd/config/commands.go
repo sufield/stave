@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	appconfig "github.com/sufield/stave/internal/app/config"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
@@ -57,7 +57,7 @@ func newRunner(rt *ui.Runtime, cmd *cobra.Command) *Runner {
 	}
 }
 
-func mutationOptsFrom(gf cmdutil.GlobalFlags, format ui.OutputFormat) MutationOpts {
+func mutationOptsFrom(gf cliflags.GlobalFlags, format ui.OutputFormat) MutationOpts {
 	return MutationOpts{
 		Format:       format,
 		Force:        gf.Force,
@@ -152,7 +152,7 @@ Supported keys:
 			if err != nil {
 				return err
 			}
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := newRunner(rt, cmd)
 			return runner.Set(cmd.Context(), SetRequest{
 				Key:   args[0],
@@ -182,7 +182,7 @@ Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
 			if err != nil {
 				return err
 			}
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := newRunner(rt, cmd)
 			return runner.Delete(cmd.Context(), DeleteRequest{
 				Key: args[0],

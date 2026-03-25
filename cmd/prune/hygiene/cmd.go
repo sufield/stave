@@ -3,7 +3,7 @@ package hygiene
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
@@ -79,11 +79,11 @@ Examples:
 	f.StringVarP(&opts.ctlDir, "controls", "i", "", "Path to control definitions directory")
 	f.StringVarP(&opts.obsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	f.StringVar(&opts.arcDir, "archive-dir", "observations/archive", "Path to archived observation snapshots directory")
-	f.StringVar(&opts.maxUnsafe, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 168h, 7d)"))
+	f.StringVar(&opts.maxUnsafe, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 168h, 7d)"))
 	f.StringVar(&opts.dueSoon, "due-soon", "24h", "Threshold for due-soon upcoming actions")
 	f.StringVar(&opts.lookback, "lookback", "7d", "Trend comparison window (e.g., 7d)")
-	f.StringVar(&opts.olderThan, "older-than", "", cmdutil.WithDynamicDefaultHelp("Retention window used to estimate prune candidates"))
-	f.StringVar(&opts.tier, "retention-tier", "", cmdutil.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
+	f.StringVar(&opts.olderThan, "older-than", "", cliflags.WithDynamicDefaultHelp("Retention window used to estimate prune candidates"))
+	f.StringVar(&opts.tier, "retention-tier", "", cliflags.WithDynamicDefaultHelp("Retention tier from stave.yaml snapshot_retention_tiers (e.g., critical, non_critical)"))
 	f.IntVar(&opts.keepMin, "keep-min", 2, "Minimum number of snapshots assumed for prune-candidate estimate")
 	f.StringVar(&opts.nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&opts.formatFlag, "format", "f", "markdown", "Output format: markdown or json")
@@ -91,8 +91,8 @@ Examples:
 	f.StringSliceVar(&opts.assetTypes, "asset-type", nil, "Filter upcoming metrics to one or more asset types")
 	f.StringSliceVar(&opts.statuses, "status", nil, "Filter upcoming metrics by status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&opts.dueWithin, "due-within", "", "Filter upcoming metrics to items due within duration from --now (e.g., 24h, 3d)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("markdown", "json"))
-	_ = cmd.RegisterFlagCompletionFunc("status", cmdutil.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("markdown", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
 
 	return cmd
 }

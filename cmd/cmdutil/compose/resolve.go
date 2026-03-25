@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -22,21 +22,21 @@ func ResolveNow(raw string) (time.Time, error) {
 	if raw == "" {
 		return time.Now().UTC(), nil
 	}
-	return cmdutil.ParseRFC3339(raw, "--now")
+	return cliflags.ParseRFC3339(raw, "--now")
 }
 
 // ResolveFormatValue determines the effective output format from a flag value and
 // global JSON mode. When the flag was not explicitly changed and global JSON mode
 // is active, "json" is used instead.
 func ResolveFormatValue(cmd *cobra.Command, raw string) (ui.OutputFormat, error) {
-	formatRaw := cmdutil.ResolveFormat(cmd, raw)
+	formatRaw := cliflags.ResolveFormat(cmd, raw)
 	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
 }
 
 // ResolveFormatValuePure determines the effective output format without cobra.
 // formatChanged indicates whether --format was explicitly set by the user.
 func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (ui.OutputFormat, error) {
-	formatRaw := cmdutil.ResolveFormatPure(raw, formatChanged, isJSONMode)
+	formatRaw := cliflags.ResolveFormatPure(raw, formatChanged, isJSONMode)
 	return ui.ParseOutputFormat(strings.ToLower(formatRaw))
 }
 

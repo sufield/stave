@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/metadata"
@@ -160,7 +160,7 @@ Examples:
 
 			return newRunner().Run(config{
 				Format: fmtValue,
-				Quiet:  cmdutil.GetGlobalFlags(cmd).Quiet,
+				Quiet:  cliflags.GetGlobalFlags(cmd).Quiet,
 				Stdout: cmd.OutOrStdout(),
 			})
 		},

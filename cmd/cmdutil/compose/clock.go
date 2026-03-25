@@ -1,7 +1,7 @@
 package compose
 
 import (
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
@@ -10,7 +10,7 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	if raw == "" {
 		return ports.RealClock{}, nil
 	}
-	t, err := cmdutil.ParseRFC3339(raw, "--now")
+	t, err := cliflags.ParseRFC3339(raw, "--now")
 	if err != nil {
 		return nil, err
 	}

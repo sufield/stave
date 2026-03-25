@@ -3,7 +3,7 @@ package artifacts
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appartifacts "github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -25,7 +25,7 @@ Rules:
 Use --check to verify formatting without writing files.` + metadata.OfflineHelpSuffix,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			allowSymlinks := cmdutil.GetGlobalFlags(cmd).AllowSymlinkOut
+			allowSymlinks := cliflags.GetGlobalFlags(cmd).AllowSymlinkOut
 
 			cfg := appartifacts.FormatConfig{
 				Target:    fsutil.CleanUserPath(args[0]),

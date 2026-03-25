@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
@@ -51,9 +51,9 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.AfterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 
-	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.Now, "now", "", "Override current time (RFC3339) for deterministic output")
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
+	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")
@@ -93,7 +93,7 @@ type Execution struct {
 
 // Complete transforms the raw options into a validated Execution object.
 func (o *options) Complete(ctx context.Context) (Execution, error) {
-	maxDuration, err := cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+	maxDuration, err := cliflags.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return Execution{}, err
 	}

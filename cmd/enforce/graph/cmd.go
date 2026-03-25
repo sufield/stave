@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -72,7 +72,7 @@ Exit Codes:
 				return err
 			}
 
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := newRunner(
 				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 					return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
@@ -94,7 +94,7 @@ Exit Codes:
 	}
 
 	opts.BindFlags(cmd)
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("dot", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("dot", "json"))
 
 	return cmd
 }
