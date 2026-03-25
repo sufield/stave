@@ -169,8 +169,8 @@ type ExtensionsDTO struct {
 	ContextName         string            `json:"context_name,omitempty"`
 	ResolvedPaths       map[string]string `json:"resolved_paths,omitempty"`
 	EnabledPacks        []string          `json:"enabled_control_packs,omitempty"`
-	ResolvedControlIDs  []string          `json:"resolved_control_ids,omitempty"`
-	PackRegistryVersion string            `json:"pack_registry_version,omitempty"`
+	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
+	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
 	PackRegistryHash    kernel.Digest     `json:"pack_registry_hash,omitempty"`
 	Git                 *GitMetadataDTO   `json:"git,omitempty"`
 }

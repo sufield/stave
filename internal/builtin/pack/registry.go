@@ -29,8 +29,8 @@ type ControlRef struct {
 }
 
 type packSpec struct {
-	Description string   `yaml:"description"`
-	Controls    []string `yaml:"controls"`
+	Description string             `yaml:"description"`
+	Controls    []kernel.ControlID `yaml:"controls"`
 }
 
 type registryIndex struct {
@@ -41,9 +41,9 @@ type registryIndex struct {
 
 // Pack describes a named control pack.
 type Pack struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Controls    []string `json:"controls"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	Controls    []kernel.ControlID `json:"controls"`
 }
 
 // Registry holds pre-processed pack data. Use NewRegistry for testing
@@ -92,7 +92,7 @@ func (r *Registry) loadPacks(specs map[string]packSpec) error {
 		slices.Sort(ids)
 
 		for _, id := range ids {
-			if _, ok := r.controls[id]; !ok {
+			if _, ok := r.controls[string(id)]; !ok {
 				return fmt.Errorf("pack %q: undefined control %q", name, id)
 			}
 		}
@@ -131,9 +131,9 @@ func (r *Registry) LookupPack(name string) (Pack, bool) {
 }
 
 // ResolveEnabledPacks expands packs into de-duplicated, sorted control IDs.
-func (r *Registry) ResolveEnabledPacks(names []string) ([]string, error) {
-	seen := make(map[string]struct{})
-	var ids []string
+func (r *Registry) ResolveEnabledPacks(names []string) ([]kernel.ControlID, error) {
+	seen := make(map[kernel.ControlID]struct{})
+	var ids []kernel.ControlID
 	for _, raw := range names {
 		name := strings.TrimSpace(raw)
 		if name == "" {
