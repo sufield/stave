@@ -3,7 +3,7 @@ package fix
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -25,9 +25,9 @@ func (o *loopOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.BeforeDir, "before", "b", "", "Path to before-remediation observations (required)")
 	f.StringVarP(&o.AfterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
-	f.StringVar(&o.MaxUnsafeRaw, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeRaw, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowRaw, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cmdutil.WithDynamicDefaultHelp("Allow observations with unknown source types"))
+	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 	f.StringVar(&o.OutDir, "out", "", "Write remediation artifacts to this directory")
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")

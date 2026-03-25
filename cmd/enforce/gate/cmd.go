@@ -3,7 +3,7 @@ package gate
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/metadata"
@@ -75,10 +75,10 @@ Examples:
 }
 
 func registerCompletions(cmd *cobra.Command) {
-	_ = cmd.RegisterFlagCompletionFunc("policy", cmdutil.CompleteFixed(
+	_ = cmd.RegisterFlagCompletionFunc("policy", cliflags.CompleteFixed(
 		string(appconfig.GatePolicyAny),
 		string(appconfig.GatePolicyNew),
 		string(appconfig.GatePolicyOverdue),
 	))
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 }

@@ -3,7 +3,7 @@ package initcmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -20,14 +20,14 @@ func GetRootCmd() *cobra.Command {
 	}
 
 	p := root.PersistentFlags()
-	p.Bool(cmdutil.FlagQuiet, false, "Suppress output")
+	p.Bool(cliflags.FlagQuiet, false, "Suppress output")
 	p.CountP("verbose", "v", "Increase verbosity")
-	p.Bool(cmdutil.FlagForce, false, "Allow overwrite operations")
-	p.Bool(cmdutil.FlagSymlink, false, "Allow writing through symlinks")
-	p.Bool(cmdutil.FlagSanitize, false, "Sanitize identifiers")
-	p.String(cmdutil.FlagPathMode, "base", "Path rendering mode")
-	p.String(cmdutil.FlagLogFile, "", "Log file path")
-	p.Bool(cmdutil.FlagOffline, false, "Require offline execution")
+	p.Bool(cliflags.FlagForce, false, "Allow overwrite operations")
+	p.Bool(cliflags.FlagSymlink, false, "Allow writing through symlinks")
+	p.Bool(cliflags.FlagSanitize, false, "Sanitize identifiers")
+	p.String(cliflags.FlagPathMode, "base", "Path rendering mode")
+	p.String(cliflags.FlagLogFile, "", "Log file path")
+	p.Bool(cliflags.FlagOffline, false, "Require offline execution")
 
 	root.AddCommand(NewInitCmd())
 	root.AddCommand(NewGenerateCmd())

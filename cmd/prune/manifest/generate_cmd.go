@@ -3,7 +3,7 @@ package manifest
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -37,7 +37,7 @@ Examples:
   stave manifest generate --observations ./observations --out build/manifest.json` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &GenerateRunner{}
 			return runner.Run(cmd.Context(), GenerateConfig{
 				ObservationsDir: fsutil.CleanUserPath(observationsDir),

@@ -3,7 +3,7 @@ package gate
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -56,12 +56,12 @@ func (o *gateOptions) Prepare(cmd *cobra.Command) error {
 // BindFlags attaches the options to a Cobra command.
 func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringVar(&o.PolicyRaw, "policy", "", cmdutil.WithDynamicDefaultHelp("CI failure policy mode: fail_on_any_violation, fail_on_new_violation, fail_on_overdue_upcoming"))
+	f.StringVar(&o.PolicyRaw, "policy", "", cliflags.WithDynamicDefaultHelp("CI failure policy mode: fail_on_any_violation, fail_on_new_violation, fail_on_overdue_upcoming"))
 	f.StringVar(&o.InPath, "in", o.InPath, "Path to evaluation JSON (required for fail_on_any_violation and fail_on_new_violation)")
 	f.StringVar(&o.BasePath, "baseline", o.BasePath, "Path to baseline JSON (required for fail_on_new_violation)")
 	f.StringVarP(&o.CtlDir, "controls", "i", o.CtlDir, "Path to control definitions directory (used by fail_on_overdue_upcoming)")
 	f.StringVarP(&o.ObsDir, "observations", "o", o.ObsDir, "Path to observation snapshots directory (used by fail_on_overdue_upcoming)")
-	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
 	f.StringVar(&o.NowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&o.FormatRaw, "format", "f", o.FormatRaw, "Output format: text or json")
 }
@@ -87,7 +87,7 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 		return config{}, err
 	}
 
-	gf := cmdutil.GetGlobalFlags(cmd)
+	gf := cliflags.GetGlobalFlags(cmd)
 
 	return config{
 		Policy:            policy,

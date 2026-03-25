@@ -2,7 +2,7 @@ package initcmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -37,7 +37,7 @@ Examples:
   stave init --dir ./my-s3 --profile aws-s3 --capture-cadence hourly --force` + metadata.OfflineHelpSuffix,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &InitRunner{
 				Stdout:       cmd.OutOrStdout(),
 				Stderr:       cmd.ErrOrStderr(),
@@ -85,7 +85,7 @@ func newGenerateControlCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req.Name = args[0]
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &GenerateRunner{
 				Out:          cmd.OutOrStdout(),
 				Force:        gf.Force,
@@ -113,7 +113,7 @@ func newGenerateObservationCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req.Name = args[0]
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &GenerateRunner{
 				Out:          cmd.OutOrStdout(),
 				Force:        gf.Force,

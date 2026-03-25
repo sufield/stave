@@ -3,7 +3,7 @@ package generate
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -33,7 +33,7 @@ Supported Modes:
 				return err
 			}
 
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &Runner{}
 			runner.FileOptions = fileout.FileOptions{
 				Overwrite:     gf.Force,
@@ -60,7 +60,7 @@ Supported Modes:
 	f.BoolVar(&dryRun, "dry-run", false, "Preview planned paths without writing files")
 
 	_ = cmd.MarkFlagRequired("in")
-	_ = cmd.RegisterFlagCompletionFunc("mode", cmdutil.CompleteFixed(string(ModePAB), string(ModeSCP)))
+	_ = cmd.RegisterFlagCompletionFunc("mode", cliflags.CompleteFixed(string(ModePAB), string(ModeSCP)))
 
 	return cmd
 }

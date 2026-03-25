@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -65,7 +65,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.Controls, "controls", "i", o.Controls, "Path to control definitions (inferred if omitted)")
 	f.StringVarP(&o.Observations, "observations", "o", o.Observations, "Path to observation snapshots (inferred if omitted)")
-	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cmdutil.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
+	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.BoolVar(&o.Strict, "strict", false, "Treat warnings as errors (exit 2)")
@@ -131,7 +131,7 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 // auditGitStatus checks for uncommitted changes in control/config files
 // and emits a warning to stderr if the working tree is dirty.
 func (o *options) auditGitStatus(cmd *cobra.Command) error {
-	gf := cmdutil.GetGlobalFlags(cmd)
+	gf := cliflags.GetGlobalFlags(cmd)
 	resolver, err := projctx.NewResolver()
 	if err != nil {
 		return fmt.Errorf("resolve project context: %w", err)
@@ -192,7 +192,7 @@ func (o *options) parseParams() validateParams {
 	}
 
 	if o.NowTime != "" {
-		t, parseErr := cmdutil.ParseRFC3339(o.NowTime, "--now")
+		t, parseErr := cliflags.ParseRFC3339(o.NowTime, "--now")
 		if parseErr != nil {
 			p.issues = append(p.issues, diag.New(diag.CodeInvalidNowTime).
 				Error().

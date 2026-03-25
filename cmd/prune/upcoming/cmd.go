@@ -5,7 +5,7 @@ package upcoming
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -66,7 +66,7 @@ Examples:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 
 			cfg, err := gatherUpcomingConfig(upcomingConfigInput{
 				MaxUnsafeRaw:  opts.MaxUnsafe,

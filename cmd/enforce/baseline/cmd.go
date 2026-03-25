@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -36,7 +36,7 @@ Example:
 }
 
 func newRunner(cmd *cobra.Command) *Runner {
-	gf := cmdutil.GetGlobalFlags(cmd)
+	gf := cliflags.GetGlobalFlags(cmd)
 	stdout := cmd.OutOrStdout()
 	if !gf.TextOutputEnabled() {
 		stdout = io.Discard
@@ -90,7 +90,7 @@ func newCheckCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return NewRunner(
 				ports.RealClock{},
-				cmdutil.GetGlobalFlags(cmd).GetSanitizer(),
+				cliflags.GetGlobalFlags(cmd).GetSanitizer(),
 				fileout.FileOptions{},
 				cmd.OutOrStdout(),
 			).Check(cfg)

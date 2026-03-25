@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
@@ -34,7 +34,7 @@ func (o *rawOptions) prepare(cmd *cobra.Command) error {
 
 // resolve parses and validates all raw flag values into a ready-to-use Config.
 func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (config, error) {
-	gf := cmdutil.GetGlobalFlags(cmd)
+	gf := cliflags.GetGlobalFlags(cmd)
 
 	// Dynamic defaults — resolve from project config when flags were not set.
 	maxUnsafe := o.maxUnsafe
@@ -74,11 +74,11 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 	if err != nil {
 		return config{}, err
 	}
-	dueSoonDur, err := cmdutil.ParseDurationFlag(o.dueSoon, "--due-soon")
+	dueSoonDur, err := cliflags.ParseDurationFlag(o.dueSoon, "--due-soon")
 	if err != nil {
 		return config{}, err
 	}
-	lookbackDur, err := cmdutil.ParseDurationFlag(o.lookback, "--lookback")
+	lookbackDur, err := cliflags.ParseDurationFlag(o.lookback, "--lookback")
 	if err != nil {
 		return config{}, err
 	}
@@ -133,5 +133,5 @@ func parseDueWithin(raw string) (time.Duration, error) {
 	if raw == "" {
 		return 0, nil
 	}
-	return cmdutil.ParseDurationFlag(raw, "--due-within")
+	return cliflags.ParseDurationFlag(raw, "--due-within")
 }

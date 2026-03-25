@@ -3,7 +3,7 @@ package report
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -23,7 +23,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format (text|json)")
 	f.StringVar(&o.TemplateFile, "template-file", "", "Path to custom Go template")
 	_ = cmd.MarkFlagRequired("in")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 }
 
 // Prepare normalizes paths. Called from PreRunE.

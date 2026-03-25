@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -60,7 +60,7 @@ func (o *Options) ToConfig(cmd *cobra.Command) (config, error) {
 		return config{}, err
 	}
 
-	gf := cmdutil.GetGlobalFlags(cmd)
+	gf := cliflags.GetGlobalFlags(cmd)
 	return config{
 		ObservationsDir: obsDir,
 		Format:          format,

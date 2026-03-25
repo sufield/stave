@@ -3,7 +3,7 @@ package diff
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -62,8 +62,8 @@ Examples:
 	}
 
 	opts.BindFlags(cmd)
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
-	_ = cmd.RegisterFlagCompletionFunc("change-type", cmdutil.CompleteFixed("added", "removed", "modified"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed("added", "removed", "modified"))
 
 	return cmd
 }

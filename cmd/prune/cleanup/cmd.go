@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -55,7 +55,7 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 
 			if gf.Force {
 				fmt.Fprintln(cmd.ErrOrStderr(),

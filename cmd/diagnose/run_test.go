@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -73,11 +73,11 @@ func TestDiagnosePathNormalization_DirErrors(t *testing.T) {
 }
 
 func TestDiagnoseParseHelpers(t *testing.T) {
-	maxDur, err := cmdutil.ParseDurationFlag("7d", "--max-unsafe")
+	maxDur, err := cliflags.ParseDurationFlag("7d", "--max-unsafe")
 	if err != nil || maxDur != 7*24*time.Hour {
 		t.Fatalf("ParseDurationFlag() = (%s, %v), want (168h, nil)", maxDur, err)
 	}
-	if _, parseErr := cmdutil.ParseDurationFlag("bad", "--max-unsafe"); parseErr == nil {
+	if _, parseErr := cliflags.ParseDurationFlag("bad", "--max-unsafe"); parseErr == nil {
 		t.Fatal("expected max-unsafe parse error")
 	}
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/metadata"
@@ -29,14 +29,14 @@ func (o *qualityOptions) Prepare(_ *cobra.Command) error {
 	if o.MinSnapshots < 1 {
 		return fmt.Errorf("invalid --min-snapshots %d: must be >= 1", o.MinSnapshots)
 	}
-	staleDur, err := cmdutil.ParseDurationFlag(o.MaxStaleness, "--max-staleness")
+	staleDur, err := cliflags.ParseDurationFlag(o.MaxStaleness, "--max-staleness")
 	if err != nil {
 		return err
 	}
 	if staleDur < 0 {
 		return fmt.Errorf("invalid --max-staleness %q: must be >= 0", o.MaxStaleness)
 	}
-	gapDur, err := cmdutil.ParseDurationFlag(o.MaxGap, "--max-gap")
+	gapDur, err := cliflags.ParseDurationFlag(o.MaxGap, "--max-gap")
 	if err != nil {
 		return err
 	}
@@ -99,10 +99,10 @@ Examples:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 
-			staleDur, _ := cmdutil.ParseDurationFlag(opts.MaxStaleness, "--max-staleness")
-			gapDur, _ := cmdutil.ParseDurationFlag(opts.MaxGap, "--max-gap")
+			staleDur, _ := cliflags.ParseDurationFlag(opts.MaxStaleness, "--max-staleness")
+			gapDur, _ := cliflags.ParseDurationFlag(opts.MaxGap, "--max-gap")
 			now, err := compose.ResolveNow(opts.NowRaw)
 			if err != nil {
 				return err
@@ -146,7 +146,7 @@ Examples:
 	f.StringVar(&opts.NowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&opts.FormatFlag, "format", "f", opts.FormatFlag, "Output format: text or json")
 	f.BoolVar(&opts.Strict, "strict", false, "Treat warnings as gate failures")
-	_ = cmd.RegisterFlagCompletionFunc("format", cmdutil.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 
 	return cmd
 }

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -51,7 +51,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		Stdout:      cmd.OutOrStdout(),
 		Stderr:      cmd.ErrOrStderr(),
 		Stdin:       cmd.InOrStdin(),
-		GlobalFlags: cmdutil.GetGlobalFlags(cmd),
+		GlobalFlags: cliflags.GetGlobalFlags(cmd),
 	}
 
 	t.Run("valid flags with defaults", func(t *testing.T) {

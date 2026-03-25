@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -76,7 +76,7 @@ Examples:
 				return err
 			}
 
-			gf := cmdutil.GetGlobalFlags(cmd)
+			gf := cliflags.GetGlobalFlags(cmd)
 
 			return appverify.RunVerify(
 				appverify.VerifyDeps{
