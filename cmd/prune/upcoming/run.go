@@ -14,18 +14,18 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// resolvedConfig holds CLI-resolved parameters before asset loading.
+// resolvedConfig holds CLI-resolved computation parameters.
+// Presentation-only fields (raw duration strings for echo) are passed
+// directly to OutputMetadata from the original CLI options.
 type resolvedConfig struct {
-	MaxUnsafeDuration    time.Duration
-	MaxUnsafeDurationRaw string
-	DueSoon              time.Duration
-	DueSoonRaw           string
-	Now                  time.Time
-	Format               ui.OutputFormat
-	Filter               risk.ThresholdFilter
-	Sanitizer            kernel.Sanitizer
-	Quiet                bool
-	Stdout               io.Writer
+	MaxUnsafeDuration time.Duration
+	DueSoon           time.Duration
+	Now               time.Time
+	Format            ui.OutputFormat
+	Filter            risk.ThresholdFilter
+	Sanitizer         kernel.Sanitizer
+	Quiet             bool
+	Stdout            io.Writer
 }
 
 // upcomingConfigInput groups the raw CLI flag values for upcoming config resolution.
@@ -83,16 +83,14 @@ func gatherUpcomingConfig(in upcomingConfigInput) (resolvedConfig, error) {
 	}
 
 	return resolvedConfig{
-		MaxUnsafeDuration:    maxUnsafeDur,
-		MaxUnsafeDurationRaw: in.MaxUnsafeRaw,
-		DueSoon:              dueSoonDur,
-		DueSoonRaw:           in.DueSoonRaw,
-		Now:                  now,
-		Format:               format,
-		Filter:               filter,
-		Sanitizer:            in.Sanitizer,
-		Quiet:                in.Quiet,
-		Stdout:               in.Stdout,
+		MaxUnsafeDuration: maxUnsafeDur,
+		DueSoon:           dueSoonDur,
+		Now:               now,
+		Format:            format,
+		Filter:            filter,
+		Sanitizer:         in.Sanitizer,
+		Quiet:             in.Quiet,
+		Stdout:            in.Stdout,
 	}, nil
 }
 

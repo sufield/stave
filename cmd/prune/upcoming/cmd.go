@@ -109,8 +109,8 @@ Examples:
 				appupcoming.OutputMetadata{
 					ControlsDir:          opts.CtlDir,
 					ObservationsDir:      opts.ObsDir,
-					MaxUnsafeDurationRaw: cfg.MaxUnsafeDurationRaw,
-					DueSoonRaw:           cfg.DueSoonRaw,
+					MaxUnsafeDurationRaw: opts.MaxUnsafe,
+					DueSoonRaw:           opts.DueSoon,
 				},
 			)
 			if err != nil {
