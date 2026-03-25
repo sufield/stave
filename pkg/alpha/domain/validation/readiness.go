@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 )
 
-// Status represents the result of a prerequisite check.
+// Status represents the result of a check.
 type Status string
 
 const (
@@ -16,20 +16,14 @@ const (
 	StatusFail Status = "fail"
 )
 
-// Label returns the uppercase display form of the status (e.g. "PASS", "WARN", "FAIL").
-func (s Status) Label() string {
+// String returns the uppercase display form (e.g. "PASS", "WARN", "FAIL").
+// Implements fmt.Stringer.
+func (s Status) String() string {
 	return strings.ToUpper(string(s))
 }
 
-// PrereqCheck represents a single prerequisite validation with its status and remediation guidance.
-type PrereqCheck struct {
-	Name    string
-	Status  Status
-	Message string
-	Fix     string
-}
-
-// Issue describes a validation issue with severity and suggested fix.
+// Issue describes a validation finding with severity and suggested fix.
+// Consolidates the former PrereqCheck and Issue types into a single model.
 type Issue struct {
 	Name    string `json:"name"`
 	Status  Status `json:"status"`
@@ -38,7 +32,7 @@ type Issue struct {
 	Command string `json:"command,omitempty"`
 }
 
-// Summary aggregates the counts of checks, errors, and warnings from a readiness assessment.
+// Summary aggregates counts of checks, errors, and warnings.
 type Summary struct {
 	Errors                   int `json:"errors"`
 	Warnings                 int `json:"warnings"`
@@ -47,9 +41,10 @@ type Summary struct {
 	AssetObservationsChecked int `json:"asset_observations_checked"`
 }
 
-// ReadinessReport holds the result of a readiness assessment including prerequisites and issues.
-// NextCommand is not set here — CLI command names are a presentation concern owned by the cmd layer.
-type ReadinessReport struct {
+// Report holds the result of a readiness assessment.
+// Issues are unexported to force use of RecordIssue, keeping Summary
+// and Ready in sync with the data.
+type Report struct {
 	Ready           bool    `json:"ready"`
 	ControlsDir     string  `json:"controls_dir"`
 	ObservationsDir string  `json:"observations_dir"`
@@ -57,20 +52,24 @@ type ReadinessReport struct {
 	issues          []Issue
 }
 
-// NewReadinessReport returns an initialized ReadinessReport.
-func NewReadinessReport(controlsDir, observationsDir string) *ReadinessReport {
-	return &ReadinessReport{
+// NewReport returns a Report initialized for success.
+func NewReport(controlsDir, observationsDir string) *Report {
+	return &Report{
 		Ready:           true,
 		ControlsDir:     controlsDir,
 		ObservationsDir: observationsDir,
 	}
 }
 
-// Issues returns the recorded issues. Use RecordIssue to append.
-func (r *ReadinessReport) Issues() []Issue { return r.issues }
+// Issues returns a copy of the recorded issues to prevent external mutation.
+func (r *Report) Issues() []Issue {
+	out := make([]Issue, len(r.issues))
+	copy(out, r.issues)
+	return out
+}
 
 // RecordIssue appends an issue and updates Ready and Summary counters.
-func (r *ReadinessReport) RecordIssue(issue Issue) {
+func (r *Report) RecordIssue(issue Issue) {
 	switch issue.Status {
 	case StatusFail:
 		r.Ready = false
@@ -91,14 +90,14 @@ type Result struct {
 	}
 }
 
-// ReadinessInput provides the parameters needed to perform a readiness assessment.
-type ReadinessInput struct {
+// Input provides the parameters needed to perform a readiness assessment.
+type Input struct {
 	ControlsDir            string
 	ObservationsDir        string
 	MaxUnsafeDuration      time.Duration
 	Now                    time.Time
 	ControlsFlagSet        bool
 	HasEnabledControlPacks bool
-	PrereqChecks           []PrereqCheck
+	PrereqChecks           []Issue
 	Validate               func(maxUnsafeDuration time.Duration, now time.Time) (Result, error)
 }

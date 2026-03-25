@@ -37,7 +37,7 @@ type ReadinessConfig struct {
 
 	ControlsFlagSet        bool
 	HasEnabledControlPacks bool
-	PrereqChecks           []validation.PrereqCheck
+	PrereqChecks           []validation.Issue
 }
 
 // ReadinessRunner orchestrates the readiness assessment workflow.
@@ -55,7 +55,7 @@ func NewReadinessRunner(factory ReadinessValidatorFactory) *ReadinessRunner {
 
 // Execute performs the readiness assessment and writes the report.
 func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
-	report, err := readiness.AssessReadiness(validation.ReadinessInput{
+	report, err := readiness.AssessReadiness(validation.Input{
 		ControlsDir:            cfg.ControlsDir,
 		ObservationsDir:        cfg.ObservationsDir,
 		MaxUnsafeDuration:      cfg.MaxUnsafeDuration,
@@ -81,22 +81,22 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 	return nil
 }
 
-func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.ReadinessReport) error {
+func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Report) error {
 	if cfg.Format.IsJSON() {
 		return jsonout.WriteReadinessJSON(cfg.Stdout, readinessJSONReport{
-			ReadinessReport: report,
-			NextCommand:     readinessNextCommand(report),
+			Report:      report,
+			NextCommand: readinessNextCommand(report),
 		})
 	}
 	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}
 	return rep.ReportPlan(report)
 }
 
-// readinessJSONReport enriches the domain ReadinessReport with the CLI-specific
+// readinessJSONReport enriches the domain Report with the CLI-specific
 // next_command field for JSON output. The domain type intentionally omits this
 // field because CLI command names are a presentation concern.
 type readinessJSONReport struct {
-	validation.ReadinessReport
+	validation.Report
 	NextCommand string `json:"next_command"`
 }
 
@@ -110,7 +110,7 @@ func runDryRun(ctx context.Context, p *compose.Provider, cfg ReadinessConfig) er
 	return runner.Execute(cfg)
 }
 
-func doctorPrereqs() ([]validation.PrereqCheck, error) {
+func doctorPrereqs() ([]validation.Issue, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("resolve working directory: %w", err)

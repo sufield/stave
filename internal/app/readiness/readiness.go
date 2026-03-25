@@ -7,8 +7,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
-func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, error) {
-	report := validation.NewReadinessReport(in.ControlsDir, in.ObservationsDir)
+func AssessReadiness(in validation.Input) (validation.Report, error) {
+	report := validation.NewReport(in.ControlsDir, in.ObservationsDir)
 	recordPrereqIssues(report, in.PrereqChecks)
 	recordControlSourceIssue(report, in)
 	if err := recordValidationIssues(readinessValidationRequest{
@@ -17,26 +17,21 @@ func AssessReadiness(in validation.ReadinessInput) (validation.ReadinessReport, 
 		MaxUnsafeDuration: in.MaxUnsafeDuration,
 		Now:               in.Now,
 	}); err != nil {
-		return validation.ReadinessReport{}, err
+		return validation.Report{}, err
 	}
 	return *report, nil
 }
 
-func recordPrereqIssues(report *validation.ReadinessReport, checks []validation.PrereqCheck) {
+func recordPrereqIssues(report *validation.Report, checks []validation.Issue) {
 	for _, check := range checks {
 		if check.Status == validation.StatusPass {
 			continue
 		}
-		report.RecordIssue(validation.Issue{
-			Name:    check.Name,
-			Status:  check.Status,
-			Message: check.Message,
-			Fix:     check.Fix,
-		})
+		report.RecordIssue(check)
 	}
 }
 
-func recordControlSourceIssue(report *validation.ReadinessReport, in validation.ReadinessInput) {
+func recordControlSourceIssue(report *validation.Report, in validation.Input) {
 	if !in.HasEnabledControlPacks || !in.ControlsFlagSet {
 		return
 	}
@@ -50,8 +45,8 @@ func recordControlSourceIssue(report *validation.ReadinessReport, in validation.
 }
 
 type readinessValidationRequest struct {
-	Report            *validation.ReadinessReport
-	Input             validation.ReadinessInput
+	Report            *validation.Report
+	Input             validation.Input
 	MaxUnsafeDuration time.Duration
 	Now               time.Time
 }
