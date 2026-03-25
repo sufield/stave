@@ -1,7 +1,6 @@
 package hygiene
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -9,7 +8,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
-	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
@@ -30,15 +28,6 @@ type rawOptions struct {
 func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (config, error) {
 	gf := cmdutil.GetGlobalFlags(cmd)
 
-	// Path inference
-	res, resolverErr := projctx.NewResolver()
-	if resolverErr != nil {
-		return config{}, fmt.Errorf("resolve project context: %w", resolverErr)
-	}
-	engine := projctx.NewInferenceEngine(res)
-	resolvedCtl := engine.InferDir("controls", o.ctlDir)
-	resolvedObs := engine.InferDir("observations", o.obsDir)
-
 	// Dynamic defaults — resolve from project config when flags were not set.
 	maxUnsafe := o.maxUnsafe
 	if !cmd.Flags().Changed("max-unsafe") {
@@ -53,24 +42,27 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 		tier = eval.RetentionTier()
 	}
 
-	// Boundary parsing
+	// Common evaluation context: path inference + now/format/max-unsafe.
+	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
+		ControlsDir:                o.ctlDir,
+		ObservationsDir:            o.obsDir,
+		MaxUnsafeDuration:          maxUnsafe,
+		NowTime:                    o.nowRaw,
+		Format:                     o.formatFlag,
+		FormatChanged:              cmd.Flags().Changed("format"),
+		SkipControlsValidation:     true,
+		SkipObservationsValidation: true,
+	})
+	if err != nil {
+		return config{}, err
+	}
+
+	// Hygiene-specific boundary parsing.
 	validTier, err := pruneretention.ValidateRetentionTierWith(eval, tier)
 	if err != nil {
 		return config{}, err
 	}
 	retentionDur, err := pruneretention.ResolveOlderThanWith(eval, olderThan, cmd.Flags().Changed("older-than"), validTier)
-	if err != nil {
-		return config{}, err
-	}
-	now, err := compose.ResolveNow(o.nowRaw)
-	if err != nil {
-		return config{}, err
-	}
-	format, err := compose.ResolveFormatValue(cmd, o.formatFlag)
-	if err != nil {
-		return config{}, err
-	}
-	maxUnsafeDur, err := cmdutil.ParseDurationFlag(maxUnsafe, "--max-unsafe")
 	if err != nil {
 		return config{}, err
 	}
@@ -82,7 +74,6 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 	if err != nil {
 		return config{}, err
 	}
-
 	dueWithinDur, err := parseDueWithin(o.dueWithin)
 	if err != nil {
 		return config{}, err
@@ -100,24 +91,24 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 		KeepMin:           o.keepMin,
 		Statuses:          statuses,
 		NowTime:           o.nowRaw,
-		NowFunc:           func() time.Time { return now },
+		NowFunc:           func() time.Time { return ec.Now },
 	}
 	if _, parseErr := req.Parse(); parseErr != nil {
 		return config{}, parseErr
 	}
 
 	return config{
-		ControlsDir:       fsutil.CleanUserPath(resolvedCtl),
-		ObservationsDir:   fsutil.CleanUserPath(resolvedObs),
+		ControlsDir:       ec.ControlsDir,
+		ObservationsDir:   ec.ObservationsDir,
 		ArchiveDir:        fsutil.CleanUserPath(o.arcDir),
-		MaxUnsafeDuration: maxUnsafeDur,
+		MaxUnsafeDuration: ec.MaxUnsafe,
 		DueSoon:           dueSoonDur,
 		Lookback:          lookbackDur,
 		OlderThan:         retentionDur,
 		RetentionTier:     validTier,
 		KeepMin:           o.keepMin,
-		Now:               now,
-		Format:            format,
+		Now:               ec.Now,
+		Format:            ec.Format,
 		Quiet:             gf.Quiet,
 		Stdout:            cmd.OutOrStdout(),
 		Filter: UpcomingFilter{

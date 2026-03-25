@@ -54,7 +54,14 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 	if len(args) != 0 {
 		return
 	}
-	if _, found := projconfig.FindNearestFile(appconfig.ProjectConfigFile); !found {
+	_, found, err := projconfig.FindNearestFile(appconfig.ProjectConfigFile)
+	if err != nil {
+		// Resolver construction failed — cannot determine project presence.
+		// Treat as no project and show the hint.
+		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
+		return
+	}
+	if !found {
 		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}
 }

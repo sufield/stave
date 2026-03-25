@@ -19,7 +19,7 @@ func getTestRootCmd() *cobra.Command {
 			// Discover config from cwd — matches what bootstrap does, but
 			// without the full App lifecycle. Tests that need specific config
 			// should create stave.yaml in their temp dir and chdir there.
-			eval := projconfig.Global()
+			eval := projconfig.BuildEvaluator().Evaluator
 			ctx := cmdctx.WithEvaluator(cmd.Context(), eval)
 			cmd.SetContext(ctx)
 		},

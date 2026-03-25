@@ -19,11 +19,6 @@ type FindingWriter struct{}
 
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
-// NewFindingWriter creates a new text finding writer.
-func NewFindingWriter() *FindingWriter {
-	return &FindingWriter{}
-}
-
 // MarshalFindings transforms enriched findings into human-readable text bytes
 // without performing I/O.
 func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
