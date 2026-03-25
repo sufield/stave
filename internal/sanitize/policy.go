@@ -11,6 +11,14 @@ const (
 	PathFull PathMode = "full"
 )
 
+// String implements fmt.Stringer, returning "base" for the zero value.
+func (m PathMode) String() string {
+	if m == PathFull {
+		return "full"
+	}
+	return "base"
+}
+
 // Option configures a Sanitizer during construction.
 type Option func(*Sanitizer)
 
