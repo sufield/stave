@@ -68,7 +68,7 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
-	return runStandardApply(cs.Ctx, cs.Logger, p, opts, *cfg.Params, sio, cfg.projectConfig, cfg.projectConfigPath)
+	return runStandardApply(cs.Ctx, cs.Logger, p, opts, *cfg.Params, sio, cfg)
 }
 
 // evalContext groups the parameters needed by the evaluation pipeline.
@@ -85,8 +85,8 @@ type evalContext struct {
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO, projCfg *appconfig.ProjectConfig, cfgPath string) error {
-	evalInput, err := opts.buildEvaluatorInput(cfgPath)
+func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO, cfg RunConfig) error {
+	evalInput, err := opts.buildEvaluatorInput(cfg.ControlsDir, cfg.ObservationsDir, cfg.projectConfigPath)
 	if err != nil {
 		return decorateError(fmt.Errorf("build evaluator input: %w", err))
 	}
@@ -110,8 +110,8 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 		Plan:              plan,
 		Runtime:           rt,
 		Logger:            logger,
-		ProjectConfig:     projCfg,
-		ProjectConfigPath: cfgPath,
+		ProjectConfig:     cfg.projectConfig,
+		ProjectConfigPath: cfg.projectConfigPath,
 	}
 
 	results, err := executeEvaluation(ctx, ec)

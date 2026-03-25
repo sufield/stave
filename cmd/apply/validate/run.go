@@ -15,10 +15,11 @@ import (
 
 // runValidate is the primary entry point for the cobra command.
 func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime, opts *options) error {
-	// 1. Prepare environment (git audit, verbose logging)
-	if err := opts.prepareAndLogEnvironment(cmd); err != nil {
+	// 1. Audit git status and log environment context.
+	if err := opts.auditGitStatus(cmd); err != nil {
 		return err
 	}
+	opts.logEnvironment()
 
 	// 2. Resolve format via shared helper
 	gf := cmdutil.GetGlobalFlags(cmd)
