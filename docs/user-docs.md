@@ -41,18 +41,18 @@ stave capabilities
 # Validate inputs first
 stave validate \
   --controls controls/s3 \
-  --observations examples/observations/
+  --observations examples/public-bucket/observations/
 
 # Run evaluation
 stave apply \
   --controls controls/s3 \
-  --observations examples/observations/ \
+  --observations examples/public-bucket/observations/ \
   --max-unsafe 168h
 
 # Diagnose unexpected results
 stave diagnose \
   --controls controls/s3 \
-  --observations examples/observations/
+  --observations examples/public-bucket/observations/
 ```
 
 ## Path Inference
@@ -111,7 +111,7 @@ Use this table when you know your goal but want the fastest path to the right co
 
 | I want to... | Run this command | Read this doc |
 |--------------|------------------|---------------|
-| Get my first finding in 60 seconds | `stave apply --observations examples/observations/ --max-unsafe 168h --now 2026-01-11T00:00:00Z` | [`time-to-first-finding.md`](time-to-first-finding.md) |
+| Get my first finding in 60 seconds | `stave apply --observations examples/public-bucket/observations/ --max-unsafe 168h --now 2026-01-11T00:00:00Z` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | Evaluate my own snapshots instantly | `stave init && stave validate && stave apply` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | See where I am and what to do next | `stave status` | [`README.md`](../README.md) |
 | Start a new project with sane defaults | `stave init --profile aws-s3` | [`README.md`](../README.md) |
@@ -810,7 +810,7 @@ stave diagnose [flags]
 # Basic diagnosis
 stave diagnose \
   --controls controls/s3 \
-  --observations examples/observations/
+  --observations examples/public-bucket/observations/
 
 # Diagnose with specific threshold
 stave diagnose --max-unsafe 7d
@@ -1497,7 +1497,7 @@ stave validate --controls ./controls --observations ./obs \
 
 Observations capture the state of your infrastructure at a point in time.
 
-**Location:** `examples/observations/` directory (or custom path via `--observations`)
+**Location:** `examples/public-bucket/observations/` directory (or custom path via `--observations`)
 
 **File naming:** Use RFC3339 timestamps for deterministic ordering:
 - `2026-01-01T000000Z.json`
@@ -1721,7 +1721,7 @@ make build
 # Run evaluation
 ./stave apply \
   --controls controls/s3 \
-  --observations examples/observations/ \
+  --observations examples/public-bucket/observations/ \
   --max-unsafe 7d \
   --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -1752,7 +1752,7 @@ jobs:
         run: |
           ./stave apply \
             --controls controls/s3 \
-            --observations examples/observations/ \
+            --observations examples/public-bucket/observations/ \
             --max-unsafe 168h
 ```
 

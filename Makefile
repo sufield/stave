@@ -95,11 +95,11 @@ install:
 
 ## run: Run with default fixtures
 run: build
-	./$(BINARY) apply --controls controls/s3 --observations examples/observations/ --max-unsafe 168h
+	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h --allow-unknown-input
 
 ## run-now: Run with fixed time for deterministic output
 run-now: build
-	./$(BINARY) apply --controls controls/s3 --observations examples/observations/ --max-unsafe 168h --now 2026-01-11T00:00:00Z
+	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h --now 2026-01-11T00:00:00Z --allow-unknown-input
 
 ## check: Run all checks (fmt, vet, lint, test)
 check: fmt vet lint test
