@@ -18,15 +18,6 @@ type ControlLoader struct {
 	repo appcontracts.ControlRepository
 }
 
-// NewLoader initializes a loader with the given provider's repository.
-func NewLoader(p *Provider) (*ControlLoader, error) {
-	repo, err := p.NewControlRepo()
-	if err != nil {
-		return nil, fmt.Errorf("initializing control repository: %w", err)
-	}
-	return &ControlLoader{repo: repo}, nil
-}
-
 // LoadControls retrieves all control definitions from the specified directory.
 func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 	controls, err := l.repo.LoadControls(ctx, dir)
@@ -38,11 +29,17 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 
 // --- Package Level Helpers (Functional API) ---
 
-// LoadControls is a convenience wrapper for one-off loading.
+// LoadControls is a convenience wrapper for one-off loading via Provider.
 func LoadControls(ctx context.Context, p *Provider, dir string) ([]policy.ControlDefinition, error) {
-	l, err := NewLoader(p)
+	return LoadControlsFrom(ctx, p.NewControlRepo, dir)
+}
+
+// LoadControlsFrom loads controls using an explicit factory function.
+func LoadControlsFrom(ctx context.Context, newCtlRepo CtlRepoFactory, dir string) ([]policy.ControlDefinition, error) {
+	repo, err := newCtlRepo()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("initializing control repository: %w", err)
 	}
+	l := &ControlLoader{repo: repo}
 	return l.LoadControls(ctx, dir)
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // NewFixCmd constructs the fix command.
-func NewFixCmd(p *compose.Provider) *cobra.Command {
+func NewFixCmd(newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	opts := &fixOptions{}
 
 	cmd := &cobra.Command{
@@ -44,7 +44,7 @@ Examples:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			celEval, err := p.NewCELEvaluator()
+			celEval, err := newCELEvaluator()
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,7 @@ Examples:
 }
 
 // NewFixLoopCmd constructs the fix-loop command.
-func NewFixLoopCmd(p *compose.Provider) *cobra.Command {
+func NewFixLoopCmd(newCELEvaluator compose.CELEvaluatorFactory, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory) *cobra.Command {
 	opts := &loopOptions{
 		ControlsDir: "controls",
 	}
@@ -118,13 +118,13 @@ Examples:
 			}
 
 			gf := cmdutil.GetGlobalFlags(cmd)
-			celEval, celErr := p.NewCELEvaluator()
+			celEval, celErr := newCELEvaluator()
 			if celErr != nil {
 				return celErr
 			}
 			runner := NewRunner(celEval, clock)
-			runner.NewCtlRepo = p.NewControlRepo
-			runner.NewObsRepo = p.NewObservationRepo
+			runner.NewCtlRepo = newCtlRepo
+			runner.NewObsRepo = newObsRepo
 			runner.Sanitizer = gf.GetSanitizer()
 			runner.FileOptions = fileout.FileOptions{
 				Overwrite:     gf.Force,

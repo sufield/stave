@@ -382,7 +382,8 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 
 // TestValidateHelpText verifies validate command help contains required sections.
 func TestValidateHelpText(t *testing.T) {
-	help := NewCmd(compose.NewDefaultProvider(), ui.DefaultRuntime()).Long
+	vp := compose.NewDefaultProvider()
+	help := NewCmd(vp.NewObservationRepo, vp.NewControlRepo, vp.NewCELEvaluator, ui.DefaultRuntime()).Long
 	required := []string{"What it checks:", "Control schema", "Observation schema", "Duration format"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {

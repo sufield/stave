@@ -16,15 +16,25 @@ import (
 
 // Factory functions for individual enforcement commands.
 
-func NewGenerateCmd() *cobra.Command                   { return generate.NewCmd() }
-func NewDiffCmd(p *compose.Provider) *cobra.Command    { return diff.NewCmd(p) }
-func NewFixCmd(p *compose.Provider) *cobra.Command     { return fix.NewFixCmd(p) }
-func NewFixLoopCmd(p *compose.Provider) *cobra.Command { return fix.NewFixLoopCmd(p) }
-func NewGateCmd(p *compose.Provider) *cobra.Command    { return gate.NewCmd(p) }
-func NewCiDiffCmd() *cobra.Command                     { return cidiff.NewCmd() }
-func NewBaselineCmd() *cobra.Command                   { return baseline.NewCmd() }
-func NewStatusCmd() *cobra.Command                     { return status.NewCmd() }
-func NewGraphCmd(p *compose.Provider) *cobra.Command   { return graph.NewCmd(p) }
+func NewGenerateCmd() *cobra.Command { return generate.NewCmd() }
+func NewDiffCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
+	return diff.NewCmd(loadSnapshots)
+}
+func NewFixCmd(newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+	return fix.NewFixCmd(newCELEvaluator)
+}
+func NewFixLoopCmd(newCELEvaluator compose.CELEvaluatorFactory, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory) *cobra.Command {
+	return fix.NewFixLoopCmd(newCELEvaluator, newCtlRepo, newObsRepo)
+}
+func NewGateCmd(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+	return gate.NewCmd(loadAssets, newCELEvaluator)
+}
+func NewCiDiffCmd() *cobra.Command   { return cidiff.NewCmd() }
+func NewBaselineCmd() *cobra.Command { return baseline.NewCmd() }
+func NewStatusCmd() *cobra.Command   { return status.NewCmd() }
+func NewGraphCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
+	return graph.NewCmd(newCtlRepo, loadSnapshots)
+}
 
 // NextCommandForProject provides a high-level recommendation for the next
 // action to take in a project. It delegates to the app-layer scanner.

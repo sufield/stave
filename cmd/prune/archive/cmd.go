@@ -9,7 +9,7 @@ import (
 )
 
 // NewCmd constructs the archive command.
-func NewCmd(p *compose.Provider) *cobra.Command {
+func NewCmd(newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	opts := &options{
 		ObsDir:     "observations",
 		ArchiveDir: "observations/archive",
@@ -58,7 +58,7 @@ Exit Codes:
 				return err
 			}
 
-			runner := &runner{NewSnapshotRepo: p.NewSnapshotRepo}
+			runner := &runner{NewSnapshotRepo: newSnapshotRepo}
 			return runner.Run(cmd.Context(), config{
 				ObservationsDir: opts.ObsDir,
 				ArchiveDir:      opts.ArchiveDir,

@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-func NewCmd(p *compose.Provider) *cobra.Command {
+func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	graphCmd := &cobra.Command{
 		Use:   "graph",
 		Short: "Visualize control and asset relationships",
@@ -18,11 +18,11 @@ func NewCmd(p *compose.Provider) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	graphCmd.AddCommand(newCoverageCmd(p))
+	graphCmd.AddCommand(newCoverageCmd(newCtlRepo, loadSnapshots))
 	return graphCmd
 }
 
-func newCoverageCmd(p *compose.Provider) *cobra.Command {
+func newCoverageCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	opts := &coverageOptions{
 		ControlsDir: "controls/s3",
 		ObsDir:      "observations",
@@ -75,9 +75,9 @@ Exit Codes:
 			gf := cmdutil.GetGlobalFlags(cmd)
 			runner := newRunner(
 				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-					return compose.LoadControls(ctx, p, dir)
+					return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 				},
-				p.LoadSnapshots,
+				loadSnapshots,
 			)
 
 			return runner.Run(cmd.Context(), config{

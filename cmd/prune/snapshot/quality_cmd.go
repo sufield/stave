@@ -47,7 +47,7 @@ func (o *qualityOptions) Prepare(_ *cobra.Command) error {
 }
 
 // NewQualityCmd constructs the quality command.
-func NewQualityCmd(p *compose.Provider) *cobra.Command {
+func NewQualityCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	opts := &qualityOptions{
 		ObsDir:       "observations",
 		MinSnapshots: 2,
@@ -114,7 +114,7 @@ Examples:
 
 			ctx := compose.CommandContext(cmd)
 			cleanObsDir := fsutil.CleanUserPath(opts.ObsDir)
-			snapshots, err := p.LoadSnapshots(ctx, cleanObsDir)
+			snapshots, err := loadSnapshots(ctx, cleanObsDir)
 			if err != nil {
 				return fmt.Errorf("loading snapshots from %q: %w", cleanObsDir, err)
 			}

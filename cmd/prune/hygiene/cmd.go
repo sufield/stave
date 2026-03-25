@@ -10,7 +10,7 @@ import (
 )
 
 // NewCmd constructs the hygiene command.
-func NewCmd(p *compose.Provider) *cobra.Command {
+func NewCmd(loadAssets compose.AssetLoaderFunc, newObsRepo compose.ObsRepoFactory, newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	opts := &rawOptions{}
 
 	cmd := &cobra.Command{
@@ -65,9 +65,9 @@ Examples:
 				return err
 			}
 			runner := &runner{
-				LoadAssets:      p.LoadAssets,
-				NewObsRepo:      p.NewObservationRepo,
-				NewSnapshotRepo: p.NewSnapshotRepo,
+				LoadAssets:      loadAssets,
+				NewObsRepo:      newObsRepo,
+				NewSnapshotRepo: newSnapshotRepo,
 			}
 			return runner.Run(compose.CommandContext(cmd), cfg)
 		},
