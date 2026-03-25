@@ -6,7 +6,7 @@ import "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 // standard 3-path pattern: error → warn/fail, condition true → pass,
 // condition false → fail/warn.
 type findingSpec struct {
-	ID       string
+	ID       securityaudit.CheckID
 	Pillar   securityaudit.Pillar
 	Severity securityaudit.Severity
 

@@ -22,7 +22,7 @@ type Report struct {
 
 // Finding represents a single entry in a security audit.
 type Finding struct {
-	ID             string       `json:"id"`
+	ID             CheckID      `json:"id"`
 	Pillar         Pillar       `json:"pillar"`
 	Status         Status       `json:"status"`
 	Severity       Severity     `json:"severity"`
@@ -75,7 +75,8 @@ func (r *Report) RecomputeSummary() {
 
 		s.BySeverity[f.Severity]++
 
-		if f.Status != StatusPass && f.Severity.Gte(s.FailOn) {
+		// FailOn=None means "disable gating" — skip the check entirely.
+		if s.FailOn != SeverityNone && f.Status != StatusPass && f.Severity.Gte(s.FailOn) {
 			s.GatedFindingCount++
 		}
 	}

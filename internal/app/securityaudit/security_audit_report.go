@@ -24,7 +24,7 @@ func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.B
 	}
 
 	for i := range report.Findings {
-		refs := ev.Crosswalk.ByCheck[report.Findings[i].ID]
+		refs := ev.Crosswalk.ByCheck[string(report.Findings[i].ID)]
 		report.Findings[i].ControlRefs = slices.Clone(refs)
 	}
 

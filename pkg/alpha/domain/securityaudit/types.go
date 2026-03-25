@@ -3,11 +3,12 @@ package securityaudit
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// Status represents the binary or ternary outcome of a specific audit check.
+// Status represents the outcome of an audit check.
 type Status string
 
 const (
@@ -16,7 +17,10 @@ const (
 	StatusFail Status = "FAIL"
 )
 
-// Pillar identifies the functional enterprise category for an audit check.
+// String implements fmt.Stringer.
+func (s Status) String() string { return string(s) }
+
+// Pillar identifies the enterprise category for an audit check.
 type Pillar string
 
 const (
@@ -37,7 +41,8 @@ const (
 	SeverityNone     Severity = "NONE"
 )
 
-// Rank returns a numeric value representing the severity level (higher is more severe).
+// Rank returns a numeric value (0–4) for the severity.
+// Higher values indicate more severe risk.
 func (s Severity) Rank() int {
 	switch s {
 	case SeverityCritical:
@@ -53,15 +58,17 @@ func (s Severity) Rank() int {
 	}
 }
 
-// Gte reports whether the severity is greater than or equal to the provided threshold.
+// Gte reports whether s is at least as severe as the threshold.
+// Every severity (including None) is >= None, so a threshold of None
+// never gates any finding.
 func (s Severity) Gte(threshold Severity) bool {
-	if threshold == SeverityNone {
-		return false
-	}
 	return s.Rank() >= threshold.Rank()
 }
 
-// ParseSeverity converts a string token into a validated Severity.
+// String implements fmt.Stringer.
+func (s Severity) String() string { return string(s) }
+
+// ParseSeverity converts a string to a validated Severity.
 func ParseSeverity(raw string) (Severity, error) {
 	norm := Severity(strings.ToUpper(strings.TrimSpace(raw)))
 	switch norm {
@@ -75,7 +82,8 @@ func ParseSeverity(raw string) (Severity, error) {
 }
 
 // ParseSeverityList parses a comma-separated string of severity levels.
-// It deduplicates the input and returns a slice in the original encountered order.
+// Deduplicates input and returns values in encountered order.
+// Returns [CRITICAL, HIGH] when raw is empty (secure default).
 func ParseSeverityList(raw string) ([]Severity, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
@@ -101,7 +109,7 @@ func ParseSeverityList(raw string) ([]Severity, error) {
 
 // --- Report Components ---
 
-// ControlRef maps an audit finding to a specific regulatory or internal framework requirement.
+// ControlRef maps an audit finding to a regulatory or internal framework requirement.
 type ControlRef struct {
 	Framework string `json:"framework" yaml:"framework"`
 	ControlID string `json:"control_id" yaml:"control_id"`
@@ -116,18 +124,18 @@ type EvidenceRef struct {
 	Description string `json:"description,omitempty"`
 }
 
-// ArtifactEntry represents a single file entry in the security audit bundle.
+// ArtifactEntry represents a single file in the security audit bundle.
 type ArtifactEntry struct {
 	Path      string `json:"path"`
 	SHA256    string `json:"sha256"`
 	SizeBytes int64  `json:"size_bytes"`
-	Content   []byte `json:"-"`
+	Content   []byte `json:"-"` // Never serialized
 }
 
-// ArtifactManifest tracks all files contained within a security audit bundle.
+// ArtifactManifest tracks all files in a security audit bundle.
 type ArtifactManifest struct {
 	SchemaVersion  kernel.Schema   `json:"schema_version"`
-	GeneratedAt    string          `json:"generated_at"`
+	GeneratedAt    time.Time       `json:"generated_at"`
 	BundleDir      string          `json:"bundle_dir"`
 	MainReportPath string          `json:"main_report_path"`
 	Files          []ArtifactEntry `json:"files"`
@@ -149,33 +157,45 @@ const (
 
 // --- Check IDs ---
 
+// CheckID is a typed identifier for a security audit check.
+type CheckID string
+
+// String implements fmt.Stringer.
+func (c CheckID) String() string { return string(c) }
+
 const (
-	CheckBuildInfoPresent   = "SC.BUILDINFO.PRESENT"
-	CheckSBOMGenerated      = "SC.SBOM.GENERATED"
-	CheckVulnResults        = "SC.VULN.RESULTS"
-	CheckBinarySHA256       = "SC.BINARY.SHA256"
-	CheckSignatureVerified  = "SC.SIGNATURE.VERIFIED"
-	CheckRuntimeNetworkNone = "RB.NETWORK.RUNTIME_NONE"
-	CheckOfflineEnforcement = "RB.OFFLINE.ENFORCEMENT"
-	CheckFSAccessDisclosure = "RB.FS.ACCESS.DISCLOSURE"
-	CheckPrivilegeNoSudo    = "RB.PRIVILEGE.NO_SUDO"
-	CheckIAMS3MinPerms      = "RB.IAM.S3.MINPERMS"
-	CheckCredentialStorage  = "DP.CREDENTIAL.STORAGE" // #nosec G101
-	CheckSanitizationPolicy = "DP.SANITIZATION.POLICY"
-	CheckTelemetryDecl      = "DP.TELEMETRY.DISCLOSURE"
-	CheckPrivacyMode        = "DP.PRIVACY.MODE"
-	CheckBuildHardening     = "IC.BUILD.HARDENING"
-	CheckAuditLogging       = "IC.AUDIT.LOGGING"
-	CheckControlMapping     = "IC.CONTROL.MAPPING"
-	CheckControlMapMissing  = "IC.CONTROL.MAPPING_MISSING"
+	CheckBuildInfoPresent   CheckID = "SC.BUILDINFO.PRESENT"
+	CheckSBOMGenerated      CheckID = "SC.SBOM.GENERATED"
+	CheckVulnResults        CheckID = "SC.VULN.RESULTS"
+	CheckBinarySHA256       CheckID = "SC.BINARY.SHA256"
+	CheckSignatureVerified  CheckID = "SC.SIGNATURE.VERIFIED"
+	CheckRuntimeNetworkNone CheckID = "RB.NETWORK.RUNTIME_NONE"
+	CheckOfflineEnforcement CheckID = "RB.OFFLINE.ENFORCEMENT"
+	CheckFSAccessDisclosure CheckID = "RB.FS.ACCESS.DISCLOSURE"
+	CheckPrivilegeNoSudo    CheckID = "RB.PRIVILEGE.NO_SUDO"
+	CheckIAMS3MinPerms      CheckID = "RB.IAM.S3.MINPERMS"
+	CheckCredentialStorage  CheckID = "DP.CREDENTIAL.STORAGE" //nolint:gosec // audit check ID, not a credential
+	CheckSanitizationPolicy CheckID = "DP.SANITIZATION.POLICY"
+	CheckTelemetryDecl      CheckID = "DP.TELEMETRY.DISCLOSURE"
+	CheckPrivacyMode        CheckID = "DP.PRIVACY.MODE"
+	CheckBuildHardening     CheckID = "IC.BUILD.HARDENING"
+	CheckAuditLogging       CheckID = "IC.AUDIT.LOGGING"
+	CheckControlMapping     CheckID = "IC.CONTROL.MAPPING"
+	CheckControlMapMissing  CheckID = "IC.CONTROL.MAPPING_MISSING"
 )
 
+// allChecks is the canonical registry; unexported to prevent mutation.
+var allChecks = []CheckID{
+	CheckBuildInfoPresent, CheckSBOMGenerated, CheckVulnResults, CheckBinarySHA256, CheckSignatureVerified,
+	CheckRuntimeNetworkNone, CheckOfflineEnforcement, CheckFSAccessDisclosure, CheckPrivilegeNoSudo, CheckIAMS3MinPerms,
+	CheckCredentialStorage, CheckSanitizationPolicy, CheckTelemetryDecl, CheckPrivacyMode,
+	CheckBuildHardening, CheckAuditLogging, CheckControlMapping, CheckControlMapMissing,
+}
+
 // AllCheckIDs returns the complete registry of V1 audit checks.
-func AllCheckIDs() []string {
-	return []string{
-		CheckBuildInfoPresent, CheckSBOMGenerated, CheckVulnResults, CheckBinarySHA256, CheckSignatureVerified,
-		CheckRuntimeNetworkNone, CheckOfflineEnforcement, CheckFSAccessDisclosure, CheckPrivilegeNoSudo, CheckIAMS3MinPerms,
-		CheckCredentialStorage, CheckSanitizationPolicy, CheckTelemetryDecl, CheckPrivacyMode,
-		CheckBuildHardening, CheckAuditLogging, CheckControlMapping, CheckControlMapMissing,
-	}
+// Returns a defensive copy to prevent mutation of the global registry.
+func AllCheckIDs() []CheckID {
+	cp := make([]CheckID, len(allChecks))
+	copy(cp, allChecks)
+	return cp
 }

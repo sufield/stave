@@ -30,7 +30,11 @@ func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {
 		},
 		StatFile: os.Stat,
 	}
-	checkIDs := securityaudit.AllCheckIDs()
+	allIDs := securityaudit.AllCheckIDs()
+	checkIDStrings := make([]string, len(allIDs))
+	for i, id := range allIDs {
+		checkIDStrings[i] = string(id)
+	}
 
 	resolved, err := resolver.Resolve(context.Background(), evidence.Params{
 		Cwd: root,
@@ -40,15 +44,15 @@ func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {
 			"soc2",
 			"pci_dss_v3.2.1",
 		},
-	}, checkIDs)
+	}, checkIDStrings)
 	if err != nil {
 		t.Fatalf("resolve crosswalk: %v", err)
 	}
 	if len(resolved.MissingChecks) > 0 {
 		t.Fatalf("crosswalk missing check mappings: %v", resolved.MissingChecks)
 	}
-	for _, checkID := range checkIDs {
-		refs := resolved.ByCheck[checkID]
+	for _, checkID := range allIDs {
+		refs := resolved.ByCheck[string(checkID)]
 		if len(refs) == 0 {
 			t.Fatalf("check %s resolved to zero control refs", checkID)
 		}

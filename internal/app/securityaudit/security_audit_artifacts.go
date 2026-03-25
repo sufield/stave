@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -14,7 +13,7 @@ import (
 func (r *Runner) buildArtifactManifest(req Request, ev evidence.Bundle) securityaudit.ArtifactManifest {
 	manifest := securityaudit.ArtifactManifest{
 		SchemaVersion: kernel.SchemaSecurityAuditArtifacts,
-		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
+		GeneratedAt:   req.Now.UTC(),
 		BundleDir:     req.OutDir,
 		Files:         make([]securityaudit.ArtifactEntry, 0, 10),
 	}

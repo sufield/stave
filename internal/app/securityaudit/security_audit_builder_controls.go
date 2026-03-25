@@ -116,7 +116,7 @@ func findingFromCrosswalkMissing(in evidence.CrosswalkSnapshot) securityaudit.Fi
 	}
 }
 
-func mapEvidenceRefs(checkID string) []string {
+func mapEvidenceRefs(checkID securityaudit.CheckID) []string {
 	switch checkID {
 	case securityaudit.CheckBuildInfoPresent:
 		return []string{securityaudit.ArtifactBuildInfo}

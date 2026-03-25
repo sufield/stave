@@ -70,10 +70,11 @@ func MarshalSARIFReport(report domain.Report) ([]byte, error) {
 	results := make([]sarifResult, 0, len(report.Findings))
 
 	for _, finding := range report.Findings {
-		if _, exists := ruleIndex[finding.ID]; !exists {
-			ruleIndex[finding.ID] = len(rules)
+		fid := string(finding.ID)
+		if _, exists := ruleIndex[fid]; !exists {
+			ruleIndex[fid] = len(rules)
 			rules = append(rules, sarifRule{
-				ID:               finding.ID,
+				ID:               fid,
 				Name:             finding.Title,
 				ShortDescription: sarifMessage{Text: finding.Title},
 				Help:             sarifMessage{Text: finding.Recommendation},
@@ -90,8 +91,8 @@ func MarshalSARIFReport(report domain.Report) ([]byte, error) {
 		}
 
 		results = append(results, sarifResult{
-			RuleID:    finding.ID,
-			RuleIndex: ruleIndex[finding.ID],
+			RuleID:    fid,
+			RuleIndex: ruleIndex[fid],
 			Level:     sarifLevelFromSeverity(finding.Severity),
 			Message:   sarifMessage{Text: fmt.Sprintf("%s. %s", finding.Details, finding.AuditorHint)},
 			Properties: sarifResultProperties{

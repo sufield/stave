@@ -71,7 +71,12 @@ func (r *Runner) collectEvidence(ctx context.Context, params evidence.Params) (e
 	vuln, vulnErr := r.collectors.Vuln.Resolve(ctx, params)
 	binary, binaryErr := r.collectors.Binary.Inspect(params, buildInfo)
 	policy, policyErr := r.collectors.Policy.Inspect(ctx, params)
-	crosswalk, crosswalkErr := r.collectors.Crosswalk.Resolve(ctx, params, securityaudit.AllCheckIDs())
+	allIDs := securityaudit.AllCheckIDs()
+	checkIDStrings := make([]string, len(allIDs))
+	for i, id := range allIDs {
+		checkIDStrings[i] = string(id)
+	}
+	crosswalk, crosswalkErr := r.collectors.Crosswalk.Resolve(ctx, params, checkIDStrings)
 	return evidence.Bundle{
 		BuildInfo:    buildInfo,
 		SBOM:         sbom,
