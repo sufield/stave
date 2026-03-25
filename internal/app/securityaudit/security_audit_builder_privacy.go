@@ -7,117 +7,85 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
+var credentialSpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckCredentialStorage,
+	Pillar:   securityaudit.PillarPrivacy,
+	Severity: securityaudit.SeverityHigh,
+
+	ErrStatus: securityaudit.StatusWarn,
+	ErrTitle:  "Credential handling inspection incomplete",
+	ErrHint:   "Could not verify credential-env handling restrictions from source.",
+	ErrReco:   "Run security-audit from repository root.",
+
+	PassTitle:   "Credential storage policy enforced",
+	PassDetails: "No forbidden credential environment variable reads detected.",
+	PassHint:    "Runtime avoids direct credential-env reads in offline data model.",
+	PassReco:    "Retain this policy in CI static checks.",
+
+	FailStatus: securityaudit.StatusFail,
+	FailTitle:  "Credential environment variable references detected",
+	FailHint:   "Runtime code references forbidden credential environment variables.",
+	FailReco:   "Remove credential-env usage from runtime paths.",
+}
+
 func findingFromCredentialStorage(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
-	if err != nil {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckCredentialStorage,
-			Pillar:         securityaudit.PillarPrivacy,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "Credential handling inspection incomplete",
-			Details:        err.Error(),
-			AuditorHint:    "Could not verify credential-env handling restrictions from source.",
-			Recommendation: "Run security-audit from repository root.",
-		}
-	}
-	if !in.Credential.CredentialPolicyOK {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckCredentialStorage,
-			Pillar:         securityaudit.PillarPrivacy,
-			Status:         securityaudit.StatusFail,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "Credential environment variable references detected",
-			Details:        strings.Join(in.Credential.CredentialViolations, "; "),
-			AuditorHint:    "Runtime code references forbidden credential environment variables.",
-			Recommendation: "Remove credential-env usage from runtime paths.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckCredentialStorage,
-		Pillar:         securityaudit.PillarPrivacy,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityHigh,
-		Title:          "Credential storage policy enforced",
-		Details:        "No forbidden credential environment variable reads detected.",
-		AuditorHint:    "Runtime avoids direct credential-env reads in offline data model.",
-		Recommendation: "Retain this policy in CI static checks.",
-	}
+	return buildFinding(credentialSpec, err, in.Credential.CredentialPolicyOK,
+		"", strings.Join(in.Credential.CredentialViolations, "; "))
+}
+
+var redactionSpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckSanitizationPolicy,
+	Pillar:   securityaudit.PillarPrivacy,
+	Severity: securityaudit.SeverityMedium,
+
+	ErrStatus: securityaudit.StatusWarn,
+	ErrTitle:  "Sanitization policy verification incomplete",
+	ErrHint:   "Could not verify sanitization controls from source.",
+	ErrReco:   "Ensure internal/sanitize package is present and rerun.",
+
+	PassTitle:   "Sanitization policy declared",
+	PassDetails: "Sanitization controls are available for output sanitization.",
+	PassHint:    "Supports privacy-preserving sharing workflows.",
+	PassReco:    "Use --sanitize for sharable reports.",
+
+	FailStatus:  securityaudit.StatusFail,
+	FailTitle:   "Sanitization policy unavailable",
+	FailDetails: "Sanitization package/features were not detected.",
+	FailHint:    "Potential risk of sensitive identifier leakage in outputs.",
+	FailReco:    "Enable and test output sanitization policy paths.",
 }
 
 func findingFromRedaction(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
-	if err != nil {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckSanitizationPolicy,
-			Pillar:         securityaudit.PillarPrivacy,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
-			Title:          "Sanitization policy verification incomplete",
-			Details:        err.Error(),
-			AuditorHint:    "Could not verify sanitization controls from source.",
-			Recommendation: "Ensure internal/sanitize package is present and rerun.",
-		}
-	}
-	if !in.Operational.RedactionPolicyOK {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckSanitizationPolicy,
-			Pillar:         securityaudit.PillarPrivacy,
-			Status:         securityaudit.StatusFail,
-			Severity:       securityaudit.SeverityMedium,
-			Title:          "Sanitization policy unavailable",
-			Details:        "Sanitization package/features were not detected.",
-			AuditorHint:    "Potential risk of sensitive identifier leakage in outputs.",
-			Recommendation: "Enable and test output sanitization policy paths.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckSanitizationPolicy,
-		Pillar:         securityaudit.PillarPrivacy,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityMedium,
-		Title:          "Sanitization policy declared",
-		Details:        "Sanitization controls are available for output sanitization.",
-		AuditorHint:    "Supports privacy-preserving sharing workflows.",
-		Recommendation: "Use --sanitize for sharable reports.",
-	}
+	return buildFinding(redactionSpec, err, in.Operational.RedactionPolicyOK, "", "")
+}
+
+var telemetrySpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckTelemetryDecl,
+	Pillar:   securityaudit.PillarPrivacy,
+	Severity: securityaudit.SeverityHigh,
+
+	ErrStatus: securityaudit.StatusWarn,
+	ErrTitle:  "Telemetry disclosure incomplete",
+	ErrHint:   "Unable to complete telemetry declaration checks.",
+	ErrReco:   "Run from source checkout and verify network policy artifacts.",
+
+	PassTitle:   "Telemetry disclosure: none",
+	PassDetails: "No telemetry endpoints declared; offline policy is consistent.",
+	PassHint:    "Supports privacy reviews for restricted environments.",
+	PassReco:    "Maintain explicit no-telemetry declaration in docs and policy artifacts.",
+
+	FailStatus:  securityaudit.StatusFail,
+	FailTitle:   "Telemetry endpoints not declared as none",
+	FailDetails: "Runtime policy inspection indicates potential undeclared network behavior.",
+	FailHint:    "Telemetry disclosure must explicitly state no outbound data.",
+	FailReco:    "Remove undeclared egress paths or declare justified endpoints.",
 }
 
 func findingFromTelemetry(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
-	if err != nil {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckTelemetryDecl,
-			Pillar:         securityaudit.PillarPrivacy,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "Telemetry disclosure incomplete",
-			Details:        err.Error(),
-			AuditorHint:    "Unable to complete telemetry declaration checks.",
-			Recommendation: "Run from source checkout and verify network policy artifacts.",
-		}
-	}
-	if !in.Operational.TelemetryDeclaredNone {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckTelemetryDecl,
-			Pillar:         securityaudit.PillarPrivacy,
-			Status:         securityaudit.StatusFail,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "Telemetry endpoints not declared as none",
-			Details:        "Runtime policy inspection indicates potential undeclared network behavior.",
-			AuditorHint:    "Telemetry disclosure must explicitly state no outbound data.",
-			Recommendation: "Remove undeclared egress paths or declare justified endpoints.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckTelemetryDecl,
-		Pillar:         securityaudit.PillarPrivacy,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityHigh,
-		Title:          "Telemetry disclosure: none",
-		Details:        "No telemetry endpoints declared; offline policy is consistent.",
-		AuditorHint:    "Supports privacy reviews for restricted environments.",
-		Recommendation: "Maintain explicit no-telemetry declaration in docs and policy artifacts.",
-	}
+	return buildFinding(telemetrySpec, err, in.Operational.TelemetryDeclaredNone, "", "")
 }
 
+// findingFromPrivacyMode is complex (4-path with Request parameter) — kept explicit.
 func findingFromPrivacyMode(in evidence.PolicyInspectionSnapshot, req Request, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{

@@ -8,56 +8,87 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
+var buildInfoSpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckBuildInfoPresent,
+	Pillar:   securityaudit.PillarSupplyChain,
+	Severity: securityaudit.SeverityHigh,
+
+	ErrStatus: securityaudit.StatusFail,
+
+	PassTitle: "Build metadata available",
+	PassHint:  "Dependencies can be enumerated from runtime metadata.",
+	PassReco:  "Retain build metadata in release binaries to preserve SBOM traceability.",
+
+	FailStatus:  securityaudit.StatusFail,
+	FailTitle:   "Build metadata unavailable",
+	FailDetails: "runtime/debug build info is not available in this binary.",
+	FailHint:    "Without build info, runtime SBOM provenance is incomplete.",
+	FailReco:    "Rebuild with standard Go build metadata enabled and rerun security-audit.",
+}
+
 func findingFromBuildInfo(in evidence.BuildInfoSnapshot) securityaudit.Finding {
-	if in.Available {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckBuildInfoPresent,
-			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusPass,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "Build metadata available",
-			Details:        fmt.Sprintf("Build info detected (go version: %s).", in.GoVersion),
-			AuditorHint:    "Dependencies can be enumerated from runtime metadata.",
-			Recommendation: "Retain build metadata in release binaries to preserve SBOM traceability.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckBuildInfoPresent,
-		Pillar:         securityaudit.PillarSupplyChain,
-		Status:         securityaudit.StatusFail,
-		Severity:       securityaudit.SeverityHigh,
-		Title:          "Build metadata unavailable",
-		Details:        "runtime/debug build info is not available in this binary.",
-		AuditorHint:    "Without build info, runtime SBOM provenance is incomplete.",
-		Recommendation: "Rebuild with standard Go build metadata enabled and rerun security-audit.",
-	}
+	return buildFinding(buildInfoSpec, nil, in.Available,
+		fmt.Sprintf("Build info detected (go version: %s).", in.GoVersion), "")
+}
+
+var sbomSpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckSBOMGenerated,
+	Pillar:   securityaudit.PillarSupplyChain,
+	Severity: securityaudit.SeverityHigh,
+
+	ErrStatus: securityaudit.StatusFail,
+	ErrTitle:  "SBOM generation failed",
+	ErrHint:   "Missing SBOM blocks dependency-level supply-chain review.",
+	ErrReco:   "Run with --sbom spdx or --sbom cyclonedx and ensure build info is present.",
+
+	PassTitle: "SBOM generated",
+	PassHint:  "Standardized SBOM is available for third-party risk review.",
+	PassReco:  "Archive the SBOM artifact with release evidence.",
+
+	FailStatus: securityaudit.StatusFail,
+	FailTitle:  "SBOM generation failed",
+	FailHint:   "Missing SBOM blocks dependency-level supply-chain review.",
+	FailReco:   "Run with --sbom spdx or --sbom cyclonedx and ensure build info is present.",
 }
 
 func findingFromSBOM(in evidence.SBOMSnapshot, err error) securityaudit.Finding {
-	if err == nil && len(in.RawJSON) > 0 {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckSBOMGenerated,
-			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusPass,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "SBOM generated",
-			Details:        fmt.Sprintf("Generated %s with %d dependencies.", in.FileName, in.DependencyCount),
-			AuditorHint:    "Standardized SBOM is available for third-party risk review.",
-			Recommendation: "Archive the SBOM artifact with release evidence.",
-		}
+	pass := err == nil && len(in.RawJSON) > 0
+	passDetails := ""
+	if pass {
+		passDetails = fmt.Sprintf("Generated %s with %d dependencies.", in.FileName, in.DependencyCount)
 	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckSBOMGenerated,
-		Pillar:         securityaudit.PillarSupplyChain,
-		Status:         securityaudit.StatusFail,
-		Severity:       securityaudit.SeverityHigh,
-		Title:          "SBOM generation failed",
-		Details:        errorStringOrDefault(err, "SBOM generation did not produce output."),
-		AuditorHint:    "Missing SBOM blocks dependency-level supply-chain review.",
-		Recommendation: "Run with --sbom spdx or --sbom cyclonedx and ensure build info is present.",
-	}
+	failDetails := errorStringOrDefault(err, "SBOM generation did not produce output.")
+	return buildFinding(sbomSpec, nil, pass, passDetails, failDetails)
 }
 
+var binaryHashSpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckBinarySHA256,
+	Pillar:   securityaudit.PillarSupplyChain,
+	Severity: securityaudit.SeverityHigh,
+
+	ErrStatus: securityaudit.StatusFail,
+
+	PassTitle: "Binary checksum generated",
+	PassHint:  "Checksum enables integrity verification against release artifacts.",
+	PassReco:  "Compare checksum with trusted release manifests.",
+
+	FailStatus: securityaudit.StatusFail,
+	FailTitle:  "Binary checksum unavailable",
+	FailHint:   "Integrity checks cannot be performed without binary digest.",
+	FailReco:   "Ensure the binary path is accessible and rerun security-audit.",
+}
+
+func findingFromBinaryHash(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {
+	pass := err == nil && strings.TrimSpace(in.SHA256) != ""
+	passDetails := ""
+	if pass {
+		passDetails = fmt.Sprintf("SHA-256 computed for %s.", in.BinaryPath)
+	}
+	failDetails := errorStringOrDefault(err, "Failed to compute running binary hash.")
+	return buildFinding(binaryHashSpec, nil, pass, passDetails, failDetails)
+}
+
+// findingFromVuln is complex (4-path with severity escalation) — kept explicit.
 func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit.Finding {
 	if err != nil {
 		return securityaudit.Finding{
@@ -107,31 +138,7 @@ func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit
 	}
 }
 
-func findingFromBinaryHash(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {
-	if err == nil && strings.TrimSpace(in.SHA256) != "" {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckBinarySHA256,
-			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusPass,
-			Severity:       securityaudit.SeverityHigh,
-			Title:          "Binary checksum generated",
-			Details:        fmt.Sprintf("SHA-256 computed for %s.", in.BinaryPath),
-			AuditorHint:    "Checksum enables integrity verification against release artifacts.",
-			Recommendation: "Compare checksum with trusted release manifests.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckBinarySHA256,
-		Pillar:         securityaudit.PillarSupplyChain,
-		Status:         securityaudit.StatusFail,
-		Severity:       securityaudit.SeverityHigh,
-		Title:          "Binary checksum unavailable",
-		Details:        errorStringOrDefault(err, "Failed to compute running binary hash."),
-		AuditorHint:    "Integrity checks cannot be performed without binary digest.",
-		Recommendation: "Ensure the binary path is accessible and rerun security-audit.",
-	}
-}
-
+// findingFromSignature is complex (4-path with flag checks) — kept explicit.
 func findingFromSignature(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {
 	if err != nil && in.SignatureAttempt {
 		return securityaudit.Finding{

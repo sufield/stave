@@ -40,41 +40,30 @@ func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) secur
 	}
 }
 
+var auditLoggingSpec = findingSpec{ //nolint:gosec // audit template, not a credential
+	ID:       securityaudit.CheckAuditLogging,
+	Pillar:   securityaudit.PillarControls,
+	Severity: securityaudit.SeverityMedium,
+
+	ErrStatus: securityaudit.StatusWarn,
+	ErrTitle:  "Audit logging check incomplete",
+	ErrHint:   "Could not verify local audit logging support.",
+	ErrReco:   "Verify logging configuration and rerun security-audit.",
+
+	PassTitle:   "Audit logging available",
+	PassDetails: "CLI logging subsystem is present and configurable via --log-file/--log-format.",
+	PassHint:    "Operational events can be captured locally for review.",
+	PassReco:    "Route logs to protected storage for audit retention.",
+
+	FailStatus:  securityaudit.StatusWarn,
+	FailTitle:   "Audit logging not configured",
+	FailDetails: "Logging subsystem exists but no explicit audit-log policy was detected.",
+	FailHint:    "Tamper-evident log posture depends on deployment configuration.",
+	FailReco:    "Configure log file destination and retention controls for audited workflows.",
+}
+
 func findingFromAuditLogging(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
-	if err != nil {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckAuditLogging,
-			Pillar:         securityaudit.PillarControls,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
-			Title:          "Audit logging check incomplete",
-			Details:        err.Error(),
-			AuditorHint:    "Could not verify local audit logging support.",
-			Recommendation: "Verify logging configuration and rerun security-audit.",
-		}
-	}
-	if in.Operational.AuditLoggingConfigured {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckAuditLogging,
-			Pillar:         securityaudit.PillarControls,
-			Status:         securityaudit.StatusPass,
-			Severity:       securityaudit.SeverityMedium,
-			Title:          "Audit logging available",
-			Details:        "CLI logging subsystem is present and configurable via --log-file/--log-format.",
-			AuditorHint:    "Operational events can be captured locally for review.",
-			Recommendation: "Route logs to protected storage for audit retention.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckAuditLogging,
-		Pillar:         securityaudit.PillarControls,
-		Status:         securityaudit.StatusWarn,
-		Severity:       securityaudit.SeverityMedium,
-		Title:          "Audit logging not configured",
-		Details:        "Logging subsystem exists but no explicit audit-log policy was detected.",
-		AuditorHint:    "Tamper-evident log posture depends on deployment configuration.",
-		Recommendation: "Configure log file destination and retention controls for audited workflows.",
-	}
+	return buildFinding(auditLoggingSpec, err, in.Operational.AuditLoggingConfigured, "", "")
 }
 
 func findingFromCrosswalk(in evidence.CrosswalkSnapshot, err error) securityaudit.Finding {
