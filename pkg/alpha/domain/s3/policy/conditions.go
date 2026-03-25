@@ -80,7 +80,7 @@ func isEffectiveConstraint(op string, values []string) bool {
 
 func normalizeOperator(op string) string {
 	clean := strings.ToLower(op)
-	clean = strings.TrimPrefix(clean, conditionPrefixForAnyValue)
-	clean = strings.TrimPrefix(clean, conditionPrefixForAllValue)
-	return strings.TrimSuffix(clean, conditionSuffixIfExists)
+	clean = strings.TrimPrefix(clean, condPrefixForAnyValue)
+	clean = strings.TrimPrefix(clean, condPrefixForAllValues)
+	return strings.TrimSuffix(clean, condSuffixIfExists)
 }

@@ -23,7 +23,7 @@ func (e *Document) PrefixScopeAnalysis() PrefixScopeAnalysis {
 		if !stmt.Effect.IsAllow() {
 			continue
 		}
-		if !IsPublicPrincipal(stmt.principalAny()) {
+		if !IsPublicPrincipal(stmt.decodeRaw(stmt.Principal)) {
 			continue
 		}
 

@@ -33,7 +33,7 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 		perms := risk.ResolveActions(actions, e.Resolver)
 		report.Permissions |= perms
 
-		isPublic, isAuth := classifyPolicyPrincipal(stmt.principalAny())
+		isPublic, isAuth := classifyPolicyPrincipal(stmt.decodeRaw(stmt.Principal))
 		cond := stmt.ConditionAnalysis()
 
 		ctx := risk.StatementContext{

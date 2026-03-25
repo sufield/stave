@@ -2,50 +2,63 @@ package policy
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
+// Policy constants.
 const (
-	policyWildcard         = "*"
-	policyS3Wildcard       = "s3:*"
-	policyS3GlobalResource = "arn:aws:s3:::*"
-
-	policyActionGetObject          = "s3:getobject"
-	policyActionListBucket         = "s3:listbucket"
-	policyActionListBucketVersions = "s3:listbucketversions"
-	policyActionPutObject          = "s3:putobject"
-	policyActionPutObjectACL       = "s3:putobjectacl"
-	policyActionPutBucketPolicy    = "s3:putbucketpolicy"
-	policyActionDeleteObject       = "s3:deleteobject"
-	policyActionDeleteBucket       = "s3:deletebucket"
-	policyActionPutBucketACL       = "s3:putbucketacl"
-	policyActionGetBucketACL       = "s3:getbucketacl"
-	policyActionGetObjectACL       = "s3:getobjectacl"
-	policyActionPrefixGet          = "s3:get"
-	policyActionPrefixList         = "s3:list"
-	policyActionPrefixPut          = "s3:put"
-	policyActionPrefixDelete       = "s3:delete"
-
-	policyCondBool            = "Bool"
-	policyCondSecureTransport = "aws:SecureTransport"
-	policyCondSecureFalse     = "false"
-	policyPrincipalAWS        = "AWS"
-
-	policyScopePublic        = "public"
-	policyScopeVPCRestricted = "vpc-restricted"
-	policyScopeIPRestricted  = "ip-restricted"
-	policyScopeOrgRestricted = "org-restricted"
-
-	conditionPrefixForAnyValue = "foranyvalue:"
-	conditionPrefixForAllValue = "forallvalues:"
-	conditionSuffixIfExists    = "ifexists"
+	wildcard         = "*"
+	s3Wildcard       = "s3:*"
+	s3GlobalResource = "arn:aws:s3:::*"
 )
 
-// Effect prevents invalid effect strings in policy statements.
+// S3 action constants (lowercase for case-insensitive matching).
+const (
+	actionGetObject          = "s3:getobject"
+	actionListBucket         = "s3:listbucket"
+	actionListBucketVersions = "s3:listbucketversions"
+	actionPutObject          = "s3:putobject"
+	actionPutObjectACL       = "s3:putobjectacl"
+	actionPutBucketPolicy    = "s3:putbucketpolicy"
+	actionDeleteObject       = "s3:deleteobject"
+	actionDeleteBucket       = "s3:deletebucket"
+	actionPutBucketACL       = "s3:putbucketacl"
+	actionGetBucketACL       = "s3:getbucketacl"
+	actionGetObjectACL       = "s3:getobjectacl"
+	actionPrefixGet          = "s3:get"
+	actionPrefixList         = "s3:list"
+	actionPrefixPut          = "s3:put"
+	actionPrefixDelete       = "s3:delete"
+)
+
+// Condition keys and values.
+const (
+	condBool            = "Bool"
+	condSecureTransport = "aws:SecureTransport"
+	condValueFalse      = "false"
+	principalAWS        = "AWS"
+)
+
+// Scope labels.
+const (
+	scopePublic        = "public"
+	scopeVPCRestricted = "vpc-restricted"
+	scopeIPRestricted  = "ip-restricted"
+	scopeOrgRestricted = "org-restricted"
+)
+
+// Condition operator prefixes and suffixes.
+const (
+	condPrefixForAnyValue  = "foranyvalue:"
+	condPrefixForAllValues = "forallvalues:"
+	condSuffixIfExists     = "ifexists"
+)
+
+// Effect represents the Allow or Deny status of a policy statement.
 type Effect string
 
 const (
@@ -53,26 +66,29 @@ const (
 	EffectDeny  Effect = "Deny"
 )
 
-func (e Effect) IsAllow() bool {
-	return strings.EqualFold(string(e), "allow")
-}
+// IsAllow reports whether the effect is Allow (case-insensitive).
+func (e Effect) IsAllow() bool { return strings.EqualFold(string(e), "allow") }
 
-func (e Effect) IsDeny() bool {
-	return strings.EqualFold(string(e), "deny")
-}
+// IsDeny reports whether the effect is Deny (case-insensitive).
+func (e Effect) IsDeny() bool { return strings.EqualFold(string(e), "deny") }
 
-// StringList handles the AWS "string or []string" JSON pattern.
+// String implements fmt.Stringer.
+func (e Effect) String() string { return string(e) }
+
+// StringList handles the AWS "string or []string" JSON polymorphic pattern.
 type StringList []string
 
+// UnmarshalJSON handles both `"value"` and `["value"]` forms.
 func (s *StringList) UnmarshalJSON(data []byte) error {
-	// Try single string first.
-	var single string
-	if err := json.Unmarshal(data, &single); err == nil {
-		*s = StringList{single}
+	if len(data) > 0 && data[0] == '"' {
+		var str string
+		if err := json.Unmarshal(data, &str); err != nil {
+			return err
+		}
+		*s = StringList{str}
 		return nil
 	}
 
-	// Otherwise decode as []string.
 	var slice []string
 	if err := json.Unmarshal(data, &slice); err != nil {
 		return err
@@ -81,14 +97,15 @@ func (s *StringList) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ConditionAnalysis contains the analysis of AWS policy condition keys.
+// ConditionAnalysis contains the result of an AWS policy condition inspection.
 type ConditionAnalysis struct {
 	HasIPCondition  bool
 	HasVPCCondition bool
 	HasOrgCondition bool
-	ConditionKeys   []string // all condition keys found
+	ConditionKeys   []string
 }
 
+// IsNetworkScoped reports whether any network-scoping condition is present.
 func (c ConditionAnalysis) IsNetworkScoped() bool {
 	return c.HasIPCondition || c.HasVPCCondition || c.HasOrgCondition
 }
@@ -109,55 +126,31 @@ type Statement struct {
 	Condition json.RawMessage `json:"Condition,omitempty"`
 }
 
-func (s Statement) principalAny() any {
-	if len(s.Principal) == 0 {
-		return nil
-	}
-	var v any
-	if err := json.Unmarshal(s.Principal, &v); err != nil {
-		return nil
-	}
-	return v
-}
-
-func (s Statement) conditionAny() any {
-	if len(s.Condition) == 0 {
-		return nil
-	}
-	var v any
-	if err := json.Unmarshal(s.Condition, &v); err != nil {
-		return nil
-	}
-	return v
-}
-
-func (s Statement) IsAllow() bool {
-	return s.Effect.IsAllow()
-}
-
-func (s Statement) IsDeny() bool {
-	return s.Effect.IsDeny()
-}
-
-func (s Statement) ID(index int) kernel.StatementID {
+// StatementID returns a kernel-compatible ID based on Sid or index.
+func (s Statement) StatementID(index int) kernel.StatementID {
 	if s.Sid != "" {
-		return kernel.StatementID("sid:" + s.Sid)
+		return kernel.StatementID(fmt.Sprintf("sid:%s", s.Sid))
 	}
-	return kernel.StatementID("idx:" + strconv.Itoa(index))
+	return kernel.StatementID(fmt.Sprintf("idx:%d", index))
 }
 
+// PrincipalScope determines the exposure level of the statement.
 func (s Statement) PrincipalScope() kernel.PrincipalScope {
-	return classifyPolicyPrincipalScope(s.principalAny())
+	return classifyPolicyPrincipalScope(s.decodeRaw(s.Principal))
 }
 
+// ConditionAnalysis extracts scoping information from the Condition block.
 func (s Statement) ConditionAnalysis() ConditionAnalysis {
-	return analyzeCondition(s.conditionAny())
+	return analyzeCondition(s.decodeRaw(s.Condition))
 }
 
+// IsPubliclyExposed reports whether this is an Allow statement with a public principal.
 func (s Statement) IsPubliclyExposed() bool {
-	return s.IsAllow() && s.PrincipalScope().IsPublic()
+	return s.Effect.IsAllow() && s.PrincipalScope().IsPublic()
 }
 
+// HasWildcardActionsOnWildcardResources reports whether the statement
+// grants all actions on all resources.
 func (s Statement) HasWildcardActionsOnWildcardResources() bool {
 	_, hasFullWildcardAction := s.ResolveActions()
 	if !hasFullWildcardAction {
@@ -166,14 +159,37 @@ func (s Statement) HasWildcardActionsOnWildcardResources() bool {
 	return hasWildcardResource([]string(s.Resource))
 }
 
+// EnforcesHTTPS reports whether this is a Deny statement requiring HTTPS.
 func (s Statement) EnforcesHTTPS() bool {
-	if !s.IsDeny() || !s.PrincipalScope().IsPublic() {
+	if !s.Effect.IsDeny() || !s.PrincipalScope().IsPublic() {
 		return false
 	}
 	return hasSecureTransportCondition(s.Condition)
 }
 
-// hasSecureTransportCondition checks if Condition contains Bool.aws:SecureTransport = false.
+// PrincipalARNs extracts ARN strings from the Principal field.
+func (s Statement) PrincipalARNs() []string {
+	return extractPrincipalARNs(s.decodeRaw(s.Principal))
+}
+
+// HasWriteActions reports whether any action in the statement is a write action.
+func (s Statement) HasWriteActions() bool {
+	return slices.ContainsFunc([]string(s.Action), isWriteAction)
+}
+
+// decodeRaw unmarshals a json.RawMessage into any, used for Principal
+// and Condition fields that have varying JSON shapes.
+func (s Statement) decodeRaw(raw json.RawMessage) any {
+	if len(raw) == 0 {
+		return nil
+	}
+	var v any
+	_ = json.Unmarshal(raw, &v)
+	return v
+}
+
+// hasSecureTransportCondition checks if Condition contains
+// Bool.aws:SecureTransport = false.
 func hasSecureTransportCondition(condition json.RawMessage) bool {
 	if len(condition) == 0 {
 		return false
@@ -184,30 +200,22 @@ func hasSecureTransportCondition(condition json.RawMessage) bool {
 		return false
 	}
 
-	boolCond, ok := cond[policyCondBool]
+	boolCond, ok := cond[condBool]
 	if !ok {
 		return false
 	}
 
-	raw, ok := boolCond[policyCondSecureTransport]
+	raw, ok := boolCond[condSecureTransport]
 	if !ok {
 		return false
 	}
 
 	switch v := raw.(type) {
 	case string:
-		return strings.EqualFold(strings.TrimSpace(v), policyCondSecureFalse)
+		return strings.EqualFold(strings.TrimSpace(v), condValueFalse)
 	case bool:
 		return !v
 	default:
 		return false
 	}
-}
-
-func (s Statement) PrincipalARNs() []string {
-	return extractPrincipalARNs(s.principalAny())
-}
-
-func (s Statement) HasWriteActions() bool {
-	return slices.ContainsFunc([]string(s.Action), isWriteAction)
 }
