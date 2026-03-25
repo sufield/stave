@@ -10,46 +10,68 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
+// ValidateEvaluation checks an evaluation envelope against the output schema.
 func ValidateEvaluation(payload *Evaluation) error {
-	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload, "evaluation output")
+	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload)
 }
 
+// ValidateVerification checks a verification envelope against the output schema.
 func ValidateVerification(payload *Verification) error {
-	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload, "verification output")
+	return validate(string(schemas.KindOutput), kernel.RegistryLayoutStandard, payload)
 }
 
+// ValidateDiagnose checks a diagnose envelope against the diagnose schema.
 func ValidateDiagnose(payload *Diagnose) error {
-	return validate(string(schemas.KindDiagnose), kernel.RegistryLayoutStandard, payload, "diagnose output")
+	return validate(string(schemas.KindDiagnose), kernel.RegistryLayoutStandard, payload)
 }
 
-func validate(kind string, version string, payload any, label string) error {
+// validate marshals the payload and runs schema validation. Callers wrap
+// the returned error with their own context if needed.
+func validate(kind, version string, payload any) error {
 	raw, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("marshal %s: %w", label, err)
+		return fmt.Errorf("marshal for schema validation: %w", err)
 	}
+	return validateRaw(kind, version, raw)
+}
+
+// validateRaw validates pre-serialized JSON bytes against a schema.
+// Use this when the caller already has the JSON representation.
+func validateRaw(kind, version string, data []byte) error {
 	validator := contractvalidator.New()
 	diags, err := validator.Validate(contractvalidator.Request{
 		Kind:          schemas.Kind(kind),
 		ActualVersion: version,
-		Data:          raw,
+		Data:          data,
 	})
 	if err != nil {
-		return fmt.Errorf("validate %s schema: %w", label, err)
+		return fmt.Errorf("schema validation: %w", err)
 	}
 	if len(diags) > 0 {
-		const maxReported = 3
-		var msg strings.Builder
-		for i, d := range diags {
-			if i >= maxReported {
-				fmt.Fprintf(&msg, "; and %d more...", len(diags)-maxReported)
-				break
-			}
-			if i > 0 {
-				msg.WriteString("; ")
-			}
-			fmt.Fprintf(&msg, "[%s] %s", d.Path, d.Message)
-		}
-		return fmt.Errorf("%w: %s (%d issues): %s", contractvalidator.ErrSchemaValidationFailed, label, len(diags), msg.String())
+		return formatDiagnostics(diags)
 	}
 	return nil
+}
+
+// formatDiagnostics builds a single error from schema validation diagnostics.
+func formatDiagnostics(diags []contractvalidator.Diagnostic) error {
+	const maxReported = 3
+	var sb strings.Builder
+	sb.Grow(256)
+
+	for i, d := range diags {
+		if i >= maxReported {
+			fmt.Fprintf(&sb, "; and %d more...", len(diags)-maxReported)
+			break
+		}
+		if i > 0 {
+			sb.WriteString("; ")
+		}
+		sb.WriteString("[")
+		sb.WriteString(d.Path)
+		sb.WriteString("] ")
+		sb.WriteString(d.Message)
+	}
+
+	return fmt.Errorf("%w: %s (%d issues)", contractvalidator.ErrSchemaValidationFailed, sb.String(), len(diags))
 }

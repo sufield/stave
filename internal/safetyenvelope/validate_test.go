@@ -1,10 +1,11 @@
 package safetyenvelope
 
 import (
-	"strings"
+	"errors"
 	"testing"
 	"time"
 
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -79,7 +80,7 @@ func TestValidateDiagnose_ErrorLabel(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected validation error for empty diagnose payload")
 	}
-	if !strings.Contains(err.Error(), "diagnose output") {
-		t.Fatalf("error = %q, want diagnose output label", err.Error())
+	if !errors.Is(err, contractvalidator.ErrSchemaValidationFailed) {
+		t.Fatalf("error = %q, want ErrSchemaValidationFailed sentinel", err.Error())
 	}
 }
