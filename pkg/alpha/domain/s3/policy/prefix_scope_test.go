@@ -18,7 +18,7 @@ func TestPrefixScopeAnalysisWildcardResource(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
@@ -43,7 +43,7 @@ func TestPrefixScopeAnalysisPrefixedResource(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
@@ -68,7 +68,7 @@ func TestPrefixScopeAnalysisNonAllowSkipped(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 0 {
 		t.Errorf("expected 0 scopes for Deny, got %d", len(result.Scopes))
@@ -86,7 +86,7 @@ func TestPrefixScopeAnalysisNonPublicPrincipalSkipped(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 0 {
 		t.Errorf("expected 0 scopes for specific account principal, got %d", len(result.Scopes))
@@ -104,7 +104,7 @@ func TestPrefixScopeAnalysisNonReadActionsSkipped(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 0 {
 		t.Errorf("expected 0 scopes for PutObject, got %d", len(result.Scopes))
@@ -122,7 +122,7 @@ func TestPrefixScopeAnalysisSidAbsentUsesIndex(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
@@ -143,7 +143,7 @@ func TestPrefixScopeAnalysisS3WildcardAction(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
@@ -165,7 +165,7 @@ func TestPrefixScopeAnalysisFullWildcardAction(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope, got %d", len(result.Scopes))
@@ -186,7 +186,7 @@ func TestPrefixScopeAnalysisAWSPrincipalWildcard(t *testing.T) {
 		}]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Fatalf("expected 1 scope for AWS:* principal, got %d", len(result.Scopes))
@@ -214,7 +214,7 @@ func TestPrefixScopeAnalysisDeduplicatesScopes(t *testing.T) {
 		]
 	}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 1 {
 		t.Errorf("expected 1 deduplicated scope, got %d", len(result.Scopes))
@@ -227,7 +227,7 @@ func TestPrefixScopeAnalysisDeduplicatesScopes(t *testing.T) {
 func TestPrefixScopeAnalysisEmptyPolicy(t *testing.T) {
 	engine := mustParse(t, `{"Version": "2012-10-17", "Statement": []}`)
 
-	result := engine.PrefixScopeAnalysis()
+	result := engine.AnalyzeScopes()
 
 	if len(result.Scopes) != 0 {
 		t.Errorf("expected 0 scopes for empty statement list, got %d", len(result.Scopes))
