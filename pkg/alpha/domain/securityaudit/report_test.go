@@ -27,7 +27,10 @@ func TestSeverityGte(t *testing.T) {
 	if SeverityLow.Gte(SeverityHigh) {
 		t.Fatal("low should not be at or above high")
 	}
-	if SeverityCritical.Gte(SeverityNone) {
-		t.Fatal("threshold none should never gate")
+	if !SeverityCritical.Gte(SeverityNone) {
+		t.Fatal("every severity should be >= none")
+	}
+	if !SeverityNone.Gte(SeverityNone) {
+		t.Fatal("none should be >= none")
 	}
 }
