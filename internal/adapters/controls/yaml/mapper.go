@@ -1,6 +1,7 @@
 package yaml
 
 import (
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/predicate"
@@ -74,7 +75,7 @@ func exposureToDomain(y *yamlExposure) *policy.Exposure {
 	}
 	scope, _ := kernel.ParsePrincipalScope(y.PrincipalScope)
 	return &policy.Exposure{
-		Type:           y.Type,
+		Type:           exposure.Type(y.Type),
 		PrincipalScope: scope,
 	}
 }

@@ -20,12 +20,12 @@ type ExplainRule = contracts.ExplainRule
 
 // ControlFinder loads a single control by ID.
 type ControlFinder interface {
-	FindByID(ctx context.Context, dir, id string) (policy.ControlDefinition, error)
+	FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error)
 }
 
 // ExplainInput holds the inputs for the explain workflow.
 type ExplainInput struct {
-	ControlID   string
+	ControlID   kernel.ControlID
 	ControlsDir string
 }
 
@@ -36,12 +36,11 @@ type Explainer struct {
 
 // Run executes the explain workflow.
 func (e *Explainer) Run(ctx context.Context, input ExplainInput) (ExplainResult, error) {
-	id := strings.TrimSpace(input.ControlID)
-	if id == "" {
+	if input.ControlID == "" {
 		return ExplainResult{}, fmt.Errorf("control id cannot be empty")
 	}
 	controlsDir := strings.TrimSpace(input.ControlsDir)
-	ctl, err := e.Finder.FindByID(ctx, controlsDir, id)
+	ctl, err := e.Finder.FindByID(ctx, controlsDir, input.ControlID)
 	if err != nil {
 		return ExplainResult{}, err
 	}

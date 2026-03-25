@@ -17,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -161,7 +162,7 @@ Examples:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			explainer := diagnose.NewExplainer(newCtlRepo)
 			return explainer.Run(cmd.Context(), diagnose.ExplainRequest{
-				ControlID:   args[0],
+				ControlID:   kernel.ControlID(args[0]),
 				ControlsDir: controlsDir,
 				Format:      ui.OutputFormatText,
 				Stdout:      cmd.OutOrStdout(),

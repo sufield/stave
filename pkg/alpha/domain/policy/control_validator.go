@@ -187,7 +187,7 @@ func validateDurationConstraints(ctl *ControlDefinition) []diag.Issue {
 		return nil
 	}
 
-	raw := ctl.Params.String(key)
+	raw := ctl.Params.paramString(key)
 	if raw == "" {
 		return []diag.Issue{
 			diag.New(diag.CodeControlBadDurationParam).

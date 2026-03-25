@@ -21,8 +21,8 @@ type RecurrencePolicy struct {
 // ParseRecurrencePolicy extracts recurrence settings from the raw control parameters.
 func ParseRecurrencePolicy(params ControlParams) RecurrencePolicy {
 	return RecurrencePolicy{
-		Limit:      params.Int(paramRecurrenceLimit),
-		WindowDays: params.Int(paramWindowDays),
+		Limit:      params.paramInt(paramRecurrenceLimit),
+		WindowDays: params.paramInt(paramWindowDays),
 	}
 }
 
