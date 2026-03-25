@@ -143,8 +143,9 @@ func TestValidateInFlagRegistered(t *testing.T) {
 }
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
-	applyCmd := apply.NewApplyCmd(compose.NewDefaultProvider())
-	validateCmd := applyvalidate.NewCmd(compose.NewDefaultProvider(), ui.DefaultRuntime())
+	diagProvider := compose.NewDefaultProvider()
+	applyCmd := apply.NewApplyCmd(diagProvider)
+	validateCmd := applyvalidate.NewCmd(diagProvider, ui.DefaultRuntime())
 	cases := []struct {
 		name      string
 		shorthand string
@@ -154,7 +155,7 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		{name: "apply observations", shorthand: "o", flags: applyCmd.Flags()},
 		{name: "validate controls", shorthand: "i", flags: validateCmd.Flags()},
 		{name: "validate observations", shorthand: "o", flags: validateCmd.Flags()},
-		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd(compose.NewDefaultProvider()).Flags()},
+		{name: "diagnose previous-output", shorthand: "p", flags: diagnose.NewDiagnoseCmd(diagProvider.NewObservationRepo, diagProvider.NewControlRepo).Flags()},
 	}
 
 	for _, tc := range cases {

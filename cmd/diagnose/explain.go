@@ -83,7 +83,7 @@ func (f *composeFinder) FindByID(ctx context.Context, dir, id string) (policy.Co
 }
 
 // NewExplainCmd constructs the explain command.
-func NewExplainCmd(p *compose.Provider) *cobra.Command {
+func NewExplainCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	var (
 		controlsDir string
 		format      string
@@ -109,7 +109,7 @@ Examples:
 			if fmtErr != nil {
 				return fmtErr
 			}
-			explainer := NewExplainer(p.NewControlRepo)
+			explainer := NewExplainer(newCtlRepo)
 			return explainer.Run(cmd.Context(), ExplainRequest{
 				ControlID:   args[0],
 				ControlsDir: controlsDir,
