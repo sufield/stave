@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
@@ -11,7 +12,7 @@ import (
 func sampleReport() domain.Report {
 	return domain.Report{
 		SchemaVersion: "security-audit.v1",
-		GeneratedAt:   "2026-02-28T00:00:00Z",
+		GeneratedAt:   time.Date(2026, 2, 28, 0, 0, 0, 0, time.UTC),
 		StaveVersion:  "v0.0.0-test",
 		Summary: domain.Summary{
 			Total:      1,

@@ -11,7 +11,7 @@ func TestReportFilterBySeverity(t *testing.T) {
 			{ID: "C", Severity: SeverityLow, Status: StatusPass},
 		},
 	}
-	filtered := report.FilterBySeverity([]Severity{SeverityCritical, SeverityHigh})
+	filtered := report.CloneWithFilter([]Severity{SeverityCritical, SeverityHigh})
 	if len(filtered.Findings) != 1 {
 		t.Fatalf("expected 1 finding after filter, got %d", len(filtered.Findings))
 	}

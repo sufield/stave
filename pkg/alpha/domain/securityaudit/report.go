@@ -3,9 +3,22 @@ package securityaudit
 import (
 	"cmp"
 	"slices"
+	"time"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
+
+// Report is the root document for a security audit.
+// It is designed to be deterministic and JSON-serializable.
+type Report struct {
+	SchemaVersion kernel.Schema `json:"schema_version"`
+	GeneratedAt   time.Time     `json:"generated_at"`
+	StaveVersion  string        `json:"tool_version"`
+	Summary       Summary       `json:"summary"`
+	Findings      []Finding     `json:"findings"`
+	EvidenceIndex []EvidenceRef `json:"evidence_index"`
+	Controls      []ControlRef  `json:"controls"`
+}
 
 // Finding represents a single entry in a security audit.
 type Finding struct {
@@ -35,18 +48,8 @@ type Summary struct {
 	EvidenceFreshness string           `json:"evidence_freshness,omitempty"`
 }
 
-// Report is the root document for a security audit.
-type Report struct {
-	SchemaVersion kernel.Schema `json:"schema_version"`
-	GeneratedAt   string        `json:"generated_at"`
-	StaveVersion  string        `json:"tool_version"`
-	Summary       Summary       `json:"summary"`
-	Findings      []Finding     `json:"findings"`
-	EvidenceIndex []EvidenceRef `json:"evidence_index"`
-	Controls      []ControlRef  `json:"controls"`
-}
-
-// RecomputeSummary rebuilds all aggregate counts and gating status based on current findings.
+// RecomputeSummary rebuilds all aggregate counts and gating status from
+// the current findings. Ensures the summary is consistent with the data.
 func (r *Report) RecomputeSummary() {
 	if r == nil {
 		return
@@ -81,10 +84,17 @@ func (r *Report) RecomputeSummary() {
 	r.Summary = s
 }
 
-// FilterBySeverity returns a copy of the report containing only findings matching the allowed severities.
-func (r Report) FilterBySeverity(allowed []Severity) Report {
+// CloneWithFilter returns a new Report containing only findings that
+// match the allowed severities. The summary is recomputed for the
+// filtered set. Evidence and control references are cloned to ensure
+// the new report is independent.
+func (r *Report) CloneWithFilter(allowed []Severity) *Report {
+	if r == nil {
+		return nil
+	}
 	if len(allowed) == 0 {
-		return r
+		cp := *r
+		return &cp
 	}
 
 	allowedSet := make(map[Severity]struct{}, len(allowed))
@@ -99,18 +109,27 @@ func (r Report) FilterBySeverity(allowed []Severity) Report {
 		}
 	}
 
-	r.Findings = filtered
-	r.RecomputeSummary()
-	return r
+	newReport := &Report{
+		SchemaVersion: r.SchemaVersion,
+		GeneratedAt:   r.GeneratedAt,
+		StaveVersion:  r.StaveVersion,
+		Summary:       r.Summary,
+		Findings:      filtered,
+		EvidenceIndex: slices.Clone(r.EvidenceIndex),
+		Controls:      slices.Clone(r.Controls),
+	}
+	newReport.RecomputeSummary()
+	return newReport
 }
 
 // Normalize ensures deterministic ordering of all slices within the report.
+// This is critical for generating consistent hashes and meaningful diffs
+// between audit runs.
 func (r *Report) Normalize() {
 	if r == nil {
 		return
 	}
 
-	// Sort Findings: Severity (highest first), then Status, then ID
 	slices.SortFunc(r.Findings, func(a, b Finding) int {
 		return cmp.Or(
 			cmp.Compare(b.Severity.Rank(), a.Severity.Rank()),
@@ -119,12 +138,10 @@ func (r *Report) Normalize() {
 		)
 	})
 
-	// Sort Evidence Index by ID
 	slices.SortFunc(r.EvidenceIndex, func(a, b EvidenceRef) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
 
-	// Sort Controls: Framework, then ControlID, then Rationale
 	slices.SortFunc(r.Controls, func(a, b ControlRef) int {
 		return cmp.Or(
 			cmp.Compare(a.Framework, b.Framework),
@@ -133,17 +150,14 @@ func (r *Report) Normalize() {
 		)
 	})
 
-	// Sort nested lists within each finding
 	for i := range r.Findings {
 		f := &r.Findings[i]
-
 		slices.SortFunc(f.ControlRefs, func(a, b ControlRef) int {
 			return cmp.Or(
 				cmp.Compare(a.Framework, b.Framework),
 				cmp.Compare(a.ControlID, b.ControlID),
 			)
 		})
-
 		slices.Sort(f.EvidenceRefs)
 	}
 

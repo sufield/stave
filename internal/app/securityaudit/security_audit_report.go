@@ -3,7 +3,6 @@ package securityaudit
 import (
 	"slices"
 	"sort"
-	"time"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
@@ -13,7 +12,7 @@ import (
 func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.Bundle, artifacts securityaudit.ArtifactManifest) securityaudit.Report {
 	report := securityaudit.Report{
 		SchemaVersion: kernel.SchemaSecurityAudit,
-		GeneratedAt:   req.Now.UTC().Format(time.RFC3339),
+		GeneratedAt:   req.Now.UTC(),
 		StaveVersion:  req.StaveVersion,
 		Summary: securityaudit.Summary{
 			BySeverity:        map[securityaudit.Severity]int{},
@@ -43,7 +42,8 @@ func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.B
 	}
 
 	report.Normalize()
-	report = report.FilterBySeverity(req.SeverityFilter)
+	filtered := report.CloneWithFilter(req.SeverityFilter)
+	report = *filtered
 	report.Controls = collectUniqueControls(report.Findings)
 	report.Summary.FailOn = req.FailOn
 	report.RecomputeSummary()
