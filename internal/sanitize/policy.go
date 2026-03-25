@@ -1,46 +1,49 @@
-// Package sanitize — Policy centralizes output sanitization configuration.
+// Package sanitize centralizes output sanitization configuration.
 package sanitize
 
 // PathMode controls how file paths are rendered in user-facing output.
 type PathMode string
 
 const (
-	// PathBase (default) renders only the basename of each path.
-	PathBase PathMode = "base"
-	// PathFull renders absolute paths as-is.
+	// PathBase (zero value) renders only the basename of each path.
+	PathBase PathMode = ""
+	// PathFull renders paths as provided.
 	PathFull PathMode = "full"
 )
 
-// Effective returns the mode, defaulting to PathBase when unset.
-// This handles the zero-value case where PathMode is "".
-func (m PathMode) Effective() PathMode {
-	if m == PathFull {
-		return PathFull
+// Option configures a Sanitizer during construction.
+type Option func(*Sanitizer)
+
+// WithPathMode sets the path rendering strategy.
+func WithPathMode(m PathMode) Option {
+	return func(s *Sanitizer) {
+		s.pathMode = m
 	}
-	return PathBase
 }
 
-// Policy bundles all output sanitization settings.
-// It is constructed once from CLI flags and threaded through commands,
-// writers, error formatting, and the panic handler.
+// WithIDSanitization enables or disables asset identifier sanitization.
+func WithIDSanitization(enabled bool) Option {
+	return func(s *Sanitizer) {
+		s.sanitizeIDs = enabled
+	}
+}
+
+// Policy bundles output sanitization settings.
+// Constructed once from CLI flags and threaded through commands.
 type Policy struct {
 	// SanitizeIDs enables deterministic sanitization of asset identifiers,
 	// matched property values, and source evidence in findings output.
 	SanitizeIDs bool
 
 	// PathMode controls rendering of file paths in errors and logs.
-	// "base" (default) strips directory prefixes; "full" preserves them.
+	// Zero value (PathBase) strips directory prefixes; PathFull preserves them.
 	PathMode PathMode
 }
 
-// NewSanitizer returns a configured sanitizer based on the policy.
-// When SanitizeIDs is false, ID/value sanitization is disabled but
-// path mode is still respected.
+// NewSanitizer returns a sanitizer configured from the policy.
 func (p Policy) NewSanitizer() *Sanitizer {
-	s := New()
-	s.pathMode = p.PathMode.Effective()
-	if !p.SanitizeIDs {
-		s.disableIDs = true
-	}
-	return s
+	return New(
+		WithPathMode(p.PathMode),
+		WithIDSanitization(p.SanitizeIDs),
+	)
 }

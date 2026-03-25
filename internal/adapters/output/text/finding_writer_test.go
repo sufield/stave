@@ -59,7 +59,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 	w := &FindingWriter{}
 	enricher := remediation.NewMapper(crypto.NewHasher())
-	sanitizer := sanitize.New()
+	sanitizer := sanitize.New(sanitize.WithIDSanitization(true))
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{

@@ -20,7 +20,7 @@ import (
 )
 
 func TestSanitizeFindings_Redaction(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 
 	src := &asset.SourceRef{File: "/home/user/ctl/public.yaml", Line: 10}
 	stmts := []kernel.StatementID{"AllowPublicRead", "AllowPublicList"}
@@ -79,7 +79,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 }
 
 func TestSanitizeExemptedAssets(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	resources := []asset.ExemptedAsset{
 		{ID: "my-bucket", Pattern: "*", Reason: "ignored"},
 	}
@@ -93,7 +93,7 @@ func TestSanitizeExemptedAssets(t *testing.T) {
 }
 
 func TestSanitizeInputHashKeys(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	hashes := &evaluation.InputHashes{
 		Overall: "abc123",
 		Files: map[evaluation.FilePath]kernel.Digest{
@@ -114,7 +114,7 @@ func TestSanitizeInputHashKeys(t *testing.T) {
 }
 
 func TestSanitizeInputHashKeys_Nil(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	if got := appeval.SanitizeInputHashKeys(r, nil); got != nil {
 		t.Error("Expected nil for nil input")
 	}
@@ -137,7 +137,7 @@ var sensitivePatterns = []string{
 }
 
 func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	src := &asset.SourceRef{File: "/home/user/ctl/public.yaml", Line: 10}
 	f := remediation.Finding{
 		Finding: evaluation.Finding{
@@ -176,7 +176,7 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 }
 
 func TestRedactedDiagnosticJSON_NoSensitivePatterns(t *testing.T) {
-	r := sanitize.New()
+	r := sanitize.New(sanitize.WithIDSanitization(true))
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{
