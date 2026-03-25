@@ -16,7 +16,6 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -299,7 +298,7 @@ func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
 		return ReadinessConfig{}, err
 	}
 
-	maxUnsafe, err := timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+	maxUnsafe, err := cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return ReadinessConfig{}, ui.WithHint(err, ui.ErrHintInvalidMaxUnsafe)
 	}

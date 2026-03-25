@@ -13,7 +13,7 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
@@ -158,7 +158,7 @@ func ResolveOlderThanWith(eval *appconfig.Evaluator, flagValue string, flagChang
 	if !flagChanged {
 		raw = eval.SnapshotRetentionForTier(tier)
 	}
-	dur, err := timeutil.ParseDuration(raw)
+	dur, err := kernel.ParseDuration(raw)
 	if err != nil {
 		return 0, fmt.Errorf("invalid --older-than %q (use format: 14d, 720h, or 1d12h)", raw)
 	}

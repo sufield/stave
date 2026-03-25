@@ -13,7 +13,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/retention"
@@ -98,7 +97,7 @@ func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 			Applied:         !r.cfg.DryRun && len(candidates) > 0,
 			ObservationsDir: r.cfg.ObservationsDir,
 			RetentionTier:   r.cfg.RetentionTier,
-			OlderThan:       timeutil.FormatDuration(r.cfg.OlderThan),
+			OlderThan:       kernel.FormatDuration(r.cfg.OlderThan),
 			KeepMin:         r.cfg.KeepMin,
 			TotalSnapshots:  len(allFiles),
 			Candidates:      len(candidates),

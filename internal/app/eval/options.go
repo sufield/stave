@@ -8,7 +8,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // ObservationSource represents the source of observation data.
@@ -133,7 +133,7 @@ func validateFilePath(path, flag string) error {
 }
 
 func (o Options) parseMaxUnsafeDuration() (time.Duration, error) {
-	d, err := timeutil.ParseDuration(o.MaxUnsafeDuration)
+	d, err := kernel.ParseDuration(o.MaxUnsafeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("invalid --max-unsafe: %w", err)
 	}
@@ -146,7 +146,11 @@ func (o Options) parseNowTime() (time.Time, error) {
 	if o.NowTime == "" {
 		return time.Time{}, nil
 	}
-	return timeutil.ParseTimestamp(o.NowTime)
+	t, err := time.Parse(time.RFC3339, o.NowTime)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid timestamp %q (use RFC3339: 2026-01-15T00:00:00Z)", o.NowTime)
+	}
+	return t.UTC(), nil
 }
 
 func (o Options) resolveContextName() string {

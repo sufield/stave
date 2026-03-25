@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -94,8 +93,8 @@ func (a *qualityAssessor) checkStaleness() {
 		"Latest snapshot is older than allowed staleness threshold.",
 		&issueEvidence{
 			LatestCapturedAt: latest.Format(time.RFC3339),
-			Age:              timeutil.FormatDurationHuman(age),
-			MaxStaleness:     timeutil.FormatDurationHuman(params.MaxStaleness),
+			Age:              kernel.FormatDurationHuman(age),
+			MaxStaleness:     kernel.FormatDurationHuman(params.MaxStaleness),
 		},
 	)
 }
@@ -104,7 +103,7 @@ func (a *qualityAssessor) checkGap() {
 	params := a.params
 	summary := &a.report.Summary
 	maxObservedGap := calculateMaxGap(a.sorted)
-	summary.MaxGap = timeutil.FormatDurationHuman(maxObservedGap)
+	summary.MaxGap = kernel.FormatDurationHuman(maxObservedGap)
 	if maxObservedGap <= params.MaxGap {
 		return
 	}
@@ -114,8 +113,8 @@ func (a *qualityAssessor) checkGap() {
 		severityWarning,
 		"Gap between snapshots exceeds recommended maximum.",
 		&issueEvidence{
-			MaxGapObserved: timeutil.FormatDurationHuman(maxObservedGap),
-			MaxGapAllowed:  timeutil.FormatDurationHuman(params.MaxGap),
+			MaxGapObserved: kernel.FormatDurationHuman(maxObservedGap),
+			MaxGapAllowed:  kernel.FormatDurationHuman(params.MaxGap),
 		},
 	)
 }

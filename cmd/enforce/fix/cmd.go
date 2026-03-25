@@ -7,7 +7,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
@@ -109,7 +108,7 @@ Examples:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			maxUnsafe, err := timeutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
+			maxUnsafe, err := cmdutil.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
 			if err != nil {
 				return err
 			}

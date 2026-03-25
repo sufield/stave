@@ -10,7 +10,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
@@ -94,7 +93,7 @@ type Execution struct {
 
 // Complete transforms the raw options into a validated Execution object.
 func (o *options) Complete(ctx context.Context) (Execution, error) {
-	maxDuration, err := timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+	maxDuration, err := cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return Execution{}, err
 	}

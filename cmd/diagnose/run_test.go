@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
@@ -73,11 +73,11 @@ func TestDiagnosePathNormalization_DirErrors(t *testing.T) {
 }
 
 func TestDiagnoseParseHelpers(t *testing.T) {
-	maxDur, err := timeutil.ParseDurationFlag("7d", "--max-unsafe")
+	maxDur, err := cmdutil.ParseDurationFlag("7d", "--max-unsafe")
 	if err != nil || maxDur != 7*24*time.Hour {
 		t.Fatalf("ParseDurationFlag() = (%s, %v), want (168h, nil)", maxDur, err)
 	}
-	if _, parseErr := timeutil.ParseDurationFlag("bad", "--max-unsafe"); parseErr == nil {
+	if _, parseErr := cmdutil.ParseDurationFlag("bad", "--max-unsafe"); parseErr == nil {
 		t.Fatal("expected max-unsafe parse error")
 	}
 

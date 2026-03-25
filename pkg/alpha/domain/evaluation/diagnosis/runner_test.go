@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -261,9 +260,9 @@ func TestFormatDuration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := timeutil.FormatDuration(tt.duration)
+		result := kernel.FormatDuration(tt.duration)
 		if result != tt.expected {
-			t.Errorf("timeutil.FormatDuration(%v) = %s, want %s", tt.duration, result, tt.expected)
+			t.Errorf("kernel.FormatDuration(%v) = %s, want %s", tt.duration, result, tt.expected)
 		}
 	}
 }

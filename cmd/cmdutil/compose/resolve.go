@@ -9,7 +9,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 )
 
 // CommandContext returns cmd.Context(). Panics if cmd is nil —
@@ -23,7 +22,7 @@ func ResolveNow(raw string) (time.Time, error) {
 	if raw == "" {
 		return time.Now().UTC(), nil
 	}
-	return timeutil.ParseRFC3339(raw, "--now")
+	return cmdutil.ParseRFC3339(raw, "--now")
 }
 
 // ResolveFormatValue determines the effective output format from a flag value and

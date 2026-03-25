@@ -8,7 +8,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/pkg/timeutil"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // SnapshotCleanupRenderInput configures text/json rendering for prune/archive plan.
@@ -41,11 +41,11 @@ func RenderSnapshotCleanupExecutionPlan(out io.Writer, in SnapshotCleanupRenderI
 		return nil
 	}
 	if len(in.CandidateFiles) == 0 {
-		fmt.Fprintf(out, "No snapshots to %s (total=%d, older-than=%s, keep-min=%d).\n", in.ActionLabel, len(in.AllFiles), timeutil.FormatDuration(in.OlderThan), in.KeepMin)
+		fmt.Fprintf(out, "No snapshots to %s (total=%d, older-than=%s, keep-min=%d).\n", in.ActionLabel, len(in.AllFiles), kernel.FormatDuration(in.OlderThan), in.KeepMin)
 		return nil
 	}
 	fmt.Fprintf(out, "%s mode=%s total=%d candidates=%d older-than=%s tier=%s keep-min=%d now=%s\n",
-		in.SummaryPrefix, in.Action.ModeString(in.DryRun), len(in.AllFiles), len(in.CandidateFiles), timeutil.FormatDuration(in.OlderThan), in.Tier, in.KeepMin, in.Now.Format(time.RFC3339))
+		in.SummaryPrefix, in.Action.ModeString(in.DryRun), len(in.AllFiles), len(in.CandidateFiles), kernel.FormatDuration(in.OlderThan), in.Tier, in.KeepMin, in.Now.Format(time.RFC3339))
 	for _, sf := range in.CandidateFiles {
 		fmt.Fprintf(out, "- %s (captured_at=%s)\n", sf.Name, sf.CapturedAt.Format(time.RFC3339))
 	}

@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -43,15 +42,15 @@ type ParsedRequest struct {
 // Parse validates and converts raw request fields into typed values used by
 // hygiene orchestration code.
 func (r *Request) Parse() (ParsedRequest, error) {
-	maxUnsafe, err := timeutil.ParseDuration(r.MaxUnsafeDuration)
+	maxUnsafe, err := kernel.ParseDuration(r.MaxUnsafeDuration)
 	if err != nil {
 		return ParsedRequest{}, fmt.Errorf("invalid max-unsafe: %w", err)
 	}
-	dueSoon, err := timeutil.ParseDuration(r.DueSoon)
+	dueSoon, err := kernel.ParseDuration(r.DueSoon)
 	if err != nil {
 		return ParsedRequest{}, fmt.Errorf("invalid due-soon: %w", err)
 	}
-	lookback, err := timeutil.ParseDuration(r.Lookback)
+	lookback, err := kernel.ParseDuration(r.Lookback)
 	if err != nil {
 		return ParsedRequest{}, fmt.Errorf("invalid lookback: %w", err)
 	}
@@ -60,7 +59,7 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	}
 	var dueWithin *time.Duration
 	if strings.TrimSpace(r.DueWithin) != "" {
-		dw, dwErr := timeutil.ParseDuration(r.DueWithin)
+		dw, dwErr := kernel.ParseDuration(r.DueWithin)
 		if dwErr != nil {
 			return ParsedRequest{}, fmt.Errorf("invalid due-within: %w", dwErr)
 		}
@@ -83,10 +82,11 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	if strings.TrimSpace(r.NowTime) == "" {
 		now = nowFn()
 	} else {
-		now, err = timeutil.ParseTimestamp(r.NowTime)
+		now, err = time.Parse(time.RFC3339, r.NowTime)
 		if err != nil {
-			return ParsedRequest{}, err
+			return ParsedRequest{}, fmt.Errorf("invalid timestamp %q (use RFC3339: 2026-01-15T00:00:00Z)", r.NowTime)
 		}
+		now = now.UTC()
 	}
 	return ParsedRequest{
 		MaxUnsafeDuration: maxUnsafe,

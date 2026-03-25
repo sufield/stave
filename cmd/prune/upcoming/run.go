@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -98,7 +98,7 @@ func gatherUpcomingConfig(in upcomingConfigInput) (resolvedConfig, error) {
 
 func parsePositiveDuration(raw, flag string) (time.Duration, error) {
 	raw = strings.TrimSpace(raw)
-	dur, err := timeutil.ParseDurationFlag(raw, flag)
+	dur, err := cmdutil.ParseDurationFlag(raw, flag)
 	if err != nil {
 		return 0, err
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/timeutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
 )
@@ -107,7 +106,7 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		return Config{}, err
 	}
 
-	maxUnsafe, err := timeutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
+	maxUnsafe, err := cmdutil.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
 		return Config{}, err
 	}
