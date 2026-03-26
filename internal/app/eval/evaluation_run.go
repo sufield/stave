@@ -94,8 +94,7 @@ func (e *EvaluateRun) ExecuteAndReturn(ctx context.Context, cfg EvaluateConfig) 
 		return evaluation.Result{}, "", fmt.Errorf("evaluation failed: %w", err)
 	}
 
-	status := evaluation.ClassifySafetyStatus(len(result.Findings), nil)
-	return result, status, nil
+	return result, result.SafetyStatus, nil
 }
 
 func (e *EvaluateRun) loadEvaluationArtifacts(ctx context.Context, cfg LoadConfig) IntentEvaluationResult {

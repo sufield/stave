@@ -1,3 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 12ms)
-Evaluation complete. No violations found.
+Done:    apply controls against observations (2 files, 30ms)
+Evaluation complete. No violations, but at-risk assets detected.
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-26-breach-disc-sparse-duration/controls --observations testdata/e2e/e2e-26-breach-disc-sparse-duration/observations

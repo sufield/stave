@@ -21,6 +21,19 @@
     "attack_surface": 1,
     "violations": 1
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.WRITE.CONTENT.001",
+      "asset_id": "upload-policy-unrestricted-content",
+      "asset_type": "s3_upload_policy",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.WRITE.CONTENT.001",
@@ -79,7 +92,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
+      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
       "dirty": false
     }
   }

@@ -20,6 +20,7 @@
     "attack_surface": 0,
     "violations": 0
   },
+  "safety_status": "SAFE",
   "findings": [],
   "extensions": {
     "selected_controls_source": "dir",
@@ -30,7 +31,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "a5cd12324f4f4f1ecd1f6500e2914a93796898da",
+      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
       "dirty": false
     }
   }

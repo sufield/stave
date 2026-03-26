@@ -21,6 +21,19 @@
     "attack_surface": 1,
     "violations": 1
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "asset_id": "upload-api-bcm-hk",
+      "asset_type": "s3_upload_policy",
+      "status": "OVERDUE",
+      "due_at": "2019-12-22T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2019-12-15T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.WRITE.SCOPE.001",
@@ -78,7 +91,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "a5cd12324f4f4f1ecd1f6500e2914a93796898da",
+      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
       "dirty": false
     }
   }

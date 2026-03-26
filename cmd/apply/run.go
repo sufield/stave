@@ -14,6 +14,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -120,7 +121,7 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	}
 
 	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
-	return rep.ReportApply(results)
+	return rep.ReportApply(results, evaluation.ResponsePolicy{})
 }
 
 // executeEvaluation builds dependencies, runs the evaluation, and writes output.

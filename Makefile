@@ -270,6 +270,14 @@ readme: sync-controls
 readme-check: sync-controls
 	$(GOCMD) run ./internal/tools/genreadme -check
 
+## docs-controls: Generate control reference from built-in catalog
+docs-controls: sync-controls
+	$(GOCMD) run ./internal/tools/gencontroldocs
+
+## docs-controls-check: Verify control reference is up to date
+docs-controls-check: sync-controls
+	$(GOCMD) run ./internal/tools/gencontroldocs -check
+
 ## docker-demo: Build demo Docker image using Go version from go.mod
 docker-demo: build
 	docker build \

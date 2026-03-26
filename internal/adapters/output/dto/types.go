@@ -196,16 +196,30 @@ type RowDTO struct {
 	Reason     string                     `json:"reason,omitempty"`
 }
 
+// AtRiskItemDTO mirrors risk.ThresholdItem.
+type AtRiskItemDTO struct {
+	ControlID      kernel.ControlID `json:"control_id"`
+	AssetID        asset.ID         `json:"asset_id"`
+	AssetType      kernel.AssetType `json:"asset_type"`
+	Status         string           `json:"status"`
+	DueAt          time.Time        `json:"due_at"`
+	RemainingHours float64          `json:"remaining_hours"`
+	FirstUnsafeAt  time.Time        `json:"first_unsafe_at"`
+	ThresholdHours float64          `json:"threshold_hours"`
+}
+
 // ResultDTO is the top-level evaluation output envelope content.
 type ResultDTO struct {
-	SchemaVersion     kernel.Schema         `json:"schema_version"`
-	Kind              string                `json:"kind"`
-	Run               RunInfoDTO            `json:"run"`
-	Summary           SummaryDTO            `json:"summary"`
-	Findings          []FindingDTO          `json:"findings"`
-	ExceptedFindings  []ExceptedFindingDTO  `json:"excepted_findings,omitempty"`
-	RemediationGroups []RemediationGroupDTO `json:"remediation_groups,omitempty"`
-	Skipped           []SkippedControlDTO   `json:"skipped,omitempty"`
-	ExemptedAssets    []ExemptedAssetDTO    `json:"exempted_assets,omitempty"`
-	Extensions        *ExtensionsDTO        `json:"extensions,omitempty"`
+	SchemaVersion     kernel.Schema                `json:"schema_version"`
+	Kind              string                       `json:"kind"`
+	Run               RunInfoDTO                   `json:"run"`
+	Summary           SummaryDTO                   `json:"summary"`
+	SafetyStatus      evaluation.SafetyStatus      `json:"safety_status"`
+	AtRisk            []AtRiskItemDTO              `json:"at_risk,omitempty"`
+	Findings          []FindingDTO                 `json:"findings"`
+	ExceptedFindings  []ExceptedFindingDTO         `json:"excepted_findings,omitempty"`
+	RemediationGroups []RemediationGroupDTO        `json:"remediation_groups,omitempty"`
+	Skipped           []SkippedControlDTO          `json:"skipped,omitempty"`
+	ExemptedAssets    []ExemptedAssetDTO           `json:"exempted_assets,omitempty"`
+	Extensions        *ExtensionsDTO               `json:"extensions,omitempty"`
 }
