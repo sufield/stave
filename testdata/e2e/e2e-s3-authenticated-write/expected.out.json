@@ -52,8 +52,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.\n",
-        "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
+        "description": "Bucket grants write access to the AuthenticatedUsers group. Any AWS account holder worldwide can upload or overwrite objects.",
+        "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"authenticated_write\": false\n    }\n  }\n}\n"
       }
     }
@@ -67,7 +67,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }

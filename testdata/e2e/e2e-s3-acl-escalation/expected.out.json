@@ -58,8 +58,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.\n",
-        "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
+        "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.",
+        "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       }
     },
@@ -99,8 +99,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.\n",
-        "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
+        "description": "Bucket grants ACL modification (WRITE_ACP) to public or authenticated users. An attacker can call PutBucketAcl to grant themselves FULL_CONTROL, then read or modify all objects.",
+        "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false,\n      \"authenticated_admin\": false\n    }\n  }\n}\n"
       }
     }
@@ -114,7 +114,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }
