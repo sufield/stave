@@ -48,7 +48,7 @@ type ControlDefinition struct {
 
 // HasCompliance reports whether the control has a non-empty mapping for the given framework key.
 func (ctl *ControlDefinition) HasCompliance(key string) bool {
-	return ctl.Compliance.HasFramework(key)
+	return ctl.Compliance.Has(key)
 }
 
 // Prepare extracts and validates typed parameters from the raw Params map.
