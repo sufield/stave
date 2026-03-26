@@ -75,28 +75,17 @@ type Grants []Grant
 
 // Audience determines who the grant applies to by inspecting the Grantee URI
 // against the canonical AWS group identifiers.
-//
-// Uses suffix matching instead of Contains to avoid false positives:
-// a principal like "arn:aws:iam::123:user/allusers-service" must not
-// match as the public AllUsers group.
+// Uses suffix matching to avoid false positives from similarly-named principals.
 func (g Grant) Audience() Audience {
+	u := strings.ToLower(g.Grantee)
 	switch {
-	case matchesToken(g.Grantee, "allusers"):
+	case strings.HasSuffix(u, "/allusers") || strings.HasSuffix(u, ":allusers"):
 		return AudienceAllUsers
-	case matchesToken(g.Grantee, "authenticatedusers"):
+	case strings.HasSuffix(u, "/authenticatedusers") || strings.HasSuffix(u, ":authenticatedusers"):
 		return AudienceAuthenticatedOnly
 	default:
 		return AudiencePrivate
 	}
-}
-
-// matchesToken checks if a principal string matches a token via exact match,
-// URI path suffix (".../AllUsers"), or AWS prefix ("AWS:AuthenticatedUsers").
-func matchesToken(principal, token string) bool {
-	v := strings.ToLower(strings.TrimSpace(principal))
-	return v == token ||
-		strings.HasSuffix(v, "/"+token) ||
-		strings.HasSuffix(v, ":"+token)
 }
 
 // IsPublic reports whether this grant applies to public or authenticated principals.

@@ -2,20 +2,21 @@ package acl
 
 import (
 	"slices"
+	"strings"
 
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// AWS Canonical Group URIs.
+// S3 Canonical Group URIs.
 // These are opaque identifiers defined by AWS, NOT HTTP endpoints — Stave never fetches them.
 // See: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#specifying-grantee
 const (
-	allUsersURI           = "http://acs.amazonaws.com/groups/global/AllUsers"
-	authenticatedUsersURI = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
+	GroupAllUsers           = "http://acs.amazonaws.com/groups/global/AllUsers"
+	GroupAuthenticatedUsers = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
 )
 
-// List represents an S3 Access Control List as a collection of grants.
+// List represents an S3 Access Control List as an immutable collection of grants.
 type List struct {
 	grants []Grant
 }
@@ -33,7 +34,7 @@ type Assessment struct {
 
 // Assess evaluates the ACL grants and returns a summary of effective permissions.
 func (l List) Assess() Assessment {
-	perms := make(map[Audience]risk.Permission)
+	perms := make(map[Audience]risk.Permission, 2)
 	var publicIDs []kernel.GranteeID
 
 	for _, g := range l.grants {
@@ -58,8 +59,13 @@ func Assess(grants []Grant) Assessment {
 	return New(grants).Assess()
 }
 
-// IsPublicGrantee checks if a grantee URI represents public access.
-func IsPublicGrantee(granteeURI string) bool {
-	return matchesToken(granteeURI, "allusers") ||
-		matchesToken(granteeURI, "authenticatedusers")
+// IsPublicGrantee reports whether a grantee URI matches the S3 AllUsers or
+// AuthenticatedUsers group. Uses suffix matching to handle varied input
+// sources while avoiding false positives from similarly-named IAM principals.
+func IsPublicGrantee(uri string) bool {
+	if uri == "" {
+		return false
+	}
+	u := strings.ToLower(uri)
+	return strings.HasSuffix(u, "/allusers") || strings.HasSuffix(u, "/authenticatedusers")
 }

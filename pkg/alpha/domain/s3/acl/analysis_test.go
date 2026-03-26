@@ -8,8 +8,8 @@ import (
 
 func TestAssess_PublicAndAuthenticatedGrants(t *testing.T) {
 	grants := []Grant{
-		{Grantee: allUsersURI, Permission: "READ"},
-		{Grantee: authenticatedUsersURI, Permission: "FULL_CONTROL"},
+		{Grantee: GroupAllUsers, Permission: "READ"},
+		{Grantee: GroupAuthenticatedUsers, Permission: "FULL_CONTROL"},
 	}
 
 	got := Assess(grants)
@@ -33,8 +33,8 @@ func TestAssess_PublicAndAuthenticatedGrants(t *testing.T) {
 
 func TestAssess_ACLPermissions(t *testing.T) {
 	grants := []Grant{
-		{Grantee: allUsersURI, Permission: "WRITE_ACP"},
-		{Grantee: authenticatedUsersURI, Permission: "READ_ACP"},
+		{Grantee: GroupAllUsers, Permission: "WRITE_ACP"},
+		{Grantee: GroupAuthenticatedUsers, Permission: "READ_ACP"},
 	}
 
 	got := Assess(grants)
@@ -48,10 +48,10 @@ func TestAssess_ACLPermissions(t *testing.T) {
 }
 
 func TestIsPublicGrantee(t *testing.T) {
-	if !IsPublicGrantee(allUsersURI) {
+	if !IsPublicGrantee(GroupAllUsers) {
 		t.Fatal("expected all-users URI to be public")
 	}
-	if !IsPublicGrantee(authenticatedUsersURI) {
+	if !IsPublicGrantee(GroupAuthenticatedUsers) {
 		t.Fatal("expected authenticated-users URI to be public")
 	}
 	if IsPublicGrantee("http://example.com/private") {
