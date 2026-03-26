@@ -121,13 +121,3 @@ func scopePrecedence(s kernel.PrincipalScope) int {
 func classifyPolicyPrincipalScope(p any) kernel.PrincipalScope {
 	return NewPrincipal(p).Scope()
 }
-
-// isAuthenticatedPrincipal checks if a principal grants access to any authenticated AWS user.
-func isAuthenticatedPrincipal(principal any) bool {
-	return classifyPolicyPrincipalScope(principal) == kernel.ScopeAuthenticated
-}
-
-// IsPublicPrincipal checks if a principal grants public access.
-func IsPublicPrincipal(principal any) bool {
-	return classifyPolicyPrincipalScope(principal).IsPublic()
-}

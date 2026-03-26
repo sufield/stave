@@ -2,10 +2,14 @@ package policy
 
 import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// Evaluator encapsulates policy scoring rules.
+// Evaluator translates AWS S3 bucket policy constructs into risk assessments.
+// It bridges the vendor-specific policy model and the domain risk engine.
 type Evaluator struct {
+	// TrustedCIDRs allows the evaluator to ignore specific network ranges
+	// when calculating exposure.
 	TrustedCIDRs []string
 	Resolver     risk.PermissionResolver
 }
@@ -15,8 +19,10 @@ func NewEvaluator(trusted []string, resolver risk.PermissionResolver) *Evaluator
 	return &Evaluator{TrustedCIDRs: trusted, Resolver: resolver}
 }
 
-// Evaluate computes a policy risk report from a pre-parsed Document.
-// The Document must have been created via Parse() at the adapter boundary.
+// Evaluate computes a risk report by analyzing each Allow statement.
+// Deny statements are skipped — they reduce exposure and are handled
+// by the AWS engine itself. An empty or missing Effect defaults to
+// "not Allow" (safe) per AWS policy semantics.
 func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 	if doc == nil || len(doc.statements) == 0 {
 		return risk.Report{Score: risk.ScoreSafe}
@@ -25,7 +31,7 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 	report := risk.Report{}
 
 	for _, stmt := range doc.statements {
-		if stmt.Effect != "" && !stmt.Effect.IsAllow() {
+		if !stmt.Effect.IsAllow() {
 			continue
 		}
 
@@ -33,22 +39,18 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 		perms := risk.ResolveActions(actions, e.Resolver)
 		report.Permissions |= perms
 
-		isPublic, isAuth := classifyPolicyPrincipal(stmt.decodeRaw(stmt.Principal))
-		cond := stmt.ConditionAnalysis()
+		scope := stmt.PrincipalScope()
+		analysis := stmt.ConditionAnalysis()
 
 		ctx := risk.StatementContext{
 			Permissions:     perms,
-			IsPublic:        isPublic,
-			IsAuthenticated: isAuth,
-			IsNetworkScoped: cond.IsNetworkScoped(),
-			IsAllow:         stmt.Effect == "" || stmt.Effect.IsAllow(),
+			IsPublic:        scope.IsPublic(),
+			IsAuthenticated: scope == kernel.ScopeAuthenticated,
+			IsNetworkScoped: analysis.IsNetworkScoped(),
+			IsAllow:         true,
 		}
 		report.UpdateReport(ctx.Evaluate())
 	}
 
 	return report
-}
-
-func classifyPolicyPrincipal(principal any) (isPublic bool, isAuthenticated bool) {
-	return IsPublicPrincipal(principal), isAuthenticatedPrincipal(principal)
 }
