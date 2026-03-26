@@ -57,32 +57,27 @@ func (ctl *ControlDefinition) Prepare() error {
 	if ctl.Prepared.Ready {
 		return nil
 	}
-	// 1. Duration Handling
 	if raw := ctl.Params.paramString("max_unsafe_duration"); raw != "" {
 		d, err := kernel.ParseDuration(raw)
 		if err != nil {
-			// Initialize other params so accessors don't panic, but bubble the error
-			ctl.initializePreparedParams()
+			ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
+			ctl.Prepared.PrefixExposure = PrefixExposureParams{
+				AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.paramStringSlice("allowed_public_prefixes")),
+				ProtectedPrefixes:     toObjectPrefixes(ctl.Params.paramStringSlice("protected_prefixes")),
+			}
 			ctl.Prepared.Ready = true
 			return fmt.Errorf("invalid max_unsafe_duration %q: %w", raw, err)
 		}
 		ctl.Prepared.MaxUnsafeDuration = d
 		ctl.Prepared.HasMaxUnsafeDuration = true
 	}
-
-	// 2. Specialized Policy Parsing
-	ctl.initializePreparedParams()
-	ctl.Prepared.Ready = true
-	return nil
-}
-
-// initializePreparedParams populates sub-policies from the Params map.
-func (ctl *ControlDefinition) initializePreparedParams() {
 	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
 	ctl.Prepared.PrefixExposure = PrefixExposureParams{
 		AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.paramStringSlice("allowed_public_prefixes")),
 		ProtectedPrefixes:     toObjectPrefixes(ctl.Params.paramStringSlice("protected_prefixes")),
 	}
+	ctl.Prepared.Ready = true
+	return nil
 }
 
 func toObjectPrefixes(raw []string) []kernel.ObjectPrefix {
