@@ -2,76 +2,82 @@ package policy
 
 import (
 	"strings"
+	"sync"
+
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
-// ExemptionConfig defines a set of rules used to exclude specific assets
-// from policy evaluation.
+// ExemptionRule defines the criteria for completely skipping an asset's evaluation.
+type ExemptionRule struct {
+	// Pattern supports exact asset IDs or simple globs (e.g., "aws_s3_bucket:*").
+	Pattern string `json:"pattern" yaml:"pattern"`
+	Reason  string `json:"reason"  yaml:"reason"`
+}
+
+// ExemptionConfig manages asset-level exemptions with an optimized lookup index.
+// Always used as a pointer — sync.Once is safe for thread-safe init.
 type ExemptionConfig struct {
 	Version string
 	Assets  []ExemptionRule
 
-	// Prepared state for performance optimization
 	exactMatches map[string]*ExemptionRule
 	globMatches  []*ExemptionRule
-	ready        bool
+	once         sync.Once
 }
 
-// ExemptionRule defines the criteria for skipping an asset.
-type ExemptionRule struct {
-	// Pattern supports exact asset IDs or simple globs (e.g. "aws_s3_bucket:*")
-	Pattern string
-	Reason  string
+// NewExemptionConfig creates a prepared ExemptionConfig with indexed rules.
+func NewExemptionConfig(version string, assets []ExemptionRule) *ExemptionConfig {
+	c := &ExemptionConfig{Version: version, Assets: assets}
+	c.Prepare()
+	return c
 }
 
-// Prepare indexes the rules to optimize lookup performance.
-// This should be called once after the configuration is loaded.
-func (c *ExemptionConfig) Prepare() {
-	if c == nil || c.ready {
-		return
-	}
-
-	c.exactMatches = make(map[string]*ExemptionRule)
-	c.globMatches = make([]*ExemptionRule, 0)
-
-	for i := range c.Assets {
-		rule := &c.Assets[i]
-		if strings.Contains(rule.Pattern, "*") {
-			c.globMatches = append(c.globMatches, rule)
-		} else {
-			c.exactMatches[rule.Pattern] = rule
-		}
-	}
-	c.ready = true
-}
-
-// ShouldExempt determines if a specific asset ID is covered by an exemption rule.
-// It returns the matching rule or nil if the asset should be evaluated.
-func (c *ExemptionConfig) ShouldExempt(assetID string) *ExemptionRule {
-	if c == nil {
+// ShouldExempt determines if a specific asset ID should be skipped.
+// Returns the matching rule if an exemption applies; otherwise nil.
+// Thread-safe via sync.Once.
+func (c *ExemptionConfig) ShouldExempt(assetID asset.ID) *ExemptionRule {
+	if c == nil || len(c.Assets) == 0 {
 		return nil
 	}
+	c.Prepare()
 
-	// Auto-prepare if the caller forgot, though loaders should handle this.
-	if !c.ready {
-		c.Prepare()
-	}
+	id := string(assetID)
 
-	// 1. Fast path: O(1) exact match lookup
-	if rule, ok := c.exactMatches[assetID]; ok {
+	// Fast path: O(1) exact match lookup.
+	if rule, ok := c.exactMatches[id]; ok {
 		return rule
 	}
 
-	// 2. Slow path: Iterate through glob patterns
+	// Slow path: iterate through glob patterns.
 	for _, rule := range c.globMatches {
-		if globMatch(rule.Pattern, assetID) {
+		if globMatch(rule.Pattern, id) {
 			return rule
 		}
 	}
-
 	return nil
 }
 
-// matchPattern checks if a string matches a pattern supporting exact and glob matches.
+// Prepare indexes the rules for efficient lookup.
+// Thread-safe and idempotent via sync.Once.
+func (c *ExemptionConfig) Prepare() {
+	if c == nil {
+		return
+	}
+	c.once.Do(func() {
+		c.exactMatches = make(map[string]*ExemptionRule)
+		c.globMatches = make([]*ExemptionRule, 0)
+		for i := range c.Assets {
+			r := &c.Assets[i]
+			if strings.Contains(r.Pattern, "*") {
+				c.globMatches = append(c.globMatches, r)
+			} else {
+				c.exactMatches[r.Pattern] = r
+			}
+		}
+	})
+}
+
+// matchPattern checks if a string matches a pattern (exact or glob).
 // Shared by ExemptionConfig and ExceptionRule.
 func matchPattern(pattern, s string) bool {
 	if pattern == s {
@@ -85,18 +91,20 @@ func matchPattern(pattern, s string) bool {
 
 // globMatch performs simple glob matching where "*" matches any character sequence.
 func globMatch(pattern, s string) bool {
+	if pattern == "*" {
+		return true
+	}
+
 	segments := strings.Split(pattern, "*")
 	if len(segments) == 1 {
 		return pattern == s
 	}
 
-	// Must match the start of the pattern
 	if !strings.HasPrefix(s, segments[0]) {
 		return false
 	}
 	s = s[len(segments[0]):]
 
-	// Match intermediate segments in order
 	for i := 1; i < len(segments)-1; i++ {
 		idx := strings.Index(s, segments[i])
 		if idx < 0 {
@@ -105,6 +113,5 @@ func globMatch(pattern, s string) bool {
 		s = s[idx+len(segments[i]):]
 	}
 
-	// Must match the end of the pattern
 	return strings.HasSuffix(s, segments[len(segments)-1])
 }
