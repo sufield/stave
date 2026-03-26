@@ -7,13 +7,15 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
 
-// AWS canonical permission strings.
+// ACLPermission represents an S3 ACL permission string.
+type ACLPermission string
+
 const (
-	permRead        = "READ"
-	permWrite       = "WRITE"
-	permReadACP     = "READ_ACP"
-	permWriteACP    = "WRITE_ACP"
-	permFullControl = "FULL_CONTROL"
+	ACLPermRead        ACLPermission = "READ"
+	ACLPermWrite       ACLPermission = "WRITE"
+	ACLPermReadACP     ACLPermission = "READ_ACP"
+	ACLPermWriteACP    ACLPermission = "WRITE_ACP"
+	ACLPermFullControl ACLPermission = "FULL_CONTROL"
 )
 
 // Audience classifies the reach of an ACL grant.
@@ -28,7 +30,7 @@ const (
 	AudienceAuthenticatedOnly
 )
 
-// String returns the text label for the audience.
+// String returns the canonical text label for the audience.
 func (a Audience) String() string {
 	switch a {
 	case AudienceAllUsers:
@@ -40,43 +42,43 @@ func (a Audience) String() string {
 	}
 }
 
-// MarshalText implements encoding.TextMarshaler for consistent output
-// across all text-based serialization formats.
+// MarshalText implements encoding.TextMarshaler.
 func (a Audience) MarshalText() ([]byte, error) {
 	return []byte(a.String()), nil
 }
 
-// UnmarshalText implements encoding.TextUnmarshaler for consistent input
-// across all text-based serialization formats.
+// UnmarshalText implements encoding.TextUnmarshaler.
 func (a *Audience) UnmarshalText(text []byte) error {
-	switch string(text) {
-	case "all_users":
+	switch strings.ToLower(string(text)) {
+	case "all_users", "public":
 		*a = AudienceAllUsers
-	case "authenticated":
+	case "authenticated", "auth":
 		*a = AudienceAuthenticatedOnly
 	case "private":
 		*a = AudiencePrivate
 	default:
-		return fmt.Errorf("invalid audience %q", text)
+		return fmt.Errorf("acl: invalid audience %q", text)
 	}
 	return nil
 }
 
 // Grant represents a single entry in an S3 Access Control List.
 type Grant struct {
-	Grantee    string // URI for groups, or canonical ID for accounts
-	Permission string // READ, WRITE, READ_ACP, WRITE_ACP, FULL_CONTROL
-	Type       string `json:"type,omitempty"`
-	Scope      string `json:"scope,omitempty"`
+	Grantee    string        `json:"grantee"`    // Group URI or canonical ID
+	Permission ACLPermission `json:"permission"` // READ, WRITE, etc.
+	Type       string        `json:"type,omitempty"`
+	Scope      string        `json:"scope,omitempty"`
 }
 
 // Grants is a collection helper for ACL grant slices.
 type Grants []Grant
 
-// Audience determines who the grant applies to by inspecting the Grantee URI
-// against the canonical AWS group identifiers.
+// Audience determines who the grant applies to by inspecting the Grantee URI.
 // Uses suffix matching to avoid false positives from similarly-named principals.
 func (g Grant) Audience() Audience {
+	if g.Grantee == "" {
+		return AudiencePrivate
+	}
 	u := strings.ToLower(g.Grantee)
 	switch {
 	case strings.HasSuffix(u, "/allusers") || strings.HasSuffix(u, ":allusers"):
@@ -95,21 +97,22 @@ func (g Grant) IsPublic() bool {
 
 // HasFullControl reports whether the grant includes FULL_CONTROL.
 func (g Grant) HasFullControl() bool {
-	return strings.ToUpper(strings.TrimSpace(g.Permission)) == permFullControl
+	return strings.EqualFold(string(g.Permission), string(ACLPermFullControl))
 }
 
-// Permissions maps the raw permission string to the risk permission bitmask.
+// Permissions maps the S3 ACL permission to the domain risk bitmask.
 func (g Grant) Permissions() risk.Permission {
-	switch strings.ToUpper(strings.TrimSpace(g.Permission)) {
-	case permRead:
+	p := ACLPermission(strings.ToUpper(strings.TrimSpace(string(g.Permission))))
+	switch p {
+	case ACLPermRead:
 		return risk.PermRead
-	case permWrite:
+	case ACLPermWrite:
 		return risk.PermWrite
-	case permReadACP:
+	case ACLPermReadACP:
 		return risk.PermAdminRead
-	case permWriteACP:
+	case ACLPermWriteACP:
 		return risk.PermAdminWrite
-	case permFullControl:
+	case ACLPermFullControl:
 		return risk.PermRead | risk.PermWrite | risk.PermAdminRead | risk.PermAdminWrite
 	default:
 		return 0

@@ -51,7 +51,7 @@ func run(cmd *cobra.Command, file string) error {
 	for _, g := range grants {
 		details = append(details, GrantDetail{
 			Grantee:      g.Grantee,
-			Permission:   g.Permission,
+			Permission:   string(g.Permission),
 			Audience:     g.Audience().String(),
 			IsPublic:     g.IsPublic(),
 			HasFullCtrl:  g.HasFullControl(),
