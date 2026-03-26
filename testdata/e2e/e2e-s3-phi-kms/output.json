@@ -21,6 +21,29 @@
     "attack_surface": 2,
     "violations": 2
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "asset_id": "phi-bucket-aes256",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "asset_id": "phi-bucket-no-config",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.ENCRYPT.003",
@@ -124,7 +147,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "a5cd12324f4f4f1ecd1f6500e2914a93796898da",
+      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
       "dirty": false
     }
   }

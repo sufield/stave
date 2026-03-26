@@ -23,24 +23,38 @@ type Reporter struct {
 	Quiet   bool
 }
 
-// ReportApply prints the outcome of an evaluation.
-// Returns ui.ErrViolationsFound if the status is Unsafe.
-func (r *Reporter) ReportApply(res EvaluateResult) error {
-	if res.SafetyStatus == evaluation.StatusSafe {
+// ReportApply prints the outcome of an evaluation and returns an error
+// when the response policy indicates failure.
+func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.ResponsePolicy) error {
+	action := policy.Decide(res.SafetyStatus)
+
+	switch action.Severity {
+	case evaluation.ActionPass:
 		if !r.Quiet {
 			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations found."); err != nil {
 				return err
 			}
 		}
 		return nil
-	}
 
-	if !r.Quiet {
-		ui.WriteHint(r.Stderr, res.DiagnoseCommand)
-		r.Runtime.PrintNextSteps(res.NextSteps...)
-	}
+	case evaluation.ActionWarn:
+		if !r.Quiet {
+			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations, but at-risk assets detected."); err != nil {
+				return err
+			}
+			if res.DiagnoseCommand != "" {
+				ui.WriteHint(r.Stderr, res.DiagnoseCommand)
+			}
+		}
+		return nil
 
-	return ui.ErrViolationsFound
+	default: // ActionFail
+		if !r.Quiet {
+			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
+			r.Runtime.PrintNextSteps(res.NextSteps...)
+		}
+		return ui.ErrViolationsFound
+	}
 }
 
 // ReportPlan prints the readiness report (used by apply --dry-run).

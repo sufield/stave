@@ -21,6 +21,79 @@
     "attack_surface": 7,
     "violations": 7
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.ACCESS.001",
+      "asset_id": "vuln-cross-account",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ACCESS.002",
+      "asset_id": "vuln-wildcard-policy",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "asset_id": "vuln-no-encryption",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.002",
+      "asset_id": "vuln-no-https",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.LOG.001",
+      "asset_id": "vuln-no-logging",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "vuln-public-write",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.VERSION.001",
+      "asset_id": "vuln-no-versioning",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.ACCESS.001",
@@ -384,7 +457,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
       "dirty": false
     }
   }

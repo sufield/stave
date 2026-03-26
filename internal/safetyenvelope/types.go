@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
@@ -25,6 +26,8 @@ const (
 type EvaluationRequest struct {
 	Run              evaluation.RunInfo
 	Summary          evaluation.Summary
+	SafetyStatus     evaluation.SafetyStatus
+	AtRisk           risk.ThresholdItems
 	Findings         []remediation.Finding
 	Skipped          []evaluation.SkippedControl
 	ExemptedAssets   []asset.ExemptedAsset
@@ -37,6 +40,8 @@ type Evaluation struct {
 	Kind              EnvelopeKind                 `json:"kind"`
 	Run               evaluation.RunInfo           `json:"run"`
 	Summary           evaluation.Summary           `json:"summary"`
+	SafetyStatus      evaluation.SafetyStatus      `json:"safety_status"`
+	AtRisk            risk.ThresholdItems           `json:"at_risk,omitempty"`
 	Findings          []remediation.Finding        `json:"findings"`
 	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
 	RemediationGroups []remediation.Group          `json:"remediation_groups,omitempty"`
@@ -53,6 +58,8 @@ func NewEvaluation(req EvaluationRequest) *Evaluation {
 		Kind:             KindEvaluation,
 		Run:              req.Run,
 		Summary:          req.Summary,
+		SafetyStatus:     req.SafetyStatus,
+		AtRisk:           req.AtRisk,
 		Findings:         emptyIfNil(req.Findings),
 		ExceptedFindings: emptyIfNil(req.ExceptedFindings),
 		Skipped:          emptyIfNil(req.Skipped),

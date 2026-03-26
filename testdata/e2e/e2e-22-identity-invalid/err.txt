@@ -1,5 +1,5 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (9ms)
+Done:    apply controls against observations (27ms)
 [ERR] Input validation failed (INVALID_INPUT)
   Message: execute evaluation: failed to load observations: load snapshot testdata2026-01-15T000000Z.json: schema validation failed: validation failed: 1 errors, 0 warnings: UNSUPPORTED_SCHEMA_VERSION
 Next: stave validate --controls ./controls --observations ./observations

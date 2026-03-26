@@ -21,6 +21,139 @@
     "attack_surface": 3,
     "violations": 13
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-18T00:00:00Z",
+      "remaining_hours": -192,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-18T00:00:00Z",
+      "remaining_hours": -192,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-18T00:00:00Z",
+      "remaining_hours": -192,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.CONTROLS.001",
@@ -949,7 +1082,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
+      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
       "dirty": false
     }
   }

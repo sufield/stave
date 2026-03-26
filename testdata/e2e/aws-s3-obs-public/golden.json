@@ -14,6 +14,19 @@
         "attack_surface": 1,
         "violations": 5
     },
+    "safety_status": "UNSAFE",
+    "at_risk": [
+        {
+            "control_id": "CTL.S3.PUBLIC.001",
+            "asset_id": "public-test-bucket",
+            "asset_type": "aws_s3_bucket",
+            "status": "OVERDUE",
+            "due_at": "2026-01-10T00:00:00Z",
+            "remaining_hours": -96,
+            "first_unsafe_at": "2026-01-10T00:00:00Z",
+            "threshold_hours": 0
+        }
+    ],
     "findings": [
         {
             "control_id": "CTL.S3.PUBLIC.001",

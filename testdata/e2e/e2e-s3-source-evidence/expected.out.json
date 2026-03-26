@@ -21,6 +21,29 @@
     "attack_surface": 1,
     "violations": 2
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -240,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 0
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "exposed-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -240,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 0
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.PUBLIC.001",
@@ -211,7 +234,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
       "dirty": false
     }
   }

@@ -21,6 +21,29 @@
     "attack_surface": 1,
     "violations": 2
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-22T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-15T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-22T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2015-10-15T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.ENCRYPT.004",
@@ -169,7 +192,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
+      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
       "dirty": false
     }
   }

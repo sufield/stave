@@ -21,6 +21,19 @@
     "attack_surface": 1,
     "violations": 1
   },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "asset_id": "learn2-khanacademy-cname-ref",
+      "asset_type": "s3_bucket_reference",
+      "status": "OVERDUE",
+      "due_at": "2022-11-08T00:00:00Z",
+      "remaining_hours": -24,
+      "first_unsafe_at": "2022-11-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
   "findings": [
     {
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
@@ -150,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
       "dirty": false
     }
   }

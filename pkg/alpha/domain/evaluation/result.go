@@ -119,6 +119,8 @@ type SkippedControl struct {
 type Result struct {
 	Run              RunInfo               `json:"run"`
 	Summary          Summary               `json:"summary"`
+	SafetyStatus     SafetyStatus          `json:"safety_status"`
+	AtRisk           risk.ThresholdItems   `json:"at_risk,omitempty"`
 	Findings         []Finding             `json:"findings"`
 	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`
 	Skipped          []SkippedControl      `json:"skipped,omitempty"`

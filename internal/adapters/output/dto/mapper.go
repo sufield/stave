@@ -5,6 +5,7 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
@@ -16,6 +17,8 @@ func FromEvaluation(e *safetyenvelope.Evaluation) ResultDTO {
 		Kind:              string(e.Kind),
 		Run:               fromRunInfo(e.Run),
 		Summary:           fromSummary(e.Summary),
+		SafetyStatus:      e.SafetyStatus,
+		AtRisk:            fromAtRiskItems(e.AtRisk),
 		Findings:          fromFindings(e.Findings),
 		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),
 		RemediationGroups: fromRemediationGroups(e.RemediationGroups),
@@ -252,6 +255,24 @@ func mapSlice[T, U any](s []T, f func(T) U) []U {
 		out[i] = f(v)
 	}
 	return out
+}
+
+func fromAtRiskItems(items risk.ThresholdItems) []AtRiskItemDTO {
+	if len(items) == 0 {
+		return nil
+	}
+	return mapSlice(items, func(item risk.ThresholdItem) AtRiskItemDTO {
+		return AtRiskItemDTO{
+			ControlID:      item.ControlID,
+			AssetID:        item.AssetID,
+			AssetType:      item.AssetType,
+			Status:         string(item.Status),
+			DueAt:          item.DueAt,
+			RemainingHours: item.Remaining.Hours(),
+			FirstUnsafeAt:  item.FirstUnsafeAt,
+			ThresholdHours: item.Threshold.Hours(),
+		}
+	})
 }
 
 func fromExtensions(e *evaluation.Extensions) *ExtensionsDTO {

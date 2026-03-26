@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
@@ -116,7 +117,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 		}
 		e.evaluateControl(&ctl, timelinesPerInv[ctl.ID], now, acc)
 	}
-	return e.buildResult(acc, now, len(snapshots)), nil
+	return e.buildResult(acc, sorted, now, len(snapshots)), nil
 }
 
 // evaluateControl evaluates a single control across all asset timelines.
@@ -162,8 +163,8 @@ func (e *Runner) evaluateControl(
 	}
 }
 
-// buildResult sorts accumulated data and constructs the final Result.
-func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int) evaluation.Result {
+// buildResult sorts accumulated data, computes risk, and constructs the final Result.
+func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now time.Time, snapshotCount int) evaluation.Result {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
 	// Sort exempted assets for deterministic output.
@@ -178,6 +179,17 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 	regularFindings, exceptedFindings := e.partitionFindings(acc.findings, now)
+
+	upcoming := risk.ComputeItems(risk.ThresholdRequest{
+		Controls:                e.Controls,
+		Snapshots:               snapshots,
+		GlobalMaxUnsafeDuration: e.MaxUnsafeDuration,
+		Now:                     now,
+		PredicateParser:         e.PredicateParser,
+		PredicateEval:           e.CELEvaluator,
+	})
+	status := evaluation.ClassifySafetyStatus(len(regularFindings), upcoming)
+
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
 			StaveVersion:      e.StaveVersion,
@@ -193,6 +205,8 @@ func (e *Runner) buildResult(acc *Accumulator, now time.Time, snapshotCount int)
 			AttackSurface:   len(acc.unsafeAssets),
 			Violations:      len(regularFindings),
 		},
+		SafetyStatus:     status,
+		AtRisk:           upcoming,
 		Findings:         regularFindings,
 		ExceptedFindings: exceptedFindings,
 		Skipped:          acc.skippedByCtl,

@@ -30,8 +30,9 @@ type EvaluateInput struct {
 
 // Evaluate runs domain evaluation over already-loaded inputs.
 func Evaluate(input EvaluateInput) (evaluation.Result, error) {
+	catalog := policy.NewCatalog(input.Controls)
 	runner := engine.Runner{
-		Controls:          input.Controls,
+		Controls:          catalog.List(),
 		MaxUnsafeDuration: input.MaxUnsafeDuration,
 		Clock:             input.Clock,
 		Hasher:            input.Hasher,
