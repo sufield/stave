@@ -25,7 +25,7 @@ type PredicateRule struct {
 
 // ExtractMisconfigurations traverses the predicate tree to pull the actual observed
 // values for every field mentioned in the unsafe predicate.
-func ExtractMisconfigurations(p *UnsafePredicate, ctx EvalContext) []Misconfiguration {
+func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfiguration {
 	if p == nil {
 		return nil
 	}
@@ -46,7 +46,7 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx EvalContext) []Misconfigur
 	return results
 }
 
-func (r *PredicateRule) collectFields(ctx EvalContext, results *[]Misconfiguration) {
+func (r *PredicateRule) collectFields(ctx *EvalContext, results *[]Misconfiguration) {
 	// Recursive traversal for nested logic blocks
 	for i := range r.Any {
 		r.Any[i].collectFields(ctx, results)

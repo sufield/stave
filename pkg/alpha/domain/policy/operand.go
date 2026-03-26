@@ -1,13 +1,10 @@
 package policy
 
-import (
-	"encoding/json"
-	"fmt"
-)
+import "encoding/json"
 
 // Operand wraps a predicate comparison value with type safety.
-// The inner raw value is restricted to: bool, string, float64, int,
-// []string, []any, map[string]any, or nil.
+// It handles the polymorphism of JSON/YAML inputs (where a value might be
+// a string, number, bool, or list) and provides safe access via Raw().
 type Operand struct{ raw any }
 
 // Bool creates an Operand holding a bool.
@@ -21,42 +18,6 @@ func NewOperand(v any) Operand { return Operand{raw: v} }
 
 // Raw returns the underlying value for operator evaluation.
 func (o Operand) Raw() any { return o.raw }
-
-// AsBool returns the value as a bool if it is one.
-func (o Operand) AsBool() (bool, bool) {
-	v, ok := o.raw.(bool)
-	return v, ok
-}
-
-// AsString returns the value as a string if it is one.
-func (o Operand) AsString() (string, bool) {
-	v, ok := o.raw.(string)
-	return v, ok
-}
-
-// AsNumber returns the value as a float64, converting int if needed.
-func (o Operand) AsNumber() (float64, bool) {
-	switch v := o.raw.(type) {
-	case float64:
-		return v, true
-	case int:
-		return float64(v), true
-	default:
-		return 0, false
-	}
-}
-
-// AsStringSlice returns the value as a []string if it is one.
-func (o Operand) AsStringSlice() ([]string, bool) {
-	v, ok := o.raw.([]string)
-	return v, ok
-}
-
-// String implements fmt.Stringer.
-func (o Operand) String() string { return fmt.Sprint(o.raw) }
-
-// IsZero reports whether the operand holds nil (supports yaml omitempty).
-func (o Operand) IsZero() bool { return o.raw == nil }
 
 // MarshalJSON encodes the raw value.
 func (o Operand) MarshalJSON() ([]byte, error) { return json.Marshal(o.raw) }
