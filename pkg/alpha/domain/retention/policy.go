@@ -22,9 +22,9 @@ type Candidate struct {
 // PlanPrune selects candidates older than the cutoff while preserving the
 // KeepMin safety floor.
 //
-// Items must be sorted by CapturedAt ascending (oldest first). Since the
-// list is sorted, the function exits early once it encounters an item
-// newer than the cutoff.
+// Items MUST be sorted by CapturedAt ascending (oldest first). The function
+// exits early once it encounters an item newer than the cutoff, and the
+// KeepMin cap trims the oldest candidates.
 //
 // When OlderThan is zero the cutoff equals Now, selecting all items for
 // pruning (subject to KeepMin).
@@ -39,7 +39,7 @@ func PlanPrune(items []Candidate, criteria Criteria) []Candidate {
 	cutoff := criteria.Now.Add(-criteria.OlderThan)
 
 	// Count expired items. Since items are sorted oldest-first, we can
-	// stop as soon as we hit one that's within the retention window.
+	// stop as soon as we hit one within the retention window.
 	expiredCount := 0
 	for _, item := range items {
 		if !item.CapturedAt.Before(cutoff) {

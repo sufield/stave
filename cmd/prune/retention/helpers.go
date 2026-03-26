@@ -3,6 +3,7 @@ package retention
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -67,6 +68,9 @@ func PlanPrune(files []appcontracts.SnapshotFile, criteria retention.Criteria) [
 			CapturedAt: sf.CapturedAt,
 		}
 	}
+	slices.SortFunc(items, func(a, b retention.Candidate) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
 	selected := retention.PlanPrune(items, criteria)
 	out := make([]appcontracts.SnapshotFile, 0, len(selected))
 	for _, item := range selected {

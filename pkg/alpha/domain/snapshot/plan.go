@@ -219,6 +219,9 @@ func buildTierPlan(params BuildPlanParams, tierName string, files []File) (tierP
 			CapturedAt: sf.CapturedAt.UTC(),
 		}
 	}
+	slices.SortFunc(candidates, func(a, b retention.Candidate) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
 
 	toProcess := retention.PlanPrune(candidates, retention.Criteria{
 		Now:       params.Now.UTC(),
