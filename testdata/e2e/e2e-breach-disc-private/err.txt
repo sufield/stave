@@ -1,6 +1,6 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (1 files, 11ms)
-[ERR] Command failed (INTERNAL_ERROR)
+Done:    apply controls against observations (1 files, 10ms)
+[ERR] Input validation failed (INVALID_INPUT)
   Message: execute evaluation: source_type unsupported: snapshot[0] has unsupported source_type "cloud.inventory" (use --allow-unknown-input to skip)
 Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input
 More info: run 'stave docs search allow-unknown-input source_type'

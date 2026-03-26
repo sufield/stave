@@ -1,6 +1,6 @@
 Running: apply controls against observations...
-Done:    apply controls against observations (1 files, 16ms)
-[ERR] Command failed (INTERNAL_ERROR)
+Done:    apply controls against observations (1 files, 8ms)
+[ERR] Input validation failed (INVALID_INPUT)
   Message: execute evaluation: failed to load controls: control "testdataCTL.EXP.DURATION.001.yaml": schema validation failed: validation failed: 1 errors, 0 warnings: UNSUPPORTED_SCHEMA_VERSION
 Next: stave validate --controls ./controls --observations ./observations
 More info: run 'stave docs search validate schema validation failed'

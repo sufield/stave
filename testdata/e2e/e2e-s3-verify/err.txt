@@ -1,2 +1,4 @@
-
-Need help? Run 'stave bug-report' to create a diagnostic bundle.
+Running: apply before observations...
+Done:    apply before observations (2ms)
+Running: apply after observations...
+Done:    apply after observations (1ms)
