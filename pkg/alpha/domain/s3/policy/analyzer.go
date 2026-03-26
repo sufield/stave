@@ -98,7 +98,7 @@ func (d *Document) Assess() Assessment {
 			res.HasIPCondition = res.HasIPCondition || condition.HasIPCondition
 			res.HasVPCCondition = res.HasVPCCondition || condition.HasVPCCondition
 		}
-		state.updateWeakestScope(conditionScope(condition))
+		state.updateWeakestScope(resolveConditionScope(condition))
 
 		// Action analysis
 		actionMask, _ := stmt.ResolveActions()
@@ -119,7 +119,7 @@ func (d *Document) Assess() Assessment {
 	}
 
 	applyPermissionMasks(&res, state.publicPerms, state.authPerms)
-	res.EffectiveNetworkScope = toKernelNetworkScope(state.weakestScope)
+	res.EffectiveNetworkScope = state.weakestScope
 
 	return res
 }
@@ -143,13 +143,13 @@ func (d *Document) extractExternalAccounts(res *Assessment, stmt Statement) {
 }
 
 type analysisState struct {
-	weakestScope networkScope
+	weakestScope kernel.NetworkScope
 	publicPerms  actionMask
 	authPerms    actionMask
 }
 
-func (s *analysisState) updateWeakestScope(scope networkScope) {
-	if s.weakestScope == "" || scope.weakerThan(s.weakestScope) {
+func (s *analysisState) updateWeakestScope(scope kernel.NetworkScope) {
+	if s.weakestScope == kernel.NetworkScopeUnknown || scope.WeakerThan(s.weakestScope) {
 		s.weakestScope = scope
 	}
 }

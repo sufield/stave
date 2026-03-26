@@ -4,11 +4,13 @@ package policy
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
+// actionMask uses bit-flags to represent categories of IAM actions.
 type actionMask uint8
 
 const (
@@ -19,75 +21,47 @@ const (
 	actionACLRead
 	actionACLWrite
 
-	actionAll = actionRead |
-		actionList |
-		actionWrite |
-		actionDelete |
-		actionACLRead |
-		actionACLWrite
+	actionAll = actionRead | actionList | actionWrite | actionDelete | actionACLRead | actionACLWrite
 )
 
-type networkScope string
-
-var (
-	// AWS Account IDs are exactly 12 digits.
-	reAccountID = regexp.MustCompile(`^\d{12}$`)
-)
-
-func (s networkScope) rank() int {
-	switch string(s) {
-	case scopeVPCRestricted:
-		return 3
-	case scopeIPRestricted:
-		return 2
-	case scopeOrgRestricted:
-		return 1
-	default:
-		return 0 // public
-	}
-}
-
-func (s networkScope) weakerThan(other networkScope) bool {
-	return s.rank() < other.rank()
-}
-
-var actionRegistry = map[string]actionMask{
-	wildcard:   actionAll,
-	s3Wildcard: actionAll,
-
-	actionGetObject:          actionRead,
-	actionListBucket:         actionList,
-	actionListBucketVersions: actionList,
-	actionPutObject:          actionWrite,
-	actionPutObjectACL:       actionWrite | actionACLWrite,
-	actionPutBucketPolicy:    actionWrite,
-	actionDeleteObject:       actionDelete,
-	actionDeleteBucket:       actionDelete,
-	actionPutBucketACL:       actionACLWrite,
-	actionGetBucketACL:       actionACLRead,
-	actionGetObjectACL:       actionACLRead,
-}
-
+// has checks if the mask contains a specific flag.
 func (m actionMask) has(flag actionMask) bool {
 	return m&flag != 0
 }
 
-func (s Statement) ResolveActions() (actionMask, bool) {
-	return resolveActionMask([]string(s.Action))
-}
+var (
+	// AWS Account IDs are exactly 12 digits.
+	reAccountID = regexp.MustCompile(`^\d{12}$`)
 
-func resolveActionMask(actions []string) (actionMask, bool) {
+	// actionRegistry maps common S3 actions to their functional categories.
+	actionRegistry = map[string]actionMask{
+		wildcard:   actionAll,
+		s3Wildcard: actionAll,
+
+		actionGetObject:          actionRead,
+		actionListBucket:         actionList,
+		actionListBucketVersions: actionList,
+		actionPutObject:          actionWrite,
+		actionPutObjectACL:       actionWrite | actionACLWrite,
+		actionPutBucketPolicy:    actionWrite,
+		actionDeleteObject:       actionDelete,
+		actionDeleteBucket:       actionDelete,
+		actionPutBucketACL:       actionACLWrite,
+		actionGetBucketACL:       actionACLRead,
+		actionGetObjectACL:       actionACLRead,
+	}
+)
+
+// ResolveActions aggregates all actions in a statement into a single bitmask.
+func (s Statement) ResolveActions() (actionMask, bool) {
 	var (
 		mask            actionMask
 		hasFullWildcard bool
 	)
-
-	for _, action := range actions {
-		action = strings.ToLower(action)
-		am, isFullWildcard := classifyPolicyAction(action)
-		mask |= am
-		hasFullWildcard = hasFullWildcard || isFullWildcard
-
+	for _, action := range s.Action {
+		m, isWild := classifyAction(strings.ToLower(action))
+		mask |= m
+		hasFullWildcard = hasFullWildcard || isWild
 		if mask == actionAll && hasFullWildcard {
 			break
 		}
@@ -95,20 +69,30 @@ func resolveActionMask(actions []string) (actionMask, bool) {
 	return mask, hasFullWildcard
 }
 
-func classifyPolicyAction(action string) (actionMask, bool) {
+// classifyAction identifies the category of an individual IAM action string.
+func classifyAction(action string) (actionMask, bool) {
 	if mask, ok := actionRegistry[action]; ok {
-		isFullWildcard := action == wildcard || action == s3Wildcard
-		return mask, isFullWildcard
+		return mask, action == wildcard || action == s3Wildcard
 	}
-
 	switch {
 	case strings.HasPrefix(action, actionPrefixGet):
 		return actionRead, false
 	case strings.HasPrefix(action, actionPrefixList):
 		return actionList, false
+	case strings.HasPrefix(action, actionPrefixPut):
+		return actionWrite, false
+	case strings.HasPrefix(action, actionPrefixDelete):
+		return actionDelete, false
 	default:
 		return 0, false
 	}
+}
+
+// isWriteAction returns true if the given IAM action grants write, delete,
+// or ACL-write access. Uses classifyAction to stay in sync with the registry.
+func isWriteAction(action string) bool {
+	mask, _ := classifyAction(strings.ToLower(action))
+	return mask.has(actionWrite) || mask.has(actionDelete) || mask.has(actionACLWrite)
 }
 
 func hasWildcardResource(resources []string) bool {
@@ -120,93 +104,58 @@ func hasWildcardResource(resources []string) bool {
 	return false
 }
 
-// isAccountIDOnly identifies whether the principal is a specific AWS account ID.
 func isAccountIDOnly(principal string) bool {
 	return reAccountID.MatchString(principal)
 }
 
-// isWriteAction returns true if the given IAM action grants write or delete access.
-func isWriteAction(action string) bool {
-	action = strings.ToLower(action)
-	switch action {
-	case wildcard, s3Wildcard,
-		actionPutObject, actionDeleteObject,
-		actionPutBucketPolicy, actionDeleteBucket,
-		actionPutObjectACL, actionPutBucketACL:
-		return true
-	}
-	return strings.HasPrefix(action, actionPrefixPut) ||
-		strings.HasPrefix(action, actionPrefixDelete)
-}
-
-// extractPrincipalARNs extracts string ARNs from a Principal field, excluding "*".
+// extractPrincipalARNs extracts concrete AWS ARNs (excluding wildcards)
+// from a decoded Principal field.
 func extractPrincipalARNs(principal any) []string {
-	var raw any
+	var target any
 	switch p := principal.(type) {
 	case string:
-		raw = p
+		target = p
 	case map[string]any:
-		var ok bool
-		raw, ok = p[principalAWS]
-		if !ok {
-			return nil
-		}
-	default:
-		return nil
-	}
-	return filterConcreteARNs(NormalizeStringOrSlice(raw))
-}
-
-// filterConcreteARNs removes empty strings and wildcards from ARN lists.
-func filterConcreteARNs(arns []string) []string {
-	var out []string
-	for _, arn := range arns {
-		if arn != "" && arn != wildcard {
-			out = append(out, arn)
+		if awsEntry, ok := p[principalAWS]; ok {
+			target = awsEntry
 		}
 	}
-	if len(out) == 0 {
+	if target == nil {
 		return nil
 	}
-	return out
+
+	candidates := NormalizeStringOrSlice(target)
+	filtered := slices.DeleteFunc(candidates, func(arn string) bool {
+		return arn == "" || arn == wildcard
+	})
+	if len(filtered) == 0 {
+		return nil
+	}
+	return filtered
 }
 
-// conditionScope returns the most restrictive scope label for a single statement.
-// Precedence: vpc > ip > org.
-func conditionScope(ca ConditionAnalysis) networkScope {
-	if ca.HasVPCCondition {
-		return networkScope(scopeVPCRestricted)
-	}
-	if ca.HasIPCondition {
-		return networkScope(scopeIPRestricted)
-	}
-	if ca.HasOrgCondition {
-		return networkScope(scopeOrgRestricted)
-	}
-	return networkScope(scopePublic)
-}
-
-// toKernelNetworkScope maps the adapter-private networkScope to the domain type.
-func toKernelNetworkScope(s networkScope) kernel.NetworkScope {
-	switch string(s) {
-	case scopePublic:
-		return kernel.NetworkScopePublic
-	case scopeIPRestricted:
-		return kernel.NetworkScopeIPRestricted
-	case scopeVPCRestricted:
+// resolveConditionScope maps a ConditionAnalysis directly to a kernel.NetworkScope.
+// Precedence: vpc > ip > org > public.
+func resolveConditionScope(ca ConditionAnalysis) kernel.NetworkScope {
+	switch {
+	case ca.HasVPCCondition:
 		return kernel.NetworkScopeVPCRestricted
-	case scopeOrgRestricted:
+	case ca.HasIPCondition:
+		return kernel.NetworkScopeIPRestricted
+	case ca.HasOrgCondition:
 		return kernel.NetworkScopeOrgRestricted
 	default:
-		return kernel.NetworkScopeUnknown
+		return kernel.NetworkScopePublic
 	}
 }
 
-// NormalizeStringOrSlice converts a string or []string to []string.
+// NormalizeStringOrSlice handles the AWS JSON polymorphism of single string vs array.
 func NormalizeStringOrSlice(v any) []string {
 	switch val := v.(type) {
 	case string:
 		return []string{val}
+	case []string:
+		return val
 	case []any:
 		out := make([]string, 0, len(val))
 		for _, item := range val {
@@ -215,8 +164,7 @@ func NormalizeStringOrSlice(v any) []string {
 			}
 		}
 		return out
-	case []string:
-		return val
+	default:
+		return nil
 	}
-	return nil
 }

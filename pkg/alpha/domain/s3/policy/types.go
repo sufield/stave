@@ -43,14 +43,6 @@ const (
 	principalAWS        = "AWS"
 )
 
-// Scope labels.
-const (
-	scopePublic        = "public"
-	scopeVPCRestricted = "vpc-restricted"
-	scopeIPRestricted  = "ip-restricted"
-	scopeOrgRestricted = "org-restricted"
-)
-
 // Condition operator prefixes and suffixes.
 const (
 	condPrefixForAnyValue  = "foranyvalue:"
