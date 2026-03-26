@@ -2,82 +2,87 @@ package policy
 
 import "strings"
 
-// NetworkKey represents the types of network-scoping keys we track.
-type NetworkKey string
-
+// Condition keys for network scoping.
 const (
-	NetKeyIP   NetworkKey = "aws:sourceip"
-	NetKeyVPCE NetworkKey = "aws:sourcevpce"
-	NetKeyVPC  NetworkKey = "aws:sourcevpc"
-	NetKeyOrg  NetworkKey = "aws:principalorgid"
+	keySourceIP     = "aws:sourceip"
+	keySourceVPCE   = "aws:sourcevpce"
+	keySourceVPC    = "aws:sourcevpc"
+	keyPrincipalOrg = "aws:principalorgid"
 )
 
-// Map of keys to their respective flag setters.
-var networkKeyRegistry = map[string]func(*ConditionAnalysis){
-	string(NetKeyIP):   func(ca *ConditionAnalysis) { ca.HasIPCondition = true },
-	string(NetKeyVPCE): func(ca *ConditionAnalysis) { ca.HasVPCCondition = true },
-	string(NetKeyVPC):  func(ca *ConditionAnalysis) { ca.HasVPCCondition = true },
-	string(NetKeyOrg):  func(ca *ConditionAnalysis) { ca.HasOrgCondition = true },
-}
-
-// analyzeCondition reduces the AWS Condition map into a network-scope analysis.
+// analyzeCondition reduces an AWS Condition map into a network-scope analysis.
+// AWS Condition structure: map[Operator]map[Key]Value(s).
 func analyzeCondition(raw any) ConditionAnalysis {
 	analysis := ConditionAnalysis{}
-	conds, ok := raw.(map[string]any)
-	if !ok || len(conds) == 0 {
+
+	operators, ok := raw.(map[string]any)
+	if !ok || len(operators) == 0 {
 		return analysis
 	}
 
-	for operator, keys := range conds {
-		op := normalizeOperator(operator)
+	for opRaw, keysRaw := range operators {
+		op := normalizeOperator(opRaw)
 
-		keyMap, ok := keys.(map[string]any)
+		keys, ok := keysRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		for key, values := range keyMap {
-			k := strings.ToLower(key)
+		for keyRaw, valuesRaw := range keys {
+			key := strings.ToLower(keyRaw)
 
-			// 1) Check whether the key is network scoping.
-			setFlag, isNetworkKey := networkKeyRegistry[k]
-			if !isNetworkKey {
+			values := NormalizeStringOrSlice(valuesRaw)
+			if !isEffectiveConstraint(op, values) {
 				continue
 			}
 
-			// 2) Check whether operator+values create an effective constraint.
-			valSlice := NormalizeStringOrSlice(values)
-			if isEffectiveConstraint(op, valSlice) {
-				setFlag(&analysis)
+			analysis.ConditionKeys = append(analysis.ConditionKeys, key)
+			switch key {
+			case keySourceIP:
+				analysis.HasIPCondition = true
+			case keySourceVPCE, keySourceVPC:
+				analysis.HasVPCCondition = true
+			case keyPrincipalOrg:
+				analysis.HasOrgCondition = true
 			}
 		}
 	}
 	return analysis
 }
 
-// isEffectiveConstraint determines whether the condition is a real boundary.
+// isEffectiveConstraint determines whether a condition actually restricts
+// access. A wildcard value (e.g., StringLike: {"aws:SourceVpce": "*"})
+// is a no-op in AWS and should not be treated as a real boundary.
 func isEffectiveConstraint(op string, values []string) bool {
 	if len(values) == 0 {
 		return false
 	}
 
-	switch {
-	case strings.Contains(op, "ipaddress"):
-		// Any IPAddress/NotIpAddress with values is a scope boundary.
+	// IPAddress and NotIpAddress are almost always effective boundaries.
+	if strings.Contains(op, "ipaddress") {
 		return true
+	}
 
-	case strings.Contains(op, "string") || strings.Contains(op, "arn"):
-		// Ignore wildcard no-op patterns.
+	// String and ARN operators require at least one non-wildcard value.
+	if strings.Contains(op, "string") || strings.Contains(op, "arn") {
 		for _, v := range values {
-			if v != "*" {
+			if v != wildcard {
 				return true
 			}
 		}
+		return false
+	}
+
+	// Bool operators (like aws:SecureTransport) are effective if present.
+	if strings.Contains(op, "bool") {
+		return true
 	}
 
 	return false
 }
 
+// normalizeOperator strips AWS-specific modifiers from the operator name.
+// e.g., "ForAnyValue:StringEqualsIfExists" → "stringequals".
 func normalizeOperator(op string) string {
 	clean := strings.ToLower(op)
 	clean = strings.TrimPrefix(clean, condPrefixForAnyValue)
