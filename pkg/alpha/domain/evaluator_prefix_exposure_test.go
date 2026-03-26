@@ -14,13 +14,8 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
 )
 
-// newPrefixSet is a test helper wrapping NewPrefixSetFromPrefixes with raw strings.
 func newPrefixSet(raw []string) policy.PrefixSet {
-	prefixes := make([]kernel.ObjectPrefix, len(raw))
-	for i, s := range raw {
-		prefixes[i] = kernel.ObjectPrefix(s)
-	}
-	return policy.NewPrefixSetFromPrefixes(prefixes)
+	return policy.NewPrefixSet(raw...)
 }
 
 func TestNewPrefixSet(t *testing.T) {
@@ -72,7 +67,7 @@ func TestDetectOverlap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			conflict := policy.DetectOverlap(newPrefixSet(tt.allowed), newPrefixSet(tt.protected))
+			conflict := newPrefixSet(tt.allowed).Overlap(newPrefixSet(tt.protected))
 			wantConflict := tt.wantA != "" || tt.wantP != ""
 			if wantConflict {
 				if conflict == nil {
