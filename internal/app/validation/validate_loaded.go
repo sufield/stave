@@ -82,7 +82,7 @@ func ValidateLoaded(input Input) Result {
 
 	// 3. Cross-model consistency checks.
 	if len(input.Controls) > 0 && len(input.Snapshots) > 0 {
-		issues.AddAll(policy.CheckControlEffectiveness(input.Controls, input.Snapshots, input.PredicateEval))
+		issues.AddAll(policy.CheckEffectiveness(input.Controls, input.Snapshots, input.PredicateEval))
 	}
 
 	return Result{

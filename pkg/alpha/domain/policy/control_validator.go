@@ -160,7 +160,7 @@ func validateOperatorSupport(ctl *ControlDefinition) []diag.Issue {
 }
 
 func validateParameterReferences(ctl *ControlDefinition) []diag.Issue {
-	missing := FindMissingParamReferences(ctl.UnsafePredicate, ctl.Params)
+	missing := ctl.UnsafePredicate.MissingParamReferences(ctl.Params)
 	if len(missing) == 0 {
 		return nil
 	}

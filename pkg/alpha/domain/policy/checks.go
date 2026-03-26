@@ -7,12 +7,13 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/diag"
 )
 
-// FindMissingParamReferences identifies predicate rules that reference control
-// parameters that have not been defined.
-func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []string {
+// MissingParamReferences identifies parameter names used in rules but
+// missing from the control's params definition. Returns a sorted,
+// deduplicated list of missing keys.
+func (p UnsafePredicate) MissingParamReferences(params ControlParams) []string {
 	missingSet := make(map[string]struct{})
 
-	pred.Walk(func(rule PredicateRule) {
+	p.Walk(func(rule PredicateRule) {
 		if rule.ValueFromParam.IsZero() {
 			return
 		}
@@ -34,13 +35,17 @@ func FindMissingParamReferences(pred UnsafePredicate, params ControlParams) []st
 	return keys
 }
 
-// CheckControlEffectiveness evaluates if controls are matching any assets in the
-// current dataset. This helps identify misconfigured predicates.
-func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) []diag.Issue {
-	var issues []diag.Issue
+// CheckEffectiveness identifies controls that never triggered across the
+// provided dataset. This is a diagnostic tool to find misconfigured or
+// obsolete rules.
+func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) []diag.Issue {
+	if eval == nil {
+		return nil
+	}
 
+	var issues []diag.Issue
 	for _, ctl := range controls {
-		if !isControlMatchingAny(ctl, snapshots, eval) {
+		if !isTriggered(ctl, snapshots, eval) {
 			issues = append(issues, diag.New(diag.CodeControlNeverMatches).
 				Warning().
 				Action("Check predicate field paths or verify if all resources are currently safe.").
@@ -48,14 +53,12 @@ func CheckControlEffectiveness(controls []ControlDefinition, snapshots []asset.S
 				Build())
 		}
 	}
-
 	return issues
 }
 
-func isControlMatchingAny(ctl ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) bool {
-	if eval == nil {
-		return false
-	}
+// isTriggered determines if a control matches at least one asset.
+// Short-circuits on the first match.
+func isTriggered(ctl ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) bool {
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
 			unsafe, err := eval(ctl, a, snap.Identities)

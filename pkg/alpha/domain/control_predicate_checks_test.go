@@ -26,7 +26,7 @@ func TestFindMissingParamReferences_DedupesAndSorts(t *testing.T) {
 		},
 	}
 
-	got := policy.FindMissingParamReferences(pred, policy.NewParams(map[string]any{
+	got := pred.MissingParamReferences(policy.NewParams(map[string]any{
 		"a": "present",
 	}))
 
@@ -73,7 +73,7 @@ func TestCheckControlEffectiveness(t *testing.T) {
 		},
 	}
 
-	issues := policy.CheckControlEffectiveness(controls, snapshots, testCELEvaluator())
+	issues := policy.CheckEffectiveness(controls, snapshots, testCELEvaluator())
 	if len(issues) != 1 {
 		t.Fatalf("issue count = %d, want 1 (%v)", len(issues), issues)
 	}
