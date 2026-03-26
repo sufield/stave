@@ -22,64 +22,52 @@ const (
 	TypePrefixExposure                    // 9
 )
 
+// typeToName is the single source of truth for type↔string mapping.
+var typeToName = map[ControlType]string{
+	TypeUnsafeState:           "unsafe_state",
+	TypeUnsafeDuration:        "unsafe_duration",
+	TypeUnsafeRecurrence:      "unsafe_recurrence",
+	TypeAuthorizationBoundary: "authorization_boundary",
+	TypeAudienceBoundary:      "audience_boundary",
+	TypeJustificationRequired: "justification_required",
+	TypeOwnershipRequired:     "ownership_required",
+	TypeVisibilityRequired:    "visibility_required",
+	TypePrefixExposure:        "prefix_exposure",
+}
+
+// nameToType provides reverse lookup for parsing.
+var nameToType = func() map[string]ControlType {
+	m := make(map[string]ControlType, len(typeToName))
+	for k, v := range typeToName {
+		m[v] = k
+	}
+	return m
+}()
+
 // String returns the wire-format name of the control type.
 func (t ControlType) String() string {
-	switch t {
-	case TypeUnsafeState:
-		return "unsafe_state"
-	case TypeUnsafeDuration:
-		return "unsafe_duration"
-	case TypeUnsafeRecurrence:
-		return "unsafe_recurrence"
-	case TypeAuthorizationBoundary:
-		return "authorization_boundary"
-	case TypeAudienceBoundary:
-		return "audience_boundary"
-	case TypeJustificationRequired:
-		return "justification_required"
-	case TypeOwnershipRequired:
-		return "ownership_required"
-	case TypeVisibilityRequired:
-		return "visibility_required"
-	case TypePrefixExposure:
-		return "prefix_exposure"
-	default:
-		return "unknown"
+	if s, ok := typeToName[t]; ok {
+		return s
 	}
+	return "unknown"
 }
 
 // IsValid reports whether t is a recognized canonical control type.
 func (t ControlType) IsValid() bool {
-	return t > TypeUnknown && t <= TypePrefixExposure
+	_, ok := typeToName[t]
+	return ok
 }
 
 // ParseControlType converts a string name into a ControlType.
 func ParseControlType(s string) (ControlType, error) {
 	norm := strings.TrimSpace(strings.ToLower(s))
-	switch norm {
-	case "unsafe_state":
-		return TypeUnsafeState, nil
-	case "unsafe_duration":
-		return TypeUnsafeDuration, nil
-	case "unsafe_recurrence":
-		return TypeUnsafeRecurrence, nil
-	case "authorization_boundary":
-		return TypeAuthorizationBoundary, nil
-	case "audience_boundary":
-		return TypeAudienceBoundary, nil
-	case "justification_required":
-		return TypeJustificationRequired, nil
-	case "ownership_required":
-		return TypeOwnershipRequired, nil
-	case "visibility_required":
-		return TypeVisibilityRequired, nil
-	case "prefix_exposure":
-		return TypePrefixExposure, nil
-	case "", "unknown":
+	if norm == "" || norm == "unknown" {
 		return TypeUnknown, nil
-	default:
-		return TypeUnknown, fmt.Errorf("unknown control type %q", s)
 	}
+	if t, ok := nameToType[norm]; ok {
+		return t, nil
+	}
+	return TypeUnknown, fmt.Errorf("policy: unknown control type %q", s)
 }
 
 // --- Serialization ---
