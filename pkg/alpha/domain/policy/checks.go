@@ -49,7 +49,7 @@ func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot
 			issues = append(issues, diag.New(diag.CodeControlNeverMatches).
 				Warning().
 				Action("Check predicate field paths or verify if all resources are currently safe.").
-				WithMap(buildCtx(&ctl, nil)).
+				WithMap(buildIssueContext(&ctl, nil)).
 				Build())
 		}
 	}
