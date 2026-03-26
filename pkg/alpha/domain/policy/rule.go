@@ -21,10 +21,9 @@ type PredicateRule struct {
 	All []PredicateRule
 }
 
-// --- Evidence Extraction ---
-
 // ExtractMisconfigurations traverses the predicate tree to pull the actual observed
 // values for every field mentioned in the unsafe predicate.
+// Returns a sorted, deduplicated slice of misconfigurations.
 func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfiguration {
 	if p == nil {
 		return nil
@@ -32,37 +31,47 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 
 	var results []Misconfiguration
 	for i := range p.Any {
-		p.Any[i].collectFields(ctx, &results)
+		results = p.Any[i].collect(ctx, results)
 	}
 	for i := range p.All {
-		p.All[i].collectFields(ctx, &results)
+		results = p.All[i].collect(ctx, results)
 	}
 
-	// Sort by Property name for stable, deterministic reporting.
+	if len(results) == 0 {
+		return nil
+	}
+
+	// Sort by Property then Operator for fully deterministic output.
 	slices.SortFunc(results, func(a, b Misconfiguration) int {
-		return cmp.Compare(a.Property, b.Property)
+		if n := cmp.Compare(a.Property, b.Property); n != 0 {
+			return n
+		}
+		return cmp.Compare(string(a.Operator), string(b.Operator))
 	})
 
-	return results
+	// Remove adjacent duplicates (same property checked multiple times in a logic tree).
+	// Compare only Property + Operator to avoid panics on non-comparable ActualValue types.
+	return slices.CompactFunc(results, func(a, b Misconfiguration) bool {
+		return a.Property == b.Property && a.Operator == b.Operator
+	})
 }
 
-func (r *PredicateRule) collectFields(ctx *EvalContext, results *[]Misconfiguration) {
-	// Recursive traversal for nested logic blocks
+// collect appends discovered misconfigurations and returns the updated slice.
+func (r *PredicateRule) collect(ctx *EvalContext, results []Misconfiguration) []Misconfiguration {
 	for i := range r.Any {
-		r.Any[i].collectFields(ctx, results)
+		results = r.Any[i].collect(ctx, results)
 	}
 	for i := range r.All {
-		r.All[i].collectFields(ctx, results)
+		results = r.All[i].collect(ctx, results)
 	}
 
-	// Leaf node processing
 	if r.Field.IsZero() {
-		return
+		return results
 	}
 
 	val, _ := resolvePropertyValue(ctx.Properties, r.Field.Parts())
 
-	*results = append(*results, Misconfiguration{
+	return append(results, Misconfiguration{
 		Property:    r.Field.TrimPrefix(propertiesPathPrefix),
 		ActualValue: val,
 		Operator:    r.Op,
