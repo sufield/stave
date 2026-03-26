@@ -8,17 +8,15 @@ import (
 )
 
 // PrefixSet represents a normalized, sorted, and non-redundant collection of path prefixes.
+// The zero value is a valid empty set.
 type PrefixSet struct {
 	prefixes []kernel.ObjectPrefix
 }
 
-// NewPrefixSetFromPrefixes constructs a PrefixSet from already-typed prefixes.
-func NewPrefixSetFromPrefixes(prefixes []kernel.ObjectPrefix) PrefixSet {
-	raw := make([]string, len(prefixes))
-	for i, p := range prefixes {
-		raw[i] = string(p)
-	}
-	return PrefixSet{prefixes: normalizePrefixes(raw)}
+// NewPrefixSet constructs a PrefixSet from raw strings.
+// It handles normalization, sorting, and removal of redundant sub-paths.
+func NewPrefixSet(prefixes ...string) PrefixSet {
+	return PrefixSet{prefixes: normalizePrefixes(prefixes)}
 }
 
 // Empty reports whether the set contains no path prefixes.
@@ -26,9 +24,9 @@ func (ps PrefixSet) Empty() bool {
 	return len(ps.prefixes) == 0
 }
 
-// Prefixes returns the sorted, normalized object prefixes.
+// Prefixes returns a copy of the sorted, normalized object prefixes.
 func (ps PrefixSet) Prefixes() []kernel.ObjectPrefix {
-	return ps.prefixes
+	return slices.Clone(ps.prefixes)
 }
 
 // PrefixConflict identifies a path containment collision between an allowed and protected prefix.
@@ -37,30 +35,28 @@ type PrefixConflict struct {
 	Protected kernel.ObjectPrefix
 }
 
-// DetectOverlap identifies the first instance where a prefix from the allowed set
-// contains or is contained by a prefix in the protected set.
-func DetectOverlap(allowed, protected PrefixSet) *PrefixConflict {
-	aIdx, pIdx := 0, 0
-	aLen, pLen := len(allowed.prefixes), len(protected.prefixes)
+// Overlap identifies the first instance where a prefix from this set
+// contains or is contained by a prefix in the other set.
+// Both sets must be sorted; runs in O(N+M).
+func (ps PrefixSet) Overlap(other PrefixSet) *PrefixConflict {
+	aIdx, oIdx := 0, 0
+	aLen, oLen := len(ps.prefixes), len(other.prefixes)
 
-	for aIdx < aLen && pIdx < pLen {
-		a := string(allowed.prefixes[aIdx])
-		p := string(protected.prefixes[pIdx])
+	for aIdx < aLen && oIdx < oLen {
+		a := string(ps.prefixes[aIdx])
+		o := string(other.prefixes[oIdx])
 
 		switch {
-		case strings.HasPrefix(a, p):
-			// Protected prefix is higher/equal (e.g., p="a/", a="a/b/")
-			return &PrefixConflict{Allowed: allowed.prefixes[aIdx], Protected: protected.prefixes[pIdx]}
-		case strings.HasPrefix(p, a):
-			// Allowed prefix is higher (e.g., a="a/", p="a/b/")
-			return &PrefixConflict{Allowed: allowed.prefixes[aIdx], Protected: protected.prefixes[pIdx]}
+		case strings.HasPrefix(a, o):
+			return &PrefixConflict{Allowed: ps.prefixes[aIdx], Protected: other.prefixes[oIdx]}
+		case strings.HasPrefix(o, a):
+			return &PrefixConflict{Allowed: ps.prefixes[aIdx], Protected: other.prefixes[oIdx]}
 		}
 
-		// Move the pointer that is lexicographically smaller
-		if a < p {
+		if a < o {
 			aIdx++
 		} else {
-			pIdx++
+			oIdx++
 		}
 	}
 

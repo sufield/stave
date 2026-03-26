@@ -61,10 +61,7 @@ func (ctl *ControlDefinition) Prepare() error {
 		d, err := kernel.ParseDuration(raw)
 		if err != nil {
 			ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
-			ctl.Prepared.PrefixExposure = PrefixExposureParams{
-				AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.paramStringSlice("allowed_public_prefixes")),
-				ProtectedPrefixes:     toObjectPrefixes(ctl.Params.paramStringSlice("protected_prefixes")),
-			}
+			ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
 			ctl.Prepared.Ready = true
 			return fmt.Errorf("invalid max_unsafe_duration %q: %w", raw, err)
 		}
@@ -72,23 +69,16 @@ func (ctl *ControlDefinition) Prepare() error {
 		ctl.Prepared.HasMaxUnsafeDuration = true
 	}
 	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
-	ctl.Prepared.PrefixExposure = PrefixExposureParams{
-		AllowedPublicPrefixes: toObjectPrefixes(ctl.Params.paramStringSlice("allowed_public_prefixes")),
-		ProtectedPrefixes:     toObjectPrefixes(ctl.Params.paramStringSlice("protected_prefixes")),
-	}
+	ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
 	ctl.Prepared.Ready = true
 	return nil
 }
 
-func toObjectPrefixes(raw []string) []kernel.ObjectPrefix {
-	if raw == nil {
-		return nil
+func preparePrefixExposure(params ControlParams) PrefixExposureParams {
+	return PrefixExposureParams{
+		AllowedPublicPrefixes: NewPrefixSet(params.paramStringSlice("allowed_public_prefixes")...),
+		ProtectedPrefixes:     NewPrefixSet(params.paramStringSlice("protected_prefixes")...),
 	}
-	out := make([]kernel.ObjectPrefix, len(raw))
-	for i, s := range raw {
-		out[i] = kernel.ObjectPrefix(s)
-	}
-	return out
 }
 
 // --- Accessors (Require Prepare) ---
@@ -250,8 +240,8 @@ type PreparedParams struct {
 
 // PrefixExposureParams holds the typed prefix lists for prefix_exposure controls.
 type PrefixExposureParams struct {
-	AllowedPublicPrefixes []kernel.ObjectPrefix
-	ProtectedPrefixes     []kernel.ObjectPrefix
+	AllowedPublicPrefixes PrefixSet
+	ProtectedPrefixes     PrefixSet
 }
 
 // EvaluatableTypes defines which control types the engine currently supports.

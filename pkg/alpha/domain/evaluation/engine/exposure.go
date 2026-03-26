@@ -33,7 +33,7 @@ func EvaluatePrefixExposureForRow(
 		return buildConfigIssue(row, ctl, timeline, msgMissingProtectedPrefixes(), valNotConfigured)
 	}
 
-	if conflict := policy.DetectOverlap(allowed, protected); conflict != nil {
+	if conflict := allowed.Overlap(protected); conflict != nil {
 		return buildOverlapIssue(row, ctl, timeline, conflict)
 	}
 
@@ -124,8 +124,7 @@ func buildOverlapIssue(
 
 func prefixExposureSets(ctl *policy.ControlDefinition) (allowed, protected policy.PrefixSet) {
 	p := ctl.ExposurePrefixes()
-	return policy.NewPrefixSetFromPrefixes(p.AllowedPublicPrefixes),
-		policy.NewPrefixSetFromPrefixes(p.ProtectedPrefixes)
+	return p.AllowedPublicPrefixes, p.ProtectedPrefixes
 }
 
 func msgMissingProtectedPrefixes() string {
