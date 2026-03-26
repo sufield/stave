@@ -1,2 +1,0 @@
-
-Need help? Run 'stave bug-report' to create a diagnostic bundle.
