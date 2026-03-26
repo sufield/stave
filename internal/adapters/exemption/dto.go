@@ -14,7 +14,7 @@ type yamlExemptionRule struct {
 	Reason  string `yaml:"reason"`
 }
 
-func exemptionConfigToDomain(y yamlExemptionConfig) policy.ExemptionConfig {
+func exemptionConfigToDomain(y yamlExemptionConfig) *policy.ExemptionConfig {
 	rules := make([]policy.ExemptionRule, len(y.Assets))
 	for i, r := range y.Assets {
 		rules[i] = policy.ExemptionRule{
@@ -22,8 +22,5 @@ func exemptionConfigToDomain(y yamlExemptionConfig) policy.ExemptionConfig {
 			Reason:  r.Reason,
 		}
 	}
-	return policy.ExemptionConfig{
-		Version: y.Version,
-		Assets:  rules,
-	}
+	return policy.NewExemptionConfig(y.Version, rules)
 }

@@ -136,7 +136,7 @@ func (e *Runner) evaluateControl(
 	for _, assetID := range assetIDs {
 		timeline := timelines[assetID]
 		// Check if asset is exempted.
-		if rule := e.Exemptions.ShouldExempt(string(assetID)); rule != nil {
+		if rule := e.Exemptions.ShouldExempt(assetID); rule != nil {
 			if acc.TrackExemption(assetID) {
 				acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
 			}
