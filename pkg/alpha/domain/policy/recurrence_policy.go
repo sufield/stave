@@ -26,18 +26,24 @@ func ParseRecurrencePolicy(params ControlParams) RecurrencePolicy {
 	}
 }
 
-// Configured reports whether the policy has valid parameters to perform an evaluation.
-func (p RecurrencePolicy) Configured() bool {
+// Enabled reports whether the policy has valid parameters to perform an evaluation.
+func (p RecurrencePolicy) Enabled() bool {
 	return p.Limit > 0 && p.WindowDays > 0
 }
 
 // WindowDuration converts the day-based window into a standard time.Duration.
+// This assumes 24-hour days; for calendar-accurate lookups across DST
+// boundaries, use Window() instead.
 func (p RecurrencePolicy) WindowDuration() time.Duration {
 	return time.Duration(p.WindowDays) * 24 * time.Hour
 }
 
 // Window returns a TimeWindow representing the evaluation period ending at the provided time.
+// Returns a zero TimeWindow if the policy is not enabled.
 func (p RecurrencePolicy) Window(now time.Time) kernel.TimeWindow {
+	if !p.Enabled() {
+		return kernel.TimeWindow{}
+	}
 	// AddDate handles calendar complexities better than duration math for day units.
 	start := now.AddDate(0, 0, -p.WindowDays)
 	return kernel.NewTimeWindow(start, now)

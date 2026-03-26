@@ -23,7 +23,7 @@ func EvaluateRecurrenceForControl(
 	now time.Time,
 ) []*evaluation.Finding {
 	p := ctl.RecurrencePolicy()
-	if !p.Configured() {
+	if !p.Enabled() {
 		return nil
 	}
 

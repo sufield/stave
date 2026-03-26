@@ -137,7 +137,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time) (e
 	row := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 
-	if !p.Configured() {
+	if !p.Enabled() {
 		row.Reason = "missing recurrence parameters"
 		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
 	}
