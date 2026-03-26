@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"slices"
 
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
@@ -50,15 +49,15 @@ type Assessment struct {
 	ExternalAccountIDs  []string `json:"external_account_ids"`
 }
 
-// Document is the parsed bucket policy. It is created once via Parse
-// and provides Assess() as the single entry point for analysis.
+// Document is the parsed bucket policy. Created once via Parse;
+// provides Assess() as the single entry point for analysis.
 type Document struct {
 	statements []Statement
 }
 
 // Parse turns raw policy JSON into a typed Document.
 func Parse(policyJSON string) (*Document, error) {
-	if policyJSON == "" {
+	if policyJSON == "" || policyJSON == "{}" {
 		return &Document{}, nil
 	}
 	var raw BucketPolicy
@@ -68,11 +67,15 @@ func Parse(policyJSON string) (*Document, error) {
 	return &Document{statements: raw.Statement}, nil
 }
 
-// Assess performs a comprehensive security analysis in a single pass,
-// producing transport, access, cross-account, and network results.
+// Assess performs a comprehensive security analysis in a single pass.
 func (d *Document) Assess() Assessment {
-	var res Assessment
-	state := analysisState{}
+	res := Assessment{
+		PublicStatements:   []kernel.StatementID{},
+		ExternalAccountIDs: []string{},
+	}
+	state := &analysisState{
+		seenAccounts: make(map[string]struct{}),
+	}
 
 	for i, stmt := range d.statements {
 		if stmt.EnforcesHTTPS() {
@@ -87,7 +90,7 @@ func (d *Document) Assess() Assessment {
 
 		// Cross-account analysis
 		if scope == kernel.ScopeAccount {
-			d.extractExternalAccounts(&res, stmt)
+			analyzeExternalAccess(&res, state, stmt)
 			continue
 		}
 
@@ -101,44 +104,53 @@ func (d *Document) Assess() Assessment {
 		state.updateWeakestScope(resolveConditionScope(condition))
 
 		// Action analysis
-		actionMask, _ := stmt.ResolveActions()
-		if actionMask != 0 {
+		mask, _ := stmt.ResolveActions()
+		if mask != 0 {
 			res.PublicStatements = append(res.PublicStatements, stmt.StatementID(i))
 		}
 		res.HasWildcardActions = res.HasWildcardActions || stmt.HasWildcardActionsOnWildcardResources()
 
-		// Permission accumulation
+		// Permission accumulation by scope
 		switch {
 		case stmt.IsPubliclyExposed():
 			if !condition.IsNetworkScoped() {
-				state.publicPerms |= actionMask
+				state.publicPerms |= mask
 			}
 		case scope == kernel.ScopeAuthenticated:
-			state.authPerms |= actionMask
+			state.authPerms |= mask
 		}
 	}
 
-	applyPermissionMasks(&res, state.publicPerms, state.authPerms)
-	res.EffectiveNetworkScope = state.weakestScope
-
+	res.applyMasks(state)
 	return res
 }
 
-func (d *Document) extractExternalAccounts(res *Assessment, stmt Statement) {
+// analyzeExternalAccess extracts cross-account ARNs and tracks unique
+// account IDs using a set for O(1) dedup instead of O(n) slice search.
+func analyzeExternalAccess(res *Assessment, state *analysisState, stmt Statement) {
 	arns := stmt.PrincipalARNs()
-	for _, arn := range arns {
-		if id, ok := extractAccountID(arn); ok {
-			if !slices.Contains(res.ExternalAccountIDs, id) {
-				res.ExternalAccountIDs = append(res.ExternalAccountIDs, id)
-				res.ExternalAccountARNs = append(res.ExternalAccountARNs, arn)
-			}
-		}
+	if len(arns) == 0 {
+		return
 	}
-	if len(arns) > 0 {
-		res.HasExternalAccess = true
-		if stmt.HasWriteActions() {
-			res.HasExternalWrite = true
+
+	res.HasExternalAccess = true
+
+	mask, _ := stmt.ResolveActions()
+	if mask.has(actionWrite) || mask.has(actionDelete) || mask.has(actionACLWrite) {
+		res.HasExternalWrite = true
+	}
+
+	for _, arn := range arns {
+		id, ok := extractAccountID(arn)
+		if !ok {
+			continue
 		}
+		if _, seen := state.seenAccounts[id]; seen {
+			continue
+		}
+		state.seenAccounts[id] = struct{}{}
+		res.ExternalAccountIDs = append(res.ExternalAccountIDs, id)
+		res.ExternalAccountARNs = append(res.ExternalAccountARNs, arn)
 	}
 }
 
@@ -146,6 +158,7 @@ type analysisState struct {
 	weakestScope kernel.NetworkScope
 	publicPerms  actionMask
 	authPerms    actionMask
+	seenAccounts map[string]struct{}
 }
 
 func (s *analysisState) updateWeakestScope(scope kernel.NetworkScope) {
@@ -154,19 +167,21 @@ func (s *analysisState) updateWeakestScope(scope kernel.NetworkScope) {
 	}
 }
 
-func applyPermissionMasks(res *Assessment, publicPerms, authPerms actionMask) {
-	res.AllowsPublicRead = publicPerms.has(actionRead)
-	res.AllowsPublicList = publicPerms.has(actionList)
-	res.AllowsPublicWrite = publicPerms.has(actionWrite)
-	res.AllowsPublicDelete = publicPerms.has(actionDelete)
-	res.AllowsPublicACLWrite = publicPerms.has(actionACLWrite)
-	res.AllowsPublicACLRead = publicPerms.has(actionACLRead)
+func (r *Assessment) applyMasks(state *analysisState) {
+	r.EffectiveNetworkScope = state.weakestScope
 
-	res.AllowsAuthenticatedRead = authPerms.has(actionRead)
-	res.AllowsAuthenticatedList = authPerms.has(actionList)
-	res.AllowsAuthenticatedWrite = authPerms.has(actionWrite)
-	res.AllowsAuthenticatedACLWrite = authPerms.has(actionACLWrite)
-	res.AllowsAuthenticatedACLRead = authPerms.has(actionACLRead)
+	r.AllowsPublicRead = state.publicPerms.has(actionRead)
+	r.AllowsPublicList = state.publicPerms.has(actionList)
+	r.AllowsPublicWrite = state.publicPerms.has(actionWrite)
+	r.AllowsPublicDelete = state.publicPerms.has(actionDelete)
+	r.AllowsPublicACLWrite = state.publicPerms.has(actionACLWrite)
+	r.AllowsPublicACLRead = state.publicPerms.has(actionACLRead)
+
+	r.AllowsAuthenticatedRead = state.authPerms.has(actionRead)
+	r.AllowsAuthenticatedList = state.authPerms.has(actionList)
+	r.AllowsAuthenticatedWrite = state.authPerms.has(actionWrite)
+	r.AllowsAuthenticatedACLWrite = state.authPerms.has(actionACLWrite)
+	r.AllowsAuthenticatedACLRead = state.authPerms.has(actionACLRead)
 }
 
 func extractAccountID(arn string) (string, bool) {

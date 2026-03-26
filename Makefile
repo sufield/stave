@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public sync-public-dry fuzz docker-demo demo-check readme readme-check
+.PHONY: all build build-dev test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz docker-demo demo-check readme readme-check
 
 # Binary name
 BINARY=stave
@@ -306,7 +306,6 @@ demo-check: build
 # internal-only directories. The public repo lives at PUBLIC_DEST.
 #
 # Usage:
-#   make sync-public-dry          # preview what would be copied/deleted
 #   make sync-public              # sync and show summary
 #   make sync-public MSG="v0.1.0 release"  # sync, commit, push
 
@@ -319,10 +318,6 @@ SYNC_EXCLUDES = \
 	--exclude='.lychee.toml' \
 	--exclude='dist/' \
 	--exclude='dist-local/'
-
-## sync-public-dry: Preview sync to public repo (no changes)
-sync-public-dry:
-	rsync -avn --delete $(SYNC_EXCLUDES) ./ $(PUBLIC_DEST)
 
 ## sync-public: Sync to public repo
 sync-public:
