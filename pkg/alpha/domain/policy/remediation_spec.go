@@ -15,26 +15,20 @@ type RemediationSpec struct {
 	Example string `json:"example,omitempty"`
 }
 
+// NewRemediationSpec constructs a spec with whitespace-trimmed Description and Action.
+// Example is left as-is because it may contain multiline block content.
+// Use this at input boundaries (YAML loading, API ingestion) to normalize
+// data before it enters the domain.
+func NewRemediationSpec(desc, action, example string) *RemediationSpec {
+	return &RemediationSpec{
+		Description: strings.TrimSpace(desc),
+		Action:      strings.TrimSpace(action),
+		Example:     example,
+	}
+}
+
 // Actionable reports whether the specification contains a concrete remediation instruction.
 // It is safe to call on a nil receiver.
 func (s *RemediationSpec) Actionable() bool {
-	return s != nil && strings.TrimSpace(s.Action) != ""
-}
-
-// IsValid reports whether the specification contains the minimum required
-// information (Description and Action) to be useful to an operator.
-func (s *RemediationSpec) IsValid() bool {
-	if s == nil {
-		return false
-	}
-	return strings.TrimSpace(s.Description) != "" && strings.TrimSpace(s.Action) != ""
-}
-
-// DeepCopy returns a new copy of the remediation specification.
-func (s *RemediationSpec) DeepCopy() *RemediationSpec {
-	if s == nil {
-		return nil
-	}
-	cp := *s
-	return &cp
+	return s != nil && s.Action != ""
 }
