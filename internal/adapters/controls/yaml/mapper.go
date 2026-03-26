@@ -62,11 +62,7 @@ func remediationToDomain(y *yamlRemediationSpec) *policy.RemediationSpec {
 	if y == nil {
 		return nil
 	}
-	return &policy.RemediationSpec{
-		Description: y.Description,
-		Action:      y.Action,
-		Example:     y.Example,
-	}
+	return policy.NewRemediationSpec(y.Description, y.Action, y.Example)
 }
 
 func exposureToDomain(y *yamlExposure) *policy.Exposure {
