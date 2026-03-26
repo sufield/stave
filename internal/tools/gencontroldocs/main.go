@@ -65,7 +65,7 @@ func main() {
 		return
 	}
 
-	if err := os.WriteFile(*outPath, buf.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(*outPath, buf.Bytes(), 0o600); err != nil {
 		fmt.Fprintf(os.Stderr, "error: write %s: %v\n", *outPath, err)
 		os.Exit(1)
 	}
@@ -90,11 +90,11 @@ type countEntry struct {
 }
 
 type templateData struct {
-	Total     int
-	PackHash  string
-	Controls  []controlData
-	ByDomain  []countEntry
-	BySev     []countEntry
+	Total    int
+	PackHash string
+	Controls []controlData
+	ByDomain []countEntry
+	BySev    []countEntry
 }
 
 func buildTemplateData(catalog *policy.Catalog, hasher ports.Digester) templateData {

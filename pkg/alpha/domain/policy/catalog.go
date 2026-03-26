@@ -12,23 +12,16 @@ import (
 // Controls are sorted by ID for deterministic iteration.
 type Catalog struct {
 	controls []ControlDefinition
-	byID     map[kernel.ControlID]*ControlDefinition
 }
 
 // NewCatalog constructs a catalog from a slice of controls.
-// Controls are sorted by ID; duplicates are kept (last wins in lookup).
+// Controls are sorted by ID for deterministic iteration.
 func NewCatalog(controls []ControlDefinition) *Catalog {
 	sorted := slices.Clone(controls)
 	slices.SortFunc(sorted, func(a, b ControlDefinition) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
-
-	byID := make(map[kernel.ControlID]*ControlDefinition, len(sorted))
-	for i := range sorted {
-		byID[sorted[i].ID] = &sorted[i]
-	}
-
-	return &Catalog{controls: sorted, byID: byID}
+	return &Catalog{controls: sorted}
 }
 
 // List returns all controls in sorted order.
@@ -45,44 +38,6 @@ func (c *Catalog) Len() int {
 		return 0
 	}
 	return len(c.controls)
-}
-
-// Get retrieves a control by ID.
-func (c *Catalog) Get(id kernel.ControlID) (*ControlDefinition, bool) {
-	if c == nil {
-		return nil, false
-	}
-	ctl, ok := c.byID[id]
-	return ctl, ok
-}
-
-// FindByID retrieves a control by ID, returning nil if not found.
-// Satisfies the evaluation.ControlProvider interface.
-func (c *Catalog) FindByID(id kernel.ControlID) *ControlDefinition {
-	ctl, _ := c.Get(id)
-	return ctl
-}
-
-// Filter returns controls whose ScopeTags contain at least one of the given tags.
-func (c *Catalog) Filter(tags ...string) []ControlDefinition {
-	if c == nil || len(tags) == 0 {
-		return nil
-	}
-	tagSet := make(map[string]bool, len(tags))
-	for _, t := range tags {
-		tagSet[t] = true
-	}
-
-	var out []ControlDefinition
-	for _, ctl := range c.controls {
-		for _, st := range ctl.ScopeTags {
-			if tagSet[st] {
-				out = append(out, ctl)
-				break
-			}
-		}
-	}
-	return out
 }
 
 // PackHash returns a deterministic digest of the control IDs in this catalog.

@@ -41,7 +41,7 @@ type Evaluation struct {
 	Run               evaluation.RunInfo           `json:"run"`
 	Summary           evaluation.Summary           `json:"summary"`
 	SafetyStatus      evaluation.SafetyStatus      `json:"safety_status"`
-	AtRisk            risk.ThresholdItems           `json:"at_risk,omitempty"`
+	AtRisk            risk.ThresholdItems          `json:"at_risk,omitempty"`
 	Findings          []remediation.Finding        `json:"findings"`
 	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
 	RemediationGroups []remediation.Group          `json:"remediation_groups,omitempty"`

@@ -210,16 +210,16 @@ type AtRiskItemDTO struct {
 
 // ResultDTO is the top-level evaluation output envelope content.
 type ResultDTO struct {
-	SchemaVersion     kernel.Schema                `json:"schema_version"`
-	Kind              string                       `json:"kind"`
-	Run               RunInfoDTO                   `json:"run"`
-	Summary           SummaryDTO                   `json:"summary"`
-	SafetyStatus      evaluation.SafetyStatus      `json:"safety_status"`
-	AtRisk            []AtRiskItemDTO              `json:"at_risk,omitempty"`
-	Findings          []FindingDTO                 `json:"findings"`
-	ExceptedFindings  []ExceptedFindingDTO         `json:"excepted_findings,omitempty"`
-	RemediationGroups []RemediationGroupDTO        `json:"remediation_groups,omitempty"`
-	Skipped           []SkippedControlDTO          `json:"skipped,omitempty"`
-	ExemptedAssets    []ExemptedAssetDTO           `json:"exempted_assets,omitempty"`
-	Extensions        *ExtensionsDTO               `json:"extensions,omitempty"`
+	SchemaVersion     kernel.Schema           `json:"schema_version"`
+	Kind              string                  `json:"kind"`
+	Run               RunInfoDTO              `json:"run"`
+	Summary           SummaryDTO              `json:"summary"`
+	SafetyStatus      evaluation.SafetyStatus `json:"safety_status"`
+	AtRisk            []AtRiskItemDTO         `json:"at_risk,omitempty"`
+	Findings          []FindingDTO            `json:"findings"`
+	ExceptedFindings  []ExceptedFindingDTO    `json:"excepted_findings,omitempty"`
+	RemediationGroups []RemediationGroupDTO   `json:"remediation_groups,omitempty"`
+	Skipped           []SkippedControlDTO     `json:"skipped,omitempty"`
+	ExemptedAssets    []ExemptedAssetDTO      `json:"exempted_assets,omitempty"`
+	Extensions        *ExtensionsDTO          `json:"extensions,omitempty"`
 }
