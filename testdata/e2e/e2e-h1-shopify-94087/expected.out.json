@@ -50,8 +50,8 @@
           {
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "unsafe_value": true
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
           },
           {
             "property": "storage.tags.data-classification",
@@ -62,8 +62,8 @@
           {
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
+            "operator": "present",
+            "unsafe_value": true
           }
         ],
         "root_causes": [
@@ -169,7 +169,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }

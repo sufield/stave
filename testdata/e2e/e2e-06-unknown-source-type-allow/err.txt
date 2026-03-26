@@ -1,4 +1,4 @@
 Running: apply controls against observations...
 warning: snapshot[0] has no generated_by.source_type, proceeding anyway
-Done:    apply controls against observations (1 files, 12ms)
+Done:    apply controls against observations (1 files, 11ms)
 Evaluation complete. No violations found.

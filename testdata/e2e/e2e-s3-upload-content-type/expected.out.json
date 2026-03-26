@@ -64,8 +64,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Signed upload policy does not restrict content types. An attacker can upload arbitrary content types including image/svg+xml or text/html, enabling stored XSS.\n",
-        "action": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type.\n",
+        "description": "Signed upload policy does not restrict content types. An attacker can upload arbitrary content types including image/svg+xml or text/html, enabling stored XSS.",
+        "action": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type.",
         "example": "{\n  \"s3_upload\": {\n    \"operation\": \"write\",\n    \"content_type_restricted\": true,\n    \"allowed_content_types\": [\"image/jpeg\", \"image/png\"]\n  }\n}\n"
       }
     }
@@ -79,7 +79,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }

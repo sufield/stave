@@ -2,6 +2,7 @@ package policy
 
 import (
 	"cmp"
+	"fmt"
 	"slices"
 
 	"github.com/sufield/stave/pkg/alpha/domain/predicate"
@@ -41,18 +42,23 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 		return nil
 	}
 
-	// Sort by Property then Operator for fully deterministic output.
+	// Sort by Property, Operator, then UnsafeValue for fully deterministic output.
 	slices.SortFunc(results, func(a, b Misconfiguration) int {
 		if n := cmp.Compare(a.Property, b.Property); n != 0 {
 			return n
 		}
-		return cmp.Compare(string(a.Operator), string(b.Operator))
+		if n := cmp.Compare(string(a.Operator), string(b.Operator)); n != 0 {
+			return n
+		}
+		return cmp.Compare(fmt.Sprint(a.UnsafeValue), fmt.Sprint(b.UnsafeValue))
 	})
 
 	// Remove adjacent duplicates (same property checked multiple times in a logic tree).
-	// Compare only Property + Operator to avoid panics on non-comparable ActualValue types.
+	// Uses fmt.Sprint for UnsafeValue since it is type any and may not be comparable with ==.
 	return slices.CompactFunc(results, func(a, b Misconfiguration) bool {
-		return a.Property == b.Property && a.Operator == b.Operator
+		return a.Property == b.Property &&
+			a.Operator == b.Operator &&
+			fmt.Sprint(a.UnsafeValue) == fmt.Sprint(b.UnsafeValue)
 	})
 }
 

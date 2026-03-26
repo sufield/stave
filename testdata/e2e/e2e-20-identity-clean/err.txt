@@ -1,5 +1,5 @@
 Running: apply controls against observations...
 warning: snapshot[0] has unsupported source_type "kubernetes.rbac", proceeding anyway
 warning: snapshot[1] has unsupported source_type "kubernetes.rbac", proceeding anyway
-Done:    apply controls against observations (2 files, 14ms)
+Done:    apply controls against observations (2 files, 12ms)
 Evaluation complete. No violations found.

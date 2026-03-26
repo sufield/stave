@@ -52,8 +52,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.\n",
-        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.\n",
+        "description": "Bucket grants ACL read access (READ_ACP) to public users. An attacker can call GetBucketAcl to discover which principals have access and identify escalation paths.",
+        "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_admin\": false\n    }\n  }\n}\n"
       }
     }
@@ -67,7 +67,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }

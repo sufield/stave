@@ -58,8 +58,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.\n",
-        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
+        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
+        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
       }
     },
@@ -99,8 +99,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.\n",
-        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.\n",
+        "description": "Bucket ACL grants FULL_CONTROL to AllUsers or AuthenticatedUsers. This grants complete control including object read/write/delete and ACL modification.",
+        "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"has_full_control_public\": false,\n      \"has_full_control_authenticated\": false\n    }\n  }\n}\n"
       }
     }
@@ -114,7 +114,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }

@@ -64,8 +64,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.\n",
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.\n",
+        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
       }
     },
@@ -112,8 +112,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "PHI bucket is not using SSE-KMS with a customer-managed key. The organization lacks control over key rotation, access policies, and audit logging for PHI data at rest.\n",
-        "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation.\n",
+        "description": "PHI bucket is not using SSE-KMS with a customer-managed key. The organization lacks control over key rotation, access policies, and audit logging for PHI data at rest.",
+        "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation.",
         "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\",\n      \"kms_key_id\": \"arn:aws:kms:us-east-1:123456789012:key/example-key-id\"\n    }\n  }\n}\n"
       }
     },
@@ -145,8 +145,8 @@
           {
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
-            "operator": "present",
-            "unsafe_value": true
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
           },
           {
             "property": "storage.tags.data-classification",
@@ -157,8 +157,8 @@
           {
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
+            "operator": "present",
+            "unsafe_value": true
           }
         ],
         "root_causes": [
@@ -172,8 +172,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.\n",
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.\n",
+        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
       }
     },
@@ -214,8 +214,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket is missing the data-classification tag. Without this tag, sensitivity-gated controls cannot evaluate and the bucket silently passes all data-protection checks.\n",
-        "action": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets.\n",
+        "description": "Bucket is missing the data-classification tag. Without this tag, sensitivity-gated controls cannot evaluate and the bucket silently passes all data-protection checks.",
+        "action": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"internal\"\n    }\n  }\n}\n"
       }
     },
@@ -259,8 +259,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.\n",
-        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
@@ -327,6 +327,12 @@
             "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
+            "unsafe_value": "confidential"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
             "unsafe_value": "phi"
           },
           {
@@ -334,12 +340,6 @@
             "actual_value": "[SANITIZED]",
             "operator": "eq",
             "unsafe_value": "pii"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "confidential"
           }
         ],
         "root_causes": [
@@ -357,8 +357,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "A bucket containing sensitive data (PHI, PII, or confidential) has public read or list access. This data is accessible to anyone on the internet.\n",
-        "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window.\n",
+        "description": "A bucket containing sensitive data (PHI, PII, or confidential) has public read or list access. This data is accessible to anyone on the internet.",
+        "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
       },
       "fix_plan": {
@@ -431,8 +431,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket policy grants public read (Principal \\\"*\\\" with read action).\n",
-        "action": "Remove or constrain the public policy statement. Use restrictive principals or conditions and keep Public Access Block enabled.\n",
+        "description": "Bucket policy grants public read (Principal \\\"*\\\" with read action).",
+        "action": "Remove or constrain the public policy statement. Use restrictive principals or conditions and keep Public Access Block enabled.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
@@ -505,8 +505,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket policy grants public listing (Principal \\\"*\\\" with list action).\n",
-        "action": "Remove or constrain policy statements allowing s3:ListBucket to anonymous principals.\n",
+        "description": "Bucket policy grants public listing (Principal \\\"*\\\" with list action).",
+        "action": "Remove or constrain policy statements allowing s3:ListBucket to anonymous principals.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
@@ -579,8 +579,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket allows anonymous listing of objects. Public listing exposes all object keys, enabling targeted data exfiltration.\n",
-        "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block.\n",
+        "description": "Bucket allows anonymous listing of objects. Public listing exposes all object keys, enabling targeted data exfiltration.",
+        "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block.",
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
@@ -671,8 +671,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.\n",
-        "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.\n",
+        "description": "Bucket has public listing enabled without an explicit intent tag. Anonymous listing increases exposure surface even for public content.",
+        "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers.",
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
@@ -744,8 +744,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -817,8 +817,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -890,8 +890,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -963,8 +963,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -1036,8 +1036,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -1109,8 +1109,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -1182,8 +1182,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -1255,8 +1255,8 @@
         "episode_count": 1
       },
       "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.\n",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.\n",
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
@@ -1396,7 +1396,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7b7d044d71d66c066a21db51767d2c0cfe73d7ef",
+      "head_commit": "8612383402c7a2eee59bb23fff05e1b94148bbb8",
       "dirty": false
     }
   }
