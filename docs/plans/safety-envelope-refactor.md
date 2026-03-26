@@ -256,7 +256,7 @@ All phases are complete.
 - Renaming "control" to "invariant". The terminology migration to
   "control" was completed March 2026 (GLOSSARY.md). "Invariant" is the
   conceptual term for external audiences only.
-- New `internal/domain/safety/` package hierarchy. The existing domain
+- New `pkg/alpha/domain/safety/` package hierarchy. The existing domain
   lives at `pkg/alpha/domain/` and the evaluation subsystem is already
   well-structured there. Adding a parallel hierarchy creates confusion.
 - Schema version bump to `out.v0.2`. New fields are additive and
