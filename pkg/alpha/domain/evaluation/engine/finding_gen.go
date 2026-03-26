@@ -24,8 +24,7 @@ type DurationFindingInput struct {
 func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 	a := in.Timeline.Asset()
 	duration, _ := in.Timeline.UnsafeDuration(in.Now)
-	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.Identities...)
-	ctx.PredicateParser = in.PredicateParser
+	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.PredicateParser, in.Identities...)
 	misconfigs := policy.ExtractMisconfigurations(&in.Control.UnsafePredicate, ctx)
 	causes := DeriveRootCauses(misconfigs)
 
