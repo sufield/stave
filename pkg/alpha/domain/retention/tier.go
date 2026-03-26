@@ -9,33 +9,78 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
-// DefaultKeepMin is the fallback keep_min value when none is configured.
+// DefaultKeepMin is the fallback value for minimum items to retain if not specified.
 const DefaultKeepMin = 2
 
-// TierConfig holds a tier's retention settings.
-type TierConfig struct {
+// Tier defines the retention settings for a specific category of data.
+type Tier struct {
 	OlderThan string `yaml:"older_than" json:"older_than"`
 	KeepMin   int    `yaml:"keep_min"   json:"keep_min"`
 }
 
-// ParseDuration returns the OlderThan string as a time.Duration.
-func (c TierConfig) ParseDuration() (time.Duration, error) {
-	if c.OlderThan == "" {
-		return 0, fmt.Errorf("older_than is empty")
+// Validate checks if the tier configuration is semantically correct.
+func (t Tier) Validate() error {
+	if t.OlderThan == "" {
+		return fmt.Errorf("retention: older_than must not be empty")
 	}
-	return kernel.ParseDuration(c.OlderThan)
+	_, err := t.Duration()
+	return err
 }
 
-// EffectiveKeepMin returns the keep_min value, using DefaultKeepMin as fallback.
-func (c TierConfig) EffectiveKeepMin() int {
-	if c.KeepMin <= 0 {
+// Duration parses the OlderThan string into a time.Duration.
+func (t Tier) Duration() (time.Duration, error) {
+	if t.OlderThan == "" {
+		return 0, nil
+	}
+	d, err := kernel.ParseDuration(t.OlderThan)
+	if err != nil {
+		return 0, fmt.Errorf("retention: invalid duration %q: %w", t.OlderThan, err)
+	}
+	return d, nil
+}
+
+// MinRetained returns the effective number of items to keep.
+// Defaults to DefaultKeepMin if the configured value is 0 or less.
+func (t Tier) MinRetained() int {
+	if t.KeepMin <= 0 {
 		return DefaultKeepMin
 	}
-	return c.KeepMin
+	return t.KeepMin
 }
 
-// MappingRule maps a glob pattern to a retention tier.
-type MappingRule struct {
+// Rule maps a resource pattern (glob) to a specific retention tier name.
+type Rule struct {
 	Pattern string `yaml:"pattern" json:"pattern"`
 	Tier    string `yaml:"tier"    json:"tier"`
 }
+
+// Validate ensures the rule has both a pattern and a target tier.
+func (r Rule) Validate() error {
+	if r.Pattern == "" {
+		return fmt.Errorf("retention rule: pattern is required")
+	}
+	if r.Tier == "" {
+		return fmt.Errorf("retention rule: tier name is required")
+	}
+	return nil
+}
+
+// --- Backward-compatibility aliases (remove once all callers migrate) ---
+
+// TierConfig is an alias for Tier.
+type TierConfig = Tier
+
+// MappingRule is an alias for Rule.
+type MappingRule = Rule
+
+// ParseDuration returns the OlderThan string as a time.Duration.
+// Unlike Duration(), it returns an error when OlderThan is empty.
+func (t Tier) ParseDuration() (time.Duration, error) {
+	if t.OlderThan == "" {
+		return 0, fmt.Errorf("older_than is empty")
+	}
+	return kernel.ParseDuration(t.OlderThan)
+}
+
+// EffectiveKeepMin is an alias for MinRetained on Tier.
+func (t Tier) EffectiveKeepMin() int { return t.MinRetained() }
