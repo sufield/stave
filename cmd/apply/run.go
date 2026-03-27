@@ -129,12 +129,15 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	progress := ec.Runtime.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
-	builder := NewBuilder(ctx, ec.Logger, ec.Provider, ec.Opts, ec.Params, ec.IO)
+	builder := NewBuilder(ec.Logger, ec.Opts, ec.Params, ec.IO)
+	builder.NewFindingWriter = ec.Provider.NewFindingWriter
+	builder.NewCtlRepo = ec.Provider.NewControlRepo
+	builder.NewStdinObsRepo = ec.Provider.NewStdinObsRepo
 	builder.ProjectConfig = ec.ProjectConfig
 	builder.ProjectConfigPath = ec.ProjectConfigPath
 	builder.OnObsProgress = progress.Update
 
-	deps, err := builder.Build(ec.Plan)
+	deps, err := builder.Build(ctx, ec.Plan)
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("build evaluation dependencies: %w", err)
 	}
