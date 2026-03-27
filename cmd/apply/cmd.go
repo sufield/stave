@@ -45,7 +45,7 @@ type SharedOptions struct {
 
 func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
 	f := cmd.Flags()
-	cliflags.RegisterControlsFlag(cmd, &o.ControlsDir, "controls/s3", "Path to control definitions directory")
+	cliflags.RegisterControlsFlag(cmd, &o.ControlsDir, cliflags.DefaultControlsDir, "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))

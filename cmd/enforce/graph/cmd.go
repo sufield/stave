@@ -24,7 +24,7 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoa
 
 func newCoverageCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	opts := &coverageOptions{
-		ControlsDir: "controls/s3",
+		ControlsDir: cliflags.DefaultControlsDir,
 		ObsDir:      "observations",
 		FormatRaw:   "dot",
 	}

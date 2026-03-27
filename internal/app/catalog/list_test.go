@@ -9,12 +9,12 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
-type stubRepo struct {
+type stubProvider struct {
 	controls []policy.ControlDefinition
 	err      error
 }
 
-func (s *stubRepo) LoadControls(_ context.Context, _ string) ([]policy.ControlDefinition, error) {
+func (s *stubProvider) Load(_ context.Context) ([]policy.ControlDefinition, error) {
 	return s.controls, s.err
 }
 
@@ -196,8 +196,8 @@ func TestFieldValue(t *testing.T) {
 }
 
 func TestListRunner_Run(t *testing.T) {
-	repo := &stubRepo{controls: sampleControls()}
-	runner := &ListRunner{Repo: repo}
+	provider := &stubProvider{controls: sampleControls()}
+	runner := &ListRunner{Provider: provider}
 
 	rows, err := runner.Run(context.Background(), ListConfig{Dir: "controls", SortBy: "id"})
 	if err != nil {
@@ -213,8 +213,8 @@ func TestListRunner_Run(t *testing.T) {
 }
 
 func TestListRunner_RunError(t *testing.T) {
-	repo := &stubRepo{err: fmt.Errorf("not found")}
-	runner := &ListRunner{Repo: repo}
+	provider := &stubProvider{err: fmt.Errorf("not found")}
+	runner := &ListRunner{Provider: provider}
 
 	_, err := runner.Run(context.Background(), ListConfig{Dir: "bad", SortBy: "id"})
 	if err == nil {

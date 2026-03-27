@@ -17,7 +17,7 @@ import (
 // NewCmd constructs the upcoming command.
 func NewCmd(loadAssets compose.AssetLoaderFunc) *cobra.Command {
 	opts := &options{
-		CtlDir:     "controls/s3",
+		CtlDir:     cliflags.DefaultControlsDir,
 		ObsDir:     "observations",
 		DueSoon:    "24h",
 		FormatFlag: "markdown",

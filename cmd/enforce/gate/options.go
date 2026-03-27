@@ -29,7 +29,7 @@ func DefaultOptions() gateOptions {
 	return gateOptions{
 		InPath:    "output/evaluation.json",
 		BasePath:  "output/baseline.json",
-		CtlDir:    "controls/s3",
+		CtlDir:    cliflags.DefaultControlsDir,
 		ObsDir:    "observations",
 		FormatRaw: "text",
 	}

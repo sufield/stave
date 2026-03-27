@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output/text"
 	appexplain "github.com/sufield/stave/internal/app/explain"
@@ -119,7 +120,7 @@ Exit Codes:
 		},
 	}
 
-	cmd.Flags().StringVar(&controlsDir, "controls", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVar(&controlsDir, "controls", cliflags.DefaultControlsDir, "Path to control definitions directory")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 
 	return cmd
