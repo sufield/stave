@@ -43,7 +43,7 @@ func NewOpenRunner(stdout io.Writer) *OpenRunner {
 }
 
 // Run resolves the topic and writes the result to the configured output.
-func (r *OpenRunner) Run(_ context.Context, req OpenRequest) error {
+func (r *OpenRunner) Run(ctx context.Context, req OpenRequest) error {
 	if strings.TrimSpace(req.Topic) == "" {
 		return fmt.Errorf("topic cannot be empty")
 	}
@@ -56,7 +56,7 @@ func (r *OpenRunner) Run(_ context.Context, req OpenRequest) error {
 		return fmt.Errorf("no documentation files found under %s", req.Root)
 	}
 
-	hits, err := searchDocsFiles(files, req.Topic, req.CaseSensitive)
+	hits, err := searchDocsFiles(ctx, files, req.Topic, req.CaseSensitive)
 	if err != nil {
 		return err
 	}

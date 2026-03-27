@@ -2,6 +2,9 @@ package docs
 
 import (
 	"bufio"
+	"bytes"
+	"cmp"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -10,16 +13,15 @@ import (
 )
 
 // searchDocsFiles runs a keyword search across all provided files.
-func searchDocsFiles(files []docsFile, query string, caseSensitive bool) ([]SearchHit, error) {
-	phrase := strings.TrimSpace(query)
-	if !caseSensitive {
-		phrase = strings.ToLower(phrase)
-	}
-	tokens := tokenizeQuery(query, caseSensitive)
+func searchDocsFiles(ctx context.Context, files []docsFile, query string, caseSensitive bool) ([]SearchHit, error) {
+	tokens, phrase := tokenizeQueryBytes(query, caseSensitive)
 
 	var hits []SearchHit
 	for _, file := range files {
-		fileHits, err := searchSingleFile(file, phrase, tokens, caseSensitive)
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		fileHits, err := searchSingleFile(ctx, file, phrase, tokens, caseSensitive)
 		if err != nil {
 			return nil, err
 		}
@@ -30,24 +32,24 @@ func searchDocsFiles(files []docsFile, query string, caseSensitive bool) ([]Sear
 	return hits, nil
 }
 
-func searchSingleFile(file docsFile, phrase string, tokens []string, caseSensitive bool) ([]SearchHit, error) {
+func searchSingleFile(ctx context.Context, file docsFile, phrase []byte, tokens [][]byte, caseSensitive bool) ([]SearchHit, error) {
 	// #nosec G304 -- path is discovered from directory walking.
 	fh, err := os.Open(file.Abs)
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", file.Abs, err)
 	}
 	defer fh.Close()
-	return searchReader(fh, file.Rel, phrase, tokens, caseSensitive)
+	return searchReader(ctx, fh, file.Rel, phrase, tokens, caseSensitive)
 }
 
 // searchReader runs keyword matching against an io.Reader, returning
-// scored hits. Separated from file I/O for testability.
-func searchReader(r io.Reader, relPath string, phrase string, tokens []string, caseSensitive bool) ([]SearchHit, error) {
-	pathCmp := relPath
+// scored hits. Uses scanner.Bytes() to avoid per-line string allocation.
+func searchReader(ctx context.Context, r io.Reader, relPath string, phrase []byte, tokens [][]byte, caseSensitive bool) ([]SearchHit, error) {
+	pathBytes := []byte(relPath)
 	if !caseSensitive {
-		pathCmp = strings.ToLower(pathCmp)
+		pathBytes = bytes.ToLower(pathBytes)
 	}
-	filePathScore := scorePath(pathCmp, tokens)
+	filePathScore := scorePath(pathBytes, tokens)
 
 	scanner := bufio.NewScanner(r)
 	buf := make([]byte, 0, 64*1024)
@@ -56,17 +58,22 @@ func searchReader(r io.Reader, relPath string, phrase string, tokens []string, c
 	var hits []SearchHit
 	lineNo := 0
 	for scanner.Scan() {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
 		lineNo++
-		line := scanner.Text()
+		line := scanner.Bytes() // zero allocation
 		score := scoreLine(line, phrase, tokens, caseSensitive) + filePathScore
 		if score <= 0 {
 			continue
 		}
+		// Only allocate a string when we actually find a hit.
 		hits = append(hits, SearchHit{
 			Path:    relPath,
 			Line:    lineNo,
 			Score:   score,
-			Snippet: trimSnippet(line),
+			Snippet: trimSnippet(string(line)),
 		})
 	}
 	if err := scanner.Err(); err != nil {
@@ -76,54 +83,50 @@ func searchReader(r io.Reader, relPath string, phrase string, tokens []string, c
 }
 
 func compareSearchHits(a, b SearchHit) int {
-	if a.Score != b.Score {
-		return b.Score - a.Score
+	if n := cmp.Compare(b.Score, a.Score); n != 0 {
+		return n
 	}
-	if a.Path != b.Path {
-		return strings.Compare(a.Path, b.Path)
+	if n := cmp.Compare(a.Path, b.Path); n != 0 {
+		return n
 	}
-	return a.Line - b.Line
+	return cmp.Compare(a.Line, b.Line)
 }
 
-func tokenizeQuery(query string, caseSensitive bool) []string {
-	parts := strings.Fields(query)
-	out := make([]string, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p == "" {
-			continue
-		}
-		if !caseSensitive {
-			p = strings.ToLower(p)
-		}
-		out = append(out, p)
+// tokenizeQueryBytes prepares the search query as byte slices for
+// zero-allocation matching in the scanner loop.
+func tokenizeQueryBytes(query string, caseSensitive bool) ([][]byte, []byte) {
+	phrase := []byte(strings.TrimSpace(query))
+	if !caseSensitive {
+		phrase = bytes.ToLower(phrase)
 	}
-	return out
+	return bytes.Fields(phrase), phrase
 }
 
-func scorePath(path string, tokens []string) int {
+func scorePath(path []byte, tokens [][]byte) int {
 	score := 0
 	for _, tok := range tokens {
-		if strings.Contains(path, tok) {
+		if bytes.Contains(path, tok) {
 			score += 2
 		}
 	}
 	return score
 }
 
-func scoreLine(line, phrase string, tokens []string, caseSensitive bool) int {
+// scoreLine scores a line against the query tokens using byte operations
+// to avoid string allocation in the hot path.
+func scoreLine(line, phrase []byte, tokens [][]byte, caseSensitive bool) int {
 	lineCmp := line
 	if !caseSensitive {
-		lineCmp = strings.ToLower(lineCmp)
+		lineCmp = bytes.ToLower(line)
 	}
 	score := 0
-	if phrase != "" && strings.Contains(lineCmp, phrase) {
+	if len(phrase) > 0 && bytes.Contains(lineCmp, phrase) {
 		score += 20
 	}
-	isHeader := strings.HasPrefix(strings.TrimLeft(line, " "), "#")
+	isHeader := bytes.HasPrefix(bytes.TrimLeft(line, " \t"), []byte("#"))
 	matchedTokens := 0
 	for _, tok := range tokens {
-		count := strings.Count(lineCmp, tok)
+		count := bytes.Count(lineCmp, tok)
 		if count == 0 {
 			continue
 		}

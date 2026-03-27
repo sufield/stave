@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -97,29 +96,7 @@ func (r *SearchRunner) validate(req SearchRequest) error {
 }
 
 func (r *SearchRunner) search(ctx context.Context, files []docsFile, req SearchRequest) ([]SearchHit, error) {
-	tokens := tokenizeQuery(req.Query, req.CaseSensitive)
-	phrase := strings.TrimSpace(req.Query)
-	if !req.CaseSensitive {
-		phrase = strings.ToLower(phrase)
-	}
-
-	var allHits []SearchHit
-	for _, f := range files {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		hits, err := searchSingleFile(f, phrase, tokens, req.CaseSensitive)
-		if err != nil {
-			return nil, err
-		}
-		allHits = append(allHits, hits...)
-	}
-
-	slices.SortFunc(allHits, compareSearchHits)
-	return allHits, nil
+	return searchDocsFiles(ctx, files, req.Query, req.CaseSensitive)
 }
 
 func (r *SearchRunner) report(res SearchResult, format ui.OutputFormat) error {
