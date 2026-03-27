@@ -1,9 +1,11 @@
 package docs
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -20,7 +22,6 @@ type OpenRequest struct {
 	Topic         string
 	Root          string
 	Paths         []string
-	Format        ui.OutputFormat
 	CaseSensitive bool
 }
 
@@ -33,51 +34,43 @@ type OpenResult struct {
 }
 
 // OpenRunner orchestrates the discovery and resolution of documentation topics.
-type OpenRunner struct {
-	Stdout io.Writer
-}
+type OpenRunner struct{}
 
-// NewOpenRunner initializes a runner with the provided output stream.
-func NewOpenRunner(stdout io.Writer) *OpenRunner {
-	return &OpenRunner{Stdout: stdout}
-}
-
-// Run resolves the topic and writes the result to the configured output.
-func (r *OpenRunner) Run(ctx context.Context, req OpenRequest) error {
+// Run resolves the topic and returns the best-matching result.
+// Presentation is handled by the caller.
+func (r *OpenRunner) Run(ctx context.Context, req OpenRequest) (OpenResult, error) {
 	if strings.TrimSpace(req.Topic) == "" {
-		return fmt.Errorf("topic cannot be empty")
+		return OpenResult{}, fmt.Errorf("topic cannot be empty")
 	}
 
 	files, err := collectDocsFiles(req.Root, req.Paths)
 	if err != nil {
-		return fmt.Errorf("collecting docs: %w", err)
+		return OpenResult{}, fmt.Errorf("collecting docs: %w", err)
 	}
 	if len(files) == 0 {
-		return fmt.Errorf("no documentation files found under %s", req.Root)
+		return OpenResult{}, fmt.Errorf("no documentation files found under %s", req.Root)
 	}
 
 	hits, err := searchDocsFiles(ctx, files, req.Topic, req.CaseSensitive)
 	if err != nil {
-		return err
+		return OpenResult{}, err
 	}
 	if len(hits) == 0 {
-		return fmt.Errorf("no documentation topic match for %q; try `stave docs search %q`", req.Topic, req.Topic)
+		return OpenResult{}, fmt.Errorf("no documentation topic match for %q; try `stave docs search %q`", req.Topic, req.Topic)
 	}
 
 	top := hits[0]
-	absPath := r.resolveAbsPath(files, top.Path)
+	absPath := resolveAbsPath(files, top.Path)
 
-	result := OpenResult{
+	return OpenResult{
 		Topic:   req.Topic,
 		Path:    absPath,
 		Match:   fmt.Sprintf("%s:%d", top.Path, top.Line),
-		Summary: r.summarizeAtMatch(absPath, top.Line, top.Snippet),
-	}
-
-	return r.write(result, req.Format)
+		Summary: summarizeAtMatch(absPath, top.Line, top.Snippet),
+	}, nil
 }
 
-func (r *OpenRunner) resolveAbsPath(files []docsFile, rel string) string {
+func resolveAbsPath(files []docsFile, rel string) string {
 	for _, f := range files {
 		if f.Rel == rel {
 			return f.Abs
@@ -86,33 +79,39 @@ func (r *OpenRunner) resolveAbsPath(files []docsFile, rel string) string {
 	return rel
 }
 
-func (r *OpenRunner) summarizeAtMatch(absPath string, line int, fallback string) string {
-	data, err := fsutil.ReadFileLimited(absPath)
+// summarizeAtMatch streams the file up to the target line using a scanner
+// instead of loading the entire file into memory.
+func summarizeAtMatch(absPath string, targetLine int, fallback string) string {
+	// #nosec G304 -- path is from directory walking.
+	f, err := os.Open(absPath)
 	if err != nil {
 		return fallback
 	}
+	defer f.Close()
 
-	lines := strings.Split(string(data), "\n")
-	idx := max(line-1, 0)
-	if idx >= len(lines) {
-		idx = len(lines) - 1
-	}
+	scanner := bufio.NewScanner(f)
+	lineNo := 0
+	startLine := max(targetLine, 1)
 
-	for i := idx; i < len(lines) && i < idx+18; i++ {
-		if s := r.cleanLine(lines[i]); s != "" {
-			return s
+	// Scan to the target line and check up to 18 lines after it.
+	for scanner.Scan() {
+		lineNo++
+		if lineNo < startLine {
+			continue
 		}
-	}
-
-	for i := 0; i < len(lines) && i < 60; i++ {
-		if s := r.cleanLine(lines[i]); s != "" {
+		if lineNo >= startLine+18 {
+			break
+		}
+		if s := cleanLine(scanner.Text()); s != "" {
 			return s
 		}
 	}
 	return fallback
 }
 
-func (r *OpenRunner) cleanLine(line string) string {
+// cleanLine returns a trimmed line suitable for a summary, or empty string
+// if the line is a header, code fence, table, or horizontal rule.
+func cleanLine(line string) string {
 	s := strings.TrimSpace(line)
 	if s == "" || strings.HasPrefix(s, "#") || strings.HasPrefix(s, "```") ||
 		strings.HasPrefix(s, "|") || strings.HasPrefix(s, "---") {
@@ -121,15 +120,15 @@ func (r *OpenRunner) cleanLine(line string) string {
 	return trimSnippet(s)
 }
 
-func (r *OpenRunner) write(res OpenResult, format ui.OutputFormat) error {
+// writeOpenResult renders an OpenResult to the writer in the given format.
+func writeOpenResult(w io.Writer, res OpenResult, format ui.OutputFormat) error {
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, res)
+		return jsonutil.WriteIndented(w, res)
 	}
-
-	fmt.Fprintf(r.Stdout, "Topic: %q\n", res.Topic)
-	fmt.Fprintf(r.Stdout, "Path: %s\n", res.Path)
-	fmt.Fprintf(r.Stdout, "Match: %s\n", res.Match)
-	fmt.Fprintf(r.Stdout, "Summary: %s\n", res.Summary)
+	fmt.Fprintf(w, "Topic: %q\n", res.Topic)
+	fmt.Fprintf(w, "Path: %s\n", res.Path)
+	fmt.Fprintf(w, "Match: %s\n", res.Match)
+	fmt.Fprintf(w, "Summary: %s\n", res.Summary)
 	return nil
 }
 
@@ -162,13 +161,17 @@ Exit Codes:
 			}
 
 			req := OpenRequest{
-				Topic:  strings.Join(args, " "),
-				Root:   fsutil.CleanUserPath(root),
-				Paths:  paths,
-				Format: fmtValue,
+				Topic: strings.Join(args, " "),
+				Root:  fsutil.CleanUserPath(root),
+				Paths: paths,
 			}
 
-			return NewOpenRunner(cmd.OutOrStdout()).Run(cmd.Context(), req)
+			runner := &OpenRunner{}
+			result, err := runner.Run(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			return writeOpenResult(cmd.OutOrStdout(), result, fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
