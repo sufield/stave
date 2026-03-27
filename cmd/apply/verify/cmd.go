@@ -46,10 +46,8 @@ Outputs:
 Exit Codes:
   0   - All findings resolved; no remaining or introduced violations
   3   - Remaining or introduced violations exist
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Compare before/after observations
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Compare before/after observations
   stave verify --before ./obs-before --after ./obs-after --controls ./controls
 
   # Deterministic output for CI
@@ -58,7 +56,7 @@ Examples:
 
   # With a custom unsafe duration threshold
   stave verify --before ./obs-before --after ./obs-after --controls ./controls \
-    --max-unsafe 72h` + metadata.OfflineHelpSuffix,
+    --max-unsafe 72h`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			opts.resolveConfigDefaults(cmd)

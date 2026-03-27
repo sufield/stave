@@ -34,17 +34,15 @@ Exit Codes:
   0   - Diff completed successfully
   2   - Invalid input or configuration error
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Human-readable summary
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Human-readable summary
   stave snapshot diff --observations ./observations
 
   # Machine-readable output
   stave snapshot diff --observations ./observations --format json
 
   # Write report to file
-  stave snapshot diff --observations ./observations --format json > output/diff.json` + metadata.OfflineHelpSuffix,
+  stave snapshot diff --observations ./observations --format json > output/diff.json`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)

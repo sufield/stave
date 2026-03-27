@@ -50,18 +50,9 @@ Exit Codes:
   0   - No upcoming violations found
   2   - Invalid input or configuration error
   3   - Upcoming violations exist
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Print upcoming action table to stdout
-  stave snapshot upcoming --controls ./controls --observations ./observations
-
-  # Save text report to file
-  stave snapshot upcoming --controls ./controls --observations ./observations > upcoming.txt
-
-  # Deterministic planning with explicit now
-  stave snapshot upcoming --controls ./controls --observations ./observations --now 2026-01-15T00:00:00Z` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave snapshot upcoming --controls ./controls --observations ./observations --now 2026-01-15T00:00:00Z`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},

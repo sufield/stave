@@ -81,20 +81,9 @@ Exit Codes:
   2   - Invalid input or configuration error
   3   - Quality check failures detected (or warnings with --strict)
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Human-readable quality check
-  stave snapshot quality --observations ./observations
-
-  # Fail CI on warnings as well as errors
-  stave snapshot quality --observations ./observations --strict
-
-  # Require key resources to exist in latest snapshot
-  stave snapshot quality --observations ./observations \
-    --require-asset res:aws:s3:bucket:prod-audit \
-    --require-asset res:aws:s3:bucket:prod-logs` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave snapshot quality --observations ./observations --strict`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},

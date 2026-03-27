@@ -179,10 +179,12 @@ func newSetCmd(rootCmd *cobra.Command) *cobra.Command {
 Alias names must match [a-zA-Z0-9_-]+ and must not collide with
 existing command names.
 
-Examples:
-  stave alias set ap "apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 24h --allow-unknown-input"
-  stave alias set q "apply --quiet"` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(2),
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave alias set ev "apply --controls controls/s3 --now 2026-01-11T00:00:00Z"`,
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			res, err := newResolver()
 			if err != nil {
@@ -206,8 +208,14 @@ func newListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all aliases",
-		Long:  "List all defined aliases from user config." + metadata.OfflineHelpSuffix,
-		Args:  cobra.NoArgs,
+		Long: `List all defined aliases from user config.
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave alias list --format json`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			res, err := newResolver()
 			if err != nil {
@@ -233,8 +241,14 @@ func newDeleteCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete an alias",
-		Long:  "Delete removes an alias from user config." + metadata.OfflineHelpSuffix,
-		Args:  cobra.ExactArgs(1),
+		Long: `Delete removes an alias from user config.
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave alias delete ev`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			res, err := newResolver()
 			if err != nil {

@@ -1,0 +1,76 @@
+# Verify JSON output is well-formed (clig.dev § Machine Readability)
+
+# apply --format json produces valid JSON with expected fields
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+stdout '"schema_version": "out.v0.1"'
+stdout '"kind": "evaluation"'
+stdout '"summary"'
+stdout '"findings"'
+stdout '"safety_status"'
+
+# apply with violations produces findings array
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+stdout '"findings"'
+stdout '"control_id"'
+stdout '"evidence"'
+
+# doctor --format json
+exec stave doctor --format json
+stdout '"checks"'
+
+# capabilities produces valid JSON
+exec stave capabilities
+stdout '"version"'
+stdout '"inputs"'
+
+# validate help
+exec stave validate --help
+stdout 'Exit Codes'
+
+-- controls/CTL.TEST.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.TEST.001
+name: Test Public Access
+description: Bucket must not allow public read.
+domain: exposure
+severity: high
+type: unsafe_duration
+params:
+  max_unsafe_duration: "12h"
+unsafe_predicate:
+  all:
+    - field: properties.public
+      op: eq
+      value: true
+
+-- observations/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{"id": "test-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": true}}]
+}
+
+-- observations/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{"id": "test-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": true}}]
+}
+
+-- observations-clean/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}
+
+-- observations-clean/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}

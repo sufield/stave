@@ -31,14 +31,12 @@ Exit Codes:
   0   - Guidance emitted successfully
   2   - Invalid input (missing file, bad selector)
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Show fix plan for a specific finding
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Show fix plan for a specific finding
   stave ci fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@res:aws:s3:bucket:my-bucket
 
   # Pipe to jq for structured inspection
-  stave ci fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@res:aws:s3:bucket:my-bucket | jq .` + metadata.OfflineHelpSuffix,
+  stave ci fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@res:aws:s3:bucket:my-bucket | jq .`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
@@ -89,20 +87,15 @@ Output:
 
 Exit Codes:
   0   - No remaining or introduced violations
-  3   - Remaining or introduced violations exist
-
-Examples:
-  # 1. Run a full fix-loop comparing before and after observations.
+  3   - Remaining or introduced violations exist` + metadata.OfflineHelpSuffix,
+		Example: `  # Run a full fix-loop comparing before and after observations
   stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --now 2026-01-11T00:00:00Z
 
-  # 2. Run in CI with a strict 72-hour threshold.
+  # Run in CI with a strict 72-hour threshold
   stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --max-unsafe 72h --now 2026-01-11T00:00:00Z
 
-  # 3. Inspect the remediation report.
-  cat ./output/remediation-report.json | jq '.summary'
-
-    Sample output:
-      { "before_violations": 5, "after_violations": 2, "resolved": 3, "remaining": 2, "introduced": 0 }` + metadata.OfflineHelpSuffix,
+  # Inspect the remediation report
+  cat ./output/remediation-report.json | jq '.summary'`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)

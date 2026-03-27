@@ -143,11 +143,12 @@ Outputs:
 Exit Codes:
   0   - All checks passed; environment is ready
   3   - One or more required checks failed
-  130 - Interrupted (SIGINT)
-
-Examples:
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Check environment readiness
   stave doctor
-  stave doctor --format json` + metadata.OfflineHelpSuffix,
+
+  # JSON output for automation
+  stave doctor --format json`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)

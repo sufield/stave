@@ -56,8 +56,14 @@ Examples:
   stave controls list --controls ./controls
   stave controls list --controls ./controls --format json
   stave controls list --controls ./controls --format csv --columns id,name
-  stave controls list --built-in --filter aws/s3/severity:high+` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  stave controls list --built-in --filter aws/s3/severity:high+
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave controls list --controls controls/s3 --format json`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			stdout := cmd.OutOrStdout()
 			if cfg.ListPacks {
@@ -157,8 +163,14 @@ and a minimal observation snippet.
 
 Examples:
   stave controls explain CTL.S3.PUBLIC.001 --controls ./controls
-  stave controls explain CTL.S3.PUBLIC.001 --controls ./controls --format json` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(1),
+  stave controls explain CTL.S3.PUBLIC.001 --controls ./controls --format json
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave controls explain CTL.S3.PUBLIC.001 --controls controls/s3`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			explainer := diagnose.NewExplainer(newCtlRepo)
 			return explainer.Run(cmd.Context(), diagnose.ExplainRequest{
@@ -182,7 +194,18 @@ func newControlsAliasesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aliases",
 		Short: "List built-in semantic predicate aliases",
-		Args:  cobra.NoArgs,
+		Long: `List all built-in semantic predicate aliases that can be used in
+control definitions via the unsafe_predicate_alias field. Optionally
+filter by category.
+
+Exit Codes:
+  0    Success
+  4    Internal error`,
+		Example: `  stave controls aliases
+  stave controls aliases --category Encryption`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			names := predicates.ListAliases(category)
 			for _, name := range names {
@@ -201,7 +224,19 @@ func newControlsAliasExplainCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "alias-explain <alias>",
 		Short: "Show expanded predicate for an alias",
-		Args:  cobra.ExactArgs(1),
+		Long: `Show the full predicate tree that a semantic alias expands to.
+Use this to understand what an alias checks before using it in
+a custom control definition.
+
+Exit Codes:
+  0    Success
+  2    Unknown alias name
+  4    Internal error`,
+		Example: `  stave controls alias-explain s3.public_read
+  stave controls alias-explain s3.encrypted_kms`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			expanded, err := predicates.Resolve(strings.TrimSpace(args[0]))
 			if err != nil {

@@ -96,10 +96,11 @@ func NewExplainCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
   - operator/value expectations
   - a minimal obs.v0.1 snippet you can start from
 
-Examples:
-  stave explain CTL.S3.PUBLIC.001
-  stave explain CTL.S3.PUBLIC.001 --controls ./controls
-  stave explain CTL.S3.PUBLIC.001 --format json` + metadata.OfflineHelpSuffix,
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example:       `  stave explain --controls controls/s3 --format json`,
 		Args:          cobra.ExactArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,

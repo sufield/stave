@@ -34,8 +34,14 @@ Examples:
   stave init --with-github-actions
 
   # 4. Optional automation flow: scaffold another directory from current shell.
-  stave init --dir ./my-s3 --profile aws-s3 --capture-cadence hourly --force` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  stave init --dir ./my-s3 --profile aws-s3 --capture-cadence hourly --force
+
+Exit Codes:
+  0   - Success
+  2   - Input error
+  4   - Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  mkdir myproject && cd myproject && stave init`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &InitRunner{
@@ -81,8 +87,14 @@ func newGenerateControlCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "control <name>",
 		Short: "Generate a canonical control template",
-		Long:  "Generate control creates a ctrl.v1 YAML template in controls/." + metadata.OfflineHelpSuffix,
-		Args:  cobra.ExactArgs(1),
+		Long: `Generate control creates a ctrl.v1 YAML template in controls/.
+
+Exit Codes:
+  0   - Success
+  2   - Input error
+  4   - Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave generate control my-control --out controls/my-control.yaml`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req.Name = args[0]
 			gf := cliflags.GetGlobalFlags(cmd)
@@ -109,8 +121,14 @@ func newGenerateObservationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "observation <name>",
 		Short: "Generate an observation template",
-		Long:  "Generate observation creates an obs.v0.1 JSON template in observations/." + metadata.OfflineHelpSuffix,
-		Args:  cobra.ExactArgs(1),
+		Long: `Generate observation creates an obs.v0.1 JSON template in observations/.
+
+Exit Codes:
+  0   - Success
+  2   - Input error
+  4   - Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave generate observation my-obs --out observations/snap.json`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req.Name = args[0]
 			gf := cliflags.GetGlobalFlags(cmd)

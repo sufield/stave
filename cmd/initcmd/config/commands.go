@@ -101,8 +101,14 @@ Supported keys:
   ci_failure_policy
   capture_cadence
   snapshot_filename_template
-  snapshot_retention_tiers.<tier>` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(1),
+  snapshot_retention_tiers.<tier>
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave config get max_unsafe`,
+		Args:    cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 			return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
 		},
@@ -133,8 +139,14 @@ Supported keys:
   ci_failure_policy
   capture_cadence
   snapshot_filename_template
-  snapshot_retention_tiers.<tier>` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(2),
+  snapshot_retention_tiers.<tier>
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave config set max_unsafe 72h`,
+		Args:    cobra.ExactArgs(2),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
 				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
@@ -169,8 +181,14 @@ func newDeleteCmd(rt *ui.Runtime, format *string) *cobra.Command {
 		Use:   "delete <key>",
 		Short: "Remove a project config key (reverts to default)",
 		Long: `Delete removes a key from stave.yaml, reverting it to the built-in default.
-Supported keys match those of 'config set'.` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(1),
+Supported keys match those of 'config set'.
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave config delete max_unsafe`,
+		Args:    cobra.ExactArgs(1),
 		ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
 				return configKeyCompletions(), cobra.ShellCompDirectiveNoFileComp
@@ -200,10 +218,12 @@ func newShowCmd(rt *ui.Runtime, format *string) *cobra.Command {
 		Long: `Show prints the effective configuration values used by Stave and where each
 value came from (environment variable, stave.yaml, user config, or built-in default).
 
-Examples:
-  stave config show
-  stave config show --format json` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave config show --format json`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, *format)
 			if err != nil {
@@ -222,8 +242,14 @@ func newExplainCmd(rt *ui.Runtime, format *string) *cobra.Command {
 		Use:   "explain",
 		Short: "Explain resolved config values and sources",
 		Long: `Explain is an alias of "stave config show". It prints effective values and
-their resolution source (flag/env/project/user/default).` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+their resolution source (flag/env/project/user/default).
+
+Exit Codes:
+  0   - Success
+  2   - Input error
+  4   - Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave config explain max_unsafe`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, *format)
 			if err != nil {

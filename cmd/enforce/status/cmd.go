@@ -36,7 +36,8 @@ Examples:
   stave status
   cd ./stave-project && stave status
   stave status --format json` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Example: `  stave status`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},

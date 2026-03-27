@@ -117,7 +117,8 @@ Examples:
 
   # Use a custom template
   stave report --in output/evaluation.json --template-file ./my-template.tmpl` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Example: `  stave report --in evaluation.json --format text`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},

@@ -97,6 +97,7 @@ Examples:
     --evaluation-file evaluation.json \
     --asset-id my-bucket \
     --controls ./controls/s3 | pbcopy` + metadata.OfflineHelpSuffix,
+		Example:       `  stave prompt from-finding --evaluation-file eval.json --asset-id my-bucket --controls controls/s3 --observations observations`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,

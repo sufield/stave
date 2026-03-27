@@ -57,17 +57,15 @@ Exit Codes:
   0   - Audit passed; no findings at or above the --fail-on threshold
   1   - Gated findings detected at or above the --fail-on threshold
   2   - Invalid input or configuration error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Print JSON report to stdout (pipe to jq for filtering)
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Print JSON report to stdout (pipe to jq for filtering)
   stave security-audit --format json
 
   # Write markdown report to a file
   stave security-audit --format markdown --out ./audit/security-report.md
 
   # Write SARIF report and full evidence bundle, gate on CRITICAL only
-  stave security-audit --format sarif --out-dir ./audit --fail-on CRITICAL` + metadata.OfflineHelpSuffix,
+  stave security-audit --format sarif --out-dir ./audit --fail-on CRITICAL`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)

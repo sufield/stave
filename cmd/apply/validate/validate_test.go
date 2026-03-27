@@ -395,12 +395,17 @@ func TestValidateHelpText(t *testing.T) {
 // TestDiagnoseHelpText verifies diagnose command help contains required sections.
 func TestDiagnoseHelpText(t *testing.T) {
 	p := compose.NewDefaultProvider()
-	help := diagnose.NewDiagnoseCmd(p.NewObservationRepo, p.NewControlRepo).Long
-	required := []string{"Inputs:", "Outputs:", "Exit Codes:", "Examples:"}
+	cmd := diagnose.NewDiagnoseCmd(p.NewObservationRepo, p.NewControlRepo)
+	help := cmd.Long
+	required := []string{"Inputs:", "Outputs:", "Exit Codes:"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {
 			t.Errorf("diagnose help missing required section: %s", section)
 		}
+	}
+	// Examples may be in Long or in the dedicated Example field (CLIG.dev best practice).
+	if !strings.Contains(help, "Examples:") && strings.TrimSpace(cmd.Example) == "" {
+		t.Error("diagnose help missing examples (expected in Long or Example field)")
 	}
 }
 

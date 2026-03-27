@@ -29,10 +29,10 @@ Exit Codes:
   4   - Internal error
   130 - Interrupted (SIGINT)
 
-Examples:
-  stave inspect policy --file policy.json
+` + metadata.OfflineHelpSuffix,
+		Example: `  stave inspect policy --file policy.json
   cat policy.json | stave inspect policy
-  stave inspect policy --file policy.json | jq .risk` + metadata.OfflineHelpSuffix,
+  stave inspect policy --file policy.json | jq .risk`,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file) },
 		SilenceUsage:  true,

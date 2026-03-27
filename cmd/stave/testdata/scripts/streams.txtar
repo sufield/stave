@@ -1,0 +1,53 @@
+# Verify stdout/stderr separation (clig.dev § Output)
+
+# Data (JSON findings) goes to stdout, not stderr
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+stdout '"schema_version"'
+stdout '"safety_status"'
+
+# Error messages go to stderr
+! exec stave apply --controls /nonexistent --observations /nonexistent
+! stdout 'error'
+
+# Doctor data goes to stdout
+exec stave doctor --format json
+stdout '"checks"'
+
+# Capabilities data goes to stdout
+exec stave capabilities
+stdout '"version"'
+
+# Schemas data goes to stdout
+exec stave schemas
+stdout 'obs.v0.1'
+
+-- controls/CTL.TEST.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.TEST.001
+name: Test Control
+description: Test.
+domain: exposure
+severity: high
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.public
+      op: eq
+      value: true
+
+-- observations-clean/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}
+
+-- observations-clean/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}

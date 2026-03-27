@@ -1,0 +1,49 @@
+# Verify help discovery works for all top-level commands (clig.dev § Help)
+
+# Root help
+exec stave --help
+stdout 'Stave detects infrastructure'
+exec stave -h
+stdout 'Stave detects infrastructure'
+
+# Version
+exec stave --version
+stdout 'stave version'
+
+# Subcommand help includes exit codes
+exec stave apply --help
+stdout 'Exit Codes'
+stdout 'Inputs'
+
+exec stave diagnose --help
+stdout 'Exit Codes'
+
+exec stave validate --help
+stdout 'Exit Codes'
+
+exec stave doctor --help
+stdout 'Exit Codes'
+
+exec stave ci --help
+stdout 'baseline'
+stdout 'gate'
+
+exec stave snapshot --help
+stdout 'archive'
+stdout 'diff'
+
+exec stave config --help
+stdout 'get'
+stdout 'set'
+
+exec stave controls --help
+stdout 'list'
+stdout 'explain'
+
+exec stave inspect --help
+stdout 'policy'
+stdout 'acl'
+
+# No-args shows help, not error
+exec stave
+stdout 'Stave detects infrastructure'

@@ -1,0 +1,9 @@
+# Verify lint and fmt help works
+exec stave lint --help
+stdout 'Exit Codes'
+
+exec stave fmt --help
+stdout 'Exit Codes'
+
+exec stave graph --help
+stdout 'coverage'

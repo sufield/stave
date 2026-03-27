@@ -67,10 +67,11 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 	opts := newOptions()
 
 	cmd := &cobra.Command{
-		Use:   "validate",
-		Short: "Validate inputs without evaluation",
-		Long:  validateLongHelp,
-		Args:  cobra.NoArgs,
+		Use:     "validate",
+		Short:   "Validate inputs without evaluation",
+		Long:    validateLongHelp,
+		Example: `  stave validate --controls controls/s3 --observations observations`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},

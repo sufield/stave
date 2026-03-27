@@ -44,18 +44,9 @@ Exit Codes:
   0   - Report generated successfully
   2   - Invalid input or configuration error
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Print report to stdout
-  stave snapshot hygiene --controls ./controls --observations ./observations
-
-  # Write report to file for CI artifacts
-  stave snapshot hygiene --controls ./controls --observations ./observations > output/weekly-hygiene.md
-
-  # Deterministic weekly report
-  stave snapshot hygiene --controls ./controls --observations ./observations --now 2026-01-20T00:00:00Z` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave snapshot hygiene --controls ./controls --observations ./observations --now 2026-01-20T00:00:00Z`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.prepare(cmd)
 		},

@@ -22,9 +22,13 @@ reports newly introduced and resolved findings.
 
 Use this in CI to fail PRs only when new violations are introduced.
 
-Example:
-  stave ci diff --current pr-evaluation.json --baseline main-evaluation.json
-  stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new` + metadata.OfflineHelpSuffix,
+Exit Codes:
+  0   - Success
+  2   - Input error
+  3   - New findings detected (with --fail-on-new)
+  4   - Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave ci diff --current pr-evaluation.json --baseline main-evaluation.json
+  stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)

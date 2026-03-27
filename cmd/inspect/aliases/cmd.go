@@ -19,9 +19,11 @@ by category.
 
 Output: JSON array of alias info entries.
 
-Examples:
-  stave inspect aliases
-  stave inspect aliases --category Encryption` + metadata.OfflineHelpSuffix,
+Exit Codes:
+  0    Success
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave inspect aliases
+  stave inspect aliases --category Encryption`,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, category) },
 		SilenceUsage:  true,

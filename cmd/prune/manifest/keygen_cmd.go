@@ -31,12 +31,9 @@ Exit Codes:
   0   - Keypair generated successfully
   2   - Invalid input (path conflict, permission error)
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  stave manifest keygen
-  stave manifest keygen --private-key-out keys/sign.pem --public-key-out keys/verify.pem` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave manifest keygen --private-key-out keys/sign.pem --public-key-out keys/verify.pem`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &KeygenRunner{}

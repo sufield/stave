@@ -1,0 +1,6 @@
+# Smoke test: stave binary responds to basic commands
+exec stave --version
+stdout 'stave version'
+
+exec stave --help
+stdout 'Stave detects infrastructure'

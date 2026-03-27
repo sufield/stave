@@ -30,12 +30,9 @@ Exit Codes:
   0   - Manifest generated successfully
   2   - Invalid input (directory not found, permission error)
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  stave manifest generate --observations ./observations
-  stave manifest generate --observations ./observations --out build/manifest.json` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave manifest generate --observations ./observations --out build/manifest.json`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &GenerateRunner{}

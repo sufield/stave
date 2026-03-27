@@ -38,7 +38,17 @@ func newContextListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available contexts",
-		Args:  cobra.NoArgs,
+		Long: `List all named contexts stored in the user configuration.
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error`,
+		Example: `  stave config context list
+  stave config context list --format json`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runContextList(cmd, format)
 		},
@@ -52,7 +62,20 @@ func newContextCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create or update a named context",
-		Args:  cobra.ExactArgs(1),
+		Long: `Create a named context that stores default paths for a project.
+Contexts are saved in the user configuration and selected with
+'config context use'. They affect default path resolution only —
+evaluation semantics are never changed.
+
+Exit Codes:
+  0    Context created or updated
+  2    Input error (invalid directory or name)
+  4    Internal error`,
+		Example: `  stave config context create myproject --dir /path/to/project
+  stave config context create myproject --dir . --controls controls/s3`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runContextCreate(cmd, args, contextCreateInput{
 				Dir:             dir,
@@ -73,8 +96,18 @@ func newContextUseCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "use <name>",
 		Short: "Set active context",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runContextUse,
+		Long: `Set the active context. Subsequent commands use this context's default
+paths unless overridden by flags. Override with STAVE_CONTEXT env var.
+
+Exit Codes:
+  0    Context activated
+  2    Input error (unknown context name)
+  4    Internal error`,
+		Example:       `  stave config context use myproject`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
+		RunE:          runContextUse,
 	}
 }
 
@@ -83,7 +116,18 @@ func newContextShowCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show",
 		Short: "Show selected context",
-		Args:  cobra.NoArgs,
+		Long: `Show the currently active context and its configured paths.
+Reports how the context was selected (active vs STAVE_CONTEXT env var).
+
+Exit Codes:
+  0    Success
+  2    No context selected
+  4    Internal error`,
+		Example: `  stave config context show
+  stave config context show --format json`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runContextShow(cmd, format)
 		},
@@ -96,8 +140,19 @@ func newContextDeleteCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete a context",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runContextDelete,
+		Long: `Delete a named context from the user configuration. If the deleted
+context was active, no context will be selected until you run
+'config context use' again.
+
+Exit Codes:
+  0    Context deleted
+  2    Input error (unknown context name)
+  4    Internal error`,
+		Example:       `  stave config context delete myproject`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ExactArgs(1),
+		RunE:          runContextDelete,
 	}
 }
 

@@ -46,7 +46,13 @@ Examples:
   stave trace --control CTL.S3.ENCRYPT.001 \
     --observation observations/2026-01-11T000000Z.json \
     --asset-id res:aws:s3:bucket:public-bucket \
-    --format json` + metadata.OfflineHelpSuffix,
+    --format json
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example:       `  stave trace --controls controls/s3 --observation observations/snap.json --control CTL.S3.PUBLIC.001 --asset-id my-bucket`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {

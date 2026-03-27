@@ -41,17 +41,15 @@ Exit Codes:
   0   - Policy passed; no violations detected
   2   - Invalid input or configuration error
   3   - Policy failed; violations detected
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Fail on any findings in evaluation output
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Fail on any findings in evaluation output
   stave ci gate --policy fail_on_any_violation --in output/evaluation.json
 
   # Fail only on newly introduced findings
   stave ci gate --policy fail_on_new_violation --in output/evaluation.json --baseline output/baseline.json
 
   # Fail when any upcoming action is already overdue
-  stave ci gate --policy fail_on_overdue_upcoming --controls ./controls --observations ./observations` + metadata.OfflineHelpSuffix,
+  stave ci gate --policy fail_on_overdue_upcoming --controls ./controls --observations ./observations`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)

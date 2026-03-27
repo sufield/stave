@@ -1,0 +1,28 @@
+# Verify config commands
+
+# Config show
+exec stave config show
+stdout 'max_unsafe'
+
+# Config env list
+exec stave config env list
+stdout 'STAVE'
+
+# Config help
+exec stave config --help
+stdout 'get'
+stdout 'set'
+stdout 'delete'
+stdout 'show'
+
+# Config explain help
+exec stave config explain --help
+stdout 'Exit Codes'
+
+# Config context help
+exec stave config context --help
+stdout 'create'
+stdout 'use'
+stdout 'delete'
+stdout 'list'
+stdout 'show'

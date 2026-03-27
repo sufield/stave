@@ -28,16 +28,6 @@ Safety defaults:
   - Defaults to dry-run when neither --dry-run nor --force is set
   - Actual file moves require --force
 
-Examples:
-  # Preview snapshots older than 30 days
-  stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 30d --dry-run
-
-  # Move snapshots older than 30 days (keeping at least 2)
-  stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 30d --force
-
-  # Deterministic retention window
-  stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 14d --now 2026-01-20T00:00:00Z --dry-run
-
 Outputs:
   stdout        Summary: "Archived N snapshot(s) to <dir>" (or dry-run preview)
   stderr        Error messages (if any)
@@ -46,7 +36,8 @@ Exit Codes:
   0   - Archive completed successfully (or dry-run previewed)
   2   - Invalid input or configuration error
   130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Example: `  stave snapshot archive --observations ./observations --archive-dir ./archive --older-than 30d --dry-run`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},
