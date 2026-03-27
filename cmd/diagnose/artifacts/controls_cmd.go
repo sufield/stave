@@ -130,13 +130,19 @@ Exit Codes:
 		Example: `  stave controls explain CTL.S3.PUBLIC.001 --controls controls/s3`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			explainer := diagnose.NewExplainer(newCtlRepo)
-			return explainer.Run(cmd.Context(), diagnose.ExplainRequest{
+			repo, err := newCtlRepo()
+			if err != nil {
+				return fmt.Errorf("create control loader: %w", err)
+			}
+			explainer := diagnose.NewExplainerWithFinder(repo)
+			result, err := explainer.Run(cmd.Context(), diagnose.ExplainRequest{
 				ControlID:   kernel.ControlID(args[0]),
 				ControlsDir: controlsDir,
-				Format:      ui.OutputFormatText,
-				Stdout:      cmd.OutOrStdout(),
 			})
+			if err != nil {
+				return err
+			}
+			return diagnose.WriteExplainResult(cmd.OutOrStdout(), result, ui.OutputFormatText)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

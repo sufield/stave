@@ -37,17 +37,24 @@ unsafe_predicate:
 		t.Fatalf("write control: %v", err)
 	}
 
-	var buf bytes.Buffer
 	p := compose.NewDefaultProvider()
-	explainer := NewExplainer(p.NewControlRepo)
-	err := explainer.Run(context.Background(), ExplainRequest{
+	repo, err := p.NewControlRepo()
+	if err != nil {
+		t.Fatalf("create repo: %v", err)
+	}
+
+	explainer := NewExplainerWithFinder(repo)
+	result, err := explainer.Run(context.Background(), ExplainRequest{
 		ControlID:   "CTL.S3.PUBLIC.001",
 		ControlsDir: ctlDir,
-		Format:      ui.OutputFormatText,
-		Stdout:      &buf,
 	})
 	if err != nil {
 		t.Fatalf("explain failed: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := WriteExplainResult(&buf, result, ui.OutputFormatText); err != nil {
+		t.Fatalf("write result: %v", err)
 	}
 
 	out := buf.String()
@@ -68,14 +75,16 @@ func TestExplainNotFound(t *testing.T) {
 		t.Fatalf("mkdir controls: %v", err)
 	}
 
-	var buf bytes.Buffer
 	p := compose.NewDefaultProvider()
-	explainer := NewExplainer(p.NewControlRepo)
-	err := explainer.Run(context.Background(), ExplainRequest{
+	repo, err := p.NewControlRepo()
+	if err != nil {
+		t.Fatalf("create repo: %v", err)
+	}
+
+	explainer := NewExplainerWithFinder(repo)
+	_, err = explainer.Run(context.Background(), ExplainRequest{
 		ControlID:   "CTL.MISSING.001",
 		ControlsDir: ctlDir,
-		Format:      ui.OutputFormatText,
-		Stdout:      &buf,
 	})
 	if err == nil {
 		t.Fatal("expected error for missing control")
