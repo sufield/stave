@@ -32,38 +32,28 @@ type Request struct {
 	Format       ui.OutputFormat
 	Quiet        bool
 	Stdout       io.Writer
-	Stderr       io.Writer
-
-	// Metadata for Git auditing
-	ProjectRoot string
-	AuditPaths  []string
 }
 
-// Runner orchestrates the loading, auditing, and rendering of reports.
+// Runner orchestrates the loading and rendering of reports.
 type Runner struct {
 	Version         string
 	DefaultTemplate string
 }
 
-// NewRunner initializes a report runner with default settings.
-func NewRunner() *Runner {
+// NewRunner initializes a report runner with the given version string.
+func NewRunner(version string) *Runner {
 	return &Runner{
-		Version:         staveversion.String,
+		Version:         version,
 		DefaultTemplate: defaultReportTemplate,
 	}
 }
 
 // Run executes the report generation process.
-func (r *Runner) Run(_ context.Context, req Request) error {
+func (r *Runner) Run(ctx context.Context, req Request) error {
 	inputFile := fsutil.CleanUserPath(req.InputFile)
 	eval, err := artifact.NewLoader().Evaluation(inputFile)
 	if err != nil {
 		return fmt.Errorf("loading evaluation: %w", err)
-	}
-
-	if req.ProjectRoot != "" {
-		gitInfo := compose.AuditGitStatus(req.ProjectRoot, req.AuditPaths)
-		compose.WarnGitDirty(req.Stderr, gitInfo, "report", req.Quiet)
 	}
 
 	if req.Format.IsJSON() {
@@ -129,16 +119,14 @@ Examples:
 				return err
 			}
 
+			// Audit git state before running the report (CLI concern).
 			res, resolverErr := projctx.NewResolver()
 			if resolverErr != nil {
 				slog.Warn("failed to resolve project context", "error", resolverErr)
 			}
-
-			var projectRoot string
-			var auditPaths []string
 			if res != nil {
-				projectRoot = res.ProjectRoot()
-				auditPaths = resolveAuditPaths(res)
+				gitInfo := compose.AuditGitStatus(res.ProjectRoot(), resolveAuditPaths(res))
+				compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report", flags.Quiet)
 			}
 
 			req := Request{
@@ -147,12 +135,9 @@ Examples:
 				Format:       fmtValue,
 				Quiet:        flags.Quiet,
 				Stdout:       cmd.OutOrStdout(),
-				Stderr:       cmd.ErrOrStderr(),
-				ProjectRoot:  projectRoot,
-				AuditPaths:   auditPaths,
 			}
 
-			return NewRunner().Run(cmd.Context(), req)
+			return NewRunner(staveversion.String).Run(cmd.Context(), req)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
