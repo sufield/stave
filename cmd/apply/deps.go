@@ -32,11 +32,9 @@ import (
 )
 
 // Builder encapsulates the cmd-layer resolution needed before building
-// apply dependencies. It resolves adapters from the compose provider,
-// loads exemptions, audits git status, and delegates final assembly
-// to BuildApplyDeps.
+// apply dependencies. It resolves adapters, loads exemptions, audits
+// git status, and delegates final assembly to BuildDependencies.
 type Builder struct {
-	Ctx       context.Context
 	Logger    *slog.Logger
 	Stdout    io.Writer
 	Stderr    io.Writer
@@ -61,28 +59,27 @@ type Builder struct {
 	OnObsProgress func(processed, total int)
 }
 
-// NewBuilder constructs a Builder from the standard apply execution context.
-func NewBuilder(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO) *Builder {
+// NewBuilder constructs a Builder with sensible defaults for crypto.
+// Adapter factories (NewFindingWriter, NewCtlRepo, NewStdinObsRepo)
+// must be set by the caller before calling Build.
+func NewBuilder(logger *slog.Logger, opts *ApplyOptions, params applyParams, sio standardIO) *Builder {
 	return &Builder{
-		Ctx:              ctx,
-		Logger:           logger,
-		Stdout:           sio.Stdout,
-		Stderr:           sio.Stderr,
-		Stdin:            sio.Stdin,
-		Sanitizer:        sio.Sanitizer,
-		Format:           sio.Format,
-		Digester:         crypto.NewHasher(),
-		IDGen:            crypto.NewHasher(),
-		Opts:             opts,
-		Params:           params,
-		NewFindingWriter: p.NewFindingWriter,
-		NewCtlRepo:       p.NewControlRepo,
-		NewStdinObsRepo:  p.NewStdinObsRepo,
+		Logger:    logger,
+		Stdout:    sio.Stdout,
+		Stderr:    sio.Stderr,
+		Stdin:     sio.Stdin,
+		Sanitizer: sio.Sanitizer,
+		Format:    sio.Format,
+		Digester:  crypto.NewHasher(),
+		IDGen:     crypto.NewHasher(),
+		Opts:      opts,
+		Params:    params,
 	}
 }
 
 // Build constructs ApplyDeps from a pre-existing evaluation plan.
-func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error) {
+// Context is passed as the first argument per Go convention.
+func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error) {
 	if plan == nil {
 		return nil, errors.New("evaluation plan is required")
 	}
@@ -99,44 +96,52 @@ func (b *Builder) Build(plan *appeval.EvaluationPlan) (*appeval.ApplyDeps, error
 
 	gitMeta := compose.AuditGitStatus(plan.ProjectRoot, []string{b.Opts.ControlsDir, b.ProjectConfigPath})
 
-	projCfgInput, projCfgErr := b.buildProjectConfigFromLoaded(b.ProjectConfig)
-	if projCfgErr != nil {
-		return nil, fmt.Errorf("resolve project config: %w", projCfgErr)
+	projCfgInput, err := b.buildProjectConfigFromLoaded(b.ProjectConfig)
+	if err != nil {
+		return nil, fmt.Errorf("resolve project config: %w", err)
 	}
 
-	celEval, celErr := stavecel.NewPredicateEval()
-	if celErr != nil {
-		return nil, fmt.Errorf("initialize CEL evaluator: %w", celErr)
+	celEval, err := stavecel.NewPredicateEval()
+	if err != nil {
+		return nil, fmt.Errorf("initialize CEL evaluator: %w", err)
 	}
 
-	deps, err := appeval.BuildApplyDeps(appeval.ApplyBuilderInput{
-		Ctx:               b.Ctx,
-		Logger:            b.Logger,
-		Stdout:            b.Stdout,
-		Stderr:            b.Stderr,
-		Plan:              *plan,
-		Marshaler:         a.marshaler,
-		ObsLoader:         a.obsLoader,
-		CtlLoader:         a.ctlLoader,
-		EnrichFn:          buildEnrichFn(b.Sanitizer, b.IDGen),
-		MaxUnsafeDuration: b.Params.maxUnsafeDuration,
-		Clock:             b.Params.clock,
-		Hasher:            b.Digester,
-		AllowUnknownInput: b.Opts.AllowUnknown,
-		ExemptionConfig:   exemptionCfg,
-		PredicateParser:   ctlyaml.ParsePredicate,
-		CELEvaluator:      celEval,
-		StaveVersion:      version.String,
-		ControlsDir:       b.Opts.ControlsDir,
-		ProjectConfig:     projCfgInput,
-		GitMetadata:       gitMeta,
-		ControlFilters:    appeval.ControlFilter{},
+	built, err := appeval.BuildDependencies(appeval.BuildDependenciesInput{
+		Context: ctx,
+		Logger:  b.Logger,
+		Plan:    *plan,
+		Adapters: appeval.Adapters{
+			FindingMarshaler:  a.marshaler,
+			EnrichFn:          buildEnrichFn(b.Sanitizer, b.IDGen),
+			ObservationLoader: a.obsLoader,
+			ControlLoader:     a.ctlLoader,
+		},
+		Runtime: appeval.RuntimeConfig{
+			MaxUnsafeDuration: b.Params.maxUnsafeDuration,
+			Clock:             b.Params.clock,
+			Hasher:            b.Digester,
+			StaveVersion:      version.String,
+			AllowUnknownInput: b.Opts.AllowUnknown,
+			ExemptionConfig:   exemptionCfg,
+			PredicateParser:   ctlyaml.ParsePredicate,
+			CELEvaluator:      celEval,
+		},
+		Writers: appeval.OutputWriters{
+			Stdout: b.Stdout,
+			Stderr: b.Stderr,
+		},
+		Project: appeval.ProjectScope{
+			Config:      projCfgInput,
+			GitMetadata: gitMeta,
+			Filters:     appeval.ControlFilter{},
+			ControlsDir: b.Opts.ControlsDir,
+		},
 	})
 	if err != nil {
 		return nil, wrapBuildError(err)
 	}
 
-	return deps, nil
+	return &appeval.ApplyDeps{Runner: built.Runner, Config: built.Config}, nil
 }
 
 type adapters struct {

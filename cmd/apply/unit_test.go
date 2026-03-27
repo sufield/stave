@@ -222,7 +222,7 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.Build(plan)
+	return b.Build(context.Background(), plan)
 }
 
 func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
@@ -230,7 +230,6 @@ func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
 	hasher := crypto.NewHasher()
 	p := compose.NewDefaultProvider()
 	return &Builder{
-		Ctx:              context.Background(),
 		Logger:           slog.Default(),
 		Stdout:           io.Discard,
 		Stderr:           io.Discard,
