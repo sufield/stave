@@ -138,21 +138,21 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 	prof, err := ParseProfile(o.Profile)
 	if err != nil {
-		return RunConfig{}, err
+		return RunConfig{}, &ui.UserError{Err: err}
 	}
 
 	if prof == ProfileAWSS3 && o.InputFile == "" {
-		return RunConfig{}, fmt.Errorf("--input is required when using --profile %s", o.Profile)
+		return RunConfig{}, &ui.UserError{Err: fmt.Errorf("--input is required when using --profile %s", o.Profile)}
 	}
 
 	clock, err := compose.ResolveClock(o.NowTime)
 	if err != nil {
-		return RunConfig{}, err
+		return RunConfig{}, &ui.UserError{Err: err}
 	}
 
 	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
-		return RunConfig{}, err
+		return RunConfig{}, &ui.UserError{Err: err}
 	}
 
 	cfg := &Config{
