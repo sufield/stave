@@ -1,0 +1,55 @@
+# Exercise apply --profile with built-in controls
+
+# Profile evaluation with built-in controls
+exec stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z --format json
+
+-- observations.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-14T00:00:00Z",
+  "snapshots": [
+    {
+      "captured_at": "2026-01-10T00:00:00Z",
+      "assets": [{
+        "id": "public-test-bucket",
+        "type": "aws_s3_bucket",
+        "vendor": "aws",
+        "properties": {
+          "storage": {
+            "kind": "bucket",
+            "name": "public-test-bucket",
+            "access": {"public_read": true},
+            "public_access_block": {
+              "block_public_acls": false,
+              "block_public_policy": false,
+              "ignore_public_acls": false,
+              "restrict_public_buckets": false
+            }
+          }
+        }
+      }]
+    },
+    {
+      "captured_at": "2026-01-14T00:00:00Z",
+      "assets": [{
+        "id": "public-test-bucket",
+        "type": "aws_s3_bucket",
+        "vendor": "aws",
+        "properties": {
+          "storage": {
+            "kind": "bucket",
+            "name": "public-test-bucket",
+            "access": {"public_read": true},
+            "public_access_block": {
+              "block_public_acls": false,
+              "block_public_policy": false,
+              "ignore_public_acls": false,
+              "restrict_public_buckets": false
+            }
+          }
+        }
+      }]
+    }
+  ]
+}

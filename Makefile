@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz docker-demo demo-check readme readme-check
+.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls gofixer imports imports-check sync-public fuzz docker-demo demo-check readme readme-check
 
 # Binary name
 BINARY=stave
@@ -61,6 +61,24 @@ test: sync-schemas sync-controls
 test-coverage:
 	$(GOTEST) -v -cover -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
+
+## test-compliance: Run metadata linter + testscript with global coverage
+test-compliance: sync-schemas sync-controls
+	@echo "==> Running Compliance & Integration Tests..."
+	$(GOTEST) -coverprofile=compliance-coverage.out -coverpkg=./... ./cmd/ ./cmd/stave/
+	@echo ""
+	@echo "==> Coverage Summary:"
+	@$(GOCMD) tool cover -func=compliance-coverage.out | grep total | awk '{print "Compliance Test Coverage: " $$3}'
+
+## cover-report: Generate HTML coverage report from compliance tests
+cover-report: test-compliance
+	@echo "==> Generating HTML report..."
+	$(GOCMD) tool cover -html=compliance-coverage.out -o compliance-coverage.html
+	@echo "Done: compliance-coverage.html"
+
+## clean-cover: Remove coverage files
+clean-cover:
+	rm -f coverage.out coverage.html compliance-coverage.out compliance-coverage.html
 
 ## script-test: Run testscript behavioral CLI tests
 script-test: sync-schemas sync-controls
