@@ -1,7 +1,6 @@
 package apply
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -23,8 +22,8 @@ import (
 
 // cobraState holds all values extracted from *cobra.Command.
 // Populated once in RunE; all downstream functions are cobra-free.
+// Context is not stored here — it flows through function parameters.
 type cobraState struct {
-	Ctx           context.Context
 	Logger        *slog.Logger
 	Stdout        io.Writer
 	Stderr        io.Writer
@@ -71,12 +70,12 @@ type applyParams struct {
 // resolvePathInference resolves controls and observations directories using
 // PrepareEvaluationContext. Dir validation is deferred to validateDirsWithConfig
 // because it depends on the loaded project config (pack awareness).
-func (o *ApplyOptions) resolvePathInference(obsChanged bool) (compose.EvalContext, error) {
+func resolvePathInference(controlsDir, observationsDir string, controlsSet, obsChanged bool) (compose.EvalContext, error) {
 	return compose.PrepareEvaluationContext(compose.EvalContextRequest{
-		ControlsDir:                o.ControlsDir,
-		ObservationsDir:            o.ObservationsDir,
-		ControlsChanged:            o.controlsSet,
-		ObsChanged:                 obsChanged || o.ObservationsDir == "-",
+		ControlsDir:                controlsDir,
+		ObservationsDir:            observationsDir,
+		ControlsChanged:            controlsSet,
+		ObsChanged:                 obsChanged || observationsDir == "-",
 		SkipControlsValidation:     true,
 		SkipObservationsValidation: true,
 		SkipMaxUnsafe:              true,
@@ -93,7 +92,7 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 		return o.resolveProfileMode(cs)
 	}
 
-	ec, err := o.resolvePathInference(cs.ObsChanged)
+	ec, err := resolvePathInference(o.ControlsDir, o.ObservationsDir, o.controlsSet, cs.ObsChanged)
 	if err != nil {
 		return RunConfig{}, err
 	}
@@ -103,16 +102,16 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 	// IntegrityManifest and IntegrityPublicKey are already cleaned by
 	// normalize() in PreRunE — no duplicate cleaning needed here.
 
-	parsed, err := o.parseDomainWith(observationsDir)
+	parsed, err := parseDomainOptions(o.MaxUnsafeDuration, o.NowTime, observationsDir, o.IntegrityManifest, o.IntegrityPublicKey)
 	if err != nil {
 		return RunConfig{}, err
 	}
 
 	// Load project config once — shared by validateDirs, buildEvaluatorInput, and Build.
-	projCfg, cfgPath, cfgErr := projconfig.FindProjectConfigWithPath("")
-	if cfgErr != nil {
+	projCfg, cfgPath, err := projconfig.FindProjectConfigWithPath("")
+	if err != nil {
 		return RunConfig{}, ui.WithHint(
-			fmt.Errorf("load project config: %w", cfgErr),
+			fmt.Errorf("load project config: %w", err),
 			ui.ErrHintProjectConfig,
 		)
 	}
@@ -123,7 +122,7 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 
 	params := &applyParams{
 		maxUnsafeDuration: parsed.MaxUnsafeDuration,
-		clock:             o.buildClock(parsed.Now),
+		clock:             buildClock(parsed.Now),
 		source:            parsed.Source,
 	}
 	return RunConfig{
@@ -210,15 +209,14 @@ func (o *ApplyOptions) buildEvaluatorInput(controlsDir, observationsDir, cfgPath
 	}, nil
 }
 
-// parseDomainWith handles the conversion of strings to domain-specific types.
-// observationsDir is the resolved path from inference, not from the receiver.
-func (o *ApplyOptions) parseDomainWith(observationsDir string) (appeval.ParsedOptions, error) {
+// parseDomainOptions handles the conversion of strings to domain-specific types.
+func parseDomainOptions(maxUnsafe, nowTime, observationsDir, manifest, pubKey string) (appeval.ParsedOptions, error) {
 	parsed, err := (appeval.Options{
-		MaxUnsafeDuration:  o.MaxUnsafeDuration,
-		NowTime:            o.NowTime,
+		MaxUnsafeDuration:  maxUnsafe,
+		NowTime:            nowTime,
 		ObservationsSource: appeval.ObservationSource(observationsDir),
-		IntegrityManifest:  o.IntegrityManifest,
-		IntegrityPublicKey: o.IntegrityPublicKey,
+		IntegrityManifest:  manifest,
+		IntegrityPublicKey: pubKey,
 	}).Validate()
 	if err != nil {
 		return appeval.ParsedOptions{}, &ui.UserError{Err: err}
@@ -271,7 +269,7 @@ func (o *ApplyOptions) ResolveStandardIO(cs cobraState) (standardIO, error) {
 	}, nil
 }
 
-func (o *ApplyOptions) buildClock(now time.Time) ports.Clock {
+func buildClock(now time.Time) ports.Clock {
 	if !now.IsZero() {
 		return ports.FixedClock(now)
 	}

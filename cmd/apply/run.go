@@ -19,8 +19,9 @@ import (
 )
 
 // runApply is the single dispatch function called by the thin RunE wrapper.
-// All CLI state has already been extracted into cs.
-func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
+// All CLI state has already been extracted into cs. Context flows as the
+// first parameter per Go convention.
+func runApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate options: %w", err)
 	}
@@ -38,7 +39,7 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 		if dryErr != nil {
 			return fmt.Errorf("resolve dry-run config: %w", dryErr)
 		}
-		return runDryRun(cs.Ctx, p, dryCfg)
+		return runDryRun(ctx, p, dryCfg)
 	}
 
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
@@ -62,14 +63,14 @@ func runApply(p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
 			cfg.profileClock,
 			rt,
 		)
-		return runner.Run(cs.Ctx, *cfg.Profile)
+		return runner.Run(ctx, *cfg.Profile)
 	}
 
 	sio, err := opts.ResolveStandardIO(cs)
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
-	return runStandardApply(cs.Ctx, cs.Logger, p, opts, *cfg.Params, sio, cfg)
+	return runStandardApply(ctx, cs.Logger, p, opts, *cfg.Params, sio, cfg)
 }
 
 // evalContext groups the parameters needed by the evaluation pipeline.
