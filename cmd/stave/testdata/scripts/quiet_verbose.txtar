@@ -1,0 +1,57 @@
+# Verify --quiet and --verbose flags (clig.dev § Verbosity)
+
+# --quiet suppresses non-essential output
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --quiet --format json --allow-unknown-input
+! stderr 'No violations'
+stdout '"schema_version"'
+
+# --quiet with violations still exits 3
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --quiet --format json --allow-unknown-input
+
+-- controls/CTL.TEST.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.TEST.001
+name: Test Control
+description: Test.
+domain: exposure
+severity: high
+type: unsafe_duration
+params:
+  max_unsafe_duration: "12h"
+unsafe_predicate:
+  all:
+    - field: properties.public
+      op: eq
+      value: true
+
+-- observations/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{"id": "test-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": true}}]
+}
+
+-- observations/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{"id": "test-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": true}}]
+}
+
+-- observations-clean/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}
+
+-- observations-clean/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}

@@ -159,11 +159,12 @@ func NewDocsSearchCmd() *cobra.Command {
 		Long: `Search inspects local documentation files and returns ranked keyword matches.
 It is offline-only and deterministic, so it can run in CI and air-gapped workflows.
 
-Examples:
-  stave docs search "snapshot upcoming"
-  stave docs search "fail on new violation" --format json
-  stave docs search "I want to" --docs-root . --path docs --path README.md` + metadata.OfflineHelpSuffix,
-		Args: cobra.MinimumNArgs(1),
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave docs search "snapshot upcoming" --format json`,
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, format)
 			if err != nil {

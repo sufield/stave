@@ -52,7 +52,8 @@ Examples:
 
   # Include only last 200 log lines
   stave bug-report --tail-lines 200` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Example: `  stave bug-report --out bug-bundle.zip`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runReport(cmd, opts)
 		},
@@ -75,11 +76,17 @@ func newInspectCmd() *cobra.Command {
 		Long: `Inspect opens a bug-report bundle zip and prints each file with a separator
 header. Output goes to stdout so it can be piped to less, grep, jq, etc.
 
+Exit Codes:
+  0   - Success
+  2   - Input error
+  4   - Internal error
+
 Examples:
   stave bug-report inspect stave-diag-20260306T120000Z.zip
   stave bug-report inspect bundle.zip | grep -A5 manifest
   stave bug-report inspect bundle.zip | less` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(1),
+		Example: `  stave bug-report inspect --bundle bug-bundle.zip`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			zr, err := zip.OpenReader(args[0])
 			if err != nil {

@@ -19,9 +19,12 @@ analyzing action permissions and principal exposure.
 Input: JSON statement context from --file or stdin.
 Output: JSON risk report with score, findings, and permissions.
 
-Examples:
-  stave inspect risk --file statement.json
-  cat statement.json | stave inspect risk` + metadata.OfflineHelpSuffix,
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave inspect risk --file statement.json
+  cat statement.json | stave inspect risk`,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file) },
 		SilenceUsage:  true,

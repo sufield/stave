@@ -1,0 +1,24 @@
+# Verify controls and packs commands
+
+# Controls list built-in
+exec stave controls list --built-in
+stdout 'CTL.S3'
+
+# Controls aliases
+exec stave controls aliases
+stdout 's3.'
+
+# Packs list
+exec stave packs list
+stdout 's3'
+
+# Controls help
+exec stave controls --help
+stdout 'list'
+stdout 'explain'
+stdout 'aliases'
+
+# Packs help
+exec stave packs --help
+stdout 'list'
+stdout 'show'

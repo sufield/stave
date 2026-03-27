@@ -62,7 +62,8 @@ Exit Codes:
   2   - Invalid input or configuration error
   4   - Internal error
   130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Example: `  stave graph coverage --controls controls/s3 --observations observations`,
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},

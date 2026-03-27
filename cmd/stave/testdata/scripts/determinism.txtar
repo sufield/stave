@@ -1,0 +1,40 @@
+# Verify deterministic output (same inputs = same output)
+
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+cp stdout run1.json
+
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+cp stdout run2.json
+
+cmp run1.json run2.json
+
+-- controls/CTL.TEST.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.TEST.001
+name: Test Control
+description: Test.
+domain: exposure
+severity: high
+type: unsafe_state
+params: {}
+unsafe_predicate:
+  all:
+    - field: properties.public
+      op: eq
+      value: true
+
+-- observations-clean/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}
+
+-- observations-clean/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "test-snapshot", "tool": "testscript"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{"id": "safe-bucket", "type": "aws_s3_bucket", "vendor": "aws", "properties": {"public": false}}]
+}

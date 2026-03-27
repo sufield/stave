@@ -22,8 +22,14 @@ Rules:
   - .yaml/.yml files are parsed as ctrl.v1 controls and emitted in canonical field order
   - .json files are parsed as obs.v0.1 snapshots and emitted with stable indentation
 
-Use --check to verify formatting without writing files.` + metadata.OfflineHelpSuffix,
-		Args: cobra.ExactArgs(1),
+Use --check to verify formatting without writing files.
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave fmt --controls controls/s3 --check`,
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			allowSymlinks := cliflags.GetGlobalFlags(cmd).AllowSymlinkOut
 

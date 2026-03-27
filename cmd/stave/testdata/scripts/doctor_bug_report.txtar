@@ -1,0 +1,13 @@
+# Verify doctor and bug-report commands
+
+# Doctor text output
+exec stave doctor
+stdout 'PASS'
+
+# Doctor JSON output
+exec stave doctor --format json
+stdout '"checks"'
+
+# Bug-report creates a bundle
+exec stave bug-report --out bug-bundle.zip
+exists bug-bundle.zip

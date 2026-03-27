@@ -19,9 +19,12 @@ posture, identifying public, authenticated, and full-control grants.
 Input: JSON array of grant objects from --file or stdin.
 Output: JSON assessment with permission analysis.
 
-Examples:
-  stave inspect acl --file grants.json
-  cat grants.json | stave inspect acl` + metadata.OfflineHelpSuffix,
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave inspect acl --file grants.json
+  cat grants.json | stave inspect acl`,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file) },
 		SilenceUsage:  true,

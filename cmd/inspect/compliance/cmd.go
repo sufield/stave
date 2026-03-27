@@ -35,11 +35,11 @@ Exit Codes:
   4   - Internal error
   130 - Interrupted (SIGINT)
 
-Examples:
-  stave inspect compliance --file crosswalk.yaml
+` + metadata.OfflineHelpSuffix,
+		Example: `  stave inspect compliance --file crosswalk.yaml
   stave inspect compliance --file crosswalk.yaml --framework nist_800_53
   cat crosswalk.yaml | stave inspect compliance
-  stave inspect compliance --file crosswalk.yaml --check-id CTL.S3.PUBLIC.001 | jq .` + metadata.OfflineHelpSuffix,
+  stave inspect compliance --file crosswalk.yaml --check-id CTL.S3.PUBLIC.001 | jq .`,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file, frameworks, checkIDs) },
 		SilenceUsage:  true,

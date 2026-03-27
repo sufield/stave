@@ -82,9 +82,14 @@ func (r *VersionRunner) enrichWithProjectInfo(out *versionOutput) {
 func newVersionCmd(edition Edition) *cobra.Command {
 	var verbose bool
 	cmd := &cobra.Command{
-		Use:           "version",
-		Short:         "Print version and environment state",
-		Long:          "Version prints binary version and, with --verbose, schema and lockfile status." + OfflineHelpSuffix,
+		Use:   "version",
+		Short: "Print version and environment state",
+		Long: `Version prints binary version and, with --verbose, schema and lockfile status.
+
+Exit Codes:
+  0   - Success
+  4   - Internal error` + OfflineHelpSuffix,
+		Example:       `  stave version --verbose`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -123,6 +128,7 @@ Examples:
 
   # Check security-audit capabilities
   stave capabilities | jq '.security_audit'` + OfflineHelpSuffix,
+		Example:       `  stave capabilities | jq '.version'`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,

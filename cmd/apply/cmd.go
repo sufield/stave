@@ -116,17 +116,15 @@ Exit Codes:
   2   - Invalid input or configuration error
   3   - Violations found
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Standard evaluation
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Standard evaluation
   stave apply --controls ./controls --observations ./obs --format json
 
   # Readiness check only (dry run)
   stave apply --dry-run
 
   # Profile-based evaluation with bundled observations
-  stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z` + metadata.OfflineHelpSuffix,
+  stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			opts.controlsSet = cliflags.ControlsFlagChanged(cmd)

@@ -149,10 +149,12 @@ func NewDocsOpenCmd() *cobra.Command {
 		Long: `Open resolves a topic to the best local documentation page and prints the exact
 file path plus a short summary in terminal output.
 
-Examples:
-  stave docs open "snapshot upcoming"
-  stave docs open "ci gate policy" --format json` + metadata.OfflineHelpSuffix,
-		Args: cobra.MinimumNArgs(1),
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave docs open "snapshot upcoming"`,
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, format)
 			if err != nil {

@@ -46,10 +46,8 @@ Exit Codes:
   0   - No diagnostic issues found
   2   - Invalid input or error
   3   - Diagnostic issues detected
-  130 - Interrupted (SIGINT)
-
-Examples:
-  # Basic diagnosis
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  # Basic diagnosis
   stave diagnose --controls ./controls --observations ./obs
 
   # Automation/CI mode (exit code only)
@@ -77,8 +75,7 @@ Examples:
     --controls ./controls --observations ./obs \
     --control-id CTL.S3.PUBLIC.001 \
     --asset-id res:aws:s3:bucket:my-bucket \
-    --format json
-` + metadata.OfflineHelpSuffix,
+    --format json`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,

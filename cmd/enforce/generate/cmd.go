@@ -25,8 +25,14 @@ func NewCmd() *cobra.Command {
 
 Supported Modes:
   pab - Generates AWS Public Access Block Terraform (.tf)
-  scp - Generates AWS Service Control Policy JSON (.json)` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  scp - Generates AWS Service Control Policy JSON (.json)
+
+Exit Codes:
+  0   - Success
+  2   - Input error
+  4   - Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave enforce --input evaluation.json --mode terraform`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			mode, err := ParseMode(modeRaw)
 			if err != nil {

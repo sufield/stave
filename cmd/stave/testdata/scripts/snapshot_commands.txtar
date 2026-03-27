@@ -1,0 +1,32 @@
+# Verify snapshot subcommand help and basic operations
+
+exec stave snapshot --help
+stdout 'diff'
+stdout 'archive'
+stdout 'prune'
+
+exec stave snapshot diff --help
+stdout 'Exit Codes'
+
+exec stave snapshot quality --help
+stdout 'Exit Codes'
+
+exec stave snapshot plan --help
+stdout 'Exit Codes'
+
+exec stave snapshot archive --help
+stdout 'Exit Codes'
+
+exec stave snapshot prune --help
+stdout 'Exit Codes'
+
+exec stave snapshot upcoming --help
+stdout 'Exit Codes'
+
+exec stave snapshot hygiene --help
+stdout 'Exit Codes'
+
+exec stave snapshot manifest --help
+stdout 'generate'
+stdout 'keygen'
+stdout 'sign'

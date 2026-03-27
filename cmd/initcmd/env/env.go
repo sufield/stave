@@ -120,10 +120,12 @@ func newEnvListCmd() *cobra.Command {
 		Long: `List prints every supported STAVE_* environment variable with its
 description, category, and current value.
 
-Examples:
-  stave env list
-  stave env list --format json` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave config env list`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, format)
 			if err != nil {

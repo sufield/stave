@@ -62,6 +62,14 @@ test-coverage:
 	$(GOTEST) -v -cover -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
 
+## script-test: Run testscript behavioral CLI tests
+script-test: sync-schemas sync-controls
+	$(GOTEST) ./cmd/stave/ -run TestScripts -count=1
+
+## clig-check: Verify CLI commands follow clig.dev guidelines
+clig-check:
+	$(GOTEST) ./cmd/ -run "TestCligCompliance|TestCligGlobalFlags" -count=1
+
 ## lint: Run golangci-lint (v2.8.0)
 lint:
 	$(GOLINT) run ./...

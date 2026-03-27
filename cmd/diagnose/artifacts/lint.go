@@ -23,7 +23,13 @@ Rules:
   - ID namespace format
   - Required metadata (name/description/remediation)
   - Determinism key constraints
-  - Stable ordering hints for list-like sections` + metadata.OfflineHelpSuffix,
+  - Stable ordering hints for list-like sections
+
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example:       `  stave lint --controls controls/s3`,
 		Args:          cobra.ExactArgs(1),
 		RunE:          runLint,
 		SilenceUsage:  true,

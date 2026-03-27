@@ -31,12 +31,9 @@ Exit Codes:
   0   - Manifest signed successfully
   2   - Invalid input (missing file, bad key format)
   4   - Internal error
-  130 - Interrupted (SIGINT)
-
-Examples:
-  stave manifest sign --in manifest.json --private-key manifest.private
-  stave manifest sign --in manifest.json --private-key keys/sign.pem --out build/signed.json` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave manifest sign --in manifest.json --private-key manifest.private --out build/signed.json`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 			runner := &SignRunner{}

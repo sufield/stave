@@ -19,9 +19,12 @@ vectors, resolving bucket access, visibility, and trust boundaries.
 Input: JSON object with resource exposure data from --file or stdin.
 Output: JSON with classified exposures, visibility, and governance analysis.
 
-Examples:
-  stave inspect exposure --file resources.json
-  cat resources.json | stave inspect exposure` + metadata.OfflineHelpSuffix,
+Exit Codes:
+  0    Success
+  2    Input error
+  4    Internal error` + metadata.OfflineHelpSuffix,
+		Example: `  stave inspect exposure --file resources.json
+  cat resources.json | stave inspect exposure`,
 		Args:          cobra.NoArgs,
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file) },
 		SilenceUsage:  true,

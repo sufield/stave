@@ -34,19 +34,13 @@ older_than and keep_min settings.
 
 Execution requires --apply --force.
 
-Examples:
-  # Preview multi-tier plan
-  stave snapshot plan --observations-root ./observations --now 2026-02-23T00:00:00Z
-
-  # JSON output
-  stave snapshot plan --observations-root ./observations --format json
-
-  # Execute the plan (prune mode)
-  stave snapshot plan --observations-root ./observations --apply --force
-
-  # Execute the plan (archive mode)
-  stave snapshot plan --observations-root ./observations --archive-dir ./observations/archive --apply --force` + metadata.OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+Exit Codes:
+  0   - Success
+  2   - Invalid input or configuration error
+  4   - Internal error
+  130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
+		Example: `  stave snapshot plan --observations-root ./observations --now 2026-02-23T00:00:00Z`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 			now, err := compose.ResolveNow(nowRaw)

@@ -34,7 +34,8 @@ Examples:
 
   # Pipe to jq
   stave schemas --format json | jq '.data'` + OfflineHelpSuffix,
-		Args: cobra.NoArgs,
+		Example: `  stave schemas`,
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(cmd, format)
 			if err != nil {
