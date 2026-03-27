@@ -1,0 +1,59 @@
+# Exercise diagnose, trace, and explain commands
+
+# Diagnose produces diagnostic output (may exit 3)
+! exec stave diagnose --controls controls --observations observations --now 2026-01-11T00:00:00Z --format json
+stdout '"report"'
+
+# Explain a specific control
+exec stave explain CTL.S3.PUBLIC.001 --controls controls --format json
+stdout 'CTL.S3.PUBLIC.001'
+stdout '"matched_fields"'
+
+# Trace a predicate evaluation
+exec stave trace --controls controls --observation observations/2026-01-11T000000Z.json --control CTL.S3.PUBLIC.001 --asset-id public-bucket
+stdout 'public_read'
+
+-- controls/CTL.S3.PUBLIC.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public S3 Bucket Read
+description: S3 buckets must not allow public read access.
+domain: exposure
+severity: critical
+type: unsafe_duration
+params:
+  max_unsafe_duration: "12h"
+scope_tags:
+  - aws
+  - s3
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
+
+-- observations/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{
+    "id": "public-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}
+
+-- observations/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{
+    "id": "public-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}

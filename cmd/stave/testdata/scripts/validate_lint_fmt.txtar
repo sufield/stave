@@ -1,0 +1,56 @@
+# Exercise validate, lint, and fmt against real controls
+
+# Validate runs (may warn about short span, exit 2)
+! exec stave validate --controls controls --observations observations
+stdout 'Validation passed'
+
+# Lint runs (may exit non-zero for warnings)
+! exec stave lint --controls controls
+
+# Fmt check runs
+! exec stave fmt --controls controls --check
+
+-- controls/CTL.S3.PUBLIC.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public S3 Bucket Read
+description: S3 buckets must not allow public read access.
+domain: exposure
+severity: critical
+type: unsafe_duration
+params:
+  max_unsafe_duration: "12h"
+scope_tags:
+  - aws
+  - s3
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
+
+-- observations/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{
+    "id": "test-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}
+
+-- observations/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{
+    "id": "test-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}

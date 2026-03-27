@@ -1,0 +1,69 @@
+# Exercise CI workflow commands: baseline, gate, diff, fix
+
+# Generate evaluation output first
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
+cp stdout evaluation.json
+
+# CI baseline save
+exec stave ci baseline save --in evaluation.json --out baseline.json --force
+
+# CI baseline check (self-compare = no new findings)
+exec stave ci baseline check --in evaluation.json --baseline baseline.json --fail-on-new=false
+
+# CI gate with violations
+! exec stave ci gate --policy fail_on_any_violation --in evaluation.json
+
+# CI diff (same file = no new findings)
+exec stave ci diff --current evaluation.json --baseline evaluation.json --fail-on-new=false
+
+# CI fix help
+exec stave ci fix --help
+stdout 'Exit Codes'
+
+-- controls/CTL.S3.PUBLIC.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public S3 Bucket Read
+description: S3 buckets must not allow public read access.
+domain: exposure
+severity: critical
+type: unsafe_duration
+params:
+  max_unsafe_duration: "12h"
+scope_tags:
+  - aws
+  - s3
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
+remediation:
+  description: Bucket has public read access enabled.
+  action: Enable S3 Public Access Block.
+
+-- observations/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{
+    "id": "public-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}
+
+-- observations/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{
+    "id": "public-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}

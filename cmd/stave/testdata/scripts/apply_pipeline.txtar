@@ -1,0 +1,104 @@
+# Exercise the full apply evaluation pipeline with all output formats
+
+# JSON output with violations (exit 3)
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
+stdout '"schema_version": "out.v0.1"'
+stdout '"safety_status": "UNSAFE"'
+stdout '"findings"'
+stdout '"control_id": "CTL.S3.PUBLIC.001"'
+stdout '"evidence"'
+stdout '"misconfigurations"'
+stdout '"remediation"'
+
+# Text output with violations
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format text
+
+# SARIF output with violations
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format sarif
+stdout 'runs'
+stdout 'results'
+
+# Clean evaluation (exit 0)
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json
+stdout '"safety_status": "SAFE"'
+stdout '"violations": 0'
+
+# Dry-run mode
+exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --dry-run
+stdout 'ready'
+
+-- controls/CTL.S3.PUBLIC.001.yaml --
+dsl_version: ctrl.v1
+id: CTL.S3.PUBLIC.001
+name: No Public S3 Bucket Read
+description: S3 buckets must not allow public read access.
+domain: exposure
+severity: critical
+type: unsafe_duration
+params:
+  max_unsafe_duration: "12h"
+scope_tags:
+  - aws
+  - s3
+compliance:
+  cis_aws_v1.4.0: "2.1.5"
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
+remediation:
+  description: Bucket has public read access enabled.
+  action: Enable S3 Public Access Block.
+
+-- observations/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{
+    "id": "public-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}
+
+-- observations/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{
+    "id": "public-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": true}}}
+  }]
+}
+
+-- observations-clean/2026-01-09T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-09T00:00:00Z",
+  "assets": [{
+    "id": "safe-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": false}}}
+  }]
+}
+
+-- observations-clean/2026-01-11T000000Z.json --
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {"source_type": "aws-s3-snapshot", "tool": "stave-extractor"},
+  "captured_at": "2026-01-11T00:00:00Z",
+  "assets": [{
+    "id": "safe-bucket",
+    "type": "aws_s3_bucket",
+    "vendor": "aws",
+    "properties": {"storage": {"access": {"public_read": false}}}
+  }]
+}
