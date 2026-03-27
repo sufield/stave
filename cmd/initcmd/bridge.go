@@ -28,8 +28,8 @@ const (
 // slugRegexp matches one or more non-alphanumeric characters for slug generation.
 var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
 
-// GetVersion returns the CLI version string.
-func GetVersion() string { return version.String }
+// Version returns the CLI version string.
+func Version() string { return version.String }
 
 // ---------------------------------------------------------------------------
 // Utility helpers shared across init sub-files.

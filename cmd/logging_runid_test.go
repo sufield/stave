@@ -30,7 +30,7 @@ func TestAttachRunIDFromPlan(t *testing.T) {
 	app.Logger.Info("test message")
 
 	out := buf.String()
-	wantRunID := identity.ComputeRunID(GetVersion(), plan.ObservationsHash.String(), plan.ControlsHash.String())
+	wantRunID := identity.ComputeRunID(Version(), plan.ObservationsHash.String(), plan.ControlsHash.String())
 	if !strings.Contains(out, logging.RunIDKey+"="+wantRunID) {
 		t.Fatalf("missing run_id context in log output: %s", out)
 	}

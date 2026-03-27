@@ -30,7 +30,7 @@ type VersionRunner struct {
 // Run produces version output in text or JSON format.
 func (r *VersionRunner) Run(edition Edition, verbose bool) error {
 	out := versionOutput{
-		Version:           GetVersion(),
+		Version:           Version(),
 		Edition:           string(edition),
 		SchemaControl:     kernel.SchemaControl,
 		SchemaObservation: kernel.SchemaObservation,
@@ -133,7 +133,7 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			caps := capabilities.GetCapabilities(GetVersion())
+			caps := capabilities.GetCapabilities(Version())
 			return jsonutil.WriteIndented(cmd.OutOrStdout(), caps)
 		},
 	}

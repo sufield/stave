@@ -51,13 +51,13 @@ type ThresholdItem struct {
 	Threshold      time.Duration
 }
 
-// ThresholdItems is a collection of upcoming risk items.
+// ThresholdItems is a collection of upcoming risk it.
 type ThresholdItems []ThresholdItem
 
 // CountOverdue returns the number of items with OVERDUE status.
-func (items ThresholdItems) CountOverdue() int {
+func (it ThresholdItems) CountOverdue() int {
 	count := 0
-	for _, item := range items {
+	for _, item := range it {
 		if item.Status == StatusOverdue {
 			count++
 		}
@@ -66,8 +66,8 @@ func (items ThresholdItems) CountOverdue() int {
 }
 
 // HasAnyRisk reports whether any item is overdue, due now, or upcoming.
-func (items ThresholdItems) HasAnyRisk() bool {
-	return len(items) > 0
+func (it ThresholdItems) HasAnyRisk() bool {
+	return len(it) > 0
 }
 
 // ThresholdSummary holds aggregate counts of risk items bucketed by urgency.
@@ -88,13 +88,13 @@ type ThresholdFilter struct {
 }
 
 // Filter returns items matching the criteria.
-func (items ThresholdItems) Filter(c ThresholdFilter) ThresholdItems {
-	if len(items) == 0 {
+func (it ThresholdItems) Filter(c ThresholdFilter) ThresholdItems {
+	if len(it) == 0 {
 		return nil
 	}
 
-	out := make(ThresholdItems, 0, len(items))
-	for _, item := range items {
+	out := make(ThresholdItems, 0, len(it))
+	for _, item := range it {
 		if c.matches(item) {
 			out = append(out, item)
 		}
@@ -125,10 +125,10 @@ func (c ThresholdFilter) matches(item ThresholdItem) bool {
 }
 
 // Summarize buckets items by urgency relative to a "due soon" threshold.
-func (items ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSummary {
+func (it ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSummary {
 	var s ThresholdSummary
-	s.Total = len(items)
-	for _, item := range items {
+	s.Total = len(it)
+	for _, item := range it {
 		switch item.Status {
 		case StatusOverdue:
 			s.Overdue++
