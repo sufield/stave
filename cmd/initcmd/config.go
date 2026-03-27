@@ -50,7 +50,7 @@ func NewScaffolder(opts scaffoldOptions) *Scaffolder {
 	}
 	return &Scaffolder{
 		Data: ScaffoldData{
-			Version:           GetVersion(),
+			Version:           Version(),
 			CaptureCadence:    opts.CaptureCadence,
 			SnapshotTemplate:  snapshotFilenameTemplate(opts.CaptureCadence),
 			SnapshotExample:   snapshotFilenameExample(opts.CaptureCadence),

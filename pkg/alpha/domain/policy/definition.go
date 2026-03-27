@@ -16,10 +16,10 @@ type AliasResolver func(alias string) (UnsafePredicate, bool)
 type ControlDefinitions []ControlDefinition
 
 // FindByID retrieves a definition by its unique kernel ID. Returns nil if not found.
-func (defs ControlDefinitions) FindByID(id kernel.ControlID) *ControlDefinition {
-	for i := range defs {
-		if defs[i].ID == id {
-			return &defs[i]
+func (d ControlDefinitions) FindByID(id kernel.ControlID) *ControlDefinition {
+	for i := range d {
+		if d[i].ID == id {
+			return &d[i]
 		}
 	}
 	return nil

@@ -91,36 +91,36 @@ type Facts struct {
 }
 
 // IdentityAllowsPublicRead reports whether identity-bound evidence permits public read.
-func (facts Facts) IdentityAllowsPublicRead() bool {
-	return facts.HasIdentityEvidence && !facts.IdentityReadBlocked
+func (f Facts) IdentityAllowsPublicRead() bool {
+	return f.HasIdentityEvidence && !f.IdentityReadBlocked
 }
 
 // ResourceAllowsPublicRead reports whether resource-bound evidence permits public read.
-func (facts Facts) ResourceAllowsPublicRead() bool {
-	return facts.HasResourceEvidence && facts.ResourceReadAll && !facts.ResourceReadBlocked
+func (f Facts) ResourceAllowsPublicRead() bool {
+	return f.HasResourceEvidence && f.ResourceReadAll && !f.ResourceReadBlocked
 }
 
 // LacksEvidence reports whether neither identity nor resource evidence is available.
-func (facts Facts) LacksEvidence() bool {
-	return !facts.HasIdentityEvidence && !facts.HasResourceEvidence
+func (f Facts) LacksEvidence() bool {
+	return !f.HasIdentityEvidence && !f.HasResourceEvidence
 }
 
 // CheckExposure determines whether a protected prefix is effectively publicly readable.
-func (facts Facts) CheckExposure(prefix kernel.ObjectPrefix) Result {
+func (f Facts) CheckExposure(prefix kernel.ObjectPrefix) Result {
 	// Rule 1: Explicit identity grants take precedence.
-	if facts.IdentityAllowsPublicRead() {
-		if grant := facts.IdentityGrants.FindMatch(prefix); grant != nil {
+	if f.IdentityAllowsPublicRead() {
+		if grant := f.IdentityGrants.FindMatch(prefix); grant != nil {
 			return Result{Exposed: true, Source: grant.Evidence()}
 		}
 	}
 
 	// Rule 2: Resource-bound access can expose the entire asset.
-	if facts.ResourceAllowsPublicRead() {
+	if f.ResourceAllowsPublicRead() {
 		return Result{Exposed: true, Source: NewSource(SourceResource, "")}
 	}
 
 	// Rule 3: Fail closed on missing evidence.
-	if facts.LacksEvidence() {
+	if f.LacksEvidence() {
 		return Result{Exposed: true, Source: NewSource(SourceMissingEvidence, "")}
 	}
 

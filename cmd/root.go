@@ -102,7 +102,7 @@ func NewApp(opts ...AppOption) *App {
 		opt(app)
 	}
 
-	app.Root.Version = fmt.Sprintf("%s (%s)", GetVersion(), string(app.Edition))
+	app.Root.Version = fmt.Sprintf("%s (%s)", Version(), string(app.Edition))
 	wireHelpGroups(app.Root)
 	return app
 }
@@ -132,7 +132,7 @@ func (a *App) initSanitizer() {
 	}.NewSanitizer()
 }
 
-// GetVersion returns the version string.
-func GetVersion() string {
+// Version returns the version string.
+func Version() string {
 	return staveversion.String
 }
