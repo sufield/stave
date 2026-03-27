@@ -1,6 +1,7 @@
 package docs
 
 import (
+	"cmp"
 	"fmt"
 	"io/fs"
 	"os"
@@ -47,7 +48,7 @@ func collectDocsFiles(root string, include []string) ([]docsFile, error) {
 		}
 	}
 	slices.SortFunc(files, func(a, b docsFile) int {
-		return strings.Compare(a.Rel, b.Rel)
+		return cmp.Compare(a.Rel, b.Rel)
 	})
 	return files, nil
 }
@@ -70,7 +71,8 @@ func appendDocsFromDirectory(root, dir string, seen map[string]struct{}, files *
 			return walkErr
 		}
 		if d.IsDir() {
-			if strings.HasPrefix(d.Name(), ".") {
+			name := d.Name()
+			if strings.HasPrefix(name, ".") || name == "node_modules" || name == "vendor" || name == "testdata" {
 				return filepath.SkipDir
 			}
 			return nil
