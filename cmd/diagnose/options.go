@@ -30,7 +30,7 @@ type diagnoseOptions struct {
 // BindFlags attaches the options to a Cobra command.
 func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringVarP(&o.ControlsDir, "controls", "i", "controls/s3", "Path to control definitions directory (inferred from project root if omitted)")
+	f.StringVarP(&o.ControlsDir, "controls", "i", cliflags.DefaultControlsDir, "Path to control definitions directory (inferred from project root if omitted)")
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
 	f.StringVarP(&o.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))

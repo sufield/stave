@@ -146,7 +146,7 @@ Examples:
 
 	cmd.Flags().StringVar(&evalFile, "evaluation-file", "", "Path to evaluation JSON output (required)")
 	cmd.Flags().StringVar(&assetID, "asset-id", "", "Asset ID to filter findings (required)")
-	cmd.Flags().StringVarP(&controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&controlsDir, "controls", "i", cliflags.DefaultControlsDir, "Path to control definitions directory")
 	cmd.Flags().StringVarP(&obsDir, "observations", "o", "", "Path to observation snapshots directory (optional)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 

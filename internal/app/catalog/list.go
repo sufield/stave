@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
@@ -32,12 +31,12 @@ type ControlRow struct {
 
 // ListRunner orchestrates the "stave controls list" logic.
 type ListRunner struct {
-	Repo appcontracts.ControlRepository
+	Provider ControlProvider
 }
 
 // Run executes the list operation, returning rows for the cmd layer to format.
 func (r *ListRunner) Run(ctx context.Context, cfg ListConfig) ([]ControlRow, error) {
-	controls, err := r.Repo.LoadControls(ctx, strings.TrimSpace(cfg.Dir))
+	controls, err := r.Provider.Load(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}

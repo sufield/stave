@@ -93,7 +93,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&controlID, "control", "", "Control ID to trace (required)")
-	cmd.Flags().StringVarP(&controlsDir, "controls", "i", "controls/s3", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&controlsDir, "controls", "i", cliflags.DefaultControlsDir, "Path to control definitions directory")
 	cmd.Flags().StringVar(&observation, "observation", "", "Path to single observation JSON file (required)")
 	cmd.Flags().StringVar(&assetID, "asset-id", "", "Asset ID to trace against (required)")
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
