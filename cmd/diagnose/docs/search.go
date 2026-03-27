@@ -21,7 +21,6 @@ type SearchRequest struct {
 	Root          string
 	Paths         []string
 	MaxResults    int
-	Format        ui.OutputFormat
 	CaseSensitive bool
 }
 
@@ -42,32 +41,26 @@ type SearchResult struct {
 }
 
 // SearchRunner orchestrates the documentation search process.
-type SearchRunner struct {
-	Stdout io.Writer
-}
+type SearchRunner struct{}
 
-// NewSearchRunner initializes a runner with the provided output stream.
-func NewSearchRunner(stdout io.Writer) *SearchRunner {
-	return &SearchRunner{Stdout: stdout}
-}
-
-// Run executes the search and writes the results to the configured output.
-func (r *SearchRunner) Run(ctx context.Context, req SearchRequest) error {
-	if err := r.validate(req); err != nil {
-		return err
+// Run executes the search and returns the result.
+// Presentation is handled by the caller.
+func (r *SearchRunner) Run(ctx context.Context, req SearchRequest) (SearchResult, error) {
+	if err := validateSearchRequest(req); err != nil {
+		return SearchResult{}, err
 	}
 
 	files, err := collectDocsFiles(req.Root, req.Paths)
 	if err != nil {
-		return fmt.Errorf("collecting docs: %w", err)
+		return SearchResult{}, fmt.Errorf("collecting docs: %w", err)
 	}
 	if len(files) == 0 {
-		return &ui.UserError{Err: fmt.Errorf("no documentation files found under %s", req.Root)}
+		return SearchResult{}, &ui.UserError{Err: fmt.Errorf("no documentation files found under %s", req.Root)}
 	}
 
-	hits, err := r.search(ctx, files, req)
+	hits, err := searchDocsFiles(ctx, files, req.Query, req.CaseSensitive)
 	if err != nil {
-		return err
+		return SearchResult{}, err
 	}
 
 	total := len(hits)
@@ -75,17 +68,15 @@ func (r *SearchRunner) Run(ctx context.Context, req SearchRequest) error {
 		hits = hits[:req.MaxResults]
 	}
 
-	res := SearchResult{
+	return SearchResult{
 		Query:    req.Query,
 		Total:    total,
 		Returned: len(hits),
 		Hits:     hits,
-	}
-
-	return r.report(res, req.Format)
+	}, nil
 }
 
-func (r *SearchRunner) validate(req SearchRequest) error {
+func validateSearchRequest(req SearchRequest) error {
 	if strings.TrimSpace(req.Query) == "" {
 		return &ui.UserError{Err: fmt.Errorf("query cannot be empty")}
 	}
@@ -95,25 +86,22 @@ func (r *SearchRunner) validate(req SearchRequest) error {
 	return nil
 }
 
-func (r *SearchRunner) search(ctx context.Context, files []docsFile, req SearchRequest) ([]SearchHit, error) {
-	return searchDocsFiles(ctx, files, req.Query, req.CaseSensitive)
-}
-
-func (r *SearchRunner) report(res SearchResult, format ui.OutputFormat) error {
+// writeSearchResult renders a SearchResult to the writer in the given format.
+func writeSearchResult(w io.Writer, res SearchResult, format ui.OutputFormat) error {
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, res)
+		return jsonutil.WriteIndented(w, res)
 	}
 
-	fmt.Fprintf(r.Stdout, "Query: %q\n", res.Query)
+	fmt.Fprintf(w, "Query: %q\n", res.Query)
 	if res.Total == 0 {
-		fmt.Fprintln(r.Stdout, "No matches found.")
+		fmt.Fprintln(w, "No matches found.")
 		return nil
 	}
 
-	fmt.Fprintf(r.Stdout, "Matches: %d\n\n", res.Total)
+	fmt.Fprintf(w, "Matches: %d\n\n", res.Total)
 	for i, hit := range res.Hits {
-		fmt.Fprintf(r.Stdout, "%d. [score=%d] %s:%d\n", i+1, hit.Score, hit.Path, hit.Line)
-		fmt.Fprintf(r.Stdout, "   %s\n", hit.Snippet)
+		fmt.Fprintf(w, "%d. [score=%d] %s:%d\n", i+1, hit.Score, hit.Path, hit.Line)
+		fmt.Fprintf(w, "   %s\n", hit.Snippet)
 	}
 	return nil
 }
@@ -153,11 +141,15 @@ Exit Codes:
 				Root:          fsutil.CleanUserPath(root),
 				Paths:         paths,
 				MaxResults:    show,
-				Format:        fmtValue,
 				CaseSensitive: caseSensitive,
 			}
 
-			return NewSearchRunner(cmd.OutOrStdout()).Run(cmd.Context(), req)
+			runner := &SearchRunner{}
+			result, err := runner.Run(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			return writeSearchResult(cmd.OutOrStdout(), result, fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
