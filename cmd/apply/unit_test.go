@@ -47,7 +47,6 @@ func TestResolveApplyOptions(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 	cmd := NewApplyCmd(compose.NewDefaultProvider())
 	cs := cobraState{
-		Ctx:         cmd.Context(),
 		Stdout:      cmd.OutOrStdout(),
 		Stderr:      cmd.ErrOrStderr(),
 		Stdin:       cmd.InOrStdin(),

@@ -134,7 +134,6 @@ Exit Codes:
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cs := cobraState{
-				Ctx:           cmd.Context(),
 				Logger:        cmdctx.LoggerFromCmd(cmd),
 				Stdout:        cmd.OutOrStdout(),
 				Stderr:        cmd.ErrOrStderr(),
@@ -143,7 +142,7 @@ Exit Codes:
 				FormatChanged: cmd.Flags().Changed("format"),
 				ObsChanged:    cmd.Flags().Changed("observations"),
 			}
-			return runApply(p, opts, cs)
+			return runApply(cmd.Context(), p, opts, cs)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
