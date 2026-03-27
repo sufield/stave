@@ -9,66 +9,63 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/output/text"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appexplain "github.com/sufield/stave/internal/app/explain"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
+
+	"github.com/sufield/stave/internal/adapters/output/text"
 )
 
 // ExplainRequest holds the inputs for the explain workflow.
 type ExplainRequest struct {
 	ControlID   kernel.ControlID
 	ControlsDir string
-	Format      ui.OutputFormat
-	Stdout      io.Writer
 }
 
 // Explainer analyzes a control and explains its predicate structure.
 type Explainer struct {
-	NewCtlRepo compose.CtlRepoFactory
+	Finder appexplain.ControlFinder
 }
 
-// NewExplainer creates an Explainer with the given control repo factory.
-func NewExplainer(newCtlRepo compose.CtlRepoFactory) *Explainer {
-	return &Explainer{NewCtlRepo: newCtlRepo}
-}
-
-// Run executes the explain workflow.
-func (e *Explainer) Run(ctx context.Context, req ExplainRequest) error {
+// Run executes the explain workflow and returns the result.
+// Presentation is handled by the caller.
+func (e *Explainer) Run(ctx context.Context, req ExplainRequest) (appexplain.ExplainResult, error) {
 	if req.ControlID == "" {
-		return &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
+		return appexplain.ExplainResult{}, &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
 	}
 
-	finder := &composeFinder{newCtlRepo: e.NewCtlRepo}
-	runner := &appexplain.Explainer{Finder: finder}
-	result, err := runner.Run(ctx, appexplain.ExplainInput{
+	runner := &appexplain.Explainer{Finder: e.Finder}
+	return runner.Run(ctx, appexplain.ExplainInput{
 		ControlID:   req.ControlID,
 		ControlsDir: req.ControlsDir,
 	})
-	if err != nil {
-		return err
-	}
-
-	if req.Format.IsJSON() {
-		return jsonutil.WriteIndented(req.Stdout, result)
-	}
-	return text.WriteExplainText(req.Stdout, result)
 }
 
-// composeFinder implements the ControlFinder interface using a control repository factory.
-type composeFinder struct {
-	newCtlRepo compose.CtlRepoFactory
+// NewExplainerWithFinder creates an Explainer from an initialized repository.
+func NewExplainerWithFinder(repo appcontracts.ControlRepository) *Explainer {
+	return &Explainer{Finder: &repoFinder{repo: repo}}
 }
 
-func (f *composeFinder) FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
-	repo, err := f.newCtlRepo()
-	if err != nil {
-		return policy.ControlDefinition{}, err
+// WriteExplainResult renders an ExplainResult to the writer in the given format.
+func WriteExplainResult(w io.Writer, result appexplain.ExplainResult, format ui.OutputFormat) error {
+	if format.IsJSON() {
+		return jsonutil.WriteIndented(w, result)
 	}
-	controls, err := repo.LoadControls(ctx, dir)
+	return text.WriteExplainText(w, result)
+}
+
+// repoFinder implements appexplain.ControlFinder using an initialized repo.
+// The repo is created once in the CLI layer and reused for all lookups.
+type repoFinder struct {
+	repo appcontracts.ControlRepository
+}
+
+func (f *repoFinder) FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
+	controls, err := f.repo.LoadControls(ctx, dir)
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
 	}
@@ -106,17 +103,25 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
-			if fmtErr != nil {
-				return fmtErr
+			fmtValue, err := compose.ResolveFormatValue(cmd, format)
+			if err != nil {
+				return err
 			}
-			explainer := NewExplainer(newCtlRepo)
-			return explainer.Run(cmd.Context(), ExplainRequest{
+
+			repo, err := newCtlRepo()
+			if err != nil {
+				return fmt.Errorf("create control loader: %w", err)
+			}
+
+			explainer := &Explainer{Finder: &repoFinder{repo: repo}}
+			result, err := explainer.Run(cmd.Context(), ExplainRequest{
 				ControlID:   kernel.ControlID(args[0]),
 				ControlsDir: controlsDir,
-				Format:      fmtValue,
-				Stdout:      cmd.OutOrStdout(),
 			})
+			if err != nil {
+				return err
+			}
+			return WriteExplainResult(cmd.OutOrStdout(), result, fmtValue)
 		},
 	}
 
