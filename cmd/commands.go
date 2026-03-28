@@ -27,7 +27,9 @@ import (
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/usecases"
+	"github.com/sufield/stave/internal/core/eval"
+	"github.com/sufield/stave/internal/core/reporting"
+	"github.com/sufield/stave/internal/core/setup"
 	infrabaseline "github.com/sufield/stave/internal/infra/baseline"
 	infradoctor "github.com/sufield/stave/internal/infra/doctor"
 	infrafix "github.com/sufield/stave/internal/infra/fix"
@@ -87,7 +89,7 @@ func WireCommands(app *App) {
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
 	root.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
-		UseCaseDeps: usecases.ReportDeps{
+		UseCaseDeps: reporting.ReportDeps{
 			Loader: &infrareport.EvaluationLoader{},
 		},
 	}))
@@ -104,8 +106,8 @@ func WireCommands(app *App) {
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{
-		UseCaseDeps: usecases.DoctorDeps{
-			CheckRunner: &infradoctor.CheckRunner{},
+		UseCaseDeps: setup.DoctorDeps{
+			Runner: &infradoctor.CheckRunner{},
 		},
 	}))
 	root.AddCommand(bugreport.NewCmd())
@@ -141,19 +143,19 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
 
 func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	ciCmd.AddCommand(enforce.NewBaselineCmd(baseline.Deps{
-		SaveDeps: usecases.BaselineSaveDeps{
+		SaveDeps: reporting.BaselineSaveDeps{
 			Loader: &infrabaseline.EvaluationLoader{},
 			Writer: &infrabaseline.BaselineWriter{},
 			Clock:  time.Now,
 		},
-		CheckDeps: usecases.BaselineCheckDeps{
+		CheckDeps: reporting.BaselineCheckDeps{
 			EvalLoader:     &infrabaseline.EvaluationLoader{},
 			BaselineLoader: &infrabaseline.BaselineLoader{},
 			Clock:          time.Now,
 		},
 	}))
 	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
-		UseCaseDeps: usecases.GateDeps{
+		UseCaseDeps: eval.GateDeps{
 			FindingsCounter:  &infragate.FindingsCounter{},
 			BaselineComparer: &infragate.BaselineComparer{},
 			OverdueCounter: &infragate.OverdueCounter{
@@ -169,7 +171,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 		NewObsRepo:      p.NewObservationRepo,
 	}))
 	ciCmd.AddCommand(enforce.NewCiDiffCmd(cidiff.Deps{
-		UseCaseDeps: usecases.CIDiffDeps{
+		UseCaseDeps: reporting.CIDiffDeps{
 			CurrentLoader:  &infrabaseline.EvaluationLoader{},
 			BaselineLoader: &infrabaseline.EvaluationLoader{},
 			Clock:          time.Now,
@@ -177,7 +179,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	}))
 	celEval, _ := p.NewCELEvaluator()
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.FixDeps{
-		UseCaseDeps: usecases.FixDeps{
+		UseCaseDeps: eval.FixDeps{
 			Loader: &infrafix.FindingLoader{CELEvaluator: celEval},
 		},
 	}))

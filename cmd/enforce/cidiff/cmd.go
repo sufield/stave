@@ -4,15 +4,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/domain"
-	"github.com/sufield/stave/internal/core/usecases"
+	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/metadata"
 	formatter "github.com/sufield/stave/internal/ui"
 )
 
 // Deps groups the infrastructure implementations for the ci diff command.
 type Deps struct {
-	UseCaseDeps usecases.CIDiffDeps
+	UseCaseDeps reporting.CIDiffDeps
 }
 
 // NewCmd constructs the diff command.
@@ -40,13 +39,13 @@ Exit Codes:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := domain.CIDiffRequest{
+			req := reporting.CIDiffRequest{
 				CurrentPath:  currentPath,
 				BaselinePath: baselinePath,
 				FailOnNew:    failOnNew,
 			}
 
-			resp, err := usecases.CIDiff(cmd.Context(), req, deps.UseCaseDeps)
+			resp, err := reporting.CIDiff(cmd.Context(), req, deps.UseCaseDeps)
 			if err != nil {
 				return err
 			}

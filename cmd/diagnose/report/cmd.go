@@ -13,8 +13,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
-	coredomain "github.com/sufield/stave/internal/core/domain"
-	coreusecases "github.com/sufield/stave/internal/core/usecases"
+	"github.com/sufield/stave/internal/core/reporting"
 	infrareport "github.com/sufield/stave/internal/infra/report"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -28,7 +27,7 @@ var defaultReportTemplate string
 
 // Deps groups the infrastructure implementations for the report command.
 type Deps struct {
-	UseCaseDeps coreusecases.ReportDeps
+	UseCaseDeps reporting.ReportDeps
 }
 
 // NewReportCmd constructs the report command.
@@ -91,13 +90,13 @@ Examples:
 			}
 
 			// Use case: load evaluation
-			ucReq := coredomain.ReportRequest{
+			ucReq := reporting.ReportRequest{
 				InputFile:    opts.InputFile,
 				TemplateFile: opts.TemplateFile,
 				Format:       string(fmtValue),
 				Quiet:        flags.Quiet,
 			}
-			ucResp, ucErr := coreusecases.Report(cmd.Context(), ucReq, reportDeps)
+			ucResp, ucErr := reporting.Report(cmd.Context(), ucReq, reportDeps)
 			if ucErr != nil {
 				return ucErr
 			}

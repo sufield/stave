@@ -10,8 +10,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/domain"
-	"github.com/sufield/stave/internal/core/usecases"
+	"github.com/sufield/stave/internal/core/setup"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -21,7 +20,7 @@ var ErrDoctorRequiredIssues = fmt.Errorf("doctor found required issues: %w", ui.
 
 // Deps groups the infrastructure implementations for the doctor command.
 type Deps struct {
-	UseCaseDeps usecases.DoctorDeps
+	UseCaseDeps setup.DoctorDeps
 }
 
 // NewCmd constructs the doctor command.
@@ -75,13 +74,13 @@ Exit Codes:
 				return fmt.Errorf("resolve executable path: %w", exeErr)
 			}
 
-			req := domain.DoctorRequest{
+			req := setup.DoctorRequest{
 				Cwd:        cwd,
 				BinaryPath: exe,
 				Format:     string(fmtValue),
 			}
 
-			resp, ucErr := usecases.Doctor(cmd.Context(), req, deps.UseCaseDeps)
+			resp, ucErr := setup.Doctor(cmd.Context(), req, deps.UseCaseDeps)
 			if ucErr != nil {
 				return ucErr
 			}
@@ -115,10 +114,10 @@ Exit Codes:
 	return cmd
 }
 
-func reportJSON(w io.Writer, resp domain.DoctorResponse) error {
+func reportJSON(w io.Writer, resp setup.DoctorResponse) error {
 	payload := struct {
-		Ready  bool                 `json:"ready"`
-		Checks []domain.DoctorCheck `json:"checks"`
+		Ready  bool                `json:"ready"`
+		Checks []setup.DoctorCheck `json:"checks"`
 	}{
 		Ready:  resp.AllPassed,
 		Checks: resp.Checks,
@@ -128,7 +127,7 @@ func reportJSON(w io.Writer, resp domain.DoctorResponse) error {
 	return enc.Encode(payload)
 }
 
-func reportText(w io.Writer, resp domain.DoctorResponse) error {
+func reportText(w io.Writer, resp setup.DoctorResponse) error {
 	for _, c := range resp.Checks {
 		if _, err := fmt.Fprintf(w, "[%s] %s: %s\n", c.Status, c.Name, c.Message); err != nil {
 			return err

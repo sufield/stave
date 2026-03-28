@@ -7,7 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
-	"github.com/sufield/stave/internal/core/domain"
+	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -20,7 +20,7 @@ import (
 type EvaluationLoader struct{}
 
 // LoadFindings loads an evaluation artifact and extracts baseline-level findings.
-func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]domain.BaselineFinding, error) {
+func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]reporting.BaselineFinding, error) {
 	loader := &evaljson.Loader{}
 	eval, err := loader.LoadEnvelopeFromFile(ctx, fsutil.CleanUserPath(path))
 	if err != nil {
@@ -34,7 +34,7 @@ func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]dom
 type BaselineLoader struct{}
 
 // LoadBaseline loads a saved baseline artifact.
-func (l *BaselineLoader) LoadBaseline(ctx context.Context, path string) ([]domain.BaselineFinding, error) {
+func (l *BaselineLoader) LoadBaseline(ctx context.Context, path string) ([]reporting.BaselineFinding, error) {
 	loader := &evaljson.Loader{}
 	base, err := loader.LoadBaselineFromFile(ctx, fsutil.CleanUserPath(path), kernel.KindBaseline)
 	if err != nil {
@@ -49,7 +49,7 @@ type BaselineWriter struct {
 }
 
 // WriteBaseline writes a baseline snapshot to disk.
-func (w *BaselineWriter) WriteBaseline(_ context.Context, path string, findings []domain.BaselineFinding, createdAt time.Time, sourcePath string) error {
+func (w *BaselineWriter) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) error {
 	baseline := evaluation.Baseline{
 		SchemaVersion:    kernel.SchemaBaseline,
 		Kind:             kernel.KindBaseline,
@@ -66,10 +66,10 @@ func (w *BaselineWriter) WriteBaseline(_ context.Context, path string, findings 
 	return jsonutil.WriteIndented(f, baseline)
 }
 
-func entriesToDomain(entries []evaluation.BaselineEntry) []domain.BaselineFinding {
-	out := make([]domain.BaselineFinding, len(entries))
+func entriesToDomain(entries []evaluation.BaselineEntry) []reporting.BaselineFinding {
+	out := make([]reporting.BaselineFinding, len(entries))
 	for i, e := range entries {
-		out[i] = domain.BaselineFinding{
+		out[i] = reporting.BaselineFinding{
 			ControlID:   string(e.ControlID),
 			ControlName: e.ControlName,
 			AssetID:     string(e.AssetID),
@@ -79,7 +79,7 @@ func entriesToDomain(entries []evaluation.BaselineEntry) []domain.BaselineFindin
 	return out
 }
 
-func domainToEntries(findings []domain.BaselineFinding) []evaluation.BaselineEntry {
+func domainToEntries(findings []reporting.BaselineFinding) []evaluation.BaselineEntry {
 	out := make([]evaluation.BaselineEntry, len(findings))
 	for i, f := range findings {
 		out[i] = evaluation.BaselineEntry{
