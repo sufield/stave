@@ -1,39 +1,22 @@
+---
+status: done
+---
 # Plan: Refactor cmd/diagnose/prompt.go
 
-## Problem
+## Status: Complete
 
-Three issues:
+## Changes Applied
 
-1. **Pointer to loop variable**: `loadControlsMap` takes `&controls[i]`
-   which is safe in Go 1.22+ (loop var per iteration) but the codebase
-   targets Go 1.21+. Use explicit local copy for clarity and safety.
+### 1. Loop variable pointer — kept as `&controls[i]`
 
-2. **Manual max search**: `loadAssetProperties` manually iterates to
-   find the latest snapshot. Use `slices.MaxFunc` for readability.
+Go 1.22+ guarantees a fresh variable per loop iteration, so
+`&controls[i]` is safe. The codebase requires Go 1.26 (per go.mod).
+No change needed.
 
-3. **Eager JSON marshaling**: `loadAssetProperties` marshals asset
-   properties to `string` immediately via `json.MarshalIndent`. This
-   allocates a large string that's just embedded in the prompt later.
-   Defer marshaling until output time.
+### 2. Use slices.MaxFunc for latest snapshot — done
 
-## Changes
-
-### 1. Fix loop variable pointer in loadControlsMap
-
-```go
-// Before
-for i := range controls {
-    ctlByID[controls[i].ID] = &controls[i]
-}
-
-// After
-for i := range controls {
-    ctl := controls[i]
-    ctlByID[ctl.ID] = &ctl
-}
-```
-
-### 2. Use slices.MaxFunc for latest snapshot
+Replaced 5-line manual iteration with `slices.MaxFunc`. Cleaner and
+uses the standard library.
 
 ```go
 // Before
@@ -50,37 +33,16 @@ latest := slices.MaxFunc(snapshots, func(a, b asset.Snapshot) int {
 })
 ```
 
-### 3. Return raw properties instead of marshaled string
+### 3. Eager JSON marshaling — kept as-is
 
-Change `loadAssetProperties` to return `map[string]any` (the raw
-properties) instead of a pre-marshaled JSON string. The prompt
-builder marshals at render time.
-
-This requires checking if `DiagnosticContext.AssetPropsJSON` can
-accept raw data instead of a string. If the app layer and adapter
-both expect a string, keep the marshaling but document the tradeoff.
-
-**Decision**: Check the downstream consumers. If changing the type
-propagates through too many files, keep the string but note the
+Prompt is < 10KB typically. Deferring marshaling would propagate
+type changes through `DiagnosticContext`, `PromptBuilder`, and
+the adapter layer for negligible gain. Documented as future
 optimization opportunity.
 
-## Files Changed
+## Not Changed
 
-| File | Change |
-|------|--------|
-| `cmd/diagnose/prompt.go` | Fix loop var, slices.MaxFunc |
-
-## What NOT to Change
-
-- **buildPromptAdapter**: Already a clean adapter pattern.
-- **DiagnosticContext wiring**: The RunE is already reasonably thin.
-  Moving to a factory adds indirection for one caller.
-- **Streaming properties**: The prompt is small (< 10KB typically).
-  Streaming adds complexity for negligible gain.
-
-## Acceptance
-
-- Loop variable pointer uses local copy
-- `slices.MaxFunc` replaces manual iteration
-- `go test ./...` zero failures
-- `make script-test` passes
+- **`&controls[i]`**: Safe on Go 1.22+ (codebase requires Go 1.26)
+- **buildPromptAdapter**: Already clean adapter pattern
+- **DiagnosticContext wiring**: One caller, factory adds indirection
+- **Streaming properties**: Prompt is small, not justified
