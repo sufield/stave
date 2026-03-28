@@ -16,12 +16,12 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/kernel"
+	clockadp "github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 type diagnoseObsRepoStub struct {

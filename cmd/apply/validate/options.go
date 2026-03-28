@@ -12,9 +12,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	"github.com/sufield/stave/internal/core/diag"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // resolveConfigDefaults fills flag values from project config when the user

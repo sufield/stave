@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 
 	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	s3policy "github.com/sufield/stave/internal/core/s3/policy"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
-	s3policy "github.com/sufield/stave/pkg/alpha/domain/s3/policy"
 )
 
 // PolicyReport is the output of the policy inspector.

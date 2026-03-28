@@ -5,7 +5,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // IsSymlink reports whether path is a symbolic link.

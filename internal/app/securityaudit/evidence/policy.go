@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 type networkDeclaration struct {

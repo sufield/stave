@@ -5,11 +5,11 @@ package verify
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	staveversion "github.com/sufield/stave/internal/version"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // CompareRequest defines the inputs for a before/after comparison.

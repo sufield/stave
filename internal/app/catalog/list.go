@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // ListConfig defines the parameters for listing controls.

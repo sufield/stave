@@ -3,7 +3,7 @@ package s3
 import (
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ParseS3Reference strips S3-specific prefixes (ARN, model ID, S3 URI)

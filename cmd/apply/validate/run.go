@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/internal/core/diag"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appvalidation "github.com/sufield/stave/internal/app/validation"

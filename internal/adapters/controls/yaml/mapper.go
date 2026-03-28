@@ -1,10 +1,10 @@
 package yaml
 
 import (
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/predicate"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/exposure"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 	"gopkg.in/yaml.v3"
 )
 

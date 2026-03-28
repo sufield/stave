@@ -3,7 +3,7 @@ package s3
 import (
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 func TestResolverExactMatches(t *testing.T) {

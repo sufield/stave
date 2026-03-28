@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // LoadSnapshotFromReader loads a single snapshot from an io.Reader.

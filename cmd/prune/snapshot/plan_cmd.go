@@ -8,9 +8,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/pruner/plan"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
+	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 // NewPlanCmd constructs the plan command.

@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	s3acl "github.com/sufield/stave/internal/core/s3/acl"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
-	s3acl "github.com/sufield/stave/pkg/alpha/domain/s3/acl"
 )
 
 // ACLReport is the output of the ACL inspector.

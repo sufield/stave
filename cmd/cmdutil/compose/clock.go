@@ -2,7 +2,7 @@ package compose
 
 import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // ResolveClock returns a FixedClock if a timestamp is provided, otherwise RealClock.

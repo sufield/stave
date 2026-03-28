@@ -14,8 +14,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/retention"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
 )
 
 // --- Domain Types ---

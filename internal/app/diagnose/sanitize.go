@@ -3,9 +3,9 @@ package diagnose
 import (
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // SanitizeDiagnosisReport returns a deep copy of the report with asset

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 const sectionWidth = 72

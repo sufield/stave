@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // messagePathRe matches absolute POSIX-style paths embedded inside free-form

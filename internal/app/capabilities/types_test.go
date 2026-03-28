@@ -5,7 +5,7 @@ import (
 
 	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/app/capabilities"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestCapabilities_SourceTypeCount(t *testing.T) {

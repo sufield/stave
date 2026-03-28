@@ -1,6 +1,6 @@
 package securityaudit
 
-import "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+import "github.com/sufield/stave/internal/core/securityaudit"
 
 // findingSpec defines the static metadata for a check that follows the
 // standard 3-path pattern: error → warn/fail, condition true → pass,

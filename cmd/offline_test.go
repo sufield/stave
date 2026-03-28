@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // TestOfflineHelpSuffix_ProdCommands verifies that every production command

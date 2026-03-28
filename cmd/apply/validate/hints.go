@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/internal/core/diag"
 )
 
 // hintContext provides values used to format remediation hints.

@@ -2,7 +2,7 @@ package securityaudit
 
 import (
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func buildFindings(ev evidence.Bundle, req Request) []securityaudit.Finding {

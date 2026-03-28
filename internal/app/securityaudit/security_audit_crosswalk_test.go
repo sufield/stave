@@ -9,8 +9,8 @@ import (
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/compliance"
+	"github.com/sufield/stave/internal/core/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
 func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {

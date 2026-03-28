@@ -3,8 +3,8 @@ package eval
 import (
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestFilterControls_BySeverity(t *testing.T) {

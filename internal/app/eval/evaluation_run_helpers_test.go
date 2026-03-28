@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 // Execute runs the full evaluate use case: load artifacts, evaluate, marshal, and write output.

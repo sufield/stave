@@ -3,8 +3,8 @@ package readiness
 import (
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
-	"github.com/sufield/stave/pkg/alpha/domain/validation"
+	"github.com/sufield/stave/internal/core/diag"
+	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
 func AssessReadiness(in validation.Input) (validation.Report, error) {

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // Request defines all inputs for a full enterprise audit run.

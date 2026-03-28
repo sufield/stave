@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // MarshalJSONReport renders the security-audit report as indented JSON.

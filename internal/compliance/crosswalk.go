@@ -11,12 +11,12 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // ControlRef identifies a compliance framework mapping for a security check.
-// The canonical definition lives in pkg/alpha/domain/securityaudit.
+// The canonical definition lives in internal/core/securityaudit.
 type ControlRef = securityaudit.ControlRef
 
 // Framework represents a normalized compliance standard (e.g., "nist_800_53").

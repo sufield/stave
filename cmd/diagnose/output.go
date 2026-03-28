@@ -8,10 +8,10 @@ import (
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	"github.com/sufield/stave/internal/cli/ui"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/safetyenvelope"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // Presenter handles formatting and writing diagnostic results.

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
+	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 )
 
 func TestApplySnapshotPlan_Delete(t *testing.T) {

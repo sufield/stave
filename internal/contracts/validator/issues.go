@@ -8,8 +8,8 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/diag"
+	"github.com/sufield/stave/internal/core/kernel"
 	"gopkg.in/yaml.v3"
 )
 

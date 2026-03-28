@@ -3,7 +3,7 @@ package s3
 import (
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestARN(t *testing.T) {

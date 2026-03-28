@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 func resolveScopeFilter(cfg Config) *asset.ScopeFilter {

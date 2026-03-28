@@ -7,8 +7,8 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // SnapshotCleanupRenderInput configures text/json rendering for prune/archive plan.

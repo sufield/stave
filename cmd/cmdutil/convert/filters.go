@@ -3,7 +3,7 @@ package convert
 import (
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ToControlIDs converts a string slice to kernel.ControlID slice.

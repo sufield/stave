@@ -4,14 +4,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/predicate"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	clockadp "github.com/sufield/stave/internal/core/ports"
 )
 
 // BenchmarkEvaluateLargeSnapshot benchmarks evaluation against a large S3 snapshot set.

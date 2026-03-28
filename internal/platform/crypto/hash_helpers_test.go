@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // HashReader returns the SHA-256 hex digest of data read from r.

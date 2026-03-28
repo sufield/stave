@@ -14,14 +14,14 @@ import (
 	"gopkg.in/yaml.v3"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/doctor"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/sanitize/scrub"
 	staveversion "github.com/sufield/stave/internal/version"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Config defines the inputs required to generate a bug report.

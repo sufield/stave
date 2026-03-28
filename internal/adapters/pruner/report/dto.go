@@ -5,7 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/pruner"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // CleanupAction is an alias for the shared pruner CleanupAction type.

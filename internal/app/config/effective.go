@@ -3,7 +3,7 @@ package config
 import (
 	"path/filepath"
 
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	"github.com/sufield/stave/internal/core/retention"
 )
 
 // ResolvedField pairs a configuration value with its originating source

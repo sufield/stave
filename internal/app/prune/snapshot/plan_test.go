@@ -5,8 +5,8 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
-	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
+	"github.com/sufield/stave/internal/core/retention"
+	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 )
 
 func TestBuildSnapshotPlan_SingleTier(t *testing.T) {

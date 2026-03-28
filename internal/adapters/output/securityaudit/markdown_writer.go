@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // MarshalMarkdownReport renders the security-audit report as markdown.

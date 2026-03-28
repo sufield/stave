@@ -1,6 +1,6 @@
 package s3
 
-import "github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+import "github.com/sufield/stave/internal/core/evaluation/risk"
 
 type trieNode struct {
 	children map[byte]*trieNode

@@ -11,9 +11,9 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	outenforce "github.com/sufield/stave/internal/adapters/output/enforcement"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Mode represents a validated enforcement mode.

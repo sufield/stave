@@ -10,8 +10,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
+	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 	"github.com/sufield/stave/internal/metadata"
-	domainsecurityaudit "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
 // NewCmd constructs the security-audit command.

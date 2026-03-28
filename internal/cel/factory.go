@@ -1,8 +1,8 @@
 package cel
 
 import (
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // NewPredicateEval creates a policy.PredicateEval backed by the CEL engine.

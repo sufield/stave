@@ -3,8 +3,8 @@ package exemption
 import (
 	"fmt"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
 	"gopkg.in/yaml.v3"
 )
 

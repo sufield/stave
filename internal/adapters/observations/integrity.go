@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/integrity"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 func (l *ObservationLoader) verifyConfiguredIntegrity(hashes *evaluation.InputHashes) error {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // NewCmd constructs the snapshot diff command.

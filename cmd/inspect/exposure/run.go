@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	domainexposure "github.com/sufield/stave/internal/core/evaluation/exposure"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	domainexposure "github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
 )
 
 // ExposureInput is the JSON input for exposure classification.

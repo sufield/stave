@@ -2,7 +2,7 @@ package hygiene
 
 import (
 	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func mustPredicateEval() policy.PredicateEval {

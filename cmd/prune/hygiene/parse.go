@@ -3,7 +3,7 @@ package hygiene
 import (
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 // toStatuses converts raw CLI flag strings into validated risk.ThresholdStatus values.

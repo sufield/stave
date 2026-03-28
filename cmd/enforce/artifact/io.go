@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/safetyenvelope"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Loader handles the retrieval and validation of Stave artifacts from the filesystem.

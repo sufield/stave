@@ -13,7 +13,7 @@ import (
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/alpha/domain/validation"
+	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.

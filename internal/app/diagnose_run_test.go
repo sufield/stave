@@ -6,15 +6,15 @@ import (
 	"time"
 
 	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/predicate"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	clockadp "github.com/sufield/stave/internal/core/ports"
 )
 
 func TestDiagnoseExecuteAndLoaders(t *testing.T) {

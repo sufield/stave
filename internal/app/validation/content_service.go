@@ -5,7 +5,7 @@ import (
 
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/internal/core/diag"
 )
 
 // ContentValidator defines the behavior of a validatable piece of content.

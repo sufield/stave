@@ -11,9 +11,9 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appverify "github.com/sufield/stave/internal/app/verify"
 	"github.com/sufield/stave/internal/cli/ui"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/safetyenvelope"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // NewCmd builds the verify command.

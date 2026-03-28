@@ -7,9 +7,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/core/eval"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/metadata"
 	formatter "github.com/sufield/stave/internal/ui"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // FixLoopDeps groups the factory functions required by the fix-loop command.

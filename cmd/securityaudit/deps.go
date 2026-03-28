@@ -8,10 +8,10 @@ import (
 	"github.com/sufield/stave/internal/adapters/govulncheck"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/compliance"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/doctor"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func buildRunnerDeps() appsa.RunnerDeps {

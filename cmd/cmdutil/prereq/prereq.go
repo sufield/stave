@@ -1,8 +1,8 @@
 package prereq
 
 import (
+	validation "github.com/sufield/stave/internal/core/schemaval"
 	"github.com/sufield/stave/internal/doctor"
-	"github.com/sufield/stave/pkg/alpha/domain/validation"
 )
 
 // DoctorPrereqChecks runs system health checks and transforms them into domain-level

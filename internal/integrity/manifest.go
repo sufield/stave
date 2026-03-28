@@ -6,10 +6,10 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Manifest defines expected per-file and aggregate hashes for integrity verification.

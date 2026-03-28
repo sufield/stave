@@ -6,7 +6,7 @@ import (
 
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
-	domainsecurityaudit "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func renderReport(format string, report domainsecurityaudit.Report) ([]byte, string, error) {

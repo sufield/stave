@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/core/kernel"
+	domain "github.com/sufield/stave/internal/core/securityaudit"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
 // BundleWriteOpts configures filesystem behavior for bundle writing.

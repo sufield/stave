@@ -6,7 +6,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	packs "github.com/sufield/stave/internal/builtin/pack"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
+	"github.com/sufield/stave/internal/core/diag"
 )
 
 // PackConfigIssues checks for unknown control pack names in the project config.

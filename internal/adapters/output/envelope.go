@@ -2,9 +2,9 @@ package output
 
 import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/safetyenvelope"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
 )
 
 // BuildSafetyEnvelopeFromEnriched assembles a safety envelope from a

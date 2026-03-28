@@ -6,9 +6,9 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/retention"
+	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
-	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 // PlanConfig defines the resolved parameters for multi-tier snapshot retention.
