@@ -1,6 +1,8 @@
 package artifact
 
 import (
+	"errors"
+
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
@@ -19,10 +21,16 @@ func NewLoader() *Loader {
 
 // Evaluation loads and validates a JSON safety envelope containing evaluation results.
 func (l *Loader) Evaluation(path string) (*safetyenvelope.Evaluation, error) {
+	if path == "" {
+		return nil, errors.New("evaluation path is required")
+	}
 	return l.adapter.LoadEnvelopeFromFile(path)
 }
 
 // Baseline loads a baseline finding file and ensures findings are sorted deterministically.
 func (l *Loader) Baseline(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
+	if path == "" {
+		return nil, errors.New("baseline path is required")
+	}
 	return l.adapter.LoadBaselineFromFile(path, expectedKind)
 }
