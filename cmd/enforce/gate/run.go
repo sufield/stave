@@ -137,9 +137,8 @@ func (r *runner) runPolicyNew(cfg config) (result, error) {
 		return result{}, fmt.Errorf("loading baseline: %w", err)
 	}
 	bc := artifact.CompareAgainstBaseline(cfg.Sanitizer, base.Findings, eval.Findings)
-	newCount := len(bc.Comparison.New)
-	pass := newCount == 0
-	reason := fmt.Sprintf("new findings=%d", newCount)
+	pass := !bc.HasNewViolations()
+	reason := fmt.Sprintf("new findings=%d", len(bc.Comparison.New))
 	if pass {
 		reason = "no new findings compared to baseline"
 	}
@@ -153,7 +152,7 @@ func (r *runner) runPolicyNew(cfg config) (result, error) {
 		EvaluationPath:    cfg.InPath,
 		BaselinePath:      cfg.BaselinePath,
 		CurrentViolations: len(bc.Current),
-		NewViolations:     newCount,
+		NewViolations:     len(bc.Comparison.New),
 	}, nil
 }
 
