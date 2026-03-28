@@ -22,6 +22,16 @@ const (
 	ChangeModified ChangeType = "modified"
 )
 
+// IsValid reports whether ct is a recognized change type.
+func (ct ChangeType) IsValid() bool {
+	switch ct {
+	case ChangeAdded, ChangeRemoved, ChangeModified:
+		return true
+	default:
+		return false
+	}
+}
+
 // PropertyChange represents a single property-level change between snapshots.
 type PropertyChange struct {
 	Path string `json:"path"`
