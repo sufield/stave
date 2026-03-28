@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -51,17 +52,17 @@ func (c Config) IsDetailMode() bool {
 
 // Runner orchestrates the diagnostic analysis.
 type Runner struct {
-	NewObsRepo compose.ObsRepoFactory
-	NewCtlRepo compose.CtlRepoFactory
-	Clock      ports.Clock
+	ObsRepo appcontracts.ObservationRepository
+	CtlRepo appcontracts.ControlRepository
+	Clock   ports.Clock
 }
 
-// NewRunner initializes a runner with the required dependencies.
-func NewRunner(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, clock ports.Clock) *Runner {
+// NewRunner initializes a runner with pre-built dependencies.
+func NewRunner(obsRepo appcontracts.ObservationRepository, ctlRepo appcontracts.ControlRepository, clock ports.Clock) *Runner {
 	return &Runner{
-		NewObsRepo: newObsRepo,
-		NewCtlRepo: newCtlRepo,
-		Clock:      clock,
+		ObsRepo: obsRepo,
+		CtlRepo: ctlRepo,
+		Clock:   clock,
 	}
 }
 
@@ -148,15 +149,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) newDiagnoseRun() (*appdiagnose.Run, error) {
-	obsLoader, err := r.NewObsRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create observation loader: %w", err)
-	}
-	ctlLoader, err := r.NewCtlRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-	return appdiagnose.NewRun(obsLoader, ctlLoader)
+	return appdiagnose.NewRun(r.ObsRepo, r.CtlRepo)
 }
 
 func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagnose.Config, error) {

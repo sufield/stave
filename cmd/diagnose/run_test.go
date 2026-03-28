@@ -105,7 +105,9 @@ func TestDiagnoseParseHelpers(t *testing.T) {
 
 func TestRunnerBuildAppConfig(t *testing.T) {
 	p := compose.NewDefaultProvider()
-	runner := NewRunner(p.NewObservationRepo, p.NewControlRepo, clockadp.RealClock{})
+	obsRepo, _ := p.NewObservationRepo()
+	ctlRepo, _ := p.NewControlRepo()
+	runner := NewRunner(obsRepo, ctlRepo, clockadp.RealClock{})
 
 	fakeStdin := strings.NewReader(`{"findings":[]}`)
 	cfg := Config{
@@ -181,36 +183,8 @@ func TestPresenterRenderReport_BareJSON(t *testing.T) {
 	}
 }
 
-func TestRunDiagnose_EarlyValidationAndLoaderError(t *testing.T) {
-	ctlDir := filepath.Join(t.TempDir(), "ctl")
-	obsDir := filepath.Join(t.TempDir(), "obs")
-	if err := os.MkdirAll(ctlDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.MkdirAll(obsDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	// Test observation loader error.
-	cfg := Config{
-		ControlsDir:       ctlDir,
-		ObservationsDir:   obsDir,
-		MaxUnsafeDuration: 24 * time.Hour,
-		Format:            ui.OutputFormatText,
-		Stdout:            &bytes.Buffer{},
-		Stderr:            &bytes.Buffer{},
-	}
-	badObsRepo := func() (appcontracts.ObservationRepository, error) {
-		return nil, os.ErrPermission
-	}
-	goodCtlRepo := func() (appcontracts.ControlRepository, error) {
-		return nil, nil
-	}
-	runner := NewRunner(badObsRepo, goodCtlRepo, clockadp.RealClock{})
-	if err := runner.Run(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "create observation loader") {
-		t.Fatalf("expected observation loader error, got %v", err)
-	}
-}
+// Factory error testing moved to RunE integration tests — the runner
+// no longer owns factory lifecycle.
 
 func TestPresenterRenderReport_Branches(t *testing.T) {
 	report := &diagnosis.Report{
