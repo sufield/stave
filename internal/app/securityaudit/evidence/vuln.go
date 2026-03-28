@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // --- Vuln evidence payload structs ---

@@ -13,11 +13,11 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // Profile represents a validated evaluation profile.

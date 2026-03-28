@@ -11,8 +11,8 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
-	"github.com/sufield/stave/pkg/alpha/domain/validation"
+	"github.com/sufield/stave/internal/core/diag"
+	validation "github.com/sufield/stave/internal/core/schemaval"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )

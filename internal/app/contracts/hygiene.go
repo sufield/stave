@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 // ReportRequest bundles all data required to generate a hygiene report.

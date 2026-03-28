@@ -3,7 +3,7 @@ package upcoming
 import (
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 func mapRiskItems(items risk.ThresholdItems) []UpcomingSnapshot {

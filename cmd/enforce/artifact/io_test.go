@@ -3,7 +3,7 @@ package artifact
 import (
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 func TestCompareBaseline_FindsNewAndResolved(t *testing.T) {

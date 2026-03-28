@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // --- SARIF v2.1.0 typed structs ---

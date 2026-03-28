@@ -8,12 +8,12 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	staveversion "github.com/sufield/stave/internal/version"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // VerifyDeps holds injected infrastructure dependencies for the verify workflow.

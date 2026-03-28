@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 )
 
 type stubSanitizer struct{}

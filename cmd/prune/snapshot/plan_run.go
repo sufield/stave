@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	"github.com/sufield/stave/internal/core/retention"
 )
 
 func listPlanFiles(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFactory, observationsRoot, archiveDir string) ([]appcontracts.SnapshotFile, error) {

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 // newDiffFilter constructs a filter from raw flag values (test helper).

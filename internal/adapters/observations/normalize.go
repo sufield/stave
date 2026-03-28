@@ -3,7 +3,7 @@ package observations
 import (
 	"errors"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 // Sentinel errors for observation normalization.

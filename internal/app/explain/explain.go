@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/predicate"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // ExplainResult is an alias for contracts.ExplainResult.

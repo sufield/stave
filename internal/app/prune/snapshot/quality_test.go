@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 func TestAssessSnapshotQuality_NoSnapshots(t *testing.T) {

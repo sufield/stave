@@ -16,10 +16,10 @@ import (
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/cli/ui"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // NewControlsCmd constructs the controls command tree with closure-scoped flags.

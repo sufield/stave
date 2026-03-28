@@ -14,8 +14,8 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 // runApply is the single dispatch function called by the thin RunE wrapper.

@@ -12,8 +12,8 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // loadSnapshotsIfDirExists retrieves snapshots from a directory only if it exists.

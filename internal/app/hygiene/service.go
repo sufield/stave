@@ -5,11 +5,11 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // RiskOptions configures how risk metrics should be computed for a

@@ -7,9 +7,9 @@ package dto
 import (
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // FindingDTO mirrors remediation.Finding for JSON output.

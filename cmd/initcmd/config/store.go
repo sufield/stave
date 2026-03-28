@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	"github.com/sufield/stave/internal/core/retention"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/platform/fsutil"

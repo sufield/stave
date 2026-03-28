@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
+	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	domainrisk "github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
 )
 
 // RiskInput is the JSON input for risk analysis.

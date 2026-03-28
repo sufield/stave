@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func plainLabel(_, message string) string { return message }

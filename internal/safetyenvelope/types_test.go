@@ -3,9 +3,9 @@ package safetyenvelope
 import (
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestNewEvaluation_NormalizesSlices(t *testing.T) {

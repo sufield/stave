@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Check Names

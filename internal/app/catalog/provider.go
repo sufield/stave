@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // ControlProvider loads controls from any source.

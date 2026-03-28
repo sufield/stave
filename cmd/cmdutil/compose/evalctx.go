@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // EvalContextRequest groups the raw CLI values for common evaluation setup.

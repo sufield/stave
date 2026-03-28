@@ -15,10 +15,10 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/evaluation/exposure"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/exposure"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {

@@ -14,9 +14,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	clockadp "github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
-	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // testdataDir returns the path to a testdata e2e fixture directory.

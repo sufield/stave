@@ -3,7 +3,7 @@ package yaml
 import (
 	"fmt"
 
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"gopkg.in/yaml.v3"
 )
 

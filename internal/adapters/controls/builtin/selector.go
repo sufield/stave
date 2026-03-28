@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // Selector filters controls by scope tags and minimum severity.

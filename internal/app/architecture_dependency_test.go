@@ -24,7 +24,7 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 
 	rules := []rule{
 		{
-			dirPrefix: filepath.Join("pkg", "alpha", "domain"),
+			dirPrefix: filepath.Join("internal", "core"),
 			forbidden: []string{
 				"github.com/sufield/stave/internal/adapters/",
 				"github.com/sufield/stave/internal/app",

@@ -1,6 +1,6 @@
 package exemption
 
-import "github.com/sufield/stave/pkg/alpha/domain/policy"
+import policy "github.com/sufield/stave/internal/core/controldef"
 
 // yamlExemptionConfig is the YAML wire-format for policy.ExemptionConfig.
 type yamlExemptionConfig struct {

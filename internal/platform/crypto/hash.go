@@ -7,8 +7,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // Compile-time interface guards.

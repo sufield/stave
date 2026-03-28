@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	domainsecurityaudit "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {

@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/predicate"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // ── Alias Name Constants ──────────────────────────────────

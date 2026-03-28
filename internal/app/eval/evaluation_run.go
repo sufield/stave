@@ -9,9 +9,9 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // LoadConfig holds configuration for loading evaluation artifacts from the filesystem.

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/builtin/predicate"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func testRegistry() *Registry {

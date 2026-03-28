@@ -8,9 +8,9 @@ import (
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	appfix "github.com/sufield/stave/internal/app/fix"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // FindingLoader satisfies usecases.FixFindingLoaderPort.

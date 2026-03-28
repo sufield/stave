@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Request captures all inputs needed to generate a hygiene report.

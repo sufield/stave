@@ -9,8 +9,8 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/validation"
+	"github.com/sufield/stave/internal/core/evaluation"
+	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
 // Reporter handles the visual presentation of evaluation and readiness

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
 )
 
 // Validator compares actual input hashes against a manifest.

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 // QualityConfig defines the resolved parameters for a quality assessment.

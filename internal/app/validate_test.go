@@ -8,7 +8,7 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // stubControlRepo always returns an error to trigger load failure.

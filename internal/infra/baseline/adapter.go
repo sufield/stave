@@ -7,13 +7,13 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/remediation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // EvaluationLoader satisfies usecases.EvaluationLoaderPort.

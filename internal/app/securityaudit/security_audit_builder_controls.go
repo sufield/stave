@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) securityaudit.Finding {

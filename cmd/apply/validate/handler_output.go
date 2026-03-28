@@ -7,8 +7,8 @@ import (
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/diag"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Reporter handles the formatting and writing of validation results.

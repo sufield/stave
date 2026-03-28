@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func (r *Runner) buildArtifactManifest(req Request, ev evidence.Bundle) securityaudit.ArtifactManifest {

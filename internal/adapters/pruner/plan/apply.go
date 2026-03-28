@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/sufield/stave/internal/adapters/pruner/fsops"
+	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	snapshotdomain "github.com/sufield/stave/pkg/alpha/domain/snapshot"
 )
 
 // EntryProcessor handles the filesystem action for a single plan entry.

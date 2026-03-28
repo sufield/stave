@@ -6,7 +6,7 @@ import (
 
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	"github.com/sufield/stave/internal/core/retention"
 )
 
 func TestPlanPrune_RespectsKeepMin(t *testing.T) {

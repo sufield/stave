@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 type runMockRunner struct {

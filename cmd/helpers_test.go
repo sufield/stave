@@ -12,9 +12,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/runid"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/logging"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
 )
 
 // getRootCmd returns a fully-wired root cobra command for tests.

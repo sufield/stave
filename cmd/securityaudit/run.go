@@ -12,9 +12,9 @@ import (
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
+	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
-	domainsecurityaudit "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
 )
 
 // auditConfig defines the resolved parameters for a security audit.

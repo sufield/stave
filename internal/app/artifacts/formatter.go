@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
+	"github.com/sufield/stave/internal/core/asset"
 	"gopkg.in/yaml.v3"
 )
 

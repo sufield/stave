@@ -7,8 +7,8 @@ import (
 	"unicode"
 
 	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // BucketTarget represents one S3 bucket remediation target.

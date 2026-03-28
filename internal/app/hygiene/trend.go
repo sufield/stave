@@ -2,7 +2,7 @@ package hygiene
 
 import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 // CalculateTrend compares current risk metrics against metrics from a

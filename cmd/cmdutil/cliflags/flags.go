@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/sanitize"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // Flag constants to prevent typos across the CLI tree.

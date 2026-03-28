@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
-	clockadp "github.com/sufield/stave/pkg/alpha/domain/ports"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
+	clockadp "github.com/sufield/stave/internal/core/ports"
 )
 
 func TestNewConfig_SetsExpectedFields(t *testing.T) {

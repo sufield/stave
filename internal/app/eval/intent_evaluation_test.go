@@ -8,8 +8,8 @@ import (
 	"time"
 
 	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
-	"github.com/sufield/stave/pkg/alpha/domain/asset"
-	"github.com/sufield/stave/pkg/alpha/domain/policy"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestIntentEvaluationLoadArtifacts_LoadsBoth(t *testing.T) {

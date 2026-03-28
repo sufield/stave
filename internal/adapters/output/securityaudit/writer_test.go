@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	domain "github.com/sufield/stave/pkg/alpha/domain/securityaudit"
+	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func sampleReport() domain.Report {

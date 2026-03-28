@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
-	domainpredicate "github.com/sufield/stave/pkg/alpha/domain/predicate"
+	domainpredicate "github.com/sufield/stave/internal/core/predicate"
 )
 
 // AliasesOutput is the JSON output of the aliases inspector.

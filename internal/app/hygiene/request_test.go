@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/risk"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 func TestRequestParse(t *testing.T) {

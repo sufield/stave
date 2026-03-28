@@ -3,7 +3,7 @@ package diagnose
 import (
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/evaluation/diagnosis"
+	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 )
 
 // Filter defines the criteria for narrowing down a diagnostic report.

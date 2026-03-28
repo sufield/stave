@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/kernel"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 // HashFile returns the SHA-256 hash for a file as a kernel.Digest.

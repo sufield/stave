@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/retention"
 )
 
 // ConfigKeys is the set of top-level config keys exposed to `stave config`.

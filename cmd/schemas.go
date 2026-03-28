@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
 )
 
 func newSchemasCmd() *cobra.Command {

@@ -16,8 +16,8 @@ import (
 	"github.com/sufield/stave/cmd/diagnose"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/alpha/domain/diag"
-	"github.com/sufield/stave/pkg/alpha/domain/kernel"
+	"github.com/sufield/stave/internal/core/diag"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // testdataDir returns the path to a testdata e2e fixture directory.

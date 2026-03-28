@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/pkg/alpha/domain/retention"
+	"github.com/sufield/stave/internal/core/retention"
 	"gopkg.in/yaml.v3"
 )
 
