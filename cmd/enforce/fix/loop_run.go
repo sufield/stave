@@ -3,6 +3,7 @@ package fix
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -24,23 +25,21 @@ type LoopRequest struct {
 	Stderr            io.Writer
 }
 
-// Loop delegates to the app-layer fix-loop service.
-func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
-	r.service.Sanitizer = r.Sanitizer
+// loopInfra holds the initialized dependencies for the fix-loop workflow.
+type loopInfra struct {
+	deps   appfix.LoopDeps
+	writer *appfix.ArtifactWriter
+	eb     *appfix.EnvelopeBuilder
+}
 
+// buildLoopInfra initializes all dependencies needed by the fix-loop.
+func (r *Runner) buildLoopInfra(req LoopRequest) (loopInfra, error) {
 	controlRepo, err := r.NewCtlRepo()
 	if err != nil {
-		return err
+		return loopInfra{}, fmt.Errorf("init control repo: %w", err)
 	}
 
-	deps := appfix.LoopDeps{
-		ObservationRepoFactory: func() (contracts.ObservationRepository, error) {
-			return r.NewObsRepo()
-		},
-		ControlRepo: controlRepo,
-	}
-
-	am, amErr := appfix.NewArtifactWriter(
+	writer, err := appfix.NewArtifactWriter(
 		req.OutDir,
 		appfix.WriteOptions{
 			Overwrite:     r.FileOptions.Overwrite,
@@ -53,11 +52,30 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 			AllowSymlink: r.FileOptions.AllowSymlinks,
 		},
 	)
-	if amErr != nil {
-		return amErr
+	if err != nil {
+		return loopInfra{}, fmt.Errorf("init artifact writer: %w", err)
 	}
 
-	eb := r.newEnvelopeBuilder()
+	return loopInfra{
+		deps: appfix.LoopDeps{
+			ObservationRepoFactory: func() (contracts.ObservationRepository, error) {
+				return r.NewObsRepo()
+			},
+			ControlRepo: controlRepo,
+		},
+		writer: writer,
+		eb:     r.newEnvelopeBuilder(),
+	}, nil
+}
+
+// Loop delegates to the app-layer fix-loop service.
+func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
+	r.service.Sanitizer = r.Sanitizer
+
+	infra, err := r.buildLoopInfra(req)
+	if err != nil {
+		return err
+	}
 
 	err = r.service.Loop(ctx, appfix.LoopRequest{
 		BeforeDir:         req.BeforeDir,
@@ -68,7 +86,7 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		AllowUnknown:      req.AllowUnknown,
 		Stdout:            req.Stdout,
 		Stderr:            req.Stderr,
-	}, deps, am, eb)
+	}, infra.deps, infra.writer, infra.eb)
 
 	if errors.Is(err, appfix.ErrViolationsRemaining) {
 		return ui.ErrViolationsFound
