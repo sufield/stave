@@ -74,13 +74,11 @@ Exit Codes:
 				return err
 			}
 			gf := cliflags.GetGlobalFlags(cmd)
-			runner := &Runner{
-				FileOptions: fileout.FileOptions{
-					Overwrite:     gf.Force,
-					AllowSymlinks: gf.AllowSymlinkOut,
-					DirPerms:      0o700,
-				},
-			}
+			runner := NewRunner(fileout.FileOptions{
+				Overwrite:     gf.Force,
+				AllowSymlinks: gf.AllowSymlinkOut,
+				DirPerms:      0o700,
+			})
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,
