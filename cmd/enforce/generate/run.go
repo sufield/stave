@@ -56,7 +56,13 @@ type Runner struct {
 	FileOptions fileout.FileOptions
 }
 
-type result struct {
+// NewRunner initializes a generator runner.
+func NewRunner(opts fileout.FileOptions) *Runner {
+	return &Runner{FileOptions: opts}
+}
+
+// Result represents the structured output of the generation process.
+type Result struct {
 	SchemaVersion kernel.Schema     `json:"schema_version"`
 	Kind          kernel.OutputKind `json:"kind"`
 	Mode          Mode              `json:"mode"`
@@ -65,48 +71,51 @@ type result struct {
 	Targets       []string          `json:"targets"`
 }
 
-type plan struct {
-	result   result
-	rendered string
+// Plan couples the metadata result with the actual rendered content.
+type Plan struct {
+	Result   Result
+	Rendered string
 }
 
 // Run executes the template generation workflow.
 func (r *Runner) Run(_ context.Context, cfg Config) error {
-	p, err := r.buildPlan(cfg)
+	p, err := r.BuildPlan(cfg)
 	if err != nil {
 		return err
 	}
 	if cfg.DryRun {
-		return r.writeDryRun(cfg.Stdout, p.result)
+		p.Result.DryRun = true
+		return r.writeResult(cfg.Stdout, p.Result)
 	}
-	if err := r.writeOutputFile(p.result.OutputFile, p.rendered); err != nil {
+	if err := r.writeOutputFile(p.Result.OutputFile, p.Rendered); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
-	return r.writeResult(cfg.Stdout, p.result)
+	return r.writeResult(cfg.Stdout, p.Result)
 }
 
-func (r *Runner) buildPlan(cfg Config) (plan, error) {
+// BuildPlan constructs the generation metadata and content without writing to disk.
+func (r *Runner) BuildPlan(cfg Config) (Plan, error) {
 	if err := validateInputPath(cfg.InputPath); err != nil {
-		return plan{}, err
+		return Plan{}, err
 	}
 	refs, err := loadFindingRefs(cfg.InputPath)
 	if err != nil {
-		return plan{}, err
+		return Plan{}, err
 	}
 	targets := outenforce.ExtractBucketTargets(refs)
 	outPath, rendered, err := buildOutput(cfg.Mode, cfg.OutDir, targets)
 	if err != nil {
-		return plan{}, err
+		return Plan{}, err
 	}
-	return plan{
-		result: result{
+	return Plan{
+		Result: Result{
 			SchemaVersion: kernel.SchemaEnforce,
 			Kind:          kernel.KindEnforcement,
 			Mode:          cfg.Mode,
 			OutputFile:    outPath,
 			Targets:       targetNames(targets),
 		},
-		rendered: rendered,
+		Rendered: rendered,
 	}, nil
 }
 
@@ -148,24 +157,23 @@ func targetNames(targets []outenforce.BucketTarget) []string {
 	return names
 }
 
-func (r *Runner) writeDryRun(w io.Writer, res result) error {
-	res.DryRun = true
-	return r.writeResult(w, res)
-}
-
-func (r *Runner) writeOutputFile(outPath, rendered string) error {
+func (r *Runner) writeOutputFile(outPath, rendered string) (err error) {
 	file, err := fileout.OpenOutputFile(outPath, r.FileOptions)
 	if err != nil {
-		return err
+		return fmt.Errorf("open output file %s: %w", outPath, err)
 	}
-	defer file.Close()
-	if _, err := file.WriteString(rendered); err != nil {
-		return fmt.Errorf("write output file: %w", err)
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
+	if _, err = file.WriteString(rendered); err != nil {
+		return fmt.Errorf("write content to %s: %w", outPath, err)
 	}
 	return nil
 }
 
-func (r *Runner) writeResult(w io.Writer, res result) error {
+func (r *Runner) writeResult(w io.Writer, res Result) error {
 	return jsonutil.WriteIndented(w, res)
 }
 
