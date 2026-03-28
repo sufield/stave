@@ -163,7 +163,7 @@ func TestPresenterRenderReport_BareJSON(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{Stdout: &buf, Format: ui.OutputFormatJSON}
+	p := &Presenter{W: &buf, Format: ui.OutputFormatJSON}
 	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("RenderReport() error = %v", err)
 	}
@@ -228,7 +228,7 @@ func TestPresenterRenderReport_Branches(t *testing.T) {
 	}
 
 	var out bytes.Buffer
-	p := &Presenter{Stdout: &out, Format: ui.OutputFormatText}
+	p := &Presenter{W: &out, Format: ui.OutputFormatText}
 	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("text report error = %v", err)
 	}
