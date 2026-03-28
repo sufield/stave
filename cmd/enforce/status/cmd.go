@@ -38,27 +38,16 @@ Examples:
   stave status --format json` + metadata.OfflineHelpSuffix,
 		Example: `  stave status`,
 		Args:    cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return opts.Prepare(cmd)
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			format, err := opts.resolveFormat(cmd)
+			cfg, err := opts.ToConfig(cmd)
 			if err != nil {
 				return err
 			}
-
 			resolver, err := projctx.NewResolver()
 			if err != nil {
 				return err
 			}
-
-			runner := NewRunner(resolver)
-			return runner.Run(config{
-				Dir:    opts.Dir,
-				Format: format,
-				Stdout: cmd.OutOrStdout(),
-				Stderr: cmd.ErrOrStderr(),
-			})
+			return NewRunner(resolver).Run(cfg)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

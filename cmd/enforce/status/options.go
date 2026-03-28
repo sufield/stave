@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -21,13 +20,16 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 }
 
-// Prepare normalizes paths and resolves format. Called from PreRunE.
-func (o *options) Prepare(_ *cobra.Command) error {
-	o.Dir = fsutil.CleanUserPath(o.Dir)
-	return nil
-}
-
-// resolveFormat resolves the output format using the command context.
-func (o *options) resolveFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return compose.ResolveFormatValue(cmd, o.Format)
+// ToConfig validates flags and returns a typed config.
+func (o *options) ToConfig(cmd *cobra.Command) (config, error) {
+	format, err := compose.ResolveFormatValue(cmd, o.Format)
+	if err != nil {
+		return config{}, err
+	}
+	return config{
+		Dir:    fsutil.CleanUserPath(o.Dir),
+		Format: format,
+		Stdout: cmd.OutOrStdout(),
+		Stderr: cmd.ErrOrStderr(),
+	}, nil
 }
