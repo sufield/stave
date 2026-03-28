@@ -4,16 +4,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/domain"
-	"github.com/sufield/stave/internal/core/usecases"
+	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/metadata"
 	formatter "github.com/sufield/stave/internal/ui"
 )
 
 // Deps groups the infrastructure implementations for the baseline command.
 type Deps struct {
-	SaveDeps  usecases.BaselineSaveDeps
-	CheckDeps usecases.BaselineCheckDeps
+	SaveDeps  reporting.BaselineSaveDeps
+	CheckDeps reporting.BaselineCheckDeps
 }
 
 // NewCmd constructs the baseline command tree.
@@ -42,7 +41,7 @@ Example:
 
 // --- Save Subcommand ---
 
-func newSaveCmd(deps usecases.BaselineSaveDeps) *cobra.Command {
+func newSaveCmd(deps reporting.BaselineSaveDeps) *cobra.Command {
 	var (
 		inPath  string
 		outPath = "output/baseline.json"
@@ -69,12 +68,12 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := domain.BaselineSaveRequest{
+			req := reporting.BaselineSaveRequest{
 				EvaluationPath: inPath,
 				OutputPath:     outPath,
 			}
 
-			resp, err := usecases.BaselineSave(cmd.Context(), req, deps)
+			resp, err := reporting.BaselineSave(cmd.Context(), req, deps)
 			if err != nil {
 				return err
 			}
@@ -93,7 +92,7 @@ Exit Codes:
 
 // --- Check Subcommand ---
 
-func newCheckCmd(deps usecases.BaselineCheckDeps) *cobra.Command {
+func newCheckCmd(deps reporting.BaselineCheckDeps) *cobra.Command {
 	var (
 		inPath       string
 		baselinePath string
@@ -123,13 +122,13 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := domain.BaselineCheckRequest{
+			req := reporting.BaselineCheckRequest{
 				EvaluationPath: inPath,
 				BaselinePath:   baselinePath,
 				FailOnNew:      failOnNew,
 			}
 
-			resp, err := usecases.BaselineCheck(cmd.Context(), req, deps)
+			resp, err := reporting.BaselineCheck(cmd.Context(), req, deps)
 			if err != nil {
 				return err
 			}

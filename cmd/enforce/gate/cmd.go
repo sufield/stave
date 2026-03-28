@@ -6,15 +6,14 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/domain"
-	"github.com/sufield/stave/internal/core/usecases"
+	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/metadata"
 	formatter "github.com/sufield/stave/internal/ui"
 )
 
 // Deps groups the infrastructure implementations for the gate command.
 type Deps struct {
-	UseCaseDeps usecases.GateDeps
+	UseCaseDeps eval.GateDeps
 }
 
 // NewCmd constructs the CI gate command.
@@ -68,7 +67,7 @@ Exit Codes:
 				return err
 			}
 
-			req := domain.GateRequest{
+			req := eval.GateRequest{
 				Policy:            string(cfg.Policy),
 				EvaluationPath:    cfg.InPath,
 				BaselinePath:      cfg.BaselinePath,
@@ -77,7 +76,7 @@ Exit Codes:
 				MaxUnsafeDuration: cfg.MaxUnsafeDuration,
 			}
 
-			resp, err := usecases.Gate(cmd.Context(), req, deps.UseCaseDeps)
+			resp, err := eval.Gate(cmd.Context(), req, deps.UseCaseDeps)
 			if err != nil {
 				return err
 			}
