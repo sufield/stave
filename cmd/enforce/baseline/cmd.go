@@ -122,12 +122,7 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return NewRunner(
-				ports.RealClock{},
-				cliflags.GetGlobalFlags(cmd).GetSanitizer(),
-				fileout.FileOptions{},
-				cmd.OutOrStdout(),
-			).Check(cfg)
+			return newRunner(cmd).Check(cfg)
 		},
 	}
 
