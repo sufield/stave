@@ -7,6 +7,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -77,10 +78,14 @@ func (a *App) installInterruptHandler() func() {
 }
 
 func (a *App) executeRootCommand(args []string) {
-	err := a.Root.Execute()
-	if err == nil {
-		return
+	if err := a.Root.Execute(); err != nil {
+		a.handleExecutionError(err, args)
 	}
+}
+
+func (a *App) handleExecutionError(err error, args []string) {
+	exitCode := ExitCode(err)
+
 	if a.Logger != nil {
 		// Log only the root error message, not presentation decoration
 		// (Next: …, More info: … lines appended by hint wrappers).
@@ -88,17 +93,21 @@ func (a *App) executeRootCommand(args []string) {
 		if idx := strings.Index(msg, "\n"); idx > 0 {
 			msg = msg[:idx]
 		}
-		a.Logger.Debug("command failed", "error", msg, "exit_code", ExitCode(err))
+		a.Logger.Debug("command failed", "error", msg, "exit_code", exitCode)
 	}
+
 	if !isSentinelError(err) {
 		a.writeCommandError(err, args)
 	}
-	a.ExitFunc(ExitCode(err))
+
+	a.ExitFunc(exitCode)
 }
 
 func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
 	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)
 	a.printNoProjectHintIfNeeded(args)
-	projectRoot := persistSessionStateIfApplicable(args)
+
+	resolver, _ := projctx.NewResolver()
+	projectRoot := persistSessionStateIfApplicable(resolver, args)
 	a.printWorkflowHandoff(args, projectRoot)
 }

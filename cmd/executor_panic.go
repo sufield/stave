@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -9,21 +10,39 @@ import (
 
 func (a *App) recoverExecutePanic() {
 	if recovered := recover(); recovered != nil {
+		stack := debug.Stack()
+
 		panicMsg := panicMessageFromValue(recovered)
 		sanitized := a.sanitizeExecuteMessage(panicMsg)
-		userMsg := a.panicUserMessage(sanitized)
 
-		action := "Rerun with -vv, then run `stave-dev doctor` or contact support if this error persists."
-		if a.Edition == EditionDev {
-			action = "Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists."
+		if a.Logger != nil {
+			a.Logger.Error("panic recovered",
+				"panic", sanitized,
+				"stack", string(stack),
+			)
 		}
-		errInfo := ui.NewErrorInfo(ui.CodeInternalError, userMsg).
-			WithTitle("Internal error").
-			WithAction(action).
-			WithURL(metadata.IssuesRef())
+
+		errInfo := a.buildPanicErrorInfo(sanitized)
 		a.writeErrorInfo(errInfo)
 		a.ExitFunc(ui.ExitInternal)
 	}
+}
+
+func (a *App) buildPanicErrorInfo(sanitized string) *ui.ErrorInfo {
+	userMsg := "internal error occurred; rerun with -vv to see details"
+	if a.Flags.Verbosity >= 2 {
+		userMsg = fmt.Sprintf("internal error: %s", sanitized)
+	}
+
+	action := "Rerun with -vv, then run `stave-dev doctor` or contact support if this error persists."
+	if a.Edition == EditionDev {
+		action = "Rerun with -vv, then run `stave bug-report` and attach the bundle if it persists."
+	}
+
+	return ui.NewErrorInfo(ui.CodeInternalError, userMsg).
+		WithTitle("Internal error").
+		WithAction(action).
+		WithURL(metadata.IssuesRef())
 }
 
 func panicMessageFromValue(recovered any) string {
@@ -35,19 +54,6 @@ func panicMessageFromValue(recovered any) string {
 	default:
 		return fmt.Sprintf("(panic type %T)", recovered)
 	}
-}
-
-func (a *App) panicUserMessage(sanitized string) string {
-	if a.Flags.Verbosity >= 2 {
-		if a.Logger != nil {
-			a.Logger.Error("panic recovered", "panic", sanitized)
-		}
-		return fmt.Sprintf("internal error: %s", sanitized)
-	}
-	if a.Logger != nil {
-		a.Logger.Error("panic recovered")
-	}
-	return "internal error occurred; rerun with -vv to see details"
 }
 
 func (a *App) sanitizeExecuteMessage(message string) string {

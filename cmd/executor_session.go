@@ -6,13 +6,12 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func persistSessionStateIfApplicable(args []string) string {
-	resolver, err := projctx.NewResolver()
-	if err != nil {
+func persistSessionStateIfApplicable(resolver *projctx.Resolver, args []string) string {
+	if resolver == nil {
 		return ""
 	}
-	projectRoot, detectErr := resolver.DetectProjectRoot(resolver.WorkingDir)
-	if detectErr != nil {
+	projectRoot, err := resolver.DetectProjectRoot(resolver.WorkingDir)
+	if err != nil {
 		return ""
 	}
 	// Best-effort: session state is advisory; failure doesn't affect the command result.
