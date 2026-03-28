@@ -49,11 +49,11 @@ func NewRunner(clock ports.Clock, san kernel.Sanitizer, fileOpts fileout.FileOpt
 }
 
 // Save captures current evaluation findings into a baseline file.
-func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
+func (r *Runner) Save(ctx context.Context, cfg SaveConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	outPath := fsutil.CleanUserPath(cfg.OutPath)
 
-	eval, err := artifact.NewLoader().Evaluation(inPath)
+	eval, err := artifact.NewLoader().Evaluation(ctx, inPath)
 	if err != nil {
 		return fmt.Errorf("load evaluation %s: %w", inPath, err)
 	}
@@ -70,7 +70,7 @@ func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 
 	f, err := fileout.OpenOutputFile(outPath, r.FileOptions)
 	if err != nil {
-		return fmt.Errorf("create %s: %w", outPath, err)
+		return fmt.Errorf("create baseline file %s: %w", outPath, err)
 	}
 	defer f.Close()
 	if err := jsonutil.WriteIndented(f, baseline); err != nil {
@@ -82,38 +82,27 @@ func (r *Runner) Save(_ context.Context, cfg SaveConfig) error {
 }
 
 // Check compares evaluation findings against an existing baseline.
-func (r *Runner) Check(_ context.Context, cfg CheckConfig) error {
+func (r *Runner) Check(ctx context.Context, cfg CheckConfig) error {
 	inPath := fsutil.CleanUserPath(cfg.InPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
-	eval, err := artifact.NewLoader().Evaluation(inPath)
+	eval, err := artifact.NewLoader().Evaluation(ctx, inPath)
 	if err != nil {
 		return fmt.Errorf("load evaluation %s: %w", inPath, err)
 	}
 	current := remediation.BaselineEntriesFromFindings(eval.Findings)
 	current = output.SanitizeBaselineEntries(r.Sanitizer, current)
 
-	base, err := artifact.NewLoader().Baseline(baselinePath, kernel.KindBaseline)
+	base, err := artifact.NewLoader().Baseline(ctx, baselinePath, kernel.KindBaseline)
 	if err != nil {
 		return fmt.Errorf("load baseline %s: %w", baselinePath, err)
 	}
 
 	comparison := evaluation.CompareBaseline(base.Findings, current)
-	result := evaluation.BaselineComparison{
-		SchemaVersion: kernel.SchemaBaseline,
-		Kind:          kernel.KindBaselineCheck,
-		CheckedAt:     r.Clock.Now().UTC(),
-		BaselineFile:  baselinePath,
-		Evaluation:    inPath,
-		Summary: evaluation.BaselineComparisonSummary{
-			BaselineFindings: len(base.Findings),
-			CurrentFindings:  len(current),
-			NewFindings:      len(comparison.New),
-			ResolvedFindings: len(comparison.Resolved),
-		},
-		New:      comparison.New,
-		Resolved: comparison.Resolved,
-	}
+	result := comparison.ToReport(
+		r.Clock.Now().UTC(), baselinePath, inPath,
+		len(base.Findings), len(current),
+	)
 
 	if err := jsonutil.WriteIndented(r.Stdout, result); err != nil {
 		return fmt.Errorf("write baseline check output: %w", err)

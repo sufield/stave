@@ -62,7 +62,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 }`), 0o644); err != nil {
 		t.Fatalf("write eval file: %v", err)
 	}
-	result, err := runner.runPolicyAny(config{
+	result, err := runner.runPolicyAny(context.Background(), config{
 		InPath: withFindings,
 		Clock:  ports.FixedClock(now),
 		Stdout: &bytes.Buffer{},
@@ -81,7 +81,7 @@ func TestRunGatePolicyAny(t *testing.T) {
 	if writeErr := os.WriteFile(noFindings, []byte(`{"kind":"evaluation","findings":[]}`), 0o644); writeErr != nil {
 		t.Fatalf("write eval file: %v", writeErr)
 	}
-	result, err = runner.runPolicyAny(config{
+	result, err = runner.runPolicyAny(context.Background(), config{
 		InPath: noFindings,
 		Clock:  ports.FixedClock(now),
 		Stdout: &bytes.Buffer{},
@@ -137,7 +137,7 @@ func TestRunGatePolicyNew(t *testing.T) {
 		t.Fatalf("write baseline file: %v", err)
 	}
 
-	result, err := runner.runPolicyNew(config{
+	result, err := runner.runPolicyNew(context.Background(), config{
 		InPath:       evalPath,
 		BaselinePath: basePath,
 		Clock:        ports.FixedClock(now),

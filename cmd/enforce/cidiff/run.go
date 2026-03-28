@@ -61,17 +61,17 @@ type DiffReport struct {
 }
 
 // Run executes the comparison workflow.
-func (r *Runner) Run(_ context.Context, cfg Config) error {
+func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	currentPath := fsutil.CleanUserPath(cfg.CurrentPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
-	currentEval, err := artifact.NewLoader().Evaluation(currentPath)
+	currentEval, err := artifact.NewLoader().Evaluation(ctx, currentPath)
 	if err != nil {
 		return fmt.Errorf("load current evaluation: %w", err)
 	}
 	currentEntries := remediation.BaselineEntriesFromFindings(currentEval.Findings)
 
-	baselineEval, err := artifact.NewLoader().Evaluation(baselinePath)
+	baselineEval, err := artifact.NewLoader().Evaluation(ctx, baselinePath)
 	if err != nil {
 		return fmt.Errorf("load baseline evaluation: %w", err)
 	}

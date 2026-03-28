@@ -76,9 +76,9 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 
 	switch cfg.Policy {
 	case appconfig.GatePolicyAny:
-		res, err = r.runPolicyAny(cfg)
+		res, err = r.runPolicyAny(ctx, cfg)
 	case appconfig.GatePolicyNew:
-		res, err = r.runPolicyNew(cfg)
+		res, err = r.runPolicyNew(ctx, cfg)
 	case appconfig.GatePolicyOverdue:
 		res, err = r.runPolicyOverdue(ctx, cfg)
 	default:
@@ -104,8 +104,8 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	return nil
 }
 
-func (r *runner) runPolicyAny(cfg config) (result, error) {
-	eval, err := artifact.NewLoader().Evaluation(cfg.InPath)
+func (r *runner) runPolicyAny(ctx context.Context, cfg config) (result, error) {
+	eval, err := artifact.NewLoader().Evaluation(ctx, cfg.InPath)
 	if err != nil {
 		return result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
@@ -127,12 +127,12 @@ func (r *runner) runPolicyAny(cfg config) (result, error) {
 	}, nil
 }
 
-func (r *runner) runPolicyNew(cfg config) (result, error) {
-	eval, err := artifact.NewLoader().Evaluation(cfg.InPath)
+func (r *runner) runPolicyNew(ctx context.Context, cfg config) (result, error) {
+	eval, err := artifact.NewLoader().Evaluation(ctx, cfg.InPath)
 	if err != nil {
 		return result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
-	base, err := artifact.NewLoader().Baseline(cfg.BaselinePath, kernel.KindBaseline)
+	base, err := artifact.NewLoader().Baseline(ctx, cfg.BaselinePath, kernel.KindBaseline)
 	if err != nil {
 		return result{}, fmt.Errorf("loading baseline: %w", err)
 	}
