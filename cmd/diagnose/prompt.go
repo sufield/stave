@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -212,12 +213,9 @@ func loadAssetProperties(ctx context.Context, loadSnapshots compose.SnapshotLoad
 		return "", nil
 	}
 
-	latest := snapshots[0]
-	for _, s := range snapshots[1:] {
-		if s.CapturedAt.After(latest.CapturedAt) {
-			latest = s
-		}
-	}
+	latest := slices.MaxFunc(snapshots, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
 	for _, a := range latest.Assets {
 		if a.ID == assetID {
 			propsJSON, marshalErr := json.MarshalIndent(a.Properties, "", "  ")
