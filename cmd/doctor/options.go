@@ -9,7 +9,8 @@ import (
 
 // options holds the raw CLI flag values for the doctor command.
 type options struct {
-	Format string
+	Format        string
+	formatChanged bool
 }
 
 // BindFlags attaches the options to a Cobra command.
@@ -17,13 +18,13 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 }
 
-// Prepare is a no-op for doctor; included for pattern consistency.
-// Called from PreRunE.
-func (o *options) Prepare(_ *cobra.Command) error {
+// Prepare captures flag-changed state. Called from PreRunE.
+func (o *options) Prepare(cmd *cobra.Command) error {
+	o.formatChanged = cmd.Flags().Changed("format")
 	return nil
 }
 
-// resolveFormat resolves the output format using the command context.
-func (o *options) resolveFormat(cmd *cobra.Command) (ui.OutputFormat, error) {
-	return compose.ResolveFormatValue(cmd, o.Format)
+// resolveFormat resolves the output format without needing *cobra.Command.
+func (o *options) resolveFormat() (ui.OutputFormat, error) {
+	return compose.ResolveFormatValuePure(o.Format, o.formatChanged, false)
 }
