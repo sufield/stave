@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/pkg/alpha/domain/asset"
 )
 
 // NewCmd constructs the snapshot diff command.
@@ -61,7 +62,8 @@ Exit Codes:
 
 	opts.BindFlags(cmd)
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
-	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed("added", "removed", "modified"))
+	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed(
+		string(asset.ChangeAdded), string(asset.ChangeRemoved), string(asset.ChangeModified)))
 
 	return cmd
 }
