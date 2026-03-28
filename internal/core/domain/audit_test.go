@@ -130,3 +130,155 @@ func TestInspectACLResponse_JSON(t *testing.T) {
 		t.Error("GrantDetails: got nil")
 	}
 }
+
+func TestInspectExposureRequest_JSON(t *testing.T) {
+	req := InspectExposureRequest{FilePath: "resources.json"}
+	data, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectExposureRequest
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.FilePath != "resources.json" {
+		t.Errorf("FilePath: got %q", got.FilePath)
+	}
+}
+
+func TestInspectExposureResponse_JSON(t *testing.T) {
+	resp := InspectExposureResponse{
+		Classifications: []any{map[string]any{"name": "bucket-a", "exposure": "PUBLIC"}},
+		BucketAccess:    map[string]any{"public_read": true},
+		Visibility:      map[string]any{"effective": "public"},
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectExposureResponse
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.Classifications == nil {
+		t.Error("Classifications: got nil")
+	}
+	if got.BucketAccess == nil {
+		t.Error("BucketAccess: got nil")
+	}
+}
+
+func TestInspectRiskRequest_JSON(t *testing.T) {
+	req := InspectRiskRequest{FilePath: "statement.json"}
+	data, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectRiskRequest
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.FilePath != "statement.json" {
+		t.Errorf("FilePath: got %q", got.FilePath)
+	}
+}
+
+func TestInspectRiskResponse_JSON(t *testing.T) {
+	resp := InspectRiskResponse{
+		NormalizedActions: []string{"s3:GetObject", "s3:PutObject"},
+		Permissions:       map[string]any{"read": true, "write": true},
+		PermissionCheck:   map[string]any{"has_read": true},
+		StatementResult:   map[string]any{"score": 7},
+		Report:            map[string]any{"level": "HIGH"},
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectRiskResponse
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if len(got.NormalizedActions) != 2 {
+		t.Errorf("NormalizedActions count: got %d, want 2", len(got.NormalizedActions))
+	}
+	if got.Report == nil {
+		t.Error("Report: got nil")
+	}
+}
+
+func TestInspectComplianceRequest_JSON(t *testing.T) {
+	req := InspectComplianceRequest{
+		FilePath:   "crosswalk.yaml",
+		Frameworks: []string{"nist_800_53", "cis"},
+		CheckIDs:   []string{"CTL.S3.PUBLIC.001"},
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectComplianceRequest
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.FilePath != "crosswalk.yaml" {
+		t.Errorf("FilePath: got %q", got.FilePath)
+	}
+	if len(got.Frameworks) != 2 {
+		t.Errorf("Frameworks count: got %d, want 2", len(got.Frameworks))
+	}
+	if len(got.CheckIDs) != 1 {
+		t.Errorf("CheckIDs count: got %d, want 1", len(got.CheckIDs))
+	}
+}
+
+func TestInspectComplianceResponse_JSON(t *testing.T) {
+	resp := InspectComplianceResponse{ResolutionJSON: []byte(`{"resolved":true}`)}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectComplianceResponse
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if len(got.ResolutionJSON) == 0 {
+		t.Error("ResolutionJSON: got empty")
+	}
+}
+
+func TestInspectAliasesRequest_JSON(t *testing.T) {
+	req := InspectAliasesRequest{Category: "Encryption"}
+	data, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectAliasesRequest
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.Category != "Encryption" {
+		t.Errorf("Category: got %q", got.Category)
+	}
+}
+
+func TestInspectAliasesResponse_JSON(t *testing.T) {
+	resp := InspectAliasesResponse{
+		Aliases:            []any{map[string]any{"name": "is_encrypted", "category": "Encryption"}},
+		SupportedOperators: []string{"eq", "ne", "in"},
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got InspectAliasesResponse
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.Aliases == nil {
+		t.Error("Aliases: got nil")
+	}
+	if len(got.SupportedOperators) != 3 {
+		t.Errorf("SupportedOperators count: got %d, want 3", len(got.SupportedOperators))
+	}
+}

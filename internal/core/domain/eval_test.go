@@ -99,3 +99,62 @@ func TestTraceResponse_JSON(t *testing.T) {
 		t.Error("TraceData: got nil")
 	}
 }
+
+func TestApplyRequest_JSON(t *testing.T) {
+	req := ApplyRequest{
+		ControlsDir:       "controls",
+		ObservationsDir:   "observations",
+		MaxUnsafeDuration: "168h",
+		NowTime:           "2026-01-15T00:00:00Z",
+		Format:            "json",
+		Profile:           "aws-s3",
+		InputFile:         "obs.json",
+		BucketAllowlist:   []string{"bucket-a", "bucket-b"},
+		IncludeAll:        true,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got ApplyRequest
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if got.Profile != "aws-s3" {
+		t.Errorf("Profile: got %q", got.Profile)
+	}
+	if got.MaxUnsafeDuration != "168h" {
+		t.Errorf("MaxUnsafeDuration: got %q", got.MaxUnsafeDuration)
+	}
+	if len(got.BucketAllowlist) != 2 {
+		t.Errorf("BucketAllowlist count: got %d, want 2", len(got.BucketAllowlist))
+	}
+	if !got.IncludeAll {
+		t.Error("IncludeAll: got false, want true")
+	}
+}
+
+func TestApplyResponse_JSON(t *testing.T) {
+	resp := ApplyResponse{
+		EvaluationData: map[string]any{"findings": 3, "status": "UNSAFE"},
+		HasViolations:  true,
+		Warnings:       []string{"unknown source type"},
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var got ApplyResponse
+	if unmarshalErr := json.Unmarshal(data, &got); unmarshalErr != nil {
+		t.Fatalf("unmarshal: %v", unmarshalErr)
+	}
+	if !got.HasViolations {
+		t.Error("HasViolations: got false, want true")
+	}
+	if got.EvaluationData == nil {
+		t.Error("EvaluationData: got nil")
+	}
+	if len(got.Warnings) != 1 {
+		t.Errorf("Warnings count: got %d, want 1", len(got.Warnings))
+	}
+}

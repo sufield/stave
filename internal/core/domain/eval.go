@@ -69,3 +69,76 @@ type TraceResponse struct {
 	// TraceData holds the evaluation trace, ready for rendering.
 	TraceData any `json:"trace_data"`
 }
+
+// --- Apply ---
+
+// ApplyRequest defines the inputs for running control evaluation.
+type ApplyRequest struct {
+	// ControlsDir is the path to control definitions directory.
+	// CLI flag: --controls (default: controls)
+	ControlsDir string `json:"controls_dir,omitempty"`
+
+	// ObservationsDir is the path to observation snapshots directory.
+	// CLI flag: --observations (default: observations)
+	ObservationsDir string `json:"observations_dir,omitempty"`
+
+	// MaxUnsafeDuration is the maximum allowed unsafe duration (e.g. "168h").
+	// CLI flag: --max-unsafe
+	MaxUnsafeDuration string `json:"max_unsafe_duration,omitempty"`
+
+	// NowTime overrides the current time (RFC3339) for deterministic output.
+	// CLI flag: --now
+	NowTime string `json:"now_time,omitempty"`
+
+	// Format is the output format: json, text, or sarif.
+	// CLI flag: --format (default: json)
+	Format string `json:"format,omitempty"`
+
+	// DryRun runs readiness checks only without evaluating controls.
+	// CLI flag: --dry-run
+	DryRun bool `json:"dry_run,omitempty"`
+
+	// AllowUnknownInput allows observations with unknown source types.
+	// CLI flag: --allow-unknown-input
+	AllowUnknownInput bool `json:"allow_unknown_input,omitempty"`
+
+	// ExemptionFile is the path to an asset exemption list YAML file.
+	// CLI flag: --exemption-file
+	ExemptionFile string `json:"exemption_file,omitempty"`
+
+	// IntegrityManifest is the path to a manifest JSON with expected hashes.
+	// CLI flag: --integrity-manifest
+	IntegrityManifest string `json:"integrity_manifest,omitempty"`
+
+	// IntegrityPublicKey is the path to an Ed25519 public key for signed manifests.
+	// CLI flag: --integrity-public-key
+	IntegrityPublicKey string `json:"integrity_public_key,omitempty"`
+
+	// Profile is the evaluation profile (e.g. aws-s3).
+	// CLI flag: --profile
+	Profile string `json:"profile,omitempty"`
+
+	// InputFile is the path to an observations bundle file (required with --profile).
+	// CLI flag: --input
+	InputFile string `json:"input_file,omitempty"`
+
+	// BucketAllowlist limits evaluation to specific bucket names/ARNs.
+	// CLI flag: --bucket-allowlist
+	BucketAllowlist []string `json:"bucket_allowlist,omitempty"`
+
+	// IncludeAll disables health scope filtering.
+	// CLI flag: --include-all
+	IncludeAll bool `json:"include_all,omitempty"`
+}
+
+// ApplyResponse contains the result of control evaluation.
+type ApplyResponse struct {
+	// EvaluationData holds the evaluation output, ready for rendering.
+	EvaluationData any `json:"evaluation_data"`
+
+	// HasViolations indicates whether any controls were violated.
+	HasViolations bool `json:"has_violations"`
+
+	// Warnings lists non-fatal issues encountered during evaluation.
+	Warnings []string `json:"warnings,omitempty"`
+}
