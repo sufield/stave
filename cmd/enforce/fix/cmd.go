@@ -6,7 +6,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/fileout"
+	"github.com/sufield/stave/internal/core/domain"
+	"github.com/sufield/stave/internal/core/usecases"
 	"github.com/sufield/stave/internal/metadata"
+	formatter "github.com/sufield/stave/internal/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
@@ -17,8 +20,13 @@ type FixLoopDeps struct {
 	NewObsRepo      compose.ObsRepoFactory
 }
 
+// FixDeps groups the infrastructure implementations for the fix command.
+type FixDeps struct {
+	UseCaseDeps usecases.FixDeps
+}
+
 // NewFixCmd constructs the fix command.
-func NewFixCmd(newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+func NewFixCmd(deps FixDeps) *cobra.Command {
 	opts := &fixOptions{}
 
 	cmd := &cobra.Command{
@@ -49,16 +57,17 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			celEval, err := newCELEvaluator()
+			req := domain.FixRequest{
+				InputPath:  opts.InputPath,
+				FindingRef: opts.FindingRef,
+			}
+
+			resp, err := usecases.Fix(cmd.Context(), req, deps.UseCaseDeps)
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(celEval, ports.RealClock{})
-			return runner.Run(cmd.Context(), Request{
-				InputPath:  opts.InputPath,
-				FindingRef: opts.FindingRef,
-				Stdout:     cmd.OutOrStdout(),
-			})
+
+			return formatter.RenderJSON(cmd.OutOrStdout(), resp.Data)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

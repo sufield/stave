@@ -4,13 +4,21 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/domain"
+	"github.com/sufield/stave/internal/core/usecases"
 	"github.com/sufield/stave/internal/metadata"
+	formatter "github.com/sufield/stave/internal/ui"
 )
 
+// Deps groups the infrastructure implementations for the gate command.
+type Deps struct {
+	UseCaseDeps usecases.GateDeps
+}
+
 // NewCmd constructs the CI gate command.
-func NewCmd(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+func NewCmd(deps Deps) *cobra.Command {
 	opts := DefaultOptions()
 
 	cmd := &cobra.Command{
@@ -59,8 +67,39 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(loadAssets, newCELEvaluator)
-			return runner.Run(cmd.Context(), cfg)
+
+			req := domain.GateRequest{
+				Policy:            string(cfg.Policy),
+				EvaluationPath:    cfg.InPath,
+				BaselinePath:      cfg.BaselinePath,
+				ControlsDir:       cfg.ControlsDir,
+				ObservationsDir:   cfg.ObservationsDir,
+				MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+			}
+
+			resp, err := usecases.Gate(cmd.Context(), req, deps.UseCaseDeps)
+			if err != nil {
+				return err
+			}
+
+			if cfg.Format.IsJSON() {
+				if renderErr := formatter.RenderJSON(cfg.Stdout, resp); renderErr != nil {
+					return renderErr
+				}
+			} else if !cfg.Quiet {
+				status := "PASS"
+				if !resp.Passed {
+					status = "FAIL"
+				}
+				if renderErr := formatter.RenderText(cfg.Stdout, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason); renderErr != nil {
+					return renderErr
+				}
+			}
+
+			if !resp.Passed {
+				return ui.ErrViolationsFound
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

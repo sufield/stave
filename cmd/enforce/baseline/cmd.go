@@ -1,18 +1,23 @@
 package baseline
 
 import (
-	"io"
-
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/domain"
+	"github.com/sufield/stave/internal/core/usecases"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
+	formatter "github.com/sufield/stave/internal/ui"
 )
 
+// Deps groups the infrastructure implementations for the baseline command.
+type Deps struct {
+	SaveDeps  usecases.BaselineSaveDeps
+	CheckDeps usecases.BaselineCheckDeps
+}
+
 // NewCmd constructs the baseline command tree.
-func NewCmd() *cobra.Command {
+func NewCmd(deps Deps) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "baseline",
 		Short: "Manage baseline findings for fail-on-new CI workflows",
@@ -29,36 +34,19 @@ Example:
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newSaveCmd())
-	cmd.AddCommand(newCheckCmd())
+	cmd.AddCommand(newSaveCmd(deps.SaveDeps))
+	cmd.AddCommand(newCheckCmd(deps.CheckDeps))
 
 	return cmd
 }
 
-func newRunner(cmd *cobra.Command) *Runner {
-	gf := cliflags.GetGlobalFlags(cmd)
-	stdout := cmd.OutOrStdout()
-	if !gf.TextOutputEnabled() {
-		stdout = io.Discard
-	}
-	return NewRunner(
-		ports.RealClock{},
-		gf.GetSanitizer(),
-		fileout.FileOptions{
-			Overwrite:     gf.Force,
-			AllowSymlinks: gf.AllowSymlinkOut,
-			DirPerms:      0o700,
-		},
-		stdout,
-	)
-}
-
 // --- Save Subcommand ---
 
-func newSaveCmd() *cobra.Command {
-	cfg := SaveConfig{
-		OutPath: "output/baseline.json",
-	}
+func newSaveCmd(deps usecases.BaselineSaveDeps) *cobra.Command {
+	var (
+		inPath  string
+		outPath = "output/baseline.json"
+	)
 
 	cmd := &cobra.Command{
 		Use:   "save",
@@ -81,12 +69,23 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return newRunner(cmd).Save(cmd.Context(), cfg)
+			req := domain.BaselineSaveRequest{
+				EvaluationPath: inPath,
+				OutputPath:     outPath,
+			}
+
+			resp, err := usecases.BaselineSave(cmd.Context(), req, deps)
+			if err != nil {
+				return err
+			}
+
+			return formatter.RenderText(cmd.OutOrStdout(),
+				"Saved baseline: %s (findings=%d)\n", resp.OutputPath, resp.FindingsCount)
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.InPath, "in", "", "Path to evaluation JSON (required)")
-	cmd.Flags().StringVar(&cfg.OutPath, "out", cfg.OutPath, "Path to baseline output JSON")
+	cmd.Flags().StringVar(&inPath, "in", "", "Path to evaluation JSON (required)")
+	cmd.Flags().StringVar(&outPath, "out", outPath, "Path to baseline output JSON")
 	_ = cmd.MarkFlagRequired("in")
 
 	return cmd
@@ -94,10 +93,12 @@ Exit Codes:
 
 // --- Check Subcommand ---
 
-func newCheckCmd() *cobra.Command {
-	cfg := CheckConfig{
-		FailOnNew: true,
-	}
+func newCheckCmd(deps usecases.BaselineCheckDeps) *cobra.Command {
+	var (
+		inPath       string
+		baselinePath string
+		failOnNew    = true
+	)
 
 	cmd := &cobra.Command{
 		Use:   "check",
@@ -122,13 +123,31 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return newRunner(cmd).Check(cmd.Context(), cfg)
+			req := domain.BaselineCheckRequest{
+				EvaluationPath: inPath,
+				BaselinePath:   baselinePath,
+				FailOnNew:      failOnNew,
+			}
+
+			resp, err := usecases.BaselineCheck(cmd.Context(), req, deps)
+			if err != nil {
+				return err
+			}
+
+			if renderErr := formatter.RenderJSON(cmd.OutOrStdout(), resp); renderErr != nil {
+				return renderErr
+			}
+
+			if req.FailOnNew && resp.HasNew {
+				return ui.ErrViolationsFound
+			}
+			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.InPath, "in", "", "Path to evaluation JSON (required)")
-	cmd.Flags().StringVar(&cfg.BaselinePath, "baseline", "", "Path to baseline JSON (required)")
-	cmd.Flags().BoolVar(&cfg.FailOnNew, "fail-on-new", cfg.FailOnNew, "Return exit code 3 when new findings are detected")
+	cmd.Flags().StringVar(&inPath, "in", "", "Path to evaluation JSON (required)")
+	cmd.Flags().StringVar(&baselinePath, "baseline", "", "Path to baseline JSON (required)")
+	cmd.Flags().BoolVar(&failOnNew, "fail-on-new", failOnNew, "Return exit code 3 when new findings are detected")
 	_ = cmd.MarkFlagRequired("in")
 	_ = cmd.MarkFlagRequired("baseline")
 

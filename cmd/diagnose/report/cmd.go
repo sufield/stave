@@ -1,10 +1,8 @@
 package report
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
-	"io"
 	"log/slog"
 	"strings"
 
@@ -14,9 +12,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/cmd/enforce/artifact"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
-	"github.com/sufield/stave/internal/cli/ui"
+	coredomain "github.com/sufield/stave/internal/core/domain"
+	coreusecases "github.com/sufield/stave/internal/core/usecases"
+	infrareport "github.com/sufield/stave/internal/infra/report"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
@@ -25,54 +24,16 @@ import (
 //go:embed templates/report_default.tmpl
 var defaultReportTemplate string
 
-// Request defines the parameters for generating a report.
-type Request struct {
-	InputFile    string
-	TemplateFile string
-	Format       ui.OutputFormat
-	Quiet        bool
-	Stdout       io.Writer
-}
-
-// Runner orchestrates the loading and rendering of reports.
-type Runner struct {
-	Version         string
-	DefaultTemplate string
-}
-
-// NewRunner initializes a report runner with the given version string.
-func NewRunner(version string) *Runner {
-	return &Runner{
-		Version:         version,
-		DefaultTemplate: defaultReportTemplate,
-	}
-}
-
-// Run executes the report generation process.
-func (r *Runner) Run(ctx context.Context, req Request) error {
-	inputFile := fsutil.CleanUserPath(req.InputFile)
-	eval, err := artifact.NewLoader().Evaluation(ctx, inputFile)
-	if err != nil {
-		return fmt.Errorf("loading evaluation: %w", err)
-	}
-
-	if req.Format.IsJSON() {
-		return reportrender.RenderJSON(*eval, r.Version, req.Stdout, req.Quiet)
-	}
-
-	return reportrender.RenderText(*eval, reportrender.RenderTextOptions{
-		StaveVersion:    r.Version,
-		DefaultTemplate: r.DefaultTemplate,
-		TemplatePath:    fsutil.CleanUserPath(req.TemplateFile),
-		Writer:          req.Stdout,
-		Quiet:           req.Quiet,
-	})
-}
-
 // --- Cobra Command Constructor ---
 
+// Deps groups the infrastructure implementations for the report command.
+type Deps struct {
+	UseCaseDeps coreusecases.ReportDeps
+}
+
 // NewReportCmd constructs the report command.
-func NewReportCmd() *cobra.Command {
+func NewReportCmd(deps Deps) *cobra.Command {
+	reportDeps := deps.UseCaseDeps
 	opts := &options{
 		Format: "text",
 	}
@@ -129,15 +90,33 @@ Examples:
 				compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report", flags.Quiet)
 			}
 
-			req := Request{
+			// Use case: load evaluation
+			ucReq := coredomain.ReportRequest{
 				InputFile:    opts.InputFile,
 				TemplateFile: opts.TemplateFile,
-				Format:       fmtValue,
+				Format:       string(fmtValue),
 				Quiet:        flags.Quiet,
-				Stdout:       cmd.OutOrStdout(),
+			}
+			ucResp, ucErr := coreusecases.Report(cmd.Context(), ucReq, reportDeps)
+			if ucErr != nil {
+				return ucErr
 			}
 
-			return NewRunner(staveversion.String).Run(cmd.Context(), req)
+			// Adapter: render in requested format
+			eval, ok := infrareport.TypedEvaluation(ucResp.EvaluationData)
+			if !ok {
+				return fmt.Errorf("unexpected evaluation data type")
+			}
+			if fmtValue.IsJSON() {
+				return reportrender.RenderJSON(*eval, staveversion.String, cmd.OutOrStdout(), flags.Quiet)
+			}
+			return reportrender.RenderText(*eval, reportrender.RenderTextOptions{
+				StaveVersion:    staveversion.String,
+				DefaultTemplate: defaultReportTemplate,
+				TemplatePath:    fsutil.CleanUserPath(opts.TemplateFile),
+				Writer:          cmd.OutOrStdout(),
+				Quiet:           flags.Quiet,
+			})
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

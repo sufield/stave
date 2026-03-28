@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/apply"
@@ -14,7 +16,10 @@ import (
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
+	"github.com/sufield/stave/cmd/enforce/baseline"
+	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/fix"
+	"github.com/sufield/stave/cmd/enforce/gate"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -22,6 +27,12 @@ import (
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/usecases"
+	infrabaseline "github.com/sufield/stave/internal/infra/baseline"
+	infradoctor "github.com/sufield/stave/internal/infra/doctor"
+	infrafix "github.com/sufield/stave/internal/infra/fix"
+	infragate "github.com/sufield/stave/internal/infra/gate"
+	infrareport "github.com/sufield/stave/internal/infra/report"
 )
 
 const (
@@ -75,7 +86,11 @@ func WireCommands(app *App) {
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
-	root.AddCommand(diagreport.NewReportCmd())
+	root.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
+		UseCaseDeps: usecases.ReportDeps{
+			Loader: &infrareport.EvaluationLoader{},
+		},
+	}))
 	root.AddCommand(artifacts.NewLintCmd())
 	root.AddCommand(artifacts.NewFmtCmd())
 	root.AddCommand(artifacts.NewControlsCmd(p.NewControlRepo))
@@ -88,7 +103,11 @@ func WireCommands(app *App) {
 	root.AddCommand(securityaudit.NewCmd())
 
 	// Supportability
-	root.AddCommand(doctor.NewCmd())
+	root.AddCommand(doctor.NewCmd(doctor.Deps{
+		UseCaseDeps: usecases.DoctorDeps{
+			CheckRunner: &infradoctor.CheckRunner{},
+		},
+	}))
 	root.AddCommand(bugreport.NewCmd())
 	root.AddCommand(enforce.NewGraphCmd(p.NewControlRepo, p.LoadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
@@ -121,15 +140,47 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
 }
 
 func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
-	ciCmd.AddCommand(enforce.NewBaselineCmd())
-	ciCmd.AddCommand(enforce.NewGateCmd(p.LoadAssets, p.NewCELEvaluator))
+	ciCmd.AddCommand(enforce.NewBaselineCmd(baseline.Deps{
+		SaveDeps: usecases.BaselineSaveDeps{
+			Loader: &infrabaseline.EvaluationLoader{},
+			Writer: &infrabaseline.BaselineWriter{},
+			Clock:  time.Now,
+		},
+		CheckDeps: usecases.BaselineCheckDeps{
+			EvalLoader:     &infrabaseline.EvaluationLoader{},
+			BaselineLoader: &infrabaseline.BaselineLoader{},
+			Clock:          time.Now,
+		},
+	}))
+	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
+		UseCaseDeps: usecases.GateDeps{
+			FindingsCounter:  &infragate.FindingsCounter{},
+			BaselineComparer: &infragate.BaselineComparer{},
+			OverdueCounter: &infragate.OverdueCounter{
+				LoadAssets:      p.LoadAssets,
+				NewCELEvaluator: p.NewCELEvaluator,
+			},
+			Clock: time.Now,
+		},
+	}))
 	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.FixLoopDeps{
 		NewCELEvaluator: p.NewCELEvaluator,
 		NewCtlRepo:      p.NewControlRepo,
 		NewObsRepo:      p.NewObservationRepo,
 	}))
-	ciCmd.AddCommand(enforce.NewCiDiffCmd())
-	ciCmd.AddCommand(enforce.NewFixCmd(p.NewCELEvaluator))
+	ciCmd.AddCommand(enforce.NewCiDiffCmd(cidiff.Deps{
+		UseCaseDeps: usecases.CIDiffDeps{
+			CurrentLoader:  &infrabaseline.EvaluationLoader{},
+			BaselineLoader: &infrabaseline.EvaluationLoader{},
+			Clock:          time.Now,
+		},
+	}))
+	celEval, _ := p.NewCELEvaluator()
+	ciCmd.AddCommand(enforce.NewFixCmd(fix.FixDeps{
+		UseCaseDeps: usecases.FixDeps{
+			Loader: &infrafix.FindingLoader{CELEvaluator: celEval},
+		},
+	}))
 }
 
 func assignCommandGroup(root *cobra.Command, use, groupID string) {

@@ -6,6 +6,7 @@ run:
 
 linters:
   enable:
+    - depguard
     - errcheck
     - gocritic
     - gosec
@@ -16,6 +17,26 @@ linters:
     - staticcheck
     - unused
   settings:
+    depguard:
+      rules:
+        usecases-no-aws:
+          files:
+            - "internal/core/usecases/**"
+          deny:
+            - pkg: "github.com/*/stave/internal/adapters/aws/**"
+              desc: "Use cases must depend on port interfaces, not AWS adapters"
+        domain-no-internal:
+          files:
+            - "internal/core/domain/**"
+          deny:
+            - pkg: "github.com/*/stave/internal/**"
+              desc: "Domain types must have zero internal dependencies"
+        cmd-no-infra:
+          files:
+            - "cmd/**"
+          deny:
+            - pkg: "github.com/*/stave/internal/infra/**"
+              desc: "CLI adapters must not know about infrastructure"
     gocritic:
       disable-all: true
       enabled-checks:
