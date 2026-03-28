@@ -5,6 +5,7 @@ package diagnose
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -83,7 +84,8 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.ToConfig(cmd)
+			flags := cliflags.GetGlobalFlags(cmd)
+			cfg, err := opts.ToConfig(flags, cmd.OutOrStdout(), cmd.ErrOrStderr(), cmd.InOrStdin())
 			if err != nil {
 				return err
 			}

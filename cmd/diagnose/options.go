@@ -1,6 +1,7 @@
 package diagnose
 
 import (
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -25,6 +26,12 @@ type diagnoseOptions struct {
 	Template          string
 	ControlID         string
 	AssetID           string
+
+	// Captured in Prepare from cmd.Flags().Changed() so ToConfig
+	// does not need *cobra.Command.
+	controlsSet bool
+	obsSet      bool
+	formatSet   bool
 }
 
 // BindFlags attaches the options to a Cobra command.
@@ -49,8 +56,12 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	))
 }
 
-// Prepare resolves config defaults. Called from PreRunE.
+// Prepare captures flag-changed state and resolves config defaults.
+// Called from PreRunE — this is the only place that touches *cobra.Command.
 func (o *diagnoseOptions) Prepare(cmd *cobra.Command) error {
+	o.controlsSet = cmd.Flags().Changed("controls")
+	o.obsSet = cmd.Flags().Changed("observations")
+	o.formatSet = cmd.Flags().Changed("format")
 	o.resolveConfigDefaults(cmd)
 	return nil
 }
@@ -65,22 +76,21 @@ func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {
 }
 
 // ToConfig converts raw CLI options into a validated Config.
-func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
+// Does not take *cobra.Command — all Cobra state was captured in Prepare.
+func (o *diagnoseOptions) ToConfig(flags cliflags.GlobalFlags, stdout, stderr io.Writer, stdin io.Reader) (Config, error) {
 	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
 		ControlsDir:       o.ControlsDir,
 		ObservationsDir:   o.ObservationsDir,
-		ControlsChanged:   cmd.Flags().Changed("controls"),
-		ObsChanged:        cmd.Flags().Changed("observations"),
+		ControlsChanged:   o.controlsSet,
+		ObsChanged:        o.obsSet,
 		MaxUnsafeDuration: o.MaxUnsafeDuration,
 		NowTime:           o.NowTime,
 		Format:            o.Format,
-		FormatChanged:     cmd.Flags().Changed("format"),
+		FormatChanged:     o.formatSet,
 	})
 	if err != nil {
 		return Config{}, err
 	}
-
-	flags := cliflags.GetGlobalFlags(cmd)
 
 	return Config{
 		ControlsDir:       ec.ControlsDir,
@@ -94,9 +104,9 @@ func (o *diagnoseOptions) ToConfig(cmd *cobra.Command) (Config, error) {
 		Template:          o.Template,
 		ControlID:         strings.TrimSpace(o.ControlID),
 		AssetID:           strings.TrimSpace(o.AssetID),
-		Stdout:            cmd.OutOrStdout(),
-		Stderr:            cmd.ErrOrStderr(),
-		Stdin:             cmd.InOrStdin(),
+		Stdout:            stdout,
+		Stderr:            stderr,
+		Stdin:             stdin,
 		Clock:             ec.Clock,
 		Sanitizer:         flags.GetSanitizer(),
 	}, nil
