@@ -1,6 +1,8 @@
 package cidiff
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -31,13 +33,7 @@ Exit Codes:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			gf := cliflags.GetGlobalFlags(cmd)
-			runner := NewRunner(
-				ports.RealClock{},
-				gf.GetSanitizer(),
-				cmd.OutOrStdout(),
-			)
-			return runner.Run(cmd.Context(), cfg)
+			return newRunner(cmd).Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -50,4 +46,17 @@ Exit Codes:
 	_ = cmd.MarkFlagRequired("baseline")
 
 	return cmd
+}
+
+func newRunner(cmd *cobra.Command) *Runner {
+	gf := cliflags.GetGlobalFlags(cmd)
+	stdout := cmd.OutOrStdout()
+	if !gf.TextOutputEnabled() {
+		stdout = io.Discard
+	}
+	return NewRunner(
+		ports.RealClock{},
+		gf.GetSanitizer(),
+		stdout,
+	)
 }
