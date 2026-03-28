@@ -33,13 +33,16 @@ func NewRunner(r *projctx.Resolver) *Runner {
 func (r *Runner) Run(cfg config) error {
 	root, err := r.Resolver.DetectProjectRoot(cfg.Dir)
 	if err != nil {
-		return ui.WithNextCommand(err, "stave init")
+		return ui.WithNextCommand(
+			fmt.Errorf("project root not found in %s: %w", cfg.Dir, err),
+			"stave init",
+		)
 	}
 
 	scanner := appstatus.NewScanner()
 	state, err := scanner.Scan(root)
 	if err != nil {
-		return fmt.Errorf("scanning project: %w", err)
+		return fmt.Errorf("scan project state at %s: %w", root, err)
 	}
 
 	// Load CLI session info and attach to domain state.
@@ -53,8 +56,15 @@ func (r *Runner) Run(cfg config) error {
 		NextCommand: state.RecommendNext(),
 	}
 
+	return r.report(cfg, result)
+}
+
+func (r *Runner) report(cfg config, res appstatus.Result) error {
 	if cfg.Format.IsJSON() {
-		return jsonutil.WriteIndented(cfg.Stdout, result)
+		return jsonutil.WriteIndented(cfg.Stdout, res)
 	}
-	return appstatus.FormatText(cfg.Stdout, result)
+	if err := appstatus.FormatText(cfg.Stdout, res); err != nil {
+		return fmt.Errorf("render status text: %w", err)
+	}
+	return nil
 }

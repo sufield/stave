@@ -29,10 +29,7 @@ func prepareFirstRunHint(args []string) (bool, string) {
 }
 
 func ensureFirstRunRunHint(message string, args []string) string {
-	if strings.Contains(message, "\nRun:") {
-		return message
-	}
-	if len(args) == 0 {
+	if len(args) == 0 || strings.Contains(message, "\nRun:") {
 		return message
 	}
 	switch args[0] {
@@ -55,13 +52,7 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 		return
 	}
 	_, found, err := projconfig.FindNearestFile(appconfig.ProjectConfigFile)
-	if err != nil {
-		// Resolver construction failed — cannot determine project presence.
-		// Treat as no project and show the hint.
-		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
-		return
-	}
-	if !found {
+	if err != nil || !found {
 		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}
 }
