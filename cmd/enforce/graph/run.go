@@ -52,56 +52,56 @@ type config struct {
 // ControlLoaderFunc loads controls from a directory.
 type ControlLoaderFunc func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 
-// runner orchestrates loading assets and generating coverage graphs.
-type runner struct {
+// Runner orchestrates loading assets and generating coverage graphs.
+type Runner struct {
 	LoadControls  ControlLoaderFunc
 	LoadSnapshots compose.SnapshotLoader
 }
 
-// newRunner initializes a graph runner.
-func newRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *runner {
-	return &runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
+// NewRunner initializes a graph runner.
+func NewRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *Runner {
+	return &Runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
 }
 
-// coverageEdge represents a single control→asset coverage relationship.
-type coverageEdge struct {
+// CoverageEdge represents a single control→asset coverage relationship.
+type CoverageEdge struct {
 	ControlID string `json:"control_id"`
 	AssetID   string `json:"asset_id"`
 }
 
-// coverageResult holds the complete coverage graph data.
-type coverageResult struct {
+// CoverageResult holds the complete coverage graph data.
+type CoverageResult struct {
 	Controls        []string       `json:"controls"`
 	Assets          []string       `json:"assets"`
-	Edges           []coverageEdge `json:"edges"`
+	Edges           []CoverageEdge `json:"edges"`
 	UncoveredAssets []string       `json:"uncovered_assets"`
 }
 
 // Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
-func (r *runner) Run(ctx context.Context, cfg config) error {
+func (r *Runner) Run(ctx context.Context, cfg config) error {
 	if err := dircheck.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
-		return err
+		return fmt.Errorf("invalid controls directory: %w", err)
 	}
 	if err := dircheck.ValidateFlagDir("--observations", cfg.ObservationsDir, "", nil, nil); err != nil {
-		return err
+		return fmt.Errorf("invalid observations directory: %w", err)
 	}
 
 	controls, latestSnapshot, err := r.loadArtifacts(ctx, cfg.ControlsDir, cfg.ObservationsDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("loading artifacts: %w", err)
 	}
 	result := buildResult(controls, latestSnapshot, cfg.PredicateEval)
 	return writeResult(cfg.Stdout, cfg.Format, result, cfg.Sanitizer)
 }
 
-func (r *runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
+func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
 	controls, err := r.LoadControls(ctx, controlsDir)
 	if err != nil {
-		return nil, asset.Snapshot{}, err
+		return nil, asset.Snapshot{}, fmt.Errorf("load controls: %w", err)
 	}
 	snapshots, err := r.LoadSnapshots(ctx, observationsDir)
 	if err != nil {
-		return nil, asset.Snapshot{}, err
+		return nil, asset.Snapshot{}, fmt.Errorf("load snapshots: %w", err)
 	}
 	if len(snapshots) == 0 {
 		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", appeval.ErrNoSnapshots, observationsDir)
@@ -115,11 +115,11 @@ func (r *runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir
 	return controls, latest, nil
 }
 
-func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eval policy.PredicateEval) coverageResult {
+func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eval policy.PredicateEval) CoverageResult {
 	assetMap, assetIDs := coverageAssets(latest.Assets)
 	controlIDs := coverageControlIDs(controls)
-	edges, covered := coverageEdges(controls, assetMap, assetIDs, latest.Identities, eval)
-	return coverageResult{
+	edges, covered := CoverageEdges(controls, assetMap, assetIDs, latest.Identities, eval)
+	return CoverageResult{
 		Controls:        controlIDs,
 		Assets:          assetIDs,
 		Edges:           edges,
@@ -146,14 +146,14 @@ func coverageControlIDs(controls []policy.ControlDefinition) []string {
 	return ids
 }
 
-func coverageEdges(
+func CoverageEdges(
 	controls []policy.ControlDefinition,
 	assetMap map[string]asset.Asset,
 	assetIDs []string,
 	identities []asset.CloudIdentity,
 	eval policy.PredicateEval,
-) ([]coverageEdge, map[string]bool) {
-	edges := make([]coverageEdge, 0)
+) ([]CoverageEdge, map[string]bool) {
+	edges := make([]CoverageEdge, 0, len(assetIDs))
 	coveredAssets := make(map[string]bool, len(assetIDs))
 	if eval == nil {
 		return edges, coveredAssets
@@ -165,7 +165,7 @@ func coverageEdges(
 			if err != nil || !unsafe {
 				continue
 			}
-			edges = append(edges, coverageEdge{ControlID: ctl.ID.String(), AssetID: rid})
+			edges = append(edges, CoverageEdge{ControlID: ctl.ID.String(), AssetID: rid})
 			coveredAssets[rid] = true
 		}
 	}
@@ -173,7 +173,7 @@ func coverageEdges(
 }
 
 func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string {
-	var out []string
+	out := make([]string, 0)
 	for _, rid := range assetIDs {
 		if !coveredAssets[rid] {
 			out = append(out, rid)
@@ -182,7 +182,7 @@ func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string 
 	return out
 }
 
-func writeResult(w io.Writer, format Format, result coverageResult, sanitizer kernel.Sanitizer) error {
+func writeResult(w io.Writer, format Format, result CoverageResult, sanitizer kernel.Sanitizer) error {
 	switch format {
 	case FormatDot:
 		return writeDOT(w, result, sanitizer)
@@ -193,7 +193,7 @@ func writeResult(w io.Writer, format Format, result coverageResult, sanitizer ke
 	}
 }
 
-func writeDOT(w io.Writer, result coverageResult, sanitizer kernel.Sanitizer) error {
+func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
 	uncoveredSet := make(map[string]bool)
 	for _, r := range result.UncoveredAssets {
 		uncoveredSet[r] = true
@@ -246,7 +246,7 @@ func dotQuote(s string) string {
 	return `"` + escaped + `"`
 }
 
-func writeJSON(w io.Writer, result coverageResult, sanitizer kernel.Sanitizer) error {
+func writeJSON(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
 	for i, rid := range result.Assets {
 		result.Assets[i] = sanitizer.ID(rid)
 	}
@@ -255,13 +255,6 @@ func writeJSON(w io.Writer, result coverageResult, sanitizer kernel.Sanitizer) e
 	}
 	for i, rid := range result.UncoveredAssets {
 		result.UncoveredAssets[i] = sanitizer.ID(rid)
-	}
-
-	if result.Edges == nil {
-		result.Edges = []coverageEdge{}
-	}
-	if result.UncoveredAssets == nil {
-		result.UncoveredAssets = []string{}
 	}
 
 	return jsonutil.WriteIndented(w, result)

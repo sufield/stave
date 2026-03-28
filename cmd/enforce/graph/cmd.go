@@ -64,7 +64,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(
+			runner := NewRunner(
 				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 					return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 				},
