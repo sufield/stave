@@ -8,7 +8,6 @@ import (
 	appstatus "github.com/sufield/stave/internal/app/status"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // config defines the parameters for the status check.
@@ -32,9 +31,7 @@ func NewRunner(r *projctx.Resolver) *Runner {
 // Run detects the project root, delegates scanning to the app layer,
 // loads session info, and formats the output.
 func (r *Runner) Run(cfg config) error {
-	dir := fsutil.CleanUserPath(cfg.Dir)
-
-	root, err := r.Resolver.DetectProjectRoot(dir)
+	root, err := r.Resolver.DetectProjectRoot(cfg.Dir)
 	if err != nil {
 		return ui.WithNextCommand(err, "stave init")
 	}
