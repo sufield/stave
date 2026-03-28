@@ -68,6 +68,31 @@ func (r BaselineComparisonResult) HasNewFindings() bool {
 	return len(r.New) > 0
 }
 
+// ToReport builds the serializable comparison report from the diff result.
+func (r BaselineComparisonResult) ToReport(
+	checkedAt time.Time,
+	baselineFile string,
+	evaluationFile string,
+	baselineCount int,
+	currentCount int,
+) BaselineComparison {
+	return BaselineComparison{
+		SchemaVersion: kernel.SchemaBaseline,
+		Kind:          kernel.KindBaselineCheck,
+		CheckedAt:     checkedAt,
+		BaselineFile:  baselineFile,
+		Evaluation:    evaluationFile,
+		Summary: BaselineComparisonSummary{
+			BaselineFindings: baselineCount,
+			CurrentFindings:  currentCount,
+			NewFindings:      len(r.New),
+			ResolvedFindings: len(r.Resolved),
+		},
+		New:      r.New,
+		Resolved: r.Resolved,
+	}
+}
+
 // BaselineEntryFromFinding converts a detailed Finding into a simplified BaselineEntry.
 func BaselineEntryFromFinding(f Finding) BaselineEntry {
 	return BaselineEntry{

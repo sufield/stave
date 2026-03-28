@@ -51,7 +51,7 @@ func NewRunner(version string) *Runner {
 // Run executes the report generation process.
 func (r *Runner) Run(ctx context.Context, req Request) error {
 	inputFile := fsutil.CleanUserPath(req.InputFile)
-	eval, err := artifact.NewLoader().Evaluation(inputFile)
+	eval, err := artifact.NewLoader().Evaluation(ctx, inputFile)
 	if err != nil {
 		return fmt.Errorf("loading evaluation: %w", err)
 	}

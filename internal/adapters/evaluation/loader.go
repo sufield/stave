@@ -1,6 +1,7 @@
 package evaluation
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -48,7 +49,7 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Result, er
 }
 
 // LoadEnvelopeFromFile loads and validates a JSON safety envelope containing evaluation results.
-func (l *Loader) LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, error) {
+func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*safetyenvelope.Evaluation, error) {
 	path = fsutil.CleanUserPath(path)
 
 	data, err := fsutil.ReadFileLimited(path)
@@ -70,7 +71,7 @@ func (l *Loader) LoadEnvelopeFromFile(path string) (*safetyenvelope.Evaluation, 
 }
 
 // LoadBaselineFromFile loads a baseline finding file and ensures findings are sorted deterministically.
-func (l *Loader) LoadBaselineFromFile(path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
+func (l *Loader) LoadBaselineFromFile(_ context.Context, path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
 	path = fsutil.CleanUserPath(path)
 
 	data, err := fsutil.ReadFileLimited(path)
