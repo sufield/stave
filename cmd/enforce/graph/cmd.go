@@ -64,38 +64,24 @@ Exit Codes:
   130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
 		Example: `  stave graph coverage --controls controls/s3 --observations observations`,
 		Args:    cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return opts.Prepare(cmd)
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			format, err := ParseFormat(opts.FormatRaw)
+			cfg, err := opts.ToConfig(cmd)
 			if err != nil {
 				return err
 			}
-
-			gf := cliflags.GetGlobalFlags(cmd)
 			runner := newRunner(
 				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 					return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 				},
 				loadSnapshots,
 			)
-
-			return runner.Run(cmd.Context(), config{
-				ControlsDir:     opts.ControlsDir,
-				ObservationsDir: opts.ObsDir,
-				Format:          format,
-				AllowUnknown:    opts.AllowUnknown,
-				Sanitizer:       gf.GetSanitizer(),
-				Stdout:          cmd.OutOrStdout(),
-			})
+			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
 	opts.BindFlags(cmd)
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("dot", "json"))
 
 	return cmd
 }
