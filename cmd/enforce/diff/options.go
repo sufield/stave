@@ -90,14 +90,12 @@ func parseChangeTypes(raw []string) ([]asset.ChangeType, error) {
 			continue
 		}
 		ct := asset.ChangeType(val)
-		switch ct {
-		case asset.ChangeAdded, asset.ChangeRemoved, asset.ChangeModified:
-			out = append(out, ct)
-		default:
+		if !ct.IsValid() {
 			return nil, &ui.UserError{
 				Err: fmt.Errorf("invalid --change-type %q (supported: added, removed, modified)", s),
 			}
 		}
+		out = append(out, ct)
 	}
 	return out, nil
 }
