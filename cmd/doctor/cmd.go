@@ -130,7 +130,7 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmtValue, err := opts.resolveFormat(cmd)
+			fmtValue, err := opts.resolveFormat()
 			if err != nil {
 				return err
 			}
