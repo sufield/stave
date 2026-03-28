@@ -53,11 +53,14 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	progress := ui.NewRuntime(r.Stdout, r.Stderr)
 	progress.Quiet = r.Quiet
 	stop := progress.BeginProgress("Computing observation delta")
+	defer stop()
+
 	delta, err := r.computeDelta(ctx, cfg.ObservationsDir, cfg.Filter)
-	stop()
 	if err != nil {
 		return err
 	}
+
+	stop()
 
 	delta = output.SanitizeObservationDelta(r.Sanitizer, delta)
 
