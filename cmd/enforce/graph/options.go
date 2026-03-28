@@ -11,32 +11,40 @@ import (
 
 // coverageOptions holds the raw CLI flag values for the coverage subcommand.
 type coverageOptions struct {
-	ControlsDir  string
-	ObsDir       string
-	FormatRaw    string
-	AllowUnknown bool
+	ControlsDir     string
+	ObservationsDir string
+	Format          string
+	AllowUnknown    bool
+}
+
+func defaultCoverageOptions() *coverageOptions {
+	return &coverageOptions{
+		ControlsDir:     cliflags.DefaultControlsDir,
+		ObservationsDir: "observations",
+		Format:          "dot",
+	}
 }
 
 // BindFlags attaches the options to a Cobra command.
 func (o *coverageOptions) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
-	f.StringVarP(&o.ObsDir, "observations", "o", o.ObsDir, "Path to observation snapshots directory")
-	f.StringVarP(&o.FormatRaw, "format", "f", o.FormatRaw, "Output format: dot or json")
+	f.StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory")
+	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: dot or json")
 	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", o.AllowUnknown, cliflags.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("dot", "json"))
 }
 
 // ToConfig validates flags and converts them into a typed runner configuration.
 func (o *coverageOptions) ToConfig(cmd *cobra.Command) (config, error) {
-	format, err := ParseFormat(o.FormatRaw)
+	format, err := ParseFormat(o.Format)
 	if err != nil {
 		return config{}, fmt.Errorf("invalid format: %w", err)
 	}
 	gf := cliflags.GetGlobalFlags(cmd)
 	return config{
 		ControlsDir:     fsutil.CleanUserPath(o.ControlsDir),
-		ObservationsDir: fsutil.CleanUserPath(o.ObsDir),
+		ObservationsDir: fsutil.CleanUserPath(o.ObservationsDir),
 		Format:          format,
 		AllowUnknown:    o.AllowUnknown,
 		Sanitizer:       gf.GetSanitizer(),

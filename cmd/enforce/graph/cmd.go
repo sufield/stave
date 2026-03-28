@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/pkg/alpha/domain/policy"
@@ -23,11 +22,7 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoa
 }
 
 func newCoverageCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
-	opts := &coverageOptions{
-		ControlsDir: cliflags.DefaultControlsDir,
-		ObsDir:      "observations",
-		FormatRaw:   "dot",
-	}
+	opts := defaultCoverageOptions()
 
 	cmd := &cobra.Command{
 		Use:   "coverage",
