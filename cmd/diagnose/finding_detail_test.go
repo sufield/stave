@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/alpha/domain/asset"
@@ -24,7 +23,9 @@ import (
 
 func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
 	p := compose.NewDefaultProvider()
-	runner := NewRunner(p.NewObservationRepo, p.NewControlRepo, clockadp.RealClock{})
+	obsRepo, _ := p.NewObservationRepo()
+	ctlRepo, _ := p.NewControlRepo()
+	runner := NewRunner(obsRepo, ctlRepo, clockadp.RealClock{})
 	cfg := Config{
 		ControlID:         "",
 		AssetID:           "res-1",
@@ -126,15 +127,12 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 		t.Fatal(writeErr)
 	}
 
-	newObsRepo := func() (appcontracts.ObservationRepository, error) {
-		return diagnoseObsRepoStub{snapshots: snapshots}, nil
-	}
-	newCtlRepo := func() (appcontracts.ControlRepository, error) {
-		return diagnoseInvRepoStub{controls: controls}, nil
-	}
-
 	var out bytes.Buffer
-	runner := NewRunner(newObsRepo, newCtlRepo, clockadp.FixedClock(now))
+	runner := NewRunner(
+		diagnoseObsRepoStub{snapshots: snapshots},
+		diagnoseInvRepoStub{controls: controls},
+		clockadp.FixedClock(now),
+	)
 	cfg := Config{
 		ControlsDir:       "ctl",
 		ObservationsDir:   "obs",

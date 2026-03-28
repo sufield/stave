@@ -3,6 +3,8 @@
 package diagnose
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -89,7 +91,15 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := NewRunner(newObsRepo, newCtlRepo, cfg.Clock)
+			obsRepo, err := newObsRepo()
+			if err != nil {
+				return fmt.Errorf("create observation loader: %w", err)
+			}
+			ctlRepo, err := newCtlRepo()
+			if err != nil {
+				return fmt.Errorf("create control loader: %w", err)
+			}
+			runner := NewRunner(obsRepo, ctlRepo, cfg.Clock)
 			return runner.Run(cmd.Context(), cfg)
 		},
 	}
