@@ -1,7 +1,11 @@
 package fix
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
@@ -9,6 +13,12 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
+
+// configDefaults provides project-level defaults for loop options.
+type configDefaults interface {
+	MaxUnsafeDuration() string
+	AllowUnknownInput() bool
+}
 
 // loopOptions holds the raw CLI flag values for the fix-loop command.
 type loopOptions struct {
@@ -37,20 +47,21 @@ func (o *loopOptions) BindFlags(cmd *cobra.Command) {
 
 // Prepare resolves config defaults and normalizes paths. Called from PreRunE.
 func (o *loopOptions) Prepare(cmd *cobra.Command) error {
-	o.resolveConfigDefaults(cmd)
-	o.normalize()
-	return nil
+	o.resolveConfigDefaults(cmdctx.EvaluatorFromCmd(cmd), cmd.Flags())
+	return o.normalize()
 }
 
 // resolveConfigDefaults fills flag values from project config when the user
 // did not set them explicitly on the command line.
-func (o *loopOptions) resolveConfigDefaults(cmd *cobra.Command) {
-	eval := cmdctx.EvaluatorFromCmd(cmd)
-	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafeRaw = eval.MaxUnsafeDuration()
+func (o *loopOptions) resolveConfigDefaults(defaults configDefaults, flags *pflag.FlagSet) {
+	if defaults == nil {
+		return
 	}
-	if !cmd.Flags().Changed("allow-unknown-input") {
-		o.AllowUnknown = eval.AllowUnknownInput()
+	if !flags.Changed("max-unsafe") {
+		o.MaxUnsafeRaw = defaults.MaxUnsafeDuration()
+	}
+	if !flags.Changed("allow-unknown-input") {
+		o.AllowUnknown = defaults.AllowUnknownInput()
 	}
 }
 
@@ -85,10 +96,17 @@ func (o *loopOptions) ToRequest(cmd *cobra.Command) (loopResolved, error) {
 	}, nil
 }
 
-// normalize cleans user-supplied paths.
-func (o *loopOptions) normalize() {
+// normalize cleans user-supplied paths and validates the output directory.
+func (o *loopOptions) normalize() error {
 	o.BeforeDir = fsutil.CleanUserPath(o.BeforeDir)
 	o.AfterDir = fsutil.CleanUserPath(o.AfterDir)
 	o.ControlsDir = fsutil.CleanUserPath(o.ControlsDir)
 	o.OutDir = fsutil.CleanUserPath(o.OutDir)
+
+	if o.OutDir != "" {
+		if err := os.MkdirAll(o.OutDir, 0o700); err != nil {
+			return fmt.Errorf("create output directory %s: %w", o.OutDir, err)
+		}
+	}
+	return nil
 }
