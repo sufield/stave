@@ -1,20 +1,27 @@
 package cidiff
 
 import (
-	"io"
-
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/domain"
+	"github.com/sufield/stave/internal/core/usecases"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/pkg/alpha/domain/ports"
+	formatter "github.com/sufield/stave/internal/ui"
 )
 
+// Deps groups the infrastructure implementations for the ci diff command.
+type Deps struct {
+	UseCaseDeps usecases.CIDiffDeps
+}
+
 // NewCmd constructs the diff command.
-func NewCmd() *cobra.Command {
-	cfg := Config{
-		FailOnNew: true,
-	}
+func NewCmd(deps Deps) *cobra.Command {
+	var (
+		currentPath  string
+		baselinePath string
+		failOnNew    = true
+	)
 
 	cmd := &cobra.Command{
 		Use:   "diff",
@@ -33,30 +40,35 @@ Exit Codes:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return newRunner(cmd).Run(cmd.Context(), cfg)
+			req := domain.CIDiffRequest{
+				CurrentPath:  currentPath,
+				BaselinePath: baselinePath,
+				FailOnNew:    failOnNew,
+			}
+
+			resp, err := usecases.CIDiff(cmd.Context(), req, deps.UseCaseDeps)
+			if err != nil {
+				return err
+			}
+
+			if renderErr := formatter.RenderJSON(cmd.OutOrStdout(), resp); renderErr != nil {
+				return renderErr
+			}
+
+			if req.FailOnNew && resp.HasNew {
+				return ui.ErrViolationsFound
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&cfg.CurrentPath, "current", "", "Path to current evaluation JSON (required)")
-	cmd.Flags().StringVar(&cfg.BaselinePath, "baseline", "", "Path to baseline evaluation JSON (required)")
-	cmd.Flags().BoolVar(&cfg.FailOnNew, "fail-on-new", cfg.FailOnNew, "Return exit code 3 when new findings are detected")
+	cmd.Flags().StringVar(&currentPath, "current", "", "Path to current evaluation JSON (required)")
+	cmd.Flags().StringVar(&baselinePath, "baseline", "", "Path to baseline evaluation JSON (required)")
+	cmd.Flags().BoolVar(&failOnNew, "fail-on-new", failOnNew, "Return exit code 3 when new findings are detected")
 	_ = cmd.MarkFlagRequired("current")
 	_ = cmd.MarkFlagRequired("baseline")
 
 	return cmd
-}
-
-func newRunner(cmd *cobra.Command) *Runner {
-	gf := cliflags.GetGlobalFlags(cmd)
-	stdout := cmd.OutOrStdout()
-	if !gf.TextOutputEnabled() {
-		stdout = io.Discard
-	}
-	return NewRunner(
-		ports.RealClock{},
-		gf.GetSanitizer(),
-		stdout,
-	)
 }

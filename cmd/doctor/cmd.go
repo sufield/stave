@@ -10,91 +10,22 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/doctor"
+	"github.com/sufield/stave/internal/core/domain"
+	"github.com/sufield/stave/internal/core/usecases"
 	"github.com/sufield/stave/internal/metadata"
-	staveversion "github.com/sufield/stave/internal/version"
 )
 
 // ErrDoctorRequiredIssues is returned when the doctor detects critical environment issues.
 // It wraps ErrDiagnosticsFound so ExitCode maps it to exit 3 (violations/diagnostics).
 var ErrDoctorRequiredIssues = fmt.Errorf("doctor found required issues: %w", ui.ErrDiagnosticsFound)
 
-// config holds the parameters for the environment check.
-// Cwd and BinaryPath are always populated by the caller — the runner
-// never calls the OS directly.
-type config struct {
-	Cwd        string
-	BinaryPath string
-	Format     ui.OutputFormat
-	Stdout     io.Writer
+// Deps groups the infrastructure implementations for the doctor command.
+type Deps struct {
+	UseCaseDeps usecases.DoctorDeps
 }
-
-// runner handles the execution of environment readiness checks.
-type runner struct {
-	Version string
-}
-
-// newRunner initializes a doctor runner with the given version string.
-func newRunner(version string) *runner {
-	return &runner{Version: version}
-}
-
-// Run executes the doctor checks and reports the results.
-func (r *runner) Run(cfg config) error {
-	checks, ok := doctor.Run(&doctor.Context{
-		Cwd:          cfg.Cwd,
-		BinaryPath:   cfg.BinaryPath,
-		StaveVersion: r.Version,
-	})
-
-	if err := r.report(cfg, checks, ok); err != nil {
-		return err
-	}
-
-	if !ok {
-		return ErrDoctorRequiredIssues
-	}
-	return nil
-}
-
-func (r *runner) report(cfg config, checks []doctor.Check, ok bool) error {
-	if cfg.Format.IsJSON() {
-		return r.reportJSON(cfg.Stdout, checks, ok)
-	}
-	return r.reportText(cfg.Stdout, checks)
-}
-
-func (r *runner) reportJSON(w io.Writer, checks []doctor.Check, ok bool) error {
-	payload := struct {
-		Ready  bool           `json:"ready"`
-		Checks []doctor.Check `json:"checks"`
-	}{
-		Ready:  ok,
-		Checks: checks,
-	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(payload)
-}
-
-func (r *runner) reportText(w io.Writer, checks []doctor.Check) error {
-	for _, c := range checks {
-		if _, err := fmt.Fprintf(w, "[%s] %s: %s\n", c.Status, c.Name, c.Message); err != nil {
-			return err
-		}
-		if c.Fix != "" {
-			if _, err := fmt.Fprintf(w, "      Fix: %s\n", c.Fix); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// --- CLI bridge ---
 
 // NewCmd constructs the doctor command.
-func NewCmd() *cobra.Command {
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{
 		Format: "text",
 	}
@@ -135,13 +66,24 @@ Exit Codes:
 				return err
 			}
 
-			cwd, err := os.Getwd()
-			if err != nil {
-				return fmt.Errorf("resolve working directory: %w", err)
+			cwd, cwdErr := os.Getwd()
+			if cwdErr != nil {
+				return fmt.Errorf("resolve working directory: %w", cwdErr)
 			}
-			exe, err := os.Executable()
-			if err != nil {
-				return fmt.Errorf("resolve executable path: %w", err)
+			exe, exeErr := os.Executable()
+			if exeErr != nil {
+				return fmt.Errorf("resolve executable path: %w", exeErr)
+			}
+
+			req := domain.DoctorRequest{
+				Cwd:        cwd,
+				BinaryPath: exe,
+				Format:     string(fmtValue),
+			}
+
+			resp, ucErr := usecases.Doctor(cmd.Context(), req, deps.UseCaseDeps)
+			if ucErr != nil {
+				return ucErr
 			}
 
 			stdout := cmd.OutOrStdout()
@@ -149,12 +91,20 @@ Exit Codes:
 				stdout = io.Discard
 			}
 
-			return newRunner(staveversion.String).Run(config{
-				Cwd:        cwd,
-				BinaryPath: exe,
-				Format:     fmtValue,
-				Stdout:     stdout,
-			})
+			if fmtValue.IsJSON() {
+				if renderErr := reportJSON(stdout, resp); renderErr != nil {
+					return renderErr
+				}
+			} else {
+				if renderErr := reportText(stdout, resp); renderErr != nil {
+					return renderErr
+				}
+			}
+
+			if !resp.AllPassed {
+				return ErrDoctorRequiredIssues
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -163,4 +113,31 @@ Exit Codes:
 	opts.BindFlags(cmd)
 
 	return cmd
+}
+
+func reportJSON(w io.Writer, resp domain.DoctorResponse) error {
+	payload := struct {
+		Ready  bool                 `json:"ready"`
+		Checks []domain.DoctorCheck `json:"checks"`
+	}{
+		Ready:  resp.AllPassed,
+		Checks: resp.Checks,
+	}
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(payload)
+}
+
+func reportText(w io.Writer, resp domain.DoctorResponse) error {
+	for _, c := range resp.Checks {
+		if _, err := fmt.Fprintf(w, "[%s] %s: %s\n", c.Status, c.Name, c.Message); err != nil {
+			return err
+		}
+		if c.Fix != "" {
+			if _, err := fmt.Fprintf(w, "      Fix: %s\n", c.Fix); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

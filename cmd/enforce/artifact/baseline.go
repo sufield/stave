@@ -15,12 +15,6 @@ type BaselineComparisonResult struct {
 	Comparison evaluation.BaselineComparisonResult
 }
 
-// HasNewViolations reports whether the comparison found new findings
-// not present in the baseline.
-func (r BaselineComparisonResult) HasNewViolations() bool {
-	return len(r.Comparison.New) > 0
-}
-
 // CompareAgainstBaseline transforms current findings into baseline entries
 // and executes a domain-level comparison.
 //

@@ -20,18 +20,18 @@ func NewGenerateCmd() *cobra.Command { return generate.NewCmd() }
 func NewDiffCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	return diff.NewCmd(loadSnapshots)
 }
-func NewFixCmd(newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
-	return fix.NewFixCmd(newCELEvaluator)
+func NewFixCmd(deps fix.FixDeps) *cobra.Command {
+	return fix.NewFixCmd(deps)
 }
 func NewFixLoopCmd(deps fix.FixLoopDeps) *cobra.Command {
 	return fix.NewFixLoopCmd(deps)
 }
-func NewGateCmd(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
-	return gate.NewCmd(loadAssets, newCELEvaluator)
+func NewGateCmd(deps gate.Deps) *cobra.Command {
+	return gate.NewCmd(deps)
 }
-func NewCiDiffCmd() *cobra.Command   { return cidiff.NewCmd() }
-func NewBaselineCmd() *cobra.Command { return baseline.NewCmd() }
-func NewStatusCmd() *cobra.Command   { return status.NewCmd() }
+func NewCiDiffCmd(deps cidiff.Deps) *cobra.Command     { return cidiff.NewCmd(deps) }
+func NewBaselineCmd(deps baseline.Deps) *cobra.Command { return baseline.NewCmd(deps) }
+func NewStatusCmd() *cobra.Command                     { return status.NewCmd() }
 func NewGraphCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	return graph.NewCmd(newCtlRepo, loadSnapshots)
 }
