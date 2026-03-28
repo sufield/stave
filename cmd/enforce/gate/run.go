@@ -85,14 +85,11 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 		return fmt.Errorf("unsupported gate policy: %q", cfg.Policy)
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("gate execution: %w", err)
 	}
 
 	if cfg.Sanitizer != nil {
-		res.EvaluationPath = cfg.Sanitizer.Path(res.EvaluationPath)
-		res.BaselinePath = cfg.Sanitizer.Path(res.BaselinePath)
-		res.ControlsPath = cfg.Sanitizer.Path(res.ControlsPath)
-		res.ObservationsPath = cfg.Sanitizer.Path(res.ObservationsPath)
+		res.sanitize(cfg.Sanitizer)
 	}
 
 	if err := r.report(cfg, res); err != nil {
@@ -102,6 +99,21 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 		return ui.ErrViolationsFound
 	}
 	return nil
+}
+
+func newBaseResult(cfg config) result {
+	return result{
+		SchemaVersion: kernel.SchemaGate,
+		Kind:          kernel.KindGateCheck,
+		CheckedAt:     cfg.Clock.Now().UTC(),
+	}
+}
+
+func (res *result) sanitize(s kernel.Sanitizer) {
+	res.EvaluationPath = s.Path(res.EvaluationPath)
+	res.BaselinePath = s.Path(res.BaselinePath)
+	res.ControlsPath = s.Path(res.ControlsPath)
+	res.ObservationsPath = s.Path(res.ObservationsPath)
 }
 
 func (r *runner) runPolicyAny(ctx context.Context, cfg config) (result, error) {
@@ -115,24 +127,22 @@ func (r *runner) runPolicyAny(ctx context.Context, cfg config) (result, error) {
 	if pass {
 		reason = "no current findings"
 	}
-	return result{
-		SchemaVersion:     kernel.SchemaGate,
-		Kind:              kernel.KindGateCheck,
-		CheckedAt:         cfg.Clock.Now().UTC(),
-		Policy:            appconfig.GatePolicyAny,
-		Passed:            pass,
-		Reason:            reason,
-		EvaluationPath:    cfg.InPath,
-		CurrentViolations: count,
-	}, nil
+	res := newBaseResult(cfg)
+	res.Policy = appconfig.GatePolicyAny
+	res.Passed = pass
+	res.Reason = reason
+	res.EvaluationPath = cfg.InPath
+	res.CurrentViolations = count
+	return res, nil
 }
 
 func (r *runner) runPolicyNew(ctx context.Context, cfg config) (result, error) {
-	eval, err := artifact.NewLoader().Evaluation(ctx, cfg.InPath)
+	loader := artifact.NewLoader()
+	eval, err := loader.Evaluation(ctx, cfg.InPath)
 	if err != nil {
 		return result{}, fmt.Errorf("loading evaluation: %w", err)
 	}
-	base, err := artifact.NewLoader().Baseline(ctx, cfg.BaselinePath, kernel.KindBaseline)
+	base, err := loader.Baseline(ctx, cfg.BaselinePath, kernel.KindBaseline)
 	if err != nil {
 		return result{}, fmt.Errorf("loading baseline: %w", err)
 	}
@@ -142,24 +152,21 @@ func (r *runner) runPolicyNew(ctx context.Context, cfg config) (result, error) {
 	if pass {
 		reason = "no new findings compared to baseline"
 	}
-	return result{
-		SchemaVersion:     kernel.SchemaGate,
-		Kind:              kernel.KindGateCheck,
-		CheckedAt:         cfg.Clock.Now().UTC(),
-		Policy:            appconfig.GatePolicyNew,
-		Passed:            pass,
-		Reason:            reason,
-		EvaluationPath:    cfg.InPath,
-		BaselinePath:      cfg.BaselinePath,
-		CurrentViolations: len(bc.Current),
-		NewViolations:     len(bc.Comparison.New),
-	}, nil
+	res := newBaseResult(cfg)
+	res.Policy = appconfig.GatePolicyNew
+	res.Passed = pass
+	res.Reason = reason
+	res.EvaluationPath = cfg.InPath
+	res.BaselinePath = cfg.BaselinePath
+	res.CurrentViolations = len(bc.Current)
+	res.NewViolations = len(bc.Comparison.New)
+	return res, nil
 }
 
 func (r *runner) runPolicyOverdue(ctx context.Context, cfg config) (result, error) {
 	loaded, err := r.LoadAssets(ctx, cfg.ObservationsDir, cfg.ControlsDir)
 	if err != nil {
-		return result{}, err
+		return result{}, fmt.Errorf("loading assets: %w", err)
 	}
 	celEval, err := r.NewCELEvaluator()
 	if err != nil {
@@ -180,17 +187,15 @@ func (r *runner) runPolicyOverdue(ctx context.Context, cfg config) (result, erro
 	if pass {
 		reason = "no overdue upcoming actions"
 	}
-	return result{
-		SchemaVersion:    kernel.SchemaGate,
-		Kind:             kernel.KindGateCheck,
-		CheckedAt:        now,
-		Policy:           appconfig.GatePolicyOverdue,
-		Passed:           pass,
-		Reason:           reason,
-		ControlsPath:     cfg.ControlsDir,
-		ObservationsPath: cfg.ObservationsDir,
-		OverdueUpcoming:  overdueCount,
-	}, nil
+	res := newBaseResult(cfg)
+	res.CheckedAt = now
+	res.Policy = appconfig.GatePolicyOverdue
+	res.Passed = pass
+	res.Reason = reason
+	res.ControlsPath = cfg.ControlsDir
+	res.ObservationsPath = cfg.ObservationsDir
+	res.OverdueUpcoming = overdueCount
+	return res, nil
 }
 
 func (r *runner) report(cfg config, res result) error {
