@@ -5,7 +5,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
 // loopOptions holds the raw CLI flag values for the fix-loop command.
@@ -50,6 +52,37 @@ func (o *loopOptions) resolveConfigDefaults(cmd *cobra.Command) {
 	if !cmd.Flags().Changed("allow-unknown-input") {
 		o.AllowUnknown = eval.AllowUnknownInput()
 	}
+}
+
+// loopResolved holds the parsed runtime values from flag resolution.
+type loopResolved struct {
+	Request LoopRequest
+	Clock   ports.Clock
+}
+
+// ToRequest resolves raw flag values into a validated LoopRequest and Clock.
+func (o *loopOptions) ToRequest(cmd *cobra.Command) (loopResolved, error) {
+	maxUnsafe, err := cliflags.ParseDurationFlag(o.MaxUnsafeRaw, "--max-unsafe")
+	if err != nil {
+		return loopResolved{}, err
+	}
+	clock, err := compose.ResolveClock(o.NowRaw)
+	if err != nil {
+		return loopResolved{}, err
+	}
+	return loopResolved{
+		Request: LoopRequest{
+			BeforeDir:         o.BeforeDir,
+			AfterDir:          o.AfterDir,
+			ControlsDir:       o.ControlsDir,
+			OutDir:            o.OutDir,
+			MaxUnsafeDuration: maxUnsafe,
+			AllowUnknown:      o.AllowUnknown,
+			Stdout:            cmd.OutOrStdout(),
+			Stderr:            cmd.ErrOrStderr(),
+		},
+		Clock: clock,
+	}, nil
 }
 
 // normalize cleans user-supplied paths.

@@ -23,8 +23,8 @@ func NewDiffCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
 func NewFixCmd(newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	return fix.NewFixCmd(newCELEvaluator)
 }
-func NewFixLoopCmd(newCELEvaluator compose.CELEvaluatorFactory, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory) *cobra.Command {
-	return fix.NewFixLoopCmd(newCELEvaluator, newCtlRepo, newObsRepo)
+func NewFixLoopCmd(deps fix.FixLoopDeps) *cobra.Command {
+	return fix.NewFixLoopCmd(deps)
 }
 func NewGateCmd(loadAssets compose.AssetLoaderFunc, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	return gate.NewCmd(loadAssets, newCELEvaluator)

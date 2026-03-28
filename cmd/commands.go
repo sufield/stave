@@ -14,6 +14,7 @@ import (
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
+	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -122,7 +123,11 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
 func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	ciCmd.AddCommand(enforce.NewBaselineCmd())
 	ciCmd.AddCommand(enforce.NewGateCmd(p.LoadAssets, p.NewCELEvaluator))
-	ciCmd.AddCommand(enforce.NewFixLoopCmd(p.NewCELEvaluator, p.NewControlRepo, p.NewObservationRepo))
+	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.FixLoopDeps{
+		NewCELEvaluator: p.NewCELEvaluator,
+		NewCtlRepo:      p.NewControlRepo,
+		NewObsRepo:      p.NewObservationRepo,
+	}))
 	ciCmd.AddCommand(enforce.NewCiDiffCmd())
 	ciCmd.AddCommand(enforce.NewFixCmd(p.NewCELEvaluator))
 }

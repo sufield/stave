@@ -10,6 +10,13 @@ import (
 	"github.com/sufield/stave/pkg/alpha/domain/ports"
 )
 
+// FixLoopDeps groups the factory functions required by the fix-loop command.
+type FixLoopDeps struct {
+	NewCELEvaluator compose.CELEvaluatorFactory
+	NewCtlRepo      compose.CtlRepoFactory
+	NewObsRepo      compose.ObsRepoFactory
+}
+
 // NewFixCmd constructs the fix command.
 func NewFixCmd(newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
 	opts := &fixOptions{}
@@ -63,7 +70,7 @@ Exit Codes:
 }
 
 // NewFixLoopCmd constructs the fix-loop command.
-func NewFixLoopCmd(newCELEvaluator compose.CELEvaluatorFactory, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory) *cobra.Command {
+func NewFixLoopCmd(deps FixLoopDeps) *cobra.Command {
 	opts := &loopOptions{
 		ControlsDir: "controls",
 	}
@@ -101,40 +108,15 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			maxUnsafe, err := cliflags.ParseDurationFlag(opts.MaxUnsafeRaw, "--max-unsafe")
+			resolved, err := opts.ToRequest(cmd)
 			if err != nil {
 				return err
 			}
-			clock, err := compose.ResolveClock(opts.NowRaw)
+			runner, err := newLoopRunner(cmd, deps, resolved.Clock)
 			if err != nil {
 				return err
 			}
-
-			gf := cliflags.GetGlobalFlags(cmd)
-			celEval, celErr := newCELEvaluator()
-			if celErr != nil {
-				return celErr
-			}
-			runner := NewRunner(celEval, clock)
-			runner.NewCtlRepo = newCtlRepo
-			runner.NewObsRepo = newObsRepo
-			runner.Sanitizer = gf.GetSanitizer()
-			runner.FileOptions = fileout.FileOptions{
-				Overwrite:     gf.Force,
-				AllowSymlinks: gf.AllowSymlinkOut,
-				DirPerms:      0o700,
-			}
-
-			return runner.Loop(cmd.Context(), LoopRequest{
-				BeforeDir:         opts.BeforeDir,
-				AfterDir:          opts.AfterDir,
-				ControlsDir:       opts.ControlsDir,
-				OutDir:            opts.OutDir,
-				MaxUnsafeDuration: maxUnsafe,
-				AllowUnknown:      opts.AllowUnknown,
-				Stdout:            cmd.OutOrStdout(),
-				Stderr:            cmd.ErrOrStderr(),
-			})
+			return runner.Loop(cmd.Context(), resolved.Request)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -143,4 +125,22 @@ Exit Codes:
 	opts.BindFlags(cmd)
 
 	return cmd
+}
+
+func newLoopRunner(cmd *cobra.Command, deps FixLoopDeps, clock ports.Clock) (*Runner, error) {
+	gf := cliflags.GetGlobalFlags(cmd)
+	celEval, err := deps.NewCELEvaluator()
+	if err != nil {
+		return nil, err
+	}
+	runner := NewRunner(celEval, clock)
+	runner.NewCtlRepo = deps.NewCtlRepo
+	runner.NewObsRepo = deps.NewObsRepo
+	runner.Sanitizer = gf.GetSanitizer()
+	runner.FileOptions = fileout.FileOptions{
+		Overwrite:     gf.Force,
+		AllowSymlinks: gf.AllowSymlinkOut,
+		DirPerms:      0o700,
+	}
+	return runner, nil
 }
