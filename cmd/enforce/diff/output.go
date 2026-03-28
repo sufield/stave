@@ -1,6 +1,7 @@
 package diff
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"time"
@@ -23,12 +24,14 @@ func writeOutput(w io.Writer, format ui.OutputFormat, quiet bool, out asset.Obse
 
 // renderText generates a human-readable summary of asset changes.
 func renderText(w io.Writer, out asset.ObservationDelta) error {
+	bw := bufio.NewWriter(w)
+
 	var firstErr error
 	printf := func(format string, args ...any) {
 		if firstErr != nil {
 			return
 		}
-		_, firstErr = fmt.Fprintf(w, format, args...)
+		_, firstErr = fmt.Fprintf(bw, format, args...)
 	}
 
 	printf("Observation delta: %s -> %s\n",
@@ -46,10 +49,16 @@ func renderText(w io.Writer, out asset.ObservationDelta) error {
 	}
 
 	for _, c := range out.Changes {
+		if firstErr != nil {
+			break
+		}
 		printf("- %s [%s]\n", c.AssetID, c.ChangeType)
 		for _, p := range c.PropertyChanges {
 			printf("  * %s: %v -> %v\n", p.Path, p.From, p.To)
 		}
+	}
+	if err := bw.Flush(); err != nil && firstErr == nil {
+		return err
 	}
 	return firstErr
 }
