@@ -20,11 +20,12 @@ import (
 var ErrDoctorRequiredIssues = fmt.Errorf("doctor found required issues: %w", ui.ErrDiagnosticsFound)
 
 // config holds the parameters for the environment check.
+// Cwd and BinaryPath are always populated by the caller — the runner
+// never calls the OS directly.
 type config struct {
 	Cwd        string
 	BinaryPath string
 	Format     ui.OutputFormat
-	Quiet      bool
 	Stdout     io.Writer
 }
 
@@ -33,43 +34,18 @@ type runner struct {
 	Version string
 }
 
-// newRunner initializes a doctor runner.
-func newRunner() *runner {
-	return &runner{
-		Version: staveversion.String,
-	}
+// newRunner initializes a doctor runner with the given version string.
+func newRunner(version string) *runner {
+	return &runner{Version: version}
 }
 
-// Run executes the doctor checks and reports the results based on the config.
-// If Cwd or BinaryPath are empty, they are resolved from the current process.
+// Run executes the doctor checks and reports the results.
 func (r *runner) Run(cfg config) error {
-	if cfg.Cwd == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("resolve working directory: %w", err)
-		}
-		cfg.Cwd = cwd
-	}
-	if cfg.BinaryPath == "" {
-		exe, err := os.Executable()
-		if err != nil {
-			return fmt.Errorf("resolve executable path: %w", err)
-		}
-		cfg.BinaryPath = exe
-	}
-
 	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:          cfg.Cwd,
 		BinaryPath:   cfg.BinaryPath,
 		StaveVersion: r.Version,
 	})
-
-	if cfg.Quiet {
-		if !ok {
-			return ErrDoctorRequiredIssues
-		}
-		return nil
-	}
 
 	if err := r.report(cfg, checks, ok); err != nil {
 		return err
@@ -159,10 +135,25 @@ Exit Codes:
 				return err
 			}
 
-			return newRunner().Run(config{
-				Format: fmtValue,
-				Quiet:  cliflags.GetGlobalFlags(cmd).Quiet,
-				Stdout: cmd.OutOrStdout(),
+			cwd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("resolve working directory: %w", err)
+			}
+			exe, err := os.Executable()
+			if err != nil {
+				return fmt.Errorf("resolve executable path: %w", err)
+			}
+
+			stdout := cmd.OutOrStdout()
+			if cliflags.GetGlobalFlags(cmd).Quiet {
+				stdout = io.Discard
+			}
+
+			return newRunner(staveversion.String).Run(config{
+				Cwd:        cwd,
+				BinaryPath: exe,
+				Format:     fmtValue,
+				Stdout:     stdout,
 			})
 		},
 		SilenceUsage:  true,
