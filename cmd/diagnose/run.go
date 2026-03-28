@@ -188,9 +188,8 @@ func (r *Runner) buildAppConfig(cfg Config, maxDuration time.Duration) (appdiagn
 
 func (r *Runner) newPresenter(cfg Config) *Presenter {
 	return &Presenter{
-		Stdout:   cfg.Stdout,
+		W:        compose.ResolveStdout(cfg.Stdout, cfg.Quiet, cfg.Format),
 		Format:   cfg.Format,
-		Quiet:    cfg.Quiet,
 		Template: cfg.Template,
 	}
 }

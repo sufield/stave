@@ -57,7 +57,7 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{Stdout: &buf, Format: ui.OutputFormatJSON}
+	p := &Presenter{W: &buf, Format: ui.OutputFormatJSON}
 	if err := p.RenderDetail(detail); err != nil {
 		t.Fatalf("RenderDetail() error = %v", err)
 	}
