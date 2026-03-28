@@ -65,13 +65,15 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	currentPath := fsutil.CleanUserPath(cfg.CurrentPath)
 	baselinePath := fsutil.CleanUserPath(cfg.BaselinePath)
 
-	currentEval, err := artifact.NewLoader().Evaluation(ctx, currentPath)
+	loader := artifact.NewLoader()
+
+	currentEval, err := loader.Evaluation(ctx, currentPath)
 	if err != nil {
 		return fmt.Errorf("load current evaluation: %w", err)
 	}
 	currentEntries := remediation.BaselineEntriesFromFindings(currentEval.Findings)
 
-	baselineEval, err := artifact.NewLoader().Evaluation(ctx, baselinePath)
+	baselineEval, err := loader.Evaluation(ctx, baselinePath)
 	if err != nil {
 		return fmt.Errorf("load baseline evaluation: %w", err)
 	}
@@ -81,28 +83,8 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	baselineEntries = output.SanitizeBaselineEntries(r.Sanitizer, baselineEntries)
 
 	comparison := evaluation.CompareBaseline(baselineEntries, currentEntries)
-	report := DiffReport{
-		SchemaVersion:      kernel.SchemaCIDiff,
-		Kind:               kernel.KindCIDiff,
-		ComparedAt:         r.Clock.Now().UTC(),
-		CurrentEvaluation:  sanitizePath(r.Sanitizer, currentPath),
-		BaselineEvaluation: sanitizePath(r.Sanitizer, baselinePath),
-		Summary: DiffSummary{
-			BaselineFindings: len(baselineEntries),
-			CurrentFindings:  len(currentEntries),
-			NewFindings:      len(comparison.New),
-			ResolvedFindings: len(comparison.Resolved),
-		},
-		New:      comparison.New,
-		Resolved: comparison.Resolved,
-	}
-
-	if report.New == nil {
-		report.New = []evaluation.BaselineEntry{}
-	}
-	if report.Resolved == nil {
-		report.Resolved = []evaluation.BaselineEntry{}
-	}
+	report := r.newDiffReport(comparison, currentPath, baselinePath,
+		len(currentEntries), len(baselineEntries))
 
 	if err := jsonutil.WriteIndented(r.Stdout, report); err != nil {
 		return fmt.Errorf("write diff output: %w", err)
@@ -112,6 +94,30 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return ui.ErrViolationsFound
 	}
 	return nil
+}
+
+func (r *Runner) newDiffReport(
+	comparison evaluation.BaselineComparisonResult,
+	currentPath string,
+	baselinePath string,
+	currentCount int,
+	baselineCount int,
+) DiffReport {
+	return DiffReport{
+		SchemaVersion:      kernel.SchemaCIDiff,
+		Kind:               kernel.KindCIDiff,
+		ComparedAt:         r.Clock.Now().UTC(),
+		CurrentEvaluation:  sanitizePath(r.Sanitizer, currentPath),
+		BaselineEvaluation: sanitizePath(r.Sanitizer, baselinePath),
+		Summary: DiffSummary{
+			BaselineFindings: baselineCount,
+			CurrentFindings:  currentCount,
+			NewFindings:      len(comparison.New),
+			ResolvedFindings: len(comparison.Resolved),
+		},
+		New:      comparison.New,
+		Resolved: comparison.Resolved,
+	}
 }
 
 func sanitizePath(s kernel.Sanitizer, p string) string {

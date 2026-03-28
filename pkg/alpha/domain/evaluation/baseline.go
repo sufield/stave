@@ -117,7 +117,8 @@ func CompareBaseline(baseEntries, curEntries []BaselineEntry) BaselineComparison
 		curMap[c.Key()] = c
 	}
 
-	var newFindings, resolvedFindings []BaselineEntry
+	newFindings := make([]BaselineEntry, 0)
+	resolvedFindings := make([]BaselineEntry, 0)
 
 	// Find items in current that are not in base (New)
 	for key, entry := range curMap {
