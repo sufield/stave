@@ -81,7 +81,7 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return newRunner(cmd).Save(cfg)
+			return newRunner(cmd).Save(cmd.Context(), cfg)
 		},
 	}
 
@@ -122,7 +122,7 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return newRunner(cmd).Check(cfg)
+			return newRunner(cmd).Check(cmd.Context(), cfg)
 		},
 	}
 
