@@ -119,15 +119,15 @@ func validateFilePath(path, flag string) error {
 	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s not found: %s", flag, path)
+			return fmt.Errorf("%s not found at path %q", flag, path)
 		}
 		if os.IsPermission(err) {
-			return fmt.Errorf("%s not readable: %s (check file permissions)", flag, path)
+			return fmt.Errorf("%s not readable at path %q (check file permissions)", flag, path)
 		}
-		return fmt.Errorf("cannot access %s %q: %w", flag, path, err)
+		return fmt.Errorf("cannot access %s at path %q: %w", flag, path, err)
 	}
 	if fi.IsDir() {
-		return fmt.Errorf("%s must be a file, got directory: %s", flag, path)
+		return fmt.Errorf("%s must be a file, got directory %q", flag, path)
 	}
 	return nil
 }
