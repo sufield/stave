@@ -28,7 +28,7 @@ var sentinelTemplates = map[int]errorTemplate{
     ui.ExitSecurity: {
         Code:   ui.CodeSecurityAuditFindings,
         Title:  "Security audit gate failed",
-        Action: "Review the generated security-audit report and remediate findings at or above --fail-on.",
+        Action: "Review the generated security audit report and remediate findings at or above --fail-on.",
     },
     ui.ExitViolations: {
         Code:   ui.CodeViolationsFound,
