@@ -1,0 +1,43 @@
+package hipaa
+
+import (
+	"fmt"
+
+	"github.com/sufield/stave/internal/core/asset"
+)
+
+// governance001 checks that ACLs are disabled via BucketOwnerEnforced ownership.
+type governance001 struct {
+	Definition
+}
+
+func init() {
+	GovernanceRegistry.MustRegister(&governance001{
+		Definition: Build(
+			WithID("GOVERNANCE.001"),
+			WithDescription("Bucket ACLs must be disabled (ownership_controls == BucketOwnerEnforced)"),
+			WithSeverity(High),
+			WithComplianceProfiles("hipaa", "cis-s3"),
+			WithComplianceRef("hipaa", "§164.312(a)(1)"),
+		),
+	})
+}
+
+// Evaluate checks that ownership_controls is BucketOwnerEnforced.
+func (inv *governance001) Evaluate(snap asset.Snapshot) Result {
+	for _, a := range snap.Assets {
+		if !isS3Bucket(a) {
+			continue
+		}
+
+		ownership := toString(storageMap(a)["ownership_controls"])
+		if ownership != "BucketOwnerEnforced" {
+			return inv.FailResult(
+				fmt.Sprintf("Bucket %s: ACLs are not disabled (ownership_controls=%q). ACL grants can bypass bucket policy and create unauditable access paths", a.ID, ownership),
+				"Set Object Ownership to BucketOwnerEnforced to disable all ACLs. Known exception: AWS Backup restore jobs require ACLs enabled on the destination bucket — document as an acknowledged exception if this bucket is an AWS Backup restore target.",
+			)
+		}
+	}
+
+	return inv.PassResult()
+}

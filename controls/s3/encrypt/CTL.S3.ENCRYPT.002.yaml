@@ -7,6 +7,7 @@ description: >
 domain: exposure
 severity: high
 compliance:
+  hipaa: "164.312(e)(2)(ii)"
   cis_aws_v1.4.0: "2.1.2"
   pci_dss_v3.2.1: "4.1"
   soc2: "CC6.1"
