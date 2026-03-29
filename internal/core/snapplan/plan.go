@@ -1,4 +1,4 @@
-// Package snapshot provides retention planning for observation snapshots.
+// Package snapplan provides retention planning for observation snapshots.
 //
 // It computes multi-tier retention plans from snapshot file metadata and
 // retention configuration. The resulting [PlanOutput] describes which files

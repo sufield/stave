@@ -1,6 +1,9 @@
-// Package setup provides domain types and use cases for project setup
-// and configuration: init, doctor, status, config get/set/delete/show,
-// alias management, context management, env listing, and template generation.
+// Package setup provides request/response types and use case orchestration
+// for project setup and configuration: init with profile scaffolding,
+// doctor environment checks, status with next-command recommendation,
+// config get/set/delete/show, command alias management, named context
+// management, environment variable listing, and control/observation
+// template generation.
 package setup
 
 // --- Doctor ---

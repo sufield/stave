@@ -1,5 +1,6 @@
-// Package audit provides domain types and use cases for security auditing,
-// control catalog operations, coverage graphing, and control explanation.
+// Package audit provides request/response types and use case orchestration
+// for security auditing, control catalog listing, coverage graphing,
+// control explanation, and predicate alias management.
 package audit
 
 // --- Security Audit ---

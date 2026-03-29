@@ -1,5 +1,7 @@
-// Package compound detects dangerous combinations of invariant results
+// Package compound detects dangerous combinations of control results
 // that represent higher risk than any individual finding alone.
+// Compound risks are evaluated after individual controls and prepended
+// to the profile report.
 package compound
 
 import "github.com/sufield/stave/internal/core/hipaa"

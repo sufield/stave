@@ -1,5 +1,7 @@
 // Package evaluate implements the stave evaluate command for running
-// compliance profile evaluation against observation snapshots.
+// compliance profile evaluation against observation snapshots. Supports
+// the HIPAA profile with compound risk detection, acknowledged exceptions,
+// and text/JSON report output.
 package evaluate
 
 import (

@@ -1,5 +1,7 @@
-// Package snapshot provides domain types and use cases for snapshot lifecycle
-// operations: diff, upcoming, archive, cleanup, hygiene, quality, and plan.
+// Package snapshot provides request/response types and use case orchestration
+// for snapshot lifecycle operations: diff, upcoming, archive, cleanup,
+// hygiene, quality, and plan. Port interfaces decouple use cases from
+// infrastructure implementations.
 package snapshot
 
 // --- Diff ---

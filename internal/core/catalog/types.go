@@ -1,5 +1,7 @@
-// Package catalog provides domain types and use cases for built-in
-// control pack discovery: list and show.
+// Package catalog provides request/response types and use case orchestration
+// for built-in control pack discovery. Packs are curated sets of controls
+// (e.g., s3, hipaa) registered in the pack index and queryable via
+// list and show operations.
 package catalog
 
 type PacksListRequest struct{}

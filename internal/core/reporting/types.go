@@ -1,6 +1,8 @@
-// Package reporting provides domain types and use cases for evaluation
-// reporting: baseline save/check, CI diff, diagnose, enforce template
-// generation, documentation search/open, prompt generation, and report loading.
+// Package reporting provides request/response types and use case orchestration
+// for evaluation reporting: baseline save/check with finding comparison,
+// CI diff for pull request gating, diagnose with detail mode, enforce
+// template generation, documentation search/open, LLM prompt generation
+// from findings, and evaluation report loading.
 package reporting
 
 import "time"

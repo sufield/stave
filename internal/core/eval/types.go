@@ -1,5 +1,7 @@
-// Package eval provides domain types and use cases for the control
-// evaluation pipeline: apply, fix, fix-loop, gate, trace, and verify.
+// Package eval provides request/response types and use case orchestration
+// for the control evaluation pipeline: apply, fix, fix-loop, gate, trace,
+// and verify. The gate use case implements CI failure policies with
+// configurable strategies (fail-on-any, fail-on-new, fail-on-overdue).
 package eval
 
 import "time"

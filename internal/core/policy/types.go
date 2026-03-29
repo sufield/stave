@@ -1,6 +1,7 @@
-// Package policy provides domain types and use cases for policy validation,
-// linting, formatting, and security inspection (ACL, risk, exposure,
-// compliance, aliases).
+// Package policy provides request/response types and use case orchestration
+// for control validation, linting, formatting, and security inspection.
+// Inspect commands (ACL, risk, exposure, compliance, aliases) share a
+// common file-or-stdin input pattern via the resolveInput helper.
 package policy
 
 // --- Validate ---

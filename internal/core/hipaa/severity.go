@@ -1,5 +1,7 @@
-// Package control defines the interface and registry for programmatic
-// safety controls evaluated against observation snapshots.
+// Package hipaa defines programmatic HIPAA Security Rule controls that
+// supplement the CEL-evaluated YAML controls in the catalog. Go-native
+// controls handle logic too complex for CEL predicates: CMK alias
+// matching, dynamic severity from lock mode, and tiered access checks.
 package hipaa
 
 import "fmt"
