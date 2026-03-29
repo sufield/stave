@@ -62,7 +62,7 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 	if _, statErr := os.Stat(plan.ControlsPath); statErr == nil {
 		h, err := hasher.HashDir(plan.ControlsPath, ".yaml", ".yml")
 		if err != nil {
-			return fmt.Errorf("controls directory %s: %w", plan.ControlsPath, err)
+			return fmt.Errorf("controls directory %q: %w", plan.ControlsPath, err)
 		}
 		plan.ControlsHash = kernel.Digest(h)
 	}
@@ -70,7 +70,7 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 	if plan.ObservationsPath != "" {
 		h, err := hasher.HashDir(plan.ObservationsPath, ".json")
 		if err != nil {
-			return fmt.Errorf("observations directory %s: %w", plan.ObservationsPath, err)
+			return fmt.Errorf("observations directory %q: %w", plan.ObservationsPath, err)
 		}
 		plan.ObservationsHash = kernel.Digest(h)
 	}
@@ -78,7 +78,7 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 	if plan.ConfigPath != "" {
 		h, err := hasher.HashFile(plan.ConfigPath)
 		if err != nil {
-			return fmt.Errorf("config file %s: %w", plan.ConfigPath, err)
+			return fmt.Errorf("config file %q: %w", plan.ConfigPath, err)
 		}
 		plan.ConfigHash = kernel.Digest(h)
 	}
@@ -86,12 +86,12 @@ func populatePlanHashes(plan *EvaluationPlan, hasher appcontracts.ContentHasher)
 }
 
 // resolveLockPath returns the lock file path if a project root is set.
+// projectRoot is assumed to be already trimmed by Options.normalize().
 func resolveLockPath(projectRoot string) string {
-	root := strings.TrimSpace(projectRoot)
-	if root == "" {
+	if projectRoot == "" {
 		return ""
 	}
-	return filepath.Join(root, "stave.lock")
+	return filepath.Join(projectRoot, "stave.lock")
 }
 
 func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error {
