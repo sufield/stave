@@ -1,5 +1,7 @@
 // Package profile defines compliance profiles that select and configure
-// invariants for evaluation against observation snapshots.
+// controls for evaluation against observation snapshots. The built-in
+// HIPAA profile maps controls to Security Rule citations with severity
+// overrides, compound risk detection, and acknowledged exceptions.
 package profile
 
 import (

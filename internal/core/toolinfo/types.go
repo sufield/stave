@@ -1,5 +1,7 @@
-// Package toolinfo provides domain types and use cases for binary
-// introspection: version, capabilities, schemas, and bug report.
+// Package toolinfo provides request/response types and use case orchestration
+// for binary introspection: version with build metadata, runtime capabilities
+// discovery, contract schema listing, and diagnostic bundle generation
+// and inspection.
 package toolinfo
 
 type VersionRequest struct {

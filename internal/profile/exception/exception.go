@@ -1,5 +1,7 @@
 // Package exception implements the acknowledged exception mechanism for
-// invariants that have legitimate configurations failing checks.
+// controls that have legitimate configurations failing checks. Exceptions
+// require compensating controls that must all pass for the exception to
+// be valid.
 package exception
 
 import (

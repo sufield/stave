@@ -1,5 +1,7 @@
 // Package reporter produces human-readable and machine-readable output
-// from profile evaluation reports.
+// from profile evaluation reports. Text format groups findings by severity
+// with compliance citations. JSON format provides structured output for
+// automation. Both formats include the BAA disclaimer for HIPAA profiles.
 package reporter
 
 import (

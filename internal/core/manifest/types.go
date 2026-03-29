@@ -1,5 +1,6 @@
-// Package manifest provides domain types and use cases for observation
-// integrity manifests: generate, sign, and keygen.
+// Package manifest provides request/response types and use case orchestration
+// for observation integrity manifests: generate unsigned manifests, sign
+// with Ed25519 private keys, and generate signing keypairs.
 package manifest
 
 // --- Generate ---
