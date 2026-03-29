@@ -128,7 +128,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 			testEnrichFn,
 		)
 
-		status, err := run.Execute(context.Background(), EvaluateConfig{
+		status, err := run.ExecuteAndWrite(context.Background(), EvaluateConfig{
 			LoadConfig: LoadConfig{
 				ControlsDir:     "ctl",
 				ObservationsDir: "obs",
@@ -163,7 +163,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 			testEnrichFn,
 		)
 
-		_, err := run.Execute(context.Background(), EvaluateConfig{
+		_, err := run.ExecuteAndWrite(context.Background(), EvaluateConfig{
 			LoadConfig: LoadConfig{
 				ControlsDir:     "ctl",
 				ObservationsDir: "obs",
@@ -173,7 +173,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 			Output:            &bytes.Buffer{},
 			CELEvaluator:      mustPredicateEval(),
 		})
-		if err == nil || !strings.Contains(err.Error(), "failed to write findings") {
+		if err == nil || !strings.Contains(err.Error(), "marshal") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
