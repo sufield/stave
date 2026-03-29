@@ -6,15 +6,15 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// access001 checks that all four S3 Block Public Access flags are enabled
+// accessBlockPublic checks that all four S3 Block Public Access flags are enabled
 // at the bucket level. If account-level BPA is fully enabled but bucket-level
 // is not set, severity downgrades to LOW.
-type access001 struct {
+type accessBlockPublic struct {
 	Definition
 }
 
 func init() {
-	AccessRegistry.MustRegister(&access001{
+	ControlRegistry.MustRegister(&accessBlockPublic{
 		Definition: Build(
 			WithID("ACCESS.001"),
 			WithDescription("Block Public Access must be fully enabled at bucket level"),
@@ -27,7 +27,7 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket asset in the snapshot for complete BPA enablement.
-func (inv *access001) Evaluate(snap asset.Snapshot) Result {
+func (inv *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

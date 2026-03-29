@@ -13,13 +13,13 @@ const (
 	lockModeGovernance = "GOVERNANCE"
 )
 
-// retention002 checks that Object Lock is enabled and evaluates the lock mode.
-type retention002 struct {
+// retentionObjectLock checks that Object Lock is enabled and evaluates the lock mode.
+type retentionObjectLock struct {
 	Definition
 }
 
 func init() {
-	RetentionRegistry.MustRegister(&retention002{
+	ControlRegistry.MustRegister(&retentionObjectLock{
 		Definition: Build(
 			WithID("RETENTION.002"),
 			WithDescription("Object Lock must be enabled for PHI retention (6-year HIPAA minimum)"),
@@ -33,7 +33,7 @@ func init() {
 
 // Evaluate checks Object Lock status and mode, returning severity based
 // on the actual lock configuration rather than a hardcoded value.
-func (inv *retention002) Evaluate(snap asset.Snapshot) Result {
+func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

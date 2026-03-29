@@ -59,11 +59,7 @@ func fixtureSnapshot() asset.Snapshot {
 
 func allRegistries() []*hipaa.Registry {
 	return []*hipaa.Registry{
-		hipaa.AccessRegistry,
-		hipaa.ControlsRegistry,
-		hipaa.AuditRegistry,
-		hipaa.GovernanceRegistry,
-		hipaa.RetentionRegistry,
+		hipaa.ControlRegistry,
 	}
 }
 

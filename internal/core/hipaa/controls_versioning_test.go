@@ -15,7 +15,7 @@ func versionedBucket(id string, enabled bool) asset.Asset {
 }
 
 func TestControls002(t *testing.T) {
-	inv := ControlsRegistry.Lookup("CONTROLS.002")
+	inv := ControlRegistry.Lookup("CONTROLS.002")
 	if inv == nil {
 		t.Fatal("CONTROLS.002 not registered")
 	}

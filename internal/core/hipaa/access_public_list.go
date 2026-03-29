@@ -6,14 +6,14 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// access011 checks that no S3 bucket policy grants s3:ListBucket
+// accessPublicList checks that no S3 bucket policy grants s3:ListBucket
 // to a wildcard principal (*).
-type access011 struct {
+type accessPublicList struct {
 	Definition
 }
 
 func init() {
-	AccessRegistry.MustRegister(&access011{
+	ControlRegistry.MustRegister(&accessPublicList{
 		Definition: Build(
 			WithID("ACCESS.011"),
 			WithDescription("No bucket policy may grant s3:ListBucket to a public principal"),
@@ -25,7 +25,7 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket for public ListBucket grants.
-func (inv *access011) Evaluate(snap asset.Snapshot) Result {
+func (inv *accessPublicList) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

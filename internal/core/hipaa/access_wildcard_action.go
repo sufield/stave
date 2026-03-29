@@ -7,9 +7,9 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// access002 checks that no S3 bucket policy statement grants Allow with
+// accessWildcardAction checks that no S3 bucket policy statement grants Allow with
 // a wildcard action (s3:* or *).
-type access002 struct {
+type accessWildcardAction struct {
 	Definition
 }
 
@@ -24,7 +24,7 @@ var minimumSyncActions = []string{
 }
 
 func init() {
-	AccessRegistry.MustRegister(&access002{
+	ControlRegistry.MustRegister(&accessWildcardAction{
 		Definition: Build(
 			WithID("ACCESS.002"),
 			WithDescription("No bucket policy statement may grant Allow with wildcard action s3:*"),
@@ -37,7 +37,7 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket for wildcard Allow statements.
-func (inv *access002) Evaluate(snap asset.Snapshot) Result {
+func (inv *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

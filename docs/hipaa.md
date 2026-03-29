@@ -350,12 +350,12 @@ type Result struct {
 
 ### Registries
 
-Invariants are organized into five registries:
-- `AccessRegistry` — ACCESS.* (public access, policy checks)
-- `ControlsRegistry` — CONTROLS.* (encryption, versioning, TLS)
-- `AuditRegistry` — AUDIT.* (logging)
-- `GovernanceRegistry` — GOVERNANCE.* (ACL control)
-- `RetentionRegistry` — RETENTION.* (object lock, retention)
+All controls are registered in a single `ControlRegistry`:
+- ACCESS.* — public access, policy checks
+- CONTROLS.* — encryption, versioning, TLS
+- AUDIT.* — logging
+- GOVERNANCE.* — ACL control
+- RETENTION.* — object lock, retention
 
 ### Evaluation Pipeline
 
