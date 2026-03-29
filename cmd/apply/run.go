@@ -144,7 +144,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 	defer deps.Close()
 
-	result, status, err := deps.Runner.ExecuteAndReturn(ctx, deps.Config)
+	result, status, err := deps.Runner.Execute(ctx, deps.Config)
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
