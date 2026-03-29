@@ -5,6 +5,7 @@ import (
 
 	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/app/capabilities"
+	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -36,13 +37,25 @@ func TestCapabilities_SourceTypesExpectedSet(t *testing.T) {
 	}
 }
 
-func TestCapabilities_OnlyS3PackInMVP(t *testing.T) {
-	caps := capabilities.GetCapabilities("test-v1")
-	if len(caps.Packs) != 1 {
-		t.Fatalf("pack count = %d, want 1", len(caps.Packs))
+func TestCapabilities_PacksMatchEmbeddedRegistry(t *testing.T) {
+	reg, err := pack.NewEmbeddedRegistry()
+	if err != nil {
+		t.Fatalf("load embedded registry: %v", err)
 	}
-	if caps.Packs[0].Name != "s3" {
-		t.Fatalf("only pack = %q, want %q", caps.Packs[0].Name, "s3")
+	want := reg.ListPacks()
+
+	caps := capabilities.GetCapabilities("test-v1")
+
+	if len(caps.Packs) != len(want) {
+		t.Fatalf("pack count = %d, want %d", len(caps.Packs), len(want))
+	}
+	for i, p := range caps.Packs {
+		if p.Name != want[i].Name {
+			t.Errorf("pack[%d].Name = %q, want %q", i, p.Name, want[i].Name)
+		}
+		if p.Description != want[i].Description {
+			t.Errorf("pack[%d].Description = %q, want %q", i, p.Description, want[i].Description)
+		}
 	}
 }
 
@@ -68,8 +81,10 @@ func TestCapabilities_UsesProvidedVersion(t *testing.T) {
 	if caps.Version != "1.2.3-test" {
 		t.Fatalf("version = %q, want %q", caps.Version, "1.2.3-test")
 	}
-	if len(caps.Packs) != 1 || caps.Packs[0].Version != "1.2.3-test" {
-		t.Fatalf("pack version = %q, want %q", caps.Packs[0].Version, "1.2.3-test")
+	for _, p := range caps.Packs {
+		if p.Version != "1.2.3-test" {
+			t.Fatalf("pack %q version = %q, want %q", p.Name, p.Version, "1.2.3-test")
+		}
 	}
 }
 

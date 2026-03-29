@@ -3,13 +3,9 @@ package capabilities
 import (
 	"slices"
 
+	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/core/kernel"
-)
-
-const (
-	s3PackName = "s3"
-	s3PackPath = "controls/s3"
 )
 
 // registry holds pre-sorted, immutable capabilities data.
@@ -74,8 +70,18 @@ func newRegistry() *registry {
 		sourceTypeIndex[st.Type] = struct{}{}
 	}
 
-	packs := []ControlPack{
-		{Name: s3PackName, Path: s3PackPath},
+	// Discover packs from the embedded pack index (single source of truth).
+	packReg, err := pack.NewEmbeddedRegistry()
+	if err != nil {
+		panic("capabilities: load embedded pack registry: " + err.Error())
+	}
+	discovered := packReg.ListPacks()
+	packs := make([]ControlPack, len(discovered))
+	for i, p := range discovered {
+		packs[i] = ControlPack{
+			Name:        p.Name,
+			Description: p.Description,
+		}
 	}
 
 	securityAudit := SecurityAuditSupport{
