@@ -24,9 +24,9 @@ type Capabilities struct {
 
 // ControlPack describes an available control pack.
 type ControlPack struct {
-	Name    string `json:"name"`
-	Path    string `json:"path"`
-	Version string `json:"version"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Version     string `json:"version"`
 }
 
 // ObservationSupport describes supported observation formats.

@@ -120,8 +120,8 @@ func validatePacks(t *testing.T, packs []any) {
 		if !ok || name == "" {
 			t.Fatalf("packs[%d].name must be a non-empty string", i)
 		}
-		if _, ok := obj["path"].(string); !ok {
-			t.Fatalf("packs[%d].path must be a string", i)
+		if _, ok := obj["description"].(string); !ok {
+			t.Fatalf("packs[%d].description must be a string", i)
 		}
 		if v, ok := obj["version"].(string); !ok || v != "contract-test-version" {
 			t.Fatalf("packs[%d].version = %v, want %q", i, obj["version"], "contract-test-version")
