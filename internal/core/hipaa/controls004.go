@@ -20,6 +20,7 @@ func init() {
 			WithSeverity(High),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(e)(2)(ii)"),
+			WithProfileRationale("hipaa", "Encryption in transit — deny non-TLS access"),
 		),
 	})
 }

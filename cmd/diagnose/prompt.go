@@ -153,7 +153,7 @@ Examples:
 
 	_ = cmd.MarkFlagRequired("evaluation-file")
 	_ = cmd.MarkFlagRequired("asset-id")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
 }

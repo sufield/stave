@@ -153,7 +153,7 @@ Exit Codes:
 	opts.bindApplySpecific(cmd)
 	// Completion registration is best-effort — if it fails, help output
 	// loses tab completion but the command still works.
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("json", "text", "sarif"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSONSARIF...))
 
 	return cmd
 }

@@ -232,7 +232,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
 }

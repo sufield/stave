@@ -13,6 +13,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 6.2
       rationale: Dependency visibility supports vulnerability management requirements.
+    - framework: hipaa
+      control_id: "164.312(d)"
+      rationale: Build metadata supports person or entity authentication and software integrity verification.
   SC.SBOM.GENERATED:
     - framework: nist_800_53
       control_id: SI-2
@@ -26,6 +29,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 6.1
       rationale: Security processes require identification of vulnerable system components.
+    - framework: hipaa
+      control_id: "164.312(a)(2)(iv)"
+      rationale: SBOM supports encryption and access control implementation by documenting software components.
   SC.VULN.RESULTS:
     - framework: nist_800_53
       control_id: RA-5
@@ -39,6 +45,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 11.2
       rationale: PCI requires vulnerability scanning and remediation workflows.
+    - framework: hipaa
+      control_id: "164.308(a)(1)(ii)(A)"
+      rationale: Vulnerability scanning supports the required risk analysis of ePHI handling systems.
   SC.BINARY.SHA256:
     - framework: nist_800_53
       control_id: SI-7
@@ -52,6 +61,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 10.5
       rationale: Integrity controls require detection of unauthorized modification.
+    - framework: hipaa
+      control_id: "164.312(c)(1)"
+      rationale: Checksum verification supports integrity controls for ePHI systems.
   SC.SIGNATURE.VERIFIED:
     - framework: nist_800_53
       control_id: SA-10
@@ -65,6 +77,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 6.4
       rationale: Verified release artifacts support controlled change procedures.
+    - framework: hipaa
+      control_id: "164.312(c)(2)"
+      rationale: Signature verification supports mechanism to authenticate ePHI system components.
   RB.NETWORK.RUNTIME_NONE:
     - framework: nist_800_53
       control_id: SC-7
@@ -78,6 +93,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 1.2
       rationale: Network segmentation and restriction controls map to PCI requirements.
+    - framework: hipaa
+      control_id: "164.312(e)(1)"
+      rationale: Network restriction supports transmission security controls for ePHI.
   RB.OFFLINE.ENFORCEMENT:
     - framework: nist_800_53
       control_id: CM-7
@@ -91,6 +109,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 2.2
       rationale: Secure configuration standards require disabling unnecessary network paths.
+    - framework: hipaa
+      control_id: "164.312(e)(2)(ii)"
+      rationale: Offline enforcement supports encryption controls for ePHI transmission.
   RB.FS.ACCESS.DISCLOSURE:
     - framework: nist_800_53
       control_id: AC-6
@@ -104,6 +125,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 7.1
       rationale: Access restrictions require documented scope of system interactions.
+    - framework: hipaa
+      control_id: "164.312(a)(1)"
+      rationale: Filesystem access disclosure supports access control requirements for ePHI.
   RB.PRIVILEGE.NO_SUDO:
     - framework: nist_800_53
       control_id: AC-6
@@ -117,6 +141,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 7.2
       rationale: Privilege assignment must follow least-privilege requirements.
+    - framework: hipaa
+      control_id: "164.312(a)(2)(i)"
+      rationale: Non-privileged execution supports unique user identification and access control.
   RB.IAM.S3.MINPERMS:
     - framework: nist_800_53
       control_id: AC-3
@@ -130,6 +157,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 7.1
       rationale: Access control policies must define minimum required privileges.
+    - framework: hipaa
+      control_id: "164.312(a)(1)"
+      rationale: Minimum IAM permissions support access control requirements for ePHI.
   DP.CREDENTIAL.STORAGE:
     - framework: nist_800_53
       control_id: IA-5
@@ -143,6 +173,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 3.5
       rationale: Sensitive authentication data must be protected from exposure.
+    - framework: hipaa
+      control_id: "164.312(d)"
+      rationale: Credential protection supports person or entity authentication for ePHI access.
   DP.SANITIZATION.POLICY:
     - framework: nist_800_53
       control_id: MP-6
@@ -156,6 +189,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 3.3
       rationale: Sensitive data masking/redaction supports disclosure minimization.
+    - framework: hipaa
+      control_id: "164.530(c)"
+      rationale: Sanitization supports minimum necessary standard for PHI disclosure.
   DP.TELEMETRY.DISCLOSURE:
     - framework: nist_800_53
       control_id: AR-4
@@ -169,6 +205,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 12.1
       rationale: Security governance requires documented data handling behavior.
+    - framework: hipaa
+      control_id: "164.308(a)(1)(ii)(D)"
+      rationale: Telemetry disclosure supports information system activity review for ePHI.
   DP.PRIVACY.MODE:
     - framework: nist_800_53
       control_id: PT-2
@@ -182,6 +221,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 12.10
       rationale: Incident and privacy posture checks support governance controls.
+    - framework: hipaa
+      control_id: "164.530(c)"
+      rationale: Privacy mode enforcement supports minimum necessary standard for PHI.
   IC.BUILD.HARDENING:
     - framework: nist_800_53
       control_id: SI-7
@@ -195,6 +237,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 6.5
       rationale: Secure development requirements include hardening practices.
+    - framework: hipaa
+      control_id: "164.312(c)(1)"
+      rationale: Build hardening supports integrity controls for ePHI processing systems.
   IC.AUDIT.LOGGING:
     - framework: nist_800_53
       control_id: AU-2
@@ -208,6 +253,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 10.2
       rationale: Audit logs must capture critical security-relevant activity.
+    - framework: hipaa
+      control_id: "164.312(b)"
+      rationale: Audit logging supports audit controls and examination of ePHI system activity.
   IC.CONTROL.MAPPING:
     - framework: nist_800_53
       control_id: CA-2
@@ -221,6 +269,9 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 12.5
       rationale: Security governance requires mapping operational checks to controls.
+    - framework: hipaa
+      control_id: "164.308(a)(8)"
+      rationale: Control mapping supports evaluation of security measures for ePHI compliance.
   IC.CONTROL.MAPPING_MISSING:
     - framework: nist_800_53
       control_id: CA-2
@@ -234,4 +285,7 @@ checks:
     - framework: pci_dss_v3.2.1
       control_id: 12.5
       rationale: Control mapping completeness is required for audit readiness.
+    - framework: hipaa
+      control_id: "164.308(a)(8)"
+      rationale: Missing control mappings indicate incomplete HIPAA compliance evaluation coverage.
 

@@ -23,7 +23,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format (text|json)")
 	f.StringVar(&o.TemplateFile, "template-file", "", "Path to custom Go template")
 	_ = cmd.MarkFlagRequired("in")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 }
 
 // Prepare normalizes paths. Called from PreRunE.

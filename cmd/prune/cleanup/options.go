@@ -30,7 +30,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.IntVar(&o.KeepMin, "keep-min", o.KeepMin, "Minimum number of snapshots to keep")
 	f.BoolVar(&o.DryRun, "dry-run", false, "Preview planned file operations without applying them")
 	f.StringVarP(&o.FormatFlag, "format", "f", o.FormatFlag, "Output format: text or json")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 }
 
 // Prepare normalizes paths. Called from PreRunE.

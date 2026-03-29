@@ -9,15 +9,21 @@ import (
 	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 )
 
+const (
+	auditFormatJSON     = string(domainsecurityaudit.ReportFormatJSON)
+	auditFormatMarkdown = string(domainsecurityaudit.ReportFormatMarkdown)
+	auditFormatSARIF    = string(domainsecurityaudit.ReportFormatSARIF)
+)
+
 func renderReport(format string, report domainsecurityaudit.Report) ([]byte, string, error) {
 	switch format {
-	case "json":
+	case auditFormatJSON:
 		data, err := securityout.MarshalJSONReport(report)
 		return data, "security-report.json", err
-	case "markdown":
+	case auditFormatMarkdown:
 		data, err := securityout.MarshalMarkdownReport(report)
 		return data, "security-report.md", err
-	case "sarif":
+	case auditFormatSARIF:
 		data, err := securityout.MarshalSARIFReport(report)
 		return data, "security-report.sarif", err
 	default:
@@ -40,9 +46,9 @@ func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecu
 func parseFormat(raw string) (string, error) {
 	normalized := ui.NormalizeToken(raw)
 	switch normalized {
-	case "json", "markdown", "sarif":
+	case auditFormatJSON, auditFormatMarkdown, auditFormatSARIF:
 		return normalized, nil
 	default:
-		return "", &ui.UserError{Err: ui.EnumError("--format", raw, []string{"json", "markdown", "sarif"})}
+		return "", &ui.UserError{Err: ui.EnumError("--format", raw, domainsecurityaudit.AllReportFormats())}
 	}
 }

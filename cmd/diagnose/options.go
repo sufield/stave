@@ -48,7 +48,7 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")
 	f.StringVar(&o.ControlID, "control-id", "", "Control ID for single-finding detail mode (requires --asset-id)")
 	f.StringVar(&o.AssetID, "asset-id", "", "Asset ID for single-finding detail mode (requires --control-id)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 	_ = cmd.RegisterFlagCompletionFunc("case", cliflags.CompleteFixed(
 		string(diagnosis.ScenarioExpectedNone),
 		string(diagnosis.ScenarioViolationEvidence),

@@ -9,8 +9,19 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/sanitize"
+)
+
+// Standard format completion sets derived from contracts.OutputFormat constants.
+var (
+	// FormatsTextJSON covers commands that support text and JSON output.
+	FormatsTextJSON = []string{string(contracts.FormatText), string(contracts.FormatJSON)}
+	// FormatsTextJSONSARIF covers commands that also support SARIF output.
+	FormatsTextJSONSARIF = []string{string(contracts.FormatJSON), string(contracts.FormatText), string(contracts.FormatSARIF)}
+	// FormatsMarkdownJSON covers commands that support markdown and JSON output.
+	FormatsMarkdownJSON = []string{string(contracts.FormatMarkdown), string(contracts.FormatJSON)}
 )
 
 // Flag constants to prevent typos across the CLI tree.

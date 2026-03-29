@@ -96,7 +96,7 @@ Exit Codes:
 	f.StringVar(&nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
 	f.BoolVar(&apply, "apply", false, "Execute the plan (requires --force)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
 }

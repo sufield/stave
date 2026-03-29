@@ -17,6 +17,25 @@ func newTracker(entries map[EvidenceCategory][]string) *EvidenceTracker {
 var policyEvidence = []string{"bucket.policy.statements[0].effect", "bucket.policy.statements[0].principal", "bucket.policy.statements[0].actions"}
 var aclEvidence = []string{"bucket.acl.grants[0].grantee", "bucket.acl.grants[0].permission", "bucket.acl.grants[0].scope"}
 
+func TestExposureControlIDs_Complete(t *testing.T) {
+	all := exposureIDs.all()
+	// There are exactly 11 exposure control IDs. If you add a field to
+	// exposureControlSet, add it to all() and update this count.
+	if len(all) != 11 {
+		t.Fatalf("expected 11 exposure control IDs, got %d — update all() in control_ids.go", len(all))
+	}
+	seen := make(map[kernel.ControlID]bool)
+	for _, id := range all {
+		if id == "" {
+			t.Fatal("empty control ID in exposureIDs.all()")
+		}
+		if seen[id] {
+			t.Fatalf("duplicate control ID %s in exposureIDs.all()", id)
+		}
+		seen[id] = true
+	}
+}
+
 func TestClassifyExposure_PublicRead(t *testing.T) {
 	resources := []NormalizedResourceInput{{
 		Name:          "test-bucket",
@@ -31,8 +50,8 @@ func TestClassifyExposure_PublicRead(t *testing.T) {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
 	f := findings[0]
-	if f.ID != idPublicRead {
-		t.Errorf("expected ID %s, got %s", idPublicRead, f.ID)
+	if f.ID != exposureIDs.publicRead {
+		t.Errorf("expected ID %s, got %s", exposureIDs.publicRead, f.ID)
 	}
 	if f.ExposureType != TypePublicRead {
 		t.Errorf("expected exposure_type %s, got %s", TypePublicRead, f.ExposureType)
@@ -55,8 +74,8 @@ func TestClassifyExposure_ResourcePublicRead(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idResourcePublicRead {
-		t.Errorf("expected ID %s, got %s", idResourcePublicRead, findings[0].ID)
+	if findings[0].ID != exposureIDs.resourcePublicRead {
+		t.Errorf("expected ID %s, got %s", exposureIDs.resourcePublicRead, findings[0].ID)
 	}
 }
 
@@ -72,7 +91,7 @@ func TestClassifyExposure_Takeover(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idResourceTakeover {
+	if findings[0].ID != exposureIDs.resourceTakeover {
 		t.Errorf("expected takeover, got %s", findings[0].ID)
 	}
 	if findings[0].PrincipalScope != kernel.ScopeNotApplicable {
@@ -93,7 +112,7 @@ func TestClassifyExposure_List(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idPublicList {
+	if findings[0].ID != exposureIDs.publicList {
 		t.Errorf("expected list, got %s", findings[0].ID)
 	}
 	if findings[0].Actions[0] != ActionList {
@@ -114,7 +133,7 @@ func TestClassifyExposure_Write(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idPublicWrite {
+	if findings[0].ID != exposureIDs.publicWrite {
 		t.Errorf("expected write, got %s", findings[0].ID)
 	}
 	if findings[0].WriteScope != WriteScopeBlind {
@@ -158,7 +177,7 @@ func TestClassifyExposure_Delete(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idPublicDelete {
+	if findings[0].ID != exposureIDs.publicDelete {
 		t.Errorf("expected delete, got %s", findings[0].ID)
 	}
 	if findings[0].Actions[0] != ActionDelete {
@@ -179,7 +198,7 @@ func TestClassifyExposure_MetadataRead(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idPublicAdminRead {
+	if findings[0].ID != exposureIDs.publicAdminRead {
 		t.Errorf("expected admin read, got %s", findings[0].ID)
 	}
 	if findings[0].ExposureType != TypePublicMetaRead {
@@ -200,7 +219,7 @@ func TestClassifyExposure_MetadataWrite(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idPublicAdminWrite {
+	if findings[0].ID != exposureIDs.publicAdminWrite {
 		t.Errorf("expected admin write, got %s", findings[0].ID)
 	}
 	if findings[0].ExposureType != TypePublicMetaWrite {
@@ -222,7 +241,7 @@ func TestClassifyExposure_WebsitePublic(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idWebPublic {
+	if findings[0].ID != exposureIDs.webPublic {
 		t.Errorf("expected web public, got %s", findings[0].ID)
 	}
 }
@@ -241,7 +260,7 @@ func TestClassifyExposure_AuthenticatedOnly(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
-	if findings[0].ID != idAuthenticatedRead {
+	if findings[0].ID != exposureIDs.authenticatedRead {
 		t.Errorf("expected authenticated read, got %s", findings[0].ID)
 	}
 	if findings[0].PrincipalScope != kernel.ScopeAuthenticated {
@@ -324,7 +343,7 @@ func TestSelectWriteExposure_ResourceWrite(t *testing.T) {
 	if result == nil {
 		t.Fatal("expected finding")
 	}
-	if result.finding.ID != idResourcePublicWrite {
+	if result.finding.ID != exposureIDs.resourcePublicWrite {
 		t.Errorf("expected resource write, got %s", result.finding.ID)
 	}
 }

@@ -116,5 +116,5 @@ func registerCompletions(cmd *cobra.Command) {
 		string(appconfig.GatePolicyNew),
 		string(appconfig.GatePolicyOverdue),
 	))
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 }

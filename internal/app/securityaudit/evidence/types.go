@@ -59,6 +59,16 @@ func FreshnessFromTime(t time.Time) VulnFreshness {
 	return VulnFreshness(t.UTC().Format(time.RFC3339))
 }
 
+// AllSBOMFormats returns all supported SBOM format strings in stable order.
+func AllSBOMFormats() []string {
+	return []string{string(SBOMFormatCycloneDX), string(SBOMFormatSPDX)}
+}
+
+// AllVulnSources returns all supported vulnerability source strings in stable order.
+func AllVulnSources() []string {
+	return []string{string(VulnSourceCI), string(VulnSourceHybrid), string(VulnSourceLocal)}
+}
+
 // ParseSBOMFormat validates and returns an SBOMFormat.
 func ParseSBOMFormat(s string) (SBOMFormat, error) {
 	switch SBOMFormat(s) {

@@ -135,7 +135,7 @@ Exit Codes:
 	f.StringVar(&opts.NowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&opts.FormatFlag, "format", "f", opts.FormatFlag, "Output format: text or json")
 	f.BoolVar(&opts.Strict, "strict", false, "Treat warnings as gate failures")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
 }

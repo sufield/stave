@@ -82,7 +82,7 @@ Exit Codes:
 	f.StringSliceVar(&opts.assetTypes, "asset-type", nil, "Filter upcoming metrics to one or more asset types")
 	f.StringSliceVar(&opts.statuses, "status", nil, "Filter upcoming metrics by status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&opts.dueWithin, "due-within", "", "Filter upcoming metrics to items due within duration from --now (e.g., 24h, 3d)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("markdown", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsMarkdownJSON...))
 	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
 
 	return cmd

@@ -35,7 +35,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringSliceVar(&o.AssetTypes, "asset-type", nil, "Filter to one or more asset types")
 	f.StringSliceVar(&o.Statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&o.DueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
 }
 

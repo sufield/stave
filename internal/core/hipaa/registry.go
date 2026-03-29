@@ -1,6 +1,9 @@
 package hipaa
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // Registry holds controls indexed by their unique ID.
 // It is not safe for concurrent use during registration; register
@@ -46,6 +49,19 @@ func (r *Registry) All() []Control {
 	out := make([]Control, len(r.order))
 	for i, id := range r.order {
 		out[i] = r.controls[id]
+	}
+	return out
+}
+
+// ByProfile returns all controls that declare membership in the given
+// compliance profile, in registration order.
+func (r *Registry) ByProfile(profile string) []Control {
+	var out []Control
+	for _, id := range r.order {
+		ctrl := r.controls[id]
+		if slices.Contains(ctrl.ComplianceProfiles(), profile) {
+			out = append(out, ctrl)
+		}
 	}
 	return out
 }
