@@ -102,10 +102,10 @@ func (r *Runner) runStandardDiagnosis(ctx context.Context, cfg Config) error {
 	if cfg.Sanitizer != nil && report != nil {
 		report = appdiagnose.SanitizeDiagnosisReport(cfg.Sanitizer, report)
 	}
-	report = appdiagnose.FilterReport(report, appdiagnose.Filter{
+	report = appdiagnose.Filter{
 		Cases:          cfg.Cases,
 		SignalContains: cfg.SignalContains,
-	})
+	}.Apply(report)
 
 	p := r.newPresenter(cfg)
 	if err := p.RenderReport(report); err != nil {

@@ -100,7 +100,7 @@ func TestBuildDependencies_ValidationErrors(t *testing.T) {
 			in := base
 			tt.mutate(&in)
 
-			_, err := BuildDependencies(in)
+			_, err := BuildDependencies(context.Background(), in)
 			if err == nil {
 				t.Fatal("expected error")
 			}
@@ -115,7 +115,7 @@ func TestBuildDependencies_UsesProvidedLoader(t *testing.T) {
 	obsRepo := &depsObservationRepoStub{}
 	ctlRepo := &depsControlRepoStub{}
 
-	out, err := BuildDependencies(BuildDependenciesInput{
+	out, err := BuildDependencies(context.Background(), BuildDependenciesInput{
 		Plan: EvaluationPlan{
 			ContextName:      "ctx",
 			ControlsPath:     "/ctl",
@@ -151,7 +151,7 @@ func TestBuildDependencies_PassesExemptionConfig(t *testing.T) {
 		},
 	}
 
-	out, err := BuildDependencies(BuildDependenciesInput{
+	out, err := BuildDependencies(context.Background(), BuildDependenciesInput{
 		Plan: EvaluationPlan{
 			ControlsPath:     "/ctl",
 			ObservationsPath: "/obs",
