@@ -6,13 +6,13 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// governance001 checks that ACLs are disabled via BucketOwnerEnforced ownership.
-type governance001 struct {
+// governanceAclDisabled checks that ACLs are disabled via BucketOwnerEnforced ownership.
+type governanceAclDisabled struct {
 	Definition
 }
 
 func init() {
-	GovernanceRegistry.MustRegister(&governance001{
+	ControlRegistry.MustRegister(&governanceAclDisabled{
 		Definition: Build(
 			WithID("GOVERNANCE.001"),
 			WithDescription("Bucket ACLs must be disabled (ownership_controls == BucketOwnerEnforced)"),
@@ -25,7 +25,7 @@ func init() {
 }
 
 // Evaluate checks that ownership_controls is BucketOwnerEnforced.
-func (inv *governance001) Evaluate(snap asset.Snapshot) Result {
+func (inv *governanceAclDisabled) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

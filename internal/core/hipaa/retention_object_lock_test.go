@@ -17,7 +17,7 @@ func lockBucket(id string, enabled bool, mode string) asset.Asset {
 }
 
 func TestRetention002(t *testing.T) {
-	inv := RetentionRegistry.Lookup("RETENTION.002")
+	inv := ControlRegistry.Lookup("RETENTION.002")
 	if inv == nil {
 		t.Fatal("RETENTION.002 not registered")
 	}

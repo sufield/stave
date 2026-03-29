@@ -6,13 +6,13 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// controls001 checks that server-side encryption is enabled on every S3 bucket.
-type controls001 struct {
+// controlsEncryption checks that server-side encryption is enabled on every S3 bucket.
+type controlsEncryption struct {
 	Definition
 }
 
 func init() {
-	ControlsRegistry.MustRegister(&controls001{
+	ControlRegistry.MustRegister(&controlsEncryption{
 		Definition: Build(
 			WithID("CONTROLS.001"),
 			WithDescription("Server-side encryption (SSE) must be enabled"),
@@ -24,7 +24,7 @@ func init() {
 }
 
 // Evaluate checks that encryption.at_rest_enabled is true for every S3 bucket.
-func (inv *controls001) Evaluate(snap asset.Snapshot) Result {
+func (inv *controlsEncryption) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

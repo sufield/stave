@@ -6,13 +6,13 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// audit001 checks that server access logging is enabled with a target bucket.
-type audit001 struct {
+// auditServerLogging checks that server access logging is enabled with a target bucket.
+type auditServerLogging struct {
 	Definition
 }
 
 func init() {
-	AuditRegistry.MustRegister(&audit001{
+	ControlRegistry.MustRegister(&auditServerLogging{
 		Definition: Build(
 			WithID("AUDIT.001"),
 			WithDescription("Server access logging must be enabled with a configured target bucket"),
@@ -25,7 +25,7 @@ func init() {
 }
 
 // Evaluate checks that logging.target_bucket is set for every S3 bucket.
-func (inv *audit001) Evaluate(snap asset.Snapshot) Result {
+func (inv *auditServerLogging) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

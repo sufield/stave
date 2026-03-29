@@ -9,14 +9,14 @@ import (
 
 const awsManagedS3KeyAlias = "alias/aws/s3"
 
-// controls001strict checks that SSE uses KMS with a customer-managed key (CMK),
+// controlsKmsCmk checks that SSE uses KMS with a customer-managed key (CMK),
 // not the AWS-managed alias/aws/s3 key.
-type controls001strict struct {
+type controlsKmsCmk struct {
 	Definition
 }
 
 func init() {
-	ControlsRegistry.MustRegister(&controls001strict{
+	ControlRegistry.MustRegister(&controlsKmsCmk{
 		Definition: Build(
 			WithID("CONTROLS.001.STRICT"),
 			WithDescription("Server-side encryption must use SSE-KMS with a customer-managed key (CMK)"),
@@ -29,7 +29,7 @@ func init() {
 }
 
 // Evaluate checks that encryption uses aws:kms with a non-AWS-managed key.
-func (inv *controls001strict) Evaluate(snap asset.Snapshot) Result {
+func (inv *controlsKmsCmk) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

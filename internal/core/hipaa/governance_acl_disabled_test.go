@@ -14,7 +14,7 @@ func ownershipBucket(id, ownership string) asset.Asset {
 }
 
 func TestGovernance001(t *testing.T) {
-	inv := GovernanceRegistry.Lookup("GOVERNANCE.001")
+	inv := ControlRegistry.Lookup("GOVERNANCE.001")
 	if inv == nil {
 		t.Fatal("GOVERNANCE.001 not registered")
 	}

@@ -6,14 +6,14 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// controls004 checks that the bucket policy contains a Deny statement
+// controlsDenyNonTls checks that the bucket policy contains a Deny statement
 // enforcing TLS via the aws:SecureTransport condition.
-type controls004 struct {
+type controlsDenyNonTls struct {
 	Definition
 }
 
 func init() {
-	ControlsRegistry.MustRegister(&controls004{
+	ControlRegistry.MustRegister(&controlsDenyNonTls{
 		Definition: Build(
 			WithID("CONTROLS.004"),
 			WithDescription("Bucket policy must deny non-TLS access (aws:SecureTransport=false). Note: S3 API endpoints enforce TLS 1.2 by default since February 2024, but HTTP endpoint access via website hosting remains possible"),
@@ -26,7 +26,7 @@ func init() {
 }
 
 // Evaluate checks that the bucket policy contains a Deny non-TLS statement.
-func (inv *controls004) Evaluate(snap asset.Snapshot) Result {
+func (inv *controlsDenyNonTls) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

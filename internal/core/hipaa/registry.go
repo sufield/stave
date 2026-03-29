@@ -70,3 +70,6 @@ func (r *Registry) ByProfile(profile string) []Control {
 func (r *Registry) Len() int {
 	return len(r.controls)
 }
+
+// ControlRegistry is the single registry for all HIPAA controls.
+var ControlRegistry = NewRegistry()

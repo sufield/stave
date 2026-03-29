@@ -6,13 +6,13 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-// controls002 checks that versioning is enabled on every S3 bucket.
-type controls002 struct {
+// controlsVersioning checks that versioning is enabled on every S3 bucket.
+type controlsVersioning struct {
 	Definition
 }
 
 func init() {
-	ControlsRegistry.MustRegister(&controls002{
+	ControlRegistry.MustRegister(&controlsVersioning{
 		Definition: Build(
 			WithID("CONTROLS.002"),
 			WithDescription("S3 bucket versioning must be enabled to protect data integrity"),
@@ -25,7 +25,7 @@ func init() {
 }
 
 // Evaluate checks that versioning.enabled is true for every S3 bucket.
-func (inv *controls002) Evaluate(snap asset.Snapshot) Result {
+func (inv *controlsVersioning) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

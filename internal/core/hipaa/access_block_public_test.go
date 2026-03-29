@@ -41,7 +41,7 @@ func bpaProps(blockACLs, ignoreACLs, blockPolicy, restrictBuckets bool) map[stri
 }
 
 func TestAccess001(t *testing.T) {
-	inv := AccessRegistry.Lookup("ACCESS.001")
+	inv := ControlRegistry.Lookup("ACCESS.001")
 	if inv == nil {
 		t.Fatal("ACCESS.001 not registered")
 	}

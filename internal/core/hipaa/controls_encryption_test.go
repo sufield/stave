@@ -20,7 +20,7 @@ func encBucket(id string, atRest bool, algorithm, keyID string) asset.Asset {
 }
 
 func TestControls001(t *testing.T) {
-	inv := ControlsRegistry.Lookup("CONTROLS.001")
+	inv := ControlRegistry.Lookup("CONTROLS.001")
 	if inv == nil {
 		t.Fatal("CONTROLS.001 not registered")
 	}
