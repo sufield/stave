@@ -19,18 +19,20 @@ linters:
   settings:
     depguard:
       rules:
-        usecases-no-aws:
+        headless-core:
           files:
-            - "internal/core/usecases/**"
+            - "internal/**"
+          deny:
+            - pkg: "github.com/spf13/cobra"
+              desc: "Core logic must remain headless; CLI dependencies belong in cmd/"
+            - pkg: "github.com/spf13/pflag"
+              desc: "Core logic must remain headless; CLI dependencies belong in cmd/"
+        core-no-aws:
+          files:
+            - "internal/core/**"
           deny:
             - pkg: "github.com/*/stave/internal/adapters/aws/**"
-              desc: "Use cases must depend on port interfaces, not AWS adapters"
-        domain-no-internal:
-          files:
-            - "internal/core/domain/**"
-          deny:
-            - pkg: "github.com/*/stave/internal/**"
-              desc: "Domain types must have zero internal dependencies"
+              desc: "Core packages must depend on port interfaces, not AWS adapters"
         cmd-no-infra:
           files:
             - "cmd/**"

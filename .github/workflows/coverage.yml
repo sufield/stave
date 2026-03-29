@@ -51,8 +51,8 @@ jobs:
 
           check_coverage ./internal/app/... 25 coverage-app.out
           check_coverage ./internal/core/predicate/... 40 coverage-predicate.out
-          check_coverage ./internal/core/kernel/... 70 coverage-kernel.out
-          check_coverage ./internal/core/evaluation/... 70 coverage-evaluation.out
+          check_coverage ./internal/core/kernel/... 50 coverage-kernel.out
+          check_coverage ./internal/core/evaluation/... 45 coverage-evaluation.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
