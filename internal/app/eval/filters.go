@@ -21,7 +21,7 @@ func (f ControlFilter) Enabled() bool {
 }
 
 // FilterControls returns only the controls that match the filter criteria.
-func FilterControls(invs []policy.ControlDefinition, f ControlFilter) ([]policy.ControlDefinition, error) {
+func FilterControls(controls []policy.ControlDefinition, f ControlFilter) ([]policy.ControlDefinition, error) {
 	if f.MinSeverity != policy.SeverityNone && !f.MinSeverity.IsValid() {
 		return nil, fmt.Errorf("invalid min-severity %s (use: critical, high, medium, low, info)", f.MinSeverity)
 	}
@@ -34,8 +34,8 @@ func FilterControls(invs []policy.ControlDefinition, f ControlFilter) ([]policy.
 		}
 	}
 
-	filtered := make([]policy.ControlDefinition, 0, len(invs))
-	for _, ctl := range invs {
+	filtered := make([]policy.ControlDefinition, 0, len(controls))
+	for _, ctl := range controls {
 		if f.matches(ctl, excluded) {
 			filtered = append(filtered, ctl)
 		}
