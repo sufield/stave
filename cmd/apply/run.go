@@ -149,7 +149,12 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
 
-	if err := appeval.RunOutputPipeline(ctx, deps.Config.Output, result, deps.Runner.Marshaler, deps.Runner.EnrichFn, ec.Logger); err != nil {
+	pipeline := &appeval.OutputPipeline{
+		Marshaler: deps.Runner.Marshaler,
+		Enricher:  deps.Runner.EnrichFn,
+		Logger:    ec.Logger,
+	}
+	if err := pipeline.Run(ctx, deps.Config.Output, result); err != nil {
 		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
 	}
 

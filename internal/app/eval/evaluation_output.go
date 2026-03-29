@@ -11,73 +11,60 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 )
 
-// RunOutputPipeline executes the Enrich → Marshal → Write sequence for
+// OutputPipeline handles the Enrich → Marshal → Write sequence for
 // evaluation results.
-func RunOutputPipeline(
-	ctx context.Context,
-	out io.Writer,
-	result evaluation.Result,
-	marshaler appcontracts.FindingMarshaler,
-	enrichFn appcontracts.EnrichFunc,
-	logger *slog.Logger,
-) error {
+type OutputPipeline struct {
+	Marshaler appcontracts.FindingMarshaler
+	Enricher  appcontracts.EnrichFunc
+	Logger    *slog.Logger
+}
+
+// Run executes the pipeline, writing the marshaled result to w.
+func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result evaluation.Result) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 
-	enriched, err := runStep(logger, "enrich", func() (appcontracts.EnrichedResult, error) {
-		return enrichFn(result)
+	enriched, err := runStep(p.Logger, "enrich", func() (appcontracts.EnrichedResult, error) {
+		return p.Enricher(result)
 	})
 	if err != nil {
-		return fmt.Errorf("failed to write findings: %w", err)
+		return fmt.Errorf("enrich: %w", err)
 	}
 
 	if err = ctx.Err(); err != nil {
 		return err
 	}
 
-	bytes, err := runStep(logger, "marshal", func() ([]byte, error) {
-		return marshaler.MarshalFindings(enriched)
+	data, err := runStep(p.Logger, "marshal", func() ([]byte, error) {
+		return p.Marshaler.MarshalFindings(enriched)
 	})
 	if err != nil {
-		return fmt.Errorf("failed to write findings: marshal findings: %w", err)
+		return fmt.Errorf("marshal: %w", err)
 	}
 
 	if err = ctx.Err(); err != nil {
 		return err
 	}
 
-	if len(bytes) == 0 {
-		return fmt.Errorf("failed to write findings: no bytes to write")
+	if len(data) == 0 {
+		return fmt.Errorf("no output generated")
 	}
 
-	_, err = runStep(logger, "write", func() (int, error) {
-		return out.Write(bytes)
+	_, err = runStep(p.Logger, "write", func() (int, error) {
+		return w.Write(data)
 	})
-	if err != nil {
-		return fmt.Errorf("failed to write findings: write output: %w", err)
-	}
-	return nil
+	return err
 }
 
-// runStep executes fn with optional logging and panic recovery.
-func runStep[T any](logger *slog.Logger, name string, fn func() (T, error)) (result T, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			var zero T
-			result = zero
-			err = fmt.Errorf("panic in step %q: %v", name, r)
-		}
-	}()
-
+// runStep executes fn with optional timing logs.
+func runStep[T any](logger *slog.Logger, name string, fn func() (T, error)) (T, error) {
 	if logger != nil {
 		logger.Debug("step starting", "step", name)
 		start := time.Now()
 		defer func() {
-			logger.Debug("step completed", "step", name,
-				"duration", time.Since(start), "error", err)
+			logger.Debug("step completed", "step", name, "duration", time.Since(start))
 		}()
 	}
-
 	return fn()
 }

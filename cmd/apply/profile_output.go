@@ -25,7 +25,11 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}
 
-	return appeval.RunOutputPipeline(ctx, cfg.Stdout, result, marshaler, enrichFn, nil)
+	pipeline := &appeval.OutputPipeline{
+		Marshaler: marshaler,
+		Enricher:  enrichFn,
+	}
+	return pipeline.Run(ctx, cfg.Stdout, result)
 }
 
 // finalizeProfileEvaluation reports warnings and returns the appropriate exit error.
