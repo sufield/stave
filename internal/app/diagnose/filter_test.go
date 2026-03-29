@@ -6,19 +6,19 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 )
 
-func TestFilterReport_NoFiltersReturnsOriginal(t *testing.T) {
+func TestFilter_Apply_NoFiltersReturnsOriginal(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
 		},
 	}
-	filtered := FilterReport(report, Filter{})
+	filtered := Filter{}.Apply(report)
 	if len(filtered.Issues) != 1 {
 		t.Fatalf("expected 1 diagnostic, got %d", len(filtered.Issues))
 	}
 }
 
-func TestFilterReport_ByCaseAndSignal(t *testing.T) {
+func TestFilter_Apply_ByCaseAndSignal(t *testing.T) {
 	report := &diagnosis.Report{
 		Issues: []diagnosis.Issue{
 			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
@@ -26,10 +26,10 @@ func TestFilterReport_ByCaseAndSignal(t *testing.T) {
 			{Case: diagnosis.ScenarioViolationEvidence, Signal: "streak evidence available"},
 		},
 	}
-	filtered := FilterReport(report, Filter{
+	filtered := Filter{
 		Cases:          []string{string(diagnosis.ScenarioExpectedNone), string(diagnosis.ScenarioEmptyFindings)},
 		SignalContains: "threshold",
-	})
+	}.Apply(report)
 	if len(filtered.Issues) != 1 {
 		t.Fatalf("expected 1 diagnostic after filters, got %d", len(filtered.Issues))
 	}
@@ -38,8 +38,8 @@ func TestFilterReport_ByCaseAndSignal(t *testing.T) {
 	}
 }
 
-func TestFilterReport_NilReport(t *testing.T) {
-	result := FilterReport(nil, Filter{Cases: []string{"x"}})
+func TestFilter_Apply_NilReport(t *testing.T) {
+	result := Filter{Cases: []string{"x"}}.Apply(nil)
 	if result != nil {
 		t.Fatal("expected nil for nil report")
 	}

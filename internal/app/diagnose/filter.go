@@ -17,9 +17,9 @@ func (f Filter) IsEmpty() bool {
 	return len(f.Cases) == 0 && strings.TrimSpace(f.SignalContains) == ""
 }
 
-// FilterReport applies the filter criteria to a diagnostic report and returns
+// Apply applies the filter criteria to a diagnostic report and returns
 // a new report containing only the matching issues.
-func FilterReport(report *diagnosis.Report, f Filter) *diagnosis.Report {
+func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
 	if report == nil || f.IsEmpty() {
 		return report
 	}

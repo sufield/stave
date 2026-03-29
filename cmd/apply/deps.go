@@ -106,10 +106,9 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("initialize CEL evaluator: %w", err)
 	}
 
-	built, err := appeval.BuildDependencies(appeval.BuildDependenciesInput{
-		Context: ctx,
-		Logger:  b.Logger,
-		Plan:    *plan,
+	built, err := appeval.BuildDependencies(ctx, appeval.BuildDependenciesInput{
+		Logger: b.Logger,
+		Plan:   *plan,
 		Adapters: appeval.Adapters{
 			FindingMarshaler:  a.marshaler,
 			EnrichFn:          buildEnrichFn(b.Sanitizer, b.IDGen),

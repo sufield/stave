@@ -53,9 +53,8 @@ type ProjectScope struct {
 // Runtime for evaluation parameters, Writers for output destinations,
 // and Project for configuration resolution.
 type BuildDependenciesInput struct {
-	Plan    EvaluationPlan
-	Context context.Context
-	Logger  *slog.Logger
+	Plan   EvaluationPlan
+	Logger *slog.Logger
 
 	Adapters Adapters
 	Runtime  RuntimeConfig
@@ -72,12 +71,10 @@ type BuildDependenciesOutput struct {
 // BuildDependencies assembles the evaluate runner and config from
 // pre-built dependencies. All loaders and writers must be created
 // by the caller before invoking this function.
-func BuildDependencies(in BuildDependenciesInput) (BuildDependenciesOutput, error) {
+func BuildDependencies(ctx context.Context, in BuildDependenciesInput) (BuildDependenciesOutput, error) {
 	if err := validateBuildDependenciesInput(in); err != nil {
 		return BuildDependenciesOutput{}, err
 	}
-
-	ctx := in.Context
 
 	resolved, err := ResolveProjectConfig(in.Project.Config)
 	if err != nil {
