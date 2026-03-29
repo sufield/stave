@@ -42,7 +42,6 @@ func (r *Runner) Run(
 	ctx context.Context,
 	req Request,
 ) (securityaudit.Report, securityaudit.ArtifactManifest, error) {
-	req = normalizeRequest(req)
 	if err := validateRequest(req); err != nil {
 		return securityaudit.Report{}, securityaudit.ArtifactManifest{}, err
 	}

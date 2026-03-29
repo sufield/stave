@@ -77,13 +77,6 @@ type FindingMarshaler interface {
 // Implementations close over the enricher and sanitizer.
 type EnrichFunc func(result evaluation.Result) (EnrichedResult, error)
 
-// IntegrityCheckConfigurer allows observation loaders to accept manifest
-// verification configuration. Implementations must configure integrity
-// checking before any snapshot listing calls.
-type IntegrityCheckConfigurer interface {
-	ConfigureIntegrityCheck(manifestPath, publicKeyPath string)
-}
-
 // ContentHasher computes reproducible digests over file system paths.
 type ContentHasher interface {
 	HashDir(path string, exts ...string) (string, error)

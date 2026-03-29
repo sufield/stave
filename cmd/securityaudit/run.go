@@ -78,22 +78,22 @@ func resolveAuditEnvironment() (cwd string, exe string, err error) {
 func executeAudit(ctx context.Context, cfg auditConfig, cwd, exe, bundleDir string) (domainsecurityaudit.Report, domainsecurityaudit.ArtifactManifest, error) {
 	runner := appsa.NewRunner(buildRunnerDeps())
 
-	report, artifacts, err := runner.Run(ctx, appsa.Request{
-		Now:                  cfg.Now,
-		StaveVersion:         staveversion.String,
-		Cwd:                  cwd,
-		BinaryPath:           exe,
-		OutDir:               bundleDir,
-		SeverityFilter:       cfg.SeverityFilter,
-		SBOMFormat:           cfg.SBOMFormat,
-		ComplianceFrameworks: cfg.Frameworks,
-		VulnSource:           cfg.VulnSource,
-		LiveVulnCheck:        cfg.LiveVulnCheck,
-		ReleaseBundleDir:     cfg.ReleaseBundleDir,
-		PrivacyEnabled:       cfg.PrivacyEnabled,
-		FailOn:               cfg.FailOn,
-		RequireOffline:       cfg.RequireOffline,
-	})
+	report, artifacts, err := runner.Run(ctx, appsa.NewRequest(
+		appsa.WithNow(cfg.Now),
+		appsa.WithStaveVersion(staveversion.String),
+		appsa.WithCwd(cwd),
+		appsa.WithBinaryPath(exe),
+		appsa.WithOutDir(bundleDir),
+		appsa.WithSeverityFilter(cfg.SeverityFilter),
+		appsa.WithSBOMFormat(cfg.SBOMFormat),
+		appsa.WithComplianceFrameworks(cfg.Frameworks),
+		appsa.WithVulnSource(cfg.VulnSource),
+		appsa.WithLiveVulnCheck(cfg.LiveVulnCheck),
+		appsa.WithReleaseBundleDir(cfg.ReleaseBundleDir),
+		appsa.WithPrivacy(cfg.PrivacyEnabled),
+		appsa.WithFailOn(cfg.FailOn),
+		appsa.WithRequireOffline(cfg.RequireOffline),
+	))
 	if err != nil {
 		return domainsecurityaudit.Report{}, domainsecurityaudit.ArtifactManifest{}, fmt.Errorf("run security audit: %w", err)
 	}

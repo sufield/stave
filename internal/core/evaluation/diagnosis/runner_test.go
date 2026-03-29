@@ -42,7 +42,16 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(48*time.Hour), mustPredicateEval())
+	input := NewInput(Input{
+		Snapshots:         snapshots,
+		Controls:          controls,
+		Findings:          nil,
+		ViolationsFound:   0,
+		AttackSurface:     0,
+		MaxUnsafeDuration: 168 * time.Hour,
+		Now:               baseTime.Add(48 * time.Hour),
+		PredicateEval:     mustPredicateEval(),
+	})
 
 	report := Explain(input)
 
@@ -95,7 +104,16 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(24*time.Hour), mustPredicateEval())
+	input := NewInput(Input{
+		Snapshots:         snapshots,
+		Controls:          controls,
+		Findings:          nil,
+		ViolationsFound:   0,
+		AttackSurface:     0,
+		MaxUnsafeDuration: 168 * time.Hour,
+		Now:               baseTime.Add(24 * time.Hour),
+		PredicateEval:     mustPredicateEval(),
+	})
 
 	report := Explain(input)
 
@@ -143,7 +161,16 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(200*time.Hour), mustPredicateEval())
+	input := NewInput(Input{
+		Snapshots:         snapshots,
+		Controls:          controls,
+		Findings:          nil,
+		ViolationsFound:   0,
+		AttackSurface:     0,
+		MaxUnsafeDuration: 168 * time.Hour,
+		Now:               baseTime.Add(200 * time.Hour),
+		PredicateEval:     mustPredicateEval(),
+	})
 
 	report := Explain(input)
 
@@ -182,7 +209,16 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 		},
 	}
 
-	input := NewInput(snapshots, []policy.ControlDefinition{{ID: "CTL.TEST"}}, findings, 1, 0, 168*time.Hour, baseTime.Add(100*time.Hour), mustPredicateEval())
+	input := NewInput(Input{
+		Snapshots:         snapshots,
+		Controls:          []policy.ControlDefinition{{ID: "CTL.TEST"}},
+		Findings:          findings,
+		ViolationsFound:   1,
+		AttackSurface:     0,
+		MaxUnsafeDuration: 168 * time.Hour,
+		Now:               baseTime.Add(100 * time.Hour),
+		PredicateEval:     mustPredicateEval(),
+	})
 
 	report := Explain(input)
 
@@ -226,7 +262,16 @@ func TestRun_Summary(t *testing.T) {
 		{ID: "CTL.2", Name: "Test2"},
 	}
 
-	input := NewInput(snapshots, controls, nil, 0, 0, 168*time.Hour, baseTime.Add(240*time.Hour), mustPredicateEval())
+	input := NewInput(Input{
+		Snapshots:         snapshots,
+		Controls:          controls,
+		Findings:          nil,
+		ViolationsFound:   0,
+		AttackSurface:     0,
+		MaxUnsafeDuration: 168 * time.Hour,
+		Now:               baseTime.Add(240 * time.Hour),
+		PredicateEval:     mustPredicateEval(),
+	})
 
 	report := Explain(input)
 

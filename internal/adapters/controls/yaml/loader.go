@@ -48,12 +48,6 @@ func NewControlLoader(opts ...LoaderOption) (*ControlLoader, error) {
 	return l, nil
 }
 
-// SetOnProgress sets a callback that is called after each file is processed
-// with (processed, total) counts. Pass nil to disable.
-func (l *ControlLoader) SetOnProgress(fn func(processed, total int)) {
-	l.onProgress = fn
-}
-
 // LoadControls loads all YAML control definitions from the given directory,
 // recursively traversing subdirectories. Directories prefixed with "_" are skipped.
 // It supports an optional _registry/controls.index.json fast-path for large sets.
