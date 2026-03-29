@@ -24,10 +24,20 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Generate coverage
+      - name: Generate unit test coverage
         run: |
-          make sync-schemas
-          go test ./... -covermode=atomic -coverprofile=coverage.out
+          make sync-schemas sync-controls
+          go test ./... -covermode=atomic -coverprofile=unit.out
+
+      - name: Generate testscript integration coverage
+        run: |
+          go test ./cmd/stave/... -run TestScripts -covermode=atomic -coverpkg=./... -coverprofile=testscript.out -count=1 -timeout 120s
+
+      - name: Merge coverage profiles
+        run: |
+          head -1 unit.out > coverage.out
+          tail -n +2 unit.out >> coverage.out
+          tail -n +2 testscript.out >> coverage.out
 
       - name: Enforce core package coverage policy
         run: |
