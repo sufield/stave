@@ -35,9 +35,16 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 		},
 	}
 
-	s := newSession(NewInput(
-		snapshots, []policy.ControlDefinition{ctl}, nil, 0, 0, 0, base.Add(1*time.Hour), mustPredicateEval(),
-	), 0)
+	s := newSession(NewInput(Input{
+		Snapshots:         snapshots,
+		Controls:          []policy.ControlDefinition{ctl},
+		Findings:          nil,
+		ViolationsFound:   0,
+		AttackSurface:     0,
+		MaxUnsafeDuration: 0,
+		Now:               base.Add(1 * time.Hour),
+		PredicateEval:     mustPredicateEval(),
+	}), 0)
 	maxStreak, ctlID := s.globalMaxStreak()
 
 	if ctlID != ctl.ID.String() {

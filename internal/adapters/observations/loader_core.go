@@ -27,22 +27,37 @@ type ObservationLoader struct {
 	validator              *contractvalidator.Validator
 	integrityManifestPath  string
 	integrityPublicKeyPath string
-	// OnProgress is called after each file is processed with (processed, total) counts.
-	// It is optional and safe to leave nil.
-	OnProgress func(processed, total int)
+	onProgress             func(processed, total int)
 }
 
-var (
-	_ appcontracts.ObservationRepository    = (*ObservationLoader)(nil)
-	_ appcontracts.IntegrityCheckConfigurer = (*ObservationLoader)(nil)
-)
+// LoaderOption configures an ObservationLoader.
+type LoaderOption func(*ObservationLoader)
+
+// WithOnProgress sets a callback invoked after each file is processed.
+func WithOnProgress(fn func(processed, total int)) LoaderOption {
+	return func(l *ObservationLoader) { l.onProgress = fn }
+}
+
+// WithIntegrityCheck enables manifest verification for loaded snapshots.
+func WithIntegrityCheck(manifestPath, publicKeyPath string) LoaderOption {
+	return func(l *ObservationLoader) {
+		l.integrityManifestPath = manifestPath
+		l.integrityPublicKeyPath = publicKeyPath
+	}
+}
+
+var _ appcontracts.ObservationRepository = (*ObservationLoader)(nil)
 
 // NewObservationLoader creates a new JSON observation loader with the default contract validator.
-func NewObservationLoader() *ObservationLoader {
-	return &ObservationLoader{
+func NewObservationLoader(opts ...LoaderOption) *ObservationLoader {
+	l := &ObservationLoader{
 		validator:  contractvalidator.New(),
-		OnProgress: func(int, int) {},
+		onProgress: func(int, int) {},
 	}
+	for _, opt := range opts {
+		opt(l)
+	}
+	return l
 }
 
 // LoadSnapshots loads all JSON snapshots from the given directory.
@@ -84,7 +99,7 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		snapshots = append(snapshots, snap)
 		fileHashes[entry.Name()] = hash
 
-		l.OnProgress(i+1, total)
+		l.onProgress(i+1, total)
 	}
 
 	if joinedErr != nil {
@@ -97,18 +112,6 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 	}
 
 	return appcontracts.LoadResult{Snapshots: snapshots, Hashes: hashes}, nil
-}
-
-// SetOnProgress sets a callback that is called after each file is processed
-// with (processed, total) counts. Pass nil to disable.
-func (l *ObservationLoader) SetOnProgress(fn func(processed, total int)) {
-	l.OnProgress = fn
-}
-
-// ConfigureIntegrityCheck sets optional manifest verification for future LoadSnapshots calls.
-func (l *ObservationLoader) ConfigureIntegrityCheck(manifestPath, publicKeyPath string) {
-	l.integrityManifestPath = manifestPath
-	l.integrityPublicKeyPath = publicKeyPath
 }
 
 // listObservationFiles reads a directory and returns JSON file entries

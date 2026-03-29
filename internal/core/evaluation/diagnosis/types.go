@@ -75,28 +75,10 @@ type Input struct {
 }
 
 // NewInput initializes the input and pre-computes summary statistics.
-func NewInput(
-	snapshots asset.Snapshots,
-	controls []policy.ControlDefinition,
-	findings []DiagnosticFinding,
-	violationsFound int,
-	attackSurface int,
-	maxUnsafe time.Duration,
-	now time.Time,
-	eval policy.PredicateEval,
-) Input {
-	i := Input{
-		Snapshots:         snapshots,
-		Controls:          controls,
-		Findings:          findings,
-		ViolationsFound:   violationsFound,
-		AttackSurface:     attackSurface,
-		MaxUnsafeDuration: maxUnsafe,
-		Now:               now,
-		PredicateEval:     eval,
-	}
-	i.summary = i.buildSummary()
-	return i
+// Callers should construct the Input struct literal and pass it here.
+func NewInput(in Input) Input {
+	in.summary = in.buildSummary()
+	return in
 }
 
 // Summarize returns pre-computed metadata about the input data.

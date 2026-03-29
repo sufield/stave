@@ -66,16 +66,16 @@ func (d *Run) Execute(ctx context.Context, cfg Config) (*diagnosis.Report, error
 		return nil, fmt.Errorf("resolve result: %w", err)
 	}
 
-	input := diagnosis.NewInput(
-		loaded.snapshots,
-		loaded.controls,
-		toDiagnosticFindings(result.Findings),
-		len(result.Findings),
-		result.Summary.AttackSurface,
-		cfg.MaxUnsafeDuration,
-		cfg.Clock.Now(),
-		cfg.PredicateEval,
-	)
+	input := diagnosis.NewInput(diagnosis.Input{
+		Snapshots:         loaded.snapshots,
+		Controls:          loaded.controls,
+		Findings:          toDiagnosticFindings(result.Findings),
+		ViolationsFound:   len(result.Findings),
+		AttackSurface:     result.Summary.AttackSurface,
+		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Now:               cfg.Clock.Now(),
+		PredicateEval:     cfg.PredicateEval,
+	})
 
 	report := diagnosis.Explain(input)
 	return &report, nil

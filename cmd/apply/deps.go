@@ -184,17 +184,14 @@ func (b *Builder) buildObservationLoader(source appeval.ObservationSource) (appc
 		return b.NewStdinObsRepo(b.Stdin)
 	}
 
-	loader := observations.NewObservationLoader()
-
+	var opts []observations.LoaderOption
 	if b.Opts.IntegrityManifest != "" {
-		loader.ConfigureIntegrityCheck(b.Opts.IntegrityManifest, b.Opts.IntegrityPublicKey)
+		opts = append(opts, observations.WithIntegrityCheck(b.Opts.IntegrityManifest, b.Opts.IntegrityPublicKey))
 	}
-
 	if b.OnObsProgress != nil {
-		loader.SetOnProgress(b.OnObsProgress)
+		opts = append(opts, observations.WithOnProgress(b.OnObsProgress))
 	}
-
-	return loader, nil
+	return observations.NewObservationLoader(opts...), nil
 }
 
 // buildProjectConfigFromLoaded assembles project configuration input from

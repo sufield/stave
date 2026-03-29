@@ -26,33 +26,99 @@ type Request struct {
 	RequireOffline       bool
 }
 
-func normalizeRequest(req Request) Request {
-	if req.Now.IsZero() {
-		req.Now = time.Now().UTC()
-	}
-	if strings.TrimSpace(req.StaveVersion) == "" {
-		req.StaveVersion = "unknown"
-	}
-	if strings.TrimSpace(req.Cwd) == "" {
-		req.Cwd = "."
-	}
-	if strings.TrimSpace(string(req.SBOMFormat)) == "" {
-		req.SBOMFormat = SBOMFormatSPDX
-	}
-	req.SBOMFormat = SBOMFormat(strings.ToLower(strings.TrimSpace(string(req.SBOMFormat))))
-	if strings.TrimSpace(string(req.VulnSource)) == "" {
-		req.VulnSource = VulnSourceHybrid
-	}
-	req.VulnSource = VulnSource(strings.ToLower(strings.TrimSpace(string(req.VulnSource))))
-	if req.FailOn == "" {
-		req.FailOn = securityaudit.SeverityHigh
-	}
-	if len(req.SeverityFilter) == 0 {
-		req.SeverityFilter = []securityaudit.Severity{
+// RequestOption configures a Request.
+type RequestOption func(*Request)
+
+// WithNow overrides the audit timestamp (default: time.Now().UTC()).
+func WithNow(t time.Time) RequestOption {
+	return func(r *Request) { r.Now = t }
+}
+
+// WithStaveVersion sets the stave binary version for the audit report.
+func WithStaveVersion(v string) RequestOption {
+	return func(r *Request) { r.StaveVersion = v }
+}
+
+// WithCwd sets the working directory (default: ".").
+func WithCwd(dir string) RequestOption {
+	return func(r *Request) { r.Cwd = dir }
+}
+
+// WithBinaryPath sets the path to the stave binary for inspection.
+func WithBinaryPath(path string) RequestOption {
+	return func(r *Request) { r.BinaryPath = path }
+}
+
+// WithOutDir overrides the audit output directory.
+func WithOutDir(dir string) RequestOption {
+	return func(r *Request) { r.OutDir = dir }
+}
+
+// WithSeverityFilter sets which severity levels to include.
+func WithSeverityFilter(levels []securityaudit.Severity) RequestOption {
+	return func(r *Request) { r.SeverityFilter = levels }
+}
+
+// WithSBOMFormat sets the SBOM output format (default: spdx).
+func WithSBOMFormat(f SBOMFormat) RequestOption {
+	return func(r *Request) { r.SBOMFormat = f }
+}
+
+// WithComplianceFrameworks sets the compliance frameworks to map.
+func WithComplianceFrameworks(frameworks []string) RequestOption {
+	return func(r *Request) { r.ComplianceFrameworks = frameworks }
+}
+
+// WithVulnSource sets the vulnerability evidence strategy (default: hybrid).
+func WithVulnSource(src VulnSource) RequestOption {
+	return func(r *Request) { r.VulnSource = src }
+}
+
+// WithLiveVulnCheck enables live vulnerability scanning.
+func WithLiveVulnCheck(enabled bool) RequestOption {
+	return func(r *Request) { r.LiveVulnCheck = enabled }
+}
+
+// WithReleaseBundleDir sets the release bundle directory for evidence.
+func WithReleaseBundleDir(dir string) RequestOption {
+	return func(r *Request) { r.ReleaseBundleDir = dir }
+}
+
+// WithPrivacy enables privacy mode for the audit.
+func WithPrivacy(enabled bool) RequestOption {
+	return func(r *Request) { r.PrivacyEnabled = enabled }
+}
+
+// WithFailOn sets the severity threshold for gating (default: HIGH).
+func WithFailOn(sev securityaudit.Severity) RequestOption {
+	return func(r *Request) { r.FailOn = sev }
+}
+
+// WithRequireOffline enforces offline mode during the audit.
+func WithRequireOffline(offline bool) RequestOption {
+	return func(r *Request) { r.RequireOffline = offline }
+}
+
+// NewRequest creates a Request with sensible defaults, then applies options.
+func NewRequest(opts ...RequestOption) Request {
+	req := Request{
+		Now:          time.Now().UTC(),
+		StaveVersion: "unknown",
+		Cwd:          ".",
+		SBOMFormat:   SBOMFormatSPDX,
+		VulnSource:   VulnSourceHybrid,
+		FailOn:       securityaudit.SeverityHigh,
+		SeverityFilter: []securityaudit.Severity{
 			securityaudit.SeverityCritical,
 			securityaudit.SeverityHigh,
-		}
+		},
 	}
+	for _, opt := range opts {
+		opt(&req)
+	}
+	// Normalize formats after options are applied.
+	req.SBOMFormat = SBOMFormat(strings.ToLower(strings.TrimSpace(string(req.SBOMFormat))))
+	req.VulnSource = VulnSource(strings.ToLower(strings.TrimSpace(string(req.VulnSource))))
 	if strings.TrimSpace(req.OutDir) == "" {
 		req.OutDir = fmt.Sprintf("security-audit-%s", req.Now.UTC().Format("20060102T150405Z"))
 	}

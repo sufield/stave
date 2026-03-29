@@ -281,8 +281,7 @@ func TestObservationLoader_IntegrityManifest_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader2 := NewObservationLoader()
-	loader2.ConfigureIntegrityCheck(manifestPath, "")
+	loader2 := NewObservationLoader(WithIntegrityCheck(manifestPath, ""))
 	if _, err := loader2.LoadSnapshots(context.Background(), obsDir); err != nil {
 		t.Fatalf("expected successful integrity verification, got: %v", err)
 	}
@@ -319,8 +318,7 @@ func TestObservationLoader_IntegrityManifest_HashMismatch(t *testing.T) {
 		t.Fatal(writeErr)
 	}
 
-	loader2 := NewObservationLoader()
-	loader2.ConfigureIntegrityCheck(manifestPath, "")
+	loader2 := NewObservationLoader(WithIntegrityCheck(manifestPath, ""))
 	_, err = loader2.LoadSnapshots(context.Background(), obsDir)
 	if err == nil {
 		t.Fatal("expected integrity verification error")
@@ -388,8 +386,7 @@ func TestObservationLoader_SignedIntegrityManifest_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader2 := NewObservationLoader()
-	loader2.ConfigureIntegrityCheck(manifestPath, pubPath)
+	loader2 := NewObservationLoader(WithIntegrityCheck(manifestPath, pubPath))
 	if _, err := loader2.LoadSnapshots(context.Background(), obsDir); err != nil {
 		t.Fatalf("expected signed integrity verification success, got: %v", err)
 	}
