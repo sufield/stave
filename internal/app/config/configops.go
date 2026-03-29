@@ -217,19 +217,23 @@ func DeleteTierValue(cfg *ProjectConfig, tierName string) {
 	delete(cfg.RetentionTiers, tierName)
 }
 
+// resolveRegistry maps config key names to their corresponding Evaluator methods.
+// This replaces reflection-based dispatch for compile-time safety and grep-ability.
+var resolveRegistry = map[string]func(*Evaluator) Value[string]{
+	"max_unsafe":             (*Evaluator).ResolveMaxUnsafeDuration,
+	"default_retention_tier": (*Evaluator).ResolveRetentionTier,
+	"ci_failure_policy":      (*Evaluator).ResolveCIFailurePolicy,
+	"cli_output":             (*Evaluator).ResolveCLIOutput,
+	"cli_path_mode":          (*Evaluator).ResolveCLIPathMode,
+}
+
 // ResolveKey calls the appropriate Evaluator.Resolve*() method by key name.
 func ResolveKey(eval *Evaluator, key string) (Value[string], bool) {
-	methodName := "Resolve" + pascalCase(key)
-	method := reflect.ValueOf(eval).MethodByName(methodName)
-	if !method.IsValid() {
+	resolver, ok := resolveRegistry[key]
+	if !ok {
 		return Value[string]{}, false
 	}
-	results := method.Call(nil)
-	if len(results) == 0 {
-		return Value[string]{}, false
-	}
-	v, ok := results[0].Interface().(Value[string])
-	return v, ok
+	return resolver(eval), true
 }
 
 // BuildKeyCompletions generates shell completion strings for config keys.
@@ -268,14 +272,4 @@ func structFieldNameByYAMLTag(cfg *ProjectConfig, yamlKey string) string {
 		}
 	}
 	return ""
-}
-
-func pascalCase(s string) string {
-	words := strings.Split(s, "_")
-	for i, w := range words {
-		if len(w) > 0 {
-			words[i] = strings.ToUpper(w[:1]) + w[1:]
-		}
-	}
-	return strings.Join(words, "")
 }

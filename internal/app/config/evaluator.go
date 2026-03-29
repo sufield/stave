@@ -15,6 +15,8 @@ type Evaluator struct {
 	ProjectPath string
 	User        *UserConfig
 	UserPath    string
+	// Getenv returns the value of an environment variable. Defaults to os.Getenv.
+	Getenv func(string) string
 }
 
 // NewEvaluator creates a pre-populated evaluator.
@@ -24,6 +26,7 @@ func NewEvaluator(proj *ProjectConfig, projPath string, user *UserConfig, userPa
 		ProjectPath: projPath,
 		User:        user,
 		UserPath:    userPath,
+		Getenv:      os.Getenv,
 	}
 }
 
@@ -35,6 +38,7 @@ func (e *Evaluator) WithProject(proj *ProjectConfig, projPath string) *Evaluator
 		ProjectPath: projPath,
 		User:        e.User,
 		UserPath:    e.UserPath,
+		Getenv:      e.Getenv,
 	}
 }
 
@@ -46,7 +50,7 @@ func (e *Evaluator) resolve(
 	defaultValue string,
 	normalize func(string) string,
 ) Value[string] {
-	if v := strings.TrimSpace(os.Getenv(entry.Name)); v != "" {
+	if v := strings.TrimSpace(e.Getenv(entry.Name)); v != "" {
 		return Value[string]{Value: normalize(v), Source: "env:" + entry.Name, Layer: LayerEnvironment}
 	}
 	if e.Project != nil {
@@ -63,10 +67,6 @@ func (e *Evaluator) resolve(
 }
 
 func passthrough(v string) string { return v }
-
-// ResolveMaxUnsafe is the reflection target for config key "max_unsafe".
-// Called by ResolveKey via reflect.MethodByName("ResolveMaxUnsafe").
-func (e *Evaluator) ResolveMaxUnsafe() Value[string] { return e.ResolveMaxUnsafeDuration() }
 
 // ResolveMaxUnsafeDuration returns the max-unsafe value with provenance.
 func (e *Evaluator) ResolveMaxUnsafeDuration() Value[string] {
@@ -88,7 +88,7 @@ func (e *Evaluator) ResolveRetentionTier() Value[string] {
 
 // ResolveSnapshotRetention returns the snapshot retention value with provenance for a specific tier.
 func (e *Evaluator) ResolveSnapshotRetention(tier string) Value[string] {
-	if v := strings.TrimSpace(os.Getenv(env.SnapshotRetention.Name)); v != "" {
+	if v := strings.TrimSpace(e.Getenv(env.SnapshotRetention.Name)); v != "" {
 		return Value[string]{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
 	}
 	if v, ok := e.retentionFromProject(tier); ok {
