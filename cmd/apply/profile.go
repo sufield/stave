@@ -26,21 +26,24 @@ type Profile string
 const (
 	// ProfileAWSS3 selects the AWS S3 evaluation profile.
 	ProfileAWSS3 Profile = "aws-s3"
+	// ProfileHIPAA selects the HIPAA Security Rule evaluation profile.
+	ProfileHIPAA Profile = "hipaa"
 )
 
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
-	case ProfileAWSS3:
-		return ProfileAWSS3, nil
+	case ProfileAWSS3, ProfileHIPAA:
+		return Profile(s), nil
 	default:
-		return "", fmt.Errorf("unsupported --profile %q (supported: %s)", s, ProfileAWSS3)
+		return "", fmt.Errorf("unsupported --profile %q (supported: aws-s3, hipaa)", s)
 	}
 }
 
 // Config holds the parameters for a profile-based apply operation.
 type Config struct {
 	InputFile       string
+	Profile         Profile
 	BucketAllowlist []string
 	IncludeAll      bool
 	OutputFormat    ui.OutputFormat
@@ -91,7 +94,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return nil
 	}
 
-	ctlDir, controls, err := r.loadControls(ctx)
+	ctlDir, controls, err := r.loadControls(ctx, cfg.Profile)
 	if err != nil {
 		return fmt.Errorf("load controls: %w", err)
 	}
@@ -142,18 +145,30 @@ func validateInput(path string) error {
 	return nil
 }
 
-func (r *Runner) loadControls(ctx context.Context) (string, []policy.ControlDefinition, error) {
-	ctlDir := filepath.Join(getControlsBaseDir(), "s3")
+func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []policy.ControlDefinition, error) {
+	domain := profileControlDomain(prof)
+	ctlDir := filepath.Join(getControlsBaseDir(), domain)
 
 	controls, err := r.LoadControls(ctx, ctlDir)
 	if err != nil {
 		return "", nil, err
 	}
 	if len(controls) == 0 {
-		return "", nil, fmt.Errorf("%w: no S3 controls found in %s", appeval.ErrNoControls, ctlDir)
+		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, domain, ctlDir)
 	}
 
 	return ctlDir, controls, nil
+}
+
+// profileControlDomain maps a profile to its control subdirectory.
+func profileControlDomain(prof Profile) string {
+	switch prof {
+	case ProfileHIPAA:
+		// HIPAA reuses S3 controls — same directory, filtered by compliance ref.
+		return "s3"
+	default:
+		return "s3"
+	}
 }
 
 func getControlsBaseDir() string {

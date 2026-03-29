@@ -6,6 +6,20 @@ packs:
       - CTL.S3.PUBLIC.001
       - CTL.S3.PUBLIC.003
       - CTL.S3.ACL.WRITE.001
+  hipaa:
+    description: HIPAA Security Rule S3 controls for PHI workloads
+    controls:
+      - CTL.S3.CONTROLS.001
+      - CTL.S3.ENCRYPT.001
+      - CTL.S3.ENCRYPT.002
+      - CTL.S3.ENCRYPT.003
+      - CTL.S3.GOVERNANCE.001
+      - CTL.S3.LOCK.001
+      - CTL.S3.LOCK.002
+      - CTL.S3.LOCK.003
+      - CTL.S3.LOG.001
+      - CTL.S3.PUBLIC.001
+      - CTL.S3.VERSION.001
   s3:
     description: Default S3 built-in pack for MVP
     controls:

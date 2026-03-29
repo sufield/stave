@@ -141,7 +141,7 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 		return RunConfig{}, &ui.UserError{Err: err}
 	}
 
-	if prof == ProfileAWSS3 && o.InputFile == "" {
+	if o.InputFile == "" {
 		return RunConfig{}, &ui.UserError{Err: fmt.Errorf("--input is required when using --profile %s", o.Profile)}
 	}
 
@@ -157,6 +157,7 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 
 	cfg := &Config{
 		InputFile:       o.InputFile,
+		Profile:         prof,
 		BucketAllowlist: o.BucketAllowlist,
 		IncludeAll:      o.IncludeAll,
 		OutputFormat:    format,
