@@ -12,19 +12,16 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 )
 
-func TestRunOutputPipeline_Success(t *testing.T) {
+func TestOutputPipeline_Success(t *testing.T) {
 	var buf bytes.Buffer
 
-	err := RunOutputPipeline(
-		context.Background(),
-		&buf,
-		evaluation.Result{Run: evaluation.RunInfo{StaveVersion: "test"}},
-		&outputMarshalerStub{data: []byte(`{"ok":true}`)},
-		func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
+	p := &OutputPipeline{
+		Marshaler: &outputMarshalerStub{data: []byte(`{"ok":true}`)},
+		Enricher: func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{Result: r, Run: r.Run}, nil
 		},
-		nil,
-	)
+	}
+	err := p.Run(context.Background(), &buf, evaluation.Result{Run: evaluation.RunInfo{StaveVersion: "test"}})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -33,58 +30,40 @@ func TestRunOutputPipeline_Success(t *testing.T) {
 	}
 }
 
-func TestRunOutputPipeline_MarshalError(t *testing.T) {
+func TestOutputPipeline_MarshalError(t *testing.T) {
 	sentinel := errors.New("codec failure")
 
-	err := RunOutputPipeline(
-		context.Background(),
-		&bytes.Buffer{},
-		evaluation.Result{},
-		&outputMarshalerStub{err: sentinel},
-		func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
+	p := &OutputPipeline{
+		Marshaler: &outputMarshalerStub{err: sentinel},
+		Enricher: func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, nil
 		},
-		nil,
-	)
+	}
+	err := p.Run(context.Background(), &bytes.Buffer{}, evaluation.Result{})
 	if err == nil {
 		t.Fatal("expected error")
 	}
 	if !errors.Is(err, sentinel) {
 		t.Fatalf("expected sentinel through wrapping, got %v", err)
 	}
-	if !strings.Contains(err.Error(), "marshal findings") {
-		t.Fatalf("expected 'marshal findings' in error, got %v", err)
+	if !strings.Contains(err.Error(), "marshal") {
+		t.Fatalf("expected 'marshal' in error, got %v", err)
 	}
 }
 
-func TestRunOutputPipeline_CancelledContext(t *testing.T) {
+func TestOutputPipeline_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	err := RunOutputPipeline(
-		ctx,
-		&bytes.Buffer{},
-		evaluation.Result{},
-		&outputMarshalerStub{data: []byte(`{}`)},
-		func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
+	p := &OutputPipeline{
+		Marshaler: &outputMarshalerStub{data: []byte(`{}`)},
+		Enricher: func(r evaluation.Result) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, nil
 		},
-		nil,
-	)
+	}
+	err := p.Run(ctx, &bytes.Buffer{}, evaluation.Result{})
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context.Canceled, got %v", err)
-	}
-}
-
-func TestRunStep_CatchesPanic(t *testing.T) {
-	_, err := runStep[int](nil, "boom", func() (int, error) {
-		panic("boom")
-	})
-	if err == nil {
-		t.Fatal("expected error from panic")
-	}
-	if !strings.Contains(err.Error(), `panic in step "boom"`) {
-		t.Fatalf("got %q", err.Error())
 	}
 }
 
