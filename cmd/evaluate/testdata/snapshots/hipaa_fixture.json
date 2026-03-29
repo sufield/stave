@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-15T00:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::phi-data-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket_name": "phi-data-bucket",
+        "external_id": "arn:aws:s3:::phi-data-bucket",
+        "storage": {
+          "kind": "bucket",
+          "controls": {
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256"
+          },
+          "versioning": {
+            "enabled": true
+          },
+          "ownership_controls": "ObjectWriter"
+        },
+        "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadWrite\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-data-bucket\",\"arn:aws:s3:::phi-data-bucket/*\"]}]}"
+      }
+    }
+  ]
+}

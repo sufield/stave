@@ -20,6 +20,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
+	"github.com/sufield/stave/cmd/evaluate"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -103,6 +104,9 @@ func WireCommands(app *App) {
 
 	// Security
 	root.AddCommand(securityaudit.NewCmd())
+
+	// Compliance evaluation
+	root.AddCommand(evaluate.NewCmd())
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd(doctor.Deps{

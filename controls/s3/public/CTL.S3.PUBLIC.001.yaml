@@ -10,6 +10,7 @@ exposure:
   principal_scope: public
 severity: critical
 compliance:
+  hipaa: "164.312(a)(1)"
   cis_aws_v1.4.0: "2.1.5"
   pci_dss_v3.2.1: "1.2.1"
   soc2: "CC6.1"

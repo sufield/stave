@@ -1,0 +1,8 @@
+exceptions:
+  - control_id: ACCESS.001
+    bucket: phi-data-bucket
+    rationale: "CloudFront + OAI pattern — bucket is private to CloudFront"
+    acknowledged_by: bala@example.com
+    acknowledged_date: "2026-03-28"
+    requires_passing:
+      - CONTROLS.002
