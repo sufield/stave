@@ -14,7 +14,7 @@ Cloud security tools fall into two camps: runtime scanners that require credenti
 
 Stave fills this gap. Controls are YAML-defined using a `ctrl.v1` DSL that compiles to [CEL (Common Expression Language)](https://github.com/google/cel-go) at runtime — giving you a battle-tested expression engine with type safety and deterministic evaluation. Any vendor, any asset type, any JSON property shape. No API calls, no runtime agents, no network access at scan time.
 
-The first built-in control pack targets AWS S3 — where existing tools share a blind spot (treating Block Public Access as the sole signal for exposure, missing legacy ACL grants). But the engine is not S3-specific: the same evaluation pipeline, duration tracking, and enforcement artifacts apply to any infrastructure asset you can capture as a JSON snapshot.
+Stave ships two built-in control packs. The **S3 pack** (43 controls) targets the blind spot where existing tools treat Block Public Access as the sole signal for exposure, missing legacy ACL grants. The **HIPAA pack** selects the subset of S3 controls required for PHI workloads and maps each to specific HIPAA Security Rule citations (§164.312). But the engine is not S3-specific or HIPAA-specific: the same evaluation pipeline, duration tracking, and enforcement artifacts apply to any infrastructure asset you can capture as a JSON snapshot.
 
 ## What Stave does
 
@@ -29,6 +29,7 @@ Stave reads point-in-time configuration snapshots and evaluates them against YAM
 - **Enforcement artifacts** — generates fix plans with specific remediation actions
 - **Exemptions and exceptions** — exempt entire assets or suppress specific control+asset findings with audit trail and expiry dates
 - **43 built-in S3 controls** — first control pack covers public exposure, ACL escalation, encryption, versioning, lifecycle, object lock, logging, governance, and takeover prevention
+- **HIPAA compliance pack** — curated subset of S3 controls mapped to HIPAA Security Rule sections (§164.312, §164.316) with compound risk detection, acknowledged exceptions with compensating controls, and structured compliance reporting
 
 All evaluation runs locally. No cloud credentials. No network access. Air-gapped by design.
 
@@ -64,6 +65,19 @@ stave apply --format json > output/evaluation.json
 
 # 5. Investigate unexpected results
 stave diagnose
+```
+
+### HIPAA compliance evaluation
+
+```bash
+# Evaluate S3 observations against the HIPAA compliance profile
+stave apply --profile hipaa --input observations.json --format json
+
+# Or use the dedicated evaluate command with compound risk detection
+stave evaluate --snapshot observations/snap.json --profile hipaa
+
+# List HIPAA pack controls
+stave packs show hipaa
 ```
 
 ### Run tests
@@ -143,7 +157,7 @@ Details: [Security and Trust](docs/trust/01-security-and-trust.md) | [Threat Mod
 
 ## Built-in controls
 
-Stave ships 43 S3 controls across 15 categories as its first control pack. Custom controls for any asset type can be authored in the same YAML format.
+Stave ships 43 S3 controls across 15 categories. The HIPAA compliance pack selects the controls required for PHI workloads and maps each to HIPAA Security Rule citations. Custom controls for any asset type can be authored in the same YAML format.
 
 | Category | Controls | What they detect |
 |----------|:---:|-----------------|
@@ -174,6 +188,8 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 | `init` | Create a starter project layout |
 | `validate` | Check inputs are well-formed |
 | `apply` | Evaluate controls against observations, produce findings |
+| `apply --profile hipaa` | Evaluate using the HIPAA compliance pack |
+| `evaluate` | Run compliance profile evaluation with compound risk detection |
 | `verify` | Compare before/after evaluations to check remediation |
 | `diagnose` | Explain unexpected evaluation results |
 | `explain` | Show fields a control requires |
@@ -223,7 +239,7 @@ Full control reference: [docs/controls/authoring.md](docs/controls/authoring.md)
 | `fmt` | Format control and observation files deterministically |
 | `lint` | Lint control files for design quality |
 | `graph` | Visualize control and asset relationships |
-| `security-audit` | Generate enterprise security posture evidence |
+| `security-audit` | Generate enterprise security posture evidence bundle |
 | `prompt` | Generate LLM prompts from evaluation results |
 
 ```
@@ -247,6 +263,9 @@ validate → apply → diagnose
 | **Max unsafe duration** | Maximum time an asset may remain unsafe before violation |
 | **Exemption** | Skips an entire asset from evaluation (by asset ID pattern) |
 | **Exception** | Suppresses a specific control+asset finding with reason and expiry date |
+| **Compliance pack** | A curated set of controls mapped to a regulatory framework (e.g., HIPAA) |
+| **Compound risk** | A dangerous combination of control failures that represents higher risk than any individual finding |
+| **Acknowledged exception** | A declared exception with mandatory compensating controls that must all pass |
 
 ## Data formats
 
@@ -263,8 +282,9 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 **v0.0.3**
 
 - Engine supports any vendor and asset type
-- Built-in control pack: AWS S3 (43 controls)
+- Built-in control packs: AWS S3 (43 controls), HIPAA compliance
 - CEL-powered predicate evaluation with parameterized controls
+- HIPAA Security Rule mapping with compound risk detection and exception handling
 - Custom controls and observations supported for any asset type
 - Extractors are external — write in any language, conform to `obs.v0.1`
 - Offline evaluation only
