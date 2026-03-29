@@ -97,19 +97,19 @@ func SelectReadExposure(in ReadExposureInput) *exposureCandidate {
 			ev = in.EvidenceGeneral
 		}
 		path := append(slices.Clone([]string{"resource.web_hosting.enabled"}), ev...)
-		best.consider(PriorityWebPublic, template(idWebPublic, TypeWebPublic, path))
+		best.consider(PriorityWebPublic, template(exposureIDs.webPublic, TypeWebPublic, path))
 	}
 
 	if in.IsAuthenticatedOnly {
-		best.consider(PriorityAuthenticated, template(idAuthenticatedRead, TypeAuthenticated, in.EvidenceGeneral))
+		best.consider(PriorityAuthenticated, template(exposureIDs.authenticatedRead, TypeAuthenticated, in.EvidenceGeneral))
 	}
 
 	if in.HasIdentityRead {
-		best.consider(PriorityIdentityRead, template(idPublicRead, TypePublicRead, in.EvidenceIdentity))
+		best.consider(PriorityIdentityRead, template(exposureIDs.publicRead, TypePublicRead, in.EvidenceIdentity))
 	}
 
 	if in.HasResourceRead {
-		best.consider(PriorityResourceRead, template(idResourcePublicRead, TypePublicRead, in.EvidenceResource))
+		best.consider(PriorityResourceRead, template(exposureIDs.resourcePublicRead, TypePublicRead, in.EvidenceResource))
 	}
 
 	if best.finding.ID == "" {
@@ -155,11 +155,11 @@ func SelectWriteExposure(in WriteExposureInput) *exposureCandidate {
 	}
 
 	if in.HasIdentityWrite {
-		best.consider(PriorityIdentityWrite, template(idPublicWrite, in.EvidenceIdentity))
+		best.consider(PriorityIdentityWrite, template(exposureIDs.publicWrite, in.EvidenceIdentity))
 	}
 
 	if in.HasResourceWrite {
-		f := template(idResourcePublicWrite, in.EvidenceResource)
+		f := template(exposureIDs.resourcePublicWrite, in.EvidenceResource)
 		f.Actions = in.BaseActions
 		best.consider(PriorityResourceWrite, f)
 	}

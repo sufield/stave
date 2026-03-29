@@ -19,6 +19,7 @@ func init() {
 			WithSeverity(High),
 			WithComplianceProfiles("hipaa", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(1)"),
+			WithProfileRationale("hipaa", "ACL control — disable legacy ACL grants"),
 		),
 	})
 }

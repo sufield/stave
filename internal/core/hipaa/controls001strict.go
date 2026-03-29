@@ -23,6 +23,7 @@ func init() {
 			WithSeverity(Critical),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
+			WithProfileRationale("hipaa", "CMK required for key revocation during breach response"),
 		),
 	})
 }

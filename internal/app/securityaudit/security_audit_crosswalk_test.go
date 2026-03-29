@@ -37,13 +37,8 @@ func TestSecurityAuditCrosswalk_Completeness(t *testing.T) {
 	}
 
 	resolved, err := resolver.Resolve(context.Background(), evidence.Params{
-		Cwd: root,
-		ComplianceFrameworks: []string{
-			"nist_800_53",
-			"cis_aws_v1.4.0",
-			"soc2",
-			"pci_dss_v3.2.1",
-		},
+		Cwd:                  root,
+		ComplianceFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}, checkIDStrings)
 	if err != nil {
 		t.Fatalf("resolve crosswalk: %v", err)

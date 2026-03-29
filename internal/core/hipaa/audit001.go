@@ -19,6 +19,7 @@ func init() {
 			WithSeverity(Critical),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(b)"),
+			WithProfileRationale("hipaa", "All PHI access must be logged — logs cannot be obtained retroactively"),
 		),
 	})
 }

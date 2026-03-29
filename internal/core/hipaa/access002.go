@@ -31,6 +31,7 @@ func init() {
 			WithSeverity(High),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(2)(i)"),
+			WithProfileRationale("hipaa", "Least privilege — no wildcard actions"),
 		),
 	})
 }

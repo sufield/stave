@@ -19,6 +19,7 @@ func init() {
 			WithSeverity(Medium),
 			WithComplianceProfiles("hipaa", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(c)(1)"),
+			WithProfileRationale("hipaa", "Integrity — versioning protects against accidental deletion"),
 		),
 	})
 }

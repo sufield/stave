@@ -21,6 +21,7 @@ func init() {
 			WithSeverity(Critical),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(1)"),
+			WithProfileRationale("hipaa", "Access control — Block Public Access prevents public exposure of ePHI"),
 		),
 	})
 }

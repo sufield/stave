@@ -3,9 +3,11 @@ package capabilities
 import (
 	"slices"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 // registry holds pre-sorted, immutable capabilities data.
@@ -60,7 +62,7 @@ func newRegistry() *registry {
 
 	sourceTypes := []SourceTypeSupport{
 		{
-			Type:        kernel.ObservationSourceType("aws-s3-snapshot"),
+			Type:        kernel.SourceTypeAWSS3Snapshot,
 			Description: "S3 snapshot JSON observations",
 		},
 	}
@@ -85,28 +87,11 @@ func newRegistry() *registry {
 	}
 
 	securityAudit := SecurityAuditSupport{
-		Enabled: true,
-		Formats: []string{
-			"json",
-			"markdown",
-			"sarif",
-		},
-		SBOMFormats: []string{
-			"spdx",
-			"cyclonedx",
-		},
-		VulnerabilitySources: []string{
-			"hybrid",
-			"local",
-			"ci",
-		},
-		FailOnLevels: []string{
-			"CRITICAL",
-			"HIGH",
-			"MEDIUM",
-			"LOW",
-			"NONE",
-		},
+		Enabled:              true,
+		Formats:              securityaudit.AllReportFormats(),
+		SBOMFormats:          evidence.AllSBOMFormats(),
+		VulnerabilitySources: evidence.AllVulnSources(),
+		FailOnLevels:         securityaudit.AllSeverityStrings(),
 		ComplianceFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}
 

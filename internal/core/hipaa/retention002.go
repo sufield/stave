@@ -26,6 +26,7 @@ func init() {
 			WithSeverity(High),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.316(b)(2)"),
+			WithProfileRationale("hipaa", "6-year PHI retention via Object Lock"),
 		),
 	})
 }

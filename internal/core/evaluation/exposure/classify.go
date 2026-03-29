@@ -8,31 +8,12 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-const (
-	// Canonical exposure classification IDs (Cloud Neutral).
-	idResourceTakeover    kernel.ControlID = "CTL.STORAGE.TAKEOVER.001"
-	idWebPublic           kernel.ControlID = "CTL.STORAGE.WEBSITE.PUBLIC.001"
-	idAuthenticatedRead   kernel.ControlID = "CTL.STORAGE.GLOBAL.AUTHENTICATED.READ.001"
-	idPublicRead          kernel.ControlID = "CTL.STORAGE.PUBLIC.READ.001"
-	idResourcePublicRead  kernel.ControlID = "CTL.STORAGE.RESOURCE.PUBLIC.READ.001"
-	idPublicList          kernel.ControlID = "CTL.STORAGE.PUBLIC.LIST.001"
-	idPublicWrite         kernel.ControlID = "CTL.STORAGE.PUBLIC.WRITE.001"
-	idResourcePublicWrite kernel.ControlID = "CTL.STORAGE.RESOURCE.PUBLIC.WRITE.001"
-	idPublicAdminRead     kernel.ControlID = "CTL.STORAGE.PUBLIC.ADMIN.READ.001"
-	idPublicAdminWrite    kernel.ControlID = "CTL.STORAGE.PUBLIC.ADMIN.WRITE.001"
-	idPublicDelete        kernel.ControlID = "CTL.STORAGE.PUBLIC.DELETE.001"
-)
-
-// ValidateControlIDs checks that all hardcoded exposure control ID constants
-// conform to the required format. Call this during bootstrap instead of
-// relying on init()-time panics.
+// ValidateControlIDs checks that all exposure control IDs conform to the
+// required format. Call this during bootstrap instead of relying on
+// init()-time panics. IDs are enumerated from the single source of truth
+// in control_ids.go.
 func ValidateControlIDs() error {
-	ids := []kernel.ControlID{
-		idResourceTakeover, idWebPublic, idAuthenticatedRead, idPublicRead,
-		idResourcePublicRead, idPublicList, idPublicWrite, idResourcePublicWrite,
-		idPublicAdminRead, idPublicAdminWrite, idPublicDelete,
-	}
-	for _, id := range ids {
+	for _, id := range exposureIDs.all() {
 		if err := kernel.ValidateControlIDFormat(id.String()); err != nil {
 			return fmt.Errorf("invalid exposure control ID %q: %w", id, err)
 		}
@@ -67,7 +48,7 @@ func classifyResource(r NormalizedResourceInput) []ExposureClassification {
 	// 1. Check for Resource Takeover (Dangling Reference)
 	if !r.Exists && r.ExternalReference {
 		return []ExposureClassification{{
-			ID:             idResourceTakeover,
+			ID:             exposureIDs.resourceTakeover,
 			Resource:       r.Name,
 			ExposureType:   TypeResourceTakeover,
 			PrincipalScope: kernel.ScopeNotApplicable,

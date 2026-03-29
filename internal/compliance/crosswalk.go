@@ -27,6 +27,7 @@ const (
 	FrameworkCISAWS Framework = "cis_aws_v1.4.0"
 	FrameworkSOC2   Framework = "soc2"
 	FrameworkPCIDSS Framework = "pci_dss_v3.2.1"
+	FrameworkHIPAA  Framework = "hipaa"
 )
 
 var supportedFrameworks = map[Framework]struct{}{
@@ -34,6 +35,7 @@ var supportedFrameworks = map[Framework]struct{}{
 	FrameworkCISAWS: {},
 	FrameworkSOC2:   {},
 	FrameworkPCIDSS: {},
+	FrameworkHIPAA:  {},
 }
 
 // ParseFramework validates and normalizes a raw string into a Framework type.
@@ -48,7 +50,7 @@ func ParseFramework(s string) (Framework, error) {
 
 // SupportedFrameworks returns the list of frameworks recognized by the system, sorted alphabetically.
 func SupportedFrameworks() []Framework {
-	return []Framework{FrameworkCISAWS, FrameworkNIST, FrameworkPCIDSS, FrameworkSOC2}
+	return []Framework{FrameworkCISAWS, FrameworkHIPAA, FrameworkNIST, FrameworkPCIDSS, FrameworkSOC2}
 }
 
 // CrosswalkResolution captures the mapping between internal audit checks and external controls.

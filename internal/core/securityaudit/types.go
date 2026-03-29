@@ -8,6 +8,24 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// ReportFormat identifies a supported security-audit output format.
+type ReportFormat string
+
+const (
+	ReportFormatJSON     ReportFormat = "json"
+	ReportFormatMarkdown ReportFormat = "markdown"
+	ReportFormatSARIF    ReportFormat = "sarif"
+)
+
+// AllReportFormats returns all supported report format strings in stable order.
+func AllReportFormats() []string {
+	return []string{
+		string(ReportFormatJSON),
+		string(ReportFormatMarkdown),
+		string(ReportFormatSARIF),
+	}
+}
+
 // Status represents the outcome of an audit check.
 type Status string
 
@@ -40,6 +58,17 @@ const (
 	SeverityLow      Severity = "LOW"
 	SeverityNone     Severity = "NONE"
 )
+
+// AllSeverityStrings returns all severity level strings in descending order of risk.
+func AllSeverityStrings() []string {
+	return []string{
+		string(SeverityCritical),
+		string(SeverityHigh),
+		string(SeverityMedium),
+		string(SeverityLow),
+		string(SeverityNone),
+	}
+}
 
 // Rank returns a numeric value (0–4) for the severity.
 // Higher values indicate more severe risk.

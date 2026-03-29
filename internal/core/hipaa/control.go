@@ -19,6 +19,15 @@ type Control interface {
 	// is relevant to (e.g. "hipaa", "pci-dss", "cis-s3").
 	ComplianceProfiles() []string
 
+	// ComplianceRefs returns the compliance citation map.
+	ComplianceRefs() map[string]string
+
+	// ProfileRationale returns the rationale for inclusion in the named profile.
+	ProfileRationale(profile string) string
+
+	// ProfileSeverityOverride returns the severity override for the named profile, if any.
+	ProfileSeverityOverride(profile string) (Severity, bool)
+
 	// Evaluate runs the control against a snapshot and returns a Result.
 	Evaluate(snap asset.Snapshot) Result
 }
@@ -57,6 +66,8 @@ type Definition struct {
 	severity           Severity
 	complianceProfiles []string
 	complianceRefs     map[string]string
+	profileRationales  map[string]string
+	profileSeverities  map[string]Severity
 }
 
 // Option configures a Definition.
@@ -92,6 +103,16 @@ func WithComplianceRef(profile, citation string) Option {
 	}
 }
 
+// WithProfileRationale sets the rationale for inclusion in a specific profile.
+func WithProfileRationale(profile, rationale string) Option {
+	return func(d *Definition) {
+		if d.profileRationales == nil {
+			d.profileRationales = make(map[string]string)
+		}
+		d.profileRationales[profile] = rationale
+	}
+}
+
 // Build applies all options and returns the populated Definition.
 func Build(opts ...Option) Definition {
 	var d Definition
@@ -117,6 +138,17 @@ func (d Definition) ComplianceProfiles() []string { return d.complianceProfiles 
 
 // ComplianceRefs returns the compliance citation map.
 func (d Definition) ComplianceRefs() map[string]string { return d.complianceRefs }
+
+// ProfileRationale returns the rationale for inclusion in the named profile.
+func (d Definition) ProfileRationale(profile string) string {
+	return d.profileRationales[profile]
+}
+
+// ProfileSeverityOverride returns the severity override for the named profile, if any.
+func (d Definition) ProfileSeverityOverride(profile string) (Severity, bool) {
+	s, ok := d.profileSeverities[profile]
+	return s, ok
+}
 
 // PassResult returns a passing Result for this definition.
 func (d Definition) PassResult() Result {

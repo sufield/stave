@@ -68,10 +68,19 @@ type AcknowledgedEntry struct {
 // Evaluate runs all profile invariants against the snapshot.
 // It validates for incompatible pairs, resolves invariants from registries,
 // applies severity overrides, and returns a sorted report.
+//
+// When p.Controls is empty the profile discovers its controls from the
+// registries using each control's ComplianceProfiles() metadata — no
+// hardcoded list required.
 func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (ProfileReport, error) {
+	controls := p.Controls
+	if len(controls) == 0 {
+		controls = discoverProfileControls(p.ID, registries)
+	}
+
 	// Collect all control IDs for profile validation.
-	ids := make([]string, len(p.Controls))
-	for i, c := range p.Controls {
+	ids := make([]string, len(controls))
+	for i, c := range controls {
 		ids[i] = c.ControlID
 	}
 	if err := hipaa.ValidateProfile(ids); err != nil {
@@ -82,10 +91,10 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (
 	lookup := buildLookup(registries)
 
 	var results []ProfileResult
-	for _, ctrl := range p.Controls {
+	for _, ctrl := range controls {
 		inv := lookup[ctrl.ControlID]
 		if inv == nil {
-			// Invariant not yet implemented — skip silently.
+			// Control not yet implemented — skip silently.
 			continue
 		}
 
@@ -141,6 +150,26 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (
 		Counts:           counts,
 		FailCounts:       failCounts,
 	}, nil
+}
+
+// discoverProfileControls builds the ProfileControl list by querying all
+// registries for controls that declare membership in the given profile.
+func discoverProfileControls(profileID string, registries []*hipaa.Registry) []ProfileControl {
+	var controls []ProfileControl
+	for _, reg := range registries {
+		for _, ctrl := range reg.ByProfile(profileID) {
+			pc := ProfileControl{
+				ControlID:     ctrl.ID(),
+				ComplianceRef: ctrl.ComplianceRefs()[profileID],
+				Rationale:     ctrl.ProfileRationale(profileID),
+			}
+			if sev, ok := ctrl.ProfileSeverityOverride(profileID); ok {
+				pc.SeverityOverride = &sev
+			}
+			controls = append(controls, pc)
+		}
+	}
+	return controls
 }
 
 func buildLookup(registries []*hipaa.Registry) map[string]hipaa.Control {

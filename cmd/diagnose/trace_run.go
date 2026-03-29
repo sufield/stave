@@ -102,7 +102,7 @@ Exit Codes:
 	_ = cmd.MarkFlagRequired("observation")
 	_ = cmd.MarkFlagRequired("asset-id")
 
-	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
+	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
 }

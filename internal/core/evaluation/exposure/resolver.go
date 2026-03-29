@@ -83,7 +83,7 @@ func (c *resolutionContext) resolveList() []ExposureClassification {
 		return nil
 	}
 	return []ExposureClassification{{
-		ID:             idPublicList,
+		ID:             exposureIDs.publicList,
 		Resource:       c.input.Name,
 		ExposureType:   TypePublicList,
 		PrincipalScope: c.principalScope(),
@@ -123,7 +123,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 
 	if perms.Has(PermMetadataRead) {
 		findings = append(findings, ExposureClassification{
-			ID:             idPublicAdminRead,
+			ID:             exposureIDs.publicAdminRead,
 			Resource:       c.input.Name,
 			ExposureType:   TypePublicMetaRead,
 			PrincipalScope: scope,
@@ -133,7 +133,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 	}
 	if perms.Has(PermMetadataWrite) {
 		findings = append(findings, ExposureClassification{
-			ID:             idPublicAdminWrite,
+			ID:             exposureIDs.publicAdminWrite,
 			Resource:       c.input.Name,
 			ExposureType:   TypePublicMetaWrite,
 			PrincipalScope: scope,
@@ -143,7 +143,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 	}
 	if perms.Has(PermDelete) {
 		findings = append(findings, ExposureClassification{
-			ID:             idPublicDelete,
+			ID:             exposureIDs.publicDelete,
 			Resource:       c.input.Name,
 			ExposureType:   TypePublicDelete,
 			PrincipalScope: scope,
