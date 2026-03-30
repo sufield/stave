@@ -28,6 +28,36 @@ func versioningMap(a asset.Asset) map[string]any {
 	return v
 }
 
+// accessMap extracts storage.access from an asset.
+func accessMap(a asset.Asset) map[string]any {
+	s := storageMap(a)
+	if s == nil {
+		return nil
+	}
+	m, _ := s["access"].(map[string]any)
+	return m
+}
+
+// networkMap extracts storage.network from an asset.
+func networkMap(a asset.Asset) map[string]any {
+	s := storageMap(a)
+	if s == nil {
+		return nil
+	}
+	m, _ := s["network"].(map[string]any)
+	return m
+}
+
+// loggingMap extracts storage.logging from an asset.
+func loggingMap(a asset.Asset) map[string]any {
+	s := storageMap(a)
+	if s == nil {
+		return nil
+	}
+	m, _ := s["logging"].(map[string]any)
+	return m
+}
+
 // toString extracts a string from an interface value.
 func toString(v any) string {
 	s, _ := v.(string)

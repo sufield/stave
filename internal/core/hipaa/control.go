@@ -103,6 +103,16 @@ func WithComplianceRef(profile, citation string) Option {
 	}
 }
 
+// WithProfileSeverityOverride sets a severity override for a specific profile.
+func WithProfileSeverityOverride(profile string, sev Severity) Option {
+	return func(d *Definition) {
+		if d.profileSeverities == nil {
+			d.profileSeverities = make(map[string]Severity)
+		}
+		d.profileSeverities[profile] = sev
+	}
+}
+
 // WithProfileRationale sets the rationale for inclusion in a specific profile.
 func WithProfileRationale(profile, rationale string) Option {
 	return func(d *Definition) {

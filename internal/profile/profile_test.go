@@ -116,10 +116,11 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 		}
 	}
 
-	// Unimplemented invariants (AUDIT.002, ACCESS.003, ACCESS.009) should be skipped.
-	for _, id := range []string{"AUDIT.002", "ACCESS.003", "ACCESS.009"} {
-		if resultIDs[id] {
-			t.Errorf("unexpected result for unimplemented %s", id)
+	// All HIPAA-tagged controls should now be present (formerly unimplemented
+	// controls AUDIT.002, ACCESS.003, ACCESS.006, ACCESS.009 are now implemented).
+	for _, id := range []string{"AUDIT.002", "ACCESS.003", "ACCESS.006", "ACCESS.009"} {
+		if !resultIDs[id] {
+			t.Errorf("expected result for newly implemented %s", id)
 		}
 	}
 }

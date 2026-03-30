@@ -43,12 +43,3 @@ func (inv *auditServerLogging) Evaluate(snap asset.Snapshot) Result {
 
 	return inv.PassResult()
 }
-
-func loggingMap(a asset.Asset) map[string]any {
-	s := storageMap(a)
-	if s == nil {
-		return nil
-	}
-	l, _ := s["logging"].(map[string]any)
-	return l
-}
