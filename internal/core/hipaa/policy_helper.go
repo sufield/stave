@@ -178,6 +178,46 @@ func (s PolicyStatement) IsDeny() bool {
 	return strings.EqualFold(s.Effect, "Deny")
 }
 
+// HasSignatureAgeGuardrail reports whether this statement denies requests
+// where s3:signatureAge exceeds a threshold (presigned URL age limit).
+func (s PolicyStatement) HasSignatureAgeGuardrail() bool {
+	if !s.IsDeny() {
+		return false
+	}
+	cond, ok := s.Condition.(map[string]any)
+	if !ok {
+		return false
+	}
+	block, ok := cond["NumericGreaterThan"].(map[string]any)
+	if !ok {
+		return false
+	}
+	_, ok = block["s3:signatureAge"]
+	return ok
+}
+
+// HasAuthTypeGuardrail reports whether this statement denies requests
+// where s3:authType is not REST-HEADER (blocks presigned URL access).
+func (s PolicyStatement) HasAuthTypeGuardrail() bool {
+	if !s.IsDeny() {
+		return false
+	}
+	cond, ok := s.Condition.(map[string]any)
+	if !ok {
+		return false
+	}
+	block, ok := cond["StringNotEquals"].(map[string]any)
+	if !ok {
+		return false
+	}
+	val, ok := block["s3:authType"]
+	if !ok {
+		return false
+	}
+	str, ok := val.(string)
+	return ok && strings.EqualFold(str, "REST-HEADER")
+}
+
 func isWildcard(v any) bool {
 	switch val := v.(type) {
 	case string:
