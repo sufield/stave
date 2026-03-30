@@ -1,0 +1,70 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-29T00:00:00Z",
+  "assets": [
+    {
+      "id": "phi-patient-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket_name": "phi-patient-records",
+        "storage": {
+          "kind": "bucket",
+          "name": "phi-patient-records",
+          "tags": {
+            "data-classification": "phi",
+            "compliance": "hipaa",
+            "containsPHI": "true"
+          },
+          "controls": {
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            },
+            "account_public_access_fully_blocked": false
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "aws:kms",
+            "kms_master_key_id": "alias/aws/s3",
+            "bucket_key_enabled": false
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": false,
+            "target_bucket": ""
+          },
+          "access": {
+            "public_read": true,
+            "public_write": false,
+            "has_wildcard_policy": true,
+            "has_vpc_condition": false,
+            "has_ip_condition": false,
+            "effective_network_scope": "public"
+          },
+          "object_lock": {
+            "enabled": false
+          },
+          "network": {
+            "vpc_endpoint_policy": {
+              "attached": false,
+              "is_default_full_access": false
+            }
+          },
+          "ownership_controls": "BucketOwnerPreferred"
+        },
+        "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowPublicRead\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-patient-records\",\"arn:aws:s3:::phi-patient-records/*\"]}]}"
+      }
+    }
+  ]
+}

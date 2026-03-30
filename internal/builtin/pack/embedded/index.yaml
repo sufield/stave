@@ -9,6 +9,7 @@ packs:
   hipaa:
     description: HIPAA Security Rule S3 controls for PHI workloads
     controls:
+      - CTL.S3.AUDIT.OBJECTLEVEL.001
       - CTL.S3.CONTROLS.001
       - CTL.S3.ENCRYPT.001
       - CTL.S3.ENCRYPT.002
@@ -18,6 +19,9 @@ packs:
       - CTL.S3.LOCK.002
       - CTL.S3.LOCK.003
       - CTL.S3.LOG.001
+      - CTL.S3.NETWORK.POLICY.001
+      - CTL.S3.NETWORK.VPC.001
+      - CTL.S3.PRESIGNED.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.VERSION.001
   s3:
@@ -45,6 +49,10 @@ packs:
       - CTL.S3.LOCK.003
       - CTL.S3.LOG.001
       - CTL.S3.NETWORK.001
+      - CTL.S3.NETWORK.POLICY.001
+      - CTL.S3.NETWORK.VPC.001
+      - CTL.S3.PRESIGNED.001
+      - CTL.S3.AUDIT.OBJECTLEVEL.001
       - CTL.S3.PUBLIC.001
       - CTL.S3.VERSION.001
       - CTL.S3.VERSION.002
@@ -67,6 +75,9 @@ packs:
       - CTL.S3.BUCKET.TAKEOVER.001
       - CTL.S3.DANGLING.ORIGIN.001
 controls:
+  CTL.S3.AUDIT.OBJECTLEVEL.001:
+    path: internal/controldata/embedded/s3/logging/CTL.S3.AUDIT.OBJECTLEVEL.001.yaml
+    summary: CloudTrail Object-Level Logging Required
   CTL.S3.ACCESS.001:
     path: internal/controldata/embedded/s3/access/CTL.S3.ACCESS.001.yaml
     summary: No Unauthorized Cross-Account Access
@@ -136,6 +147,15 @@ controls:
   CTL.S3.NETWORK.001:
     path: internal/controldata/embedded/s3/network/CTL.S3.NETWORK.001.yaml
     summary: Public-Principal Policies Must Have Network Conditions
+  CTL.S3.NETWORK.POLICY.001:
+    path: internal/controldata/embedded/s3/network/CTL.S3.NETWORK.POLICY.001.yaml
+    summary: VPC Endpoint Policy Must Restrict Access
+  CTL.S3.NETWORK.VPC.001:
+    path: internal/controldata/embedded/s3/network/CTL.S3.NETWORK.VPC.001.yaml
+    summary: VPC Endpoint or IP Condition Required
+  CTL.S3.PRESIGNED.001:
+    path: internal/controldata/embedded/s3/access/CTL.S3.PRESIGNED.001.yaml
+    summary: Presigned URL Access Must Be Restricted
   CTL.S3.ACL.WRITE.001:
     path: internal/controldata/embedded/s3/public/CTL.S3.ACL.WRITE.001.yaml
     summary: No Public Write via ACL

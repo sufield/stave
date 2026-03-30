@@ -9,24 +9,27 @@ INIT_DONE="$WORK_DIR/.init_done"
 # Trusted Advisor blind spot scenarios
 BLIND_SPOT_SCENARIOS=(8 23 18)
 
+# HIPAA compliance scenario directory
+HIPAA_DIR="$SCENARIOS_DIR/hipaa-compliance"
+
 usage() {
   cat <<'HELP'
-Stave Tutorial Demo — 44 S3 security scenarios
+Stave Tutorial Demo — 44 S3 security scenarios + HIPAA compliance profile
 
 Usage:
   docker run stave-tutorials --list                  List all scenarios
   docker run stave-tutorials --scenario 1            Run bad config (shows violations)
   docker run stave-tutorials --scenario 1 --fixed    Run fixed config (shows remediation)
   docker run stave-tutorials --blind-spots           Run the 3 Trusted Advisor blind spots
+  docker run stave-tutorials --hipaa                 Run HIPAA compliance profile (violations)
+  docker run stave-tutorials --hipaa --fixed         Run HIPAA profile (fully remediated)
+  docker run stave-tutorials --hipaa --json          Run HIPAA profile with JSON output
   docker run stave-tutorials -- stave <args>         Pass-through to stave
-
-Each scenario uses the same project structure. Observations are swapped
-per scenario, then stave apply runs against the observations/ directory.
 
 Examples:
   docker run stave-tutorials --scenario 10           # CTL.S3.PUBLIC.007 violation
-  docker run stave-tutorials --scenario 10 --fixed   # CTL.S3.PUBLIC.007 remediated
-  docker run stave-tutorials --blind-spots           # 3 AWS Trusted Advisor blind spots
+  docker run stave-tutorials --hipaa                 # HIPAA: 14 controls + compound risks
+  docker run stave-tutorials --hipaa --fixed         # HIPAA: all controls passing
   docker run stave-tutorials --list                  # Show all 44 scenarios
 HELP
 }
@@ -248,6 +251,97 @@ INTRO
   echo "================================================================"
 }
 
+run_hipaa() {
+  local mode="bad"
+  local format="text"
+  shift  # consume --hipaa
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --fixed|-f) mode="fixed" ;;
+      --json) format="json" ;;
+    esac
+    shift
+  done
+
+  local snap_file
+  if [ "$mode" = "fixed" ]; then
+    snap_file="$HIPAA_DIR/fixed/snapshot.json"
+  else
+    snap_file="$HIPAA_DIR/bad/snapshot.json"
+  fi
+
+  if [ ! -f "$snap_file" ]; then
+    echo "Error: HIPAA scenario snapshot not found at $snap_file" >&2
+    exit 2
+  fi
+
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "HIPAA Security Rule — S3 Compliance Profile"
+  echo "Mode:     $mode"
+  echo "Format:   $format"
+  echo "Controls: 14 invariants + 3 compound risk detectors"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  echo ""
+  echo "  \$ stave evaluate --snapshot snapshot.json --profile hipaa --format $format"
+  echo ""
+  echo "── observation snapshot ──────────────────────────────"
+  echo ""
+  echo "  Bucket: phi-patient-records"
+  echo "  Tags:   data-classification=phi, compliance=hipaa"
+  echo ""
+
+  if [ "$mode" = "bad" ]; then
+    echo "  Config:  Public Access Block OFF, AWS-managed KMS key,"
+    echo "           no logging, no versioning, no Object Lock,"
+    echo "           wildcard policy (s3:*), no VPC restriction"
+  else
+    echo "  Config:  Public Access Block ON, customer-managed CMK,"
+    echo "           server + object-level logging, versioning ON,"
+    echo "           Object Lock COMPLIANCE 6yr, VPC-only access,"
+    echo "           presigned URL restriction, ACLs disabled"
+  fi
+
+  echo ""
+  echo "── output ────────────────────────────────────────────"
+  echo ""
+
+  rc=0
+  stave evaluate \
+    --snapshot "$snap_file" \
+    --profile hipaa \
+    --format "$format" \
+    || rc=$?
+
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  if [ "$mode" = "bad" ]; then
+    if [ "$rc" -ne 0 ]; then
+      echo "Result: CRITICAL VIOLATIONS (exit $rc)"
+      echo ""
+      echo "This PHI bucket fails multiple HIPAA Security Rule"
+      echo "requirements. Compound risks amplify the severity."
+      echo ""
+      echo "To see the fully remediated configuration:"
+      echo "  docker run --rm stave-tutorials --hipaa --fixed"
+    else
+      echo "Result: exit $rc (unexpected — bad config should fail)"
+    fi
+  else
+    if [ "$rc" -eq 0 ]; then
+      echo "Result: ALL CONTROLS PASSING (exit 0)"
+      echo ""
+      echo "The PHI bucket meets all 14 HIPAA technical safeguard"
+      echo "requirements evaluated by Stave."
+    else
+      echo "Result: exit $rc"
+    fi
+  fi
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  return "$rc"
+}
+
 case "${1:-}" in
   --list|-l)
     list_scenarios
@@ -271,6 +365,10 @@ case "${1:-}" in
       mode="fixed"
     fi
     run_blind_spots "$mode"
+    ;;
+  --hipaa)
+    run_hipaa "$@"
+    exit $?
     ;;
   --help|-h|"")
     usage
