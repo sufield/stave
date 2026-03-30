@@ -1,6 +1,7 @@
 # Stave Tutorial Demo
 
-44 interactive S3 security scenarios running in Docker. No AWS credentials required.
+44 interactive S3 security scenarios + HIPAA compliance profile running
+in Docker. No AWS credentials required.
 
 ## What you will learn
 
@@ -10,11 +11,18 @@ Each scenario walks you through the complete Stave workflow for one real S3 misc
 - **The detection** — how `stave apply` evaluates the observation and reports the violation
 - **The remediation** — what the fixed state looks like and how Stave confirms it
 
-By the end of all 44 scenarios you will know how to:
+The HIPAA compliance profile demonstrates:
+
+- **Compound risk detection** — cross-control violations that amplify severity
+- **Compliance reporting** — CFR citations, severity grouping, BAA disclaimer
+- **Exception handling** — acknowledged exceptions with compensating controls
+
+By the end you will know how to:
 
 - Structure observation JSON files in the `obs.v0.1` schema
 - Map AWS S3 configuration to the fields each control checks
 - Run `stave apply` to detect violations and verify fixes
+- Run `stave evaluate --profile hipaa` for compliance reporting
 - Read Stave output: findings, severity, evidence, remediation guidance
 - Use `exclude_controls` to focus evaluation on specific controls
 
@@ -23,7 +31,7 @@ The scenarios are organized in three levels:
 - **Beginner (1-8)** — One AWS CLI command, one observation field. Public access, encryption, logging, versioning, tagging.
 - **Intermediate (9-29)** — Policy and ACL parsing. Multiple fields, cross-field conditions, latent exposure, cross-account access.
 - **Advanced (30-43)** — Tag-conditional compliance, lifecycle retention, Object Lock modes, website hosting, VCS artifact exposure, signed upload restrictions, tenant isolation, bucket takeover, CDN origin hijacking.
-- **Capstone (44)** — Full hardening audit of one bucket against all 43 controls in a single observation.
+- **Capstone (44)** — Full hardening audit of one bucket against all 47 controls in a single observation.
 
 ## Prerequisites
 
@@ -95,6 +103,29 @@ docker run --rm stave-tutorials --blind-spots --fixed
 References:
 - [Fog Security: Mistrusted Advisor (Aug 2025)](https://www.fogsecurity.io/blog/mistrusted-advisor-public-s3-buckets)
 - [SecurityWeek: AWS Trusted Advisor Tricked](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/)
+
+### HIPAA compliance profile
+
+Run the HIPAA profile evaluation against a PHI bucket with 14 Go
+invariants and 3 compound risk detectors:
+
+```bash
+docker run --rm stave-tutorials --hipaa             # violations
+docker run --rm stave-tutorials --hipaa --fixed      # fully remediated
+docker run --rm stave-tutorials --hipaa --json       # JSON output
+```
+
+The bad scenario demonstrates a PHI bucket with: no Block Public Access,
+AWS-managed KMS key, no logging, no versioning, wildcard policy, no VPC
+restriction — triggering COMPOUND.001 (public + broad policy) and
+COMPOUND.002 (encryption + public access).
+
+The fixed scenario shows full remediation: BPA on, customer CMK, server
+and object-level logging, versioning, COMPLIANCE Object Lock 6yr,
+VPC-only access, presigned URL restriction, ACLs disabled.
+
+This uses `stave evaluate --profile hipaa` (Go invariants with
+compliance reporting), not `stave apply` (YAML/CEL evaluation).
 
 ### Pass-through to stave
 
@@ -173,7 +204,7 @@ Tag-conditional evaluation, compliance controls, cross-service analysis.
 
 | # | Control | Severity | Name |
 |---|---------|----------|------|
-| 44 | All 43 controls | all | Full Hardening Audit |
+| 44 | All 47 controls | all | Full Hardening Audit |
 
 ## How it works
 
