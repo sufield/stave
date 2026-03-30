@@ -82,7 +82,7 @@ func TestApplyProfileE2E(t *testing.T) {
 		wantExit int
 		wantViol int
 	}{
-		{"obs-public", "aws-s3-obs-public", 3, 5},
+		{"obs-public", "aws-s3-obs-public", 3, 6},
 		{"obs-private", "aws-s3-obs-private", 3, 4},
 	}
 

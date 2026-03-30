@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.S3.NETWORK.POLICY.001
+name: VPC Endpoint Policy Must Restrict Access
+description: >
+  VPC endpoint policy must be attached and must not be the default
+  full-access policy (Allow * on *). The default policy allows any
+  principal on the VPC to reach any S3 bucket in any account via
+  the endpoint, bypassing firewall controls. A restrictive endpoint
+  policy limits which bucket ARNs and actions are reachable.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    VPC endpoint policy is missing or uses the default full-access
+    policy. Any principal on the VPC can reach any S3 bucket.
+  action: >
+    Replace the default endpoint policy with one that restricts
+    Resource to specific bucket ARNs and Action to required S3
+    operations only.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "network": {
+          "vpc_endpoint_policy": {
+            "attached": true,
+            "is_default_full_access": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.storage.network.vpc_endpoint_policy.attached
+      op: eq
+      value: false
+    - field: properties.storage.network.vpc_endpoint_policy.is_default_full_access
+      op: eq
+      value: true

@@ -7,15 +7,25 @@
     "now": "2026-01-14T00:00:00Z",
     "max_unsafe": "0h",
     "snapshots": 2,
-    "pack_hash": "853b2485a07396a55f0ef421159807db391eab7282c1d4d3e83059506c0dcb67"
+    "pack_hash": "667bd0fa64a70e874d2a319f2cfbbf9d20586d5bdb19cd6e2a38a5f08de39904"
   },
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 1,
-    "violations": 5
+    "violations": 6
   },
   "safety_status": "UNSAFE",
   "at_risk": [
+    {
+      "control_id": "CTL.S3.NETWORK.VPC.001",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-10T00:00:00Z",
+      "remaining_hours": -96,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 0
+    },
     {
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-test-bucket",
@@ -28,6 +38,56 @@
     }
   ],
   "findings": [
+    {
+      "control_id": "CTL.S3.NETWORK.VPC.001",
+      "control_name": "VPC Endpoint or IP Condition Required",
+      "control_description": "S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce) or an IP address condition (aws:SourceIp) in the bucket policy. Without network-level restrictions, the bucket is reachable from any network path. This control enforces transmission security for PHI workloads.\n",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 96,
+        "misconfigurations": [
+          {
+            "property": "storage.access.has_ip_condition",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.access.has_vpc_condition",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 96 hours (threshold: 0 hours). Unsafe since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(e)(1)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has no VPC endpoint or IP condition restricting access. The bucket is reachable from any network path.",
+        "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"has_vpc_condition\": true,\n      \"has_ip_condition\": false\n    }\n  }\n}\n"
+      }
+    },
     {
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",

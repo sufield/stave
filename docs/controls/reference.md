@@ -3,21 +3,21 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 43
-**Pack hash:** `853b2485a07396a55f0ef421159807db391eab7282c1d4d3e83059506c0dcb67`
+**Total controls:** 47
+**Pack hash:** `667bd0fa64a70e874d2a319f2cfbbf9d20586d5bdb19cd6e2a38a5f08de39904`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 10 |
-| high | 20 |
+| high | 23 |
 | low | 2 |
-| medium | 11 |
+| medium | 12 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 40 |
+| exposure | 44 |
 | storage | 3 |
 
 ## Controls
@@ -121,6 +121,21 @@ S3 bucket ACLs must not grant write access to AllUsers or AuthenticatedUsers. AC
 
 ---
 
+### CTL.S3.AUDIT.OBJECTLEVEL.001
+
+**CloudTrail Object-Level Logging Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b);
+
+CloudTrail S3 object-level data event logging must be enabled for PHI buckets. Server access logging captures bucket-level operations but not individual object access patterns. CloudTrail data events record GetObject, PutObject, and DeleteObject calls required for HIPAA audit controls.
+
+**Remediation:** Configure a CloudTrail trail with a data event selector for AWS::S3::Object covering this bucket. Use aws cloudtrail put-event-selectors to add the selector.
+
+---
+
 ### CTL.S3.AUTH.READ.001
 
 **No Authenticated-Users Read Access**
@@ -199,7 +214,7 @@ CloudFront distributions must not reference S3 origins that do not exist. A miss
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.1; pci_dss_v3.2.1: 3.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.1; hipaa: 164.312(a)(2)(iv); pci_dss_v3.2.1: 3.4; soc2: CC6.1;
 
 S3 buckets must have server-side encryption enabled. Unencrypted storage is the top audit finding in regulated industries.
 
@@ -214,7 +229,7 @@ S3 buckets must have server-side encryption enabled. Unencrypted storage is the 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.2; pci_dss_v3.2.1: 4.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.2; hipaa: 164.312(e)(2)(ii); pci_dss_v3.2.1: 4.1; soc2: CC6.1;
 
 S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false. Without this, data transfers occur in plaintext.
 
@@ -313,7 +328,7 @@ S3 buckets tagged with data-classification=phi must not have lifecycle expiratio
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** soc2: CC6.1;
+- **Compliance:** hipaa: 164.316(b)(2); soc2: CC6.1;
 
 S3 buckets tagged with any compliance framework (soc2, gdpr, hipaa, pci-dss, etc.) must have S3 Object Lock enabled. Object Lock provides WORM (Write Once Read Many) protection, preventing objects from being deleted or overwritten for a specified retention period. Regulatory frameworks require immutable storage for audit logs, compliance records, and protected data.
 
@@ -356,7 +371,7 @@ S3 buckets tagged with data-classification=phi that have Object Lock enabled mus
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.3; pci_dss_v3.2.1: 10.2.1; soc2: CC7.2;
+- **Compliance:** cis_aws_v1.4.0: 2.1.3; hipaa: 164.312(b); pci_dss_v3.2.1: 10.2.1; soc2: CC7.2;
 
 S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.
 
@@ -378,6 +393,51 @@ S3 bucket policies that grant access to Principal * (any AWS principal) must inc
 
 ---
 
+### CTL.S3.NETWORK.POLICY.001
+
+**VPC Endpoint Policy Must Restrict Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1);
+
+VPC endpoint policy must be attached and must not be the default full-access policy (Allow * on *). The default policy allows any principal on the VPC to reach any S3 bucket in any account via the endpoint, bypassing firewall controls. A restrictive endpoint policy limits which bucket ARNs and actions are reachable.
+
+**Remediation:** Replace the default endpoint policy with one that restricts Resource to specific bucket ARNs and Action to required S3 operations only.
+
+---
+
+### CTL.S3.NETWORK.VPC.001
+
+**VPC Endpoint or IP Condition Required**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1);
+
+S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce) or an IP address condition (aws:SourceIp) in the bucket policy. Without network-level restrictions, the bucket is reachable from any network path. This control enforces transmission security for PHI workloads.
+
+**Remediation:** Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges.
+
+---
+
+### CTL.S3.PRESIGNED.001
+
+**Presigned URL Access Must Be Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1);
+
+PHI bucket policy must restrict presigned URL access using s3:signatureAge (maximum age in milliseconds) or s3:authType (require REST-HEADER to block presigned URLs). Without these guardrails, presigned URLs can provide long-lived unauthenticated access to PHI data.
+
+**Remediation:** Add a Deny statement with Condition NumericGreaterThan s3:signatureAge (e.g., 600000 for 10 minutes) or StringNotEquals s3:authType REST-HEADER to block presigned URL access.
+
+---
+
 ### CTL.S3.PUBLIC.001
 
 **No Public S3 Bucket Read**
@@ -385,7 +445,7 @@ S3 bucket policies that grant access to Principal * (any AWS principal) must inc
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.5; pci_dss_v3.2.1: 1.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.5; hipaa: 164.312(a)(1); pci_dss_v3.2.1: 1.2.1; soc2: CC6.1;
 
 S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.
 
@@ -572,7 +632,7 @@ When a shared S3 bucket uses prefix-based tenant isolation, every app-signer ide
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.1.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.1.3; hipaa: 164.312(c)(1); soc2: CC6.1;
 
 S3 buckets must have versioning enabled to protect against accidental deletion and enable recovery from negligent operations.
 

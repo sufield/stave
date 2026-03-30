@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AUDIT.OBJECTLEVEL.001
+name: CloudTrail Object-Level Logging Required
+description: >
+  CloudTrail S3 object-level data event logging must be enabled for
+  PHI buckets. Server access logging captures bucket-level operations
+  but not individual object access patterns. CloudTrail data events
+  record GetObject, PutObject, and DeleteObject calls required for
+  HIPAA audit controls.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(b)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    CloudTrail S3 object-level data event logging is not enabled.
+    No forensic evidence exists for individual PHI access operations.
+  action: >
+    Configure a CloudTrail trail with a data event selector for
+    AWS::S3::Object covering this bucket. Use aws cloudtrail
+    put-event-selectors to add the selector.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "logging": {
+          "object_level_logging": {
+            "enabled": true,
+            "source": "cloudtrail"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.logging.object_level_logging.enabled
+      op: eq
+      value: false

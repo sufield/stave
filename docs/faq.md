@@ -343,3 +343,59 @@ JSON Schema source: `schemas/output/v1/output.schema.json`
 - **No runtime agents** — nothing is deployed into your infrastructure.
 
 Stave is a pure function: files in, findings out.
+
+## Why some are YAML controls and some are implemented as Go invariants?
+
+Two separate systems that evolved for different reasons:                                                              
+                                                                                                                        
+  YAML controls (stave apply) — the primary system. 43 controls evaluated by the CEL engine against observations with   
+  duration tracking, at-risk detection, and the full output pipeline (out.v0.1). These are declarative — you write a
+  YAML file with an unsafe_predicate and the engine handles everything. This is what runs in CI/CD.                     
+                                                                  
+  Go invariants (stave evaluate --profile hipaa) — built specifically for the HIPAA compliance reporting use case
+  (Prompts 2-10 in tutorials/prompts.md). These produce a different output: a compliance report with CFR citations,
+  severity-grouped findings, compound risk detection, acknowledged exceptions, and a BAA disclaimer. The output is
+  shaped for a compliance officer, not a CI pipeline.
+
+  They exist as separate systems because they were built for different audiences:
+
+  ┌───────────────────┬─────────────────────────────┬────────────────────────────────────────────────────────┐
+  │                   │        YAML Controls        │                     Go Invariants                      │
+  ├───────────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Consumer          │ CI/CD pipeline, DevOps      │ Compliance officer, auditor                            │
+  ├───────────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Output            │ out.v0.1 JSON with findings │ ProfileReport with CFR citations                       │
+  ├───────────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Duration tracking │ Yes (unsafe for X hours)    │ No (point-in-time snapshot)                            │
+  ├───────────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Compound risks    │ No                          │ Yes (COMPOUND.001/002/003)                             │
+  ├───────────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Exceptions        │ Via exemption config        │ Via acknowledged exceptions with compensating controls │
+  ├───────────────────┼─────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Adding new check  │ Write YAML file             │ Write Go file with init()                              │
+  └───────────────────┴─────────────────────────────┴────────────────────────────────────────────────────────┘
+
+  The overlap is intentional — both systems check the same S3 properties but produce different reports for different
+  workflows. The YAML controls gate CI; the Go invariants produce audit evidence.
+
+  The question of whether to consolidate them is a design decision. The YAML system is more extensible (anyone can write
+   a control without Go). The Go system is more expressive (compound risk detection, severity routing, compensating
+  controls). They complement rather than compete.
+
+The compliance audience needs:                                                    
+                                               
+  - CFR citations on every finding — an auditor looks for "§164.312(b)" not "CTL.S3.LOG.001"                            
+  - Severity-grouped output — CRITICAL first, so the CISO knows what to fix today
+  - Compound risk detection — "public access + broad policy" is worse than either alone, and auditors need that called  
+  out explicitly                                                  
+  - Acknowledged exceptions with compensating controls — real compliance has exceptions; the report must show them with
+  audit trail
+  - BAA disclaimer — legal requirement to note what stave can and cannot verify
+
+  The YAML/CEL system cannot express these because they are cross-control concerns (compound risks span multiple
+  controls) and output-shaping concerns (citations, exceptions, disclaimers) that don't fit the "one predicate per
+  control" model.
+
+  The Go invariants earn their existence by serving a workflow that YAML controls structurally cannot: producing
+  audit-ready compliance evidence where the output format is as important as the evaluation logic.
+  

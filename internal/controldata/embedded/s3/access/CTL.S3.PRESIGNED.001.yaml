@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PRESIGNED.001
+name: Presigned URL Access Must Be Restricted
+description: >
+  PHI bucket policy must restrict presigned URL access using
+  s3:signatureAge (maximum age in milliseconds) or s3:authType
+  (require REST-HEADER to block presigned URLs). Without these
+  guardrails, presigned URLs can provide long-lived unauthenticated
+  access to PHI data.
+domain: exposure
+severity: medium
+compliance:
+  hipaa: "164.312(a)(1)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket policy does not restrict presigned URL access. Presigned
+    URLs can provide long-lived unauthenticated access to objects.
+  action: >
+    Add a Deny statement with Condition NumericGreaterThan
+    s3:signatureAge (e.g., 600000 for 10 minutes) or StringNotEquals
+    s3:authType REST-HEADER to block presigned URL access.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "presigned_url_restricted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.presigned_url_restricted
+      op: eq
+      value: false

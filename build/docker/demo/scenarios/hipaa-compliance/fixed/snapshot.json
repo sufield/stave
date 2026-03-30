@@ -1,0 +1,79 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws-s3-snapshot",
+    "tool": "aws-cli",
+    "tool_version": "2.x"
+  },
+  "captured_at": "2026-03-29T00:00:00Z",
+  "assets": [
+    {
+      "id": "phi-patient-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket_name": "phi-patient-records",
+        "storage": {
+          "kind": "bucket",
+          "name": "phi-patient-records",
+          "tags": {
+            "data-classification": "phi",
+            "compliance": "hipaa",
+            "containsPHI": "true"
+          },
+          "controls": {
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            },
+            "account_public_access_fully_blocked": true
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "aws:kms",
+            "kms_master_key_id": "arn:aws:kms:us-east-1:123456789012:key/mrk-phi-records",
+            "bucket_key_enabled": true
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "phi-access-logs",
+            "target_prefix": "patient-records/",
+            "object_level_logging": {
+              "enabled": true,
+              "source": "cloudtrail",
+              "trail_arn": "arn:aws:cloudtrail:us-east-1:123456789012:trail/hipaa-data-events"
+            }
+          },
+          "access": {
+            "public_read": false,
+            "public_write": false,
+            "has_wildcard_policy": false,
+            "has_vpc_condition": true,
+            "has_ip_condition": false,
+            "effective_network_scope": "vpc"
+          },
+          "object_lock": {
+            "enabled": true,
+            "mode": "COMPLIANCE",
+            "retention_days": 2190
+          },
+          "network": {
+            "vpc_endpoint_policy": {
+              "attached": true,
+              "is_default_full_access": false,
+              "vpc_endpoint_id": "vpce-0123456789abcdef0"
+            }
+          },
+          "ownership_controls": "BucketOwnerEnforced"
+        },
+        "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"DenyNonTLS\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-patient-records\",\"arn:aws:s3:::phi-patient-records/*\"],\"Condition\":{\"Bool\":{\"aws:SecureTransport\":\"false\"}}},{\"Sid\":\"DenyOldPresignedUrls\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::phi-patient-records/*\",\"Condition\":{\"NumericGreaterThan\":{\"s3:signatureAge\":600000}}},{\"Sid\":\"VPCOnly\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::phi-patient-records\",\"arn:aws:s3:::phi-patient-records/*\"],\"Condition\":{\"StringNotEquals\":{\"aws:SourceVpce\":\"vpce-0123456789abcdef0\"}}}]}"
+      }
+    }
+  ]
+}

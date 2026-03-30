@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.S3.NETWORK.VPC.001
+name: VPC Endpoint or IP Condition Required
+description: >
+  S3 bucket access must be restricted by a VPC endpoint condition
+  (aws:SourceVpce) or an IP address condition (aws:SourceIp) in
+  the bucket policy. Without network-level restrictions, the bucket
+  is reachable from any network path. This control enforces
+  transmission security for PHI workloads.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(e)(1)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    Bucket has no VPC endpoint or IP condition restricting access.
+    The bucket is reachable from any network path.
+  action: >
+    Add a VPC gateway endpoint for S3 and route bucket traffic through
+    it, or add an IP condition (aws:SourceIp) to the bucket policy to
+    restrict access to known CIDR ranges.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "has_vpc_condition": true,
+          "has_ip_condition": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_vpc_condition
+      op: eq
+      value: false
+    - field: properties.storage.access.has_ip_condition
+      op: eq
+      value: false
