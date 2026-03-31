@@ -457,3 +457,72 @@ How it works:
 
   The CI workflow in stave-guide/how-to/ci-cd-integration.md documents all the patterns: GitHub Actions (build from
   source or Docker), GitLab CI, baseline tracking, SARIF upload, and gating.
+
+## What is the purpose of now flag in apply command?
+
+--now overrides the current time used to calculate unsafe durations. Stave computes how long an asset has been in an unsafe state by measuring from when the violation was first observed to "now." Without --now, that's the real wall clock — which means the output changes every second, making it impossible to reproduce results or write golden tests. 
+                    
+With --now 2026-01-15T00:00:00Z, the evaluation is frozen in time: the same inputs always produce the same findings, same durations, same safety status. This is essential for:              
+                                                                  
+  - Golden tests — commit expected output, diff byte-for-byte
+  - CI reproducibility — same commit produces same result regardless of when CI runs
+  - Demo scenarios — the Docker demo pins --now so findings are stable
+  - Verification — stave apply verify uses --now to confirm deterministic output
+
+## Which ones are validated using JSON schema?
+
+output of stave schemas
+
+Data Contracts:
+  control       ctrl.v1
+  observation   obs.v0.1
+  output        out.v0.1
+
+Diagnostic Contracts:
+  diagnose   diagnose.v1
+  diff       diff.v0.1
+
+Command Output Contracts:
+  baseline           baseline.v0.1
+  ci_diff            ci_diff.v0.1
+  enforce            enforce.v0.1
+  fix_loop           fix_loop.v0.1
+  gate               gate.v0.1
+  snapshot_archive   snapshot_archive.v0.1
+  snapshot_plan      snapshot_plan.v0.1
+  snapshot_prune     snapshot_prune.v0.1
+  snapshot_quality   snapshot_quality.v0.1
+  validate           validate.v0.1
+
+Artifact Contracts:
+  bug_report                     bug-report.v0.1
+  control_crosswalk_resolution   control-crosswalk-resolution.v1
+  security_audit                 security-audit.v1
+  security_audit_artifacts       security-audit-artifacts.v1
+  security_audit_run_manifest    security-audit-run-manifest.v1
+
+Validated with JSON Schema (4):                                                                                       
+                                                                                                                        
+  ┌─────────────┬─────────────────────────────────────────────────────────────────┐                                     
+  │   Schema    │                       Validation Function                       │                                     
+  ├─────────────┼─────────────────────────────────────────────────────────────────┤                                     
+  │ ctrl.v1     │ ValidateControlYAML() — control loader                          │                                     
+  ├─────────────┼─────────────────────────────────────────────────────────────────┤                                     
+  │ obs.v0.1    │ ValidateObservationJSON() — observation loader                  │                                     
+  ├─────────────┼─────────────────────────────────────────────────────────────────┤                                     
+  │ out.v0.1    │ ValidateEvaluation() / ValidateVerification() — safety envelope │                                     
+  ├─────────────┼─────────────────────────────────────────────────────────────────┤                                     
+  │ diagnose.v1 │ ValidateDiagnose() — safety envelope                            │
+  └─────────────┴─────────────────────────────────────────────────────────────────┘
+
+  Plus finding.v1 (internal, not in stave schemas output) — validated optionally in the finding writer.
+
+  No JSON Schema (20):
+
+  All command output contracts (baseline.v0.1, ci_diff.v0.1, enforce.v0.1, gate.v0.1, validate.v0.1, etc.), all artifact
+   contracts (security-audit.v1, bug-report.v0.1, etc.), and diff.v0.1 exist only as version constants in
+  kernel/schema.go. They're stamped into output JSON as schema_version fields but have no .schema.json file and no
+  runtime validation.
+
+  The validated schemas are the ones on the input boundary (control YAML, observation JSON) and the output contract
+  (evaluation output, diagnose output) — the core data contracts that external tools and CI pipelines consume.
