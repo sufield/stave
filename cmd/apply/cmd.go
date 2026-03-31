@@ -7,25 +7,19 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// resolveConfigDefaults fills flag values from project config when the user
-// did not set them explicitly on the command line.
-func (o *SharedOptions) resolveConfigDefaults(cmd *cobra.Command, eval *appconfig.Evaluator) {
+// resolveApplyConfigDefaults fills apply-specific flag values from project
+// config when the user did not set them explicitly on the command line.
+// Called from PreRunE — the only place that touches *cobra.Command.
+func (o *ApplyOptions) resolveApplyConfigDefaults(cmd *cobra.Command) {
+	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
-}
-
-// resolveApplyConfigDefaults fills apply-specific flag values from project
-// config when the user did not set them explicitly on the command line.
-func (o *ApplyOptions) resolveApplyConfigDefaults(cmd *cobra.Command) {
-	eval := cmdctx.EvaluatorFromCmd(cmd)
-	o.resolveConfigDefaults(cmd, eval)
 	if !cmd.Flags().Changed("allow-unknown-input") {
 		o.AllowUnknown = eval.AllowUnknownInput()
 	}

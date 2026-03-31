@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -36,22 +37,18 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringSliceVar(&o.Statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&o.DueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
-	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
+	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed(risk.AllThresholdStatuses()...))
 }
 
 // Prepare resolves config defaults and normalizes paths. Called from PreRunE.
 func (o *options) Prepare(cmd *cobra.Command) error {
-	o.resolveConfigDefaults(cmd)
+	if eval := cmdctx.EvaluatorFromCmd(cmd); eval != nil {
+		if !cmd.Flags().Changed("max-unsafe") {
+			o.MaxUnsafe = eval.MaxUnsafeDuration()
+		}
+	}
 	o.normalize()
 	return nil
-}
-
-// resolveConfigDefaults fills flag values from project config when the user
-// did not set them explicitly on the command line.
-func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
-	if !cmd.Flags().Changed("max-unsafe") {
-		o.MaxUnsafe = cmdctx.EvaluatorFromCmd(cmd).MaxUnsafeDuration()
-	}
 }
 
 // normalize cleans user-supplied paths.

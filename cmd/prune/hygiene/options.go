@@ -1,11 +1,13 @@
 package hygiene
 
 import (
+	"io"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
@@ -22,31 +24,43 @@ type rawOptions struct {
 	nowRaw, formatFlag                            string
 	controlIDs, assetTypes, statuses              []string
 	dueWithin                                     string
+
+	// Captured in prepare so resolve is cobra-free.
+	maxUnsafeSet bool
+	olderThanSet bool
+	tierSet      bool
+	formatSet    bool
+	eval         *appconfig.Evaluator
+	gf           cliflags.GlobalFlags
 }
 
-// prepare resolves config defaults from the evaluator. Called from PreRunE.
+// prepare captures cobra state for resolve. Called from PreRunE.
 func (o *rawOptions) prepare(cmd *cobra.Command) error {
-	// Config defaults are resolved in resolve() since they need the evaluator.
-	// PreRunE validates that the command context is healthy.
-	_ = cmd
+	o.maxUnsafeSet = cmd.Flags().Changed("max-unsafe")
+	o.olderThanSet = cmd.Flags().Changed("older-than")
+	o.tierSet = cmd.Flags().Changed("retention-tier")
+	o.formatSet = cmd.Flags().Changed("format")
+	o.eval = cmdctx.EvaluatorFromCmd(cmd)
+	o.gf = cliflags.GetGlobalFlags(cmd)
 	return nil
 }
 
 // resolve parses and validates all raw flag values into a ready-to-use Config.
-func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (config, error) {
-	gf := cliflags.GetGlobalFlags(cmd)
+// Does not take *cobra.Command — all cobra state was captured in prepare.
+func (o *rawOptions) resolve(stdout io.Writer) (config, error) {
+	eval := o.eval
 
 	// Dynamic defaults — resolve from project config when flags were not set.
 	maxUnsafe := o.maxUnsafe
-	if !cmd.Flags().Changed("max-unsafe") {
+	if !o.maxUnsafeSet {
 		maxUnsafe = eval.MaxUnsafeDuration()
 	}
 	olderThan := o.olderThan
-	if !cmd.Flags().Changed("older-than") {
+	if !o.olderThanSet {
 		olderThan = eval.SnapshotRetention()
 	}
 	tier := o.tier
-	if !cmd.Flags().Changed("retention-tier") {
+	if !o.tierSet {
 		tier = eval.RetentionTier()
 	}
 
@@ -57,7 +71,7 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 		MaxUnsafeDuration:          maxUnsafe,
 		NowTime:                    o.nowRaw,
 		Format:                     o.formatFlag,
-		FormatChanged:              cmd.Flags().Changed("format"),
+		FormatChanged:              o.formatSet,
 		SkipControlsValidation:     true,
 		SkipObservationsValidation: true,
 	})
@@ -70,7 +84,7 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 	if err != nil {
 		return config{}, err
 	}
-	retentionDur, err := pruneretention.ResolveOlderThanWith(eval, olderThan, cmd.Flags().Changed("older-than"), validTier)
+	retentionDur, err := pruneretention.ResolveOlderThanWith(eval, olderThan, o.olderThanSet, validTier)
 	if err != nil {
 		return config{}, err
 	}
@@ -117,8 +131,8 @@ func (o *rawOptions) resolve(cmd *cobra.Command, eval *appconfig.Evaluator) (con
 		KeepMin:           o.keepMin,
 		Now:               ec.Now,
 		Format:            ec.Format,
-		Quiet:             gf.Quiet,
-		Stdout:            cmd.OutOrStdout(),
+		Quiet:             o.gf.Quiet,
+		Stdout:            stdout,
 		Filter: UpcomingFilter{
 			ControlIDs:   convert.ToControlIDs(o.controlIDs),
 			AssetTypes:   convert.ToAssetTypes(o.assetTypes),

@@ -111,10 +111,6 @@ Exit Codes:
 }
 
 func registerCompletions(cmd *cobra.Command) {
-	_ = cmd.RegisterFlagCompletionFunc("policy", cliflags.CompleteFixed(
-		string(appconfig.GatePolicyAny),
-		string(appconfig.GatePolicyNew),
-		string(appconfig.GatePolicyOverdue),
-	))
+	_ = cmd.RegisterFlagCompletionFunc("policy", cliflags.CompleteFixed(appconfig.AllGatePolicies()...))
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 }

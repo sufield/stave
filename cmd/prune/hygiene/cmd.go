@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -51,7 +51,7 @@ Exit Codes:
 			return opts.prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.resolve(cmd, cmdctx.EvaluatorFromCmd(cmd))
+			cfg, err := opts.resolve(cmd.OutOrStdout())
 			if err != nil {
 				return err
 			}
@@ -83,7 +83,7 @@ Exit Codes:
 	f.StringSliceVar(&opts.statuses, "status", nil, "Filter upcoming metrics by status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&opts.dueWithin, "due-within", "", "Filter upcoming metrics to items due within duration from --now (e.g., 24h, 3d)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsMarkdownJSON...))
-	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed("OVERDUE", "DUE_NOW", "UPCOMING"))
+	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed(risk.AllThresholdStatuses()...))
 
 	return cmd
 }
