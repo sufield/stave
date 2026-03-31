@@ -3,6 +3,8 @@ package inspect
 import (
 	"github.com/spf13/cobra"
 
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
+
 	"github.com/sufield/stave/cmd/inspect/acl"
 	"github.com/sufield/stave/cmd/inspect/aliases"
 	"github.com/sufield/stave/cmd/inspect/compliance"
@@ -32,10 +34,11 @@ Subcommands:
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(policy.NewCmd())
+	resolver := s3resolver.NewResolver()
+	cmd.AddCommand(policy.NewCmd(resolver))
 	cmd.AddCommand(acl.NewCmd())
 	cmd.AddCommand(exposure.NewCmd())
-	cmd.AddCommand(risk.NewCmd())
+	cmd.AddCommand(risk.NewCmd(resolver))
 	cmd.AddCommand(compliance.NewCmd())
 	cmd.AddCommand(aliases.NewCmd())
 

@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,7 +28,7 @@ items:
   - value: a
 `)
 
-	diags, err := LintDir(dir)
+	diags, err := LintDir(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("LintDir error: %v", err)
 	}
@@ -69,7 +70,7 @@ unsafe_predicate:
       value: true
 `)
 
-	diags, err := LintDir(dir)
+	diags, err := LintDir(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("LintDir error: %v", err)
 	}
@@ -80,7 +81,7 @@ unsafe_predicate:
 
 func TestLintDir_NoFiles(t *testing.T) {
 	dir := t.TempDir()
-	_, err := LintDir(dir)
+	_, err := LintDir(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for empty directory")
 	}
@@ -90,7 +91,7 @@ func TestCollectYAMLFiles_SingleFile(t *testing.T) {
 	dir := t.TempDir()
 	writeControl(t, dir, "ctl.yaml", "id: test\n")
 
-	files, err := CollectYAMLFiles(filepath.Join(dir, "ctl.yaml"))
+	files, err := CollectYAMLFiles(context.Background(), filepath.Join(dir, "ctl.yaml"))
 	if err != nil {
 		t.Fatalf("CollectYAMLFiles error: %v", err)
 	}
@@ -105,7 +106,7 @@ func TestCollectYAMLFiles_UnsupportedExt(t *testing.T) {
 	if err := os.WriteFile(path, []byte("hi"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	_, err := CollectYAMLFiles(path)
+	_, err := CollectYAMLFiles(context.Background(), path)
 	if err == nil {
 		t.Fatal("expected error for .txt file")
 	}

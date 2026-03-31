@@ -1,13 +1,9 @@
 package policy
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
-	"github.com/spf13/cobra"
-
-	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	s3policy "github.com/sufield/stave/internal/core/s3/policy"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -21,27 +17,19 @@ type PolicyReport struct {
 	RequiredIAM []string                     `json:"required_iam_actions"`
 }
 
-func run(cmd *cobra.Command, file string) error {
-	input, err := readInput(file, cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
-
+// Analyze parses a policy document and produces a comprehensive report.
+func Analyze(input []byte, resolver risk.PermissionResolver) (PolicyReport, error) {
 	doc, err := s3policy.Parse(string(input))
 	if err != nil {
-		return fmt.Errorf("parse policy: %w", err)
+		return PolicyReport{}, fmt.Errorf("parse policy: %w", err)
 	}
 
-	report := PolicyReport{
+	return PolicyReport{
 		Assessment:  doc.Assess(),
 		PrefixScope: doc.AnalyzeScopes(),
-		Risk:        s3policy.NewEvaluator(nil, s3resolver.NewResolver()).Evaluate(doc),
+		Risk:        s3policy.NewEvaluator(nil, resolver).Evaluate(doc),
 		RequiredIAM: s3policy.MinimumS3IngestIAMActions(),
-	}
-
-	enc := json.NewEncoder(cmd.OutOrStdout())
-	enc.SetIndent("", "  ")
-	return enc.Encode(report)
+	}, nil
 }
 
 func readInput(file string, stdin io.Reader) ([]byte, error) {

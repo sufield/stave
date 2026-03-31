@@ -2,6 +2,7 @@ package artifacts
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -36,8 +37,8 @@ type FormatResult struct {
 type Formatter struct{}
 
 // Run executes the formatting process based on the provided configuration.
-func (f *Formatter) Run(cfg FormatConfig) (FormatResult, error) {
-	files, err := CollectFormatTargets(cfg.Target)
+func (f *Formatter) Run(ctx context.Context, cfg FormatConfig) (FormatResult, error) {
+	files, err := CollectFormatTargets(ctx, cfg.Target)
 	if err != nil {
 		return FormatResult{}, err
 	}
@@ -103,7 +104,7 @@ func (f *Formatter) processFile(path string, cfg FormatConfig, readFn func(strin
 }
 
 // CollectFormatTargets discovers JSON and YAML files under the given path.
-func CollectFormatTargets(target string) ([]string, error) {
+func CollectFormatTargets(ctx context.Context, target string) ([]string, error) {
 	info, err := os.Stat(target)
 	if err != nil {
 		return nil, err
@@ -117,6 +118,9 @@ func CollectFormatTargets(target string) ([]string, error) {
 	err = filepath.WalkDir(target, func(path string, d os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
+		}
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return ctxErr
 		}
 		if d.IsDir() {
 			if d.Name() == ".git" {

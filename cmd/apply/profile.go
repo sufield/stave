@@ -66,16 +66,31 @@ type Runner struct {
 	newFindingWriter compose.FindingWriterFactory
 }
 
-// NewRunner initializes a runner with injected dependencies.
-func NewRunner(newCELEvaluator compose.CELEvaluatorFactory, loadControls ControlLoaderFunc, newFindingWriter compose.FindingWriterFactory, clock ports.Clock, rt *ui.Runtime) *Runner {
-	return &Runner{
-		Clock:            clock,
+// RunnerOption configures optional Runner dependencies.
+type RunnerOption func(*Runner)
+
+// WithClock overrides the default wall clock.
+func WithClock(c ports.Clock) RunnerOption {
+	return func(r *Runner) { r.Clock = c }
+}
+
+// WithUI sets the UI runtime for progress and hints.
+func WithUI(rt *ui.Runtime) RunnerOption {
+	return func(r *Runner) { r.UI = rt }
+}
+
+// NewRunner initializes a runner with required factories and optional overrides.
+func NewRunner(newCELEvaluator compose.CELEvaluatorFactory, loadControls ControlLoaderFunc, newFindingWriter compose.FindingWriterFactory, opts ...RunnerOption) *Runner {
+	r := &Runner{
 		Hasher:           crypto.NewHasher(),
-		UI:               rt,
 		NewCELEvaluator:  newCELEvaluator,
 		LoadControls:     loadControls,
 		newFindingWriter: newFindingWriter,
 	}
+	for _, o := range opts {
+		o(r)
+	}
+	return r
 }
 
 // Run executes the profile evaluation workflow.

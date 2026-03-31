@@ -45,7 +45,7 @@ Exit Codes:
 				},
 			}
 			formatter := &appartifacts.Formatter{}
-			_, err := formatter.Run(cfg)
+			_, err := formatter.Run(cmd.Context(), cfg)
 			return err
 		},
 		SilenceUsage:  true,
