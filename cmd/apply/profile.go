@@ -132,15 +132,15 @@ func validateInput(path string) error {
 	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("--input not found: %q", path)
+			return &ui.UserError{Err: fmt.Errorf("--input not found: %q", path)}
 		}
 		if os.IsPermission(err) {
-			return fmt.Errorf("--input not readable: %q (check file permissions)", path)
+			return &ui.UserError{Err: fmt.Errorf("--input not readable: %q (check file permissions)", path)}
 		}
-		return fmt.Errorf("cannot access --input %q: %w", path, err)
+		return &ui.UserError{Err: fmt.Errorf("cannot access --input %q: %w", path, err)}
 	}
 	if fi.IsDir() {
-		return fmt.Errorf("--input must be a file, got directory: %q", path)
+		return &ui.UserError{Err: fmt.Errorf("--input must be a file, got directory: %q", path)}
 	}
 	return nil
 }

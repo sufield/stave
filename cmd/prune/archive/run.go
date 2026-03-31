@@ -63,7 +63,7 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 		return err
 	}
 	if cfg.KeepMin < 0 {
-		return fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)
+		return &ui.UserError{Err: fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)}
 	}
 
 	cfg.ObservationsDir = obsDir

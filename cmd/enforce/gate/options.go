@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -73,7 +74,7 @@ func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 func toConfig(o *gateOptions, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (config, error) {
 	policy, err := appconfig.ParseGatePolicy(o.Policy)
 	if err != nil {
-		return config{}, fmt.Errorf("invalid policy: %w", err)
+		return config{}, &ui.UserError{Err: fmt.Errorf("invalid policy: %w", err)}
 	}
 
 	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
@@ -87,7 +88,7 @@ func toConfig(o *gateOptions, gf cliflags.GlobalFlags, stdout, stderr io.Writer)
 		SkipMaxUnsafe:     policy != appconfig.GatePolicyOverdue,
 	})
 	if err != nil {
-		return config{}, fmt.Errorf("prepare evaluation context: %w", err)
+		return config{}, &ui.UserError{Err: fmt.Errorf("prepare evaluation context: %w", err)}
 	}
 
 	return config{

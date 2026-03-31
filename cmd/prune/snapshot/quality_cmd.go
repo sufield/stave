@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -27,21 +28,21 @@ type qualityOptions struct {
 // Prepare validates flag values. Called from PreRunE.
 func (o *qualityOptions) Prepare(_ *cobra.Command) error {
 	if o.MinSnapshots < 1 {
-		return fmt.Errorf("invalid --min-snapshots %d: must be >= 1", o.MinSnapshots)
+		return &ui.UserError{Err: fmt.Errorf("invalid --min-snapshots %d: must be >= 1", o.MinSnapshots)}
 	}
 	staleDur, err := cliflags.ParseDurationFlag(o.MaxStaleness, "--max-staleness")
 	if err != nil {
-		return err
+		return &ui.UserError{Err: err}
 	}
 	if staleDur < 0 {
-		return fmt.Errorf("invalid --max-staleness %q: must be >= 0", o.MaxStaleness)
+		return &ui.UserError{Err: fmt.Errorf("invalid --max-staleness %q: must be >= 0", o.MaxStaleness)}
 	}
 	gapDur, err := cliflags.ParseDurationFlag(o.MaxGap, "--max-gap")
 	if err != nil {
-		return err
+		return &ui.UserError{Err: err}
 	}
 	if gapDur < 0 {
-		return fmt.Errorf("invalid --max-gap %q: must be >= 0", o.MaxGap)
+		return &ui.UserError{Err: fmt.Errorf("invalid --max-gap %q: must be >= 0", o.MaxGap)}
 	}
 	return nil
 }
