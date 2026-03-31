@@ -31,8 +31,8 @@ type LoopRequest struct {
 
 // LoopDeps holds the injectable dependencies for the fix-loop workflow.
 type LoopDeps struct {
-	ObservationRepoFactory func() (contracts.ObservationRepository, error)
-	ControlRepo            contracts.ControlRepository
+	ObservationRepo contracts.ObservationRepository
+	ControlRepo     contracts.ControlRepository
 
 	// Remediator controls user interaction during the loop.
 	// When nil, NopRemediator is used (auto-approve, discard progress).
@@ -157,10 +157,6 @@ func (s *Service) evaluateState(
 	dir string,
 	label string,
 ) (evaluationState, error) {
-	loader, err := deps.ObservationRepoFactory()
-	if err != nil {
-		return evaluationState{}, fmt.Errorf("%s evaluation: create observation loader: %w", label, err)
-	}
 	result, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
 		Context:           ctx,
 		ObservationsDir:   dir,
@@ -169,7 +165,7 @@ func (s *Service) evaluateState(
 		Clock:             s.Clock,
 		AllowUnknownType:  req.AllowUnknown,
 		StaveVersion:      version.String,
-		ObservationLoader: loader,
+		ObservationLoader: deps.ObservationRepo,
 		CELEvaluator:      s.CELEvaluator,
 	})
 	if err != nil {

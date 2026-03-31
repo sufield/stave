@@ -7,7 +7,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/sufield/stave/internal/app/contracts"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -63,12 +62,15 @@ func (r *Runner) buildLoopInfra(req LoopRequest) (loopInfra, error) {
 		return loopInfra{}, fmt.Errorf("init artifact writer: %w", err)
 	}
 
+	obsRepo, err := r.NewObsRepo()
+	if err != nil {
+		return loopInfra{}, fmt.Errorf("init observation repo: %w", err)
+	}
+
 	return loopInfra{
 		deps: appfix.LoopDeps{
-			ObservationRepoFactory: func() (contracts.ObservationRepository, error) {
-				return r.NewObsRepo()
-			},
-			ControlRepo: controlRepo,
+			ObservationRepo: obsRepo,
+			ControlRepo:     controlRepo,
 		},
 		writer: writer,
 		eb:     r.newEnvelopeBuilder(),

@@ -27,6 +27,20 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	return controls, nil
 }
 
+// FindControlByID loads controls from a directory and returns the one matching the given ID.
+func FindControlByID(ctx context.Context, repo appcontracts.ControlRepository, dir string, id string) (policy.ControlDefinition, error) {
+	controls, err := repo.LoadControls(ctx, dir)
+	if err != nil {
+		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
+	}
+	for _, c := range controls {
+		if c.ID.String() == id {
+			return c, nil
+		}
+	}
+	return policy.ControlDefinition{}, fmt.Errorf("%w: %q in %s", ErrControlNotFound, id, dir)
+}
+
 // --- Package Level Helpers (Functional API) ---
 
 // LoadControls is a convenience wrapper for one-off loading via Provider.

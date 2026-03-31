@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/core/asset"
 )
 
@@ -25,4 +26,18 @@ func (p *Provider) LoadSnapshots(ctx context.Context, dir string) ([]asset.Snaps
 	}
 
 	return result.Snapshots, nil
+}
+
+// LatestSnapshot returns the most recent snapshot by CapturedAt from a slice.
+func LatestSnapshot(snapshots []asset.Snapshot) (asset.Snapshot, error) {
+	if len(snapshots) == 0 {
+		return asset.Snapshot{}, appeval.ErrNoSnapshots
+	}
+	latest := snapshots[0]
+	for _, s := range snapshots[1:] {
+		if s.CapturedAt.After(latest.CapturedAt) {
+			latest = s
+		}
+	}
+	return latest, nil
 }

@@ -76,7 +76,11 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 
 // BuildPlan identifies which snapshots meet the criteria for archiving.
 func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
-	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, r.cfg.ObservationsDir)
+	loader, err := r.NewSnapshotRepo()
+	if err != nil {
+		return appeval.CleanupPlan{}, fmt.Errorf("create snapshot loader: %w", err)
+	}
+	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, loader, r.cfg.ObservationsDir)
 	if err != nil {
 		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
 	}

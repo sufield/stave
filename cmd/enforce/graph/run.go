@@ -11,7 +11,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -103,14 +102,9 @@ func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir
 	if err != nil {
 		return nil, asset.Snapshot{}, fmt.Errorf("load snapshots: %w", err)
 	}
-	if len(snapshots) == 0 {
-		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", appeval.ErrNoSnapshots, observationsDir)
-	}
-	latest := snapshots[0]
-	for _, s := range snapshots[1:] {
-		if s.CapturedAt.After(latest.CapturedAt) {
-			latest = s
-		}
+	latest, latestErr := compose.LatestSnapshot(snapshots)
+	if latestErr != nil {
+		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", latestErr, observationsDir)
 	}
 	return controls, latest, nil
 }
