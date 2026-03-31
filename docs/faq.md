@@ -421,3 +421,39 @@ The google/cel-go library provides steps 3 and 4 — the expression compiler and
 The CEL library maintainers' scope is the CEL specification — a general-purpose expression language. They wouldn't accept a YAML-to-CEL translator for infrastructure control predicates. That's application logic.
 
 What could be contributed upstream (if it doesn't already exist) would be generic CEL utilities like custom type adapters or extension functions. But stave's current usage of cel-go is standard — it creates programs, registers variables, and evaluates. Nothing is missing from the library.
+
+How does the CI/CD workflow for stave work? Where is the snapshots stored?                                            
+                                                                             
+Stave's CI/CD integration works as a gatekeeper on locally stored snapshots — no cloud calls during evaluation.                                                
+
+How it works:                                                                                                       
+   
+  1. An extractor (external to stave, any language) calls AWS APIs and produces obs.v0.1 JSON files                     
+  2. Those JSON files are committed to the repo or stored as CI artifacts alongside the infrastructure code
+  3. stave apply evaluates them in the pipeline — same as running locally
+
+  Where snapshots are stored — it depends on the workflow:
+
+  Option A: Committed to the repo (simplest)
+  my-infra-repo/
+    observations/
+      2026-03-28T000000Z.json
+      2026-03-29T000000Z.json
+    controls/         # or use built-in packs
+    stave.yaml
+  The pipeline runs stave apply --observations observations/ on every PR. Snapshots are versioned with the code.
+
+  Option B: CI artifact from a prior step
+  A scheduled job runs the extractor, produces snapshots, and uploads them as artifacts. A downstream job downloads them
+   and runs stave apply.
+
+  Option C: Mounted volume in Docker
+  The extractor writes to a directory, the stave container mounts it:
+  docker run --rm -v $(pwd)/snapshots:/work/observations stave-tutorials \
+    stave apply --observations observations --max-unsafe 7d --format json
+
+  Stave itself never stores snapshots. It reads from a directory, evaluates, and writes findings to stdout. Where the
+  snapshots live is the user's choice — repo, artifact store, S3, local disk.
+
+  The CI workflow in stave-guide/how-to/ci-cd-integration.md documents all the patterns: GitHub Actions (build from
+  source or Docker), GitLab CI, baseline tracking, SARIF upload, and gating.

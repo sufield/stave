@@ -345,8 +345,8 @@ Try with your own AWS data
 
    mkdir -p mydata
    cp snap1.json mydata/
-   docker run --rm -v $(pwd)/mydata:/work/observations stave-tutorials \
-     stave apply --observations observations --max-unsafe 0s --format json
+   docker compose run --rm -T -v $(pwd)/mydata:/work/observations \
+     stave stave apply --observations observations --max-unsafe 0s --format json
 
 OWN
 }

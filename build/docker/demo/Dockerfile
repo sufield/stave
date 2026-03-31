@@ -1,9 +1,9 @@
 # Build stage: compile stave from source
 FROM golang:1.26-bookworm@sha256:8e8aa801e8417ef0b5c42b504dd34db3db911bb73dba933bd8bde75ed815fdbb AS builder
 WORKDIR /src
-COPY stave/go.mod stave/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
-COPY stave/ .
+COPY . .
 RUN make sync-schemas sync-controls && \
     CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(cat VERSION)" -o /stave ./cmd/stave
 
@@ -12,14 +12,11 @@ FROM debian:bookworm-slim@sha256:f06537653ac770703bc45b4b113475bd402f451e85223f0
 RUN groupadd -g 10001 stave && \
     useradd -u 10001 -g stave -m -d /work stave
 COPY --from=builder /stave /usr/local/bin/stave
-
-# Suppress first-run hint — the demo is not a new user's first project.
-RUN mkdir -p /root/.config/stave && touch /root/.config/stave/.first_run_seen
-COPY stave/build/docker/demo/scenarios/ /scenarios/
-COPY stave/build/docker/demo/all_controls.txt /scenarios/all_controls.txt
-COPY stave/build/docker/demo/entrypoint.sh /entrypoint.sh
+COPY build/docker/demo/scenarios/ /scenarios/
+COPY build/docker/demo/all_controls.txt /scenarios/all_controls.txt
+COPY build/docker/demo/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 USER stave
 WORKDIR /work
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["--help"]
+CMD ["--scenario", "1"]
