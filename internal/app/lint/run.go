@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -11,8 +12,8 @@ import (
 
 // LintDir discovers YAML files under root and lints them all.
 // It returns a sorted slice of diagnostics.
-func LintDir(root string) ([]Diagnostic, error) {
-	files, err := CollectYAMLFiles(root)
+func LintDir(ctx context.Context, root string) ([]Diagnostic, error) {
+	files, err := CollectYAMLFiles(ctx, root)
 	if err != nil {
 		return nil, err
 	}
@@ -24,6 +25,9 @@ func LintDir(root string) ([]Diagnostic, error) {
 	var all []Diagnostic
 
 	for _, file := range files {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		clean := filepath.Clean(file)
 		data, readErr := os.ReadFile(clean) //nolint:gosec // paths from CollectYAMLFiles, caller-controlled
 		if readErr != nil {
@@ -39,7 +43,7 @@ func LintDir(root string) ([]Diagnostic, error) {
 // CollectYAMLFiles discovers YAML files at the given path.
 // If root is a file, it returns that file (if it has a YAML extension).
 // If root is a directory, it walks recursively.
-func CollectYAMLFiles(root string) ([]string, error) {
+func CollectYAMLFiles(ctx context.Context, root string) ([]string, error) {
 	info, err := os.Stat(root)
 	if err != nil {
 		return nil, err
@@ -56,6 +60,9 @@ func CollectYAMLFiles(root string) ([]string, error) {
 	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
+		}
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return ctxErr
 		}
 		if d.IsDir() {
 			return nil

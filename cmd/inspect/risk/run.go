@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/spf13/cobra"
-
-	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -38,19 +35,15 @@ type PermissionCheck struct {
 	IsFullControl bool `json:"is_full_control"`
 }
 
-func run(cmd *cobra.Command, file string) error {
-	input, err := readInput(file, cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
-
+// Analyze parses input JSON and produces a risk analysis report.
+func Analyze(input []byte, resolver domainrisk.PermissionResolver) (RiskOutput, error) {
 	var in RiskInput
 	if err := json.Unmarshal(input, &in); err != nil {
-		return fmt.Errorf("parse risk input: %w", err)
+		return RiskOutput{}, fmt.Errorf("parse risk input: %w", err)
 	}
 
 	normalized := domainrisk.NormalizeActions(in.Actions)
-	perms := domainrisk.ResolveActions(normalized, s3resolver.NewResolver())
+	perms := domainrisk.ResolveActions(normalized, resolver)
 
 	ctx := domainrisk.StatementContext{
 		Permissions:     perms,
@@ -66,7 +59,7 @@ func run(cmd *cobra.Command, file string) error {
 	report.UpdateReport(result)
 	report.Permissions = perms
 
-	output := RiskOutput{
+	return RiskOutput{
 		NormalizedActions: normalized,
 		Permissions:       perms,
 		PermissionCheck: PermissionCheck{
@@ -77,11 +70,7 @@ func run(cmd *cobra.Command, file string) error {
 		},
 		StatementResult: result,
 		Report:          report,
-	}
-
-	enc := json.NewEncoder(cmd.OutOrStdout())
-	enc.SetIndent("", "  ")
-	return enc.Encode(output)
+	}, nil
 }
 
 func readInput(file string, stdin io.Reader) ([]byte, error) {

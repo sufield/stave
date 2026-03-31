@@ -2,6 +2,7 @@ package artifacts
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,7 +19,7 @@ func TestFormatterRun_CheckOnly(t *testing.T) {
 
 	var buf bytes.Buffer
 	f := &Formatter{}
-	_, err := f.Run(FormatConfig{
+	_, err := f.Run(context.Background(), FormatConfig{
 		Target:    dir,
 		CheckOnly: true,
 		Stdout:    &buf,
@@ -41,7 +42,7 @@ func TestFormatterRun_FormatWrites(t *testing.T) {
 	var written []byte
 	var buf bytes.Buffer
 	f := &Formatter{}
-	result, err := f.Run(FormatConfig{
+	result, err := f.Run(context.Background(), FormatConfig{
 		Target:   dir,
 		Stdout:   &buf,
 		ReadFile: os.ReadFile,
@@ -72,7 +73,7 @@ func TestFormatterRun_AlreadyFormatted(t *testing.T) {
 
 	var buf bytes.Buffer
 	f := &Formatter{}
-	result, err := f.Run(FormatConfig{
+	result, err := f.Run(context.Background(), FormatConfig{
 		Target:    dir,
 		CheckOnly: true,
 		Stdout:    &buf,
@@ -94,7 +95,7 @@ func TestCollectFormatTargets_Dir(t *testing.T) {
 		}
 	}
 
-	files, err := CollectFormatTargets(dir)
+	files, err := CollectFormatTargets(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("CollectFormatTargets error: %v", err)
 	}
@@ -110,7 +111,7 @@ func TestCollectFormatTargets_SingleFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := CollectFormatTargets(path)
+	files, err := CollectFormatTargets(context.Background(), path)
 	if err != nil {
 		t.Fatalf("CollectFormatTargets error: %v", err)
 	}

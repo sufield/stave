@@ -40,7 +40,7 @@ Exit Codes:
 func runLint(cmd *cobra.Command, args []string) error {
 	target := fsutil.CleanUserPath(args[0])
 
-	diags, err := lint.LintDir(target)
+	diags, err := lint.LintDir(cmd.Context(), target)
 	if err != nil {
 		return err
 	}

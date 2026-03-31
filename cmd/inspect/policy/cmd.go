@@ -3,11 +3,13 @@ package policy
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // NewCmd constructs the inspect policy command.
-func NewCmd() *cobra.Command {
+func NewCmd(resolver risk.PermissionResolver) *cobra.Command {
 	var file string
 
 	cmd := &cobra.Command{
@@ -33,8 +35,18 @@ Exit Codes:
 		Example: `  stave inspect policy --file policy.json
   cat policy.json | stave inspect policy
   stave inspect policy --file policy.json | jq .risk`,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			input, err := readInput(file, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			report, err := Analyze(input, resolver)
+			if err != nil {
+				return err
+			}
+			return jsonutil.WriteIndented(cmd.OutOrStdout(), report)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

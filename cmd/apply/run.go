@@ -60,8 +60,8 @@ func runApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, cs c
 				return compose.LoadControls(ctx, p, dir)
 			},
 			p.NewFindingWriter,
-			cfg.profileClock,
-			rt,
+			WithClock(cfg.profileClock),
+			WithUI(rt),
 		)
 		return runner.Run(ctx, *cfg.Profile)
 	}
