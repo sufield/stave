@@ -57,6 +57,11 @@ const (
 	GatePolicyOverdue GatePolicy = "fail_on_overdue_upcoming"
 )
 
+// AllGatePolicies returns all valid GatePolicy values as strings.
+func AllGatePolicies() []string {
+	return []string{string(GatePolicyAny), string(GatePolicyNew), string(GatePolicyOverdue)}
+}
+
 // ParseGatePolicy validates and normalizes a string into a GatePolicy.
 func ParseGatePolicy(raw string) (GatePolicy, error) {
 	p := GatePolicy(strings.ToLower(strings.TrimSpace(raw)))

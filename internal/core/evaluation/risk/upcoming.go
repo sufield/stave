@@ -21,6 +21,11 @@ const (
 	StatusUpcoming ThresholdStatus = "UPCOMING"
 )
 
+// AllThresholdStatuses returns all valid ThresholdStatus values as strings.
+func AllThresholdStatuses() []string {
+	return []string{string(StatusOverdue), string(StatusDueNow), string(StatusUpcoming)}
+}
+
 // ValidateStatuses normalizes and validates a slice of status strings.
 func ValidateStatuses(statuses []string) ([]ThresholdStatus, error) {
 	out := make([]ThresholdStatus, 0, len(statuses))

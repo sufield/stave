@@ -44,7 +44,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 
-			ret, err := opts.resolveRetention(cmd)
+			ret, err := opts.resolveRetention()
 			if err != nil {
 				return err
 			}

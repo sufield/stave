@@ -55,7 +55,7 @@ Exit Codes:
 					"before proceeding.")
 			}
 
-			ret, err := opts.resolveRetention(cmd)
+			ret, err := opts.resolveRetention()
 			if err != nil {
 				return err
 			}

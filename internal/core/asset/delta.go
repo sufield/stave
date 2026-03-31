@@ -22,6 +22,11 @@ const (
 	ChangeModified ChangeType = "modified"
 )
 
+// AllChangeTypes returns all valid ChangeType values as strings.
+func AllChangeTypes() []string {
+	return []string{string(ChangeAdded), string(ChangeRemoved), string(ChangeModified)}
+}
+
 // IsValid reports whether ct is a recognized change type.
 func (ct ChangeType) IsValid() bool {
 	switch ct {

@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -19,6 +20,12 @@ type options struct {
 	KeepMin    int
 	DryRun     bool
 	FormatFlag string
+
+	// Captured in Prepare so resolveRetention is cobra-free.
+	olderThanSet bool
+	tierSet      bool
+	formatSet    bool
+	eval         *appconfig.Evaluator
 }
 
 // BindFlags attaches the options to a Cobra command.
@@ -35,18 +42,25 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 }
 
-// Prepare normalizes paths. Called from PreRunE.
-func (o *options) Prepare(_ *cobra.Command) error {
+// Prepare captures cobra state and normalizes paths. Called from PreRunE.
+func (o *options) Prepare(cmd *cobra.Command) error {
+	if cmd != nil {
+		o.olderThanSet = cmd.Flags().Changed("older-than")
+		o.tierSet = cmd.Flags().Changed("retention-tier")
+		o.formatSet = cmd.Flags().Changed("format")
+		o.eval = cmdctx.EvaluatorFromCmd(cmd)
+	}
 	o.ObsDir = fsutil.CleanUserPath(o.ObsDir)
 	o.ArchiveDir = fsutil.CleanUserPath(o.ArchiveDir)
 	return nil
 }
 
 // resolveRetention resolves the retention parameters from config and flags.
-func (o *options) resolveRetention(cmd *cobra.Command) (pruneretention.ResolvedRetention, error) {
+// Does not take *cobra.Command — all cobra state was captured in Prepare.
+func (o *options) resolveRetention() (pruneretention.ResolvedRetention, error) {
 	return pruneretention.ResolveRetention(
 		pruneretention.RawRetentionOpts{OlderThan: o.OlderThan, Tier: o.Tier, NowRaw: o.NowRaw, FormatFlag: o.FormatFlag},
-		cmdctx.EvaluatorFromCmd(cmd),
-		cmd.Flags().Changed("older-than"), cmd.Flags().Changed("retention-tier"), cmd.Flags().Changed("format"), false,
+		o.eval,
+		o.olderThanSet, o.tierSet, o.formatSet, false,
 	)
 }
