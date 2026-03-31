@@ -1,41 +1,6 @@
 # Stave Tutorial Demo
 
-44 interactive S3 security scenarios + HIPAA compliance profile running
-in Docker. No AWS credentials required.
-
-## What you will learn
-
-Each scenario walks you through the complete Stave workflow for one real S3 misconfiguration:
-
-- **The observation** — what the misconfigured bucket state looks like as JSON
-- **The detection** — how `stave apply` evaluates the observation and reports the violation
-- **The remediation** — what the fixed state looks like and how Stave confirms it
-
-The HIPAA compliance profile demonstrates:
-
-- **Compound risk detection** — cross-control violations that amplify severity
-- **Compliance reporting** — CFR citations, severity grouping, BAA disclaimer
-- **Exception handling** — acknowledged exceptions with compensating controls
-
-By the end you will know how to:
-
-- Structure observation JSON files in the `obs.v0.1` schema
-- Map AWS S3 configuration to the fields each control checks
-- Run `stave apply` to detect violations and verify fixes
-- Run `stave evaluate --profile hipaa` for compliance reporting
-- Read Stave output: findings, severity, evidence, remediation guidance
-- Use `exclude_controls` to focus evaluation on specific controls
-
-The scenarios are organized in three levels:
-
-- **Beginner (1-8)** — One AWS CLI command, one observation field. Public access, encryption, logging, versioning, tagging.
-- **Intermediate (9-29)** — Policy and ACL parsing. Multiple fields, cross-field conditions, latent exposure, cross-account access.
-- **Advanced (30-43)** — Tag-conditional compliance, lifecycle retention, Object Lock modes, website hosting, VCS artifact exposure, signed upload restrictions, tenant isolation, bucket takeover, CDN origin hijacking.
-- **Capstone (44)** — Full hardening audit of one bucket against all 47 controls in a single observation.
-
-## Prerequisites
-
-- Docker 20.10+
+44 S3 security scenarios in Docker. No AWS credentials required.
 
 ## Install
 
@@ -45,100 +10,54 @@ cd stave
 docker build -f build/docker/demo/Dockerfile -t stave-tutorials ..
 ```
 
-Or from the repository root:
+## Run your first scenario
 
 ```bash
-docker build -f stave/build/docker/demo/Dockerfile -t stave-tutorials .
+docker run --rm stave-tutorials --scenario 1
 ```
 
-## Usage
+This detects a publicly readable S3 bucket. The output shows the
+observation, the command, and the violation.
 
-### List all scenarios
+Add `--fixed` to see the remediated version pass.
+
+## See all 44 scenarios
 
 ```bash
 docker run --rm stave-tutorials --list
 ```
 
-### Run a scenario (bad configuration)
+Pick any number from 1 to 44.
+
+## HIPAA compliance profile
 
 ```bash
-docker run --rm stave-tutorials --scenario 10
+docker run --rm stave-tutorials --hipaa
 ```
 
-This shows:
-1. The observation JSON (the misconfigured state)
-2. The `stave apply` command
-3. The evaluation output with the violation
+Evaluates a PHI bucket against 14 HIPAA controls with compound risk
+detection. Add `--fixed` to see all controls pass.
 
-Exit code 3 (violations found).
-
-### Run the same scenario (fixed configuration)
-
-```bash
-docker run --rm stave-tutorials --scenario 10 --fixed
-```
-
-This shows:
-1. The fixed observation JSON (the remediated state)
-2. The same `stave apply` command
-3. The evaluation output confirming zero violations
-
-Exit code 0 (no violations).
-
-### AWS Trusted Advisor blind spots
-
-Three scenarios that demonstrate S3 risks Trusted Advisor cannot detect:
+## Trusted Advisor blind spots
 
 ```bash
 docker run --rm stave-tutorials --blind-spots
-docker run --rm stave-tutorials --blind-spots --fixed
 ```
 
-| # | Blind Spot | Control | What Trusted Advisor Does | What Stave Does |
-|---|-----------|---------|--------------------------|-----------------|
-| 8 | Policy-denied scanning | CTL.S3.INCOMPLETE.001 | Reports green — scanning role was denied access to bucket policy, ACL, and Public Access Block APIs. The bucket is fully public but the scanner cannot see it. | Flags missing data as unsafe. If required fields are absent from the observation, the bucket cannot be proven safe. |
-| 23 | Latent exposure behind PAB | CTL.S3.PUBLIC.005 | Reports safe — Public Access Block is on. But the underlying policy grants `Principal: "*"`. Removing PAB (one toggle) makes the bucket instantly public. | Flags the underlying public policy as latent exposure even when PAB masks it. |
-| 18 | ACL escalation (WRITE_ACP) | CTL.S3.ACL.ESCALATION.001 | Not checked. Trusted Advisor checks public read access but not whether the public can modify the ACL itself. | Flags WRITE_ACP grants to AllUsers. Anyone can call PutBucketAcl, grant themselves FULL_CONTROL, then read every object. |
+Three S3 risks that AWS Trusted Advisor cannot detect.
 
-References:
-- [Fog Security: Mistrusted Advisor (Aug 2025)](https://www.fogsecurity.io/blog/mistrusted-advisor-public-s3-buckets)
-- [SecurityWeek: AWS Trusted Advisor Tricked](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/)
-
-### HIPAA compliance profile
-
-Run the HIPAA profile evaluation against a PHI bucket with 14 Go
-invariants and 3 compound risk detectors:
+## Try with your own bucket
 
 ```bash
-docker run --rm stave-tutorials --hipaa             # violations
-docker run --rm stave-tutorials --hipaa --fixed      # fully remediated
-docker run --rm stave-tutorials --hipaa --json       # JSON output
+docker run --rm stave-tutorials --try-your-own
 ```
 
-The bad scenario demonstrates a PHI bucket with: no Block Public Access,
-AWS-managed KMS key, no logging, no versioning, wildcard policy, no VPC
-restriction — triggering COMPOUND.001 (public + broad policy) and
-COMPOUND.002 (encryption + public access).
+Prints step-by-step instructions to capture a real S3 bucket with
+the AWS CLI and evaluate it.
 
-The fixed scenario shows full remediation: BPA on, customer CMK, server
-and object-level logging, versioning, COMPLIANCE Object Lock 6yr,
-VPC-only access, presigned URL restriction, ACLs disabled.
-
-This uses `stave evaluate --profile hipaa` (Go invariants with
-compliance reporting), not `stave apply` (YAML/CEL evaluation).
-
-### Pass-through to stave
-
-```bash
-docker run --rm stave-tutorials -- stave --version
-docker run --rm stave-tutorials -- stave controls list --format json
-```
-
-## Scenarios
+## Scenario reference
 
 ### Beginner (1-8)
-
-One AWS CLI command per scenario. Direct field mapping.
 
 | # | Control | Severity | Name |
 |---|---------|----------|------|
@@ -151,9 +70,7 @@ One AWS CLI command per scenario. Direct field mapping.
 | 7 | CTL.S3.GOVERNANCE.001 | low | Data Classification Tag Required |
 | 8 | CTL.S3.INCOMPLETE.001 | low | Complete Data Required for Safety Assessment |
 
-### Intermediate (9-29)
-
-Policy and ACL parsing with conditional logic. Some scenarios combine two CLI outputs.
+### Intermediate (9-27)
 
 | # | Control | Severity | Name |
 |---|---------|----------|------|
@@ -177,9 +94,7 @@ Policy and ACL parsing with conditional logic. Some scenarios combine two CLI ou
 | 26 | CTL.S3.PUBLIC.002 | critical | No Public S3 Buckets With Sensitive Data |
 | 27 | CTL.S3.PUBLIC.PREFIX.001 | high | Protected Prefixes Must Not Be Publicly Readable |
 
-### Advanced (30-43)
-
-Tag-conditional evaluation, compliance controls, cross-service analysis.
+### Advanced (28-43)
 
 | # | Control | Severity | Name |
 |---|---------|----------|------|
@@ -206,13 +121,29 @@ Tag-conditional evaluation, compliance controls, cross-service analysis.
 |---|---------|----------|------|
 | 44 | All 47 controls | all | Full Hardening Audit |
 
-## How it works
+## How stave works
 
-The demo uses one Stave project. Each scenario swaps the observation files in the `observations/` directory and runs `stave apply`. The `exclude_controls` setting in `stave.yaml` ensures only the target control is evaluated, so the output focuses on exactly one misconfiguration.
+```mermaid
+graph LR
+    A[Observations<br/>S3 bucket snapshots] --> C[stave apply]
+    B[Controls<br/>safety rules] --> C
+    C --> D[Findings<br/>violations + remediation]
+```
 
-Each run shows three things:
-1. **Observation JSON** — the exact input data Stave evaluates
-2. **Command** — the `stave apply` command you would run
-3. **Output** — the evaluation result with findings, evidence, and remediation guidance
+## What you now know
 
-Scenario 44 (capstone) removes all exclusions and runs every control against a single fully-populated observation.
+By working through these scenarios you have:
+
+- **Seen what an observation looks like** — a JSON snapshot of S3
+  bucket configuration captured at a point in time (`obs.v0.1`)
+- **Run `stave apply`** — the evaluation engine that checks
+  observations against safety controls and reports violations
+- **Read a finding** — control ID, severity, affected asset, evidence
+  of the misconfiguration, and concrete remediation steps
+- **Verified a fix** — the same command on a remediated observation
+  produces zero violations (exit code 0)
+- **Understood exit codes** — 0 means safe, 3 means violations found
+- **Seen compound risks** — how HIPAA profile evaluation detects
+  dangerous combinations of control failures
+- **Used your own data** — captured a real S3 bucket with the AWS CLI
+  and evaluated it with stave

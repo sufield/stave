@@ -161,7 +161,7 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 		BucketAllowlist: o.BucketAllowlist,
 		IncludeAll:      o.IncludeAll,
 		OutputFormat:    format,
-		Quiet:           cs.GlobalFlags.Quiet,
+		Quiet:           cs.GlobalFlags.Quiet || isMachineFormat(format),
 		Stdout:          compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
 		Stderr:          cs.Stderr,
 		Sanitizer:       cs.GlobalFlags.GetSanitizer(),
@@ -260,14 +260,23 @@ func (o *ApplyOptions) ResolveStandardIO(cs cobraState) (standardIO, error) {
 	if err != nil {
 		return standardIO{}, err
 	}
+	quiet := cs.GlobalFlags.Quiet || isMachineFormat(format)
 	return standardIO{
-		Stdout:    compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
+		Stdout:    compose.ResolveStdout(cs.Stdout, quiet, format),
 		Stderr:    cs.Stderr,
 		Stdin:     cs.Stdin,
 		Sanitizer: cs.GlobalFlags.GetSanitizer(),
 		Format:    format,
-		Quiet:     cs.GlobalFlags.Quiet,
+		Quiet:     quiet,
 	}, nil
+}
+
+// isMachineFormat reports whether the output format is intended for
+// machine consumption (JSON, SARIF). When true, progress messages
+// and hints on stderr are suppressed to keep the output composable
+// with tools like jq.
+func isMachineFormat(f ui.OutputFormat) bool {
+	return f == ui.OutputFormatJSON || f == ui.OutputFormatSARIF
 }
 
 func buildClock(now time.Time) ports.Clock {

@@ -398,4 +398,26 @@ The compliance audience needs:
 
   The Go invariants earn their existence by serving a workflow that YAML controls structurally cannot: producing
   audit-ready compliance evidence where the output format is as important as the evaluation logic.
-  
+
+## Google CEL Library
+
+For the predicate engine that is mostly using google cel library, is it possible to open a PR that moves that functionality to it? Is it appropriate to ask the library maintainer to implement it (is it in their scope and generic enough?)                                                                               
+No, it's not appropriate. Stave's CEL usage is domain-specific — it evaluates unsafe_predicate YAML structures (with all/any/field/op/value nodes) against asset property maps. This is a DSL built on top of CEL, not CEL itself.
+                                                  
+What stave does:
+                                                  
+1. Parses ctrl.v1 YAML predicates into an internal UnsafePredicate tree
+2. Translates field ops (eq, ne, in, missing, present, not_subset_of_field) into CEL expressions
+3. Compiles the CEL expression against asset properties
+4. Evaluates with the CEL runtime
+
+The google/cel-go library provides steps 3 and 4 — the expression compiler and runtime. Steps 1 and 2 are stave-specific domain logic that wouldn't belong in the CEL library because:
+
+- The unsafe_predicate YAML schema is stave's invention, not a CEL concept
+- The field operator set (eq, ne, missing, present, not_subset_of_field) is stave's domain language
+- The translation from YAML tree → CEL expression string is stave's compiler, not a general-purpose tool
+- The AssetEvalContext that maps properties.storage.encryption.enabled paths to CEL variables is stave's binding layer
+
+The CEL library maintainers' scope is the CEL specification — a general-purpose expression language. They wouldn't accept a YAML-to-CEL translator for infrastructure control predicates. That's application logic.
+
+What could be contributed upstream (if it doesn't already exist) would be generic CEL utilities like custom type adapters or extension functions. But stave's current usage of cel-go is standard — it creates programs, registers variables, and evaluates. Nothing is missing from the library.

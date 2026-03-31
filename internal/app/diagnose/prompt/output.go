@@ -10,7 +10,7 @@ import (
 
 func (r *Runner) write(cfg Config, out PromptOutput) error {
 	w := cfg.Stdout
-	if cfg.Quiet && !cfg.Format.IsJSON() {
+	if cfg.Quiet && !cfg.Format.IsMachineReadable() {
 		w = io.Discard
 	}
 

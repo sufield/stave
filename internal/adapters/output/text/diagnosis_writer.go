@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/env"
 )
 
 // LabelFunc formats a severity label for display.
@@ -52,8 +53,12 @@ func writeNoDiagnosisIssues(w io.Writer, labelFn LabelFunc) error {
 	if _, err := fmt.Fprintf(w, "\n%s\n", line); err != nil {
 		return err
 	}
-	_, err := fmt.Fprintln(w, "Next step: continue with `stave apply` on new snapshots.")
-	return err
+	if !env.Demo.IsTrue() {
+		if _, err := fmt.Fprintln(w, "Next step: continue with `stave apply` on new snapshots."); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Issue, labelFn LabelFunc) error {
@@ -67,8 +72,12 @@ func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Issue, labelFn LabelF
 			return err
 		}
 	}
-	_, err := fmt.Fprintln(w, "\nNext step: apply the suggested action/command, then rerun `stave apply` and `stave diagnose`.")
-	return err
+	if !env.Demo.IsTrue() {
+		if _, err := fmt.Fprintln(w, "\nNext step: apply the suggested action/command, then rerun `stave apply` and `stave diagnose`."); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func writeDiagnosisItem(w io.Writer, index int, diag diagnosis.Issue) error {
