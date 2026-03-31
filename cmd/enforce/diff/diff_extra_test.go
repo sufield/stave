@@ -68,7 +68,7 @@ func TestBuildFilter(t *testing.T) {
 		AssetTypes:  []string{"bucket"},
 		AssetID:     "  my-bucket  ",
 	}
-	filter, err := opts.buildFilter()
+	filter, err := buildFilter(opts)
 	if err != nil {
 		t.Fatalf("buildFilter error: %v", err)
 	}

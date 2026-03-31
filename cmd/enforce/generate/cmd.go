@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -35,7 +36,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	_ = cmd.RegisterFlagCompletionFunc("mode", cliflags.CompleteFixed(string(ModePAB), string(ModeSCP)))
 }
 
-func (o *options) ToConfig(cmd *cobra.Command) (Config, error) {
+func toConfig(o *options, stdout io.Writer) (Config, error) {
 	mode, err := ParseMode(o.ModeRaw)
 	if err != nil {
 		return Config{}, fmt.Errorf("invalid mode: %w", err)
@@ -45,7 +46,7 @@ func (o *options) ToConfig(cmd *cobra.Command) (Config, error) {
 		OutDir:    fsutil.CleanUserPath(o.OutDir),
 		Mode:      mode,
 		DryRun:    o.DryRun,
-		Stdout:    cmd.OutOrStdout(),
+		Stdout:    stdout,
 	}, nil
 }
 
@@ -69,7 +70,7 @@ Exit Codes:
 		Example: `  stave enforce --input evaluation.json --mode terraform`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.ToConfig(cmd)
+			cfg, err := toConfig(&opts, cmd.OutOrStdout())
 			if err != nil {
 				return err
 			}

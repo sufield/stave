@@ -29,9 +29,9 @@ func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
 	report := buildReport(result, r.FixHints, hc)
 
 	switch {
-	case r.Format == "json":
+	case r.Format == string(ui.OutputFormatJSON):
 		return outjson.WriteValidation(r.Writer, report)
-	case r.Format != "" && r.Format != "text":
+	case r.Format != "" && r.Format != string(ui.OutputFormatText):
 		return ui.ExecuteTemplate(r.Writer, r.Format, report)
 	default:
 		return r.writeText(result, report)

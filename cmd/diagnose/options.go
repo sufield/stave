@@ -62,22 +62,16 @@ func (o *diagnoseOptions) Prepare(cmd *cobra.Command) error {
 	o.controlsSet = cmd.Flags().Changed("controls")
 	o.obsSet = cmd.Flags().Changed("observations")
 	o.formatSet = cmd.Flags().Changed("format")
-	o.resolveConfigDefaults(cmd)
-	return nil
-}
-
-// resolveConfigDefaults fills flag values from project config when the user
-// did not set them explicitly on the command line.
-func (o *diagnoseOptions) resolveConfigDefaults(cmd *cobra.Command) {
 	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
+	return nil
 }
 
 // ToConfig converts raw CLI options into a validated Config.
 // Does not take *cobra.Command — all Cobra state was captured in Prepare.
-func (o *diagnoseOptions) ToConfig(flags cliflags.GlobalFlags, stdout, stderr io.Writer, stdin io.Reader) (Config, error) {
+func toConfig(o *diagnoseOptions, flags cliflags.GlobalFlags, stdout, stderr io.Writer, stdin io.Reader) (Config, error) {
 	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
 		ControlsDir:       o.ControlsDir,
 		ObservationsDir:   o.ObservationsDir,

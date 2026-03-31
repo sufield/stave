@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/metadata"
@@ -60,7 +61,7 @@ Exit Codes:
 		Example: `  stave graph coverage --controls controls/s3 --observations observations`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.ToConfig(cmd)
+			cfg, err := toConfig(opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout())
 			if err != nil {
 				return err
 			}

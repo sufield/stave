@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -35,19 +36,18 @@ func (o *coverageOptions) BindFlags(cmd *cobra.Command) {
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("dot", "json"))
 }
 
-// ToConfig validates flags and converts them into a typed runner configuration.
-func (o *coverageOptions) ToConfig(cmd *cobra.Command) (config, error) {
+// toConfig validates flags and converts them into a typed runner configuration.
+func toConfig(o *coverageOptions, gf cliflags.GlobalFlags, stdout io.Writer) (config, error) {
 	format, err := ParseFormat(o.Format)
 	if err != nil {
 		return config{}, fmt.Errorf("invalid format: %w", err)
 	}
-	gf := cliflags.GetGlobalFlags(cmd)
 	return config{
 		ControlsDir:     fsutil.CleanUserPath(o.ControlsDir),
 		ObservationsDir: fsutil.CleanUserPath(o.ObservationsDir),
 		Format:          format,
 		AllowUnknown:    o.AllowUnknown,
 		Sanitizer:       gf.GetSanitizer(),
-		Stdout:          cmd.OutOrStdout(),
+		Stdout:          stdout,
 	}, nil
 }

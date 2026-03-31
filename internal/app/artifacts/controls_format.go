@@ -8,14 +8,15 @@ import (
 	"text/tabwriter"
 
 	"github.com/sufield/stave/internal/app/catalog"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // FormatControlOutput writes control rows in the requested format.
 func FormatControlOutput(w io.Writer, cfg catalog.ListConfig, rows []catalog.ControlRow) error {
-	format := strings.ToLower(strings.TrimSpace(cfg.Format))
+	format := appcontracts.OutputFormat(strings.ToLower(strings.TrimSpace(cfg.Format)))
 
-	if format == "json" {
+	if format == appcontracts.FormatJSON {
 		return jsonutil.WriteIndented(w, rows)
 	}
 
@@ -27,7 +28,7 @@ func FormatControlOutput(w io.Writer, cfg catalog.ListConfig, rows []catalog.Con
 	switch format {
 	case "csv":
 		return WriteCSV(w, rows, cols, !cfg.NoHeaders)
-	case "text":
+	case appcontracts.FormatText:
 		return WriteTable(w, rows, cols, !cfg.NoHeaders)
 	default:
 		return fmt.Errorf("unsupported --format %q (use: text, json, csv)", cfg.Format)

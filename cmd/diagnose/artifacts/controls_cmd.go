@@ -97,7 +97,7 @@ func runListPacks(w io.Writer, cfg catalog.ListConfig) error {
 	}
 	items := reg.ListPacks()
 
-	if cfg.Format == "json" {
+	if ui.OutputFormat(cfg.Format) == ui.OutputFormatJSON {
 		return jsonutil.WriteIndented(w, items)
 	}
 

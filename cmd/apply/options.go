@@ -87,9 +87,10 @@ func resolvePathInference(controlsDir, observationsDir string, controlsSet, obsC
 // --- Standard mode resolution ---
 
 // Resolve transforms raw CLI options into a RunConfig.
-func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
+// Pure function — reads from o and cs, writes nothing.
+func Resolve(o *ApplyOptions, cs cobraState) (RunConfig, error) {
 	if o.Profile != "" {
-		return o.resolveProfileMode(cs)
+		return resolveProfileMode(o, cs)
 	}
 
 	ec, err := resolvePathInference(o.ControlsDir, o.ObservationsDir, o.controlsSet, cs.ObsChanged)
@@ -135,7 +136,7 @@ func (o *ApplyOptions) Resolve(cs cobraState) (RunConfig, error) {
 	}, nil
 }
 
-func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
+func resolveProfileMode(o *ApplyOptions, cs cobraState) (RunConfig, error) {
 	prof, err := ParseProfile(o.Profile)
 	if err != nil {
 		return RunConfig{}, &ui.UserError{Err: err}
@@ -169,13 +170,19 @@ func (o *ApplyOptions) resolveProfileMode(cs cobraState) (RunConfig, error) {
 	return RunConfig{Mode: runModeProfile, Profile: cfg, profileClock: clock}, nil
 }
 
-// buildEvaluatorInput bridges CLI flags to the internal application layer options.
-// controlsDir and observationsDir are the resolved paths from RunConfig.
-// cfgPath is the pre-resolved project config path from Resolve().
-func (o *ApplyOptions) buildEvaluatorInput(controlsDir, observationsDir, cfgPath string) (appeval.Options, error) {
+// projectContext holds resolved project-level paths and identity.
+type projectContext struct {
+	Root           string
+	ContextName    string
+	UserConfigPath string
+}
+
+// resolveProjectContext discovers the project root, active context, and
+// user config path. Pure I/O — no dependency on ApplyOptions.
+func resolveProjectContext() (projectContext, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
-		return appeval.Options{}, ui.WithHint(
+		return projectContext{}, ui.WithHint(
 			fmt.Errorf("resolve project context: %w", err),
 			ui.ErrHintProjectContext,
 		)
@@ -184,7 +191,7 @@ func (o *ApplyOptions) buildEvaluatorInput(controlsDir, observationsDir, cfgPath
 
 	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
 	if uErr != nil {
-		return appeval.Options{}, ui.WithHint(
+		return projectContext{}, ui.WithHint(
 			fmt.Errorf("load user config: %w", uErr),
 			ui.ErrHintProjectConfig,
 		)
@@ -195,30 +202,43 @@ func (o *ApplyOptions) buildEvaluatorInput(controlsDir, observationsDir, cfgPath
 		selectedContext = sc.Name
 	}
 
+	return projectContext{
+		Root:           root,
+		ContextName:    appapply.ResolveContextName(root, selectedContext),
+		UserConfigPath: userPath,
+	}, nil
+}
+
+// buildEvaluatorInput assembles the domain-layer options from resolved
+// paths and CLI flags. No project context resolution — that's done by
+// resolveProjectContext.
+func buildEvaluatorInput(o *ApplyOptions, pc projectContext, controlsDir, observationsDir, cfgPath string) appeval.Options {
 	return appeval.Options{
-		ContextName:        appapply.ResolveContextName(root, selectedContext),
-		ProjectRoot:        root,
+		ContextName:        pc.ContextName,
+		ProjectRoot:        pc.Root,
 		ControlsDir:        controlsDir,
 		ConfigPath:         cfgPath,
-		UserConfigPath:     userPath,
+		UserConfigPath:     pc.UserConfigPath,
 		MaxUnsafeDuration:  o.MaxUnsafeDuration,
 		NowTime:            o.NowTime,
 		ObservationsSource: appeval.ObservationSource(observationsDir),
 		IntegrityManifest:  o.IntegrityManifest,
 		IntegrityPublicKey: o.IntegrityPublicKey,
 		Hasher:             fsutil.FSContentHasher{},
-	}, nil
+	}
 }
 
-// parseDomainOptions handles the conversion of strings to domain-specific types.
+// parseDomainOptions validates and parses domain-specific flag values
+// without constructing a full appeval.Options struct.
 func parseDomainOptions(maxUnsafe, nowTime, observationsDir, manifest, pubKey string) (appeval.ParsedOptions, error) {
-	parsed, err := (appeval.Options{
+	opts := appeval.Options{
 		MaxUnsafeDuration:  maxUnsafe,
 		NowTime:            nowTime,
 		ObservationsSource: appeval.ObservationSource(observationsDir),
 		IntegrityManifest:  manifest,
 		IntegrityPublicKey: pubKey,
-	}).Validate()
+	}
+	parsed, err := opts.Validate()
 	if err != nil {
 		return appeval.ParsedOptions{}, &ui.UserError{Err: err}
 	}
@@ -255,7 +275,7 @@ type standardIO struct {
 }
 
 // ResolveStandardIO extracts IO and format state for the standard apply path.
-func (o *ApplyOptions) ResolveStandardIO(cs cobraState) (standardIO, error) {
+func ResolveStandardIO(o *ApplyOptions, cs cobraState) (standardIO, error) {
 	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
 		return standardIO{}, err
@@ -288,7 +308,7 @@ func buildClock(now time.Time) ports.Clock {
 
 // ResolveDryRun converts raw CLI options into a ReadinessConfig for dry-run mode.
 // Flag strings are parsed to native types here so the config struct is ready to use.
-func (o *ApplyOptions) ResolveDryRun(cs cobraState) (ReadinessConfig, error) {
+func ResolveDryRun(o *ApplyOptions, cs cobraState) (ReadinessConfig, error) {
 	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
 		ControlsDir:                o.ControlsDir,
 		ObservationsDir:            o.ObservationsDir,

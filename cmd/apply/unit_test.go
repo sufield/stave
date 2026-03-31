@@ -62,7 +62,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		cfg, err := opts.Resolve(cs)
+		cfg, err := Resolve(opts, cs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -88,7 +88,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		cfg, err := opts.Resolve(cs)
+		cfg, err := Resolve(opts, cs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -114,7 +114,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		cfg, err := opts.Resolve(cs)
+		cfg, err := Resolve(opts, cs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -177,7 +177,7 @@ func TestResolveApplyOptions(t *testing.T) {
 	for _, tc := range errorCases {
 		t.Run(tc.name, func(t *testing.T) {
 			o := tc.opts
-			_, err := o.Resolve(cs)
+			_, err := Resolve(&o, cs)
 			if err == nil {
 				t.Fatalf("expected error containing %q", tc.wantContain)
 			}
@@ -200,7 +200,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 		}
 
-		_, err := opts.Resolve(cs)
+		_, err := Resolve(opts, cs)
 		if err == nil {
 			t.Fatal("expected error when controls is a file")
 		}
@@ -213,10 +213,8 @@ func TestResolveApplyOptions(t *testing.T) {
 // buildWithNewPlan is a test-only helper that creates a new evaluation plan
 // and builds dependencies from it.
 func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
-	evalInput, err := b.Opts.buildEvaluatorInput(b.Opts.ControlsDir, b.Opts.ObservationsDir, "")
-	if err != nil {
-		return nil, err
-	}
+	pc := projectContext{Root: ".", ContextName: "test"}
+	evalInput := buildEvaluatorInput(b.Opts, pc, b.Opts.ControlsDir, b.Opts.ObservationsDir, "")
 	plan, err := appeval.NewPlan(evalInput)
 	if err != nil {
 		return nil, err
