@@ -78,13 +78,13 @@ vendor management, and GRC workflows are out of scope.
 | HIPAA.REQ.030 | Public access prevention (all 4 BPA flags) | §164.312(a)(1) | Done |
 | HIPAA.REQ.031 | Transmission security (deny non-TLS) | §164.312(e)(1) | Done |
 | HIPAA.REQ.032 | Server access logging enabled | §164.312(b) | Done |
-| HIPAA.REQ.033 | Object-level audit logging (CloudTrail) | §164.312(b) | Done (Go invariant); pending YAML control |
+| HIPAA.REQ.033 | Object-level audit logging (CloudTrail) | §164.312(b) | Done |
 | HIPAA.REQ.034 | Versioning enabled | §164.312(c)(1) | Done |
 | HIPAA.REQ.035 | Object Lock for PHI retention | §164.312(c)(1) | Done |
 | HIPAA.REQ.036 | No public access path (policy + ACL) | §164.312(a)(1) | Done |
-| HIPAA.REQ.037 | VPC endpoint / IP restriction | §164.312(e)(1) | Done (Go invariant); pending YAML control |
-| HIPAA.REQ.038 | VPC endpoint policy not default | §164.312(e)(1) | Done (Go invariant); pending YAML control |
-| HIPAA.REQ.039 | Presigned URL restriction | §164.312(a)(1) | Done (Go invariant); pending YAML control |
+| HIPAA.REQ.037 | VPC endpoint / IP restriction | §164.312(e)(1) | Done |
+| HIPAA.REQ.038 | VPC endpoint policy not default | §164.312(e)(1) | Done |
+| HIPAA.REQ.039 | Presigned URL restriction | §164.312(a)(1) | Done |
 | HIPAA.REQ.040 | Least privilege / minimum necessary | §164.312(a)(1), §164.502(b) | Pending — needs IAM evidence |
 | HIPAA.REQ.041 | Log review process verification | §164.308(a)(1)(ii)(D) | Pending — needs process evidence |
 | HIPAA.REQ.042 | Malware scanning for uploaded files | §164.308(a)(5)(ii)(B) | Pending — needs GuardDuty evidence |

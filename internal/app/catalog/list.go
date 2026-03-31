@@ -34,28 +34,17 @@ type ListRunner struct {
 	Provider ControlProvider
 }
 
-// Run executes the list operation, returning rows for the cmd layer to format.
+// Run loads controls, converts to rows, and sorts. Returns rows for
+// formatting by the caller.
 func (r *ListRunner) Run(ctx context.Context, cfg ListConfig) ([]ControlRow, error) {
 	controls, err := r.Provider.Load(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}
-
-	rows := make([]ControlRow, 0, len(controls))
-	for _, c := range controls {
-		rows = append(rows, ControlRow{
-			ID:       c.ID.String(),
-			Name:     c.Name,
-			Type:     c.Type.String(),
-			Severity: c.Severity.String(),
-			Domain:   c.Domain,
-		})
-	}
-
+	rows := ToRows(controls)
 	if err := SortRows(rows, cfg.SortBy); err != nil {
 		return nil, err
 	}
-
 	return rows, nil
 }
 

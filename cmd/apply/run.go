@@ -35,7 +35,7 @@ func runApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, cs c
 	}
 
 	if opts.DryRun {
-		dryCfg, dryErr := opts.ResolveDryRun(cs)
+		dryCfg, dryErr := ResolveDryRun(opts, cs)
 		if dryErr != nil {
 			return fmt.Errorf("resolve dry-run config: %w", dryErr)
 		}
@@ -46,7 +46,7 @@ func runApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, cs c
 		return err // already wrapped inside runStrictIntegrityCheck
 	}
 
-	cfg, err := opts.Resolve(cs)
+	cfg, err := Resolve(opts, cs)
 	if err != nil {
 		return decorateError(err)
 	}
@@ -66,7 +66,7 @@ func runApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, cs c
 		return runner.Run(ctx, *cfg.Profile)
 	}
 
-	sio, err := opts.ResolveStandardIO(cs)
+	sio, err := ResolveStandardIO(opts, cs)
 	if err != nil {
 		return fmt.Errorf("resolve output config: %w", err)
 	}
@@ -88,10 +88,11 @@ type evalContext struct {
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
 func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO, cfg RunConfig) error {
-	evalInput, err := opts.buildEvaluatorInput(cfg.ControlsDir, cfg.ObservationsDir, cfg.projectConfigPath)
-	if err != nil {
-		return decorateError(fmt.Errorf("build evaluator input: %w", err))
+	pc, pcErr := resolveProjectContext()
+	if pcErr != nil {
+		return decorateError(pcErr)
 	}
+	evalInput := buildEvaluatorInput(opts, pc, cfg.ControlsDir, cfg.ObservationsDir, cfg.projectConfigPath)
 	plan, err := appeval.NewPlan(evalInput)
 	if err != nil {
 		return decorateError(fmt.Errorf("resolve evaluation plan: %w", err))

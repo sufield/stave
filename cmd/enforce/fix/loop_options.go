@@ -2,6 +2,7 @@ package fix
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -71,8 +72,8 @@ type loopResolved struct {
 	Clock   ports.Clock
 }
 
-// ToRequest resolves raw flag values into a validated LoopRequest and Clock.
-func (o *loopOptions) ToRequest(cmd *cobra.Command) (loopResolved, error) {
+// toRequest resolves raw flag values into a validated LoopRequest and Clock.
+func toRequest(o *loopOptions, stdout, stderr io.Writer) (loopResolved, error) {
 	maxUnsafe, err := cliflags.ParseDurationFlag(o.MaxUnsafeRaw, "--max-unsafe")
 	if err != nil {
 		return loopResolved{}, err
@@ -89,8 +90,8 @@ func (o *loopOptions) ToRequest(cmd *cobra.Command) (loopResolved, error) {
 			OutDir:            o.OutDir,
 			MaxUnsafeDuration: maxUnsafe,
 			AllowUnknown:      o.AllowUnknown,
-			Stdout:            cmd.OutOrStdout(),
-			Stderr:            cmd.ErrOrStderr(),
+			Stdout:            stdout,
+			Stderr:            stderr,
 		},
 		Clock: clock,
 	}, nil

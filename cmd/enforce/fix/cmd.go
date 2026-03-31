@@ -116,7 +116,7 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resolved, err := opts.ToRequest(cmd)
+			resolved, err := toRequest(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
 			if err != nil {
 				return err
 			}

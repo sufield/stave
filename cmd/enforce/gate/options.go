@@ -2,6 +2,7 @@ package gate
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -22,6 +23,7 @@ type gateOptions struct {
 	MaxUnsafeDuration string
 	Now               string
 	Format            string
+	formatChanged     bool // set by Prepare from cmd.Flags().Changed
 }
 
 // DefaultOptions returns the standard defaults for the gate command.
@@ -37,12 +39,11 @@ func DefaultOptions() gateOptions {
 	}
 }
 
-// resolveConfigDefaults fills flag values from project config when the user
-// did not set them explicitly on the command line.
-func (o *gateOptions) resolveConfigDefaults(cmd *cobra.Command) {
+// Prepare resolves config defaults from project config. Called from PreRunE.
+func (o *gateOptions) Prepare(cmd *cobra.Command) error {
 	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if eval == nil {
-		return
+		return nil
 	}
 	if !cmd.Flags().Changed("policy") {
 		o.Policy = string(eval.CIFailurePolicy())
@@ -50,11 +51,7 @@ func (o *gateOptions) resolveConfigDefaults(cmd *cobra.Command) {
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
-}
-
-// Prepare resolves config defaults. Called from PreRunE.
-func (o *gateOptions) Prepare(cmd *cobra.Command) error {
-	o.resolveConfigDefaults(cmd)
+	o.formatChanged = cmd.Flags().Changed("format")
 	return nil
 }
 
@@ -71,8 +68,9 @@ func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 }
 
-// ToConfig converts raw CLI options into a validated Config.
-func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
+// toConfig converts raw CLI options into a validated Config.
+// Standalone function — does not depend on cobra.
+func toConfig(o *gateOptions, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (config, error) {
 	policy, err := appconfig.ParseGatePolicy(o.Policy)
 	if err != nil {
 		return config{}, fmt.Errorf("invalid policy: %w", err)
@@ -84,15 +82,13 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 		MaxUnsafeDuration: o.MaxUnsafeDuration,
 		NowTime:           o.Now,
 		Format:            o.Format,
-		FormatChanged:     cmd.Flags().Changed("format"),
+		FormatChanged:     o.formatChanged,
 		SkipPathInference: true,
 		SkipMaxUnsafe:     policy != appconfig.GatePolicyOverdue,
 	})
 	if err != nil {
 		return config{}, fmt.Errorf("prepare evaluation context: %w", err)
 	}
-
-	gf := cliflags.GetGlobalFlags(cmd)
 
 	return config{
 		Policy:            policy,
@@ -105,7 +101,7 @@ func (o *gateOptions) ToConfig(cmd *cobra.Command) (config, error) {
 		Quiet:             gf.Quiet,
 		Clock:             ec.Clock,
 		Sanitizer:         gf.GetSanitizer(),
-		Stdout:            cmd.OutOrStdout(),
-		Stderr:            cmd.ErrOrStderr(),
+		Stdout:            stdout,
+		Stderr:            stderr,
 	}, nil
 }

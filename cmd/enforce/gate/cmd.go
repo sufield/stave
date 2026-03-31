@@ -62,7 +62,7 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := opts.ToConfig(cmd)
+			cfg, err := toConfig(&opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			if err != nil {
 				return err
 			}

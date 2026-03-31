@@ -1,6 +1,8 @@
 package status
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -20,16 +22,24 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 }
 
-// ToConfig validates flags and returns a typed config.
-func (o *options) ToConfig(cmd *cobra.Command) (config, error) {
-	format, err := compose.ResolveFormatValue(cmd, o.Format)
+// cmdIO holds values extracted from *cobra.Command in RunE.
+type cmdIO struct {
+	Stdout        io.Writer
+	Stderr        io.Writer
+	FormatChanged bool
+}
+
+// toConfig validates flags and returns a typed config.
+// Standalone function — does not depend on cobra.
+func toConfig(o *options, cio cmdIO) (config, error) {
+	format, err := compose.ResolveFormatValuePure(o.Format, cio.FormatChanged, false)
 	if err != nil {
 		return config{}, err
 	}
 	return config{
 		Dir:    fsutil.CleanUserPath(o.Dir),
 		Format: format,
-		Stdout: cmd.OutOrStdout(),
-		Stderr: cmd.ErrOrStderr(),
+		Stdout: cio.Stdout,
+		Stderr: cio.Stderr,
 	}, nil
 }

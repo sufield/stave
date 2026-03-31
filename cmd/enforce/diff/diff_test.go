@@ -14,7 +14,11 @@ func newDiffFilter(changeTypes, assetTypes []string, assetID string) (asset.Filt
 		AssetTypes:  assetTypes,
 		AssetID:     assetID,
 	}
-	return opts.buildFilter()
+	f, err := buildFilter(&opts)
+	if err != nil {
+		return asset.FilterOptions{}, err
+	}
+	return f, nil
 }
 
 func TestComputeObservationDelta_DetectsAddedRemovedModified(t *testing.T) {

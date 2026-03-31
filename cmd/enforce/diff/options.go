@@ -46,27 +46,27 @@ func (o *Options) Prepare(_ *cobra.Command) error {
 	return nil
 }
 
-// ToConfig converts raw CLI options into a validated logic configuration.
-func (o *Options) ToConfig(cmd *cobra.Command) (config, error) {
-	obsDir := o.ObservationsDir
-	format, err := compose.ResolveFormatValue(cmd, o.Format)
+// toConfig converts raw CLI options into a validated logic configuration.
+// Standalone function — does not depend on cobra.
+func toConfig(o *Options, formatChanged bool) (config, error) {
+	format, err := compose.ResolveFormatValuePure(o.Format, formatChanged, false)
 	if err != nil {
 		return config{}, err
 	}
 
-	filter, err := o.buildFilter()
+	filter, err := buildFilter(o)
 	if err != nil {
 		return config{}, err
 	}
 
 	return config{
-		ObservationsDir: obsDir,
+		ObservationsDir: o.ObservationsDir,
 		Format:          format,
 		Filter:          filter,
 	}, nil
 }
 
-func (o *Options) buildFilter() (asset.FilterOptions, error) {
+func buildFilter(o *Options) (asset.FilterOptions, error) {
 	changeTypes, err := parseChangeTypes(o.ChangeTypes)
 	if err != nil {
 		return asset.FilterOptions{}, err
