@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // LintDir discovers YAML files under root and lints them all.
@@ -22,18 +25,31 @@ func LintDir(ctx context.Context, root string) ([]Diagnostic, error) {
 	}
 
 	linter := NewLinter()
-	var all []Diagnostic
+	var (
+		mu  sync.Mutex
+		all []Diagnostic
+	)
 
+	g, gctx := errgroup.WithContext(ctx)
 	for _, file := range files {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		clean := filepath.Clean(file)
-		data, readErr := os.ReadFile(clean) //nolint:gosec // paths from CollectYAMLFiles, caller-controlled
-		if readErr != nil {
-			return nil, fmt.Errorf("read %s: %w", clean, readErr)
-		}
-		all = append(all, linter.LintBytes(file, data)...)
+		g.Go(func() error {
+			if err := gctx.Err(); err != nil {
+				return err
+			}
+			clean := filepath.Clean(file)
+			data, readErr := os.ReadFile(clean) //nolint:gosec // paths from CollectYAMLFiles, caller-controlled
+			if readErr != nil {
+				return fmt.Errorf("read %s: %w", clean, readErr)
+			}
+			diags := linter.LintBytes(file, data)
+			mu.Lock()
+			all = append(all, diags...)
+			mu.Unlock()
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	SortDiagnostics(all)

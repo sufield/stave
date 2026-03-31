@@ -38,11 +38,11 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			runner, err := artifacts.NewPackRunner(cmd.OutOrStdout())
+			runner, err := artifacts.NewPackRunner()
 			if err != nil {
 				return err
 			}
-			return runner.List()
+			return artifacts.WritePackList(cmd.OutOrStdout(), runner.List())
 		},
 	}
 }
@@ -64,11 +64,15 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			runner, err := artifacts.NewPackRunner(cmd.OutOrStdout())
+			runner, err := artifacts.NewPackRunner()
 			if err != nil {
 				return err
 			}
-			return runner.Show(args[0])
+			pack, err := runner.Show(args[0])
+			if err != nil {
+				return err
+			}
+			return artifacts.WritePackJSON(cmd.OutOrStdout(), pack)
 		},
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -15,7 +14,6 @@ import (
 type FormatConfig struct {
 	Target    string
 	CheckOnly bool
-	Stdout    io.Writer
 
 	// ReadFile reads a file's contents. Injected by the caller to abstract
 	// platform-specific read behavior (e.g. size limits).
@@ -60,13 +58,8 @@ func (f *Formatter) Run(ctx context.Context, cfg FormatConfig) (FormatResult, er
 		}
 	}
 
-	if cfg.CheckOnly {
-		if res.ChangedFiles > 0 {
-			return res, fmt.Errorf("%d/%d file(s) require formatting", res.ChangedFiles, res.TotalFiles)
-		}
-		fmt.Fprintf(cfg.Stdout, "All %d file(s) already formatted.\n", res.TotalFiles)
-	} else {
-		fmt.Fprintf(cfg.Stdout, "Formatted %d/%d file(s).\n", res.ChangedFiles, res.TotalFiles)
+	if cfg.CheckOnly && res.ChangedFiles > 0 {
+		return res, fmt.Errorf("%d/%d file(s) require formatting", res.ChangedFiles, res.TotalFiles)
 	}
 
 	return res, nil

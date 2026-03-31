@@ -7,13 +7,15 @@ import (
 )
 
 func TestPackRunnerList(t *testing.T) {
-	var buf bytes.Buffer
-	runner, err := NewPackRunner(&buf)
+	runner, err := NewPackRunner()
 	if err != nil {
 		t.Fatalf("NewPackRunner: %v", err)
 	}
-	if err := runner.List(); err != nil {
-		t.Fatalf("List: %v", err)
+	items := runner.List()
+
+	var buf bytes.Buffer
+	if err := WritePackList(&buf, items); err != nil {
+		t.Fatalf("WritePackList: %v", err)
 	}
 	out := buf.String()
 	if !strings.Contains(out, "NAME") && !strings.Contains(out, "No built-in packs") {
@@ -22,12 +24,11 @@ func TestPackRunnerList(t *testing.T) {
 }
 
 func TestPackRunnerShowUnknown(t *testing.T) {
-	var buf bytes.Buffer
-	runner, err := NewPackRunner(&buf)
+	runner, err := NewPackRunner()
 	if err != nil {
 		t.Fatalf("NewPackRunner: %v", err)
 	}
-	if err := runner.Show("nonexistent-pack"); err == nil {
+	if _, err := runner.Show("nonexistent-pack"); err == nil {
 		t.Fatal("expected error for unknown pack")
 	}
 }

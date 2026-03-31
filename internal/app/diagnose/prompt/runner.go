@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -72,7 +73,10 @@ func NewRunner(dctx DiagnosticContext) *Runner {
 
 // Run generates an LLM prompt based on evaluation findings.
 // Returns the structured output for rendering by the caller.
-func (r *Runner) Run(cfg Config) (PromptOutput, error) {
+func (r *Runner) Run(ctx context.Context, cfg Config) (PromptOutput, error) {
+	if err := ctx.Err(); err != nil {
+		return PromptOutput{}, err
+	}
 	if cfg.EvalFile == "" {
 		return PromptOutput{}, fmt.Errorf("--evaluation-file is required")
 	}
