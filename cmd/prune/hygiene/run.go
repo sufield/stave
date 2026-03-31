@@ -84,7 +84,11 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 		return err
 	}
 
-	files, err := pruneretention.ListObservationSnapshotFiles(ctx, r.NewSnapshotRepo, cfg.ObservationsDir)
+	snapshotLoader, err := r.NewSnapshotRepo()
+	if err != nil {
+		return err
+	}
+	files, err := pruneretention.ListObservationSnapshotFiles(ctx, snapshotLoader, cfg.ObservationsDir)
 	if err != nil {
 		return err
 	}

@@ -122,20 +122,12 @@ func loadTraceControl(ctx context.Context, newCtlRepo compose.CtlRepoFactory, di
 	if err != nil {
 		return policy.ControlDefinition{}, err
 	}
-	controls, err := repo.LoadControls(ctx, dir)
+	ctl, err := compose.FindControlByID(ctx, repo, dir, id)
 	if err != nil {
-		return policy.ControlDefinition{}, ui.WithNextCommand(
-			fmt.Errorf("loading controls from %s: %w", dir, err),
+		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave explain --controls %s <control-id>", dir))
 	}
-	for _, c := range controls {
-		if c.ID.String() == id {
-			return c, nil
-		}
-	}
-	return policy.ControlDefinition{}, ui.WithNextCommand(
-		fmt.Errorf("%w: %q in %s", compose.ErrControlNotFound, id, dir),
-		fmt.Sprintf("stave explain --controls %s <control-id>", dir))
+	return ctl, nil
 }
 
 // loadTraceSnapshot loads a single snapshot file via factory.

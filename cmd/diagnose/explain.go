@@ -65,18 +65,12 @@ type repoFinder struct {
 }
 
 func (f *repoFinder) FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
-	controls, err := f.repo.LoadControls(ctx, dir)
+	ctl, err := compose.FindControlByID(ctx, f.repo, dir, string(id))
 	if err != nil {
-		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
+		return policy.ControlDefinition{}, ui.WithNextCommand(err,
+			fmt.Sprintf("stave validate --controls %s", dir))
 	}
-	for _, c := range controls {
-		if c.ID == id {
-			return c, nil
-		}
-	}
-	return policy.ControlDefinition{}, ui.WithNextCommand(
-		fmt.Errorf("%w: %q in %s", compose.ErrControlNotFound, id, dir),
-		fmt.Sprintf("stave validate --controls %s", dir))
+	return ctl, nil
 }
 
 // NewExplainCmd constructs the explain command.
