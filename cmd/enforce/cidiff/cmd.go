@@ -14,13 +14,16 @@ type Deps struct {
 	UseCaseDeps reporting.CIDiffDeps
 }
 
+// options holds the raw CLI flag values for the ci diff command.
+type options struct {
+	CurrentPath  string
+	BaselinePath string
+	FailOnNew    bool
+}
+
 // NewCmd constructs the diff command.
 func NewCmd(deps Deps) *cobra.Command {
-	var (
-		currentPath  string
-		baselinePath string
-		failOnNew    = true
-	)
+	opts := &options{FailOnNew: true}
 
 	cmd := &cobra.Command{
 		Use:   "diff",
@@ -40,9 +43,9 @@ Exit Codes:
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			req := reporting.CIDiffRequest{
-				CurrentPath:  currentPath,
-				BaselinePath: baselinePath,
-				FailOnNew:    failOnNew,
+				CurrentPath:  opts.CurrentPath,
+				BaselinePath: opts.BaselinePath,
+				FailOnNew:    opts.FailOnNew,
 			}
 
 			resp, err := reporting.CIDiff(cmd.Context(), req, deps.UseCaseDeps)
@@ -63,9 +66,9 @@ Exit Codes:
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVar(&currentPath, "current", "", "Path to current evaluation JSON (required)")
-	cmd.Flags().StringVar(&baselinePath, "baseline", "", "Path to baseline evaluation JSON (required)")
-	cmd.Flags().BoolVar(&failOnNew, "fail-on-new", failOnNew, "Return exit code 3 when new findings are detected")
+	cmd.Flags().StringVar(&opts.CurrentPath, "current", "", "Path to current evaluation JSON (required)")
+	cmd.Flags().StringVar(&opts.BaselinePath, "baseline", "", "Path to baseline evaluation JSON (required)")
+	cmd.Flags().BoolVar(&opts.FailOnNew, "fail-on-new", opts.FailOnNew, "Return exit code 3 when new findings are detected")
 	_ = cmd.MarkFlagRequired("current")
 	_ = cmd.MarkFlagRequired("baseline")
 

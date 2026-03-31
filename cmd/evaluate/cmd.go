@@ -21,14 +21,19 @@ import (
 	"github.com/sufield/stave/internal/profile/reporter"
 )
 
+// options holds the raw CLI flag values for the evaluate command.
+type options struct {
+	SnapshotPath string
+	ProfileID    string
+	Format       string
+	OutputPath   string
+}
+
 // NewCmd constructs the evaluate command.
 func NewCmd() *cobra.Command {
-	var (
-		snapshotPath string
-		profileID    string
-		format       string
-		outputPath   string
-	)
+	opts := &options{
+		Format: "text",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "evaluate",
@@ -47,14 +52,19 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd, snapshotPath, profileID, format, outputPath)
+			w, closer, err := resolveOutput(opts.OutputPath, cmd.OutOrStdout())
+			if err != nil {
+				return fmt.Errorf("open output: %w", err)
+			}
+			defer closer()
+			return run(w, opts)
 		},
 	}
 
-	cmd.Flags().StringVar(&snapshotPath, "snapshot", "", "Path to observation snapshot JSON (required)")
-	cmd.Flags().StringVar(&profileID, "profile", "", "Compliance profile ID (required)")
-	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Output file path (default: stdout)")
+	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "Path to observation snapshot JSON (required)")
+	cmd.Flags().StringVar(&opts.ProfileID, "profile", "", "Compliance profile ID (required)")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "Output format: text or json")
+	cmd.Flags().StringVarP(&opts.OutputPath, "output", "o", "", "Output file path (default: stdout)")
 
 	_ = cmd.MarkFlagRequired("snapshot")
 	_ = cmd.MarkFlagRequired("profile")
@@ -62,11 +72,10 @@ Exit Codes:
 	return cmd
 }
 
-func run(cmd *cobra.Command, snapshotPath, profileID, format, outputPath string) error {
+func run(w io.Writer, opts *options) error {
 	// Load snapshot.
-	snap, err := loadSnapshot(snapshotPath)
+	snap, err := loadSnapshot(opts.SnapshotPath)
 	if err != nil {
-		cmd.SilenceUsage = false
 		return fmt.Errorf("load snapshot: %w", err)
 	}
 
@@ -76,9 +85,8 @@ func run(cmd *cobra.Command, snapshotPath, profileID, format, outputPath string)
 	}
 
 	// Load profile.
-	prof, err := profile.LoadProfile(profileID)
+	prof, err := profile.LoadProfile(opts.ProfileID)
 	if err != nil {
-		cmd.SilenceUsage = false
 		return fmt.Errorf("load profile: %w", err)
 	}
 
@@ -89,7 +97,7 @@ func run(cmd *cobra.Command, snapshotPath, profileID, format, outputPath string)
 	}
 
 	// Load and apply exceptions.
-	staveYAML := filepath.Join(filepath.Dir(snapshotPath), "stave.yaml")
+	staveYAML := filepath.Join(filepath.Dir(opts.SnapshotPath), "stave.yaml")
 	excs, excErr := exception.LoadExceptions(staveYAML)
 	if excErr != nil {
 		return fmt.Errorf("load exceptions: %w", excErr)
@@ -129,19 +137,12 @@ func run(cmd *cobra.Command, snapshotPath, profileID, format, outputPath string)
 
 	// Select reporter.
 	var rep reporter.Reporter
-	switch format {
+	switch opts.Format {
 	case "json":
 		rep = reporter.JSONReporter{}
 	default:
 		rep = reporter.TextReporter{}
 	}
-
-	// Write output.
-	w, closer, err := resolveOutput(outputPath, cmd.OutOrStdout())
-	if err != nil {
-		return fmt.Errorf("open output: %w", err)
-	}
-	defer closer()
 
 	if err := rep.Write(w, report, meta); err != nil {
 		return fmt.Errorf("write report: %w", err)

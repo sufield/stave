@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -229,8 +227,7 @@ func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpt
 }
 
 // Show renders the full suite of effective values and their sources.
-func (r *Runner) Show(_ context.Context, cmd *cobra.Command, format ui.OutputFormat) error {
-	eval := cmdctx.EvaluatorFromCmd(cmd)
+func (r *Runner) Show(_ context.Context, eval *appconfig.Evaluator, format ui.OutputFormat) error {
 	if eval == nil {
 		return fmt.Errorf("project config evaluator not available; ensure bootstrap runs before this command")
 	}

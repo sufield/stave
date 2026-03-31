@@ -120,7 +120,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner, err := newLoopRunner(cmd, deps, resolved.Clock)
+			runner, err := newLoopRunner(cliflags.GetGlobalFlags(cmd), deps, resolved.Clock)
 			if err != nil {
 				return err
 			}
@@ -135,8 +135,7 @@ Exit Codes:
 	return cmd
 }
 
-func newLoopRunner(cmd *cobra.Command, deps FixLoopDeps, clock ports.Clock) (*Runner, error) {
-	gf := cliflags.GetGlobalFlags(cmd)
+func newLoopRunner(gf cliflags.GlobalFlags, deps FixLoopDeps, clock ports.Clock) (*Runner, error) {
 	celEval, err := deps.NewCELEvaluator()
 	if err != nil {
 		return nil, err

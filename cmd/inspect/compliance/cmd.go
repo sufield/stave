@@ -7,12 +7,15 @@ import (
 )
 
 // NewCmd constructs the inspect compliance command.
+// options holds the raw CLI flag values for the compliance command.
+type options struct {
+	File       string
+	Frameworks []string
+	CheckIDs   []string
+}
+
 func NewCmd() *cobra.Command {
-	var (
-		file       string
-		frameworks []string
-		checkIDs   []string
-	)
+	opts := &options{}
 
 	cmd := &cobra.Command{
 		Use:   "compliance",
@@ -40,15 +43,26 @@ Exit Codes:
   stave inspect compliance --file crosswalk.yaml --framework nist_800_53
   cat crosswalk.yaml | stave inspect compliance
   stave inspect compliance --file crosswalk.yaml --check-id CTL.S3.PUBLIC.001 | jq .`,
-		Args:          cobra.NoArgs,
-		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, file, frameworks, checkIDs) },
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			input, err := readInput(opts.File, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			result, err := analyze(input, opts.Frameworks, opts.CheckIDs)
+			if err != nil {
+				return err
+			}
+			_, writeErr := cmd.OutOrStdout().Write(result)
+			return writeErr
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "", "Path to crosswalk YAML file (default: stdin)")
-	cmd.Flags().StringSliceVar(&frameworks, "framework", nil, "Compliance frameworks to include (default: all)")
-	cmd.Flags().StringSliceVar(&checkIDs, "check-id", nil, "Check IDs to resolve (default: all from file)")
+	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Path to crosswalk YAML file (default: stdin)")
+	cmd.Flags().StringSliceVar(&opts.Frameworks, "framework", nil, "Compliance frameworks to include (default: all)")
+	cmd.Flags().StringSliceVar(&opts.CheckIDs, "check-id", nil, "Check IDs to resolve (default: all from file)")
 
 	return cmd
 }
