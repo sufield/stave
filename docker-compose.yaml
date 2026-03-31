@@ -1,0 +1,8 @@
+services:
+  stave:
+    build:
+      context: .
+      dockerfile: build/docker/demo/Dockerfile
+    image: stave-tutorials
+    tty: false
+    stdin_open: false

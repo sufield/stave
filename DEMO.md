@@ -7,24 +7,35 @@
 ```bash
 git clone https://github.com/sufield/stave.git
 cd stave
-docker build -f build/docker/demo/Dockerfile -t stave-tutorials ..
+docker compose build
 ```
 
-## Run your first scenario
+## Detect a misconfiguration
 
 ```bash
-docker run --rm stave-tutorials --scenario 1
+docker compose run --rm -T stave --scenario 1
 ```
 
-This detects a publicly readable S3 bucket. The output shows the
-observation, the command, and the violation.
+The output shows:
+1. The observation — a bucket with `public_read: true`
+2. The stave command
+3. The violation — CTL.S3.PUBLIC.001 detected public read access
 
-Add `--fixed` to see the remediated version pass.
+## See the fix
+
+```bash
+docker compose run --rm -T stave --scenario 1 --fixed
+```
+
+The output shows:
+1. The observation — the same bucket with `public_read: false`
+2. The same stave command
+3. No violations — exit code 0
 
 ## See all 44 scenarios
 
 ```bash
-docker run --rm stave-tutorials --list
+docker compose run --rm -T stave --list
 ```
 
 Pick any number from 1 to 44.
@@ -32,16 +43,25 @@ Pick any number from 1 to 44.
 ## HIPAA compliance profile
 
 ```bash
-docker run --rm stave-tutorials --hipaa
+docker compose run --rm -T stave --hipaa
 ```
 
-Evaluates a PHI bucket against 14 HIPAA controls with compound risk
-detection. Add `--fixed` to see all controls pass.
+A PHI bucket with no Block Public Access, AWS-managed KMS key, no
+logging, no versioning, and a wildcard policy. Stave reports CRITICAL
+findings with HIPAA Security Rule citations and compound risks.
+
+```bash
+docker compose run --rm -T stave --hipaa --fixed
+```
+
+The same bucket with Block Public Access on, customer-managed CMK,
+server and object-level logging, versioning, COMPLIANCE Object Lock,
+VPC-only access, and ACLs disabled. All 14 controls pass.
 
 ## Trusted Advisor blind spots
 
 ```bash
-docker run --rm stave-tutorials --blind-spots
+docker compose run --rm -T stave --blind-spots
 ```
 
 Three S3 risks that AWS Trusted Advisor cannot detect.
@@ -49,11 +69,18 @@ Three S3 risks that AWS Trusted Advisor cannot detect.
 ## Try with your own bucket
 
 ```bash
-docker run --rm stave-tutorials --try-your-own
+docker compose run --rm -T stave --try-your-own
 ```
 
 Prints step-by-step instructions to capture a real S3 bucket with
 the AWS CLI and evaluate it.
+
+## Rebuild from scratch
+
+```bash
+docker compose down --rmi all
+docker compose build
+```
 
 ## Scenario reference
 
