@@ -19,3 +19,8 @@ func (f OutputFormat) String() string { return string(f) }
 
 // IsJSON reports whether the format is JSON.
 func (f OutputFormat) IsJSON() bool { return f == FormatJSON }
+
+// IsMachineReadable reports whether the format is intended for machine
+// consumption (JSON or SARIF). When true, stdout output should be
+// preserved even in quiet mode.
+func (f OutputFormat) IsMachineReadable() bool { return f == FormatJSON || f == FormatSARIF }

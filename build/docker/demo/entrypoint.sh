@@ -5,6 +5,7 @@ SCENARIOS_DIR="/scenarios"
 WORK_DIR="/work"
 ALL_CONTROLS="/scenarios/all_controls.txt"
 INIT_DONE="$WORK_DIR/.init_done"
+export STAVE_DEMO=1
 
 # Trusted Advisor blind spot scenarios
 BLIND_SPOT_SCENARIOS=(8 23 18)
@@ -24,13 +25,7 @@ Usage:
   docker run stave-tutorials --hipaa                 Run HIPAA compliance profile (violations)
   docker run stave-tutorials --hipaa --fixed         Run HIPAA profile (fully remediated)
   docker run stave-tutorials --hipaa --json          Run HIPAA profile with JSON output
-  docker run stave-tutorials -- stave <args>         Pass-through to stave
-
-Examples:
-  docker run stave-tutorials --scenario 10           # CTL.S3.PUBLIC.007 violation
-  docker run stave-tutorials --hipaa                 # HIPAA: 14 controls + compound risks
-  docker run stave-tutorials --hipaa --fixed         # HIPAA: all controls passing
-  docker run stave-tutorials --list                  # Show all 44 scenarios
+  docker run stave-tutorials --try-your-own          Run stave on your own AWS bucket
 HELP
 }
 
@@ -115,39 +110,27 @@ run_scenario() {
   # Focus on target control
   write_focused_config "$ctl"
 
-  # ── Display ─────────────────────────────────────────────
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "Scenario $num: $name"
-  echo "Control:  $ctl ($sev)"
-  echo "Mode:     $mode"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-  # Show observation files
+  # ── 1. What control is being checked ────────────────────
   echo ""
-  echo "  \$ ls observations/"
-  for f in "$WORK_DIR"/observations/*.json; do
-    echo "    $(basename "$f")"
-  done
-
-  # Show observation content
+  echo "[$sev] $ctl"
+  echo "$name"
   echo ""
-  echo "── observations/$(basename "$(ls "$WORK_DIR"/observations/*.json | head -1)") ──"
+
+  # ── 2. The observation (what the bucket looks like) ────
+  echo "Observation:"
   echo ""
   cat "$(ls "$WORK_DIR"/observations/*.json | head -1)"
-
-  # Show command
   echo ""
-  local cmd="  \$ stave apply --observations observations --max-unsafe 12h --now $now_time"
+
+  # ── 3. The command (what you would run) ────────────────
+  local cmd="stave apply --observations observations --max-unsafe 12h --now $now_time"
   if [ -n "$flags" ]; then
     cmd="$cmd $flags"
   fi
-  echo "$cmd"
-
-  # Run evaluation
-  echo ""
-  echo "── output ────────────────────────────────────────────"
+  echo "\$ $cmd"
   echo ""
 
+  # ── 4. The result (what stave found) ───────────────────
   rc=0
   stave apply \
     --observations observations \
@@ -155,27 +138,23 @@ run_scenario() {
     --now "$now_time" \
     --format text \
     $flags \
+    2>/dev/null \
     || rc=$?
 
   echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   if [ "$mode" = "bad" ]; then
     if [ "$rc" -eq 3 ]; then
-      echo "Result: VIOLATION DETECTED (exit 3)"
-      echo ""
-      echo "To see the fix:"
-      echo "  docker run --rm stave-tutorials --scenario $num --fixed"
+      echo "Exit code 3 — violation detected."
     else
-      echo "Result: exit $rc"
+      echo "Exit code $rc"
     fi
   else
     if [ "$rc" -eq 0 ]; then
-      echo "Result: NO VIOLATIONS (exit 0) — remediation confirmed"
+      echo "Exit code 0 — no violations."
     else
-      echo "Result: exit $rc"
+      echo "Exit code $rc"
     fi
   fi
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   return "$rc"
 }
@@ -242,9 +221,6 @@ INTRO
 
   if [ "$mode" = "bad" ]; then
     echo "Stave detected all three. Trusted Advisor missed all three."
-    echo ""
-    echo "To see the fixes:"
-    echo "  docker run --rm stave-tutorials --blind-spots --fixed"
   else
     echo "All three blind spots remediated."
   fi
@@ -275,71 +251,104 @@ run_hipaa() {
     exit 2
   fi
 
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  # ── 1. What profile is being evaluated ──────────────────
+  echo ""
   echo "HIPAA Security Rule — S3 Compliance Profile"
-  echo "Mode:     $mode"
-  echo "Format:   $format"
-  echo "Controls: 14 invariants + 3 compound risk detectors"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-  echo ""
-  echo "  \$ stave evaluate --snapshot snapshot.json --profile hipaa --format $format"
-  echo ""
-  echo "── observation snapshot ──────────────────────────────"
-  echo ""
-  echo "  Bucket: phi-patient-records"
-  echo "  Tags:   data-classification=phi, compliance=hipaa"
+  echo "14 invariants + 3 compound risk detectors"
   echo ""
 
-  if [ "$mode" = "bad" ]; then
-    echo "  Config:  Public Access Block OFF, AWS-managed KMS key,"
-    echo "           no logging, no versioning, no Object Lock,"
-    echo "           wildcard policy (s3:*), no VPC restriction"
-  else
-    echo "  Config:  Public Access Block ON, customer-managed CMK,"
-    echo "           server + object-level logging, versioning ON,"
-    echo "           Object Lock COMPLIANCE 6yr, VPC-only access,"
-    echo "           presigned URL restriction, ACLs disabled"
-  fi
-
-  echo ""
-  echo "── output ────────────────────────────────────────────"
+  # ── 2. The command ─────────────────────────────────────
+  echo "\$ stave evaluate --snapshot snapshot.json --profile hipaa --format $format"
   echo ""
 
+  # ── 3. The result ──────────────────────────────────────
   rc=0
   stave evaluate \
     --snapshot "$snap_file" \
     --profile hipaa \
     --format "$format" \
+    2>/dev/null \
     || rc=$?
 
   echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   if [ "$mode" = "bad" ]; then
     if [ "$rc" -ne 0 ]; then
-      echo "Result: CRITICAL VIOLATIONS (exit $rc)"
-      echo ""
-      echo "This PHI bucket fails multiple HIPAA Security Rule"
-      echo "requirements. Compound risks amplify the severity."
-      echo ""
-      echo "To see the fully remediated configuration:"
-      echo "  docker run --rm stave-tutorials --hipaa --fixed"
+      echo "Exit code $rc — critical violations detected."
     else
-      echo "Result: exit $rc (unexpected — bad config should fail)"
+      echo "Exit code $rc"
     fi
   else
     if [ "$rc" -eq 0 ]; then
-      echo "Result: ALL CONTROLS PASSING (exit 0)"
-      echo ""
-      echo "The PHI bucket meets all 14 HIPAA technical safeguard"
-      echo "requirements evaluated by Stave."
+      echo "Exit code 0 — all controls passing."
     else
-      echo "Result: exit $rc"
+      echo "Exit code $rc"
     fi
   fi
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   return "$rc"
+}
+
+show_try_your_own() {
+  cat <<'OWN'
+Try with your own AWS data
+==========================
+
+1. Pick a bucket:
+
+   BUCKET=my-bucket-name
+
+2. Capture two snapshots (at least a day apart for duration tracking):
+
+   aws s3api get-public-access-block --bucket $BUCKET > pab.json
+   aws s3api get-bucket-encryption --bucket $BUCKET > enc.json
+   aws s3api get-bucket-versioning --bucket $BUCKET > ver.json
+   aws s3api get-bucket-logging --bucket $BUCKET > log.json
+   aws s3api get-bucket-policy --bucket $BUCKET > pol.json 2>/dev/null || echo '{}' > pol.json
+
+3. Build the observation JSON:
+
+   cat <<EOF > snap1.json
+   {
+     "schema_version": "obs.v0.1",
+     "generated_by": {"source_type": "aws-s3-snapshot", "tool": "aws-cli"},
+     "captured_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+     "assets": [{
+       "id": "$BUCKET",
+       "type": "aws_s3_bucket",
+       "vendor": "aws",
+       "properties": {
+         "storage": {
+           "kind": "bucket",
+           "name": "$BUCKET",
+           "controls": {
+             "public_access_block": $(cat pab.json | jq '.PublicAccessBlockConfiguration // {}')
+           },
+           "encryption": {
+             "at_rest_enabled": $(cat enc.json | jq 'has("ServerSideEncryptionConfiguration")'),
+             "algorithm": $(cat enc.json | jq -r '.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm // ""' | jq -R .)
+           },
+           "versioning": {
+             "enabled": $(cat ver.json | jq '.Status == "Enabled"')
+           },
+           "logging": {
+             "enabled": $(cat log.json | jq 'has("LoggingEnabled")'),
+             "target_bucket": $(cat log.json | jq -r '.LoggingEnabled.TargetBucket // ""' | jq -R .)
+           }
+         },
+         "policy_json": $(cat pol.json | jq -r '.Policy // ""' | jq -R .)
+       }
+     }]
+   }
+   EOF
+
+4. Copy the snapshot and run stave:
+
+   mkdir -p mydata
+   cp snap1.json mydata/
+   docker run --rm -v $(pwd)/mydata:/work/observations stave-tutorials \
+     stave apply --observations observations --max-unsafe 0s --format json
+
+OWN
 }
 
 case "${1:-}" in
@@ -369,6 +378,9 @@ case "${1:-}" in
   --hipaa)
     run_hipaa "$@"
     exit $?
+    ;;
+  --try-your-own)
+    show_try_your_own
     ;;
   --help|-h|"")
     usage

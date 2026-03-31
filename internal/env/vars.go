@@ -65,6 +65,11 @@ var (
 		Category:     "config",
 		DefaultValue: "https://github.com/sufield/stave/issues",
 	}
+	Demo = Entry{
+		Name:        "STAVE_DEMO",
+		Description: "Suppress hints, tips, and next-step suggestions for demo/tutorial output",
+		Category:    "config",
+	}
 	FirstRunHintFile = Entry{
 		Name:        "STAVE_FIRST_RUN_HINT_FILE",
 		Description: "Override path to first-run hint marker file",
@@ -123,6 +128,7 @@ var all = []Entry{
 	Debug,
 	DevValidateFindings,
 	DocsURL,
+	Demo,
 	FirstRunHintFile,
 	IssuesURL,
 	MaxUnsafe,

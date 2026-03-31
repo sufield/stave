@@ -5,13 +5,16 @@ COPY stave/go.mod stave/go.sum ./
 RUN go mod download
 COPY stave/ .
 RUN make sync-schemas sync-controls && \
-    CGO_ENABLED=0 go build -ldflags "-s -w" -o /stave ./cmd/stave
+    CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(cat VERSION)" -o /stave ./cmd/stave
 
 # Runtime stage: minimal image with stave + scenarios
 FROM debian:bookworm-slim@sha256:f06537653ac770703bc45b4b113475bd402f451e85223f0f2837acbf89ab020a
 RUN groupadd -g 10001 stave && \
     useradd -u 10001 -g stave -m -d /work stave
 COPY --from=builder /stave /usr/local/bin/stave
+
+# Suppress first-run hint — the demo is not a new user's first project.
+RUN mkdir -p /root/.config/stave && touch /root/.config/stave/.first_run_seen
 COPY stave/build/docker/demo/scenarios/ /scenarios/
 COPY stave/build/docker/demo/all_controls.txt /scenarios/all_controls.txt
 COPY stave/build/docker/demo/entrypoint.sh /entrypoint.sh

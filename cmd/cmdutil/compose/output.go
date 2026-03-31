@@ -29,7 +29,7 @@ func DefaultFindingWriter(format ui.OutputFormat, _ bool) (appcontracts.FindingM
 
 // ResolveStdout returns a writer based on quiet settings and format.
 func ResolveStdout(w io.Writer, quiet bool, format ui.OutputFormat) io.Writer {
-	if quiet && !format.IsJSON() {
+	if quiet && !format.IsMachineReadable() {
 		return io.Discard
 	}
 	if w == nil {

@@ -8,13 +8,14 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/state"
 )
 
 // prepareFirstRunHint uses os.Stderr directly because it runs before
 // the Cobra command tree is initialized — no cmd.ErrOrStderr() is available.
 func prepareFirstRunHint(args []string) (bool, string) {
-	if ui.ShouldSkipFirstRunHint(args) {
+	if ui.ShouldSkipFirstRunHint(args) || env.Demo.IsTrue() {
 		return false, ""
 	}
 	markerPath, err := state.FirstRunMarkerPath()

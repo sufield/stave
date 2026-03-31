@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
@@ -40,7 +41,9 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	w.writeSkippedControls(d, result.Skipped)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
 	w.writeExceptedFindings(d, result.ExceptedFindings)
-	d.f("\nNext step: run `stave diagnose --controls <dir> --observations <dir>` for root-cause guidance.\n")
+	if !env.Demo.IsTrue() {
+		d.f("\nNext step: run `stave diagnose --controls <dir> --observations <dir>` for root-cause guidance.\n")
+	}
 
 	if d.err != nil {
 		return nil, d.err
@@ -64,7 +67,9 @@ func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Result) {
 
 func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 	d.f("No violations found.\n")
-	d.f("\nNext step: run `stave verify` after remediation snapshots to confirm no regressions.\n")
+	if !env.Demo.IsTrue() {
+		d.f("\nNext step: run `stave verify` after remediation snapshots to confirm no regressions.\n")
+	}
 }
 
 // writeViolationsFromEnriched renders violation output from pre-enriched findings.

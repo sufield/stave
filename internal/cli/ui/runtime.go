@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sufield/stave/internal/env"
 )
 
 // Runtime holds process-level CLI output and mode settings.
@@ -136,7 +138,7 @@ func WriteHint(w io.Writer, command string) {
 // PrintNextSteps writes a formatted "Next steps:" block to stderr.
 // Hints are always written to stderr so they never contaminate JSON stdout.
 func (r *Runtime) PrintNextSteps(steps ...string) {
-	if r == nil || r.Quiet || len(steps) == 0 {
+	if r == nil || r.Quiet || len(steps) == 0 || env.Demo.IsTrue() {
 		return
 	}
 
