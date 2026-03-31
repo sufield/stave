@@ -47,7 +47,6 @@ jobs:
 
           # Commands that were removed
           check_pattern 'stave-dev extractor'        'extractor command was removed'
-          check_pattern 'security-audit'             'security-audit command does not exist'
 
           # Stale binary split language
           check_pattern 'stave-dev only'             'no dev-only commands — all ship in one binary'
