@@ -177,7 +177,10 @@ func tierSubFieldResolution(cfg *appconfig.ProjectConfig, cfgPath string, parsed
 }
 
 // Set updates the stave.yaml file in the nearest project root.
-func (r *Runner) Set(_ context.Context, req SetRequest, opts MutationOpts) error {
+func (r *Runner) Set(ctx context.Context, req SetRequest, opts MutationOpts) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	key := strings.TrimSpace(req.Key)
 	value := strings.TrimSpace(req.Value)
 	if value == "" {
@@ -202,7 +205,10 @@ func (r *Runner) Set(_ context.Context, req SetRequest, opts MutationOpts) error
 }
 
 // Delete removes a project config key, reverting it to the built-in default.
-func (r *Runner) Delete(_ context.Context, req DeleteRequest, opts MutationOpts) error {
+func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpts) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	key := strings.TrimSpace(req.Key)
 
 	editor, err := r.newEditor(opts)

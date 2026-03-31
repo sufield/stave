@@ -2,9 +2,7 @@ package prompt
 
 import (
 	"fmt"
-	"io"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -53,10 +51,6 @@ type DiagnosticContext struct {
 type Config struct {
 	EvalFile string
 	AssetID  string
-	Format   appcontracts.OutputFormat
-	Quiet    bool
-	Stdout   io.Writer
-	Stderr   io.Writer
 }
 
 // Result represents the structured JSON output for a prompt.
@@ -77,17 +71,18 @@ func NewRunner(dctx DiagnosticContext) *Runner {
 }
 
 // Run generates an LLM prompt based on evaluation findings.
-func (r *Runner) Run(cfg Config) error {
+// Returns the structured output for rendering by the caller.
+func (r *Runner) Run(cfg Config) (PromptOutput, error) {
 	if cfg.EvalFile == "" {
-		return fmt.Errorf("--evaluation-file is required")
+		return PromptOutput{}, fmt.Errorf("--evaluation-file is required")
 	}
 	if cfg.AssetID == "" {
-		return fmt.Errorf("--asset-id is required")
+		return PromptOutput{}, fmt.Errorf("--asset-id is required")
 	}
 
 	evalResult, err := r.Ctx.LoadEval(cfg.EvalFile)
 	if err != nil {
-		return fmt.Errorf("load evaluation file: %w", err)
+		return PromptOutput{}, fmt.Errorf("load evaluation file: %w", err)
 	}
 
 	assetID := asset.ID(cfg.AssetID)
@@ -98,9 +93,9 @@ func (r *Runner) Run(cfg Config) error {
 		}
 	}
 	if len(matched) == 0 {
-		return fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
+		return PromptOutput{}, fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
 	}
 
 	out := r.Ctx.BuildPrompt(cfg.AssetID, r.Ctx.ControlsByID, r.Ctx.AssetPropsJSON, matched)
-	return r.write(cfg, out)
+	return out, nil
 }

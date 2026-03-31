@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/predicate"
@@ -41,18 +40,19 @@ func testSnapshot() *asset.Snapshot {
 }
 
 func TestRunnerRun_Text(t *testing.T) {
-	var buf bytes.Buffer
 	runner := &Runner{}
-	err := runner.Run(Config{
+	result, err := runner.Run(Config{
 		Control:         testControl(),
 		Snapshot:        testSnapshot(),
 		AssetID:         "aws:s3:::test-bucket",
 		ObservationPath: "test.json",
-		Format:          appcontracts.FormatText,
-		Stdout:          &buf,
 	})
 	if err != nil {
 		t.Fatalf("Run error: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := result.RenderText(&buf); err != nil {
+		t.Fatalf("RenderText error: %v", err)
 	}
 	if buf.Len() == 0 {
 		t.Fatal("expected non-empty output")
@@ -60,39 +60,38 @@ func TestRunnerRun_Text(t *testing.T) {
 }
 
 func TestRunnerRun_JSON(t *testing.T) {
-	var buf bytes.Buffer
 	runner := &Runner{}
-	err := runner.Run(Config{
+	result, err := runner.Run(Config{
 		Control:         testControl(),
 		Snapshot:        testSnapshot(),
 		AssetID:         "aws:s3:::test-bucket",
 		ObservationPath: "test.json",
-		Format:          appcontracts.FormatJSON,
-		Stdout:          &buf,
 	})
 	if err != nil {
 		t.Fatalf("Run error: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := result.RenderJSON(&buf); err != nil {
+		t.Fatalf("RenderJSON error: %v", err)
 	}
 	if !strings.Contains(buf.String(), "CTL.TEST.001") {
 		t.Fatalf("expected control ID in JSON output, got: %s", buf.String())
 	}
 }
 
-func TestRunnerRun_Quiet(t *testing.T) {
-	var buf bytes.Buffer
+func TestRunnerRun_ReturnsResult(t *testing.T) {
 	runner := &Runner{}
-	err := runner.Run(Config{
-		Control:  testControl(),
-		Snapshot: testSnapshot(),
-		AssetID:  "aws:s3:::test-bucket",
-		Quiet:    true,
-		Stdout:   &buf,
+	result, err := runner.Run(Config{
+		Control:         testControl(),
+		Snapshot:        testSnapshot(),
+		AssetID:         "aws:s3:::test-bucket",
+		ObservationPath: "test.json",
 	})
 	if err != nil {
 		t.Fatalf("Run error: %v", err)
 	}
-	if buf.Len() != 0 {
-		t.Fatal("expected empty output in quiet mode")
+	if result == nil {
+		t.Fatal("expected non-nil result")
 	}
 }
 

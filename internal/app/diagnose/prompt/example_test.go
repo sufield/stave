@@ -92,16 +92,18 @@ func TestNewRunnerRun(t *testing.T) {
 		`{"public_access": true}`,
 	)
 
-	var stdout, stderr bytes.Buffer
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(diagprompt.Config{
+	out, err := runner.Run(diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
-		Stdout:   &stdout,
-		Stderr:   &stderr,
 	})
 	if err != nil {
 		t.Fatalf("Run() error: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	if err := diagprompt.WriteOutput(&stdout, &bytes.Buffer{}, out, appcontracts.FormatText, false); err != nil {
+		t.Fatalf("WriteOutput error: %v", err)
 	}
 
 	got := stdout.String()
@@ -123,11 +125,9 @@ func TestNewRunnerRunNoFindings(t *testing.T) {
 
 	dctx := testContext(nil, "")
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(diagprompt.Config{
+	_, err := runner.Run(diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::nonexistent-bucket",
-		Stdout:   &bytes.Buffer{},
-		Stderr:   &bytes.Buffer{},
 	})
 	if err == nil || !strings.Contains(err.Error(), "no findings") {
 		t.Fatalf("expected 'no findings' error, got: %v", err)
@@ -139,10 +139,8 @@ func TestNewRunnerRunValidation(t *testing.T) {
 	runner := diagprompt.NewRunner(dctx)
 
 	t.Run("missing eval file", func(t *testing.T) {
-		err := runner.Run(diagprompt.Config{
+		_, err := runner.Run(diagprompt.Config{
 			AssetID: "x",
-			Stdout:  &bytes.Buffer{},
-			Stderr:  &bytes.Buffer{},
 		})
 		if err == nil || !strings.Contains(err.Error(), "--evaluation-file") {
 			t.Fatalf("expected eval file error, got: %v", err)
@@ -150,10 +148,8 @@ func TestNewRunnerRunValidation(t *testing.T) {
 	})
 
 	t.Run("missing asset id", func(t *testing.T) {
-		err := runner.Run(diagprompt.Config{
+		_, err := runner.Run(diagprompt.Config{
 			EvalFile: "x.json",
-			Stdout:   &bytes.Buffer{},
-			Stderr:   &bytes.Buffer{},
 		})
 		if err == nil || !strings.Contains(err.Error(), "--asset-id") {
 			t.Fatalf("expected asset-id error, got: %v", err)
@@ -175,17 +171,18 @@ func TestNewRunnerRunJSON(t *testing.T) {
 		"",
 	)
 
-	var stdout bytes.Buffer
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(diagprompt.Config{
+	out, err := runner.Run(diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
-		Format:   appcontracts.FormatJSON,
-		Stdout:   &stdout,
-		Stderr:   &bytes.Buffer{},
 	})
 	if err != nil {
 		t.Fatalf("Run() error: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	if err := diagprompt.WriteOutput(&stdout, &bytes.Buffer{}, out, appcontracts.FormatJSON, false); err != nil {
+		t.Fatalf("WriteOutput error: %v", err)
 	}
 
 	got := stdout.String()
@@ -204,11 +201,9 @@ func TestNewRunnerRunLoadError(t *testing.T) {
 		BuildPrompt: testBuildPrompt,
 	}
 	runner := diagprompt.NewRunner(dctx)
-	err := runner.Run(diagprompt.Config{
+	_, err := runner.Run(diagprompt.Config{
 		EvalFile: "nonexistent.json",
 		AssetID:  "x",
-		Stdout:   &bytes.Buffer{},
-		Stderr:   &bytes.Buffer{},
 	})
 	if err == nil || !strings.Contains(err.Error(), "simulated load error") {
 		t.Fatalf("expected load error, got: %v", err)

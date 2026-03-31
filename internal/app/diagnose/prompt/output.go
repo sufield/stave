@@ -5,16 +5,17 @@ import (
 	"io"
 	"runtime"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func (r *Runner) write(cfg Config, out PromptOutput) error {
-	w := cfg.Stdout
-	if cfg.Quiet && !cfg.Format.IsMachineReadable() {
+// WriteOutput renders a PromptOutput to the writer in the given format.
+func WriteOutput(w, stderr io.Writer, out PromptOutput, format appcontracts.OutputFormat, quiet bool) error {
+	if quiet && !format.IsMachineReadable() {
 		w = io.Discard
 	}
 
-	if cfg.Format.IsJSON() {
+	if format.IsJSON() {
 		findingIDs := make([]string, len(out.FindingIDs))
 		for i, id := range out.FindingIDs {
 			findingIDs[i] = string(id)
@@ -30,7 +31,7 @@ func (r *Runner) write(cfg Config, out PromptOutput) error {
 	if _, err := fmt.Fprint(w, out.Rendered); err != nil {
 		return err
 	}
-	writeClipboardHint(cfg.Stderr, cfg.Quiet)
+	writeClipboardHint(stderr, quiet)
 	return nil
 }
 

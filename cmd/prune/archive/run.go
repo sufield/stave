@@ -138,7 +138,10 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 }
 
 // Apply executes the file moves.
-func (r *runner) Apply(_ context.Context, _ appeval.CleanupPlan) error {
+func (r *runner) Apply(ctx context.Context, _ appeval.CleanupPlan) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	_, err := fsops.ApplyArchive(fsops.ArchiveInput{
 		ArchiveDir: r.plan.archiveDir,
 		Moves:      r.toArchiveMoves(),
