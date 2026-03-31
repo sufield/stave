@@ -3,18 +3,25 @@
 Demos showing how stave works with other tools. Each integration
 follows the same structure: prerequisites, install, run.
 
-Stave integrates through two surfaces:
+### Input — tools that feed data into stave
 
-- **Input**: any tool that produces JSON can feed stave via `obs.v0.1`
-- **Output**: stave produces JSON, SARIF, or text that other tools consume
+| Integration | Demo |
+|---|---|
+| [Terraform State](terraform-state/) | Scan S3 resources from tfstate |
+| [AWS Config](aws-config/) | Scan from AWS Config snapshots |
+| [Steampipe](steampipe/) | SQL query to observation snapshot |
 
-| Integration | Direction | Demo |
-|---|---|---|
-| [GitHub Actions + SARIF](github-actions-sarif/) | Output | Violations in PR diffs |
-| [Terraform State](terraform-state/) | Input | Scan S3 resources from tfstate |
-| [pre-commit](pre-commit/) | Workflow | Validate before every commit |
-| [AWS Config](aws-config/) | Input | Scan from AWS Config snapshots |
-| [Cloud Custodian](cloud-custodian/) | Output | Detect with stave, remediate with Custodian |
-| [Steampipe](steampipe/) | Input | SQL query to observation snapshot |
-| [Slack Webhook](slack-webhook/) | Output | Alert on violations in CI |
-| [Atlantis](atlantis/) | Workflow | Post-plan safety check on PRs |
+### Output — tools that consume stave findings
+
+| Integration | Demo |
+|---|---|
+| [GitHub Actions + SARIF](github-actions-sarif/) | Violations in PR diffs |
+| [Cloud Custodian](cloud-custodian/) | Detect with stave, remediate with Custodian |
+| [Slack Webhook](slack-webhook/) | Alert on violations in CI |
+
+### Workflow — stave as part of a development process
+
+| Integration | Demo |
+|---|---|
+| [pre-commit](pre-commit/) | Validate before every commit |
+| [Atlantis](atlantis/) | Post-plan safety check on PRs |
