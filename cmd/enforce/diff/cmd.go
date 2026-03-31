@@ -53,7 +53,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(cmd, loadSnapshots)
+			runner := newRunner(loadSnapshots, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Run(cmd.Context(), cfg)
 		},
 		SilenceUsage:  true,

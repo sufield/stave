@@ -1,12 +1,14 @@
 package config
 
 import (
+	"io"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
@@ -48,12 +50,12 @@ func NewConfigCmd(rt *ui.Runtime) *cobra.Command {
 	return cmd
 }
 
-func newRunner(rt *ui.Runtime, cmd *cobra.Command) *Runner {
+func newRunner(rt *ui.Runtime, stdin io.Reader, stdout, stderr io.Writer) *Runner {
 	return &Runner{
 		RT:     rt,
-		Stdin:  cmd.InOrStdin(),
-		Stdout: cmd.OutOrStdout(),
-		Stderr: cmd.ErrOrStderr(),
+		Stdin:  stdin,
+		Stdout: stdout,
+		Stderr: stderr,
 	}
 }
 
@@ -117,7 +119,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(rt, cmd)
+			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Get(cmd.Context(), GetRequest{Key: args[0], Format: fmtValue})
 		},
 		SilenceUsage:  true,
@@ -165,7 +167,7 @@ Exit Codes:
 				return err
 			}
 			gf := cliflags.GetGlobalFlags(cmd)
-			runner := newRunner(rt, cmd)
+			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Set(cmd.Context(), SetRequest{
 				Key:   args[0],
 				Value: args[1],
@@ -201,7 +203,7 @@ Exit Codes:
 				return err
 			}
 			gf := cliflags.GetGlobalFlags(cmd)
-			runner := newRunner(rt, cmd)
+			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Delete(cmd.Context(), DeleteRequest{
 				Key: args[0],
 			}, mutationOptsFrom(gf, fmtValue))
@@ -229,8 +231,8 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(rt, cmd)
-			return runner.Show(cmd.Context(), cmd, fmtValue)
+			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
+			return runner.Show(cmd.Context(), cmdctx.EvaluatorFromCmd(cmd), fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -255,8 +257,8 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			runner := newRunner(rt, cmd)
-			return runner.Show(cmd.Context(), cmd, fmtValue)
+			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
+			return runner.Show(cmd.Context(), cmdctx.EvaluatorFromCmd(cmd), fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

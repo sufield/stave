@@ -6,41 +6,32 @@ import (
 	"io"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	comp "github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func run(cmd *cobra.Command, file string, frameworks, checkIDs []string) error {
-	raw, err := readInput(file, cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
-
-	// Exercise ParseFramework for each requested framework.
+// analyze validates frameworks, resolves check IDs, and returns the crosswalk JSON.
+func analyze(raw []byte, frameworks, checkIDs []string) ([]byte, error) {
 	for _, f := range frameworks {
 		if _, parseErr := comp.ParseFramework(f); parseErr != nil {
-			return fmt.Errorf("invalid framework: %w", parseErr)
+			return nil, fmt.Errorf("invalid framework: %w", parseErr)
 		}
 	}
 
-	// If no check IDs supplied, extract them from the YAML.
 	if len(checkIDs) == 0 {
+		var err error
 		checkIDs, err = extractCheckIDs(raw)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	resolution, err := comp.ResolveControlCrosswalk(raw, frameworks, checkIDs, time.Now().UTC())
 	if err != nil {
-		return fmt.Errorf("resolve crosswalk: %w", err)
+		return nil, fmt.Errorf("resolve crosswalk: %w", err)
 	}
 
-	// Write the pre-formatted JSON directly.
-	_, err = cmd.OutOrStdout().Write(resolution.ResolutionJSON)
-	return err
+	return resolution.ResolutionJSON, nil
 }
 
 func extractCheckIDs(raw []byte) ([]string, error) {

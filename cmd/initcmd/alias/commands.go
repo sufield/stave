@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -78,7 +79,7 @@ func (r *Runner) Set(ctx context.Context, name, command string) error {
 }
 
 // List retrieves all defined aliases and outputs them in the requested format.
-func (r *Runner) List(ctx context.Context, format string, cmd *cobra.Command) error {
+func (r *Runner) List(ctx context.Context, format ui.OutputFormat) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -95,12 +96,7 @@ func (r *Runner) List(ctx context.Context, format string, cmd *cobra.Command) er
 		return strings.Compare(a.Name, b.Name)
 	})
 
-	fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
-	if fmtErr != nil {
-		return fmtErr
-	}
-
-	if fmtValue.IsJSON() {
+	if format.IsJSON() {
 		if entries == nil {
 			entries = []Entry{}
 		}
@@ -234,7 +230,11 @@ Exit Codes:
 				Resolver: res,
 				Stdout:   cmd.OutOrStdout(),
 			}
-			return runner.List(cmd.Context(), format, cmd)
+			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
+			if fmtErr != nil {
+				return fmtErr
+			}
+			return runner.List(cmd.Context(), fmtValue)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

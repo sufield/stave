@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/spf13/cobra"
-
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
@@ -31,10 +29,8 @@ type runner struct {
 	Stderr        io.Writer
 }
 
-// newRunner initializes a diff runner with injected dependencies and global flags.
-func newRunner(cmd *cobra.Command, load compose.SnapshotLoader) *runner {
-	gf := cliflags.GetGlobalFlags(cmd)
-	stdout := cmd.OutOrStdout()
+// newRunner initializes a diff runner with injected dependencies and pre-extracted flags.
+func newRunner(load compose.SnapshotLoader, gf cliflags.GlobalFlags, stdout, stderr io.Writer) *runner {
 	if !gf.TextOutputEnabled() {
 		stdout = io.Discard
 	}
@@ -43,7 +39,7 @@ func newRunner(cmd *cobra.Command, load compose.SnapshotLoader) *runner {
 		Quiet:         gf.Quiet,
 		Sanitizer:     gf.GetSanitizer(),
 		Stdout:        stdout,
-		Stderr:        cmd.ErrOrStderr(),
+		Stderr:        stderr,
 	}
 }
 
