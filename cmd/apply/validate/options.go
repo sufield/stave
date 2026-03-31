@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -95,7 +96,7 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 	o.SchemaVersion = strings.TrimSpace(o.SchemaVersion)
 
 	if o.Kind != "" && o.InputPath == "" {
-		return fmt.Errorf("flag --kind requires --in <file>")
+		return &ui.UserError{Err: fmt.Errorf("flag --kind requires --in <file>")}
 	}
 
 	singleFileMode := o.InputPath != ""

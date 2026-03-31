@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -40,7 +41,7 @@ func (o *coverageOptions) BindFlags(cmd *cobra.Command) {
 func toConfig(o *coverageOptions, gf cliflags.GlobalFlags, stdout io.Writer) (config, error) {
 	format, err := ParseFormat(o.Format)
 	if err != nil {
-		return config{}, fmt.Errorf("invalid format: %w", err)
+		return config{}, &ui.UserError{Err: fmt.Errorf("invalid format: %w", err)}
 	}
 	return config{
 		ControlsDir:     fsutil.CleanUserPath(o.ControlsDir),

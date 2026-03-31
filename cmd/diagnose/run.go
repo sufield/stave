@@ -79,7 +79,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 func (r *Runner) validate(cfg Config) error {
 	if (cfg.ControlID != "" && cfg.AssetID == "") || (cfg.ControlID == "" && cfg.AssetID != "") {
-		return fmt.Errorf("detail mode requires both --control-id AND --asset-id")
+		return &ui.UserError{Err: fmt.Errorf("detail mode requires both --control-id AND --asset-id")}
 	}
 	return nil
 }

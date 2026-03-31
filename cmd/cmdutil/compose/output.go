@@ -23,7 +23,7 @@ func DefaultFindingWriter(format ui.OutputFormat, _ bool) (appcontracts.FindingM
 	case ui.OutputFormatSARIF:
 		return outsarif.NewFindingWriter(), nil
 	default:
-		return nil, fmt.Errorf("invalid --format %q (use text, json, or sarif)", format)
+		return nil, &ui.UserError{Err: fmt.Errorf("invalid --format %q (use text, json, or sarif)", format)}
 	}
 }
 

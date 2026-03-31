@@ -80,10 +80,10 @@ type CoverageResult struct {
 // Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
 func (r *Runner) Run(ctx context.Context, cfg config) error {
 	if err := dircheck.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
-		return fmt.Errorf("invalid controls directory: %w", err)
+		return &ui.UserError{Err: fmt.Errorf("invalid controls directory: %w", err)}
 	}
 	if err := dircheck.ValidateFlagDir("--observations", cfg.ObservationsDir, "", nil, nil); err != nil {
-		return fmt.Errorf("invalid observations directory: %w", err)
+		return &ui.UserError{Err: fmt.Errorf("invalid observations directory: %w", err)}
 	}
 
 	controls, latestSnapshot, err := r.loadArtifacts(ctx, cfg.ControlsDir, cfg.ObservationsDir)

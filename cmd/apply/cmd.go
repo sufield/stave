@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -172,7 +173,7 @@ func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
 
 func (o *ApplyOptions) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
-		return fmt.Errorf("flag --input is required when using --profile")
+		return &ui.UserError{Err: fmt.Errorf("flag --input is required when using --profile")}
 	}
 	return nil
 }

@@ -55,10 +55,10 @@ type runner struct {
 func (r *runner) Run(ctx context.Context, cfg config) error {
 	obsDir := fsutil.CleanUserPath(cfg.ObservationsDir)
 	if obsDir == "" {
-		return fmt.Errorf("--observations cannot be empty")
+		return &ui.UserError{Err: fmt.Errorf("--observations cannot be empty")}
 	}
 	if cfg.KeepMin < 0 {
-		return fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)
+		return &ui.UserError{Err: fmt.Errorf("invalid --keep-min %d: must be >= 0", cfg.KeepMin)}
 	}
 
 	cfg.ObservationsDir = obsDir
