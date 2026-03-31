@@ -2,11 +2,9 @@ package trace
 
 import (
 	"fmt"
-	"io"
 	"slices"
 	"strings"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -21,34 +19,23 @@ type Config struct {
 	// Parameters.
 	AssetID         string
 	ObservationPath string // used in error messages
-	Format          appcontracts.OutputFormat
-	Quiet           bool
-	Stdout          io.Writer
 }
 
 // Runner orchestrates evaluation trace generation for a specific asset.
 type Runner struct{}
 
-// Run executes the trace workflow.
-func (r *Runner) Run(cfg Config) error {
-	if cfg.Quiet {
-		return nil
-	}
-
+// Run executes the trace workflow and returns the result for rendering by the caller.
+func (r *Runner) Run(cfg Config) (*stavecel.TraceResult, error) {
 	found, err := FindAsset(cfg.Snapshot, asset.ID(cfg.AssetID), cfg.ObservationPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	result := stavecel.BuildTrace(&cfg.Control, found, cfg.Snapshot)
 	if result == nil {
-		return fmt.Errorf("trace: no result produced")
+		return nil, fmt.Errorf("trace: no result produced")
 	}
-
-	if cfg.Format.IsJSON() {
-		return result.RenderJSON(cfg.Stdout)
-	}
-	return result.RenderText(cfg.Stdout)
+	return result, nil
 }
 
 // FindAsset locates an asset by ID in a snapshot.

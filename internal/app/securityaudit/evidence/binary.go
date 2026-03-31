@@ -1,6 +1,8 @@
 package evidence
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -109,9 +111,11 @@ func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDi
 }
 
 // matchChecksumEntry searches SHA256SUMS lines for the binary and verifies its hash.
+// Uses a scanner to stream lines and exit early on match.
 func matchChecksumEntry(raw []byte, binaryName, expectedHash string) (string, bool) {
-	for line := range strings.SplitSeq(string(raw), "\n") {
-		fields := strings.Fields(strings.TrimSpace(line))
+	scanner := bufio.NewScanner(bytes.NewReader(raw))
+	for scanner.Scan() {
+		fields := strings.Fields(strings.TrimSpace(scanner.Text()))
 		if len(fields) < 2 {
 			continue
 		}

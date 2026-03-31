@@ -42,7 +42,10 @@ type Runner struct {
 }
 
 // Set creates or updates an alias in the user's global config.
-func (r *Runner) Set(_ context.Context, name, command string) error {
+func (r *Runner) Set(ctx context.Context, name, command string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	name = strings.TrimSpace(name)
 	if !namePattern.MatchString(name) {
 		return fmt.Errorf("invalid alias name %q: must match [a-zA-Z0-9_-]+", name)
@@ -75,7 +78,10 @@ func (r *Runner) Set(_ context.Context, name, command string) error {
 }
 
 // List retrieves all defined aliases and outputs them in the requested format.
-func (r *Runner) List(_ context.Context, format string, cmd *cobra.Command) error {
+func (r *Runner) List(ctx context.Context, format string, cmd *cobra.Command) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	cfg, _, err := r.Resolver.LoadUserConfig()
 	if err != nil {
 		return err
@@ -112,7 +118,10 @@ func (r *Runner) List(_ context.Context, format string, cmd *cobra.Command) erro
 }
 
 // Delete removes an existing alias from the user's config.
-func (r *Runner) Delete(_ context.Context, name string) error {
+func (r *Runner) Delete(ctx context.Context, name string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	cfg, path, err := r.Resolver.LoadUserConfig()
 	if err != nil {
 		return err

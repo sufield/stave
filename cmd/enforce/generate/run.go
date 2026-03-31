@@ -78,7 +78,10 @@ type Plan struct {
 }
 
 // Run executes the template generation workflow.
-func (r *Runner) Run(_ context.Context, cfg Config) error {
+func (r *Runner) Run(ctx context.Context, cfg Config) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	p, err := r.BuildPlan(cfg)
 	if err != nil {
 		return err

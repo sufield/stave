@@ -80,15 +80,24 @@ Exit Codes:
 
 			// Delegate to internal runner
 			runner := &apptrace.Runner{}
-			return runner.Run(apptrace.Config{
+			result, err := runner.Run(apptrace.Config{
 				Control:         control,
 				Snapshot:        snapshot,
 				AssetID:         strings.TrimSpace(assetID),
 				ObservationPath: cleanObsPath,
-				Format:          fmtValue,
-				Quiet:           cliflags.GetGlobalFlags(cmd).Quiet,
-				Stdout:          cmd.OutOrStdout(),
 			})
+			if err != nil {
+				return err
+			}
+
+			if cliflags.GetGlobalFlags(cmd).Quiet {
+				return nil
+			}
+			w := cmd.OutOrStdout()
+			if fmtValue.IsJSON() {
+				return result.RenderJSON(w)
+			}
+			return result.RenderText(w)
 		},
 	}
 

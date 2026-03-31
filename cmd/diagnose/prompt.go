@@ -134,14 +134,14 @@ Examples:
 			}
 
 			runner := diagprompt.NewRunner(dctx)
-			return runner.Run(diagprompt.Config{
+			out, err := runner.Run(diagprompt.Config{
 				EvalFile: fsutil.CleanUserPath(evalFile),
 				AssetID:  strings.TrimSpace(assetID),
-				Format:   fmtValue,
-				Quiet:    cliflags.GetGlobalFlags(cmd).Quiet,
-				Stdout:   cmd.OutOrStdout(),
-				Stderr:   cmd.ErrOrStderr(),
 			})
+			if err != nil {
+				return err
+			}
+			return diagprompt.WriteOutput(cmd.OutOrStdout(), cmd.ErrOrStderr(), out, fmtValue, cliflags.GetGlobalFlags(cmd).Quiet)
 		},
 	}
 
