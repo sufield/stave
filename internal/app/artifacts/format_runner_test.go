@@ -1,7 +1,6 @@
 package artifacts
 
 import (
-	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -17,12 +16,10 @@ func TestFormatterRun_CheckOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var buf bytes.Buffer
 	f := &Formatter{}
 	_, err := f.Run(context.Background(), FormatConfig{
 		Target:    dir,
 		CheckOnly: true,
-		Stdout:    &buf,
 		ReadFile:  os.ReadFile,
 	})
 	if err == nil {
@@ -40,11 +37,9 @@ func TestFormatterRun_FormatWrites(t *testing.T) {
 	}
 
 	var written []byte
-	var buf bytes.Buffer
 	f := &Formatter{}
 	result, err := f.Run(context.Background(), FormatConfig{
 		Target:   dir,
-		Stdout:   &buf,
 		ReadFile: os.ReadFile,
 		WriteFile: func(p string, data []byte) error {
 			written = data
@@ -71,12 +66,10 @@ func TestFormatterRun_AlreadyFormatted(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var buf bytes.Buffer
 	f := &Formatter{}
 	result, err := f.Run(context.Background(), FormatConfig{
 		Target:    dir,
 		CheckOnly: true,
-		Stdout:    &buf,
 		ReadFile:  os.ReadFile,
 	})
 	if err != nil {

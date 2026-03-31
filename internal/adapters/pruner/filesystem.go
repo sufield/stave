@@ -9,7 +9,10 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
@@ -53,34 +56,57 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 	}
 
 	limit := opts.maxFiles()
-	files := make([]appcontracts.SnapshotFile, 0, min(len(entries), limit))
 
+	// Filter eligible entries first.
+	type candidate struct {
+		path string
+		name string
+	}
+	var candidates []candidate
 	for _, entry := range entries {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
 		}
 		if entry.Type()&os.ModeSymlink != 0 {
 			continue
 		}
-		if len(files) >= limit {
+		if len(candidates) >= limit {
 			return nil, snapshotLimitError(observationsDir, limit)
 		}
-
-		path := filepath.Join(observationsDir, entry.Name())
-		capturedAt, loadErr := opts.MetadataLoader(path, entry.Name())
-		if loadErr != nil {
-			return nil, fmt.Errorf("load metadata for %s: %w", entry.Name(), loadErr)
-		}
-
-		files = append(files, appcontracts.SnapshotFile{
-			Path:       path,
-			RelPath:    entry.Name(),
-			Name:       entry.Name(),
-			CapturedAt: capturedAt.UTC(),
+		candidates = append(candidates, candidate{
+			path: filepath.Join(observationsDir, entry.Name()),
+			name: entry.Name(),
 		})
+	}
+
+	// Load metadata concurrently.
+	var (
+		mu    sync.Mutex
+		files = make([]appcontracts.SnapshotFile, 0, len(candidates))
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	for _, c := range candidates {
+		g.Go(func() error {
+			if gctxErr := gctx.Err(); gctxErr != nil {
+				return gctxErr
+			}
+			capturedAt, loadErr := opts.MetadataLoader(c.path, c.name)
+			if loadErr != nil {
+				return fmt.Errorf("load metadata for %s: %w", c.name, loadErr)
+			}
+			mu.Lock()
+			files = append(files, appcontracts.SnapshotFile{
+				Path:       c.path,
+				RelPath:    c.name,
+				Name:       c.name,
+				CapturedAt: capturedAt.UTC(),
+			})
+			mu.Unlock()
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	slices.SortFunc(files, func(a, b appcontracts.SnapshotFile) int {

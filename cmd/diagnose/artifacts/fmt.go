@@ -1,6 +1,8 @@
 package artifacts
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -36,7 +38,6 @@ Exit Codes:
 			cfg := appartifacts.FormatConfig{
 				Target:    fsutil.CleanUserPath(args[0]),
 				CheckOnly: checkOnly,
-				Stdout:    cmd.OutOrStdout(),
 				ReadFile:  fsutil.ReadFileLimited,
 				WriteFile: func(path string, data []byte) error {
 					opts := fsutil.ConfigWriteOpts()
@@ -45,8 +46,17 @@ Exit Codes:
 				},
 			}
 			formatter := &appartifacts.Formatter{}
-			_, err := formatter.Run(cmd.Context(), cfg)
-			return err
+			res, err := formatter.Run(cmd.Context(), cfg)
+			if err != nil {
+				return err
+			}
+			out := cmd.OutOrStdout()
+			if checkOnly {
+				fmt.Fprintf(out, "All %d file(s) already formatted.\n", res.TotalFiles)
+			} else {
+				fmt.Fprintf(out, "Formatted %d/%d file(s).\n", res.ChangedFiles, res.TotalFiles)
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

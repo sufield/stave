@@ -2,6 +2,7 @@ package prompt_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -93,7 +94,7 @@ func TestNewRunnerRun(t *testing.T) {
 	)
 
 	runner := diagprompt.NewRunner(dctx)
-	out, err := runner.Run(diagprompt.Config{
+	out, err := runner.Run(context.Background(), diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
 	})
@@ -125,7 +126,7 @@ func TestNewRunnerRunNoFindings(t *testing.T) {
 
 	dctx := testContext(nil, "")
 	runner := diagprompt.NewRunner(dctx)
-	_, err := runner.Run(diagprompt.Config{
+	_, err := runner.Run(context.Background(), diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::nonexistent-bucket",
 	})
@@ -139,7 +140,7 @@ func TestNewRunnerRunValidation(t *testing.T) {
 	runner := diagprompt.NewRunner(dctx)
 
 	t.Run("missing eval file", func(t *testing.T) {
-		_, err := runner.Run(diagprompt.Config{
+		_, err := runner.Run(context.Background(), diagprompt.Config{
 			AssetID: "x",
 		})
 		if err == nil || !strings.Contains(err.Error(), "--evaluation-file") {
@@ -148,7 +149,7 @@ func TestNewRunnerRunValidation(t *testing.T) {
 	})
 
 	t.Run("missing asset id", func(t *testing.T) {
-		_, err := runner.Run(diagprompt.Config{
+		_, err := runner.Run(context.Background(), diagprompt.Config{
 			EvalFile: "x.json",
 		})
 		if err == nil || !strings.Contains(err.Error(), "--asset-id") {
@@ -172,7 +173,7 @@ func TestNewRunnerRunJSON(t *testing.T) {
 	)
 
 	runner := diagprompt.NewRunner(dctx)
-	out, err := runner.Run(diagprompt.Config{
+	out, err := runner.Run(context.Background(), diagprompt.Config{
 		EvalFile: evalFile,
 		AssetID:  "aws:s3:::test-bucket",
 	})
@@ -201,7 +202,7 @@ func TestNewRunnerRunLoadError(t *testing.T) {
 		BuildPrompt: testBuildPrompt,
 	}
 	runner := diagprompt.NewRunner(dctx)
-	_, err := runner.Run(diagprompt.Config{
+	_, err := runner.Run(context.Background(), diagprompt.Config{
 		EvalFile: "nonexistent.json",
 		AssetID:  "x",
 	})

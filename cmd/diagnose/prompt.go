@@ -134,7 +134,7 @@ Examples:
 			}
 
 			runner := diagprompt.NewRunner(dctx)
-			out, err := runner.Run(diagprompt.Config{
+			out, err := runner.Run(cmd.Context(), diagprompt.Config{
 				EvalFile: fsutil.CleanUserPath(evalFile),
 				AssetID:  strings.TrimSpace(assetID),
 			})
