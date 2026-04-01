@@ -16,7 +16,7 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// EvaluationLoader satisfies usecases.EvaluationLoaderPort.
+// EvaluationLoader loads a persisted evaluation artifact.
 type EvaluationLoader struct{}
 
 // LoadFindings loads an evaluation artifact and extracts baseline-level findings.
@@ -30,7 +30,7 @@ func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]rep
 	return entriesToDomain(entries), nil
 }
 
-// BaselineLoader satisfies usecases.BaselineLoaderPort.
+// BaselineLoader loads a persisted baseline artifact.
 type BaselineLoader struct{}
 
 // LoadBaseline loads a saved baseline artifact.
@@ -43,7 +43,7 @@ func (l *BaselineLoader) LoadBaseline(ctx context.Context, path string) ([]repor
 	return entriesToDomain(base.Findings), nil
 }
 
-// BaselineWriter satisfies usecases.BaselineWriterPort.
+// BaselineWriter persists a baseline artifact to disk.
 type BaselineWriter struct {
 	FileOptions fileout.FileOptions
 }

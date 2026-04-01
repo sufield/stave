@@ -2,11 +2,9 @@ package policy
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	s3policy "github.com/sufield/stave/internal/core/s3/policy"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // PolicyReport is the output of the policy inspector.
@@ -30,11 +28,4 @@ func Analyze(input []byte, resolver risk.PermissionResolver) (PolicyReport, erro
 		Risk:        s3policy.NewEvaluator(nil, resolver).Evaluate(doc),
 		RequiredIAM: s3policy.MinimumS3IngestIAMActions(),
 	}, nil
-}
-
-func readInput(file string, stdin io.Reader) ([]byte, error) {
-	if file != "" {
-		return fsutil.ReadFileLimited(file)
-	}
-	return io.ReadAll(stdin)
 }

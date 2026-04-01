@@ -11,7 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// FindingsCounter satisfies usecases.GateFindingsCounterPort.
+// FindingsCounter counts findings from a persisted evaluation artifact.
 type FindingsCounter struct{}
 
 // CountFindings loads an evaluation and returns the number of findings.
@@ -23,7 +23,7 @@ func (f *FindingsCounter) CountFindings(ctx context.Context, path string) (int, 
 	return len(eval.Findings), nil
 }
 
-// BaselineComparer satisfies usecases.GateBaselineComparerPort.
+// BaselineComparer compares an evaluation against a baseline artifact.
 type BaselineComparer struct {
 	Sanitizer kernel.Sanitizer
 }
@@ -43,7 +43,7 @@ func (b *BaselineComparer) CompareAgainstBaseline(ctx context.Context, evalPath,
 	return len(bc.Current), len(bc.Comparison.New), nil
 }
 
-// OverdueCounter satisfies usecases.GateOverdueCounterPort.
+// OverdueCounter counts overdue upcoming risk items.
 type OverdueCounter struct {
 	LoadAssets      compose.AssetLoaderFunc
 	NewCELEvaluator compose.CELEvaluatorFactory

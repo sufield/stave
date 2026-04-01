@@ -6,6 +6,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // NewCmd constructs the inspect policy command.
@@ -37,7 +38,7 @@ Exit Codes:
   stave inspect policy --file policy.json | jq .risk`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			input, err := readInput(file, cmd.InOrStdin())
+			input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}

@@ -3,10 +3,8 @@ package risk
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // RiskInput is the JSON input for risk analysis.
@@ -71,11 +69,4 @@ func Analyze(input []byte, resolver domainrisk.PermissionResolver) (RiskOutput, 
 		StatementResult: result,
 		Report:          report,
 	}, nil
-}
-
-func readInput(file string, stdin io.Reader) ([]byte, error) {
-	if file != "" {
-		return fsutil.ReadFileLimited(file)
-	}
-	return io.ReadAll(stdin)
 }

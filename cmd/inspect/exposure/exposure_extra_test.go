@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	domainexposure "github.com/sufield/stave/internal/core/evaluation/exposure"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func TestToCaps(t *testing.T) {
@@ -55,7 +56,7 @@ func TestResourceInput_ToDomain(t *testing.T) {
 
 func TestReadInput_Stdin(t *testing.T) {
 	r := strings.NewReader(`{"resources":[]}`)
-	data, err := readInput("", r)
+	data, err := fsutil.ReadFileOrStdin("", r)
 	if err != nil {
 		t.Fatalf("readInput error: %v", err)
 	}
@@ -65,7 +66,7 @@ func TestReadInput_Stdin(t *testing.T) {
 }
 
 func TestReadInput_MissingFile(t *testing.T) {
-	_, err := readInput("/nonexistent/file.json", nil)
+	_, err := fsutil.ReadFileOrStdin("/nonexistent/file.json", nil)
 	if err == nil {
 		t.Fatal("expected error for missing file")
 	}

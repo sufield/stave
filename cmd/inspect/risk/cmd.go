@@ -6,6 +6,7 @@ import (
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // NewCmd constructs the inspect risk command.
@@ -29,7 +30,7 @@ Exit Codes:
   cat statement.json | stave inspect risk`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			input, err := readInput(file, cmd.InOrStdin())
+			input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}

@@ -3,7 +3,6 @@ package acl
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -29,7 +28,7 @@ type GrantDetail struct {
 }
 
 func run(cmd *cobra.Command, file string) error {
-	input, err := readInput(file, cmd.InOrStdin())
+	input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -69,11 +68,4 @@ func run(cmd *cobra.Command, file string) error {
 	enc := json.NewEncoder(cmd.OutOrStdout())
 	enc.SetIndent("", "  ")
 	return enc.Encode(report)
-}
-
-func readInput(file string, stdin io.Reader) ([]byte, error) {
-	if file != "" {
-		return fsutil.ReadFileLimited(file)
-	}
-	return io.ReadAll(stdin)
 }
