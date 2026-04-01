@@ -22,7 +22,7 @@ func Closest(input string, candidates []string) string {
 			continue
 		}
 
-		d := distance(query, norm)
+		d := Distance(query, norm)
 		if d > maxDist {
 			continue
 		}
@@ -53,7 +53,8 @@ func threshold(inputLen int) int {
 	}
 }
 
-func distance(a, b string) int {
+// Distance returns the Levenshtein edit distance between two strings.
+func Distance(a, b string) int {
 	if a == b {
 		return 0
 	}
