@@ -12,7 +12,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -23,7 +22,7 @@ type Provider struct {
 	ObsRepoFunc       func() (appcontracts.ObservationRepository, error)
 	StdinObsRepoFunc  func(io.Reader) (appcontracts.ObservationRepository, error)
 	ControlRepoFunc   func() (appcontracts.ControlRepository, error)
-	FindingWriterFunc func(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error)
+	FindingWriterFunc func(format appcontracts.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error)
 	CELEvalFunc       func() (policy.PredicateEval, error)
 	SnapshotRepoFunc  func() (appcontracts.SnapshotReader, error)
 }
@@ -63,7 +62,7 @@ type (
 	CtlRepoFactory       = func() (appcontracts.ControlRepository, error)
 	SnapshotRepoFactory  = func() (appcontracts.SnapshotReader, error)
 	CELEvaluatorFactory  = func() (policy.PredicateEval, error)
-	FindingWriterFactory = func(ui.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
+	FindingWriterFactory = func(appcontracts.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
 	SnapshotLoader       = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
 	AssetLoaderFunc      = func(ctx context.Context, obsDir, ctlDir string) (Assets, error)
 )
@@ -104,7 +103,7 @@ func (p *Provider) NewSnapshotRepo() (appcontracts.SnapshotReader, error) {
 }
 
 // NewFindingWriter creates a finding marshaler for the given output format.
-func (p *Provider) NewFindingWriter(format ui.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error) {
+func (p *Provider) NewFindingWriter(format appcontracts.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error) {
 	if p.FindingWriterFunc == nil {
 		return nil, fmt.Errorf("FindingWriterFunc not configured on Provider")
 	}

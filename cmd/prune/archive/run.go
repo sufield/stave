@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
+	"github.com/sufield/stave/internal/adapters/pruner"
 	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -31,7 +32,7 @@ type config struct {
 	DryRun          bool
 	Force           bool
 	Quiet           bool
-	Format          ui.OutputFormat
+	Format          appcontracts.OutputFormat
 	AllowSymlink    bool
 	Stdout          io.Writer
 }
@@ -94,7 +95,7 @@ func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 	out := report.BuildArchiveOutput(report.ArchiveOutputInput{
 		CleanupInput: report.CleanupInput{
 			Now:             r.cfg.Now,
-			Action:          report.ActionMove,
+			Action:          pruner.ActionMove,
 			DryRun:          r.cfg.DryRun,
 			ObservationsDir: r.cfg.ObservationsDir,
 			Tier:            r.cfg.RetentionTier,
@@ -129,7 +130,7 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 		OutputKind:     "archive",
 		ActionLabel:    "archive",
 		SummaryPrefix:  "Archive",
-		Action:         report.ActionMove,
+		Action:         pruner.ActionMove,
 		DryRun:         r.plan.dryRun,
 		AllFiles:       r.plan.allFiles,
 		CandidateFiles: r.plan.candidateFiles,

@@ -2,6 +2,7 @@ package report
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -204,13 +205,10 @@ func TestRenderJSON_Quiet(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		},
 	}
-	var buf bytes.Buffer
-	err := RenderJSON(eval, "v1.0.0", &buf, true)
+	// Quiet mode: caller passes io.Discard.
+	err := RenderJSON(eval, "v1.0.0", io.Discard)
 	if err != nil {
 		t.Fatalf("error: %v", err)
-	}
-	if buf.Len() != 0 {
-		t.Fatal("quiet should produce no output")
 	}
 }
 
@@ -222,7 +220,7 @@ func TestRenderJSON_NotQuiet(t *testing.T) {
 		},
 	}
 	var buf bytes.Buffer
-	err := RenderJSON(eval, "v1.0.0", &buf, false)
+	err := RenderJSON(eval, "v1.0.0", &buf)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}

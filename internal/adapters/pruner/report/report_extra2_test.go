@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/internal/adapters/pruner"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -16,7 +17,7 @@ func TestBuildCleanupOutput_DryRun(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	input := CleanupInput{
 		Now:             now,
-		Action:          ActionDelete,
+		Action:          pruner.ActionDelete,
 		DryRun:          true,
 		ObservationsDir: "/observations",
 		Tier:            "day",
@@ -50,7 +51,7 @@ func TestBuildCleanupOutput_Apply(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	input := CleanupInput{
 		Now:    now,
-		Action: ActionDelete,
+		Action: pruner.ActionDelete,
 		DryRun: false,
 		CandidateFiles: []appcontracts.SnapshotFile{
 			{Name: "a.json", CapturedAt: now},
@@ -65,7 +66,7 @@ func TestBuildCleanupOutput_Apply(t *testing.T) {
 func TestBuildCleanupOutput_NoCandidates(t *testing.T) {
 	input := CleanupInput{
 		Now:    time.Now(),
-		Action: ActionDelete,
+		Action: pruner.ActionDelete,
 		DryRun: false,
 	}
 	out := buildCleanupOutput(kernel.SchemaSnapshotPrune, kernel.KindSnapshotPrune, input)
@@ -83,7 +84,7 @@ func TestBuildArchiveOutput(t *testing.T) {
 	input := ArchiveOutputInput{
 		CleanupInput: CleanupInput{
 			Now:    now,
-			Action: ActionMove,
+			Action: pruner.ActionMove,
 			DryRun: false,
 			CandidateFiles: []appcontracts.SnapshotFile{
 				{Name: "a.json", CapturedAt: now},

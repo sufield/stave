@@ -10,10 +10,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/adapters/pruner"
-	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/retention"
 )
@@ -21,10 +19,10 @@ import (
 // CleanupPlan holds the fields shared by delete and archive execution plans.
 type CleanupPlan struct {
 	Now             time.Time
-	Action          report.CleanupAction
+	Action          pruner.CleanupAction
 	DryRun          bool
 	Quiet           bool
-	Format          ui.OutputFormat
+	Format          appcontracts.OutputFormat
 	ObservationsDir string
 	Tier            string
 	OlderThan       time.Duration
@@ -39,11 +37,11 @@ type CleanupRunInput struct {
 	Tier      string
 	OlderThan time.Duration
 	Now       time.Time
-	Format    ui.OutputFormat
+	Format    appcontracts.OutputFormat
 	KeepMin   int
 	DryRun    bool
 	Quiet     bool
-	Action    report.CleanupAction
+	Action    pruner.CleanupAction
 }
 
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
@@ -90,7 +88,7 @@ type ResolvedRetention struct {
 	OlderThan     time.Duration
 	RetentionTier string
 	Now           time.Time
-	Format        ui.OutputFormat
+	Format        appcontracts.OutputFormat
 }
 
 // ResolveRetention transforms raw CLI flag values into fully resolved retention

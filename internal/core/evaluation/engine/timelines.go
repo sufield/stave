@@ -12,7 +12,7 @@ import (
 func BuildTimelinesPerControl(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
-	celEval PredicateEvaluator,
+	celEval policy.PredicateEval,
 ) (map[kernel.ControlID]map[asset.ID]*asset.Timeline, error) {
 
 	timelinesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.Timeline, len(controls))
@@ -54,7 +54,7 @@ func checkUnsafe(
 	ctl policy.ControlDefinition,
 	a asset.Asset,
 	snap asset.Snapshot,
-	celEval PredicateEvaluator,
+	celEval policy.PredicateEval,
 ) bool {
 	if celEval == nil {
 		return false

@@ -6,16 +6,14 @@ import (
 	"io"
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-// writeOutput dispatches rendering of the delta based on format and quiet mode.
-func writeOutput(w io.Writer, format ui.OutputFormat, quiet bool, out asset.ObservationDelta) error {
-	if quiet {
-		return nil
-	}
+// writeOutput dispatches rendering of the delta based on format.
+// Pass io.Discard as w to suppress output in quiet mode.
+func writeOutput(w io.Writer, format appcontracts.OutputFormat, out asset.ObservationDelta) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(w, out)
 	}

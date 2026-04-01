@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 func TestErrorInfo_Error_WithTitle(t *testing.T) {
@@ -153,15 +155,15 @@ func TestDirectoryAccessError_NilError(t *testing.T) {
 func TestParseOutputFormat_ValidFormats(t *testing.T) {
 	tests := []struct {
 		input string
-		want  OutputFormat
+		want  appcontracts.OutputFormat
 	}{
-		{"text", OutputFormatText},
-		{"json", OutputFormatJSON},
-		{"sarif", OutputFormatSARIF},
-		{"markdown", OutputFormatMarkdown},
-		{"TEXT", OutputFormatText},
-		{"JSON", OutputFormatJSON},
-		{" json ", OutputFormatJSON},
+		{"text", appcontracts.FormatText},
+		{"json", appcontracts.FormatJSON},
+		{"sarif", appcontracts.FormatSARIF},
+		{"markdown", appcontracts.FormatMarkdown},
+		{"TEXT", appcontracts.FormatText},
+		{"JSON", appcontracts.FormatJSON},
+		{" json ", appcontracts.FormatJSON},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {

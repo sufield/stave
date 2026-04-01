@@ -15,7 +15,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
@@ -165,7 +164,7 @@ func TestPresenterRenderReport_BareJSON(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{W: &buf, Format: ui.OutputFormatJSON}
+	p := &Presenter{W: &buf, Format: appcontracts.FormatJSON}
 	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("RenderReport() error = %v", err)
 	}
@@ -202,7 +201,7 @@ func TestPresenterRenderReport_Branches(t *testing.T) {
 	}
 
 	var out bytes.Buffer
-	p := &Presenter{W: &out, Format: ui.OutputFormatText}
+	p := &Presenter{W: &out, Format: appcontracts.FormatText}
 	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("text report error = %v", err)
 	}
@@ -211,7 +210,7 @@ func TestPresenterRenderReport_Branches(t *testing.T) {
 	}
 
 	out.Reset()
-	p.Format = ui.OutputFormatJSON
+	p.Format = appcontracts.FormatJSON
 	if err := p.RenderReport(report); err != nil {
 		t.Fatalf("json report error = %v", err)
 	}

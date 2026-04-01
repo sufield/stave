@@ -21,8 +21,8 @@ type planBuildParams struct {
 	ObsRoot     string
 	ArchiveDir  string
 	DefaultTier string
-	TierRules   []retention.MappingRule
-	Tiers       map[string]retention.TierConfig
+	TierRules   []retention.Rule
+	Tiers       map[string]retention.Tier
 	Files       []appcontracts.SnapshotFile
 	Apply       bool
 	Force       bool

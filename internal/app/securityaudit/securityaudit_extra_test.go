@@ -438,10 +438,10 @@ func TestErrorStringOrDefault(t *testing.T) {
 
 func TestNewRequestDefaults(t *testing.T) {
 	req := NewRequest()
-	if req.SBOMFormat != SBOMFormatSPDX {
+	if req.SBOMFormat != evidence.SBOMFormatSPDX {
 		t.Fatalf("SBOMFormat = %v, want spdx", req.SBOMFormat)
 	}
-	if req.VulnSource != VulnSourceHybrid {
+	if req.VulnSource != evidence.VulnSourceHybrid {
 		t.Fatalf("VulnSource = %v, want hybrid", req.VulnSource)
 	}
 	if req.FailOn != securityaudit.SeverityHigh {
@@ -460,8 +460,8 @@ func TestNewRequestWithOptions(t *testing.T) {
 		WithCwd("/tmp"),
 		WithBinaryPath("/usr/bin/stave"),
 		WithOutDir("out"),
-		WithSBOMFormat(SBOMFormatCycloneDX),
-		WithVulnSource(VulnSourceLocal),
+		WithSBOMFormat(evidence.SBOMFormatCycloneDX),
+		WithVulnSource(evidence.VulnSourceLocal),
 		WithLiveVulnCheck(true),
 		WithReleaseBundleDir("/release"),
 		WithPrivacy(true),
@@ -476,7 +476,7 @@ func TestNewRequestWithOptions(t *testing.T) {
 	if req.StaveVersion != "v1.0.0" {
 		t.Fatalf("StaveVersion = %q", req.StaveVersion)
 	}
-	if req.SBOMFormat != SBOMFormatCycloneDX {
+	if req.SBOMFormat != evidence.SBOMFormatCycloneDX {
 		t.Fatalf("SBOMFormat = %v", req.SBOMFormat)
 	}
 	if !req.PrivacyEnabled {

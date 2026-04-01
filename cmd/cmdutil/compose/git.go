@@ -54,8 +54,9 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 }
 
 // WarnGitDirty logs a warning if the repository is dirty.
-func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string, quiet bool) {
-	if git == nil || !git.Dirty || quiet {
+// Callers should skip this call entirely when in quiet mode.
+func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string) {
+	if git == nil || !git.Dirty {
 		return
 	}
 	slog.Warn("uncommitted changes detected",

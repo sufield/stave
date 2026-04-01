@@ -37,7 +37,11 @@ func (r *QualityRunner) Run(cfg QualityConfig) error {
 		Strict:            cfg.Strict,
 	})
 
-	if err := writeQualityOutput(cfg.Stdout, cfg.Format, report, cfg.Quiet); err != nil {
+	w := cfg.Stdout
+	if cfg.Quiet {
+		w = io.Discard
+	}
+	if err := writeQualityOutput(w, cfg.Format, report); err != nil {
 		return err
 	}
 	if !report.Passed {

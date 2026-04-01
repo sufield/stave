@@ -2,11 +2,12 @@ package diff
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 )
 
@@ -131,13 +132,10 @@ func TestRenderText_WithChanges(t *testing.T) {
 }
 
 func TestWriteOutput_Quiet(t *testing.T) {
-	var buf bytes.Buffer
-	err := writeOutput(&buf, ui.OutputFormatText, true, asset.ObservationDelta{})
+	// Quiet mode: caller passes io.Discard.
+	err := writeOutput(io.Discard, appcontracts.FormatText, asset.ObservationDelta{})
 	if err != nil {
 		t.Fatalf("writeOutput error: %v", err)
-	}
-	if buf.Len() != 0 {
-		t.Fatalf("expected no output in quiet mode, got %d bytes", buf.Len())
 	}
 }
 
@@ -147,7 +145,7 @@ func TestWriteOutput_JSON(t *testing.T) {
 		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
 		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	}
-	err := writeOutput(&buf, ui.OutputFormatJSON, false, delta)
+	err := writeOutput(&buf, appcontracts.FormatJSON, delta)
 	if err != nil {
 		t.Fatalf("writeOutput error: %v", err)
 	}
@@ -165,7 +163,7 @@ func TestWriteOutput_TextWithChanges(t *testing.T) {
 			{AssetID: "bucket-a", ChangeType: asset.ChangeAdded},
 		},
 	}
-	err := writeOutput(&buf, ui.OutputFormatText, false, delta)
+	err := writeOutput(&buf, appcontracts.FormatText, delta)
 	if err != nil {
 		t.Fatalf("writeOutput error: %v", err)
 	}

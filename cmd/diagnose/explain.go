@@ -33,9 +33,9 @@ type Explainer struct {
 
 // Run executes the explain workflow and returns the result.
 // Presentation is handled by the caller.
-func (e *Explainer) Run(ctx context.Context, req ExplainRequest) (appexplain.ExplainResult, error) {
+func (e *Explainer) Run(ctx context.Context, req ExplainRequest) (appcontracts.ExplainResult, error) {
 	if req.ControlID == "" {
-		return appexplain.ExplainResult{}, &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
+		return appcontracts.ExplainResult{}, &ui.UserError{Err: fmt.Errorf("control id cannot be empty")}
 	}
 
 	runner := &appexplain.Explainer{Finder: e.Finder}
@@ -51,7 +51,7 @@ func NewExplainerWithFinder(repo appcontracts.ControlRepository) *Explainer {
 }
 
 // WriteExplainResult renders an ExplainResult to the writer in the given format.
-func WriteExplainResult(w io.Writer, result appexplain.ExplainResult, format ui.OutputFormat) error {
+func WriteExplainResult(w io.Writer, result appcontracts.ExplainResult, format appcontracts.OutputFormat) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(w, result)
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
@@ -30,7 +31,7 @@ func TestRunnerDetailMode_ValidationShortCircuit(t *testing.T) {
 		ControlID:         "",
 		AssetID:           "res-1",
 		MaxUnsafeDuration: 24 * time.Hour,
-		Format:            ui.OutputFormatText,
+		Format:            appcontracts.FormatText,
 		Stdout:            &bytes.Buffer{},
 		Stderr:            &bytes.Buffer{},
 	}
@@ -58,7 +59,7 @@ func TestPresenterRenderDetail_IncludesTrace(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{W: &buf, Format: ui.OutputFormatJSON}
+	p := &Presenter{W: &buf, Format: appcontracts.FormatJSON}
 	if err := p.RenderDetail(detail); err != nil {
 		t.Fatalf("RenderDetail() error = %v", err)
 	}
@@ -138,7 +139,7 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 		ObservationsDir:   "obs",
 		PreviousOutput:    evalFile,
 		MaxUnsafeDuration: time.Hour,
-		Format:            ui.OutputFormatJSON,
+		Format:            appcontracts.FormatJSON,
 		ControlID:         "CTL.TEST.A.001",
 		AssetID:           "res-1",
 		Stdout:            &out,
@@ -154,7 +155,7 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 
 	// Text mode branch returns ErrViolationsFound.
 	out.Reset()
-	cfg.Format = ui.OutputFormatText
+	cfg.Format = appcontracts.FormatText
 	if runErr := runner.Run(context.Background(), cfg); runErr != ui.ErrViolationsFound {
 		t.Fatalf("expected ErrViolationsFound in text mode, got %v", runErr)
 	}

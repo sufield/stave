@@ -26,7 +26,7 @@ func TestNormalizeTier(t *testing.T) {
 
 func TestSortedTierNames(t *testing.T) {
 	t.Run("multiple tiers sorted", func(t *testing.T) {
-		tiers := map[string]retention.TierConfig{
+		tiers := map[string]retention.Tier{
 			"cold": {OlderThan: "30d"},
 			"hot":  {OlderThan: "7d"},
 			"warm": {OlderThan: "14d"},
@@ -78,7 +78,7 @@ func TestMatchGlob(t *testing.T) {
 }
 
 func TestResolveTierForPath(t *testing.T) {
-	rules := []retention.MappingRule{
+	rules := []retention.Rule{
 		{Pattern: "observations/**", Tier: "hot"},
 		{Pattern: "controls/**", Tier: "cold"},
 	}
@@ -129,7 +129,7 @@ func TestResolveDefinedRetentionTiers(t *testing.T) {
 
 	t.Run("normalizes tier names", func(t *testing.T) {
 		cfg := &ProjectConfig{
-			RetentionTiers: map[string]retention.TierConfig{
+			RetentionTiers: map[string]retention.Tier{
 				"HOT":    {OlderThan: "7d", KeepMin: 2},
 				"  Cold": {OlderThan: "30d", KeepMin: 1},
 			},

@@ -6,7 +6,7 @@ import (
 )
 
 // LevelFromVerbosity returns the log level based on -v count.
-func LevelFromVerbosity(v int) Level {
+func LevelFromVerbosity(v int) slog.Level {
 	switch {
 	case v >= 2:
 		return LevelDebug
@@ -18,7 +18,7 @@ func LevelFromVerbosity(v int) Level {
 }
 
 // ParseLevel parses a string into a Level.
-func ParseLevel(s string) Level {
+func ParseLevel(s string) slog.Level {
 	var level slog.Level
 	if err := level.UnmarshalText([]byte(strings.TrimSpace(s))); err == nil {
 		return level

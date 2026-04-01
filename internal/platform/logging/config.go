@@ -22,14 +22,11 @@ const (
 	RunIDKey   string = "run_id"
 )
 
-// Level maps directly to slog levels.
-type Level = slog.Level
-
 const (
-	LevelDebug Level = slog.LevelDebug
-	LevelInfo  Level = slog.LevelInfo
-	LevelWarn  Level = slog.LevelWarn
-	LevelError Level = slog.LevelError
+	LevelDebug = slog.LevelDebug
+	LevelInfo  = slog.LevelInfo
+	LevelWarn  = slog.LevelWarn
+	LevelError = slog.LevelError
 )
 
 // Config holds logging configuration.
@@ -38,7 +35,7 @@ type Config struct {
 	Format Format
 
 	// Level is the minimum log level.
-	Level Level
+	Level slog.Level
 
 	// LogFile is an optional file path for log output.
 	// If empty, logs go to stderr.

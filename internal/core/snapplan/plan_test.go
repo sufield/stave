@@ -219,7 +219,7 @@ func TestBuildPlan_MultipleTiers(t *testing.T) {
 		Now:         baseTime,
 		ObsRoot:     "/obs",
 		DefaultTier: "default",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"hot":  {OlderThan: "48h", KeepMin: 0},
 			"cold": {OlderThan: "24h", KeepMin: 0},
 		},
@@ -251,7 +251,7 @@ func TestBuildPlan_InvalidTierDuration(t *testing.T) {
 		Now:         baseTime,
 		ObsRoot:     "/obs",
 		DefaultTier: "default",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"default": {OlderThan: "invalid-duration"},
 		},
 		Files:            files,

@@ -288,7 +288,7 @@ func TestSetTierValue(t *testing.T) {
 
 func TestDeleteTierValue(t *testing.T) {
 	cfg := &ProjectConfig{
-		RetentionTiers: map[string]retention.TierConfig{
+		RetentionTiers: map[string]retention.Tier{
 			"hot": {OlderThan: "7d"},
 		},
 	}
@@ -361,7 +361,7 @@ func TestBuildEffectiveConfig(t *testing.T) {
 		&ProjectConfig{
 			MaxUnsafe:       "72h",
 			CIFailurePolicy: "fail_on_any_violation",
-			RetentionTiers: map[string]retention.TierConfig{
+			RetentionTiers: map[string]retention.Tier{
 				"hot": {OlderThan: "7d", KeepMin: 2},
 			},
 		},
@@ -441,7 +441,7 @@ func TestValidateField_EmptyValues(t *testing.T) {
 
 func TestSnapshotRetentionForTier(t *testing.T) {
 	e := newTestEvaluator(&ProjectConfig{
-		RetentionTiers: map[string]retention.TierConfig{
+		RetentionTiers: map[string]retention.Tier{
 			"hot": {OlderThan: "3d"},
 		},
 	}, nil)

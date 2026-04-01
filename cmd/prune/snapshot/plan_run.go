@@ -26,20 +26,20 @@ func listPlanFiles(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFact
 	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
 }
 
-func resolvePlanRetentionConfig(eval *appconfig.Evaluator) (map[string]retention.TierConfig, []retention.MappingRule, string, error) {
+func resolvePlanRetentionConfig(eval *appconfig.Evaluator) (map[string]retention.Tier, []retention.Rule, string, error) {
 	cfg, _, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("load project config: %w", err)
 	}
 	defaultTier := eval.RetentionTier()
-	var tiers map[string]retention.TierConfig
-	var tierRules []retention.MappingRule
+	var tiers map[string]retention.Tier
+	var tierRules []retention.Rule
 	if cfg != nil {
 		tiers = cfg.RetentionTiers
 		tierRules = cfg.ObservationTierMapping
 	}
 	if tiers == nil {
-		tiers = map[string]retention.TierConfig{
+		tiers = map[string]retention.Tier{
 			appconfig.DefaultRetentionTier: {
 				OlderThan: appconfig.DefaultSnapshotRetention,
 				KeepMin:   appconfig.DefaultTierKeepMin,

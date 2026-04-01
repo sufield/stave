@@ -78,17 +78,17 @@ func ParseGatePolicy(raw string) (GatePolicy, error) {
 
 // ProjectConfig represents the schema for the stave.yaml file.
 type ProjectConfig struct {
-	MaxUnsafe                string                          `yaml:"max_unsafe"`
-	SnapshotRetention        string                          `yaml:"snapshot_retention"`
-	RetentionTier            string                          `yaml:"default_retention_tier"`
-	RetentionTiers           map[string]retention.TierConfig `yaml:"snapshot_retention_tiers"`
-	ObservationTierMapping   []retention.MappingRule         `yaml:"observation_tier_mapping"`
-	CIFailurePolicy          string                          `yaml:"ci_failure_policy"`
-	CaptureCadence           string                          `yaml:"capture_cadence"`
-	SnapshotFilenameTemplate string                          `yaml:"snapshot_filename_template"`
-	Exceptions               []ExceptionRule                 `yaml:"exceptions"`
-	EnabledControlPacks      []string                        `yaml:"enabled_control_packs"`
-	ExcludeControls          []string                        `yaml:"exclude_controls"`
+	MaxUnsafe                string                    `yaml:"max_unsafe"`
+	SnapshotRetention        string                    `yaml:"snapshot_retention"`
+	RetentionTier            string                    `yaml:"default_retention_tier"`
+	RetentionTiers           map[string]retention.Tier `yaml:"snapshot_retention_tiers"`
+	ObservationTierMapping   []retention.Rule          `yaml:"observation_tier_mapping"`
+	CIFailurePolicy          string                    `yaml:"ci_failure_policy"`
+	CaptureCadence           string                    `yaml:"capture_cadence"`
+	SnapshotFilenameTemplate string                    `yaml:"snapshot_filename_template"`
+	Exceptions               []ExceptionRule           `yaml:"exceptions"`
+	EnabledControlPacks      []string                  `yaml:"enabled_control_packs"`
+	ExcludeControls          []string                  `yaml:"exclude_controls"`
 }
 
 // ExceptionRule defines a control exception.

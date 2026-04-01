@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -121,7 +121,7 @@ func cleanLine(line string) string {
 }
 
 // writeOpenResult renders an OpenResult to the writer in the given format.
-func writeOpenResult(w io.Writer, res OpenResult, format ui.OutputFormat) error {
+func writeOpenResult(w io.Writer, res OpenResult, format appcontracts.OutputFormat) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(w, res)
 	}

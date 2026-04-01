@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -87,7 +88,7 @@ func validateSearchRequest(req SearchRequest) error {
 }
 
 // writeSearchResult renders a SearchResult to the writer in the given format.
-func writeSearchResult(w io.Writer, res SearchResult, format ui.OutputFormat) error {
+func writeSearchResult(w io.Writer, res SearchResult, format appcontracts.OutputFormat) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(w, res)
 	}

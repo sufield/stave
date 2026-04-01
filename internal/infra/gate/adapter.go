@@ -7,7 +7,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/artifact"
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -65,7 +64,6 @@ func (o *OverdueCounter) CountOverdue(ctx context.Context, controlsDir, observat
 		Snapshots:               loaded.Snapshots,
 		GlobalMaxUnsafeDuration: maxUnsafe,
 		Now:                     now,
-		PredicateParser:         ctlyaml.ParsePredicate,
 		PredicateEval:           celEval,
 	})
 	return items.CountOverdue(), nil

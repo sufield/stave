@@ -108,7 +108,7 @@ func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.ProjectConfig, pars
 		}
 		return tc.OlderThan, true
 	case "keep_min":
-		return strconv.Itoa(retention.TierConfig{KeepMin: tc.KeepMin}.EffectiveKeepMin()), true
+		return strconv.Itoa(retention.Tier{KeepMin: tc.KeepMin}.MinRetained()), true
 	default:
 		return "", false
 	}

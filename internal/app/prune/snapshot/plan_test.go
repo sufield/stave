@@ -20,7 +20,7 @@ func TestBuildSnapshotPlan_SingleTier(t *testing.T) {
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "30d", KeepMin: 2},
 		},
 		Files: files,
@@ -53,7 +53,7 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "30d", KeepMin: 2},
 		},
 		Files: files,
@@ -90,7 +90,7 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 		{RelPath: "dev/2026-02-01.json", CapturedAt: now.AddDate(0, 0, -22)},
 	}
 
-	rules := []retention.MappingRule{
+	rules := []retention.Rule{
 		{Pattern: "prod/**", Tier: "critical"},
 		{Pattern: "dev/**", Tier: "non_critical"},
 	}
@@ -100,7 +100,7 @@ func TestBuildSnapshotPlan_MultiTier(t *testing.T) {
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
 		TierRules:   rules,
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical":     {OlderThan: "30d", KeepMin: 2},
 			"non_critical": {OlderThan: "14d", KeepMin: 2},
 		},
@@ -164,8 +164,8 @@ func TestBuildSnapshotPlan_PerTierKeepMin(t *testing.T) {
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
-		TierRules:   []retention.MappingRule{{Pattern: "prod/**", Tier: "critical"}},
-		Tiers: map[string]retention.TierConfig{
+		TierRules:   []retention.Rule{{Pattern: "prod/**", Tier: "critical"}},
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "30d", KeepMin: 3},
 		},
 		Files: files,
@@ -192,7 +192,7 @@ func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
 		ObsRoot:     "./observations",
 		ArchiveDir:  "./observations/archive",
 		DefaultTier: "critical",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "14d", KeepMin: 1},
 		},
 		Files: files,
@@ -227,7 +227,7 @@ func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 		{RelPath: "staging/file.json", CapturedAt: now.AddDate(0, 0, -1)},
 	}
 
-	rules := []retention.MappingRule{
+	rules := []retention.Rule{
 		{Pattern: "prod/**", Tier: "critical"},
 	}
 
@@ -236,7 +236,7 @@ func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 		ObsRoot:     "./observations",
 		DefaultTier: "non_critical",
 		TierRules:   rules,
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical":     {OlderThan: "30d", KeepMin: 2},
 			"non_critical": {OlderThan: "14d", KeepMin: 2},
 		},
@@ -261,7 +261,7 @@ func TestBuildSnapshotPlan_NoFiles(t *testing.T) {
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "30d", KeepMin: 2},
 		},
 		Files: nil,
@@ -288,7 +288,7 @@ func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "30d", KeepMin: 2},
 		},
 		Files: nil,
@@ -318,7 +318,7 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 		Now:         now,
 		ObsRoot:     "./observations",
 		DefaultTier: "critical",
-		Tiers: map[string]retention.TierConfig{
+		Tiers: map[string]retention.Tier{
 			"critical": {OlderThan: "14d", KeepMin: 1},
 		},
 		Files: files,

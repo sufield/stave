@@ -67,17 +67,15 @@ type reportRemediation struct {
 	Example     string `json:"example,omitempty"`
 }
 
-// RenderJSON serialises the evaluation as JSON and writes it to w unless quiet is true.
-func RenderJSON(eval safetyenvelope.Evaluation, toolVersion string, w io.Writer, quiet bool) error {
+// RenderJSON serialises the evaluation as JSON and writes it to w.
+// Pass io.Discard as w to suppress output in quiet mode.
+func RenderJSON(eval safetyenvelope.Evaluation, toolVersion string, w io.Writer) error {
 	data := buildReportViewModel(eval, toolVersion)
 	output, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal report JSON: %w", err)
 	}
 	output = append(output, '\n')
-	if quiet {
-		return nil
-	}
 	if _, err := w.Write(output); err != nil {
 		return fmt.Errorf("write report: %w", err)
 	}

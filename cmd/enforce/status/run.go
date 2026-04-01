@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appstatus "github.com/sufield/stave/internal/app/status"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -13,7 +14,7 @@ import (
 // config defines the parameters for the status check.
 type config struct {
 	Dir    string
-	Format ui.OutputFormat
+	Format appcontracts.OutputFormat
 	Stdout io.Writer
 	Stderr io.Writer
 }

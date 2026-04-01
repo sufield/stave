@@ -25,7 +25,7 @@ type EvaluateInput struct {
 	Metadata          evaluation.Metadata
 
 	// CELEvaluator evaluates predicates using the CEL engine.
-	CELEvaluator engine.PredicateEvaluator
+	CELEvaluator policy.PredicateEval
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.

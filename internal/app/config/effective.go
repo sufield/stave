@@ -16,20 +16,20 @@ type ResolvedField struct {
 // EffectiveConfig represents the fully resolved, merged configuration state
 // as seen by the CLI.
 type EffectiveConfig struct {
-	ConfigFile               string                          `json:"config_file,omitempty"`
-	UserConfigFile           string                          `json:"user_config_file,omitempty"`
-	ProjectRoot              string                          `json:"project_root,omitempty"`
-	MaxUnsafeDuration        ResolvedField                   `json:"max_unsafe"`
-	SnapshotRetention        ResolvedField                   `json:"snapshot_retention"`
-	DefaultRetentionTier     ResolvedField                   `json:"default_retention_tier"`
-	CIFailurePolicy          ResolvedField                   `json:"ci_failure_policy"`
-	CLIOutput                ResolvedField                   `json:"cli_output"`
-	CLIQuiet                 ResolvedField                   `json:"cli_quiet"`
-	CLISanitize              ResolvedField                   `json:"cli_sanitize"`
-	CLIPathMode              ResolvedField                   `json:"cli_path_mode"`
-	CLIAllowUnknownInput     ResolvedField                   `json:"cli_allow_unknown_input"`
-	DefinedRetentionTiers    map[string]retention.TierConfig `json:"defined_retention_tiers"`
-	EffectiveRetentionByTier map[string]ResolvedField        `json:"effective_retention_by_tier"`
+	ConfigFile               string                    `json:"config_file,omitempty"`
+	UserConfigFile           string                    `json:"user_config_file,omitempty"`
+	ProjectRoot              string                    `json:"project_root,omitempty"`
+	MaxUnsafeDuration        ResolvedField             `json:"max_unsafe"`
+	SnapshotRetention        ResolvedField             `json:"snapshot_retention"`
+	DefaultRetentionTier     ResolvedField             `json:"default_retention_tier"`
+	CIFailurePolicy          ResolvedField             `json:"ci_failure_policy"`
+	CLIOutput                ResolvedField             `json:"cli_output"`
+	CLIQuiet                 ResolvedField             `json:"cli_quiet"`
+	CLISanitize              ResolvedField             `json:"cli_sanitize"`
+	CLIPathMode              ResolvedField             `json:"cli_path_mode"`
+	CLIAllowUnknownInput     ResolvedField             `json:"cli_allow_unknown_input"`
+	DefinedRetentionTiers    map[string]retention.Tier `json:"defined_retention_tiers"`
+	EffectiveRetentionByTier map[string]ResolvedField  `json:"effective_retention_by_tier"`
 }
 
 // toResolvedField converts a Value[T] to a ResolvedField.
@@ -67,13 +67,13 @@ func (e *Evaluator) BuildEffectiveConfig() EffectiveConfig {
 	return out
 }
 
-func (e *Evaluator) buildDefinedRetentionTiers() map[string]retention.TierConfig {
+func (e *Evaluator) buildDefinedRetentionTiers() map[string]retention.Tier {
 	if e.Project != nil {
 		if tiers := ResolveDefinedRetentionTiers(e.Project); len(tiers) > 0 {
 			return tiers
 		}
 	}
-	return map[string]retention.TierConfig{
+	return map[string]retention.Tier{
 		DefaultRetentionTier: {OlderThan: DefaultSnapshotRetention, KeepMin: DefaultTierKeepMin},
 	}
 }

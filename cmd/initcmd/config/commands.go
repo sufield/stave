@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
@@ -59,7 +60,7 @@ func newRunner(rt *ui.Runtime, stdin io.Reader, stdout, stderr io.Writer) *Runne
 	}
 }
 
-func mutationOptsFrom(gf cliflags.GlobalFlags, format ui.OutputFormat) MutationOpts {
+func mutationOptsFrom(gf cliflags.GlobalFlags, format appcontracts.OutputFormat) MutationOpts {
 	return MutationOpts{
 		Format:       format,
 		Force:        gf.Force,

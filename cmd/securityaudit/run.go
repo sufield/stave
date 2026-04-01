@@ -11,6 +11,7 @@ import (
 
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/cli/ui"
 	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -23,9 +24,9 @@ type auditConfig struct {
 	OutPath          string
 	OutDir           string
 	SeverityFilter   []domainsecurityaudit.Severity
-	SBOMFormat       appsa.SBOMFormat
+	SBOMFormat       evidence.SBOMFormat
 	Frameworks       []string
-	VulnSource       appsa.VulnSource
+	VulnSource       evidence.VulnSource
 	LiveVulnCheck    bool
 	ReleaseBundleDir string
 	PrivacyEnabled   bool

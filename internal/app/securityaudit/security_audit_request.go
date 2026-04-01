@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -16,9 +17,9 @@ type Request struct {
 	BinaryPath           string
 	OutDir               string
 	SeverityFilter       []securityaudit.Severity
-	SBOMFormat           SBOMFormat
+	SBOMFormat           evidence.SBOMFormat
 	ComplianceFrameworks []string
-	VulnSource           VulnSource
+	VulnSource           evidence.VulnSource
 	LiveVulnCheck        bool
 	ReleaseBundleDir     string
 	PrivacyEnabled       bool
@@ -60,7 +61,7 @@ func WithSeverityFilter(levels []securityaudit.Severity) RequestOption {
 }
 
 // WithSBOMFormat sets the SBOM output format (default: spdx).
-func WithSBOMFormat(f SBOMFormat) RequestOption {
+func WithSBOMFormat(f evidence.SBOMFormat) RequestOption {
 	return func(r *Request) { r.SBOMFormat = f }
 }
 
@@ -70,7 +71,7 @@ func WithComplianceFrameworks(frameworks []string) RequestOption {
 }
 
 // WithVulnSource sets the vulnerability evidence strategy (default: hybrid).
-func WithVulnSource(src VulnSource) RequestOption {
+func WithVulnSource(src evidence.VulnSource) RequestOption {
 	return func(r *Request) { r.VulnSource = src }
 }
 
@@ -105,8 +106,8 @@ func NewRequest(opts ...RequestOption) Request {
 		Now:          time.Now().UTC(),
 		StaveVersion: "unknown",
 		Cwd:          ".",
-		SBOMFormat:   SBOMFormatSPDX,
-		VulnSource:   VulnSourceHybrid,
+		SBOMFormat:   evidence.SBOMFormatSPDX,
+		VulnSource:   evidence.VulnSourceHybrid,
 		FailOn:       securityaudit.SeverityHigh,
 		SeverityFilter: []securityaudit.Severity{
 			securityaudit.SeverityCritical,
@@ -117,8 +118,8 @@ func NewRequest(opts ...RequestOption) Request {
 		opt(&req)
 	}
 	// Normalize formats after options are applied.
-	req.SBOMFormat = SBOMFormat(strings.ToLower(strings.TrimSpace(string(req.SBOMFormat))))
-	req.VulnSource = VulnSource(strings.ToLower(strings.TrimSpace(string(req.VulnSource))))
+	req.SBOMFormat = evidence.SBOMFormat(strings.ToLower(strings.TrimSpace(string(req.SBOMFormat))))
+	req.VulnSource = evidence.VulnSource(strings.ToLower(strings.TrimSpace(string(req.VulnSource))))
 	if strings.TrimSpace(req.OutDir) == "" {
 		req.OutDir = fmt.Sprintf("security-audit-%s", req.Now.UTC().Format("20060102T150405Z"))
 	}
@@ -126,11 +127,11 @@ func NewRequest(opts ...RequestOption) Request {
 }
 
 func validateRequest(req Request) error {
-	if req.SBOMFormat != SBOMFormatSPDX && req.SBOMFormat != SBOMFormatCycloneDX {
+	if req.SBOMFormat != evidence.SBOMFormatSPDX && req.SBOMFormat != evidence.SBOMFormatCycloneDX {
 		return fmt.Errorf("invalid SBOM format %q (use spdx or cyclonedx)", req.SBOMFormat)
 	}
 	switch req.VulnSource {
-	case VulnSourceHybrid, VulnSourceLocal, VulnSourceCI:
+	case evidence.VulnSourceHybrid, evidence.VulnSourceLocal, evidence.VulnSourceCI:
 	default:
 		return fmt.Errorf("invalid vulnerability source %q (use hybrid, local, or ci)", req.VulnSource)
 	}

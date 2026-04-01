@@ -14,7 +14,7 @@ import (
 func TestLevelFromVerbosity(t *testing.T) {
 	tests := []struct {
 		verbosity int
-		expected  Level
+		expected  slog.Level
 	}{
 		{0, LevelWarn},
 		{1, LevelInfo},
@@ -34,7 +34,7 @@ func TestLevelFromVerbosity(t *testing.T) {
 func TestParseLevel(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected Level
+		expected slog.Level
 	}{
 		{"debug", LevelDebug},
 		{"DEBUG", LevelDebug},

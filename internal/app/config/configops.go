@@ -187,7 +187,7 @@ func DeleteConfigValue(cfg *ProjectConfig, key string) error {
 // SetTierValue sets a retention tier field.
 func SetTierValue(cfg *ProjectConfig, tierName, subField, value string) error {
 	if cfg.RetentionTiers == nil {
-		cfg.RetentionTiers = make(map[string]retention.TierConfig)
+		cfg.RetentionTiers = make(map[string]retention.Tier)
 	}
 	tc := cfg.RetentionTiers[tierName]
 	if subField == "" {

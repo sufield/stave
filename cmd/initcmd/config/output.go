@@ -63,7 +63,7 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 	}
 	for _, name := range sortedKeys(out.DefinedRetentionTiers) {
 		tier := out.DefinedRetentionTiers[name]
-		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, tier.EffectiveKeepMin()); err != nil {
+		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, tier.MinRetained()); err != nil {
 			return err
 		}
 	}

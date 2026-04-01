@@ -13,14 +13,14 @@ import (
 )
 
 // DefaultFindingWriter is the standard implementation for finding marshalers.
-func DefaultFindingWriter(format ui.OutputFormat, _ bool) (appcontracts.FindingMarshaler, error) {
+func DefaultFindingWriter(format appcontracts.OutputFormat, _ bool) (appcontracts.FindingMarshaler, error) {
 	const indented = true
 	switch format {
-	case ui.OutputFormatText:
+	case appcontracts.FormatText:
 		return &outtext.FindingWriter{}, nil
-	case ui.OutputFormatJSON:
+	case appcontracts.FormatJSON:
 		return outjson.NewFindingWriter(indented), nil
-	case ui.OutputFormatSARIF:
+	case appcontracts.FormatSARIF:
 		return outsarif.NewFindingWriter(), nil
 	default:
 		return nil, &ui.UserError{Err: fmt.Errorf("invalid --format %q (use text, json, or sarif)", format)}
@@ -28,7 +28,7 @@ func DefaultFindingWriter(format ui.OutputFormat, _ bool) (appcontracts.FindingM
 }
 
 // ResolveStdout returns a writer based on quiet settings and format.
-func ResolveStdout(w io.Writer, quiet bool, format ui.OutputFormat) io.Writer {
+func ResolveStdout(w io.Writer, quiet bool, format appcontracts.OutputFormat) io.Writer {
 	if quiet && !format.IsMachineReadable() {
 		return io.Discard
 	}

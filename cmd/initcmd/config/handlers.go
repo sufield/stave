@@ -10,6 +10,7 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/retention"
@@ -29,7 +30,7 @@ type Runner struct {
 // GetRequest defines the parameters for retrieving a single config value.
 type GetRequest struct {
 	Key    string
-	Format ui.OutputFormat
+	Format appcontracts.OutputFormat
 }
 
 // SetRequest defines the parameters for updating a project config value.
@@ -45,7 +46,7 @@ type DeleteRequest struct {
 
 // MutationOpts carries CLI-environment context needed for config mutations.
 type MutationOpts struct {
-	Format       ui.OutputFormat
+	Format       appcontracts.OutputFormat
 	Force        bool
 	IsTTY        bool
 	AllowSymlink bool
@@ -84,7 +85,7 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	return r.presentValue(res, req.Format)
 }
 
-func (r *Runner) presentValue(res ValueResult, format ui.OutputFormat) error {
+func (r *Runner) presentValue(res ValueResult, format appcontracts.OutputFormat) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(r.Stdout, res)
 	}
@@ -165,7 +166,7 @@ func tierSubFieldResolution(cfg *appconfig.ProjectConfig, cfgPath string, parsed
 	case "older_than":
 		val = tc.OlderThan
 	case "keep_min":
-		val = strconv.Itoa(retention.TierConfig{KeepMin: tc.KeepMin}.EffectiveKeepMin())
+		val = strconv.Itoa(retention.Tier{KeepMin: tc.KeepMin}.MinRetained())
 	default:
 		return "", "", fmt.Errorf("unsupported tier field %q", parsed.SubField)
 	}
@@ -227,7 +228,7 @@ func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpt
 }
 
 // Show renders the full suite of effective values and their sources.
-func (r *Runner) Show(_ context.Context, eval *appconfig.Evaluator, format ui.OutputFormat) error {
+func (r *Runner) Show(_ context.Context, eval *appconfig.Evaluator, format appcontracts.OutputFormat) error {
 	if eval == nil {
 		return fmt.Errorf("project config evaluator not available; ensure bootstrap runs before this command")
 	}

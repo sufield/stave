@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	appapply "github.com/sufield/stave/internal/app/apply"
 	appconfig "github.com/sufield/stave/internal/app/config"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -270,7 +271,7 @@ type standardIO struct {
 	Stderr    io.Writer
 	Stdin     io.Reader
 	Sanitizer kernel.Sanitizer
-	Format    ui.OutputFormat
+	Format    appcontracts.OutputFormat
 	Quiet     bool
 }
 
@@ -295,8 +296,8 @@ func ResolveStandardIO(o *ApplyOptions, cs cobraState) (standardIO, error) {
 // machine consumption (JSON, SARIF). When true, progress messages
 // and hints on stderr are suppressed to keep the output composable
 // with tools like jq.
-func isMachineFormat(f ui.OutputFormat) bool {
-	return f == ui.OutputFormatJSON || f == ui.OutputFormatSARIF
+func isMachineFormat(f appcontracts.OutputFormat) bool {
+	return f == appcontracts.FormatJSON || f == appcontracts.FormatSARIF
 }
 
 func buildClock(now time.Time) ports.Clock {

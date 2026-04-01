@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -42,7 +43,7 @@ type Runner struct {
 }
 
 // List retrieves all contexts from the store and renders them.
-func (r *Runner) List(st *contexts.Store, format ui.OutputFormat) error {
+func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) error {
 	names := st.Names()
 	active := strings.TrimSpace(st.Active)
 
@@ -118,7 +119,7 @@ func (r *Runner) Use(st *contexts.Store, name string) error {
 }
 
 // Show renders the currently selected context.
-func (r *Runner) Show(format ui.OutputFormat, res ShowResult) error {
+func (r *Runner) Show(format appcontracts.OutputFormat, res ShowResult) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(r.Stdout, res)
 	}

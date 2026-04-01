@@ -25,7 +25,7 @@ type Config struct {
 	ObservationsDir   string
 	PreviousOutput    string
 	MaxUnsafeDuration time.Duration
-	Format            ui.OutputFormat
+	Format            appcontracts.OutputFormat
 	Quiet             bool
 	Cases             []string
 	SignalContains    string
