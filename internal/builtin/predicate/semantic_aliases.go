@@ -16,6 +16,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/predicate"
+	"github.com/sufield/stave/internal/pkg/suggest"
 )
 
 // ── Alias Name Constants ──────────────────────────────────
@@ -269,7 +270,7 @@ func (r *Registry) suggestError(name string) *UnknownAliasError {
 	best := ""
 	bestDist := -1
 	for candidate := range r.entries {
-		d := levenshtein(name, candidate)
+		d := suggest.Distance(name, candidate)
 		if bestDist < 0 || d < bestDist {
 			bestDist = d
 			best = candidate
@@ -284,30 +285,4 @@ func (r *Registry) suggestError(name string) *UnknownAliasError {
 		}
 	}
 	return &UnknownAliasError{Name: name, Suggestion: suggestion}
-}
-
-func levenshtein(a, b string) int {
-	if len(a) == 0 {
-		return len(b)
-	}
-	if len(b) == 0 {
-		return len(a)
-	}
-	prev := make([]int, len(b)+1)
-	curr := make([]int, len(b)+1)
-	for j := range prev {
-		prev[j] = j
-	}
-	for i := 1; i <= len(a); i++ {
-		curr[0] = i
-		for j := 1; j <= len(b); j++ {
-			cost := 1
-			if a[i-1] == b[j-1] {
-				cost = 0
-			}
-			curr[j] = min(curr[j-1]+1, prev[j]+1, prev[j-1]+cost)
-		}
-		prev, curr = curr, prev
-	}
-	return prev[len(b)]
 }

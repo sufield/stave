@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/pkg/suggest"
 )
 
 // ── Phase 3.1: Comprehensive Unit Test ───────────────────────────────
@@ -204,9 +205,9 @@ func TestLevenshtein(t *testing.T) {
 		{"kitten", "sitting", 3},
 	}
 	for _, tt := range tests {
-		got := levenshtein(tt.a, tt.b)
+		got := suggest.Distance(tt.a, tt.b)
 		if got != tt.want {
-			t.Errorf("levenshtein(%q, %q) = %d, want %d", tt.a, tt.b, got, tt.want)
+			t.Errorf("Distance(%q, %q) = %d, want %d", tt.a, tt.b, got, tt.want)
 		}
 	}
 }
