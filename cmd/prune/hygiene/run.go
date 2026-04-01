@@ -10,7 +10,6 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	hygieneapp "github.com/sufield/stave/internal/app/hygiene"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -34,7 +33,7 @@ type config struct {
 	RetentionTier     string
 	KeepMin           int
 	Now               time.Time
-	Format            ui.OutputFormat
+	Format            appcontracts.OutputFormat
 	Quiet             bool
 	Stdout            io.Writer
 

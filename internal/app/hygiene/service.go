@@ -81,7 +81,6 @@ func computeUpcomingSummary(
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,
 		Now:                     opts.Now,
-		PredicateParser:         opts.PredicateParser,
 		PredicateEval:           opts.CELEvaluator,
 	})
 	var controlIDSet map[kernel.ControlID]struct{}

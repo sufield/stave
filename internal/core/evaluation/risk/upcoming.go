@@ -156,7 +156,6 @@ type ThresholdRequest struct {
 	Snapshots               []asset.Snapshot
 	GlobalMaxUnsafeDuration time.Duration
 	Now                     time.Time
-	PredicateParser         func(any) (*policy.UnsafePredicate, error) // kept for signature compat
 	PredicateEval           policy.PredicateEval
 }
 

@@ -67,13 +67,17 @@ func (r *InitRunner) Run(req *InitRequest) error {
 		return err
 	}
 
-	printScaffoldSummary(r.Stdout, r.Stderr, scaffoldSummaryRequest{
+	w := r.Stdout
+	if r.Quiet {
+		w = io.Discard
+	}
+	printScaffoldSummary(w, r.Stderr, scaffoldSummaryRequest{
 		BaseDir: result.BaseDir,
 		Dirs:    result.Dirs,
 		Created: result.Created,
 		Skipped: result.Skipped,
 		DryRun:  result.DryRun,
-	}, r.Quiet)
+	})
 	return nil
 }
 

@@ -15,8 +15,8 @@ import (
 type PlanConfig struct {
 	// Pre-loaded data.
 	Files       []appcontracts.SnapshotFile
-	Tiers       map[string]retention.TierConfig
-	TierRules   []retention.MappingRule
+	Tiers       map[string]retention.Tier
+	TierRules   []retention.Rule
 	DefaultTier string
 
 	// Resolved parameters.

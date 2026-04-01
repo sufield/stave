@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
@@ -106,7 +106,7 @@ func TestEmptyDash(t *testing.T) {
 
 func TestResolveStdout_QuietText(t *testing.T) {
 	var buf bytes.Buffer
-	w := ResolveStdout(&buf, true, ui.OutputFormatText)
+	w := ResolveStdout(&buf, true, appcontracts.FormatText)
 	if w != io.Discard {
 		t.Fatal("expected io.Discard for quiet+text")
 	}
@@ -114,7 +114,7 @@ func TestResolveStdout_QuietText(t *testing.T) {
 
 func TestResolveStdout_QuietJSON(t *testing.T) {
 	var buf bytes.Buffer
-	w := ResolveStdout(&buf, true, ui.OutputFormatJSON)
+	w := ResolveStdout(&buf, true, appcontracts.FormatJSON)
 	if w == io.Discard {
 		t.Fatal("quiet+json should preserve writer for piping")
 	}
@@ -122,14 +122,14 @@ func TestResolveStdout_QuietJSON(t *testing.T) {
 
 func TestResolveStdout_NotQuiet(t *testing.T) {
 	var buf bytes.Buffer
-	w := ResolveStdout(&buf, false, ui.OutputFormatText)
+	w := ResolveStdout(&buf, false, appcontracts.FormatText)
 	if w != &buf {
 		t.Fatal("non-quiet should return original writer")
 	}
 }
 
 func TestResolveStdout_NilWriter(t *testing.T) {
-	w := ResolveStdout(nil, false, ui.OutputFormatText)
+	w := ResolveStdout(nil, false, appcontracts.FormatText)
 	if w == nil {
 		t.Fatal("nil writer should be replaced with os.Stdout")
 	}
@@ -142,7 +142,7 @@ func TestResolveFormatValuePure_Text(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if f != ui.OutputFormatText {
+	if f != appcontracts.FormatText {
 		t.Fatalf("format = %q, want text", f)
 	}
 }
@@ -152,7 +152,7 @@ func TestResolveFormatValuePure_JSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if f != ui.OutputFormatJSON {
+	if f != appcontracts.FormatJSON {
 		t.Fatalf("format = %q, want json", f)
 	}
 }
@@ -162,7 +162,7 @@ func TestResolveFormatValuePure_SARIF(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if f != ui.OutputFormatSARIF {
+	if f != appcontracts.FormatSARIF {
 		t.Fatalf("format = %q, want sarif", f)
 	}
 }
@@ -179,7 +179,7 @@ func TestResolveFormatValuePure_CaseInsensitive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if f != ui.OutputFormatJSON {
+	if f != appcontracts.FormatJSON {
 		t.Fatalf("format = %q, want json", f)
 	}
 }
@@ -187,7 +187,7 @@ func TestResolveFormatValuePure_CaseInsensitive(t *testing.T) {
 // --- DefaultFindingWriter ---
 
 func TestDefaultFindingWriter_Text(t *testing.T) {
-	fw, err := DefaultFindingWriter(ui.OutputFormatText, false)
+	fw, err := DefaultFindingWriter(appcontracts.FormatText, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestDefaultFindingWriter_Text(t *testing.T) {
 }
 
 func TestDefaultFindingWriter_JSON(t *testing.T) {
-	fw, err := DefaultFindingWriter(ui.OutputFormatJSON, false)
+	fw, err := DefaultFindingWriter(appcontracts.FormatJSON, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -207,7 +207,7 @@ func TestDefaultFindingWriter_JSON(t *testing.T) {
 }
 
 func TestDefaultFindingWriter_SARIF(t *testing.T) {
-	fw, err := DefaultFindingWriter(ui.OutputFormatSARIF, false)
+	fw, err := DefaultFindingWriter(appcontracts.FormatSARIF, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -262,7 +262,7 @@ func TestProvider_NewSnapshotRepo_NilFunc(t *testing.T) {
 
 func TestProvider_NewFindingWriter_NilFunc(t *testing.T) {
 	p := &Provider{}
-	_, err := p.NewFindingWriter(ui.OutputFormatJSON, false)
+	_, err := p.NewFindingWriter(appcontracts.FormatJSON, false)
 	if err == nil {
 		t.Fatal("expected error for nil FindingWriterFunc")
 	}
@@ -372,7 +372,7 @@ func TestPrepareEvaluationContext_FlagParsing(t *testing.T) {
 	if ec.MaxUnsafe != 7*24*time.Hour {
 		t.Fatalf("MaxUnsafe = %v, want 168h", ec.MaxUnsafe)
 	}
-	if ec.Format != ui.OutputFormatJSON {
+	if ec.Format != appcontracts.FormatJSON {
 		t.Fatalf("Format = %q, want json", ec.Format)
 	}
 	want := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
@@ -437,17 +437,18 @@ func TestPrepareEvaluationContext_BadFormat(t *testing.T) {
 
 func TestWarnGitDirty_NilGit(t *testing.T) {
 	// Should not panic
-	WarnGitDirty(io.Discard, nil, "test", false)
+	WarnGitDirty(io.Discard, nil, "test")
 }
 
 func TestWarnGitDirty_NotDirty(t *testing.T) {
 	// Should not panic or write
 	var buf bytes.Buffer
-	WarnGitDirty(&buf, &evaluation.GitInfo{Dirty: false}, "test", false)
+	WarnGitDirty(&buf, &evaluation.GitInfo{Dirty: false}, "test")
 }
 
-func TestWarnGitDirty_Quiet(t *testing.T) {
-	WarnGitDirty(io.Discard, &evaluation.GitInfo{Dirty: true}, "test", true)
+func TestWarnGitDirty_DirtyLogsWarning(t *testing.T) {
+	// Caller skips this call in quiet mode; here we test the non-quiet path.
+	WarnGitDirty(io.Discard, &evaluation.GitInfo{Dirty: true}, "test")
 }
 
 // --- isManifestArtifact (via output) ---

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
-	"github.com/sufield/stave/internal/cli/ui"
 )
 
 func TestParsePositiveDuration_Valid(t *testing.T) {
@@ -83,7 +83,7 @@ func TestToAdapterSummary(t *testing.T) {
 func TestRenderOutput_JSON(t *testing.T) {
 	report := appupcoming.UpcomingReport{}
 	var buf bytes.Buffer
-	err := renderOutput(&buf, ui.OutputFormatJSON, report, 24*time.Hour)
+	err := renderOutput(&buf, appcontracts.FormatJSON, report, 24*time.Hour)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

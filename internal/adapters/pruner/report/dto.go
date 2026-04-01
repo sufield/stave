@@ -8,15 +8,6 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// CleanupAction is an alias for the shared pruner CleanupAction type.
-type CleanupAction = pruner.CleanupAction
-
-// Action constants re-exported from pruner.
-const (
-	ActionDelete = pruner.ActionDelete
-	ActionMove   = pruner.ActionMove
-)
-
 // CleanupFile is one snapshot listed in prune/archive output.
 type CleanupFile struct {
 	Name       string    `json:"name"`
@@ -53,7 +44,7 @@ type ArchiveOutput struct {
 // CleanupInput holds the shared fields for building prune/archive output.
 type CleanupInput struct {
 	Now             time.Time
-	Action          CleanupAction
+	Action          pruner.CleanupAction
 	DryRun          bool
 	ObservationsDir string
 	Tier            string

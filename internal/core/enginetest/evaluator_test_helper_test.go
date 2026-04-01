@@ -20,7 +20,7 @@ func testDigester() ports.Digester { return crypto.NewHasher() }
 func testIDGen() ports.IdentityGenerator { return crypto.NewHasher() }
 
 // testCELEvaluator returns a CEL-based PredicateEval for domain tests.
-func testCELEvaluator() engine.PredicateEvaluator {
+func testCELEvaluator() policy.PredicateEval {
 	compiler, err := stavecel.NewCompiler()
 	if err != nil {
 		panic("testCELEvaluator: " + err.Error())

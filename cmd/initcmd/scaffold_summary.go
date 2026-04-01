@@ -18,10 +18,8 @@ type scaffoldSummaryRequest struct {
 	DryRun  bool
 }
 
-func printScaffoldSummary(w io.Writer, stderr io.Writer, req scaffoldSummaryRequest, quiet bool) {
-	if quiet {
-		return
-	}
+// printScaffoldSummary writes the scaffold summary. Pass io.Discard as w for quiet mode.
+func printScaffoldSummary(w io.Writer, stderr io.Writer, req scaffoldSummaryRequest) {
 	absBaseDir, err := filepath.Abs(req.BaseDir)
 	if err != nil {
 		absBaseDir = req.BaseDir
@@ -56,7 +54,6 @@ func printScaffoldSummary(w io.Writer, stderr io.Writer, req scaffoldSummaryRequ
 	}
 
 	rt := ui.NewRuntime(w, stderr)
-	rt.Quiet = quiet
 	rt.PrintNextSteps(
 		"Run `stave doctor` to verify your local environment.",
 		"Run `stave apply --observations ./observations` to evaluate with built-in S3 checks.",

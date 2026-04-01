@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -64,7 +64,7 @@ type schemasOutput struct {
 	Artifact      []schemaEntry `json:"artifact"`
 }
 
-func writeSchemas(w io.Writer, format ui.OutputFormat) error {
+func writeSchemas(w io.Writer, format appcontracts.OutputFormat) error {
 	out := schemasOutput{
 		Data: []schemaEntry{
 			{"control", kernel.SchemaControl.String()},

@@ -86,7 +86,9 @@ Examples:
 			}
 			if res != nil {
 				gitInfo := compose.AuditGitStatus(res.ProjectRoot(), resolveAuditPaths(res))
-				compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report", flags.Quiet)
+				if !flags.Quiet {
+					compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report")
+				}
 			}
 
 			// Use case: load evaluation
@@ -107,7 +109,8 @@ Examples:
 				return fmt.Errorf("unexpected evaluation data type")
 			}
 			if fmtValue.IsJSON() {
-				return reportrender.RenderJSON(*eval, staveversion.String, cmd.OutOrStdout(), flags.Quiet)
+				w := compose.ResolveStdout(cmd.OutOrStdout(), flags.Quiet, fmtValue)
+				return reportrender.RenderJSON(*eval, staveversion.String, w)
 			}
 			return reportrender.RenderText(*eval, reportrender.RenderTextOptions{
 				StaveVersion:    staveversion.String,

@@ -8,8 +8,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -21,7 +21,7 @@ type resolvedConfig struct {
 	MaxUnsafeDuration time.Duration
 	DueSoon           time.Duration
 	Now               time.Time
-	Format            ui.OutputFormat
+	Format            appcontracts.OutputFormat
 	Filter            risk.ThresholdFilter
 	Sanitizer         kernel.Sanitizer
 	Quiet             bool
@@ -41,7 +41,7 @@ type upcomingConfigInput struct {
 	Sanitizer     kernel.Sanitizer
 	Quiet         bool
 	Stdout        io.Writer
-	ResolveFormat func(string) (ui.OutputFormat, error)
+	ResolveFormat func(string) (appcontracts.OutputFormat, error)
 }
 
 func gatherUpcomingConfig(in upcomingConfigInput) (resolvedConfig, error) {

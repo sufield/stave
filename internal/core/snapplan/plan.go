@@ -105,7 +105,7 @@ type BuildPlanParams struct {
 	ObsRoot          string
 	ArchiveDir       string
 	DefaultTier      string
-	Tiers            map[string]retention.TierConfig
+	Tiers            map[string]retention.Tier
 	Files            []File
 	Apply            bool
 	Force            bool

@@ -72,41 +72,6 @@ func TestTier_MinRetained(t *testing.T) {
 	}
 }
 
-func TestTier_ParseDuration(t *testing.T) {
-	tests := []struct {
-		name    string
-		tier    Tier
-		want    time.Duration
-		wantErr bool
-	}{
-		{"valid", Tier{OlderThan: "7d"}, 7 * 24 * time.Hour, false},
-		{"empty returns error", Tier{OlderThan: ""}, 0, true},
-		{"invalid returns error", Tier{OlderThan: "bad"}, 0, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.tier.ParseDuration()
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("ParseDuration() err=%v, wantErr=%v", err, tt.wantErr)
-			}
-			if !tt.wantErr && got != tt.want {
-				t.Fatalf("ParseDuration()=%v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestTier_EffectiveKeepMin(t *testing.T) {
-	tier := Tier{OlderThan: "1d", KeepMin: 3}
-	if got := tier.EffectiveKeepMin(); got != 3 {
-		t.Fatalf("EffectiveKeepMin()=%d, want 3", got)
-	}
-	tier.KeepMin = 0
-	if got := tier.EffectiveKeepMin(); got != DefaultKeepMin {
-		t.Fatalf("EffectiveKeepMin()=%d, want %d", got, DefaultKeepMin)
-	}
-}
-
 func TestRule_Validate(t *testing.T) {
 	tests := []struct {
 		name    string

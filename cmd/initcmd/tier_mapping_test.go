@@ -8,7 +8,7 @@ import (
 )
 
 func TestResolveTierForPath_FirstMatchWins(t *testing.T) {
-	rules := []retention.MappingRule{
+	rules := []retention.Rule{
 		{Pattern: "prod/**", Tier: "critical"},
 		{Pattern: "prod/**", Tier: "non_critical"}, // should never match
 	}
@@ -19,7 +19,7 @@ func TestResolveTierForPath_FirstMatchWins(t *testing.T) {
 }
 
 func TestResolveTierForPath_DefaultFallback(t *testing.T) {
-	rules := []retention.MappingRule{
+	rules := []retention.Rule{
 		{Pattern: "prod/**", Tier: "critical"},
 	}
 	got := appconfig.ResolveTierForPath("staging/2026-01-01.json", rules, "non_critical")

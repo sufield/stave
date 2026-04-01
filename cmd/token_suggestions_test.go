@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/enforce/generate"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -13,8 +14,8 @@ func TestParseOutputFormat_IsCaseInsensitive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ParseOutputFormat returned error: %v", err)
 	}
-	if got != ui.OutputFormatJSON {
-		t.Fatalf("ParseOutputFormat(JSON)=%q, want %q", got, ui.OutputFormatJSON)
+	if got != appcontracts.FormatJSON {
+		t.Fatalf("ParseOutputFormat(JSON)=%q, want %q", got, appcontracts.FormatJSON)
 	}
 }
 

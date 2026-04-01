@@ -12,12 +12,6 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
-// ExplainResult is an alias for contracts.ExplainResult.
-type ExplainResult = contracts.ExplainResult
-
-// ExplainRule is an alias for contracts.ExplainRule.
-type ExplainRule = contracts.ExplainRule
-
 // ControlFinder loads a single control by ID.
 type ControlFinder interface {
 	FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error)
@@ -35,22 +29,22 @@ type Explainer struct {
 }
 
 // Run executes the explain workflow.
-func (e *Explainer) Run(ctx context.Context, input ExplainInput) (ExplainResult, error) {
+func (e *Explainer) Run(ctx context.Context, input ExplainInput) (contracts.ExplainResult, error) {
 	if input.ControlID == "" {
-		return ExplainResult{}, fmt.Errorf("control id cannot be empty")
+		return contracts.ExplainResult{}, fmt.Errorf("control id cannot be empty")
 	}
 	controlsDir := strings.TrimSpace(input.ControlsDir)
 	ctl, err := e.Finder.FindByID(ctx, controlsDir, input.ControlID)
 	if err != nil {
-		return ExplainResult{}, err
+		return contracts.ExplainResult{}, err
 	}
 	return analyze(ctl), nil
 }
 
-func analyze(ctl policy.ControlDefinition) ExplainResult {
+func analyze(ctl policy.ControlDefinition) contracts.ExplainResult {
 	fields, rules := walkPredicate(ctl.UnsafePredicate, ctl.Params)
 	slices.Sort(fields)
-	return ExplainResult{
+	return contracts.ExplainResult{
 		ControlID:          ctl.ID.String(),
 		Name:               ctl.Name,
 		Description:        ctl.Description,
@@ -61,7 +55,7 @@ func analyze(ctl policy.ControlDefinition) ExplainResult {
 	}
 }
 
-func walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]string, []ExplainRule) {
+func walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]string, []contracts.ExplainRule) {
 	rules, fieldSet := walkRules("any", pred.Any, params)
 	allRules, allFields := walkRules("all", pred.All, params)
 	rules = append(rules, allRules...)
@@ -77,8 +71,8 @@ func walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]
 	return fields, rules
 }
 
-func walkRules(from string, prs []policy.PredicateRule, params policy.ControlParams) ([]ExplainRule, map[string]bool) {
-	var rules []ExplainRule
+func walkRules(from string, prs []policy.PredicateRule, params policy.ControlParams) ([]contracts.ExplainRule, map[string]bool) {
+	var rules []contracts.ExplainRule
 	fieldSet := map[string]bool{}
 	for i := range prs {
 		r := prs[i]
@@ -101,7 +95,7 @@ func walkRules(from string, prs []policy.PredicateRule, params policy.ControlPar
 			continue
 		}
 		value, comment := resolveRuleValue(r, params)
-		rules = append(rules, ExplainRule{
+		rules = append(rules, contracts.ExplainRule{
 			Path:    r.Field.String(),
 			Op:      r.Op,
 			Value:   value,
@@ -124,7 +118,7 @@ func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (valu
 	return value, comment
 }
 
-func buildMinimalObservation(fields []string, rules []ExplainRule) map[string]any {
+func buildMinimalObservation(fields []string, rules []contracts.ExplainRule) map[string]any {
 	props := map[string]any{}
 	valueByPath := map[string]any{}
 	for _, r := range rules {
@@ -160,7 +154,7 @@ func buildMinimalObservation(fields []string, rules []ExplainRule) map[string]an
 	}
 }
 
-func sampleValue(r ExplainRule) any {
+func sampleValue(r contracts.ExplainRule) any {
 	if r.Op == predicate.OpMissing {
 		return nil
 	}

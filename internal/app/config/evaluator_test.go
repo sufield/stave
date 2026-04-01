@@ -115,7 +115,7 @@ func TestResolveSnapshotRetention(t *testing.T) {
 
 	t.Run("project tier-specific", func(t *testing.T) {
 		e := newTestEvaluator(&ProjectConfig{
-			RetentionTiers: map[string]retention.TierConfig{
+			RetentionTiers: map[string]retention.Tier{
 				"hot": {OlderThan: "7d"},
 			},
 		}, nil)
@@ -322,7 +322,7 @@ func TestHasConfiguredTier(t *testing.T) {
 
 	t.Run("tier exists", func(t *testing.T) {
 		e := newTestEvaluator(&ProjectConfig{
-			RetentionTiers: map[string]retention.TierConfig{
+			RetentionTiers: map[string]retention.Tier{
 				"hot": {OlderThan: "7d"},
 			},
 		}, nil)

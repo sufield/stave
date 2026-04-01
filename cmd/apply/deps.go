@@ -20,7 +20,6 @@ import (
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -40,7 +39,7 @@ type Builder struct {
 	Stderr    io.Writer
 	Stdin     io.Reader
 	Sanitizer kernel.Sanitizer
-	Format    ui.OutputFormat
+	Format    appcontracts.OutputFormat
 	Digester  ports.Digester
 	IDGen     ports.IdentityGenerator
 

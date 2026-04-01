@@ -5,6 +5,7 @@ import (
 	"io"
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/diag"
@@ -29,9 +30,9 @@ func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
 	report := buildReport(result, r.FixHints, hc)
 
 	switch {
-	case r.Format == string(ui.OutputFormatJSON):
+	case r.Format == string(appcontracts.FormatJSON):
 		return outjson.WriteValidation(r.Writer, report)
-	case r.Format != "" && r.Format != string(ui.OutputFormatText):
+	case r.Format != "" && r.Format != string(appcontracts.FormatText):
 		return ui.ExecuteTemplate(r.Writer, r.Format, report)
 	default:
 		return r.writeText(result, report)

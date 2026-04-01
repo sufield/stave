@@ -8,7 +8,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appsa "github.com/sufield/stave/internal/app/securityaudit"
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/cli/ui"
 	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 	"github.com/sufield/stave/internal/metadata"
@@ -90,11 +90,11 @@ Exit Codes:
 				return &ui.UserError{Err: err}
 			}
 
-			parsedSBOM, err := appsa.ParseSBOMFormat(opts.SBOMFormat)
+			parsedSBOM, err := evidence.ParseSBOMFormat(opts.SBOMFormat)
 			if err != nil {
 				return &ui.UserError{Err: err}
 			}
-			parsedVuln, err := appsa.ParseVulnSource(opts.VulnSource)
+			parsedVuln, err := evidence.ParseVulnSource(opts.VulnSource)
 			if err != nil {
 				return &ui.UserError{Err: err}
 			}

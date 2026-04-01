@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 func TestSchemasTextOutput(t *testing.T) {
 	var buf bytes.Buffer
-	if err := writeSchemas(&buf, ui.OutputFormatText); err != nil {
+	if err := writeSchemas(&buf, appcontracts.FormatText); err != nil {
 		t.Fatalf("writeSchemas error: %v", err)
 	}
 
@@ -39,7 +39,7 @@ func TestSchemasTextOutput(t *testing.T) {
 
 func TestSchemasJSONOutput(t *testing.T) {
 	var buf bytes.Buffer
-	if err := writeSchemas(&buf, ui.OutputFormatJSON); err != nil {
+	if err := writeSchemas(&buf, appcontracts.FormatJSON); err != nil {
 		t.Fatalf("writeSchemas error: %v", err)
 	}
 

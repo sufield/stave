@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	staveenv "github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
@@ -18,7 +18,7 @@ import (
 
 // ListConfig defines the parameters for the environment variable listing.
 type ListConfig struct {
-	Format ui.OutputFormat
+	Format appcontracts.OutputFormat
 	Stdout io.Writer
 }
 

@@ -157,15 +157,12 @@ func TestVersion(t *testing.T) {
 // --- printScaffoldSummary ---
 
 func TestPrintScaffoldSummary_Quiet(t *testing.T) {
-	var buf bytes.Buffer
-	printScaffoldSummary(&buf, io.Discard, scaffoldSummaryRequest{
+	// Quiet mode: caller passes io.Discard as writer.
+	printScaffoldSummary(io.Discard, io.Discard, scaffoldSummaryRequest{
 		BaseDir: "/tmp/test",
 		Dirs:    []string{"controls"},
 		Created: []string{"stave.yaml"},
-	}, true)
-	if buf.Len() != 0 {
-		t.Fatalf("expected no output in quiet mode, got: %s", buf.String())
-	}
+	})
 }
 
 func TestPrintScaffoldSummary_DryRun(t *testing.T) {
@@ -175,7 +172,7 @@ func TestPrintScaffoldSummary_DryRun(t *testing.T) {
 		Dirs:    []string{"controls", "observations"},
 		Created: []string{"stave.yaml", "README.md"},
 		DryRun:  true,
-	}, false)
+	})
 	out := buf.String()
 	if !strings.Contains(out, "Dry run") {
 		t.Fatalf("expected dry run header, got: %s", out)
@@ -191,7 +188,7 @@ func TestPrintScaffoldSummary_Normal(t *testing.T) {
 		BaseDir: "/tmp/test",
 		Dirs:    []string{"controls"},
 		Created: []string{"stave.yaml"},
-	}, false)
+	})
 	out := buf.String()
 	if !strings.Contains(out, "Initialized empty Stave project") {
 		t.Fatalf("expected init message, got: %s", out)
@@ -208,7 +205,7 @@ func TestPrintScaffoldSummary_WithSkipped(t *testing.T) {
 		Dirs:    []string{"controls"},
 		Created: []string{"stave.yaml"},
 		Skipped: []string{"README.md"},
-	}, false)
+	})
 	out := buf.String()
 	if !strings.Contains(out, "Skipped existing files") {
 		t.Fatalf("expected skipped files section, got: %s", out)

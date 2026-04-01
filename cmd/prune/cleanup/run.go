@@ -8,6 +8,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	pruneretention "github.com/sufield/stave/cmd/prune/retention"
+	"github.com/sufield/stave/internal/adapters/pruner"
 	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -30,7 +31,7 @@ type config struct {
 	DryRun          bool
 	Force           bool
 	Quiet           bool
-	Format          ui.OutputFormat
+	Format          appcontracts.OutputFormat
 	Stdout          io.Writer
 }
 
@@ -97,7 +98,7 @@ func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
 			SchemaVersion:   kernel.SchemaSnapshotPrune,
 			Kind:            kernel.KindSnapshotPrune,
 			CheckedAt:       r.cfg.Now.UTC(),
-			Mode:            report.ActionDelete.ModeString(r.cfg.DryRun),
+			Mode:            pruner.ActionDelete.ModeString(r.cfg.DryRun),
 			Applied:         !r.cfg.DryRun && len(candidates) > 0,
 			ObservationsDir: r.cfg.ObservationsDir,
 			RetentionTier:   r.cfg.RetentionTier,
@@ -129,7 +130,7 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 		OutputKind:     "prune",
 		ActionLabel:    "prune",
 		SummaryPrefix:  "Prune",
-		Action:         report.ActionDelete,
+		Action:         pruner.ActionDelete,
 		DryRun:         r.cfg.DryRun,
 		AllFiles:       r.plan.allFiles,
 		CandidateFiles: r.plan.candidateFiles,

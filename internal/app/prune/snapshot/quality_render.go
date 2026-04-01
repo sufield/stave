@@ -10,10 +10,8 @@ import (
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
-func writeQualityOutput(w io.Writer, format appcontracts.OutputFormat, report qualityReport, quiet bool) error {
-	if quiet {
-		return nil
-	}
+// writeQualityOutput renders a quality report. Pass io.Discard as w for quiet mode.
+func writeQualityOutput(w io.Writer, format appcontracts.OutputFormat, report qualityReport) error {
 	if format.IsJSON() {
 		return jsonutil.WriteIndented(w, report)
 	}

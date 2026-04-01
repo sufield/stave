@@ -7,6 +7,7 @@ import (
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -18,7 +19,7 @@ import (
 // The writer W must be pre-resolved by the caller (use io.Discard for quiet mode).
 type Presenter struct {
 	W        io.Writer
-	Format   ui.OutputFormat
+	Format   appcontracts.OutputFormat
 	Template string
 }
 

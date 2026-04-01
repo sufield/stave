@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -46,7 +47,7 @@ type Config struct {
 	Profile         Profile
 	BucketAllowlist []string
 	IncludeAll      bool
-	OutputFormat    ui.OutputFormat
+	OutputFormat    appcontracts.OutputFormat
 	Quiet           bool
 	Stdout          io.Writer
 	Stderr          io.Writer

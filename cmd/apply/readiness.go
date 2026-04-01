@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/prereq"
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
 	validation "github.com/sufield/stave/internal/core/schemaval"
@@ -29,7 +30,7 @@ type ReadinessConfig struct {
 	ObservationsDir   string
 	MaxUnsafeDuration time.Duration
 	Now               time.Time
-	Format            ui.OutputFormat
+	Format            appcontracts.OutputFormat
 	Quiet             bool
 	Sanitize          bool
 	Stdout            io.Writer

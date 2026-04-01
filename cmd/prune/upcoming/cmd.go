@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/convert"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -71,7 +71,7 @@ Exit Codes:
 				Sanitizer:     gf.GetSanitizer(),
 				Quiet:         gf.Quiet,
 				Stdout:        cmd.OutOrStdout(),
-				ResolveFormat: func(raw string) (ui.OutputFormat, error) { return compose.ResolveFormatValue(cmd, raw) },
+				ResolveFormat: func(raw string) (appcontracts.OutputFormat, error) { return compose.ResolveFormatValue(cmd, raw) },
 			})
 			if err != nil {
 				return err

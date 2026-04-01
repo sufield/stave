@@ -13,9 +13,9 @@ import (
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	appartifacts "github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/app/catalog"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	predicates "github.com/sufield/stave/internal/builtin/predicate"
-	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/metadata"
@@ -97,7 +97,7 @@ func runListPacks(w io.Writer, cfg catalog.ListConfig) error {
 	}
 	items := reg.ListPacks()
 
-	if ui.OutputFormat(cfg.Format) == ui.OutputFormatJSON {
+	if appcontracts.OutputFormat(cfg.Format) == appcontracts.FormatJSON {
 		return jsonutil.WriteIndented(w, items)
 	}
 
@@ -142,7 +142,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			return diagnose.WriteExplainResult(cmd.OutOrStdout(), result, ui.OutputFormatText)
+			return diagnose.WriteExplainResult(cmd.OutOrStdout(), result, appcontracts.FormatText)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

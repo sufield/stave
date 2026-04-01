@@ -40,7 +40,6 @@ func (r *Runner) Run(cfg EvalConfig, meta OutputMetadata) (UpcomingReport, error
 		Snapshots:               cfg.Snapshots,
 		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
 		Now:                     cfg.Now,
-		PredicateParser:         cfg.PredicateParser,
 	})
 	riskItems = riskItems.Filter(cfg.Filter)
 

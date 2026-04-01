@@ -7,12 +7,12 @@ import (
 
 	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	textout "github.com/sufield/stave/internal/adapters/output/text"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
-	"github.com/sufield/stave/internal/cli/ui"
 )
 
 // renderOutput dispatches the UpcomingReport to the correct format adapter.
-func renderOutput(w io.Writer, format ui.OutputFormat, out appupcoming.UpcomingReport, dueSoonThreshold time.Duration) error {
+func renderOutput(w io.Writer, format appcontracts.OutputFormat, out appupcoming.UpcomingReport, dueSoonThreshold time.Duration) error {
 	if format.IsJSON() {
 		return jsonout.WriteUpcomingJSON(w, out)
 	}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/govulncheck"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
+	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/doctor"
@@ -30,12 +31,12 @@ func buildRunnerDeps() appsa.RunnerDeps {
 				StaveVersion: staveVersion,
 			})
 		},
-		ResolveCrosswalk: func(raw []byte, frameworks, checkIDs []string, now time.Time) (appsa.CrosswalkResult, error) {
+		ResolveCrosswalk: func(raw []byte, frameworks, checkIDs []string, now time.Time) (evidence.CrosswalkResult, error) {
 			resolved, resolveErr := compliance.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
 			if resolveErr != nil {
-				return appsa.CrosswalkResult{}, resolveErr
+				return evidence.CrosswalkResult{}, resolveErr
 			}
-			return appsa.CrosswalkResult{
+			return evidence.CrosswalkResult{
 				ByCheck:        resolved.ByCheck,
 				MissingChecks:  resolved.MissingChecks,
 				ResolutionJSON: resolved.ResolutionJSON,
@@ -44,7 +45,7 @@ func buildRunnerDeps() appsa.RunnerDeps {
 		StatFile:     os.Stat,
 		Getenv:       os.Getenv,
 		IsPrivileged: func() bool { return os.Geteuid() == 0 },
-		WalkDir: func(root string, fn appsa.WalkFunc) error {
+		WalkDir: func(root string, fn evidence.WalkFunc) error {
 			return filepath.Walk(root, filepath.WalkFunc(fn))
 		},
 		Getwd: os.Getwd,

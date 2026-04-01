@@ -5,7 +5,7 @@ import (
 	"time"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 )
@@ -18,7 +18,7 @@ type config struct {
 	ControlsDir       string
 	ObservationsDir   string
 	MaxUnsafeDuration time.Duration
-	Format            ui.OutputFormat
+	Format            appcontracts.OutputFormat
 	Quiet             bool
 
 	Clock     ports.Clock

@@ -5,20 +5,20 @@ import (
 	"io"
 	"time"
 
+	"github.com/sufield/stave/internal/adapters/pruner"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // SnapshotCleanupRenderInput configures text/json rendering for prune/archive plan.
 type SnapshotCleanupRenderInput struct {
-	Format         ui.OutputFormat
+	Format         appcontracts.OutputFormat
 	Output         any
 	OutputKind     string
 	ActionLabel    string
 	SummaryPrefix  string
-	Action         CleanupAction
+	Action         pruner.CleanupAction
 	DryRun         bool
 	AllFiles       []appcontracts.SnapshotFile
 	CandidateFiles []appcontracts.SnapshotFile

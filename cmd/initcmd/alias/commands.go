@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
@@ -79,7 +79,7 @@ func (r *Runner) Set(ctx context.Context, name, command string) error {
 }
 
 // List retrieves all defined aliases and outputs them in the requested format.
-func (r *Runner) List(ctx context.Context, format ui.OutputFormat) error {
+func (r *Runner) List(ctx context.Context, format appcontracts.OutputFormat) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}

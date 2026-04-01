@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
@@ -28,7 +28,7 @@ func TestPresenter_RenderReport_Template(t *testing.T) {
 	var buf bytes.Buffer
 	p := &Presenter{
 		W:        &buf,
-		Format:   ui.OutputFormatText,
+		Format:   appcontracts.FormatText,
 		Template: "Issues: {{len .Report.Issues}}",
 	}
 	err := p.RenderReport(report)
@@ -55,7 +55,7 @@ func TestPresenter_RenderDetail_JSON(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{W: &buf, Format: ui.OutputFormatJSON}
+	p := &Presenter{W: &buf, Format: appcontracts.FormatJSON}
 	err := p.RenderDetail(detail)
 	if err != nil {
 		t.Fatalf("RenderDetail JSON error: %v", err)
@@ -87,7 +87,7 @@ func TestPresenter_RenderDetail_Text(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	p := &Presenter{W: &buf, Format: ui.OutputFormatText}
+	p := &Presenter{W: &buf, Format: appcontracts.FormatText}
 	err := p.RenderDetail(detail)
 	if err != nil {
 		t.Fatalf("RenderDetail text error: %v", err)

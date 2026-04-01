@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/output"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -16,7 +17,7 @@ import (
 // config defines the domain parameters for comparing observation snapshots.
 type config struct {
 	ObservationsDir string
-	Format          ui.OutputFormat
+	Format          appcontracts.OutputFormat
 	Filter          asset.FilterOptions
 }
 
@@ -60,7 +61,7 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 
 	delta = output.SanitizeObservationDelta(r.Sanitizer, delta)
 
-	return writeOutput(r.Stdout, cfg.Format, r.Quiet, delta)
+	return writeOutput(r.Stdout, cfg.Format, delta)
 }
 
 func (r *runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {

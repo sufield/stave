@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 func TestExplainText(t *testing.T) {
@@ -53,7 +53,7 @@ unsafe_predicate:
 	}
 
 	var buf bytes.Buffer
-	if err := WriteExplainResult(&buf, result, ui.OutputFormatText); err != nil {
+	if err := WriteExplainResult(&buf, result, appcontracts.FormatText); err != nil {
 		t.Fatalf("write result: %v", err)
 	}
 

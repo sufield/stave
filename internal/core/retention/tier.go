@@ -64,23 +64,3 @@ func (r Rule) Validate() error {
 	}
 	return nil
 }
-
-// --- Backward-compatibility aliases (remove once all callers migrate) ---
-
-// TierConfig is an alias for Tier.
-type TierConfig = Tier
-
-// MappingRule is an alias for Rule.
-type MappingRule = Rule
-
-// ParseDuration returns the OlderThan string as a time.Duration.
-// Unlike Duration(), it returns an error when OlderThan is empty.
-func (t Tier) ParseDuration() (time.Duration, error) {
-	if t.OlderThan == "" {
-		return 0, fmt.Errorf("older_than is empty")
-	}
-	return kernel.ParseDuration(t.OlderThan)
-}
-
-// EffectiveKeepMin is an alias for MinRetained on Tier.
-func (t Tier) EffectiveKeepMin() int { return t.MinRetained() }
