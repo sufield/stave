@@ -7,15 +7,11 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	"github.com/sufield/stave/internal/adapters/pruner"
-	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/retention"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -69,59 +65,6 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	return appeval.RunCleanup(ctx, r)
 }
 
-// BuildPlan identifies which snapshots meet the criteria for pruning.
-func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
-	loader, err := r.NewSnapshotRepo()
-	if err != nil {
-		return appeval.CleanupPlan{}, fmt.Errorf("create snapshot loader: %w", err)
-	}
-	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, loader, r.cfg.ObservationsDir)
-	if err != nil {
-		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
-	}
-
-	candidates := pruneretention.PlanPrune(allFiles, retention.Criteria{
-		Now:       r.cfg.Now,
-		OlderThan: r.cfg.OlderThan,
-		KeepMin:   r.cfg.KeepMin,
-	})
-
-	pruneFiles := make([]report.CleanupFile, 0, len(candidates))
-	for _, sf := range candidates {
-		pruneFiles = append(pruneFiles, report.CleanupFile{
-			Name:       sf.Name,
-			CapturedAt: sf.CapturedAt.UTC(),
-		})
-	}
-	out := report.PruneOutput{
-		CleanupOutput: report.CleanupOutput{
-			SchemaVersion:   kernel.SchemaSnapshotPrune,
-			Kind:            kernel.KindSnapshotPrune,
-			CheckedAt:       r.cfg.Now.UTC(),
-			Mode:            pruner.ActionDelete.ModeString(r.cfg.DryRun),
-			Applied:         !r.cfg.DryRun && len(candidates) > 0,
-			ObservationsDir: r.cfg.ObservationsDir,
-			RetentionTier:   r.cfg.RetentionTier,
-			OlderThan:       kernel.FormatDuration(r.cfg.OlderThan),
-			KeepMin:         r.cfg.KeepMin,
-			TotalSnapshots:  len(allFiles),
-			Candidates:      len(candidates),
-			Files:           pruneFiles,
-		},
-	}
-
-	r.plan = &executionPlan{
-		allFiles:       allFiles,
-		candidateFiles: candidates,
-		output:         out,
-	}
-
-	return appeval.CleanupPlan{
-		CandidateCount: len(candidates),
-		DryRun:         r.cfg.DryRun,
-	}, nil
-}
-
 // Render outputs the plan to the user in the requested format.
 func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
@@ -140,33 +83,4 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 		Now:            r.cfg.Now,
 		Quiet:          r.cfg.Quiet,
 	})
-}
-
-// Apply executes the file deletions.
-func (r *runner) Apply(ctx context.Context, _ appeval.CleanupPlan) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	deletion, err := fsops.ApplyDelete(fsops.DeleteInput{
-		ObservationsDir: r.cfg.ObservationsDir,
-		Files:           r.toDeleteFiles(),
-	})
-	if err != nil {
-		return fmt.Errorf("deleting snapshots: %w", err)
-	}
-
-	if !r.cfg.Quiet && !r.cfg.Format.IsJSON() {
-		fmt.Fprintf(r.cfg.Stdout, "Deleted %d snapshot(s).\n", deletion.Deleted)
-	}
-	return nil
-}
-
-// --- Helpers ---
-
-func (r *runner) toDeleteFiles() []fsops.DeleteFile {
-	out := make([]fsops.DeleteFile, 0, len(r.plan.candidateFiles))
-	for _, sf := range r.plan.candidateFiles {
-		out = append(out, fsops.DeleteFile{Path: sf.Path})
-	}
-	return out
 }
