@@ -9,6 +9,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
@@ -25,13 +26,12 @@ func TestComputeUpcomingSummary_FilterIntegration(t *testing.T) {
 
 	summary := computeUpcomingSummary(controls, snapshots, RiskOptions{
 		GlobalMaxUnsafeDuration: 4 * time.Hour,
-		Now:                     base.Add(1 * time.Hour),
 		DueSoonThreshold:        90 * time.Minute,
 		Statuses:                []risk.ThresholdStatus{risk.StatusUpcoming},
 		AssetTypes:              []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		DueWithin:               &dueSoon,
 		CELEvaluator:            mustPredicateEval(),
-	})
+	}, base.Add(1*time.Hour))
 	if summary.Total != 1 || summary.DueSoon != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}
@@ -48,10 +48,9 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
 
-	svc := &Service{}
+	svc := NewService(ports.FixedClock(now))
 	stats := svc.ComputeRisk(controls, snapshots, RiskOptions{
 		GlobalMaxUnsafeDuration: 30 * time.Minute,
-		Now:                     now,
 		DueSoonThreshold:        2 * time.Hour,
 		StaveVersion:            "test",
 		CELEvaluator:            mustPredicateEval(),
@@ -65,10 +64,9 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 }
 
 func TestComputeRisk_EmptyInput(t *testing.T) {
-	svc := &Service{}
+	svc := NewService(ports.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)))
 	stats := svc.ComputeRisk(nil, nil, RiskOptions{
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC),
 		DueSoonThreshold:        time.Hour,
 	})
 	if stats != (appcontracts.RiskStats{}) {
@@ -85,16 +83,16 @@ func TestComputeUpcomingSummary_AndSummarize(t *testing.T) {
 		{CapturedAt: base, Assets: []asset.Asset{testUnsafeResource(true)}},
 		{CapturedAt: base.Add(1 * time.Hour), Assets: []asset.Asset{testUnsafeResource(true)}},
 	}
+	now := base.Add(1 * time.Hour)
 	opts := RiskOptions{
 		GlobalMaxUnsafeDuration: 4 * time.Hour,
-		Now:                     base.Add(1 * time.Hour),
 		DueSoonThreshold:        90 * time.Minute,
 		Statuses:                []risk.ThresholdStatus{risk.StatusUpcoming},
 		AssetTypes:              []kernel.AssetType{kernel.AssetType("storage_bucket")},
 		CELEvaluator:            mustPredicateEval(),
 	}
 
-	summary := computeUpcomingSummary(controls, snapshots, opts)
+	summary := computeUpcomingSummary(controls, snapshots, opts, now)
 	if summary.Total != 1 || summary.DueSoon != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
 	}

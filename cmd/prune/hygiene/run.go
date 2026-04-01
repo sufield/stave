@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/retention"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -160,13 +161,12 @@ func computeRiskTrend(
 ) (appcontracts.RiskStats, []evaluation.TrendMetric) {
 	riskOpts := buildRiskOptions(cfg)
 
-	svc := &hygieneapp.Service{}
+	svc := hygieneapp.NewService(ports.FixedClock(cfg.Now))
 	currentRisk := svc.ComputeRisk(controls, activeSnapshots, riskOpts)
 
 	previousSnapshots := filterSnapshotsBefore(activeSnapshots, previousNow)
-	previousOpts := riskOpts
-	previousOpts.Now = previousNow
-	previousRisk := svc.ComputeRisk(controls, previousSnapshots, previousOpts)
+	prevSvc := hygieneapp.NewService(ports.FixedClock(previousNow))
+	previousRisk := prevSvc.ComputeRisk(controls, previousSnapshots, riskOpts)
 
 	trend := hygieneapp.CalculateTrend(currentRisk, previousRisk)
 	return currentRisk, trend
@@ -175,7 +175,6 @@ func computeRiskTrend(
 func buildRiskOptions(cfg config) hygieneapp.RiskOptions {
 	return hygieneapp.RiskOptions{
 		GlobalMaxUnsafeDuration: cfg.MaxUnsafeDuration,
-		Now:                     cfg.Now,
 		DueSoonThreshold:        cfg.DueSoon,
 		StaveVersion:            staveversion.String,
 		ControlIDs:              cfg.Filter.ControlIDs,

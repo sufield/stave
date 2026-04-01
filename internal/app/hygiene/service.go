@@ -16,7 +16,6 @@ import (
 // hygiene report.
 type RiskOptions struct {
 	GlobalMaxUnsafeDuration time.Duration
-	Now                     time.Time
 	DueSoonThreshold        time.Duration
 	StaveVersion            string
 	// Optional filters for upcoming metrics (empty = no filter).
@@ -31,16 +30,13 @@ type RiskOptions struct {
 // Service encapsulates the core calculations used by snapshot hygiene
 // reports. It operates purely on domain types so it can be reused by different
 // frontends (CLI, APIs, tests).
-type Service struct{}
-
-type fixedClock struct {
-	now time.Time
+type Service struct {
+	Clock ports.Clock
 }
 
-var _ ports.Clock = fixedClock{}
-
-func (c fixedClock) Now() time.Time {
-	return c.now
+// NewService creates a Service with the given clock.
+func NewService(clock ports.Clock) *Service {
+	return &Service{Clock: clock}
 }
 
 // ComputeRisk calculates snapshot risk metrics for the given controls and
@@ -56,7 +52,7 @@ func (s *Service) ComputeRisk(
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,
-			Clock:             fixedClock{now: opts.Now},
+			Clock:             s.Clock,
 			StaveVersion:      opts.StaveVersion,
 			PredicateParser:   opts.PredicateParser,
 			CELEvaluator:      opts.CELEvaluator,
@@ -66,7 +62,7 @@ func (s *Service) ComputeRisk(
 		}
 		violations = len(result.Findings)
 	}
-	summary := computeUpcomingSummary(controls, snapshots, opts)
+	summary := computeUpcomingSummary(controls, snapshots, opts, s.Clock.Now())
 
 	return appcontracts.NewRiskStats(violations, summary)
 }
@@ -75,12 +71,13 @@ func computeUpcomingSummary(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
+	now time.Time,
 ) risk.ThresholdSummary {
 	items := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                controls,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,
-		Now:                     opts.Now,
+		Now:                     now,
 		PredicateEval:           opts.CELEvaluator,
 	})
 	var controlIDSet map[kernel.ControlID]struct{}
