@@ -50,9 +50,12 @@ func RunVerify(deps VerifyDeps, req VerifyRequest) error {
 	}
 
 	// 1. Load controls
-	controls, err := loadControls(req.Ctx, deps.LoadControls, req.ControlsDir)
+	controls, err := deps.LoadControls(req.Ctx, req.ControlsDir)
 	if err != nil {
 		return err
+	}
+	if len(controls) == 0 {
+		return fmt.Errorf("%w: no controls found in %s", appeval.ErrNoControls, req.ControlsDir)
 	}
 
 	// 2. Run evaluations
@@ -97,17 +100,6 @@ func RunVerify(deps VerifyDeps, req VerifyRequest) error {
 type evalResult struct {
 	result        *evaluation.Result
 	snapshotCount int
-}
-
-func loadControls(ctx context.Context, loadFn func(context.Context, string) ([]policy.ControlDefinition, error), dir string) ([]policy.ControlDefinition, error) {
-	controls, err := loadFn(ctx, dir)
-	if err != nil {
-		return nil, err
-	}
-	if len(controls) == 0 {
-		return nil, fmt.Errorf("%w: no controls found in %s", appeval.ErrNoControls, dir)
-	}
-	return controls, nil
 }
 
 func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
