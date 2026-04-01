@@ -62,7 +62,14 @@ func (r *PlanRunner) Run(cfg PlanConfig) error {
 		return err
 	}
 	if p.Applied {
-		return applyPlan(r.ApplyFn, p, cfg.ObservationsRoot, cfg.ArchiveDir, cfg.AllowSymlink)
+		if err := r.ApplyFn(ApplyParams{
+			Entries:         toPlanEntries(p.Files),
+			ObservationsDir: cfg.ObservationsRoot,
+			ArchiveDir:      cfg.ArchiveDir,
+			AllowSymlink:    cfg.AllowSymlink,
+		}); err != nil {
+			return fmt.Errorf("applying snapshot lifecycle plan: %w", err)
+		}
 	}
 	return nil
 }
