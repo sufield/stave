@@ -11,7 +11,13 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allowSymlink bool) (projectapp.ScaffoldResult, error) {
+// scaffoldWriteOpts bundles the boolean write options to prevent accidental swaps.
+type scaffoldWriteOpts struct {
+	Overwrite    bool
+	AllowSymlink bool
+}
+
+func scaffoldProject(baseDir string, writeOpts scaffoldWriteOpts, opts scaffoldOptions) (projectapp.ScaffoldResult, error) {
 	dirs, files, err := scaffoldLayout(opts)
 	if err != nil {
 		return projectapp.ScaffoldResult{}, err
@@ -19,7 +25,7 @@ func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allow
 
 	for _, rel := range dirs {
 		path := filepath.Join(baseDir, rel)
-		if err := fsutil.SafeMkdirAll(path, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: allowSymlink}); err != nil {
+		if err := fsutil.SafeMkdirAll(path, fsutil.WriteOptions{Perm: 0o700, AllowSymlink: writeOpts.AllowSymlink}); err != nil {
 			return projectapp.ScaffoldResult{}, fmt.Errorf("create directory %s: %w", path, err)
 		}
 	}
@@ -27,7 +33,7 @@ func scaffoldProject(baseDir string, overwrite bool, opts scaffoldOptions, allow
 	var created, skipped []string
 	for rel, content := range files {
 		full := filepath.Join(baseDir, rel)
-		wrote, err := writeScaffoldFile(full, []byte(content), overwrite, allowSymlink)
+		wrote, err := writeScaffoldFile(full, []byte(content), writeOpts)
 		if err != nil {
 			return projectapp.ScaffoldResult{}, fmt.Errorf("write %s: %w", full, err)
 		}
@@ -172,15 +178,15 @@ func addWorkflowScaffoldFiles(files map[string]string, opts scaffoldOptions) err
 	return nil
 }
 
-func writeScaffoldFile(path string, data []byte, overwrite, allowSymlink bool) (bool, error) {
-	if !overwrite {
+func writeScaffoldFile(path string, data []byte, wo scaffoldWriteOpts) (bool, error) {
+	if !wo.Overwrite {
 		if _, err := os.Stat(path); err == nil {
 			return false, nil
 		}
 	}
 	opts := fsutil.ConfigWriteOpts()
-	opts.Overwrite = overwrite
-	opts.AllowSymlink = allowSymlink
+	opts.Overwrite = wo.Overwrite
+	opts.AllowSymlink = wo.AllowSymlink
 	if err := fsutil.SafeWriteFile(path, data, opts); err != nil {
 		return false, err
 	}

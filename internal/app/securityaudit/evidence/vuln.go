@@ -60,7 +60,7 @@ func (p DefaultVulnProvider) Resolve(ctx context.Context, req Params) (Vulnerabi
 			return ensureVulnRawJSON(live, req.Now), nil
 		}
 		// Keep fallback behavior but preserve the live-check failure reason.
-		fallback, err := resolveVulnFallback(req, p.ReadFile, p.StatFile)
+		fallback, err := p.resolveVulnFallback(req)
 		if err == nil && fallback.Available {
 			fallback.Details = fmt.Sprintf("live check failed (%v); used fallback evidence", liveErr)
 			return ensureVulnRawJSON(fallback, req.Now), nil
@@ -73,7 +73,7 @@ func (p DefaultVulnProvider) Resolve(ctx context.Context, req Params) (Vulnerabi
 			Details:      fmt.Sprintf("govulncheck execution failed: %v", liveErr),
 		}, req.Now), nil
 	}
-	fallback, err := resolveVulnFallback(req, p.ReadFile, p.StatFile)
+	fallback, err := p.resolveVulnFallback(req)
 	if err != nil {
 		return VulnerabilitySnapshot{}, err
 	}
@@ -87,14 +87,14 @@ func shouldAttemptLiveCheck(req Params) bool {
 	return req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid
 }
 
-func resolveVulnFallback(req Params, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (VulnerabilitySnapshot, error) {
+func (p DefaultVulnProvider) resolveVulnFallback(req Params) (VulnerabilitySnapshot, error) {
 	if req.VulnSource == VulnSourceLocal || req.VulnSource == VulnSourceHybrid {
-		if cached, ok := loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now, readFile, statFile); ok {
+		if cached, ok := p.loadVulnEvidenceFromCandidates(localVulnEvidenceCandidates(req), req.Now); ok {
 			return cached, nil
 		}
 	}
 	if req.VulnSource == VulnSourceCI || req.VulnSource == VulnSourceHybrid {
-		if ciEvidence, ok := loadVulnEvidenceFromCandidates(ciVulnEvidenceCandidates(req), req.Now, readFile, statFile); ok {
+		if ciEvidence, ok := p.loadVulnEvidenceFromCandidates(ciVulnEvidenceCandidates(req), req.Now); ok {
 			return ciEvidence, nil
 		}
 	}
@@ -187,16 +187,16 @@ func compactPaths(paths ...string) []string {
 	return out
 }
 
-func loadVulnEvidenceFromCandidates(candidates []string, now time.Time, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (VulnerabilitySnapshot, bool) {
+func (p DefaultVulnProvider) loadVulnEvidenceFromCandidates(candidates []string, now time.Time) (VulnerabilitySnapshot, bool) {
 	for _, candidate := range candidates {
-		raw, err := readFile(candidate)
+		raw, err := p.ReadFile(candidate)
 		if err != nil {
 			continue
 		}
 		count := inferVulnCount(raw)
 		freshness := FreshnessCached
-		if statFile != nil {
-			if stat, statErr := statFile(candidate); statErr == nil {
+		if p.StatFile != nil {
+			if stat, statErr := p.StatFile(candidate); statErr == nil {
 				freshness = FreshnessFromTime(stat.ModTime())
 			}
 		}

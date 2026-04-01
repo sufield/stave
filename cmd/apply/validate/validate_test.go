@@ -126,7 +126,9 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 
 	// Exercise full validate command flow (directory mode).
 	p := compose.NewDefaultProvider()
-	err := runValidate(cmd, p.NewObservationRepo, p.NewControlRepo, p.NewCELEvaluator, ui.DefaultRuntime(), opts)
+	err := runValidate(cmd, validateDeps{
+		NewObsRepo: p.NewObservationRepo, NewCtlRepo: p.NewControlRepo, NewCELEvaluator: p.NewCELEvaluator,
+	}, ui.DefaultRuntime(), opts)
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v\nstderr: %s", err, stderr.String())
 	}

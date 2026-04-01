@@ -76,7 +76,9 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runValidate(cmd, newObsRepo, newCtlRepo, newCELEvaluator, rt, opts)
+			return runValidate(cmd, validateDeps{
+				NewObsRepo: newObsRepo, NewCtlRepo: newCtlRepo, NewCELEvaluator: newCELEvaluator,
+			}, rt, opts)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

@@ -91,17 +91,23 @@ type ResolvedRetention struct {
 	Format        appcontracts.OutputFormat
 }
 
+// ResolutionFlags indicates which CLI flags were explicitly set by the user.
+type ResolutionFlags struct {
+	OlderThanChanged bool
+	TierChanged      bool
+	FormatChanged    bool
+	IsJSONMode       bool
+}
+
 // ResolveRetention transforms raw CLI flag values into fully resolved retention
-// parameters. olderThanChanged and formatChanged indicate whether the respective
-// flags were explicitly set by the user. isJSONMode indicates global JSON output mode.
-// tierChanged indicates whether --retention-tier was explicitly set.
-func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, olderThanChanged, tierChanged, formatChanged, isJSONMode bool) (ResolvedRetention, error) {
+// parameters.
+func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, flags ResolutionFlags) (ResolvedRetention, error) {
 	olderThan := raw.OlderThan
-	if !olderThanChanged {
+	if !flags.OlderThanChanged {
 		olderThan = eval.SnapshotRetention()
 	}
 	tier := raw.Tier
-	if !tierChanged {
+	if !flags.TierChanged {
 		tier = eval.RetentionTier()
 	}
 
@@ -109,7 +115,7 @@ func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, olderThan
 	if err != nil {
 		return ResolvedRetention{}, err
 	}
-	resolvedOlderThan, err := ResolveOlderThanWith(eval, olderThan, olderThanChanged, validTier)
+	resolvedOlderThan, err := ResolveOlderThanWith(eval, olderThan, flags.OlderThanChanged, validTier)
 	if err != nil {
 		return ResolvedRetention{}, err
 	}
@@ -117,7 +123,7 @@ func ResolveRetention(raw RawRetentionOpts, eval *appconfig.Evaluator, olderThan
 	if err != nil {
 		return ResolvedRetention{}, err
 	}
-	format, err := compose.ResolveFormatValuePure(raw.FormatFlag, formatChanged, isJSONMode)
+	format, err := compose.ResolveFormatValuePure(raw.FormatFlag, flags.FormatChanged, flags.IsJSONMode)
 	if err != nil {
 		return ResolvedRetention{}, err
 	}
