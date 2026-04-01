@@ -246,11 +246,13 @@ func (e *Runner) computePackHash() kernel.Digest {
 	return e.Hasher.Digest(ids, '\n')
 }
 
-const defaultRunnerMaxGapThreshold = 12 * time.Hour
+// DefaultMaxGapThreshold is the conservative default for when sparse
+// observations become INCONCLUSIVE. Override via Runner.MaxGapThreshold.
+const DefaultMaxGapThreshold = 12 * time.Hour
 
 func (e *Runner) maxGapThreshold() time.Duration {
 	if e.MaxGapThreshold > 0 {
 		return e.MaxGapThreshold
 	}
-	return defaultRunnerMaxGapThreshold
+	return DefaultMaxGapThreshold
 }

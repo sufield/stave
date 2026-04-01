@@ -34,14 +34,26 @@ type ScannerOptions struct {
 	MaxFiles int
 }
 
-// DefaultMaxFiles is the safety cap on snapshot file enumeration.
+// DefaultMaxFiles is the conservative default safety cap on snapshot
+// file enumeration. Override via SetDefaultMaxFiles for environments
+// with large snapshot directories.
 const DefaultMaxFiles = 100_000
+
+var defaultMaxFiles = DefaultMaxFiles
+
+// SetDefaultMaxFiles overrides the default file scan cap used when
+// ScannerOptions.MaxFiles is zero. Values <= 0 are ignored.
+func SetDefaultMaxFiles(n int) {
+	if n > 0 {
+		defaultMaxFiles = n
+	}
+}
 
 func (o ScannerOptions) maxFiles() int {
 	if o.MaxFiles > 0 {
 		return o.MaxFiles
 	}
-	return DefaultMaxFiles
+	return defaultMaxFiles
 }
 
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.

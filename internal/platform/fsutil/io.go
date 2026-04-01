@@ -17,9 +17,22 @@ import (
 	"strings"
 )
 
-// maxInputFileBytes is the hardcoded safety limit for input files (256 MB).
-// Any file or stream larger than this is rejected to prevent asset exhaustion.
-const maxInputFileBytes int64 = 256 << 20
+// DefaultMaxInputFileBytes is the conservative default safety limit for input
+// files (256 MB). Override via SetMaxInputFileBytes for environments that
+// process larger snapshots (e.g., enterprise CI with thousands of assets).
+const DefaultMaxInputFileBytes int64 = 256 << 20
+
+// maxInputFileBytes is the active safety limit. Starts at the default and can
+// be overridden once at startup via SetMaxInputFileBytes.
+var maxInputFileBytes int64 = DefaultMaxInputFileBytes
+
+// SetMaxInputFileBytes overrides the input file safety limit. Call this once
+// during CLI bootstrap, before any file reads. Values <= 0 are ignored.
+func SetMaxInputFileBytes(n int64) {
+	if n > 0 {
+		maxInputFileBytes = n
+	}
+}
 
 var (
 	// ErrFileTooLarge indicates input exceeded the internal safety size limit.
@@ -34,8 +47,9 @@ var (
 
 // --- READ SAFETY ---
 
-// ReadFileLimited reads a file after verifying it does not exceed the internal
-// safety limit of 256 MB. Returns a descriptive error if the file is too large.
+// ReadFileLimited reads a file after verifying it does not exceed the active
+// safety limit (default 256 MB). Returns a descriptive error if the file is
+// too large. Override the limit with SetMaxInputFileBytes.
 func ReadFileLimited(path string) ([]byte, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -53,7 +67,7 @@ func ReadFileLimited(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-// LimitedReadAll reads from r up to the internal safety limit of 256 MB.
+// LimitedReadAll reads from r up to the active safety limit (default 256 MB).
 // Returns a descriptive error if the stream exceeds the limit.
 func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 	data, err := io.ReadAll(io.LimitReader(r, maxInputFileBytes+1))

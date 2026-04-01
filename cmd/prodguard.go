@@ -71,10 +71,24 @@ type SafetyPolicy struct {
 }
 
 // DefaultSafetyPolicy blocks commands that permanently destroy evidence.
+// Override with SetBlockedCommands to customize for your environment.
 var DefaultSafetyPolicy = SafetyPolicy{
 	BlockedCommands: map[string]bool{
 		"prune": true,
 	},
+}
+
+// SetBlockedCommands replaces the production guard blocked command list.
+// Pass nil or empty to keep the default.
+func SetBlockedCommands(cmds []string) {
+	if len(cmds) == 0 {
+		return
+	}
+	m := make(map[string]bool, len(cmds))
+	for _, c := range cmds {
+		m[c] = true
+	}
+	DefaultSafetyPolicy.BlockedCommands = m
 }
 
 // ProductionGuard prevents the developer binary from performing
