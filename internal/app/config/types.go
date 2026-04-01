@@ -89,6 +89,13 @@ type ProjectConfig struct {
 	Exceptions               []ExceptionRule           `yaml:"exceptions"`
 	EnabledControlPacks      []string                  `yaml:"enabled_control_packs"`
 	ExcludeControls          []string                  `yaml:"exclude_controls"`
+	MaxInputFileSize         string                    `yaml:"max_input_file_size"`
+	MaxGapThreshold          string                    `yaml:"max_gap_threshold"`
+	ConfidenceHighMultiplier int                       `yaml:"confidence_high_multiplier"`
+	ConfidenceMedMultiplier  int                       `yaml:"confidence_medium_multiplier"`
+	MaxSnapshotFiles         int                       `yaml:"max_snapshot_files"`
+	BlockedCommands          []string                  `yaml:"blocked_commands"`
+	MaxValidationErrors      int                       `yaml:"max_validation_errors"`
 }
 
 // ExceptionRule defines a control exception.

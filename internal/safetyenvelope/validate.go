@@ -54,8 +54,22 @@ func validateRaw(kind, version string, data []byte) error {
 }
 
 // formatDiagnostics builds a single error from schema validation diagnostics.
+// DefaultMaxValidationErrors is the conservative default for how many schema
+// validation errors are shown before truncating. Override via SetMaxValidationErrors.
+const DefaultMaxValidationErrors = 3
+
+var maxValidationErrors = DefaultMaxValidationErrors
+
+// SetMaxValidationErrors overrides the validation error display cap.
+// Values <= 0 are ignored.
+func SetMaxValidationErrors(n int) {
+	if n > 0 {
+		maxValidationErrors = n
+	}
+}
+
 func formatDiagnostics(diags []contractvalidator.Diagnostic) error {
-	const maxReported = 3
+	maxReported := maxValidationErrors
 	var sb strings.Builder
 	sb.Grow(256)
 

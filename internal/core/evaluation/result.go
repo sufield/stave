@@ -27,9 +27,27 @@ type confidenceRange struct {
 	level      ConfidenceLevel
 }
 
+// Default confidence multipliers: HIGH when maxGap <= 25% of window (4x),
+// MEDIUM when maxGap <= 50% of window (2x).
+const (
+	DefaultConfidenceHighMultiplier = 4
+	DefaultConfidenceMedMultiplier  = 2
+)
+
 var confidenceThresholds = []confidenceRange{
-	{4, ConfidenceHigh},   // maxGap <= 25% of window
-	{2, ConfidenceMedium}, // maxGap <= 50% of window
+	{DefaultConfidenceHighMultiplier, ConfidenceHigh},
+	{DefaultConfidenceMedMultiplier, ConfidenceMedium},
+}
+
+// SetConfidenceThresholds overrides the confidence classification multipliers.
+// high must be > med, and both must be > 0. Invalid values are ignored.
+func SetConfidenceThresholds(high, med int) {
+	if high > med && med > 0 {
+		confidenceThresholds = []confidenceRange{
+			{high, ConfidenceHigh},
+			{med, ConfidenceMedium},
+		}
+	}
 }
 
 // DeriveConfidenceLevel classifies confidence based on the largest observation gap

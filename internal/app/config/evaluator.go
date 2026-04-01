@@ -230,6 +230,64 @@ func (e *Evaluator) PathMode() string {
 	return e.ResolveCLIPathMode().Value
 }
 
+// MaxInputFileSize returns the configured max input file size string,
+// or empty if not set (caller should use the built-in default).
+func (e *Evaluator) MaxInputFileSize() string {
+	if e == nil || e.Project == nil {
+		return ""
+	}
+	return e.Project.MaxInputFileSize
+}
+
+// MaxGapThreshold returns the configured max gap threshold string,
+// or empty if not set.
+func (e *Evaluator) MaxGapThreshold() string {
+	if e == nil || e.Project == nil {
+		return ""
+	}
+	return e.Project.MaxGapThreshold
+}
+
+// ConfidenceHighMultiplier returns the configured multiplier, or 0 if not set.
+func (e *Evaluator) ConfidenceHighMultiplier() int {
+	if e == nil || e.Project == nil {
+		return 0
+	}
+	return e.Project.ConfidenceHighMultiplier
+}
+
+// ConfidenceMedMultiplier returns the configured multiplier, or 0 if not set.
+func (e *Evaluator) ConfidenceMedMultiplier() int {
+	if e == nil || e.Project == nil {
+		return 0
+	}
+	return e.Project.ConfidenceMedMultiplier
+}
+
+// MaxSnapshotFiles returns the configured max file scan limit, or 0 if not set.
+func (e *Evaluator) MaxSnapshotFiles() int {
+	if e == nil || e.Project == nil {
+		return 0
+	}
+	return e.Project.MaxSnapshotFiles
+}
+
+// BlockedCommands returns the configured production-blocked command list, or nil.
+func (e *Evaluator) BlockedCommands() []string {
+	if e == nil || e.Project == nil {
+		return nil
+	}
+	return e.Project.BlockedCommands
+}
+
+// MaxValidationErrors returns the configured max errors to report, or 0 if not set.
+func (e *Evaluator) MaxValidationErrors() int {
+	if e == nil || e.Project == nil {
+		return 0
+	}
+	return e.Project.MaxValidationErrors
+}
+
 // AllowUnknownInput returns whether to allow unknown snapshots.
 func (e *Evaluator) AllowUnknownInput() bool {
 	return e.ResolveCLIAllowUnknownInput().Value
