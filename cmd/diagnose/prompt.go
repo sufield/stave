@@ -102,45 +102,15 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			fmtValue, fmtErr := compose.ResolveFormatValue(cmd, format)
-			if fmtErr != nil {
-				return fmtErr
-			}
-
-			ctx := cmd.Context()
-
-			ctlByID, err := loadControlsMap(ctx, newCtlRepo, fsutil.CleanUserPath(controlsDir))
-			if err != nil {
-				return err
-			}
-
-			var assetPropsJSON string
-			cleanObsDir := fsutil.CleanUserPath(obsDir)
-			if cleanObsDir != "" {
-				assetPropsJSON, err = loadAssetProperties(ctx, loadSnapshots, cleanObsDir, asset.ID(strings.TrimSpace(assetID)))
-				if err != nil {
-					return err
-				}
-			}
-
-			dctx := diagprompt.DiagnosticContext{
-				ControlsByID:   ctlByID,
-				AssetPropsJSON: assetPropsJSON,
-				LoadEval: func(path string) (*evaluation.Result, error) {
-					return (&evaljson.Loader{}).LoadFromFile(path)
-				},
-				BuildPrompt: buildPromptAdapter,
-			}
-
-			runner := diagprompt.NewRunner(dctx)
-			out, err := runner.Run(cmd.Context(), diagprompt.Config{
-				EvalFile: fsutil.CleanUserPath(evalFile),
-				AssetID:  strings.TrimSpace(assetID),
+			return runPromptFromFinding(cmd, promptFromFindingOpts{
+				evalFile:      evalFile,
+				assetID:       assetID,
+				controlsDir:   controlsDir,
+				obsDir:        obsDir,
+				format:        format,
+				newCtlRepo:    newCtlRepo,
+				loadSnapshots: loadSnapshots,
 			})
-			if err != nil {
-				return err
-			}
-			return diagprompt.WriteOutput(cmd.OutOrStdout(), cmd.ErrOrStderr(), out, fmtValue, cliflags.GetGlobalFlags(cmd).Quiet)
 		},
 	}
 
@@ -155,6 +125,60 @@ Examples:
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
+}
+
+// promptFromFindingOpts holds the resolved inputs for prompt generation.
+type promptFromFindingOpts struct {
+	evalFile      string
+	assetID       string
+	controlsDir   string
+	obsDir        string
+	format        string
+	newCtlRepo    compose.CtlRepoFactory
+	loadSnapshots compose.SnapshotLoader
+}
+
+// runPromptFromFinding executes the prompt-from-finding workflow.
+func runPromptFromFinding(cmd *cobra.Command, opts promptFromFindingOpts) error {
+	fmtValue, fmtErr := compose.ResolveFormatValue(cmd, opts.format)
+	if fmtErr != nil {
+		return fmtErr
+	}
+
+	ctx := cmd.Context()
+
+	ctlByID, err := loadControlsMap(ctx, opts.newCtlRepo, fsutil.CleanUserPath(opts.controlsDir))
+	if err != nil {
+		return err
+	}
+
+	var assetPropsJSON string
+	cleanObsDir := fsutil.CleanUserPath(opts.obsDir)
+	if cleanObsDir != "" {
+		assetPropsJSON, err = loadAssetProperties(ctx, opts.loadSnapshots, cleanObsDir, asset.ID(strings.TrimSpace(opts.assetID)))
+		if err != nil {
+			return err
+		}
+	}
+
+	dctx := diagprompt.DiagnosticContext{
+		ControlsByID:   ctlByID,
+		AssetPropsJSON: assetPropsJSON,
+		LoadEval: func(path string) (*evaluation.Result, error) {
+			return (&evaljson.Loader{}).LoadFromFile(path)
+		},
+		BuildPrompt: buildPromptAdapter,
+	}
+
+	runner := diagprompt.NewRunner(dctx)
+	out, err := runner.Run(ctx, diagprompt.Config{
+		EvalFile: fsutil.CleanUserPath(opts.evalFile),
+		AssetID:  strings.TrimSpace(opts.assetID),
+	})
+	if err != nil {
+		return err
+	}
+	return diagprompt.WriteOutput(cmd.OutOrStdout(), cmd.ErrOrStderr(), out, fmtValue, cliflags.GetGlobalFlags(cmd).Quiet)
 }
 
 // buildPromptAdapter bridges the app-layer BuildFunc contract to the

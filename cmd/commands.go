@@ -49,6 +49,10 @@ const (
 )
 
 // WireCommands attaches the full command tree to the root command.
+// This is intentionally the single command registration point for the entire CLI.
+// Every command and subcommand is registered here so the full tree is visible
+// in one place. Do not split registration across packages — that makes the
+// command hierarchy harder to reason about and the registration order non-obvious.
 func WireCommands(app *App) {
 	root := app.Root
 	p := app.Provider
