@@ -13,7 +13,7 @@ import (
 	"github.com/sufield/stave/internal/platform/crypto"
 )
 
-// FindingLoader satisfies usecases.FixFindingLoaderPort.
+// FindingLoader loads a single finding from an evaluation artifact.
 type FindingLoader struct {
 	CELEvaluator policy.PredicateEval
 }

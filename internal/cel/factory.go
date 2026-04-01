@@ -20,3 +20,12 @@ func NewPredicateEval() (policy.PredicateEval, error) {
 		return Evaluate(cp, a, identities, ctl.Params.Raw())
 	}, nil
 }
+
+// MustPredicateEval creates a PredicateEval or panics. For use in tests only.
+func MustPredicateEval() policy.PredicateEval {
+	eval, err := NewPredicateEval()
+	if err != nil {
+		panic("MustPredicateEval: " + err.Error())
+	}
+	return eval
+}

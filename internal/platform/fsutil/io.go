@@ -67,6 +67,15 @@ func ReadFileLimited(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
+// ReadFileOrStdin reads from a file path if non-empty, otherwise from stdin.
+// File reads go through ReadFileLimited; stdin reads use io.ReadAll.
+func ReadFileOrStdin(file string, stdin io.Reader) ([]byte, error) {
+	if file != "" {
+		return ReadFileLimited(file)
+	}
+	return io.ReadAll(stdin)
+}
+
 // LimitedReadAll reads from r up to the active safety limit (default 256 MB).
 // Returns a descriptive error if the stream exceeds the limit.
 func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {

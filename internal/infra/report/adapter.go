@@ -8,7 +8,7 @@ import (
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
-// EvaluationLoader satisfies usecases.ReportEvaluationLoaderPort.
+// EvaluationLoader loads a persisted evaluation artifact.
 type EvaluationLoader struct{}
 
 // LoadEvaluation loads a safety envelope evaluation artifact.

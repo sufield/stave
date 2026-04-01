@@ -6,9 +6,5 @@ import (
 )
 
 func mustPredicateEval() policy.PredicateEval {
-	eval, err := stavecel.NewPredicateEval()
-	if err != nil {
-		panic("mustPredicateEval: " + err.Error())
-	}
-	return eval
+	return stavecel.MustPredicateEval()
 }

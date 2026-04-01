@@ -3,7 +3,6 @@ package exposure
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -93,7 +92,7 @@ type ExposureOutput struct {
 }
 
 func run(cmd *cobra.Command, file string) error {
-	input, err := readInput(file, cmd.InOrStdin())
+	input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -160,11 +159,4 @@ func toCaps(c CapInput) domainexposure.Capabilities {
 		Delete: c.Delete,
 		Admin:  c.Admin,
 	}
-}
-
-func readInput(file string, stdin io.Reader) ([]byte, error) {
-	if file != "" {
-		return fsutil.ReadFileLimited(file)
-	}
-	return io.ReadAll(stdin)
 }
