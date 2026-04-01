@@ -8,7 +8,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/pruner/plan"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
-	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -103,12 +102,12 @@ Exit Codes:
 
 // adaptPlanApply bridges the domain PlanEntry type to the adapter's
 // ApplySnapshotPlan function, keeping the app layer adapter-free.
-func adaptPlanApply(entries []snapshotdomain.PlanEntry, obsRoot, archiveDir string, allowSymlink bool) error {
+func adaptPlanApply(params appsnapshot.ApplyParams) error {
 	_, err := plan.ApplySnapshotPlan(plan.SnapshotPlanApplyInput{
-		Entries:          entries,
-		ObservationsRoot: obsRoot,
-		ArchiveDir:       archiveDir,
-		AllowSymlink:     allowSymlink,
+		Entries:          params.Entries,
+		ObservationsRoot: params.ObservationsDir,
+		ArchiveDir:       params.ArchiveDir,
+		AllowSymlink:     params.AllowSymlink,
 	})
 	return err
 }

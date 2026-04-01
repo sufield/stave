@@ -11,9 +11,19 @@ import (
 	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 )
 
+// ApplyParams bundles the execution details for applying a snapshot plan,
+// preventing accidental swaps of the two path strings and eliminating the
+// opaque trailing boolean.
+type ApplyParams struct {
+	Entries         []snapshotdomain.PlanEntry
+	ObservationsDir string
+	ArchiveDir      string
+	AllowSymlink    bool
+}
+
 // PlanApplyFunc applies a computed plan against the filesystem.
 // Injected by the cmd layer to keep the app free of adapter imports.
-type PlanApplyFunc func(entries []snapshotdomain.PlanEntry, obsRoot, archiveDir string, allowSymlink bool) error
+type PlanApplyFunc func(params ApplyParams) error
 
 // planBuildParams holds all inputs for buildPlan (pure, testable).
 type planBuildParams struct {
@@ -51,14 +61,6 @@ func buildPlan(params planBuildParams) (*snapshotdomain.PlanOutput, error) {
 		DefaultKeepMin:   appconfig.DefaultTierKeepMin,
 		TierResolver:     resolver,
 	})
-}
-
-func applyPlan(applyFn PlanApplyFunc, p *snapshotdomain.PlanOutput, obsRoot, archiveDir string, allowSymlink bool) error {
-	entries := toPlanEntries(p.Files)
-	if err := applyFn(entries, obsRoot, archiveDir, allowSymlink); err != nil {
-		return fmt.Errorf("applying snapshot lifecycle plan: %w", err)
-	}
-	return nil
 }
 
 func toSnapshotFiles(files []appcontracts.SnapshotFile) []snapshotdomain.File {
