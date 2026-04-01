@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/hipaa"
+	"github.com/sufield/stave/internal/core/hipaa/compound"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -14,30 +15,40 @@ type TextReporter struct{}
 
 // Write renders the report as formatted text.
 func (TextReporter) Write(w io.Writer, report profile.ProfileReport, meta ReportMeta) error {
-	// Header.
+	writeHeader(w, report, meta)
+	writeCompoundRisks(w, report.CompoundFindings)
+	writeFindingsBySeverity(w, report.Results)
+	writeAcknowledged(w, report.Acknowledged)
+	writeSummary(w, report)
+	return nil
+}
+
+func writeHeader(w io.Writer, report profile.ProfileReport, meta ReportMeta) {
 	fmt.Fprintf(w, "═══ %s ═══\n", report.ProfileName)
 	fmt.Fprintf(w, "Bucket:    %s\n", meta.BucketName)
 	fmt.Fprintf(w, "Account:   %s\n", RedactAccountID(meta.AccountID))
 	fmt.Fprintf(w, "Snapshot:  %s\n", meta.Timestamp)
 	fmt.Fprintf(w, "Result:    %s\n\n", passLabel(report.Pass))
+}
 
-	// Compound risks first.
-	if len(report.CompoundFindings) > 0 {
-		fmt.Fprintln(w, "── COMPOUND RISKS ──")
-		fmt.Fprintln(w)
-		for _, cf := range report.CompoundFindings {
-			fmt.Fprintf(w, "  [%s] %s (triggers: %s)\n", cf.Severity, cf.ID, strings.Join(cf.TriggerIDs, ", "))
-			fmt.Fprintf(w, "  %s\n\n", cf.Message)
-		}
+func writeCompoundRisks(w io.Writer, findings []compound.CompoundFinding) {
+	if len(findings) == 0 {
+		return
 	}
+	fmt.Fprintln(w, "── COMPOUND RISKS ──")
+	fmt.Fprintln(w)
+	for _, cf := range findings {
+		fmt.Fprintf(w, "  [%s] %s (triggers: %s)\n", cf.Severity, cf.ID, strings.Join(cf.TriggerIDs, ", "))
+		fmt.Fprintf(w, "  %s\n\n", cf.Message)
+	}
+}
 
-	// Group findings by severity.
+func writeFindingsBySeverity(w io.Writer, results []profile.ProfileResult) {
 	for _, sev := range []hipaa.Severity{hipaa.Critical, hipaa.High, hipaa.Medium, hipaa.Low} {
-		group := filterBySeverity(report.Results, sev)
+		group := filterBySeverity(results, sev)
 		if len(group) == 0 {
 			continue
 		}
-
 		fmt.Fprintf(w, "── %s ──\n\n", sev)
 		for _, r := range group {
 			status := "PASS"
@@ -61,27 +72,30 @@ func (TextReporter) Write(w io.Writer, report profile.ProfileReport, meta Report
 			fmt.Fprintln(w)
 		}
 	}
+}
 
-	// Acknowledged exceptions.
-	if len(report.Acknowledged) > 0 {
-		fmt.Fprintln(w, "── Acknowledged Exceptions ──")
-		fmt.Fprintln(w)
-		for _, ack := range report.Acknowledged {
-			status := "VALID"
-			if !ack.Valid {
-				status = "INVALID"
-			}
-			fmt.Fprintf(w, "  [%s] %s — %s\n", status, ack.ControlID, ack.Bucket)
-			fmt.Fprintf(w, "  Rationale: %s\n", ack.Rationale)
-			fmt.Fprintf(w, "  Acknowledged by: %s\n", ack.AcknowledgedBy)
-			if !ack.Valid {
-				fmt.Fprintf(w, "  Reason: %s\n", ack.InvalidReason)
-			}
-			fmt.Fprintln(w)
-		}
+func writeAcknowledged(w io.Writer, acknowledged []profile.AcknowledgedEntry) {
+	if len(acknowledged) == 0 {
+		return
 	}
+	fmt.Fprintln(w, "── Acknowledged Exceptions ──")
+	fmt.Fprintln(w)
+	for _, ack := range acknowledged {
+		status := "VALID"
+		if !ack.Valid {
+			status = "INVALID"
+		}
+		fmt.Fprintf(w, "  [%s] %s — %s\n", status, ack.ControlID, ack.Bucket)
+		fmt.Fprintf(w, "  Rationale: %s\n", ack.Rationale)
+		fmt.Fprintf(w, "  Acknowledged by: %s\n", ack.AcknowledgedBy)
+		if !ack.Valid {
+			fmt.Fprintf(w, "  Reason: %s\n", ack.InvalidReason)
+		}
+		fmt.Fprintln(w)
+	}
+}
 
-	// Footer.
+func writeSummary(w io.Writer, report profile.ProfileReport) {
 	fmt.Fprintln(w, "── Summary ──")
 	fmt.Fprintln(w)
 	for _, sev := range []hipaa.Severity{hipaa.Critical, hipaa.High, hipaa.Medium, hipaa.Low} {
@@ -95,8 +109,6 @@ func (TextReporter) Write(w io.Writer, report profile.ProfileReport, meta Report
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "Overall: %s\n\n", passLabel(report.Pass))
 	fmt.Fprintf(w, "%s\n", disclaimer)
-
-	return nil
 }
 
 func passLabel(pass bool) string {

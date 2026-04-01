@@ -6,7 +6,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/metadata"
-	formatter "github.com/sufield/stave/internal/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // Deps groups the infrastructure implementations for the ci diff command.
@@ -53,7 +53,7 @@ Exit Codes:
 				return err
 			}
 
-			if renderErr := formatter.RenderJSON(cmd.OutOrStdout(), resp); renderErr != nil {
+			if renderErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp); renderErr != nil {
 				return renderErr
 			}
 

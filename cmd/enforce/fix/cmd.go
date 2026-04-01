@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/metadata"
-	formatter "github.com/sufield/stave/internal/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // FixLoopDeps groups the factory functions required by the fix-loop command.
@@ -66,7 +66,7 @@ Exit Codes:
 				return err
 			}
 
-			return formatter.RenderJSON(cmd.OutOrStdout(), resp.Data)
+			return jsonutil.WriteIndented(cmd.OutOrStdout(), resp.Data)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
