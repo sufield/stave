@@ -3,12 +3,14 @@ package gate
 import (
 	"github.com/spf13/cobra"
 
+	"fmt"
+
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/metadata"
-	formatter "github.com/sufield/stave/internal/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // Deps groups the infrastructure implementations for the gate command.
@@ -82,7 +84,7 @@ Exit Codes:
 			}
 
 			if cfg.Format.IsJSON() {
-				if renderErr := formatter.RenderJSON(cfg.Stdout, resp); renderErr != nil {
+				if renderErr := jsonutil.WriteIndented(cfg.Stdout, resp); renderErr != nil {
 					return renderErr
 				}
 			} else if !cfg.Quiet {
@@ -90,7 +92,7 @@ Exit Codes:
 				if !resp.Passed {
 					status = "FAIL"
 				}
-				if renderErr := formatter.RenderText(cfg.Stdout, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason); renderErr != nil {
+				if _, renderErr := fmt.Fprintf(cfg.Stdout, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason); renderErr != nil {
 					return renderErr
 				}
 			}

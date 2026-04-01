@@ -526,3 +526,66 @@ Validated with JSON Schema (4):
 
   The validated schemas are the ones on the input boundary (control YAML, observation JSON) and the output contract
   (evaluation output, diagnose output) — the core data contracts that external tools and CI pipelines consume.
+
+## How are the testscripts structured?
+
+Stave uses [testscript](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript) (from `github.com/rogpeppe/go-internal`) for end-to-end CLI tests. The test harness lives in `cmd/stave/main_test.go`:
+
+```go
+func TestMain(m *testing.M) {
+    testscript.Main(m, map[string]func(){
+        "stave": staveMain,
+    })
+}
+
+func TestScripts(t *testing.T) {
+    testscript.Run(t, testscript.Params{
+        Dir:                 "testdata/scripts",
+        RequireExplicitExec: true,
+    })
+}
+```
+
+`TestMain` registers the `stave` binary as an in-process command via `testscript.Main`. This means each `.txtar` script can call `exec stave ...` and it runs the real CLI code in-process — no separate binary build needed, and coverage is collected.
+
+`TestScripts` runs every `.txtar` file in `cmd/stave/testdata/scripts/`. Each script is a self-contained test scenario written in the [txtar format](https://pkg.go.dev/golang.org/x/tools/txtar): a sequence of shell-like commands followed by embedded files.
+
+There are 21 scripts covering the full CLI surface:
+
+| Script | What it tests |
+|--------|---------------|
+| `smoke.txtar` | Binary starts, `--version` works, `--help` produces output |
+| `apply_pipeline.txtar` | Full `apply` workflow: load controls + observations, produce findings |
+| `ci_workflow.txtar` | `ci baseline` and `ci diff` commands |
+| `config_lifecycle.txtar` | `config get/set/show` commands |
+| `controls_packs.txtar` | `controls list` and pack resolution |
+| `determinism.txtar` | Same inputs + `--now` produce identical output |
+| `diagnose_trace_explain.txtar` | `diagnose`, `trace`, and `explain` commands |
+| `doctor_bug_report.txtar` | `doctor` and `bug-report` commands |
+| `exit_codes.txtar` | Exit code 0 (success), 3 (violations), 2 (input error) |
+| `help_discovery.txtar` | Subcommand help text and flag documentation |
+| `json_validity.txtar` | All JSON output is valid JSON |
+| `lint_fmt_graph.txtar` | `lint`, `fmt`, and `graph` commands |
+| `profile_builtin.txtar` | `apply --profile` with built-in controls |
+| `quiet_verbose.txtar` | `--quiet` suppresses output, `-v` adds diagnostics |
+| `report_prompt.txtar` | `report` and `prompt` commands |
+| `sanitize.txtar` | `--sanitize` redacts infrastructure identifiers |
+| `sarif_output.txtar` | `--format sarif` produces valid SARIF v2.1.0 |
+| `snapshot_commands.txtar` | `snapshot plan/prune/archive` commands |
+| `snapshot_operations.txtar` | Snapshot lifecycle operations with retention tiers |
+| `streams.txtar` | stdout/stderr separation |
+| `validate_lint_fmt.txtar` | `validate` command with lint and format checks |
+
+To run them:
+
+```bash
+go test ./cmd/stave/ -run TestScripts -v
+```
+
+To run a single script:
+
+```bash
+go test ./cmd/stave/ -run TestScripts/smoke -v
+```
+
+These tests run as part of `make test` (which executes `go test ./...`). They are the primary integration test suite — each script exercises the real CLI binary against real control YAML and observation JSON files embedded in the `.txtar` archive.

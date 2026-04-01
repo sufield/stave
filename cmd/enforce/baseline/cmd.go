@@ -1,12 +1,14 @@
 package baseline
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/metadata"
-	formatter "github.com/sufield/stave/internal/ui"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // Deps groups the infrastructure implementations for the baseline command.
@@ -78,8 +80,9 @@ Exit Codes:
 				return err
 			}
 
-			return formatter.RenderText(cmd.OutOrStdout(),
+			_, printErr := fmt.Fprintf(cmd.OutOrStdout(),
 				"Saved baseline: %s (findings=%d)\n", resp.OutputPath, resp.FindingsCount)
+			return printErr
 		},
 	}
 
@@ -133,7 +136,7 @@ Exit Codes:
 				return err
 			}
 
-			if renderErr := formatter.RenderJSON(cmd.OutOrStdout(), resp); renderErr != nil {
+			if renderErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp); renderErr != nil {
 				return renderErr
 			}
 
