@@ -10,11 +10,11 @@ import (
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/prereq"
-	jsonout "github.com/sufield/stave/internal/adapters/output/json"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
 	validation "github.com/sufield/stave/internal/core/schemaval"
+	"github.com/sufield/stave/internal/pkg/jsonutil"
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.
@@ -84,7 +84,7 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 
 func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Report) error {
 	if cfg.Format.IsJSON() {
-		return jsonout.WriteReadinessJSON(cfg.Stdout, readinessJSONReport{
+		return jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
 			Report:      report,
 			NextCommand: readinessNextCommand(report),
 		})

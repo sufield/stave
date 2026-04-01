@@ -171,10 +171,6 @@ func NewCmd(rootCmd *cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func newResolver() (*projconfig.Resolver, error) {
-	return projconfig.NewResolver()
-}
-
 func newSetCmd(rootCmd *cobra.Command) *cobra.Command {
 	return &cobra.Command{
 		Use:   "set <name> <command>",
@@ -191,7 +187,7 @@ Exit Codes:
 		Example: `  stave alias set ev "apply --controls controls/s3 --now 2026-01-11T00:00:00Z"`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			res, err := newResolver()
+			res, err := projconfig.NewResolver()
 			if err != nil {
 				return fmt.Errorf("resolve project context: %w", err)
 			}
@@ -222,7 +218,7 @@ Exit Codes:
 		Example: `  stave alias list --format json`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			res, err := newResolver()
+			res, err := projconfig.NewResolver()
 			if err != nil {
 				return fmt.Errorf("resolve project context: %w", err)
 			}
@@ -259,7 +255,7 @@ Exit Codes:
 		Example: `  stave alias delete ev`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			res, err := newResolver()
+			res, err := projconfig.NewResolver()
 			if err != nil {
 				return fmt.Errorf("resolve project context: %w", err)
 			}

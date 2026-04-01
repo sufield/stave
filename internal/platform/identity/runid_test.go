@@ -6,37 +6,37 @@ import (
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
 
-func TestComputeRunID(t *testing.T) {
-	runID := ComputeRunID("1.0.0", "hash1", "hash2")
+func TestComputeRunIDParts(t *testing.T) {
+	runID := ComputeRunIDParts("1.0.0", "hash1", "hash2")
 	if len(runID) != RunIDLength {
-		t.Errorf("ComputeRunID() length = %d, want %d", len(runID), RunIDLength)
+		t.Errorf("ComputeRunIDParts() length = %d, want %d", len(runID), RunIDLength)
 	}
 
-	runID2 := ComputeRunID("1.0.0", "hash1", "hash2")
+	runID2 := ComputeRunIDParts("1.0.0", "hash1", "hash2")
 	if runID != runID2 {
-		t.Errorf("ComputeRunID() not deterministic: %s != %s", runID, runID2)
+		t.Errorf("ComputeRunIDParts() not deterministic: %s != %s", runID, runID2)
 	}
 
-	runID3 := ComputeRunID("1.0.1", "hash1", "hash2")
+	runID3 := ComputeRunIDParts("1.0.1", "hash1", "hash2")
 	if runID == runID3 {
-		t.Errorf("ComputeRunID() should produce different output for different inputs")
+		t.Errorf("ComputeRunIDParts() should produce different output for different inputs")
 	}
 }
 
 func TestComputeRunID_SeparatorsPreventConcatenationAmbiguity(t *testing.T) {
 	// Without separators, both would hash "abc".
-	a := ComputeRunID("ab", "c", "")
-	b := ComputeRunID("a", "bc", "")
+	a := ComputeRunIDParts("ab", "c", "")
+	b := ComputeRunIDParts("a", "bc", "")
 	if a == b {
-		t.Fatalf("ComputeRunID() should differ when input boundaries differ: %q", a)
+		t.Fatalf("ComputeRunIDParts() should differ when input boundaries differ: %q", a)
 	}
 }
 
 func TestComputeRunIDParts_Compatibility(t *testing.T) {
-	oldStyle := ComputeRunID("1.0.0", "hash1", "hash2")
+	oldStyle := ComputeRunIDParts("1.0.0", "hash1", "hash2")
 	variadic := ComputeRunIDParts("1.0.0", "hash1", "hash2")
 	if oldStyle != variadic {
-		t.Fatalf("ComputeRunIDParts() should match ComputeRunID(); got %q, want %q", variadic, oldStyle)
+		t.Fatalf("ComputeRunIDParts() should match ComputeRunIDParts(); got %q, want %q", variadic, oldStyle)
 	}
 }
 

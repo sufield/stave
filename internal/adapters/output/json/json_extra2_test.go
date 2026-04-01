@@ -55,20 +55,3 @@ func TestWriteValidation_MapInput(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// WriteReadinessJSON (renamed to avoid collision)
-// ---------------------------------------------------------------------------
-
-func TestWriteReadinessJSON_MapInput(t *testing.T) {
-	report := map[string]any{
-		"ready": true,
-	}
-	var buf bytes.Buffer
-	err := WriteReadinessJSON(&buf, report)
-	if err != nil {
-		t.Fatalf("WriteReadinessJSON: %v", err)
-	}
-	out := buf.String()
-	if !strings.Contains(out, "ready") {
-		t.Error("missing ready field")
-	}
-}

@@ -35,7 +35,7 @@ func RenderSnapshotCleanupExecutionPlan(out io.Writer, in SnapshotCleanupRenderI
 		return nil
 	}
 	if in.Format.IsJSON() {
-		if err := writeJSON(out, in.Output); err != nil {
+		if err := jsonutil.WriteIndented(out, in.Output); err != nil {
 			return fmt.Errorf("write %s output: %w", in.OutputKind, err)
 		}
 		return nil
@@ -50,8 +50,4 @@ func RenderSnapshotCleanupExecutionPlan(out io.Writer, in SnapshotCleanupRenderI
 		fmt.Fprintf(out, "- %s (captured_at=%s)\n", sf.Name, sf.CapturedAt.Format(time.RFC3339))
 	}
 	return nil
-}
-
-func writeJSON(w io.Writer, v any) error {
-	return jsonutil.WriteIndented(w, v)
 }
