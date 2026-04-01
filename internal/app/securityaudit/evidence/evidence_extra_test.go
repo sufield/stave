@@ -327,13 +327,15 @@ func TestShouldInspectPath(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSetProxyVars(t *testing.T) {
-	getenv := func(key string) string {
-		if key == "HTTPS_PROXY" {
-			return "http://proxy:3128"
-		}
-		return ""
+	d := DefaultPolicyInspector{
+		Getenv: func(key string) string {
+			if key == "HTTPS_PROXY" {
+				return "http://proxy:3128"
+			}
+			return ""
+		},
 	}
-	vars := setProxyVars(getenv)
+	vars := d.setProxyVars()
 	found := false
 	for _, v := range vars {
 		if v == "HTTPS_PROXY" {
@@ -346,7 +348,8 @@ func TestSetProxyVars(t *testing.T) {
 }
 
 func TestSetProxyVars_None(t *testing.T) {
-	vars := setProxyVars(func(string) string { return "" })
+	d := DefaultPolicyInspector{Getenv: func(string) string { return "" }}
+	vars := d.setProxyVars()
 	if len(vars) != 0 {
 		t.Fatalf("expected 0 vars, got %d", len(vars))
 	}
