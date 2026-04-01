@@ -4,18 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	pruneretention "github.com/sufield/stave/cmd/prune/retention"
 	"github.com/sufield/stave/internal/adapters/pruner"
-	"github.com/sufield/stave/internal/adapters/pruner/fsops"
 	"github.com/sufield/stave/internal/adapters/pruner/report"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/retention"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -75,53 +71,6 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	return appeval.RunCleanup(ctx, r)
 }
 
-// BuildPlan identifies which snapshots meet the criteria for archiving.
-func (r *runner) BuildPlan(ctx context.Context) (appeval.CleanupPlan, error) {
-	loader, err := r.NewSnapshotRepo()
-	if err != nil {
-		return appeval.CleanupPlan{}, fmt.Errorf("create snapshot loader: %w", err)
-	}
-	allFiles, err := pruneretention.ListObservationSnapshotFiles(ctx, loader, r.cfg.ObservationsDir)
-	if err != nil {
-		return appeval.CleanupPlan{}, fmt.Errorf("listing snapshots: %w", err)
-	}
-
-	candidates := pruneretention.PlanPrune(allFiles, retention.Criteria{
-		Now:       r.cfg.Now,
-		OlderThan: r.cfg.OlderThan,
-		KeepMin:   r.cfg.KeepMin,
-	})
-
-	out := report.BuildArchiveOutput(report.ArchiveOutputInput{
-		CleanupInput: report.CleanupInput{
-			Now:             r.cfg.Now,
-			Action:          pruner.ActionMove,
-			DryRun:          r.cfg.DryRun,
-			ObservationsDir: r.cfg.ObservationsDir,
-			Tier:            r.cfg.RetentionTier,
-			OlderThan:       r.cfg.OlderThan,
-			KeepMin:         r.cfg.KeepMin,
-			AllFiles:        allFiles,
-			CandidateFiles:  candidates,
-		},
-		ArchiveDir: r.cfg.ArchiveDir,
-	})
-
-	r.plan = &executionPlan{
-		obsDir:         r.cfg.ObservationsDir,
-		archiveDir:     r.cfg.ArchiveDir,
-		allFiles:       allFiles,
-		candidateFiles: candidates,
-		output:         out,
-		dryRun:         r.cfg.DryRun,
-	}
-
-	return appeval.CleanupPlan{
-		CandidateCount: len(candidates),
-		DryRun:         r.cfg.DryRun,
-	}, nil
-}
-
 // Render outputs the plan to the user in the requested format.
 func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 	return report.RenderSnapshotCleanupExecutionPlan(r.cfg.Stdout, report.SnapshotCleanupRenderInput{
@@ -142,42 +91,7 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 	})
 }
 
-// Apply executes the file moves.
-func (r *runner) Apply(ctx context.Context, _ appeval.CleanupPlan) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	_, err := fsops.ApplyArchive(fsops.ArchiveInput{
-		ArchiveDir: r.plan.archiveDir,
-		Moves:      r.toArchiveMoves(),
-		Options: fsops.MoveOptions{
-			Overwrite:    r.cfg.Force,
-			AllowSymlink: r.cfg.AllowSymlink,
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("archiving snapshots: %w", err)
-	}
-
-	if !r.cfg.Quiet && !r.cfg.Format.IsJSON() {
-		fmt.Fprintf(r.cfg.Stdout, "Archived %d snapshot(s) to %s.\n",
-			len(r.plan.candidateFiles), r.plan.archiveDir)
-	}
-	return nil
-}
-
 // --- Helpers ---
-
-func (r *runner) toArchiveMoves() []fsops.ArchiveMove {
-	moves := make([]fsops.ArchiveMove, 0, len(r.plan.candidateFiles))
-	for _, sf := range r.plan.candidateFiles {
-		moves = append(moves, fsops.ArchiveMove{
-			Src: sf.Path,
-			Dst: filepath.Join(r.plan.archiveDir, sf.Name),
-		})
-	}
-	return moves
-}
 
 func resolveArchivePaths(observationsPath, archivePath string) (string, string, error) {
 	obsDir := fsutil.CleanUserPath(observationsPath)
