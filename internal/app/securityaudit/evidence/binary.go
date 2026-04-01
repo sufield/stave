@@ -28,6 +28,14 @@ type binarySignaturePayload struct {
 	GeneratedAt      string `json:"generated_at"`
 }
 
+// releaseBundleParams bundles the data arguments for release bundle
+// verification, preventing accidental swaps of the three string parameters.
+type releaseBundleParams struct {
+	BinaryPath       string
+	ExpectedHash     string
+	ReleaseBundleDir string
+}
+
 type DefaultBinaryInspector struct {
 	SignatureVerifier ports.Verifier
 	HashFile          func(path string) (kernel.Digest, error)
@@ -66,7 +74,9 @@ func (d DefaultBinaryInspector) Inspect(req Params, buildInfo BuildInfoSnapshot)
 	var signatureJSON []byte
 
 	if signatureAttempt {
-		signatureVerified, signatureDetail = verifyReleaseBundle(abs, string(hash), req.ReleaseBundleDir, d.SignatureVerifier, d.ReadFile, d.StatFile)
+		signatureVerified, signatureDetail = d.verifyReleaseBundle(releaseBundleParams{
+			BinaryPath: abs, ExpectedHash: string(hash), ReleaseBundleDir: req.ReleaseBundleDir,
+		})
 		signaturePayload := binarySignaturePayload{
 			ReleaseBundleDir: strings.TrimSpace(req.ReleaseBundleDir),
 			Verified:         signatureVerified,
@@ -96,18 +106,18 @@ func (d DefaultBinaryInspector) Inspect(req Params, buildInfo BuildInfoSnapshot)
 	}, nil
 }
 
-func verifyReleaseBundle(binaryPath string, expectedHash string, releaseBundleDir string, verifier ports.Verifier, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (bool, string) {
-	sumsPath := filepath.Join(releaseBundleDir, "SHA256SUMS")
-	raw, err := readFile(sumsPath)
+func (d DefaultBinaryInspector) verifyReleaseBundle(params releaseBundleParams) (bool, string) {
+	sumsPath := filepath.Join(params.ReleaseBundleDir, "SHA256SUMS")
+	raw, err := d.ReadFile(sumsPath)
 	if err != nil {
 		return false, fmt.Sprintf("cannot read SHA256SUMS: %v", err)
 	}
 
-	if msg, ok := matchChecksumEntry(raw, filepath.Base(binaryPath), expectedHash); !ok {
+	if msg, ok := matchChecksumEntry(raw, filepath.Base(params.BinaryPath), params.ExpectedHash); !ok {
 		return false, msg
 	}
 
-	return verifyChecksumSignature(raw, releaseBundleDir, verifier, readFile, statFile)
+	return d.verifyChecksumSignature(raw, params.ReleaseBundleDir)
 }
 
 // matchChecksumEntry searches SHA256SUMS lines for the binary and verifies its hash.
@@ -131,22 +141,22 @@ func matchChecksumEntry(raw []byte, binaryName, expectedHash string) (string, bo
 }
 
 // verifyChecksumSignature validates the SHA256SUMS signature file.
-func verifyChecksumSignature(sumsData []byte, releaseBundleDir string, verifier ports.Verifier, readFile func(string) ([]byte, error), statFile func(string) (fs.FileInfo, error)) (bool, string) {
-	sigBytes, sigErr := readFile(filepath.Join(releaseBundleDir, "SHA256SUMS.sig"))
+func (d DefaultBinaryInspector) verifyChecksumSignature(sumsData []byte, bundleDir string) (bool, string) {
+	sigBytes, sigErr := d.ReadFile(filepath.Join(bundleDir, "SHA256SUMS.sig"))
 	if sigErr != nil {
-		sigstorePath := filepath.Join(releaseBundleDir, "SHA256SUMS.sigstore.json")
-		if _, statErr := statFile(sigstorePath); statErr == nil {
+		sigstorePath := filepath.Join(bundleDir, "SHA256SUMS.sigstore.json")
+		if _, statErr := d.StatFile(sigstorePath); statErr == nil {
 			return false, "checksum matched; sigstore bundle found but cryptographic verification of sigstore format is not yet supported"
 		}
 		return false, "checksum matched but no signature artifact found"
 	}
 
-	if verifier == nil {
+	if d.SignatureVerifier == nil {
 		return false, "checksum matched; signature file found but no signing public key configured for verification"
 	}
 
 	sig := kernel.Signature(strings.TrimSpace(string(sigBytes)))
-	if verifyErr := verifier.Verify(sumsData, sig); verifyErr != nil {
+	if verifyErr := d.SignatureVerifier.Verify(sumsData, sig); verifyErr != nil {
 		return false, fmt.Sprintf("checksum matched but signature verification failed: %v", verifyErr)
 	}
 	return true, "checksum matched and signature cryptographically verified"
