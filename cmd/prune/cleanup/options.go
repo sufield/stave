@@ -58,6 +58,6 @@ func (o *options) resolveRetention() (pruneretention.ResolvedRetention, error) {
 	return pruneretention.ResolveRetention(
 		pruneretention.RawRetentionOpts{OlderThan: o.OlderThan, Tier: o.Tier, NowRaw: o.NowRaw, FormatFlag: o.FormatFlag},
 		o.eval,
-		o.olderThanSet, o.tierSet, o.formatSet, false,
+		pruneretention.ResolutionFlags{OlderThanChanged: o.olderThanSet, TierChanged: o.tierSet, FormatChanged: o.formatSet},
 	)
 }

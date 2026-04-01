@@ -13,8 +13,16 @@ import (
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 
+// validateDeps bundles the factory functions needed by the validate workflow,
+// preventing the same 3 params from being repeated in every function signature.
+type validateDeps struct {
+	NewObsRepo      compose.ObsRepoFactory
+	NewCtlRepo      compose.CtlRepoFactory
+	NewCELEvaluator compose.CELEvaluatorFactory
+}
+
 // runValidate is the primary entry point for the cobra command.
-func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime, opts *options) error {
+func runValidate(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, opts *options) error {
 	// 1. Audit git status and log environment context.
 	if err := opts.auditGitStatus(cmd); err != nil {
 		return err
@@ -49,10 +57,10 @@ func runValidate(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRe
 		return runValidateSingleFile(cmd.InOrStdin(), rep, opts)
 	}
 
-	return runValidateProject(cmd, newObsRepo, newCtlRepo, newCELEvaluator, rt, rep, opts)
+	return runValidateProject(cmd, deps, rt, rep, opts)
 }
 
-func runValidateProject(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime, rep *Reporter, opts *options) error {
+func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, rep *Reporter, opts *options) error {
 	// Prepare parameters (MaxUnsafe, Time, etc)
 	params := opts.parseParams()
 	if len(params.issues) > 0 {
@@ -66,7 +74,7 @@ func runValidateProject(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, n
 
 	// Start progress UI
 	done := rt.BeginProgress("validate artifacts")
-	result, err := executeValidateRun(cmd, newObsRepo, newCtlRepo, newCELEvaluator, params, opts)
+	result, err := executeValidateRun(cmd, deps, params, opts)
 	done()
 
 	if err != nil {
@@ -93,17 +101,17 @@ func runValidateProject(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, n
 	return exitErr
 }
 
-func executeValidateRun(cmd *cobra.Command, newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, params validateParams, opts *options) (*appvalidation.Result, error) {
+func executeValidateRun(cmd *cobra.Command, deps validateDeps, params validateParams, opts *options) (*appvalidation.Result, error) {
 	// Setup Repositories
-	obsLoader, err := newObsRepo()
+	obsLoader, err := deps.NewObsRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init observation repository: %w", err)
 	}
-	ctlLoader, err := newCtlRepo()
+	ctlLoader, err := deps.NewCtlRepo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init control repository: %w", err)
 	}
-	celEval, err := newCELEvaluator()
+	celEval, err := deps.NewCELEvaluator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init CEL evaluator: %w", err)
 	}

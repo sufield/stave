@@ -53,11 +53,13 @@ func (r *InitRunner) Run(req *InitRequest) error {
 			})
 		},
 		Scaffold: func(baseDir string, overwrite bool, opts projectapp.ScaffoldOptions) (projectapp.ScaffoldResult, error) {
-			return scaffoldProject(baseDir, overwrite, scaffoldOptions{
+			return scaffoldProject(baseDir, scaffoldWriteOpts{
+				Overwrite: overwrite, AllowSymlink: r.AllowSymlink,
+			}, scaffoldOptions{
 				Profile:           opts.Profile,
 				WithGitHubActions: opts.WithGitHubActions,
 				CaptureCadence:    opts.CaptureCadence,
-			}, r.AllowSymlink)
+			})
 		},
 		AfterScaffold: func(baseDir string) error {
 			return maybePromptAndInitGitRepo(baseDir, os.Stdin, r.Stdout)
