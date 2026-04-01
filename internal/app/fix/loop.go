@@ -45,6 +45,16 @@ type evaluationState struct {
 	Snapshots int
 }
 
+// EvaluationParams bundles the data arguments for evaluateState,
+// preventing accidental swaps of the two string parameters (Dir, Label).
+type EvaluationParams struct {
+	Deps     LoopDeps
+	Req      LoopRequest
+	Controls []policy.ControlDefinition
+	Dir      string
+	Label    string
+}
+
 // Loop executes the apply-before, apply-after, and verify sequence.
 func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *ArtifactWriter, eb *EnvelopeBuilder) error {
 	rem := deps.Remediator
@@ -66,14 +76,18 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 
 	// 3. Evaluate "before" state
 	rem.LogProgress("evaluating before state from " + req.BeforeDir)
-	before, err := s.evaluateState(ctx, deps, req, controls, req.BeforeDir, "before")
+	before, err := s.evaluateState(ctx, EvaluationParams{
+		Deps: deps, Req: req, Controls: controls, Dir: req.BeforeDir, Label: "before",
+	})
 	if err != nil {
 		return err
 	}
 
 	// 4. Evaluate "after" state
 	rem.LogProgress("evaluating after state from " + req.AfterDir)
-	after, err := s.evaluateState(ctx, deps, req, controls, req.AfterDir, "after")
+	after, err := s.evaluateState(ctx, EvaluationParams{
+		Deps: deps, Req: req, Controls: controls, Dir: req.AfterDir, Label: "after",
+	})
 	if err != nil {
 		return err
 	}
@@ -151,25 +165,21 @@ func loadControls(ctx context.Context, deps LoopDeps, dir string) ([]policy.Cont
 
 func (s *Service) evaluateState(
 	ctx context.Context,
-	deps LoopDeps,
-	req LoopRequest,
-	controls []policy.ControlDefinition,
-	dir string,
-	label string,
+	params EvaluationParams,
 ) (evaluationState, error) {
 	result, snaps, err := appeval.RunDirectoryEvaluation(appeval.DirectoryEvaluationRequest{
 		Context:           ctx,
-		ObservationsDir:   dir,
-		Controls:          controls,
-		MaxUnsafeDuration: req.MaxUnsafeDuration,
+		ObservationsDir:   params.Dir,
+		Controls:          params.Controls,
+		MaxUnsafeDuration: params.Req.MaxUnsafeDuration,
 		Clock:             s.Clock,
-		AllowUnknownType:  req.AllowUnknown,
+		AllowUnknownType:  params.Req.AllowUnknown,
 		StaveVersion:      version.String,
-		ObservationLoader: deps.ObservationRepo,
+		ObservationLoader: params.Deps.ObservationRepo,
 		CELEvaluator:      s.CELEvaluator,
 	})
 	if err != nil {
-		return evaluationState{}, fmt.Errorf("%s evaluation: %w", label, err)
+		return evaluationState{}, fmt.Errorf("%s evaluation: %w", params.Label, err)
 	}
 	return evaluationState{Result: result, Snapshots: snaps}, nil
 }
