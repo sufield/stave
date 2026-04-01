@@ -116,7 +116,7 @@ type BuildPlanParams struct {
 
 // BuildPlan computes a snapshot prune/archive plan from retention config.
 // Returns an error if tier configuration is invalid (e.g., unparseable
-// duration strings in TierConfig.OlderThan).
+// duration strings in Tier.OlderThan).
 func BuildPlan(params BuildPlanParams) (*PlanOutput, error) {
 	if params.Now.IsZero() {
 		params.Now = time.Now()
