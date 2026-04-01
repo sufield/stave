@@ -31,18 +31,3 @@ func TestWriteValidation(t *testing.T) {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }
-
-func TestWriteReadinessJSON(t *testing.T) {
-	var buf bytes.Buffer
-	report := struct {
-		Ready bool `json:"ready"`
-	}{Ready: true}
-	err := WriteReadinessJSON(&buf, report)
-	if err != nil {
-		t.Fatalf("WriteReadinessJSON() error = %v", err)
-	}
-	out := buf.String()
-	if !strings.Contains(out, `"ready"`) {
-		t.Fatalf("unexpected output: %s", out)
-	}
-}

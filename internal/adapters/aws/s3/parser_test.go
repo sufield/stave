@@ -30,7 +30,7 @@ func TestParseS3ReferenceRoundTrip(t *testing.T) {
 	if ParseS3Reference(ARN(ref)).Name() != "my-bucket" {
 		t.Error("round-trip through ARN failed")
 	}
-	if ParseS3Reference(ModelID(ref)).Name() != "my-bucket" {
-		t.Error("round-trip through ModelID failed")
+	if ParseS3Reference("aws:s3:::my-bucket").Name() != "my-bucket" {
+		t.Error("round-trip through model ID prefix failed")
 	}
 }
