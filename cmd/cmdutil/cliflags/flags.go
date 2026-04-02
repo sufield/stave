@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -35,6 +36,7 @@ const (
 	FlagLogFile       = "log-file"
 	FlagOffline       = "require-offline"
 	FlagSymlink       = "allow-symlink-output"
+	FlagYes           = "yes"
 	FlagControls      = "controls"
 	FlagControlsShort = "i"
 )
@@ -44,6 +46,7 @@ const DynamicDefaultHelpSuffix = " Resolved default may come from STAVE_* env va
 // GlobalFlags represents the state of persistent flags registered at the root.
 type GlobalFlags struct {
 	Quiet             bool
+	Yes               bool
 	Force             bool
 	Sanitize          bool
 	PathMode          sanitize.PathMode
@@ -64,6 +67,7 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 
 	return GlobalFlags{
 		Quiet:           getBool(rootFlags, FlagQuiet),
+		Yes:             getBool(rootFlags, FlagYes),
 		Force:           getBool(rootFlags, FlagForce),
 		Sanitize:        getBool(rootFlags, FlagSanitize),
 		PathMode:        ParsePathMode(getStr(rootFlags, FlagPathMode)),
@@ -79,6 +83,12 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 // TextOutputEnabled returns true if human-readable text should be printed.
 func (g GlobalFlags) TextOutputEnabled() bool {
 	return !g.Quiet
+}
+
+// AutoConfirm returns true when interactive prompts should be auto-confirmed.
+// This is true when --yes is set or when stderr is not a TTY (non-interactive).
+func (g GlobalFlags) AutoConfirm() bool {
+	return g.Yes
 }
 
 // GetSanitizer returns a configured sanitizer based on the global flags.
@@ -179,4 +189,57 @@ func getStr(fs *pflag.FlagSet, name string) string {
 func getBool(fs *pflag.FlagSet, name string) bool {
 	val, _ := fs.GetBool(name)
 	return val
+}
+
+// --- Environment Variable Resolution ---
+//
+// These helpers resolve per-command flags from STAVE_* env vars when the flag
+// was not explicitly set on the command line.
+// Precedence: CLI flag > env var > config file > default.
+
+// ResolveFormatEnv returns the env-var override for --format if the flag was
+// not explicitly set by the user. Returns the original value if no override applies.
+func ResolveFormatEnv(cmd *cobra.Command, current string) string {
+	if cmd.Flags().Changed(FlagFormat) {
+		return current
+	}
+	if v := env.Format.Value(); v != "" {
+		return v
+	}
+	return current
+}
+
+// ResolveControlsEnv returns the env-var override for --controls if the flag was
+// not explicitly set by the user. Returns the original value if no override applies.
+func ResolveControlsEnv(cmd *cobra.Command, current string) string {
+	if cmd.Flags().Changed(FlagControls) {
+		return current
+	}
+	if v := env.Controls.Value(); v != "" {
+		return v
+	}
+	return current
+}
+
+// ResolveObservationsEnv returns the env-var override for --observations if the
+// flag was not explicitly set by the user. Returns the original value if no
+// override applies.
+func ResolveObservationsEnv(cmd *cobra.Command, current string) string {
+	if !cmd.Flags().Changed("observations") {
+		if v := env.Observations.Value(); v != "" {
+			return v
+		}
+	}
+	return current
+}
+
+// ResolveNowEnv returns the env-var override for --now if the flag was not
+// explicitly set by the user. Returns the original value if no override applies.
+func ResolveNowEnv(cmd *cobra.Command, current string) string {
+	if !cmd.Flags().Changed("now") {
+		if v := env.Now.Value(); v != "" {
+			return v
+		}
+	}
+	return current
 }

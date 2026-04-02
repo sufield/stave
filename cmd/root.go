@@ -21,6 +21,7 @@ import (
 // following the same pattern as applyFlagsType in cmd/apply/command.go.
 type globalFlagsType struct {
 	Quiet           bool   // suppress non-essential output
+	Yes             bool   // auto-confirm all interactive prompts
 	Verbosity       int    // -v count (0=WARN, 1=INFO, 2+=DEBUG)
 	LogLevel        string // explicit log level override
 	LogFormat       string // "text" or "json"
@@ -94,6 +95,7 @@ func NewApp(opts ...AppOption) *App {
 		PersistentPreRunE: app.bootstrap,
 		PersistentPostRun: app.postRun,
 		Long:              rootLongHelp,
+		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
 	WireCommands(app)

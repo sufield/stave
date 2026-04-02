@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -60,6 +61,9 @@ Exit Codes:
 				return err
 			}
 
+			rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
+			rt.Quiet = gf.Quiet
+
 			runner := &runner{NewSnapshotRepo: newSnapshotRepo}
 			return runner.Run(cmd.Context(), config{
 				ObservationsDir: opts.ObsDir,
@@ -72,6 +76,7 @@ Exit Codes:
 				Quiet:           gf.Quiet,
 				Format:          ret.Format,
 				Stdout:          cmd.OutOrStdout(),
+				Runtime:         rt,
 			})
 		},
 		SilenceUsage:  true,

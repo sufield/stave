@@ -103,6 +103,33 @@ var (
 		Description: "Path to user-level CLI config file",
 		Category:    "config",
 	}
+
+	// CLI flag override env vars — resolved as: CLI flag > env var > config file > default.
+	Format = Entry{
+		Name:        "STAVE_FORMAT",
+		Description: "Default output format (text, json, sarif) when --format is not set",
+		Category:    "config",
+	}
+	Controls = Entry{
+		Name:        "STAVE_CONTROLS",
+		Description: "Default controls directory path when --controls is not set",
+		Category:    "config",
+	}
+	Observations = Entry{
+		Name:        "STAVE_OBSERVATIONS",
+		Description: "Default observations directory path when --observations is not set",
+		Category:    "config",
+	}
+	Quiet = Entry{
+		Name:        "STAVE_QUIET",
+		Description: "Suppress output (exit code only) when --quiet is not set",
+		Category:    "config",
+	}
+	Now = Entry{
+		Name:        "STAVE_NOW",
+		Description: "Override current time (RFC3339) when --now is not set",
+		Category:    "config",
+	}
 )
 
 // Developer/debug env vars.
@@ -125,14 +152,19 @@ var all = []Entry{
 	CIFailurePolicy,
 	Context,
 	ContextsFile,
+	Controls,
 	Debug,
 	DevValidateFindings,
 	DocsURL,
 	Demo,
 	FirstRunHintFile,
+	Format,
 	IssuesURL,
 	MaxUnsafe,
+	Now,
+	Observations,
 	ProjectRoot,
+	Quiet,
 	RetentionTier,
 	SnapshotRetention,
 	UserConfig,

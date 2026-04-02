@@ -136,6 +136,7 @@ func WireCommands(app *App) {
 	root.AddCommand(enforce.NewGraphCmd(p.NewControlRepo, p.LoadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
 	root.AddCommand(newCapabilitiesCmd())
+	root.AddCommand(newCompletionCmd())
 	root.AddCommand(newSchemasCmd())
 	root.AddCommand(newVersionCmd(app.Edition))
 

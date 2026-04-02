@@ -64,6 +64,7 @@ func mutationOptsFrom(gf cliflags.GlobalFlags, format appcontracts.OutputFormat)
 	return MutationOpts{
 		Format:       format,
 		Force:        gf.Force,
+		Yes:          gf.Yes,
 		IsTTY:        ui.IsStderrTTY(),
 		AllowSymlink: gf.AllowSymlinkOut,
 		Quiet:        gf.Quiet,

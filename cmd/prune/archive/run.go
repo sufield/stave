@@ -31,6 +31,7 @@ type config struct {
 	Format          appcontracts.OutputFormat
 	AllowSymlink    bool
 	Stdout          io.Writer
+	Runtime         *ui.Runtime
 }
 
 // --- Runner ---
@@ -67,6 +68,9 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	cfg.ArchiveDir = archiveDir
 	cfg.DryRun = cfg.DryRun || !cfg.Force
 	r.cfg = cfg
+
+	done := cfg.Runtime.BeginProgress("archive stale snapshots")
+	defer done()
 
 	return appeval.RunCleanup(ctx, r)
 }

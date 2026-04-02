@@ -29,6 +29,7 @@ type config struct {
 	Quiet           bool
 	Format          appcontracts.OutputFormat
 	Stdout          io.Writer
+	Runtime         *ui.Runtime
 }
 
 // --- Runner ---
@@ -61,6 +62,9 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	cfg.ObservationsDir = obsDir
 	cfg.DryRun = cfg.DryRun || !cfg.Force
 	r.cfg = cfg
+
+	done := cfg.Runtime.BeginProgress("prune stale snapshots")
+	defer done()
 
 	return appeval.RunCleanup(ctx, r)
 }

@@ -32,6 +32,7 @@ type InitRunner struct {
 	Force        bool
 	AllowSymlink bool
 	Quiet        bool
+	Yes          bool
 }
 
 // Run executes the project initialization workflow.
@@ -62,7 +63,7 @@ func (r *InitRunner) Run(req *InitRequest) error {
 			})
 		},
 		AfterScaffold: func(baseDir string) error {
-			return maybePromptAndInitGitRepo(baseDir, os.Stdin, r.Stdout)
+			return maybePromptAndInitGitRepo(baseDir, os.Stdin, r.Stdout, r.Yes)
 		},
 	})
 	if err != nil {

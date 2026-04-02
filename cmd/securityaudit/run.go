@@ -38,6 +38,7 @@ type auditConfig struct {
 	Quiet          bool
 	RequireOffline bool
 	Stdout         io.Writer
+	Runtime        *ui.Runtime
 }
 
 // auditRunner orchestrates security evidence collection.
@@ -53,7 +54,9 @@ func (r *auditRunner) Run(ctx context.Context, cfg auditConfig) error {
 
 	bundleDir := resolveOutDir(cfg.OutDir, cfg.Now)
 
+	done := cfg.Runtime.BeginProgress("collect security evidence")
 	report, artifacts, err := executeAudit(ctx, cfg, cwd, exe, bundleDir)
+	done()
 	if err != nil {
 		return err
 	}

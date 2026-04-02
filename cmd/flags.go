@@ -17,6 +17,7 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 
 	// Output — zero defaults; project config resolved in PersistentPreRunE via resolveGlobalFlagDefaults.
 	p.BoolVar(&flags.Quiet, cliflags.FlagQuiet, false, cliflags.WithDynamicDefaultHelp("Suppress output (exit code only)"))
+	p.BoolVarP(&flags.Yes, cliflags.FlagYes, "y", false, "Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)")
 	p.BoolVar(&flags.NoColor, "no-color", false, "Disable ANSI colors in output")
 
 	// Logging
