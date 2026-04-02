@@ -80,6 +80,18 @@ type EvaluateOptions struct {
 	InputHashes  *evaluation.InputHashes
 }
 
+// runSession holds the per-evaluation state that would otherwise be drilled
+// through every helper call. It separates "what the engine is doing right now"
+// from "how the engine is configured" (Runner).
+type runSession struct {
+	runner      *Runner
+	snapshots   []asset.Snapshot // sorted by CapturedAt
+	now         time.Time
+	acc         *Accumulator
+	identityIdx IdentityIndex
+	opts        EvaluateOptions
+}
+
 // Evaluate processes snapshots and returns findings for unsafe duration violations.
 func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (evaluation.Result, error) {
 	if e.Clock == nil {
@@ -90,8 +102,6 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 		opt = opts[0]
 	}
 	sorted := e.normalizeSnapshots(snapshots)
-	now := e.deterministicNow(sorted)
-	identityIdx := BuildIdentityIndex(sorted)
 	timelinesPerInv, err := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
 	if err != nil {
 		return evaluation.Result{}, fmt.Errorf("build timelines: %w", err)
@@ -100,31 +110,38 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 	if len(sorted) > 0 {
 		assetHint = len(sorted[0].Assets)
 	}
-	acc := NewAccumulator(assetHint)
+
+	sess := &runSession{
+		runner:      e,
+		snapshots:   sorted,
+		now:         e.deterministicNow(sorted),
+		acc:         NewAccumulator(assetHint),
+		identityIdx: BuildIdentityIndex(sorted),
+		opts:        opt,
+	}
+
 	for _, ctl := range e.Controls {
 		// Skip control types the evaluator cannot process.
 		if !ctl.IsEvaluatable() {
-			acc.AddSkippedControl(
+			sess.acc.AddSkippedControl(
 				ctl.ID,
 				ctl.Name,
 				"type not evaluatable: "+ctl.Type.String(),
 			)
 			continue
 		}
-		e.evaluateControl(&ctl, timelinesPerInv[ctl.ID], now, acc, identityIdx)
+		sess.evaluateControl(&ctl, timelinesPerInv[ctl.ID])
 	}
-	return e.buildResult(acc, sorted, now, len(snapshots), opt.StaveVersion, opt.InputHashes), nil
+
+	return sess.buildResult(), nil
 }
 
 // evaluateControl evaluates a single control across all asset timelines.
-func (e *Runner) evaluateControl(
+func (s *runSession) evaluateControl(
 	ctl *policy.ControlDefinition,
 	timelines map[asset.ID]*asset.Timeline,
-	now time.Time,
-	acc *Accumulator,
-	identityIdx IdentityIndex,
 ) {
-	strategy := e.strategyFor(ctl)
+	strategy := s.runner.strategyFor(ctl)
 	// Deterministic iteration: sort asset IDs first.
 	assetIDs := make([]asset.ID, 0, len(timelines))
 	for id := range timelines {
@@ -134,11 +151,11 @@ func (e *Runner) evaluateControl(
 	for _, assetID := range assetIDs {
 		timeline := timelines[assetID]
 		// Check if asset is exempted.
-		if rule := e.Exemptions.ShouldExempt(assetID); rule != nil {
-			if acc.TrackExemption(assetID) {
-				acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
+		if rule := s.runner.Exemptions.ShouldExempt(assetID); rule != nil {
+			if s.acc.TrackExemption(assetID) {
+				s.acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
 			}
-			acc.AddRow(evaluation.Row{
+			s.acc.AddRow(evaluation.Row{
 				ControlID:   ctl.ID,
 				AssetID:     assetID,
 				AssetType:   timeline.Asset().Type,
@@ -150,64 +167,64 @@ func (e *Runner) evaluateControl(
 			continue
 		}
 		// Track assets that were actually evaluated (not exempted).
-		acc.seenAssets.Add(assetID)
+		s.acc.seenAssets.Add(assetID)
 		if timeline.CurrentlyUnsafe() {
-			acc.unsafeAssets.Add(assetID)
+			s.acc.unsafeAssets.Add(assetID)
 		}
-		row, findings := strategy.Evaluate(timeline, now, identityIdx)
-		acc.AddRow(row)
-		acc.AddFindings(findings)
+		row, findings := strategy.Evaluate(timeline, s.now, s.identityIdx)
+		s.acc.AddRow(row)
+		s.acc.AddFindings(findings)
 	}
 }
 
 // buildResult sorts accumulated data, computes risk, and constructs the final Result.
-func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now time.Time, snapshotCount int, staveVersion string, inputHashes *evaluation.InputHashes) evaluation.Result {
+func (s *runSession) buildResult() evaluation.Result {
 	// Sort findings for deterministic output.
-	evaluation.SortFindings(acc.findings)
+	evaluation.SortFindings(s.acc.findings)
 	// Sort exempted assets for deterministic output.
-	slices.SortFunc(acc.exemptedByAst, func(a, b asset.ExemptedAsset) int {
+	slices.SortFunc(s.acc.exemptedByAst, func(a, b asset.ExemptedAsset) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
 	// Sort rows for deterministic output (by control_id, then asset_id).
-	slices.SortFunc(acc.rows, func(a, b evaluation.Row) int {
+	slices.SortFunc(s.acc.rows, func(a, b evaluation.Row) int {
 		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
-	regularFindings, exceptedFindings := partitionFindings(acc.findings, e.Exceptions, now)
+	regularFindings, exceptedFindings := partitionFindings(s.acc.findings, s.runner.Exceptions, s.now)
 
 	upcoming := risk.ComputeItems(risk.ThresholdRequest{
-		Controls:                e.Controls,
-		Snapshots:               snapshots,
-		GlobalMaxUnsafeDuration: e.MaxUnsafeDuration,
-		Now:                     now,
-		PredicateEval:           e.CELEvaluator,
+		Controls:                s.runner.Controls,
+		Snapshots:               s.snapshots,
+		GlobalMaxUnsafeDuration: s.runner.MaxUnsafeDuration,
+		Now:                     s.now,
+		PredicateEval:           s.runner.CELEvaluator,
 	})
 	status := evaluation.ClassifySafetyStatus(len(regularFindings), upcoming)
 
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion:      staveVersion,
+			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,
-			Now:               now,
-			MaxUnsafeDuration: kernel.Duration(e.MaxUnsafeDuration),
-			Snapshots:         snapshotCount,
-			InputHashes:       inputHashes,
-			PackHash:          e.computePackHash(),
+			Now:               s.now,
+			MaxUnsafeDuration: kernel.Duration(s.runner.MaxUnsafeDuration),
+			Snapshots:         len(s.snapshots),
+			InputHashes:       s.opts.InputHashes,
+			PackHash:          s.runner.computePackHash(),
 		},
 		Summary: evaluation.Summary{
-			AssetsEvaluated: len(acc.seenAssets),
-			AttackSurface:   len(acc.unsafeAssets),
+			AssetsEvaluated: len(s.acc.seenAssets),
+			AttackSurface:   len(s.acc.unsafeAssets),
 			Violations:      len(regularFindings),
 		},
 		SafetyStatus:     status,
 		AtRisk:           upcoming,
 		Findings:         regularFindings,
 		ExceptedFindings: exceptedFindings,
-		Skipped:          acc.skippedByCtl,
-		ExemptedAssets:   acc.exemptedByAst,
-		Rows:             acc.rows,
+		Skipped:          s.acc.skippedByCtl,
+		ExemptedAssets:   s.acc.exemptedByAst,
+		Rows:             s.acc.rows,
 	}
 }
 
