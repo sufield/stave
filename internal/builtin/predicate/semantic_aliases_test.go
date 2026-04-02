@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/pkg/suggest"
+	"github.com/sufield/stave/internal/util/suggest"
 )
 
 // ── Phase 3.1: Comprehensive Unit Test ───────────────────────────────

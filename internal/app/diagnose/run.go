@@ -43,10 +43,10 @@ func NewRun(
 	ctlRepo appcontracts.ControlRepository,
 ) (*Run, error) {
 	if obsRepo == nil {
-		return nil, fmt.Errorf("NewRun requires non-nil ObservationRepository")
+		return nil, fmt.Errorf("observation repository must not be nil")
 	}
 	if ctlRepo == nil {
-		return nil, fmt.Errorf("NewRun requires non-nil ControlRepository")
+		return nil, fmt.Errorf("control repository must not be nil")
 	}
 	return &Run{
 		ObservationRepo: obsRepo,

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sufield/stave/internal/pkg/suggest"
+	"github.com/sufield/stave/internal/util/suggest"
 )
 
 // NormalizeToken returns a trimmed lowercase token for matching.

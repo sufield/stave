@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/platform/shlex"
@@ -35,6 +36,6 @@ func (a *App) expandAliasIfMatch() {
 		fmt.Fprintf(a.Root.ErrOrStderr(), "stave: alias %q: %v\n", os.Args[1], err)
 		return
 	}
-	newArgs := append(tokens, os.Args[2:]...)
+	newArgs := slices.Concat(tokens, os.Args[2:])
 	a.Root.SetArgs(newArgs)
 }

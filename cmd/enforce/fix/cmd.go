@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // FixLoopDeps groups the factory functions required by the fix-loop command.

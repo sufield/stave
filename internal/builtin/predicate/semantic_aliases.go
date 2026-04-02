@@ -16,7 +16,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/predicate"
-	"github.com/sufield/stave/internal/pkg/suggest"
+	"github.com/sufield/stave/internal/util/suggest"
 )
 
 // ── Alias Name Constants ──────────────────────────────────

@@ -9,7 +9,7 @@ import (
 
 	"github.com/sufield/stave/internal/app/catalog"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // FormatControlOutput writes control rows in the requested format.

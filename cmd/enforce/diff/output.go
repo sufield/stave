@@ -8,7 +8,7 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // writeOutput dispatches rendering of the delta based on format.

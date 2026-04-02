@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 
 // Runner executes evaluation logic over snapshots.
 type Runner struct {
+	Logger            *slog.Logger
 	Controls          []policy.ControlDefinition
 	MaxUnsafeDuration time.Duration
 	// MaxGapThreshold controls when sparse observations become INCONCLUSIVE.
@@ -55,6 +57,13 @@ func (e *Runner) identitiesAt(t time.Time) []asset.CloudIdentity {
 		return e.identitiesByTime[best]
 	}
 	return nil
+}
+
+func (e *Runner) logger() *slog.Logger {
+	if e.Logger != nil {
+		return e.Logger
+	}
+	return slog.Default()
 }
 
 // getMaxUnsafeDurationForControl returns the max unsafe duration for a control.

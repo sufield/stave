@@ -38,7 +38,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 // Returns an error if enricher is nil.
 func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) ([]remediation.Finding, error) {
 	if enricher == nil {
-		return nil, fmt.Errorf("PrepareFindings requires non-nil enricher")
+		return nil, fmt.Errorf("enricher must not be nil")
 	}
 	findings := enricher.EnrichFindings(result)
 	if sanitizer != nil {

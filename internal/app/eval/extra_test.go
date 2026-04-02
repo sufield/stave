@@ -214,8 +214,8 @@ func TestFilterControls_ExcludeByID(t *testing.T) {
 
 func TestPrepareFindings_NilEnricher(t *testing.T) {
 	_, err := PrepareFindings(nil, nil, evaluation.Result{})
-	if err == nil || !strings.Contains(err.Error(), "non-nil enricher") {
-		t.Fatalf("expected non-nil enricher error, got: %v", err)
+	if err == nil || !strings.Contains(err.Error(), "must not be nil") {
+		t.Fatalf("expected must not be nil error, got: %v", err)
 	}
 }
 

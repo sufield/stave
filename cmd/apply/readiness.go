@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
 	validation "github.com/sufield/stave/internal/core/schemaval"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.

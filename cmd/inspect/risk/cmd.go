@@ -5,8 +5,8 @@ import (
 
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // NewCmd constructs the inspect risk command.

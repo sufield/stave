@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 func newSchemasCmd() *cobra.Command {

@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 
 	packs "github.com/sufield/stave/internal/builtin/pack"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // PackRunner handles the inspection of built-in control packs.

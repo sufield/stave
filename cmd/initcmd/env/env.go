@@ -11,7 +11,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	staveenv "github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // --- Domain Types ---

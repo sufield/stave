@@ -7,7 +7,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // writeQualityOutput renders a quality report. Pass io.Discard as w for quiet mode.

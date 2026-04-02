@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -241,7 +242,7 @@ func ensureVulnRawJSON(in VulnerabilitySnapshot, now time.Time) VulnerabilitySna
 	}
 	raw, err := json.MarshalIndent(payload, "", "  ")
 	if err == nil {
-		in.RawJSON = append(raw, '\n')
+		in.RawJSON = slices.Concat(raw, []byte{'\n'})
 	}
 	return in
 }
