@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // EvaluationLoaderPort loads evaluation findings from a file.
@@ -24,13 +26,13 @@ type BaselineWriterPort interface {
 type BaselineSaveDeps struct {
 	Loader EvaluationLoaderPort
 	Writer BaselineWriterPort
-	Clock  func() time.Time
+	Clock  ports.Clock
 }
 
 type BaselineCheckDeps struct {
 	EvalLoader     EvaluationLoaderPort
 	BaselineLoader BaselineLoaderPort
-	Clock          func() time.Time
+	Clock          ports.Clock
 }
 
 // BaselineSave captures current evaluation findings as a baseline snapshot.
@@ -48,7 +50,7 @@ func BaselineSave(ctx context.Context, req BaselineSaveRequest, deps BaselineSav
 		return BaselineSaveResponse{}, fmt.Errorf("baseline_save: %w", ctxErr)
 	}
 
-	now := deps.Clock()
+	now := deps.Clock.Now()
 	if req.Now != nil {
 		now = *req.Now
 	}
@@ -90,7 +92,7 @@ func BaselineCheck(ctx context.Context, req BaselineCheckRequest, deps BaselineC
 	return BaselineCheckResponse{
 		BaselineFile: req.BaselinePath,
 		Evaluation:   req.EvaluationPath,
-		CheckedAt:    deps.Clock().UTC(),
+		CheckedAt:    deps.Clock.Now().UTC(),
 		Summary: BaselineCheckSummary{
 			BaselineFindings: len(baseline),
 			CurrentFindings:  len(current),
@@ -107,7 +109,7 @@ func BaselineCheck(ctx context.Context, req BaselineCheckRequest, deps BaselineC
 type CIDiffDeps struct {
 	CurrentLoader  EvaluationLoaderPort
 	BaselineLoader EvaluationLoaderPort
-	Clock          func() time.Time
+	Clock          ports.Clock
 }
 
 // CIDiff compares two evaluation artifacts and identifies new and resolved findings.
@@ -135,7 +137,7 @@ func CIDiff(ctx context.Context, req CIDiffRequest, deps CIDiffDeps) (CIDiffResp
 	return CIDiffResponse{
 		CurrentEvaluation:  req.CurrentPath,
 		BaselineEvaluation: req.BaselinePath,
-		ComparedAt:         deps.Clock().UTC(),
+		ComparedAt:         deps.Clock.Now().UTC(),
 		Summary: CIDiffSummary{
 			BaselineFindings: len(baseline),
 			CurrentFindings:  len(current),

@@ -27,7 +27,7 @@ func runReport(cmd *cobra.Command, opts reportOptions) error {
 		return fmt.Errorf("resolve current directory: %w", err)
 	}
 
-	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out, time.Time{}))
+	outPath := fsutil.CleanUserPath(ResolveDefaultOutPath(cwd, opts.out, time.Now().UTC()))
 	f, err := fileout.OpenOutputFile(outPath, fileout.FileOptions{
 		Overwrite:     gf.Force,
 		AllowSymlinks: gf.AllowSymlinkOut,

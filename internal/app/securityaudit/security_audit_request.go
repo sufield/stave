@@ -103,7 +103,6 @@ func WithRequireOffline(offline bool) RequestOption {
 // NewRequest creates a Request with sensible defaults, then applies options.
 func NewRequest(opts ...RequestOption) Request {
 	req := Request{
-		Now:          time.Now().UTC(),
 		StaveVersion: "unknown",
 		Cwd:          ".",
 		SBOMFormat:   evidence.SBOMFormatSPDX,

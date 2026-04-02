@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // --- Mocks ---
@@ -158,7 +160,7 @@ func TestFixLoop(t *testing.T) {
 
 func TestGate(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	clock := func() time.Time { return now }
+	clock := ports.FixedClock(now)
 
 	t.Run("any pass", func(t *testing.T) {
 		resp, err := Gate(context.Background(), GateRequest{Policy: "fail_on_any_violation", EvaluationPath: "e.json"}, GateDeps{FindingsCounter: &mockFindingsCounter{count: 0}, Clock: clock})

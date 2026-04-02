@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // FindingsCounterPort counts findings in an evaluation artifact.
@@ -26,7 +28,7 @@ type GateDeps struct {
 	FindingsCounter  FindingsCounterPort
 	BaselineComparer BaselineComparerPort
 	OverdueCounter   OverdueCounterPort
-	Clock            func() time.Time
+	Clock            ports.Clock
 }
 
 const (
@@ -41,7 +43,7 @@ func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, er
 		return GateResponse{}, fmt.Errorf("gate: %w", err)
 	}
 
-	now := deps.Clock().UTC()
+	now := deps.Clock.Now().UTC()
 	if req.Now != nil {
 		now = req.Now.UTC()
 	}

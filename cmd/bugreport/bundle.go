@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/core/ports"
 	"gopkg.in/yaml.v3"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -37,13 +38,13 @@ type Config struct {
 
 // Generator handles the creation of the diagnostic bundle.
 type Generator struct {
-	now func() time.Time
+	Clock ports.Clock
 }
 
 // NewGenerator returns a generator with default dependencies.
 func NewGenerator() *Generator {
 	return &Generator{
-		now: func() time.Time { return time.Now().UTC() },
+		Clock: ports.RealClock{},
 	}
 }
 
@@ -55,7 +56,7 @@ func (g *Generator) Generate(_ context.Context, w io.Writer, cfg Config) error {
 		zip:      zw,
 		files:    make([]string, 0, 8),
 		warnings: make([]string, 0, 4),
-		now:      g.now,
+		Clock:    g.Clock,
 	}
 
 	if err := g.addCoreArtifacts(bundle, cfg); err != nil {
@@ -106,7 +107,7 @@ func (g *Generator) addScrubDemo(bundle *bundleWriter) error {
 
 	demo := sc.ScrubSnapshot(asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
-		CapturedAt:    g.now(),
+		CapturedAt:    g.Clock.Now(),
 		Assets: []asset.Asset{
 			{
 				ID:     "arn:aws:s3:::demo-bucket",
@@ -195,7 +196,7 @@ func (g *Generator) addManifest(bundle *bundleWriter) error {
 	manifestFiles := append([]string(nil), bundle.files...)
 	m := manifest{
 		BundleVersion: kernel.SchemaBugReport,
-		GeneratedAt:   g.now(),
+		GeneratedAt:   g.Clock.Now(),
 		StaveVersion:  staveversion.String,
 		Sanitized:     true,
 		Files:         manifestFiles,
@@ -214,7 +215,7 @@ type bundleWriter struct {
 	zip      *zip.Writer
 	files    []string
 	warnings []string
-	now      func() time.Time
+	Clock    ports.Clock
 }
 
 func (w *bundleWriter) addJSON(name string, payload any) error {
@@ -229,7 +230,7 @@ func (w *bundleWriter) addText(name string, data []byte) error {
 	h := &zip.FileHeader{
 		Name:     name,
 		Method:   zip.Deflate,
-		Modified: w.now(),
+		Modified: w.Clock.Now(),
 	}
 	h.SetMode(0o600)
 	f, err := w.zip.CreateHeader(h)
@@ -262,9 +263,6 @@ type manifest struct {
 func ResolveDefaultOutPath(cwd, override string, now time.Time) string {
 	if strings.TrimSpace(override) != "" {
 		return override
-	}
-	if now.IsZero() {
-		now = time.Now().UTC()
 	}
 	name := fmt.Sprintf("stave-diag-%s.zip", now.UTC().Format("20060102T150405Z"))
 	return filepath.Join(cwd, name)
