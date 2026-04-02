@@ -247,7 +247,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv, now)
+		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
 		if row.Decision != evaluation.DecisionPass {
 			t.Errorf("decision=%s, want PASS", row.Decision)
@@ -274,7 +274,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv, now)
+		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
 		if row.Decision != evaluation.DecisionViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
@@ -292,7 +292,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		timeline := makeTimeline(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv, now)
+		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
 		if row.Decision != evaluation.DecisionViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
@@ -310,7 +310,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		timeline := makeTimeline(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv, now)
+		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
 		if row.Decision != evaluation.DecisionViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
@@ -328,7 +328,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		timeline := makeTimeline(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
-		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv, now)
+		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
 		if row.Decision != evaluation.DecisionViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)

@@ -6,7 +6,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// assetIDSet provides a clean interface for unique asset tracking.
+// assetIDSet provides an interface for unique asset tracking.
 type assetIDSet map[asset.ID]struct{}
 
 // Add inserts an ID and returns true if it was not already present.

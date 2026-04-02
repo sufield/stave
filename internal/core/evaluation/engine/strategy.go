@@ -174,8 +174,8 @@ type prefixExposureStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
-	row, findings := EvaluatePrefixExposureForRow(t, s.ctl, now)
+func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
+	row, findings := EvaluatePrefixExposureForRow(t, s.ctl)
 	return row, wrapInPointers(findings)
 }
 
