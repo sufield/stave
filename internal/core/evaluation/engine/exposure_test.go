@@ -56,9 +56,8 @@ func TestExposure_MissingProtectedPrefixes(t *testing.T) {
 	// Control with no protected_prefixes → config issue → violation
 	ctl := exposureControl("CTL.EXP.001", nil, nil)
 	tl := exposureTimeline(t, nil)
-	now := time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC)
 
-	row, findings := EvaluatePrefixExposureForRow(tl, ctl, now)
+	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
 	if row.Decision != evaluation.DecisionViolation {
 		t.Fatalf("expected Violation for missing protected prefixes, got %v", row.Decision)
 	}
@@ -74,9 +73,8 @@ func TestExposure_OverlappingPrefixes(t *testing.T) {
 		[]string{"public/images/secret"},
 	)
 	tl := exposureTimeline(t, nil)
-	now := time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC)
 
-	row, findings := EvaluatePrefixExposureForRow(tl, ctl, now)
+	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
 	if row.Decision != evaluation.DecisionViolation {
 		t.Fatalf("expected Violation for overlapping prefixes, got %v", row.Decision)
 	}
@@ -89,9 +87,8 @@ func TestExposure_NoEvidence_IsViolation(t *testing.T) {
 	// Missing exposure evidence is security-conservative → violation
 	ctl := exposureControl("CTL.EXP.001", []string{"data/sensitive"}, nil)
 	tl := exposureTimeline(t, map[string]any{})
-	now := time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC)
 
-	row, findings := EvaluatePrefixExposureForRow(tl, ctl, now)
+	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
 	if row.Decision != evaluation.DecisionViolation {
 		t.Fatalf("expected Violation for missing evidence, got %v", row.Decision)
 	}

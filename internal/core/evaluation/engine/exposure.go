@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -18,27 +17,38 @@ const (
 	valConfigOverlap    = "config_overlap"
 )
 
+// prefixEvaluator groups the timeline and control that travel together
+// through every prefix-exposure helper, eliminating repeated parameter passing.
+type prefixEvaluator struct {
+	timeline *asset.Timeline
+	ctl      *policy.ControlDefinition
+}
+
 // EvaluatePrefixExposureForRow evaluates whether protected prefixes are publicly readable.
 func EvaluatePrefixExposureForRow(
 	timeline *asset.Timeline,
 	ctl *policy.ControlDefinition,
-	_ time.Time,
 ) (evaluation.Row, []evaluation.Finding) {
-	row := newPrefixExposureRow(timeline, ctl)
+	e := prefixEvaluator{timeline: timeline, ctl: ctl}
+	return e.evaluate()
+}
+
+func (e *prefixEvaluator) evaluate() (evaluation.Row, []evaluation.Finding) {
+	row := newPrefixExposureRow(e.timeline, e.ctl)
 
 	// 1. Validate Control Configuration
-	allowed, protected := prefixExposureSets(ctl)
+	allowed, protected := prefixExposureSets(e.ctl)
 
 	if protected.Empty() {
-		return buildConfigIssue(row, ctl, timeline, msgMissingProtectedPrefixes(), valNotConfigured)
+		return e.configIssue(row, msgMissingProtectedPrefixes(), valNotConfigured)
 	}
 
 	if conflict := allowed.Overlap(protected); conflict != nil {
-		return buildOverlapIssue(row, ctl, timeline, conflict)
+		return e.overlapIssue(row, conflict)
 	}
 
 	// 2. Evaluate Asset Facts
-	return evaluateAssetExposure(row, ctl, timeline, protected)
+	return e.assetExposure(row, protected)
 }
 
 func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) evaluation.Row {
@@ -53,13 +63,11 @@ func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) eval
 	}
 }
 
-func evaluateAssetExposure(
+func (e *prefixEvaluator) assetExposure(
 	row evaluation.Row,
-	ctl *policy.ControlDefinition,
-	t *asset.Timeline,
 	protected policy.PrefixSet,
 ) (evaluation.Row, []evaluation.Finding) {
-	facts := exposure.FactsFromStorage(t.Asset().Properties)
+	facts := exposure.FactsFromStorage(e.timeline.Asset().Properties)
 	var findings []evaluation.Finding
 
 	for _, prefix := range protected.Prefixes() {
@@ -69,7 +77,7 @@ func evaluateAssetExposure(
 		}
 
 		evidence := res.String()
-		findings = append(findings, *NewFinding(ctl, t, FindingContext{
+		findings = append(findings, *NewFinding(e.ctl, e.timeline, FindingContext{
 			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{
 				{Property: predicate.NewFieldPath(propExposureSource), ActualValue: evidence, Operator: predicate.OpEq, UnsafeValue: evidence},
@@ -87,15 +95,13 @@ func evaluateAssetExposure(
 
 // --- Configuration Error Helpers ---
 
-func buildConfigIssue(
+func (e *prefixEvaluator) configIssue(
 	row evaluation.Row,
-	ctl *policy.ControlDefinition,
-	t *asset.Timeline,
 	why string,
 	reasonCode string,
 ) (evaluation.Row, []evaluation.Finding) {
 	row.Decision = evaluation.DecisionViolation
-	f := NewFinding(ctl, t, FindingContext{
+	f := NewFinding(e.ctl, e.timeline, FindingContext{
 		Reason: why,
 		Misconfigs: []policy.Misconfiguration{
 			{Property: predicate.NewFieldPath(propExposureSource), ActualValue: reasonCode, Operator: predicate.OpEq, UnsafeValue: reasonCode},
@@ -104,14 +110,12 @@ func buildConfigIssue(
 	return row, []evaluation.Finding{*f}
 }
 
-func buildOverlapIssue(
+func (e *prefixEvaluator) overlapIssue(
 	row evaluation.Row,
-	ctl *policy.ControlDefinition,
-	t *asset.Timeline,
 	c *policy.PrefixConflict,
 ) (evaluation.Row, []evaluation.Finding) {
 	row.Decision = evaluation.DecisionViolation
-	f := NewFinding(ctl, t, FindingContext{
+	f := NewFinding(e.ctl, e.timeline, FindingContext{
 		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
 		Misconfigs: []policy.Misconfiguration{
 			{Property: predicate.NewFieldPath(propExposureSource), ActualValue: valConfigOverlap, Operator: predicate.OpEq, UnsafeValue: valConfigOverlap},
