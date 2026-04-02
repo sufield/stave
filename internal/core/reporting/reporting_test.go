@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // --- Mocks ---
@@ -36,11 +37,11 @@ func (m *mockBaselineWriter) WriteBaseline(_ context.Context, _ string, _ []Base
 }
 
 type mockReportLoader struct {
-	data any
+	data *safetyenvelope.Evaluation
 	err  error
 }
 
-func (m *mockReportLoader) LoadEvaluation(_ context.Context, _ string) (any, error) {
+func (m *mockReportLoader) LoadEvaluation(_ context.Context, _ string) (*safetyenvelope.Evaluation, error) {
 	return m.data, m.err
 }
 
@@ -182,7 +183,7 @@ func TestCIDiff(t *testing.T) {
 
 func TestReport(t *testing.T) {
 	t.Run("happy", func(t *testing.T) {
-		_, err := Report(context.Background(), ReportRequest{InputFile: "e.json"}, ReportDeps{Loader: &mockReportLoader{data: "ok"}})
+		_, err := Report(context.Background(), ReportRequest{InputFile: "e.json"}, ReportDeps{Loader: &mockReportLoader{data: &safetyenvelope.Evaluation{}}})
 		assertNoErr(t, err)
 	})
 	t.Run("error", func(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // LoadResult holds the output of a snapshot load: the parsed snapshots and
@@ -77,10 +78,9 @@ type FindingMarshaler interface {
 type EnrichFunc func(result evaluation.Result) (EnrichedResult, error)
 
 // ContentHasher computes reproducible digests over file system paths.
-type ContentHasher interface {
-	HashDir(path string, exts ...string) (string, error)
-	HashFile(path string) (string, error)
-}
+// Canonical definition lives in core/ports; this alias preserves backward
+// compatibility for existing app-layer consumers.
+type ContentHasher = ports.ContentHasher
 
 // SnapshotFile represents a discovered snapshot file with its metadata.
 // This type is defined in contracts (not in the adapter) so that both the app

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sufield/stave/cmd/enforce/artifact"
+	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/safetyenvelope"

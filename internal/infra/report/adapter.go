@@ -15,17 +15,6 @@ type EvaluationLoader struct {
 }
 
 // LoadEvaluation loads a safety envelope evaluation artifact.
-// Returns *safetyenvelope.Evaluation as any to keep the use case decoupled.
-func (l *EvaluationLoader) LoadEvaluation(ctx context.Context, path string) (any, error) {
-	eval, err := l.LoadEval(ctx, path)
-	if err != nil {
-		return nil, err
-	}
-	return eval, nil
-}
-
-// TypedEvaluation extracts the concrete evaluation from a ReportResponse.
-func TypedEvaluation(data any) (*safetyenvelope.Evaluation, bool) {
-	eval, ok := data.(*safetyenvelope.Evaluation)
-	return eval, ok
+func (l *EvaluationLoader) LoadEvaluation(ctx context.Context, path string) (*safetyenvelope.Evaluation, error) {
+	return l.LoadEval(ctx, path)
 }

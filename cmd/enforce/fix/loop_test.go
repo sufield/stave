@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 

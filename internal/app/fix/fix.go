@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -85,24 +84,9 @@ func (s *Service) Fix(ctx context.Context, req FixRequest) error {
 }
 
 // SelectFinding locates a finding by its canonical key (<control_id>@<asset_id>).
+// Delegates to remediation.SelectFinding in core.
 func SelectFinding(findings []remediation.Finding, needle string) (remediation.Finding, error) {
-	for i := range findings {
-		if FindingKey(findings[i]) == needle {
-			return findings[i], nil
-		}
-	}
-
-	keys := make([]string, 0, len(findings))
-	for i := range findings {
-		keys = append(keys, FindingKey(findings[i]))
-	}
-	slices.Sort(keys)
-
-	return remediation.Finding{}, fmt.Errorf(
-		"finding %q not found; available findings:\n  %s",
-		needle,
-		strings.Join(keys, "\n  "),
-	)
+	return remediation.SelectFinding(findings, needle)
 }
 
 // WriteFixResult writes the fix plan as JSON.
@@ -128,6 +112,7 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 }
 
 // FindingKey returns the canonical string selector for a finding.
+// Delegates to remediation.FindingKey in core.
 func FindingKey(f remediation.Finding) string {
-	return fmt.Sprintf("%s@%s", f.ControlID, f.AssetID)
+	return remediation.FindingKey(f)
 }

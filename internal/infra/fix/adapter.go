@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
-	appfix "github.com/sufield/stave/internal/app/fix"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -35,7 +34,7 @@ func (l *FindingLoader) LoadFindingWithPlan(_ context.Context, inputPath, findin
 		return nil, fmt.Errorf("no findings found in %s", path)
 	}
 
-	selected, err := appfix.SelectFinding(findings, findingRef)
+	selected, err := remediation.SelectFinding(findings, findingRef)
 	if err != nil {
 		return nil, err
 	}

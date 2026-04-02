@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/adapters/output"
 	appfix "github.com/sufield/stave/internal/app/fix"
@@ -14,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/fileout"
 )
 
 // Runner is a thin CLI wrapper that delegates to internal/app/fix.Service.

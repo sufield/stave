@@ -5,10 +5,10 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 

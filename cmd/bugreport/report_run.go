@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 

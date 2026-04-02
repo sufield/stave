@@ -2,7 +2,6 @@ package report
 
 import (
 	_ "embed"
-	"fmt"
 	"log/slog"
 	"strings"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
 	"github.com/sufield/stave/internal/core/reporting"
-	infrareport "github.com/sufield/stave/internal/infra/report"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	staveversion "github.com/sufield/stave/internal/version"
@@ -104,10 +102,7 @@ Examples:
 			}
 
 			// Adapter: render in requested format
-			eval, ok := infrareport.TypedEvaluation(ucResp.EvaluationData)
-			if !ok {
-				return fmt.Errorf("unexpected evaluation data type")
-			}
+			eval := ucResp.EvaluationData
 			if fmtValue.IsJSON() {
 				w := compose.ResolveStdout(cmd.OutOrStdout(), flags.Quiet, fmtValue)
 				return reportrender.RenderJSON(*eval, staveversion.String, w)
