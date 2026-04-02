@@ -52,13 +52,13 @@ func (rt *Timeline) SetAsset(a Asset) {
 }
 
 // Stats returns continuity metrics for this timeline.
-func (rt *Timeline) Stats() *ObservationStats {
-	return &rt.stats
+func (rt *Timeline) Stats() ObservationStats {
+	return rt.stats
 }
 
 // History returns archived unsafe episodes for this timeline.
-func (rt *Timeline) History() *EpisodeHistory {
-	return &rt.history
+func (rt *Timeline) History() EpisodeHistory {
+	return rt.history
 }
 
 // RecordObservation updates continuity metrics and applies the unsafe/safe transition.

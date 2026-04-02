@@ -27,13 +27,13 @@ func (h *EpisodeHistory) Record(e Episode) {
 }
 
 // Count returns number of archived episodes.
-func (h *EpisodeHistory) Count() int {
+func (h EpisodeHistory) Count() int {
 	return len(h.episodes)
 }
 
 // RecurringViolationCount returns count of episodes that started in the window.
 // Episodes are sorted by StartAt, so we skip before the window and break after.
-func (h *EpisodeHistory) RecurringViolationCount(w kernel.TimeWindow) int {
+func (h EpisodeHistory) RecurringViolationCount(w kernel.TimeWindow) int {
 	var count int
 	for _, episode := range h.episodes {
 		start := episode.StartAt()
@@ -51,7 +51,7 @@ func (h *EpisodeHistory) RecurringViolationCount(w kernel.TimeWindow) int {
 // WindowSummary returns count and bounds for episodes started in the window.
 // Episodes are sorted by StartAt, so first is taken from the earliest match
 // and we break once past the window.
-func (h *EpisodeHistory) WindowSummary(w kernel.TimeWindow) (count int, first, last time.Time) {
+func (h EpisodeHistory) WindowSummary(w kernel.TimeWindow) (count int, first, last time.Time) {
 	for _, episode := range h.episodes {
 		start := episode.StartAt()
 		if !start.After(w.Start) {

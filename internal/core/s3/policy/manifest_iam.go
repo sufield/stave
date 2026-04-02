@@ -9,20 +9,22 @@ type PermissionMapping struct {
 	Action    string `json:"action"`    // e.g., "s3:ListAllMyBuckets"
 }
 
-// S3IngestPermissions is the source-of-truth least-privilege mapping for
+// S3IngestPermissions returns the source-of-truth least-privilege mapping for
 // S3 observation collection. Each entry pairs a CLI operation with the
 // IAM action it requires.
-var S3IngestPermissions = []PermissionMapping{
-	{"aws s3api list-buckets", "s3:ListAllMyBuckets"},
-	{"aws s3api get-bucket-tagging", "s3:GetBucketTagging"},
-	{"aws s3api get-bucket-policy", "s3:GetBucketPolicy"},
-	{"aws s3api get-bucket-acl", "s3:GetBucketAcl"},
-	{"aws s3api get-public-access-block", "s3:GetBucketPublicAccessBlock"},
-	{"aws s3api get-bucket-encryption", "s3:GetEncryptionConfiguration"},
-	{"aws s3api get-bucket-versioning", "s3:GetBucketVersioning"},
-	{"aws s3api get-object-lock-configuration", "s3:GetBucketObjectLockConfiguration"},
-	{"aws s3api get-bucket-logging", "s3:GetBucketLogging"},
-	{"aws s3api get-bucket-lifecycle-configuration", "s3:GetLifecycleConfiguration"},
+func S3IngestPermissions() []PermissionMapping {
+	return []PermissionMapping{
+		{"aws s3api list-buckets", "s3:ListAllMyBuckets"},
+		{"aws s3api get-bucket-tagging", "s3:GetBucketTagging"},
+		{"aws s3api get-bucket-policy", "s3:GetBucketPolicy"},
+		{"aws s3api get-bucket-acl", "s3:GetBucketAcl"},
+		{"aws s3api get-public-access-block", "s3:GetBucketPublicAccessBlock"},
+		{"aws s3api get-bucket-encryption", "s3:GetEncryptionConfiguration"},
+		{"aws s3api get-bucket-versioning", "s3:GetBucketVersioning"},
+		{"aws s3api get-object-lock-configuration", "s3:GetBucketObjectLockConfiguration"},
+		{"aws s3api get-bucket-logging", "s3:GetBucketLogging"},
+		{"aws s3api get-bucket-lifecycle-configuration", "s3:GetLifecycleConfiguration"},
+	}
 }
 
 // MinimumS3IngestIAMActions returns the normalized action allow-list

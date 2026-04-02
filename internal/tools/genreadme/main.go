@@ -5,7 +5,7 @@
 //
 //	go run ./internal/tools/genreadme                    # write README.md
 //	go run ./internal/tools/genreadme -check             # exit 1 if README.md is stale
-//	go run ./internal/tools/genreadme -tmpl README.md.tmpl -out README.md
+//	go run ./internal/tools/genreadme -tmpl internal/tools/genreadme/README.md.tmpl -out README.md
 package main
 
 import (
@@ -26,7 +26,7 @@ type Data struct {
 }
 
 func main() {
-	tmplPath := flag.String("tmpl", "README.md.tmpl", "template file")
+	tmplPath := flag.String("tmpl", "internal/tools/genreadme/README.md.tmpl", "template file")
 	outPath := flag.String("out", "README.md", "output file")
 	controlsDir := flag.String("controls", "controls/s3", "controls directory")
 	check := flag.Bool("check", false, "check mode: exit 1 if output is stale")

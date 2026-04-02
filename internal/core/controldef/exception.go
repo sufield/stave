@@ -7,6 +7,7 @@ package controldef
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -97,7 +98,7 @@ func (r ExceptionRule) matches(assetID asset.ID) bool {
 // ExceptionConfig holds all exception rules with an indexed lookup.
 // Always used as a pointer — sync.Once is safe for thread-safe init.
 type ExceptionConfig struct {
-	Rules []ExceptionRule
+	rules []ExceptionRule
 
 	index map[kernel.ControlID][]*ExceptionRule
 	once  sync.Once
@@ -105,16 +106,24 @@ type ExceptionConfig struct {
 
 // NewExceptionConfig creates a prepared ExceptionConfig with indexed rules.
 func NewExceptionConfig(rules []ExceptionRule) *ExceptionConfig {
-	c := &ExceptionConfig{Rules: rules}
+	c := &ExceptionConfig{rules: rules}
 	c.Prepare()
 	return c
+}
+
+// Rules returns a defensive copy of the exception rules.
+func (c *ExceptionConfig) Rules() []ExceptionRule {
+	if c == nil {
+		return nil
+	}
+	return slices.Clone(c.rules)
 }
 
 // ShouldExcept checks if a specific control+asset pair should be excepted.
 // Returns the matched rule when exception applies; otherwise nil.
 // Thread-safe via sync.Once.
 func (c *ExceptionConfig) ShouldExcept(controlID kernel.ControlID, assetID asset.ID, now time.Time) *ExceptionRule {
-	if c == nil || len(c.Rules) == 0 {
+	if c == nil || len(c.rules) == 0 {
 		return nil
 	}
 	c.Prepare()
@@ -138,9 +147,9 @@ func (c *ExceptionConfig) Prepare() {
 		return
 	}
 	c.once.Do(func() {
-		c.index = make(map[kernel.ControlID][]*ExceptionRule, len(c.Rules))
-		for i := range c.Rules {
-			rule := &c.Rules[i]
+		c.index = make(map[kernel.ControlID][]*ExceptionRule, len(c.rules))
+		for i := range c.rules {
+			rule := &c.rules[i]
 			c.index[rule.ControlID] = append(c.index[rule.ControlID], rule)
 		}
 	})

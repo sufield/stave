@@ -72,7 +72,7 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 		}),
 	)
 
-	if cfg.ExceptionConfig == nil || len(cfg.ExceptionConfig.Rules) != 1 {
+	if cfg.ExceptionConfig == nil || len(cfg.ExceptionConfig.Rules()) != 1 {
 		t.Fatalf("exception config = %#v", cfg.ExceptionConfig)
 	}
 	if len(cfg.PreloadedControls) != 1 || cfg.PreloadedControls[0].ID != "CTL.A" {

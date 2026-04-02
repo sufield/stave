@@ -18,15 +18,16 @@ type Snapshot struct {
 	Identities    []CloudIdentity `json:"identities,omitempty"`
 }
 
-// FindAsset returns the asset with the given ID, or nil if not present.
-func (s *Snapshot) FindAsset(id string) *Asset {
+// FindAsset returns the asset with the given ID.
+// Returns the asset and true if found, or a zero Asset and false if not present.
+func (s *Snapshot) FindAsset(id string) (Asset, bool) {
 	assetID := ID(id)
 	for i := range s.Assets {
 		if s.Assets[i].ID == assetID {
-			return &s.Assets[i]
+			return s.Assets[i], true
 		}
 	}
-	return nil
+	return Asset{}, false
 }
 
 // HasTimestamp reports whether the snapshot has a captured timestamp.

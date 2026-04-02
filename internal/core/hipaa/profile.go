@@ -10,14 +10,16 @@ type IncompatiblePair struct {
 	Reason string
 }
 
-// KnownIncompatible is the compile-time list of control pairs that
+// KnownIncompatible returns the compile-time list of control pairs that
 // cannot coexist in a single profile.
-var KnownIncompatible = []IncompatiblePair{
-	{
-		A:      "CONTROLS.003",
-		B:      "RETENTION.001",
-		Reason: "MFA Delete (CONTROLS.003) and lifecycle expiry (RETENTION.001) are mutually exclusive — MFA Delete prevents lifecycle rules from permanently deleting objects",
-	},
+func KnownIncompatible() []IncompatiblePair {
+	return []IncompatiblePair{
+		{
+			A:      "CONTROLS.003",
+			B:      "RETENTION.001",
+			Reason: "MFA Delete (CONTROLS.003) and lifecycle expiry (RETENTION.001) are mutually exclusive — MFA Delete prevents lifecycle rules from permanently deleting objects",
+		},
+	}
 }
 
 // ValidateProfile checks that a set of control IDs contains no
@@ -28,7 +30,7 @@ func ValidateProfile(ids []string) error {
 		set[id] = struct{}{}
 	}
 
-	for _, pair := range KnownIncompatible {
+	for _, pair := range KnownIncompatible() {
 		_, hasA := set[pair.A]
 		_, hasB := set[pair.B]
 		if hasA && hasB {

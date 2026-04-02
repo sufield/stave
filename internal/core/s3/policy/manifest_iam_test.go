@@ -16,7 +16,7 @@ func TestMinimumS3IngestIAMActions_MatchesManifest(t *testing.T) {
 	}
 
 	manifestSet := map[string]bool{}
-	for _, entry := range S3IngestPermissions {
+	for _, entry := range S3IngestPermissions() {
 		manifestSet[entry.Action] = true
 	}
 	if len(got) != len(manifestSet) {
@@ -39,7 +39,7 @@ func TestIAMMinimumDocs_MatchesManifest(t *testing.T) {
 	content := string(data)
 
 	manifestActions := MinimumS3IngestIAMActions()
-	for _, entry := range S3IngestPermissions {
+	for _, entry := range S3IngestPermissions() {
 		if !strings.Contains(content, "`"+entry.Operation+"`") {
 			t.Fatalf("docs missing operation %q", entry.Operation)
 		}

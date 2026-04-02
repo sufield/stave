@@ -44,16 +44,15 @@ func findAssetInSnapshots(
 
 	idStr := assetID.String()
 	for i := range snapshots {
-		found := snapshots[i].FindAsset(idStr)
-		if found == nil {
-			continue
-		}
-		if !targetTime.IsZero() && snapshots[i].CapturedAt.Equal(targetTime) {
-			return found, &snapshots[i]
-		}
-		if fallbackAsset == nil {
-			fallbackAsset = found
-			fallbackSnap = &snapshots[i]
+		if found, ok := snapshots[i].FindAsset(idStr); ok {
+			if !targetTime.IsZero() && snapshots[i].CapturedAt.Equal(targetTime) {
+				return &found, &snapshots[i]
+			}
+			if fallbackAsset == nil {
+				fb := found
+				fallbackAsset = &fb
+				fallbackSnap = &snapshots[i]
+			}
 		}
 	}
 	return fallbackAsset, fallbackSnap
