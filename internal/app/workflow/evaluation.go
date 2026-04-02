@@ -38,12 +38,13 @@ func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 		Hasher:            input.Hasher,
 		Exemptions:        input.ExemptionConfig,
 		Exceptions:        input.ExceptionConfig,
-		StaveVersion:      input.StaveVersion,
-		InputHashes:       input.InputHashes,
 		PredicateParser:   input.PredicateParser,
 		CELEvaluator:      input.CELEvaluator,
 	}
-	result, err := runner.Evaluate(input.Snapshots)
+	result, err := runner.Evaluate(input.Snapshots, engine.EvaluateOptions{
+		StaveVersion: input.StaveVersion,
+		InputHashes:  input.InputHashes,
+	})
 	if err != nil {
 		return evaluation.Result{}, err
 	}

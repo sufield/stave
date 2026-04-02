@@ -238,7 +238,7 @@ func TestUnsupportedStrategy(t *testing.T) {
 	tl, _ := asset.NewTimeline(a)
 
 	s := &unsupportedStrategy{ctl: ctl}
-	row, findings := s.Evaluate(tl, time.Now())
+	row, findings := s.Evaluate(tl, time.Now(), nil)
 	if row.Decision != evaluation.DecisionSkipped {
 		t.Fatalf("Decision = %v", row.Decision)
 	}
@@ -303,31 +303,49 @@ func TestRunnerNormalizeSnapshots(t *testing.T) {
 	}
 }
 
-func TestRunnerIdentitiesAt(t *testing.T) {
+func TestIdentityIndexAt(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	r := &Runner{
-		identitiesByTime: map[time.Time][]asset.CloudIdentity{
-			base:                    {{ID: "id-1"}},
-			base.Add(2 * time.Hour): {{ID: "id-2"}},
-		},
+	idx := IdentityIndex{
+		base:                    {{ID: "id-1"}},
+		base.Add(2 * time.Hour): {{ID: "id-2"}},
 	}
 
 	// Exact match
-	ids := r.identitiesAt(base)
+	ids := idx.At(base)
 	if len(ids) != 1 || ids[0].ID != "id-1" {
 		t.Fatalf("exact: %v", ids)
 	}
 
 	// Fallback to closest before
-	ids = r.identitiesAt(base.Add(time.Hour))
+	ids = idx.At(base.Add(time.Hour))
 	if len(ids) != 1 || ids[0].ID != "id-1" {
 		t.Fatalf("fallback: %v", ids)
 	}
 
 	// No match at all
-	ids = r.identitiesAt(base.Add(-time.Hour))
+	ids = idx.At(base.Add(-time.Hour))
 	if len(ids) != 0 {
 		t.Fatalf("no match: %v", ids)
+	}
+}
+
+func TestBuildIdentityIndex(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	snapshots := []asset.Snapshot{
+		{CapturedAt: base, Identities: []asset.CloudIdentity{{ID: "id-1"}}},
+		{CapturedAt: base.Add(time.Hour), Identities: []asset.CloudIdentity{{ID: "id-2"}}},
+	}
+	idx := BuildIdentityIndex(snapshots)
+	if len(idx) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(idx))
+	}
+	ids := idx.At(base)
+	if len(ids) != 1 || ids[0].ID != "id-1" {
+		t.Fatalf("first snapshot: %v", ids)
+	}
+	ids = idx.At(base.Add(time.Hour))
+	if len(ids) != 1 || ids[0].ID != "id-2" {
+		t.Fatalf("second snapshot: %v", ids)
 	}
 }
 

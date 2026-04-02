@@ -70,7 +70,7 @@ func TestUnsafeStateStrategy_SafeAsset(t *testing.T) {
 		ctl:    testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionPass {
 		t.Fatalf("expected Pass, got %v", row.Decision)
 	}
@@ -96,7 +96,7 @@ func TestUnsafeStateStrategy_UnsafeExceedsThreshold(t *testing.T) {
 		ctl:    testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionViolation {
 		t.Fatalf("expected Violation, got %v", row.Decision)
 	}
@@ -122,7 +122,7 @@ func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
 		ctl:    testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionPass {
 		t.Fatalf("expected Pass (below threshold), got %v", row.Decision)
 	}
@@ -153,7 +153,7 @@ func TestUnsafeDurationStrategy_SafeAsset(t *testing.T) {
 		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionPass {
 		t.Fatalf("expected Pass, got %v", row.Decision)
 	}
@@ -179,7 +179,7 @@ func TestUnsafeDurationStrategy_ViolationExceedsThreshold(t *testing.T) {
 		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionViolation {
 		t.Fatalf("expected Violation, got %v", row.Decision)
 	}
@@ -205,7 +205,7 @@ func TestUnsafeDurationStrategy_InconclusiveInsufficientCoverage(t *testing.T) {
 		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionInconclusive {
 		t.Fatalf("expected Inconclusive (insufficient coverage), got %v", row.Decision)
 	}
@@ -233,7 +233,7 @@ func TestUnsafeDurationStrategy_SafeWithAdequateCoverage(t *testing.T) {
 		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionPass {
 		t.Fatalf("expected Pass with adequate coverage, got %v", row.Decision)
 	}
@@ -265,7 +265,7 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 		ctl:    ctl,
 	}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionPass {
 		t.Fatalf("expected Pass (disabled recurrence), got %v", row.Decision)
 	}
@@ -292,7 +292,7 @@ func TestUnsupportedStrategy_ReturnsSkipped(t *testing.T) {
 	ctl := testControl("CTL.AUTH.001", policy.TypeAuthorizationBoundary)
 	s := &unsupportedStrategy{ctl: ctl}
 
-	row, findings := s.Evaluate(tl, now)
+	row, findings := s.Evaluate(tl, now, nil)
 	if row.Decision != evaluation.DecisionSkipped {
 		t.Fatalf("expected Skipped, got %v", row.Decision)
 	}

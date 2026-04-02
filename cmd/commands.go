@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"context"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/core/ports"
@@ -10,12 +13,14 @@ import (
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	"github.com/sufield/stave/cmd/bugreport"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagdocs "github.com/sufield/stave/cmd/diagnose/docs"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
+	"github.com/sufield/stave/cmd/enforce/artifact"
 	"github.com/sufield/stave/cmd/enforce/baseline"
 	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/fix"
@@ -29,6 +34,9 @@ import (
 	"github.com/sufield/stave/cmd/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/eval"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/core/setup"
 	infrabaseline "github.com/sufield/stave/internal/infra/baseline"
@@ -36,6 +44,8 @@ import (
 	infrafix "github.com/sufield/stave/internal/infra/fix"
 	infragate "github.com/sufield/stave/internal/infra/gate"
 	infrareport "github.com/sufield/stave/internal/infra/report"
+	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 const (
@@ -95,7 +105,11 @@ func WireCommands(app *App) {
 	root.AddCommand(enforce.NewGenerateCmd())
 	root.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
 		UseCaseDeps: reporting.ReportDeps{
-			Loader: &infrareport.EvaluationLoader{},
+			Loader: &infrareport.EvaluationLoader{
+				LoadEval: func(ctx context.Context, path string) (*safetyenvelope.Evaluation, error) {
+					return artifact.NewLoader().Evaluation(ctx, fsutil.CleanUserPath(path))
+				},
+			},
 		},
 	}))
 	root.AddCommand(artifacts.NewLintCmd())
@@ -150,11 +164,19 @@ func wireSnapshotSubtree(snapshotCmd *cobra.Command, p *compose.Provider) {
 }
 
 func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
+	loader := artifact.NewLoader()
+
+	baselineFileOpts := fileout.FileOptions{}
+
 	ciCmd.AddCommand(enforce.NewBaselineCmd(baseline.Deps{
 		SaveDeps: reporting.BaselineSaveDeps{
 			Loader: &infrabaseline.EvaluationLoader{},
-			Writer: &infrabaseline.BaselineWriter{},
-			Clock:  ports.RealClock{},
+			Writer: &infrabaseline.BaselineWriter{
+				OpenFile: func(path string) (*os.File, error) {
+					return fileout.OpenOutputFile(path, baselineFileOpts)
+				},
+			},
+			Clock: ports.RealClock{},
 		},
 		CheckDeps: reporting.BaselineCheckDeps{
 			EvalLoader:     &infrabaseline.EvaluationLoader{},
@@ -164,10 +186,31 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	}))
 	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
 		UseCaseDeps: eval.GateDeps{
-			FindingsCounter:  &infragate.FindingsCounter{},
-			BaselineComparer: &infragate.BaselineComparer{},
+			FindingsCounter: &infragate.FindingsCounter{
+				LoadEvaluation: loader.Evaluation,
+			},
+			BaselineComparer: &infragate.BaselineComparer{
+				LoadEvaluation: loader.Evaluation,
+				LoadBaseline:   loader.Baseline,
+				Compare: func(san kernel.Sanitizer, baseEntries []evaluation.BaselineEntry, currentFindings []remediation.Finding) infragate.BaselineComparisonResult {
+					bc := artifact.CompareAgainstBaseline(san, baseEntries, currentFindings)
+					return infragate.BaselineComparisonResult{
+						Current:    bc.Current,
+						Comparison: bc.Comparison,
+					}
+				},
+			},
 			OverdueCounter: &infragate.OverdueCounter{
-				LoadAssets:      p.LoadAssets,
+				LoadAssets: func(ctx context.Context, obsDir, ctlDir string) (infragate.Assets, error) {
+					a, err := p.LoadAssets(ctx, obsDir, ctlDir)
+					if err != nil {
+						return infragate.Assets{}, err
+					}
+					return infragate.Assets{
+						Snapshots: a.Snapshots,
+						Controls:  a.Controls,
+					}, nil
+				},
 				NewCELEvaluator: p.NewCELEvaluator,
 			},
 			Clock: ports.RealClock{},
