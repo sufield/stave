@@ -231,7 +231,7 @@ func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time)
 				ControlID: f.ControlID,
 				AssetID:   f.AssetID,
 				Reason:    rule.Reason,
-				Expires:   rule.Expires.String(),
+				Expires:   rule.Expires,
 			})
 		} else {
 			regular = append(regular, f)

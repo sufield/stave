@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 func newTestRunner(t *testing.T) *Runner {
@@ -44,7 +45,7 @@ func TestRunFix_WithExistingRemediationPlan(t *testing.T) {
 						AssetID:   "bucket-a",
 						AssetType: "storage_bucket",
 					},
-					Actions: []evaluation.RemediationAction{{ActionType: "set", Path: "p", Value: true}},
+					Actions: []evaluation.RemediationAction{{ActionType: "set", Path: predicate.NewFieldPath("p"), Value: true}},
 				},
 			},
 		},

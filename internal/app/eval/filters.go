@@ -55,7 +55,7 @@ func (f ControlFilter) matches(ctl policy.ControlDefinition, excluded map[kernel
 	if f.MinSeverity != policy.SeverityNone && !ctl.Severity.Gte(f.MinSeverity) {
 		return false
 	}
-	if f.Compliance != "" && !ctl.HasCompliance(f.Compliance) {
+	if f.Compliance != "" && !ctl.HasCompliance(policy.ComplianceFramework(f.Compliance)) {
 		return false
 	}
 	return true

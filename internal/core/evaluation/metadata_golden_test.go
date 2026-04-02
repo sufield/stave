@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestEvaluationMetadata_ToMap_Golden(t *testing.T) {
@@ -13,7 +15,7 @@ func TestEvaluationMetadata_ToMap_Golden(t *testing.T) {
 		ContextName: "prod-check",
 		ControlSource: ControlSourceInfo{
 			Source:       ControlSourcePacks,
-			EnabledPacks: []string{"cis-aws-v1"},
+			EnabledPacks: []kernel.PackName{"cis-aws-v1"},
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/tmp/ctl.yaml",

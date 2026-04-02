@@ -60,7 +60,7 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 
 	// Verify all returned controls have the required tags
 	for _, ctl := range controls {
-		tags := make(map[string]bool, len(ctl.ScopeTags))
+		tags := make(map[kernel.ScopeTag]bool, len(ctl.ScopeTags))
 		for _, tag := range ctl.ScopeTags {
 			tags[tag] = true
 		}

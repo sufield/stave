@@ -50,8 +50,8 @@ type BaselineComparison struct {
 	SchemaVersion kernel.Schema             `json:"schema_version"`
 	Kind          kernel.OutputKind         `json:"kind"`
 	CheckedAt     time.Time                 `json:"checked_at"`
-	BaselineFile  string                    `json:"baseline_file"`
-	Evaluation    string                    `json:"evaluation"`
+	BaselineFile  FilePath                  `json:"baseline_file"`
+	Evaluation    FilePath                  `json:"evaluation"`
 	Summary       BaselineComparisonSummary `json:"summary"`
 	New           []BaselineEntry           `json:"new"`
 	Resolved      []BaselineEntry           `json:"resolved"`

@@ -20,7 +20,7 @@ func FromFinding(f remediation.Finding) FindingDTO {
 		AssetVendor:        f.AssetVendor,
 		Evidence:           fromEvidence(f.Evidence),
 		ControlSeverity:    f.ControlSeverity.String(),
-		ControlCompliance:  map[string]string(f.ControlCompliance),
+		ControlCompliance:  complianceToStrings(f.ControlCompliance),
 		Remediation:        fromRemediationSpec(f.RemediationSpec),
 	}
 
@@ -96,7 +96,7 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 
 func fromMisconfiguration(m policy.Misconfiguration) MisconfigurationDTO {
 	return MisconfigurationDTO{
-		Property:    m.Property,
+		Property:    m.Property.String(),
 		ActualValue: m.ActualValue,
 		Operator:    string(m.Operator),
 		UnsafeValue: m.UnsafeValue,
@@ -113,7 +113,7 @@ func fromRemediationSpec(s policy.RemediationSpec) RemediationSpecDTO {
 
 func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 	dto := RemediationPlanDTO{
-		ID: p.ID,
+		ID: string(p.ID),
 		Target: RemediationTargetDTO{
 			AssetID:   p.Target.AssetID,
 			AssetType: p.Target.AssetType,
@@ -130,7 +130,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 func fromRemediationAction(a evaluation.RemediationAction) RemediationActionDTO {
 	return RemediationActionDTO{
 		ActionType: a.ActionType,
-		Path:       a.Path,
+		Path:       a.Path.String(),
 		Value:      a.Value,
 	}
 }
@@ -144,7 +144,7 @@ func fromExceptedFindings(fs []evaluation.ExceptedFinding) []ExceptedFindingDTO 
 			ControlID: f.ControlID,
 			AssetID:   f.AssetID,
 			Reason:    f.Reason,
-			Expires:   f.Expires,
+			Expires:   f.Expires.String(),
 		}
 	})
 }
@@ -206,4 +206,15 @@ func fromAtRiskItems(items risk.ThresholdItems) []AtRiskItemDTO {
 			ThresholdHours: item.Threshold.Hours(),
 		}
 	})
+}
+
+func complianceToStrings(m policy.ComplianceMapping) map[string]string {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]string, len(m))
+	for k, v := range m {
+		out[string(k)] = v
+	}
+	return out
 }

@@ -36,7 +36,7 @@ func analyzeCondition(raw any) ConditionAnalysis {
 				continue
 			}
 
-			analysis.ConditionKeys = append(analysis.ConditionKeys, key)
+			analysis.ConditionKeys = append(analysis.ConditionKeys, ConditionKey(key))
 			switch key {
 			case keySourceIP:
 				analysis.HasIPCondition = true

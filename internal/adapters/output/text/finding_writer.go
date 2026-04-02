@@ -114,8 +114,8 @@ func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.E
 	d.f("\nExcepted Findings: %d\n", len(excepted))
 	for _, s := range excepted {
 		d.f("  - %s on %s: %s", s.ControlID, s.AssetID, s.Reason)
-		if s.Expires != "" {
-			d.f(" (expires %s)", s.Expires)
+		if !s.Expires.IsZero() {
+			d.f(" (expires %s)", s.Expires.String())
 		}
 		d.f("\n")
 	}
@@ -129,7 +129,7 @@ func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation
 
 	d.ln("  By domain:")
 	for _, dc := range domainCounts {
-		d.f("    - %s: %d\n", dc.Domain, dc.Count)
+		d.f("    - %s: %d\n", string(dc.Domain), dc.Count)
 	}
 	d.f("\n")
 }

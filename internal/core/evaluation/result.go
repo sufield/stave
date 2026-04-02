@@ -98,15 +98,15 @@ const (
 
 // Row captures the granular result for a single control/asset pairing.
 type Row struct {
-	ControlID   kernel.ControlID `json:"control_id"`
-	AssetID     asset.ID         `json:"asset_id"`
-	AssetType   kernel.AssetType `json:"asset_type"`
-	AssetDomain string           `json:"asset_domain"`
-	Decision    Decision         `json:"decision"`
-	Confidence  ConfidenceLevel  `json:"confidence"`
-	Evidence    *Evidence        `json:"evidence,omitempty"`
-	WhyNow      string           `json:"why_now,omitempty"`
-	Reason      string           `json:"reason,omitempty"` // populated for SKIPPED/INCONCLUSIVE
+	ControlID   kernel.ControlID   `json:"control_id"`
+	AssetID     asset.ID           `json:"asset_id"`
+	AssetType   kernel.AssetType   `json:"asset_type"`
+	AssetDomain kernel.AssetDomain `json:"asset_domain"`
+	Decision    Decision           `json:"decision"`
+	Confidence  ConfidenceLevel    `json:"confidence"`
+	Evidence    *Evidence          `json:"evidence,omitempty"`
+	WhyNow      string             `json:"why_now,omitempty"`
+	Reason      string             `json:"reason,omitempty"` // populated for SKIPPED/INCONCLUSIVE
 }
 
 // MarkInconclusive shifts a row to an inconclusive state with a specific explanation.
@@ -159,7 +159,7 @@ func (r *Result) FindFinding(ctlID kernel.ControlID, astID asset.ID) *Finding {
 
 // DomainCount represents the number of violations in a specific business domain.
 type DomainCount struct {
-	Domain string
+	Domain kernel.AssetDomain
 	Count  int
 }
 
@@ -169,13 +169,13 @@ func GroupViolationsByDomain(rows []Row) []DomainCount {
 		return nil
 	}
 
-	counts := make(map[string]int, len(rows)/10)
+	counts := make(map[kernel.AssetDomain]int, len(rows)/10)
 	for i := range rows {
 		if rows[i].Decision != DecisionViolation {
 			continue
 		}
 
-		d := strings.ToLower(strings.TrimSpace(rows[i].AssetDomain))
+		d := kernel.AssetDomain(strings.ToLower(strings.TrimSpace(string(rows[i].AssetDomain))))
 		if d == "" {
 			d = "unknown"
 		}

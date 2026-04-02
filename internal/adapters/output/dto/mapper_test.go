@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
@@ -96,7 +97,7 @@ func TestFromFinding_AllFields(t *testing.T) {
 				ThresholdHours:      24,
 				WhyNow:              "Threshold exceeded",
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "storage.access.public_read", ActualValue: true, Operator: "eq", UnsafeValue: true},
+					{Property: predicate.NewFieldPath("storage.access.public_read"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
 				RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
 				SourceEvidence: &evaluation.SourceEvidence{
@@ -129,7 +130,7 @@ func TestFromFinding_AllFields(t *testing.T) {
 			Preconditions:  []string{"bucket exists"},
 			ExpectedEffect: "removes public access",
 			Actions: []evaluation.RemediationAction{
-				{ActionType: "set", Path: ".public_read", Value: false},
+				{ActionType: "set", Path: predicate.NewFieldPath(".public_read"), Value: false},
 			},
 		},
 	}
@@ -275,7 +276,7 @@ func TestFromExceptedFindings_Empty(t *testing.T) {
 
 func TestFromExceptedFindings_WithData(t *testing.T) {
 	input := []evaluation.ExceptedFinding{
-		{ControlID: "CTL.A", AssetID: "res-1", Reason: "known", Expires: "2027-01-01"},
+		{ControlID: "CTL.A", AssetID: "res-1", Reason: "known", Expires: mustParseExpiry("2027-01-01")},
 	}
 	result := fromExceptedFindings(input)
 	if len(result) != 1 {
@@ -442,7 +443,7 @@ func TestFromExtensions_WithGit(t *testing.T) {
 		SelectedSource: "dir",
 		ContextName:    "dev",
 		ResolvedPaths:  map[string]string{"controls": "/ctl"},
-		EnabledPacks:   []string{"s3/public"},
+		EnabledPacks:   []kernel.PackName{"s3/public"},
 		Git: &evaluation.GitMetadata{
 			RepoRoot: "/repo",
 			Head:     "abc123",
@@ -477,7 +478,7 @@ func TestFromExtensions_WithGit(t *testing.T) {
 func TestFromExtensions_WithoutGit(t *testing.T) {
 	ext := &evaluation.Extensions{
 		SelectedSource: "packs",
-		EnabledPacks:   []string{"s3/all"},
+		EnabledPacks:   []kernel.PackName{"s3/all"},
 	}
 	dto := fromExtensions(ext)
 	if dto == nil {
@@ -513,7 +514,7 @@ func TestFromEvidence_WithAllFields(t *testing.T) {
 		LastEpisodeAt:       now,
 		WhyNow:              "threshold exceeded",
 		Misconfigurations: []policy.Misconfiguration{
-			{Property: "x", ActualValue: true, Operator: "eq"},
+			{Property: predicate.NewFieldPath("x"), ActualValue: true, Operator: "eq"},
 		},
 		RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
 		SourceEvidence: &evaluation.SourceEvidence{
@@ -542,18 +543,18 @@ func TestFromEvidence_WithAllFields(t *testing.T) {
 func TestFromRemediationAction(t *testing.T) {
 	a := evaluation.RemediationAction{
 		ActionType: "set",
-		Path:       ".public",
+		Path:       predicate.NewFieldPath(".public"),
 		Value:      false,
 	}
 	dto := fromRemediationAction(a)
-	if dto.ActionType != "set" || dto.Path != ".public" || dto.Value != false {
+	if dto.ActionType != "set" || dto.Path != "public" || dto.Value != false {
 		t.Errorf("dto = %+v", dto)
 	}
 }
 
 func TestFromMisconfiguration(t *testing.T) {
 	m := policy.Misconfiguration{
-		Property:    "storage.access.public_read",
+		Property:    predicate.NewFieldPath("storage.access.public_read"),
 		ActualValue: true,
 		Operator:    "eq",
 		UnsafeValue: true,
@@ -577,4 +578,12 @@ func TestFromRemediationSpec(t *testing.T) {
 	if dto.Description != "fix it" || dto.Action != "do something" || dto.Example != "example code" {
 		t.Errorf("dto = %+v", dto)
 	}
+}
+
+func mustParseExpiry(s string) policy.ExpiryDate {
+	d, err := policy.ParseExpiryDate(s)
+	if err != nil {
+		panic(err)
+	}
+	return d
 }

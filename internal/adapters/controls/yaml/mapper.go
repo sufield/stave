@@ -18,7 +18,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Description:          y.Description,
 		Severity:             y.Severity,
 		Domain:               y.Domain,
-		ScopeTags:            y.ScopeTags,
+		ScopeTags:            scopeTagsToDomain(y.ScopeTags),
 		Compliance:           y.Compliance,
 		Type:                 y.Type,
 		Params:               policy.NewParams(y.Params),
@@ -27,6 +27,17 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Remediation:          remediationToDomain(y.Remediation),
 		Exposure:             exposureToDomain(y.Exposure),
 	}
+}
+
+func scopeTagsToDomain(tags []string) []kernel.ScopeTag {
+	if tags == nil {
+		return nil
+	}
+	out := make([]kernel.ScopeTag, len(tags))
+	for i, t := range tags {
+		out[i] = kernel.ScopeTag(t)
+	}
+	return out
 }
 
 func unsafePredicateToDomain(y yamlUnsafePredicate) policy.UnsafePredicate {

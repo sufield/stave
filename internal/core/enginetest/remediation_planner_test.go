@@ -41,7 +41,7 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 	}
 	gotPaths := make([]string, len(plan.Actions))
 	for i := range plan.Actions {
-		gotPaths[i] = plan.Actions[i].Path
+		gotPaths[i] = plan.Actions[i].Path.String()
 	}
 	if !reflect.DeepEqual(gotPaths, wantActionPaths) {
 		t.Fatalf("action paths = %v, want %v", gotPaths, wantActionPaths)

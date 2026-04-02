@@ -26,17 +26,17 @@ const (
 
 type ControlSourceInfo struct {
 	Source             ControlSourceMode  `json:"source"`
-	EnabledPacks       []string           `json:"enabled_packs,omitempty"`
+	EnabledPacks       []kernel.PackName  `json:"enabled_packs,omitempty"`
 	ResolvedControlIDs []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	RegistryVersion    string             `json:"registry_version,omitempty"`
 	RegistryHash       kernel.Digest      `json:"registry_hash,omitempty"`
 }
 
 type GitInfo struct {
-	RepoRoot  string   `json:"repo_root,omitempty"`
-	Head      string   `json:"head,omitempty"`
-	Dirty     bool     `json:"dirty"`
-	DirtyList []string `json:"dirty_list,omitempty"`
+	RepoRoot  FilePath   `json:"repo_root,omitempty"`
+	Head      string     `json:"head,omitempty"`
+	Dirty     bool       `json:"dirty"`
+	DirtyList []FilePath `json:"dirty_list,omitempty"`
 }
 
 type ResolvedPaths struct {
@@ -51,7 +51,7 @@ type Extensions struct {
 	SelectedSource      string             `json:"selected_controls_source,omitempty"`
 	ContextName         string             `json:"context_name,omitempty"`
 	ResolvedPaths       map[string]string  `json:"resolved_paths,omitempty"`
-	EnabledPacks        []string           `json:"enabled_control_packs,omitempty"`
+	EnabledPacks        []kernel.PackName  `json:"enabled_control_packs,omitempty"`
 	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
 	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
@@ -90,11 +90,15 @@ func (m Metadata) ToExtensions() *Extensions {
 	}
 
 	if m.Git != nil {
+		modified := make([]string, len(m.Git.DirtyList))
+		for i, p := range m.Git.DirtyList {
+			modified[i] = string(p)
+		}
 		ext.Git = &GitMetadata{
-			RepoRoot: m.Git.RepoRoot,
+			RepoRoot: string(m.Git.RepoRoot),
 			Head:     m.Git.Head,
 			Dirty:    m.Git.Dirty,
-			Modified: slices.Clone(m.Git.DirtyList),
+			Modified: modified,
 		}
 	}
 

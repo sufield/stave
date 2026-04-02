@@ -8,6 +8,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // ---------------------------------------------------------------------------
@@ -389,7 +390,7 @@ func TestNewFinding(t *testing.T) {
 	ctx := FindingContext{
 		Reason: "test reason",
 		Misconfigs: []policy.Misconfiguration{
-			{Property: "prop.x"},
+			{Property: predicate.NewFieldPath("prop.x")},
 		},
 	}
 

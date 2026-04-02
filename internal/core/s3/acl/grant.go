@@ -66,8 +66,6 @@ func (a *Audience) UnmarshalText(text []byte) error {
 type Grant struct {
 	Grantee    string        `json:"grantee"`    // Group URI or canonical ID
 	Permission ACLPermission `json:"permission"` // READ, WRITE, etc.
-	Type       string        `json:"type,omitempty"`
-	Scope      string        `json:"scope,omitempty"`
 }
 
 // Grants is a collection helper for ACL grant slices.

@@ -57,7 +57,7 @@ func ToRows(controls []policy.ControlDefinition) []ControlRow {
 			Name:     c.Name,
 			Type:     c.Type.String(),
 			Severity: c.Severity.String(),
-			Domain:   c.Domain,
+			Domain:   string(c.Domain),
 		})
 	}
 	return rows

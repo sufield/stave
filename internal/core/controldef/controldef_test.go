@@ -809,12 +809,12 @@ func TestPrefixSetOverlap(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestMisconfigurationDisplayProperty(t *testing.T) {
-	m := Misconfiguration{Property: "properties.storage.public_read"}
+	m := Misconfiguration{Property: predicate.NewFieldPath("properties.storage.public_read")}
 	if got := m.DisplayProperty(); got != "storage.public_read" {
 		t.Fatalf("DisplayProperty = %q", got)
 	}
 
-	m = Misconfiguration{Property: "no_prefix"}
+	m = Misconfiguration{Property: predicate.NewFieldPath("no_prefix")}
 	if got := m.DisplayProperty(); got != "no_prefix" {
 		t.Fatalf("DisplayProperty = %q", got)
 	}
@@ -857,28 +857,28 @@ func TestMisconfigurationString(t *testing.T) {
 	}{
 		{
 			"missing",
-			Misconfiguration{Property: "properties.x", Operator: predicate.OpMissing},
+			Misconfiguration{Property: predicate.NewFieldPath("properties.x"), Operator: predicate.OpMissing},
 			`property "x" is missing`,
 		},
 		{
 			"eq",
-			Misconfiguration{Property: "properties.x", Operator: predicate.OpEq, ActualValue: true},
+			Misconfiguration{Property: predicate.NewFieldPath("properties.x"), Operator: predicate.OpEq, ActualValue: true},
 			`property "x" has unsafe value: true`,
 		},
 		{
 			"ne",
-			Misconfiguration{Property: "properties.x", Operator: predicate.OpNe, ActualValue: "abc"},
+			Misconfiguration{Property: predicate.NewFieldPath("properties.x"), Operator: predicate.OpNe, ActualValue: "abc"},
 			`property "x" value abc is unsafe`,
 		},
 		{
 			"contains",
-			Misconfiguration{Property: "properties.list", Operator: predicate.OpContains, ActualValue: "bad"},
+			Misconfiguration{Property: predicate.NewFieldPath("properties.list"), Operator: predicate.OpContains, ActualValue: "bad"},
 			`property "list" contains unsafe element: bad`,
 		},
 		{
 			"in",
 			Misconfiguration{
-				Property:    "properties.x",
+				Property:    predicate.NewFieldPath("properties.x"),
 				Operator:    predicate.OpIn,
 				ActualValue: "val",
 				UnsafeValue: []string{"val", "other"},
@@ -887,7 +887,7 @@ func TestMisconfigurationString(t *testing.T) {
 		},
 		{
 			"any_match",
-			Misconfiguration{Property: "properties.items", Operator: predicate.OpAnyMatch, ActualValue: []string{"x"}},
+			Misconfiguration{Property: predicate.NewFieldPath("properties.items"), Operator: predicate.OpAnyMatch, ActualValue: []string{"x"}},
 			`one or more items in "items" matched unsafe criteria`,
 		},
 	}

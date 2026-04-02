@@ -108,7 +108,7 @@ func buildTemplateData(catalog *policy.Catalog, hasher ports.Digester) templateD
 	}
 
 	for _, ctl := range controls {
-		domain := ctl.Domain
+		domain := string(ctl.Domain)
 		if domain == "" {
 			domain = "uncategorized"
 		}
@@ -125,7 +125,7 @@ func buildTemplateData(catalog *policy.Catalog, hasher ports.Digester) templateD
 		}
 
 		for k, v := range ctl.Compliance {
-			cd.Compliance = append(cd.Compliance, k+": "+v)
+			cd.Compliance = append(cd.Compliance, string(k)+": "+v)
 		}
 		slices.Sort(cd.Compliance)
 

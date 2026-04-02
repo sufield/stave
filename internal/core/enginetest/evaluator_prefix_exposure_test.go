@@ -344,7 +344,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 
 func findMisconfiguration(misconfigs []policy.Misconfiguration) any {
 	for _, mc := range misconfigs {
-		if mc.Property == "exposure_source" {
+		if mc.Property.String() == "exposure_source" {
 			return mc.ActualValue
 		}
 	}

@@ -44,7 +44,7 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 
 	// Sort by Property, Operator, then UnsafeValue for fully deterministic output.
 	slices.SortFunc(results, func(a, b Misconfiguration) int {
-		if n := cmp.Compare(a.Property, b.Property); n != 0 {
+		if n := cmp.Compare(a.Property.String(), b.Property.String()); n != 0 {
 			return n
 		}
 		if n := cmp.Compare(string(a.Operator), string(b.Operator)); n != 0 {
@@ -56,7 +56,7 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 	// Remove adjacent duplicates (same property checked multiple times in a logic tree).
 	// Uses fmt.Sprint for UnsafeValue since it is type any and may not be comparable with ==.
 	return slices.CompactFunc(results, func(a, b Misconfiguration) bool {
-		return a.Property == b.Property &&
+		return a.Property.String() == b.Property.String() &&
 			a.Operator == b.Operator &&
 			fmt.Sprint(a.UnsafeValue) == fmt.Sprint(b.UnsafeValue)
 	})
@@ -78,7 +78,7 @@ func (r *PredicateRule) collect(ctx *EvalContext, results []Misconfiguration) []
 	val, _ := resolvePropertyValue(ctx.Properties, r.Field.Parts())
 
 	return append(results, Misconfiguration{
-		Property:    r.Field.TrimPrefix(propertiesPathPrefix),
+		Property:    predicate.NewFieldPath(r.Field.TrimPrefix(propertiesPathPrefix)),
 		ActualValue: val,
 		Operator:    r.Op,
 		UnsafeValue: r.Value.Raw(),

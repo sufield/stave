@@ -7,6 +7,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // ---------------------------------------------------------------------------
@@ -35,7 +36,7 @@ func TestBuildGroups_SingleFinding(t *testing.T) {
 					AssetType: "s3_bucket",
 				},
 				Actions: []evaluation.RemediationAction{
-					{ActionType: evaluation.ActionSet, Path: "public_access", Value: false},
+					{ActionType: evaluation.ActionSet, Path: predicate.NewFieldPath("public_access"), Value: false},
 				},
 			},
 		},
@@ -61,7 +62,7 @@ func TestBuildGroups_MultipleFindingsSameAsset(t *testing.T) {
 			AssetType: "s3_bucket",
 		},
 		Actions: []evaluation.RemediationAction{
-			{ActionType: evaluation.ActionSet, Path: "public_access", Value: false},
+			{ActionType: evaluation.ActionSet, Path: predicate.NewFieldPath("public_access"), Value: false},
 		},
 	}
 
@@ -257,7 +258,7 @@ func TestCanonicalActionsHash_Empty(t *testing.T) {
 
 func TestCanonicalActionsHash_NonEmpty(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: evaluation.ActionSet, Path: "public_access", Value: false},
+		{ActionType: evaluation.ActionSet, Path: predicate.NewFieldPath("public_access"), Value: false},
 	}
 	hash := canonicalActionsHash(stubDigester{}, actions)
 	if hash == "" {
@@ -301,7 +302,7 @@ func TestFinding_Sanitized_Full(t *testing.T) {
 			Source:    &asset.SourceRef{File: "/path/to/obs.json", Line: 42},
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "public_access", ActualValue: true, Operator: "eq", UnsafeValue: true},
+					{Property: predicate.NewFieldPath("public_access"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
 					IdentityStatements: []kernel.StatementID{"stmt-1"},

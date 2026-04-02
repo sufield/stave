@@ -42,6 +42,17 @@ func fromSummary(s evaluation.Summary) SummaryDTO {
 	}
 }
 
+func packNamesToStrings(packs []kernel.PackName) []string {
+	if packs == nil {
+		return nil
+	}
+	out := make([]string, len(packs))
+	for i, p := range packs {
+		out[i] = string(p)
+	}
+	return out
+}
+
 func fromExtensions(e *evaluation.Extensions) *ExtensionsDTO {
 	if e == nil {
 		return nil
@@ -50,7 +61,7 @@ func fromExtensions(e *evaluation.Extensions) *ExtensionsDTO {
 		SelectedSource:      e.SelectedSource,
 		ContextName:         e.ContextName,
 		ResolvedPaths:       e.ResolvedPaths,
-		EnabledPacks:        e.EnabledPacks,
+		EnabledPacks:        packNamesToStrings(e.EnabledPacks),
 		ResolvedControlIDs:  e.ResolvedControlIDs,
 		PackRegistryVersion: e.PackRegistryVersion,
 		PackRegistryHash:    e.PackRegistryHash,

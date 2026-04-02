@@ -28,7 +28,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Severity:    policy.SeverityCritical,
 		Domain:      "exposure",
 		Type:        policy.TypeUnsafeState,
-		Compliance:  map[string]string{"cis_aws_v1.4.0": "2.1.5"},
+		Compliance:  policy.ComplianceMapping{"cis_aws_v1.4.0": "2.1.5"},
 		UnsafePredicate: policy.UnsafePredicate{
 			Any: []policy.PredicateRule{
 				{Field: predicate.NewFieldPath("properties.storage.access.public_read"), Op: predicate.OpEq, Value: policy.Bool(true)},
@@ -109,7 +109,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 	if detail.Control.Domain != "exposure" {
 		t.Errorf("domain = %q, want exposure", detail.Control.Domain)
 	}
-	if detail.Control.Type != "unsafe_state" {
+	if detail.Control.Type != policy.TypeUnsafeState {
 		t.Errorf("type = %q, want unsafe_state", detail.Control.Type)
 	}
 

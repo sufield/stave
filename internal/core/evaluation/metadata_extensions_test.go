@@ -52,7 +52,7 @@ func TestToExtensions_PacksSourceWithGit(t *testing.T) {
 	m := Metadata{
 		ControlSource: ControlSourceInfo{
 			Source:             ControlSourcePacks,
-			EnabledPacks:       []string{"core", "hipaa"},
+			EnabledPacks:       []kernel.PackName{"core", "hipaa"},
 			ResolvedControlIDs: []kernel.ControlID{"CTL.001", "CTL.002"},
 			RegistryVersion:    "v1.0",
 			RegistryHash:       "abc123",
@@ -61,7 +61,7 @@ func TestToExtensions_PacksSourceWithGit(t *testing.T) {
 			RepoRoot:  "/repo",
 			Head:      "deadbeef",
 			Dirty:     true,
-			DirtyList: []string{"a.tf", "b.tf"},
+			DirtyList: []FilePath{"a.tf", "b.tf"},
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/ctl",
@@ -102,7 +102,7 @@ func TestToExtensions_PacksSourceWithGit(t *testing.T) {
 }
 
 func TestToExtensions_GitDirtyListDeepCopy(t *testing.T) {
-	dirty := []string{"a.tf", "b.tf"}
+	dirty := []FilePath{"a.tf", "b.tf"}
 	m := Metadata{
 		ControlSource: ControlSourceInfo{Source: "dir"},
 		Git: &GitInfo{

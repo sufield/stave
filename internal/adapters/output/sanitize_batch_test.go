@@ -34,7 +34,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "properties.storage.access.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
+					{Property: predicate.NewFieldPath("properties.storage.access.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
 					IdentityStatements: stmts,
@@ -60,7 +60,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	if s.Evidence.Misconfigurations[0].ActualValue != "[SANITIZED]" {
 		t.Errorf("Misconfigurations[0].ActualValue = %v, want [SANITIZED]", s.Evidence.Misconfigurations[0].ActualValue)
 	}
-	if s.Evidence.Misconfigurations[0].Property != "properties.storage.access.public_read" {
+	if s.Evidence.Misconfigurations[0].Property.String() != "properties.storage.access.public_read" {
 		t.Errorf("Misconfigurations[0].Property changed")
 	}
 	for i, v := range s.Evidence.SourceEvidence.IdentityStatements {
@@ -147,7 +147,7 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 			Source:    src,
 			Evidence: evaluation.Evidence{
 				Misconfigurations: []policy.Misconfiguration{
-					{Property: "properties.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
+					{Property: predicate.NewFieldPath("properties.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 				},
 				SourceEvidence: &evaluation.SourceEvidence{
 					IdentityStatements: []kernel.StatementID{"AllowPublicRead"},
