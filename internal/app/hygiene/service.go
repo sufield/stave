@@ -4,7 +4,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -48,7 +48,7 @@ func (s *Service) ComputeRisk(
 ) appcontracts.RiskStats {
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
-		result, err := appworkflow.Evaluate(appworkflow.EvaluateInput{
+		result, err := appeval.Evaluate(appeval.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,

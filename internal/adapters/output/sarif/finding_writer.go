@@ -36,8 +36,9 @@ func NewFindingWriter(opts ...Option) *FindingWriter {
 // MarshalFindings transforms enriched findings into SARIF v2.1.0 JSON bytes
 // without performing I/O.
 func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([]byte, error) {
-	rules, ruleIndex := buildRules(enriched.Findings)
-	results := buildResults(enriched.Findings, ruleIndex)
+	remFindings := toRemediationFindings(enriched.Findings)
+	rules, ruleIndex := buildRules(remFindings)
+	results := buildResults(remFindings, ruleIndex)
 
 	report := sarifReport{
 		Version: "2.1.0",
@@ -169,4 +170,18 @@ func buildMessage(f remediation.Finding) string {
 		msg += ". " + f.Evidence.WhyNow
 	}
 	return msg
+}
+
+// toRemediationFindings converts port-boundary enriched findings to
+// remediation.Finding for use by core formatting functions.
+func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Finding {
+	out := make([]remediation.Finding, len(fs))
+	for i, f := range fs {
+		out[i] = remediation.Finding{
+			Finding:         f.Finding,
+			RemediationSpec: f.RemediationSpec,
+			RemediationPlan: f.RemediationPlan,
+		}
+	}
+	return out
 }

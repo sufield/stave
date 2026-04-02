@@ -34,6 +34,9 @@ type Runner struct {
 	CELEvaluator policy.PredicateEval
 }
 
+// Compile-time check: Runner satisfies strategyDeps.
+var _ strategyDeps = (*Runner)(nil)
+
 func (e *Runner) logger() *slog.Logger {
 	if e.Logger != nil {
 		return e.Logger
@@ -41,10 +44,15 @@ func (e *Runner) logger() *slog.Logger {
 	return slog.Default()
 }
 
-// getMaxUnsafeDurationForControl returns the max unsafe duration for a control.
+// maxUnsafeDurationFor returns the max unsafe duration for a control.
 // Uses per-control override if set, otherwise falls back to CLI default.
-func (e *Runner) getMaxUnsafeDurationForControl(ctl *policy.ControlDefinition) time.Duration {
+func (e *Runner) maxUnsafeDurationFor(ctl *policy.ControlDefinition) time.Duration {
 	return ctl.EffectiveMaxUnsafeDuration(e.MaxUnsafeDuration)
+}
+
+// predicateParser returns the configured predicate parser function.
+func (e *Runner) predicateParser() policy.PredicateParser {
+	return e.PredicateParser
 }
 
 // normalizeSnapshots returns a copy of snapshots sorted by captured_at ascending.

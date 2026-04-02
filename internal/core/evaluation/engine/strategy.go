@@ -1,12 +1,22 @@
 package engine
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 )
+
+// strategyDeps abstracts the Runner capabilities that strategies need,
+// decoupling them from the concrete Runner type.
+type strategyDeps interface {
+	maxUnsafeDurationFor(ctl *policy.ControlDefinition) time.Duration
+	maxGapThreshold() time.Duration
+	logger() *slog.Logger
+	predicateParser() policy.PredicateParser
+}
 
 // strategy defines how different control types analyze a timeline.
 type strategy interface {
@@ -26,11 +36,11 @@ var (
 func (r *Runner) strategyFor(ctl *policy.ControlDefinition) strategy {
 	switch ctl.Type {
 	case policy.TypeUnsafeState:
-		return &unsafeStateStrategy{runner: r, ctl: ctl}
+		return &unsafeStateStrategy{deps: r, ctl: ctl}
 	case policy.TypeUnsafeDuration:
-		return &unsafeDurationStrategy{runner: r, ctl: ctl}
+		return &unsafeDurationStrategy{deps: r, ctl: ctl}
 	case policy.TypeUnsafeRecurrence:
-		return &unsafeRecurrenceStrategy{runner: r, ctl: ctl}
+		return &unsafeRecurrenceStrategy{deps: r, ctl: ctl}
 	case policy.TypePrefixExposure:
 		return &prefixExposureStrategy{ctl: ctl}
 	default:
@@ -41,13 +51,13 @@ func (r *Runner) strategyFor(ctl *policy.ControlDefinition) strategy {
 // --- Duration & State Strategies ---
 
 type unsafeStateStrategy struct {
-	runner *Runner
-	ctl    *policy.ControlDefinition
+	deps strategyDeps
+	ctl  *policy.ControlDefinition
 }
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
-	maxUnsafe := s.runner.getMaxUnsafeDurationForControl(s.ctl)
+	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
 	if t.CurrentlySafe() {
 		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
@@ -60,7 +70,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids Ide
 
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
 	if threshErr != nil {
-		s.runner.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		row.MarkInconclusive("threshold check error")
 		return row, nil
 	}
@@ -72,7 +82,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids Ide
 			Threshold:       maxUnsafe,
 			Now:             now,
 			Identities:      ids.At(t.LastSeenUnsafeAt()),
-			PredicateParser: s.runner.PredicateParser,
+			PredicateParser: s.deps.predicateParser(),
 		})
 		return finalizeRow(row, evaluation.DecisionViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
 	}
@@ -81,18 +91,18 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids Ide
 }
 
 type unsafeDurationStrategy struct {
-	runner *Runner
-	ctl    *policy.ControlDefinition
+	deps strategyDeps
+	ctl  *policy.ControlDefinition
 }
 
 func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
-	maxUnsafe := s.runner.getMaxUnsafeDurationForControl(s.ctl)
+	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
 	if threshErr != nil {
-		s.runner.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		row.MarkInconclusive("threshold check error")
 		return row, nil
 	}
@@ -104,7 +114,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 			Threshold:       maxUnsafe,
 			Now:             now,
 			Identities:      ids.At(t.LastSeenUnsafeAt()),
-			PredicateParser: s.runner.PredicateParser,
+			PredicateParser: s.deps.predicateParser(),
 		})
 		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(row, evaluation.DecisionViolation, confidence), []*evaluation.Finding{finding}
@@ -113,7 +123,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
 	coverage := CoverageValidator{
 		MinRequiredSpan: maxUnsafe,
-		MaxAllowedGap:   s.runner.maxGapThreshold(),
+		MaxAllowedGap:   s.deps.maxGapThreshold(),
 	}
 	if reason, ok := coverage.IsSufficient(t); !ok {
 		row.MarkInconclusive(reason)
@@ -128,8 +138,8 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 // --- Recurrence Strategy ---
 
 type unsafeRecurrenceStrategy struct {
-	runner *Runner
-	ctl    *policy.ControlDefinition
+	deps strategyDeps
+	ctl  *policy.ControlDefinition
 }
 
 func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {

@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
 // LoadResult holds the output of a snapshot load: the parsed snapshots and
@@ -62,7 +61,7 @@ func LoadSnapshots(ctx context.Context, repo ObservationRepository, dir string) 
 // from this struct (not from Result) because they are pre-sanitized.
 type EnrichedResult struct {
 	Result         evaluation.Result
-	Findings       []remediation.Finding
+	Findings       []EnrichedFinding
 	ExemptedAssets []asset.ExemptedAsset
 	Run            evaluation.RunInfo
 }

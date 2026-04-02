@@ -6,7 +6,6 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
@@ -46,7 +45,7 @@ func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result,
 		return nil, 0, fmt.Errorf("source_type compatibility in %s: %w", req.ObservationsDir, err)
 	}
 
-	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, err := EvaluateLoaded(EvaluationRequest{
 		Controls:          req.Controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: req.MaxUnsafeDuration,

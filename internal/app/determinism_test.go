@@ -12,7 +12,6 @@ import (
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -112,7 +111,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 	// Run evaluation and serialize to JSON — twice
 	var outputs [2][]byte
 	for i := range 2 {
-		result, evalErr := appworkflow.Evaluate(appworkflow.EvaluateInput{
+		result, evalErr := appeval.Evaluate(appeval.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: maxUnsafe,
@@ -197,7 +196,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	var outputs [10][]byte
 	for i := range 10 {
-		result, evalErr := appworkflow.Evaluate(appworkflow.EvaluateInput{
+		result, evalErr := appeval.Evaluate(appeval.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: maxUnsafe,

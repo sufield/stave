@@ -9,7 +9,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
 type depsObservationRepoStub struct{}
@@ -33,7 +32,7 @@ func (depsMarshalerStub) MarshalFindings(appcontracts.EnrichedResult) ([]byte, e
 func depsEnrichFn(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
-		Findings:       []remediation.Finding{},
+		Findings:       []appcontracts.EnrichedFinding{},
 		ExemptedAssets: result.ExemptedAssets,
 		Run:            result.Run,
 	}, nil

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -143,7 +143,7 @@ func (d *Run) resolveResult(
 		return cfg.PreviousResult, nil
 	}
 
-	result, err := appworkflow.Evaluate(appworkflow.EvaluateInput{
+	result, err := appeval.Evaluate(appeval.EvaluateInput{
 		Controls:          artifacts.controls,
 		Snapshots:         artifacts.snapshots,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
