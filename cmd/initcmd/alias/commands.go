@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/metadata"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // --- Domain Types ---

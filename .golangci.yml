@@ -3,6 +3,8 @@ version: "2"
 run:
   timeout: 5m
   tests: true
+  build-tags:
+    - stavedev
 
 linters:
   enable:
@@ -44,11 +46,13 @@ linters:
       enabled-checks:
         - nestingReduce
         - initClause
+        - appendAssign
+        - deferInLoop
     govet:
       enable:
         - shadow
     nestif:
-      min-complexity: 25
+      min-complexity: 12
     revive:
       rules:
         - name: unused-parameter

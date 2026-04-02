@@ -97,21 +97,21 @@ type Result struct {
 }
 
 // Evaluate analyzes the context to determine the risk level.
-func (ctx StatementContext) Evaluate() Result {
-	if !ctx.IsAllow {
+func (sc StatementContext) Evaluate() Result {
+	if !sc.IsAllow {
 		return Result{}
 	}
 
 	res := Result{}
 
 	// 1. Evaluate Public Risk
-	if ctx.IsPublic && !ctx.IsNetworkScoped {
+	if sc.IsPublic && !sc.IsNetworkScoped {
 		res.IsPublic = true
 		// Critical: Any form of public modification
-		if ctx.Permissions.Overlap(PermWrite | PermAdminWrite | PermDelete) {
+		if sc.Permissions.Overlap(PermWrite | PermAdminWrite | PermDelete) {
 			res.Score = ScoreCritical
 			res.Findings = append(res.Findings, "Unrestricted Public Write/Admin Access")
-		} else if ctx.Permissions.Has(PermRead) {
+		} else if sc.Permissions.Has(PermRead) {
 			// Warning: Public Read
 			res.Score = ScoreWarning
 			res.Findings = append(res.Findings, "Unrestricted Public Read Access")
@@ -120,7 +120,7 @@ func (ctx StatementContext) Evaluate() Result {
 
 	// 2. Evaluate Authenticated Risk
 	// High risk if any authenticated user in the cloud provider has full control
-	if ctx.IsAuthenticated && !ctx.IsPublic && ctx.Permissions == PermFullControl {
+	if sc.IsAuthenticated && !sc.IsPublic && sc.Permissions == PermFullControl {
 		if ScoreWarning > res.Score {
 			res.Score = ScoreWarning
 		}

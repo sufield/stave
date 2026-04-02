@@ -72,7 +72,7 @@ type (
 // NewObservationRepo creates a new observation repository.
 func (p *Provider) NewObservationRepo() (appcontracts.ObservationRepository, error) {
 	if p.ObsRepoFunc == nil {
-		return nil, fmt.Errorf("ObsRepoFunc not configured on Provider")
+		return nil, fmt.Errorf("obs repo func not configured on Provider")
 	}
 	return p.ObsRepoFunc()
 }
@@ -80,7 +80,7 @@ func (p *Provider) NewObservationRepo() (appcontracts.ObservationRepository, err
 // NewControlRepo creates a new control repository.
 func (p *Provider) NewControlRepo() (appcontracts.ControlRepository, error) {
 	if p.ControlRepoFunc == nil {
-		return nil, fmt.Errorf("ControlRepoFunc not configured on Provider")
+		return nil, fmt.Errorf("control repo func not configured on Provider")
 	}
 	return p.ControlRepoFunc()
 }
@@ -88,7 +88,7 @@ func (p *Provider) NewControlRepo() (appcontracts.ControlRepository, error) {
 // NewStdinObsRepo creates an observation repository that reads from stdin.
 func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationRepository, error) {
 	if p.StdinObsRepoFunc == nil {
-		return nil, fmt.Errorf("StdinObsRepoFunc not configured on Provider")
+		return nil, fmt.Errorf("stdin obs repo func not configured on Provider")
 	}
 	return p.StdinObsRepoFunc(r)
 }
@@ -97,7 +97,7 @@ func (p *Provider) NewStdinObsRepo(r io.Reader) (appcontracts.ObservationReposit
 // Requires SnapshotRepoFunc to be set (always true via NewDefaultProvider).
 func (p *Provider) NewSnapshotRepo() (appcontracts.SnapshotReader, error) {
 	if p.SnapshotRepoFunc == nil {
-		return nil, fmt.Errorf("SnapshotRepoFunc not configured on Provider")
+		return nil, fmt.Errorf("snapshot repo func not configured on Provider")
 	}
 	return p.SnapshotRepoFunc()
 }
@@ -105,7 +105,7 @@ func (p *Provider) NewSnapshotRepo() (appcontracts.SnapshotReader, error) {
 // NewFindingWriter creates a finding marshaler for the given output format.
 func (p *Provider) NewFindingWriter(format appcontracts.OutputFormat, jsonMode bool) (appcontracts.FindingMarshaler, error) {
 	if p.FindingWriterFunc == nil {
-		return nil, fmt.Errorf("FindingWriterFunc not configured on Provider")
+		return nil, fmt.Errorf("finding writer func not configured on Provider")
 	}
 	return p.FindingWriterFunc(format, jsonMode)
 }
@@ -121,10 +121,10 @@ type Assets struct {
 // LoadAssets concurrently fetches observations and controls.
 func (p *Provider) LoadAssets(ctx context.Context, obsDir, ctlDir string) (Assets, error) {
 	if p.ObsRepoFunc == nil {
-		return Assets{}, fmt.Errorf("ObsRepoFunc not configured on Provider")
+		return Assets{}, fmt.Errorf("obs repo func not configured on Provider")
 	}
 	if p.ControlRepoFunc == nil {
-		return Assets{}, fmt.Errorf("ControlRepoFunc not configured on Provider")
+		return Assets{}, fmt.Errorf("control repo func not configured on Provider")
 	}
 	obsRepo, err := p.ObsRepoFunc()
 	if err != nil {

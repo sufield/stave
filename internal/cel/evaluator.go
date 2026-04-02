@@ -32,12 +32,12 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 
 	out, _, err := cp.Program.Eval(activation)
 	if err != nil {
-		return false, fmt.Errorf("CEL eval: %w\n  expression: %s", err, cp.Expression)
+		return false, fmt.Errorf("cel eval: %w\n  expression: %s", err, cp.Expression)
 	}
 
 	result, ok := out.Value().(bool)
 	if !ok {
-		return false, fmt.Errorf("CEL eval: expected bool, got %T", out.Value())
+		return false, fmt.Errorf("cel eval: expected bool, got %T", out.Value())
 	}
 	return result, nil
 }

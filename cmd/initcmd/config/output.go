@@ -6,7 +6,7 @@ import (
 	"slices"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // ShowPresenter handles the formatting and output of the configuration summary.

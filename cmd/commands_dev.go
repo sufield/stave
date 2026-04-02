@@ -14,8 +14,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // ---------------------------------------------------------------------------

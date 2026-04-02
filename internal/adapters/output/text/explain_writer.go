@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // WriteExplainText renders the explain result as human-readable text.

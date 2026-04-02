@@ -8,7 +8,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appstatus "github.com/sufield/stave/internal/app/status"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // config defines the parameters for the status check.

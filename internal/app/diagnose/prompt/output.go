@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // WriteOutput renders a PromptOutput to the writer in the given format.

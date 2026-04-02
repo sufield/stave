@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -61,7 +60,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evalua
 
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
 	if threshErr != nil {
-		slog.Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.runner.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		row.MarkInconclusive("threshold check error")
 		return row, nil
 	}
@@ -93,7 +92,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (eva
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
 	if threshErr != nil {
-		slog.Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.runner.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		row.MarkInconclusive("threshold check error")
 		return row, nil
 	}

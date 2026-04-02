@@ -29,7 +29,7 @@ type Timeline struct {
 // Returns an error if the asset ID is empty (e.g. from malformed observation data).
 func NewTimeline(a Asset) (*Timeline, error) {
 	if a.ID.IsEmpty() {
-		return nil, fmt.Errorf("NewTimeline requires non-empty asset ID")
+		return nil, fmt.Errorf("asset ID must not be empty")
 	}
 	return &Timeline{
 		ID:    a.ID,
@@ -65,7 +65,7 @@ func (rt *Timeline) History() *EpisodeHistory {
 // Returns an error if the timestamp is zero (e.g. from malformed observation data).
 func (rt *Timeline) RecordObservation(t time.Time, isUnsafe bool) error {
 	if t.IsZero() {
-		return fmt.Errorf("Timeline.RecordObservation requires non-zero time")
+		return fmt.Errorf("record observation: time must not be zero")
 	}
 
 	if err := rt.stats.RecordObservation(t); err != nil {
@@ -165,7 +165,7 @@ func (rt *Timeline) UnsafeDuration(now time.Time) (time.Duration, error) {
 		return 0, nil
 	}
 	if !now.IsZero() && now.Before(rt.activeEpisode.StartAt()) {
-		return 0, fmt.Errorf("UnsafeDuration 'now' (%s) must not be before episode start (%s)", now.Format(time.RFC3339), rt.activeEpisode.StartAt().Format(time.RFC3339))
+		return 0, fmt.Errorf("unsafe duration: 'now' (%s) must not be before episode start (%s)", now.Format(time.RFC3339), rt.activeEpisode.StartAt().Format(time.RFC3339))
 	}
 	return now.Sub(rt.activeEpisode.StartAt()), nil
 }

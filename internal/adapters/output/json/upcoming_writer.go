@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/pkg/jsonutil"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // WriteUpcomingJSON encodes an upcoming output value as indented JSON.

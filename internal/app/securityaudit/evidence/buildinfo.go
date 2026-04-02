@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/debug"
+	"slices"
 	"sort"
 	"time"
 )
@@ -85,7 +86,7 @@ func (DefaultBuildInfoProvider) Collect(now time.Time) (BuildInfoSnapshot, error
 	if err != nil {
 		return BuildInfoSnapshot{}, fmt.Errorf("marshal build info: %w", err)
 	}
-	out.RawJSON = append(raw, '\n')
+	out.RawJSON = slices.Concat(raw, []byte{'\n'})
 	return out, nil
 }
 

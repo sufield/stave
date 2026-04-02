@@ -57,7 +57,7 @@ func (s *ObservationStats) MaxGap() time.Duration {
 // CONTRACT: out-of-order timestamps are ignored.
 func (s *ObservationStats) RecordObservation(t time.Time) error {
 	if t.IsZero() {
-		return fmt.Errorf("RecordObservation requires non-zero time")
+		return fmt.Errorf("record observation: time must not be zero")
 	}
 
 	if s.observationCount == 0 {

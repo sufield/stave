@@ -15,8 +15,8 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/pkg/jsonutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // EnvelopeBuilderFunc transforms an enriched result into a safety envelope.
