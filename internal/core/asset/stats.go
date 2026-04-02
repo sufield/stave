@@ -18,37 +18,37 @@ type ObservationStats struct {
 }
 
 // HasFirstObservation reports whether at least one observation was recorded.
-func (s *ObservationStats) HasFirstObservation() bool {
+func (s ObservationStats) HasFirstObservation() bool {
 	return !s.firstSeenAt.IsZero()
 }
 
 // HasCoverageData reports whether both first and last timestamps are available.
-func (s *ObservationStats) HasCoverageData() bool {
+func (s ObservationStats) HasCoverageData() bool {
 	return !s.firstSeenAt.IsZero() && !s.lastSeenAt.IsZero()
 }
 
 // FirstSeenAt returns the first observation timestamp.
-func (s *ObservationStats) FirstSeenAt() time.Time {
+func (s ObservationStats) FirstSeenAt() time.Time {
 	return s.firstSeenAt
 }
 
 // LastSeenAt returns the last observation timestamp.
-func (s *ObservationStats) LastSeenAt() time.Time {
+func (s ObservationStats) LastSeenAt() time.Time {
 	return s.lastSeenAt
 }
 
 // CoverageSpan returns duration between first and last observation.
-func (s *ObservationStats) CoverageSpan() time.Duration {
+func (s ObservationStats) CoverageSpan() time.Duration {
 	return s.coverageSpan
 }
 
 // ObservationCount returns number of recorded observations.
-func (s *ObservationStats) ObservationCount() int {
+func (s ObservationStats) ObservationCount() int {
 	return s.observationCount
 }
 
 // MaxGap returns the maximum interval between consecutive observations.
-func (s *ObservationStats) MaxGap() time.Duration {
+func (s ObservationStats) MaxGap() time.Duration {
 	return s.maxGap
 }
 

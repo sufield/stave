@@ -29,7 +29,7 @@ func (c *Catalog) List() []ControlDefinition {
 	if c == nil {
 		return nil
 	}
-	return c.controls
+	return slices.Clone(c.controls)
 }
 
 // Len returns the number of controls.

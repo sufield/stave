@@ -380,9 +380,6 @@ func TestTimeline_Stats(t *testing.T) {
 		t.Fatal(err)
 	}
 	stats := tl.Stats()
-	if stats == nil {
-		t.Fatal("Stats should not be nil")
-	}
 	if stats.HasFirstObservation() {
 		t.Fatal("empty timeline should not have first observation")
 	}

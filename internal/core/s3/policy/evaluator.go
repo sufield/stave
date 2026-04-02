@@ -1,6 +1,8 @@
 package policy
 
 import (
+	"slices"
+
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -16,7 +18,7 @@ type Evaluator struct {
 
 // NewEvaluator constructs a new policy evaluator.
 func NewEvaluator(trusted []string, resolver risk.PermissionResolver) *Evaluator {
-	return &Evaluator{TrustedCIDRs: trusted, Resolver: resolver}
+	return &Evaluator{TrustedCIDRs: slices.Clone(trusted), Resolver: resolver}
 }
 
 // Evaluate computes a risk report by analyzing each Allow statement.

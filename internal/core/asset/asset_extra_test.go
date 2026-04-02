@@ -814,10 +814,10 @@ func TestSnapshotFindAsset(t *testing.T) {
 			{ID: "bucket-2"},
 		},
 	}
-	if s.FindAsset("bucket-1") == nil {
+	if _, ok := s.FindAsset("bucket-1"); !ok {
 		t.Fatal("should find bucket-1")
 	}
-	if s.FindAsset("bucket-3") != nil {
+	if _, ok := s.FindAsset("bucket-3"); ok {
 		t.Fatal("should not find bucket-3")
 	}
 }

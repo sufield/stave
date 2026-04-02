@@ -2,6 +2,7 @@ package controldef
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"time"
 
@@ -130,7 +131,12 @@ type ControlParams struct{ m map[string]any }
 func NewParams(m map[string]any) ControlParams { return ControlParams{m: m} }
 
 // Raw returns the underlying map. Returns nil for zero-value ControlParams.
-func (p ControlParams) Raw() map[string]any { return p.m }
+func (p ControlParams) Raw() map[string]any {
+	if p.m == nil {
+		return nil
+	}
+	return maps.Clone(p.m)
+}
 
 // Get retrieves a value by key. Safe to call on a zero-value ControlParams.
 func (p ControlParams) Get(key string) (any, bool) {
@@ -244,17 +250,19 @@ type PrefixExposureParams struct {
 	ProtectedPrefixes     PrefixSet
 }
 
-// EvaluatableTypes defines which control types the engine currently supports.
-var EvaluatableTypes = []ControlType{
-	TypeUnsafeState,
-	TypeUnsafeDuration,
-	TypeUnsafeRecurrence,
-	TypePrefixExposure,
+// EvaluatableTypes returns the control types the engine currently supports.
+func EvaluatableTypes() []ControlType {
+	return []ControlType{
+		TypeUnsafeState,
+		TypeUnsafeDuration,
+		TypeUnsafeRecurrence,
+		TypePrefixExposure,
+	}
 }
 
 // IsEvaluatable reports whether the evaluator can process this control type.
 func (ctl *ControlDefinition) IsEvaluatable() bool {
-	return slices.Contains(EvaluatableTypes, ctl.Type)
+	return slices.Contains(EvaluatableTypes(), ctl.Type)
 }
 
 // ControlMetadata provides a read-only snapshot of core identity and classification.
