@@ -581,6 +581,43 @@ func TestFactsFromStorage_Empty(t *testing.T) {
 	}
 }
 
+func TestFactsFromStorage_OrphanedScope(t *testing.T) {
+	// Scope exists in array but not in source map — should be skipped.
+	props := map[string]any{
+		"storage": map[string]any{
+			"prefix_exposure": map[string]any{
+				"has_identity_evidence":    true,
+				"identity_read_scopes":     []any{"*", "orphan/"},
+				"identity_source_by_scope": map[string]any{"*": "s1"},
+			},
+		},
+	}
+	facts := FactsFromStorage(props)
+	if len(facts.IdentityGrants) != 1 {
+		t.Fatalf("expected 1 grant (orphan skipped), got %d", len(facts.IdentityGrants))
+	}
+	if facts.IdentityGrants[0].Scope != "*" {
+		t.Errorf("expected scope *, got %s", facts.IdentityGrants[0].Scope)
+	}
+}
+
+func TestFactsFromStorage_AllScopesOrphaned(t *testing.T) {
+	// All scopes missing from source map — should return nil grants.
+	props := map[string]any{
+		"storage": map[string]any{
+			"prefix_exposure": map[string]any{
+				"has_identity_evidence":    true,
+				"identity_read_scopes":     []any{"a/", "b/"},
+				"identity_source_by_scope": map[string]any{},
+			},
+		},
+	}
+	facts := FactsFromStorage(props)
+	if len(facts.IdentityGrants) != 0 {
+		t.Fatalf("expected 0 grants (all orphaned), got %d", len(facts.IdentityGrants))
+	}
+}
+
 // --- Visibility resolver tests ---
 
 func TestBuildVisibilityResult_PublicRead(t *testing.T) {
