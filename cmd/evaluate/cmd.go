@@ -36,8 +36,9 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "evaluate",
-		Short: "Evaluate a snapshot against a compliance profile",
+		Use:     "evaluate",
+		Aliases: []string{"eval"},
+		Short:   "Evaluate a snapshot against a compliance profile",
 		Long: `Evaluate runs all invariants in a compliance profile against an observation
 snapshot and produces a report with findings, remediation steps, and
 compliance citations.

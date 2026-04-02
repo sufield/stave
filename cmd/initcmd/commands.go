@@ -50,6 +50,7 @@ Exit Codes:
 				Force:        gf.Force,
 				AllowSymlink: gf.AllowSymlinkOut,
 				Quiet:        gf.Quiet,
+				Yes:          gf.Yes,
 			}
 			return runner.Run(&req)
 		},

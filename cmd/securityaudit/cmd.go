@@ -25,8 +25,9 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "security-audit",
-		Short: "Generate enterprise security posture evidence for Stave",
+		Use:     "security-audit",
+		Aliases: []string{"sec-audit", "audit"},
+		Short:   "Generate enterprise security posture evidence for Stave",
 		Long: `Generate enterprise security posture evidence for auditors and compliance workflows.
 
 Security-audit produces auditor-ready artifacts covering supply-chain integrity,
@@ -99,6 +100,9 @@ Exit Codes:
 				return &ui.UserError{Err: err}
 			}
 
+			rt := ui.NewRuntime(cmd.OutOrStdout(), cmd.ErrOrStderr())
+			rt.Quiet = gf.Quiet
+
 			runner := &auditRunner{}
 			return runner.Run(cmd.Context(), auditConfig{
 				Format:           format,
@@ -118,6 +122,7 @@ Exit Codes:
 				Quiet:            gf.Quiet,
 				RequireOffline:   gf.RequireOffline,
 				Stdout:           cmd.OutOrStdout(),
+				Runtime:          rt,
 			})
 		},
 		SilenceUsage:  true,

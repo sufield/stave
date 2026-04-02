@@ -12,6 +12,16 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+// resolveEnvVarDefaults fills shared flag values from STAVE_* environment
+// variables when the user did not set them explicitly on the command line.
+// Precedence: CLI flag > env var > config file > default.
+func (o *ApplyOptions) resolveEnvVarDefaults(cmd *cobra.Command) {
+	o.Format = cliflags.ResolveFormatEnv(cmd, o.Format)
+	o.ControlsDir = cliflags.ResolveControlsEnv(cmd, o.ControlsDir)
+	o.ObservationsDir = cliflags.ResolveObservationsEnv(cmd, o.ObservationsDir)
+	o.NowTime = cliflags.ResolveNowEnv(cmd, o.NowTime)
+}
+
 // resolveApplyConfigDefaults fills apply-specific flag values from project
 // config when the user did not set them explicitly on the command line.
 // Called from PreRunE — the only place that touches *cobra.Command.
@@ -124,6 +134,7 @@ Exit Codes:
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			opts.controlsSet = cliflags.ControlsFlagChanged(cmd)
 			opts.normalize()
+			opts.resolveEnvVarDefaults(cmd)
 			opts.resolveApplyConfigDefaults(cmd)
 			return opts.validate()
 		},

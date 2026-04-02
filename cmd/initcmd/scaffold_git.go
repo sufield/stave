@@ -11,9 +11,20 @@ import (
 	"github.com/sufield/stave/internal/adapters/gitinfo"
 )
 
-func maybePromptAndInitGitRepo(baseDir string, in io.Reader, out io.Writer) error {
+func maybePromptAndInitGitRepo(baseDir string, in io.Reader, out io.Writer, autoConfirm bool) error {
 	gitDir := filepath.Join(baseDir, ".git")
 	if fi, err := os.Stat(gitDir); err == nil && fi.IsDir() {
+		return nil
+	}
+
+	if autoConfirm {
+		// --yes flag: auto-confirm git init without prompting.
+		if err := gitinfo.InitRepo(baseDir); err != nil {
+			return fmt.Errorf("initialize git repository in %s: %w", baseDir, err)
+		}
+		if _, err := fmt.Fprintf(out, "Initialized git repository at %s\n", baseDir); err != nil {
+			return err
+		}
 		return nil
 	}
 

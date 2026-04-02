@@ -26,6 +26,6 @@ func wireHelpGroups(root *cobra.Command) {
 		}
 	}
 
-	root.SetCompletionCommandGroupID(groupSettings)
+	assignCommandGroup(root, "completion", groupSettings)
 	root.SetHelpCommandGroupID(groupSettings)
 }

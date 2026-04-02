@@ -45,6 +45,7 @@ type DeleteRequest struct {
 type MutationOpts struct {
 	Format       appcontracts.OutputFormat
 	Force        bool
+	Yes          bool
 	IsTTY        bool
 	AllowSymlink bool
 	Quiet        bool
@@ -152,12 +153,20 @@ func (r *Runner) newEditor(opts MutationOpts) (*cliconfig.Editor[appconfig.Proje
 		return nil, fmt.Errorf("resolve project context: %w", err)
 	}
 	store := projectConfigStore{resolver: cfgResolver, allowSymlink: opts.AllowSymlink}
+
+	var confirmFn func(string) bool
+	if opts.Yes {
+		confirmFn = ui.NewAutoConfirmPrompter(r.Stderr).Confirm
+	} else {
+		confirmFn = ui.NewPrompter(r.Stdin, r.Stderr).Confirm
+	}
+
 	return &cliconfig.Editor[appconfig.ProjectConfig]{
 		SetStore:    store,
 		DeleteStore: store,
 		Stderr:      r.Stderr,
 		Force:       opts.Force,
 		IsTTY:       func() bool { return opts.IsTTY },
-		Confirm:     ui.NewPrompter(r.Stdin, r.Stderr).Confirm,
+		Confirm:     confirmFn,
 	}, nil
 }

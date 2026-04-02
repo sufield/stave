@@ -17,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/exposure"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 )
@@ -43,6 +44,7 @@ func (a *App) bootstrap(cmd *cobra.Command, _ []string) error {
 	// is stored in Cobra's context — no package-level global state.
 	evalResult := projconfig.BuildEvaluator()
 	a.resolveGlobalFlagDefaults(cmd, evalResult.Evaluator)
+	a.resolveEnvVarDefaults(cmd)
 
 	a.resolveConfigurableLimits(evalResult.Evaluator)
 
@@ -93,6 +95,21 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Eval
 	}
 	if !p.Changed(cliflags.FlagPathMode) {
 		a.Flags.PathMode = eval.PathMode()
+	}
+}
+
+// resolveEnvVarDefaults fills global persistent flags from STAVE_* environment
+// variables when the user did not set them explicitly on the command line.
+// Precedence: CLI flag > env var > config file > default.
+// This runs after resolveGlobalFlagDefaults so env vars override config-file
+// defaults but not explicit CLI flags.
+func (a *App) resolveEnvVarDefaults(cmd *cobra.Command) {
+	p := cmd.Root().PersistentFlags()
+
+	if !p.Changed(cliflags.FlagQuiet) {
+		if env.Quiet.IsTrue() {
+			a.Flags.Quiet = true
+		}
 	}
 }
 

@@ -17,8 +17,9 @@ func NewDiagnoseCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRep
 	var opts diagnoseOptions
 
 	cmd := &cobra.Command{
-		Use:   "diagnose",
-		Short: "Diagnose evaluation inputs and results",
+		Use:     "diagnose",
+		Aliases: []string{"diag"},
+		Short:   "Diagnose evaluation inputs and results",
 		Long: `Diagnose evaluation inputs and results to identify likely causes of unexpected findings.
 
 Diagnose analyzes controls, observations, and optional prior output to explain
