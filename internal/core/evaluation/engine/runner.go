@@ -28,35 +28,10 @@ type Runner struct {
 	Hasher          ports.Digester
 	Exemptions      *policy.ExemptionConfig
 	Exceptions      *policy.ExceptionConfig
-	StaveVersion    string
-	InputHashes     *evaluation.InputHashes
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
 	// CELEvaluator evaluates predicates using the CEL engine.
 	// Required — the built-in predicate evaluator has been removed.
 	CELEvaluator policy.PredicateEval
-	// identitiesByTime maps snapshot capture times to their identities.
-	// Set during Evaluate so finding generation can look up the identities
-	// from the snapshot where the asset was last seen unsafe.
-	identitiesByTime map[time.Time][]asset.CloudIdentity
-}
-
-// identitiesAt returns the identities from the snapshot captured at the given time.
-// Falls back to the latest snapshot's identities if no exact match is found.
-func (e *Runner) identitiesAt(t time.Time) []asset.CloudIdentity {
-	if ids, ok := e.identitiesByTime[t]; ok {
-		return ids
-	}
-	// Fallback: find the closest snapshot at or before t.
-	var best time.Time
-	for capturedAt := range e.identitiesByTime {
-		if !capturedAt.After(t) && capturedAt.After(best) {
-			best = capturedAt
-		}
-	}
-	if !best.IsZero() {
-		return e.identitiesByTime[best]
-	}
-	return nil
 }
 
 func (e *Runner) logger() *slog.Logger {
@@ -90,17 +65,25 @@ func (e *Runner) deterministicNow(sorted []asset.Snapshot) time.Time {
 	return e.Clock.Now()
 }
 
+// EvaluateOptions holds per-run parameters that are not part of Runner's
+// reusable configuration.
+type EvaluateOptions struct {
+	StaveVersion string
+	InputHashes  *evaluation.InputHashes
+}
+
 // Evaluate processes snapshots and returns findings for unsafe duration violations.
-func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error) {
+func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (evaluation.Result, error) {
 	if e.Clock == nil {
 		return evaluation.Result{}, errors.New("precondition failed: Runner.Evaluate requires non-nil Clock")
 	}
+	var opt EvaluateOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 	sorted := e.normalizeSnapshots(snapshots)
 	now := e.deterministicNow(sorted)
-	e.identitiesByTime = make(map[time.Time][]asset.CloudIdentity, len(sorted))
-	for i := range sorted {
-		e.identitiesByTime[sorted[i].CapturedAt] = sorted[i].Identities
-	}
+	identityIdx := BuildIdentityIndex(sorted)
 	timelinesPerInv, err := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
 	if err != nil {
 		return evaluation.Result{}, fmt.Errorf("build timelines: %w", err)
@@ -120,9 +103,9 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot) (evaluation.Result, error)
 			)
 			continue
 		}
-		e.evaluateControl(&ctl, timelinesPerInv[ctl.ID], now, acc)
+		e.evaluateControl(&ctl, timelinesPerInv[ctl.ID], now, acc, identityIdx)
 	}
-	return e.buildResult(acc, sorted, now, len(snapshots)), nil
+	return e.buildResult(acc, sorted, now, len(snapshots), opt.StaveVersion, opt.InputHashes), nil
 }
 
 // evaluateControl evaluates a single control across all asset timelines.
@@ -131,6 +114,7 @@ func (e *Runner) evaluateControl(
 	timelines map[asset.ID]*asset.Timeline,
 	now time.Time,
 	acc *Accumulator,
+	identityIdx IdentityIndex,
 ) {
 	strategy := e.strategyFor(ctl)
 	// Deterministic iteration: sort asset IDs first.
@@ -162,14 +146,14 @@ func (e *Runner) evaluateControl(
 		if timeline.CurrentlyUnsafe() {
 			acc.unsafeAssets.Add(assetID)
 		}
-		row, findings := strategy.Evaluate(timeline, now)
+		row, findings := strategy.Evaluate(timeline, now, identityIdx)
 		acc.AddRow(row)
 		acc.AddFindings(findings)
 	}
 }
 
 // buildResult sorts accumulated data, computes risk, and constructs the final Result.
-func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now time.Time, snapshotCount int) evaluation.Result {
+func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now time.Time, snapshotCount int, staveVersion string, inputHashes *evaluation.InputHashes) evaluation.Result {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(acc.findings)
 	// Sort exempted assets for deterministic output.
@@ -183,7 +167,7 @@ func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now t
 		}
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
-	regularFindings, exceptedFindings := e.partitionFindings(acc.findings, now)
+	regularFindings, exceptedFindings := partitionFindings(acc.findings, e.Exceptions, now)
 
 	upcoming := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                e.Controls,
@@ -196,12 +180,12 @@ func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now t
 
 	return evaluation.Result{
 		Run: evaluation.RunInfo{
-			StaveVersion:      e.StaveVersion,
+			StaveVersion:      staveVersion,
 			Offline:           true,
 			Now:               now,
 			MaxUnsafeDuration: kernel.Duration(e.MaxUnsafeDuration),
 			Snapshots:         snapshotCount,
-			InputHashes:       e.InputHashes,
+			InputHashes:       inputHashes,
 			PackHash:          e.computePackHash(),
 		},
 		Summary: evaluation.Summary{
@@ -220,13 +204,15 @@ func (e *Runner) buildResult(acc *Accumulator, snapshots []asset.Snapshot, now t
 }
 
 // partitionFindings separates findings into regular and excepted based on active exception rules.
-func (e *Runner) partitionFindings(findings []evaluation.Finding, now time.Time) (
-	[]evaluation.Finding, []evaluation.ExceptedFinding,
-) {
+func partitionFindings(
+	findings []evaluation.Finding,
+	exceptions *policy.ExceptionConfig,
+	now time.Time,
+) ([]evaluation.Finding, []evaluation.ExceptedFinding) {
 	var regular []evaluation.Finding
 	var excepted []evaluation.ExceptedFinding
 	for _, f := range findings {
-		if rule := e.Exceptions.ShouldExcept(f.ControlID, f.AssetID, now); rule != nil {
+		if rule := exceptions.ShouldExcept(f.ControlID, f.AssetID, now); rule != nil {
 			excepted = append(excepted, evaluation.ExceptedFinding{
 				ControlID: f.ControlID,
 				AssetID:   f.AssetID,

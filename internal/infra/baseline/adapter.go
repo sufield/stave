@@ -3,9 +3,9 @@ package baseline
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -15,6 +15,10 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
+
+// FileOpener opens a file for writing at the given path.
+// The concrete implementation is injected from the cmd layer at construction.
+type FileOpener func(path string) (*os.File, error)
 
 // EvaluationLoader loads a persisted evaluation artifact.
 type EvaluationLoader struct{}
@@ -45,7 +49,7 @@ func (l *BaselineLoader) LoadBaseline(ctx context.Context, path string) ([]repor
 
 // BaselineWriter persists a baseline artifact to disk.
 type BaselineWriter struct {
-	FileOptions fileout.FileOptions
+	OpenFile FileOpener
 }
 
 // WriteBaseline writes a baseline snapshot to disk.
@@ -58,7 +62,7 @@ func (w *BaselineWriter) WriteBaseline(_ context.Context, path string, findings 
 		Findings:         domainToEntries(findings),
 	}
 
-	f, err := fileout.OpenOutputFile(fsutil.CleanUserPath(path), w.FileOptions)
+	f, err := w.OpenFile(fsutil.CleanUserPath(path))
 	if err != nil {
 		return fmt.Errorf("create %s: %w", path, err)
 	}

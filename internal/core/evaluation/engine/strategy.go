@@ -10,7 +10,7 @@ import (
 
 // strategy defines how different control types analyze a timeline.
 type strategy interface {
-	Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding)
+	Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding)
 }
 
 // Compile-time interface assertions.
@@ -45,7 +45,7 @@ type unsafeStateStrategy struct {
 	ctl    *policy.ControlDefinition
 }
 
-func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	maxUnsafe := s.runner.getMaxUnsafeDurationForControl(s.ctl)
 
@@ -71,7 +71,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time) (evalua
 			Control:         s.ctl,
 			Threshold:       maxUnsafe,
 			Now:             now,
-			Identities:      s.runner.identitiesAt(t.LastSeenUnsafeAt()),
+			Identities:      ids.At(t.LastSeenUnsafeAt()),
 			PredicateParser: s.runner.PredicateParser,
 		})
 		return finalizeRow(row, evaluation.DecisionViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
@@ -85,7 +85,7 @@ type unsafeDurationStrategy struct {
 	ctl    *policy.ControlDefinition
 }
 
-func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	maxUnsafe := s.runner.getMaxUnsafeDurationForControl(s.ctl)
 
@@ -103,7 +103,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time) (eva
 			Control:         s.ctl,
 			Threshold:       maxUnsafe,
 			Now:             now,
-			Identities:      s.runner.identitiesAt(t.LastSeenUnsafeAt()),
+			Identities:      ids.At(t.LastSeenUnsafeAt()),
 			PredicateParser: s.runner.PredicateParser,
 		})
 		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
@@ -132,7 +132,7 @@ type unsafeRecurrenceStrategy struct {
 	ctl    *policy.ControlDefinition
 }
 
-func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 
@@ -164,7 +164,7 @@ type prefixExposureStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, now time.Time) (evaluation.Row, []*evaluation.Finding) {
+func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row, findings := EvaluatePrefixExposureForRow(t, s.ctl, now)
 	return row, wrapInPointers(findings)
 }
@@ -173,7 +173,7 @@ type unsupportedStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	row.Reason = "type not evaluatable: " + s.ctl.Type.String()
 	return finalizeRow(row, evaluation.DecisionSkipped, evaluation.ConfidenceHigh), nil
