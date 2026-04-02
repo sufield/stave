@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/internal/core/ports"
 
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
@@ -154,12 +154,12 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 		SaveDeps: reporting.BaselineSaveDeps{
 			Loader: &infrabaseline.EvaluationLoader{},
 			Writer: &infrabaseline.BaselineWriter{},
-			Clock:  time.Now,
+			Clock:  ports.RealClock{},
 		},
 		CheckDeps: reporting.BaselineCheckDeps{
 			EvalLoader:     &infrabaseline.EvaluationLoader{},
 			BaselineLoader: &infrabaseline.BaselineLoader{},
-			Clock:          time.Now,
+			Clock:          ports.RealClock{},
 		},
 	}))
 	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
@@ -170,7 +170,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 				LoadAssets:      p.LoadAssets,
 				NewCELEvaluator: p.NewCELEvaluator,
 			},
-			Clock: time.Now,
+			Clock: ports.RealClock{},
 		},
 	}))
 	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.FixLoopDeps{
@@ -182,7 +182,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 		UseCaseDeps: reporting.CIDiffDeps{
 			CurrentLoader:  &infrabaseline.EvaluationLoader{},
 			BaselineLoader: &infrabaseline.EvaluationLoader{},
-			Clock:          time.Now,
+			Clock:          ports.RealClock{},
 		},
 	}))
 	celEval, _ := p.NewCELEvaluator()

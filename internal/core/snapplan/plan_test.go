@@ -165,18 +165,15 @@ func TestBuildPlan_PreviewWhenNotForced(t *testing.T) {
 	}
 }
 
-func TestBuildPlan_ZeroNowDefaultsToNonZero(t *testing.T) {
-	plan, err := BuildPlan(BuildPlanParams{
+func TestBuildPlan_ZeroNowReturnsError(t *testing.T) {
+	_, err := BuildPlan(BuildPlanParams{
 		ObsRoot:          "/obs",
 		DefaultTier:      "default",
 		Files:            makeFiles(1 * time.Hour),
 		DefaultOlderThan: 36 * time.Hour,
 	})
-	if err != nil {
-		t.Fatalf("BuildPlan() error: %v", err)
-	}
-	if plan.GeneratedAt.IsZero() {
-		t.Error("GeneratedAt should not be zero when Now defaults")
+	if err == nil {
+		t.Fatal("BuildPlan() should return error when Now is zero")
 	}
 }
 

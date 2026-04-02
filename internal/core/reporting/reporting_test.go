@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // --- Mocks ---
@@ -102,7 +104,7 @@ func canceled() context.Context {
 	return ctx
 }
 
-var fixedClock = func() time.Time { return time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC) }
+var fixedClock = ports.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC))
 
 // --- Baseline Save ---
 
