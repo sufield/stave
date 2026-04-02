@@ -3,7 +3,7 @@ package generate
 import (
 	"testing"
 
-	"github.com/sufield/stave/cmd/cmdutil/fileout"
+	"github.com/sufield/stave/internal/platform/fileout"
 )
 
 func TestParseMode_Valid(t *testing.T) {

@@ -5,7 +5,11 @@
 // from findings, and evaluation report loading.
 package reporting
 
-import "time"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/safetyenvelope"
+)
 
 // --- Baseline ---
 
@@ -90,7 +94,7 @@ type ReportRequest struct {
 }
 
 type ReportResponse struct {
-	EvaluationData any `json:"evaluation_data"`
+	EvaluationData *safetyenvelope.Evaluation `json:"evaluation_data"`
 }
 
 // --- Diagnose ---

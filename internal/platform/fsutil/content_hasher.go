@@ -1,11 +1,11 @@
 package fsutil
 
-import appcontracts "github.com/sufield/stave/internal/app/contracts"
+import "github.com/sufield/stave/internal/core/ports"
 
 // FSContentHasher implements ContentHasher using filesystem I/O.
 type FSContentHasher struct{}
 
-var _ appcontracts.ContentHasher = FSContentHasher{}
+var _ ports.ContentHasher = FSContentHasher{}
 
 // HashDir returns a deterministic hash of files matching the given extensions.
 func (FSContentHasher) HashDir(path string, exts ...string) (string, error) {

@@ -3,13 +3,15 @@ package reporting
 import (
 	"context"
 	"fmt"
+
+	"github.com/sufield/stave/internal/safetyenvelope"
 )
 
 // --- Report ---
 
 // ReportEvaluationLoaderPort loads an evaluation artifact for reporting.
 type ReportEvaluationLoaderPort interface {
-	LoadEvaluation(ctx context.Context, path string) (any, error)
+	LoadEvaluation(ctx context.Context, path string) (*safetyenvelope.Evaluation, error)
 }
 
 type ReportDeps struct {
