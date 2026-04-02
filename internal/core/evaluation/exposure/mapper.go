@@ -25,6 +25,8 @@ func FactsFromStorage(props map[string]any) Facts {
 }
 
 // buildGrants maps parallel property structures into a slice of Grant objects.
+// Scopes without a corresponding non-empty source are skipped to prevent
+// ghost grants with empty StatementIDs.
 func buildGrants(pe maps.Value) Grants {
 	scopes := pe.Get("identity_read_scopes").StringSlice()
 	sources := pe.Get("identity_source_by_scope").StringMap()
@@ -35,9 +37,13 @@ func buildGrants(pe maps.Value) Grants {
 
 	grants := make(Grants, 0, len(scopes))
 	for _, scope := range scopes {
+		source, ok := sources[scope]
+		if !ok || source == "" {
+			continue
+		}
 		grants = append(grants, Grant{
 			Scope:    kernel.ObjectPrefix(scope),
-			SourceID: kernel.StatementID(sources[scope]),
+			SourceID: kernel.StatementID(source),
 		})
 	}
 	return grants
