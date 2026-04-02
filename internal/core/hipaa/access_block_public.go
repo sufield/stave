@@ -33,13 +33,13 @@ func (inv *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		bpa := extractBPA(a)
-		if bpa != nil && bpa.AllEnabled() {
+		props := ParseS3Properties(a)
+		if props.Controls.PublicAccessBlock.Present && props.Controls.PublicAccessBlock.AllEnabled() {
 			continue
 		}
 
 		// Check account-level BPA as a mitigating factor.
-		if accountBPAFullyEnabled(a) {
+		if props.Controls.AccountPublicAccessFullyBlocked {
 			return Result{
 				Pass:           false,
 				ControlID:      inv.ID(),
@@ -59,51 +59,6 @@ func (inv *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
 	return inv.PassResult()
 }
 
-// --- Property extraction helpers ---
-
-func isS3Bucket(a asset.Asset) bool {
-	return a.Type.String() == "aws_s3_bucket"
-}
-
-func extractBPA(a asset.Asset) *asset.S3BlockPublicAccess {
-	storage, ok := a.Properties["storage"].(map[string]any)
-	if !ok {
-		return nil
-	}
-	controls, ok := storage["controls"].(map[string]any)
-	if !ok {
-		return nil
-	}
-	block, ok := controls["public_access_block"].(map[string]any)
-	if !ok {
-		return nil
-	}
-	return &asset.S3BlockPublicAccess{
-		BlockPublicACLs:       toBool(block["block_public_acls"]),
-		IgnorePublicACLs:      toBool(block["ignore_public_acls"]),
-		BlockPublicPolicy:     toBool(block["block_public_policy"]),
-		RestrictPublicBuckets: toBool(block["restrict_public_buckets"]),
-	}
-}
-
-func accountBPAFullyEnabled(a asset.Asset) bool {
-	storage, ok := a.Properties["storage"].(map[string]any)
-	if !ok {
-		return false
-	}
-	controls, ok := storage["controls"].(map[string]any)
-	if !ok {
-		return false
-	}
-	return toBool(controls["account_public_access_fully_blocked"])
-}
-
-func toBool(v any) bool {
-	b, _ := v.(bool)
-	return b
-}
-
 func extractPolicyJSON(a asset.Asset) string {
-	s, _ := a.Properties["policy_json"].(string)
-	return s
+	return ParseS3Properties(a).PolicyJSON
 }

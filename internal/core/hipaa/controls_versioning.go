@@ -31,8 +31,8 @@ func (inv *controlsVersioning) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		ver := versioningMap(a)
-		if ver == nil || !toBool(ver["enabled"]) {
+		props := ParseS3Properties(a)
+		if !props.Versioning.Enabled {
 			return inv.FailResult(
 				fmt.Sprintf("Bucket %s: versioning is not enabled — accidental or malicious deletions cannot be recovered", a.ID),
 				"Enable versioning on the bucket. For HIPAA workloads, also enable MFA Delete to prevent unauthorized permanent deletion of objects.",

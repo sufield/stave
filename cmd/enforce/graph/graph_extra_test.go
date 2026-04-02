@@ -80,7 +80,7 @@ func TestCoverageAssets(t *testing.T) {
 		t.Fatalf("ids len = %d", len(ids))
 	}
 	// Should be sorted
-	if ids[0] != "bucket-a" {
+	if ids[0] != asset.ID("bucket-a") {
 		t.Fatalf("first id = %q, want bucket-a", ids[0])
 	}
 }
@@ -97,21 +97,21 @@ func TestCoverageAssets_Empty(t *testing.T) {
 
 func TestCoverageControlIDs(t *testing.T) {
 	controls := []policy.ControlDefinition{
-		{ID: "CTL.B.001"},
-		{ID: "CTL.A.001"},
+		{ID: "CTL.B.FOO.001"},
+		{ID: "CTL.A.FOO.001"},
 	}
 	ids := coverageControlIDs(controls)
 	if len(ids) != 2 {
 		t.Fatalf("len = %d", len(ids))
 	}
-	if ids[0] != "CTL.B.001" {
+	if ids[0] != "CTL.B.FOO.001" {
 		t.Fatalf("[0] = %q", ids[0])
 	}
 }
 
 func TestUncoveredAssets(t *testing.T) {
-	all := []string{"a", "b", "c"}
-	covered := map[string]bool{"b": true}
+	all := []asset.ID{"a", "b", "c"}
+	covered := map[asset.ID]bool{"b": true}
 	uncovered := uncoveredAssets(all, covered)
 	if len(uncovered) != 2 {
 		t.Fatalf("len = %d", len(uncovered))
@@ -119,9 +119,9 @@ func TestUncoveredAssets(t *testing.T) {
 }
 
 func TestCoverageEdges_NilEval(t *testing.T) {
-	controls := []policy.ControlDefinition{{ID: "CTL.A.001"}}
-	assetMap := map[string]asset.Asset{"bucket-1": {ID: "bucket-1"}}
-	assetIDs := []string{"bucket-1"}
+	controls := []policy.ControlDefinition{{ID: "CTL.A.FOO.001"}}
+	assetMap := map[asset.ID]asset.Asset{"bucket-1": {ID: "bucket-1"}}
+	assetIDs := []asset.ID{"bucket-1"}
 	edges, covered := CoverageEdges(controls, assetMap, assetIDs, nil, nil)
 	if len(edges) != 0 {
 		t.Fatalf("edges = %d", len(edges))
@@ -132,7 +132,7 @@ func TestCoverageEdges_NilEval(t *testing.T) {
 }
 
 func TestBuildResult(t *testing.T) {
-	controls := []policy.ControlDefinition{{ID: "CTL.A.001"}}
+	controls := []policy.ControlDefinition{{ID: "CTL.A.FOO.001"}}
 	latest := asset.Snapshot{
 		Assets: []asset.Asset{{ID: "bucket-1"}},
 	}
@@ -151,10 +151,10 @@ func TestBuildResult(t *testing.T) {
 
 func TestWriteDOT(t *testing.T) {
 	result := CoverageResult{
-		Controls:        []string{"CTL.A.001"},
-		Assets:          []string{"bucket-1", "bucket-2"},
-		Edges:           []CoverageEdge{{ControlID: "CTL.A.001", AssetID: "bucket-1"}},
-		UncoveredAssets: []string{"bucket-2"},
+		Controls:        []kernel.ControlID{"CTL.A.FOO.001"},
+		Assets:          []asset.ID{"bucket-1", "bucket-2"},
+		Edges:           []CoverageEdge{{ControlID: "CTL.A.FOO.001", AssetID: "bucket-1"}},
+		UncoveredAssets: []asset.ID{"bucket-2"},
 	}
 	san := sanitize.New()
 	var buf bytes.Buffer
@@ -165,7 +165,7 @@ func TestWriteDOT(t *testing.T) {
 	if !strings.Contains(out, "digraph StaveCoverage") {
 		t.Fatal("missing digraph header")
 	}
-	if !strings.Contains(out, "CTL.A.001") {
+	if !strings.Contains(out, "CTL.A.FOO.001") {
 		t.Fatal("missing control node")
 	}
 	if !strings.Contains(out, "bucket-2") {
@@ -178,10 +178,10 @@ func TestWriteDOT(t *testing.T) {
 
 func TestWriteJSON(t *testing.T) {
 	result := CoverageResult{
-		Controls:        []string{"CTL.A.001"},
-		Assets:          []string{"bucket-1"},
-		Edges:           []CoverageEdge{{ControlID: "CTL.A.001", AssetID: "bucket-1"}},
-		UncoveredAssets: []string{},
+		Controls:        []kernel.ControlID{"CTL.A.FOO.001"},
+		Assets:          []asset.ID{"bucket-1"},
+		Edges:           []CoverageEdge{{ControlID: "CTL.A.FOO.001", AssetID: "bucket-1"}},
+		UncoveredAssets: []asset.ID{},
 	}
 	san := sanitize.New()
 	var buf bytes.Buffer
@@ -195,7 +195,7 @@ func TestWriteJSON(t *testing.T) {
 }
 
 func TestWriteResult_DOT(t *testing.T) {
-	result := CoverageResult{Controls: []string{"CTL.A"}, Assets: []string{"a"}}
+	result := CoverageResult{Controls: []kernel.ControlID{"CTL.A.FOO.001"}, Assets: []asset.ID{"a"}}
 	san := sanitize.New()
 	var buf bytes.Buffer
 	if err := writeResult(&buf, FormatDot, result, san); err != nil {
@@ -207,7 +207,7 @@ func TestWriteResult_DOT(t *testing.T) {
 }
 
 func TestWriteResult_JSON(t *testing.T) {
-	result := CoverageResult{Controls: []string{"CTL.A"}, Assets: []string{"a"}}
+	result := CoverageResult{Controls: []kernel.ControlID{"CTL.A.FOO.001"}, Assets: []asset.ID{"a"}}
 	san := sanitize.New()
 	var buf bytes.Buffer
 	if err := writeResult(&buf, FormatJSON, result, san); err != nil {

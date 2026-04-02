@@ -35,23 +35,22 @@ func (inv *controlsKmsCmk) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		enc := encryptionMap(a)
-		if enc == nil || !toBool(enc["at_rest_enabled"]) {
+		props := ParseS3Properties(a)
+		if !props.Encryption.AtRestEnabled {
 			return inv.FailResult(
 				fmt.Sprintf("Bucket %s: encryption is not enabled — CMK requirement cannot be met without SSE", a.ID),
 				"Enable SSE-KMS with a customer-managed CMK. Do not use the AWS-managed key (alias/aws/s3).",
 			)
 		}
 
-		algorithm := toString(enc["algorithm"])
-		if !strings.EqualFold(algorithm, "aws:kms") {
+		if !strings.EqualFold(props.Encryption.Algorithm, "aws:kms") {
 			return inv.FailResult(
-				fmt.Sprintf("Bucket %s: encryption algorithm is %q, not aws:kms — SSE-KMS with CMK is required for HIPAA", a.ID, algorithm),
+				fmt.Sprintf("Bucket %s: encryption algorithm is %q, not aws:kms — SSE-KMS with CMK is required for HIPAA", a.ID, props.Encryption.Algorithm),
 				"Change the default encryption to SSE-KMS (aws:kms) with a customer-managed CMK.",
 			)
 		}
 
-		keyID := toString(enc["kms_master_key_id"])
+		keyID := props.Encryption.KMSMasterKeyID
 		if keyID == "" {
 			return inv.FailResult(
 				fmt.Sprintf("Bucket %s: SSE-KMS is enabled but no KMS key ID is set — likely using the AWS-managed default", a.ID),

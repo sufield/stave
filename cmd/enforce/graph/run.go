@@ -64,16 +64,16 @@ func NewRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoa
 
 // CoverageEdge represents a single control→asset coverage relationship.
 type CoverageEdge struct {
-	ControlID string `json:"control_id"`
-	AssetID   string `json:"asset_id"`
+	ControlID kernel.ControlID `json:"control_id"`
+	AssetID   asset.ID         `json:"asset_id"`
 }
 
 // CoverageResult holds the complete coverage graph data.
 type CoverageResult struct {
-	Controls        []string       `json:"controls"`
-	Assets          []string       `json:"assets"`
-	Edges           []CoverageEdge `json:"edges"`
-	UncoveredAssets []string       `json:"uncovered_assets"`
+	Controls        []kernel.ControlID `json:"controls"`
+	Assets          []asset.ID         `json:"assets"`
+	Edges           []CoverageEdge     `json:"edges"`
+	UncoveredAssets []asset.ID         `json:"uncovered_assets"`
 }
 
 // Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
@@ -121,10 +121,10 @@ func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eva
 	}
 }
 
-func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
-	assetMap := make(map[string]asset.Asset, len(assets))
+func coverageAssets(assets []asset.Asset) (map[asset.ID]asset.Asset, []asset.ID) {
+	assetMap := make(map[asset.ID]asset.Asset, len(assets))
 	for _, a := range assets {
-		assetMap[a.ID.String()] = a
+		assetMap[a.ID] = a
 	}
 	if len(assetMap) == 0 {
 		return assetMap, nil
@@ -132,23 +132,23 @@ func coverageAssets(assets []asset.Asset) (map[string]asset.Asset, []string) {
 	return assetMap, slices.Sorted(maps.Keys(assetMap))
 }
 
-func coverageControlIDs(controls []policy.ControlDefinition) []string {
-	ids := make([]string, len(controls))
+func coverageControlIDs(controls []policy.ControlDefinition) []kernel.ControlID {
+	ids := make([]kernel.ControlID, len(controls))
 	for i, ctl := range controls {
-		ids[i] = ctl.ID.String()
+		ids[i] = ctl.ID
 	}
 	return ids
 }
 
 func CoverageEdges(
 	controls []policy.ControlDefinition,
-	assetMap map[string]asset.Asset,
-	assetIDs []string,
+	assetMap map[asset.ID]asset.Asset,
+	assetIDs []asset.ID,
 	identities []asset.CloudIdentity,
 	eval policy.PredicateEval,
-) ([]CoverageEdge, map[string]bool) {
+) ([]CoverageEdge, map[asset.ID]bool) {
 	edges := make([]CoverageEdge, 0, len(assetIDs))
-	coveredAssets := make(map[string]bool, len(assetIDs))
+	coveredAssets := make(map[asset.ID]bool, len(assetIDs))
 	if eval == nil {
 		return edges, coveredAssets
 	}
@@ -159,15 +159,15 @@ func CoverageEdges(
 			if err != nil || !unsafe {
 				continue
 			}
-			edges = append(edges, CoverageEdge{ControlID: ctl.ID.String(), AssetID: rid})
+			edges = append(edges, CoverageEdge{ControlID: ctl.ID, AssetID: rid})
 			coveredAssets[rid] = true
 		}
 	}
 	return edges, coveredAssets
 }
 
-func uncoveredAssets(assetIDs []string, coveredAssets map[string]bool) []string {
-	out := make([]string, 0)
+func uncoveredAssets(assetIDs []asset.ID, coveredAssets map[asset.ID]bool) []asset.ID {
+	out := make([]asset.ID, 0)
 	for _, rid := range assetIDs {
 		if !coveredAssets[rid] {
 			out = append(out, rid)
@@ -188,7 +188,7 @@ func writeResult(w io.Writer, format Format, result CoverageResult, sanitizer ke
 }
 
 func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
-	uncoveredSet := make(map[string]bool)
+	uncoveredSet := make(map[asset.ID]bool)
 	for _, r := range result.UncoveredAssets {
 		uncoveredSet[r] = true
 	}
@@ -204,7 +204,7 @@ func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) er
 	fmt.Fprintln(w, `    style="filled";`)
 	fmt.Fprintln(w, `    color="lightgrey";`)
 	for _, id := range result.Controls {
-		fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightblue];\n", dotQuote(id))
+		fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightblue];\n", dotQuote(id.String()))
 	}
 	fmt.Fprintln(w, "  }")
 	fmt.Fprintln(w)
@@ -213,7 +213,7 @@ func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) er
 	fmt.Fprintln(w, "  subgraph cluster_assets {")
 	fmt.Fprintln(w, `    label="Assets";`)
 	for _, rid := range result.Assets {
-		displayID := sanitizer.ID(rid)
+		displayID := sanitizer.ID(rid.String())
 		if uncoveredSet[rid] {
 			fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightyellow];\n", dotQuote(displayID))
 		} else {
@@ -225,8 +225,8 @@ func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) er
 
 	// Edges
 	for _, edge := range result.Edges {
-		assetDisplay := sanitizer.ID(edge.AssetID)
-		fmt.Fprintf(w, "  %s -> %s;\n", dotQuote(edge.ControlID), dotQuote(assetDisplay))
+		assetDisplay := sanitizer.ID(edge.AssetID.String())
+		fmt.Fprintf(w, "  %s -> %s;\n", dotQuote(edge.ControlID.String()), dotQuote(assetDisplay))
 	}
 
 	fmt.Fprintln(w, "}")
@@ -242,13 +242,13 @@ func dotQuote(s string) string {
 
 func writeJSON(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
 	for i, rid := range result.Assets {
-		result.Assets[i] = sanitizer.ID(rid)
+		result.Assets[i] = asset.ID(sanitizer.ID(rid.String()))
 	}
 	for i, edge := range result.Edges {
-		result.Edges[i].AssetID = sanitizer.ID(edge.AssetID)
+		result.Edges[i].AssetID = asset.ID(sanitizer.ID(edge.AssetID.String()))
 	}
 	for i, rid := range result.UncoveredAssets {
-		result.UncoveredAssets[i] = sanitizer.ID(rid)
+		result.UncoveredAssets[i] = asset.ID(sanitizer.ID(rid.String()))
 	}
 
 	return jsonutil.WriteIndented(w, result)

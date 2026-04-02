@@ -14,7 +14,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/diag"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -181,29 +180,17 @@ type validateParams struct {
 func (o *options) parseParams() validateParams {
 	var p validateParams
 
-	dur, err := kernel.ParseDuration(o.MaxUnsafeDuration)
-	if err != nil {
-		p.issues = append(p.issues, diag.New(diag.CodeInvalidMaxUnsafe).
-			Error().
-			Action("Use format like 168h, 7d, or 1d12h").
-			Command("stave validate --max-unsafe 168h").
-			With("value", o.MaxUnsafeDuration).
-			WithSensitive("error", err.Error()).
-			Build())
+	dur, issue := compose.ResolveDurationDiag(o.MaxUnsafeDuration)
+	if issue != nil {
+		p.issues = append(p.issues, *issue)
 	} else {
-		p.maxUnsafe = &dur
+		p.maxUnsafe = dur
 	}
 
 	if o.NowTime != "" {
-		t, parseErr := cliflags.ParseRFC3339(o.NowTime, "--now")
-		if parseErr != nil {
-			p.issues = append(p.issues, diag.New(diag.CodeInvalidNowTime).
-				Error().
-				Action("Use RFC3339 format").
-				Command("stave validate --now 2026-01-15T00:00:00Z").
-				With("value", o.NowTime).
-				WithSensitive("error", parseErr.Error()).
-				Build())
+		t, issue := compose.ResolveNowDiag(o.NowTime)
+		if issue != nil {
+			p.issues = append(p.issues, *issue)
 		} else {
 			p.nowTime = t
 		}
