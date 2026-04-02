@@ -32,8 +32,8 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 		Control:      buildControlSummary(ctl, violation),
 		Asset: evaluation.FindingAssetSummary{
 			ID:         violation.AssetID,
-			Type:       string(violation.AssetType),
-			Vendor:     string(violation.AssetVendor),
+			Type:       violation.AssetType,
+			Vendor:     violation.AssetVendor,
 			ObservedAt: violation.Evidence.LastSeenUnsafeAt,
 		},
 	}
@@ -81,7 +81,7 @@ func buildControlSummary(ctl *policy.ControlDefinition, f *evaluation.Finding) e
 			Description: ctl.Description,
 			Severity:    ctl.Severity,
 			Domain:      ctl.Domain,
-			Type:        ctl.Type.String(),
+			Type:        ctl.Type,
 			ScopeTags:   ctl.ScopeTags,
 			Compliance:  policy.ComplianceMapping(ctl.Compliance),
 			Exposure:    exp,

@@ -69,7 +69,7 @@ func makeTestResult() evaluation.Result {
 					UnsafeDurationHours: 24,
 					ThresholdHours:      0,
 					Misconfigurations: []policy.Misconfiguration{
-						{Property: "properties.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
+						{Property: predicate.NewFieldPath("properties.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 					},
 					SourceEvidence: &evaluation.SourceEvidence{
 						IdentityStatements: []kernel.StatementID{"AllowPublicRead"},

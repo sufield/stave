@@ -46,17 +46,17 @@ type reportSummary struct {
 }
 
 type reportFinding struct {
-	ControlID   string            `json:"control_id"`
-	AssetID     string            `json:"asset_id"`
-	AssetType   string            `json:"asset_type"`
-	Vendor      string            `json:"vendor"`
-	Severity    string            `json:"severity,omitempty"`
-	Compliance  map[string]string `json:"compliance,omitempty"`
-	DurationH   float64           `json:"duration_hours"`
-	ThresholdH  float64           `json:"threshold_hours"`
-	FirstUnsafe string            `json:"first_unsafe,omitempty"`
-	LastUnsafe  string            `json:"last_unsafe,omitempty"`
-	sevRank     int               // precomputed from policy.Severity for sort
+	ControlID   string                   `json:"control_id"`
+	AssetID     string                   `json:"asset_id"`
+	AssetType   string                   `json:"asset_type"`
+	Vendor      string                   `json:"vendor"`
+	Severity    string                   `json:"severity,omitempty"`
+	Compliance  policy.ComplianceMapping `json:"compliance,omitempty"`
+	DurationH   float64                  `json:"duration_hours"`
+	ThresholdH  float64                  `json:"threshold_hours"`
+	FirstUnsafe string                   `json:"first_unsafe,omitempty"`
+	LastUnsafe  string                   `json:"last_unsafe,omitempty"`
+	sevRank     int                      // precomputed from policy.Severity for sort
 }
 
 type reportRemediation struct {
@@ -161,9 +161,9 @@ func toReportRemediation(finding remediation.Finding) reportRemediation {
 	}
 }
 
-func updateComplianceData(complianceData map[string]*reportComplianceEntry, compliance map[string]string, severity string) {
+func updateComplianceData(complianceData map[string]*reportComplianceEntry, compliance policy.ComplianceMapping, severity string) {
 	for framework, control := range compliance {
-		entry := ensureComplianceEntry(complianceData, framework)
+		entry := ensureComplianceEntry(complianceData, string(framework))
 		entry.TotalFindings++
 		entry.FindingsBySeverity[severity]++
 		if _, exists := entry.controlSet[control]; !exists {

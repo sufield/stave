@@ -53,6 +53,11 @@ func (d ExpiryDate) IsZero() bool {
 	return time.Time(d).IsZero()
 }
 
+// MarshalText implements encoding.TextMarshaler for JSON/YAML serialization.
+func (d ExpiryDate) MarshalText() ([]byte, error) {
+	return []byte(d.String()), nil
+}
+
 // String returns YYYY-MM-DD or "never" for the zero value.
 func (d ExpiryDate) String() string {
 	if d.IsZero() {

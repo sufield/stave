@@ -434,7 +434,7 @@ func TestExtractMisconfigurationsSorted(t *testing.T) {
 		t.Fatalf("expected 2 misconfigurations, got %d", len(results))
 	}
 	// Should be sorted by Property
-	if results[0].Property != "a_field" {
+	if results[0].Property.String() != "a_field" {
 		t.Fatalf("expected a_field first, got %s", results[0].Property)
 	}
 }
@@ -595,7 +595,7 @@ func TestControlTypeUnmarshalYAML(t *testing.T) {
 
 func TestMisconfigurationStringDefaultOperator(t *testing.T) {
 	m := Misconfiguration{
-		Property:    "properties.x",
+		Property:    predicate.NewFieldPath("properties.x"),
 		Operator:    predicate.Operator("custom_op"),
 		ActualValue: "val",
 	}

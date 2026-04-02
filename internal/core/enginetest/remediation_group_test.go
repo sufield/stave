@@ -7,13 +7,14 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 func TestBuildRemediationGroups(t *testing.T) {
 	makeActions := func(paths ...string) []evaluation.RemediationAction {
 		actions := make([]evaluation.RemediationAction, len(paths))
 		for i, p := range paths {
-			actions[i] = evaluation.RemediationAction{ActionType: "set", Path: p, Value: true}
+			actions[i] = evaluation.RemediationAction{ActionType: "set", Path: predicate.NewFieldPath(p), Value: true}
 		}
 		return actions
 	}
@@ -160,7 +161,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 
 func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
+		{ActionType: "set", Path: predicate.NewFieldPath("security_posture.block_identity_public_access"), Value: true},
 	}
 	findings := []remediation.Finding{
 		{
@@ -195,7 +196,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 
 func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
+		{ActionType: "set", Path: predicate.NewFieldPath("security_posture.block_identity_public_access"), Value: true},
 	}
 	findings := []remediation.Finding{
 		{
@@ -234,7 +235,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 
 func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 	actions := []evaluation.RemediationAction{
-		{ActionType: "set", Path: "security_posture.block_identity_public_access", Value: true},
+		{ActionType: "set", Path: predicate.NewFieldPath("security_posture.block_identity_public_access"), Value: true},
 	}
 	findings := []remediation.Finding{
 		{

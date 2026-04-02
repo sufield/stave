@@ -43,7 +43,7 @@ func classifyProperty(path string) Category {
 // It captures the specific field, the observed state, and the failed logic gate.
 type Misconfiguration struct {
 	// Property is the field path (e.g., "properties.public_access_block.block_public_acls").
-	Property string `json:"property"`
+	Property predicate.FieldPath `json:"property"`
 
 	// ActualValue is the state observed during evaluation.
 	ActualValue any `json:"actual_value"`
@@ -60,8 +60,7 @@ type Misconfiguration struct {
 
 // DisplayProperty strips the internal "properties." prefix for human-friendly reporting.
 func (m Misconfiguration) DisplayProperty() string {
-	// Reusing the logic from the predicate.FieldPath refactor.
-	return strings.TrimPrefix(m.Property, propertiesPathPrefix)
+	return m.Property.TrimPrefix(propertiesPathPrefix)
 }
 
 // IsMissing reports whether the violation was caused by the absence of a required field.

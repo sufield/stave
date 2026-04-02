@@ -11,7 +11,7 @@ func TestWithGitMetadata(t *testing.T) {
 		RepoRoot:  "/repo",
 		Head:      "abc123",
 		Dirty:     true,
-		DirtyList: []string{"a.txt"},
+		DirtyList: []evaluation.FilePath{"a.txt"},
 	}))
 	if cfg.Metadata.Git == nil {
 		t.Fatal("expected Git metadata to be set")

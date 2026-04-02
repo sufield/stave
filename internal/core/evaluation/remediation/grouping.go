@@ -138,7 +138,7 @@ func canonicalActionsHash(h ports.Digester, actions []evaluation.RemediationActi
 	for _, a := range actions {
 		// JSON ensures stable key ordering for map-based values
 		val, _ := json.Marshal(a.Value)
-		parts = append(parts, fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path, val))
+		parts = append(parts, fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path.String(), val))
 	}
 
 	// 2. Sort to ensure order-independence

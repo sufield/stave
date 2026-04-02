@@ -33,8 +33,8 @@ type ControlDefinition struct {
 	Name                 string
 	Description          string
 	Severity             Severity
-	Domain               string
-	ScopeTags            []string
+	Domain               kernel.AssetDomain
+	ScopeTags            []kernel.ScopeTag
 	Compliance           ComplianceMapping
 	Type                 ControlType
 	Params               ControlParams
@@ -48,7 +48,7 @@ type ControlDefinition struct {
 }
 
 // HasCompliance reports whether the control has a non-empty mapping for the given framework key.
-func (ctl *ControlDefinition) HasCompliance(key string) bool {
+func (ctl *ControlDefinition) HasCompliance(key ComplianceFramework) bool {
 	return ctl.Compliance.Has(key)
 }
 

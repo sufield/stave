@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -111,7 +112,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 			{ID: "skip-secret", Pattern: "*", Reason: "scoped out"},
 		},
 		ExceptedFindings: []evaluation.ExceptedFinding{
-			{ControlID: "CTL.SUP.001", AssetID: "supp-res", Reason: "approved", Expires: "2027-01-01"},
+			{ControlID: "CTL.SUP.001", AssetID: "supp-res", Reason: "approved", Expires: mustParseExpiry("2027-01-01")},
 		},
 	}
 
@@ -217,4 +218,12 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 			t.Fatalf("missing %q in output:\n%s", want, out)
 		}
 	}
+}
+
+func mustParseExpiry(s string) policy.ExpiryDate {
+	d, err := policy.ParseExpiryDate(s)
+	if err != nil {
+		panic(err)
+	}
+	return d
 }

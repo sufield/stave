@@ -10,6 +10,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // Finding represents a detected control violation.
@@ -45,11 +46,11 @@ func SortFindings(fs []Finding) {
 
 // RemediationPlan describes deterministic, machine-readable remediation guidance.
 type RemediationPlan struct {
-	ID             string              `json:"id"`
-	Target         RemediationTarget   `json:"target"`
-	Preconditions  []string            `json:"preconditions,omitempty"`
-	Actions        []RemediationAction `json:"actions,omitempty"`
-	ExpectedEffect string              `json:"expected_effect,omitempty"`
+	ID             policy.RemediationPlanID `json:"id"`
+	Target         RemediationTarget        `json:"target"`
+	Preconditions  []string                 `json:"preconditions,omitempty"`
+	Actions        []RemediationAction      `json:"actions,omitempty"`
+	ExpectedEffect string                   `json:"expected_effect,omitempty"`
 }
 
 type RemediationTarget struct {
@@ -67,7 +68,7 @@ const (
 
 type RemediationAction struct {
 	ActionType RemediationActionType `json:"action_type"`
-	Path       string                `json:"path"`
+	Path       predicate.FieldPath   `json:"path"`
 	Value      any                   `json:"value,omitempty"`
 }
 
@@ -91,19 +92,19 @@ type FindingControlSummary struct {
 	Name        string                   `json:"name"`
 	Description string                   `json:"description"`
 	Severity    policy.Severity          `json:"severity,omitempty"`
-	Domain      string                   `json:"domain,omitempty"`
-	Type        string                   `json:"type,omitempty"`
-	ScopeTags   []string                 `json:"scope_tags,omitempty"`
+	Domain      kernel.AssetDomain       `json:"domain,omitempty"`
+	Type        policy.ControlType       `json:"type,omitempty"`
+	ScopeTags   []kernel.ScopeTag        `json:"scope_tags,omitempty"`
 	Compliance  policy.ComplianceMapping `json:"compliance,omitempty"`
 	Exposure    *policy.Exposure         `json:"exposure,omitempty"`
 }
 
 // FindingAssetSummary holds asset metadata for the diagnosed finding.
 type FindingAssetSummary struct {
-	ID         asset.ID  `json:"id"`
-	Type       string    `json:"type"`
-	Vendor     string    `json:"vendor,omitempty"`
-	ObservedAt time.Time `json:"observed_at"`
+	ID         asset.ID         `json:"id"`
+	Type       kernel.AssetType `json:"type"`
+	Vendor     kernel.Vendor    `json:"vendor,omitempty"`
+	ObservedAt time.Time        `json:"observed_at"`
 }
 
 // TraceRenderer abstracts rendering of a predicate evaluation trace.
@@ -174,8 +175,8 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 
 // ExceptedFinding records a finding that was excepted, with audit trail.
 type ExceptedFinding struct {
-	ControlID kernel.ControlID `json:"control_id"`
-	AssetID   asset.ID         `json:"asset_id"`
-	Reason    string           `json:"reason"`
-	Expires   string           `json:"expires,omitempty"`
+	ControlID kernel.ControlID  `json:"control_id"`
+	AssetID   asset.ID          `json:"asset_id"`
+	Reason    string            `json:"reason"`
+	Expires   policy.ExpiryDate `json:"expires"`
 }

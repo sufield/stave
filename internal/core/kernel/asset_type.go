@@ -35,14 +35,14 @@ func (a AssetType) String() string {
 // Domain extracts the provider/family prefix.
 // For "aws_s3_bucket", it returns "aws_s3".
 // For "storage_bucket", it returns "storage".
-func (a AssetType) Domain() string {
+func (a AssetType) Domain() AssetDomain {
 	s := a.String()
 	parts := strings.Split(s, "_")
 	if len(parts) < 2 {
-		return parts[0]
+		return AssetDomain(parts[0])
 	}
 	// Convention: the domain is the first two segments if they exist.
-	return strings.Join(parts[:2], "_")
+	return AssetDomain(strings.Join(parts[:2], "_"))
 }
 
 // Validate ensures the AssetType adheres to the system's naming constraints.

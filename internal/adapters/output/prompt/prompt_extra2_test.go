@@ -8,6 +8,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // ---------------------------------------------------------------------------
@@ -110,7 +111,7 @@ func TestSummarizeMisconfigurations_Empty(t *testing.T) {
 
 func TestSummarizeMisconfigurations_NonEmpty(t *testing.T) {
 	misconfigs := []policy.Misconfiguration{
-		{Property: "public_access", ActualValue: true, Operator: "eq", UnsafeValue: true},
+		{Property: predicate.NewFieldPath("public_access"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 	}
 	got := summarizeMisconfigurations(misconfigs)
 	if got == "" {

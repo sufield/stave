@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestParseSelector(t *testing.T) {
@@ -56,13 +57,13 @@ func TestSelector_Matches(t *testing.T) {
 		Name:      "No Public S3 Bucket Read",
 		Severity:  policy.SeverityHigh,
 		Domain:    "exposure",
-		ScopeTags: []string{"aws", "s3"},
+		ScopeTags: []kernel.ScopeTag{"aws", "s3"},
 	}
 	invNoSeverity := policy.ControlDefinition{
 		ID:        "CTL.S3.LOG.001",
 		Name:      "S3 Logging Enabled",
 		Domain:    "compliance",
-		ScopeTags: []string{"aws", "s3"},
+		ScopeTags: []kernel.ScopeTag{"aws", "s3"},
 	}
 
 	tests := []struct {
@@ -97,7 +98,7 @@ func TestMatchesAny(t *testing.T) {
 	ctl := policy.ControlDefinition{
 		ID:        "CTL.S3.PUBLIC.001",
 		Severity:  policy.SeverityHigh,
-		ScopeTags: []string{"aws", "s3"},
+		ScopeTags: []kernel.ScopeTag{"aws", "s3"},
 	}
 
 	t.Run("empty selectors matches all", func(t *testing.T) {

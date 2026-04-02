@@ -24,7 +24,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 			Description: "Buckets must not allow public read access.",
 			Severity:    policy.SeverityCritical,
 			Domain:      "exposure",
-			Type:        "unsafe_state",
+			Type:        policy.TypeUnsafeState,
 			Compliance:  policy.ComplianceMapping{"cis_aws_v1.4.0": "2.1.5"},
 		},
 		Asset: evaluation.FindingAssetSummary{
@@ -39,7 +39,7 @@ func TestWriteFindingDetail_Basic(t *testing.T) {
 			UnsafeDurationHours: 12.0,
 			ThresholdHours:      24.0,
 			Misconfigurations: []policy.Misconfiguration{
-				{Property: "properties.storage.access.public_read", ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
+				{Property: predicate.NewFieldPath("properties.storage.access.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 			},
 			RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
 		},

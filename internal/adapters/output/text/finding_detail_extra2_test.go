@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // ---------------------------------------------------------------------------
@@ -22,7 +23,7 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 			Name:        "Public Read Access",
 			Description: "S3 bucket allows public read",
 			Severity:    controldef.SeverityHigh,
-			Type:        "unsafe_duration",
+			Type:        controldef.TypeUnsafeDuration,
 			Domain:      "storage",
 			Compliance:  controldef.ComplianceMapping{"hipaa": "164.312"},
 			Exposure: &controldef.Exposure{
@@ -43,7 +44,7 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 			ThresholdHours:      168.0,
 			WhyNow:              "Asset has been unsafe for 336 hours",
 			Misconfigurations: []controldef.Misconfiguration{
-				{Property: "public_access", ActualValue: true, Operator: "eq", UnsafeValue: true},
+				{Property: predicate.NewFieldPath("public_access"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 			},
 			RootCauses: []evaluation.RootCause{evaluation.RootCauseResource},
 			SourceEvidence: &evaluation.SourceEvidence{
@@ -68,7 +69,7 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 			},
 			Preconditions: []string{"Verify bucket is not serving static content"},
 			Actions: []evaluation.RemediationAction{
-				{ActionType: evaluation.ActionSet, Path: "block_public_access", Value: true},
+				{ActionType: evaluation.ActionSet, Path: predicate.NewFieldPath("block_public_access"), Value: true},
 			},
 			ExpectedEffect: "Public access will be blocked",
 		},

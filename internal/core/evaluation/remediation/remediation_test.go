@@ -279,7 +279,7 @@ func TestPublicExposurePlannerPlan(t *testing.T) {
 	}
 	// Actions should be sorted by path
 	for i := 1; i < len(plan.Actions); i++ {
-		if plan.Actions[i].Path < plan.Actions[i-1].Path {
+		if plan.Actions[i].Path.String() < plan.Actions[i-1].Path.String() {
 			t.Fatal("actions should be sorted by path")
 		}
 	}
@@ -380,7 +380,7 @@ func TestBuildControlSummary_WithCtl(t *testing.T) {
 		Severity:    policy.SeverityHigh,
 		Domain:      "storage",
 		Type:        policy.TypeUnsafeState,
-		ScopeTags:   []string{"s3"},
+		ScopeTags:   []kernel.ScopeTag{"s3"},
 		Compliance:  policy.ComplianceMapping{"hipaa": "164.312"},
 	}
 	f := &evaluation.Finding{ControlID: "CTL.TEST.001"}
@@ -391,8 +391,8 @@ func TestBuildControlSummary_WithCtl(t *testing.T) {
 	if s.Domain != "storage" {
 		t.Fatalf("Domain = %q", s.Domain)
 	}
-	if s.Type != "unsafe_state" {
-		t.Fatalf("Type = %q", s.Type)
+	if s.Type != policy.TypeUnsafeState {
+		t.Fatalf("Type = %v", s.Type)
 	}
 }
 

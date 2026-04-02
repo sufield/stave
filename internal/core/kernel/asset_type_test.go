@@ -41,12 +41,12 @@ func TestAssetTypeDomain(t *testing.T) {
 	tests := []struct {
 		name string
 		in   AssetType
-		want string
+		want AssetDomain
 	}{
 		{name: "aws s3", in: AssetType("aws_s3_bucket"), want: "aws_s3"},
 		{name: "storage bucket", in: AssetType("storage_bucket"), want: "storage_bucket"},
 		{name: "one segment", in: AssetType("custom"), want: "custom"},
-		{name: "empty", in: AssetType(""), want: string(UnknownAsset)},
+		{name: "empty", in: AssetType(""), want: AssetDomain(UnknownAsset)},
 	}
 
 	for _, tt := range tests {

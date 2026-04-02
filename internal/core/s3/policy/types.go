@@ -89,12 +89,23 @@ func (s *StringList) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ConditionKey is a typed string identifying an AWS policy condition key
+// (e.g., "aws:SourceIp", "aws:sourceVpc").
+type ConditionKey string
+
+// Well-known AWS condition keys.
+const (
+	CondKeySourceIP       ConditionKey = "aws:SourceIp"
+	CondKeySourceVPC      ConditionKey = "aws:sourceVpc"
+	CondKeyPrincipalOrgID ConditionKey = "aws:PrincipalOrgID"
+)
+
 // ConditionAnalysis contains the result of an AWS policy condition inspection.
 type ConditionAnalysis struct {
 	HasIPCondition  bool
 	HasVPCCondition bool
 	HasOrgCondition bool
-	ConditionKeys   []string
+	ConditionKeys   []ConditionKey
 }
 
 // IsNetworkScoped reports whether any network-scoping condition is present.

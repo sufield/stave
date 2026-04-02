@@ -97,7 +97,7 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 	result.PreloadedControls = loaded
 	result.ControlSource = evaluation.ControlSourceInfo{
 		Source:             evaluation.ControlSourcePacks,
-		EnabledPacks:       packNames,
+		EnabledPacks:       toPackNames(packNames),
 		ResolvedControlIDs: resolvedIDs,
 		RegistryVersion:    v,
 		RegistryHash:       kernel.Digest(h),
@@ -181,4 +181,15 @@ func collectMissingIDs(allowed map[kernel.ControlID]bool) []string {
 	}
 	slices.Sort(missing)
 	return missing
+}
+
+func toPackNames(ss []string) []kernel.PackName {
+	if ss == nil {
+		return nil
+	}
+	out := make([]kernel.PackName, len(ss))
+	for i, s := range ss {
+		out[i] = kernel.PackName(s)
+	}
+	return out
 }

@@ -4,8 +4,8 @@ import "github.com/sufield/stave/internal/core/kernel"
 
 // CrossAccountAccess captures cross-account and external principal facts.
 type CrossAccountAccess struct {
-	ExternalAccountARNs []string
-	ExternalAccountIDs  []string
+	ExternalAccountARNs []kernel.AWSAccountARN
+	ExternalAccountIDs  []kernel.AWSAccountID
 	HasExternalAccess   bool
 	HasExternalWrite    bool
 }

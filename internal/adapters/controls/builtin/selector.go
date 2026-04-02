@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Selector filters controls by scope tags and minimum severity.
@@ -57,8 +58,8 @@ func (sel Selector) Matches(ctl policy.ControlDefinition) bool {
 
 	// Check scope tags: all selector tags must be present.
 	for _, required := range sel.Tags {
-		matched := slices.ContainsFunc(ctl.ScopeTags, func(tag string) bool {
-			return strings.EqualFold(tag, required)
+		matched := slices.ContainsFunc(ctl.ScopeTags, func(tag kernel.ScopeTag) bool {
+			return strings.EqualFold(string(tag), required)
 		})
 		if !matched {
 			return false

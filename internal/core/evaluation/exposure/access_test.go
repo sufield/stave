@@ -33,7 +33,7 @@ func TestResolveBucketAccess_PassthroughFields(t *testing.T) {
 	in := BucketAccessInput{
 		CrossAccount: CrossAccountAccess{
 			HasExternalAccess:   true,
-			ExternalAccountARNs: []string{"arn:aws:iam::123456789012:root"},
+			ExternalAccountARNs: []kernel.AWSAccountARN{"arn:aws:iam::123456789012:root"},
 		},
 		NetworkScope: NetworkScopeAccess{
 			HasIPCondition:        true,

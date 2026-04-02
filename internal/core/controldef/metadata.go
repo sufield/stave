@@ -5,12 +5,14 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ComplianceMapping links compliance standards (e.g., "hipaa", "nist_800_53")
-// to specific control or requirement IDs.
-type ComplianceMapping map[string]string
+// ComplianceFramework identifies a compliance standard (e.g., "hipaa", "nist_800_53").
+type ComplianceFramework string
+
+// ComplianceMapping links compliance standards to specific control or requirement IDs.
+type ComplianceMapping map[ComplianceFramework]string
 
 // Get returns the requirement ID for a framework, or an empty string if not mapped.
-func (m ComplianceMapping) Get(framework string) string {
+func (m ComplianceMapping) Get(framework ComplianceFramework) string {
 	if m == nil {
 		return ""
 	}
@@ -18,8 +20,7 @@ func (m ComplianceMapping) Get(framework string) string {
 }
 
 // Has reports whether the control is mapped to the given compliance standard.
-// Uses the comma-ok idiom to distinguish missing keys from empty values.
-func (m ComplianceMapping) Has(framework string) bool {
+func (m ComplianceMapping) Has(framework ComplianceFramework) bool {
 	if m == nil {
 		return false
 	}

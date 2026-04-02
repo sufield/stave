@@ -45,11 +45,16 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 		dirty = true
 	}
 
+	typedDirtyList := make([]evaluation.FilePath, len(dirtyList))
+	for i, p := range dirtyList {
+		typedDirtyList[i] = evaluation.FilePath(p)
+	}
+
 	return &evaluation.GitInfo{
-		RepoRoot:  repoRoot,
+		RepoRoot:  evaluation.FilePath(repoRoot),
 		Head:      head,
 		Dirty:     dirty,
-		DirtyList: dirtyList,
+		DirtyList: typedDirtyList,
 	}
 }
 
@@ -59,7 +64,11 @@ func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string) {
 	if git == nil || !git.Dirty {
 		return
 	}
+	files := make([]string, len(git.DirtyList))
+	for i, p := range git.DirtyList {
+		files[i] = string(p)
+	}
 	slog.Warn("uncommitted changes detected",
 		"scope", label,
-		"dirty_files", strings.Join(git.DirtyList, ", "))
+		"dirty_files", strings.Join(files, ", "))
 }

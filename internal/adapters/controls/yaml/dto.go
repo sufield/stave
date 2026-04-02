@@ -15,7 +15,7 @@ type yamlControlDefinition struct {
 	Name                 string                   `yaml:"name"`
 	Description          string                   `yaml:"description"`
 	Severity             policy.Severity          `yaml:"severity,omitempty"`
-	Domain               string                   `yaml:"domain,omitempty"`
+	Domain               kernel.AssetDomain       `yaml:"domain,omitempty"`
 	ScopeTags            []string                 `yaml:"scope_tags,omitempty"`
 	Compliance           policy.ComplianceMapping `yaml:"compliance,omitempty"`
 	Type                 policy.ControlType       `yaml:"type"`

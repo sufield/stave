@@ -188,7 +188,7 @@ type RowDTO struct {
 	ControlID  kernel.ControlID           `json:"control_id"`
 	AssetID    asset.ID                   `json:"asset_id"`
 	AssetType  kernel.AssetType           `json:"asset_type"`
-	Domain     string                     `json:"asset_domain"`
+	Domain     kernel.AssetDomain         `json:"asset_domain"`
 	Decision   evaluation.Decision        `json:"decision"`
 	Confidence evaluation.ConfidenceLevel `json:"confidence"`
 	Evidence   *EvidenceDTO               `json:"evidence,omitempty"`

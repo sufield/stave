@@ -61,7 +61,7 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 		ContextName: "stave",
 		ControlSource: ControlSourceInfo{
 			Source:             ControlSourcePacks,
-			EnabledPacks:       []string{"s3"},
+			EnabledPacks:       []kernel.PackName{"s3"},
 			ResolvedControlIDs: []kernel.ControlID{"CTL.S3.PUBLIC.001"},
 			RegistryVersion:    "v1",
 			RegistryHash:       "abc123",
@@ -70,7 +70,7 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 			RepoRoot:  "/repo",
 			Head:      "deadbeef",
 			Dirty:     false,
-			DirtyList: []string{"stave.yaml"},
+			DirtyList: []FilePath{"stave.yaml"},
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/repo/controls",

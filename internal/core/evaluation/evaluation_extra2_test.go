@@ -3,6 +3,7 @@ package evaluation
 import (
 	"testing"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -50,7 +51,7 @@ func TestMetadataToMap_PacksSource(t *testing.T) {
 		ContextName: "test-project",
 		ControlSource: ControlSourceInfo{
 			Source:             ControlSourcePacks,
-			EnabledPacks:       []string{"s3"},
+			EnabledPacks:       []kernel.PackName{"s3"},
 			ResolvedControlIDs: []kernel.ControlID{"CTL.A.001"},
 			RegistryVersion:    "v1.0.0",
 			RegistryHash:       "sha256:abc",
@@ -59,7 +60,7 @@ func TestMetadataToMap_PacksSource(t *testing.T) {
 			RepoRoot:  "/repo",
 			Head:      "abc123",
 			Dirty:     true,
-			DirtyList: []string{"file.go"},
+			DirtyList: []FilePath{"file.go"},
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/repo/controls",
@@ -134,7 +135,7 @@ func TestToExtensions_PacksSource(t *testing.T) {
 	m := Metadata{
 		ControlSource: ControlSourceInfo{
 			Source:             ControlSourcePacks,
-			EnabledPacks:       []string{"hipaa", "s3"},
+			EnabledPacks:       []kernel.PackName{"hipaa", "s3"},
 			ResolvedControlIDs: []kernel.ControlID{"CTL.A.001", "CTL.B.001"},
 			RegistryVersion:    "v2.0",
 			RegistryHash:       "sha256:xyz",
@@ -347,11 +348,12 @@ func TestClassifySafetyStatus_Constants(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExceptedFindingFields(t *testing.T) {
+	expires, _ := policy.ParseExpiryDate("2026-12-31")
 	ef := ExceptedFinding{
 		ControlID: "CTL.A.001",
 		AssetID:   "bucket-1",
 		Reason:    "accepted risk",
-		Expires:   "2026-12-31",
+		Expires:   expires,
 	}
 	if ef.ControlID != "CTL.A.001" {
 		t.Fatal("ControlID")

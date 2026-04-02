@@ -43,7 +43,7 @@ func writeMetadataLine(d *drawer, detail *evaluation.FindingDetail) {
 	if len(detail.Control.Compliance) > 0 {
 		var refs []string
 		for framework, ref := range detail.Control.Compliance {
-			refs = append(refs, framework+" "+ref)
+			refs = append(refs, string(framework)+" "+ref)
 		}
 		parts = append(parts, "Compliance: "+strings.Join(refs, ", "))
 	}
@@ -55,8 +55,8 @@ func writeMetadataLine(d *drawer, detail *evaluation.FindingDetail) {
 func writeControlSection(d *drawer, detail *evaluation.FindingDetail) {
 	d.f("\nControl (%s): %s\n", detail.Control.ID, detail.Control.Name)
 	writeField(d, "Description", detail.Control.Description)
-	writeField(d, "Type", detail.Control.Type)
-	writeField(d, "Domain", detail.Control.Domain)
+	writeField(d, "Type", detail.Control.Type.String())
+	writeField(d, "Domain", string(detail.Control.Domain))
 
 	if detail.Control.Exposure != nil {
 		d.f("  Exposure: %s (scope: %s)\n",
@@ -208,7 +208,7 @@ func writeRemediationActions(d *drawer, actions []evaluation.RemediationAction) 
 	}
 	d.ln("    Actions:")
 	for _, a := range actions {
-		d.f("      - %s %s = %v\n", a.ActionType, a.Path, a.Value)
+		d.f("      - %s %s = %v\n", a.ActionType, a.Path.String(), a.Value)
 	}
 }
 

@@ -95,7 +95,7 @@ func TestEnsureComplianceEntry(t *testing.T) {
 
 func TestUpdateComplianceData(t *testing.T) {
 	data := make(map[string]*reportComplianceEntry)
-	compliance := map[string]string{"soc2": "CC6.1", "hipaa": "164.312"}
+	compliance := policy.ComplianceMapping{"soc2": "CC6.1", "hipaa": "164.312"}
 	updateComplianceData(data, compliance, "high")
 	if len(data) != 2 {
 		t.Fatalf("len = %d", len(data))

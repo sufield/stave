@@ -41,6 +41,6 @@ func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 
 // StablePlanID generates a deterministic ID for a remediation plan based on the
 // specific control and asset.
-func StablePlanID(gen ports.IdentityGenerator, controlID kernel.ControlID, assetID asset.ID) string {
+func StablePlanID(gen ports.IdentityGenerator, controlID kernel.ControlID, assetID asset.ID) policy.RemediationPlanID {
 	return policy.StableRemediationPlanID(gen, controlID, assetID)
 }
