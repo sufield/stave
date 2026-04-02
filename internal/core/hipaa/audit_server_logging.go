@@ -31,9 +31,8 @@ func (inv *auditServerLogging) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		logging := loggingMap(a)
-		target := toString(logging["target_bucket"])
-		if target == "" {
+		props := ParseS3Properties(a)
+		if props.Logging.TargetBucket == "" {
 			return inv.FailResult(
 				fmt.Sprintf("Bucket %s: server access logging is not enabled. Logs cannot be obtained retroactively from AWS — if a security incident occurs without logging enabled, no forensic evidence exists", a.ID),
 				"Enable server access logging on the bucket. Set a target bucket in a separate account or with write-only permissions to prevent log tampering.",

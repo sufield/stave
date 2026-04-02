@@ -30,18 +30,8 @@ func (inv *accessNetworkRestriction) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		acc := accessMap(a)
-		if acc == nil {
-			return inv.FailResult(
-				fmt.Sprintf("Bucket %s: no access data available for network restriction check", a.ID),
-				"Ensure the observation includes storage.access properties with has_vpc_condition and has_ip_condition fields.",
-			)
-		}
-
-		hasVPC := toBool(acc["has_vpc_condition"])
-		hasIP := toBool(acc["has_ip_condition"])
-
-		if !hasVPC && !hasIP {
+		props := ParseS3Properties(a)
+		if !props.Access.HasVPCCondition && !props.Access.HasIPCondition {
 			return inv.FailResult(
 				fmt.Sprintf("Bucket %s: no VPC endpoint or IP condition restricts access — bucket is reachable from any network path", a.ID),
 				"Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges.",

@@ -30,8 +30,8 @@ func (inv *controlsEncryption) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		enc := encryptionMap(a)
-		if enc == nil || !toBool(enc["at_rest_enabled"]) {
+		props := ParseS3Properties(a)
+		if !props.Encryption.AtRestEnabled {
 			return inv.FailResult(
 				fmt.Sprintf("Bucket %s: server-side encryption is not enabled — data at rest is unprotected", a.ID),
 				"Enable default encryption on the bucket using SSE-S3 (AES-256) or SSE-KMS. For HIPAA workloads, use SSE-KMS with a customer-managed key.",

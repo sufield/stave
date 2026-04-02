@@ -39,8 +39,8 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 			continue
 		}
 
-		lock := objectLockMap(a)
-		if lock == nil || !toBool(lock["enabled"]) {
+		props := ParseS3Properties(a)
+		if !props.ObjectLock.Enabled {
 			return Result{
 				Pass:           false,
 				ControlID:      inv.ID(),
@@ -51,7 +51,7 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 			}
 		}
 
-		mode := strings.ToUpper(toString(lock["mode"]))
+		mode := strings.ToUpper(props.ObjectLock.Mode)
 		switch mode {
 		case lockModeCompliance:
 			continue // strongest protection, pass
@@ -70,7 +70,7 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 				Pass:           false,
 				ControlID:      inv.ID(),
 				Severity:       High,
-				Finding:        fmt.Sprintf("Bucket %s: Object Lock is enabled but no retention mode is configured (mode=%q)", a.ID, toString(lock["mode"])),
+				Finding:        fmt.Sprintf("Bucket %s: Object Lock is enabled but no retention mode is configured (mode=%q)", a.ID, props.ObjectLock.Mode),
 				Remediation:    "Configure a default retention policy with Compliance mode and a retention period of at least 6 years (2190 days) for HIPAA PHI.",
 				ComplianceRefs: inv.ComplianceRefs(),
 			}
@@ -78,13 +78,4 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 	}
 
 	return inv.PassResult()
-}
-
-func objectLockMap(a asset.Asset) map[string]any {
-	s := storageMap(a)
-	if s == nil {
-		return nil
-	}
-	l, _ := s["object_lock"].(map[string]any)
-	return l
 }
