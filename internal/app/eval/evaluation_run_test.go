@@ -13,7 +13,6 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	clockadp "github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/predicate"
@@ -56,7 +55,7 @@ func (s *marshalerStub) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 func testEnrichFn(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
-		Findings:       []remediation.Finding{},
+		Findings:       []appcontracts.EnrichedFinding{},
 		ExemptedAssets: result.ExemptedAssets,
 		Run:            result.Run,
 	}, nil

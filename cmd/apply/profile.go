@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -123,7 +122,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	done := r.UI.BeginProgress("apply profile observations")
 	defer done()
 
-	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, err := appeval.EvaluateLoaded(appeval.EvaluationRequest{
 		Controls:          controls,
 		Snapshots:         filtered,
 		MaxUnsafeDuration: 0,

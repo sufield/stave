@@ -7,7 +7,6 @@ import (
 	"github.com/sufield/stave/internal/adapters/output"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -45,7 +44,7 @@ func TestBuildSafetyEnvelopeFromEnriched_WithFindings(t *testing.T) {
 			},
 			SafetyStatus: evaluation.StatusUnsafe,
 		},
-		Findings: []remediation.Finding{
+		Findings: []appcontracts.EnrichedFinding{
 			{Finding: evaluation.Finding{ControlID: "CTL.A.001", AssetID: "bucket-1"}},
 		},
 	}

@@ -10,7 +10,7 @@ import (
 // BuildSafetyEnvelopeFromEnriched assembles a safety envelope from a
 // pipeline-produced EnrichedResult.
 func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) *safetyenvelope.Evaluation {
-	findings := enriched.Findings
+	findings := toRemediationFindings(enriched.Findings)
 	if findings == nil {
 		findings = []remediation.Finding{}
 	}
@@ -28,5 +28,22 @@ func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) *safe
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
 	h := crypto.NewHasher()
 	out.RemediationGroups = remediation.BuildGroups(h, h, findings)
+	return out
+}
+
+// toRemediationFindings converts port-boundary enriched findings to
+// remediation.Finding for use by core functions (BuildGroups, etc.).
+func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Finding {
+	if fs == nil {
+		return nil
+	}
+	out := make([]remediation.Finding, len(fs))
+	for i, f := range fs {
+		out[i] = remediation.Finding{
+			Finding:         f.Finding,
+			RemediationSpec: f.RemediationSpec,
+			RemediationPlan: f.RemediationPlan,
+		}
+	}
 	return out
 }

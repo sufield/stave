@@ -263,12 +263,12 @@ func TestRunnerMaxGapThreshold(t *testing.T) {
 	}
 }
 
-func TestRunnerGetMaxUnsafeDurationForControl(t *testing.T) {
+func TestRunnerMaxUnsafeDurationFor(t *testing.T) {
 	r := &Runner{MaxUnsafeDuration: 168 * time.Hour}
 
 	// No per-control override
 	ctl := &policy.ControlDefinition{}
-	if got := r.getMaxUnsafeDurationForControl(ctl); got != 168*time.Hour {
+	if got := r.maxUnsafeDurationFor(ctl); got != 168*time.Hour {
 		t.Fatalf("got %v, want runner default", got)
 	}
 
@@ -276,7 +276,7 @@ func TestRunnerGetMaxUnsafeDurationForControl(t *testing.T) {
 	ctl = &policy.ControlDefinition{
 		Params: policy.NewParams(map[string]any{"max_unsafe_duration": "24h"}),
 	}
-	if got := r.getMaxUnsafeDurationForControl(ctl); got != 24*time.Hour {
+	if got := r.maxUnsafeDurationFor(ctl); got != 24*time.Hour {
 		t.Fatalf("got %v, want per-control 24h", got)
 	}
 }

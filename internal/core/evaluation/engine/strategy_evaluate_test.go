@@ -66,8 +66,8 @@ func TestUnsafeStateStrategy_SafeAsset(t *testing.T) {
 	})
 
 	s := &unsafeStateStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    testControl("CTL.STATE.001", policy.TypeUnsafeState),
+		deps: testRunner(4*time.Hour, now),
+		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -92,8 +92,8 @@ func TestUnsafeStateStrategy_UnsafeExceedsThreshold(t *testing.T) {
 	})
 
 	s := &unsafeStateStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    testControl("CTL.STATE.001", policy.TypeUnsafeState),
+		deps: testRunner(4*time.Hour, now),
+		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -118,8 +118,8 @@ func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
 	})
 
 	s := &unsafeStateStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    testControl("CTL.STATE.001", policy.TypeUnsafeState),
+		deps: testRunner(4*time.Hour, now),
+		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -149,8 +149,8 @@ func TestUnsafeDurationStrategy_SafeAsset(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
+		deps: testRunner(4*time.Hour, now),
+		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -175,8 +175,8 @@ func TestUnsafeDurationStrategy_ViolationExceedsThreshold(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
+		deps: testRunner(4*time.Hour, now),
+		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -201,8 +201,8 @@ func TestUnsafeDurationStrategy_InconclusiveInsufficientCoverage(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		runner: testRunner(168*time.Hour, now),
-		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
+		deps: testRunner(168*time.Hour, now),
+		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -229,8 +229,8 @@ func TestUnsafeDurationStrategy_SafeWithAdequateCoverage(t *testing.T) {
 	})
 
 	s := &unsafeDurationStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
+		deps: testRunner(4*time.Hour, now),
+		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
@@ -261,8 +261,8 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 	ctl := testControl("CTL.REC.001", policy.TypeUnsafeRecurrence)
 
 	s := &unsafeRecurrenceStrategy{
-		runner: testRunner(4*time.Hour, now),
-		ctl:    ctl,
+		deps: testRunner(4*time.Hour, now),
+		ctl:  ctl,
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)

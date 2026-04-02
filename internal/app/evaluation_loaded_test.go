@@ -6,11 +6,11 @@ import (
 
 	"github.com/sufield/stave/internal/core/kernel"
 
-	appworkflow "github.com/sufield/stave/internal/app/workflow"
+	appeval "github.com/sufield/stave/internal/app/eval"
 )
 
 func TestEvaluateLoaded_DefaultsClockWhenNil(t *testing.T) {
-	result, err := appworkflow.EvaluateLoaded(appworkflow.EvaluationRequest{
+	result, err := appeval.EvaluateLoaded(appeval.EvaluationRequest{
 		Controls:          nil,
 		Snapshots:         nil,
 		MaxUnsafeDuration: 24 * time.Hour,

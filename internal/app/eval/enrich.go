@@ -36,7 +36,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 // PrepareFindings enriches findings from the result and optionally sanitizes them.
 // If sanitizer is nil, sanitization is skipped.
 // Returns an error if enricher is nil.
-func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) ([]remediation.Finding, error) {
+func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) ([]appcontracts.EnrichedFinding, error) {
 	if enricher == nil {
 		return nil, fmt.Errorf("enricher must not be nil")
 	}
@@ -44,7 +44,7 @@ func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sani
 	if sanitizer != nil {
 		findings = SanitizeFindings(sanitizer, findings)
 	}
-	return findings, nil
+	return toEnrichedFindings(findings), nil
 }
 
 // SanitizeFindings returns sanitized copies of a slice of findings.
@@ -52,6 +52,21 @@ func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []reme
 	out := make([]remediation.Finding, len(findings))
 	for i, f := range findings {
 		out[i] = f.Sanitized(s)
+	}
+	return out
+}
+
+// toEnrichedFindings converts remediation findings to the port-boundary type.
+// The two struct types have identical underlying layouts, so this is a
+// field-level copy with no semantic transformation.
+func toEnrichedFindings(fs []remediation.Finding) []appcontracts.EnrichedFinding {
+	out := make([]appcontracts.EnrichedFinding, len(fs))
+	for i, f := range fs {
+		out[i] = appcontracts.EnrichedFinding{
+			Finding:         f.Finding,
+			RemediationSpec: f.RemediationSpec,
+			RemediationPlan: f.RemediationPlan,
+		}
 	}
 	return out
 }

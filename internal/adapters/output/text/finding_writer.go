@@ -36,8 +36,9 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 		return buf.Bytes(), nil
 	}
 
-	w.writeViolationsFromEnriched(d, result, enriched.Findings)
-	w.writeRemediationGroups(d, enriched.Findings)
+	remFindings := toRemediationFindings(enriched.Findings)
+	w.writeViolationsFromEnriched(d, result, remFindings)
+	w.writeRemediationGroups(d, remFindings)
 	w.writeSkippedControls(d, result.Skipped)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
 	w.writeExceptedFindings(d, result.ExceptedFindings)
@@ -227,4 +228,18 @@ func writeFindingRemediation(d *drawer, f remediation.Finding) {
 	if f.RemediationSpec.Action != "" {
 		d.f("     Action: %s\n", f.RemediationSpec.Action)
 	}
+}
+
+// toRemediationFindings converts port-boundary enriched findings to
+// remediation.Finding for use by core formatting functions.
+func toRemediationFindings(fs []appcontracts.EnrichedFinding) []remediation.Finding {
+	out := make([]remediation.Finding, len(fs))
+	for i, f := range fs {
+		out[i] = remediation.Finding{
+			Finding:         f.Finding,
+			RemediationSpec: f.RemediationSpec,
+			RemediationPlan: f.RemediationPlan,
+		}
+	}
+	return out
 }
