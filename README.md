@@ -12,7 +12,7 @@ Cloud security tools either require live API access (CSPM) or only lint template
 
 Stave fills this gap. Define safety controls in YAML, compile them to [CEL](https://github.com/google/cel-go), and evaluate JSON configuration snapshots locally. Any vendor, any asset type, deterministic output, air-gapped by design.
 
-## Key features
+## Features
 
 - **53 built-in S3 controls** across 15 categories — public exposure, ACL escalation, encryption, network restriction, Access Grants, Multi-Region Access Points, CloudFront OAC, and more
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
