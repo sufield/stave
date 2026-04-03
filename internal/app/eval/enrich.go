@@ -134,5 +134,12 @@ func SanitizeInputHashKeys(s kernel.Sanitizer, h *evaluation.InputHashes) *evalu
 	if h == nil {
 		return nil
 	}
-	return h.Sanitized(s)
+	sanitizedFiles := make(map[evaluation.FilePath]kernel.Digest, len(h.Files))
+	for path, digest := range h.Files {
+		sanitizedFiles[evaluation.FilePath(s.Path(string(path)))] = digest
+	}
+	return &evaluation.InputHashes{
+		Files:   sanitizedFiles,
+		Overall: h.Overall,
+	}
 }

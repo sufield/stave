@@ -21,24 +21,6 @@ type InputHashes struct {
 	Overall kernel.Digest `json:"overall"`
 }
 
-// Sanitized returns a deep copy of the hashes with path keys masked or shortened
-// using the provided sanitizer.
-func (h *InputHashes) Sanitized(s kernel.PathSanitizer) *InputHashes {
-	if h == nil {
-		return nil
-	}
-
-	sanitizedFiles := make(map[FilePath]kernel.Digest, len(h.Files))
-	for path, digest := range h.Files {
-		sanitizedFiles[FilePath(s.Path(string(path)))] = digest
-	}
-
-	return &InputHashes{
-		Files:   sanitizedFiles,
-		Overall: h.Overall,
-	}
-}
-
 // RunInfo captures the execution context and configuration of a specific evaluation run.
 type RunInfo struct {
 	StaveVersion      string          `json:"tool_version"`
