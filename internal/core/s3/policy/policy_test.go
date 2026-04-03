@@ -488,13 +488,13 @@ func TestCrossAccountAccess(t *testing.T) {
 	if len(result.ExternalAccountARNs) != 1 {
 		t.Fatalf("expected 1 external ARN, got %d", len(result.ExternalAccountARNs))
 	}
-	if result.ExternalAccountARNs[0] != AWSAccountARN("arn:aws:iam::999888777666:root") {
+	if result.ExternalAccountARNs[0] != kernel.AWSAccountARN("arn:aws:iam::999888777666:root") {
 		t.Errorf("expected ARN 'arn:aws:iam::999888777666:root', got %q", result.ExternalAccountARNs[0])
 	}
 	if len(result.ExternalAccountIDs) != 1 {
 		t.Fatalf("expected 1 external account ID, got %d", len(result.ExternalAccountIDs))
 	}
-	if result.ExternalAccountIDs[0] != AWSAccountID("999888777666") {
+	if result.ExternalAccountIDs[0] != kernel.AWSAccountID("999888777666") {
 		t.Errorf("expected account ID '999888777666', got %q", result.ExternalAccountIDs[0])
 	}
 }
