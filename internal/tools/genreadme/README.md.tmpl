@@ -140,6 +140,16 @@ The core engine is vendor-neutral and asset-type-agnostic. To evaluate a new ass
 
 No code changes to Stave required. The `ctrl.v1` predicates compile to CEL expressions that resolve dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
 
+### Backward-compatible schema extension
+
+Adding new detection capabilities does not require engine changes. The `obs.v0.1` observation schema accepts arbitrary JSON properties — new fields are additive and backward-compatible:
+
+- **New properties**: An extractor adds `properties.storage.access_grants.has_broad_write_grant` to its output. Existing controls ignore it. New controls check it.
+- **New controls**: A YAML file with an `unsafe_predicate` referencing the new property. Registered in the pack index. No Go code.
+- **No breaking changes**: Observations without the new property simply don't trigger the new control (the `eq` operator on a missing field evaluates to false for `unsafe_state` controls).
+
+This is how the 6 most recent controls (Access Grants, Multi-Region Access Points, CloudFront OAC) were added — zero Go changes, 6 YAML files, 6 test fixtures.
+
 ## How Stave compares
 
 | Category | Analogy | Examples |
@@ -175,15 +185,15 @@ Stave ships {{.TotalControls}} S3 controls across {{.CategoryCount}} categories.
 
 | Category | Controls | What they detect |
 |----------|:---:|-----------------|
-| `public` | {{ctrl "public"}} | Public read, write, list via policy, ACL, website hosting, prefix exposure |
+| `public` | {{ctrl "public"}} | Public read, write, list via policy, ACL, website hosting, prefix exposure, CloudFront OAI/OAC bypass |
 | `acl` | {{ctrl "acl"}} | ACL escalation (WRITE_ACP), reconnaissance (READ_ACP), FULL_CONTROL grants |
-| `access` | {{ctrl "access"}} | Cross-account access, wildcard actions, external write, authenticated-users access, presigned URL restriction |
+| `access` | {{ctrl "access"}} | Cross-account access, wildcard actions, external write, authenticated-users access, presigned URL restriction, S3 Access Grants scope |
 | `encrypt` | {{ctrl "encrypt"}} | Missing encryption at rest, in transit, KMS requirements for PHI |
 | `versioning` | {{ctrl "versioning"}} | Disabled versioning, missing MFA delete on backups |
 | `lock` | {{ctrl "lock"}} | Missing object lock, wrong mode, insufficient retention for PHI |
 | `logging` | {{ctrl "logging"}} | Disabled access logging, missing CloudTrail object-level audit |
 | `lifecycle` | {{ctrl "lifecycle"}} | Missing lifecycle rules, PHI retention below HIPAA minimum |
-| `network` | {{ctrl "network"}} | Public-principal policies without IP/VPC conditions, missing VPC endpoint policy |
+| `network` | {{ctrl "network"}} | Public-principal policies without IP/VPC conditions, missing VPC endpoint policy, Multi-Region Access Point PAB and policy |
 | `governance` | {{ctrl "governance"}} | Missing data-classification tag |
 | `write_scope` | {{ctrl "write_scope"}} | Prefix-wide uploads, unrestricted content types |
 | `tenant` | {{ctrl "tenant"}} | Missing prefix-based tenant isolation |
