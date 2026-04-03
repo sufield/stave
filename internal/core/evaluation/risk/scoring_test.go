@@ -67,33 +67,6 @@ func TestResolveActions(t *testing.T) {
 	}
 }
 
-func TestPermissionScore(t *testing.T) {
-	cases := []struct {
-		name string
-		perm Permission
-		want int
-	}{
-		{"zero", 0, 0},
-		{"full control", PermFullControl, 10},
-		{"admin write", PermAdminWrite, 9},
-		{"delete", PermDelete, 8},
-		{"admin read", PermAdminRead, 7},
-		{"write", PermWrite, 6},
-		{"read", PermRead, 3},
-		{"list", PermList, 2},
-		{"read|write returns write score", PermRead | PermWrite, 6},
-		{"admin write|read returns admin write score", PermAdminWrite | PermRead, 9},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := tc.perm.Score()
-			if got != tc.want {
-				t.Errorf("Permission(%d).Score() = %d, want %d", tc.perm, got, tc.want)
-			}
-		})
-	}
-}
-
 func TestEvaluate_PublicWrite(t *testing.T) {
 	res := StatementContext{
 		Permissions: PermWrite | PermAdminWrite,

@@ -65,30 +65,6 @@ func ResolveActions(actions []string, resolver PermissionResolver) Permission {
 	return total
 }
 
-// Score returns the highest-risk score for the permission bits.
-func (p Permission) Score() int {
-	switch {
-	case p == 0:
-		return 0
-	case p.Has(PermFullControl):
-		return 10
-	case p.Has(PermAdminWrite):
-		return 9
-	case p.Has(PermDelete):
-		return 8
-	case p.Has(PermAdminRead):
-		return 7
-	case p.Has(PermWrite):
-		return 6
-	case p.Has(PermRead):
-		return 3
-	case p.Has(PermList):
-		return 2
-	default:
-		return 1
-	}
-}
-
 // Result represents the risk contribution of a single statement.
 type Result struct {
 	Score    Score
