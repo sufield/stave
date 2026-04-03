@@ -14,7 +14,7 @@ Cloud security tools fall into two camps: runtime scanners that require credenti
 
 Stave fills this gap. Controls are YAML-defined using a `ctrl.v1` DSL that compiles to [CEL (Common Expression Language)](https://github.com/google/cel-go) at runtime — giving you a battle-tested expression engine with type safety and deterministic evaluation. Any vendor, any asset type, any JSON property shape. No API calls, no runtime agents, no network access at scan time.
 
-Stave ships three built-in control packs. The **S3 pack** (47 controls) targets the blind spot where existing tools treat Block Public Access as the sole signal for exposure, missing legacy ACL grants, presigned URL abuse, and VPC endpoint policy gaps. The **HIPAA pack** selects the subset of S3 controls required for PHI workloads and maps each to specific HIPAA Security Rule citations (§164.312, §164.316). The **S3 public-exposure pack** provides a focused baseline for public access prevention. The engine is not S3-specific or HIPAA-specific: the same evaluation pipeline, duration tracking, and enforcement artifacts apply to any infrastructure asset you can capture as a JSON snapshot.
+Stave ships three built-in control packs. The **S3 pack** (53 controls) targets the blind spot where existing tools treat Block Public Access as the sole signal for exposure, missing legacy ACL grants, presigned URL abuse, and VPC endpoint policy gaps. The **HIPAA pack** selects the subset of S3 controls required for PHI workloads and maps each to specific HIPAA Security Rule citations (§164.312, §164.316). The **S3 public-exposure pack** provides a focused baseline for public access prevention. The engine is not S3-specific or HIPAA-specific: the same evaluation pipeline, duration tracking, and enforcement artifacts apply to any infrastructure asset you can capture as a JSON snapshot.
 
 ## What Stave does
 
@@ -28,7 +28,7 @@ Stave reads point-in-time configuration snapshots and evaluates them against YAM
 - **Deterministic output** — same input always produces same findings
 - **Enforcement artifacts** — generates fix plans with specific remediation actions
 - **Exemptions and exceptions** — exempt entire assets or suppress specific control+asset findings with audit trail and expiry dates
-- **47 built-in S3 controls** — covers public exposure, ACL escalation, encryption, versioning, lifecycle, object lock, logging, network restriction, presigned URL abuse, governance, and takeover prevention
+- **53 built-in S3 controls** — covers public exposure, ACL escalation, encryption, versioning, lifecycle, object lock, logging, network restriction, presigned URL abuse, governance, and takeover prevention
 - **HIPAA compliance pack** — curated subset of S3 controls mapped to HIPAA Security Rule sections (§164.312, §164.316) with compound risk detection, acknowledged exceptions with compensating controls, and structured compliance reporting
 - **CI/CD gating** — exit codes, baseline tracking, policy-based merge blocking, SARIF for GitHub Code Scanning
 - **SARIF output** — `--format sarif` for native GitHub Security tab integration
@@ -140,6 +140,16 @@ The core engine is vendor-neutral and asset-type-agnostic. To evaluate a new ass
 
 No code changes to Stave required. The `ctrl.v1` predicates compile to CEL expressions that resolve dot-notation field paths against arbitrary JSON, so `properties.encryption.at_rest.enabled eq false` works whether the asset is an S3 bucket, a GCP Cloud Storage bucket, or Azure Blob Storage.
 
+### Backward-compatible schema extension
+
+Adding new detection capabilities does not require engine changes. The `obs.v0.1` observation schema accepts arbitrary JSON properties — new fields are additive and backward-compatible:
+
+- **New properties**: An extractor adds `properties.storage.access_grants.has_broad_write_grant` to its output. Existing controls ignore it. New controls check it.
+- **New controls**: A YAML file with an `unsafe_predicate` referencing the new property. Registered in the pack index. No Go code.
+- **No breaking changes**: Observations without the new property simply don't trigger the new control (the `eq` operator on a missing field evaluates to false for `unsafe_state` controls).
+
+This is how the 6 most recent controls (Access Grants, Multi-Region Access Points, CloudFront OAC) were added — zero Go changes, 6 YAML files, 6 test fixtures.
+
 ## How Stave compares
 
 | Category | Analogy | Examples |
@@ -171,19 +181,19 @@ Details: [Security and Trust](docs/trust/01-security-and-trust.md) | [Threat Mod
 
 ## Built-in controls
 
-Stave ships 47 S3 controls across 15 categories. The HIPAA compliance pack selects the controls required for PHI workloads and maps each to HIPAA Security Rule citations. Custom controls for any asset type can be authored in the same YAML format.
+Stave ships 53 S3 controls across 15 categories. The HIPAA compliance pack selects the controls required for PHI workloads and maps each to HIPAA Security Rule citations. Custom controls for any asset type can be authored in the same YAML format.
 
 | Category | Controls | What they detect |
 |----------|:---:|-----------------|
-| `public` | 13 | Public read, write, list via policy, ACL, website hosting, prefix exposure |
+| `public` | 15 | Public read, write, list via policy, ACL, website hosting, prefix exposure, CloudFront OAI/OAC bypass |
 | `acl` | 3 | ACL escalation (WRITE_ACP), reconnaissance (READ_ACP), FULL_CONTROL grants |
-| `access` | 6 | Cross-account access, wildcard actions, external write, authenticated-users access, presigned URL restriction |
+| `access` | 8 | Cross-account access, wildcard actions, external write, authenticated-users access, presigned URL restriction, S3 Access Grants scope |
 | `encrypt` | 4 | Missing encryption at rest, in transit, KMS requirements for PHI |
 | `versioning` | 2 | Disabled versioning, missing MFA delete on backups |
 | `lock` | 3 | Missing object lock, wrong mode, insufficient retention for PHI |
 | `logging` | 2 | Disabled access logging, missing CloudTrail object-level audit |
 | `lifecycle` | 2 | Missing lifecycle rules, PHI retention below HIPAA minimum |
-| `network` | 3 | Public-principal policies without IP/VPC conditions, missing VPC endpoint policy |
+| `network` | 5 | Public-principal policies without IP/VPC conditions, missing VPC endpoint policy, Multi-Region Access Point PAB and policy |
 | `governance` | 1 | Missing data-classification tag |
 | `write_scope` | 2 | Prefix-wide uploads, unrestricted content types |
 | `tenant` | 1 | Missing prefix-based tenant isolation |
@@ -296,7 +306,7 @@ Schema references: [ctrl.v1](docs/schema/ctrl.v1.md) | [obs.v0.1](docs/schema/ob
 **v0.0.3**
 
 - Engine supports any vendor and asset type
-- Built-in control packs: AWS S3 (47 controls), HIPAA compliance, S3 public-exposure baseline
+- Built-in control packs: AWS S3 (53 controls), HIPAA compliance, S3 public-exposure baseline
 - CEL-powered predicate evaluation with parameterized controls
 - HIPAA Security Rule mapping with 14 Go invariants, 3 compound risk detectors, and exception handling
 - CI/CD ready: SARIF output, baseline tracking, policy gating, deterministic evaluation
