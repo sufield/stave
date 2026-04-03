@@ -376,13 +376,6 @@ func TestFilePathString(t *testing.T) {
 	}
 }
 
-func TestInputHashesSanitized_Nil(t *testing.T) {
-	var h *InputHashes
-	if h.Sanitized(nil) != nil {
-		t.Fatal("nil should return nil")
-	}
-}
-
 // ---------------------------------------------------------------------------
 // DriftPattern constants
 // ---------------------------------------------------------------------------

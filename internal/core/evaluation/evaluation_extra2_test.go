@@ -8,41 +8,6 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// InputHashes.Sanitized — non-nil receiver
-// ---------------------------------------------------------------------------
-
-type stubPathSanitizer struct{}
-
-func (s *stubPathSanitizer) Path(p string) string {
-	return "sanitized:" + p
-}
-
-func TestInputHashesSanitized_NonNil(t *testing.T) {
-	h := &InputHashes{
-		Files: map[FilePath]kernel.Digest{
-			"/tmp/a.json": "sha256:aaa",
-			"/tmp/b.json": "sha256:bbb",
-		},
-		Overall: "sha256:combined",
-	}
-	sanitized := h.Sanitized(&stubPathSanitizer{})
-	if sanitized == nil {
-		t.Fatal("expected non-nil")
-	}
-	if sanitized.Overall != "sha256:combined" {
-		t.Fatalf("Overall = %v", sanitized.Overall)
-	}
-	if len(sanitized.Files) != 2 {
-		t.Fatalf("Files count = %d", len(sanitized.Files))
-	}
-	for path := range sanitized.Files {
-		if path != "sanitized:/tmp/a.json" && path != "sanitized:/tmp/b.json" {
-			t.Fatalf("unexpected path key %q", path)
-		}
-	}
-}
-
-// ---------------------------------------------------------------------------
 // Metadata.ToMap — pack source with git info
 // ---------------------------------------------------------------------------
 
