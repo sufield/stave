@@ -20,7 +20,7 @@ type retentionObjectLock struct {
 
 func init() {
 	ControlRegistry.MustRegister(&retentionObjectLock{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("RETENTION.002"),
 			WithDescription("Object Lock must be enabled for PHI retention (6-year HIPAA minimum)"),
 			WithSeverity(High),

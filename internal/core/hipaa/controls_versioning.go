@@ -13,7 +13,7 @@ type controlsVersioning struct {
 
 func init() {
 	ControlRegistry.MustRegister(&controlsVersioning{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("CONTROLS.002"),
 			WithDescription("S3 bucket versioning must be enabled to protect data integrity"),
 			WithSeverity(Medium),

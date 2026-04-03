@@ -12,7 +12,7 @@ type accessNetworkRestriction struct {
 
 func init() {
 	ControlRegistry.MustRegister(&accessNetworkRestriction{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("ACCESS.003"),
 			WithDescription("Bucket access must be restricted by VPC endpoint or IP condition"),
 			WithSeverity(High),

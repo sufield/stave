@@ -14,7 +14,7 @@ type controlsDenyNonTls struct {
 
 func init() {
 	ControlRegistry.MustRegister(&controlsDenyNonTls{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("CONTROLS.004"),
 			WithDescription("Bucket policy must deny non-TLS access (aws:SecureTransport=false). Note: S3 API endpoints enforce TLS 1.2 by default since February 2024, but HTTP endpoint access via website hosting remains possible"),
 			WithSeverity(High),

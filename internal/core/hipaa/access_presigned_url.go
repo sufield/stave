@@ -12,7 +12,7 @@ type accessPresignedURL struct {
 
 func init() {
 	ControlRegistry.MustRegister(&accessPresignedURL{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("ACCESS.009"),
 			WithDescription("PHI bucket policy must restrict presigned URL access via s3:signatureAge or s3:authType condition"),
 			WithSeverity(Medium),

@@ -13,7 +13,7 @@ type auditServerLogging struct {
 
 func init() {
 	ControlRegistry.MustRegister(&auditServerLogging{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("AUDIT.001"),
 			WithDescription("Server access logging must be enabled with a configured target bucket"),
 			WithSeverity(Critical),

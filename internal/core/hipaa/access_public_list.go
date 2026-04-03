@@ -14,7 +14,7 @@ type accessPublicList struct {
 
 func init() {
 	ControlRegistry.MustRegister(&accessPublicList{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("ACCESS.011"),
 			WithDescription("No bucket policy may grant s3:ListBucket to a public principal"),
 			WithSeverity(High),

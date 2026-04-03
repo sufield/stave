@@ -15,7 +15,7 @@ type accessBlockPublic struct {
 
 func init() {
 	ControlRegistry.MustRegister(&accessBlockPublic{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("ACCESS.001"),
 			WithDescription("Block Public Access must be fully enabled at bucket level"),
 			WithSeverity(Critical),
