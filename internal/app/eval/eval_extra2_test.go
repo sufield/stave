@@ -134,7 +134,7 @@ func TestNewPlan_WithLockFile(t *testing.T) {
 
 func TestEnrich_WithSanitizer(t *testing.T) {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewPlanner()
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{

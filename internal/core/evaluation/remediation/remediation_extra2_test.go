@@ -3,7 +3,6 @@ package remediation
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -270,70 +269,5 @@ func TestComputeFingerprint_NonEmpty(t *testing.T) {
 	plan.ComputeFingerprint(stubDigester{})
 	if plan.ActionsFingerprint == "" {
 		t.Fatal("expected non-empty fingerprint")
-	}
-}
-
-// ---------------------------------------------------------------------------
-// sanitizeSlice
-// ---------------------------------------------------------------------------
-
-func TestSanitizeSlice_Empty(t *testing.T) {
-	got := sanitizeSlice[kernel.StatementID](nil, stubSanitizer{})
-	if got != nil {
-		t.Fatal("nil should return nil")
-	}
-}
-
-func TestSanitizeSlice_NonEmpty(t *testing.T) {
-	items := []kernel.StatementID{"stmt-1", "stmt-2"}
-	got := sanitizeSlice(items, stubSanitizer{})
-	if len(got) != 2 {
-		t.Fatalf("len = %d", len(got))
-	}
-	for _, v := range got {
-		if v != "[REDACTED-VAL]" {
-			t.Fatalf("expected redacted, got %q", v)
-		}
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Sanitized (Finding method)
-// ---------------------------------------------------------------------------
-
-func TestFinding_Sanitized_Full(t *testing.T) {
-	f := Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.A.001",
-			AssetID:   "bucket-secret",
-			Source:    &asset.SourceRef{File: "/path/to/obs.json", Line: 42},
-			Evidence: evaluation.Evidence{
-				Misconfigurations: []policy.Misconfiguration{
-					{Property: predicate.NewFieldPath("public_access"), ActualValue: true, Operator: "eq", UnsafeValue: true},
-				},
-				SourceEvidence: &evaluation.SourceEvidence{
-					IdentityStatements: []kernel.StatementID{"stmt-1"},
-					ResourceGrantees:   []kernel.GranteeID{"grant-1"},
-				},
-			},
-		},
-		RemediationPlan: &evaluation.RemediationPlan{
-			ID: "plan-1",
-			Target: evaluation.RemediationTarget{
-				AssetID:   "bucket-secret",
-				AssetType: "s3_bucket",
-			},
-		},
-	}
-
-	sanitized := f.Sanitized(stubSanitizer{})
-	if sanitized.AssetID != "[REDACTED-ID]" {
-		t.Fatalf("AssetID = %v", sanitized.AssetID)
-	}
-	if sanitized.Source.File != "[REDACTED-PATH]" {
-		t.Fatalf("Source.File = %v", sanitized.Source.File)
-	}
-	if sanitized.RemediationPlan.Target.AssetID != "[REDACTED-ID]" {
-		t.Fatalf("Plan.Target.AssetID = %v", sanitized.RemediationPlan.Target.AssetID)
 	}
 }

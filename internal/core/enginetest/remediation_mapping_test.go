@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func TestRemediationMapper_MapFinding(t *testing.T) {
-	mapper := remediation.NewMapper()
+func TestRemediationPlanner_EnrichFindings_SpecMapping(t *testing.T) {
+	planner := remediation.NewPlanner()
 
 	tests := []struct {
 		name           string
@@ -46,49 +46,65 @@ func TestRemediationMapper_MapFinding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			finding := evaluation.Finding{
-				ControlID: kernel.ControlID(tt.controlID),
-				AssetID:   "test-resource",
+			result := evaluation.Result{
+				Findings: []evaluation.Finding{
+					{
+						ControlID: kernel.ControlID(tt.controlID),
+						AssetID:   "test-resource",
+					},
+				},
 			}
 
-			remediation := mapper.MapFinding(finding)
-
-			if remediation.Action != tt.wantAction {
-				t.Errorf("Action = %q, want %q", remediation.Action, tt.wantAction)
+			enriched := planner.EnrichFindings(result)
+			if len(enriched) != 1 {
+				t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
 			}
-			if !contains(remediation.Description, tt.wantDescSubstr) {
-				t.Errorf("Description = %q, want substring %q", remediation.Description, tt.wantDescSubstr)
+
+			spec := enriched[0].RemediationSpec
+			if spec.Action != tt.wantAction {
+				t.Errorf("Action = %q, want %q", spec.Action, tt.wantAction)
+			}
+			if !contains(spec.Description, tt.wantDescSubstr) {
+				t.Errorf("Description = %q, want substring %q", spec.Description, tt.wantDescSubstr)
 			}
 		})
 	}
 }
 
-func TestRemediationMapper_YAMLRemediationPrecedence(t *testing.T) {
-	mapper := remediation.NewMapper()
+func TestRemediationPlanner_YAMLRemediationPrecedence(t *testing.T) {
+	planner := remediation.NewPlanner()
 
 	yamlRemediation := &policy.RemediationSpec{
 		Description: "Bucket has public read access via policy.",
 		Action:      "Enable S3 Public Access Block (all four settings).",
 	}
 
-	finding := evaluation.Finding{
-		ControlID:          "CTL.S3.PUBLIC.001",
-		AssetID:            "arn:aws:s3:::my-bucket",
-		ControlRemediation: yamlRemediation,
+	result := evaluation.Result{
+		Findings: []evaluation.Finding{
+			{
+				ControlID:          "CTL.S3.PUBLIC.001",
+				AssetID:            "arn:aws:s3:::my-bucket",
+				ControlRemediation: yamlRemediation,
+			},
+		},
 	}
 
-	remediation := mapper.MapFinding(finding)
-
-	if remediation.Description != yamlRemediation.Description {
-		t.Errorf("Description = %q, want %q", remediation.Description, yamlRemediation.Description)
+	enriched := planner.EnrichFindings(result)
+	if len(enriched) != 1 {
+		t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
 	}
-	if remediation.Action != yamlRemediation.Action {
-		t.Errorf("Action = %q, want %q", remediation.Action, yamlRemediation.Action)
+
+	spec := enriched[0].RemediationSpec
+	if spec.Description != yamlRemediation.Description {
+		t.Errorf("Description = %q, want %q", spec.Description, yamlRemediation.Description)
+	}
+	if spec.Action != yamlRemediation.Action {
+		t.Errorf("Action = %q, want %q", spec.Action, yamlRemediation.Action)
 	}
 }
 
-func TestRemediationMapper_YAMLExampleFieldFlowsThrough(t *testing.T) {
-	mapper := remediation.NewMapper()
+func TestRemediationPlanner_YAMLExampleFieldFlowsThrough(t *testing.T) {
+	planner := remediation.NewPlanner()
 
 	yamlRemediation := &policy.RemediationSpec{
 		Description: "Bucket has public read access via policy.",
@@ -96,37 +112,53 @@ func TestRemediationMapper_YAMLExampleFieldFlowsThrough(t *testing.T) {
 		Example:     "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read\": false\n    }\n  }\n}\n",
 	}
 
-	finding := evaluation.Finding{
-		ControlID:          "CTL.S3.PUBLIC.001",
-		AssetID:            "arn:aws:s3:::my-bucket",
-		ControlRemediation: yamlRemediation,
+	result := evaluation.Result{
+		Findings: []evaluation.Finding{
+			{
+				ControlID:          "CTL.S3.PUBLIC.001",
+				AssetID:            "arn:aws:s3:::my-bucket",
+				ControlRemediation: yamlRemediation,
+			},
+		},
 	}
 
-	remediation := mapper.MapFinding(finding)
+	enriched := planner.EnrichFindings(result)
+	if len(enriched) != 1 {
+		t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
+	}
 
-	if remediation.Example != yamlRemediation.Example {
-		t.Errorf("Example = %q, want %q", remediation.Example, yamlRemediation.Example)
+	spec := enriched[0].RemediationSpec
+	if spec.Example != yamlRemediation.Example {
+		t.Errorf("Example = %q, want %q", spec.Example, yamlRemediation.Example)
 	}
 }
 
-func TestRemediationMapper_FallbackWhenNoYAMLRemediation(t *testing.T) {
-	mapper := remediation.NewMapper()
+func TestRemediationPlanner_FallbackWhenNoYAMLRemediation(t *testing.T) {
+	planner := remediation.NewPlanner()
 
 	// Finding without ControlRemediation should fall back to prefix mapping
-	finding := evaluation.Finding{
-		ControlID: "CTL.S3.PUBLIC.001",
-		AssetID:   "test-resource",
+	result := evaluation.Result{
+		Findings: []evaluation.Finding{
+			{
+				ControlID: "CTL.S3.PUBLIC.001",
+				AssetID:   "test-resource",
+			},
+		},
 	}
 
-	remediation := mapper.MapFinding(finding)
+	enriched := planner.EnrichFindings(result)
+	if len(enriched) != 1 {
+		t.Fatalf("expected 1 enriched finding, got %d", len(enriched))
+	}
 
-	if remediation.Action != "Restrict access to authorized principals only." {
-		t.Errorf("Action = %q, want prefix-based fallback", remediation.Action)
+	spec := enriched[0].RemediationSpec
+	if spec.Action != "Restrict access to authorized principals only." {
+		t.Errorf("Action = %q, want prefix-based fallback", spec.Action)
 	}
 }
 
-func TestRemediationMapper_EnrichFindings(t *testing.T) {
-	mapper := remediation.NewMapper()
+func TestRemediationPlanner_EnrichFindings(t *testing.T) {
+	planner := remediation.NewPlanner()
 
 	result := evaluation.Result{
 		Findings: []evaluation.Finding{
@@ -135,7 +167,7 @@ func TestRemediationMapper_EnrichFindings(t *testing.T) {
 		},
 	}
 
-	enriched := mapper.EnrichFindings(result)
+	enriched := planner.EnrichFindings(result)
 
 	if len(enriched) != 2 {
 		t.Fatalf("expected 2 enriched findings, got %d", len(enriched))

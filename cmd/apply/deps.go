@@ -160,7 +160,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 // buildEnrichFn creates the enrichment function that maps evaluation results
 // into findings with remediation plans. Pure function — no closure over builder state.
 func buildEnrichFn(sanitizer kernel.Sanitizer) appcontracts.EnrichFunc {
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewPlanner()
 	return func(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, sanitizer, result)
 	}
