@@ -9,7 +9,6 @@ import (
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // FindingLoader loads a single finding from an evaluation artifact.
@@ -40,7 +39,7 @@ func (l *FindingLoader) LoadFindingWithPlan(_ context.Context, inputPath, findin
 	}
 
 	if selected.RemediationPlan == nil {
-		planner := remediation.NewPlanner(crypto.NewHasher())
+		planner := remediation.NewPlanner()
 		selected.RemediationPlan = planner.PlanFor(selected)
 	}
 

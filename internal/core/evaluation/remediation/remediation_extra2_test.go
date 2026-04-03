@@ -165,7 +165,7 @@ func TestBuildFindingDetail_NotFound(t *testing.T) {
 	_, err := BuildFindingDetail(r, evaluation.FindingDetailRequest{
 		ControlID: "CTL.NOPE",
 		AssetID:   "bucket-nope",
-	})
+	}, stubIDGen{})
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -206,8 +206,7 @@ func TestBuildFindingDetail_Found(t *testing.T) {
 		ControlID: "CTL.A.001",
 		AssetID:   "bucket-1",
 		Controls:  &stubControlProvider{ctl: ctl},
-		IDGen:     stubIDGen{},
-	})
+	}, stubIDGen{})
 	if err != nil {
 		t.Fatalf("BuildFindingDetail: %v", err)
 	}
@@ -240,8 +239,7 @@ func TestBuildFindingDetail_NoControlProvider(t *testing.T) {
 	detail, err := BuildFindingDetail(r, evaluation.FindingDetailRequest{
 		ControlID: "CTL.A.001",
 		AssetID:   "bucket-1",
-		IDGen:     stubIDGen{},
-	})
+	}, stubIDGen{})
 	if err != nil {
 		t.Fatalf("BuildFindingDetail: %v", err)
 	}

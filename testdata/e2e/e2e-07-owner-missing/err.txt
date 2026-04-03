@@ -1,3 +1,0 @@
-Running: apply controls against observations...
-Done:    apply controls against observations (2 files, 66ms)
-Evaluation complete. No violations found.

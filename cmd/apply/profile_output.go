@@ -11,7 +11,6 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
@@ -20,7 +19,7 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 		return err
 	}
 
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	enrichFn := func(res evaluation.Result) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}

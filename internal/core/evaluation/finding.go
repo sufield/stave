@@ -180,7 +180,6 @@ type FindingDetailRequest struct {
 	Controls     ControlProvider
 	Snapshots    []asset.Snapshot
 	TraceBuilder FindingTraceBuilder
-	IDGen        ports.IdentityGenerator
 }
 
 // NewFindingFromMetadata creates a Finding pre-populated with control metadata.

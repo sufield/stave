@@ -489,7 +489,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-bbb8fb610094e8b4",
+        "id": "fix-728fc9e1572de8e9",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -563,7 +563,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-a9adeaefad1eb6e9",
+        "id": "fix-cb40dd526a18d441",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -637,7 +637,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-208c99a7323dbdeb",
+        "id": "fix-1c9e0099685bba81",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -705,7 +705,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-38b4bc7d0e891914",
+        "id": "fix-1c9e0099685bba81",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -772,7 +772,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-42d3435d00dd9ac6",
+        "id": "fix-728fc9e1572de8e9",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -839,7 +839,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-5de57717d7b74f8f",
+        "id": "fix-cb40dd526a18d441",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -906,7 +906,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-fcb6eb7cde85b4a7",
+        "id": "fix-1c9e0099685bba81",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -1082,7 +1082,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

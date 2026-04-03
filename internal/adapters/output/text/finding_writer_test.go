@@ -14,13 +14,12 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
 func TestFindingWriter_NoViolations(t *testing.T) {
 	w := &FindingWriter{}
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
@@ -59,7 +58,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 
 func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 	w := &FindingWriter{}
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	sanitizer := sanitize.New(sanitize.WithIDSanitization(true))
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 	result := evaluation.Result{
@@ -151,7 +150,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 
 func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 	w := &FindingWriter{}
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 
 	result := evaluation.Result{

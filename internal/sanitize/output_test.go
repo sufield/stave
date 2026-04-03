@@ -16,7 +16,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -98,7 +97,7 @@ func assertNoSensitive(t *testing.T, label, output string) {
 
 func TestJSONWriter_WriteFindings_NoRedact(t *testing.T) {
 	w := outjson.NewFindingWriter(true)
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	enriched, err := appeval.Enrich(enricher, nil, makeTestResult())
 	if err != nil {
 		t.Fatal(err)
@@ -117,7 +116,7 @@ func TestJSONWriter_WriteFindings_NoRedact(t *testing.T) {
 func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New(sanitize.WithIDSanitization(true))
 	w := outjson.NewFindingWriter(true)
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	enriched, err := appeval.Enrich(enricher, r, makeTestResult())
 	if err != nil {
 		t.Fatal(err)
@@ -143,7 +142,7 @@ func TestJSONWriter_WriteFindings_WithRedact(t *testing.T) {
 func TestTextWriter_WriteFindings_WithRedact(t *testing.T) {
 	r := sanitize.New(sanitize.WithIDSanitization(true))
 	w := &outtext.FindingWriter{}
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	enriched, err := appeval.Enrich(enricher, r, makeTestResult())
 	if err != nil {
 		t.Fatal(err)

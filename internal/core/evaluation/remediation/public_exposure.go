@@ -6,13 +6,10 @@ import (
 
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
-type publicExposurePlanner struct {
-	idGen ports.IdentityGenerator
-}
+type publicExposurePlanner struct{}
 
 func (p publicExposurePlanner) CanHandle(class kernel.ControlClass) bool {
 	return class == kernel.ClassPublicExposure
@@ -33,7 +30,7 @@ func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	})
 
 	return &evaluation.RemediationPlan{
-		ID: StablePlanID(p.idGen, f.ControlID, f.AssetID),
+		// ID left empty — assigned by boundary code (PrepareForGrouping or BuildFindingDetail).
 		Target: evaluation.RemediationTarget{
 			AssetID:   f.AssetID,
 			AssetType: f.AssetType,

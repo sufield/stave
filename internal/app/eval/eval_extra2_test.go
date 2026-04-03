@@ -11,7 +11,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -135,7 +134,7 @@ func TestNewPlan_WithLockFile(t *testing.T) {
 
 func TestEnrich_WithSanitizer(t *testing.T) {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{

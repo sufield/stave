@@ -1,11 +1,2 @@
-Running: apply controls against observations...
 warning: snapshot[0] has unsupported source_type "kubernetes.rbac", proceeding anyway
 warning: snapshot[1] has unsupported source_type "kubernetes.rbac", proceeding anyway
-Done:    apply controls against observations (2 files, 64ms)
-Hint:
-  stave diagnose --controls testdata/e2e/e2e-24-messy-sparse/controls --observations testdata/e2e/e2e-24-messy-sparse/observations
-
-Next steps:
-  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-24-messy-sparse/controls --observations testdata/e2e/e2e-24-messy-sparse/observations`
-  2. View a summary: `stave apply --format text`
-  3. Export findings to a file: `stave apply --format json > findings.json`

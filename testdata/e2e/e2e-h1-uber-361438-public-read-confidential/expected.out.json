@@ -85,7 +85,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-8e4b96b741b9cbf1",
+        "id": "fix-95dbc091a26df4b5",
         "target": {
           "asset_id": "ubergreece",
           "asset_type": "aws_s3_bucket"
@@ -177,7 +177,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-bb92d56d77f6e82c",
+        "id": "fix-95dbc091a26df4b5",
         "target": {
           "asset_id": "ubergreece",
           "asset_type": "aws_s3_bucket"
@@ -266,7 +266,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

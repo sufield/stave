@@ -1,5 +1,3 @@
-Running: apply controls against observations...
-Done:    apply controls against observations (1 files, 39ms)
 [ERR] Input validation failed (INVALID_INPUT)
   Message: execute evaluation: source_type missing: snapshot[0] missing generated_by.source_type (use --allow-unknown-input to skip)
 Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input

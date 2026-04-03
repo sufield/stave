@@ -16,7 +16,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -250,7 +249,7 @@ func TestSanitizeExemptedAssets_Empty(t *testing.T) {
 }
 
 func TestEnrich_NilSanitizer(t *testing.T) {
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",

@@ -79,7 +79,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-1100fc54caa50a69",
+        "id": "fix-7e7d91623b0cd9df",
         "target": {
           "asset_id": "shopify-internal-assets",
           "asset_type": "aws_s3_bucket"
@@ -201,7 +201,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

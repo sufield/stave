@@ -75,7 +75,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-3f0d54e066b725e1",
+        "id": "fix-acaa1d3ce042a70b",
         "target": {
           "asset_id": "dod-subdomain-s3-ref",
           "asset_type": "s3_bucket_reference"
@@ -163,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

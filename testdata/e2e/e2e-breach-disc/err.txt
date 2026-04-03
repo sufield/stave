@@ -1,5 +1,3 @@
-Running: apply controls against observations...
-Done:    apply controls against observations (5 files, 22ms)
 [ERR] Input validation failed (INVALID_INPUT)
   Message: execute evaluation: source_type unsupported: snapshot[0] has unsupported source_type "cloud.inventory" (use --allow-unknown-input to skip)
 Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input

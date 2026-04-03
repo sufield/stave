@@ -14,7 +14,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/safetyenvelope"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
@@ -123,13 +122,12 @@ func (m *ArtifactWriter) writeJSON(path string, value any) error {
 // EnvelopeBuilder handles the transformation and enrichment of domain results.
 type EnvelopeBuilder struct {
 	Sanitizer     kernel.Sanitizer
-	IDGen         ports.IdentityGenerator
 	BuildEnvelope EnvelopeBuilderFunc
 }
 
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
 func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) (*safetyenvelope.Evaluation, error) {
-	enricher := remediation.NewMapper(b.IDGen)
+	enricher := remediation.NewMapper()
 	enriched, err := appeval.Enrich(enricher, b.Sanitizer, result)
 	if err != nil {
 		return nil, fmt.Errorf("enrich evaluation: %w", err)

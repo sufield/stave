@@ -1,5 +1,0 @@
-Running: apply controls against observations...
-Done:    apply controls against observations (3 files, 61ms)
-Evaluation complete. No violations, but at-risk assets detected.
-Hint:
-  stave diagnose --controls testdata/e2e/e2e-03-reset-window/controls --observations testdata/e2e/e2e-03-reset-window/observations
