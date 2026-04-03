@@ -5,15 +5,10 @@ import (
 	"slices"
 
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
 type publicExposurePlanner struct{}
-
-func (p publicExposurePlanner) CanHandle(class kernel.ControlClass) bool {
-	return class == kernel.ClassPublicExposure
-}
 
 func (p publicExposurePlanner) Plan(f Finding) *evaluation.RemediationPlan {
 	// Actions use normalized domain paths.

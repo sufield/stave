@@ -154,16 +154,6 @@ func TestPlannerPlanFor_UnknownClass(t *testing.T) {
 // publicExposurePlanner
 // ---------------------------------------------------------------------------
 
-func TestPublicExposurePlannerCanHandle(t *testing.T) {
-	p := publicExposurePlanner{}
-	if !p.CanHandle(kernel.ClassPublicExposure) {
-		t.Fatal("should handle ClassPublicExposure")
-	}
-	if p.CanHandle(kernel.ClassEncryptionMissing) {
-		t.Fatal("should not handle ClassEncryptionMissing")
-	}
-}
-
 func TestPublicExposurePlannerPlan(t *testing.T) {
 	p := publicExposurePlanner{}
 	f := Finding{
