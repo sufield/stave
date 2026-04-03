@@ -74,7 +74,7 @@ func (r *Runner) Save(ctx context.Context, cfg SaveConfig) error {
 (schema version, kind, summary derivation) living in the CLI runner.
 
 **Change**: Add a `ToReport` method on `BaselineComparisonResult` in
-`pkg/alpha/domain/evaluation/baseline.go`:
+`internal/core/evaluation/baseline.go`:
 
 ```go
 // ToReport builds the serializable comparison report from the diff result.
@@ -136,7 +136,7 @@ Files changed:
 
 | File | Change |
 |------|--------|
-| `pkg/alpha/domain/evaluation/baseline.go` | Add `ToReport` method on `BaselineComparisonResult` |
+| `internal/core/evaluation/baseline.go` | Add `ToReport` method on `BaselineComparisonResult` |
 | `cmd/enforce/baseline/run.go` | Replace inline struct with `comparison.ToReport(...)` |
 
 ### 3. Normalize error wrap messages
@@ -172,7 +172,7 @@ Single line change in `Save`.
 
 | File | Step | Change |
 |------|------|--------|
-| `pkg/alpha/domain/evaluation/baseline.go` | 2 | Add `ToReport` method |
+| `internal/core/evaluation/baseline.go` | 2 | Add `ToReport` method |
 | `cmd/enforce/baseline/run.go` | 2,3 | Use `ToReport`, fix wrap message |
 | `cmd/enforce/artifact/io.go` | 1 | Add `ctx` to `Evaluation`/`Baseline` |
 | `internal/adapters/evaluation/loader.go` | 1 | Add `ctx` to `LoadEnvelopeFromFile`/`LoadBaselineFromFile` |

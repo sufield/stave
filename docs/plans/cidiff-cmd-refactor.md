@@ -57,7 +57,7 @@ RunE: func(cmd *cobra.Command, _ []string) error {
 
 Imports added to `cmd.go`: `io`,
 `github.com/sufield/stave/internal/platform/fileout` removed (not needed),
-`github.com/sufield/stave/pkg/alpha/domain/ports` already present.
+`github.com/sufield/stave/internal/core/ports` already present.
 
 ### 2. Same-file validation — NOT ADDED
 

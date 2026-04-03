@@ -45,7 +45,7 @@ _ = cmd.RegisterFlagCompletionFunc("change-type",
     ))
 ```
 
-Imports added to `cmd.go`: `github.com/sufield/stave/pkg/alpha/domain/asset`.
+Imports added to `cmd.go`: `github.com/sufield/stave/internal/core/asset`.
 
 ## No Change Needed
 

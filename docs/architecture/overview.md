@@ -36,7 +36,7 @@ stave/
 │       ├── bugreport/      bug-report command
 │       └── cmdutil/        Shared CLI utilities
 │
-├── pkg/alpha/domain/       Core business logic (no I/O, importable by adopters)
+├── internal/core/       Core business logic (no I/O, importable by adopters)
 │   ├── evaluation/         Evaluation engine (engine, exposure, diagnosis, risk, remediation)
 │   ├── snapshot/           Snapshot retention planning
 │   ├── diag/               Diagnose engine
@@ -90,7 +90,7 @@ stave/
 
 ### Layer Rules
 
-- **`pkg/alpha/domain/`** contains pure business logic with no file I/O, no CLI dependencies, and no `internal/` imports. Importable by adopters.
+- **`internal/core/`** contains pure business logic with no file I/O, no CLI dependencies, and no `internal/` imports. Importable by adopters.
 - **`internal/app/`** orchestrates use cases by wiring domain logic to adapters. It has zero direct dependencies on the adapter layer (enforced by architecture tests with zero exceptions).
 - **`internal/adapters/`** handle all I/O: reading files, parsing formats, writing output, filesystem operations.
 - **`cmd/`** handles only CLI concerns: flag parsing, exit codes, error formatting. It wires adapters into the app layer via dependency injection.
@@ -139,12 +139,12 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 
 | Command | Entry Point | App Layer | Domain Layer |
 |---------|-------------|-----------|--------------|
-| `apply` | `cmd/apply/` | `app/eval/` | `pkg/alpha/domain/evaluation/` |
+| `apply` | `cmd/apply/` | `app/eval/` | `internal/core/evaluation/` |
 | `validate` | `cmd/apply/validate/` | `app/validation/` | `contracts/` |
-| `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `pkg/alpha/domain/diag/` |
+| `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `internal/core/diag/` |
 | `verify` | `cmd/apply/verify/` | — | Before/after comparison |
-| `inspect *` | `cmd/inspect/` | — | `pkg/alpha/domain/s3/`, `evaluation/exposure/`, `evaluation/risk/` |
-| `snapshot plan` | `cmd/prune/snapshot/` | `app/prune/snapshot/` | `pkg/alpha/domain/snapshot/` |
+| `inspect *` | `cmd/inspect/` | — | `internal/core/s3/`, `evaluation/exposure/`, `evaluation/risk/` |
+| `snapshot plan` | `cmd/prune/snapshot/` | `app/prune/snapshot/` | `internal/core/snapplan/` |
 | `snapshot hygiene` | `cmd/prune/hygiene/` | `app/hygiene/` | Weekly lifecycle report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
 | `capabilities` | `cmd/commands_dev.go` | `app/capabilities/` | — |

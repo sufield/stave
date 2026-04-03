@@ -39,7 +39,7 @@ jobs:
           }
 
           # Paths that were moved or removed
-          check_pattern 'internal/domain/'          'domain moved to pkg/alpha/domain/'
+          check_pattern 'pkg/alpha/domain/'          'pkg/alpha/domain/ moved to internal/core/'
           check_pattern 'internal/adapters/input/'   'adapters/input/ flattened to adapters/'
           check_pattern 'internal/report/'           'report moved to adapters/output/report/'
           check_pattern 'internal/pruner/'           'pruner moved to adapters/pruner/'

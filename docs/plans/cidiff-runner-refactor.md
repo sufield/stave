@@ -38,7 +38,7 @@ Files changed:
 
 | File | Change |
 |------|--------|
-| `pkg/alpha/domain/evaluation/baseline.go` | Init slices with `make` |
+| `internal/core/evaluation/baseline.go` | Init slices with `make` |
 | `cmd/enforce/cidiff/run.go` | Remove nil guard block (lines 100-105) |
 
 ### 2. Extract `newDiffReport` helper
@@ -125,7 +125,7 @@ Small, focused, stays in `run.go`.
 
 | File | Change |
 |------|--------|
-| `pkg/alpha/domain/evaluation/baseline.go` | Init slices with `make` in `CompareBaseline` |
+| `internal/core/evaluation/baseline.go` | Init slices with `make` in `CompareBaseline` |
 | `cmd/enforce/cidiff/run.go` | Extract `newDiffReport`, remove nil guards, reuse loader |
 
 ## Acceptance
