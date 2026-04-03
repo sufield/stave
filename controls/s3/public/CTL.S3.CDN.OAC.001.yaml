@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.S3.CDN.OAC.001
+name: CloudFront Access Must Use OAC Not Legacy OAI
+description: >
+  When S3 objects are served via CloudFront, Origin Access Control (OAC)
+  should be used instead of the legacy Origin Access Identity (OAI).
+  OAC supports SSE-KMS, SigV4, and all S3 features. OAI is a legacy
+  mechanism that does not support KMS encryption and is being deprecated.
+domain: governance
+severity: medium
+compliance: {}
+scope_tags:
+  - aws
+  - s3
+  - cloudfront
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    A CloudFront distribution accesses this bucket using a legacy
+    Origin Access Identity (OAI) instead of Origin Access Control (OAC).
+    OAI does not support SSE-KMS encrypted objects.
+  action: >
+    1. Create an Origin Access Control for the distribution.
+    2. Update the distribution origin to use OAC instead of OAI.
+    3. Update the bucket policy to grant cloudfront.amazonaws.com
+       with a Condition restricting to the distribution ARN.
+    4. Remove the legacy OAI.
+  example: |
+    {
+      "storage": {
+        "cdn_access": {
+          "cloudfront_oac": { "enabled": true },
+          "cloudfront_oai": { "enabled": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.cdn_access.cloudfront_oai.enabled
+      op: eq
+      value: true

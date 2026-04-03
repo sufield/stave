@@ -3,21 +3,22 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 47
-**Pack hash:** `667bd0fa64a70e874d2a319f2cfbbf9d20586d5bdb19cd6e2a38a5f08de39904`
+**Total controls:** 53
+**Pack hash:** `702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 10 |
-| high | 23 |
+| critical | 12 |
+| high | 25 |
 | low | 2 |
-| medium | 12 |
+| medium | 14 |
 
 | Domain | Count |
 |--------|-------|
-| exposure | 44 |
+| exposure | 48 |
+| governance | 2 |
 | storage | 3 |
 
 ## Controls
@@ -62,6 +63,35 @@ S3 bucket policies must not use wildcard actions (s3:* or *). Wildcard policies 
 S3 buckets must not grant write or delete permissions to external AWS accounts. Cross-account read access may be acceptable for analytics or auditing, but write access from external accounts creates data integrity and supply chain risks.
 
 **Remediation:** Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys.
+
+---
+
+### CTL.S3.ACCESS.GRANTS.001
+
+**S3 Access Grants Must Not Grant Broad Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1);
+
+S3 Access Grants provide temporary credentials scoped to a bucket or prefix. An Access Grant with READWRITE permission on a broad scope (entire bucket or wildcard prefix) bypasses bucket policy restrictions.
+
+**Remediation:** Restrict grant scope to specific prefixes. Use READ not READWRITE.
+
+---
+
+### CTL.S3.ACCESS.GRANTS.002
+
+**S3 Access Grants Identity Center Must Be Attached**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+
+When S3 Access Grants are enabled, IAM Identity Center should be attached to the Access Grants instance. Without Identity Center, grants can only target IAM principals — losing the benefit of centralized identity governance and SSO-based access control.
+
+**Remediation:** Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution.
 
 ---
 
@@ -175,6 +205,40 @@ S3 buckets must not grant write or delete access to all authenticated AWS users.
 Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.
 
 **Remediation:** Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket.
+
+---
+
+### CTL.S3.CDN.EXPOSURE.001
+
+**Private Bucket Must Not Be Publicly Exposed Via CloudFront**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1);
+
+A bucket with Block Public Access enabled can still serve objects publicly through CloudFront if the bucket policy grants access to the cloudfront.amazonaws.com service principal. This creates a false sense of security — the bucket appears private but objects are accessible via the CloudFront distribution URL.
+
+**Remediation:** 1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict
+   it with signed URLs/cookies.
+3. If intentional, document this as an acknowledged exposure path
+   and add a Stave exemption for this bucket.
+
+---
+
+### CTL.S3.CDN.OAC.001
+
+**CloudFront Access Must Use OAC Not Legacy OAI**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+
+When S3 objects are served via CloudFront, Origin Access Control (OAC) should be used instead of the legacy Origin Access Identity (OAI). OAC supports SSE-KMS, SigV4, and all S3 features. OAI is a legacy mechanism that does not support KMS encryption and is being deprecated.
+
+**Remediation:** 1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com
+   with a Condition restricting to the distribution ARN.
+4. Remove the legacy OAI.
 
 ---
 
@@ -376,6 +440,35 @@ S3 buckets tagged with data-classification=phi that have Object Lock enabled mus
 S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.
 
 **Remediation:** Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region.
+
+---
+
+### CTL.S3.MRAP.PAB.001
+
+**Multi-Region Access Point Must Have Block Public Access Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1);
+
+MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.
+
+**Remediation:** Enable all four PAB flags on the MRAP.
+
+---
+
+### CTL.S3.MRAP.POLICY.001
+
+**Multi-Region Access Point Policy Must Not Be Public**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+
+MRAPs can have their own resource policy evaluated independently of the bucket policy. A public MRAP policy creates a public access path.
+
+**Remediation:** Remove public access from the MRAP policy.
 
 ---
 

@@ -74,6 +74,12 @@ packs:
       - CTL.S3.TENANT.ISOLATION.001
       - CTL.S3.BUCKET.TAKEOVER.001
       - CTL.S3.DANGLING.ORIGIN.001
+      - CTL.S3.ACCESS.GRANTS.001
+      - CTL.S3.ACCESS.GRANTS.002
+      - CTL.S3.MRAP.PAB.001
+      - CTL.S3.MRAP.POLICY.001
+      - CTL.S3.CDN.OAC.001
+      - CTL.S3.CDN.EXPOSURE.001
 controls:
   CTL.S3.AUDIT.OBJECTLEVEL.001:
     path: internal/controldata/embedded/s3/logging/CTL.S3.AUDIT.OBJECTLEVEL.001.yaml
@@ -216,3 +222,21 @@ controls:
   CTL.S3.WRITE.SCOPE.001:
     path: internal/controldata/embedded/s3/write_scope/CTL.S3.WRITE.SCOPE.001.yaml
     summary: S3 Signed Upload Must Bind To Exact Object Key
+  CTL.S3.ACCESS.GRANTS.001:
+    path: internal/controldata/embedded/s3/access/CTL.S3.ACCESS.GRANTS.001.yaml
+    summary: S3 Access Grants Must Not Grant Broad Permissions
+  CTL.S3.ACCESS.GRANTS.002:
+    path: internal/controldata/embedded/s3/access/CTL.S3.ACCESS.GRANTS.002.yaml
+    summary: S3 Access Grants Identity Center Must Be Attached
+  CTL.S3.MRAP.PAB.001:
+    path: internal/controldata/embedded/s3/network/CTL.S3.MRAP.PAB.001.yaml
+    summary: Multi-Region Access Point Must Have Block Public Access Enabled
+  CTL.S3.MRAP.POLICY.001:
+    path: internal/controldata/embedded/s3/network/CTL.S3.MRAP.POLICY.001.yaml
+    summary: Multi-Region Access Point Policy Must Not Be Public
+  CTL.S3.CDN.OAC.001:
+    path: internal/controldata/embedded/s3/public/CTL.S3.CDN.OAC.001.yaml
+    summary: CloudFront Access Must Use OAC Not Legacy OAI
+  CTL.S3.CDN.EXPOSURE.001:
+    path: internal/controldata/embedded/s3/public/CTL.S3.CDN.EXPOSURE.001.yaml
+    summary: Private Bucket Must Not Be Publicly Exposed Via CloudFront

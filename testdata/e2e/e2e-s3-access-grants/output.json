@@ -1,0 +1,168 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.3",
+    "offline": true,
+    "now": "2026-01-10T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "8a0c76aea202d3b326de21f9157952105372fcf8ab108d3661b5fa63dc0ca20c",
+        "2026-01-10T000000Z.json": "6e92bd6f4141455d2a5c2d56cacb385fe10df9c2dd876d006d3d2795c3a0dfdc"
+      },
+      "overall": "c6554aa01d99a5ca8d822587db3b2d1f2affc5e72423f6d4d94013f0ab38d974"
+    },
+    "pack_hash": "e6325c2d1c28aaf0bf14f43760ace255d130d23fa36e9e77ce3b720b39649c10"
+  },
+  "summary": {
+    "assets_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 2
+  },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.ACCESS.GRANTS.001",
+      "asset_id": "grants-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -48,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ACCESS.GRANTS.002",
+      "asset_id": "grants-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -48,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.ACCESS.GRANTS.001",
+      "control_name": "S3 Access Grants Must Not Grant Broad Permissions",
+      "control_description": "S3 Access Grants provide temporary credentials scoped to a bucket or prefix. An Access Grant with READWRITE permission on a broad scope (entire bucket or wildcard prefix) bypasses bucket policy restrictions.\n",
+      "asset_id": "grants-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 216,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access_grants.has_broad_write_grant",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access_grants.instance_exists",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)"
+      },
+      "exposure": {
+        "type": "access_grant_scope",
+        "principal_scope": "cross_account"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "An S3 Access Grant exists with broad write permissions.",
+        "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE.",
+        "example": "{ \"storage\": { \"access_grants\": { \"has_broad_write_grant\": false } } }\n"
+      }
+    },
+    {
+      "control_id": "CTL.S3.ACCESS.GRANTS.002",
+      "control_name": "S3 Access Grants Identity Center Must Be Attached",
+      "control_description": "When S3 Access Grants are enabled, IAM Identity Center should be attached to the Access Grants instance. Without Identity Center, grants can only target IAM principals — losing the benefit of centralized identity governance and SSO-based access control.\n",
+      "asset_id": "grants-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 216,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.access_grants.identity_center_attached",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.access_grants.instance_exists",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "S3 Access Grants instance exists but IAM Identity Center is not attached. Grant management is limited to IAM principals only.",
+        "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution.",
+        "example": "{\n  \"storage\": {\n    \"access_grants\": {\n      \"instance_exists\": true,\n      \"identity_center_attached\": true\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-access-grants/controls",
+      "observations": "testdata/e2e/e2e-s3-access-grants/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bd2940ef342dc6c1d2c22d877ead197889dabaa4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-access-grants/controls/"
+      ]
+    }
+  }
+}

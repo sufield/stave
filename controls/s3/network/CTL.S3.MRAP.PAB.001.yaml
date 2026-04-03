@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.S3.MRAP.PAB.001
+name: Multi-Region Access Point Must Have Block Public Access Enabled
+description: >
+  MRAPs have their own PAB settings independent of bucket PAB. A bucket
+  can have PAB enabled while the MRAP has PAB disabled.
+domain: exposure
+exposure:
+  type: public_read
+  principal_scope: public
+severity: critical
+compliance:
+  hipaa: "164.312(a)(1)"
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    A Multi-Region Access Point exists with Block Public Access disabled.
+  action: >
+    Enable all four PAB flags on the MRAP.
+  example: |
+    { "storage": { "mrap_public_access_blocked": true } }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.mrap_public_access_blocked
+      op: eq
+      value: false
