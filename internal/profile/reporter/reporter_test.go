@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/core/hipaa"
+	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -30,10 +30,10 @@ func fixtureReport() profile.ProfileReport {
 		Pass:        false,
 		Results: []profile.ProfileResult{
 			{
-				Result: hipaa.Result{
+				Result: compliance.Result{
 					Pass:           false,
 					ControlID:      "CONTROLS.001.STRICT",
-					Severity:       hipaa.Critical,
+					Severity:       compliance.Critical,
 					Finding:        "Bucket phi-data-bucket: encryption algorithm is \"AES256\", not aws:kms — SSE-KMS with CMK is required for HIPAA",
 					Remediation:    "Change the default encryption to SSE-KMS (aws:kms) with a customer-managed CMK.",
 					ComplianceRefs: map[string]string{"hipaa": "§164.312(a)(2)(iv)"},
@@ -42,10 +42,10 @@ func fixtureReport() profile.ProfileReport {
 				Rationale:     "CMK required for key revocation during breach response",
 			},
 			{
-				Result: hipaa.Result{
+				Result: compliance.Result{
 					Pass:           false,
 					ControlID:      "AUDIT.001",
-					Severity:       hipaa.Critical,
+					Severity:       compliance.Critical,
 					Finding:        "Bucket phi-data-bucket: server access logging is not enabled. Logs cannot be obtained retroactively from AWS — if a security incident occurs without logging enabled, no forensic evidence exists",
 					Remediation:    "Enable server access logging on the bucket. Set a target bucket in a separate account or with write-only permissions to prevent log tampering.",
 					ComplianceRefs: map[string]string{"hipaa": "§164.312(b)"},
@@ -54,10 +54,10 @@ func fixtureReport() profile.ProfileReport {
 				Rationale:     "All PHI access must be logged — logs cannot be obtained retroactively",
 			},
 			{
-				Result: hipaa.Result{
+				Result: compliance.Result{
 					Pass:           false,
 					ControlID:      "ACCESS.002",
-					Severity:       hipaa.High,
+					Severity:       compliance.High,
 					Finding:        "Bucket phi-data-bucket: policy statement \"(unnamed)\" grants Allow with wildcard action s3:*",
 					Remediation:    "Replace s3:* with the minimum required actions. For sync patterns use: s3:GetObject, s3:PutObject, s3:DeleteObject, s3:ListBucket, s3:GetBucketLocation",
 					ComplianceRefs: map[string]string{"hipaa": "§164.312(a)(2)(i)"},
@@ -66,23 +66,23 @@ func fixtureReport() profile.ProfileReport {
 				Rationale:     "Least privilege — no wildcard actions",
 			},
 			{
-				Result: hipaa.Result{
+				Result: compliance.Result{
 					Pass:      true,
 					ControlID: "CONTROLS.002",
-					Severity:  hipaa.Medium,
+					Severity:  compliance.Medium,
 				},
 				ComplianceRef: "§164.312(c)(1)",
 				Rationale:     "Integrity — versioning protects against accidental deletion",
 			},
 		},
-		Counts: map[hipaa.Severity]int{
-			hipaa.Critical: 2,
-			hipaa.High:     1,
-			hipaa.Medium:   1,
+		Counts: map[compliance.Severity]int{
+			compliance.Critical: 2,
+			compliance.High:     1,
+			compliance.Medium:   1,
 		},
-		FailCounts: map[hipaa.Severity]int{
-			hipaa.Critical: 2,
-			hipaa.High:     1,
+		FailCounts: map[compliance.Severity]int{
+			compliance.Critical: 2,
+			compliance.High:     1,
 		},
 	}
 }

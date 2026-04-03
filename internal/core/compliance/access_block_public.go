@@ -1,0 +1,64 @@
+package compliance
+
+import (
+	"fmt"
+
+	"github.com/sufield/stave/internal/core/asset"
+)
+
+// accessBlockPublic checks that all four S3 Block Public Access flags are enabled
+// at the bucket level. If account-level BPA is fully enabled but bucket-level
+// is not set, severity downgrades to LOW.
+type accessBlockPublic struct {
+	Definition
+}
+
+func init() {
+	ControlRegistry.MustRegister(&accessBlockPublic{
+		Definition: NewDefinition(
+			WithID("ACCESS.001"),
+			WithDescription("Block Public Access must be fully enabled at bucket level"),
+			WithSeverity(Critical),
+			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
+			WithComplianceRef("hipaa", "§164.312(a)(1)"),
+			WithProfileRationale("hipaa", "Access control — Block Public Access prevents public exposure of ePHI"),
+		),
+	})
+}
+
+// Evaluate checks every S3 bucket asset in the snapshot for complete BPA enablement.
+func (inv *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
+	for _, a := range snap.Assets {
+		if !isS3Bucket(a) {
+			continue
+		}
+
+		props := ParseS3Properties(a)
+		if props.Controls.PublicAccessBlock.Present && props.Controls.PublicAccessBlock.AllEnabled() {
+			continue
+		}
+
+		// Check account-level BPA as a mitigating factor.
+		if props.Controls.AccountPublicAccessFullyBlocked {
+			return Result{
+				Pass:           false,
+				ControlID:      inv.ID(),
+				Severity:       Low,
+				Finding:        fmt.Sprintf("Bucket %s: bucket-level BPA not fully enabled. Account-level BPA active — bucket-level is defense in depth", a.ID),
+				Remediation:    "Enable all four Block Public Access flags on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+				ComplianceRefs: inv.ComplianceRefs(),
+			}
+		}
+
+		return inv.FailResult(
+			fmt.Sprintf("Bucket %s: Block Public Access is not fully enabled — publicly accessible objects may exist", a.ID),
+			"Enable all four Block Public Access flags on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+		)
+	}
+
+	return inv.PassResult()
+}
+
+func extractPolicyJSON(a asset.Asset) string {
+	return ParseS3Properties(a).PolicyJSON
+}

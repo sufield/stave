@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/hipaa"
+	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/profile"
 	"github.com/sufield/stave/internal/profile/exception"
@@ -116,7 +116,7 @@ func run(w io.Writer, opts *options) error {
 			})
 		}
 		// Recount after exceptions.
-		report.FailCounts = make(map[hipaa.Severity]int)
+		report.FailCounts = make(map[compliance.Severity]int)
 		report.Pass = true
 		for _, r := range report.Results {
 			if !r.Pass {
@@ -150,8 +150,8 @@ func run(w io.Writer, opts *options) error {
 	}
 
 	// Exit code based on CRITICAL failures.
-	if report.FailCounts[hipaa.Critical] > 0 {
-		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL invariant(s) failed", report.FailCounts[hipaa.Critical])}
+	if report.FailCounts[compliance.Critical] > 0 {
+		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL invariant(s) failed", report.FailCounts[compliance.Critical])}
 	}
 
 	return nil
@@ -196,9 +196,9 @@ func validateSchema(version kernel.Schema) error {
 	return nil
 }
 
-func allRegistries() []*hipaa.Registry {
-	return []*hipaa.Registry{
-		hipaa.ControlRegistry,
+func allRegistries() []*compliance.Registry {
+	return []*compliance.Registry{
+		compliance.ControlRegistry,
 	}
 }
 
