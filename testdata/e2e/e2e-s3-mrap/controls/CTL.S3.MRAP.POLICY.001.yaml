@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.S3.MRAP.POLICY.001
+name: Multi-Region Access Point Policy Must Not Be Public
+description: >
+  MRAPs can have their own resource policy evaluated independently of
+  the bucket policy. A public MRAP policy creates a public access path.
+domain: exposure
+exposure:
+  type: public_read
+  principal_scope: public
+severity: critical
+compliance: {}
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+params: {}
+remediation:
+  description: >
+    A Multi-Region Access Point has a public policy.
+  action: >
+    Remove public access from the MRAP policy.
+  example: |
+    { "storage": { "mrap_policy_is_public": false } }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.mrap_policy_is_public
+      op: eq
+      value: true

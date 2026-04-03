@@ -1,0 +1,240 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.3",
+    "offline": true,
+    "now": "2026-01-10T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "7bf682bdf284b2585921dbe1dfc69f222de95b0fd82b33c405a6e455f81951a2",
+        "2026-01-10T000000Z.json": "43a7c31ad693b6bd0b28b0bc3ce52afda036b113e256f24df7be62303a6fa7b4"
+      },
+      "overall": "b16183c001b8da79c67609e393cc6ed2497e744e597731587b60e1f863d3347e"
+    },
+    "pack_hash": "3ed3b164039c94c6264d7228793f9e30279aa9217fe33b2176e3447076be519a"
+  },
+  "summary": {
+    "assets_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 2
+  },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.CDN.EXPOSURE.001",
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -48,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.CDN.OAC.001",
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -48,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.CDN.EXPOSURE.001",
+      "control_name": "Private Bucket Must Not Be Publicly Exposed Via CloudFront",
+      "control_description": "A bucket with Block Public Access enabled can still serve objects publicly through CloudFront if the bucket policy grants access to the cloudfront.amazonaws.com service principal. This creates a false sense of security — the bucket appears private but objects are accessible via the CloudFront distribution URL.\n",
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 216,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.cdn_access.bucket_policy_grants_cloudfront",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)"
+      },
+      "exposure": {
+        "type": "cdn_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "This bucket has Block Public Access enabled but serves objects publicly through a CloudFront distribution. PolicyStatus.IsPublic reports false because the policy grants access to a service principal (not \"*\"), but the end result is public access via the CDN URL.",
+        "action": "1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict\n   it with signed URLs/cookies.\n3. If intentional, document this as an acknowledged exposure path\n   and add a Stave exemption for this bucket.",
+        "example": "{\n  \"storage\": {\n    \"cdn_access\": {\n      \"bucket_policy_grants_cloudfront\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-f939df2a60df642d",
+        "target": {
+          "asset_id": "cdn-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      }
+    },
+    {
+      "control_id": "CTL.S3.CDN.OAC.001",
+      "control_name": "CloudFront Access Must Use OAC Not Legacy OAI",
+      "control_description": "When S3 objects are served via CloudFront, Origin Access Control (OAC) should be used instead of the legacy Origin Access Identity (OAI). OAC supports SSE-KMS, SigV4, and all S3 features. OAI is a legacy mechanism that does not support KMS encryption and is being deprecated.\n",
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 216,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.cdn_access.cloudfront_oai.enabled",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "A CloudFront distribution accesses this bucket using a legacy Origin Access Identity (OAI) instead of Origin Access Control (OAC). OAI does not support SSE-KMS encrypted objects.",
+        "action": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI.",
+        "example": "{\n  \"storage\": {\n    \"cdn_access\": {\n      \"cloudfront_oac\": { \"enabled\": true },\n      \"cloudfront_oai\": { \"enabled\": false }\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-f939df2a60df642d",
+        "target": {
+          "asset_id": "cdn-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
+      },
+      "contributing_controls": [
+        "CTL.S3.CDN.EXPOSURE.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-cloudfront-oac/controls",
+      "observations": "testdata/e2e/e2e-s3-cloudfront-oac/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bd2940ef342dc6c1d2c22d877ead197889dabaa4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-cloudfront-oac/controls/"
+      ]
+    }
+  }
+}

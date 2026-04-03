@@ -1,0 +1,160 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "evaluation",
+  "run": {
+    "tool_version": "0.0.3",
+    "offline": true,
+    "now": "2026-01-10T00:00:00Z",
+    "max_unsafe": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "bf5fa8fa66c436468ba321e5cb5a438de9f1a5db6f8497bf5d980976b48ac944",
+        "2026-01-10T000000Z.json": "ec2b95acd7e364c9ff4ce358086524dbb2b323291ac9516cc17c486321ae5587"
+      },
+      "overall": "89b014f90be3f24d404dc0a732504392f24306257c13a3f53510800cffaa01fd"
+    },
+    "pack_hash": "1427d5ae84eb5800b910ae82089ee8f3e2b70ca2c5555b8179bb888015810909"
+  },
+  "summary": {
+    "assets_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 2
+  },
+  "safety_status": "UNSAFE",
+  "at_risk": [
+    {
+      "control_id": "CTL.S3.MRAP.PAB.001",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -48,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.MRAP.POLICY.001",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -48,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "control_id": "CTL.S3.MRAP.PAB.001",
+      "control_name": "Multi-Region Access Point Must Have Block Public Access Enabled",
+      "control_description": "MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.\n",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 216,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.mrap_public_access_blocked",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)"
+      },
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "A Multi-Region Access Point exists with Block Public Access disabled.",
+        "action": "Enable all four PAB flags on the MRAP.",
+        "example": "{ \"storage\": { \"mrap_public_access_blocked\": true } }\n"
+      }
+    },
+    {
+      "control_id": "CTL.S3.MRAP.POLICY.001",
+      "control_name": "Multi-Region Access Point Policy Must Not Be Public",
+      "control_description": "MRAPs can have their own resource policy evaluated independently of the bucket policy. A public MRAP policy creates a public access path.\n",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 216,
+        "threshold_hours": 168,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.mrap_policy_is_public",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "episode_count": 1
+      },
+      "remediation": {
+        "description": "A Multi-Region Access Point has a public policy.",
+        "action": "Remove public access from the MRAP policy.",
+        "example": "{ \"storage\": { \"mrap_policy_is_public\": false } }\n"
+      }
+    }
+  ],
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "testdata/e2e/e2e-s3-mrap/controls",
+      "observations": "testdata/e2e/e2e-s3-mrap/observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "bd2940ef342dc6c1d2c22d877ead197889dabaa4",
+      "dirty": true,
+      "modified_paths": [
+        "stave/testdata/e2e/e2e-s3-mrap/controls/"
+      ]
+    }
+  }
+}

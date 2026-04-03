@@ -2,12 +2,12 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "dev",
+    "tool_version": "0.0.3",
     "offline": true,
     "now": "2026-01-14T00:00:00Z",
     "max_unsafe": "0h",
     "snapshots": 2,
-    "pack_hash": "667bd0fa64a70e874d2a319f2cfbbf9d20586d5bdb19cd6e2a38a5f08de39904"
+    "pack_hash": "702573847a308c737563d82f4a3588dd5166ece820782b687fe13ea5bfecb59f"
   },
   "summary": {
     "assets_evaluated": 1,
