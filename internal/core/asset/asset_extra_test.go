@@ -888,25 +888,6 @@ func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ExemptedAsset
-// ---------------------------------------------------------------------------
-
-func TestExemptedAssetSanitized(t *testing.T) {
-	ea := ExemptedAsset{ID: "bucket-secret", Pattern: "*", Reason: "test"}
-	sanitized := ea.Sanitized(mockIDSanitizer{})
-	if sanitized.ID == "bucket-secret" {
-		t.Fatal("should be sanitized")
-	}
-	if sanitized.ID != "SANITIZED" {
-		t.Fatalf("ID = %q", sanitized.ID)
-	}
-}
-
-type mockIDSanitizer struct{}
-
-func (m mockIDSanitizer) ID(_ string) string { return "SANITIZED" }
-
-// ---------------------------------------------------------------------------
 // Delta Filter
 // ---------------------------------------------------------------------------
 

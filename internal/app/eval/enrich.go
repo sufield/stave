@@ -73,7 +73,8 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 	if len(f.Evidence.Misconfigurations) > 0 {
 		out.Evidence.Misconfigurations = make([]policy.Misconfiguration, len(f.Evidence.Misconfigurations))
 		for i, m := range f.Evidence.Misconfigurations {
-			out.Evidence.Misconfigurations[i] = m.Sanitized()
+			m.ActualValue = kernel.Redacted
+			out.Evidence.Misconfigurations[i] = m
 		}
 	}
 
@@ -124,7 +125,8 @@ func toEnrichedFindings(fs []remediation.Finding) []appcontracts.EnrichedFinding
 func SanitizeExemptedAssets(s kernel.Sanitizer, assets []asset.ExemptedAsset) []asset.ExemptedAsset {
 	out := make([]asset.ExemptedAsset, len(assets))
 	for i, a := range assets {
-		out[i] = a.Sanitized(s)
+		a.ID = asset.ID(s.ID(string(a.ID)))
+		out[i] = a
 	}
 	return out
 }

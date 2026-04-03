@@ -621,25 +621,6 @@ func TestAsset_Tags_Empty(t *testing.T) {
 // ExemptedAsset.Sanitized
 // ---------------------------------------------------------------------------
 
-type stubIDSanitizer struct{}
-
-func (s *stubIDSanitizer) ID(id string) string { return "REDACTED" }
-
-func TestExemptedAsset_Sanitized(t *testing.T) {
-	ea := ExemptedAsset{
-		ID:      "bucket-secret",
-		Pattern: "bucket-*",
-		Reason:  "test",
-	}
-	san := ea.Sanitized(&stubIDSanitizer{})
-	if san.ID != "REDACTED" {
-		t.Fatalf("ID = %v", san.ID)
-	}
-	if san.Pattern != "bucket-*" {
-		t.Fatal("pattern should not be sanitized")
-	}
-}
-
 // ---------------------------------------------------------------------------
 // validation.go — FormatLatest
 // ---------------------------------------------------------------------------

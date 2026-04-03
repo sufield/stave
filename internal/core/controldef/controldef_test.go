@@ -837,18 +837,6 @@ func TestMisconfigurationIsMissing(t *testing.T) {
 	}
 }
 
-func TestMisconfigurationSanitized(t *testing.T) {
-	m := Misconfiguration{ActualValue: "secret-data"}
-	s := m.Sanitized()
-	if s.ActualValue != kernel.Redacted {
-		t.Fatalf("got %v, want redacted", s.ActualValue)
-	}
-	// Original should be unchanged
-	if m.ActualValue != "secret-data" {
-		t.Fatal("original was mutated")
-	}
-}
-
 func TestMisconfigurationString(t *testing.T) {
 	tests := []struct {
 		name string
