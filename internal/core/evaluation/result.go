@@ -1,11 +1,6 @@
 package evaluation
 
 import (
-	"cmp"
-	"slices"
-	"strings"
-	"time"
-
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -20,50 +15,6 @@ const (
 	ConfidenceLow          ConfidenceLevel = "low"
 	ConfidenceInconclusive ConfidenceLevel = "inconclusive"
 )
-
-// confidenceRange defines thresholds for classifying evaluation confidence.
-type confidenceRange struct {
-	multiplier int
-	level      ConfidenceLevel
-}
-
-// Default confidence multipliers: HIGH when maxGap <= 25% of window (4x),
-// MEDIUM when maxGap <= 50% of window (2x).
-const (
-	DefaultConfidenceHighMultiplier = 4
-	DefaultConfidenceMedMultiplier  = 2
-)
-
-var confidenceThresholds = []confidenceRange{
-	{DefaultConfidenceHighMultiplier, ConfidenceHigh},
-	{DefaultConfidenceMedMultiplier, ConfidenceMedium},
-}
-
-// SetConfidenceThresholds overrides the confidence classification multipliers.
-// high must be > med, and both must be > 0. Invalid values are ignored.
-func SetConfidenceThresholds(high, med int) {
-	if high > med && med > 0 {
-		confidenceThresholds = []confidenceRange{
-			{high, ConfidenceHigh},
-			{med, ConfidenceMedium},
-		}
-	}
-}
-
-// DeriveConfidenceLevel classifies confidence based on the largest observation gap
-// relative to the required evaluation window.
-func DeriveConfidenceLevel(maxGap, requiredWindow time.Duration) ConfidenceLevel {
-	if requiredWindow <= 0 {
-		return ConfidenceInconclusive
-	}
-
-	for _, t := range confidenceThresholds {
-		if maxGap*time.Duration(t.multiplier) <= requiredWindow {
-			return t.level
-		}
-	}
-	return ConfidenceLow
-}
 
 // SafetyStatus classifies the high-level security posture based on evaluation results.
 type SafetyStatus string
@@ -155,41 +106,4 @@ func (r *Result) FindFinding(ctlID kernel.ControlID, astID asset.ID) *Finding {
 		}
 	}
 	return nil
-}
-
-// DomainCount represents the number of violations in a specific business domain.
-type DomainCount struct {
-	Domain kernel.AssetDomain
-	Count  int
-}
-
-// GroupViolationsByDomain aggregates violation rows into sorted counts by asset domain.
-func GroupViolationsByDomain(rows []Row) []DomainCount {
-	if len(rows) == 0 {
-		return nil
-	}
-
-	counts := make(map[kernel.AssetDomain]int, len(rows)/10)
-	for i := range rows {
-		if rows[i].Decision != DecisionViolation {
-			continue
-		}
-
-		d := kernel.AssetDomain(strings.ToLower(strings.TrimSpace(string(rows[i].AssetDomain))))
-		if d == "" {
-			d = "unknown"
-		}
-		counts[d]++
-	}
-
-	res := make([]DomainCount, 0, len(counts))
-	for d, c := range counts {
-		res = append(res, DomainCount{Domain: d, Count: c})
-	}
-
-	slices.SortFunc(res, func(a, b DomainCount) int {
-		return cmp.Compare(a.Domain, b.Domain)
-	})
-
-	return res
 }

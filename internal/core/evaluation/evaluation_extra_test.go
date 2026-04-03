@@ -98,10 +98,11 @@ func TestDeriveConfidenceLevel(t *testing.T) {
 		{12 * time.Hour, 24 * time.Hour, ConfidenceMedium}, // 50% exactly
 		{13 * time.Hour, 24 * time.Hour, ConfidenceLow},    // >50%
 	}
+	calc := DefaultConfidenceCalculator()
 	for _, tt := range tests {
-		got := DeriveConfidenceLevel(tt.maxGap, tt.required)
+		got := calc.Derive(tt.maxGap, tt.required)
 		if got != tt.want {
-			t.Errorf("DeriveConfidenceLevel(%v, %v) = %q, want %q", tt.maxGap, tt.required, got, tt.want)
+			t.Errorf("Derive(%v, %v) = %q, want %q", tt.maxGap, tt.required, got, tt.want)
 		}
 	}
 }
@@ -131,38 +132,6 @@ func TestRowMarkInconclusive(t *testing.T) {
 // ---------------------------------------------------------------------------
 // GroupViolationsByDomain
 // ---------------------------------------------------------------------------
-
-func TestGroupViolationsByDomain(t *testing.T) {
-	rows := []Row{
-		{Decision: DecisionViolation, AssetDomain: "storage"},
-		{Decision: DecisionViolation, AssetDomain: "Storage"},
-		{Decision: DecisionViolation, AssetDomain: "compute"},
-		{Decision: DecisionPass, AssetDomain: "storage"},
-		{Decision: DecisionViolation, AssetDomain: ""},
-		{Decision: DecisionViolation, AssetDomain: "  "},
-	}
-
-	got := GroupViolationsByDomain(rows)
-	if len(got) != 3 {
-		t.Fatalf("expected 3 groups, got %d: %+v", len(got), got)
-	}
-
-	// Sorted alphabetically
-	if got[0].Domain != "compute" || got[0].Count != 1 {
-		t.Fatalf("[0] = %+v", got[0])
-	}
-	if got[1].Domain != "storage" || got[1].Count != 2 {
-		t.Fatalf("[1] = %+v", got[1])
-	}
-	if got[2].Domain != "unknown" || got[2].Count != 2 {
-		t.Fatalf("[2] = %+v", got[2])
-	}
-
-	// Empty rows
-	if GroupViolationsByDomain(nil) != nil {
-		t.Fatal("nil rows should return nil")
-	}
-}
 
 // ---------------------------------------------------------------------------
 // Evidence

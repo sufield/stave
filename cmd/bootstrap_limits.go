@@ -23,17 +23,16 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.Evaluator) {
 	// which callers set from config. The exported DefaultMaxGapThreshold
 	// constant in engine/ is the fallback.
 
-	// Confidence classification multipliers (default HIGH=4x, MEDIUM=2x)
+	// Confidence classification multipliers (default HIGH=4x, MEDIUM=2x).
+	// Stored on App and passed to Runner during wiring, not as global state.
+	a.Confidence = evaluation.DefaultConfidenceCalculator()
 	if h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier(); h > 0 || m > 0 {
-		high := h
-		med := m
-		if high == 0 {
-			high = evaluation.DefaultConfidenceHighMultiplier
+		if h > 0 {
+			a.Confidence.HighMultiplier = h
 		}
-		if med == 0 {
-			med = evaluation.DefaultConfidenceMedMultiplier
+		if m > 0 {
+			a.Confidence.MedMultiplier = m
 		}
-		evaluation.SetConfidenceThresholds(high, med)
 	}
 
 	// Max snapshot files for directory scanning (default 100,000)

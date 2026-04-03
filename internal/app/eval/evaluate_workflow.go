@@ -15,6 +15,7 @@ type EvaluateInput struct {
 	Controls          []policy.ControlDefinition
 	Snapshots         []asset.Snapshot
 	MaxUnsafeDuration time.Duration
+	Confidence        evaluation.ConfidenceCalculator
 	Clock             ports.Clock
 	Hasher            ports.Digester
 	ExemptionConfig   *policy.ExemptionConfig
@@ -34,6 +35,7 @@ func Evaluate(input EvaluateInput) (evaluation.Result, error) {
 	runner := engine.Runner{
 		Controls:          catalog.List(),
 		MaxUnsafeDuration: input.MaxUnsafeDuration,
+		Confidence:        input.Confidence,
 		Clock:             input.Clock,
 		Hasher:            input.Hasher,
 		Exemptions:        input.ExemptionConfig,

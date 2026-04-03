@@ -123,7 +123,7 @@ func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.E
 }
 
 func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation.Row) {
-	domainCounts := evaluation.GroupViolationsByDomain(rows)
+	domainCounts := GroupViolationsByDomain(rows)
 	if len(domainCounts) == 0 {
 		return
 	}
