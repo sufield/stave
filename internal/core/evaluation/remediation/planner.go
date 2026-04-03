@@ -5,15 +5,14 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// Specialist defines the interface for logic that handles a specific class of security risk.
+// Specialist generates a remediation plan for a specific class of security risk.
 type Specialist interface {
-	CanHandle(class kernel.ControlClass) bool
 	Plan(f Finding) *evaluation.RemediationPlan
 }
 
 // Planner generates machine-readable remediation plans (Fix Plans) for violations.
 type Planner struct {
-	specialists []Specialist
+	specialists map[kernel.ControlClass]Specialist
 }
 
 // Compile-time check: Planner satisfies FindingEnricher.
@@ -21,20 +20,23 @@ var _ FindingEnricher = (*Planner)(nil)
 
 // NewPlanner creates a remediation planner populated with default specialists.
 func NewPlanner() *Planner {
-	return &Planner{
-		specialists: []Specialist{
-			publicExposurePlanner{},
-		},
+	p := &Planner{
+		specialists: make(map[kernel.ControlClass]Specialist),
 	}
+	p.Register(kernel.ClassPublicExposure, publicExposurePlanner{})
+	return p
 }
 
-// PlanFor identifies the appropriate specialist to generate a remediation plan.
+// Register binds a specialist to a control class.
+func (p *Planner) Register(class kernel.ControlClass, s Specialist) {
+	p.specialists[class] = s
+}
+
+// PlanFor returns a remediation plan for the finding's control class,
+// or nil if no specialist is registered for that class.
 func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
-	class := f.ControlID.Classify()
-	for _, s := range p.specialists {
-		if s.CanHandle(class) {
-			return s.Plan(f)
-		}
+	if s, ok := p.specialists[f.ControlID.Classify()]; ok {
+		return s.Plan(f)
 	}
 	return nil
 }
