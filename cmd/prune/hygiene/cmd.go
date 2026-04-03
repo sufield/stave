@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -83,7 +82,7 @@ Exit Codes:
 	f.StringSliceVar(&opts.statuses, "status", nil, "Filter upcoming metrics by status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&opts.dueWithin, "due-within", "", "Filter upcoming metrics to items due within duration from --now (e.g., 24h, 3d)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsMarkdownJSON...))
-	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed(risk.AllThresholdStatuses()...))
+	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed(cliflags.AllThresholdStatuses()...))
 
 	return cmd
 }

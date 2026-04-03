@@ -243,3 +243,8 @@ func ResolveNowEnv(cmd *cobra.Command, current string) string {
 	}
 	return current
 }
+
+// AllThresholdStatuses returns all valid risk threshold status labels for CLI completion.
+func AllThresholdStatuses() []string {
+	return []string{"OVERDUE", "DUE_NOW", "UPCOMING"}
+}
