@@ -58,14 +58,6 @@ func TestExitCode_InternalError(t *testing.T) {
 	}
 }
 
-func TestWithEvidence_NilReceiver(t *testing.T) {
-	var info *ErrorInfo
-	result := info.WithEvidence("k", "v")
-	if result != nil {
-		t.Error("expected nil from WithEvidence on nil receiver")
-	}
-}
-
 func TestWithTitle_NilReceiver(t *testing.T) {
 	var info *ErrorInfo
 	result := info.WithTitle("title")
@@ -86,8 +78,8 @@ func TestWriteErrorText_NilInfo(t *testing.T) {
 
 func TestWriteErrorText_WithEvidence(t *testing.T) {
 	var buf bytes.Buffer
-	info := NewErrorInfo(CodeIOError, "not found").
-		WithEvidence("path", "/tmp/x")
+	info := NewErrorInfo(CodeIOError, "not found")
+	info.Evidence = map[string]string{"path": "/tmp/x"}
 	if err := WriteErrorText(&buf, info); err != nil {
 		t.Fatalf("WriteErrorText error = %v", err)
 	}

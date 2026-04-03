@@ -2,7 +2,6 @@ package ui
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -66,43 +65,6 @@ func TestExitCode(t *testing.T) {
 	}
 }
 
-func TestWriteErrorJSON(t *testing.T) {
-	var buf bytes.Buffer
-	info := NewErrorInfo(CodeIOError, "file not found").
-		WithAction("check the file path").
-		WithEvidence("path", "/some/path")
-
-	err := WriteErrorJSON(&buf, info)
-	if err != nil {
-		t.Fatalf("WriteErrorJSON failed: %v", err)
-	}
-
-	// Parse the output
-	var result ErrorEnvelope
-	if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
-		t.Fatalf("failed to parse JSON output: %v", err)
-	}
-
-	if result.OK {
-		t.Error("expected ok=false in error envelope")
-	}
-	if result.Error == nil {
-		t.Fatal("expected error in envelope")
-	}
-	if result.Error.Code != CodeIOError {
-		t.Errorf("expected code=%s, got %s", CodeIOError, result.Error.Code)
-	}
-	if result.Error.Message != "file not found" {
-		t.Errorf("expected message='file not found', got %s", result.Error.Message)
-	}
-	if result.Error.Action != "check the file path" {
-		t.Errorf("expected action='check the file path', got %s", result.Error.Action)
-	}
-	if result.Error.Evidence["path"] != "/some/path" {
-		t.Errorf("expected evidence.path='/some/path', got %s", result.Error.Evidence["path"])
-	}
-}
-
 func TestIsSentinel(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -144,9 +106,7 @@ func TestErrorInfo_Chaining(t *testing.T) {
 	info := NewErrorInfo(CodeSchemaError, "invalid schema").
 		WithTitle("Schema mismatch").
 		WithAction("fix the schema").
-		WithURL("https://example.com/docs").
-		WithEvidence("field", "name").
-		WithEvidence("reason", "missing")
+		WithURL("https://example.com/docs")
 
 	if info.Title != "Schema mismatch" {
 		t.Errorf("expected title='Schema mismatch', got %s", info.Title)
@@ -156,15 +116,6 @@ func TestErrorInfo_Chaining(t *testing.T) {
 	}
 	if info.URL != "https://example.com/docs" {
 		t.Errorf("expected url='https://example.com/docs', got %s", info.URL)
-	}
-	if len(info.Evidence) != 2 {
-		t.Errorf("expected 2 evidence entries, got %d", len(info.Evidence))
-	}
-	if info.Evidence["field"] != "name" {
-		t.Errorf("expected evidence.field='name', got %s", info.Evidence["field"])
-	}
-	if info.Evidence["reason"] != "missing" {
-		t.Errorf("expected evidence.reason='missing', got %s", info.Evidence["reason"])
 	}
 }
 
