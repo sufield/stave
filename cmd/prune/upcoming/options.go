@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -37,7 +36,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringSliceVar(&o.Statuses, "status", nil, "Filter status: OVERDUE, DUE_NOW, UPCOMING")
 	f.StringVar(&o.DueWithin, "due-within", "", "Filter to items due within duration from --now (e.g., 24h, 3d)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
-	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed(risk.AllThresholdStatuses()...))
+	_ = cmd.RegisterFlagCompletionFunc("status", cliflags.CompleteFixed(cliflags.AllThresholdStatuses()...))
 }
 
 // Prepare resolves config defaults and normalizes paths. Called from PreRunE.
