@@ -2,7 +2,6 @@
 package ui
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -46,12 +45,6 @@ var (
 	ErrInterrupted           = errors.New("interrupted")
 	ErrInternal              = errors.New("internal error")
 )
-
-// ErrorEnvelope is the standard JSON structure for error responses.
-type ErrorEnvelope struct {
-	OK    bool       `json:"ok"`
-	Error *ErrorInfo `json:"error,omitempty"`
-}
 
 // ErrorInfo contains human-readable and machine-readable error details.
 type ErrorInfo struct {
@@ -143,27 +136,7 @@ func (e *ErrorInfo) WithURL(u string) *ErrorInfo {
 	return e
 }
 
-// WithEvidence adds evidence to the error.
-func (e *ErrorInfo) WithEvidence(k, v string) *ErrorInfo {
-	if e == nil {
-		return nil
-	}
-	if e.Evidence == nil {
-		e.Evidence = make(map[string]string)
-	}
-	e.Evidence[k] = v
-	return e
-}
-
 // --- Rendering Logic ---
-
-// WriteErrorJSON serializes the ErrorInfo as a standard JSON envelope.
-func WriteErrorJSON(w io.Writer, info *ErrorInfo) error {
-	envelope := ErrorEnvelope{OK: false, Error: info}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(envelope)
-}
 
 // WriteErrorText prints a formatted, human-readable block describing the error.
 func WriteErrorText(w io.Writer, info *ErrorInfo) error {

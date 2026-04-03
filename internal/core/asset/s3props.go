@@ -19,12 +19,6 @@ type S3BlockPublicAccess struct {
 	RestrictPublicBuckets bool `json:"restrict_public_buckets"`
 }
 
-// AllEnabled reports whether all four Block Public Access flags are true.
-func (b S3BlockPublicAccess) AllEnabled() bool {
-	return b.BlockPublicACLs && b.IgnorePublicACLs &&
-		b.BlockPublicPolicy && b.RestrictPublicBuckets
-}
-
 // S3WebsiteConfig captures static website hosting configuration.
 // A nil pointer in the parent means website hosting is not enabled.
 type S3WebsiteConfig struct {

@@ -8,20 +8,16 @@ import (
 
 func TestS3BlockPublicAccess_JSON(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      S3BlockPublicAccess
-		wantAll    bool
-		wantFields int // non-zero fields after round-trip
+		name  string
+		input S3BlockPublicAccess
 	}{
 		{
-			name:    "zero value",
-			input:   S3BlockPublicAccess{},
-			wantAll: false,
+			name:  "zero value",
+			input: S3BlockPublicAccess{},
 		},
 		{
-			name:    "partial — only block ACLs",
-			input:   S3BlockPublicAccess{BlockPublicACLs: true},
-			wantAll: false,
+			name:  "partial — only block ACLs",
+			input: S3BlockPublicAccess{BlockPublicACLs: true},
 		},
 		{
 			name: "fully enabled",
@@ -31,7 +27,6 @@ func TestS3BlockPublicAccess_JSON(t *testing.T) {
 				BlockPublicPolicy:     true,
 				RestrictPublicBuckets: true,
 			},
-			wantAll: true,
 		},
 	}
 
@@ -44,9 +39,6 @@ func TestS3BlockPublicAccess_JSON(t *testing.T) {
 			var got S3BlockPublicAccess
 			if err := json.Unmarshal(data, &got); err != nil {
 				t.Fatalf("unmarshal: %v", err)
-			}
-			if got.AllEnabled() != tc.wantAll {
-				t.Errorf("AllEnabled: got %v, want %v", got.AllEnabled(), tc.wantAll)
 			}
 			if got != tc.input {
 				t.Errorf("round-trip mismatch: got %+v, want %+v", got, tc.input)
