@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -19,15 +21,15 @@ func sampleReport() domain.Report {
 			Pass:       0,
 			Warn:       1,
 			Fail:       0,
-			BySeverity: map[domain.Severity]int{domain.SeverityHigh: 1},
-			FailOn:     domain.SeverityHigh,
+			BySeverity: map[policy.Severity]int{policy.SeverityHigh: 1},
+			FailOn:     policy.SeverityHigh,
 		},
 		Findings: []domain.Finding{
 			{
 				ID:             domain.CheckVulnResults,
 				Pillar:         domain.PillarSupplyChain,
-				Status:         domain.StatusWarn,
-				Severity:       domain.SeverityHigh,
+				Status:         outcome.Warn,
+				Severity:       policy.SeverityHigh,
 				Title:          "No vulnerability evidence found",
 				Details:        "missing evidence",
 				AuditorHint:    "needs artifact",

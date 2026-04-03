@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -33,7 +34,7 @@ func fixtureReport() profile.ProfileReport {
 				Result: compliance.Result{
 					Pass:           false,
 					ControlID:      "CONTROLS.001.STRICT",
-					Severity:       compliance.Critical,
+					Severity:       policy.SeverityCritical,
 					Finding:        "Bucket phi-data-bucket: encryption algorithm is \"AES256\", not aws:kms — SSE-KMS with CMK is required for HIPAA",
 					Remediation:    "Change the default encryption to SSE-KMS (aws:kms) with a customer-managed CMK.",
 					ComplianceRefs: map[string]string{"hipaa": "§164.312(a)(2)(iv)"},
@@ -45,7 +46,7 @@ func fixtureReport() profile.ProfileReport {
 				Result: compliance.Result{
 					Pass:           false,
 					ControlID:      "AUDIT.001",
-					Severity:       compliance.Critical,
+					Severity:       policy.SeverityCritical,
 					Finding:        "Bucket phi-data-bucket: server access logging is not enabled. Logs cannot be obtained retroactively from AWS — if a security incident occurs without logging enabled, no forensic evidence exists",
 					Remediation:    "Enable server access logging on the bucket. Set a target bucket in a separate account or with write-only permissions to prevent log tampering.",
 					ComplianceRefs: map[string]string{"hipaa": "§164.312(b)"},
@@ -57,7 +58,7 @@ func fixtureReport() profile.ProfileReport {
 				Result: compliance.Result{
 					Pass:           false,
 					ControlID:      "ACCESS.002",
-					Severity:       compliance.High,
+					Severity:       policy.SeverityHigh,
 					Finding:        "Bucket phi-data-bucket: policy statement \"(unnamed)\" grants Allow with wildcard action s3:*",
 					Remediation:    "Replace s3:* with the minimum required actions. For sync patterns use: s3:GetObject, s3:PutObject, s3:DeleteObject, s3:ListBucket, s3:GetBucketLocation",
 					ComplianceRefs: map[string]string{"hipaa": "§164.312(a)(2)(i)"},
@@ -69,20 +70,20 @@ func fixtureReport() profile.ProfileReport {
 				Result: compliance.Result{
 					Pass:      true,
 					ControlID: "CONTROLS.002",
-					Severity:  compliance.Medium,
+					Severity:  policy.SeverityMedium,
 				},
 				ComplianceRef: "§164.312(c)(1)",
 				Rationale:     "Integrity — versioning protects against accidental deletion",
 			},
 		},
-		Counts: map[compliance.Severity]int{
-			compliance.Critical: 2,
-			compliance.High:     1,
-			compliance.Medium:   1,
+		Counts: map[policy.Severity]int{
+			policy.SeverityCritical: 2,
+			policy.SeverityHigh:     1,
+			policy.SeverityMedium:   1,
 		},
-		FailCounts: map[compliance.Severity]int{
-			compliance.Critical: 2,
-			compliance.High:     1,
+		FailCounts: map[policy.Severity]int{
+			policy.SeverityCritical: 2,
+			policy.SeverityHigh:     1,
 		},
 	}
 }

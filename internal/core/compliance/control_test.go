@@ -4,26 +4,27 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
-// --- Severity tests ---
+// --- Severity tests (delegated to policy.Severity / controldef) ---
 
 func TestSeverity_Less(t *testing.T) {
 	tests := []struct {
-		a, b Severity
+		a, b policy.Severity
 		want bool
 	}{
-		{Low, Medium, true},
-		{Medium, High, true},
-		{High, Critical, true},
-		{Critical, Critical, false},
-		{High, Low, false},
-		{Low, Low, false},
+		{policy.SeverityLow, policy.SeverityMedium, true},
+		{policy.SeverityMedium, policy.SeverityHigh, true},
+		{policy.SeverityHigh, policy.SeverityCritical, true},
+		{policy.SeverityCritical, policy.SeverityCritical, false},
+		{policy.SeverityHigh, policy.SeverityLow, false},
+		{policy.SeverityLow, policy.SeverityLow, false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.a.String()+"<"+tc.b.String(), func(t *testing.T) {
-			if got := tc.a.Less(tc.b); got != tc.want {
-				t.Errorf("(%s).Less(%s) = %v, want %v", tc.a, tc.b, got, tc.want)
+			if got := tc.a < tc.b; got != tc.want {
+				t.Errorf("(%s) < (%s) = %v, want %v", tc.a, tc.b, got, tc.want)
 			}
 		})
 	}
@@ -31,18 +32,18 @@ func TestSeverity_Less(t *testing.T) {
 
 func TestSeverity_IsValid(t *testing.T) {
 	tests := []struct {
-		s    Severity
+		s    policy.Severity
 		want bool
 	}{
-		{Critical, true},
-		{High, true},
-		{Medium, true},
-		{Low, true},
-		{Severity("UNKNOWN"), false},
-		{Severity(""), false},
+		{policy.SeverityCritical, true},
+		{policy.SeverityHigh, true},
+		{policy.SeverityMedium, true},
+		{policy.SeverityLow, true},
+		{policy.SeverityNone, false},
+		{policy.Severity(99), false},
 	}
 	for _, tc := range tests {
-		t.Run(string(tc.s), func(t *testing.T) {
+		t.Run(tc.s.String(), func(t *testing.T) {
 			if got := tc.s.IsValid(); got != tc.want {
 				t.Errorf("IsValid() = %v, want %v", got, tc.want)
 			}
@@ -52,16 +53,16 @@ func TestSeverity_IsValid(t *testing.T) {
 
 func TestParseSeverity(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
-		s, err := ParseSeverity("CRITICAL")
+		s, err := policy.ParseSeverity("critical")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if s != Critical {
+		if s != policy.SeverityCritical {
 			t.Errorf("got %s", s)
 		}
 	})
 	t.Run("invalid", func(t *testing.T) {
-		_, err := ParseSeverity("EXTREME")
+		_, err := policy.ParseSeverity("EXTREME")
 		if err == nil {
 			t.Fatal("expected error")
 		}
@@ -74,7 +75,7 @@ func TestDefinition_Build(t *testing.T) {
 	def := NewDefinition(
 		WithID("ACCESS.001"),
 		WithDescription("Block public access must be fully enabled"),
-		WithSeverity(Critical),
+		WithSeverity(policy.SeverityCritical),
 		WithComplianceProfiles("hipaa", "pci-dss"),
 		WithComplianceRef("hipaa", "§164.312(b)"),
 	)
@@ -82,7 +83,7 @@ func TestDefinition_Build(t *testing.T) {
 	if def.Def().ID() != "ACCESS.001" {
 		t.Errorf("ID: got %q", def.Def().ID())
 	}
-	if def.Severity() != Critical {
+	if def.Severity() != policy.SeverityCritical {
 		t.Errorf("Severity: got %s", def.Severity())
 	}
 	if len(def.ComplianceProfiles()) != 2 {
@@ -94,7 +95,7 @@ func TestDefinition_Build(t *testing.T) {
 }
 
 func TestDefinition_PassResult(t *testing.T) {
-	def := NewDefinition(WithID("X.001"), WithSeverity(Low))
+	def := NewDefinition(WithID("X.001"), WithSeverity(policy.SeverityLow))
 	r := def.PassResult()
 	if !r.Pass {
 		t.Error("expected pass")
@@ -107,7 +108,7 @@ func TestDefinition_PassResult(t *testing.T) {
 func TestDefinition_FailResult(t *testing.T) {
 	def := NewDefinition(
 		WithID("X.002"),
-		WithSeverity(High),
+		WithSeverity(policy.SeverityHigh),
 		WithComplianceRef("cis", "1.2.3"),
 	)
 	r := def.FailResult("bucket is public", "enable BPA")
@@ -136,7 +137,7 @@ func (s *stubControl) Evaluate(_ asset.Snapshot) Result {
 	return s.PassResult()
 }
 
-func newStub(id string, sev Severity) *stubControl {
+func newStub(id string, sev policy.Severity) *stubControl {
 	return &stubControl{
 		Definition: NewDefinition(WithID(id), WithSeverity(sev)),
 	}
@@ -144,7 +145,7 @@ func newStub(id string, sev Severity) *stubControl {
 
 func TestRegistry_Register_And_Lookup(t *testing.T) {
 	reg := NewRegistry()
-	inv := newStub("ACCESS.001", Critical)
+	inv := newStub("ACCESS.001", policy.SeverityCritical)
 
 	if err := reg.Register(inv); err != nil {
 		t.Fatalf("register: %v", err)
@@ -168,7 +169,7 @@ func TestRegistry_Lookup_Missing(t *testing.T) {
 
 func TestRegistry_Duplicate_Registration(t *testing.T) {
 	reg := NewRegistry()
-	inv := newStub("ACCESS.001", High)
+	inv := newStub("ACCESS.001", policy.SeverityHigh)
 
 	if err := reg.Register(inv); err != nil {
 		t.Fatalf("first register: %v", err)
@@ -180,9 +181,9 @@ func TestRegistry_Duplicate_Registration(t *testing.T) {
 
 func TestRegistry_All_Preserves_Order(t *testing.T) {
 	reg := NewRegistry()
-	reg.MustRegister(newStub("C.001", Low))
-	reg.MustRegister(newStub("A.001", High))
-	reg.MustRegister(newStub("B.001", Medium))
+	reg.MustRegister(newStub("C.001", policy.SeverityLow))
+	reg.MustRegister(newStub("A.001", policy.SeverityHigh))
+	reg.MustRegister(newStub("B.001", policy.SeverityMedium))
 
 	all := reg.All()
 	if len(all) != 3 {
@@ -198,7 +199,7 @@ func TestRegistry_Len(t *testing.T) {
 	if reg.Len() != 0 {
 		t.Errorf("empty: got %d", reg.Len())
 	}
-	reg.MustRegister(newStub("X.001", Low))
+	reg.MustRegister(newStub("X.001", policy.SeverityLow))
 	if reg.Len() != 1 {
 		t.Errorf("after register: got %d", reg.Len())
 	}
@@ -206,12 +207,12 @@ func TestRegistry_Len(t *testing.T) {
 
 func TestRegistry_MustRegister_Panics_On_Duplicate(t *testing.T) {
 	reg := NewRegistry()
-	reg.MustRegister(newStub("X.001", Low))
+	reg.MustRegister(newStub("X.001", policy.SeverityLow))
 
 	defer func() {
 		if r := recover(); r == nil {
 			t.Fatal("expected panic on duplicate MustRegister")
 		}
 	}()
-	reg.MustRegister(newStub("X.001", Low))
+	reg.MustRegister(newStub("X.001", policy.SeverityLow))
 }

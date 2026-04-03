@@ -2,6 +2,8 @@ package compliance
 
 import (
 	"testing"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // ---------------------------------------------------------------------------
@@ -31,12 +33,12 @@ func TestDefinition_ProfileRationale(t *testing.T) {
 
 func TestDefinition_ProfileSeverityOverride(t *testing.T) {
 	d := Definition{
-		profileSeverities: map[string]Severity{
-			"hipaa": Critical,
+		profileSeverities: map[string]policy.Severity{
+			"hipaa": policy.SeverityCritical,
 		},
 	}
 	sev, ok := d.ProfileSeverityOverride("hipaa")
-	if !ok || sev != Critical {
+	if !ok || sev != policy.SeverityCritical {
 		t.Fatalf("ProfileSeverityOverride(hipaa) = %v, %v", sev, ok)
 	}
 	_, ok = d.ProfileSeverityOverride("nonexistent")
@@ -65,21 +67,21 @@ func TestRegistry_ByProfile_Unknown(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ParseSeverity — additional edge cases
+// ParseSeverity — additional edge cases (delegated to policy.ParseSeverity)
 // ---------------------------------------------------------------------------
 
 func TestParseSeverity_AllValid(t *testing.T) {
 	tests := []struct {
 		in   string
-		want Severity
+		want policy.Severity
 	}{
-		{"CRITICAL", Critical},
-		{"HIGH", High},
-		{"MEDIUM", Medium},
-		{"LOW", Low},
+		{"critical", policy.SeverityCritical},
+		{"high", policy.SeverityHigh},
+		{"medium", policy.SeverityMedium},
+		{"low", policy.SeverityLow},
 	}
 	for _, tt := range tests {
-		got, err := ParseSeverity(tt.in)
+		got, err := policy.ParseSeverity(tt.in)
 		if err != nil {
 			t.Fatalf("ParseSeverity(%q) error: %v", tt.in, err)
 		}
@@ -90,16 +92,19 @@ func TestParseSeverity_AllValid(t *testing.T) {
 }
 
 func TestParseSeverity_Invalid(t *testing.T) {
-	_, err := ParseSeverity("invalid")
+	_, err := policy.ParseSeverity("invalid")
 	if err == nil {
 		t.Fatal("expected error for invalid severity")
 	}
 }
 
-func TestParseSeverity_CaseSensitive(t *testing.T) {
-	// The parse is case-sensitive — "critical" should fail
-	_, err := ParseSeverity("critical")
-	if err == nil {
-		t.Fatal("expected error for lowercase severity")
+func TestParseSeverity_CaseInsensitive(t *testing.T) {
+	// policy.ParseSeverity is case-insensitive
+	s, err := policy.ParseSeverity("CRITICAL")
+	if err != nil {
+		t.Fatalf("ParseSeverity(CRITICAL) error: %v", err)
+	}
+	if s != policy.SeverityCritical {
+		t.Fatalf("ParseSeverity(CRITICAL) = %v, want %v", s, policy.SeverityCritical)
 	}
 }

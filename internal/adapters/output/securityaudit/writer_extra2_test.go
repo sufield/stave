@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -21,7 +23,7 @@ func sampleReportWithFindings() domain.Report {
 			Fail:              1,
 			GatedFindingCount: 1,
 			Gated:             true,
-			FailOn:            domain.SeverityHigh,
+			FailOn:            policy.SeverityHigh,
 			EvidenceFreshness: "24h",
 			VulnSourceUsed:    "embedded",
 		},
@@ -29,8 +31,8 @@ func sampleReportWithFindings() domain.Report {
 			{
 				ID:             "SC-001",
 				Pillar:         domain.PillarSupplyChain,
-				Status:         domain.StatusFail,
-				Severity:       domain.SeverityCritical,
+				Status:         outcome.Fail,
+				Severity:       policy.SeverityCritical,
 				Title:          "Unsigned dependency",
 				Details:        "Package foo is unsigned",
 				AuditorHint:    "Verify chain of custody",
@@ -43,8 +45,8 @@ func sampleReportWithFindings() domain.Report {
 			{
 				ID:             "RT-001",
 				Pillar:         domain.PillarRuntime,
-				Status:         domain.StatusWarn,
-				Severity:       domain.SeverityMedium,
+				Status:         outcome.Warn,
+				Severity:       policy.SeverityMedium,
 				Title:          "Elevated permissions | detected",
 				Details:        "Role has admin",
 				AuditorHint:    "Review RBAC",
@@ -82,7 +84,7 @@ func TestMarshalJSONReport_Empty(t *testing.T) {
 	report := domain.Report{
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0",
-		Summary:       domain.Summary{FailOn: domain.SeverityHigh},
+		Summary:       domain.Summary{FailOn: policy.SeverityHigh},
 	}
 	data, err := MarshalJSONReport(report)
 	if err != nil {
@@ -139,7 +141,7 @@ func TestMarshalSARIFReport_EmptyFindings(t *testing.T) {
 	report := domain.Report{
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0",
-		Summary:       domain.Summary{FailOn: domain.SeverityHigh},
+		Summary:       domain.Summary{FailOn: policy.SeverityHigh},
 	}
 	data, err := MarshalSARIFReport(report)
 	if err != nil {
@@ -192,8 +194,8 @@ func TestMarshalSARIFReport_DuplicateFindingIDs(t *testing.T) {
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0",
 		Findings: []domain.Finding{
-			{ID: "SC-001", Title: "First", Severity: domain.SeverityHigh, Status: domain.StatusFail},
-			{ID: "SC-001", Title: "First", Severity: domain.SeverityHigh, Status: domain.StatusFail},
+			{ID: "SC-001", Title: "First", Severity: policy.SeverityHigh, Status: outcome.Fail},
+			{ID: "SC-001", Title: "First", Severity: policy.SeverityHigh, Status: outcome.Fail},
 		},
 	}
 	data, err := MarshalSARIFReport(report)

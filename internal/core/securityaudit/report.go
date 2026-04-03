@@ -5,7 +5,9 @@ import (
 	"slices"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 // Report is the root document for a security audit.
@@ -22,30 +24,30 @@ type Report struct {
 
 // Finding represents a single entry in a security audit.
 type Finding struct {
-	ID             CheckID      `json:"id"`
-	Pillar         Pillar       `json:"pillar"`
-	Status         Status       `json:"status"`
-	Severity       Severity     `json:"severity"`
-	Title          string       `json:"title"`
-	Details        string       `json:"details"`
-	AuditorHint    string       `json:"auditor_hint,omitempty"`
-	Recommendation string       `json:"recommendation,omitempty"`
-	EvidenceRefs   []string     `json:"evidence_refs,omitempty"`
-	ControlRefs    []ControlRef `json:"control_refs,omitempty"`
+	ID             CheckID         `json:"id"`
+	Pillar         Pillar          `json:"pillar"`
+	Status         outcome.Status  `json:"status"`
+	Severity       policy.Severity `json:"severity"`
+	Title          string          `json:"title"`
+	Details        string          `json:"details"`
+	AuditorHint    string          `json:"auditor_hint,omitempty"`
+	Recommendation string          `json:"recommendation,omitempty"`
+	EvidenceRefs   []string        `json:"evidence_refs,omitempty"`
+	ControlRefs    []ControlRef    `json:"control_refs,omitempty"`
 }
 
 // Summary captures aggregate statistics for the audit run.
 type Summary struct {
-	Total             int              `json:"total"`
-	Pass              int              `json:"pass"`
-	Warn              int              `json:"warn"`
-	Fail              int              `json:"fail"`
-	BySeverity        map[Severity]int `json:"by_severity"`
-	FailOn            Severity         `json:"fail_on"`
-	GatedFindingCount int              `json:"gated_finding_count"`
-	Gated             bool             `json:"gated"`
-	VulnSourceUsed    string           `json:"vuln_source_used,omitempty"`
-	EvidenceFreshness string           `json:"evidence_freshness,omitempty"`
+	Total             int                     `json:"total"`
+	Pass              int                     `json:"pass"`
+	Warn              int                     `json:"warn"`
+	Fail              int                     `json:"fail"`
+	BySeverity        map[policy.Severity]int `json:"by_severity"`
+	FailOn            policy.Severity         `json:"fail_on"`
+	GatedFindingCount int                     `json:"gated_finding_count"`
+	Gated             bool                    `json:"gated"`
+	VulnSourceUsed    string                  `json:"vuln_source_used,omitempty"`
+	EvidenceFreshness string                  `json:"evidence_freshness,omitempty"`
 }
 
 // RecomputeSummary rebuilds all aggregate counts and gating status from
@@ -56,7 +58,7 @@ func (r *Report) RecomputeSummary() {
 	}
 
 	s := Summary{
-		BySeverity:        make(map[Severity]int),
+		BySeverity:        make(map[policy.Severity]int),
 		FailOn:            r.Summary.FailOn,
 		VulnSourceUsed:    r.Summary.VulnSourceUsed,
 		EvidenceFreshness: r.Summary.EvidenceFreshness,
@@ -65,18 +67,18 @@ func (r *Report) RecomputeSummary() {
 
 	for _, f := range r.Findings {
 		switch f.Status {
-		case StatusPass:
+		case outcome.Pass:
 			s.Pass++
-		case StatusWarn:
+		case outcome.Warn:
 			s.Warn++
-		case StatusFail:
+		case outcome.Fail:
 			s.Fail++
 		}
 
 		s.BySeverity[f.Severity]++
 
 		// FailOn=None means "disable gating" — skip the check entirely.
-		if s.FailOn != SeverityNone && f.Status != StatusPass && f.Severity.Gte(s.FailOn) {
+		if s.FailOn != policy.SeverityNone && f.Status != outcome.Pass && f.Severity.Gte(s.FailOn) {
 			s.GatedFindingCount++
 		}
 	}
@@ -89,7 +91,7 @@ func (r *Report) RecomputeSummary() {
 // match the allowed severities. The summary is recomputed for the
 // filtered set. Evidence and control references are cloned to ensure
 // the new report is independent.
-func (r *Report) CloneWithFilter(allowed []Severity) *Report {
+func (r *Report) CloneWithFilter(allowed []policy.Severity) *Report {
 	if r == nil {
 		return nil
 	}
@@ -98,7 +100,7 @@ func (r *Report) CloneWithFilter(allowed []Severity) *Report {
 		return &cp
 	}
 
-	allowedSet := make(map[Severity]struct{}, len(allowed))
+	allowedSet := make(map[policy.Severity]struct{}, len(allowed))
 	for _, s := range allowed {
 		allowedSet[s] = struct{}{}
 	}
@@ -133,7 +135,7 @@ func (r *Report) Normalize() {
 
 	slices.SortFunc(r.Findings, func(a, b Finding) int {
 		return cmp.Or(
-			cmp.Compare(b.Severity.Rank(), a.Severity.Rank()),
+			cmp.Compare(int(b.Severity), int(a.Severity)),
 			cmp.Compare(a.Status, b.Status),
 			cmp.Compare(a.ID, b.ID),
 		)

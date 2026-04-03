@@ -91,7 +91,7 @@ func newRegistry() *registry {
 		Formats:              securityaudit.AllReportFormats(),
 		SBOMFormats:          evidence.AllSBOMFormats(),
 		VulnerabilitySources: evidence.AllVulnSources(),
-		FailOnLevels:         securityaudit.AllSeverityStrings(),
+		FailOnLevels:         []string{"critical", "high", "medium", "low", "none"},
 		ComplianceFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/doctor"
 )
 
@@ -32,13 +33,13 @@ func TestRunDoctorChecksReportsPasses(t *testing.T) {
 	var hasGitPass bool
 	var hasAWSPass bool
 	for _, c := range checks {
-		if c.Name == "workspace-writable" && c.Status == doctor.StatusPass {
+		if c.Name == "workspace-writable" && c.Status == outcome.Pass {
 			hasWritablePass = true
 		}
-		if c.Name == "git" && c.Status == doctor.StatusPass {
+		if c.Name == "git" && c.Status == outcome.Pass {
 			hasGitPass = true
 		}
-		if c.Name == "aws-cli" && c.Status == doctor.StatusPass {
+		if c.Name == "aws-cli" && c.Status == outcome.Pass {
 			hasAWSPass = true
 		}
 	}
@@ -79,16 +80,16 @@ func TestRunDoctorChecksReportsWarnings(t *testing.T) {
 	var sawAWSWarn bool
 	var sawProxyWarn bool
 	for _, c := range checks {
-		if c.Name == "git" && c.Status == doctor.StatusWarn {
+		if c.Name == "git" && c.Status == outcome.Warn {
 			sawGitWarn = true
 		}
-		if c.Name == "aws-cli" && c.Status == doctor.StatusWarn {
+		if c.Name == "aws-cli" && c.Status == outcome.Warn {
 			sawAWSWarn = true
 		}
-		if c.Name == "jq" && c.Status == doctor.StatusWarn {
+		if c.Name == "jq" && c.Status == outcome.Warn {
 			sawJQWarn = true
 		}
-		if c.Name == "offline-proxy-env" && c.Status == doctor.StatusWarn {
+		if c.Name == "offline-proxy-env" && c.Status == outcome.Warn {
 			sawProxyWarn = true
 		}
 	}

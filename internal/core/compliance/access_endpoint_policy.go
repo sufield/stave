@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 type accessEndpointPolicy struct {
@@ -15,7 +16,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("ACCESS.006"),
 			WithDescription("VPC endpoint policy must restrict S3 access to approved bucket ARNs"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.312(e)(1)"),
 			WithProfileRationale("hipaa", "VPC endpoint policy restricts access to approved bucket ARNs"),

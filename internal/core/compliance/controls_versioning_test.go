@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func versionedBucket(id string, enabled bool) asset.Asset {
@@ -53,7 +54,7 @@ func TestControls002(t *testing.T) {
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}
-			if !tc.wantPass && r.Severity != Medium {
+			if !tc.wantPass && r.Severity != policy.SeverityMedium {
 				t.Errorf("Severity: got %s, want MEDIUM", r.Severity)
 			}
 		})

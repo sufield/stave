@@ -4,13 +4,15 @@ package securityaudit
 import (
 	"fmt"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
 	"github.com/sufield/stave/internal/cli/ui"
-	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 	"github.com/sufield/stave/internal/metadata"
 )
 
@@ -82,7 +84,7 @@ Exit Codes:
 			if err != nil {
 				return &ui.UserError{Err: fmt.Errorf("invalid --severity: %w", err)}
 			}
-			failOnSev, err := domainsecurityaudit.ParseSeverity(opts.FailOn)
+			failOnSev, err := policy.ParseSeverity(opts.FailOn)
 			if err != nil {
 				return &ui.UserError{Err: fmt.Errorf("invalid --fail-on: %w", err)}
 			}

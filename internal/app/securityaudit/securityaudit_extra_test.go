@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -16,14 +18,14 @@ func TestBuildFinding_ErrorPath(t *testing.T) {
 	spec := findingSpec{
 		ID:        securityaudit.CheckBuildInfoPresent,
 		Pillar:    securityaudit.PillarSupplyChain,
-		Severity:  securityaudit.SeverityHigh,
-		ErrStatus: securityaudit.StatusWarn,
+		Severity:  policy.SeverityHigh,
+		ErrStatus: outcome.Warn,
 		ErrTitle:  "Build metadata unavailable",
 		ErrHint:   "check hint",
 		ErrReco:   "fix this",
 	}
 	f := buildFinding(spec, errForTest("boom"), false, "", "")
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("status = %v, want warn", f.Status)
 	}
 	if f.Title != "Build metadata unavailable" {
@@ -38,14 +40,14 @@ func TestBuildFinding_PassPath(t *testing.T) {
 	spec := findingSpec{
 		ID:          securityaudit.CheckBuildInfoPresent,
 		Pillar:      securityaudit.PillarSupplyChain,
-		Severity:    securityaudit.SeverityHigh,
+		Severity:    policy.SeverityHigh,
 		PassTitle:   "Build metadata available",
 		PassDetails: "default details",
 		PassHint:    "hint",
 		PassReco:    "reco",
 	}
 	f := buildFinding(spec, nil, true, "custom details", "")
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("status = %v, want pass", f.Status)
 	}
 	if f.Details != "custom details" {
@@ -57,7 +59,7 @@ func TestBuildFinding_PassPathDefaultDetails(t *testing.T) {
 	spec := findingSpec{
 		ID:          securityaudit.CheckBuildInfoPresent,
 		Pillar:      securityaudit.PillarSupplyChain,
-		Severity:    securityaudit.SeverityHigh,
+		Severity:    policy.SeverityHigh,
 		PassTitle:   "Build metadata available",
 		PassDetails: "default details",
 	}
@@ -71,15 +73,15 @@ func TestBuildFinding_FailPath(t *testing.T) {
 	spec := findingSpec{
 		ID:          securityaudit.CheckSBOMGenerated,
 		Pillar:      securityaudit.PillarSupplyChain,
-		Severity:    securityaudit.SeverityHigh,
-		FailStatus:  securityaudit.StatusFail,
+		Severity:    policy.SeverityHigh,
+		FailStatus:  outcome.Fail,
 		FailTitle:   "SBOM generation failed",
 		FailDetails: "default fail",
 		FailHint:    "hint",
 		FailReco:    "reco",
 	}
 	f := buildFinding(spec, nil, false, "", "custom fail")
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("status = %v, want fail", f.Status)
 	}
 	if f.Details != "custom fail" {
@@ -91,8 +93,8 @@ func TestBuildFinding_FailPathDefaultDetails(t *testing.T) {
 	spec := findingSpec{
 		ID:          securityaudit.CheckSBOMGenerated,
 		Pillar:      securityaudit.PillarSupplyChain,
-		Severity:    securityaudit.SeverityHigh,
-		FailStatus:  securityaudit.StatusFail,
+		Severity:    policy.SeverityHigh,
+		FailStatus:  outcome.Fail,
 		FailTitle:   "SBOM generation failed",
 		FailDetails: "default fail",
 	}
@@ -108,33 +110,33 @@ func TestBuildFinding_FailPathDefaultDetails(t *testing.T) {
 
 func TestFindingFromBuildInfo(t *testing.T) {
 	f := findingFromBuildInfo(evidence.BuildInfoSnapshot{Available: true, GoVersion: "go1.26"})
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("status = %v", f.Status)
 	}
 	f = findingFromBuildInfo(evidence.BuildInfoSnapshot{Available: false})
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("status = %v, want fail", f.Status)
 	}
 }
 
 func TestFindingFromSBOM(t *testing.T) {
 	f := findingFromSBOM(evidence.SBOMSnapshot{RawJSON: []byte(`{}`), FileName: "sbom.spdx.json", DependencyCount: 5}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("status = %v, want pass", f.Status)
 	}
 	f = findingFromSBOM(evidence.SBOMSnapshot{}, errForTest("fail"))
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("status = %v, want fail (error passed as fail, not error path)", f.Status)
 	}
 }
 
 func TestFindingFromBinaryHash(t *testing.T) {
 	f := findingFromBinaryHash(evidence.BinaryInspectionSnapshot{SHA256: "abc123", BinaryPath: "/usr/bin/stave"}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("status = %v, want pass", f.Status)
 	}
 	f = findingFromBinaryHash(evidence.BinaryInspectionSnapshot{SHA256: ""}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("status = %v, want fail", f.Status)
 	}
 }
@@ -142,25 +144,25 @@ func TestFindingFromBinaryHash(t *testing.T) {
 func TestFindingFromVuln(t *testing.T) {
 	// Error
 	f := findingFromVuln(evidence.VulnerabilitySnapshot{}, errForTest("scan failed"))
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("error path: status = %v, want warn", f.Status)
 	}
 	// Not available
 	f = findingFromVuln(evidence.VulnerabilitySnapshot{Available: false, Details: "no evidence"}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("unavailable path: status = %v, want warn", f.Status)
 	}
 	// Found vulns
 	f = findingFromVuln(evidence.VulnerabilitySnapshot{Available: true, FindingCount: 3, SourceUsed: "local"}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("found vulns: status = %v, want fail", f.Status)
 	}
-	if f.Severity != securityaudit.SeverityCritical {
+	if f.Severity != policy.SeverityCritical {
 		t.Fatalf("found vulns: severity = %v, want critical", f.Severity)
 	}
 	// Clean
 	f = findingFromVuln(evidence.VulnerabilitySnapshot{Available: true, FindingCount: 0, SourceUsed: "local"}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("clean: status = %v, want pass", f.Status)
 	}
 }
@@ -168,22 +170,22 @@ func TestFindingFromVuln(t *testing.T) {
 func TestFindingFromSignature(t *testing.T) {
 	// Error + attempt
 	f := findingFromSignature(evidence.BinaryInspectionSnapshot{SignatureAttempt: true}, errForTest("verify failed"))
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("err+attempt: status = %v, want fail", f.Status)
 	}
 	// No attempt
 	f = findingFromSignature(evidence.BinaryInspectionSnapshot{SignatureAttempt: false}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("no attempt: status = %v, want warn", f.Status)
 	}
 	// Verified
 	f = findingFromSignature(evidence.BinaryInspectionSnapshot{SignatureAttempt: true, SignatureVerified: true, SignatureDetail: "ok"}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("verified: status = %v, want pass", f.Status)
 	}
 	// Inconclusive
 	f = findingFromSignature(evidence.BinaryInspectionSnapshot{SignatureAttempt: true, SignatureVerified: false, SignatureDetail: "inconclusive"}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("inconclusive: status = %v, want warn", f.Status)
 	}
 }
@@ -196,13 +198,13 @@ func TestFindingFromRuntimeNetwork(t *testing.T) {
 	f := findingFromRuntimeNetwork(evidence.PolicyInspectionSnapshot{
 		Network: evidence.NetworkInspection{RuntimeNetworkOK: true},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("ok: status = %v, want pass", f.Status)
 	}
 	f = findingFromRuntimeNetwork(evidence.PolicyInspectionSnapshot{
 		Network: evidence.NetworkInspection{RuntimeNetworkOK: false, RuntimeViolations: []string{"net/http"}},
 	}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("violation: status = %v, want fail", f.Status)
 	}
 }
@@ -211,13 +213,13 @@ func TestFindingFromPrivilege(t *testing.T) {
 	f := findingFromPrivilege(evidence.PolicyInspectionSnapshot{
 		Operational: evidence.OperationalInspection{RunningAsPrivileged: false},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("non-root: status = %v, want pass", f.Status)
 	}
 	f = findingFromPrivilege(evidence.PolicyInspectionSnapshot{
 		Operational: evidence.OperationalInspection{RunningAsPrivileged: true},
 	}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("root: status = %v, want warn", f.Status)
 	}
 }
@@ -226,11 +228,11 @@ func TestFindingFromIAM(t *testing.T) {
 	f := findingFromIAM(evidence.PolicyInspectionSnapshot{
 		IAMActions: []string{"s3:GetObject", "s3:PutObject"},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("with actions: status = %v, want pass", f.Status)
 	}
 	f = findingFromIAM(evidence.PolicyInspectionSnapshot{}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("no actions: status = %v, want fail", f.Status)
 	}
 }
@@ -238,17 +240,17 @@ func TestFindingFromIAM(t *testing.T) {
 func TestFindingFromOffline(t *testing.T) {
 	// Error
 	f := findingFromOffline(evidence.PolicyInspectionSnapshot{}, Request{}, errForTest("fail"))
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("error: status = %v, want warn", f.Status)
 	}
 	// Require offline with proxy
 	f = findingFromOffline(evidence.PolicyInspectionSnapshot{ProxyVarsSet: []string{"HTTPS_PROXY"}}, Request{RequireOffline: true}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("proxy+offline: status = %v, want fail", f.Status)
 	}
 	// Pass
 	f = findingFromOffline(evidence.PolicyInspectionSnapshot{}, Request{RequireOffline: true}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("pass: status = %v, want pass", f.Status)
 	}
 }
@@ -260,11 +262,11 @@ func TestFindingFromFSDisclosure(t *testing.T) {
 			FilesystemWrites: []string{"/out"},
 		},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("status = %v, want pass", f.Status)
 	}
 	f = findingFromFSDisclosure(evidence.PolicyInspectionSnapshot{}, errForTest("fail"))
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("error: status = %v, want warn", f.Status)
 	}
 }
@@ -277,13 +279,13 @@ func TestFindingFromCredentialStorage(t *testing.T) {
 	f := findingFromCredentialStorage(evidence.PolicyInspectionSnapshot{
 		Credential: evidence.CredentialInspection{CredentialPolicyOK: true},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("ok: status = %v, want pass", f.Status)
 	}
 	f = findingFromCredentialStorage(evidence.PolicyInspectionSnapshot{
 		Credential: evidence.CredentialInspection{CredentialPolicyOK: false, CredentialViolations: []string{"AWS_SECRET"}},
 	}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("violation: status = %v, want fail", f.Status)
 	}
 }
@@ -292,7 +294,7 @@ func TestFindingFromRedaction(t *testing.T) {
 	f := findingFromRedaction(evidence.PolicyInspectionSnapshot{
 		Operational: evidence.OperationalInspection{RedactionPolicyOK: true},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("ok: status = %v, want pass", f.Status)
 	}
 }
@@ -301,7 +303,7 @@ func TestFindingFromTelemetry(t *testing.T) {
 	f := findingFromTelemetry(evidence.PolicyInspectionSnapshot{
 		Operational: evidence.OperationalInspection{TelemetryDeclaredNone: true},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("ok: status = %v, want pass", f.Status)
 	}
 }
@@ -309,12 +311,12 @@ func TestFindingFromTelemetry(t *testing.T) {
 func TestFindingFromPrivacyMode(t *testing.T) {
 	// Error
 	f := findingFromPrivacyMode(evidence.PolicyInspectionSnapshot{}, Request{}, errForTest("fail"))
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("error: status = %v, want warn", f.Status)
 	}
 	// Not enabled
 	f = findingFromPrivacyMode(evidence.PolicyInspectionSnapshot{}, Request{PrivacyEnabled: false}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("not enabled: status = %v, want warn", f.Status)
 	}
 	// Enabled and pass
@@ -322,14 +324,14 @@ func TestFindingFromPrivacyMode(t *testing.T) {
 		Operational: evidence.OperationalInspection{TelemetryDeclaredNone: true, RedactionPolicyOK: true},
 		Credential:  evidence.CredentialInspection{CredentialPolicyOK: true},
 	}, Request{PrivacyEnabled: true}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("pass: status = %v, want pass", f.Status)
 	}
 	// Enabled and fail
 	f = findingFromPrivacyMode(evidence.PolicyInspectionSnapshot{
 		Operational: evidence.OperationalInspection{TelemetryDeclaredNone: false},
 	}, Request{PrivacyEnabled: true}, nil)
-	if f.Status != securityaudit.StatusFail {
+	if f.Status != outcome.Fail {
 		t.Fatalf("fail: status = %v, want fail", f.Status)
 	}
 }
@@ -339,16 +341,16 @@ func TestFindingFromPrivacyMode(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestFindingFromHardening(t *testing.T) {
-	f := findingFromHardening(evidence.BinaryInspectionSnapshot{HardeningLevel: securityaudit.StatusPass, HardeningDetail: "ok"}, nil)
-	if f.Status != securityaudit.StatusPass {
+	f := findingFromHardening(evidence.BinaryInspectionSnapshot{HardeningLevel: outcome.Pass, HardeningDetail: "ok"}, nil)
+	if f.Status != outcome.Pass {
 		t.Fatalf("pass: status = %v", f.Status)
 	}
-	f = findingFromHardening(evidence.BinaryInspectionSnapshot{HardeningLevel: securityaudit.StatusWarn, HardeningDetail: "review"}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	f = findingFromHardening(evidence.BinaryInspectionSnapshot{HardeningLevel: outcome.Warn, HardeningDetail: "review"}, nil)
+	if f.Status != outcome.Warn {
 		t.Fatalf("warn: status = %v", f.Status)
 	}
 	f = findingFromHardening(evidence.BinaryInspectionSnapshot{}, errForTest("fail"))
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("error: status = %v, want warn", f.Status)
 	}
 }
@@ -357,7 +359,7 @@ func TestFindingFromAuditLogging(t *testing.T) {
 	f := findingFromAuditLogging(evidence.PolicyInspectionSnapshot{
 		Operational: evidence.OperationalInspection{AuditLoggingConfigured: true},
 	}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("ok: status = %v, want pass", f.Status)
 	}
 }
@@ -365,24 +367,24 @@ func TestFindingFromAuditLogging(t *testing.T) {
 func TestFindingFromCrosswalk(t *testing.T) {
 	// Pass
 	f := findingFromCrosswalk(evidence.CrosswalkSnapshot{}, nil)
-	if f.Status != securityaudit.StatusPass {
+	if f.Status != outcome.Pass {
 		t.Fatalf("pass: status = %v", f.Status)
 	}
 	// Missing
 	f = findingFromCrosswalk(evidence.CrosswalkSnapshot{MissingChecks: []string{"SC.VULN"}}, nil)
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("missing: status = %v", f.Status)
 	}
 	// Error
 	f = findingFromCrosswalk(evidence.CrosswalkSnapshot{}, errForTest("fail"))
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("error: status = %v, want warn", f.Status)
 	}
 }
 
 func TestFindingFromCrosswalkMissing(t *testing.T) {
 	f := findingFromCrosswalkMissing(evidence.CrosswalkSnapshot{MissingChecks: []string{"SC.VULN", "SC.SBOM"}})
-	if f.Status != securityaudit.StatusWarn {
+	if f.Status != outcome.Warn {
 		t.Fatalf("status = %v, want warn", f.Status)
 	}
 	if f.ID != securityaudit.CheckControlMapMissing {
@@ -444,7 +446,7 @@ func TestNewRequestDefaults(t *testing.T) {
 	if req.VulnSource != evidence.VulnSourceHybrid {
 		t.Fatalf("VulnSource = %v, want hybrid", req.VulnSource)
 	}
-	if req.FailOn != securityaudit.SeverityHigh {
+	if req.FailOn != policy.SeverityHigh {
 		t.Fatalf("FailOn = %v, want high", req.FailOn)
 	}
 	if req.StaveVersion != "unknown" {
@@ -465,9 +467,9 @@ func TestNewRequestWithOptions(t *testing.T) {
 		WithLiveVulnCheck(true),
 		WithReleaseBundleDir("/release"),
 		WithPrivacy(true),
-		WithFailOn(securityaudit.SeverityCritical),
+		WithFailOn(policy.SeverityCritical),
 		WithRequireOffline(true),
-		WithSeverityFilter([]securityaudit.Severity{securityaudit.SeverityCritical}),
+		WithSeverityFilter([]policy.Severity{policy.SeverityCritical}),
 		WithComplianceFrameworks([]string{"soc2"}),
 	)
 	if req.Now != now {

@@ -1,6 +1,10 @@
 package doctor
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/sufield/stave/internal/core/outcome"
+)
 
 // BinaryRequest defines the parameters for validating a system dependency.
 type BinaryRequest struct {
@@ -16,7 +20,7 @@ func checkBinary(ctx *Context, req BinaryRequest) Check {
 	if req.Binary == "" {
 		return Check{
 			Name:    req.Name,
-			Status:  StatusFail,
+			Status:  outcome.Fail,
 			Message: "Logic error: binary name not specified in check request",
 		}
 	}
@@ -25,7 +29,7 @@ func checkBinary(ctx *Context, req BinaryRequest) Check {
 	if err != nil {
 		return Check{
 			Name:    req.Name,
-			Status:  StatusWarn,
+			Status:  outcome.Warn,
 			Message: req.WarnMessage,
 			Fix:     req.Fix,
 		}
@@ -38,7 +42,7 @@ func checkBinary(ctx *Context, req BinaryRequest) Check {
 
 	return Check{
 		Name:    req.Name,
-		Status:  StatusPass,
+		Status:  outcome.Pass,
 		Message: message,
 	}
 }

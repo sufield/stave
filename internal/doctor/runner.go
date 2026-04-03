@@ -1,6 +1,10 @@
 package doctor
 
-import "slices"
+import (
+	"slices"
+
+	"github.com/sufield/stave/internal/core/outcome"
+)
 
 // Registry maintains an ordered collection of diagnostic check functions.
 type Registry struct {
@@ -36,7 +40,7 @@ func (r *Registry) Run(ctx *Context) ([]Check, bool) {
 			continue
 		}
 
-		if res.Status == StatusFail {
+		if res.Status == outcome.Fail {
 			success = false
 		}
 

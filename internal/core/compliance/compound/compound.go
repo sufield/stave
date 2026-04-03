@@ -4,7 +4,10 @@
 // to the profile report.
 package compound
 
-import "github.com/sufield/stave/internal/core/compliance"
+import (
+	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
+)
 
 // CompoundFinding represents a risk that emerges from the combination
 // of multiple invariant results.
@@ -13,7 +16,7 @@ type CompoundFinding struct {
 	ID string `json:"id"`
 
 	// Severity is the impact level of the combined risk.
-	Severity compliance.Severity `json:"severity"`
+	Severity policy.Severity `json:"severity"`
 
 	// TriggerIDs lists the invariant IDs whose results triggered this finding.
 	TriggerIDs []string `json:"trigger_ids"`
@@ -28,7 +31,7 @@ type CompoundRule struct {
 	ID string
 
 	// Severity is the finding severity when the rule matches.
-	Severity compliance.Severity
+	Severity policy.Severity
 
 	// TriggerIDs lists the invariant IDs this rule examines.
 	TriggerIDs []string

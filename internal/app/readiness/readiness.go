@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/diag"
+	"github.com/sufield/stave/internal/core/outcome"
 	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
@@ -24,7 +25,7 @@ func AssessReadiness(in validation.Input) (validation.Report, error) {
 
 func recordPrereqIssues(report *validation.Report, checks []validation.Issue) {
 	for _, check := range checks {
-		if check.Status == validation.StatusPass {
+		if check.Status == outcome.Pass {
 			continue
 		}
 		report.RecordIssue(check)
@@ -37,7 +38,7 @@ func recordControlSourceIssue(report *validation.Report, in validation.Input) {
 	}
 	report.RecordIssue(validation.Issue{
 		Name:    "control-source-selection",
-		Status:  validation.StatusFail,
+		Status:  outcome.Fail,
 		Message: "cannot combine explicit --controls with enabled_control_packs",
 		Fix:     "remove --controls or clear enabled_control_packs in stave.yaml",
 		Command: "stave status",
@@ -83,9 +84,9 @@ func readinessDiagnostics(val validation.Result) *diag.Result {
 	return diag.NewResult()
 }
 
-func readinessIssueStatus(issue diag.Issue) validation.Status {
+func readinessIssueStatus(issue diag.Issue) outcome.Status {
 	if issue.Signal == diag.SignalError {
-		return validation.StatusFail
+		return outcome.Fail
 	}
-	return validation.StatusWarn
+	return outcome.Warn
 }

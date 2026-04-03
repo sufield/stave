@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func lockBucket(id string, enabled bool, mode string) asset.Asset {
@@ -26,7 +27,7 @@ func TestRetention002(t *testing.T) {
 		name     string
 		snap     asset.Snapshot
 		wantPass bool
-		wantSev  Severity
+		wantSev  policy.Severity
 	}{
 		{
 			name:     "Compliance mode — pass",
@@ -37,25 +38,25 @@ func TestRetention002(t *testing.T) {
 			name:     "Governance mode — fail HIGH",
 			snap:     snap(lockBucket("b", true, "GOVERNANCE")),
 			wantPass: false,
-			wantSev:  High,
+			wantSev:  policy.SeverityHigh,
 		},
 		{
 			name:     "lock enabled, no mode set — fail HIGH",
 			snap:     snap(lockBucket("b", true, "")),
 			wantPass: false,
-			wantSev:  High,
+			wantSev:  policy.SeverityHigh,
 		},
 		{
 			name:     "lock disabled — fail CRITICAL",
 			snap:     snap(lockBucket("b", false, "")),
 			wantPass: false,
-			wantSev:  Critical,
+			wantSev:  policy.SeverityCritical,
 		},
 		{
 			name:     "no lock properties — fail CRITICAL",
 			snap:     snap(s3Bucket("b", map[string]any{})),
 			wantPass: false,
-			wantSev:  Critical,
+			wantSev:  policy.SeverityCritical,
 		},
 		{
 			name:     "empty snapshot — pass",

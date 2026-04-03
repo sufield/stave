@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // controlsVersioning checks that versioning is enabled on every S3 bucket.
@@ -16,7 +17,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("CONTROLS.002"),
 			WithDescription("S3 bucket versioning must be enabled to protect data integrity"),
-			WithSeverity(Medium),
+			WithSeverity(policy.SeverityMedium),
 			WithComplianceProfiles("hipaa", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(c)(1)"),
 			WithProfileRationale("hipaa", "Integrity — versioning protects against accidental deletion"),

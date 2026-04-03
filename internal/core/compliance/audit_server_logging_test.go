@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func loggingBucket(id, targetBucket string) asset.Asset {
@@ -59,7 +60,7 @@ func TestAudit001(t *testing.T) {
 			if !tc.wantPass && !strings.Contains(r.Finding, "retroactively") {
 				t.Error("Finding should state logs cannot be obtained retroactively")
 			}
-			if !tc.wantPass && r.Severity != Critical {
+			if !tc.wantPass && r.Severity != policy.SeverityCritical {
 				t.Errorf("Severity: got %s, want CRITICAL", r.Severity)
 			}
 		})

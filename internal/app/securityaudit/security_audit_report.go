@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
@@ -15,7 +16,7 @@ func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.B
 		GeneratedAt:   req.Now.UTC(),
 		StaveVersion:  req.StaveVersion,
 		Summary: securityaudit.Summary{
-			BySeverity:        map[securityaudit.Severity]int{},
+			BySeverity:        map[policy.Severity]int{},
 			FailOn:            req.FailOn,
 			VulnSourceUsed:    string(ev.Vuln.SourceUsed),
 			EvidenceFreshness: string(ev.Vuln.Freshness),

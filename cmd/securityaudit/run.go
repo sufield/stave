@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	appsa "github.com/sufield/stave/internal/app/securityaudit"
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
@@ -23,14 +25,14 @@ type auditConfig struct {
 	Format           string
 	OutPath          string
 	OutDir           string
-	SeverityFilter   []domainsecurityaudit.Severity
+	SeverityFilter   []policy.Severity
 	SBOMFormat       evidence.SBOMFormat
 	Frameworks       []string
 	VulnSource       evidence.VulnSource
 	LiveVulnCheck    bool
 	ReleaseBundleDir string
 	PrivacyEnabled   bool
-	FailOn           domainsecurityaudit.Severity
+	FailOn           policy.Severity
 	Now              time.Time
 
 	Force          bool

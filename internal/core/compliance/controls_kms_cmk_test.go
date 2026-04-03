@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestControls001Strict(t *testing.T) {
@@ -70,7 +71,7 @@ func TestControls001Strict(t *testing.T) {
 			if !tc.wantPass && tc.findingLike != "" && !strings.Contains(r.Finding, tc.findingLike) {
 				t.Errorf("Finding should contain %q, got: %s", tc.findingLike, r.Finding)
 			}
-			if r.Pass == false && r.Severity != Critical {
+			if r.Pass == false && r.Severity != policy.SeverityCritical {
 				t.Errorf("Severity: got %s, want CRITICAL", r.Severity)
 			}
 		})

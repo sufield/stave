@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 type accessNetworkRestriction struct {
@@ -15,11 +16,11 @@ func init() {
 		Definition: NewDefinition(
 			WithID("ACCESS.003"),
 			WithDescription("Bucket access must be restricted by VPC endpoint or IP condition"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.312(e)(1)"),
 			WithProfileRationale("hipaa", "Transmission security — VPC endpoint or IP restriction"),
-			WithProfileSeverityOverride("hipaa", High),
+			WithProfileSeverityOverride("hipaa", policy.SeverityHigh),
 		),
 	})
 }

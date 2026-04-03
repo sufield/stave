@@ -5,15 +5,17 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 var networkSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckRuntimeNetworkNone,
 	Pillar:   securityaudit.PillarRuntime,
-	Severity: securityaudit.SeverityHigh,
+	Severity: policy.SeverityHigh,
 
-	ErrStatus: securityaudit.StatusWarn,
+	ErrStatus: outcome.Warn,
 	ErrTitle:  "Runtime network policy inspection incomplete",
 	ErrHint:   "Source-level network import inspection did not complete.",
 	ErrReco:   "Run security-audit from repository root with source files available.",
@@ -23,7 +25,7 @@ var networkSpec = findingSpec{ //nolint:gosec // audit template, not a credentia
 	PassHint:    "Supports offline runtime behavior expectations.",
 	PassReco:    "Keep banned import tests enabled in CI.",
 
-	FailStatus: securityaudit.StatusFail,
+	FailStatus: outcome.Fail,
 	FailTitle:  "Runtime network imports detected",
 	FailHint:   "Runtime path includes banned network-capable imports.",
 	FailReco:   "Remove banned imports or explicitly justify/allowlist the file-path mapping.",
@@ -37,9 +39,9 @@ func findingFromRuntimeNetwork(in evidence.PolicyInspectionSnapshot, err error) 
 var privilegeSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckPrivilegeNoSudo,
 	Pillar:   securityaudit.PillarRuntime,
-	Severity: securityaudit.SeverityMedium,
+	Severity: policy.SeverityMedium,
 
-	ErrStatus: securityaudit.StatusWarn,
+	ErrStatus: outcome.Warn,
 	ErrTitle:  "Privilege check inconclusive",
 	ErrHint:   "Could not determine effective privilege level reliably.",
 	ErrReco:   "Run under a standard non-root account.",
@@ -49,7 +51,7 @@ var privilegeSpec = findingSpec{ //nolint:gosec // audit template, not a credent
 	PassHint:    "Supports least-privilege deployment posture.",
 	PassReco:    "Keep execution profiles non-privileged in CI and local automation.",
 
-	FailStatus:  securityaudit.StatusWarn,
+	FailStatus:  outcome.Warn,
 	FailTitle:   "Running with elevated privilege",
 	FailDetails: "Command is running as root/administrator even though it is not required.",
 	FailHint:    "Least-privilege principle recommends non-elevated execution.",
@@ -63,9 +65,9 @@ func findingFromPrivilege(in evidence.PolicyInspectionSnapshot, err error) secur
 var iamSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckIAMS3MinPerms,
 	Pillar:   securityaudit.PillarRuntime,
-	Severity: securityaudit.SeverityHigh,
+	Severity: policy.SeverityHigh,
 
-	ErrStatus: securityaudit.StatusWarn,
+	ErrStatus: outcome.Warn,
 	ErrTitle:  "IAM minimum-permissions declaration unavailable",
 	ErrHint:   "Unable to disclose required S3 permissions from source-of-truth manifest.",
 	ErrReco:   "Regenerate IAM manifest and docs from the extractor mapping.",
@@ -74,7 +76,7 @@ var iamSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	PassHint:  "Least-privilege review can be performed against documented action set.",
 	PassReco:  "Compare this action list with deployed IAM policy statements.",
 
-	FailStatus:  securityaudit.StatusFail,
+	FailStatus:  outcome.Fail,
 	FailTitle:   "IAM minimum permissions missing",
 	FailDetails: "No required S3 IAM actions were declared.",
 	FailHint:    "Permissions transparency requires explicit minimum-action list.",
@@ -92,8 +94,8 @@ func findingFromOffline(in evidence.PolicyInspectionSnapshot, req Request, err e
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckOfflineEnforcement,
 			Pillar:         securityaudit.PillarRuntime,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityHigh,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityHigh,
 			Title:          "Offline enforcement check incomplete",
 			Details:        err.Error(),
 			AuditorHint:    "Proxy environment verification failed unexpectedly.",
@@ -104,8 +106,8 @@ func findingFromOffline(in evidence.PolicyInspectionSnapshot, req Request, err e
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckOfflineEnforcement,
 			Pillar:         securityaudit.PillarRuntime,
-			Status:         securityaudit.StatusFail,
-			Severity:       securityaudit.SeverityHigh,
+			Status:         outcome.Fail,
+			Severity:       policy.SeverityHigh,
 			Title:          "Offline enforcement failed",
 			Details:        fmt.Sprintf("Proxy environment variables are set: %s", strings.Join(in.ProxyVarsSet, ", ")),
 			AuditorHint:    "--require-offline was requested and policy checks found proxy settings.",
@@ -115,8 +117,8 @@ func findingFromOffline(in evidence.PolicyInspectionSnapshot, req Request, err e
 	return securityaudit.Finding{
 		ID:             securityaudit.CheckOfflineEnforcement,
 		Pillar:         securityaudit.PillarRuntime,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityHigh,
+		Status:         outcome.Pass,
+		Severity:       policy.SeverityHigh,
 		Title:          "Offline enforcement passed",
 		Details:        "Proxy environment checks satisfy offline policy expectations.",
 		AuditorHint:    "Offline mode remains deterministic unless explicitly opting into live checks.",
@@ -124,29 +126,22 @@ func findingFromOffline(in evidence.PolicyInspectionSnapshot, req Request, err e
 	}
 }
 
-// findingFromFSDisclosure is 2-path (error → warn, else → always pass) — kept explicit
-// since there's no fail condition.
+var fsDisclosureSpec = findingSpec{ //nolint:gosec // not a credential — "Disclosure" triggers false positive
+	ID:       securityaudit.CheckFSAccessDisclosure,
+	Pillar:   securityaudit.PillarRuntime,
+	Severity: policy.SeverityMedium,
+
+	ErrStatus: outcome.Warn,
+	ErrTitle:  "Filesystem disclosure incomplete",
+	ErrHint:   "Read/write footprint declaration could not be generated.",
+	ErrReco:   "Rerun security-audit with writable bundle directory.",
+
+	PassTitle: "Filesystem access declared",
+	PassHint:  "Bundle includes explicit read/write footprint for review.",
+	PassReco:  "Review filesystem_access_declaration.json with local policy owners.",
+}
+
 func findingFromFSDisclosure(in evidence.PolicyInspectionSnapshot, err error) securityaudit.Finding {
-	if err != nil {
-		return securityaudit.Finding{
-			ID:             securityaudit.CheckFSAccessDisclosure,
-			Pillar:         securityaudit.PillarRuntime,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
-			Title:          "Filesystem disclosure incomplete",
-			Details:        err.Error(),
-			AuditorHint:    "Read/write footprint declaration could not be generated.",
-			Recommendation: "Rerun security-audit with writable bundle directory.",
-		}
-	}
-	return securityaudit.Finding{
-		ID:             securityaudit.CheckFSAccessDisclosure,
-		Pillar:         securityaudit.PillarRuntime,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityMedium,
-		Title:          "Filesystem access declared",
-		Details:        fmt.Sprintf("Declared %d read paths and %d write paths.", len(in.Filesystem.FilesystemReads), len(in.Filesystem.FilesystemWrites)),
-		AuditorHint:    "Bundle includes explicit read/write footprint for review.",
-		Recommendation: "Review filesystem_access_declaration.json with local policy owners.",
-	}
+	details := fmt.Sprintf("Declared %d read paths and %d write paths.", len(in.Filesystem.FilesystemReads), len(in.Filesystem.FilesystemWrites))
+	return buildFinding(fsDisclosureSpec, err, true, details, "")
 }

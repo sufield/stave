@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // accessPublicList checks that no S3 bucket policy grants s3:ListBucket
@@ -17,7 +18,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("ACCESS.011"),
 			WithDescription("No bucket policy may grant s3:ListBucket to a public principal"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(1)"),
 		),

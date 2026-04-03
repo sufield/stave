@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 type binaryChecksumPayload struct {
@@ -162,15 +162,15 @@ func (d DefaultBinaryInspector) verifyChecksumSignature(sumsData []byte, bundleD
 	return true, "checksum matched and signature cryptographically verified"
 }
 
-func evaluateBuildHardening(buildInfo BuildInfoSnapshot) (securityaudit.Status, string) {
+func evaluateBuildHardening(buildInfo BuildInfoSnapshot) (outcome.Status, string) {
 	if len(buildInfo.Settings) == 0 {
-		return securityaudit.StatusWarn, "build settings unavailable; cannot verify hardening flags"
+		return outcome.Warn, "build settings unavailable; cannot verify hardening flags"
 	}
 	if strings.EqualFold(strings.TrimSpace(buildInfo.Settings["-buildmode"]), "pie") {
-		return securityaudit.StatusPass, "buildmode=pie detected"
+		return outcome.Pass, "buildmode=pie detected"
 	}
 	if goflags, ok := buildInfo.Settings["GOFLAGS"]; ok && strings.Contains(goflags, "-buildmode=pie") {
-		return securityaudit.StatusPass, "GOFLAGS include -buildmode=pie"
+		return outcome.Pass, "GOFLAGS include -buildmode=pie"
 	}
-	return securityaudit.StatusWarn, "PIE buildmode not detected in build settings"
+	return outcome.Warn, "PIE buildmode not detected in build settings"
 }

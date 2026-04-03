@@ -1,10 +1,10 @@
 package securityaudit
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -26,18 +26,6 @@ func AllReportFormats() []string {
 	}
 }
 
-// Status represents the outcome of an audit check.
-type Status string
-
-const (
-	StatusPass Status = "PASS"
-	StatusWarn Status = "WARN"
-	StatusFail Status = "FAIL"
-)
-
-// String implements fmt.Stringer.
-func (s Status) String() string { return string(s) }
-
 // Pillar identifies the enterprise category for an audit check.
 type Pillar string
 
@@ -48,83 +36,21 @@ const (
 	PillarControls    Pillar = "internal_security_controls"
 )
 
-// Severity represents a normalized level of security risk.
-type Severity string
-
-const (
-	SeverityCritical Severity = "CRITICAL"
-	SeverityHigh     Severity = "HIGH"
-	SeverityMedium   Severity = "MEDIUM"
-	SeverityLow      Severity = "LOW"
-	SeverityNone     Severity = "NONE"
-)
-
-// AllSeverityStrings returns all severity level strings in descending order of risk.
-func AllSeverityStrings() []string {
-	return []string{
-		string(SeverityCritical),
-		string(SeverityHigh),
-		string(SeverityMedium),
-		string(SeverityLow),
-		string(SeverityNone),
-	}
-}
-
-// Rank returns a numeric value (0–4) for the severity.
-// Higher values indicate more severe risk.
-func (s Severity) Rank() int {
-	switch s {
-	case SeverityCritical:
-		return 4
-	case SeverityHigh:
-		return 3
-	case SeverityMedium:
-		return 2
-	case SeverityLow:
-		return 1
-	default:
-		return 0
-	}
-}
-
-// Gte reports whether s is at least as severe as the threshold.
-// Every severity (including None) is >= None, so a threshold of None
-// never gates any finding.
-func (s Severity) Gte(threshold Severity) bool {
-	return s.Rank() >= threshold.Rank()
-}
-
-// String implements fmt.Stringer.
-func (s Severity) String() string { return string(s) }
-
-// ParseSeverity converts a string to a validated Severity.
-func ParseSeverity(raw string) (Severity, error) {
-	norm := Severity(strings.ToUpper(strings.TrimSpace(raw)))
-	switch norm {
-	case SeverityCritical, SeverityHigh, SeverityMedium, SeverityLow:
-		return norm, nil
-	case SeverityNone, "":
-		return SeverityNone, nil
-	default:
-		return "", fmt.Errorf("invalid severity %q: use CRITICAL, HIGH, MEDIUM, LOW, or NONE", raw)
-	}
-}
-
 // ParseSeverityList parses a comma-separated string of severity levels.
 // Deduplicates input and returns values in encountered order.
 // Returns [CRITICAL, HIGH] when raw is empty (secure default).
-func ParseSeverityList(raw string) ([]Severity, error) {
+func ParseSeverityList(raw string) ([]policy.Severity, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return []Severity{SeverityCritical, SeverityHigh}, nil
+		return []policy.Severity{policy.SeverityCritical, policy.SeverityHigh}, nil
 	}
 
 	parts := strings.Split(raw, ",")
-	out := make([]Severity, 0, len(parts))
-	seen := make(map[Severity]struct{}, len(parts))
+	out := make([]policy.Severity, 0, len(parts))
+	seen := make(map[policy.Severity]struct{}, len(parts))
 
 	for _, p := range parts {
-		sev, err := ParseSeverity(p)
+		sev, err := policy.ParseSeverity(p)
 		if err != nil {
 			return nil, err
 		}

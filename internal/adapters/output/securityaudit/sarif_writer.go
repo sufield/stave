@@ -3,7 +3,10 @@ package securityaudit
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -51,8 +54,8 @@ type sarifResult struct {
 
 type sarifResultProperties struct {
 	Pillar         domain.Pillar     `json:"pillar"`
-	Status         domain.Status     `json:"status"`
-	Severity       domain.Severity   `json:"severity"`
+	Status         outcome.Status    `json:"status"`
+	Severity       string            `json:"severity"`
 	Controls       []sarifControlRef `json:"controls"`
 	Recommendation string            `json:"recommendation"`
 }
@@ -98,7 +101,7 @@ func MarshalSARIFReport(report domain.Report) ([]byte, error) {
 			Properties: sarifResultProperties{
 				Pillar:         finding.Pillar,
 				Status:         finding.Status,
-				Severity:       finding.Severity,
+				Severity:       strings.ToUpper(finding.Severity.String()),
 				Controls:       controls,
 				Recommendation: finding.Recommendation,
 			},
@@ -129,11 +132,11 @@ func MarshalSARIFReport(report domain.Report) ([]byte, error) {
 	return append(data, '\n'), nil
 }
 
-func sarifLevelFromSeverity(severity domain.Severity) string {
+func sarifLevelFromSeverity(severity policy.Severity) string {
 	switch severity {
-	case domain.SeverityCritical, domain.SeverityHigh:
+	case policy.SeverityCritical, policy.SeverityHigh:
 		return "error"
-	case domain.SeverityMedium:
+	case policy.SeverityMedium:
 		return "warning"
 	default:
 		return "note"

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 const awsManagedS3KeyAlias = "alias/aws/s3"
@@ -20,7 +21,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("CONTROLS.001.STRICT"),
 			WithDescription("Server-side encryption must use SSE-KMS with a customer-managed key (CMK)"),
-			WithSeverity(Critical),
+			WithSeverity(policy.SeverityCritical),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
 			WithProfileRationale("hipaa", "CMK required for key revocation during breach response"),

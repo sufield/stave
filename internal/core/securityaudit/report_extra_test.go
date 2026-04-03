@@ -4,17 +4,19 @@ import (
 	"testing"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 func TestRecomputeSummary(t *testing.T) {
 	r := &Report{
-		Summary: Summary{FailOn: SeverityHigh},
+		Summary: Summary{FailOn: policy.SeverityHigh},
 		Findings: []Finding{
-			{ID: "A", Severity: SeverityCritical, Status: StatusFail},
-			{ID: "B", Severity: SeverityMedium, Status: StatusWarn},
-			{ID: "C", Severity: SeverityLow, Status: StatusPass},
-			{ID: "D", Severity: SeverityHigh, Status: StatusFail},
+			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
+			{ID: "B", Severity: policy.SeverityMedium, Status: outcome.Warn},
+			{ID: "C", Severity: policy.SeverityLow, Status: outcome.Pass},
+			{ID: "D", Severity: policy.SeverityHigh, Status: outcome.Fail},
 		},
 	}
 	r.RecomputeSummary()
@@ -46,9 +48,9 @@ func TestRecomputeSummary_NilReceiver(t *testing.T) {
 
 func TestRecomputeSummary_FailOnNone(t *testing.T) {
 	r := &Report{
-		Summary: Summary{FailOn: SeverityNone},
+		Summary: Summary{FailOn: policy.SeverityNone},
 		Findings: []Finding{
-			{ID: "A", Severity: SeverityCritical, Status: StatusFail},
+			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
 		},
 	}
 	r.RecomputeSummary()
@@ -63,12 +65,12 @@ func TestRecomputeSummary_FailOnNone(t *testing.T) {
 func TestRecomputeSummary_PreservesMetadata(t *testing.T) {
 	r := &Report{
 		Summary: Summary{
-			FailOn:            SeverityHigh,
+			FailOn:            policy.SeverityHigh,
 			VulnSourceUsed:    "govulncheck",
 			EvidenceFreshness: "2h",
 		},
 		Findings: []Finding{
-			{ID: "A", Severity: SeverityHigh, Status: StatusPass},
+			{ID: "A", Severity: policy.SeverityHigh, Status: outcome.Pass},
 		},
 	}
 	r.RecomputeSummary()
@@ -82,7 +84,7 @@ func TestRecomputeSummary_PreservesMetadata(t *testing.T) {
 
 func TestCloneWithFilter_NilReport(t *testing.T) {
 	var r *Report
-	if got := r.CloneWithFilter([]Severity{SeverityHigh}); got != nil {
+	if got := r.CloneWithFilter([]policy.Severity{policy.SeverityHigh}); got != nil {
 		t.Fatal("nil report CloneWithFilter should return nil")
 	}
 }
@@ -90,7 +92,7 @@ func TestCloneWithFilter_NilReport(t *testing.T) {
 func TestCloneWithFilter_EmptyAllowed(t *testing.T) {
 	r := &Report{
 		Findings: []Finding{
-			{ID: "A", Severity: SeverityCritical},
+			{ID: "A", Severity: policy.SeverityCritical},
 		},
 	}
 	clone := r.CloneWithFilter(nil)
@@ -101,8 +103,8 @@ func TestCloneWithFilter_EmptyAllowed(t *testing.T) {
 
 func TestCloneWithFilter_Independence(t *testing.T) {
 	r := &Report{
-		Summary:  Summary{FailOn: SeverityHigh},
-		Findings: []Finding{{ID: "A", Severity: SeverityCritical, Status: StatusFail}},
+		Summary:  Summary{FailOn: policy.SeverityHigh},
+		Findings: []Finding{{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail}},
 		EvidenceIndex: []EvidenceRef{
 			{ID: "ev1", Path: "/tmp/ev1"},
 		},
@@ -110,7 +112,7 @@ func TestCloneWithFilter_Independence(t *testing.T) {
 			{Framework: "SOC2", ControlID: "CC6.1"},
 		},
 	}
-	clone := r.CloneWithFilter([]Severity{SeverityCritical})
+	clone := r.CloneWithFilter([]policy.Severity{policy.SeverityCritical})
 	// Mutate clone's evidence index.
 	clone.EvidenceIndex[0].Path = "/mutated"
 	if r.EvidenceIndex[0].Path == "/mutated" {
@@ -122,12 +124,12 @@ func TestNormalize(t *testing.T) {
 	r := &Report{
 		SchemaVersion: kernel.Schema("securityaudit.v1"),
 		GeneratedAt:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-		Summary:       Summary{FailOn: SeverityHigh},
+		Summary:       Summary{FailOn: policy.SeverityHigh},
 		Findings: []Finding{
-			{ID: "B", Severity: SeverityMedium, Status: StatusWarn,
+			{ID: "B", Severity: policy.SeverityMedium, Status: outcome.Warn,
 				EvidenceRefs: []string{"ev2", "ev1"},
 				ControlRefs:  []ControlRef{{Framework: "SOC2", ControlID: "CC6.2"}, {Framework: "SOC2", ControlID: "CC6.1"}}},
-			{ID: "A", Severity: SeverityCritical, Status: StatusFail},
+			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
 		},
 		EvidenceIndex: []EvidenceRef{
 			{ID: "ev2"}, {ID: "ev1"},

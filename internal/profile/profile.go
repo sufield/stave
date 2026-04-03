@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/compliance/compound"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // ProfileControl binds an control to a profile with optional overrides.
@@ -19,7 +20,7 @@ type ProfileControl struct {
 	ControlID string
 
 	// SeverityOverride replaces the control's default severity when non-nil.
-	SeverityOverride *compliance.Severity
+	SeverityOverride *policy.Severity
 
 	// ComplianceRef is the regulatory citation (e.g. "§164.312(b)").
 	ComplianceRef string
@@ -45,14 +46,14 @@ type ProfileResult struct {
 
 // ProfileReport is the output of evaluating a profile against a snapshot.
 type ProfileReport struct {
-	ProfileID        string                      `json:"profile_id"`
-	ProfileName      string                      `json:"profile_name"`
-	Pass             bool                        `json:"pass"`
-	CompoundFindings []compound.CompoundFinding  `json:"compound_findings,omitempty"`
-	Acknowledged     []AcknowledgedEntry         `json:"acknowledged,omitempty"`
-	Results          []ProfileResult             `json:"results"`
-	Counts           map[compliance.Severity]int `json:"counts"`
-	FailCounts       map[compliance.Severity]int `json:"fail_counts"`
+	ProfileID        string                     `json:"profile_id"`
+	ProfileName      string                     `json:"profile_name"`
+	Pass             bool                       `json:"pass"`
+	CompoundFindings []compound.CompoundFinding `json:"compound_findings,omitempty"`
+	Acknowledged     []AcknowledgedEntry        `json:"acknowledged,omitempty"`
+	Results          []ProfileResult            `json:"results"`
+	Counts           map[policy.Severity]int    `json:"counts"`
+	FailCounts       map[policy.Severity]int    `json:"fail_counts"`
 }
 
 // AcknowledgedEntry surfaces an exception in the report.
@@ -117,7 +118,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 		if results[i].Pass != results[j].Pass {
 			return !results[i].Pass // failures first
 		}
-		return results[j].Severity.Less(results[i].Severity)
+		return results[i].Severity > results[j].Severity
 	})
 
 	// Detect compound risks from the raw control results.
@@ -127,8 +128,8 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 	}
 	compoundFindings := compound.Detect(compound.DefaultRules(), rawResults)
 
-	counts := make(map[compliance.Severity]int)
-	failCounts := make(map[compliance.Severity]int)
+	counts := make(map[policy.Severity]int)
+	failCounts := make(map[policy.Severity]int)
 	allPass := true
 	for _, r := range results {
 		counts[r.Severity]++

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -50,7 +51,7 @@ func TestAccess001(t *testing.T) {
 		name     string
 		snap     asset.Snapshot
 		wantPass bool
-		wantSev  Severity
+		wantSev  policy.Severity
 	}{
 		{
 			name:     "all BPA enabled",
@@ -61,19 +62,19 @@ func TestAccess001(t *testing.T) {
 			name:     "BPA partially enabled",
 			snap:     snap(s3Bucket("bucket-a", bpaProps(true, false, true, false))),
 			wantPass: false,
-			wantSev:  Critical,
+			wantSev:  policy.SeverityCritical,
 		},
 		{
 			name:     "BPA all disabled",
 			snap:     snap(s3Bucket("bucket-a", bpaProps(false, false, false, false))),
 			wantPass: false,
-			wantSev:  Critical,
+			wantSev:  policy.SeverityCritical,
 		},
 		{
 			name:     "no BPA properties at all",
 			snap:     snap(s3Bucket("bucket-a", map[string]any{})),
 			wantPass: false,
-			wantSev:  Critical,
+			wantSev:  policy.SeverityCritical,
 		},
 		{
 			name: "account-level BPA active, bucket-level missing",
@@ -85,7 +86,7 @@ func TestAccess001(t *testing.T) {
 				},
 			})),
 			wantPass: false,
-			wantSev:  Low,
+			wantSev:  policy.SeverityLow,
 		},
 		{
 			name:     "empty snapshot",

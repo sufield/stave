@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func fail(id string) compliance.Result {
-	return compliance.Result{ControlID: id, Pass: false, Severity: compliance.High}
+	return compliance.Result{ControlID: id, Pass: false, Severity: policy.SeverityHigh}
 }
 
 func pass(id string) compliance.Result {
-	return compliance.Result{ControlID: id, Pass: true, Severity: compliance.High}
+	return compliance.Result{ControlID: id, Pass: true, Severity: policy.SeverityHigh}
 }
 
 func TestCompound001(t *testing.T) {

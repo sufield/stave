@@ -36,9 +36,9 @@ func TestEvaluate_HIPAA_Integration(t *testing.T) {
 		t.Error("output should contain profile name")
 	}
 
-	// Must contain CRITICAL section with failures.
-	if !strings.Contains(output, "CRITICAL") {
-		t.Error("output should contain CRITICAL section")
+	// Must contain critical section with failures.
+	if !strings.Contains(output, "critical") {
+		t.Error("output should contain critical section")
 	}
 
 	// Must have at least two CRITICAL failures.

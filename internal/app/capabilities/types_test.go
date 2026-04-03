@@ -108,11 +108,11 @@ func TestCapabilities_SecurityAuditSupport(t *testing.T) {
 		t.Fatalf("security_audit.formats missing %q", missing)
 	}
 	wantFailOn := map[string]bool{
-		"CRITICAL": true,
-		"HIGH":     true,
-		"MEDIUM":   true,
-		"LOW":      true,
-		"NONE":     true,
+		"critical": true,
+		"high":     true,
+		"medium":   true,
+		"low":      true,
+		"none":     true,
 	}
 	for _, level := range caps.SecurityAudit.FailOnLevels {
 		delete(wantFailOn, level)

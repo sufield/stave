@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/compliance/compound"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -44,7 +44,7 @@ func writeCompoundRisks(w io.Writer, findings []compound.CompoundFinding) {
 }
 
 func writeFindingsBySeverity(w io.Writer, results []profile.ProfileResult) {
-	for _, sev := range []compliance.Severity{compliance.Critical, compliance.High, compliance.Medium, compliance.Low} {
+	for _, sev := range []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow} {
 		group := filterBySeverity(results, sev)
 		if len(group) == 0 {
 			continue
@@ -98,7 +98,7 @@ func writeAcknowledged(w io.Writer, acknowledged []profile.AcknowledgedEntry) {
 func writeSummary(w io.Writer, report profile.ProfileReport) {
 	fmt.Fprintln(w, "── Summary ──")
 	fmt.Fprintln(w)
-	for _, sev := range []compliance.Severity{compliance.Critical, compliance.High, compliance.Medium, compliance.Low} {
+	for _, sev := range []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow} {
 		total := report.Counts[sev]
 		failed := report.FailCounts[sev]
 		if total == 0 {
@@ -118,7 +118,7 @@ func passLabel(pass bool) string {
 	return "FAIL"
 }
 
-func filterBySeverity(results []profile.ProfileResult, sev compliance.Severity) []profile.ProfileResult {
+func filterBySeverity(results []profile.ProfileResult, sev policy.Severity) []profile.ProfileResult {
 	var out []profile.ProfileResult
 	for _, r := range results {
 		if r.Severity == sev {

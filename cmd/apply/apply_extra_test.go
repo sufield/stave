@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/ports"
 	validation "github.com/sufield/stave/internal/core/schemaval"
 )
@@ -244,7 +245,7 @@ func TestPrintReadinessIssue(t *testing.T) {
 	var buf bytes.Buffer
 	issue := validation.Issue{
 		Name:    "controls",
-		Status:  validation.StatusPass,
+		Status:  outcome.Pass,
 		Message: "found 5 controls",
 		Fix:     "run validate",
 		Command: "stave validate",
@@ -269,7 +270,7 @@ func TestPrintReadinessIssue_NoFixOrCommand(t *testing.T) {
 	var buf bytes.Buffer
 	issue := validation.Issue{
 		Name:    "obs",
-		Status:  validation.StatusPass,
+		Status:  outcome.Pass,
 		Message: "found 3 snapshots",
 	}
 	err := printReadinessIssue(&buf, issue)
