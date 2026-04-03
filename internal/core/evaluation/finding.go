@@ -2,6 +2,8 @@ package evaluation
 
 import (
 	"cmp"
+	"encoding/json"
+	"fmt"
 	"io"
 	"slices"
 	"time"
@@ -46,11 +48,27 @@ func SortFindings(fs []Finding) {
 
 // RemediationPlan describes deterministic, machine-readable remediation guidance.
 type RemediationPlan struct {
-	ID             policy.RemediationPlanID `json:"id"`
-	Target         RemediationTarget        `json:"target"`
-	Preconditions  []string                 `json:"preconditions,omitempty"`
-	Actions        []RemediationAction      `json:"actions,omitempty"`
-	ExpectedEffect string                   `json:"expected_effect,omitempty"`
+	ID                 policy.RemediationPlanID `json:"id"`
+	ActionsFingerprint string                   `json:"-"` // set by ComputeFingerprint, not serialized
+	Target             RemediationTarget        `json:"target"`
+	Preconditions      []string                 `json:"preconditions,omitempty"`
+	Actions            []RemediationAction      `json:"actions,omitempty"`
+	ExpectedEffect     string                   `json:"expected_effect,omitempty"`
+}
+
+// ComputeFingerprint sets ActionsFingerprint to a stable hash of the plan's actions.
+// Call this before grouping so BuildGroups can operate without infrastructure ports.
+func (p *RemediationPlan) ComputeFingerprint(h ports.Digester) {
+	if len(p.Actions) == 0 {
+		p.ActionsFingerprint = ""
+		return
+	}
+	parts := make([]string, len(p.Actions))
+	for i, a := range p.Actions {
+		parts[i] = a.CanonicalKey()
+	}
+	slices.Sort(parts)
+	p.ActionsFingerprint = string(h.Digest(parts, '\n'))[:16]
 }
 
 type RemediationTarget struct {
@@ -70,6 +88,12 @@ type RemediationAction struct {
 	ActionType RemediationActionType `json:"action_type"`
 	Path       predicate.FieldPath   `json:"path"`
 	Value      any                   `json:"value,omitempty"`
+}
+
+// CanonicalKey returns a deterministic string representation for hashing.
+func (a RemediationAction) CanonicalKey() string {
+	val, _ := json.Marshal(a.Value)
+	return fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path.String(), val)
 }
 
 // FindingDetail aggregates all context needed to understand and remediate

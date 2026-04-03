@@ -27,7 +27,8 @@ func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) *safe
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
 	h := crypto.NewHasher()
-	out.RemediationGroups = remediation.BuildGroups(h, h, findings)
+	remediation.PrepareForGrouping(h, h, findings)
+	out.RemediationGroups = remediation.BuildGroups(findings)
 	return out
 }
 

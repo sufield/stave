@@ -2,7 +2,6 @@ package remediation
 
 import (
 	"cmp"
-	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -33,9 +32,23 @@ func GroupStats(groups []Group) (totalFindings int, hasMulti bool) {
 	return totalFindings, hasMulti
 }
 
-// BuildGroups aggregates findings into groups based on their remediation intent.
-func BuildGroups(h ports.Digester, gen ports.IdentityGenerator, findings []Finding) []Group {
-	acc := newAccumulator(h, gen)
+// PrepareForGrouping computes action fingerprints and stable group IDs
+// on each finding's plan. Call before BuildGroups.
+func PrepareForGrouping(h ports.Digester, gen ports.IdentityGenerator, findings []Finding) {
+	for i := range findings {
+		p := findings[i].RemediationPlan
+		if p == nil {
+			continue
+		}
+		p.ComputeFingerprint(h)
+		p.ID = policy.StableRemediationGroupID(gen, findings[i].AssetID, p.ActionsFingerprint)
+	}
+}
+
+// BuildGroups aggregates findings into groups by asset + action fingerprint.
+// Findings must have been prepared via PrepareForGrouping first.
+func BuildGroups(findings []Finding) []Group {
+	acc := newAccumulator()
 	for _, f := range findings {
 		if f.RemediationPlan != nil {
 			acc.add(f)
@@ -53,23 +66,18 @@ type groupEntry struct {
 }
 
 type accumulator struct {
-	hasher ports.Digester
-	idGen  ports.IdentityGenerator
 	groups map[string]*groupEntry
 	order  []string // Tracks insertion order for semi-determinism before final sort
 }
 
-func newAccumulator(h ports.Digester, gen ports.IdentityGenerator) *accumulator {
+func newAccumulator() *accumulator {
 	return &accumulator{
-		hasher: h,
-		idGen:  gen,
 		groups: make(map[string]*groupEntry),
 	}
 }
 
 func (a *accumulator) add(f Finding) {
-	hash := canonicalActionsHash(a.hasher, f.RemediationPlan.Actions)
-	key := fmt.Sprintf("%s:%s", f.AssetID, hash)
+	key := fmt.Sprintf("%s:%s", f.AssetID, f.RemediationPlan.ActionsFingerprint)
 
 	if g, ok := a.groups[key]; ok {
 		g.controlSet[f.ControlID] = struct{}{}
@@ -77,9 +85,7 @@ func (a *accumulator) add(f Finding) {
 		return
 	}
 
-	// Clone the plan to avoid side-effects on the original finding
 	plan := *f.RemediationPlan
-	plan.ID = policy.StableRemediationGroupID(a.idGen, f.AssetID, hash)
 
 	a.groups[key] = &groupEntry{
 		assetID:         f.AssetID,
@@ -125,25 +131,4 @@ func (a *accumulator) toSortedGroups() []Group {
 	})
 
 	return result
-}
-
-// canonicalActionsHash generates a stable, short digest for a set of actions.
-func canonicalActionsHash(h ports.Digester, actions []evaluation.RemediationAction) string {
-	if len(actions) == 0 {
-		return ""
-	}
-
-	// 1. Serialize actions into a sortable string format
-	parts := make([]string, 0, len(actions))
-	for _, a := range actions {
-		// JSON ensures stable key ordering for map-based values
-		val, _ := json.Marshal(a.Value)
-		parts = append(parts, fmt.Sprintf("%s|%s|%s", a.ActionType, a.Path.String(), val))
-	}
-
-	// 2. Sort to ensure order-independence
-	slices.Sort(parts)
-
-	// 3. Hash the canonical representation (first 16 hex chars for brevity + collision resistance)
-	return string(h.Digest(parts, '\n'))[:16]
 }

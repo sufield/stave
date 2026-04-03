@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "evaluation",
   "run": {
-    "tool_version": "0.0.3",
+    "tool_version": "dev",
     "offline": true,
     "now": "2026-01-14T00:00:00Z",
     "max_unsafe": "0h",
@@ -55,7 +55,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-9e8f12062bb8281e",
+        "id": "fix-1ff6eec097e7d9ab",
         "target": {
           "asset_id": "private-test-bucket",
           "asset_type": "aws_s3_bucket"
@@ -128,7 +128,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-9e8f12062bb8281e",
+        "id": "fix-1ff6eec097e7d9ab",
         "target": {
           "asset_id": "private-test-bucket",
           "asset_type": "aws_s3_bucket"
@@ -201,7 +201,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-9e8f12062bb8281e",
+        "id": "fix-1ff6eec097e7d9ab",
         "target": {
           "asset_id": "private-test-bucket",
           "asset_type": "aws_s3_bucket"
@@ -274,7 +274,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-9e8f12062bb8281e",
+        "id": "fix-1ff6eec097e7d9ab",
         "target": {
           "asset_id": "private-test-bucket",
           "asset_type": "aws_s3_bucket"

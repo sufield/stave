@@ -139,7 +139,8 @@ func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation
 // one group has more than one contributing control.
 func (w *FindingWriter) writeRemediationGroups(d *drawer, enriched []remediation.Finding) {
 	h := crypto.NewHasher()
-	groups := remediation.BuildGroups(h, h, enriched)
+	remediation.PrepareForGrouping(h, h, enriched)
+	groups := remediation.BuildGroups(enriched)
 	totalFindings, hasMulti := remediation.GroupStats(groups)
 	if len(groups) == 0 || !hasMulti {
 		return
