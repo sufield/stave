@@ -30,7 +30,7 @@ func TestDomainLayerBoundary(t *testing.T) {
 		"/cmd/",
 	}
 
-	// Engine packages moved from pkg/alpha/domain/ to internal/core/.
+	// Engine packages live under internal/core/.
 	engineDirs := []string{
 		"kernel", "asset", "evaluation", "controldef", "predicate",
 		"ports", "maps", "retention", "snapplan", "schemaval",

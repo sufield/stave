@@ -24,10 +24,10 @@ Meanwhile, the same risk computation runs correctly in `enforce gate`,
 
 | Concept | Location | Status |
 |---------|----------|--------|
-| `SafetyStatus` (SAFE/BORDERLINE/UNSAFE) | `pkg/alpha/domain/evaluation/result.go:50-68` | Defined, BORDERLINE unreachable in apply |
-| `ClassifySafetyStatus(violations, upcoming)` | `pkg/alpha/domain/evaluation/result.go:59` | Called with `nil` for upcoming |
-| `risk.ComputeItems(ThresholdRequest)` | `pkg/alpha/domain/evaluation/risk/upcoming.go:165` | Used in gate/prune/hygiene, NOT in apply |
-| `ThresholdItems.HasAnyRisk()` | `pkg/alpha/domain/evaluation/risk/upcoming.go` | Never reached from apply |
+| `SafetyStatus` (SAFE/BORDERLINE/UNSAFE) | `internal/core/evaluation/result.go:50-68` | Defined, BORDERLINE unreachable in apply |
+| `ClassifySafetyStatus(violations, upcoming)` | `internal/core/evaluation/result.go:59` | Called with `nil` for upcoming |
+| `risk.ComputeItems(ThresholdRequest)` | `internal/core/evaluation/risk/upcoming.go:165` | Used in gate/prune/hygiene, NOT in apply |
+| `ThresholdItems.HasAnyRisk()` | `internal/core/evaluation/risk/upcoming.go` | Never reached from apply |
 | Guidance/response mapping | `cmd/apply/guidance.go`, `cmd/apply/output.go` | Command-specific, not reusable |
 | Control pack hash | `engine/runner.go:225` via `computePackHash()` | Populated correctly in RunInfo |
 | Extensions/metadata | `evaluation/metadata.go:49` | Git, paths, pack info — already in output |
@@ -81,7 +81,7 @@ separate classification call.
 
 ### Changes
 
-**`pkg/alpha/domain/evaluation/result.go`** — Add fields to `Result`:
+**`internal/core/evaluation/result.go`** — Add fields to `Result`:
 
 ```go
 type Result struct {
@@ -91,7 +91,7 @@ type Result struct {
 }
 ```
 
-**`pkg/alpha/domain/evaluation/engine/runner.go`** — Compute risk and
+**`internal/core/evaluation/engine/runner.go`** — Compute risk and
 status inside `Evaluate()`, populate the new fields in `buildResult()`.
 
 **`internal/app/eval/evaluation_run.go`** — Read status from result
@@ -126,7 +126,7 @@ across commands, not duplicated in `cmd/apply/guidance.go`.
 
 ### Changes
 
-**New file: `pkg/alpha/domain/evaluation/response.go`**
+**New file: `internal/core/evaluation/response.go`**
 
 ```go
 type ResponseAction struct {
@@ -175,7 +175,7 @@ Feeds doc generation and IDE tooling.
 
 ### Changes
 
-**New file: `pkg/alpha/domain/policy/catalog.go`**
+**New file: `internal/core/controldef/catalog.go`**
 
 ```go
 type Catalog struct {
@@ -256,8 +256,8 @@ All phases are complete.
 - Renaming "control" to "invariant". The terminology migration to
   "control" was completed March 2026 (GLOSSARY.md). "Invariant" is the
   conceptual term for external audiences only.
-- New `pkg/alpha/domain/safety/` package hierarchy. The existing domain
-  lives at `pkg/alpha/domain/` and the evaluation subsystem is already
+- New `internal/core/safety/` package hierarchy. The existing domain
+  lives at `internal/core/` and the evaluation subsystem is already
   well-structured there. Adding a parallel hierarchy creates confusion.
 - Schema version bump to `out.v0.2`. New fields are additive and
   backward-compatible within `out.v0.1`.

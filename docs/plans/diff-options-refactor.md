@@ -16,7 +16,7 @@ type (`OutputKind`, `Schema`, `ControlType`, `Severity`) uses an
 `parseChangeTypes` silently rejects it.
 
 **Change**: Add `IsValid()` to `asset.ChangeType` in
-`pkg/alpha/domain/asset/delta.go`:
+`internal/core/asset/delta.go`:
 
 ```go
 // IsValid reports whether ct is a recognized change type.
@@ -81,7 +81,7 @@ Sanitizer was moved to the `runner` in the prior commit
 
 | File | Change |
 |------|--------|
-| `pkg/alpha/domain/asset/delta.go` | Add `IsValid()` method on `ChangeType` |
+| `internal/core/asset/delta.go` | Add `IsValid()` method on `ChangeType` |
 | `cmd/enforce/diff/options.go` | Replace switch with `ct.IsValid()` |
 
 ## Acceptance

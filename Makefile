@@ -272,11 +272,11 @@ imports-check:
 
 ## fuzz: Run Go native fuzz tests (30s per target)
 fuzz: sync-schemas sync-controls
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./pkg/alpha/domain/s3/policy/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/s3/policy/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/adapters/observations/
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/contracts/validator/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./pkg/alpha/domain/predicate/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./pkg/alpha/domain/kernel/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/predicate/
+	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/core/kernel/
 
 ## help: Show this help
 help:

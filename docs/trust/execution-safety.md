@@ -13,7 +13,7 @@ Stave never executes user-supplied code. This document enumerates the guarantees
 
 All air-gapped runtime restrictions are centralized in one file:
 
-- [`pkg/alpha/domain/kernel/airgap.go`](../../pkg/alpha/domain/kernel/airgap.go)
+- [`internal/core/kernel/airgap.go`](../../internal/core/kernel/airgap.go)
 
 This file defines:
 
@@ -56,7 +56,7 @@ Control files are data (YAML), not code. They are:
 - Combined only via `any` (OR) and `all` (AND) logic
 - Not extensible — no custom functions, no user-defined operators, no hooks
 
-The operator set is defined in [`pkg/alpha/domain/predicate/operators.go`](../../pkg/alpha/domain/predicate/operators.go) and tested against drift.
+The operator set is defined in [`internal/core/predicate/operators.go`](../../internal/core/predicate/operators.go) and tested against drift.
 
 ## Enforcement artifacts are templates, not executables
 
@@ -77,6 +77,6 @@ The following packages are not imported by the runtime binary (`cmd/stave`):
 | `net/rpc` | No network I/O |
 | `crypto/tls` | No TLS connections |
 
-This is enforced by a CI test (`TestNoBannedImportsInRuntime` in `pkg/alpha/domain/`).
+This is enforced by a CI test (`TestNoBannedImportsInRuntime` in `internal/core/`).
 
 Schema identifiers use `urn:stave:schema:` (not HTTP URLs) to avoid false positives. This is enforced by `TestNoHTTPSchemaIdentifiers`.

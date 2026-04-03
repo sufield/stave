@@ -9,7 +9,7 @@ description: "Reference for Stave evaluation output contract out.v0.1."
 
 This page documents the evaluation output contract used by Stave. Every `apply` and `apply --profile aws-s3` command produces JSON conforming to this structure.
 
-The output contract is defined by Go struct types in `pkg/alpha/domain/evaluation/` and `internal/adapters/output/dto/types.go`, with runtime validation against embedded JSON Schema (`schemas/output/v0.1/output.schema.json`) before emission. The schema version constant is `SchemaOutput` in `pkg/alpha/domain/kernel/schema.go`.
+The output contract is defined by Go struct types in `internal/core/evaluation/` and `internal/adapters/output/dto/types.go`, with runtime validation against embedded JSON Schema (`schemas/output/v0.1/output.schema.json`) before emission. The schema version constant is `SchemaOutput` in `internal/core/kernel/schema.go`.
 
 ## Top-Level Structure
 
@@ -266,12 +266,12 @@ When `--explain-all` is enabled, each row represents one `(control, asset)` eval
 This reference is derived from the runtime output implementation:
 
 - [`internal/adapters/output/dto/types.go`](../../internal/adapters/output/dto/types.go) — `ResultDTO`, output DTO structs
-- [`pkg/alpha/domain/kernel/schema.go`](../../pkg/alpha/domain/kernel/schema.go) — `SchemaOutput` constant
-- [`pkg/alpha/domain/evaluation/result.go`](../../pkg/alpha/domain/evaluation/result.go) — `SkippedControl`, `Summary`, `Decision`, `ConfidenceLevel`
-- [`pkg/alpha/domain/evaluation/run_info.go`](../../pkg/alpha/domain/evaluation/run_info.go) — `RunInfo`, `InputHashes`
-- [`pkg/alpha/domain/evaluation/finding.go`](../../pkg/alpha/domain/evaluation/finding.go) — `Finding`, `FindingDetail`
-- [`pkg/alpha/domain/evaluation/evidence.go`](../../pkg/alpha/domain/evaluation/evidence.go) — `Evidence`, `SourceEvidence`
-- [`pkg/alpha/domain/policy/misconfiguration.go`](../../pkg/alpha/domain/policy/misconfiguration.go) — `Misconfiguration`
-- [`pkg/alpha/domain/policy/exemption.go`](../../pkg/alpha/domain/policy/exemption.go) — `SkippedResource`
+- [`internal/core/kernel/schema.go`](../../internal/core/kernel/schema.go) — `SchemaOutput` constant
+- [`internal/core/evaluation/result.go`](../../internal/core/evaluation/result.go) — `SkippedControl`, `Summary`, `Decision`, `ConfidenceLevel`
+- [`internal/core/evaluation/run_info.go`](../../internal/core/evaluation/run_info.go) — `RunInfo`, `InputHashes`
+- [`internal/core/evaluation/finding.go`](../../internal/core/evaluation/finding.go) — `Finding`, `FindingDetail`
+- [`internal/core/evaluation/evidence.go`](../../internal/core/evaluation/evidence.go) — `Evidence`, `SourceEvidence`
+- [`internal/core/controldef/misconfiguration.go`](../../internal/core/controldef/misconfiguration.go) — `Misconfiguration`
+- [`internal/core/controldef/exemption.go`](../../internal/core/controldef/exemption.go) — `SkippedResource`
 - [`internal/adapters/output/dto/types.go`](../../internal/adapters/output/dto/types.go) — `SkippedAssetDTO`
 - [`testdata/e2e/**/output.json`](../../testdata/e2e/) — Real output instances
