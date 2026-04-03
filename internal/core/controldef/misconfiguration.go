@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
@@ -66,13 +65,6 @@ func (m Misconfiguration) DisplayProperty() string {
 // IsMissing reports whether the violation was caused by the absence of a required field.
 func (m Misconfiguration) IsMissing() bool {
 	return m.Operator == predicate.OpMissing || m.ActualValue == nil
-}
-
-// Sanitized returns a copy of the misconfiguration with the actual value redacted.
-// This is used for generating public-facing reports where sensitive data must be hidden.
-func (m Misconfiguration) Sanitized() Misconfiguration {
-	m.ActualValue = kernel.Redacted
-	return m
 }
 
 // String returns a human-readable explanation of the violation.
