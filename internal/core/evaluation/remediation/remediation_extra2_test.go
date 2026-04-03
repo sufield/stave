@@ -10,12 +10,18 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
+// buildGroupsWithPrep is a test helper that calls PrepareForGrouping then BuildGroups.
+func buildGroupsWithPrep(findings []Finding) []Group {
+	PrepareForGrouping(stubDigester{}, stubIDGen{}, findings)
+	return BuildGroups(findings)
+}
+
 // ---------------------------------------------------------------------------
 // BuildGroups
 // ---------------------------------------------------------------------------
 
 func TestBuildGroups_Empty(t *testing.T) {
-	groups := BuildGroups(stubDigester{}, stubIDGen{}, nil)
+	groups := buildGroupsWithPrep(nil)
 	if groups != nil {
 		t.Fatalf("expected nil, got %v", groups)
 	}
@@ -42,7 +48,7 @@ func TestBuildGroups_SingleFinding(t *testing.T) {
 		},
 	}
 
-	groups := BuildGroups(stubDigester{}, stubIDGen{}, findings)
+	groups := buildGroupsWithPrep(findings)
 	if len(groups) != 1 {
 		t.Fatalf("expected 1 group, got %d", len(groups))
 	}
@@ -85,7 +91,7 @@ func TestBuildGroups_MultipleFindingsSameAsset(t *testing.T) {
 		},
 	}
 
-	groups := BuildGroups(stubDigester{}, stubIDGen{}, findings)
+	groups := buildGroupsWithPrep(findings)
 	if len(groups) != 1 {
 		t.Fatalf("expected 1 group, got %d", len(groups))
 	}
@@ -108,7 +114,7 @@ func TestBuildGroups_NilPlanSkipped(t *testing.T) {
 		},
 	}
 
-	groups := BuildGroups(stubDigester{}, stubIDGen{}, findings)
+	groups := buildGroupsWithPrep(findings)
 	if groups != nil {
 		t.Fatalf("expected nil (no plans), got %v", groups)
 	}
@@ -246,23 +252,26 @@ func TestBuildFindingDetail_NoControlProvider(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// canonicalActionsHash
+// ComputeFingerprint
 // ---------------------------------------------------------------------------
 
-func TestCanonicalActionsHash_Empty(t *testing.T) {
-	hash := canonicalActionsHash(stubDigester{}, nil)
-	if hash != "" {
-		t.Fatalf("empty actions should return empty hash, got %q", hash)
+func TestComputeFingerprint_Empty(t *testing.T) {
+	plan := &evaluation.RemediationPlan{}
+	plan.ComputeFingerprint(stubDigester{})
+	if plan.ActionsFingerprint != "" {
+		t.Fatalf("empty actions should return empty fingerprint, got %q", plan.ActionsFingerprint)
 	}
 }
 
-func TestCanonicalActionsHash_NonEmpty(t *testing.T) {
-	actions := []evaluation.RemediationAction{
-		{ActionType: evaluation.ActionSet, Path: predicate.NewFieldPath("public_access"), Value: false},
+func TestComputeFingerprint_NonEmpty(t *testing.T) {
+	plan := &evaluation.RemediationPlan{
+		Actions: []evaluation.RemediationAction{
+			{ActionType: evaluation.ActionSet, Path: predicate.NewFieldPath("public_access"), Value: false},
+		},
 	}
-	hash := canonicalActionsHash(stubDigester{}, actions)
-	if hash == "" {
-		t.Fatal("expected non-empty hash")
+	plan.ComputeFingerprint(stubDigester{})
+	if plan.ActionsFingerprint == "" {
+		t.Fatal("expected non-empty fingerprint")
 	}
 }
 

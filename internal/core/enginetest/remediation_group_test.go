@@ -10,6 +10,12 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
+func buildGroupsWithPrep(findings []remediation.Finding) []remediation.Group {
+	h := testDigester()
+	remediation.PrepareForGrouping(h, testIDGen(), findings)
+	return remediation.BuildGroups(findings)
+}
+
 func TestBuildRemediationGroups(t *testing.T) {
 	makeActions := func(paths ...string) []evaluation.RemediationAction {
 		actions := make([]evaluation.RemediationAction, len(paths))
@@ -136,7 +142,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			groups := remediation.BuildGroups(testDigester(), testIDGen(), tt.findings)
+			groups := buildGroupsWithPrep(tt.findings)
 
 			if tt.wantNil {
 				if groups != nil {
@@ -182,7 +188,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 		},
 	}
 
-	groups := remediation.BuildGroups(testDigester(), testIDGen(), findings)
+	groups := buildGroupsWithPrep(findings)
 	if len(groups) != 2 {
 		t.Fatalf("expected 2 groups, got %d", len(groups))
 	}
@@ -217,7 +223,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 		},
 	}
 
-	groups := remediation.BuildGroups(testDigester(), testIDGen(), findings)
+	groups := buildGroupsWithPrep(findings)
 	if len(groups) != 1 {
 		t.Fatalf("expected 1 group, got %d", len(groups))
 	}
@@ -256,7 +262,7 @@ func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 		},
 	}
 
-	groups := remediation.BuildGroups(testDigester(), testIDGen(), findings)
+	groups := buildGroupsWithPrep(findings)
 	if len(groups) != 1 {
 		t.Fatalf("expected 1 group, got %d", len(groups))
 	}
@@ -267,7 +273,7 @@ func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
 	}
 
 	// Running again should produce the same ID
-	groups2 := remediation.BuildGroups(testDigester(), testIDGen(), findings)
+	groups2 := buildGroupsWithPrep(findings)
 	if groups[0].RemediationPlan.ID != groups2[0].RemediationPlan.ID {
 		t.Errorf("group fix plan ID not stable: %s vs %s", groups[0].RemediationPlan.ID, groups2[0].RemediationPlan.ID)
 	}
