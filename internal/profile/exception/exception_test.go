@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -92,9 +93,9 @@ exceptions:
 
 func TestApplyExceptions_ValidException(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: compliance.Critical, Finding: "BPA disabled"}},
-		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: true, Severity: compliance.High}},
-		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: compliance.Critical}},
+		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
+		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: true, Severity: policy.SeverityHigh}},
+		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
 	}
 
 	excs := []ExceptionConfig{{
@@ -124,9 +125,9 @@ func TestApplyExceptions_ValidException(t *testing.T) {
 
 func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: compliance.Critical, Finding: "BPA disabled"}},
-		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: false, Severity: compliance.High}},
-		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: compliance.Critical}},
+		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
+		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: false, Severity: policy.SeverityHigh}},
+		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
 	}
 
 	excs := []ExceptionConfig{{

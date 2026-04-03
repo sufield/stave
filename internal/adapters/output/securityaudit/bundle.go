@@ -138,7 +138,7 @@ func writeRunManifest(opts BundleWriteOpts, path string, now time.Time, bundleDi
 		MainReport:        mainReport,
 		BundleDir:         bundleDir,
 		StaveVersion:      report.StaveVersion,
-		FailOn:            string(report.Summary.FailOn),
+		FailOn:            report.Summary.FailOn.String(),
 		Gated:             report.Summary.Gated,
 		GatedFindings:     report.Summary.GatedFindingCount,
 		Files:             files,

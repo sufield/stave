@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // controlsEncryption checks that server-side encryption is enabled on every S3 bucket.
@@ -16,7 +17,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("CONTROLS.001"),
 			WithDescription("Server-side encryption (SSE) must be enabled"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(2)(iv)"),
 		),

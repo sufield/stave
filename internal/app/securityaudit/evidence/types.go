@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
@@ -145,7 +146,7 @@ type BinaryInspectionSnapshot struct {
 	SignatureAttempt  bool
 	SignatureVerified bool
 	SignatureDetail   string
-	HardeningLevel    securityaudit.Status
+	HardeningLevel    outcome.Status
 	HardeningDetail   string
 }
 

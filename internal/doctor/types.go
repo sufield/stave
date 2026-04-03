@@ -1,27 +1,22 @@
 package doctor
 
-import "fmt"
+import (
+	"fmt"
 
-// Status represents the health level of a diagnostic check.
-type Status string
-
-const (
-	StatusPass Status = "PASS"
-	StatusWarn Status = "WARN"
-	StatusFail Status = "FAIL"
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 // Check represents the result of an environmental or system diagnostic.
 type Check struct {
-	Name    string `json:"name"`
-	Status  Status `json:"status"`
-	Message string `json:"message"`
-	Fix     string `json:"fix,omitempty"`
+	Name    string         `json:"name"`
+	Status  outcome.Status `json:"status"`
+	Message string         `json:"message"`
+	Fix     string         `json:"fix,omitempty"`
 }
 
 // IsFail reports whether the check represents a system failure.
 func (c Check) IsFail() bool {
-	return c.Status == StatusFail
+	return c.Status == outcome.Fail
 }
 
 // String implements fmt.Stringer for easy logging of check results.

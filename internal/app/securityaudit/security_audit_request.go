@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
-	"github.com/sufield/stave/internal/core/securityaudit"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // Request defines all inputs for a full enterprise audit run.
@@ -16,14 +16,14 @@ type Request struct {
 	Cwd                  string
 	BinaryPath           string
 	OutDir               string
-	SeverityFilter       []securityaudit.Severity
+	SeverityFilter       []policy.Severity
 	SBOMFormat           evidence.SBOMFormat
 	ComplianceFrameworks []string
 	VulnSource           evidence.VulnSource
 	LiveVulnCheck        bool
 	ReleaseBundleDir     string
 	PrivacyEnabled       bool
-	FailOn               securityaudit.Severity
+	FailOn               policy.Severity
 	RequireOffline       bool
 }
 
@@ -56,7 +56,7 @@ func WithOutDir(dir string) RequestOption {
 }
 
 // WithSeverityFilter sets which severity levels to include.
-func WithSeverityFilter(levels []securityaudit.Severity) RequestOption {
+func WithSeverityFilter(levels []policy.Severity) RequestOption {
 	return func(r *Request) { r.SeverityFilter = levels }
 }
 
@@ -91,7 +91,7 @@ func WithPrivacy(enabled bool) RequestOption {
 }
 
 // WithFailOn sets the severity threshold for gating (default: HIGH).
-func WithFailOn(sev securityaudit.Severity) RequestOption {
+func WithFailOn(sev policy.Severity) RequestOption {
 	return func(r *Request) { r.FailOn = sev }
 }
 
@@ -107,10 +107,10 @@ func NewRequest(opts ...RequestOption) Request {
 		Cwd:          ".",
 		SBOMFormat:   evidence.SBOMFormatSPDX,
 		VulnSource:   evidence.VulnSourceHybrid,
-		FailOn:       securityaudit.SeverityHigh,
-		SeverityFilter: []securityaudit.Severity{
-			securityaudit.SeverityCritical,
-			securityaudit.SeverityHigh,
+		FailOn:       policy.SeverityHigh,
+		SeverityFilter: []policy.Severity{
+			policy.SeverityCritical,
+			policy.SeverityHigh,
 		},
 	}
 	for _, opt := range opts {
@@ -135,13 +135,13 @@ func validateRequest(req Request) error {
 		return fmt.Errorf("invalid vulnerability source %q (use hybrid, local, or ci)", req.VulnSource)
 	}
 	for _, sev := range req.SeverityFilter {
-		if _, err := securityaudit.ParseSeverity(string(sev)); err != nil {
-			return fmt.Errorf("invalid severity filter value %q: %w", sev, err)
+		if !sev.IsValid() && sev != policy.SeverityNone {
+			return fmt.Errorf("invalid severity filter value %q", sev.String())
 		}
 	}
-	if req.FailOn != securityaudit.SeverityNone {
-		if _, err := securityaudit.ParseSeverity(string(req.FailOn)); err != nil {
-			return fmt.Errorf("invalid fail-on value %q: %w", req.FailOn, err)
+	if req.FailOn != policy.SeverityNone {
+		if !req.FailOn.IsValid() {
+			return fmt.Errorf("invalid fail-on value %q", req.FailOn.String())
 		}
 	}
 	return nil

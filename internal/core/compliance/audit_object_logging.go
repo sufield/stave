@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 type auditObjectLogging struct {
@@ -15,11 +16,11 @@ func init() {
 		Definition: NewDefinition(
 			WithID("AUDIT.002"),
 			WithDescription("CloudTrail S3 object-level data event logging must be enabled"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.312(b)"),
 			WithProfileRationale("hipaa", "Object-level logging for PHI access audit trail"),
-			WithProfileSeverityOverride("hipaa", High),
+			WithProfileSeverityOverride("hipaa", policy.SeverityHigh),
 		),
 	})
 }

@@ -9,8 +9,9 @@ import (
 	"testing"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+
 	"github.com/sufield/stave/internal/cli/ui"
-	domainsecurityaudit "github.com/sufield/stave/internal/core/securityaudit"
 )
 
 func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
@@ -20,17 +21,22 @@ func TestRunSecurityAudit_WritesBundleAndReport(t *testing.T) {
 
 	runner := &auditRunner{}
 	err := runner.Run(context.Background(), auditConfig{
-		Format:         "json",
-		OutPath:        outPath,
-		OutDir:         outDir,
-		SeverityFilter: []domainsecurityaudit.Severity{"CRITICAL", "HIGH", "MEDIUM", "LOW"},
-		SBOMFormat:     "spdx",
-		VulnSource:     "hybrid",
-		FailOn:         "NONE",
-		Now:            time.Now().UTC(),
-		Force:          true,
-		Quiet:          true,
-		Stdout:         io.Discard,
+		Format:  "json",
+		OutPath: outPath,
+		OutDir:  outDir,
+		SeverityFilter: []policy.Severity{
+			policy.SeverityCritical,
+			policy.SeverityHigh,
+			policy.SeverityMedium,
+			policy.SeverityLow,
+		},
+		SBOMFormat: "spdx",
+		VulnSource: "hybrid",
+		FailOn:     policy.SeverityNone,
+		Now:        time.Now().UTC(),
+		Force:      true,
+		Quiet:      true,
+		Stdout:     io.Discard,
 	})
 	if err != nil {
 		t.Fatalf("audit.Run returned error: %v", err)
@@ -58,17 +64,22 @@ func TestRunSecurityAudit_FailOnHighReturnsSentinel(t *testing.T) {
 
 	runner := &auditRunner{}
 	err := runner.Run(context.Background(), auditConfig{
-		Format:         "json",
-		OutPath:        filepath.Join(tmp, "security-report.json"),
-		OutDir:         filepath.Join(tmp, "bundle"),
-		SeverityFilter: []domainsecurityaudit.Severity{"CRITICAL", "HIGH", "MEDIUM", "LOW"},
-		SBOMFormat:     "spdx",
-		VulnSource:     "hybrid",
-		FailOn:         "HIGH",
-		Now:            time.Now().UTC(),
-		Force:          true,
-		Quiet:          true,
-		Stdout:         io.Discard,
+		Format:  "json",
+		OutPath: filepath.Join(tmp, "security-report.json"),
+		OutDir:  filepath.Join(tmp, "bundle"),
+		SeverityFilter: []policy.Severity{
+			policy.SeverityCritical,
+			policy.SeverityHigh,
+			policy.SeverityMedium,
+			policy.SeverityLow,
+		},
+		SBOMFormat: "spdx",
+		VulnSource: "hybrid",
+		FailOn:     policy.SeverityHigh,
+		Now:        time.Now().UTC(),
+		Force:      true,
+		Quiet:      true,
+		Stdout:     io.Discard,
 	})
 	if !errors.Is(err, ui.ErrSecurityAuditFindings) {
 		t.Fatalf("expected ErrSecurityAuditFindings, got %v", err)

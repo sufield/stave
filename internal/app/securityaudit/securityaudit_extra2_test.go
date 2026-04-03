@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -65,8 +67,8 @@ func TestAssembleReport_Basic(t *testing.T) {
 		{
 			ID:       securityaudit.CheckBuildInfoPresent,
 			Pillar:   securityaudit.PillarSupplyChain,
-			Status:   securityaudit.StatusPass,
-			Severity: securityaudit.SeverityHigh,
+			Status:   outcome.Pass,
+			Severity: policy.SeverityHigh,
 		},
 	}
 	ev := evidence.Bundle{
@@ -88,21 +90,21 @@ func TestAssembleReport_Basic(t *testing.T) {
 }
 
 func TestValidateRequest_BadSeverityFilter(t *testing.T) {
-	req := NewRequest(WithSeverityFilter([]securityaudit.Severity{"bogus"}))
+	req := NewRequest(WithSeverityFilter([]policy.Severity{policy.Severity(99)}))
 	if err := validateRequest(req); err == nil {
 		t.Fatal("expected error for bad severity filter")
 	}
 }
 
 func TestValidateRequest_BadFailOn(t *testing.T) {
-	req := NewRequest(WithFailOn("bogus"))
+	req := NewRequest(WithFailOn(policy.Severity(99)))
 	if err := validateRequest(req); err == nil {
 		t.Fatal("expected error for bad fail-on")
 	}
 }
 
 func TestValidateRequest_NoneFailOn(t *testing.T) {
-	req := NewRequest(WithFailOn(securityaudit.SeverityNone))
+	req := NewRequest(WithFailOn(policy.SeverityNone))
 	if err := validateRequest(req); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

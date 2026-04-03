@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -13,8 +15,8 @@ func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) secur
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckBuildHardening,
 			Pillar:         securityaudit.PillarControls,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityMedium,
 			Title:          "Build hardening metadata unavailable",
 			Details:        err.Error(),
 			AuditorHint:    "Could not inspect build hardening metadata.",
@@ -24,7 +26,7 @@ func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) secur
 	status := in.HardeningLevel
 	title := "Build hardening checks passed"
 	reco := "Retain reproducible build flags in release pipeline."
-	if status == securityaudit.StatusWarn {
+	if status == outcome.Warn {
 		title = "Build hardening requires review"
 		reco = "Enable hardened build flags (e.g., PIE where supported)."
 	}
@@ -32,7 +34,7 @@ func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) secur
 		ID:             securityaudit.CheckBuildHardening,
 		Pillar:         securityaudit.PillarControls,
 		Status:         status,
-		Severity:       securityaudit.SeverityMedium,
+		Severity:       policy.SeverityMedium,
 		Title:          title,
 		Details:        in.HardeningDetail,
 		AuditorHint:    "Hardening metadata is best-effort and OS/build-mode dependent.",
@@ -43,9 +45,9 @@ func findingFromHardening(in evidence.BinaryInspectionSnapshot, err error) secur
 var auditLoggingSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckAuditLogging,
 	Pillar:   securityaudit.PillarControls,
-	Severity: securityaudit.SeverityMedium,
+	Severity: policy.SeverityMedium,
 
-	ErrStatus: securityaudit.StatusWarn,
+	ErrStatus: outcome.Warn,
 	ErrTitle:  "Audit logging check incomplete",
 	ErrHint:   "Could not verify local audit logging support.",
 	ErrReco:   "Verify logging configuration and rerun security-audit.",
@@ -55,7 +57,7 @@ var auditLoggingSpec = findingSpec{ //nolint:gosec // audit template, not a cred
 	PassHint:    "Operational events can be captured locally for review.",
 	PassReco:    "Route logs to protected storage for audit retention.",
 
-	FailStatus:  securityaudit.StatusWarn,
+	FailStatus:  outcome.Warn,
 	FailTitle:   "Audit logging not configured",
 	FailDetails: "Logging subsystem exists but no explicit audit-log policy was detected.",
 	FailHint:    "Tamper-evident log posture depends on deployment configuration.",
@@ -71,8 +73,8 @@ func findingFromCrosswalk(in evidence.CrosswalkSnapshot, err error) securityaudi
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckControlMapping,
 			Pillar:         securityaudit.PillarControls,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityMedium,
 			Title:          "Control mapping resolution failed",
 			Details:        err.Error(),
 			AuditorHint:    "Compliance mappings are required for evidence traceability.",
@@ -83,8 +85,8 @@ func findingFromCrosswalk(in evidence.CrosswalkSnapshot, err error) securityaudi
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckControlMapping,
 			Pillar:         securityaudit.PillarControls,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityMedium,
 			Title:          "Control mapping has gaps",
 			Details:        fmt.Sprintf("%d checks have no control mapping after filtering.", len(in.MissingChecks)),
 			AuditorHint:    "Incomplete crosswalk weakens auditability across frameworks.",
@@ -94,8 +96,8 @@ func findingFromCrosswalk(in evidence.CrosswalkSnapshot, err error) securityaudi
 	return securityaudit.Finding{
 		ID:             securityaudit.CheckControlMapping,
 		Pillar:         securityaudit.PillarControls,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityMedium,
+		Status:         outcome.Pass,
+		Severity:       policy.SeverityMedium,
 		Title:          "Control mapping resolved",
 		Details:        "All security-audit checks are mapped to selected compliance frameworks.",
 		AuditorHint:    "Crosswalk evidence is complete for selected frameworks.",
@@ -107,8 +109,8 @@ func findingFromCrosswalkMissing(in evidence.CrosswalkSnapshot) securityaudit.Fi
 	return securityaudit.Finding{
 		ID:             securityaudit.CheckControlMapMissing,
 		Pillar:         securityaudit.PillarControls,
-		Status:         securityaudit.StatusWarn,
-		Severity:       securityaudit.SeverityMedium,
+		Status:         outcome.Warn,
+		Severity:       policy.SeverityMedium,
 		Title:          "Crosswalk entries missing",
 		Details:        strings.Join(in.MissingChecks, ", "),
 		AuditorHint:    "These checks are not mapped to selected frameworks.",

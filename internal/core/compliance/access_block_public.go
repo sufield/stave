@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // accessBlockPublic checks that all four S3 Block Public Access flags are enabled
@@ -18,7 +19,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("ACCESS.001"),
 			WithDescription("Block Public Access must be fully enabled at bucket level"),
-			WithSeverity(Critical),
+			WithSeverity(policy.SeverityCritical),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(1)"),
 			WithProfileRationale("hipaa", "Access control — Block Public Access prevents public exposure of ePHI"),
@@ -43,7 +44,7 @@ func (inv *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
 			return Result{
 				Pass:           false,
 				ControlID:      inv.ID(),
-				Severity:       Low,
+				Severity:       policy.SeverityLow,
 				Finding:        fmt.Sprintf("Bucket %s: bucket-level BPA not fully enabled. Account-level BPA active — bucket-level is defense in depth", a.ID),
 				Remediation:    "Enable all four Block Public Access flags on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
 				ComplianceRefs: inv.ComplianceRefs(),

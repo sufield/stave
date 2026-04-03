@@ -1,17 +1,22 @@
 package securityaudit
 
-import "testing"
+import (
+	"testing"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
+)
 
 func TestReportFilterBySeverity(t *testing.T) {
 	report := Report{
-		Summary: Summary{FailOn: SeverityHigh},
+		Summary: Summary{FailOn: policy.SeverityHigh},
 		Findings: []Finding{
-			{ID: "A", Severity: SeverityCritical, Status: StatusFail},
-			{ID: "B", Severity: SeverityMedium, Status: StatusWarn},
-			{ID: "C", Severity: SeverityLow, Status: StatusPass},
+			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
+			{ID: "B", Severity: policy.SeverityMedium, Status: outcome.Warn},
+			{ID: "C", Severity: policy.SeverityLow, Status: outcome.Pass},
 		},
 	}
-	filtered := report.CloneWithFilter([]Severity{SeverityCritical, SeverityHigh})
+	filtered := report.CloneWithFilter([]policy.Severity{policy.SeverityCritical, policy.SeverityHigh})
 	if len(filtered.Findings) != 1 {
 		t.Fatalf("expected 1 finding after filter, got %d", len(filtered.Findings))
 	}
@@ -21,16 +26,16 @@ func TestReportFilterBySeverity(t *testing.T) {
 }
 
 func TestSeverityGte(t *testing.T) {
-	if !SeverityCritical.Gte(SeverityHigh) {
+	if !policy.SeverityCritical.Gte(policy.SeverityHigh) {
 		t.Fatal("critical should be at or above high")
 	}
-	if SeverityLow.Gte(SeverityHigh) {
+	if policy.SeverityLow.Gte(policy.SeverityHigh) {
 		t.Fatal("low should not be at or above high")
 	}
-	if !SeverityCritical.Gte(SeverityNone) {
+	if !policy.SeverityCritical.Gte(policy.SeverityNone) {
 		t.Fatal("every severity should be >= none")
 	}
-	if !SeverityNone.Gte(SeverityNone) {
+	if !policy.SeverityNone.Gte(policy.SeverityNone) {
 		t.Fatal("none should be >= none")
 	}
 }

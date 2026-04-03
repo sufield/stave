@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/core/securityaudit"
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 // ---------------------------------------------------------------------------
@@ -244,7 +244,7 @@ func TestEvaluateBuildHardening_PIE(t *testing.T) {
 	status, _ := evaluateBuildHardening(BuildInfoSnapshot{
 		Settings: map[string]string{"-buildmode": "pie"},
 	})
-	if status != securityaudit.StatusPass {
+	if status != outcome.Pass {
 		t.Fatalf("status = %v, want pass", status)
 	}
 }
@@ -253,7 +253,7 @@ func TestEvaluateBuildHardening_GOFLAGS(t *testing.T) {
 	status, _ := evaluateBuildHardening(BuildInfoSnapshot{
 		Settings: map[string]string{"GOFLAGS": "-buildmode=pie -trimpath"},
 	})
-	if status != securityaudit.StatusPass {
+	if status != outcome.Pass {
 		t.Fatalf("status = %v, want pass", status)
 	}
 }
@@ -262,14 +262,14 @@ func TestEvaluateBuildHardening_NoPIE(t *testing.T) {
 	status, _ := evaluateBuildHardening(BuildInfoSnapshot{
 		Settings: map[string]string{"-buildmode": "exe"},
 	})
-	if status != securityaudit.StatusWarn {
+	if status != outcome.Warn {
 		t.Fatalf("status = %v, want warn", status)
 	}
 }
 
 func TestEvaluateBuildHardening_NoSettings(t *testing.T) {
 	status, _ := evaluateBuildHardening(BuildInfoSnapshot{})
-	if status != securityaudit.StatusWarn {
+	if status != outcome.Warn {
 		t.Fatalf("status = %v, want warn", status)
 	}
 }

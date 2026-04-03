@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // controlsDenyNonTls checks that the bucket policy contains a Deny statement
@@ -17,7 +18,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("CONTROLS.004"),
 			WithDescription("Bucket policy must deny non-TLS access (aws:SecureTransport=false). Note: S3 API endpoints enforce TLS 1.2 by default since February 2024, but HTTP endpoint access via website hosting remains possible"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(e)(2)(ii)"),
 			WithProfileRationale("hipaa", "Encryption in transit — deny non-TLS access"),

@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -133,21 +134,21 @@ func TestHIPAAProfile_SeverityCounts(t *testing.T) {
 	}
 
 	// All implemented invariants should fail on the fixture.
-	if report.FailCounts[compliance.Critical] == 0 {
+	if report.FailCounts[policy.SeverityCritical] == 0 {
 		t.Error("expected CRITICAL failures")
 	}
-	if report.FailCounts[compliance.High] == 0 {
+	if report.FailCounts[policy.SeverityHigh] == 0 {
 		t.Error("expected HIGH failures")
 	}
-	if report.FailCounts[compliance.Medium] == 0 {
+	if report.FailCounts[policy.SeverityMedium] == 0 {
 		t.Error("expected MEDIUM failures")
 	}
 
 	t.Logf("Fail counts: CRITICAL=%d HIGH=%d MEDIUM=%d LOW=%d",
-		report.FailCounts[compliance.Critical],
-		report.FailCounts[compliance.High],
-		report.FailCounts[compliance.Medium],
-		report.FailCounts[compliance.Low])
+		report.FailCounts[policy.SeverityCritical],
+		report.FailCounts[policy.SeverityHigh],
+		report.FailCounts[policy.SeverityMedium],
+		report.FailCounts[policy.SeverityLow])
 }
 
 func TestHIPAAProfile_ComplianceRefs(t *testing.T) {
@@ -202,16 +203,15 @@ func TestHIPAAProfile_ResultsSortedBySeverity(t *testing.T) {
 	}
 
 	// Within failures, severity should be descending.
-	lastRank := 999
+	lastRank := policy.Severity(999)
 	for _, r := range report.Results {
 		if r.Pass {
 			break
 		}
-		rank := r.Severity.Rank()
-		if rank > lastRank {
+		if r.Severity > lastRank {
 			t.Errorf("severity %s appeared after lower severity — not sorted descending", r.Severity)
 		}
-		lastRank = rank
+		lastRank = r.Severity
 	}
 }
 

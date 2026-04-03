@@ -1,18 +1,22 @@
 package schemaval
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/internal/core/outcome"
+)
 
 func TestStatus_String(t *testing.T) {
 	tests := []struct {
-		s    Status
+		s    outcome.Status
 		want string
 	}{
-		{StatusPass, "PASS"},
-		{StatusWarn, "WARN"},
-		{StatusFail, "FAIL"},
+		{outcome.Pass, "PASS"},
+		{outcome.Warn, "WARN"},
+		{outcome.Fail, "FAIL"},
 	}
 	for _, tt := range tests {
-		t.Run(string(tt.s), func(t *testing.T) {
+		t.Run(tt.s.String(), func(t *testing.T) {
 			if got := tt.s.String(); got != tt.want {
 				t.Fatalf("String()=%q, want %q", got, tt.want)
 			}
@@ -54,7 +58,7 @@ func TestReport_RecordIssue_Fail(t *testing.T) {
 	r := NewReport("", "")
 	r.RecordIssue(Issue{
 		Name:    "schema check",
-		Status:  StatusFail,
+		Status:  outcome.Fail,
 		Message: "schema invalid",
 		Fix:     "fix the schema",
 	})
@@ -81,7 +85,7 @@ func TestReport_RecordIssue_Warn(t *testing.T) {
 	r := NewReport("", "")
 	r.RecordIssue(Issue{
 		Name:   "minor warning",
-		Status: StatusWarn,
+		Status: outcome.Warn,
 	})
 
 	if !r.Ready {
@@ -99,7 +103,7 @@ func TestReport_RecordIssue_Pass(t *testing.T) {
 	r := NewReport("", "")
 	r.RecordIssue(Issue{
 		Name:   "all good",
-		Status: StatusPass,
+		Status: outcome.Pass,
 	})
 
 	if !r.Ready {
@@ -115,7 +119,7 @@ func TestReport_RecordIssue_Pass(t *testing.T) {
 
 func TestReport_Issues_ReturnsDefensiveCopy(t *testing.T) {
 	r := NewReport("", "")
-	r.RecordIssue(Issue{Name: "original", Status: StatusPass})
+	r.RecordIssue(Issue{Name: "original", Status: outcome.Pass})
 
 	issues := r.Issues()
 	issues[0].Name = "mutated"
@@ -128,10 +132,10 @@ func TestReport_Issues_ReturnsDefensiveCopy(t *testing.T) {
 
 func TestReport_MultipleIssues(t *testing.T) {
 	r := NewReport("/c", "/o")
-	r.RecordIssue(Issue{Name: "fail1", Status: StatusFail})
-	r.RecordIssue(Issue{Name: "warn1", Status: StatusWarn})
-	r.RecordIssue(Issue{Name: "fail2", Status: StatusFail})
-	r.RecordIssue(Issue{Name: "pass1", Status: StatusPass})
+	r.RecordIssue(Issue{Name: "fail1", Status: outcome.Fail})
+	r.RecordIssue(Issue{Name: "warn1", Status: outcome.Warn})
+	r.RecordIssue(Issue{Name: "fail2", Status: outcome.Fail})
+	r.RecordIssue(Issue{Name: "pass1", Status: outcome.Pass})
 
 	if r.Ready {
 		t.Fatal("should not be ready with fail issues")

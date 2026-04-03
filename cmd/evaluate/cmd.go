@@ -15,6 +15,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/profile"
 	"github.com/sufield/stave/internal/profile/exception"
@@ -116,7 +117,7 @@ func run(w io.Writer, opts *options) error {
 			})
 		}
 		// Recount after exceptions.
-		report.FailCounts = make(map[compliance.Severity]int)
+		report.FailCounts = make(map[policy.Severity]int)
 		report.Pass = true
 		for _, r := range report.Results {
 			if !r.Pass {
@@ -150,8 +151,8 @@ func run(w io.Writer, opts *options) error {
 	}
 
 	// Exit code based on CRITICAL failures.
-	if report.FailCounts[compliance.Critical] > 0 {
-		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL invariant(s) failed", report.FailCounts[compliance.Critical])}
+	if report.FailCounts[policy.SeverityCritical] > 0 {
+		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL invariant(s) failed", report.FailCounts[policy.SeverityCritical])}
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // governanceAclDisabled checks that ACLs are disabled via BucketOwnerEnforced ownership.
@@ -16,7 +17,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("GOVERNANCE.001"),
 			WithDescription("Bucket ACLs must be disabled (ownership_controls == BucketOwnerEnforced)"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(1)"),
 			WithProfileRationale("hipaa", "ACL control — disable legacy ACL grants"),

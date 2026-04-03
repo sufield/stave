@@ -1,6 +1,24 @@
 package securityaudit
 
-import "github.com/sufield/stave/internal/core/securityaudit"
+// Finding builder pattern: findingSpec + buildFinding() handle the standard
+// 3-path pattern (err → warn/fail, pass → pass, else → fail).
+//
+// Complex builders are kept explicit — they have extra parameters, multiple
+// branches beyond 3-path, or per-finding dynamic logic that doesn't fit
+// the spec pattern:
+//   - findingFromHardening (multi-branch with evaluateBuildHardening)
+//   - findingFromCrosswalk (complex branching with coverage analysis)
+//   - findingFromCrosswalkMissing (different signature, no error param)
+//   - findingFromPrivacyMode (extra Request param for conditional logic)
+//   - findingFromOffline (extra Request param for mode detection)
+//   - findingFromVuln (4-path: err, !available, findings>0, pass)
+//   - findingFromSignature (4-path with SignatureAttempt/Verified flags)
+
+import (
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
+	"github.com/sufield/stave/internal/core/securityaudit"
+)
 
 // findingSpec defines the static metadata for a check that follows the
 // standard 3-path pattern: error → warn/fail, condition true → pass,
@@ -8,10 +26,10 @@ import "github.com/sufield/stave/internal/core/securityaudit"
 type findingSpec struct {
 	ID       securityaudit.CheckID
 	Pillar   securityaudit.Pillar
-	Severity securityaudit.Severity
+	Severity policy.Severity
 
 	// Error path (err != nil).
-	ErrStatus securityaudit.Status // typically StatusWarn
+	ErrStatus outcome.Status // typically StatusWarn
 	ErrTitle  string
 	ErrHint   string
 	ErrReco   string
@@ -23,7 +41,7 @@ type findingSpec struct {
 	PassReco    string
 
 	// Fail path (condition not met).
-	FailStatus  securityaudit.Status // typically StatusFail
+	FailStatus  outcome.Status // typically StatusFail
 	FailTitle   string
 	FailDetails string
 	FailHint    string
@@ -51,7 +69,7 @@ func buildFinding(spec findingSpec, err error, pass bool, passDetails, failDetai
 	}
 
 	if pass {
-		base.Status = securityaudit.StatusPass
+		base.Status = outcome.Pass
 		base.Title = spec.PassTitle
 		base.Details = passDetails
 		if base.Details == "" {

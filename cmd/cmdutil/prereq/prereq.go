@@ -6,8 +6,7 @@ import (
 )
 
 // DoctorPrereqChecks runs system health checks and transforms them into domain-level
-// prerequisite checks. It requires explicit paths to ensure testability and
-// environment awareness.
+// prerequisite checks.
 func DoctorPrereqChecks(cwd, binaryPath string) []validation.Issue {
 	doctorChecks, _ := doctor.Run(&doctor.Context{
 		Cwd:        cwd,
@@ -18,25 +17,10 @@ func DoctorPrereqChecks(cwd, binaryPath string) []validation.Issue {
 	for _, c := range doctorChecks {
 		out = append(out, validation.Issue{
 			Name:    c.Name,
-			Status:  mapDoctorStatus(c.Status),
+			Status:  c.Status, // same type — no mapping needed
 			Message: c.Message,
 			Fix:     c.Fix,
 		})
 	}
 	return out
-}
-
-// mapDoctorStatus performs a clean translation between the system-health layer
-// and the domain-validation layer.
-func mapDoctorStatus(s doctor.Status) validation.Status {
-	switch s {
-	case doctor.StatusFail:
-		return validation.StatusFail
-	case doctor.StatusWarn:
-		return validation.StatusWarn
-	case doctor.StatusPass:
-		return validation.StatusPass
-	default:
-		return validation.StatusFail
-	}
 }

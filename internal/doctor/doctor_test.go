@@ -6,13 +6,15 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
 	reg := NewRegistry(
-		func(*Context) Check { return Check{Name: "ok", Status: StatusPass} },
+		func(*Context) Check { return Check{Name: "ok", Status: outcome.Pass} },
 		func(*Context) Check { return Check{} }, // skipped
-		func(*Context) Check { return Check{Name: "bad", Status: StatusFail} },
+		func(*Context) Check { return Check{Name: "bad", Status: outcome.Fail} },
 	)
 
 	checks, ok := reg.Run(nil)
@@ -44,7 +46,7 @@ func TestCheckClipboard(t *testing.T) {
 			return "", os.ErrNotExist
 		},
 	})
-	if pass.Status != StatusPass {
+	if pass.Status != outcome.Pass {
 		t.Fatalf("linux clipboard pass status = %s", pass.Status)
 	}
 
@@ -54,12 +56,12 @@ func TestCheckClipboard(t *testing.T) {
 			return "", os.ErrNotExist
 		},
 	})
-	if warn.Status != StatusWarn || !strings.Contains(warn.Message, "xclip") {
+	if warn.Status != outcome.Warn || !strings.Contains(warn.Message, "xclip") {
 		t.Fatalf("linux clipboard warn = %+v", warn)
 	}
 
 	other := checkClipboard(&Context{Goos: "freebsd"})
-	if other.Status != StatusWarn {
+	if other.Status != outcome.Warn {
 		t.Fatalf("other os clipboard status = %s, want WARN", other.Status)
 	}
 }
@@ -74,12 +76,12 @@ func TestCheckOfflineProxyEnv(t *testing.T) {
 		},
 	}
 	warn := checkOfflineProxyEnv(ctx)
-	if warn.Status != StatusWarn || !strings.Contains(warn.Message, "HTTP_PROXY") {
+	if warn.Status != outcome.Warn || !strings.Contains(warn.Message, "HTTP_PROXY") {
 		t.Fatalf("proxy warning = %+v", warn)
 	}
 
 	pass := checkOfflineProxyEnv(&Context{GetenvFn: func(string) string { return "" }})
-	if pass.Status != StatusPass {
+	if pass.Status != outcome.Pass {
 		t.Fatalf("expected pass when proxy env unset, got %+v", pass)
 	}
 }
@@ -203,7 +205,7 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 		Goarch:       "arm64",
 		BinaryPath:   "/usr/local/bin/stave",
 	})
-	if version.Status != StatusPass || !strings.Contains(version.Message, "stave_version=v1.2.3") {
+	if version.Status != outcome.Pass || !strings.Contains(version.Message, "stave_version=v1.2.3") {
 		t.Fatalf("version check = %+v", version)
 	}
 
@@ -215,7 +217,7 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 			return ""
 		},
 	})
-	if shell.Name != "shell" || shell.Status != StatusPass {
+	if shell.Name != "shell" || shell.Status != outcome.Pass {
 		t.Fatalf("shell check = %+v", shell)
 	}
 
@@ -227,18 +229,18 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 			return ""
 		},
 	})
-	if ci.Name != "ci-environment" || ci.Status != StatusPass {
+	if ci.Name != "ci-environment" || ci.Status != outcome.Pass {
 		t.Fatalf("ci check = %+v", ci)
 	}
 
 	_ = checkContainer(&Context{}) // environment-dependent; ensure call path is exercised
 
 	writable := checkWorkspaceWritable(&Context{Cwd: t.TempDir()})
-	if writable.Status != StatusPass {
+	if writable.Status != outcome.Pass {
 		t.Fatalf("workspace writable check = %+v", writable)
 	}
 	notWritable := checkWorkspaceWritable(&Context{Cwd: filepath.Join(t.TempDir(), "missing")})
-	if notWritable.Status != StatusFail {
+	if notWritable.Status != outcome.Fail {
 		t.Fatalf("workspace fail check = %+v", notWritable)
 	}
 
@@ -249,35 +251,35 @@ func TestCoreChecksAndBinaryChecks(t *testing.T) {
 		LookPathFn: func(string) (string, error) { return "", os.ErrNotExist },
 	}
 
-	if c := checkGit(passCtx); c.Status != StatusPass {
+	if c := checkGit(passCtx); c.Status != outcome.Pass {
 		t.Fatalf("git pass = %+v", c)
 	}
-	if c := checkGit(warnCtx); c.Status != StatusWarn {
+	if c := checkGit(warnCtx); c.Status != outcome.Warn {
 		t.Fatalf("git warn = %+v", c)
 	}
-	if c := checkAWS(passCtx); c.Status != StatusPass {
+	if c := checkAWS(passCtx); c.Status != outcome.Pass {
 		t.Fatalf("aws pass = %+v", c)
 	}
-	if c := checkAWS(warnCtx); c.Status != StatusWarn {
+	if c := checkAWS(warnCtx); c.Status != outcome.Warn {
 		t.Fatalf("aws warn = %+v", c)
 	}
-	if c := checkJQ(passCtx); c.Status != StatusPass {
+	if c := checkJQ(passCtx); c.Status != outcome.Pass {
 		t.Fatalf("jq pass = %+v", c)
 	}
-	if c := checkJQ(warnCtx); c.Status != StatusWarn {
+	if c := checkJQ(warnCtx); c.Status != outcome.Warn {
 		t.Fatalf("jq warn = %+v", c)
 	}
-	if c := checkGraphviz(passCtx); c.Status != StatusPass {
+	if c := checkGraphviz(passCtx); c.Status != outcome.Pass {
 		t.Fatalf("graphviz pass = %+v", c)
 	}
-	if c := checkGraphviz(warnCtx); c.Status != StatusWarn {
+	if c := checkGraphviz(warnCtx); c.Status != outcome.Warn {
 		t.Fatalf("graphviz warn = %+v", c)
 	}
 }
 
 func TestCheckBinary_EmptyBinaryName(t *testing.T) {
 	c := checkBinary(&Context{}, BinaryRequest{Name: "empty-bin"})
-	if c.Status != StatusFail {
+	if c.Status != outcome.Fail {
 		t.Fatalf("expected FAIL for empty binary name, got %+v", c)
 	}
 }

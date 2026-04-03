@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 // Check Names
@@ -35,35 +36,35 @@ func checkVersionInfo(ctx *Context) Check {
 
 	return Check{
 		Name:    CheckVersionInfo,
-		Status:  StatusPass,
+		Status:  outcome.Pass,
 		Message: sb.String(),
 	}
 }
 
 func checkOSVersion(ctx *Context) Check {
 	if ver := detectOSVersion(ctx.Goos); ver != "" {
-		return Check{Name: CheckOSVersion, Status: StatusPass, Message: ver}
+		return Check{Name: CheckOSVersion, Status: outcome.Pass, Message: ver}
 	}
 	return Check{}
 }
 
 func checkShell(ctx *Context) Check {
 	if shell := ctx.GetenvFn("SHELL"); shell != "" {
-		return Check{Name: CheckShell, Status: StatusPass, Message: shell}
+		return Check{Name: CheckShell, Status: outcome.Pass, Message: shell}
 	}
 	return Check{}
 }
 
 func checkCI(ctx *Context) Check {
 	if ci := detectCI(ctx.GetenvFn); ci != "" {
-		return Check{Name: CheckCIEnv, Status: StatusPass, Message: ci}
+		return Check{Name: CheckCIEnv, Status: outcome.Pass, Message: ci}
 	}
 	return Check{}
 }
 
 func checkContainer(_ *Context) Check {
 	if container := detectContainer(); container != "" {
-		return Check{Name: CheckContainer, Status: StatusPass, Message: container}
+		return Check{Name: CheckContainer, Status: outcome.Pass, Message: container}
 	}
 	return Check{}
 }
@@ -72,14 +73,14 @@ func checkWorkspaceWritable(ctx *Context) Check {
 	if err := IsDirectoryWritable(ctx.Cwd); err != nil {
 		return Check{
 			Name:    CheckWorkspaceWritable,
-			Status:  StatusFail,
+			Status:  outcome.Fail,
 			Message: fmt.Sprintf("cannot write in %s: %v", ctx.Cwd, err),
 			Fix:     "run in a writable directory or adjust permissions (chmod/chown)",
 		}
 	}
 	return Check{
 		Name:    CheckWorkspaceWritable,
-		Status:  StatusPass,
+		Status:  outcome.Pass,
 		Message: fmt.Sprintf("directory is writable: %s", ctx.Cwd),
 	}
 }
@@ -137,16 +138,16 @@ func checkClipboard(ctx *Context) Check {
 		if errX != nil && errW != nil {
 			return Check{
 				Name:    CheckClipboard,
-				Status:  StatusWarn,
+				Status:  outcome.Warn,
 				Message: "neither xclip nor wl-copy found",
 				Fix:     "install xclip or wl-clipboard for clipboard piping",
 			}
 		}
-		return Check{Name: CheckClipboard, Status: StatusPass, Message: "clipboard tool available"}
+		return Check{Name: CheckClipboard, Status: outcome.Pass, Message: "clipboard tool available"}
 	default:
 		return Check{
 			Name:    CheckClipboard,
-			Status:  StatusWarn,
+			Status:  outcome.Warn,
 			Message: fmt.Sprintf("clipboard check not supported on %s", ctx.Goos),
 		}
 	}
@@ -163,7 +164,7 @@ func checkOfflineProxyEnv(ctx *Context) Check {
 	if len(found) > 0 {
 		return Check{
 			Name:    CheckProxyEnv,
-			Status:  StatusWarn,
+			Status:  outcome.Warn,
 			Message: fmt.Sprintf("active proxy variables detected: %s", strings.Join(found, ", ")),
 			Fix:     "unset proxy variables for strict air-gap compliance, or use --require-offline",
 		}
@@ -171,7 +172,7 @@ func checkOfflineProxyEnv(ctx *Context) Check {
 
 	return Check{
 		Name:    CheckProxyEnv,
-		Status:  StatusPass,
+		Status:  outcome.Pass,
 		Message: "no proxy environment variables detected",
 	}
 }

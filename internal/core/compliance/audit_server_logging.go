@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // auditServerLogging checks that server access logging is enabled with a target bucket.
@@ -16,7 +17,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("AUDIT.001"),
 			WithDescription("Server access logging must be enabled with a configured target bucket"),
-			WithSeverity(Critical),
+			WithSeverity(policy.SeverityCritical),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(b)"),
 			WithProfileRationale("hipaa", "All PHI access must be logged — logs cannot be obtained retroactively"),

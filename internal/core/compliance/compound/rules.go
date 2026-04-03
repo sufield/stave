@@ -1,6 +1,9 @@
 package compound
 
-import "github.com/sufield/stave/internal/core/compliance"
+import (
+	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
+)
 
 // DefaultRules returns the built-in compound risk detection rules.
 func DefaultRules() []CompoundRule {
@@ -15,7 +18,7 @@ func DefaultRules() []CompoundRule {
 func compound001() CompoundRule {
 	return CompoundRule{
 		ID:         "COMPOUND.001",
-		Severity:   compliance.Critical,
+		Severity:   policy.SeverityCritical,
 		TriggerIDs: []string{"ACCESS.001", "ACCESS.002"},
 		Message: "Public access with overly broad IAM permissions — the S3 + IAM " +
 			"lateral movement pattern present in the majority of documented AWS breaches. " +
@@ -30,7 +33,7 @@ func compound001() CompoundRule {
 func compound002() CompoundRule {
 	return CompoundRule{
 		ID:         "COMPOUND.002",
-		Severity:   compliance.High,
+		Severity:   policy.SeverityHigh,
 		TriggerIDs: []string{"ACCESS.001", "CONTROLS.001"},
 		Message: "Encryption at rest is configured but the bucket is publicly " +
 			"accessible. Encryption provides no confidentiality benefit while " +
@@ -45,7 +48,7 @@ func compound002() CompoundRule {
 func compound003() CompoundRule {
 	return CompoundRule{
 		ID:         "COMPOUND.003",
-		Severity:   compliance.High,
+		Severity:   policy.SeverityHigh,
 		TriggerIDs: []string{"ACCESS.003", "ACCESS.006"},
 		Message: "VPC endpoint restricts this bucket but the endpoint policy " +
 			"does not restrict which bucket ARNs are reachable. This creates a " +

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/compliance/compound"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -44,11 +44,11 @@ func TestPassLabel(t *testing.T) {
 
 func TestFilterBySeverity(t *testing.T) {
 	results := fixtureReport().Results
-	critical := filterBySeverity(results, compliance.Critical)
+	critical := filterBySeverity(results, policy.SeverityCritical)
 	if len(critical) != 2 {
 		t.Fatalf("expected 2 critical, got %d", len(critical))
 	}
-	low := filterBySeverity(results, compliance.Low)
+	low := filterBySeverity(results, policy.SeverityLow)
 	if len(low) != 0 {
 		t.Fatalf("expected 0 low, got %d", len(low))
 	}
@@ -63,8 +63,8 @@ func TestTextReporter_PassingReport(t *testing.T) {
 		ProfileName: "HIPAA Security Rule",
 		Pass:        true,
 		Results:     []profile.ProfileResult{},
-		Counts:      map[compliance.Severity]int{},
-		FailCounts:  map[compliance.Severity]int{},
+		Counts:      map[policy.Severity]int{},
+		FailCounts:  map[policy.Severity]int{},
 	}
 	var buf bytes.Buffer
 	err := TextReporter{}.Write(&buf, report, fixtureMeta())
@@ -87,14 +87,14 @@ func TestTextReporter_CompoundFindings(t *testing.T) {
 		CompoundFindings: []compound.CompoundFinding{
 			{
 				ID:         "COMPOUND.001",
-				Severity:   compliance.Critical,
+				Severity:   policy.SeverityCritical,
 				TriggerIDs: []string{"CONTROLS.001", "AUDIT.001"},
 				Message:    "Multiple critical failures compound risk",
 			},
 		},
 		Results:    []profile.ProfileResult{},
-		Counts:     map[compliance.Severity]int{},
-		FailCounts: map[compliance.Severity]int{},
+		Counts:     map[policy.Severity]int{},
+		FailCounts: map[policy.Severity]int{},
 	}
 	var buf bytes.Buffer
 	err := TextReporter{}.Write(&buf, report, fixtureMeta())
@@ -132,8 +132,8 @@ func TestTextReporter_Acknowledged(t *testing.T) {
 			},
 		},
 		Results:    []profile.ProfileResult{},
-		Counts:     map[compliance.Severity]int{},
-		FailCounts: map[compliance.Severity]int{},
+		Counts:     map[policy.Severity]int{},
+		FailCounts: map[policy.Severity]int{},
 	}
 	var buf bytes.Buffer
 	err := TextReporter{}.Write(&buf, report, fixtureMeta())

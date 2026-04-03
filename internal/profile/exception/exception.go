@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sufield/stave/internal/core/compliance"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/profile"
 
 	"gopkg.in/yaml.v3"
@@ -138,7 +138,7 @@ func ApplyExceptions(exceptions []ExceptionConfig, results []profile.ProfileResu
 				exc.Rationale, exc.AcknowledgedBy, exc.AcknowledgedDate)
 			r.Remediation = ""
 			r.Pass = true
-			r.Severity = compliance.Low
+			r.Severity = policy.SeverityLow
 		} else {
 			// Exception invalid: keep FAIL, note the failure.
 			var failing []string

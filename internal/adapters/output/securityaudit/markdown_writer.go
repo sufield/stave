@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -43,7 +44,7 @@ func renderHeader(b *strings.Builder, report domain.Report) {
 	writeBullet(b, "Generated", report.GeneratedAt.Format(time.RFC3339))
 	writeBullet(b, "Tool Version", report.StaveVersion)
 	writeBullet(b, "Schema", report.SchemaVersion)
-	writeBullet(b, "Fail Threshold", report.Summary.FailOn)
+	writeBullet(b, "Fail Threshold", severityLabel(report.Summary.FailOn))
 	writeBullet(b, "Vulnerability Evidence Source", report.Summary.VulnSourceUsed)
 	writeBullet(b, "Evidence Freshness", report.Summary.EvidenceFreshness)
 	b.WriteString("\n")
@@ -72,7 +73,7 @@ func renderFindingsTable(b *strings.Builder, findings []domain.Finding) {
 			finding.ID,
 			finding.Pillar,
 			finding.Status,
-			finding.Severity,
+			severityLabel(finding.Severity),
 			escapeMarkdownPipe(finding.Title),
 		)
 	}
@@ -84,7 +85,7 @@ func renderFindingDetails(b *strings.Builder, findings []domain.Finding) {
 		fmt.Fprintf(b, "### `%s` — %s\n\n", finding.ID, finding.Title)
 		writeBullet(b, "Pillar", finding.Pillar)
 		writeBullet(b, "Status", finding.Status)
-		writeBullet(b, "Severity", finding.Severity)
+		writeBullet(b, "Severity", severityLabel(finding.Severity))
 		writeOptionalField(b, "Details", finding.Details)
 		writeOptionalField(b, "Auditor Hint", finding.AuditorHint)
 		writeOptionalField(b, "Recommendation", finding.Recommendation)
@@ -140,4 +141,9 @@ func renderControlCoverage(b *strings.Builder, controls []domain.ControlRef) {
 
 func escapeMarkdownPipe(in string) string {
 	return strings.ReplaceAll(strings.TrimSpace(in), "|", "\\|")
+}
+
+// severityLabel returns the UPPERCASE display string for a severity level.
+func severityLabel(s policy.Severity) string {
+	return strings.ToUpper(s.String())
 }

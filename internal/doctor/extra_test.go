@@ -2,16 +2,18 @@ package doctor
 
 import (
 	"testing"
+
+	"github.com/sufield/stave/internal/core/outcome"
 )
 
 func TestCheck_IsFail(t *testing.T) {
 	tests := []struct {
-		status Status
+		status outcome.Status
 		want   bool
 	}{
-		{StatusPass, false},
-		{StatusWarn, false},
-		{StatusFail, true},
+		{outcome.Pass, false},
+		{outcome.Warn, false},
+		{outcome.Fail, true},
 	}
 	for _, tt := range tests {
 		c := Check{Status: tt.status}
@@ -22,7 +24,7 @@ func TestCheck_IsFail(t *testing.T) {
 }
 
 func TestCheck_String(t *testing.T) {
-	c := Check{Name: "test", Status: StatusPass, Message: "ok"}
+	c := Check{Name: "test", Status: outcome.Pass, Message: "ok"}
 	got := c.String()
 	want := "[PASS] test: ok"
 	if got != want {
@@ -54,8 +56,8 @@ func TestRegistry_Run_EmptyRegistry(t *testing.T) {
 
 func TestRegistry_Run_AllPass(t *testing.T) {
 	r := NewRegistry(
-		func(*Context) Check { return Check{Name: "a", Status: StatusPass, Message: "ok"} },
-		func(*Context) Check { return Check{Name: "b", Status: StatusWarn, Message: "warning"} },
+		func(*Context) Check { return Check{Name: "a", Status: outcome.Pass, Message: "ok"} },
+		func(*Context) Check { return Check{Name: "b", Status: outcome.Warn, Message: "warning"} },
 	)
 	checks, ok := r.Run(nil)
 	if !ok {
@@ -69,7 +71,7 @@ func TestRegistry_Run_AllPass(t *testing.T) {
 func TestRegistry_Run_SkipsEmptyName(t *testing.T) {
 	r := NewRegistry(
 		func(*Context) Check { return Check{} }, // empty name, should be skipped
-		func(*Context) Check { return Check{Name: "a", Status: StatusPass} },
+		func(*Context) Check { return Check{Name: "a", Status: outcome.Pass} },
 	)
 	checks, _ := r.Run(nil)
 	if len(checks) != 1 {

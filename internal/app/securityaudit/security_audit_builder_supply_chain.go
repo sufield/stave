@@ -5,21 +5,23 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/securityaudit/evidence"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/securityaudit"
 )
 
 var buildInfoSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckBuildInfoPresent,
 	Pillar:   securityaudit.PillarSupplyChain,
-	Severity: securityaudit.SeverityHigh,
+	Severity: policy.SeverityHigh,
 
-	ErrStatus: securityaudit.StatusFail,
+	ErrStatus: outcome.Fail,
 
 	PassTitle: "Build metadata available",
 	PassHint:  "Dependencies can be enumerated from runtime metadata.",
 	PassReco:  "Retain build metadata in release binaries to preserve SBOM traceability.",
 
-	FailStatus:  securityaudit.StatusFail,
+	FailStatus:  outcome.Fail,
 	FailTitle:   "Build metadata unavailable",
 	FailDetails: "runtime/debug build info is not available in this binary.",
 	FailHint:    "Without build info, runtime SBOM provenance is incomplete.",
@@ -34,9 +36,9 @@ func findingFromBuildInfo(in evidence.BuildInfoSnapshot) securityaudit.Finding {
 var sbomSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckSBOMGenerated,
 	Pillar:   securityaudit.PillarSupplyChain,
-	Severity: securityaudit.SeverityHigh,
+	Severity: policy.SeverityHigh,
 
-	ErrStatus: securityaudit.StatusFail,
+	ErrStatus: outcome.Fail,
 	ErrTitle:  "SBOM generation failed",
 	ErrHint:   "Missing SBOM blocks dependency-level supply-chain review.",
 	ErrReco:   "Run with --sbom spdx or --sbom cyclonedx and ensure build info is present.",
@@ -45,7 +47,7 @@ var sbomSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	PassHint:  "Standardized SBOM is available for third-party risk review.",
 	PassReco:  "Archive the SBOM artifact with release evidence.",
 
-	FailStatus: securityaudit.StatusFail,
+	FailStatus: outcome.Fail,
 	FailTitle:  "SBOM generation failed",
 	FailHint:   "Missing SBOM blocks dependency-level supply-chain review.",
 	FailReco:   "Run with --sbom spdx or --sbom cyclonedx and ensure build info is present.",
@@ -64,15 +66,15 @@ func findingFromSBOM(in evidence.SBOMSnapshot, err error) securityaudit.Finding 
 var binaryHashSpec = findingSpec{ //nolint:gosec // audit template, not a credential
 	ID:       securityaudit.CheckBinarySHA256,
 	Pillar:   securityaudit.PillarSupplyChain,
-	Severity: securityaudit.SeverityHigh,
+	Severity: policy.SeverityHigh,
 
-	ErrStatus: securityaudit.StatusFail,
+	ErrStatus: outcome.Fail,
 
 	PassTitle: "Binary checksum generated",
 	PassHint:  "Checksum enables integrity verification against release artifacts.",
 	PassReco:  "Compare checksum with trusted release manifests.",
 
-	FailStatus: securityaudit.StatusFail,
+	FailStatus: outcome.Fail,
 	FailTitle:  "Binary checksum unavailable",
 	FailHint:   "Integrity checks cannot be performed without binary digest.",
 	FailReco:   "Ensure the binary path is accessible and rerun security-audit.",
@@ -94,8 +96,8 @@ func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckVulnResults,
 			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityHigh,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityHigh,
 			Title:          "Vulnerability evidence unresolved",
 			Details:        err.Error(),
 			AuditorHint:    "Audit cannot prove vulnerability posture without evidence.",
@@ -106,8 +108,8 @@ func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckVulnResults,
 			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityHigh,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityHigh,
 			Title:          "No vulnerability evidence found",
 			Details:        in.Details,
 			AuditorHint:    "Hybrid policy requires local or CI vulnerability evidence.",
@@ -118,8 +120,8 @@ func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckVulnResults,
 			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusFail,
-			Severity:       securityaudit.SeverityCritical,
+			Status:         outcome.Fail,
+			Severity:       policy.SeverityCritical,
 			Title:          "Known vulnerabilities detected",
 			Details:        fmt.Sprintf("Vulnerability evidence source=%s reports %d findings.", in.SourceUsed, in.FindingCount),
 			AuditorHint:    "At least one vulnerability requires remediation before release approval.",
@@ -129,8 +131,8 @@ func findingFromVuln(in evidence.VulnerabilitySnapshot, err error) securityaudit
 	return securityaudit.Finding{
 		ID:             securityaudit.CheckVulnResults,
 		Pillar:         securityaudit.PillarSupplyChain,
-		Status:         securityaudit.StatusPass,
-		Severity:       securityaudit.SeverityHigh,
+		Status:         outcome.Pass,
+		Severity:       policy.SeverityHigh,
 		Title:          "No known vulnerabilities in evidence",
 		Details:        fmt.Sprintf("Source=%s, findings=0.", in.SourceUsed),
 		AuditorHint:    "Evidence indicates no known vulnerable dependencies at check time.",
@@ -144,8 +146,8 @@ func findingFromSignature(in evidence.BinaryInspectionSnapshot, err error) secur
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckSignatureVerified,
 			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusFail,
-			Severity:       securityaudit.SeverityHigh,
+			Status:         outcome.Fail,
+			Severity:       policy.SeverityHigh,
 			Title:          "Release signature verification failed",
 			Details:        err.Error(),
 			AuditorHint:    "Release artifact integrity could not be verified.",
@@ -156,8 +158,8 @@ func findingFromSignature(in evidence.BinaryInspectionSnapshot, err error) secur
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckSignatureVerified,
 			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusWarn,
-			Severity:       securityaudit.SeverityMedium,
+			Status:         outcome.Warn,
+			Severity:       policy.SeverityMedium,
 			Title:          "Release signature verification skipped",
 			Details:        "No --release-bundle-dir supplied; verification not attempted.",
 			AuditorHint:    "Signature verification is optional unless release artifacts are provided.",
@@ -168,8 +170,8 @@ func findingFromSignature(in evidence.BinaryInspectionSnapshot, err error) secur
 		return securityaudit.Finding{
 			ID:             securityaudit.CheckSignatureVerified,
 			Pillar:         securityaudit.PillarSupplyChain,
-			Status:         securityaudit.StatusPass,
-			Severity:       securityaudit.SeverityMedium,
+			Status:         outcome.Pass,
+			Severity:       policy.SeverityMedium,
 			Title:          "Release signature evidence verified",
 			Details:        in.SignatureDetail,
 			AuditorHint:    "Checksum/signature bundle matched the running binary.",
@@ -179,8 +181,8 @@ func findingFromSignature(in evidence.BinaryInspectionSnapshot, err error) secur
 	return securityaudit.Finding{
 		ID:             securityaudit.CheckSignatureVerified,
 		Pillar:         securityaudit.PillarSupplyChain,
-		Status:         securityaudit.StatusWarn,
-		Severity:       securityaudit.SeverityMedium,
+		Status:         outcome.Warn,
+		Severity:       policy.SeverityMedium,
 		Title:          "Release signature verification inconclusive",
 		Details:        in.SignatureDetail,
 		AuditorHint:    "Evidence bundle was provided but did not produce a definitive verification.",

@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
+
 	domain "github.com/sufield/stave/internal/core/securityaudit"
 )
 
@@ -11,7 +13,7 @@ func TestMarshalMarkdownReport_NoFindings(t *testing.T) {
 	report := domain.Report{
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0-test",
-		Summary:       domain.Summary{FailOn: domain.SeverityHigh},
+		Summary:       domain.Summary{FailOn: policy.SeverityHigh},
 	}
 	data, err := MarshalMarkdownReport(report)
 	if err != nil {
@@ -61,14 +63,14 @@ func TestEscapeMarkdownPipe(t *testing.T) {
 
 func TestSarifLevelFromSeverity(t *testing.T) {
 	tests := []struct {
-		sev  domain.Severity
+		sev  policy.Severity
 		want string
 	}{
-		{domain.SeverityCritical, "error"},
-		{domain.SeverityHigh, "error"},
-		{domain.SeverityMedium, "warning"},
-		{domain.SeverityLow, "note"},
-		{domain.SeverityNone, "note"},
+		{policy.SeverityCritical, "error"},
+		{policy.SeverityHigh, "error"},
+		{policy.SeverityMedium, "warning"},
+		{policy.SeverityLow, "note"},
+		{policy.SeverityNone, "note"},
 	}
 	for _, tt := range tests {
 		got := sarifLevelFromSeverity(tt.sev)

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // accessWildcardAction checks that no S3 bucket policy statement grants Allow with
@@ -28,7 +29,7 @@ func init() {
 		Definition: NewDefinition(
 			WithID("ACCESS.002"),
 			WithDescription("No bucket policy statement may grant Allow with wildcard action s3:*"),
-			WithSeverity(High),
+			WithSeverity(policy.SeverityHigh),
 			WithComplianceProfiles("hipaa", "pci-dss", "cis-s3"),
 			WithComplianceRef("hipaa", "§164.312(a)(2)(i)"),
 			WithProfileRationale("hipaa", "Least privilege — no wildcard actions"),

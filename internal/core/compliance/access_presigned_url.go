@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 type accessPresignedURL struct {
@@ -15,11 +16,11 @@ func init() {
 		Definition: NewDefinition(
 			WithID("ACCESS.009"),
 			WithDescription("PHI bucket policy must restrict presigned URL access via s3:signatureAge or s3:authType condition"),
-			WithSeverity(Medium),
+			WithSeverity(policy.SeverityMedium),
 			WithComplianceProfiles("hipaa"),
 			WithComplianceRef("hipaa", "§164.312(a)(1)"),
 			WithProfileRationale("hipaa", "Presigned URL restriction for PHI buckets"),
-			WithProfileSeverityOverride("hipaa", Medium),
+			WithProfileSeverityOverride("hipaa", policy.SeverityMedium),
 		),
 	})
 }

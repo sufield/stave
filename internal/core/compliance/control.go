@@ -1,6 +1,9 @@
 package compliance
 
-import "github.com/sufield/stave/internal/core/asset"
+import (
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
+)
 
 // Control is a programmatic safety check evaluated against an observation
 // snapshot. Metadata (ID, severity, compliance refs) is accessed via Def().
@@ -21,7 +24,7 @@ type Result struct {
 	ControlID string `json:"control_id"`
 
 	// Severity is the impact level of the control.
-	Severity Severity `json:"severity"`
+	Severity policy.Severity `json:"severity"`
 
 	// Finding describes what failed in practitioner language.
 	// Empty when Pass is true.
@@ -43,11 +46,11 @@ type Result struct {
 type Definition struct {
 	id                 string
 	description        string
-	severity           Severity
+	severity           policy.Severity
 	complianceProfiles []string
 	complianceRefs     map[string]string
 	profileRationales  map[string]string
-	profileSeverities  map[string]Severity
+	profileSeverities  map[string]policy.Severity
 }
 
 // Option configures a Definition.
@@ -64,7 +67,7 @@ func WithDescription(desc string) Option {
 }
 
 // WithSeverity sets the impact level.
-func WithSeverity(s Severity) Option {
+func WithSeverity(s policy.Severity) Option {
 	return func(d *Definition) { d.severity = s }
 }
 
@@ -84,10 +87,10 @@ func WithComplianceRef(profile, citation string) Option {
 }
 
 // WithProfileSeverityOverride sets a severity override for a specific profile.
-func WithProfileSeverityOverride(profile string, sev Severity) Option {
+func WithProfileSeverityOverride(profile string, sev policy.Severity) Option {
 	return func(d *Definition) {
 		if d.profileSeverities == nil {
-			d.profileSeverities = make(map[string]Severity)
+			d.profileSeverities = make(map[string]policy.Severity)
 		}
 		d.profileSeverities[profile] = sev
 	}
@@ -124,7 +127,7 @@ func (d Definition) ID() string { return d.id }
 func (d Definition) Description() string { return d.description }
 
 // Severity returns the impact level.
-func (d Definition) Severity() Severity { return d.severity }
+func (d Definition) Severity() policy.Severity { return d.severity }
 
 // ComplianceProfiles returns the applicable compliance frameworks.
 func (d Definition) ComplianceProfiles() []string { return d.complianceProfiles }
@@ -138,7 +141,7 @@ func (d Definition) ProfileRationale(profile string) string {
 }
 
 // ProfileSeverityOverride returns the severity override for the named profile, if any.
-func (d Definition) ProfileSeverityOverride(profile string) (Severity, bool) {
+func (d Definition) ProfileSeverityOverride(profile string) (policy.Severity, bool) {
 	s, ok := d.profileSeverities[profile]
 	return s, ok
 }

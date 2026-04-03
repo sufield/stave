@@ -1,35 +1,20 @@
 package schemaval
 
 import (
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/diag"
+	"github.com/sufield/stave/internal/core/outcome"
 )
-
-// Status represents the result of a check.
-type Status string
-
-const (
-	StatusPass Status = "pass"
-	StatusWarn Status = "warn"
-	StatusFail Status = "fail"
-)
-
-// String returns the uppercase display form (e.g. "PASS", "WARN", "FAIL").
-// Implements fmt.Stringer.
-func (s Status) String() string {
-	return strings.ToUpper(string(s))
-}
 
 // Issue describes a validation finding with severity and suggested fix.
 // Consolidates the former PrereqCheck and Issue types into a single model.
 type Issue struct {
-	Name    string `json:"name"`
-	Status  Status `json:"status"`
-	Message string `json:"message"`
-	Fix     string `json:"fix,omitempty"`
-	Command string `json:"command,omitempty"`
+	Name    string         `json:"name"`
+	Status  outcome.Status `json:"status"`
+	Message string         `json:"message"`
+	Fix     string         `json:"fix,omitempty"`
+	Command string         `json:"command,omitempty"`
 }
 
 // Summary aggregates counts of checks, errors, and warnings.
@@ -71,10 +56,10 @@ func (r *Report) Issues() []Issue {
 // RecordIssue appends an issue and updates Ready and Summary counters.
 func (r *Report) RecordIssue(issue Issue) {
 	switch issue.Status {
-	case StatusFail:
+	case outcome.Fail:
 		r.Ready = false
 		r.Summary.Errors++
-	case StatusWarn:
+	case outcome.Warn:
 		r.Summary.Warnings++
 	}
 	r.issues = append(r.issues, issue)
