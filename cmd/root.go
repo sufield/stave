@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/sanitize"
@@ -72,6 +73,10 @@ type App struct {
 	// command constructors at registration time. Replace it before calling
 	// NewApp to swap adapters in tests or custom entry points.
 	Provider *compose.Provider
+
+	// Confidence holds the configurable confidence thresholds, set during
+	// bootstrap from stave.yaml. Passed to the engine Runner.
+	Confidence evaluation.ConfidenceCalculator
 
 	// sanitizer is initialized from CLI flags during bootstrap and used for
 	// path/message sanitization in error handling and panic recovery.

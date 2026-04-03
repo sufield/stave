@@ -24,6 +24,7 @@ type Runner struct {
 	// MaxGapThreshold controls when sparse observations become INCONCLUSIVE.
 	// If zero, defaultRunnerMaxGapThreshold is used.
 	MaxGapThreshold time.Duration
+	Confidence      evaluation.ConfidenceCalculator
 	Clock           ports.Clock
 	Hasher          ports.Digester
 	Exemptions      *policy.ExemptionConfig
@@ -53,6 +54,15 @@ func (e *Runner) maxUnsafeDurationFor(ctl *policy.ControlDefinition) time.Durati
 // predicateParser returns the configured predicate parser function.
 func (e *Runner) predicateParser() policy.PredicateParser {
 	return e.PredicateParser
+}
+
+// confidenceCalculator returns the configured confidence thresholds,
+// defaulting to standard multipliers if not explicitly set.
+func (e *Runner) confidenceCalculator() evaluation.ConfidenceCalculator {
+	if e.Confidence.HighMultiplier > 0 && e.Confidence.MedMultiplier > 0 {
+		return e.Confidence
+	}
+	return evaluation.DefaultConfidenceCalculator()
 }
 
 // normalizeSnapshots returns a copy of snapshots sorted by captured_at ascending.

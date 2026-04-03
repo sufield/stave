@@ -14,6 +14,7 @@ import (
 type strategyDeps interface {
 	maxUnsafeDurationFor(ctl *policy.ControlDefinition) time.Duration
 	maxGapThreshold() time.Duration
+	confidenceCalculator() evaluation.ConfidenceCalculator
 	logger() *slog.Logger
 	predicateParser() policy.PredicateParser
 }
@@ -116,7 +117,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 			Identities:      ids.At(t.LastSeenUnsafeAt()),
 			PredicateParser: s.deps.predicateParser(),
 		})
-		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
+		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(row, evaluation.DecisionViolation, confidence), []*evaluation.Finding{finding}
 	}
 
@@ -131,7 +132,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 	}
 
 	// 3. Adequate coverage and no violation => PASS
-	confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), maxUnsafe)
+	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 	return finalizeRow(row, evaluation.DecisionPass, confidence), nil
 }
 
@@ -153,7 +154,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ 
 
 	// 1. Violation Check
 	if findings := EvaluateRecurrenceForControl(t, s.ctl, now); len(findings) > 0 {
-		confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), p.WindowDuration())
+		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
 		return finalizeRow(row, evaluation.DecisionViolation, confidence), findings
 	}
 
@@ -164,7 +165,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ 
 		return row, nil
 	}
 
-	confidence := evaluation.DeriveConfidenceLevel(t.Stats().MaxGap(), p.WindowDuration())
+	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
 	return finalizeRow(row, evaluation.DecisionPass, confidence), nil
 }
 
