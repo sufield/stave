@@ -123,8 +123,8 @@ func WithProfileRationale(profile, rationale string) Option {
 	}
 }
 
-// Build applies all options and returns the populated Definition.
-func Build(opts ...Option) Definition {
+// NewDefinition applies all options and returns the populated Definition.
+func NewDefinition(opts ...Option) Definition {
 	var d Definition
 	for _, opt := range opts {
 		opt(&d)

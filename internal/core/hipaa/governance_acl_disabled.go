@@ -13,7 +13,7 @@ type governanceAclDisabled struct {
 
 func init() {
 	ControlRegistry.MustRegister(&governanceAclDisabled{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("GOVERNANCE.001"),
 			WithDescription("Bucket ACLs must be disabled (ownership_controls == BucketOwnerEnforced)"),
 			WithSeverity(High),

@@ -12,7 +12,7 @@ type accessEndpointPolicy struct {
 
 func init() {
 	ControlRegistry.MustRegister(&accessEndpointPolicy{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("ACCESS.006"),
 			WithDescription("VPC endpoint policy must restrict S3 access to approved bucket ARNs"),
 			WithSeverity(High),

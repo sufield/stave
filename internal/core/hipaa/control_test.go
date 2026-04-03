@@ -71,7 +71,7 @@ func TestParseSeverity(t *testing.T) {
 // --- Definition + functional options tests ---
 
 func TestDefinition_Build(t *testing.T) {
-	def := Build(
+	def := NewDefinition(
 		WithID("ACCESS.001"),
 		WithDescription("Block public access must be fully enabled"),
 		WithSeverity(Critical),
@@ -94,7 +94,7 @@ func TestDefinition_Build(t *testing.T) {
 }
 
 func TestDefinition_PassResult(t *testing.T) {
-	def := Build(WithID("X.001"), WithSeverity(Low))
+	def := NewDefinition(WithID("X.001"), WithSeverity(Low))
 	r := def.PassResult()
 	if !r.Pass {
 		t.Error("expected pass")
@@ -105,7 +105,7 @@ func TestDefinition_PassResult(t *testing.T) {
 }
 
 func TestDefinition_FailResult(t *testing.T) {
-	def := Build(
+	def := NewDefinition(
 		WithID("X.002"),
 		WithSeverity(High),
 		WithComplianceRef("cis", "1.2.3"),
@@ -138,7 +138,7 @@ func (s *stubControl) Evaluate(_ asset.Snapshot) Result {
 
 func newStub(id string, sev Severity) *stubControl {
 	return &stubControl{
-		Definition: Build(WithID(id), WithSeverity(sev)),
+		Definition: NewDefinition(WithID(id), WithSeverity(sev)),
 	}
 }
 

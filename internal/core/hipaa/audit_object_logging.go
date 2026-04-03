@@ -12,7 +12,7 @@ type auditObjectLogging struct {
 
 func init() {
 	ControlRegistry.MustRegister(&auditObjectLogging{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("AUDIT.002"),
 			WithDescription("CloudTrail S3 object-level data event logging must be enabled"),
 			WithSeverity(High),

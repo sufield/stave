@@ -25,7 +25,7 @@ var minimumSyncActions = []string{
 
 func init() {
 	ControlRegistry.MustRegister(&accessWildcardAction{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("ACCESS.002"),
 			WithDescription("No bucket policy statement may grant Allow with wildcard action s3:*"),
 			WithSeverity(High),

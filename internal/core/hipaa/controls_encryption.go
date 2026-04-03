@@ -13,7 +13,7 @@ type controlsEncryption struct {
 
 func init() {
 	ControlRegistry.MustRegister(&controlsEncryption{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("CONTROLS.001"),
 			WithDescription("Server-side encryption (SSE) must be enabled"),
 			WithSeverity(High),

@@ -17,7 +17,7 @@ type controlsKmsCmk struct {
 
 func init() {
 	ControlRegistry.MustRegister(&controlsKmsCmk{
-		Definition: Build(
+		Definition: NewDefinition(
 			WithID("CONTROLS.001.STRICT"),
 			WithDescription("Server-side encryption must use SSE-KMS with a customer-managed key (CMK)"),
 			WithSeverity(Critical),
