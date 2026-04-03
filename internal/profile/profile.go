@@ -9,8 +9,8 @@ import (
 	"sort"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/hipaa"
-	"github.com/sufield/stave/internal/core/hipaa/compound"
+	"github.com/sufield/stave/internal/core/compliance"
+	"github.com/sufield/stave/internal/core/compliance/compound"
 )
 
 // ProfileControl binds an control to a profile with optional overrides.
@@ -19,7 +19,7 @@ type ProfileControl struct {
 	ControlID string
 
 	// SeverityOverride replaces the control's default severity when non-nil.
-	SeverityOverride *hipaa.Severity
+	SeverityOverride *compliance.Severity
 
 	// ComplianceRef is the regulatory citation (e.g. "§164.312(b)").
 	ComplianceRef string
@@ -38,21 +38,21 @@ type Profile struct {
 
 // ProfileResult extends an control Result with profile-level metadata.
 type ProfileResult struct {
-	hipaa.Result
+	compliance.Result
 	ComplianceRef string `json:"compliance_ref,omitempty"`
 	Rationale     string `json:"rationale,omitempty"`
 }
 
 // ProfileReport is the output of evaluating a profile against a snapshot.
 type ProfileReport struct {
-	ProfileID        string                     `json:"profile_id"`
-	ProfileName      string                     `json:"profile_name"`
-	Pass             bool                       `json:"pass"`
-	CompoundFindings []compound.CompoundFinding `json:"compound_findings,omitempty"`
-	Acknowledged     []AcknowledgedEntry        `json:"acknowledged,omitempty"`
-	Results          []ProfileResult            `json:"results"`
-	Counts           map[hipaa.Severity]int     `json:"counts"`
-	FailCounts       map[hipaa.Severity]int     `json:"fail_counts"`
+	ProfileID        string                      `json:"profile_id"`
+	ProfileName      string                      `json:"profile_name"`
+	Pass             bool                        `json:"pass"`
+	CompoundFindings []compound.CompoundFinding  `json:"compound_findings,omitempty"`
+	Acknowledged     []AcknowledgedEntry         `json:"acknowledged,omitempty"`
+	Results          []ProfileResult             `json:"results"`
+	Counts           map[compliance.Severity]int `json:"counts"`
+	FailCounts       map[compliance.Severity]int `json:"fail_counts"`
 }
 
 // AcknowledgedEntry surfaces an exception in the report.
@@ -72,7 +72,7 @@ type AcknowledgedEntry struct {
 // When p.Controls is empty the profile discovers its controls from the
 // registries using each control's ComplianceProfiles() metadata — no
 // hardcoded list required.
-func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (ProfileReport, error) {
+func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Registry) (ProfileReport, error) {
 	controls := p.Controls
 	if len(controls) == 0 {
 		controls = discoverProfileControls(p.ID, registries)
@@ -83,7 +83,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (
 	for i, c := range controls {
 		ids[i] = c.ControlID
 	}
-	if err := hipaa.ValidateProfile(ids); err != nil {
+	if err := compliance.ValidateProfile(ids); err != nil {
 		return ProfileReport{}, fmt.Errorf("profile %s: %w", p.ID, err)
 	}
 
@@ -121,14 +121,14 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (
 	})
 
 	// Detect compound risks from the raw control results.
-	rawResults := make([]hipaa.Result, len(results))
+	rawResults := make([]compliance.Result, len(results))
 	for i, r := range results {
 		rawResults[i] = r.Result
 	}
 	compoundFindings := compound.Detect(compound.DefaultRules(), rawResults)
 
-	counts := make(map[hipaa.Severity]int)
-	failCounts := make(map[hipaa.Severity]int)
+	counts := make(map[compliance.Severity]int)
+	failCounts := make(map[compliance.Severity]int)
 	allPass := true
 	for _, r := range results {
 		counts[r.Severity]++
@@ -154,16 +154,17 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*hipaa.Registry) (
 
 // discoverProfileControls builds the ProfileControl list by querying all
 // registries for controls that declare membership in the given profile.
-func discoverProfileControls(profileID string, registries []*hipaa.Registry) []ProfileControl {
+func discoverProfileControls(profileID string, registries []*compliance.Registry) []ProfileControl {
 	var controls []ProfileControl
 	for _, reg := range registries {
 		for _, ctrl := range reg.ByProfile(profileID) {
+			def := ctrl.Def()
 			pc := ProfileControl{
-				ControlID:     ctrl.ID(),
-				ComplianceRef: ctrl.ComplianceRefs()[profileID],
-				Rationale:     ctrl.ProfileRationale(profileID),
+				ControlID:     def.ID(),
+				ComplianceRef: def.ComplianceRefs()[profileID],
+				Rationale:     def.ProfileRationale(profileID),
 			}
-			if sev, ok := ctrl.ProfileSeverityOverride(profileID); ok {
+			if sev, ok := def.ProfileSeverityOverride(profileID); ok {
 				pc.SeverityOverride = &sev
 			}
 			controls = append(controls, pc)
@@ -172,11 +173,11 @@ func discoverProfileControls(profileID string, registries []*hipaa.Registry) []P
 	return controls
 }
 
-func buildLookup(registries []*hipaa.Registry) map[string]hipaa.Control {
-	lookup := make(map[string]hipaa.Control)
+func buildLookup(registries []*compliance.Registry) map[string]compliance.Control {
+	lookup := make(map[string]compliance.Control)
 	for _, reg := range registries {
 		for _, inv := range reg.All() {
-			lookup[inv.ID()] = inv
+			lookup[inv.Def().ID()] = inv
 		}
 	}
 	return lookup

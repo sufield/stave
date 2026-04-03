@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/core/hipaa"
+	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -92,9 +92,9 @@ exceptions:
 
 func TestApplyExceptions_ValidException(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: hipaa.Result{ControlID: "ACCESS.001", Pass: false, Severity: hipaa.Critical, Finding: "BPA disabled"}},
-		{Result: hipaa.Result{ControlID: "CONTROLS.001", Pass: true, Severity: hipaa.High}},
-		{Result: hipaa.Result{ControlID: "AUDIT.001", Pass: true, Severity: hipaa.Critical}},
+		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: compliance.Critical, Finding: "BPA disabled"}},
+		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: true, Severity: compliance.High}},
+		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: compliance.Critical}},
 	}
 
 	excs := []ExceptionConfig{{
@@ -124,9 +124,9 @@ func TestApplyExceptions_ValidException(t *testing.T) {
 
 func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: hipaa.Result{ControlID: "ACCESS.001", Pass: false, Severity: hipaa.Critical, Finding: "BPA disabled"}},
-		{Result: hipaa.Result{ControlID: "CONTROLS.001", Pass: false, Severity: hipaa.High}},
-		{Result: hipaa.Result{ControlID: "AUDIT.001", Pass: true, Severity: hipaa.Critical}},
+		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: compliance.Critical, Finding: "BPA disabled"}},
+		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: false, Severity: compliance.High}},
+		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: compliance.Critical}},
 	}
 
 	excs := []ExceptionConfig{{
@@ -159,7 +159,7 @@ func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 
 func TestApplyExceptions_NoExceptions(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: hipaa.Result{ControlID: "ACCESS.001", Pass: false}},
+		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false}},
 	}
 	acks := ApplyExceptions(nil, results)
 	if len(acks) != 0 {
@@ -169,7 +169,7 @@ func TestApplyExceptions_NoExceptions(t *testing.T) {
 
 func TestApplyExceptions_AlreadyPassing(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: hipaa.Result{ControlID: "ACCESS.001", Pass: true}},
+		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: true}},
 	}
 	excs := []ExceptionConfig{{
 		ControlID:       "ACCESS.001",

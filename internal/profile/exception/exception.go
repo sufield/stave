@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sufield/stave/internal/core/hipaa"
+	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/profile"
 
 	"gopkg.in/yaml.v3"
@@ -138,7 +138,7 @@ func ApplyExceptions(exceptions []ExceptionConfig, results []profile.ProfileResu
 				exc.Rationale, exc.AcknowledgedBy, exc.AcknowledgedDate)
 			r.Remediation = ""
 			r.Pass = true
-			r.Severity = hipaa.Low
+			r.Severity = compliance.Low
 		} else {
 			// Exception invalid: keep FAIL, note the failure.
 			var failing []string

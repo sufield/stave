@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/hipaa"
+	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -57,9 +57,9 @@ func fixtureSnapshot() asset.Snapshot {
 	}
 }
 
-func allRegistries() []*hipaa.Registry {
-	return []*hipaa.Registry{
-		hipaa.ControlRegistry,
+func allRegistries() []*compliance.Registry {
+	return []*compliance.Registry{
+		compliance.ControlRegistry,
 	}
 }
 
@@ -133,21 +133,21 @@ func TestHIPAAProfile_SeverityCounts(t *testing.T) {
 	}
 
 	// All implemented invariants should fail on the fixture.
-	if report.FailCounts[hipaa.Critical] == 0 {
+	if report.FailCounts[compliance.Critical] == 0 {
 		t.Error("expected CRITICAL failures")
 	}
-	if report.FailCounts[hipaa.High] == 0 {
+	if report.FailCounts[compliance.High] == 0 {
 		t.Error("expected HIGH failures")
 	}
-	if report.FailCounts[hipaa.Medium] == 0 {
+	if report.FailCounts[compliance.Medium] == 0 {
 		t.Error("expected MEDIUM failures")
 	}
 
 	t.Logf("Fail counts: CRITICAL=%d HIGH=%d MEDIUM=%d LOW=%d",
-		report.FailCounts[hipaa.Critical],
-		report.FailCounts[hipaa.High],
-		report.FailCounts[hipaa.Medium],
-		report.FailCounts[hipaa.Low])
+		report.FailCounts[compliance.Critical],
+		report.FailCounts[compliance.High],
+		report.FailCounts[compliance.Medium],
+		report.FailCounts[compliance.Low])
 }
 
 func TestHIPAAProfile_ComplianceRefs(t *testing.T) {
