@@ -5,7 +5,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/ports"
 )
 
 // FindingEnricher enriches raw evaluation findings with remediation guidance.
@@ -22,9 +21,9 @@ type Mapper struct {
 }
 
 // NewMapper creates a new remediation mapper with a default planner.
-func NewMapper(gen ports.IdentityGenerator) *Mapper {
+func NewMapper() *Mapper {
 	return &Mapper{
-		planner: NewPlanner(gen),
+		planner: NewPlanner(),
 	}
 }
 

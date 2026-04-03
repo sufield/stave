@@ -75,7 +75,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-8a5bd24f81bfedd2",
+        "id": "fix-d4589654a40e7f1b",
         "target": {
           "asset_id": "latent-listable-bucket",
           "asset_type": "aws_s3_bucket"
@@ -163,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

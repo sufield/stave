@@ -75,7 +75,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-e0b36b5fc3f25c1e",
+        "id": "fix-2d27fb9a9226b4d0",
         "target": {
           "asset_id": "bime-a2-cname-ref",
           "asset_type": "s3_bucket_reference"
@@ -163,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

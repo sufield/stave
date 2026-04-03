@@ -95,6 +95,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		TraceBuilder: &apptrace.Builder{},
 		IDGen:        crypto.NewHasher(),
 	})
+
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

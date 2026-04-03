@@ -6,6 +6,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // ErrFindingNotFound is returned when no finding matches the requested control+asset pair.
@@ -13,7 +14,8 @@ var ErrFindingNotFound = errors.New("finding not found")
 
 // BuildFindingDetail composes evidence, predicate traces, and remediation plans
 // into a comprehensive detail view for a specific violation.
-func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailRequest) (*evaluation.FindingDetail, error) {
+// The gen parameter assigns stable IDs to remediation plans at this boundary.
+func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailRequest, gen ports.IdentityGenerator) (*evaluation.FindingDetail, error) {
 	violation := r.FindFinding(req.ControlID, req.AssetID)
 	if violation == nil {
 		return nil, fmt.Errorf("%w: control %q asset %q", ErrFindingNotFound, req.ControlID, req.AssetID)
@@ -49,7 +51,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 	}
 
 	// 4. Map and Plan Remediation
-	mapper := NewMapper(req.IDGen)
+	mapper := NewMapper()
 	spec := mapper.MapFinding(*violation)
 	detail.Remediation = &spec
 
@@ -57,7 +59,11 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 		Finding:         *violation,
 		RemediationSpec: spec,
 	}
-	detail.RemediationPlan = NewPlanner(req.IDGen).PlanFor(enriched)
+	plan := NewPlanner().PlanFor(enriched)
+	if plan != nil && gen != nil {
+		plan.ID = policy.StableRemediationPlanID(gen, violation.ControlID, violation.AssetID)
+	}
+	detail.RemediationPlan = plan
 
 	// 5. Generate Instructional Next Steps
 	detail.NextSteps = buildNextSteps(detail)

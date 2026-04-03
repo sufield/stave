@@ -33,7 +33,6 @@ type Builder struct {
 	Sanitizer kernel.Sanitizer
 	Format    appcontracts.OutputFormat
 	Digester  ports.Digester
-	IDGen     ports.IdentityGenerator
 
 	Opts             *ApplyOptions
 	Params           applyParams
@@ -62,7 +61,6 @@ func NewBuilder(logger *slog.Logger, opts *ApplyOptions, params applyParams, sio
 		Sanitizer: sio.Sanitizer,
 		Format:    sio.Format,
 		Digester:  crypto.NewHasher(),
-		IDGen:     crypto.NewHasher(),
 		Opts:      opts,
 		Params:    params,
 	}
@@ -102,7 +100,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		Plan:   *plan,
 		Adapters: appeval.Adapters{
 			FindingMarshaler:  a.marshaler,
-			EnrichFn:          buildEnrichFn(b.Sanitizer, b.IDGen),
+			EnrichFn:          buildEnrichFn(b.Sanitizer),
 			ObservationLoader: a.obsLoader,
 			ControlLoader:     a.ctlLoader,
 		},
@@ -161,8 +159,8 @@ func (b *Builder) buildAdapters() (adapters, error) {
 
 // buildEnrichFn creates the enrichment function that maps evaluation results
 // into findings with remediation plans. Pure function — no closure over builder state.
-func buildEnrichFn(sanitizer kernel.Sanitizer, hasher ports.IdentityGenerator) appcontracts.EnrichFunc {
-	enricher := remediation.NewMapper(hasher)
+func buildEnrichFn(sanitizer kernel.Sanitizer) appcontracts.EnrichFunc {
+	enricher := remediation.NewMapper()
 	return func(result evaluation.Result) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, sanitizer, result)
 	}

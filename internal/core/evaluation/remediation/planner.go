@@ -1,11 +1,8 @@
 package remediation
 
 import (
-	"github.com/sufield/stave/internal/core/asset"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/ports"
 )
 
 // Specialist defines the interface for logic that handles a specific class of security risk.
@@ -20,10 +17,10 @@ type Planner struct {
 }
 
 // NewPlanner creates a remediation planner populated with default specialists.
-func NewPlanner(gen ports.IdentityGenerator) *Planner {
+func NewPlanner() *Planner {
 	return &Planner{
 		specialists: []Specialist{
-			publicExposurePlanner{idGen: gen},
+			publicExposurePlanner{},
 		},
 	}
 }
@@ -37,10 +34,4 @@ func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 		}
 	}
 	return nil
-}
-
-// StablePlanID generates a deterministic ID for a remediation plan based on the
-// specific control and asset.
-func StablePlanID(gen ports.IdentityGenerator, controlID kernel.ControlID, assetID asset.ID) policy.RemediationPlanID {
-	return policy.StableRemediationPlanID(gen, controlID, assetID)
 }

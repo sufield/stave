@@ -75,7 +75,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-7c935a3e57694ac6",
+        "id": "fix-2c7509bc52123eef",
         "target": {
           "asset_id": "mapbox-private-objects",
           "asset_type": "aws_s3_bucket"
@@ -163,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

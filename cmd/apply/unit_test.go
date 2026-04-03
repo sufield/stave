@@ -234,7 +234,6 @@ func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
 		Sanitizer:        sanitize.New(),
 		Format:           format,
 		Digester:         hasher,
-		IDGen:            hasher,
 		Opts:             opts,
 		Params:           params,
 		NewFindingWriter: p.NewFindingWriter,

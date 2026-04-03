@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fileout"
 )
 
@@ -29,7 +28,7 @@ type Runner struct {
 
 // NewRunner initializes a runner with a pre-resolved CEL evaluator.
 func NewRunner(celEval policy.PredicateEval, clock ports.Clock) *Runner {
-	svc := appfix.NewService(clock, remediation.NewPlanner(crypto.NewHasher()))
+	svc := appfix.NewService(clock, remediation.NewPlanner())
 	svc.ParseFindings = evaljson.ParseFindings
 	svc.CELEvaluator = celEval
 	return &Runner{
@@ -58,7 +57,6 @@ func (r *Runner) Run(ctx context.Context, req Request) error {
 func (r *Runner) newEnvelopeBuilder() *appfix.EnvelopeBuilder {
 	return &appfix.EnvelopeBuilder{
 		Sanitizer:     r.Sanitizer,
-		IDGen:         crypto.NewHasher(),
 		BuildEnvelope: output.BuildSafetyEnvelopeFromEnriched,
 	}
 }

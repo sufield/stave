@@ -11,7 +11,7 @@ import (
 )
 
 func TestBuildRemediationPlan_S3Public(t *testing.T) {
-	planner := remediation.NewPlanner(testIDGen())
+	planner := remediation.NewPlanner()
 	finding := remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
@@ -25,9 +25,9 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 		t.Fatal("PlanFor() = nil, want non-nil plan")
 	}
 
-	wantID := remediation.StablePlanID(testIDGen(), finding.ControlID, finding.AssetID)
-	if plan.ID != wantID {
-		t.Fatalf("plan.ID = %q, want %q", plan.ID, wantID)
+	// PlanFor no longer assigns plan IDs — they are empty until AssignPlanIDs is called.
+	if plan.ID != "" {
+		t.Fatalf("plan.ID = %q, want empty (IDs assigned by boundary code)", plan.ID)
 	}
 	if plan.Target.AssetID != finding.AssetID {
 		t.Fatalf("plan.Target.AssetID = %q, want %q", plan.Target.AssetID, finding.AssetID)
@@ -49,7 +49,7 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 }
 
 func TestBuildRemediationPlan_UnknownClass(t *testing.T) {
-	planner := remediation.NewPlanner(testIDGen())
+	planner := remediation.NewPlanner()
 	finding := remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID: kernel.ControlID("CTL.CUSTOM.001"),

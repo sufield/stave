@@ -75,7 +75,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-cc69aa103d0ee260",
+        "id": "fix-b6aa58c6b933ff2c",
         "target": {
           "asset_id": "learn2-khanacademy-cname-ref",
           "asset_type": "s3_bucket_reference"
@@ -163,7 +163,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

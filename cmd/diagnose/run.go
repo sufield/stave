@@ -134,6 +134,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		TraceBuilder:   &apptrace.Builder{},
 		IDGen:          crypto.NewHasher(),
 	})
+
 	if err != nil {
 		return err
 	}

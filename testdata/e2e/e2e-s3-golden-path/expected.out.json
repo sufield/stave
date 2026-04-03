@@ -367,7 +367,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-990c069758119150",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -465,7 +465,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-a7c1b92fc4fd3b56",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -539,7 +539,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-1f7cb52a37fba422",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -613,7 +613,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-9348058b446900e1",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -687,7 +687,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-db589850848ca47e",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -779,7 +779,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-27f454c296aeb43f",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -852,7 +852,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-3c8fd5636f52b3f6",
+        "id": "fix-ddeb6cdb0d875ed0",
         "target": {
           "asset_id": "private-bucket",
           "asset_type": "aws_s3_bucket"
@@ -925,7 +925,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-3c8fd5636f52b3f6",
+        "id": "fix-ddeb6cdb0d875ed0",
         "target": {
           "asset_id": "private-bucket",
           "asset_type": "aws_s3_bucket"
@@ -998,7 +998,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-3c8fd5636f52b3f6",
+        "id": "fix-ddeb6cdb0d875ed0",
         "target": {
           "asset_id": "private-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1071,7 +1071,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-3c8fd5636f52b3f6",
+        "id": "fix-ddeb6cdb0d875ed0",
         "target": {
           "asset_id": "private-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1144,7 +1144,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-41c50153690d4e0c",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1217,7 +1217,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-41c50153690d4e0c",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1290,7 +1290,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-41c50153690d4e0c",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1363,7 +1363,7 @@
         "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
       },
       "fix_plan": {
-        "id": "fix-41c50153690d4e0c",
+        "id": "fix-659c6cef69b9707f",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1499,7 +1499,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

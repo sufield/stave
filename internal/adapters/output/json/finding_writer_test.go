@@ -11,12 +11,11 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/env"
-	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 func TestWriteFindings_BareJSON(t *testing.T) {
 	w := NewFindingWriter(false)
-	enricher := remediation.NewMapper(crypto.NewHasher())
+	enricher := remediation.NewMapper()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",

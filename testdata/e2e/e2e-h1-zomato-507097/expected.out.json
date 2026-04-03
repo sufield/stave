@@ -85,7 +85,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-704d1ec2b98e826c",
+        "id": "fix-81313fa1ba57cf6a",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -171,7 +171,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-fd70d9d0edd4ae28",
+        "id": "fix-81313fa1ba57cf6a",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -260,7 +260,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

@@ -95,7 +95,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-2b835454b8dbf91f",
+        "id": "fix-c0e5e43eb28f5519",
         "target": {
           "asset_id": "phi-data-bucket",
           "asset_type": "aws_s3_bucket"
@@ -169,7 +169,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-e8002051b865d4d3",
+        "id": "fix-5b17055023bf42ee",
         "target": {
           "asset_id": "public-assets-bucket",
           "asset_type": "aws_s3_bucket"
@@ -261,7 +261,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-f6f5240eb51e6eee",
+        "id": "fix-c0e5e43eb28f5519",
         "target": {
           "asset_id": "phi-data-bucket",
           "asset_type": "aws_s3_bucket"
@@ -392,7 +392,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "cd4588b5de97a87ca868d48f6dd74b55fd9bda1b",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

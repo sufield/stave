@@ -36,7 +36,7 @@ func (stubSanitizer) Value(v string) string { return "[REDACTED-VAL]" }
 // ---------------------------------------------------------------------------
 
 func TestMapperMapFinding_YAMLDefinedRemediation(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	spec := &policy.RemediationSpec{
 		Description: "custom desc",
 		Action:      "custom action",
@@ -54,7 +54,7 @@ func TestMapperMapFinding_YAMLDefinedRemediation(t *testing.T) {
 }
 
 func TestMapperMapFinding_PublicExposureFallback(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	f := evaluation.Finding{
 		ControlID: "CTL.S3.PUBLIC.001",
 	}
@@ -65,7 +65,7 @@ func TestMapperMapFinding_PublicExposureFallback(t *testing.T) {
 }
 
 func TestMapperMapFinding_EncryptionFallback(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	f := evaluation.Finding{
 		ControlID: "CTL.S3.ENCRYPT.001",
 	}
@@ -76,7 +76,7 @@ func TestMapperMapFinding_EncryptionFallback(t *testing.T) {
 }
 
 func TestMapperMapFinding_BaselineFallback(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	// CTL.CUSTOM.001 matches ClassBaselineViolation (CTL.* prefix)
 	f := evaluation.Finding{
 		ControlID: "CTL.CUSTOM.001",
@@ -88,7 +88,7 @@ func TestMapperMapFinding_BaselineFallback(t *testing.T) {
 }
 
 func TestMapperMapFinding_DefaultFallback(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	// Non-CTL prefix triggers the default case
 	f := evaluation.Finding{
 		ControlID: "NONSTANDARD.001",
@@ -104,7 +104,7 @@ func TestMapperMapFinding_DefaultFallback(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestMapperMapFindings(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	result := evaluation.Result{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.S3.PUBLIC.001"},
@@ -122,7 +122,7 @@ func TestMapperMapFindings(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestMapperEnrichFindings(t *testing.T) {
-	m := NewMapper(stubIDGen{})
+	m := NewMapper()
 	result := evaluation.Result{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1", AssetType: "aws_s3_bucket"},
@@ -210,7 +210,7 @@ func TestFindingSanitized_NilFields(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestPlannerPlanFor_PublicExposure(t *testing.T) {
-	p := NewPlanner(stubIDGen{})
+	p := NewPlanner()
 	f := Finding{
 		Finding: evaluation.Finding{
 			ControlID: "CTL.S3.PUBLIC.001",
@@ -231,7 +231,7 @@ func TestPlannerPlanFor_PublicExposure(t *testing.T) {
 }
 
 func TestPlannerPlanFor_UnknownClass(t *testing.T) {
-	p := NewPlanner(stubIDGen{})
+	p := NewPlanner()
 	f := Finding{
 		Finding: evaluation.Finding{
 			ControlID: "CTL.CUSTOM.UNKNOWN.001",
@@ -259,7 +259,7 @@ func TestPublicExposurePlannerCanHandle(t *testing.T) {
 }
 
 func TestPublicExposurePlannerPlan(t *testing.T) {
-	p := publicExposurePlanner{idGen: stubIDGen{}}
+	p := publicExposurePlanner{}
 	f := Finding{
 		Finding: evaluation.Finding{
 			ControlID: "CTL.S3.PUBLIC.001",
@@ -413,11 +413,11 @@ func TestBuildControlSummary_NilCtl(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// StablePlanID
+// StableRemediationPlanID (via controldef)
 // ---------------------------------------------------------------------------
 
-func TestStablePlanID(t *testing.T) {
-	id := StablePlanID(stubIDGen{}, "CTL.TEST.001", "bucket-1")
+func TestStableRemediationPlanID(t *testing.T) {
+	id := policy.StableRemediationPlanID(stubIDGen{}, "CTL.TEST.001", "bucket-1")
 	if id == "" {
 		t.Fatal("should not be empty")
 	}

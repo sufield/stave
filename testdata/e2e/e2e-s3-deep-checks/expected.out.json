@@ -329,7 +329,7 @@
         "action": "Restrict access to authorized principals only."
       },
       "fix_plan": {
-        "id": "fix-01361096bc1c13f3",
+        "id": "fix-3a41bc0c25ab5207",
         "target": {
           "asset_id": "vuln-public-write",
           "asset_type": "aws_s3_bucket"
@@ -457,7 +457,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "34532ef6fd1ce46a80b9163787a7e073d0b4ddae",
+      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
       "dirty": false
     }
   }

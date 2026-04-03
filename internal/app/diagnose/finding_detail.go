@@ -29,6 +29,5 @@ func BuildFindingDetail(input FindingDetailInput) (*evaluation.FindingDetail, er
 		Controls:     input.Controls,
 		Snapshots:    input.Snapshots,
 		TraceBuilder: input.TraceBuilder,
-		IDGen:        input.IDGen,
-	})
+	}, input.IDGen)
 }

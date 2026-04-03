@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -37,7 +38,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 		}
 		if actions != nil {
 			f.RemediationPlan = &evaluation.RemediationPlan{
-				ID:      remediation.StablePlanID(testIDGen(), ctlID, resID),
+				ID:      policy.StableRemediationPlanID(testIDGen(), ctlID, resID),
 				Target:  evaluation.RemediationTarget{AssetID: resID, AssetType: kernel.AssetType("storage_bucket")},
 				Actions: actions,
 			}
