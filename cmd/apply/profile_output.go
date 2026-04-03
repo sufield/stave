@@ -19,7 +19,7 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 		return err
 	}
 
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewPlanner()
 	enrichFn := func(res evaluation.Result) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}

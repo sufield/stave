@@ -5,6 +5,7 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -47,11 +48,59 @@ func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sani
 	return toEnrichedFindings(findings), nil
 }
 
-// SanitizeFindings returns sanitized copies of a slice of findings.
+// SanitizeFindings returns sanitized copies of a slice of findings
+// with infrastructure identifiers masked by deterministic tokens.
 func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []remediation.Finding {
 	out := make([]remediation.Finding, len(findings))
 	for i, f := range findings {
-		out[i] = f.Sanitized(s)
+		out[i] = sanitizeFinding(f, s)
+	}
+	return out
+}
+
+// sanitizeFinding returns a deep copy of the Finding with infrastructure
+// identifiers masked. This is presentation/privacy logic, not domain logic.
+func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Finding {
+	out := f
+	out.AssetID = asset.ID(s.ID(string(f.AssetID)))
+
+	if f.Source != nil {
+		src := *f.Source
+		src.File = s.Path(src.File)
+		out.Source = &src
+	}
+
+	if len(f.Evidence.Misconfigurations) > 0 {
+		out.Evidence.Misconfigurations = make([]policy.Misconfiguration, len(f.Evidence.Misconfigurations))
+		for i, m := range f.Evidence.Misconfigurations {
+			out.Evidence.Misconfigurations[i] = m.Sanitized()
+		}
+	}
+
+	if f.Evidence.SourceEvidence != nil {
+		se := *f.Evidence.SourceEvidence
+		se.IdentityStatements = sanitizeSlice(se.IdentityStatements, s)
+		se.ResourceGrantees = sanitizeSlice(se.ResourceGrantees, s)
+		out.Evidence.SourceEvidence = &se
+	}
+
+	if f.RemediationPlan != nil {
+		plan := *f.RemediationPlan
+		plan.Target.AssetID = asset.ID(s.ID(string(plan.Target.AssetID)))
+		out.RemediationPlan = &plan
+	}
+
+	return out
+}
+
+// sanitizeSlice clones and replaces every element using the provided sanitizer.
+func sanitizeSlice[T ~string](items []T, s kernel.Sanitizer) []T {
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]T, len(items))
+	for i := range items {
+		out[i] = T(s.Value(string(items[i])))
 	}
 	return out
 }

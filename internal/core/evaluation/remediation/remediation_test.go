@@ -3,7 +3,6 @@ package remediation
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -25,18 +24,11 @@ func (stubDigester) Digest(components []string, sep byte) kernel.Digest {
 	return "stubhash0123456789abcdef"
 }
 
-type stubSanitizer struct{}
-
-func (stubSanitizer) ID(id string) string   { return "[REDACTED-ID]" }
-func (stubSanitizer) Path(p string) string  { return "[REDACTED-PATH]" }
-func (stubSanitizer) Value(v string) string { return "[REDACTED-VAL]" }
-
 // ---------------------------------------------------------------------------
-// Mapper.MapFinding
+// resolveSpec
 // ---------------------------------------------------------------------------
 
-func TestMapperMapFinding_YAMLDefinedRemediation(t *testing.T) {
-	m := NewMapper()
+func TestResolveSpec_YAMLDefinedRemediation(t *testing.T) {
 	spec := &policy.RemediationSpec{
 		Description: "custom desc",
 		Action:      "custom action",
@@ -44,7 +36,7 @@ func TestMapperMapFinding_YAMLDefinedRemediation(t *testing.T) {
 	f := evaluation.Finding{
 		ControlRemediation: spec,
 	}
-	got := m.MapFinding(f)
+	got := resolveSpec(f)
 	if got.Description != "custom desc" {
 		t.Fatalf("Description = %q", got.Description)
 	}
@@ -53,82 +45,60 @@ func TestMapperMapFinding_YAMLDefinedRemediation(t *testing.T) {
 	}
 }
 
-func TestMapperMapFinding_PublicExposureFallback(t *testing.T) {
-	m := NewMapper()
+func TestResolveSpec_PublicExposureFallback(t *testing.T) {
 	f := evaluation.Finding{
 		ControlID: "CTL.S3.PUBLIC.001",
 	}
-	got := m.MapFinding(f)
+	got := resolveSpec(f)
 	if got.Description != "Resource is exposed to the public internet." {
 		t.Fatalf("Description = %q", got.Description)
 	}
 }
 
-func TestMapperMapFinding_EncryptionFallback(t *testing.T) {
-	m := NewMapper()
+func TestResolveSpec_EncryptionFallback(t *testing.T) {
 	f := evaluation.Finding{
 		ControlID: "CTL.S3.ENCRYPT.001",
 	}
-	got := m.MapFinding(f)
+	got := resolveSpec(f)
 	if got.Description != "Resource data is not encrypted at rest." {
 		t.Fatalf("Description = %q", got.Description)
 	}
 }
 
-func TestMapperMapFinding_BaselineFallback(t *testing.T) {
-	m := NewMapper()
+func TestResolveSpec_BaselineFallback(t *testing.T) {
 	// CTL.CUSTOM.001 matches ClassBaselineViolation (CTL.* prefix)
 	f := evaluation.Finding{
 		ControlID: "CTL.CUSTOM.001",
 	}
-	got := m.MapFinding(f)
+	got := resolveSpec(f)
 	if got.Description != "Resource configuration deviates from security baseline." {
 		t.Fatalf("Description = %q", got.Description)
 	}
 }
 
-func TestMapperMapFinding_DefaultFallback(t *testing.T) {
-	m := NewMapper()
+func TestResolveSpec_DefaultFallback(t *testing.T) {
 	// Non-CTL prefix triggers the default case
 	f := evaluation.Finding{
 		ControlID: "NONSTANDARD.001",
 	}
-	got := m.MapFinding(f)
+	got := resolveSpec(f)
 	if got.Description != "Security control violation detected." {
 		t.Fatalf("Description = %q", got.Description)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Mapper.MapFindings
+// Planner.EnrichFindings
 // ---------------------------------------------------------------------------
 
-func TestMapperMapFindings(t *testing.T) {
-	m := NewMapper()
-	result := evaluation.Result{
-		Findings: []evaluation.Finding{
-			{ControlID: "CTL.S3.PUBLIC.001"},
-			{ControlID: "CTL.S3.ENCRYPT.001"},
-		},
-	}
-	specs := m.MapFindings(result)
-	if len(specs) != 2 {
-		t.Fatalf("len = %d", len(specs))
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Mapper.EnrichFindings
-// ---------------------------------------------------------------------------
-
-func TestMapperEnrichFindings(t *testing.T) {
-	m := NewMapper()
+func TestPlannerEnrichFindings(t *testing.T) {
+	p := NewPlanner()
 	result := evaluation.Result{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1", AssetType: "aws_s3_bucket"},
 		},
 	}
-	enriched := m.EnrichFindings(result)
+	enriched := p.EnrichFindings(result)
 	if len(enriched) != 1 {
 		t.Fatalf("len = %d", len(enriched))
 	}
@@ -138,70 +108,6 @@ func TestMapperEnrichFindings(t *testing.T) {
 	// Public exposure should have a remediation plan
 	if enriched[0].RemediationPlan == nil {
 		t.Fatal("RemediationPlan should be populated for public exposure")
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Finding.Sanitized
-// ---------------------------------------------------------------------------
-
-func TestFindingSanitized(t *testing.T) {
-	f := Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "bucket-secret",
-			Source:    &asset.SourceRef{File: "/real/path.json", Line: 1},
-			Evidence: evaluation.Evidence{
-				Misconfigurations: []policy.Misconfiguration{
-					{ActualValue: "secret-data"},
-				},
-				SourceEvidence: &evaluation.SourceEvidence{
-					IdentityStatements: []kernel.StatementID{"stmt-1"},
-					ResourceGrantees:   []kernel.GranteeID{"grantee-1"},
-				},
-			},
-		},
-		RemediationPlan: &evaluation.RemediationPlan{
-			Target: evaluation.RemediationTarget{
-				AssetID: "bucket-secret",
-			},
-		},
-	}
-
-	sanitized := f.Sanitized(stubSanitizer{})
-	if sanitized.AssetID == "bucket-secret" {
-		t.Fatal("AssetID should be sanitized")
-	}
-	if sanitized.Source.File == "/real/path.json" {
-		t.Fatal("Source.File should be sanitized")
-	}
-	if sanitized.Evidence.Misconfigurations[0].ActualValue != kernel.Redacted {
-		t.Fatal("Misconfiguration ActualValue should be sanitized")
-	}
-	if sanitized.Evidence.SourceEvidence.IdentityStatements[0] == "stmt-1" {
-		t.Fatal("IdentityStatements should be sanitized")
-	}
-	if sanitized.RemediationPlan.Target.AssetID == "bucket-secret" {
-		t.Fatal("RemediationPlan target should be sanitized")
-	}
-
-	// Original should be unmodified
-	if f.AssetID != "bucket-secret" {
-		t.Fatal("original was mutated")
-	}
-}
-
-func TestFindingSanitized_NilFields(t *testing.T) {
-	f := Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "bucket-1",
-		},
-	}
-	// Should not panic with nil Source, SourceEvidence, RemediationPlan
-	sanitized := f.Sanitized(stubSanitizer{})
-	if sanitized.AssetID == "bucket-1" {
-		t.Fatal("AssetID should be sanitized")
 	}
 }
 

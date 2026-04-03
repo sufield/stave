@@ -105,7 +105,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 
 	clock := clockadp.FixedClock(laterTime)
 	maxUnsafe := 0 * time.Hour
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewPlanner()
 
 	// Run evaluation and serialize to JSON — twice
 	var outputs [2][]byte
@@ -191,7 +191,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	clock := clockadp.FixedClock(laterTime)
 	maxUnsafe := 0 * time.Hour
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewPlanner()
 
 	var outputs [10][]byte
 	for i := range 10 {

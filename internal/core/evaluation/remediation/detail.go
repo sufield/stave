@@ -51,8 +51,7 @@ func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailReques
 	}
 
 	// 4. Map and Plan Remediation
-	mapper := NewMapper()
-	spec := mapper.MapFinding(*violation)
+	spec := resolveSpec(*violation)
 	detail.Remediation = &spec
 
 	enriched := Finding{

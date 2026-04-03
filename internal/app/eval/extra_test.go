@@ -249,7 +249,7 @@ func TestSanitizeExemptedAssets_Empty(t *testing.T) {
 }
 
 func TestEnrich_NilSanitizer(t *testing.T) {
-	enricher := remediation.NewMapper()
+	enricher := remediation.NewPlanner()
 	result := evaluation.Result{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
