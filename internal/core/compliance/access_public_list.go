@@ -27,15 +27,11 @@ func init() {
 
 // Evaluate checks every S3 bucket for public ListBucket grants.
 func (ctl *accessPublicList) Evaluate(snap asset.Snapshot) Result {
-	for _, a := range snap.Assets {
-		if !isS3Bucket(a) {
-			continue
-		}
-
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, _ S3Properties) *Result {
 		policyJSON := extractPolicyJSON(a)
 		stmts, err := ParsePolicyStatements(policyJSON)
 		if err != nil || len(stmts) == 0 {
-			continue
+			return nil
 		}
 
 		for _, s := range stmts {
@@ -44,13 +40,14 @@ func (ctl *accessPublicList) Evaluate(snap asset.Snapshot) Result {
 				if sid == "" {
 					sid = "(unnamed)"
 				}
-				return ctl.FailResult(
+				r := ctl.FailResult(
 					fmt.Sprintf("Bucket %s: policy statement %q grants s3:ListBucket to Principal *. ListBucket enables full key enumeration defeating any object-key obscurity approach", a.ID, sid),
 					"Remove the public ListBucket grant. If listing is required, restrict Principal to specific AWS accounts or IAM roles and add a Condition limiting source VPC or IP range.",
 				)
+				return &r
 			}
 		}
-	}
 
-	return ctl.PassResult()
+		return nil
+	})
 }

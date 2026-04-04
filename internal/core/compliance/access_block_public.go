@@ -29,19 +29,14 @@ func init() {
 
 // Evaluate checks every S3 bucket asset in the snapshot for complete BPA enablement.
 func (ctl *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
-	for _, a := range snap.Assets {
-		if !isS3Bucket(a) {
-			continue
-		}
-
-		props := ParseS3Properties(a)
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
 		if props.Controls.PublicAccessBlock.Present && props.Controls.PublicAccessBlock.AllEnabled() {
-			continue
+			return nil
 		}
 
 		// Check account-level BPA as a mitigating factor.
 		if props.Controls.AccountPublicAccessFullyBlocked {
-			return Result{
+			r := Result{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityLow,
@@ -49,15 +44,15 @@ func (ctl *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
 				Remediation:    "Enable all four Block Public Access flags on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
 				ComplianceRefs: ctl.ComplianceRefs(),
 			}
+			return &r
 		}
 
-		return ctl.FailResult(
+		r := ctl.FailResult(
 			fmt.Sprintf("Bucket %s: Block Public Access is not fully enabled — publicly accessible objects may exist", a.ID),
 			"Enable all four Block Public Access flags on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
 		)
-	}
-
-	return ctl.PassResult()
+		return &r
+	})
 }
 
 func extractPolicyJSON(a asset.Asset) string {

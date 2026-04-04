@@ -26,18 +26,14 @@ func init() {
 }
 
 func (ctl *auditObjectLogging) Evaluate(snap asset.Snapshot) Result {
-	for _, a := range snap.Assets {
-		if !isS3Bucket(a) {
-			continue
-		}
-
-		props := ParseS3Properties(a)
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
 		if !props.Logging.ObjectLevelLogging.Enabled {
-			return ctl.FailResult(
+			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: CloudTrail S3 object-level data event logging is not enabled — no forensic evidence for PHI access", a.ID),
 				"Configure a CloudTrail trail with a data event selector for AWS::S3::Object covering this bucket. Use aws cloudtrail put-event-selectors.",
 			)
+			return &r
 		}
-	}
-	return ctl.PassResult()
+		return nil
+	})
 }

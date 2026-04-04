@@ -200,3 +200,21 @@ func ParseS3Properties(a asset.Asset) S3Properties {
 func isS3Bucket(a asset.Asset) bool {
 	return a.Type.String() == "aws_s3_bucket"
 }
+
+// evaluateS3Buckets filters a snapshot to S3 buckets, parses properties,
+// and calls fn for each one. Returns the first non-pass Result from fn,
+// or the Definition's PassResult if all buckets pass.
+//
+// This eliminates the repeated loop+filter+parse boilerplate across
+// all S3 compliance controls.
+func (d Definition) evaluateS3Buckets(snap asset.Snapshot, fn func(asset.Asset, S3Properties) *Result) Result {
+	for _, a := range snap.Assets {
+		if !isS3Bucket(a) {
+			continue
+		}
+		if r := fn(a, ParseS3Properties(a)); r != nil {
+			return *r
+		}
+	}
+	return d.PassResult()
+}
