@@ -2,7 +2,7 @@
 // for the control evaluation pipeline: apply, fix, fix-loop, gate, trace,
 // and verify. The gate use case implements CI failure policies with
 // configurable strategies (fail-on-any, fail-on-new, fail-on-overdue).
-package eval
+package usecase
 
 import "time"
 
