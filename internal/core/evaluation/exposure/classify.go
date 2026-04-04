@@ -23,18 +23,18 @@ func ValidateControlIDs() error {
 
 // ClassifyExposure evaluates a set of normalized resource states and returns
 // classified risk findings.
-func ClassifyExposure(resources []NormalizedResourceInput) []ExposureClassification {
+func ClassifyExposure(resources []NormalizedResourceInput) []Classification {
 	if len(resources) == 0 {
 		return nil
 	}
 
-	var findings []ExposureClassification
+	var findings []Classification
 	for _, r := range resources {
 		findings = append(findings, classifyResource(r)...)
 	}
 
 	// Sort findings deterministically: by Resource ID, then by Control ID severity.
-	slices.SortFunc(findings, func(a, b ExposureClassification) int {
+	slices.SortFunc(findings, func(a, b Classification) int {
 		if a.Resource != b.Resource {
 			return strings.Compare(a.Resource, b.Resource)
 		}
@@ -44,10 +44,10 @@ func ClassifyExposure(resources []NormalizedResourceInput) []ExposureClassificat
 	return findings
 }
 
-func classifyResource(r NormalizedResourceInput) []ExposureClassification {
+func classifyResource(r NormalizedResourceInput) []Classification {
 	// 1. Check for Resource Takeover (Dangling Reference)
 	if !r.Exists && r.ExternalReference {
-		return []ExposureClassification{{
+		return []Classification{{
 			ID:             exposureIDs.resourceTakeover,
 			Resource:       r.Name,
 			ExposureType:   TypeResourceTakeover,
@@ -71,7 +71,7 @@ func classifyResource(r NormalizedResourceInput) []ExposureClassification {
 	}
 
 	// 3. Resolve Risks across different capability axes
-	var findings []ExposureClassification
+	var findings []Classification
 	findings = append(findings, ctx.resolveRead()...)
 	findings = append(findings, ctx.resolveList()...)
 	findings = append(findings, ctx.resolveWrite()...)

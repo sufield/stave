@@ -28,9 +28,9 @@ items:
   - value: a
 `)
 
-	diags, err := LintDir(context.Background(), dir)
+	diags, err := Dir(context.Background(), dir)
 	if err != nil {
-		t.Fatalf("LintDir error: %v", err)
+		t.Fatalf("Dir error: %v", err)
 	}
 
 	codes := map[string]bool{}
@@ -70,9 +70,9 @@ unsafe_predicate:
       value: true
 `)
 
-	diags, err := LintDir(context.Background(), dir)
+	diags, err := Dir(context.Background(), dir)
 	if err != nil {
-		t.Fatalf("LintDir error: %v", err)
+		t.Fatalf("Dir error: %v", err)
 	}
 	if ErrorCount(diags) > 0 {
 		t.Fatalf("expected no errors for good control, got: %+v", diags)
@@ -81,7 +81,7 @@ unsafe_predicate:
 
 func TestLintDir_NoFiles(t *testing.T) {
 	dir := t.TempDir()
-	_, err := LintDir(context.Background(), dir)
+	_, err := Dir(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for empty directory")
 	}

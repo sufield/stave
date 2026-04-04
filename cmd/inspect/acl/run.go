@@ -11,8 +11,8 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// ACLReport is the output of the ACL inspector.
-type ACLReport struct {
+// Report is the output of the ACL inspector.
+type Report struct {
 	Assessment   s3acl.Assessment `json:"assessment"`
 	GrantDetails []GrantDetail    `json:"grant_details"`
 }
@@ -60,7 +60,7 @@ func run(cmd *cobra.Command, file string) error {
 		_ = s3acl.IsPublicGrantee(g.Grantee)
 	}
 
-	report := ACLReport{
+	report := Report{
 		Assessment:   assessment,
 		GrantDetails: details,
 	}

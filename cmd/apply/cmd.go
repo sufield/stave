@@ -15,7 +15,7 @@ import (
 // resolveEnvVarDefaults fills shared flag values from STAVE_* environment
 // variables when the user did not set them explicitly on the command line.
 // Precedence: CLI flag > env var > config file > default.
-func (o *ApplyOptions) resolveEnvVarDefaults(cmd *cobra.Command) {
+func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
 	o.Format = cliflags.ResolveFormatEnv(cmd, o.Format)
 	o.ControlsDir = cliflags.ResolveControlsEnv(cmd, o.ControlsDir)
 	o.ObservationsDir = cliflags.ResolveObservationsEnv(cmd, o.ObservationsDir)
@@ -25,7 +25,7 @@ func (o *ApplyOptions) resolveEnvVarDefaults(cmd *cobra.Command) {
 // resolveApplyConfigDefaults fills apply-specific flag values from project
 // config when the user did not set them explicitly on the command line.
 // Called from PreRunE — the only place that touches *cobra.Command.
-func (o *ApplyOptions) resolveApplyConfigDefaults(cmd *cobra.Command) {
+func (o *Options) resolveApplyConfigDefaults(cmd *cobra.Command) {
 	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
@@ -63,8 +63,8 @@ func (o *SharedOptions) normalize() {
 	o.ObservationsDir = fsutil.CleanUserPath(o.ObservationsDir)
 }
 
-// ApplyOptions configuration for the apply command.
-type ApplyOptions struct {
+// Options configuration for the apply command.
+type Options struct {
 	SharedOptions
 	DryRun             bool
 	AllowUnknown       bool
@@ -78,7 +78,7 @@ type ApplyOptions struct {
 }
 
 // normalize cleans all user-supplied paths in one pass.
-func (o *ApplyOptions) normalize() {
+func (o *Options) normalize() {
 	o.SharedOptions.normalize()
 	o.ExemptionFile = fsutil.CleanUserPath(o.ExemptionFile)
 	o.IntegrityManifest = fsutil.CleanUserPath(o.IntegrityManifest)
@@ -88,7 +88,7 @@ func (o *ApplyOptions) normalize() {
 
 // NewApplyCmd constructs the apply command.
 func NewApplyCmd(p *compose.Provider) *cobra.Command {
-	opts := &ApplyOptions{}
+	opts := &Options{}
 
 	cmd := &cobra.Command{
 		Use:   "apply",
@@ -164,7 +164,7 @@ Exit Codes:
 	return cmd
 }
 
-func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
+func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow unknown source types"))
 	f.StringVar(&o.ExemptionFile, "exemption-file", "", "Path to asset exemption list YAML file")
@@ -176,7 +176,7 @@ func (o *ApplyOptions) bindApplySpecific(cmd *cobra.Command) {
 	f.BoolVar(&o.IncludeAll, "include-all", false, "Disable health scope filtering")
 }
 
-func (o *ApplyOptions) validate() error {
+func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
 		return &ui.UserError{Err: fmt.Errorf("flag --input is required when using --profile")}
 	}

@@ -17,8 +17,8 @@ type ControlFinder interface {
 	FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error)
 }
 
-// ExplainInput holds the inputs for the explain workflow.
-type ExplainInput struct {
+// Input holds the inputs for the explain workflow.
+type Input struct {
 	ControlID   kernel.ControlID
 	ControlsDir string
 }
@@ -29,7 +29,7 @@ type Explainer struct {
 }
 
 // Run executes the explain workflow.
-func (e *Explainer) Run(ctx context.Context, input ExplainInput) (contracts.ExplainResult, error) {
+func (e *Explainer) Run(ctx context.Context, input Input) (contracts.ExplainResult, error) {
 	if input.ControlID == "" {
 		return contracts.ExplainResult{}, fmt.Errorf("control id cannot be empty")
 	}

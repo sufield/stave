@@ -7,8 +7,8 @@ import (
 	s3policy "github.com/sufield/stave/internal/core/s3/policy"
 )
 
-// PolicyReport is the output of the policy inspector.
-type PolicyReport struct {
+// Report is the output of the policy inspector.
+type Report struct {
 	Assessment  s3policy.Assessment          `json:"assessment"`
 	PrefixScope s3policy.PrefixScopeAnalysis `json:"prefix_scope"`
 	Risk        risk.Report                  `json:"risk"`
@@ -16,13 +16,13 @@ type PolicyReport struct {
 }
 
 // Analyze parses a policy document and produces a comprehensive report.
-func Analyze(input []byte, resolver risk.PermissionResolver) (PolicyReport, error) {
+func Analyze(input []byte, resolver risk.PermissionResolver) (Report, error) {
 	doc, err := s3policy.Parse(string(input))
 	if err != nil {
-		return PolicyReport{}, fmt.Errorf("parse policy: %w", err)
+		return Report{}, fmt.Errorf("parse policy: %w", err)
 	}
 
-	return PolicyReport{
+	return Report{
 		Assessment:  doc.Assess(),
 		PrefixScope: doc.AnalyzeScopes(),
 		Risk:        s3policy.NewEvaluator(nil, resolver).Evaluate(doc),

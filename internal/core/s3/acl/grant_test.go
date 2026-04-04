@@ -127,7 +127,7 @@ func TestGrant_HasFullControl(t *testing.T) {
 		{"", false},
 	}
 	for _, tt := range tests {
-		g := Grant{Permission: ACLPermission(tt.perm)}
+		g := Grant{Permission: Permission(tt.perm)}
 		if got := g.HasFullControl(); got != tt.want {
 			t.Errorf("HasFullControl(%q) = %v, want %v", tt.perm, got, tt.want)
 		}
@@ -136,7 +136,7 @@ func TestGrant_HasFullControl(t *testing.T) {
 
 func TestGrant_Permissions(t *testing.T) {
 	tests := []struct {
-		perm ACLPermission
+		perm Permission
 		want risk.Permission
 	}{
 		{ACLPermRead, risk.PermRead},
@@ -144,9 +144,9 @@ func TestGrant_Permissions(t *testing.T) {
 		{ACLPermReadACP, risk.PermAdminRead},
 		{ACLPermWriteACP, risk.PermAdminWrite},
 		{ACLPermFullControl, risk.PermRead | risk.PermWrite | risk.PermAdminRead | risk.PermAdminWrite},
-		{ACLPermission("UNKNOWN"), 0},
-		{ACLPermission(""), 0},
-		{ACLPermission("  read  "), risk.PermRead}, // whitespace handling
+		{Permission("UNKNOWN"), 0},
+		{Permission(""), 0},
+		{Permission("  read  "), risk.PermRead}, // whitespace handling
 	}
 	for _, tt := range tests {
 		g := Grant{Permission: tt.perm}

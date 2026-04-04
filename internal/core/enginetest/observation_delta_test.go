@@ -97,7 +97,7 @@ func TestLatestTwoSnapshots_InsufficientSnapshots(t *testing.T) {
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
-	changes := []asset.AssetDiff{
+	changes := []asset.Diff{
 		{ChangeType: asset.ChangeAdded},
 		{ChangeType: asset.ChangeAdded},
 		{ChangeType: asset.ChangeRemoved},

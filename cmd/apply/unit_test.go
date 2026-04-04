@@ -54,7 +54,7 @@ func TestResolveApplyOptions(t *testing.T) {
 	}
 
 	t.Run("valid flags with defaults", func(t *testing.T) {
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:       filepath.Join(fixture, "controls"),
 				ObservationsDir:   filepath.Join(fixture, "observations"),
@@ -79,7 +79,7 @@ func TestResolveApplyOptions(t *testing.T) {
 	})
 
 	t.Run("valid flags with --now", func(t *testing.T) {
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:       filepath.Join(fixture, "controls"),
 				ObservationsDir:   filepath.Join(fixture, "observations"),
@@ -106,7 +106,7 @@ func TestResolveApplyOptions(t *testing.T) {
 	})
 
 	t.Run("stdin mode", func(t *testing.T) {
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:       filepath.Join(fixture, "controls"),
 				ObservationsDir:   "-",
@@ -125,12 +125,12 @@ func TestResolveApplyOptions(t *testing.T) {
 
 	errorCases := []struct {
 		name        string
-		opts        ApplyOptions
+		opts        Options
 		wantContain string
 	}{
 		{
 			name: "controls dir not found",
-			opts: ApplyOptions{
+			opts: Options{
 				SharedOptions: SharedOptions{
 					ControlsDir:       "/nonexistent/path",
 					ObservationsDir:   filepath.Join(fixture, "observations"),
@@ -141,7 +141,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		},
 		{
 			name: "observations dir not found",
-			opts: ApplyOptions{
+			opts: Options{
 				SharedOptions: SharedOptions{
 					ControlsDir:       filepath.Join(fixture, "controls"),
 					ObservationsDir:   "/nonexistent/path",
@@ -152,7 +152,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		},
 		{
 			name: "invalid max-unsafe",
-			opts: ApplyOptions{
+			opts: Options{
 				SharedOptions: SharedOptions{
 					ControlsDir:       filepath.Join(fixture, "controls"),
 					ObservationsDir:   filepath.Join(fixture, "observations"),
@@ -163,7 +163,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		},
 		{
 			name: "invalid --now format",
-			opts: ApplyOptions{
+			opts: Options{
 				SharedOptions: SharedOptions{
 					ControlsDir:       filepath.Join(fixture, "controls"),
 					ObservationsDir:   filepath.Join(fixture, "observations"),
@@ -192,7 +192,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		if len(files) == 0 {
 			t.Fatal("no control YAML files in fixture: e2e-01-violation/controls must contain at least one *.yaml file")
 		}
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:       files[0],
 				ObservationsDir:   filepath.Join(fixture, "observations"),
@@ -222,7 +222,7 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 	return b.Build(context.Background(), plan)
 }
 
-func testBuilder(opts *ApplyOptions, params applyParams) *Builder {
+func testBuilder(opts *Options, params applyParams) *Builder {
 	format, _ := ui.ParseOutputFormat(opts.Format)
 	hasher := crypto.NewHasher()
 	p := compose.NewDefaultProvider()
@@ -246,7 +246,7 @@ func TestBuildApplyDeps(t *testing.T) {
 	fixture := testdataDir(t, "e2e-01-violation")
 
 	t.Run("json format produces deps", func(t *testing.T) {
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:     filepath.Join(fixture, "controls"),
 				ObservationsDir: filepath.Join(fixture, "observations"),
@@ -278,7 +278,7 @@ func TestBuildApplyDeps(t *testing.T) {
 	})
 
 	t.Run("text format produces deps", func(t *testing.T) {
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:     filepath.Join(fixture, "controls"),
 				ObservationsDir: filepath.Join(fixture, "observations"),
@@ -304,7 +304,7 @@ func TestBuildApplyDeps(t *testing.T) {
 	})
 
 	t.Run("invalid output format", func(t *testing.T) {
-		opts := &ApplyOptions{
+		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:     filepath.Join(fixture, "controls"),
 				ObservationsDir: filepath.Join(fixture, "observations"),

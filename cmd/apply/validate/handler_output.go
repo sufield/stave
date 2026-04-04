@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+var errNilResult = errors.New("validation result is nil")
 
 // Reporter handles the formatting and writing of validation results.
 type Reporter struct {
@@ -24,7 +27,7 @@ type Reporter struct {
 // Returns an error if result is nil.
 func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
 	if result == nil {
-		return fmt.Errorf("validation result is nil")
+		return errNilResult
 	}
 
 	report := buildReport(result, r.FixHints, hc)
@@ -43,7 +46,7 @@ func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
 // Returns an error if result is nil.
 func (r *Reporter) ExitStatus(result *appvalidation.Result) error {
 	if result == nil {
-		return fmt.Errorf("validation result is nil")
+		return errNilResult
 	}
 	if !result.Valid() {
 		return ui.ErrValidationFailed

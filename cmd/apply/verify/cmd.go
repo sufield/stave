@@ -77,7 +77,7 @@ Exit Codes:
 			gf := cliflags.GetGlobalFlags(cmd)
 
 			return appverify.RunVerify(
-				appverify.VerifyDeps{
+				appverify.Deps{
 					LoadControls: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 						return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
 					},
@@ -89,7 +89,7 @@ Exit Codes:
 					},
 					BeginProgress: rt.BeginProgress,
 				},
-				appverify.VerifyRequest{
+				appverify.Request{
 					Ctx:               exec.Context,
 					BeforeDir:         exec.BeforeDir,
 					AfterDir:          exec.AfterDir,

@@ -45,11 +45,11 @@ const (
 // exposureCandidate tracks the most severe finding identified during analysis.
 type exposureCandidate struct {
 	priority Priority
-	finding  ExposureClassification
+	finding  Classification
 }
 
 // consider updates the candidate if the provided priority is higher than the current one.
-func (c *exposureCandidate) consider(priority Priority, f ExposureClassification) {
+func (c *exposureCandidate) consider(priority Priority, f Classification) {
 	if c.finding.ID == "" || priority > c.priority {
 		c.priority = priority
 		c.finding = f
@@ -80,8 +80,8 @@ func SelectReadExposure(in ReadExposureInput) *exposureCandidate {
 
 	best := &exposureCandidate{}
 
-	template := func(id kernel.ControlID, t Type, ev []string) ExposureClassification {
-		return ExposureClassification{
+	template := func(id kernel.ControlID, t Type, ev []string) Classification {
+		return Classification{
 			ID:             id,
 			Resource:       in.ResourceID,
 			ExposureType:   t,
@@ -142,8 +142,8 @@ func SelectWriteExposure(in WriteExposureInput) *exposureCandidate {
 	best := &exposureCandidate{}
 	actions := buildEffectiveActions(in.BaseActions, in.CanAlsoRead, in.CanAlsoList)
 
-	template := func(id kernel.ControlID, ev []string) ExposureClassification {
-		return ExposureClassification{
+	template := func(id kernel.ControlID, ev []string) Classification {
+		return Classification{
 			ID:             id,
 			Resource:       in.ResourceID,
 			ExposureType:   TypePublicWrite,

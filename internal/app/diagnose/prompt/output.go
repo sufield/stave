@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
-// WriteOutput renders a PromptOutput to the writer in the given format.
-func WriteOutput(w, stderr io.Writer, out PromptOutput, format appcontracts.OutputFormat, quiet bool) error {
+// WriteOutput renders a Output to the writer in the given format.
+func WriteOutput(w, stderr io.Writer, out Output, format appcontracts.OutputFormat, quiet bool) error {
 	if quiet && !format.IsMachineReadable() {
 		w = io.Discard
 	}

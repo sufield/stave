@@ -13,9 +13,9 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// LintDir discovers YAML files under root and lints them all.
+// Dir discovers YAML files under root and lints them all.
 // It returns a sorted slice of diagnostics.
-func LintDir(ctx context.Context, root string) ([]Diagnostic, error) {
+func Dir(ctx context.Context, root string) ([]Diagnostic, error) {
 	files, err := CollectYAMLFiles(ctx, root)
 	if err != nil {
 		return nil, err

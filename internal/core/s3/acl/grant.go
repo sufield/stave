@@ -7,15 +7,15 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
-// ACLPermission represents an S3 ACL permission string.
-type ACLPermission string
+// Permission represents an S3 ACL permission string.
+type Permission string
 
 const (
-	ACLPermRead        ACLPermission = "READ"
-	ACLPermWrite       ACLPermission = "WRITE"
-	ACLPermReadACP     ACLPermission = "READ_ACP"
-	ACLPermWriteACP    ACLPermission = "WRITE_ACP"
-	ACLPermFullControl ACLPermission = "FULL_CONTROL"
+	ACLPermRead        Permission = "READ"
+	ACLPermWrite       Permission = "WRITE"
+	ACLPermReadACP     Permission = "READ_ACP"
+	ACLPermWriteACP    Permission = "WRITE_ACP"
+	ACLPermFullControl Permission = "FULL_CONTROL"
 )
 
 // Audience classifies the reach of an ACL grant.
@@ -64,8 +64,8 @@ func (a *Audience) UnmarshalText(text []byte) error {
 
 // Grant represents a single entry in an S3 Access Control List.
 type Grant struct {
-	Grantee    string        `json:"grantee"`    // Group URI or canonical ID
-	Permission ACLPermission `json:"permission"` // READ, WRITE, etc.
+	Grantee    string     `json:"grantee"`    // Group URI or canonical ID
+	Permission Permission `json:"permission"` // READ, WRITE, etc.
 }
 
 // Grants is a collection helper for ACL grant slices.
@@ -89,7 +89,7 @@ func (g Grant) HasFullControl() bool {
 
 // Permissions maps the S3 ACL permission to the domain risk bitmask.
 func (g Grant) Permissions() risk.Permission {
-	p := ACLPermission(strings.ToUpper(strings.TrimSpace(string(g.Permission))))
+	p := Permission(strings.ToUpper(strings.TrimSpace(string(g.Permission))))
 	switch p {
 	case ACLPermRead:
 		return risk.PermRead

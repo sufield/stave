@@ -19,7 +19,7 @@ type standardIO struct {
 }
 
 // ResolveStandardIO extracts IO and format state for the standard apply path.
-func ResolveStandardIO(o *ApplyOptions, cs cobraState) (standardIO, error) {
+func ResolveStandardIO(o *Options, cs cobraState) (standardIO, error) {
 	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
 		return standardIO{}, err

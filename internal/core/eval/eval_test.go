@@ -79,7 +79,7 @@ type mockVerifyRunner struct {
 	err  error
 }
 
-func (m *mockVerifyRunner) RunVerification(_ context.Context, _ VerifyRequest) (VerifyResponse, error) {
+func (m *mockVerifyRunner) RunVerification(_ context.Context, _ Request) (VerifyResponse, error) {
 	return m.resp, m.err
 }
 
@@ -135,23 +135,23 @@ func TestFix(t *testing.T) {
 
 func TestFixLoop(t *testing.T) {
 	t.Run("happy", func(t *testing.T) {
-		_, err := FixLoop(context.Background(), FixLoopRequest{BeforeDir: "a", AfterDir: "b"}, FixLoopDeps{Runner: &mockFixLoopRunner{}})
+		_, err := FixLoop(context.Background(), FixLoopRequest{BeforeDir: "a", AfterDir: "b"}, LoopDeps{Runner: &mockFixLoopRunner{}})
 		assertNoErr(t, err)
 	})
 	t.Run("empty before", func(t *testing.T) {
-		_, err := FixLoop(context.Background(), FixLoopRequest{AfterDir: "b"}, FixLoopDeps{Runner: &mockFixLoopRunner{}})
+		_, err := FixLoop(context.Background(), FixLoopRequest{AfterDir: "b"}, LoopDeps{Runner: &mockFixLoopRunner{}})
 		assertErr(t, err)
 	})
 	t.Run("empty after", func(t *testing.T) {
-		_, err := FixLoop(context.Background(), FixLoopRequest{BeforeDir: "a"}, FixLoopDeps{Runner: &mockFixLoopRunner{}})
+		_, err := FixLoop(context.Background(), FixLoopRequest{BeforeDir: "a"}, LoopDeps{Runner: &mockFixLoopRunner{}})
 		assertErr(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
-		_, err := FixLoop(context.Background(), FixLoopRequest{BeforeDir: "a", AfterDir: "b"}, FixLoopDeps{Runner: &mockFixLoopRunner{err: errors.New("fail")}})
+		_, err := FixLoop(context.Background(), FixLoopRequest{BeforeDir: "a", AfterDir: "b"}, LoopDeps{Runner: &mockFixLoopRunner{err: errors.New("fail")}})
 		assertErr(t, err)
 	})
 	t.Run("ctx", func(t *testing.T) {
-		_, err := FixLoop(canceled(), FixLoopRequest{BeforeDir: "a", AfterDir: "b"}, FixLoopDeps{Runner: &mockFixLoopRunner{}})
+		_, err := FixLoop(canceled(), FixLoopRequest{BeforeDir: "a", AfterDir: "b"}, LoopDeps{Runner: &mockFixLoopRunner{}})
 		assertCanceled(t, err)
 	})
 }
@@ -252,23 +252,23 @@ func TestTrace(t *testing.T) {
 
 func TestVerify(t *testing.T) {
 	t.Run("happy", func(t *testing.T) {
-		_, err := Verify(context.Background(), VerifyRequest{BeforeDir: "a", AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{}})
+		_, err := Verify(context.Background(), Request{BeforeDir: "a", AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{}})
 		assertNoErr(t, err)
 	})
 	t.Run("empty before", func(t *testing.T) {
-		_, err := Verify(context.Background(), VerifyRequest{AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{}})
+		_, err := Verify(context.Background(), Request{AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{}})
 		assertErr(t, err)
 	})
 	t.Run("empty after", func(t *testing.T) {
-		_, err := Verify(context.Background(), VerifyRequest{BeforeDir: "a"}, VerifyDeps{Runner: &mockVerifyRunner{}})
+		_, err := Verify(context.Background(), Request{BeforeDir: "a"}, VerifyDeps{Runner: &mockVerifyRunner{}})
 		assertErr(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
-		_, err := Verify(context.Background(), VerifyRequest{BeforeDir: "a", AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{err: errors.New("fail")}})
+		_, err := Verify(context.Background(), Request{BeforeDir: "a", AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{err: errors.New("fail")}})
 		assertErr(t, err)
 	})
 	t.Run("ctx", func(t *testing.T) {
-		_, err := Verify(canceled(), VerifyRequest{BeforeDir: "a", AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{}})
+		_, err := Verify(canceled(), Request{BeforeDir: "a", AfterDir: "b"}, VerifyDeps{Runner: &mockVerifyRunner{}})
 		assertCanceled(t, err)
 	})
 }

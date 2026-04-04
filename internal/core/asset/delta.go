@@ -44,8 +44,8 @@ type PropertyChange struct {
 	To   any    `json:"to,omitempty"`
 }
 
-// AssetDiff represents the changes detected for a single asset.
-type AssetDiff struct {
+// Diff represents the changes detected for a single asset.
+type Diff struct {
 	AssetID         ID               `json:"asset_id"`
 	ChangeType      ChangeType       `json:"change_type"` // added|removed|modified
 	FromType        kernel.AssetType `json:"from_type,omitempty"`
@@ -119,7 +119,7 @@ type ObservationDelta struct {
 	FromCaptured  time.Time               `json:"from_captured_at"`
 	ToCaptured    time.Time               `json:"to_captured_at"`
 	Summary       ObservationDeltaSummary `json:"summary"`
-	Changes       []AssetDiff             `json:"changes"`
+	Changes       []Diff                  `json:"changes"`
 }
 
 // LatestTwoSnapshots returns the two most recent snapshots by CapturedAt.
@@ -158,7 +158,7 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 		Kind:          kernel.KindObservationDelta,
 		FromCaptured:  prev.CapturedAt.UTC(),
 		ToCaptured:    curr.CapturedAt.UTC(),
-		Changes:       make([]AssetDiff, 0),
+		Changes:       make([]Diff, 0),
 	}
 
 	for _, id := range ids {
@@ -190,7 +190,7 @@ func ComputeObservationDelta(prev, curr Snapshot) ObservationDelta {
 }
 
 // SummarizeDeltaChanges computes summary counts from a list of asset diffs.
-func SummarizeDeltaChanges(changes []AssetDiff) ObservationDeltaSummary {
+func SummarizeDeltaChanges(changes []Diff) ObservationDeltaSummary {
 	s := ObservationDeltaSummary{}
 	for _, change := range changes {
 		s.Increment(change.ChangeType)

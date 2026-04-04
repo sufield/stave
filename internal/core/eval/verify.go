@@ -7,16 +7,16 @@ import (
 
 // VerificationRunnerPort compares before/after evaluations to check remediation.
 type VerificationRunnerPort interface {
-	RunVerification(ctx context.Context, req VerifyRequest) (VerifyResponse, error)
+	RunVerification(ctx context.Context, req Request) (VerifyResponse, error)
 }
 
-// VerifyDeps groups the port interfaces for the verify use case.
+// Deps groups the port interfaces for the verify use case.
 type VerifyDeps struct {
 	Runner VerificationRunnerPort
 }
 
 // Verify compares before/after evaluations to check whether remediation resolved findings.
-func Verify(ctx context.Context, req VerifyRequest, deps VerifyDeps) (VerifyResponse, error) {
+func Verify(ctx context.Context, req Request, deps VerifyDeps) (VerifyResponse, error) {
 	if err := ctx.Err(); err != nil {
 		return VerifyResponse{}, fmt.Errorf("verify: %w", err)
 	}

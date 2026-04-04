@@ -19,7 +19,11 @@ import (
 
 // ErrTooManySnapshots indicates the observations directory exceeds the
 // enumeration safety limit.
-var ErrTooManySnapshots = errors.New("too many snapshot files")
+var (
+	ErrTooManySnapshots       = errors.New("too many snapshot files")
+	errMetadataLoaderRequired = errors.New("snapshot metadata loader is required")
+	errSnapshotLoaderRequired = errors.New("snapshot loader is required")
+)
 
 // ScannerOptions configures snapshot file discovery.
 type ScannerOptions struct {
@@ -59,7 +63,7 @@ func (o ScannerOptions) maxFiles() int {
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.
 func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil {
-		return nil, fmt.Errorf("snapshot metadata loader is required")
+		return nil, errMetadataLoaderRequired
 	}
 
 	entries, err := os.ReadDir(observationsDir)
@@ -135,7 +139,7 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 // RelPath uses forward slashes and is relative to observationsDir.
 func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil {
-		return nil, fmt.Errorf("snapshot metadata loader is required")
+		return nil, errMetadataLoaderRequired
 	}
 
 	absRoot, err := filepath.Abs(observationsDir)

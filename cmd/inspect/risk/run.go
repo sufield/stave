@@ -7,8 +7,8 @@ import (
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
-// RiskInput is the JSON input for risk analysis.
-type RiskInput struct {
+// Input is the JSON input for risk analysis.
+type Input struct {
 	Actions         []string `json:"actions"`
 	IsPublic        bool     `json:"is_public"`
 	IsAuthenticated bool     `json:"is_authenticated"`
@@ -16,8 +16,8 @@ type RiskInput struct {
 	IsAllow         bool     `json:"is_allow"`
 }
 
-// RiskOutput is the JSON output of risk analysis.
-type RiskOutput struct {
+// Output is the JSON output of risk analysis.
+type Output struct {
 	NormalizedActions []string              `json:"normalized_actions"`
 	Permissions       domainrisk.Permission `json:"permissions"`
 	PermissionCheck   PermissionCheck       `json:"permission_check"`
@@ -34,10 +34,10 @@ type PermissionCheck struct {
 }
 
 // Analyze parses input JSON and produces a risk analysis report.
-func Analyze(input []byte, resolver domainrisk.PermissionResolver) (RiskOutput, error) {
-	var in RiskInput
+func Analyze(input []byte, resolver domainrisk.PermissionResolver) (Output, error) {
+	var in Input
 	if err := json.Unmarshal(input, &in); err != nil {
-		return RiskOutput{}, fmt.Errorf("parse risk input: %w", err)
+		return Output{}, fmt.Errorf("parse risk input: %w", err)
 	}
 
 	normalized := domainrisk.NormalizeActions(in.Actions)
@@ -57,7 +57,7 @@ func Analyze(input []byte, resolver domainrisk.PermissionResolver) (RiskOutput, 
 	report.UpdateReport(result)
 	report.Permissions = perms
 
-	return RiskOutput{
+	return Output{
 		NormalizedActions: normalized,
 		Permissions:       perms,
 		PermissionCheck: PermissionCheck{

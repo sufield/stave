@@ -27,23 +27,23 @@ type FindingData struct {
 	Guidance     string
 }
 
-// PromptData holds all data for the prompt rendering.
-type PromptData struct {
+// Data holds all data for the prompt rendering.
+type Data struct {
 	FindingCount    int
 	AssetID         string
 	Findings        []FindingData
 	AssetProperties string
 }
 
-// PromptBuilder coordinates assembly of LLM-ready prompt data.
-type PromptBuilder struct {
+// Builder coordinates assembly of LLM-ready prompt data.
+type Builder struct {
 	AssetID        string
 	ControlsByID   map[kernel.ControlID]*policy.ControlDefinition
 	AssetPropsJSON string
 }
 
 // Build creates prompt data from matched findings.
-func (b *PromptBuilder) Build(matched []evaluation.Finding) PromptData {
+func (b *Builder) Build(matched []evaluation.Finding) Data {
 	findings := make([]FindingData, 0, len(matched))
 
 	for _, v := range matched {
@@ -72,7 +72,7 @@ func (b *PromptBuilder) Build(matched []evaluation.Finding) PromptData {
 		findings = append(findings, fd)
 	}
 
-	return PromptData{
+	return Data{
 		FindingCount:    len(findings),
 		AssetID:         b.AssetID,
 		Findings:        findings,
@@ -164,7 +164,7 @@ func BuildGuidanceSummary(m *policy.RemediationSpec) string {
 }
 
 // RenderPrompt builds the Markdown prompt from assembled data.
-func RenderPrompt(data PromptData) string {
+func RenderPrompt(data Data) string {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "# Stave Finding Analysis\n\n")

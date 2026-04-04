@@ -39,7 +39,7 @@ func (e *Explainer) Run(ctx context.Context, req ExplainRequest) (appcontracts.E
 	}
 
 	runner := &appexplain.Explainer{Finder: e.Finder}
-	return runner.Run(ctx, appexplain.ExplainInput{
+	return runner.Run(ctx, appexplain.Input{
 		ControlID:   req.ControlID,
 		ControlsDir: req.ControlsDir,
 	})

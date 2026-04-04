@@ -16,7 +16,7 @@ import (
 // evalContext groups the parameters needed by the evaluation pipeline.
 type evalContext struct {
 	Provider          *compose.Provider
-	Opts              *ApplyOptions
+	Opts              *Options
 	Params            applyParams
 	IO                standardIO
 	Plan              *appeval.EvaluationPlan
@@ -27,7 +27,7 @@ type evalContext struct {
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *ApplyOptions, params applyParams, sio standardIO, cfg RunConfig) error {
+func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *Options, params applyParams, sio standardIO, cfg RunConfig) error {
 	pc, pcErr := resolveProjectContext()
 	if pcErr != nil {
 		return decorateError(pcErr)

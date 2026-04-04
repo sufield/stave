@@ -107,7 +107,7 @@ func TestNewDiffFilter_InvalidChangeType(t *testing.T) {
 }
 
 func TestApplyDiffFilter(t *testing.T) {
-	changes := []asset.AssetDiff{
+	changes := []asset.Diff{
 		{AssetID: "bucket-a", ChangeType: asset.ChangeAdded, ToType: "res:aws:s3:bucket"},
 		{AssetID: "bucket-b", ChangeType: asset.ChangeModified, FromType: "res:aws:s3:bucket", ToType: "res:aws:s3:bucket"},
 		{AssetID: "queue-a", ChangeType: asset.ChangeRemoved, FromType: "res:aws:sqs:queue"},

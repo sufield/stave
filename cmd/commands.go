@@ -217,7 +217,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 			Clock: ports.RealClock{},
 		},
 	}))
-	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.FixLoopDeps{
+	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.LoopDeps{
 		NewCELEvaluator: p.NewCELEvaluator,
 		NewCtlRepo:      p.NewControlRepo,
 		NewObsRepo:      p.NewObservationRepo,
@@ -230,7 +230,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 		},
 	}))
 	celEval, _ := p.NewCELEvaluator()
-	ciCmd.AddCommand(enforce.NewFixCmd(fix.FixDeps{
+	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
 		UseCaseDeps: eval.FixDeps{
 			Loader: &infrafix.FindingLoader{CELEvaluator: celEval},
 		},

@@ -14,8 +14,8 @@ import (
 // Injected by the cmd layer (typically backed by evaljson.NewLoader).
 type EvalLoadFunc func(path string) (*evaluation.Result, error)
 
-// PromptOutput contains the assembled prompt and metadata.
-type PromptOutput struct {
+// Output contains the assembled prompt and metadata.
+type Output struct {
 	Rendered   string
 	FindingIDs []kernel.ControlID
 	AssetID    string
@@ -28,7 +28,7 @@ type BuildFunc func(
 	controlsByID map[kernel.ControlID]*policy.ControlDefinition,
 	assetPropsJSON string,
 	matched []evaluation.Finding,
-) PromptOutput
+) Output
 
 // DiagnosticContext holds pre-loaded state the prompt generator needs
 // to produce rich, context-aware prompts.
@@ -73,20 +73,20 @@ func NewRunner(dctx DiagnosticContext) *Runner {
 
 // Run generates an LLM prompt based on evaluation findings.
 // Returns the structured output for rendering by the caller.
-func (r *Runner) Run(ctx context.Context, cfg Config) (PromptOutput, error) {
+func (r *Runner) Run(ctx context.Context, cfg Config) (Output, error) {
 	if err := ctx.Err(); err != nil {
-		return PromptOutput{}, err
+		return Output{}, err
 	}
 	if cfg.EvalFile == "" {
-		return PromptOutput{}, fmt.Errorf("--evaluation-file is required")
+		return Output{}, fmt.Errorf("--evaluation-file is required")
 	}
 	if cfg.AssetID == "" {
-		return PromptOutput{}, fmt.Errorf("--asset-id is required")
+		return Output{}, fmt.Errorf("--asset-id is required")
 	}
 
 	evalResult, err := r.Ctx.LoadEval(cfg.EvalFile)
 	if err != nil {
-		return PromptOutput{}, fmt.Errorf("load evaluation file: %w", err)
+		return Output{}, fmt.Errorf("load evaluation file: %w", err)
 	}
 
 	assetID := asset.ID(cfg.AssetID)
@@ -97,7 +97,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) (PromptOutput, error) {
 		}
 	}
 	if len(matched) == 0 {
-		return PromptOutput{}, fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
+		return Output{}, fmt.Errorf("no findings for asset %q in %s", cfg.AssetID, cfg.EvalFile)
 	}
 
 	out := r.Ctx.BuildPrompt(cfg.AssetID, r.Ctx.ControlsByID, r.Ctx.AssetPropsJSON, matched)

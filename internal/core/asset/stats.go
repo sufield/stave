@@ -1,7 +1,6 @@
 package asset
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -57,7 +56,7 @@ func (s ObservationStats) MaxGap() time.Duration {
 // CONTRACT: out-of-order timestamps are ignored.
 func (s *ObservationStats) RecordObservation(t time.Time) error {
 	if t.IsZero() {
-		return fmt.Errorf("record observation: time must not be zero")
+		return ErrZeroTimestamp
 	}
 
 	if s.observationCount == 0 {
