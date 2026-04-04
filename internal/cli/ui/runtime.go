@@ -102,6 +102,11 @@ func (r *Runtime) BeginProgress(label string) func() {
 	finishedCh := make(chan struct{})
 	go func() {
 		defer close(finishedCh)
+		defer func() {
+			if r := recover(); r != nil {
+				_, _ = fmt.Fprintf(errOut, "\rprogress render panic: %v\n", r)
+			}
+		}()
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 		i := 0
