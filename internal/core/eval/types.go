@@ -83,7 +83,7 @@ type ApplyResponse struct {
 
 // --- Verify ---
 
-type VerifyRequest struct {
+type Request struct {
 	BeforeDir         string `json:"before_dir"`
 	AfterDir          string `json:"after_dir"`
 	ControlsDir       string `json:"controls_dir,omitempty"`

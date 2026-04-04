@@ -10,8 +10,8 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// ExposureInput is the JSON input for exposure classification.
-type ExposureInput struct {
+// Input is the JSON input for exposure classification.
+type Input struct {
 	Resources []ResourceInput `json:"resources"`
 	Access    *AccessInput    `json:"access,omitempty"`
 }
@@ -84,11 +84,11 @@ type CapInput struct {
 	Admin  bool `json:"admin"`
 }
 
-// ExposureOutput is the JSON output.
-type ExposureOutput struct {
-	Classifications []domainexposure.ExposureClassification `json:"classifications"`
-	BucketAccess    *domainexposure.BucketAccess            `json:"bucket_access,omitempty"`
-	Visibility      *domainexposure.VisibilityResult        `json:"visibility,omitempty"`
+// Output is the JSON output.
+type Output struct {
+	Classifications []domainexposure.Classification  `json:"classifications"`
+	BucketAccess    *domainexposure.BucketAccess     `json:"bucket_access,omitempty"`
+	Visibility      *domainexposure.VisibilityResult `json:"visibility,omitempty"`
 }
 
 func run(cmd *cobra.Command, file string) error {
@@ -97,7 +97,7 @@ func run(cmd *cobra.Command, file string) error {
 		return err
 	}
 
-	var in ExposureInput
+	var in Input
 	if err := json.Unmarshal(input, &in); err != nil {
 		return fmt.Errorf("parse exposure input: %w", err)
 	}
@@ -109,7 +109,7 @@ func run(cmd *cobra.Command, file string) error {
 	}
 
 	// Classify exposure.
-	output := ExposureOutput{
+	output := Output{
 		Classifications: domainexposure.ClassifyExposure(resources),
 	}
 

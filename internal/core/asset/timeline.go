@@ -65,7 +65,7 @@ func (rt *Timeline) History() EpisodeHistory {
 // Returns an error if the timestamp is zero (e.g. from malformed observation data).
 func (rt *Timeline) RecordObservation(t time.Time, isUnsafe bool) error {
 	if t.IsZero() {
-		return fmt.Errorf("record observation: time must not be zero")
+		return ErrZeroTimestamp
 	}
 
 	if err := rt.stats.RecordObservation(t); err != nil {

@@ -24,7 +24,7 @@ func SanitizeObservationDelta(s kernel.Sanitizer, delta asset.ObservationDelta) 
 	if s == nil || len(delta.Changes) == 0 {
 		return delta
 	}
-	changes := make([]asset.AssetDiff, len(delta.Changes))
+	changes := make([]asset.Diff, len(delta.Changes))
 	for i, c := range delta.Changes {
 		c.AssetID = asset.ID(s.ID(string(c.AssetID)))
 		changes[i] = c

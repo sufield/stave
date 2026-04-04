@@ -20,10 +20,10 @@ func NewGenerateCmd() *cobra.Command { return generate.NewCmd() }
 func NewDiffCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	return diff.NewCmd(loadSnapshots)
 }
-func NewFixCmd(deps fix.FixDeps) *cobra.Command {
+func NewFixCmd(deps fix.Deps) *cobra.Command {
 	return fix.NewFixCmd(deps)
 }
-func NewFixLoopCmd(deps fix.FixLoopDeps) *cobra.Command {
+func NewFixLoopCmd(deps fix.LoopDeps) *cobra.Command {
 	return fix.NewFixLoopCmd(deps)
 }
 func NewGateCmd(deps gate.Deps) *cobra.Command {

@@ -35,7 +35,7 @@ func resolvePathInference(controlsDir, observationsDir string, controlsSet, obsC
 
 // Resolve transforms raw CLI options into a RunConfig.
 // Pure function — reads from o and cs, writes nothing.
-func Resolve(o *ApplyOptions, cs cobraState) (RunConfig, error) {
+func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 	if o.Profile != "" {
 		return resolveProfileMode(o, cs)
 	}
@@ -91,7 +91,7 @@ type projectContext struct {
 }
 
 // resolveProjectContext discovers the project root, active context, and
-// user config path. Pure I/O — no dependency on ApplyOptions.
+// user config path. Pure I/O — no dependency on Options.
 func resolveProjectContext() (projectContext, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
@@ -125,7 +125,7 @@ func resolveProjectContext() (projectContext, error) {
 // buildEvaluatorInput assembles the domain-layer options from resolved
 // paths and CLI flags. No project context resolution — that's done by
 // resolveProjectContext.
-func buildEvaluatorInput(o *ApplyOptions, pc projectContext, controlsDir, observationsDir, cfgPath string) appeval.Options {
+func buildEvaluatorInput(o *Options, pc projectContext, controlsDir, observationsDir, cfgPath string) appeval.Options {
 	return appeval.Options{
 		ContextName:        pc.ContextName,
 		ProjectRoot:        pc.Root,

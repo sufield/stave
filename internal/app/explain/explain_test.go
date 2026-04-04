@@ -30,7 +30,7 @@ func (m *mockFinder) FindByID(_ context.Context, _ string, _ kernel.ControlID) (
 
 func TestRun_EmptyControlID(t *testing.T) {
 	e := &Explainer{Finder: &mockFinder{}}
-	_, err := e.Run(context.Background(), ExplainInput{})
+	_, err := e.Run(context.Background(), Input{})
 	if err == nil {
 		t.Fatal("expected error for empty control ID")
 	}
@@ -38,7 +38,7 @@ func TestRun_EmptyControlID(t *testing.T) {
 
 func TestRun_FinderError(t *testing.T) {
 	e := &Explainer{Finder: &mockFinder{err: fmt.Errorf("not found")}}
-	_, err := e.Run(context.Background(), ExplainInput{ControlID: "CTL.A.001", ControlsDir: "controls"})
+	_, err := e.Run(context.Background(), Input{ControlID: "CTL.A.001", ControlsDir: "controls"})
 	if err == nil {
 		t.Fatal("expected error from finder")
 	}
@@ -61,7 +61,7 @@ func TestRun_Success(t *testing.T) {
 		},
 	}
 	e := &Explainer{Finder: &mockFinder{ctl: ctl}}
-	result, err := e.Run(context.Background(), ExplainInput{ControlID: "CTL.A.001", ControlsDir: "controls"})
+	result, err := e.Run(context.Background(), Input{ControlID: "CTL.A.001", ControlsDir: "controls"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

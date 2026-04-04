@@ -33,7 +33,7 @@ const (
 
 // RunConfig holds the fully resolved execution state.
 // Exactly one of Params or Profile is meaningful, determined by Mode.
-// All resolved values live here — no downstream code reads back from ApplyOptions.
+// All resolved values live here — no downstream code reads back from Options.
 type RunConfig struct {
 	Mode         runMode
 	Params       *applyParams // non-nil in standard mode
@@ -41,7 +41,7 @@ type RunConfig struct {
 	profileClock ports.Clock  // used by profile mode
 
 	// Resolved directory paths from inference. Used by buildEvaluatorInput
-	// instead of reading back from the mutable ApplyOptions receiver.
+	// instead of reading back from the mutable Options receiver.
 	ControlsDir     string
 	ObservationsDir string
 

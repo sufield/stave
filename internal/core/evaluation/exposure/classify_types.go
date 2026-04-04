@@ -19,8 +19,8 @@ type NormalizedResourceInput struct {
 	Evidence            *EvidenceTracker
 }
 
-// ExposureClassification represents a classified exposure vector for a resource.
-type ExposureClassification struct {
+// Classification represents a classified exposure vector for a resource.
+type Classification struct {
 	ID             kernel.ControlID      `json:"id"`
 	Resource       string                `json:"resource"`
 	ExposureType   Type                  `json:"exposure_type"`
@@ -32,5 +32,5 @@ type ExposureClassification struct {
 
 // Classifications wraps a slice of classifications for JSON serialization.
 type Classifications struct {
-	Classifications []ExposureClassification `json:"findings"`
+	Classifications []Classification `json:"findings"`
 }

@@ -46,7 +46,7 @@ func TestSanitizeBaselineEntries_WithEntries(t *testing.T) {
 
 func TestSanitizeObservationDelta_NilSanitizer(t *testing.T) {
 	delta := asset.ObservationDelta{
-		Changes: []asset.AssetDiff{{AssetID: "res-1"}},
+		Changes: []asset.Diff{{AssetID: "res-1"}},
 	}
 	result := output.SanitizeObservationDelta(nil, delta)
 	if result.Changes[0].AssetID != "res-1" {
@@ -66,7 +66,7 @@ func TestSanitizeObservationDelta_EmptyChanges(t *testing.T) {
 func TestSanitizeObservationDelta_WithChanges(t *testing.T) {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
 	delta := asset.ObservationDelta{
-		Changes: []asset.AssetDiff{
+		Changes: []asset.Diff{
 			{AssetID: "secret-bucket", ChangeType: asset.ChangeAdded},
 		},
 	}

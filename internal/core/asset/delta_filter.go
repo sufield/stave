@@ -26,7 +26,7 @@ func (d ObservationDelta) ApplyFilter(opt FilterOptions) ObservationDelta {
 	}
 }
 
-func filterAssetDiffs(changes []AssetDiff, opt FilterOptions) []AssetDiff {
+func filterAssetDiffs(changes []Diff, opt FilterOptions) []Diff {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -35,7 +35,7 @@ func filterAssetDiffs(changes []AssetDiff, opt FilterOptions) []AssetDiff {
 	assetTypes := buildAssetTypeSet(opt.AssetTypes)
 	assetID := strings.TrimSpace(opt.AssetID)
 
-	result := make([]AssetDiff, 0, len(changes))
+	result := make([]Diff, 0, len(changes))
 	for _, change := range changes {
 		if matchesChangeType(change.ChangeType, changeTypes) &&
 			matchesAssetType(change, assetTypes) &&
@@ -74,7 +74,7 @@ func matchesChangeType(ct ChangeType, filter map[ChangeType]struct{}) bool {
 	return ok
 }
 
-func matchesAssetType(change AssetDiff, filter map[kernel.AssetType]struct{}) bool {
+func matchesAssetType(change Diff, filter map[kernel.AssetType]struct{}) bool {
 	if len(filter) == 0 {
 		return true
 	}
@@ -82,14 +82,14 @@ func matchesAssetType(change AssetDiff, filter map[kernel.AssetType]struct{}) bo
 	return ok
 }
 
-func matchesID(change AssetDiff, substr string) bool {
+func matchesID(change Diff, substr string) bool {
 	if substr == "" {
 		return true
 	}
 	return strings.Contains(change.AssetID.String(), substr)
 }
 
-func effectiveAssetType(change AssetDiff) kernel.AssetType {
+func effectiveAssetType(change Diff) kernel.AssetType {
 	if change.ToType != "" {
 		return change.ToType
 	}

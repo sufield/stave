@@ -49,7 +49,7 @@ func (c *resolutionContext) writeScope() WriteScope {
 }
 
 // resolveRead evaluates and selects the primary read-based exposure finding.
-func (c *resolutionContext) resolveRead() []ExposureClassification {
+func (c *resolutionContext) resolveRead() []Classification {
 	perms := c.effectivePerms()
 
 	writeAbsorbsRead := perms.Has(PermWrite) &&
@@ -74,15 +74,15 @@ func (c *resolutionContext) resolveRead() []ExposureClassification {
 	if selected == nil {
 		return nil
 	}
-	return []ExposureClassification{selected.finding}
+	return []Classification{selected.finding}
 }
 
 // resolveList evaluates findings specifically for resource discovery (listing).
-func (c *resolutionContext) resolveList() []ExposureClassification {
+func (c *resolutionContext) resolveList() []Classification {
 	if !c.effectivePerms().Has(PermList) {
 		return nil
 	}
-	return []ExposureClassification{{
+	return []Classification{{
 		ID:             exposureIDs.publicList,
 		Resource:       c.input.Name,
 		ExposureType:   TypePublicList,
@@ -93,7 +93,7 @@ func (c *resolutionContext) resolveList() []ExposureClassification {
 }
 
 // resolveWrite evaluates and selects the primary write-based exposure finding.
-func (c *resolutionContext) resolveWrite() []ExposureClassification {
+func (c *resolutionContext) resolveWrite() []Classification {
 	perms := c.effectivePerms()
 	selected := SelectWriteExposure(WriteExposureInput{
 		ResourceID:       c.input.Name,
@@ -112,17 +112,17 @@ func (c *resolutionContext) resolveWrite() []ExposureClassification {
 	if selected == nil {
 		return nil
 	}
-	return []ExposureClassification{selected.finding}
+	return []Classification{selected.finding}
 }
 
 // resolveAdministrative evaluates findings for management-plane exposures (Delete/Metadata).
-func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
+func (c *resolutionContext) resolveAdministrative() []Classification {
 	perms := c.effectivePerms()
 	scope := c.principalScope()
-	findings := make([]ExposureClassification, 0, 3)
+	findings := make([]Classification, 0, 3)
 
 	if perms.Has(PermMetadataRead) {
-		findings = append(findings, ExposureClassification{
+		findings = append(findings, Classification{
 			ID:             exposureIDs.publicAdminRead,
 			Resource:       c.input.Name,
 			ExposureType:   TypePublicMetaRead,
@@ -132,7 +132,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 		})
 	}
 	if perms.Has(PermMetadataWrite) {
-		findings = append(findings, ExposureClassification{
+		findings = append(findings, Classification{
 			ID:             exposureIDs.publicAdminWrite,
 			Resource:       c.input.Name,
 			ExposureType:   TypePublicMetaWrite,
@@ -142,7 +142,7 @@ func (c *resolutionContext) resolveAdministrative() []ExposureClassification {
 		})
 	}
 	if perms.Has(PermDelete) {
-		findings = append(findings, ExposureClassification{
+		findings = append(findings, Classification{
 			ID:             exposureIDs.publicDelete,
 			Resource:       c.input.Name,
 			ExposureType:   TypePublicDelete,

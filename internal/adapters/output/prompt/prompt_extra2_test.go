@@ -138,7 +138,7 @@ func TestMarshalControl(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// PromptBuilder.Build
+// Builder.Build
 // ---------------------------------------------------------------------------
 
 func TestPromptBuilder_Build(t *testing.T) {
@@ -150,7 +150,7 @@ func TestPromptBuilder_Build(t *testing.T) {
 			Action:      "Do stuff",
 		},
 	}
-	builder := &PromptBuilder{
+	builder := &Builder{
 		AssetID:        "bucket-1",
 		ControlsByID:   map[kernel.ControlID]*policy.ControlDefinition{"CTL.A.001": ctl},
 		AssetPropsJSON: `{"public_access": true}`,
@@ -188,7 +188,7 @@ func TestPromptBuilder_Build(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestRenderPrompt(t *testing.T) {
-	data := PromptData{
+	data := Data{
 		FindingCount: 1,
 		AssetID:      "bucket-1",
 		Findings: []FindingData{
@@ -231,7 +231,7 @@ func TestRenderPrompt(t *testing.T) {
 }
 
 func TestRenderPrompt_Minimal(t *testing.T) {
-	data := PromptData{
+	data := Data{
 		FindingCount: 0,
 		AssetID:      "none",
 	}

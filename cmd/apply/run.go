@@ -13,7 +13,7 @@ import (
 // runApply is the single dispatch function called by the thin RunE wrapper.
 // All CLI state has already been extracted into cs. Context flows as the
 // first parameter per Go convention.
-func runApply(ctx context.Context, p *compose.Provider, opts *ApplyOptions, cs cobraState) error {
+func runApply(ctx context.Context, p *compose.Provider, opts *Options, cs cobraState) error {
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate options: %w", err)
 	}

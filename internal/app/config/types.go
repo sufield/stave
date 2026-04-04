@@ -23,14 +23,14 @@ const (
 
 // --- Layering Logic ---
 
-// ConfigLayer identifies the source of a configuration value.
-type ConfigLayer int
+// Layer identifies the source of a configuration value.
+type Layer int
 
 const (
-	LayerDefault       ConfigLayer = iota // built-in default value
-	LayerUserConfig                       // user config (~/.config/stave/config.yaml)
-	LayerProjectConfig                    // project config (stave.yaml)
-	LayerEnvironment                      // environment variable
+	LayerDefault       Layer = iota // built-in default value
+	LayerUserConfig                 // user config (~/.config/stave/config.yaml)
+	LayerProjectConfig              // project config (stave.yaml)
+	LayerEnvironment                // environment variable
 )
 
 // Value holds a resolved configuration value along with its provenance metadata.
@@ -38,7 +38,7 @@ const (
 type Value[T any] struct {
 	Value  T
 	Source string
-	Layer  ConfigLayer
+	Layer  Layer
 }
 
 func (v Value[T]) String() string {

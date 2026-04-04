@@ -49,8 +49,8 @@ func testBuildPrompt(
 	controlsByID map[kernel.ControlID]*policy.ControlDefinition,
 	assetPropsJSON string,
 	matched []evaluation.Finding,
-) diagprompt.PromptOutput {
-	builder := &promptout.PromptBuilder{
+) diagprompt.Output {
+	builder := &promptout.Builder{
 		AssetID:        assetID,
 		ControlsByID:   controlsByID,
 		AssetPropsJSON: assetPropsJSON,
@@ -62,7 +62,7 @@ func testBuildPrompt(
 	for i, f := range data.Findings {
 		findingIDs[i] = f.ControlID
 	}
-	return diagprompt.PromptOutput{
+	return diagprompt.Output{
 		Rendered:   rendered,
 		FindingIDs: findingIDs,
 		AssetID:    data.AssetID,

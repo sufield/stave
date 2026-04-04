@@ -101,7 +101,7 @@ func TestRenderText_WithChanges(t *testing.T) {
 	delta := asset.ObservationDelta{
 		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
 		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-		Changes: []asset.AssetDiff{
+		Changes: []asset.Diff{
 			{
 				AssetID:    "bucket-a",
 				ChangeType: asset.ChangeAdded,
@@ -159,7 +159,7 @@ func TestWriteOutput_TextWithChanges(t *testing.T) {
 	delta := asset.ObservationDelta{
 		FromCaptured: time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
 		ToCaptured:   time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-		Changes: []asset.AssetDiff{
+		Changes: []asset.Diff{
 			{AssetID: "bucket-a", ChangeType: asset.ChangeAdded},
 		},
 	}

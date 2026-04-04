@@ -10,7 +10,7 @@ import (
 
 // ResolveDryRun converts raw CLI options into a ReadinessConfig for dry-run mode.
 // Flag strings are parsed to native types here so the config struct is ready to use.
-func ResolveDryRun(o *ApplyOptions, cs cobraState) (ReadinessConfig, error) {
+func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
 		ControlsDir:                o.ControlsDir,
 		ObservationsDir:            o.ObservationsDir,

@@ -113,7 +113,7 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 		LookbackStart:    previousNow,
 		LookbackDuration: kernel.FormatDuration(cfg.Lookback),
 		DueSoonThreshold: kernel.FormatDuration(cfg.DueSoon),
-		Filters: hygieneapp.HygieneFilters{
+		Filters: hygieneapp.Filters{
 			ControlIDs: cfg.Filter.ControlIDs,
 			AssetTypes: cfg.Filter.AssetTypes,
 			Statuses:   cfg.Filter.Statuses,

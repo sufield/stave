@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-func resolveProfileMode(o *ApplyOptions, cs cobraState) (RunConfig, error) {
+func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 	prof, err := ParseProfile(o.Profile)
 	if err != nil {
 		return RunConfig{}, &ui.UserError{Err: err}

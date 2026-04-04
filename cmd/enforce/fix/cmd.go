@@ -12,20 +12,20 @@ import (
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
-// FixLoopDeps groups the factory functions required by the fix-loop command.
-type FixLoopDeps struct {
+// LoopDeps groups the factory functions required by the fix-loop command.
+type LoopDeps struct {
 	NewCELEvaluator compose.CELEvaluatorFactory
 	NewCtlRepo      compose.CtlRepoFactory
 	NewObsRepo      compose.ObsRepoFactory
 }
 
-// FixDeps groups the infrastructure implementations for the fix command.
-type FixDeps struct {
+// Deps groups the infrastructure implementations for the fix command.
+type Deps struct {
 	UseCaseDeps eval.FixDeps
 }
 
 // NewFixCmd constructs the fix command.
-func NewFixCmd(deps FixDeps) *cobra.Command {
+func NewFixCmd(deps Deps) *cobra.Command {
 	opts := &fixOptions{}
 
 	cmd := &cobra.Command{
@@ -78,7 +78,7 @@ Exit Codes:
 }
 
 // NewFixLoopCmd constructs the fix-loop command.
-func NewFixLoopCmd(deps FixLoopDeps) *cobra.Command {
+func NewFixLoopCmd(deps LoopDeps) *cobra.Command {
 	opts := &loopOptions{
 		ControlsDir: "controls",
 	}
@@ -135,7 +135,7 @@ Exit Codes:
 	return cmd
 }
 
-func newLoopRunner(gf cliflags.GlobalFlags, deps FixLoopDeps, clock ports.Clock) (*Runner, error) {
+func newLoopRunner(gf cliflags.GlobalFlags, deps LoopDeps, clock ports.Clock) (*Runner, error) {
 	celEval, err := deps.NewCELEvaluator()
 	if err != nil {
 		return nil, err

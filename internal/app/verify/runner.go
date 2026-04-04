@@ -16,8 +16,8 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-// VerifyDeps holds injected infrastructure dependencies for the verify workflow.
-type VerifyDeps struct {
+// Deps holds injected infrastructure dependencies for the verify workflow.
+type Deps struct {
 	LoadControls       func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 	NewObservationRepo func() (appcontracts.ObservationRepository, error)
 	WriteVerification  func(w io.Writer, v *safetyenvelope.Verification) error
@@ -27,8 +27,8 @@ type VerifyDeps struct {
 	BeginProgress func(label string) func()
 }
 
-// VerifyRequest holds the fully-resolved parameters for a verify run.
-type VerifyRequest struct {
+// Request holds the fully-resolved parameters for a verify run.
+type Request struct {
 	Ctx               context.Context
 	BeforeDir         string
 	AfterDir          string
@@ -43,7 +43,7 @@ type VerifyRequest struct {
 }
 
 // RunVerify executes the before/after comparison workflow.
-func RunVerify(deps VerifyDeps, req VerifyRequest) error {
+func RunVerify(deps Deps, req Request) error {
 	beginProgress := deps.BeginProgress
 	if beginProgress == nil {
 		beginProgress = func(string) func() { return func() {} }
@@ -102,7 +102,7 @@ type evalResult struct {
 	snapshotCount int
 }
 
-func runEvaluation(deps VerifyDeps, req VerifyRequest, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
+func runEvaluation(deps Deps, req Request, controls []policy.ControlDefinition, obsDir string) (evalResult, error) {
 	loader, err := deps.NewObservationRepo()
 	if err != nil {
 		return evalResult{}, err

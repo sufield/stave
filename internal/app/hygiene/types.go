@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// HygieneFilters captures the active filter criteria for a hygiene report.
-type HygieneFilters struct {
+// Filters captures the active filter criteria for a hygiene report.
+type Filters struct {
 	ControlIDs []kernel.ControlID     `json:"control_ids"`
 	AssetTypes []kernel.AssetType     `json:"asset_types"`
 	Statuses   []risk.ThresholdStatus `json:"statuses"`
@@ -23,7 +23,7 @@ type Output struct {
 	LookbackStart    time.Time                  `json:"lookback_start"`
 	LookbackDuration string                     `json:"lookback_duration"`
 	DueSoonThreshold string                     `json:"due_soon_threshold"`
-	Filters          HygieneFilters             `json:"filters"`
+	Filters          Filters                    `json:"filters"`
 	SnapshotStats    appcontracts.SnapshotStats `json:"snapshot_stats"`
 	RiskStats        appcontracts.RiskStats     `json:"risk_stats"`
 	Trend            []evaluation.TrendMetric   `json:"trend"`

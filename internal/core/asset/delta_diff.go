@@ -16,16 +16,16 @@ type assetDiffInput struct {
 	HasCurrent  bool
 }
 
-func diffAsset(in assetDiffInput) *AssetDiff {
+func diffAsset(in assetDiffInput) *Diff {
 	switch {
 	case !in.HasPrevious && in.HasCurrent:
-		return &AssetDiff{
+		return &Diff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeAdded,
 			ToType:     in.Curr.Type,
 		}
 	case in.HasPrevious && !in.HasCurrent:
-		return &AssetDiff{
+		return &Diff{
 			AssetID:    ID(in.ID),
 			ChangeType: ChangeRemoved,
 			FromType:   in.Prev.Type,
@@ -36,7 +36,7 @@ func diffAsset(in assetDiffInput) *AssetDiff {
 		if len(propChanges) == 0 {
 			return nil
 		}
-		return &AssetDiff{
+		return &Diff{
 			AssetID:         ID(in.ID),
 			ChangeType:      ChangeModified,
 			FromType:        in.Prev.Type,

@@ -581,7 +581,7 @@ func TestObservationDeltaSummaryJSON(t *testing.T) {
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
-	changes := []AssetDiff{
+	changes := []Diff{
 		{ChangeType: ChangeAdded},
 		{ChangeType: ChangeModified},
 		{ChangeType: ChangeRemoved},
@@ -893,7 +893,7 @@ func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 
 func TestApplyFilter(t *testing.T) {
 	delta := ObservationDelta{
-		Changes: []AssetDiff{
+		Changes: []Diff{
 			{AssetID: "bucket-1", ChangeType: ChangeAdded, ToType: "aws_s3_bucket"},
 			{AssetID: "bucket-2", ChangeType: ChangeRemoved, FromType: "aws_s3_bucket"},
 			{AssetID: "vm-1", ChangeType: ChangeModified, FromType: "aws_ec2_instance", ToType: "aws_ec2_instance"},
