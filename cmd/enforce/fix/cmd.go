@@ -5,8 +5,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/util/jsonutil"
@@ -21,7 +21,7 @@ type LoopDeps struct {
 
 // Deps groups the infrastructure implementations for the fix command.
 type Deps struct {
-	UseCaseDeps eval.FixDeps
+	UseCaseDeps usecase.FixDeps
 }
 
 // NewFixCmd constructs the fix command.
@@ -56,12 +56,12 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := eval.FixRequest{
+			req := usecase.FixRequest{
 				InputPath:  opts.InputPath,
 				FindingRef: opts.FindingRef,
 			}
 
-			resp, err := eval.Fix(cmd.Context(), req, deps.UseCaseDeps)
+			resp, err := usecase.Fix(cmd.Context(), req, deps.UseCaseDeps)
 			if err != nil {
 				return err
 			}

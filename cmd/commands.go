@@ -31,18 +31,18 @@ import (
 	"github.com/sufield/stave/cmd/prune"
 	"github.com/sufield/stave/cmd/securityaudit"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
+	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
+	infradoctor "github.com/sufield/stave/internal/adapters/doctor"
+	infrafix "github.com/sufield/stave/internal/adapters/fix"
+	infragate "github.com/sufield/stave/internal/adapters/gate"
+	infrareport "github.com/sufield/stave/internal/adapters/report"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/eval"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/core/setup"
-	infrabaseline "github.com/sufield/stave/internal/infra/baseline"
-	infradoctor "github.com/sufield/stave/internal/infra/doctor"
-	infrafix "github.com/sufield/stave/internal/infra/fix"
-	infragate "github.com/sufield/stave/internal/infra/gate"
-	infrareport "github.com/sufield/stave/internal/infra/report"
+	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/safetyenvelope"
@@ -186,7 +186,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 		},
 	}))
 	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
-		UseCaseDeps: eval.GateDeps{
+		UseCaseDeps: usecase.GateDeps{
 			FindingsCounter: &infragate.FindingsCounter{
 				LoadEvaluation: loader.Evaluation,
 			},
@@ -231,7 +231,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	}))
 	celEval, _ := p.NewCELEvaluator()
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
-		UseCaseDeps: eval.FixDeps{
+		UseCaseDeps: usecase.FixDeps{
 			Loader: &infrafix.FindingLoader{CELEvaluator: celEval},
 		},
 	}))
