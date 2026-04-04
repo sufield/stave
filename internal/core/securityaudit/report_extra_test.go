@@ -11,7 +11,7 @@ import (
 
 func TestRecomputeSummary(t *testing.T) {
 	r := &Report{
-		Summary: Summary{FailOn: policy.SeverityHigh},
+		Summary: Summary{Gating: GatingInfo{FailOn: policy.SeverityHigh}},
 		Findings: []Finding{
 			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
 			{ID: "B", Severity: policy.SeverityMedium, Status: outcome.Warn},
@@ -21,23 +21,23 @@ func TestRecomputeSummary(t *testing.T) {
 	}
 	r.RecomputeSummary()
 
-	if r.Summary.Total != 4 {
-		t.Fatalf("Total=%d, want 4", r.Summary.Total)
+	if r.Summary.Counts.Total != 4 {
+		t.Fatalf("Total=%d, want 4", r.Summary.Counts.Total)
 	}
-	if r.Summary.Pass != 1 {
-		t.Fatalf("Pass=%d, want 1", r.Summary.Pass)
+	if r.Summary.Counts.Pass != 1 {
+		t.Fatalf("Pass=%d, want 1", r.Summary.Counts.Pass)
 	}
-	if r.Summary.Warn != 1 {
-		t.Fatalf("Warn=%d, want 1", r.Summary.Warn)
+	if r.Summary.Counts.Warn != 1 {
+		t.Fatalf("Warn=%d, want 1", r.Summary.Counts.Warn)
 	}
-	if r.Summary.Fail != 2 {
-		t.Fatalf("Fail=%d, want 2", r.Summary.Fail)
+	if r.Summary.Counts.Fail != 2 {
+		t.Fatalf("Fail=%d, want 2", r.Summary.Counts.Fail)
 	}
-	if !r.Summary.Gated {
+	if !r.Summary.Gating.Gated {
 		t.Fatal("Gated should be true")
 	}
-	if r.Summary.GatedFindingCount != 2 {
-		t.Fatalf("GatedFindingCount=%d, want 2", r.Summary.GatedFindingCount)
+	if r.Summary.Gating.GatedFindingCount != 2 {
+		t.Fatalf("GatedFindingCount=%d, want 2", r.Summary.Gating.GatedFindingCount)
 	}
 }
 
@@ -48,36 +48,35 @@ func TestRecomputeSummary_NilReceiver(t *testing.T) {
 
 func TestRecomputeSummary_FailOnNone(t *testing.T) {
 	r := &Report{
-		Summary: Summary{FailOn: policy.SeverityNone},
+		Summary: Summary{Gating: GatingInfo{FailOn: policy.SeverityNone}},
 		Findings: []Finding{
 			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
 		},
 	}
 	r.RecomputeSummary()
-	if r.Summary.Gated {
+	if r.Summary.Gating.Gated {
 		t.Fatal("FailOn=NONE should disable gating")
 	}
-	if r.Summary.GatedFindingCount != 0 {
-		t.Fatalf("GatedFindingCount=%d, want 0", r.Summary.GatedFindingCount)
+	if r.Summary.Gating.GatedFindingCount != 0 {
+		t.Fatalf("GatedFindingCount=%d, want 0", r.Summary.Gating.GatedFindingCount)
 	}
 }
 
 func TestRecomputeSummary_PreservesMetadata(t *testing.T) {
 	r := &Report{
 		Summary: Summary{
-			FailOn:            policy.SeverityHigh,
-			VulnSourceUsed:    "govulncheck",
-			EvidenceFreshness: "2h",
+			Gating:   GatingInfo{FailOn: policy.SeverityHigh},
+			Metadata: AuditMeta{VulnSourceUsed: "govulncheck", EvidenceFreshness: "2h"},
 		},
 		Findings: []Finding{
 			{ID: "A", Severity: policy.SeverityHigh, Status: outcome.Pass},
 		},
 	}
 	r.RecomputeSummary()
-	if r.Summary.VulnSourceUsed != "govulncheck" {
+	if r.Summary.Metadata.VulnSourceUsed != "govulncheck" {
 		t.Fatalf("VulnSourceUsed lost after recompute")
 	}
-	if r.Summary.EvidenceFreshness != "2h" {
+	if r.Summary.Metadata.EvidenceFreshness != "2h" {
 		t.Fatalf("EvidenceFreshness lost after recompute")
 	}
 }
@@ -103,7 +102,7 @@ func TestCloneWithFilter_EmptyAllowed(t *testing.T) {
 
 func TestCloneWithFilter_Independence(t *testing.T) {
 	r := &Report{
-		Summary:  Summary{FailOn: policy.SeverityHigh},
+		Summary:  Summary{Gating: GatingInfo{FailOn: policy.SeverityHigh}},
 		Findings: []Finding{{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail}},
 		EvidenceIndex: []EvidenceRef{
 			{ID: "ev1", Path: "/tmp/ev1"},
@@ -124,7 +123,7 @@ func TestNormalize(t *testing.T) {
 	r := &Report{
 		SchemaVersion: kernel.Schema("securityaudit.v1"),
 		GeneratedAt:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-		Summary:       Summary{FailOn: policy.SeverityHigh},
+		Summary:       Summary{Gating: GatingInfo{FailOn: policy.SeverityHigh}},
 		Findings: []Finding{
 			{ID: "B", Severity: policy.SeverityMedium, Status: outcome.Warn,
 				EvidenceRefs: []string{"ev2", "ev1"},
@@ -170,8 +169,8 @@ func TestNormalize(t *testing.T) {
 	}
 
 	// Summary recomputed.
-	if r.Summary.Total != 2 {
-		t.Fatalf("Total=%d, want 2", r.Summary.Total)
+	if r.Summary.Counts.Total != 2 {
+		t.Fatalf("Total=%d, want 2", r.Summary.Counts.Total)
 	}
 }
 

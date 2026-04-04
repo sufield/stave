@@ -9,7 +9,7 @@ import (
 
 func TestReportFilterBySeverity(t *testing.T) {
 	report := Report{
-		Summary: Summary{FailOn: policy.SeverityHigh},
+		Summary: Summary{Gating: GatingInfo{FailOn: policy.SeverityHigh}},
 		Findings: []Finding{
 			{ID: "A", Severity: policy.SeverityCritical, Status: outcome.Fail},
 			{ID: "B", Severity: policy.SeverityMedium, Status: outcome.Warn},

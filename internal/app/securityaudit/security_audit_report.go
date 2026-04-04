@@ -16,10 +16,9 @@ func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.B
 		GeneratedAt:   req.Now.UTC(),
 		StaveVersion:  req.StaveVersion,
 		Summary: securityaudit.Summary{
-			BySeverity:        map[policy.Severity]int{},
-			FailOn:            req.FailOn,
-			VulnSourceUsed:    string(ev.Vuln.SourceUsed),
-			EvidenceFreshness: string(ev.Vuln.Freshness),
+			Counts:   securityaudit.ResultCounts{BySeverity: map[policy.Severity]int{}},
+			Gating:   securityaudit.GatingInfo{FailOn: req.FailOn},
+			Metadata: securityaudit.AuditMeta{VulnSourceUsed: string(ev.Vuln.SourceUsed), EvidenceFreshness: string(ev.Vuln.Freshness)},
 		},
 		Findings: findings,
 	}
@@ -46,10 +45,10 @@ func assembleReport(req Request, findings []securityaudit.Finding, ev evidence.B
 	filtered := report.CloneWithFilter(req.SeverityFilter)
 	report = *filtered
 	report.Controls = collectUniqueControls(report.Findings)
-	report.Summary.FailOn = req.FailOn
+	report.Summary.Gating.FailOn = req.FailOn
 	report.RecomputeSummary()
-	report.Summary.VulnSourceUsed = string(ev.Vuln.SourceUsed)
-	report.Summary.EvidenceFreshness = string(ev.Vuln.Freshness)
+	report.Summary.Metadata.VulnSourceUsed = string(ev.Vuln.SourceUsed)
+	report.Summary.Metadata.EvidenceFreshness = string(ev.Vuln.Freshness)
 	report.Normalize()
 
 	return report

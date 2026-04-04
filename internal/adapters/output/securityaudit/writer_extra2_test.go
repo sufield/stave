@@ -17,15 +17,9 @@ func sampleReportWithFindings() domain.Report {
 		StaveVersion:  "v0.1.0-test",
 		GeneratedAt:   time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		Summary: domain.Summary{
-			Total:             3,
-			Pass:              1,
-			Warn:              1,
-			Fail:              1,
-			GatedFindingCount: 1,
-			Gated:             true,
-			FailOn:            policy.SeverityHigh,
-			EvidenceFreshness: "24h",
-			VulnSourceUsed:    "embedded",
+			Counts:   domain.ResultCounts{Total: 3, Pass: 1, Warn: 1, Fail: 1},
+			Gating:   domain.GatingInfo{GatedFindingCount: 1, Gated: true, FailOn: policy.SeverityHigh},
+			Metadata: domain.AuditMeta{EvidenceFreshness: "24h", VulnSourceUsed: "embedded"},
 		},
 		Findings: []domain.Finding{
 			{
@@ -84,7 +78,7 @@ func TestMarshalJSONReport_Empty(t *testing.T) {
 	report := domain.Report{
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0",
-		Summary:       domain.Summary{FailOn: policy.SeverityHigh},
+		Summary:       domain.Summary{Gating: domain.GatingInfo{FailOn: policy.SeverityHigh}},
 	}
 	data, err := MarshalJSONReport(report)
 	if err != nil {
@@ -141,7 +135,7 @@ func TestMarshalSARIFReport_EmptyFindings(t *testing.T) {
 	report := domain.Report{
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0",
-		Summary:       domain.Summary{FailOn: policy.SeverityHigh},
+		Summary:       domain.Summary{Gating: domain.GatingInfo{FailOn: policy.SeverityHigh}},
 	}
 	data, err := MarshalSARIFReport(report)
 	if err != nil {

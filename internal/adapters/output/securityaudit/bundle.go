@@ -132,18 +132,20 @@ func writeRunManifest(opts BundleWriteOpts, path string, now time.Time, bundleDi
 		return files[i].Path < files[j].Path
 	})
 
+	g := report.Summary.Gating
+	m := report.Summary.Metadata
 	manifest := RunManifest{
 		SchemaVersion:     kernel.SchemaSecurityAuditRunManifest,
 		GeneratedAt:       now.Format(time.RFC3339),
 		MainReport:        mainReport,
 		BundleDir:         bundleDir,
 		StaveVersion:      report.StaveVersion,
-		FailOn:            report.Summary.FailOn.String(),
-		Gated:             report.Summary.Gated,
-		GatedFindings:     report.Summary.GatedFindingCount,
+		FailOn:            g.DisplayFailOn(),
+		Gated:             g.Gated,
+		GatedFindings:     g.GatedFindingCount,
 		Files:             files,
-		EvidenceFreshness: report.Summary.EvidenceFreshness,
-		VulnSourceUsed:    report.Summary.VulnSourceUsed,
+		EvidenceFreshness: m.EvidenceFreshness,
+		VulnSourceUsed:    m.VulnSourceUsed,
 	}
 	data, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {

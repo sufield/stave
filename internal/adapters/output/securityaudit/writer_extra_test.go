@@ -13,7 +13,7 @@ func TestMarshalMarkdownReport_NoFindings(t *testing.T) {
 	report := domain.Report{
 		SchemaVersion: "security-audit.v1",
 		StaveVersion:  "v0.0.0-test",
-		Summary:       domain.Summary{FailOn: policy.SeverityHigh},
+		Summary:       domain.Summary{Gating: domain.GatingInfo{FailOn: policy.SeverityHigh}},
 	}
 	data, err := MarshalMarkdownReport(report)
 	if err != nil {

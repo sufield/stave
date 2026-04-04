@@ -17,12 +17,8 @@ func sampleReport() domain.Report {
 		GeneratedAt:   time.Date(2026, 2, 28, 0, 0, 0, 0, time.UTC),
 		StaveVersion:  "v0.0.0-test",
 		Summary: domain.Summary{
-			Total:      1,
-			Pass:       0,
-			Warn:       1,
-			Fail:       0,
-			BySeverity: map[policy.Severity]int{policy.SeverityHigh: 1},
-			FailOn:     policy.SeverityHigh,
+			Counts: domain.ResultCounts{Total: 1, Pass: 0, Warn: 1, Fail: 0, BySeverity: map[policy.Severity]int{policy.SeverityHigh: 1}},
+			Gating: domain.GatingInfo{FailOn: policy.SeverityHigh},
 		},
 		Findings: []domain.Finding{
 			{

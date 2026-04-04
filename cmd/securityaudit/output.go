@@ -3,7 +3,6 @@ package securityaudit
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	securityout "github.com/sufield/stave/internal/adapters/output/securityaudit"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -32,7 +31,7 @@ func renderReport(format string, report domainsecurityaudit.Report) ([]byte, str
 	}
 }
 
-func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecurityaudit.Summary) error {
+func printSummary(w io.Writer, mainOutPath, bundleDir string, counts domainsecurityaudit.ResultCounts, gating domainsecurityaudit.GatingInfo) error {
 	if _, err := fmt.Fprintf(w, "security-audit report: %s\n", mainOutPath); err != nil {
 		return err
 	}
@@ -40,7 +39,7 @@ func printSummary(w io.Writer, mainOutPath, bundleDir string, summary domainsecu
 		return err
 	}
 	_, err := fmt.Fprintf(w, "summary: total=%d pass=%d warn=%d fail=%d gated=%t threshold=%s\n",
-		summary.Total, summary.Pass, summary.Warn, summary.Fail, summary.Gated, strings.ToUpper(summary.FailOn.String()))
+		counts.Total, counts.Pass, counts.Warn, counts.Fail, gating.Gated, gating.DisplayFailOn())
 	return err
 }
 
