@@ -53,16 +53,13 @@ type Config struct {
 	Sanitizer       kernel.Sanitizer
 }
 
-// ControlLoaderFunc loads controls from a directory.
-type ControlLoaderFunc func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
-
 // Runner handles the execution of the profile apply logic.
 type Runner struct {
 	Clock            ports.Clock
 	Hasher           ports.Digester
 	UI               *ui.Runtime
 	NewCELEvaluator  compose.CELEvaluatorFactory
-	LoadControls     ControlLoaderFunc
+	LoadControls     compose.ControlLoaderFunc
 	newFindingWriter compose.FindingWriterFactory
 }
 
@@ -80,7 +77,7 @@ func WithUI(rt *ui.Runtime) RunnerOption {
 }
 
 // NewRunner initializes a runner with required factories and optional overrides.
-func NewRunner(newCELEvaluator compose.CELEvaluatorFactory, loadControls ControlLoaderFunc, newFindingWriter compose.FindingWriterFactory, opts ...RunnerOption) *Runner {
+func NewRunner(newCELEvaluator compose.CELEvaluatorFactory, loadControls compose.ControlLoaderFunc, newFindingWriter compose.FindingWriterFactory, opts ...RunnerOption) *Runner {
 	r := &Runner{
 		Hasher:           crypto.NewHasher(),
 		NewCELEvaluator:  newCELEvaluator,

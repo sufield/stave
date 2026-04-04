@@ -48,17 +48,14 @@ type config struct {
 	PredicateEval   policy.PredicateEval
 }
 
-// ControlLoaderFunc loads controls from a directory.
-type ControlLoaderFunc func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
-
 // Runner orchestrates loading assets and generating coverage graphs.
 type Runner struct {
-	LoadControls  ControlLoaderFunc
+	LoadControls  compose.ControlLoaderFunc
 	LoadSnapshots compose.SnapshotLoader
 }
 
 // NewRunner initializes a graph runner.
-func NewRunner(loadControls ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *Runner {
+func NewRunner(loadControls compose.ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *Runner {
 	return &Runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
 }
 

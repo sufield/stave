@@ -64,6 +64,7 @@ type (
 	CELEvaluatorFactory  = func() (policy.PredicateEval, error)
 	FindingWriterFactory = func(appcontracts.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
 	SnapshotLoader       = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
+	ControlLoaderFunc    = func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 	AssetLoaderFunc      = func(ctx context.Context, obsDir, ctlDir string) (Assets, error)
 )
 
