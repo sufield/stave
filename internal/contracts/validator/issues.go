@@ -69,39 +69,53 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 
 // ValidateControlYAML validates a control document against its contract schema.
 func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Result, error) {
-	return v.validateDocument(raw, yaml.Unmarshal, "YAML", "dsl_version",
-		[]string{string(kernel.SchemaControl)},
-		string(schemas.KindControl), true, "Fix control to match DSL schema", opts...)
+	return v.validateDocument(raw, docConfig{
+		Unmarshal:     yaml.Unmarshal,
+		FormatName:    "YAML",
+		VersionField:  "dsl_version",
+		Accepted:      []string{string(kernel.SchemaControl)},
+		Kind:          string(schemas.KindControl),
+		IsYAML:        true,
+		DefaultAction: "Fix control to match DSL schema",
+	}, opts...)
 }
 
 // ValidateObservationJSON validates an observation against its contract schema.
 func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Result, error) {
-	return v.validateDocument(raw, json.Unmarshal, "JSON", "schema_version",
-		[]string{string(kernel.SchemaObservation)},
-		string(schemas.KindObservation), false, "Fix observation to match schema", opts...)
+	return v.validateDocument(raw, docConfig{
+		Unmarshal:     json.Unmarshal,
+		FormatName:    "JSON",
+		VersionField:  "schema_version",
+		Accepted:      []string{string(kernel.SchemaObservation)},
+		Kind:          string(schemas.KindObservation),
+		IsYAML:        false,
+		DefaultAction: "Fix observation to match schema",
+	}, opts...)
 }
 
 // --- Internal helpers ---
 
-func (v *Validator) validateDocument(
-	raw []byte,
-	unmarshal func([]byte, any) error,
-	formatName string,
-	versionField string,
-	accepted []string,
-	kind string,
-	isYAML bool,
-	defaultAction string,
-	opts ...Option,
-) (*diag.Result, error) {
+// docConfig groups the parameters for validateDocument to prevent
+// positional mix-ups between the multiple string fields.
+type docConfig struct {
+	Unmarshal     func([]byte, any) error
+	FormatName    string
+	VersionField  string
+	Accepted      []string
+	Kind          string
+	IsYAML        bool
+	DefaultAction string
+}
+
+func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) (*diag.Result, error) {
 	o := resolveOptions(opts)
 
 	var partial struct {
 		Version string `json:"schema_version" yaml:"schema_version"`
 		DSL     string `json:"dsl_version" yaml:"dsl_version"`
 	}
-	if err := unmarshal(raw, &partial); err != nil {
-		return syntaxErrorResult(formatName, err), nil
+	if err := cfg.Unmarshal(raw, &partial); err != nil {
+		return syntaxErrorResult(cfg.FormatName, err), nil
 	}
 
 	actual := partial.Version
@@ -110,24 +124,24 @@ func (v *Validator) validateDocument(
 	}
 
 	if strings.TrimSpace(actual) == "" {
-		return missingFieldResult(versionField, fmt.Sprintf("Add %q field to %s", versionField, formatName)), nil
+		return missingFieldResult(cfg.VersionField, fmt.Sprintf("Add %q field to %s", cfg.VersionField, cfg.FormatName)), nil
 	}
 
-	if !slices.Contains(accepted, actual) {
-		return unsupportedVersionResult(actual, accepted, "Use a supported schema version"), nil
+	if !slices.Contains(cfg.Accepted, actual) {
+		return unsupportedVersionResult(actual, cfg.Accepted, "Use a supported schema version"), nil
 	}
 
 	diags, err := v.Validate(Request{
-		Kind:          schemas.Kind(kind),
+		Kind:          schemas.Kind(cfg.Kind),
 		ActualVersion: kernel.RegistryLayoutStandard,
 		Data:          raw,
-		IsYAML:        isYAML,
+		IsYAML:        cfg.IsYAML,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return DiagnosticsResult(diags, defaultAction, true, WithPrefix(o.pathPrefix)), nil
+	return DiagnosticsResult(diags, cfg.DefaultAction, true, WithPrefix(o.pathPrefix)), nil
 }
 
 func classify(d Diagnostic) DiagnosticCategory {
