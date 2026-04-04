@@ -126,11 +126,13 @@ func outputReport(cfg auditConfig, report domainsecurityaudit.Report, artifacts 
 		if _, writeErr := cfg.Stdout.Write([]byte("\n")); writeErr != nil {
 			return writeErr
 		}
-		if report.Summary.Gated {
+		if report.Summary.Gating.Gated {
 			return ui.ErrSecurityAuditFindings
 		}
 		return nil
 	}
+
+	g := report.Summary.Gating
 
 	// File mode: write bundle to disk, summary to stdout.
 	outPathResolver := func(defaultPath string) string {
@@ -163,12 +165,12 @@ func outputReport(cfg auditConfig, report domainsecurityaudit.Report, artifacts 
 		if abs, absErr := filepath.Abs(bundleDir); absErr == nil {
 			displayDir = abs
 		}
-		if err := printSummary(cfg.Stdout, mainOutPath, displayDir, report.Summary); err != nil {
+		if err := printSummary(cfg.Stdout, mainOutPath, displayDir, report.Summary.Counts, g); err != nil {
 			return err
 		}
 	}
 
-	if report.Summary.Gated {
+	if g.Gated {
 		return ui.ErrSecurityAuditFindings
 	}
 	return nil

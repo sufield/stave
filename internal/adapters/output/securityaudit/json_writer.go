@@ -100,29 +100,29 @@ func toJSONReport(r domain.Report) jsonReport {
 		SchemaVersion: string(r.SchemaVersion),
 		GeneratedAt:   r.GeneratedAt,
 		StaveVersion:  r.StaveVersion,
-		Summary:       toJSONSummary(r.Summary),
+		Summary:       toJSONSummary(r.Summary.Counts, r.Summary.Gating, r.Summary.Metadata),
 		Findings:      findings,
 		EvidenceIndex: evIndex,
 		Controls:      controls,
 	}
 }
 
-func toJSONSummary(s domain.Summary) jsonSummary {
-	bySev := make(map[string]int, len(s.BySeverity))
-	for k, v := range s.BySeverity {
+func toJSONSummary(counts domain.ResultCounts, gating domain.GatingInfo, meta domain.AuditMeta) jsonSummary {
+	bySev := make(map[string]int, len(counts.BySeverity))
+	for k, v := range counts.BySeverity {
 		bySev[strings.ToUpper(k.String())] = v
 	}
 	return jsonSummary{
-		Total:             s.Total,
-		Pass:              s.Pass,
-		Warn:              s.Warn,
-		Fail:              s.Fail,
+		Total:             counts.Total,
+		Pass:              counts.Pass,
+		Warn:              counts.Warn,
+		Fail:              counts.Fail,
 		BySeverity:        bySev,
-		FailOn:            strings.ToUpper(s.FailOn.String()),
-		GatedFindingCount: s.GatedFindingCount,
-		Gated:             s.Gated,
-		VulnSourceUsed:    s.VulnSourceUsed,
-		EvidenceFreshness: s.EvidenceFreshness,
+		FailOn:            gating.DisplayFailOn(),
+		GatedFindingCount: gating.GatedFindingCount,
+		Gated:             gating.Gated,
+		VulnSourceUsed:    meta.VulnSourceUsed,
+		EvidenceFreshness: meta.EvidenceFreshness,
 	}
 }
 

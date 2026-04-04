@@ -14,8 +14,8 @@ func MarshalMarkdownReport(report domain.Report) ([]byte, error) {
 	var b strings.Builder
 	b.Grow(5 * 1024)
 	b.WriteString("# Stave Security Audit Report\n\n")
-	renderHeader(&b, report)
-	renderSummaryTable(&b, report.Summary)
+	renderHeader(&b, report, report.Summary.Gating, report.Summary.Metadata)
+	renderSummaryTable(&b, report.Summary.Counts, report.Summary.Gating)
 
 	b.WriteString("## Findings\n\n")
 	if len(report.Findings) == 0 {
@@ -40,26 +40,26 @@ func writeOptionalField(b *strings.Builder, label, value string) {
 	}
 }
 
-func renderHeader(b *strings.Builder, report domain.Report) {
+func renderHeader(b *strings.Builder, report domain.Report, gating domain.GatingInfo, meta domain.AuditMeta) {
 	writeBullet(b, "Generated", report.GeneratedAt.Format(time.RFC3339))
 	writeBullet(b, "Tool Version", report.StaveVersion)
 	writeBullet(b, "Schema", report.SchemaVersion)
-	writeBullet(b, "Fail Threshold", severityLabel(report.Summary.FailOn))
-	writeBullet(b, "Vulnerability Evidence Source", report.Summary.VulnSourceUsed)
-	writeBullet(b, "Evidence Freshness", report.Summary.EvidenceFreshness)
+	writeBullet(b, "Fail Threshold", gating.DisplayFailOn())
+	writeBullet(b, "Vulnerability Evidence Source", meta.VulnSourceUsed)
+	writeBullet(b, "Evidence Freshness", meta.EvidenceFreshness)
 	b.WriteString("\n")
 }
 
-func renderSummaryTable(b *strings.Builder, summary domain.Summary) {
+func renderSummaryTable(b *strings.Builder, counts domain.ResultCounts, gating domain.GatingInfo) {
 	b.WriteString("## Summary\n\n")
 	b.WriteString("| Metric | Value |\n")
 	b.WriteString("| :--- | ---: |\n")
-	fmt.Fprintf(b, "| Total checks | %d |\n", summary.Total)
-	fmt.Fprintf(b, "| Pass | %d |\n", summary.Pass)
-	fmt.Fprintf(b, "| Warn | %d |\n", summary.Warn)
-	fmt.Fprintf(b, "| Fail | %d |\n", summary.Fail)
-	fmt.Fprintf(b, "| Gated findings | %d |\n", summary.GatedFindingCount)
-	fmt.Fprintf(b, "| Gate triggered | `%t` |\n", summary.Gated)
+	fmt.Fprintf(b, "| Total checks | %d |\n", counts.Total)
+	fmt.Fprintf(b, "| Pass | %d |\n", counts.Pass)
+	fmt.Fprintf(b, "| Warn | %d |\n", counts.Warn)
+	fmt.Fprintf(b, "| Fail | %d |\n", counts.Fail)
+	fmt.Fprintf(b, "| Gated findings | %d |\n", gating.GatedFindingCount)
+	fmt.Fprintf(b, "| Gate triggered | `%t` |\n", gating.Gated)
 	b.WriteString("\n")
 }
 

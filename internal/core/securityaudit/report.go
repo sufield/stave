@@ -3,6 +3,7 @@ package securityaudit
 import (
 	"cmp"
 	"slices"
+	"strings"
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -38,16 +39,36 @@ type Finding struct {
 
 // Summary captures aggregate statistics for the audit run.
 type Summary struct {
-	Total             int                     `json:"total"`
-	Pass              int                     `json:"pass"`
-	Warn              int                     `json:"warn"`
-	Fail              int                     `json:"fail"`
-	BySeverity        map[policy.Severity]int `json:"by_severity"`
-	FailOn            policy.Severity         `json:"fail_on"`
-	GatedFindingCount int                     `json:"gated_finding_count"`
-	Gated             bool                    `json:"gated"`
-	VulnSourceUsed    string                  `json:"vuln_source_used,omitempty"`
-	EvidenceFreshness string                  `json:"evidence_freshness,omitempty"`
+	Counts   ResultCounts `json:"counts"`
+	Gating   GatingInfo   `json:"gating"`
+	Metadata AuditMeta    `json:"metadata"`
+}
+
+// ResultCounts holds pass/warn/fail tallies, recomputed from findings.
+type ResultCounts struct {
+	Total      int                     `json:"total"`
+	Pass       int                     `json:"pass"`
+	Warn       int                     `json:"warn"`
+	Fail       int                     `json:"fail"`
+	BySeverity map[policy.Severity]int `json:"by_severity"`
+}
+
+// GatingInfo holds the fail-on threshold and whether the gate was triggered.
+type GatingInfo struct {
+	FailOn            policy.Severity `json:"fail_on"`
+	GatedFindingCount int             `json:"gated_finding_count"`
+	Gated             bool            `json:"gated"`
+}
+
+// DisplayFailOn returns the uppercase severity label for display.
+func (g GatingInfo) DisplayFailOn() string {
+	return strings.ToUpper(g.FailOn.String())
+}
+
+// AuditMeta holds metadata about the evidence sources, preserved across recomputes.
+type AuditMeta struct {
+	VulnSourceUsed    string `json:"vuln_source_used,omitempty"`
+	EvidenceFreshness string `json:"evidence_freshness,omitempty"`
 }
 
 // RecomputeSummary rebuilds all aggregate counts and gating status from
@@ -57,34 +78,38 @@ func (r *Report) RecomputeSummary() {
 		return
 	}
 
-	s := Summary{
-		BySeverity:        make(map[policy.Severity]int),
-		FailOn:            r.Summary.FailOn,
-		VulnSourceUsed:    r.Summary.VulnSourceUsed,
-		EvidenceFreshness: r.Summary.EvidenceFreshness,
-		Total:             len(r.Findings),
+	counts := ResultCounts{
+		BySeverity: make(map[policy.Severity]int),
+		Total:      len(r.Findings),
+	}
+	gating := GatingInfo{
+		FailOn: r.Summary.Gating.FailOn,
 	}
 
 	for _, f := range r.Findings {
 		switch f.Status {
 		case outcome.Pass:
-			s.Pass++
+			counts.Pass++
 		case outcome.Warn:
-			s.Warn++
+			counts.Warn++
 		case outcome.Fail:
-			s.Fail++
+			counts.Fail++
 		}
 
-		s.BySeverity[f.Severity]++
+		counts.BySeverity[f.Severity]++
 
 		// FailOn=None means "disable gating" — skip the check entirely.
-		if s.FailOn != policy.SeverityNone && f.Status != outcome.Pass && f.Severity.Gte(s.FailOn) {
-			s.GatedFindingCount++
+		if gating.FailOn != policy.SeverityNone && f.Status != outcome.Pass && f.Severity.Gte(gating.FailOn) {
+			gating.GatedFindingCount++
 		}
 	}
 
-	s.Gated = s.GatedFindingCount > 0
-	r.Summary = s
+	gating.Gated = gating.GatedFindingCount > 0
+	r.Summary = Summary{
+		Counts:   counts,
+		Gating:   gating,
+		Metadata: r.Summary.Metadata, // preserved across recomputes
+	}
 }
 
 // CloneWithFilter returns a new Report containing only findings that
