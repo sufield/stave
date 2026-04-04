@@ -12,12 +12,13 @@ import (
 	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/compliance/compound"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ProfileControl binds an control to a profile with optional overrides.
 type ProfileControl struct {
 	// ControlID references a registered control.
-	ControlID string
+	ControlID kernel.ControlID
 
 	// SeverityOverride replaces the control's default severity when non-nil.
 	SeverityOverride *policy.Severity
@@ -58,12 +59,13 @@ type ProfileReport struct {
 
 // AcknowledgedEntry surfaces an exception in the report.
 type AcknowledgedEntry struct {
-	ControlID      string `json:"control_id"`
-	Bucket         string `json:"bucket"`
-	Rationale      string `json:"rationale"`
-	AcknowledgedBy string `json:"acknowledged_by"`
-	Valid          bool   `json:"valid"`
-	InvalidReason  string `json:"invalid_reason,omitempty"`
+	ControlID      kernel.ControlID `json:"control_id"`
+	Bucket         string           `json:"bucket"`
+	Rationale      string           `json:"rationale"`
+	AcknowledgedBy string           `json:"acknowledged_by"`
+	Valid          bool             `json:"valid"`
+	InvalidReason  string           `json:"invalid_reason,omitempty"`
+	InvalidDetail  string           `json:"invalid_detail,omitempty"`
 }
 
 // Evaluate runs all profile invariants against the snapshot.
@@ -80,7 +82,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 	}
 
 	// Collect all control IDs for profile validation.
-	ids := make([]string, len(controls))
+	ids := make([]kernel.ControlID, len(controls))
 	for i, c := range controls {
 		ids[i] = c.ControlID
 	}
@@ -174,8 +176,8 @@ func discoverProfileControls(profileID string, registries []*compliance.Registry
 	return controls
 }
 
-func buildLookup(registries []*compliance.Registry) map[string]compliance.Control {
-	lookup := make(map[string]compliance.Control)
+func buildLookup(registries []*compliance.Registry) map[kernel.ControlID]compliance.Control {
+	lookup := make(map[kernel.ControlID]compliance.Control)
 	for _, reg := range registries {
 		for _, inv := range reg.All() {
 			lookup[inv.Def().ID()] = inv

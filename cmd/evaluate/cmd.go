@@ -115,7 +115,8 @@ func run(w io.Writer, opts *options) error {
 				Rationale:      ack.Rationale,
 				AcknowledgedBy: ack.AcknowledgedBy,
 				Valid:          ack.Valid,
-				InvalidReason:  ack.InvalidReason,
+				InvalidReason:  string(ack.InvalidReason),
+				InvalidDetail:  ack.InvalidDetail,
 			})
 		}
 		// Recount after exceptions.

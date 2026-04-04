@@ -1,12 +1,16 @@
 package compliance
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 // IncompatiblePair documents two control IDs that must not appear
 // in the same evaluation profile.
 type IncompatiblePair struct {
-	A      string
-	B      string
+	A      kernel.ControlID
+	B      kernel.ControlID
 	Reason string
 }
 
@@ -24,8 +28,8 @@ func KnownIncompatible() []IncompatiblePair {
 
 // ValidateProfile checks that a set of control IDs contains no
 // incompatible pairs. Returns an error at startup if a conflict is found.
-func ValidateProfile(ids []string) error {
-	set := make(map[string]struct{}, len(ids))
+func ValidateProfile(ids []kernel.ControlID) error {
+	set := make(map[kernel.ControlID]struct{}, len(ids))
 	for _, id := range ids {
 		set[id] = struct{}{}
 	}

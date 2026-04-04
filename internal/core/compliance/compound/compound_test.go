@@ -5,13 +5,14 @@ import (
 
 	"github.com/sufield/stave/internal/core/compliance"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func fail(id string) compliance.Result {
+func fail(id kernel.ControlID) compliance.Result {
 	return compliance.Result{ControlID: id, Pass: false, Severity: policy.SeverityHigh}
 }
 
-func pass(id string) compliance.Result {
+func pass(id kernel.ControlID) compliance.Result {
 	return compliance.Result{ControlID: id, Pass: true, Severity: policy.SeverityHigh}
 }
 

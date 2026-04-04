@@ -8,6 +8,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/compliance"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/profile"
 )
 
@@ -45,6 +46,9 @@ exceptions:
 	}
 	if len(excs[0].RequiresPassing) != 2 {
 		t.Errorf("RequiresPassing: got %d", len(excs[0].RequiresPassing))
+	}
+	if excs[0].AcknowledgedDate.IsZero() {
+		t.Error("AcknowledgedDate should be parsed")
 	}
 }
 
@@ -103,7 +107,7 @@ func TestApplyExceptions_ValidException(t *testing.T) {
 		Bucket:          "my-bucket",
 		Rationale:       "CloudFront OAI",
 		AcknowledgedBy:  "bala@example.com",
-		RequiresPassing: []string{"CONTROLS.001", "AUDIT.001"},
+		RequiresPassing: []kernel.ControlID{"CONTROLS.001", "AUDIT.001"},
 	}}
 
 	acks := ApplyExceptions(excs, results)
@@ -135,7 +139,7 @@ func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 		Bucket:          "my-bucket",
 		Rationale:       "CloudFront OAI",
 		AcknowledgedBy:  "bala@example.com",
-		RequiresPassing: []string{"CONTROLS.001", "AUDIT.001"},
+		RequiresPassing: []kernel.ControlID{"CONTROLS.001", "AUDIT.001"},
 	}}
 
 	acks := ApplyExceptions(excs, results)
@@ -145,8 +149,11 @@ func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 	if acks[0].Valid {
 		t.Error("exception should be invalid")
 	}
-	if !strings.Contains(acks[0].InvalidReason, "CONTROLS.001") {
-		t.Errorf("invalid reason should mention CONTROLS.001: %s", acks[0].InvalidReason)
+	if acks[0].InvalidReason != InvalidReasonCompensatingFailed {
+		t.Errorf("InvalidReason = %q, want %q", acks[0].InvalidReason, InvalidReasonCompensatingFailed)
+	}
+	if !strings.Contains(acks[0].InvalidDetail, "CONTROLS.001") {
+		t.Errorf("InvalidDetail should mention CONTROLS.001: %s", acks[0].InvalidDetail)
 	}
 
 	// Result should still be FAIL.
@@ -176,7 +183,7 @@ func TestApplyExceptions_AlreadyPassing(t *testing.T) {
 		ControlID:       "ACCESS.001",
 		Bucket:          "my-bucket",
 		Rationale:       "test",
-		RequiresPassing: []string{"CONTROLS.001"},
+		RequiresPassing: []kernel.ControlID{"CONTROLS.001"},
 	}}
 	acks := ApplyExceptions(excs, results)
 	if len(acks) != 0 {

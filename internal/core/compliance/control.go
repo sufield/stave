@@ -3,6 +3,7 @@ package compliance
 import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Control is a programmatic safety check evaluated against an observation
@@ -21,7 +22,7 @@ type Result struct {
 	Pass bool `json:"pass"`
 
 	// ControlID identifies which control produced this result.
-	ControlID string `json:"control_id"`
+	ControlID kernel.ControlID `json:"control_id"`
 
 	// Severity is the impact level of the control.
 	Severity policy.Severity `json:"severity"`
@@ -44,7 +45,7 @@ type Result struct {
 // Definition holds the configurable fields for building an control.
 // Use With* options to populate fields, then pass to a constructor.
 type Definition struct {
-	id                 string
+	id                 kernel.ControlID
 	description        string
 	severity           policy.Severity
 	complianceProfiles []string
@@ -57,7 +58,7 @@ type Definition struct {
 type Option func(*Definition)
 
 // WithID sets the control identifier.
-func WithID(id string) Option {
+func WithID(id kernel.ControlID) Option {
 	return func(d *Definition) { d.id = id }
 }
 
@@ -121,7 +122,7 @@ func (d Definition) Def() Definition { return d }
 // Getters for Definition fields.
 
 // ID returns the control identifier.
-func (d Definition) ID() string { return d.id }
+func (d Definition) ID() kernel.ControlID { return d.id }
 
 // Description returns the human-readable description.
 func (d Definition) Description() string { return d.description }
