@@ -25,26 +25,24 @@ func init() {
 }
 
 func (ctl *accessEndpointPolicy) Evaluate(snap asset.Snapshot) Result {
-	for _, a := range snap.Assets {
-		if !isS3Bucket(a) {
-			continue
-		}
-
-		props := ParseS3Properties(a)
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
 		vep := props.Network.VPCEndpointPolicy
 		if !vep.Present || !vep.Attached {
-			return ctl.FailResult(
+			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: no VPC endpoint policy attached — endpoint uses default full-access policy", a.ID),
 				"Attach a VPC endpoint policy that restricts which S3 bucket ARNs are reachable through the endpoint.",
 			)
+			return &r
 		}
 
 		if vep.IsDefaultFullAccess {
-			return ctl.FailResult(
+			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: VPC endpoint policy is the default full-access policy (Allow *) — any principal on the VPC can reach any S3 bucket via this endpoint", a.ID),
 				"Replace the default endpoint policy with one that restricts Resource to specific bucket ARNs and Action to required S3 operations only.",
 			)
+			return &r
 		}
-	}
-	return ctl.PassResult()
+
+		return nil
+	})
 }

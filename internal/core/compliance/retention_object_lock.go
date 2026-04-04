@@ -28,14 +28,9 @@ func init() {
 // Evaluate checks Object Lock status and mode, returning severity based
 // on the actual lock configuration rather than a hardcoded value.
 func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
-	for _, a := range snap.Assets {
-		if !isS3Bucket(a) {
-			continue
-		}
-
-		props := ParseS3Properties(a)
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
 		if !props.ObjectLock.Enabled {
-			return Result{
+			r := Result{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityCritical,
@@ -43,13 +38,14 @@ func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 				Remediation:    "Enable Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation time. You may need to create a new bucket with Object Lock enabled and migrate objects.",
 				ComplianceRefs: ctl.ComplianceRefs(),
 			}
+			return &r
 		}
 
 		switch props.ObjectLock.Mode {
 		case ObjectLockModeCompliance:
-			continue // strongest protection, pass
+			return nil // strongest protection, pass
 		case ObjectLockModeGovernance:
-			return Result{
+			r := Result{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityHigh,
@@ -57,9 +53,10 @@ func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 				Remediation:    "Switch Object Lock from Governance mode to Compliance mode. In Compliance mode, no user (including root) can delete objects before the retention period expires.",
 				ComplianceRefs: ctl.ComplianceRefs(),
 			}
+			return &r
 		default:
 			// Object Lock enabled but mode not set or unrecognized
-			return Result{
+			r := Result{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityHigh,
@@ -67,8 +64,7 @@ func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 				Remediation:    "Configure a default retention policy with Compliance mode and a retention period of at least 6 years (2190 days) for HIPAA PHI.",
 				ComplianceRefs: ctl.ComplianceRefs(),
 			}
+			return &r
 		}
-	}
-
-	return ctl.PassResult()
+	})
 }

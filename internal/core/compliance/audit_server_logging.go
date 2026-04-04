@@ -27,19 +27,14 @@ func init() {
 
 // Evaluate checks that logging.target_bucket is set for every S3 bucket.
 func (ctl *auditServerLogging) Evaluate(snap asset.Snapshot) Result {
-	for _, a := range snap.Assets {
-		if !isS3Bucket(a) {
-			continue
-		}
-
-		props := ParseS3Properties(a)
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
 		if props.Logging.TargetBucket == "" {
-			return ctl.FailResult(
+			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: server access logging is not enabled. Logs cannot be obtained retroactively from AWS — if a security incident occurs without logging enabled, no forensic evidence exists", a.ID),
 				"Enable server access logging on the bucket. Set a target bucket in a separate account or with write-only permissions to prevent log tampering.",
 			)
+			return &r
 		}
-	}
-
-	return ctl.PassResult()
+		return nil
+	})
 }
