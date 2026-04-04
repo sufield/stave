@@ -59,6 +59,11 @@ func (a *App) installInterruptHandler() func() {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Fprintf(os.Stderr, "signal handler panic: %v\n", r)
+			}
+		}()
 		select {
 		case <-sigCh:
 			fmt.Fprintln(os.Stderr, "Interrupted")

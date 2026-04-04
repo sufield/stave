@@ -76,6 +76,11 @@ func (cp *CountedProgress) finishProgress() {
 
 func (cp *CountedProgress) renderLoop() {
 	defer close(cp.finishedCh)
+	defer func() {
+		if r := recover(); r != nil {
+			_, _ = fmt.Fprintf(cp.errOut, "\rprogress render panic: %v\n", r)
+		}
+	}()
 	frames := []string{"|", "/", "-", "\\"}
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
