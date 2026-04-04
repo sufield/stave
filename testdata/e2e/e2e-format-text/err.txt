@@ -1,0 +1,9 @@
+Running: apply controls against observations...
+Done:    apply controls against observations (3 files, 11ms)
+Hint:
+  stave diagnose --controls testdata/e2e/e2e-format-text/controls --observations testdata/e2e/e2e-format-text/observations
+
+Next steps:
+  1. Identify the root cause: `stave diagnose --controls testdata/e2e/e2e-format-text/controls --observations testdata/e2e/e2e-format-text/observations`
+  2. View a summary: `stave apply --format text`
+  3. Export findings to a file: `stave apply --format json > findings.json`

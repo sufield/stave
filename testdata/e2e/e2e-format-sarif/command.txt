@@ -1,0 +1,1 @@
+apply --controls $CASE_DIR/controls --observations $CASE_DIR/observations --max-unsafe 168h --now 2026-01-11T00:00:00Z --format sarif

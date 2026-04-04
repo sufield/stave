@@ -131,6 +131,21 @@ actual:   $act_se"
       || fail "$name full output mismatch (see diff above)"
   fi
 
+  if [[ -f "$case_dir/expected.out.sarif" ]]; then
+    # SARIF is JSON — use semantic comparison, strip tool version
+    local sarif_filter='del(.runs[0].tool.driver.version)'
+    diff -u <(jq -S "$sarif_filter" "$case_dir/expected.out.sarif") \
+            <(jq -S "$sarif_filter" "$out") \
+      || fail "$name SARIF output mismatch (see diff above)"
+  fi
+
+  if [[ -f "$case_dir/expected.out.txt" ]]; then
+    # Text output — strip version line for comparison
+    diff -u <(grep -v '^stave v' "$case_dir/expected.out.txt") \
+            <(grep -v '^stave v' "$out") \
+      || fail "$name text output mismatch (see diff above)"
+  fi
+
   if [[ -f "$case_dir/expected.generated.path" && -f "$case_dir/expected.generated.sha256" ]]; then
     local generated_rel generated_path exp_sha act_sha
     generated_rel="$(tr -d ' \n\r\t' < "$case_dir/expected.generated.path")"
