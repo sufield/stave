@@ -7,8 +7,8 @@ import (
 )
 
 func TestAccess009(t *testing.T) {
-	inv := ControlRegistry.Lookup("ACCESS.009")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("ACCESS.009")
+	if ctl == nil {
 		t.Fatal("ACCESS.009 not registered")
 	}
 
@@ -95,7 +95,7 @@ func TestAccess009(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}

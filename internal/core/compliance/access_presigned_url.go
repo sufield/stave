@@ -25,7 +25,7 @@ func init() {
 	})
 }
 
-func (inv *accessPresignedURL) Evaluate(snap asset.Snapshot) Result {
+func (ctl *accessPresignedURL) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue
@@ -33,7 +33,7 @@ func (inv *accessPresignedURL) Evaluate(snap asset.Snapshot) Result {
 
 		policyJSON := extractPolicyJSON(a)
 		if policyJSON == "" {
-			return inv.FailResult(
+			return ctl.FailResult(
 				fmt.Sprintf("Bucket %s: no bucket policy — presigned URLs are unrestricted", a.ID),
 				"Add a bucket policy with a Deny statement using s3:signatureAge (max age in ms) or s3:authType (require REST-HEADER) to restrict presigned URL access.",
 			)
@@ -41,7 +41,7 @@ func (inv *accessPresignedURL) Evaluate(snap asset.Snapshot) Result {
 
 		stmts, err := ParsePolicyStatements(policyJSON)
 		if err != nil || len(stmts) == 0 {
-			return inv.FailResult(
+			return ctl.FailResult(
 				fmt.Sprintf("Bucket %s: bucket policy could not be parsed for presigned URL restrictions", a.ID),
 				"Ensure the bucket policy is valid JSON with Statement entries.",
 			)
@@ -53,12 +53,12 @@ func (inv *accessPresignedURL) Evaluate(snap asset.Snapshot) Result {
 			}
 		}
 
-		return inv.FailResult(
+		return ctl.FailResult(
 			fmt.Sprintf("Bucket %s: bucket policy does not contain s3:signatureAge or s3:authType guardrails — presigned URLs are unrestricted", a.ID),
 			"Add a Deny statement with Condition NumericGreaterThan s3:signatureAge (e.g., 600000 for 10 minutes) or StringNotEquals s3:authType REST-HEADER to block presigned URL access.",
 		)
 
 	nextAsset:
 	}
-	return inv.PassResult()
+	return ctl.PassResult()
 }

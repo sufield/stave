@@ -42,8 +42,8 @@ func bpaProps(blockACLs, ignoreACLs, blockPolicy, restrictBuckets bool) map[stri
 }
 
 func TestAccess001(t *testing.T) {
-	inv := ControlRegistry.Lookup("ACCESS.001")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("ACCESS.001")
+	if ctl == nil {
 		t.Fatal("ACCESS.001 not registered")
 	}
 
@@ -105,7 +105,7 @@ func TestAccess001(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v", r.Pass, tc.wantPass)
 			}

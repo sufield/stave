@@ -27,7 +27,7 @@ func init() {
 }
 
 // Evaluate checks that the bucket policy contains a Deny non-TLS statement.
-func (inv *controlsDenyNonTls) Evaluate(snap asset.Snapshot) Result {
+func (ctl *controlsDenyNonTls) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue
@@ -48,12 +48,12 @@ func (inv *controlsDenyNonTls) Evaluate(snap asset.Snapshot) Result {
 		}
 
 		if !hasDenyNonTLS {
-			return inv.FailResult(
+			return ctl.FailResult(
 				fmt.Sprintf("Bucket %s: no bucket policy statement denies non-TLS access — data in transit may be unencrypted when accessed via HTTP website endpoint", a.ID),
 				"Add a Deny statement to the bucket policy with Condition {\"Bool\": {\"aws:SecureTransport\": \"false\"}} to block all HTTP access.",
 			)
 		}
 	}
 
-	return inv.PassResult()
+	return ctl.PassResult()
 }

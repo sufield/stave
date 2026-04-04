@@ -9,8 +9,8 @@ import (
 )
 
 func TestControls001Strict(t *testing.T) {
-	inv := ControlRegistry.Lookup("CONTROLS.001.STRICT")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("CONTROLS.001.STRICT")
+	if ctl == nil {
 		t.Fatal("CONTROLS.001.STRICT not registered")
 	}
 
@@ -64,7 +64,7 @@ func TestControls001Strict(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}

@@ -18,8 +18,8 @@ func lockBucket(id string, enabled bool, mode string) asset.Asset {
 }
 
 func TestRetention002(t *testing.T) {
-	inv := ControlRegistry.Lookup("RETENTION.002")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("RETENTION.002")
+	if ctl == nil {
 		t.Fatal("RETENTION.002 not registered")
 	}
 
@@ -67,7 +67,7 @@ func TestRetention002(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}

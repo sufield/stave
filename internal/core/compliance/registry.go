@@ -24,19 +24,19 @@ func NewRegistry() *Registry {
 
 // Register adds an control to the registry. Returns an error if an
 // control with the same ID is already registered.
-func (r *Registry) Register(inv Control) error {
-	id := inv.Def().ID()
+func (r *Registry) Register(ctl Control) error {
+	id := ctl.Def().ID()
 	if _, exists := r.controls[id]; exists {
 		return fmt.Errorf("control %q already registered", id)
 	}
-	r.controls[id] = inv
+	r.controls[id] = ctl
 	r.order = append(r.order, id)
 	return nil
 }
 
 // MustRegister calls Register and panics on error. Use during init.
-func (r *Registry) MustRegister(inv Control) {
-	if err := r.Register(inv); err != nil {
+func (r *Registry) MustRegister(ctl Control) {
+	if err := r.Register(ctl); err != nil {
 		panic(err)
 	}
 }

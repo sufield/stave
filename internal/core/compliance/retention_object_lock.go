@@ -27,7 +27,7 @@ func init() {
 
 // Evaluate checks Object Lock status and mode, returning severity based
 // on the actual lock configuration rather than a hardcoded value.
-func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
+func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue
@@ -37,11 +37,11 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 		if !props.ObjectLock.Enabled {
 			return Result{
 				Pass:           false,
-				ControlID:      inv.ID(),
+				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityCritical,
 				Finding:        fmt.Sprintf("Bucket %s: Object Lock is not enabled — objects can be deleted or overwritten, violating the 6-year HIPAA PHI retention requirement", a.ID),
 				Remediation:    "Enable Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation time. You may need to create a new bucket with Object Lock enabled and migrate objects.",
-				ComplianceRefs: inv.ComplianceRefs(),
+				ComplianceRefs: ctl.ComplianceRefs(),
 			}
 		}
 
@@ -51,24 +51,24 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 		case ObjectLockModeGovernance:
 			return Result{
 				Pass:           false,
-				ControlID:      inv.ID(),
+				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityHigh,
 				Finding:        fmt.Sprintf("Bucket %s: Object Lock is in Governance mode — users with s3:BypassGovernanceRetention permission can override retention and delete objects. For HIPAA PHI, Compliance mode provides the strongest protection", a.ID),
 				Remediation:    "Switch Object Lock from Governance mode to Compliance mode. In Compliance mode, no user (including root) can delete objects before the retention period expires.",
-				ComplianceRefs: inv.ComplianceRefs(),
+				ComplianceRefs: ctl.ComplianceRefs(),
 			}
 		default:
 			// Object Lock enabled but mode not set or unrecognized
 			return Result{
 				Pass:           false,
-				ControlID:      inv.ID(),
+				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityHigh,
 				Finding:        fmt.Sprintf("Bucket %s: Object Lock is enabled but no retention mode is configured (mode=%q)", a.ID, props.ObjectLock.Mode),
 				Remediation:    "Configure a default retention policy with Compliance mode and a retention period of at least 6 years (2190 days) for HIPAA PHI.",
-				ComplianceRefs: inv.ComplianceRefs(),
+				ComplianceRefs: ctl.ComplianceRefs(),
 			}
 		}
 	}
 
-	return inv.PassResult()
+	return ctl.PassResult()
 }

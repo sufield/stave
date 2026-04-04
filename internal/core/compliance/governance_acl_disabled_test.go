@@ -14,8 +14,8 @@ func ownershipBucket(id, ownership string) asset.Asset {
 }
 
 func TestGovernance001(t *testing.T) {
-	inv := ControlRegistry.Lookup("GOVERNANCE.001")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("GOVERNANCE.001")
+	if ctl == nil {
 		t.Fatal("GOVERNANCE.001 not registered")
 	}
 
@@ -58,7 +58,7 @@ func TestGovernance001(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}
