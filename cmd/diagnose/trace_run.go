@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -67,7 +68,7 @@ Exit Codes:
 			trimmedCtlID := strings.TrimSpace(controlID)
 
 			// Load control via factory
-			control, err := loadTraceControl(ctx, newCtlRepo, cleanCtlDir, trimmedCtlID)
+			control, err := loadTraceControl(ctx, newCtlRepo, cleanCtlDir, kernel.ControlID(trimmedCtlID))
 			if err != nil {
 				return err
 			}
@@ -117,7 +118,7 @@ Exit Codes:
 }
 
 // loadTraceControl loads a specific control by ID via factory.
-func loadTraceControl(ctx context.Context, newCtlRepo compose.CtlRepoFactory, dir, id string) (policy.ControlDefinition, error) {
+func loadTraceControl(ctx context.Context, newCtlRepo compose.CtlRepoFactory, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
 	repo, err := newCtlRepo()
 	if err != nil {
 		return policy.ControlDefinition{}, err

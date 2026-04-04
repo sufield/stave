@@ -76,9 +76,7 @@ func normalizePrefixes(raw []string) []kernel.ObjectPrefix {
 		if p == "" {
 			continue
 		}
-		if !strings.HasSuffix(p, "/") {
-			p += "/"
-		}
+		p = kernel.EnsureTrailingSlash(p)
 		out = append(out, p)
 	}
 

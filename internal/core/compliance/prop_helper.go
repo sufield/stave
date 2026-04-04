@@ -1,6 +1,43 @@
 package compliance
 
-import "github.com/sufield/stave/internal/core/asset"
+import (
+	"strings"
+
+	"github.com/sufield/stave/internal/core/asset"
+)
+
+// ObjectLockMode represents the S3 Object Lock retention mode.
+type ObjectLockMode int
+
+const (
+	ObjectLockModeUnset      ObjectLockMode = iota
+	ObjectLockModeCompliance                // strongest — nobody can delete before retention expires
+	ObjectLockModeGovernance                // weaker — privileged users can bypass
+)
+
+// String returns the canonical uppercase name.
+func (m ObjectLockMode) String() string {
+	switch m {
+	case ObjectLockModeCompliance:
+		return "COMPLIANCE"
+	case ObjectLockModeGovernance:
+		return "GOVERNANCE"
+	default:
+		return ""
+	}
+}
+
+// parseObjectLockMode converts a raw string (case-insensitive) to an ObjectLockMode.
+func parseObjectLockMode(s string) ObjectLockMode {
+	switch strings.ToUpper(strings.TrimSpace(s)) {
+	case "COMPLIANCE":
+		return ObjectLockModeCompliance
+	case "GOVERNANCE":
+		return ObjectLockModeGovernance
+	default:
+		return ObjectLockModeUnset
+	}
+}
 
 // S3Properties provides typed access to S3 asset properties,
 // replacing raw map[string]any traversal with compile-time safe fields.
@@ -63,7 +100,7 @@ type S3ObjectLevelLogging struct {
 type S3ObjectLock struct {
 	Present bool
 	Enabled bool
-	Mode    string
+	Mode    ObjectLockMode
 }
 
 // S3Controls holds S3 control-plane settings.
@@ -140,7 +177,8 @@ func ParseS3Properties(a asset.Asset) S3Properties {
 	if lock, _ := storage["object_lock"].(map[string]any); lock != nil {
 		p.ObjectLock.Present = true
 		p.ObjectLock.Enabled, _ = lock["enabled"].(bool)
-		p.ObjectLock.Mode, _ = lock["mode"].(string)
+		rawMode, _ := lock["mode"].(string)
+		p.ObjectLock.Mode = parseObjectLockMode(rawMode)
 	}
 
 	// Controls (BPA)

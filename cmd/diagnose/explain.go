@@ -65,7 +65,7 @@ type repoFinder struct {
 }
 
 func (f *repoFinder) FindByID(ctx context.Context, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
-	ctl, err := compose.FindControlByID(ctx, f.repo, dir, string(id))
+	ctl, err := compose.FindControlByID(ctx, f.repo, dir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
 			fmt.Sprintf("stave validate --controls %s", dir))

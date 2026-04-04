@@ -72,20 +72,9 @@ type Grant struct {
 type Grants []Grant
 
 // Audience determines who the grant applies to by inspecting the Grantee URI.
-// Uses suffix matching to avoid false positives from similarly-named principals.
+// Delegates to classifyGrantee for the actual suffix matching.
 func (g Grant) Audience() Audience {
-	if g.Grantee == "" {
-		return AudiencePrivate
-	}
-	u := strings.ToLower(g.Grantee)
-	switch {
-	case strings.HasSuffix(u, "/allusers") || strings.HasSuffix(u, ":allusers"):
-		return AudienceAllUsers
-	case strings.HasSuffix(u, "/authenticatedusers") || strings.HasSuffix(u, ":authenticatedusers"):
-		return AudienceAuthenticatedOnly
-	default:
-		return AudiencePrivate
-	}
+	return classifyGrantee(g.Grantee)
 }
 
 // IsPublic reports whether this grant applies to public or authenticated principals.

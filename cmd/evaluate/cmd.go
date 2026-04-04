@@ -13,6 +13,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	ui "github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -138,9 +140,13 @@ func run(w io.Writer, opts *options) error {
 	}
 
 	// Select reporter.
+	format, fmtErr := ui.ParseOutputFormat(opts.Format)
+	if fmtErr != nil {
+		return fmtErr
+	}
 	var rep reporter.Reporter
-	switch opts.Format {
-	case "json":
+	switch format {
+	case appcontracts.FormatJSON:
 		rep = reporter.JSONReporter{}
 	default:
 		rep = reporter.TextReporter{}

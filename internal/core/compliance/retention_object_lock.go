@@ -2,16 +2,9 @@ package compliance
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-)
-
-// Object Lock mode constants.
-const (
-	lockModeCompliance = "COMPLIANCE"
-	lockModeGovernance = "GOVERNANCE"
 )
 
 // retentionObjectLock checks that Object Lock is enabled and evaluates the lock mode.
@@ -52,11 +45,10 @@ func (inv *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 			}
 		}
 
-		mode := strings.ToUpper(props.ObjectLock.Mode)
-		switch mode {
-		case lockModeCompliance:
+		switch props.ObjectLock.Mode {
+		case ObjectLockModeCompliance:
 			continue // strongest protection, pass
-		case lockModeGovernance:
+		case ObjectLockModeGovernance:
 			return Result{
 				Pass:           false,
 				ControlID:      inv.ID(),
