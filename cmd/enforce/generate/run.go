@@ -180,7 +180,7 @@ func (r *Runner) writeResult(w io.Writer, res Result) error {
 	return jsonutil.WriteIndented(w, res)
 }
 
-func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (string, string, error) {
+func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (filePath, content string, err error) {
 	base := filepath.Join(outDir, "enforcement", "aws")
 	switch mode {
 	case ModePAB:

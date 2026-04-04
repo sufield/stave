@@ -65,7 +65,7 @@ type BaselineComparer struct {
 }
 
 // CompareAgainstBaseline loads evaluation and baseline, returns current and new counts.
-func (b *BaselineComparer) CompareAgainstBaseline(ctx context.Context, evalPath, baselinePath string) (int, int, error) {
+func (b *BaselineComparer) CompareAgainstBaseline(ctx context.Context, evalPath, baselinePath string) (currentCount, newCount int, err error) {
 	eval, err := b.LoadEvaluation(ctx, evalPath)
 	if err != nil {
 		return 0, 0, fmt.Errorf("loading evaluation: %w", err)

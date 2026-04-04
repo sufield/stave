@@ -68,7 +68,7 @@ func resolveTierKey(cfg *appconfig.ProjectConfig, cfgPath string, eval *appconfi
 }
 
 // tierSubFieldResolution reads a specific tier sub-field directly from config.
-func tierSubFieldResolution(cfg *appconfig.ProjectConfig, cfgPath string, parsed appconfig.ParsedKey) (string, string, error) {
+func tierSubFieldResolution(cfg *appconfig.ProjectConfig, cfgPath string, parsed appconfig.ParsedKey) (resolvedValue, source string, err error) {
 	if cfg == nil || len(cfg.RetentionTiers) == 0 {
 		return "", "", fmt.Errorf("key %q: not set in %s", parsed.Raw, appconfig.ProjectConfigFile)
 	}
@@ -87,6 +87,6 @@ func tierSubFieldResolution(cfg *appconfig.ProjectConfig, cfgPath string, parsed
 		return "", "", fmt.Errorf("unsupported tier field %q", parsed.SubField)
 	}
 
-	source := fmt.Sprintf("%s:%s%s.%s", cfgPath, appconfig.TierKeyPrefix, parsed.TierName, parsed.SubField)
+	source = fmt.Sprintf("%s:%s%s.%s", cfgPath, appconfig.TierKeyPrefix, parsed.TierName, parsed.SubField)
 	return val, source, nil
 }

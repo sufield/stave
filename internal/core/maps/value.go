@@ -131,9 +131,9 @@ func stringMapFromStrings(entries map[string]string) map[string]string {
 	return out
 }
 
-func normalizeStringMapEntry(key, value string) (string, string, bool) {
-	normalizedKey := strings.TrimSpace(key)
-	normalizedValue := strings.TrimSpace(value)
+func normalizeStringMapEntry(key, value string) (normalizedKey, normalizedValue string, ok bool) {
+	normalizedKey = strings.TrimSpace(key)
+	normalizedValue = strings.TrimSpace(value)
 	if normalizedKey == "" || normalizedValue == "" {
 		return "", "", false
 	}
