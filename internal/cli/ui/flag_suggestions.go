@@ -5,6 +5,41 @@ import (
 	"strings"
 )
 
+// SuggestCommandError augments an "unknown command" error with a single
+// best-match "Did you mean?" hint using the suggest package. Returns the
+// original error unchanged if the error is not a command-not-found or no
+// close match exists.
+func SuggestCommandError(err error, commandNames []string) error {
+	if err == nil || len(commandNames) == 0 {
+		return err
+	}
+
+	unknown := extractUnknownCommand(err.Error())
+	if unknown == "" {
+		return err
+	}
+
+	suggestion := ClosestToken(unknown, commandNames)
+	if suggestion == "" || suggestion == unknown {
+		return err
+	}
+
+	return fmt.Errorf("unknown command %q\nDid you mean %q?", unknown, suggestion)
+}
+
+// extractUnknownCommand parses Cobra's "unknown command" error format:
+//
+//	unknown command "aply" for "stave"
+func extractUnknownCommand(msg string) string {
+	if !strings.HasPrefix(msg, "unknown command ") {
+		return ""
+	}
+	if token, ok := extractBetween(msg, `"`); ok {
+		return token
+	}
+	return ""
+}
+
 // SuggestFlagParseError augments a flag parsing error with a "Did you mean?" hint.
 // It uses fuzzy matching to find the closest valid flag from the candidates list.
 func SuggestFlagParseError(parseErr error, candidates []string) error {

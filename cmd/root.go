@@ -93,14 +93,15 @@ func NewApp(opts ...AppOption) *App {
 		Provider: compose.NewDefaultProvider(),
 	}
 	app.Root = &cobra.Command{
-		Use:               CLIName,
-		Short:             "Configuration safety evaluator",
-		SilenceErrors:     true,
-		SilenceUsage:      true,
-		PersistentPreRunE: app.bootstrap,
-		PersistentPostRun: app.postRun,
-		Long:              rootLongHelp,
-		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
+		Use:                CLIName,
+		Short:              "Configuration safety evaluator",
+		SilenceErrors:      true,
+		SilenceUsage:       true,
+		DisableSuggestions: true,
+		PersistentPreRunE:  app.bootstrap,
+		PersistentPostRun:  app.postRun,
+		Long:               rootLongHelp,
+		CompletionOptions:  cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
 	WireCommands(app)
