@@ -59,13 +59,27 @@ func Assess(grants []Grant) Assessment {
 	return New(grants).Assess()
 }
 
+// classifyGrantee determines the audience of a grantee URI by suffix matching.
+// This is the single source of truth for public grantee detection — both
+// IsPublicGrantee and Grant.Audience delegate here.
+func classifyGrantee(uri string) Audience {
+	if uri == "" {
+		return AudiencePrivate
+	}
+	u := strings.ToLower(uri)
+	switch {
+	case strings.HasSuffix(u, "/allusers") || strings.HasSuffix(u, ":allusers"):
+		return AudienceAllUsers
+	case strings.HasSuffix(u, "/authenticatedusers") || strings.HasSuffix(u, ":authenticatedusers"):
+		return AudienceAuthenticatedOnly
+	default:
+		return AudiencePrivate
+	}
+}
+
 // IsPublicGrantee reports whether a grantee URI matches the S3 AllUsers or
 // AuthenticatedUsers group. Uses suffix matching to handle varied input
 // sources while avoiding false positives from similarly-named IAM principals.
 func IsPublicGrantee(uri string) bool {
-	if uri == "" {
-		return false
-	}
-	u := strings.ToLower(uri)
-	return strings.HasSuffix(u, "/allusers") || strings.HasSuffix(u, "/authenticatedusers")
+	return classifyGrantee(uri) != AudiencePrivate
 }

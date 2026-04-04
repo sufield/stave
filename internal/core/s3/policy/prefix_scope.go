@@ -51,7 +51,7 @@ func (d *Document) AnalyzeScopes() PrefixScopeAnalysis {
 func hasPublicReadAction(actions []string) bool {
 	for _, action := range actions {
 		a := strings.ToLower(action)
-		if a == wildcard || a == s3Wildcard || a == actionGetObject {
+		if isWildcardAction(a) || a == actionGetObject {
 			return true
 		}
 	}
@@ -82,8 +82,5 @@ func parseObjectPrefix(resource string) kernel.ObjectPrefix {
 	if prefix == "" {
 		return kernel.WildcardPrefix
 	}
-	if !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
-	}
-	return kernel.ObjectPrefix(prefix)
+	return kernel.ObjectPrefix(kernel.EnsureTrailingSlash(prefix))
 }

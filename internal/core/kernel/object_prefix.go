@@ -14,6 +14,14 @@ func (p ObjectPrefix) String() string {
 	return string(p)
 }
 
+// EnsureTrailingSlash returns s with a trailing "/" appended if not already present.
+func EnsureTrailingSlash(s string) string {
+	if !strings.HasSuffix(s, "/") {
+		return s + "/"
+	}
+	return s
+}
+
 // Matches reports whether this prefix (acting as a scope) covers the target prefix.
 // A wildcard scope matches everything. Otherwise, the scope must be an ancestor
 // directory of the target (compared with trailing-slash normalization).
@@ -25,12 +33,7 @@ func (p ObjectPrefix) Matches(target ObjectPrefix) bool {
 	if scope == "*" {
 		return true
 	}
-	if !strings.HasSuffix(scope, "/") {
-		scope += "/"
-	}
-	t := string(target)
-	if !strings.HasSuffix(t, "/") {
-		t += "/"
-	}
+	scope = EnsureTrailingSlash(scope)
+	t := EnsureTrailingSlash(string(target))
 	return strings.HasPrefix(t, scope)
 }

@@ -42,7 +42,7 @@ func (p Principal) Scope() kernel.PrincipalScope {
 
 	switch v := p.data.(type) {
 	case string:
-		if v == wildcard {
+		if isWildcardPrincipal(v) {
 			return kernel.ScopePublic
 		}
 		return kernel.ScopeAccount
@@ -83,7 +83,7 @@ func classifyAWSPrincipal(val any) kernel.PrincipalScope {
 
 	for _, p := range principals {
 		switch {
-		case p == wildcard:
+		case isWildcardPrincipal(p):
 			return kernel.ScopePublic
 		case strings.Contains(p, ":iam::*:root"):
 			maxScope = upgradeScope(maxScope, kernel.ScopeAuthenticated)

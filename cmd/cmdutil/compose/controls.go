@@ -7,6 +7,7 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ErrControlNotFound is returned when a control ID is not found in the loaded set.
@@ -28,13 +29,13 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 }
 
 // FindControlByID loads controls from a directory and returns the one matching the given ID.
-func FindControlByID(ctx context.Context, repo appcontracts.ControlRepository, dir string, id string) (policy.ControlDefinition, error) {
+func FindControlByID(ctx context.Context, repo appcontracts.ControlRepository, dir string, id kernel.ControlID) (policy.ControlDefinition, error) {
 	controls, err := repo.LoadControls(ctx, dir)
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("loading controls from %s: %w", dir, err)
 	}
 	for _, c := range controls {
-		if c.ID.String() == id {
+		if c.ID == id {
 			return c, nil
 		}
 	}

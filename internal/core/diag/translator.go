@@ -114,25 +114,27 @@ func (t *Translator) deriveAction(extCode, field string) string {
 	return "Correct the schema violation in your YAML/JSON file."
 }
 
-func requiredFieldAction(field string) string {
-	return actionWithField(field, "Add the missing field: %s", "Add the missing required field.")
+// actionTemplate pairs a field-specific format string with a fallback message.
+type actionTemplate struct {
+	withField string // fmt template with one %s for the field name
+	fallback  string // used when the field name is empty
 }
 
-func expectedTypeAction(field string) string {
-	return actionWithField(field, "Set %s to a value of the expected type.", "Use a value of the expected type.")
-}
-
-func enumAction(field string) string {
-	return actionWithField(field, "Set %s to one of the allowed values.", "Use one of the allowed values.")
-}
-
-func additionalPropertiesAction(field string) string {
-	return actionWithField(field, "Remove unsupported field: %s", "Remove unsupported fields from the payload.")
-}
-
-func actionWithField(field, withField, fallback string) string {
+func (t actionTemplate) render(field string) string {
 	if field != "" {
-		return fmt.Sprintf(withField, field)
+		return fmt.Sprintf(t.withField, field)
 	}
-	return fallback
+	return t.fallback
 }
+
+var (
+	actionRequiredField      = actionTemplate{"Add the missing field: %s", "Add the missing required field."}
+	actionExpectedType       = actionTemplate{"Set %s to a value of the expected type.", "Use a value of the expected type."}
+	actionEnum               = actionTemplate{"Set %s to one of the allowed values.", "Use one of the allowed values."}
+	actionAdditionalProperty = actionTemplate{"Remove unsupported field: %s", "Remove unsupported fields from the payload."}
+)
+
+func requiredFieldAction(field string) string        { return actionRequiredField.render(field) }
+func expectedTypeAction(field string) string         { return actionExpectedType.render(field) }
+func enumAction(field string) string                 { return actionEnum.render(field) }
+func additionalPropertiesAction(field string) string { return actionAdditionalProperty.render(field) }

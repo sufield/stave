@@ -72,7 +72,7 @@ func (s Statement) ResolveActions() (actionMask, bool) {
 // classifyAction identifies the category of an individual IAM action string.
 func classifyAction(action string) (actionMask, bool) {
 	if mask, ok := actionRegistry[action]; ok {
-		return mask, action == wildcard || action == s3Wildcard
+		return mask, isWildcardAction(action)
 	}
 	switch {
 	case strings.HasPrefix(action, actionPrefixGet):
@@ -96,12 +96,7 @@ func isWriteAction(action string) bool {
 }
 
 func hasWildcardResource(resources []string) bool {
-	for _, res := range resources {
-		if res == wildcard || res == s3GlobalResource {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(resources, isWildcardResource)
 }
 
 func isAccountIDOnly(principal string) bool {
@@ -126,7 +121,7 @@ func extractPrincipalARNs(principal any) []string {
 
 	candidates := NormalizeStringOrSlice(target)
 	filtered := slices.DeleteFunc(candidates, func(arn string) bool {
-		return arn == "" || arn == wildcard
+		return arn == "" || isWildcardPrincipal(arn)
 	})
 	if len(filtered) == 0 {
 		return nil
