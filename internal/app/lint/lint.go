@@ -233,7 +233,7 @@ func newDiag(path string, line, col int, id, msg string, sev Severity) Diagnosti
 	return Diagnostic{Path: path, Line: line, Col: col, RuleID: id, Message: msg, Severity: sev}
 }
 
-func nodePos(n *yaml.Node) (int, int) {
+func nodePos(n *yaml.Node) (line, col int) {
 	if n == nil {
 		return 1, 1
 	}

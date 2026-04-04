@@ -97,8 +97,8 @@ func (r *runner) Render(_ context.Context, _ appeval.CleanupPlan) error {
 
 // --- Helpers ---
 
-func resolveArchivePaths(observationsPath, archivePath string) (string, string, error) {
-	obsDir := fsutil.CleanUserPath(observationsPath)
+func resolveArchivePaths(observationsPath, archivePath string) (obsDir, archiveDir string, err error) {
+	obsDir = fsutil.CleanUserPath(observationsPath)
 	if obsDir == "" {
 		return "", "", fmt.Errorf("--observations cannot be empty")
 	}

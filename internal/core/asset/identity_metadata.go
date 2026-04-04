@@ -22,7 +22,7 @@ func (id CloudIdentity) Purpose() (string, bool) {
 }
 
 // HasWildcard returns whether grants.has_wildcard is set and the grants parent exists.
-func (id CloudIdentity) HasWildcard() (bool, bool) {
+func (id CloudIdentity) HasWildcard() (value, exists bool) {
 	return identityNestedBoolProperty(id.Map(), "grants", "has_wildcard")
 }
 
@@ -48,7 +48,7 @@ func identityStringProperty(props map[string]any, key string) (string, bool) {
 	return value, true
 }
 
-func identityNestedBoolProperty(props map[string]any, parent, key string) (bool, bool) {
+func identityNestedBoolProperty(props map[string]any, parent, key string) (value, exists bool) {
 	rawParent, ok := props[parent]
 	if !ok {
 		return false, false
@@ -61,7 +61,7 @@ func identityNestedBoolProperty(props map[string]any, parent, key string) (bool,
 	if !ok {
 		return false, true
 	}
-	value, ok := raw.(bool)
+	value, ok = raw.(bool)
 	if !ok {
 		return false, true
 	}

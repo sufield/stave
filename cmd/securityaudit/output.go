@@ -15,7 +15,7 @@ const (
 	auditFormatSARIF    = string(domainsecurityaudit.ReportFormatSARIF)
 )
 
-func renderReport(format string, report domainsecurityaudit.Report) ([]byte, string, error) {
+func renderReport(format string, report domainsecurityaudit.Report) (data []byte, filename string, err error) {
 	switch format {
 	case auditFormatJSON:
 		data, err := securityout.MarshalJSONReport(report)
