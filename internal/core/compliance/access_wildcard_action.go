@@ -38,7 +38,7 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket for wildcard Allow statements.
-func (inv *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
+func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue
@@ -56,7 +56,7 @@ func (inv *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
 				if sid == "" {
 					sid = "(unnamed)"
 				}
-				return inv.FailResult(
+				return ctl.FailResult(
 					fmt.Sprintf("Bucket %s: policy statement %q grants Allow with wildcard action s3:* — this permits all S3 operations including delete and ACL modification", a.ID, sid),
 					fmt.Sprintf("Replace s3:* with the minimum required actions. For sync patterns use: %s", strings.Join(minimumSyncActions, ", ")),
 				)
@@ -64,5 +64,5 @@ func (inv *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
 		}
 	}
 
-	return inv.PassResult()
+	return ctl.PassResult()
 }

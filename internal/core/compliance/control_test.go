@@ -146,9 +146,9 @@ func newStub(id kernel.ControlID, sev policy.Severity) *stubControl {
 
 func TestRegistry_Register_And_Lookup(t *testing.T) {
 	reg := NewRegistry()
-	inv := newStub("ACCESS.001", policy.SeverityCritical)
+	ctl := newStub("ACCESS.001", policy.SeverityCritical)
 
-	if err := reg.Register(inv); err != nil {
+	if err := reg.Register(ctl); err != nil {
 		t.Fatalf("register: %v", err)
 	}
 
@@ -170,12 +170,12 @@ func TestRegistry_Lookup_Missing(t *testing.T) {
 
 func TestRegistry_Duplicate_Registration(t *testing.T) {
 	reg := NewRegistry()
-	inv := newStub("ACCESS.001", policy.SeverityHigh)
+	ctl := newStub("ACCESS.001", policy.SeverityHigh)
 
-	if err := reg.Register(inv); err != nil {
+	if err := reg.Register(ctl); err != nil {
 		t.Fatalf("first register: %v", err)
 	}
-	if err := reg.Register(inv); err == nil {
+	if err := reg.Register(ctl); err == nil {
 		t.Fatal("expected error on duplicate registration")
 	}
 }

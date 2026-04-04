@@ -20,8 +20,8 @@ func encBucket(id string, atRest bool, algorithm, keyID string) asset.Asset {
 }
 
 func TestControls001(t *testing.T) {
-	inv := ControlRegistry.Lookup("CONTROLS.001")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("CONTROLS.001")
+	if ctl == nil {
 		t.Fatal("CONTROLS.001 not registered")
 	}
 
@@ -54,7 +54,7 @@ func TestControls001(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}

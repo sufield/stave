@@ -26,7 +26,7 @@ func init() {
 }
 
 // Evaluate checks that ownership_controls is BucketOwnerEnforced.
-func (inv *governanceAclDisabled) Evaluate(snap asset.Snapshot) Result {
+func (ctl *governanceAclDisabled) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue
@@ -34,12 +34,12 @@ func (inv *governanceAclDisabled) Evaluate(snap asset.Snapshot) Result {
 
 		props := ParseS3Properties(a)
 		if props.Ownership != "BucketOwnerEnforced" {
-			return inv.FailResult(
+			return ctl.FailResult(
 				fmt.Sprintf("Bucket %s: ACLs are not disabled (ownership_controls=%q). ACL grants can bypass bucket policy and create unauditable access paths", a.ID, props.Ownership),
 				"Set Object Ownership to BucketOwnerEnforced to disable all ACLs. Known exception: AWS Backup restore jobs require ACLs enabled on the destination bucket — document as an acknowledged exception if this bucket is an AWS Backup restore target.",
 			)
 		}
 	}
 
-	return inv.PassResult()
+	return ctl.PassResult()
 }

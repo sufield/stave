@@ -26,7 +26,7 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket for public ListBucket grants.
-func (inv *accessPublicList) Evaluate(snap asset.Snapshot) Result {
+func (ctl *accessPublicList) Evaluate(snap asset.Snapshot) Result {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue
@@ -44,7 +44,7 @@ func (inv *accessPublicList) Evaluate(snap asset.Snapshot) Result {
 				if sid == "" {
 					sid = "(unnamed)"
 				}
-				return inv.FailResult(
+				return ctl.FailResult(
 					fmt.Sprintf("Bucket %s: policy statement %q grants s3:ListBucket to Principal *. ListBucket enables full key enumeration defeating any object-key obscurity approach", a.ID, sid),
 					"Remove the public ListBucket grant. If listing is required, restrict Principal to specific AWS accounts or IAM roles and add a Condition limiting source VPC or IP range.",
 				)
@@ -52,5 +52,5 @@ func (inv *accessPublicList) Evaluate(snap asset.Snapshot) Result {
 		}
 	}
 
-	return inv.PassResult()
+	return ctl.PassResult()
 }

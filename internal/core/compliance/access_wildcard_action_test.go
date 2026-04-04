@@ -12,8 +12,8 @@ func policyBucket(id, policyJSON string) asset.Asset {
 }
 
 func TestAccess002(t *testing.T) {
-	inv := ControlRegistry.Lookup("ACCESS.002")
-	if inv == nil {
+	ctl := ControlRegistry.Lookup("ACCESS.002")
+	if ctl == nil {
 		t.Fatal("ACCESS.002 not registered")
 	}
 
@@ -79,7 +79,7 @@ func TestAccess002(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			r := inv.Evaluate(tc.snap)
+			r := ctl.Evaluate(tc.snap)
 			if r.Pass != tc.wantPass {
 				t.Errorf("Pass: got %v, want %v (finding: %s)", r.Pass, tc.wantPass, r.Finding)
 			}

@@ -95,13 +95,13 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 
 	var results []ProfileResult
 	for _, ctrl := range controls {
-		inv := lookup[ctrl.ControlID]
-		if inv == nil {
+		ctl := lookup[ctrl.ControlID]
+		if ctl == nil {
 			// Control not yet implemented — skip silently.
 			continue
 		}
 
-		r := inv.Evaluate(snap)
+		r := ctl.Evaluate(snap)
 
 		// Apply severity override.
 		if ctrl.SeverityOverride != nil {
@@ -179,8 +179,8 @@ func discoverProfileControls(profileID string, registries []*compliance.Registry
 func buildLookup(registries []*compliance.Registry) map[kernel.ControlID]compliance.Control {
 	lookup := make(map[kernel.ControlID]compliance.Control)
 	for _, reg := range registries {
-		for _, inv := range reg.All() {
-			lookup[inv.Def().ID()] = inv
+		for _, ctl := range reg.All() {
+			lookup[ctl.Def().ID()] = ctl
 		}
 	}
 	return lookup
