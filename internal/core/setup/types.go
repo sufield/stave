@@ -6,6 +6,8 @@
 // template generation.
 package setup
 
+import "github.com/sufield/stave/internal/core/outcome"
+
 // --- Doctor ---
 
 type DoctorRequest struct {
@@ -20,10 +22,10 @@ type DoctorResponse struct {
 }
 
 type DoctorCheck struct {
-	Name    string `json:"name"`
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
-	Fix     string `json:"fix,omitempty"`
+	Name    string         `json:"name"`
+	Status  outcome.Status `json:"status"`
+	Message string         `json:"message,omitempty"`
+	Fix     string         `json:"fix,omitempty"`
 }
 
 // --- Config Show ---

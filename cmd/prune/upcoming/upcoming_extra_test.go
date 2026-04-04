@@ -7,6 +7,7 @@ import (
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 func TestParsePositiveDuration_Valid(t *testing.T) {
@@ -51,7 +52,7 @@ func TestToAdapterItems(t *testing.T) {
 		{
 			ControlID: "CTL.A.001",
 			AssetID:   "bucket-1",
-			Status:    "OVERDUE",
+			Status:    risk.StatusOverdue,
 		},
 	}
 	result := toAdapterItems(items)
@@ -61,7 +62,7 @@ func TestToAdapterItems(t *testing.T) {
 	if result[0].ControlID != "CTL.A.001" {
 		t.Fatalf("ControlID = %q", result[0].ControlID)
 	}
-	if result[0].Status != "OVERDUE" {
+	if result[0].Status != string(risk.StatusOverdue) {
 		t.Fatalf("Status = %q", result[0].Status)
 	}
 }

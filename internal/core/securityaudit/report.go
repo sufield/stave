@@ -135,7 +135,7 @@ func (r *Report) Normalize() {
 
 	slices.SortFunc(r.Findings, func(a, b Finding) int {
 		return cmp.Or(
-			cmp.Compare(int(b.Severity), int(a.Severity)),
+			b.Severity.Compare(a.Severity),
 			cmp.Compare(a.Status, b.Status),
 			cmp.Compare(a.ID, b.ID),
 		)
