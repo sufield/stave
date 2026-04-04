@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // --- Severity tests (delegated to policy.Severity / controldef) ---
@@ -137,7 +138,7 @@ func (s *stubControl) Evaluate(_ asset.Snapshot) Result {
 	return s.PassResult()
 }
 
-func newStub(id string, sev policy.Severity) *stubControl {
+func newStub(id kernel.ControlID, sev policy.Severity) *stubControl {
 	return &stubControl{
 		Definition: NewDefinition(WithID(id), WithSeverity(sev)),
 	}

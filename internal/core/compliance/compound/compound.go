@@ -7,6 +7,7 @@ package compound
 import (
 	"github.com/sufield/stave/internal/core/compliance"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // CompoundFinding represents a risk that emerges from the combination
@@ -63,7 +64,7 @@ func Detect(rules []CompoundRule, results []compliance.Result) []CompoundFinding
 // --- Result lookup helpers ---
 
 // resultFailed returns true if the given invariant ID has a failing result.
-func resultFailed(results []compliance.Result, id string) bool {
+func resultFailed(results []compliance.Result, id kernel.ControlID) bool {
 	for _, r := range results {
 		if r.ControlID == id {
 			return !r.Pass
@@ -73,7 +74,7 @@ func resultFailed(results []compliance.Result, id string) bool {
 }
 
 // resultPassed returns true if the given invariant ID has a passing result.
-func resultPassed(results []compliance.Result, id string) bool {
+func resultPassed(results []compliance.Result, id kernel.ControlID) bool {
 	for _, r := range results {
 		if r.ControlID == id {
 			return r.Pass

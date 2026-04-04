@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/profile"
 
 	"gopkg.in/yaml.v3"
@@ -17,12 +19,53 @@ import (
 
 // ExceptionConfig represents a single acknowledged exception declaration.
 type ExceptionConfig struct {
-	ControlID        string   `yaml:"control_id" json:"control_id"`
-	Bucket           string   `yaml:"bucket" json:"bucket"`
-	Rationale        string   `yaml:"rationale" json:"rationale"`
-	AcknowledgedBy   string   `yaml:"acknowledged_by" json:"acknowledged_by"`
-	AcknowledgedDate string   `yaml:"acknowledged_date" json:"acknowledged_date"`
-	RequiresPassing  []string `yaml:"requires_passing" json:"requires_passing"`
+	ControlID        kernel.ControlID   `yaml:"control_id" json:"control_id"`
+	Bucket           string             `yaml:"bucket" json:"bucket"`
+	Rationale        string             `yaml:"rationale" json:"rationale"`
+	AcknowledgedBy   string             `yaml:"acknowledged_by" json:"acknowledged_by"`
+	AcknowledgedDate Date               `yaml:"acknowledged_date" json:"acknowledged_date"`
+	RequiresPassing  []kernel.ControlID `yaml:"requires_passing" json:"requires_passing"`
+}
+
+// Date wraps time.Time for YAML/JSON fields that accept both "2006-01-02"
+// and RFC3339 formats. The zero value renders as an empty string.
+type Date struct{ time.Time }
+
+// UnmarshalYAML parses a date string in either "2006-01-02" or RFC3339 format.
+func (d *Date) UnmarshalYAML(unmarshal func(any) error) error {
+	var s string
+	if err := unmarshal(&s); err != nil {
+		return err
+	}
+	if s == "" {
+		d.Time = time.Time{}
+		return nil
+	}
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		t, err = time.Parse(time.RFC3339, s)
+	}
+	if err != nil {
+		return fmt.Errorf("invalid date %q (use YYYY-MM-DD or RFC3339)", s)
+	}
+	d.Time = t
+	return nil
+}
+
+// MarshalJSON renders the date as "2006-01-02" for JSON output.
+func (d Date) MarshalJSON() ([]byte, error) {
+	if d.IsZero() {
+		return []byte(`""`), nil
+	}
+	return []byte(`"` + d.Format("2006-01-02") + `"`), nil
+}
+
+// String returns the date as "2006-01-02".
+func (d Date) String() string {
+	if d.IsZero() {
+		return ""
+	}
+	return d.Format("2006-01-02")
 }
 
 // StaveConfig is the top-level stave.yaml structure (only exceptions parsed).
@@ -56,7 +99,7 @@ func LoadExceptions(path string) ([]ExceptionConfig, error) {
 }
 
 func validateException(exc ExceptionConfig) error {
-	if strings.TrimSpace(exc.ControlID) == "" {
+	if strings.TrimSpace(string(exc.ControlID)) == "" {
 		return fmt.Errorf("control_id is required")
 	}
 	if strings.TrimSpace(exc.Rationale) == "" {
@@ -68,22 +111,35 @@ func validateException(exc ExceptionConfig) error {
 	return nil
 }
 
+// InvalidReason classifies why an exception was rejected.
+type InvalidReason string
+
+const (
+	// InvalidReasonNone means the exception is valid (zero value).
+	InvalidReasonNone InvalidReason = ""
+	// InvalidReasonCompensatingFailed means one or more compensating controls are not passing.
+	InvalidReasonCompensatingFailed InvalidReason = "compensating_controls_failing"
+	// InvalidReasonExpired means the exception has exceeded its validity period.
+	InvalidReasonExpired InvalidReason = "expired"
+)
+
 // AcknowledgedResult represents the outcome of applying an exception.
 type AcknowledgedResult struct {
-	ControlID            string                `json:"control_id"`
+	ControlID            kernel.ControlID      `json:"control_id"`
 	Bucket               string                `json:"bucket"`
 	Rationale            string                `json:"rationale"`
 	AcknowledgedBy       string                `json:"acknowledged_by"`
-	AcknowledgedDate     string                `json:"acknowledged_date"`
+	AcknowledgedDate     Date                  `json:"acknowledged_date"`
 	CompensatingControls []CompensatingControl `json:"compensating_controls"`
 	Valid                bool                  `json:"valid"`
-	InvalidReason        string                `json:"invalid_reason,omitempty"`
+	InvalidReason        InvalidReason         `json:"invalid_reason,omitempty"`
+	InvalidDetail        string                `json:"invalid_detail,omitempty"`
 }
 
 // CompensatingControl shows the status of a required compensating invariant.
 type CompensatingControl struct {
-	ControlID string `json:"control_id"`
-	Passing   bool   `json:"passing"`
+	ControlID kernel.ControlID `json:"control_id"`
+	Passing   bool             `json:"passing"`
 }
 
 // ApplyExceptions processes exception declarations against profile results.
@@ -95,7 +151,7 @@ func ApplyExceptions(exceptions []ExceptionConfig, results []profile.ProfileResu
 	}
 
 	// Build result lookup.
-	resultMap := make(map[string]*profile.ProfileResult)
+	resultMap := make(map[kernel.ControlID]*profile.ProfileResult)
 	for i := range results {
 		resultMap[results[i].ControlID] = &results[i]
 	}
@@ -144,10 +200,11 @@ func ApplyExceptions(exceptions []ExceptionConfig, results []profile.ProfileResu
 			var failing []string
 			for _, c := range controls {
 				if !c.Passing {
-					failing = append(failing, c.ControlID)
+					failing = append(failing, string(c.ControlID))
 				}
 			}
-			ack.InvalidReason = fmt.Sprintf("compensating control(s) not passing: %s",
+			ack.InvalidReason = InvalidReasonCompensatingFailed
+			ack.InvalidDetail = fmt.Sprintf("compensating control(s) not passing: %s",
 				strings.Join(failing, ", "))
 			r.Finding = r.Finding + fmt.Sprintf(
 				" [Exception declared but compensating control %s is not passing]",

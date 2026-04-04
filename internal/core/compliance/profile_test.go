@@ -3,34 +3,36 @@ package compliance
 import (
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestValidateProfile(t *testing.T) {
 	tests := []struct {
 		name    string
-		ids     []string
+		ids     []kernel.ControlID
 		wantErr bool
 		errLike string
 	}{
 		{
 			name:    "no conflicts",
-			ids:     []string{"ACCESS.001", "CONTROLS.001", "AUDIT.001"},
+			ids:     []kernel.ControlID{"ACCESS.001", "CONTROLS.001", "AUDIT.001"},
 			wantErr: false,
 		},
 		{
 			name:    "incompatible pair present",
-			ids:     []string{"CONTROLS.003", "RETENTION.001", "ACCESS.001"},
+			ids:     []kernel.ControlID{"CONTROLS.003", "RETENTION.001", "ACCESS.001"},
 			wantErr: true,
 			errLike: "CONTROLS.003 and RETENTION.001 are incompatible",
 		},
 		{
 			name:    "only one of the pair — ok",
-			ids:     []string{"CONTROLS.003", "ACCESS.001"},
+			ids:     []kernel.ControlID{"CONTROLS.003", "ACCESS.001"},
 			wantErr: false,
 		},
 		{
 			name:    "empty profile — ok",
-			ids:     []string{},
+			ids:     []kernel.ControlID{},
 			wantErr: false,
 		},
 	}

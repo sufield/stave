@@ -89,7 +89,11 @@ func writeAcknowledged(w io.Writer, acknowledged []profile.AcknowledgedEntry) {
 		fmt.Fprintf(w, "  Rationale: %s\n", ack.Rationale)
 		fmt.Fprintf(w, "  Acknowledged by: %s\n", ack.AcknowledgedBy)
 		if !ack.Valid {
-			fmt.Fprintf(w, "  Reason: %s\n", ack.InvalidReason)
+			reason := ack.InvalidDetail
+			if reason == "" {
+				reason = ack.InvalidReason
+			}
+			fmt.Fprintf(w, "  Reason: %s\n", reason)
 		}
 		fmt.Fprintln(w)
 	}

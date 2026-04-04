@@ -3,20 +3,22 @@ package compliance
 import (
 	"fmt"
 	"slices"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Registry holds controls indexed by their unique ID.
 // It is not safe for concurrent use during registration; register
 // all controls during init before concurrent Evaluate calls.
 type Registry struct {
-	controls map[string]Control
-	order    []string // insertion order for deterministic iteration
+	controls map[kernel.ControlID]Control
+	order    []kernel.ControlID // insertion order for deterministic iteration
 }
 
 // NewRegistry returns an empty Registry.
 func NewRegistry() *Registry {
 	return &Registry{
-		controls: make(map[string]Control),
+		controls: make(map[kernel.ControlID]Control),
 	}
 }
 
@@ -40,7 +42,7 @@ func (r *Registry) MustRegister(inv Control) {
 }
 
 // Lookup returns the control with the given ID, or nil if not found.
-func (r *Registry) Lookup(id string) Control {
+func (r *Registry) Lookup(id kernel.ControlID) Control {
 	return r.controls[id]
 }
 

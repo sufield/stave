@@ -102,13 +102,13 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 	}
 
 	// Check that implemented invariants produced results.
-	resultIDs := make(map[string]bool)
+	resultIDs := make(map[kernel.ControlID]bool)
 	for _, r := range report.Results {
 		resultIDs[r.ControlID] = true
 	}
 
 	// These invariants are implemented and should appear.
-	for _, id := range []string{
+	for _, id := range []kernel.ControlID{
 		"CONTROLS.001.STRICT", "CONTROLS.004", "AUDIT.001", "ACCESS.001",
 		"ACCESS.002", "GOVERNANCE.001", "RETENTION.002", "CONTROLS.002",
 	} {
@@ -119,7 +119,7 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 
 	// All HIPAA-tagged controls should now be present (formerly unimplemented
 	// controls AUDIT.002, ACCESS.003, ACCESS.006, ACCESS.009 are now implemented).
-	for _, id := range []string{"AUDIT.002", "ACCESS.003", "ACCESS.006", "ACCESS.009"} {
+	for _, id := range []kernel.ControlID{"AUDIT.002", "ACCESS.003", "ACCESS.006", "ACCESS.009"} {
 		if !resultIDs[id] {
 			t.Errorf("expected result for newly implemented %s", id)
 		}
@@ -166,12 +166,12 @@ func TestHIPAAProfile_ComplianceRefs(t *testing.T) {
 	}
 
 	// Spot-check specific citations.
-	refs := make(map[string]string)
+	refs := make(map[kernel.ControlID]string)
 	for _, r := range report.Results {
 		refs[r.ControlID] = r.ComplianceRef
 	}
 
-	checks := map[string]string{
+	checks := map[kernel.ControlID]string{
 		"AUDIT.001":           "§164.312(b)",
 		"CONTROLS.001.STRICT": "§164.312(a)(2)(iv)",
 		"CONTROLS.004":        "§164.312(e)(2)(ii)",
