@@ -104,3 +104,64 @@ func TestExtractUnknownFlag_DoubleQuotedToken(t *testing.T) {
 		t.Fatalf("expected --verbose, got %q", flag)
 	}
 }
+
+// --- SuggestCommandError ---
+
+func TestSuggestCommandError_CloseMatch(t *testing.T) {
+	err := SuggestCommandError(
+		errors.New(`unknown command "aply" for "stave"`),
+		[]string{"apply", "validate", "lint"},
+	)
+	msg := err.Error()
+	if !strings.Contains(msg, `Did you mean "apply"?`) {
+		t.Fatalf("expected apply suggestion, got: %q", msg)
+	}
+}
+
+func TestSuggestCommandError_CaseMismatch(t *testing.T) {
+	err := SuggestCommandError(
+		errors.New(`unknown command "APPLY" for "stave"`),
+		[]string{"apply", "validate"},
+	)
+	msg := err.Error()
+	if !strings.Contains(msg, `Did you mean "apply"?`) {
+		t.Fatalf("expected case-corrected suggestion, got: %q", msg)
+	}
+}
+
+func TestSuggestCommandError_NoMatch(t *testing.T) {
+	err := errors.New(`unknown command "zzzzz" for "stave"`)
+	got := SuggestCommandError(err, []string{"apply", "validate"})
+	if got != err {
+		t.Fatalf("expected original error, got: %q", got.Error())
+	}
+}
+
+func TestSuggestCommandError_NotUnknownCommand(t *testing.T) {
+	err := errors.New("some other error")
+	got := SuggestCommandError(err, []string{"apply"})
+	if got != err {
+		t.Fatal("should return original error for non-command errors")
+	}
+}
+
+func TestSuggestCommandError_NilError(t *testing.T) {
+	if err := SuggestCommandError(nil, []string{"apply"}); err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+}
+
+func TestSuggestCommandError_SingleBestMatch(t *testing.T) {
+	err := SuggestCommandError(
+		errors.New(`unknown command "lnt" for "stave"`),
+		[]string{"lint", "init", "fmt"},
+	)
+	msg := err.Error()
+	if !strings.Contains(msg, `Did you mean "lint"?`) {
+		t.Fatalf("expected single best match 'lint', got: %q", msg)
+	}
+	// Should NOT contain multiple suggestions
+	if strings.Count(msg, "Did you mean") != 1 {
+		t.Fatalf("expected exactly one suggestion, got: %q", msg)
+	}
+}

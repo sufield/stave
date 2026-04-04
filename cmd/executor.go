@@ -7,6 +7,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -79,8 +81,31 @@ func (a *App) installInterruptHandler() func() {
 
 func (a *App) executeRootCommand(args []string) {
 	if err := a.Root.Execute(); err != nil {
+		err = a.suggestCommandIfUnknown(err)
 		a.handleExecutionError(err, args)
 	}
+}
+
+// suggestCommandIfUnknown replaces Cobra's generic "unknown command" error
+// with a single best-match "Did you mean?" hint using the suggest package.
+func (a *App) suggestCommandIfUnknown(err error) error {
+	names := collectVisibleCommandNames(a.Root)
+	enhanced := ui.SuggestCommandError(err, names)
+	if enhanced != err {
+		return &ui.UserError{Err: enhanced}
+	}
+	return err
+}
+
+// collectVisibleCommandNames returns the names of all non-hidden subcommands.
+func collectVisibleCommandNames(root *cobra.Command) []string {
+	var names []string
+	for _, c := range root.Commands() {
+		if !c.Hidden {
+			names = append(names, c.Name())
+		}
+	}
+	return names
 }
 
 func (a *App) handleExecutionError(err error, args []string) {
