@@ -31,16 +31,21 @@ internal/
 
 ## Dependency Rule
 
+Dependencies point inward. Outer layers depend on inner layers, never the reverse.
+
 ```
-core/  -->  app/  -->  adapters/  -->  cmd/
-  ^                       |
-  |       (implements)    |
-  +--- ports/interfaces --+
+cmd/  --->  adapters/  --->  app/  --->  core/
+                |                          ^
+                |      (implements)        |
+                +--- ports/interfaces -----+
 ```
 
-- `core/` must not import `app/`, `adapters/`, or `cmd/`
-- `app/` must not import `adapters/` or `cmd/` (except `app/contracts` which defines ports)
-- `adapters/` must not import `cmd/`
+- `cmd/` depends on `adapters/`, `app/`, and `core/`
+- `adapters/` depends on `app/contracts` (port interfaces) and `core/`
+- `app/` depends on `core/`
+- `core/` depends on nothing — it is the innermost layer
+
+Enforced by `internal/app/architecture_dependency_test.go`.
 
 ## Where to Find Things
 
