@@ -22,7 +22,7 @@ func (r *CheckRunner) RunChecks(_ context.Context, req setup.DoctorRequest) (set
 	for i, c := range checks {
 		out[i] = setup.DoctorCheck{
 			Name:    c.Name,
-			Status:  c.Status.String(),
+			Status:  c.Status,
 			Message: c.Message,
 			Fix:     c.Fix,
 		}

@@ -1,6 +1,7 @@
 package controldef
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -40,6 +41,11 @@ func (s Severity) String() string {
 // IsValid reports whether s is a recognized severity level (excluding None).
 func (s Severity) IsValid() bool {
 	return s >= SeverityInfo && s <= SeverityCritical
+}
+
+// Compare returns -1, 0, or +1 comparing severity rank.
+func (s Severity) Compare(other Severity) int {
+	return cmp.Compare(int(s), int(other))
 }
 
 // Gte reports whether s is greater than or equal to other in severity rank.
