@@ -1,0 +1,52 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "stave",
+          "version": "0.0.3",
+          "rules": [
+            {
+              "id": "CTL.EXP.DURATION.001",
+              "name": "Unsafe Exposure Duration Bound",
+              "shortDescription": {
+                "text": "An asset must not remain unsafe beyond the configured time window."
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CTL.EXP.DURATION.001",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "CTL.EXP.DURATION.001: Unsafe Exposure Duration Bound on res:aws:s3:bucket:public-bucket (storage_bucket). Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "main.tf"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "Review the misconfigured properties and revert to compliant values."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

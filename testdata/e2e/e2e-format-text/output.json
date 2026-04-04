@@ -1,0 +1,31 @@
+Evaluation Results
+==================
+
+Run: 2026-01-11 00:00:00 UTC (max-unsafe: 7d, snapshots: 3)
+
+Summary
+-------
+  Assets evaluated:    2
+  Attack surface:      1
+  Violations:          1
+
+Violations
+----------
+  By domain:
+    - storage_bucket: 1
+
+
+1. CTL.EXP.DURATION.001
+   Unsafe Exposure Duration Bound
+   Asset: res:aws:s3:bucket:public-bucket (aws/storage_bucket)
+   Source: main.tf:42
+   Evidence:
+     First unsafe: 2026-01-01 00:00:00 UTC
+     Last seen:    2026-01-11 00:00:00 UTC
+     Duration:     240h (threshold: 168h)
+     Why now:      Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z.
+   Remediation:
+     Resource configuration deviates from security baseline.
+     Action: Review the misconfigured properties and revert to compliant values.
+
+Next step: run `stave diagnose --controls <dir> --observations <dir>` for root-cause guidance.
