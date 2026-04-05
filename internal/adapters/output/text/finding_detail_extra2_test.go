@@ -42,7 +42,7 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 			LastSeenUnsafeAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			UnsafeDurationHours: 336.0,
 			ThresholdHours:      168.0,
-			WhyNow:              "Asset has been unsafe for 336 hours",
+			TemporalRisk:        "Asset has been unsafe for 336 hours",
 			Misconfigurations: []controldef.Misconfiguration{
 				{Property: predicate.NewFieldPath("public_access"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 			},

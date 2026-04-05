@@ -26,7 +26,7 @@ type Reporter struct {
 // ReportApply prints the outcome of an evaluation and returns an error
 // when the response policy indicates failure.
 func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.ResponsePolicy) error {
-	action := policy.Decide(res.Posture)
+	action := policy.Decide(res.SecurityState)
 
 	switch action.Severity {
 	case evaluation.ActionPass:
@@ -73,7 +73,7 @@ func (r *Reporter) ReportPlan(report validation.Report) error {
 	if _, err := fmt.Fprintf(w, "Controls:     %s\n", report.ControlsDir); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintf(w, "Observations: %s\n", report.ObservationsDir); err != nil {
+	if _, err := fmt.Fprintf(w, "Checks: %s\n", report.ObservationsDir); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(w, "Checked:      %d controls, %d snapshots, %d asset observations\n",

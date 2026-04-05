@@ -1,5 +1,5 @@
 {
-  "assets_evaluated": 2,
-  "attack_surface": 0,
+  "total_assets": 2,
+  "exposed_resources": 0,
   "violations": 0
 }

@@ -272,7 +272,7 @@ func TestACL_MultipleViolations_PABOverridesAll(t *testing.T) {
 
 // --- Assertion helpers ---
 
-func assertHasFinding(t *testing.T, result evaluation.Audit, controlID kernel.ControlID, assetID string) {
+func assertHasFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -282,7 +282,7 @@ func assertHasFinding(t *testing.T, result evaluation.Audit, controlID kernel.Co
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoFinding(t *testing.T, result evaluation.Audit, controlID kernel.ControlID, assetID string) {
+func assertNoFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {

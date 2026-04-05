@@ -21,7 +21,7 @@ type strategyDeps interface {
 
 // strategy defines how different control types analyze a timeline.
 type strategy interface {
-	Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding)
+	Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding)
 }
 
 // Compile-time interface assertions.
@@ -56,7 +56,7 @@ type unsafeStateStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
+func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
@@ -76,7 +76,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids Ide
 		return observation, nil
 	}
 	if exceeds {
-		observation.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
+		observation.TemporalRisk = t.FormatUnsafeSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
 			Timeline:        t,
 			Control:         s.ctl,
@@ -96,7 +96,7 @@ type unsafeDurationStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
+func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
@@ -108,7 +108,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 		return observation, nil
 	}
 	if exceeds {
-		observation.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
+		observation.TemporalRisk = t.FormatUnsafeSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
 			Timeline:        t,
 			Control:         s.ctl,
@@ -143,7 +143,7 @@ type unsafeRecurrenceStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
+func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 
@@ -175,7 +175,7 @@ type prefixExposureStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
+func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation, findings := EvaluatePrefixExposureForRow(t, s.ctl)
 	return observation, wrapInPointers(findings)
 }
@@ -184,7 +184,7 @@ type unsupportedStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
+func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	observation.Reason = "type not evaluatable: " + s.ctl.Type.String()
 	return finalizeRow(observation, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
@@ -192,9 +192,9 @@ func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ Identit
 
 // --- Internal Helpers ---
 
-func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.Observation {
+func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.ResourceCheck {
 	resType := t.Asset().Type
-	return evaluation.Observation{
+	return evaluation.ResourceCheck{
 		ControlID:   ctl.ID,
 		AssetID:     t.ID,
 		AssetType:   resType,
@@ -202,7 +202,7 @@ func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.
 	}
 }
 
-func finalizeRow(r evaluation.Observation, d evaluation.Verdict, c evaluation.ConfidenceLevel) evaluation.Observation {
+func finalizeRow(r evaluation.ResourceCheck, d evaluation.Verdict, c evaluation.ConfidenceLevel) evaluation.ResourceCheck {
 	r.Verdict = d
 	r.Confidence = c
 	return r

@@ -510,7 +510,7 @@ func TestSource_String(t *testing.T) {
 }
 
 func TestResult_String(t *testing.T) {
-	r := Audit{Exposed: true, Source: NewSource(SourceResource, "")}
+	r := ComplianceReport{Exposed: true, Source: NewSource(SourceResource, "")}
 	if r.String() != "resource" {
 		t.Errorf("expected resource, got %s", r.String())
 	}

@@ -46,7 +46,7 @@ type EvidenceDTO struct {
 	Misconfigurations   []MisconfigurationDTO `json:"misconfigurations,omitempty"`
 	RootCauses          []string              `json:"root_causes,omitempty"`
 	SourceEvidence      *SourceEvidenceDTO    `json:"source_evidence,omitempty"`
-	WhyNow              string                `json:"why_now,omitempty"`
+	TemporalRisk        string                `json:"temporal_risk,omitempty"`
 }
 
 // MisconfigurationDTO mirrors policy.Misconfiguration.
@@ -104,17 +104,17 @@ type ExemptedAssetDTO struct {
 	Reason  string   `json:"reason"`
 }
 
-// RowDTO mirrors evaluation.Observation.
+// RowDTO mirrors evaluation.ResourceCheck.
 type RowDTO struct {
-	ControlID  kernel.ControlID           `json:"control_id"`
-	AssetID    asset.ID                   `json:"asset_id"`
-	AssetType  kernel.AssetType           `json:"asset_type"`
-	Domain     kernel.AssetDomain         `json:"asset_domain"`
-	Verdict    evaluation.Verdict         `json:"verdict"`
-	Confidence evaluation.ConfidenceLevel `json:"confidence"`
-	Evidence   *EvidenceDTO               `json:"evidence,omitempty"`
-	WhyNow     string                     `json:"why_now,omitempty"`
-	Reason     string                     `json:"reason,omitempty"`
+	ControlID    kernel.ControlID           `json:"control_id"`
+	AssetID      asset.ID                   `json:"asset_id"`
+	AssetType    kernel.AssetType           `json:"asset_type"`
+	Domain       kernel.AssetDomain         `json:"asset_domain"`
+	Verdict      evaluation.Verdict         `json:"verdict"`
+	Confidence   evaluation.ConfidenceLevel `json:"confidence"`
+	Evidence     *EvidenceDTO               `json:"evidence,omitempty"`
+	TemporalRisk string                     `json:"temporal_risk,omitempty"`
+	Reason       string                     `json:"reason,omitempty"`
 }
 
 // AtRiskItemDTO mirrors risk.ThresholdItem.

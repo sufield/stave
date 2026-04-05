@@ -11,5 +11,5 @@
 //	├── finding.go      → The "What" (detection: Finding, ExceptedFinding)
 //	├── diagnosis.go    → The "Why" (context: FindingDetail, Trace, ControlProvider)
 //	├── remediation.go  → The "How" (resolution: RemediationPlan, RemediationAction)
-//	└── result.go       → The aggregate (Audit with all three stages)
+//	└── result.go       → The aggregate (ComplianceReport with all three stages)
 package engine

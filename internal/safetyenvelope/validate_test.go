@@ -21,10 +21,10 @@ func TestValidateEvaluationAndVerification(t *testing.T) {
 		MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		Snapshots:         1,
 	}
-	summary := evaluation.Summary{
-		AssetsEvaluated: 1,
-		AttackSurface:   1,
-		Violations:      1,
+	summary := evaluation.ComplianceSummary{
+		TotalAssets:      1,
+		ExposedResources: 1,
+		Violations:       1,
 	}
 	findings := []remediation.Finding{
 		{

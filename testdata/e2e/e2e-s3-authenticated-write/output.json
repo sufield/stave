@@ -17,12 +17,12 @@
     "pack_hash": "17414bae5932af88e63416916bca2242600d0e92802c4e165dbd7687591de427"
   },
   "summary": {
-    "assets_evaluated": 2,
-    "attack_surface": 1,
+    "total_assets": 2,
+    "exposed_resources": 1,
     "violations": 1
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.AUTH.WRITE.001",
       "asset_id": "auth-write-bucket",
@@ -58,7 +58,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

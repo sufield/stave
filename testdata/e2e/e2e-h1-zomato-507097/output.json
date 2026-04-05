@@ -17,12 +17,12 @@
     "pack_hash": "94d929856f0be843071e52d987dad995a16b206b18a92ab46d0b14832f4981b2"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 2
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "zomato-chat-images",
@@ -74,7 +74,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -160,7 +160,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2019-03-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

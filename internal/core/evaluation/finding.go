@@ -33,7 +33,7 @@ func SortFindings(fs []Finding) {
 		return cmp.Or(
 			cmp.Compare(a.ControlID, b.ControlID),
 			cmp.Compare(a.AssetID, b.AssetID),
-			cmp.Compare(a.Evidence.WhyNow, b.Evidence.WhyNow),
+			cmp.Compare(a.Evidence.TemporalRisk, b.Evidence.TemporalRisk),
 			cmp.Compare(a.ControlName, b.ControlName),
 			cmp.Compare(a.AssetType, b.AssetType),
 		)

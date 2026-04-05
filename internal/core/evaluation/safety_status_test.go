@@ -6,61 +6,61 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
-func TestClassifySafetyStatus(t *testing.T) {
+func TestDeriveSecurityState(t *testing.T) {
 	tests := []struct {
 		name       string
 		violations int
 		risks      []risk.ThresholdItem
-		want       Posture
+		want       SecurityState
 	}{
 		{
 			name:       "no violations nil risks",
 			violations: 0,
 			risks:      nil,
-			want:       PostureSafe,
+			want:       StateCompliant,
 		},
 		{
 			name:       "no violations empty risks",
 			violations: 0,
 			risks:      []risk.ThresholdItem{},
-			want:       PostureSafe,
+			want:       StateCompliant,
 		},
 		{
 			name:       "no violations upcoming risk",
 			violations: 0,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusUpcoming}},
-			want:       PostureBorderline,
+			want:       StateAtRisk,
 		},
 		{
 			name:       "no violations due now risk",
 			violations: 0,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusDueNow}},
-			want:       PostureBorderline,
+			want:       StateAtRisk,
 		},
 		{
 			name:       "no violations overdue risk",
 			violations: 0,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusOverdue}},
-			want:       PostureBorderline,
+			want:       StateAtRisk,
 		},
 		{
 			name:       "violations with risks",
 			violations: 3,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusUpcoming}},
-			want:       PostureUnsafe,
+			want:       StateNonCompliant,
 		},
 		{
 			name:       "violations nil risks",
 			violations: 1,
 			risks:      nil,
-			want:       PostureUnsafe,
+			want:       StateNonCompliant,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := DerivePosture(tt.violations, tt.risks)
+			got := DeriveSecurityState(tt.violations, tt.risks)
 			if got != tt.want {
-				t.Fatalf("DerivePosture(%d, %v) = %q, want %q", tt.violations, tt.risks, got, tt.want)
+				t.Fatalf("DeriveSecurityState(%d, %v) = %q, want %q", tt.violations, tt.risks, got, tt.want)
 			}
 		})
 	}

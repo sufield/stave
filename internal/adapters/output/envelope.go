@@ -18,10 +18,10 @@ func BuildSafetyEnvelopeFromEnriched(enriched appcontracts.EnrichedResult) *safe
 	out := safetyenvelope.NewEvaluation(safetyenvelope.EvaluationRequest{
 		Run:              enriched.Run,
 		Summary:          enriched.Result.Summary,
-		Posture:          enriched.Result.Posture,
-		AtRisk:           enriched.Result.AtRisk,
+		SecurityState:    enriched.Result.SecurityState,
+		RiskSignals:      enriched.Result.RiskSignals,
 		Findings:         findings,
-		Skipped:          enriched.Result.Skipped,
+		SkippedControls:  enriched.Result.SkippedControls,
 		ExemptedAssets:   enriched.ExemptedAssets,
 		ExceptedFindings: enriched.Result.ExceptedFindings,
 	})

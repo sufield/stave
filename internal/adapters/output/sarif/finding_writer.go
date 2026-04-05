@@ -166,8 +166,8 @@ func buildLocations(f remediation.Finding) []sarifLocation {
 func buildMessage(f remediation.Finding) string {
 	msg := fmt.Sprintf("%s: %s on %s (%s)",
 		f.ControlID, f.ControlName, f.AssetID, f.AssetType)
-	if f.Evidence.WhyNow != "" {
-		msg += ". " + f.Evidence.WhyNow
+	if f.Evidence.TemporalRisk != "" {
+		msg += ". " + f.Evidence.TemporalRisk
 	}
 	return msg
 }

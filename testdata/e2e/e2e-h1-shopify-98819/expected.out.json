@@ -1,5 +1,5 @@
 {
-  "at_risk": [
+  "risk_signals": [
     {
       "asset_id": "shopify-internal-assets",
       "asset_type": "aws_s3_bucket",
@@ -45,7 +45,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 192,
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
       },
       "fix_plan": {
         "actions": [
@@ -113,7 +113,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 192,
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-11-15T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -126,7 +126,7 @@
     }
   ],
   "kind": "evaluation",
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "shopify-internal-assets",
@@ -187,8 +187,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 2
   }
 }

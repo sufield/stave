@@ -11,9 +11,9 @@ import (
 func TestNewEvaluation_NormalizesSlices(t *testing.T) {
 	got := NewEvaluation(EvaluationRequest{
 		Run:              evaluation.RunInfo{},
-		Summary:          evaluation.Summary{},
+		Summary:          evaluation.ComplianceSummary{},
 		Findings:         nil,
-		Skipped:          nil,
+		SkippedControls:  nil,
 		ExemptedAssets:   nil,
 		ExceptedFindings: nil,
 	})
@@ -30,7 +30,7 @@ func TestNewEvaluation_NormalizesSlices(t *testing.T) {
 	if got.ExceptedFindings == nil {
 		t.Fatal("ExceptedFindings should be normalized to empty slice")
 	}
-	if got.Skipped == nil {
+	if got.SkippedControls == nil {
 		t.Fatal("Skipped should be normalized to empty slice")
 	}
 	if got.ExemptedAssets == nil {

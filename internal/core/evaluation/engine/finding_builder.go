@@ -22,7 +22,7 @@ func NewFinding(
 	f := newBaseFinding(ctl, t)
 	f.Evidence = evaluation.Evidence{
 		Misconfigurations: ctx.Misconfigs,
-		WhyNow:            ctx.Reason,
+		TemporalRisk:      ctx.Reason,
 	}
 	return f
 }

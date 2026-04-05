@@ -52,7 +52,7 @@ func (s *marshalerStub) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	return []byte(`{"ok":true}`), nil
 }
 
-func testEnrichFn(result evaluation.Audit) (appcontracts.EnrichedResult, error) {
+func testEnrichFn(result evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
 		Findings:       []appcontracts.EnrichedFinding{},
@@ -140,7 +140,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
 		}
-		if status == evaluation.PostureSafe {
+		if status == evaluation.StateCompliant {
 			t.Fatal("expected non-safe status")
 		}
 		if m.marshalCalls != 1 {

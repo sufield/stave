@@ -107,9 +107,9 @@ type runSession struct {
 }
 
 // Evaluate processes snapshots and returns findings for unsafe duration violations.
-func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (evaluation.Audit, error) {
+func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (evaluation.ComplianceReport, error) {
 	if e.Clock == nil {
-		return evaluation.Audit{}, errors.New("precondition failed: Runner.Evaluate requires non-nil Clock")
+		return evaluation.ComplianceReport{}, errors.New("precondition failed: Runner.Evaluate requires non-nil Clock")
 	}
 	var opt EvaluateOptions
 	if len(opts) > 0 {
@@ -118,7 +118,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 	sorted := e.normalizeSnapshots(snapshots)
 	timelinesPerInv, err := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
 	if err != nil {
-		return evaluation.Audit{}, fmt.Errorf("build timelines: %w", err)
+		return evaluation.ComplianceReport{}, fmt.Errorf("build timelines: %w", err)
 	}
 	assetHint := 0
 	if len(sorted) > 0 {
@@ -169,7 +169,7 @@ func (s *runSession) evaluateControl(
 			if s.acc.TrackExemption(assetID) {
 				s.acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
 			}
-			s.acc.AddRow(evaluation.Observation{
+			s.acc.AddRow(evaluation.ResourceCheck{
 				ControlID:   ctl.ID,
 				AssetID:     assetID,
 				AssetType:   timeline.Asset().Type,
@@ -191,8 +191,8 @@ func (s *runSession) evaluateControl(
 	}
 }
 
-// buildResult sorts accumulated data, computes risk, and constructs the final Audit.
-func (s *runSession) buildResult() evaluation.Audit {
+// buildResult sorts accumulated data, computes risk, and constructs the final ComplianceReport.
+func (s *runSession) buildResult() evaluation.ComplianceReport {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(s.acc.findings)
 	// Sort exempted assets for deterministic output.
@@ -200,7 +200,7 @@ func (s *runSession) buildResult() evaluation.Audit {
 		return cmp.Compare(a.ID, b.ID)
 	})
 	// Sort rows for deterministic output (by control_id, then asset_id).
-	slices.SortFunc(s.acc.rows, func(a, b evaluation.Observation) int {
+	slices.SortFunc(s.acc.rows, func(a, b evaluation.ResourceCheck) int {
 		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
@@ -215,9 +215,9 @@ func (s *runSession) buildResult() evaluation.Audit {
 		Now:                     s.now,
 		PredicateEval:           s.runner.CELEvaluator,
 	})
-	status := evaluation.DerivePosture(len(regularFindings), upcoming)
+	status := evaluation.DeriveSecurityState(len(regularFindings), upcoming)
 
-	return evaluation.Audit{
+	return evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,
@@ -227,18 +227,18 @@ func (s *runSession) buildResult() evaluation.Audit {
 			InputHashes:       s.opts.InputHashes,
 			PackHash:          s.runner.computePackHash(),
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: len(s.acc.seenAssets),
-			AttackSurface:   len(s.acc.unsafeAssets),
-			Violations:      len(regularFindings),
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      len(s.acc.seenAssets),
+			ExposedResources: len(s.acc.unsafeAssets),
+			Violations:       len(regularFindings),
 		},
-		Posture:          status,
-		AtRisk:           upcoming,
+		SecurityState:    status,
+		RiskSignals:      upcoming,
 		Findings:         regularFindings,
 		ExceptedFindings: exceptedFindings,
-		Skipped:          s.acc.skippedByCtl,
+		SkippedControls:  s.acc.skippedByCtl,
 		ExemptedAssets:   s.acc.exemptedByAst,
-		Observations:     s.acc.rows,
+		Checks:           s.acc.rows,
 	}
 }
 

@@ -16,20 +16,20 @@ type ResponseAction struct {
 	Severity ActionSeverity
 }
 
-// ResponsePolicy maps safety statuses to response actions.
-// TreatBorderlineAsFailure causes BORDERLINE to be treated as a failure
+// ResponsePolicy maps security states to response actions.
+// TreatAtRiskAsFailure causes AT_RISK to be treated as a failure
 // (useful for CI pipelines that require a clean bill of health).
 type ResponsePolicy struct {
-	TreatBorderlineAsFailure bool
+	TreatAtRiskAsFailure bool
 }
 
-// Decide returns the appropriate response action for the given safety status.
-func (p ResponsePolicy) Decide(status Posture) ResponseAction {
-	switch status {
-	case PostureSafe:
+// Decide returns the appropriate response action for the given security state.
+func (p ResponsePolicy) Decide(state SecurityState) ResponseAction {
+	switch state {
+	case StateCompliant:
 		return ResponseAction{Severity: ActionPass}
-	case PostureBorderline:
-		if p.TreatBorderlineAsFailure {
+	case StateAtRisk:
+		if p.TreatAtRiskAsFailure {
 			return ResponseAction{Severity: ActionFail}
 		}
 		return ResponseAction{Severity: ActionWarn}

@@ -65,7 +65,7 @@ func writeRiskTable(h *hygieneWriter, risk appcontracts.RiskStats, dueSoon time.
 }
 
 func writeTrendTable(h *hygieneWriter, trends []evaluation.TrendMetric) {
-	h.f("## Risk Posture & Trends\n\n")
+	h.f("## Risk SecurityState & Trends\n\n")
 	h.f("| Metric | Current | Previous | Change |\n| :--- | :--- | :--- | :--- |\n")
 	for _, trend := range trends {
 		h.f("| %s | %d | %d | %s%d |\n", trend.Name, trend.Current, trend.Previous, trend.Symbol(), trend.Change())

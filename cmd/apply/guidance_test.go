@@ -7,9 +7,9 @@ import (
 )
 
 func TestBuildEvaluateResult_Safe(t *testing.T) {
-	res := BuildEvaluateResult(evaluation.PostureSafe, "controls/s3", "observations")
-	if res.Posture != evaluation.PostureSafe {
-		t.Fatalf("expected PostureSafe, got %s", res.Posture)
+	res := BuildEvaluateResult(evaluation.StateCompliant, "controls/s3", "observations")
+	if res.SecurityState != evaluation.StateCompliant {
+		t.Fatalf("expected PostureSafe, got %s", res.SecurityState)
 	}
 	if res.DiagnoseCommand != "" {
 		t.Fatalf("expected empty DiagnoseCommand for safe status, got %q", res.DiagnoseCommand)
@@ -20,9 +20,9 @@ func TestBuildEvaluateResult_Safe(t *testing.T) {
 }
 
 func TestBuildEvaluateResult_Unsafe(t *testing.T) {
-	res := BuildEvaluateResult(evaluation.PostureUnsafe, "controls/s3", "observations")
-	if res.Posture != evaluation.PostureUnsafe {
-		t.Fatalf("expected PostureUnsafe, got %s", res.Posture)
+	res := BuildEvaluateResult(evaluation.StateNonCompliant, "controls/s3", "observations")
+	if res.SecurityState != evaluation.StateNonCompliant {
+		t.Fatalf("expected PostureUnsafe, got %s", res.SecurityState)
 	}
 	if res.DiagnoseCommand == "" {
 		t.Fatal("expected non-empty DiagnoseCommand for unsafe status")

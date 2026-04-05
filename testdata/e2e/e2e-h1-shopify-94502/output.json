@@ -17,12 +17,12 @@
     "pack_hash": "3a43d33d6946a4821fb859b9790af47b5e39df446d519796faf7ed7af579facf"
   },
   "summary": {
-    "assets_evaluated": 3,
-    "attack_surface": 3,
+    "total_assets": 3,
+    "exposed_resources": 3,
     "violations": 13
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-1",
@@ -184,7 +184,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -224,7 +224,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -264,7 +264,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -322,7 +322,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -380,7 +380,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -438,7 +438,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -478,7 +478,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -552,7 +552,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -626,7 +626,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -694,7 +694,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -761,7 +761,7 @@
         "root_causes": [
           "resource"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -828,7 +828,7 @@
         "root_causes": [
           "resource"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -895,7 +895,7 @@
         "root_causes": [
           "resource"
         ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 0 hours). Unsafe since 2015-10-18T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",

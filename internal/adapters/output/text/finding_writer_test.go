@@ -20,7 +20,7 @@ import (
 func TestFindingWriter_NoViolations(t *testing.T) {
 	w := &FindingWriter{}
 	enricher := remediation.NewPlanner()
-	result := evaluation.Audit{
+	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
@@ -28,10 +28,10 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: 2,
-			AttackSurface:   0,
-			Violations:      0,
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      2,
+			ExposedResources: 0,
+			Violations:       0,
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 	enricher := remediation.NewPlanner()
 	sanitizer := sanitize.New(sanitize.WithIDSanitization(true))
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
-	result := evaluation.Audit{
+	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
@@ -69,10 +69,10 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         3,
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: 3,
-			AttackSurface:   1,
-			Violations:      2,
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      3,
+			ExposedResources: 1,
+			Violations:       2,
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -91,7 +91,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 					EpisodeCount:        3,
 					WindowDays:          30,
 					RecurrenceLimit:     2,
-					WhyNow:              "Threshold exceeded",
+					TemporalRisk:        "Threshold exceeded",
 				},
 			},
 			{
@@ -104,7 +104,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 				Evidence:           evaluation.Evidence{},
 			},
 		},
-		Skipped: []evaluation.SkippedControl{
+		SkippedControls: []evaluation.SkippedControl{
 			{ControlID: "CTL.SKIP.001", ControlName: "Skipped", Reason: "missing resource type"},
 		},
 		ExemptedAssets: []asset.ExemptedAsset{
@@ -153,7 +153,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 	enricher := remediation.NewPlanner()
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 
-	result := evaluation.Audit{
+	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
@@ -161,10 +161,10 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 		},
-		Summary: evaluation.Summary{
-			AssetsEvaluated: 2,
-			AttackSurface:   2,
-			Violations:      2,
+		Summary: evaluation.ComplianceSummary{
+			TotalAssets:      2,
+			ExposedResources: 2,
+			Violations:       2,
 		},
 		Findings: []evaluation.Finding{
 			{
@@ -184,7 +184,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 				AssetVendor:        kernel.Vendor("aws"),
 			},
 		},
-		Observations: []evaluation.Observation{
+		Checks: []evaluation.ResourceCheck{
 			{
 				ControlID:   "CTL.S3.PUBLIC.001",
 				AssetID:     "res-1",

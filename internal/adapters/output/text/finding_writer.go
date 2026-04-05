@@ -39,7 +39,7 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	remFindings := toRemediationFindings(enriched.Findings)
 	w.writeViolationsFromEnriched(d, result, remFindings)
 	w.writeRemediationGroups(d, remFindings)
-	w.writeSkippedControls(d, result.Skipped)
+	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
 	w.writeExceptedFindings(d, result.ExceptedFindings)
 	if !env.Demo.IsTrue() {
@@ -52,7 +52,7 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	return buf.Bytes(), nil
 }
 
-func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Audit) {
+func (w *FindingWriter) writeHeader(d *drawer, result evaluation.ComplianceReport) {
 	d.ln("Evaluation Results")
 	d.ln("==================")
 	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n\n",
@@ -61,8 +61,8 @@ func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Audit) {
 		result.Run.Snapshots)
 	d.ln("Summary")
 	d.ln("-------")
-	d.f("  Assets evaluated:    %d\n", result.Summary.AssetsEvaluated)
-	d.f("  Attack surface:      %d\n", result.Summary.AttackSurface)
+	d.f("  Assets evaluated:    %d\n", result.Summary.TotalAssets)
+	d.f("  Attack surface:      %d\n", result.Summary.ExposedResources)
 	d.f("  Violations:          %d\n\n", result.Summary.Violations)
 }
 
@@ -74,10 +74,10 @@ func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 }
 
 // writeViolationsFromEnriched renders violation output from pre-enriched findings.
-func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation.Audit, enriched []remediation.Finding) {
+func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation.ComplianceReport, enriched []remediation.Finding) {
 	d.ln("Violations")
 	d.ln("----------")
-	w.writeViolationDomainSummary(d, result.Observations)
+	w.writeViolationDomainSummary(d, result.Checks)
 
 	if d.err != nil {
 		return
@@ -122,7 +122,7 @@ func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.E
 	}
 }
 
-func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation.Observation) {
+func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation.ResourceCheck) {
 	domainCounts := GroupViolationsByDomain(rows)
 	if len(domainCounts) == 0 {
 		return
@@ -213,8 +213,8 @@ func writeFindingEvidenceContext(d *drawer, f remediation.Finding) {
 	if f.Evidence.EpisodeCount > 0 {
 		d.f("     Episodes:     %d (limit: %d within %d days)\n", f.Evidence.EpisodeCount, f.Evidence.RecurrenceLimit, f.Evidence.WindowDays)
 	}
-	if f.Evidence.WhyNow != "" {
-		d.f("     Why now:      %s\n", f.Evidence.WhyNow)
+	if f.Evidence.TemporalRisk != "" {
+		d.f("     Why now:      %s\n", f.Evidence.TemporalRisk)
 	}
 }
 

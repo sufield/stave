@@ -47,14 +47,14 @@ type BaselineComparisonSummary struct {
 
 // BaselineComparison represents the result of checking current findings against a baseline.
 type BaselineComparison struct {
-	SchemaVersion kernel.Schema             `json:"schema_version"`
-	Kind          kernel.OutputKind         `json:"kind"`
-	CheckedAt     time.Time                 `json:"checked_at"`
-	BaselineFile  FilePath                  `json:"baseline_file"`
-	Evaluation    FilePath                  `json:"evaluation"`
-	Summary       BaselineComparisonSummary `json:"summary"`
-	New           []BaselineEntry           `json:"new"`
-	Resolved      []BaselineEntry           `json:"resolved"`
+	SchemaVersion     kernel.Schema             `json:"schema_version"`
+	Kind              kernel.OutputKind         `json:"kind"`
+	CheckedAt         time.Time                 `json:"checked_at"`
+	BaselineFile      FilePath                  `json:"baseline_file"`
+	Evaluation        FilePath                  `json:"evaluation"`
+	ComplianceSummary BaselineComparisonSummary `json:"summary"`
+	New               []BaselineEntry           `json:"new"`
+	Resolved          []BaselineEntry           `json:"resolved"`
 }
 
 // BaselineComparisonResult holds the diff output between two sets of entries.

@@ -66,7 +66,7 @@ func TestAccumulatorAddExemptedAsset(t *testing.T) {
 
 func TestAccumulatorAddRow(t *testing.T) {
 	acc := NewAccumulator(0)
-	acc.AddRow(evaluation.Observation{ControlID: "CTL.A.001", AssetID: "res-1"})
+	acc.AddRow(evaluation.ResourceCheck{ControlID: "CTL.A.001", AssetID: "res-1"})
 	if len(acc.rows) != 1 {
 		t.Fatalf("len = %d", len(acc.rows))
 	}
@@ -419,8 +419,8 @@ func TestNewFinding(t *testing.T) {
 	if f.AssetID != "bucket-1" {
 		t.Fatalf("AssetID = %v", f.AssetID)
 	}
-	if f.Evidence.WhyNow != "test reason" {
-		t.Fatalf("WhyNow = %q", f.Evidence.WhyNow)
+	if f.Evidence.TemporalRisk != "test reason" {
+		t.Fatalf("TemporalRisk = %q", f.Evidence.TemporalRisk)
 	}
 	if len(f.Evidence.Misconfigurations) != 1 {
 		t.Fatalf("Misconfigurations len = %d", len(f.Evidence.Misconfigurations))

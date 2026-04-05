@@ -1,5 +1,5 @@
 {
-  "at_risk": [
+  "risk_signals": [
     {
       "asset_id": "ubergreece",
       "asset_type": "aws_s3_bucket",
@@ -51,7 +51,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "fix_plan": {
         "actions": [
@@ -143,7 +143,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 240,
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "fix_plan": {
         "actions": [
@@ -190,7 +190,7 @@
     }
   ],
   "kind": "evaluation",
-  "posture": "UNSAFE",
+  "security_state": "NON_COMPLIANT",
   "remediation_groups": [
     {
       "asset_id": "ubergreece",
@@ -252,8 +252,8 @@
   },
   "schema_version": "out.v0.1",
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 2
   }
 }

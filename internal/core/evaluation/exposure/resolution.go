@@ -70,7 +70,7 @@ func buildVisibilityFromEffective(identity, resource Visibility, gov GovernanceO
 	return visibilityResult
 }
 
-// --- Internal Posture Logic ---
+// --- Internal SecurityState Logic ---
 
 func resolveMask(identity, resource Visibility, gov GovernanceOverrides) Permission {
 	var mask Permission

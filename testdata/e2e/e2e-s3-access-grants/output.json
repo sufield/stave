@@ -17,12 +17,12 @@
     "pack_hash": "e6325c2d1c28aaf0bf14f43760ace255d130d23fa36e9e77ce3b720b39649c10"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
+    "total_assets": 1,
+    "exposed_resources": 1,
     "violations": 2
   },
-  "posture": "UNSAFE",
-  "at_risk": [
+  "security_state": "NON_COMPLIANT",
+  "risk_signals": [
     {
       "control_id": "CTL.S3.ACCESS.GRANTS.001",
       "asset_id": "grants-bucket",
@@ -80,7 +80,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -135,7 +135,7 @@
         "root_causes": [
           "general"
         ],
-        "why_now": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset has been unsafe for 216 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
       },
       "control_severity": "medium",
       "posture_drift": {

@@ -11,33 +11,31 @@ type ConfidenceLevel string
 
 // ConfidenceHigh and related constants.
 const (
-	// ConfidenceHigh constants.
 	ConfidenceHigh         ConfidenceLevel = "high"
 	ConfidenceMedium       ConfidenceLevel = "medium"
 	ConfidenceLow          ConfidenceLevel = "low"
 	ConfidenceInconclusive ConfidenceLevel = "inconclusive"
 )
 
-// Posture classifies the high-level security posture based on evaluation results.
-type Posture string
+// SecurityState classifies the high-level security posture of the environment.
+type SecurityState string
 
-// PostureSafe and related constants.
+// StateCompliant and related constants.
 const (
-	// PostureSafe constants.
-	PostureSafe       Posture = "SAFE"
-	PostureBorderline Posture = "BORDERLINE"
-	PostureUnsafe     Posture = "UNSAFE"
+	StateCompliant    SecurityState = "COMPLIANT"
+	StateAtRisk       SecurityState = "AT_RISK"
+	StateNonCompliant SecurityState = "NON_COMPLIANT"
 )
 
-// DerivePosture derives posture from violation counts and approaching risks.
-func DerivePosture(violations int, upcoming risk.ThresholdItems) Posture {
+// DeriveSecurityState determines the overall health based on violation counts and drift risks.
+func DeriveSecurityState(violations int, upcoming risk.ThresholdItems) SecurityState {
 	if violations > 0 {
-		return PostureUnsafe
+		return StateNonCompliant
 	}
 	if upcoming.HasAnyRisk() {
-		return PostureBorderline
+		return StateAtRisk
 	}
-	return PostureSafe
+	return StateCompliant
 }
 
 // Verdict represents the final outcome of a control check against a resource.
@@ -45,7 +43,6 @@ type Verdict string
 
 // VerdictViolation and related constants.
 const (
-	// VerdictViolation constants.
 	VerdictViolation     Verdict = "VIOLATION"
 	VerdictPass          Verdict = "PASS"
 	VerdictInconclusive  Verdict = "INCONCLUSIVE"
@@ -53,21 +50,21 @@ const (
 	VerdictSkipped       Verdict = "SKIPPED"
 )
 
-// Observation captures the granular result for a single control/asset pairing.
-type Observation struct {
-	ControlID   kernel.ControlID   `json:"control_id"`
-	AssetID     asset.ID           `json:"asset_id"`
-	AssetType   kernel.AssetType   `json:"asset_type"`
-	AssetDomain kernel.AssetDomain `json:"asset_domain"`
-	Verdict     Verdict            `json:"verdict"`
-	Confidence  ConfidenceLevel    `json:"confidence"`
-	Evidence    *Evidence          `json:"evidence,omitempty"`
-	WhyNow      string             `json:"why_now,omitempty"`
-	Reason      string             `json:"reason,omitempty"` // populated for SKIPPED/INCONCLUSIVE
+// ResourceCheck captures the granular result for a single control/asset pairing.
+type ResourceCheck struct {
+	ControlID    kernel.ControlID   `json:"control_id"`
+	AssetID      asset.ID           `json:"asset_id"`
+	AssetType    kernel.AssetType   `json:"asset_type"`
+	AssetDomain  kernel.AssetDomain `json:"asset_domain"`
+	Verdict      Verdict            `json:"verdict"`
+	Confidence   ConfidenceLevel    `json:"confidence"`
+	Evidence     *Evidence          `json:"evidence,omitempty"`
+	TemporalRisk string             `json:"temporal_risk,omitempty"`
+	Reason       string             `json:"reason,omitempty"` // populated for SKIPPED/INCONCLUSIVE
 }
 
 // MarkInconclusive shifts a row to an inconclusive state with a specific explanation.
-func (r *Observation) MarkInconclusive(reason string) {
+func (r *ResourceCheck) MarkInconclusive(reason string) {
 	if r == nil {
 		return
 	}
@@ -76,11 +73,11 @@ func (r *Observation) MarkInconclusive(reason string) {
 	r.Reason = reason
 }
 
-// Summary provides high-level metrics for an evaluation run.
-type Summary struct {
-	AssetsEvaluated int `json:"assets_evaluated"`
-	AttackSurface   int `json:"attack_surface"`
-	Violations      int `json:"violations"`
+// ComplianceSummary provides high-level metrics for an evaluation run.
+type ComplianceSummary struct {
+	TotalAssets      int `json:"total_assets"`
+	ExposedResources int `json:"exposed_resources"`
+	Violations       int `json:"violations"`
 }
 
 // SkippedControl identifies a control that was ignored during the run.
@@ -90,22 +87,22 @@ type SkippedControl struct {
 	Reason      string           `json:"reason"`
 }
 
-// Audit is the root aggregate of an evaluation execution.
-type Audit struct {
+// ComplianceReport is the root aggregate of an evaluation execution.
+type ComplianceReport struct {
 	Run              RunInfo               `json:"run"`
-	Summary          Summary               `json:"summary"`
-	Posture          Posture               `json:"posture"`
-	AtRisk           risk.ThresholdItems   `json:"at_risk,omitempty"`
+	Summary          ComplianceSummary     `json:"summary"`
+	SecurityState    SecurityState         `json:"security_state"`
+	RiskSignals      risk.ThresholdItems   `json:"risk_signals,omitempty"`
 	Findings         []Finding             `json:"findings"`
 	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`
-	Skipped          []SkippedControl      `json:"skipped,omitempty"`
+	SkippedControls  []SkippedControl      `json:"skipped_controls,omitempty"`
 	ExemptedAssets   []asset.ExemptedAsset `json:"exempted_assets,omitempty"`
 	Metadata         Metadata              `json:"-"`
-	Observations     []Observation         `json:"observations,omitempty"` // populated if --explain is used
+	Checks           []ResourceCheck       `json:"checks,omitempty"` // populated if --explain is used
 }
 
-// FindFinding retrieves a finding for a specific control/asset pair, returning nil if not found.
-func (r *Audit) FindFinding(ctlID kernel.ControlID, astID asset.ID) *Finding {
+// GetFindingByResource retrieves a finding for a specific control/asset pair, returning nil if not found.
+func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID asset.ID) *Finding {
 	for i := range r.Findings {
 		if r.Findings[i].ControlID == ctlID && r.Findings[i].AssetID == astID {
 			return &r.Findings[i]

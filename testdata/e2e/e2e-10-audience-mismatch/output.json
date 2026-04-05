@@ -17,13 +17,13 @@
     "pack_hash": "d35f1f4104337cec0597a5b8e3754d4da764d8dfb89525de9cff277d9e7d9eff"
   },
   "summary": {
-    "assets_evaluated": 0,
-    "attack_surface": 0,
+    "total_assets": 0,
+    "exposed_resources": 0,
     "violations": 0
   },
-  "posture": "SAFE",
+  "security_state": "COMPLIANT",
   "findings": [],
-  "skipped": [
+  "skipped_controls": [
     {
       "control_id": "CTL.PROC.MAIL.001",
       "control_name": "Process Audience Verification",

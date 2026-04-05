@@ -40,7 +40,7 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 					IdentityStatements: stmts,
 					ResourceGrantees:   grantees,
 				},
-				WhyNow: "Unsafe for 24h, threshold is 0h",
+				TemporalRisk: "Unsafe for 24h, threshold is 0h",
 			},
 		},
 	}}
@@ -73,8 +73,8 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 			t.Errorf("ResourceGrantees[%d] = %q, want [SANITIZED]", i, v)
 		}
 	}
-	if s.Evidence.WhyNow != findings[0].Evidence.WhyNow {
-		t.Errorf("WhyNow changed: %q", s.Evidence.WhyNow)
+	if s.Evidence.TemporalRisk != findings[0].Evidence.TemporalRisk {
+		t.Errorf("TemporalRisk changed: %q", s.Evidence.TemporalRisk)
 	}
 }
 

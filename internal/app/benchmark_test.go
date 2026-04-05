@@ -230,8 +230,8 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	elapsed := time.Since(start)
 
 	// Verify results
-	if result.Summary.AssetsEvaluated != 1000 {
-		t.Errorf("Expected 1000 resources evaluated, got %d", result.Summary.AssetsEvaluated)
+	if result.Summary.TotalAssets != 1000 {
+		t.Errorf("Expected 1000 resources evaluated, got %d", result.Summary.TotalAssets)
 	}
 
 	// Performance guardrail: 1000 assets should complete in under 5 seconds

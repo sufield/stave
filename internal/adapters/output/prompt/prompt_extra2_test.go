@@ -31,7 +31,7 @@ func TestBuildEvidenceSummary_Full(t *testing.T) {
 		EpisodeCount:        3,
 		WindowDays:          30,
 		RecurrenceLimit:     5,
-		WhyNow:              "Asset has been unsafe for 336 hours",
+		TemporalRisk:        "Asset has been unsafe for 336 hours",
 	}
 	got := BuildEvidenceSummary(ev)
 	expects := []string{
@@ -163,7 +163,7 @@ func TestPromptBuilder_Build(t *testing.T) {
 			AssetID:     "bucket-1",
 			AssetType:   "s3_bucket",
 			Evidence: evaluation.Evidence{
-				WhyNow: "unsafe",
+				TemporalRisk: "unsafe",
 			},
 		},
 	}

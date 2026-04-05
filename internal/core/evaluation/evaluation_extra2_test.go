@@ -293,18 +293,18 @@ func TestControlSourceModeConstants(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// DerivePosture
+// DeriveSecurityState
 // ---------------------------------------------------------------------------
 
 func TestClassifySafetyStatus_Constants(t *testing.T) {
-	if PostureSafe != "SAFE" {
-		t.Fatal("PostureSafe")
+	if StateCompliant != "COMPLIANT" {
+		t.Fatal("StateCompliant")
 	}
-	if PostureBorderline != "BORDERLINE" {
-		t.Fatal("PostureBorderline")
+	if StateAtRisk != "AT_RISK" {
+		t.Fatal("StateAtRisk")
 	}
-	if PostureUnsafe != "UNSAFE" {
-		t.Fatal("PostureUnsafe")
+	if StateNonCompliant != "NON_COMPLIANT" {
+		t.Fatal("StateNonCompliant")
 	}
 }
 

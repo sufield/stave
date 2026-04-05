@@ -41,8 +41,8 @@ func TestWriteHygieneReport(t *testing.T) {
 	if !strings.Contains(out, "## Lifecycle Inventory") {
 		t.Error("expected Lifecycle Inventory section")
 	}
-	if !strings.Contains(out, "## Risk Posture & Trends") {
-		t.Error("expected Risk Posture & Trends section")
+	if !strings.Contains(out, "## Risk SecurityState & Trends") {
+		t.Error("expected Risk SecurityState & Trends section")
 	}
 	if !strings.Contains(out, "↑ 5") {
 		t.Error("expected positive trend change to show ↑ 5")

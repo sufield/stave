@@ -64,7 +64,7 @@ func TestEvaluate_WithControls(t *testing.T) {
 	// With 2 snapshots 24h apart and max-unsafe 12h, we expect a violation.
 	// If the predicate doesn't match due to evaluation semantics, at least
 	// verify the evaluation ran successfully.
-	if result.Summary.AssetsEvaluated == 0 {
+	if result.Summary.TotalAssets == 0 {
 		t.Error("expected at least 1 asset evaluated")
 	}
 }

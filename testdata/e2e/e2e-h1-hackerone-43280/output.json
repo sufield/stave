@@ -17,11 +17,11 @@
     "pack_hash": "7fecf54b24c5d39cbc5fde80d979fb9e165bb2a765cfa650dabd241dc5f30042"
   },
   "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 0,
+    "total_assets": 1,
+    "exposed_resources": 0,
     "violations": 0
   },
-  "posture": "SAFE",
+  "security_state": "COMPLIANT",
   "findings": [],
   "extensions": {
     "selected_controls_source": "dir",

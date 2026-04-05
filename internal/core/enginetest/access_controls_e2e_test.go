@@ -384,7 +384,7 @@ func TestAccess_AllSafe(t *testing.T) {
 
 // --- Assertion helpers (access-specific, reuse the same pattern) ---
 
-func assertHasAccessFinding(t *testing.T, result evaluation.Audit, controlID kernel.ControlID, assetID string) {
+func assertHasAccessFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -394,7 +394,7 @@ func assertHasAccessFinding(t *testing.T, result evaluation.Audit, controlID ker
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoAccessFinding(t *testing.T, result evaluation.Audit, controlID kernel.ControlID, assetID string) {
+func assertNoAccessFinding(t *testing.T, result evaluation.ComplianceReport, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {

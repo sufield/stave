@@ -26,11 +26,11 @@ const (
 // EvaluationRequest bundles inputs for constructing an Evaluation envelope.
 type EvaluationRequest struct {
 	Run              evaluation.RunInfo
-	Summary          evaluation.Summary
-	Posture          evaluation.Posture
-	AtRisk           risk.ThresholdItems
+	Summary          evaluation.ComplianceSummary
+	SecurityState    evaluation.SecurityState
+	RiskSignals      risk.ThresholdItems
 	Findings         []remediation.Finding
-	Skipped          []evaluation.SkippedControl
+	SkippedControls  []evaluation.SkippedControl
 	ExemptedAssets   []asset.ExemptedAsset
 	ExceptedFindings []evaluation.ExceptedFinding
 }
@@ -40,13 +40,13 @@ type Evaluation struct {
 	SchemaVersion     kernel.Schema                `json:"schema_version"`
 	Kind              EnvelopeKind                 `json:"kind"`
 	Run               evaluation.RunInfo           `json:"run"`
-	Summary           evaluation.Summary           `json:"summary"`
-	Posture           evaluation.Posture           `json:"posture"`
-	AtRisk            risk.ThresholdItems          `json:"at_risk,omitempty"`
+	Summary           evaluation.ComplianceSummary `json:"summary"`
+	SecurityState     evaluation.SecurityState     `json:"security_state"`
+	RiskSignals       risk.ThresholdItems          `json:"risk_signals,omitempty"`
 	Findings          []remediation.Finding        `json:"findings"`
 	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
 	RemediationGroups []remediation.Group          `json:"remediation_groups,omitempty"`
-	Skipped           []evaluation.SkippedControl  `json:"skipped,omitempty"`
+	SkippedControls   []evaluation.SkippedControl  `json:"skipped_controls,omitempty"`
 	ExemptedAssets    []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
 	Extensions        *evaluation.Extensions       `json:"extensions,omitempty"`
 }
@@ -59,11 +59,11 @@ func NewEvaluation(req EvaluationRequest) *Evaluation {
 		Kind:             KindEvaluation,
 		Run:              req.Run,
 		Summary:          req.Summary,
-		Posture:          req.Posture,
-		AtRisk:           req.AtRisk,
+		SecurityState:    req.SecurityState,
+		RiskSignals:      req.RiskSignals,
 		Findings:         emptyIfNil(req.Findings),
 		ExceptedFindings: emptyIfNil(req.ExceptedFindings),
-		Skipped:          emptyIfNil(req.Skipped),
+		SkippedControls:  emptyIfNil(req.SkippedControls),
 		ExemptedAssets:   emptyIfNil(req.ExemptedAssets),
 	}
 }

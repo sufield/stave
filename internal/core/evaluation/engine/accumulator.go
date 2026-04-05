@@ -22,7 +22,7 @@ func (s assetIDSet) Add(id asset.ID) bool {
 type Accumulator struct {
 	// Collected artifacts
 	findings      []evaluation.Finding
-	rows          []evaluation.Observation
+	rows          []evaluation.ResourceCheck
 	skippedByCtl  []evaluation.SkippedControl
 	exemptedByAst []asset.ExemptedAsset
 
@@ -67,7 +67,7 @@ func (a *Accumulator) AddExemptedAsset(id asset.ID, pattern, reason string) {
 }
 
 // AddRow appends an observation row to the accumulator.
-func (a *Accumulator) AddRow(row evaluation.Observation) {
+func (a *Accumulator) AddRow(row evaluation.ResourceCheck) {
 	a.rows = append(a.rows, row)
 }
 

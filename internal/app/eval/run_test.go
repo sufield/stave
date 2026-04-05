@@ -9,42 +9,42 @@ import (
 )
 
 type runMockRunner struct {
-	returnStatus evaluation.Posture
+	returnStatus evaluation.SecurityState
 	returnErr    error
 }
 
-func (m *runMockRunner) Execute(_ context.Context, _ EvaluateConfig) (evaluation.Posture, error) {
+func (m *runMockRunner) Execute(_ context.Context, _ EvaluateConfig) (evaluation.SecurityState, error) {
 	return m.returnStatus, m.returnErr
 }
 
 func TestRunnerExecute(t *testing.T) {
 	tests := []struct {
 		name       string
-		status     evaluation.Posture
+		status     evaluation.SecurityState
 		config     EvaluateConfig
-		wantStatus evaluation.Posture
+		wantStatus evaluation.SecurityState
 	}{
 		{
 			name:   "clean run",
-			status: evaluation.PostureSafe,
+			status: evaluation.StateCompliant,
 			config: EvaluateConfig{
 				LoadConfig: LoadConfig{
 					ControlsDir:     "/tmp/ctl",
 					ObservationsDir: "/tmp/obs",
 				},
 			},
-			wantStatus: evaluation.PostureSafe,
+			wantStatus: evaluation.StateCompliant,
 		},
 		{
 			name:   "violations found",
-			status: evaluation.PostureUnsafe,
+			status: evaluation.StateNonCompliant,
 			config: EvaluateConfig{
 				LoadConfig: LoadConfig{
 					ControlsDir:     "./s3-controls",
 					ObservationsDir: "./aws-snapshots",
 				},
 			},
-			wantStatus: evaluation.PostureUnsafe,
+			wantStatus: evaluation.StateNonCompliant,
 		},
 	}
 
@@ -66,7 +66,7 @@ func TestRunnerExecute(t *testing.T) {
 
 func TestRunnerExecute_PropagatesError(t *testing.T) {
 	wantErr := errors.New("boom")
-	runner := &runMockRunner{returnStatus: evaluation.PostureSafe, returnErr: wantErr}
+	runner := &runMockRunner{returnStatus: evaluation.StateCompliant, returnErr: wantErr}
 
 	_, err := runner.Execute(context.Background(), EvaluateConfig{})
 	if !errors.Is(err, wantErr) {

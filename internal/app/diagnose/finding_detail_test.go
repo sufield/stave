@@ -76,7 +76,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 			LastSeenUnsafeAt:    lastSeen,
 			UnsafeDurationHours: 12.0,
 			ThresholdHours:      24.0,
-			WhyNow:              "unsafe duration 12h exceeds 0h",
+			TemporalRisk:        "unsafe duration 12h exceeds 0h",
 		},
 		ControlRemediation: &policy.RemediationSpec{
 			Description: "Bucket is publicly exposed.",
@@ -91,7 +91,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		AssetID:      asset.ID("res:aws:s3:bucket:test-bucket"),
 		Controls:     policy.ControlDefinitions{ctl},
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
-		Result:       &evaluation.Audit{Findings: []evaluation.Finding{violation}},
+		Result:       &evaluation.ComplianceReport{Findings: []evaluation.Finding{violation}},
 		TraceBuilder: &apptrace.Builder{},
 		IDGen:        crypto.NewHasher(),
 	})
@@ -162,7 +162,7 @@ func TestBuildFindingDetail_NotFound(t *testing.T) {
 		AssetID:   asset.ID("nonexistent"),
 		Controls:  nil,
 		Snapshots: nil,
-		Result:    &evaluation.Audit{},
+		Result:    &evaluation.ComplianceReport{},
 		IDGen:     crypto.NewHasher(),
 	})
 	if err == nil {
@@ -186,7 +186,7 @@ func TestBuildFindingDetail_NoControlDefinition(t *testing.T) {
 		AssetID:   asset.ID("res:test"),
 		Controls:  nil,
 		Snapshots: nil,
-		Result:    &evaluation.Audit{Findings: []evaluation.Finding{violation}},
+		Result:    &evaluation.ComplianceReport{Findings: []evaluation.Finding{violation}},
 		IDGen:     crypto.NewHasher(),
 	})
 	if err != nil {
@@ -221,7 +221,7 @@ func TestBuildFindingDetail_NoMatchingSnapshot(t *testing.T) {
 		AssetID:   asset.ID("res:missing"),
 		Controls:  policy.ControlDefinitions{ctl},
 		Snapshots: []asset.Snapshot{}, // no snapshots
-		Result:    &evaluation.Audit{Findings: []evaluation.Finding{violation}},
+		Result:    &evaluation.ComplianceReport{Findings: []evaluation.Finding{violation}},
 		IDGen:     crypto.NewHasher(),
 	})
 	if err != nil {

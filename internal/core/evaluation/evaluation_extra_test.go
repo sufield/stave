@@ -55,18 +55,18 @@ func TestSortFindings(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Audit.FindFinding
+// ComplianceReport.GetFindingByResource
 // ---------------------------------------------------------------------------
 
 func TestResultFindFinding(t *testing.T) {
-	r := &Audit{
+	r := &ComplianceReport{
 		Findings: []Finding{
 			{ControlID: "CTL.A.001", AssetID: "bucket-1"},
 			{ControlID: "CTL.B.002", AssetID: "bucket-2"},
 		},
 	}
 
-	f := r.FindFinding("CTL.A.001", "bucket-1")
+	f := r.GetFindingByResource("CTL.A.001", "bucket-1")
 	if f == nil {
 		t.Fatal("should find")
 	}
@@ -74,7 +74,7 @@ func TestResultFindFinding(t *testing.T) {
 		t.Fatalf("ControlID = %v", f.ControlID)
 	}
 
-	f = r.FindFinding("CTL.C.003", "bucket-3")
+	f = r.GetFindingByResource("CTL.C.003", "bucket-3")
 	if f != nil {
 		t.Fatal("should not find")
 	}
@@ -108,11 +108,11 @@ func TestDeriveConfidenceLevel(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Observation.MarkInconclusive
+// ResourceCheck.MarkInconclusive
 // ---------------------------------------------------------------------------
 
 func TestRowMarkInconclusive(t *testing.T) {
-	r := &Observation{Verdict: VerdictPass, Confidence: ConfidenceHigh}
+	r := &ResourceCheck{Verdict: VerdictPass, Confidence: ConfidenceHigh}
 	r.MarkInconclusive("test reason")
 	if r.Verdict != VerdictInconclusive {
 		t.Fatalf("Verdict = %v", r.Verdict)
@@ -125,7 +125,7 @@ func TestRowMarkInconclusive(t *testing.T) {
 	}
 
 	// Nil receiver is safe
-	var nilRow *Observation
+	var nilRow *ResourceCheck
 	nilRow.MarkInconclusive("safe") // should not panic
 }
 
@@ -202,18 +202,18 @@ func TestTrendMetric(t *testing.T) {
 func TestResponsePolicyDecide(t *testing.T) {
 	tests := []struct {
 		strict bool
-		status Posture
+		status SecurityState
 		want   ActionSeverity
 	}{
-		{false, PostureSafe, ActionPass},
-		{false, PostureBorderline, ActionWarn},
-		{false, PostureUnsafe, ActionFail},
-		{true, PostureSafe, ActionPass},
-		{true, PostureBorderline, ActionFail},
-		{true, PostureUnsafe, ActionFail},
+		{false, StateCompliant, ActionPass},
+		{false, StateAtRisk, ActionWarn},
+		{false, StateNonCompliant, ActionFail},
+		{true, StateCompliant, ActionPass},
+		{true, StateAtRisk, ActionFail},
+		{true, StateNonCompliant, ActionFail},
 	}
 	for _, tt := range tests {
-		p := ResponsePolicy{TreatBorderlineAsFailure: tt.strict}
+		p := ResponsePolicy{TreatAtRiskAsFailure: tt.strict}
 		got := p.Decide(tt.status)
 		if got.Severity != tt.want {
 			t.Errorf("Decide(strict=%v, %v) = %v, want %v", tt.strict, tt.status, got.Severity, tt.want)

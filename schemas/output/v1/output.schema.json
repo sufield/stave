@@ -80,15 +80,15 @@
           "type": "object",
           "title": "Evaluation Summary",
           "description": "Aggregate counts summarizing the evaluation results.",
-          "required": ["assets_evaluated", "attack_surface", "violations"],
+          "required": ["total_assets", "exposed_resources", "violations"],
           "properties": {
-            "assets_evaluated": {
+            "total_assets": {
               "type": "integer",
               "minimum": 0,
               "title": "Assets Evaluated Count",
               "description": "Total number of assets evaluated across all controls."
             },
-            "attack_surface": {
+            "exposed_resources": {
               "type": "integer",
               "minimum": 0,
               "title": "Currently Unsafe Count",
