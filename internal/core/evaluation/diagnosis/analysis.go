@@ -60,21 +60,20 @@ func (s *session) diagnoseMatchCoverage() []Insight {
 	var issues []Insight
 	uniqueMatches := s.countUniqueMatches()
 
-	// Global match failure
-	if uniqueMatches == 0 && s.totalAssets > 0 {
+	// No control matched any asset despite infrastructure being non-empty.
+	if s.hasNoCoverage(uniqueMatches) {
 		issues = append(issues, Insight{
 			Case:     ScenarioEmptyFindings,
 			Signal:   msgNoPredicateMatches,
 			Evidence: fmt.Sprintf("0/%d unique resources matched any predicate across %d controls", s.totalAssets, len(s.input.Controls)),
 			Action:   "Verify extractor writes expected properties or adjust predicate field paths",
 		})
-		return issues // Skip per-control if global is zero
+		return issues
 	}
 
-	// Per-control match failure
+	// Individual control matched zero assets — its scope is effectively empty.
 	for _, ctl := range s.input.Controls {
-		stat, ok := s.stats[ctl.ID]
-		if ok && len(stat.matchedAssetIDs) == 0 && s.totalAssets > 0 {
+		if s.controlHasNoCoverage(ctl.ID) {
 			issues = append(issues, Insight{
 				Case:     ScenarioExpectedNone,
 				Signal:   fmt.Sprintf("No resources matched predicate for %s", ctl.ID),
@@ -87,13 +86,25 @@ func (s *session) diagnoseMatchCoverage() []Insight {
 	return issues
 }
 
+// hasNoCoverage reports whether all controls together matched zero assets
+// despite infrastructure being non-empty — a "ghost policy" condition.
+func (s *session) hasNoCoverage(uniqueMatches int) bool {
+	return uniqueMatches == 0 && s.totalAssets > 0
+}
+
+// controlHasNoCoverage reports whether a specific control matched zero assets.
+func (s *session) controlHasNoCoverage(id kernel.ControlID) bool {
+	stat, ok := s.stats[id]
+	return ok && len(stat.matchedAssetIDs) == 0 && s.totalAssets > 0
+}
+
 func (s *session) diagnoseThresholdGaps() []Insight {
 	var issues []Insight
 	maxStreak, ctlID := s.globalMaxStreak()
 
-	// Case: Matches found, but none long enough to trigger a violation.
-	// Stave uses strict ">" so duration must exceed --max-unsafe, not equal it.
-	if maxStreak > 0 && maxStreak <= s.input.MaxUnsafeDuration {
+	// Unsafe behavior exists but hasn't matured past the grace period.
+	isWithinGracePeriod := maxStreak > 0 && maxStreak <= s.input.MaxUnsafeDuration
+	if isWithinGracePeriod {
 		issues = append(issues, Insight{
 			Case:   ScenarioEmptyFindings,
 			Signal: msgMatchesUnderThreshold,
