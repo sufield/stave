@@ -339,7 +339,7 @@ func TestOutputPipeline_Run_EnrichError(t *testing.T) {
 	var buf bytes.Buffer
 	pipeline := &OutputPipeline{
 		Marshaler: &marshalerStub{},
-		Enricher: func(result evaluation.Audit) (appcontracts.EnrichedResult, error) {
+		Enricher: func(_ evaluation.Audit) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, fmt.Errorf("enrich failed")
 		},
 	}

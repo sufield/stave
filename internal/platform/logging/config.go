@@ -16,13 +16,17 @@ import (
 // Format specifies log output format.
 type Format string
 
+// FormatText and related constants.
 const (
+	// FormatText constants.
 	FormatText Format = "text"
 	FormatJSON Format = "json"
 	RunIDKey   string = "run_id"
 )
 
+// LevelDebug and related constants.
 const (
+	// LevelDebug constants.
 	LevelDebug = slog.LevelDebug
 	LevelInfo  = slog.LevelInfo
 	LevelWarn  = slog.LevelWarn

@@ -1,3 +1,4 @@
+// Package hygiene provides snapshot quality and trend analysis services.
 package hygiene
 
 import (

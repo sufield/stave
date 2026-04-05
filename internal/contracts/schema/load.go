@@ -12,6 +12,7 @@ import (
 // Kind identifies the functional category of a schema.
 type Kind string
 
+// Schema kind constants identify the functional category of a schema.
 const (
 	KindControl     Kind = "control"
 	KindObservation Kind = "observation"

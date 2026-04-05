@@ -9,7 +9,9 @@ import (
 // ConfidenceLevel quantifies the certainty of an evaluation result.
 type ConfidenceLevel string
 
+// ConfidenceHigh and related constants.
 const (
+	// ConfidenceHigh constants.
 	ConfidenceHigh         ConfidenceLevel = "high"
 	ConfidenceMedium       ConfidenceLevel = "medium"
 	ConfidenceLow          ConfidenceLevel = "low"
@@ -19,7 +21,9 @@ const (
 // Posture classifies the high-level security posture based on evaluation results.
 type Posture string
 
+// PostureSafe and related constants.
 const (
+	// PostureSafe constants.
 	PostureSafe       Posture = "SAFE"
 	PostureBorderline Posture = "BORDERLINE"
 	PostureUnsafe     Posture = "UNSAFE"
@@ -39,7 +43,9 @@ func DerivePosture(violations int, upcoming risk.ThresholdItems) Posture {
 // Verdict represents the final outcome of a control check against a resource.
 type Verdict string
 
+// VerdictViolation and related constants.
 const (
+	// VerdictViolation constants.
 	VerdictViolation     Verdict = "VIOLATION"
 	VerdictPass          Verdict = "PASS"
 	VerdictInconclusive  Verdict = "INCONCLUSIVE"

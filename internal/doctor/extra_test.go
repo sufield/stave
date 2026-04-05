@@ -79,7 +79,7 @@ func TestRegistry_Run_SkipsEmptyName(t *testing.T) {
 	}
 }
 
-func TestFillDefaults_Nil(t *testing.T) {
+func TestFillDefaults_Nil(_ *testing.T) {
 	var ctx *Context
 	ctx.FillDefaults() // should not panic
 }

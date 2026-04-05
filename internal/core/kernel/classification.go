@@ -7,6 +7,7 @@ import (
 // ControlClass categorizes the high-level security intent of a control.
 type ControlClass int
 
+// High-level security intent classifications for controls.
 const (
 	ClassUnknown           ControlClass = iota
 	ClassPublicExposure                 // Connectivity and exposure risks

@@ -6,8 +6,8 @@ import (
 )
 
 // DefaultRules returns the built-in compound risk detection rules.
-func DefaultRules() []CompoundRule {
-	return []CompoundRule{
+func DefaultRules() []Rule {
+	return []Rule{
 		compound001(),
 		compound002(),
 		compound003(),
@@ -15,8 +15,8 @@ func DefaultRules() []CompoundRule {
 }
 
 // compound001: Public access + overly broad policy.
-func compound001() CompoundRule {
-	return CompoundRule{
+func compound001() Rule {
+	return Rule{
 		ID:         "COMPOUND.001",
 		Severity:   policy.SeverityCritical,
 		TriggerIDs: []string{"ACCESS.001", "ACCESS.002"},
@@ -30,8 +30,8 @@ func compound001() CompoundRule {
 }
 
 // compound002: Encryption pass but access fail.
-func compound002() CompoundRule {
-	return CompoundRule{
+func compound002() Rule {
+	return Rule{
 		ID:         "COMPOUND.002",
 		Severity:   policy.SeverityHigh,
 		TriggerIDs: []string{"ACCESS.001", "CONTROLS.001"},
@@ -45,8 +45,8 @@ func compound002() CompoundRule {
 }
 
 // compound003: VPC endpoint without endpoint policy.
-func compound003() CompoundRule {
-	return CompoundRule{
+func compound003() Rule {
+	return Rule{
 		ID:         "COMPOUND.003",
 		Severity:   policy.SeverityHigh,
 		TriggerIDs: []string{"ACCESS.003", "ACCESS.006"},

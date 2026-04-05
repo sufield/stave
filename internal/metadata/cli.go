@@ -7,14 +7,18 @@ import (
 	"github.com/sufield/stave/internal/env"
 )
 
+// CLI metadata constants.
 const (
+	// CLIName is the canonical name of the CLI binary.
 	CLIName = "stave"
 
 	// OfflineHelpSuffix is appended to command Long descriptions to reinforce the offline guarantee.
 	OfflineHelpSuffix = "\n\nOffline-only: reads local files; makes zero network connections; no cloud credentials."
 
+	// CLIProjectConfig is the default project configuration file name.
 	CLIProjectConfig = "stave.yaml"
-	CLILockfile      = "stave.lock"
+	// CLILockfile is the lock file name used for project integrity.
+	CLILockfile = "stave.lock"
 )
 
 // IssuesRef returns the issue tracker URL, respecting STAVE_ISSUES_URL

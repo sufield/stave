@@ -14,7 +14,7 @@ import (
 type TextReporter struct{}
 
 // Write renders the report as formatted text.
-func (TextReporter) Write(w io.Writer, report profile.ProfileReport, meta ReportMeta) error {
+func (TextReporter) Write(w io.Writer, report profile.Report, meta ReportMeta) error {
 	writeHeader(w, report, meta)
 	writeCompoundRisks(w, report.CompoundFindings)
 	writeFindingsBySeverity(w, report.Results)
@@ -23,7 +23,7 @@ func (TextReporter) Write(w io.Writer, report profile.ProfileReport, meta Report
 	return nil
 }
 
-func writeHeader(w io.Writer, report profile.ProfileReport, meta ReportMeta) {
+func writeHeader(w io.Writer, report profile.Report, meta ReportMeta) {
 	fmt.Fprintf(w, "═══ %s ═══\n", report.ProfileName)
 	fmt.Fprintf(w, "Bucket:    %s\n", meta.BucketName)
 	fmt.Fprintf(w, "Account:   %s\n", RedactAccountID(meta.AccountID))
@@ -31,7 +31,7 @@ func writeHeader(w io.Writer, report profile.ProfileReport, meta ReportMeta) {
 	fmt.Fprintf(w, "Result:    %s\n\n", passLabel(report.Pass))
 }
 
-func writeCompoundRisks(w io.Writer, findings []compound.CompoundFinding) {
+func writeCompoundRisks(w io.Writer, findings []compound.Finding) {
 	if len(findings) == 0 {
 		return
 	}
@@ -43,7 +43,7 @@ func writeCompoundRisks(w io.Writer, findings []compound.CompoundFinding) {
 	}
 }
 
-func writeFindingsBySeverity(w io.Writer, results []profile.ProfileResult) {
+func writeFindingsBySeverity(w io.Writer, results []profile.Result) {
 	for _, sev := range []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow} {
 		group := filterBySeverity(results, sev)
 		if len(group) == 0 {
@@ -99,7 +99,7 @@ func writeAcknowledged(w io.Writer, acknowledged []profile.AcknowledgedEntry) {
 	}
 }
 
-func writeSummary(w io.Writer, report profile.ProfileReport) {
+func writeSummary(w io.Writer, report profile.Report) {
 	fmt.Fprintln(w, "── Summary ──")
 	fmt.Fprintln(w)
 	for _, sev := range []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow} {
@@ -122,8 +122,8 @@ func passLabel(pass bool) string {
 	return "FAIL"
 }
 
-func filterBySeverity(results []profile.ProfileResult, sev policy.Severity) []profile.ProfileResult {
-	var out []profile.ProfileResult
+func filterBySeverity(results []profile.Result, sev policy.Severity) []profile.Result {
+	var out []profile.Result
 	for _, r := range results {
 		if r.Severity == sev {
 			out = append(out, r)
@@ -133,7 +133,7 @@ func filterBySeverity(results []profile.ProfileResult, sev policy.Severity) []pr
 }
 
 // String returns the full text report as a string.
-func (t TextReporter) String(report profile.ProfileReport, meta ReportMeta) string {
+func (t TextReporter) String(report profile.Report, meta ReportMeta) string {
 	var b strings.Builder
 	_ = t.Write(&b, report, meta)
 	return b.String()

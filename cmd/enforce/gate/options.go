@@ -14,8 +14,8 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// gateOptions holds the raw CLI flag values before validation.
-type gateOptions struct {
+// Options holds the raw CLI flag values before validation.
+type Options struct {
 	Policy            string
 	InPath            string
 	BaselinePath      string
@@ -30,8 +30,8 @@ type gateOptions struct {
 // DefaultOptions returns the standard defaults for the gate command.
 // Config-derived fields (Policy, MaxUnsafeDuration) start as zero values;
 // call resolveConfigDefaults after flag parsing to fill them from project config.
-func DefaultOptions() gateOptions {
-	return gateOptions{
+func DefaultOptions() Options {
+	return Options{
 		InPath:          "output/evaluation.json",
 		BaselinePath:    "output/baseline.json",
 		ControlsDir:     cliflags.DefaultControlsDir,
@@ -41,7 +41,7 @@ func DefaultOptions() gateOptions {
 }
 
 // Prepare resolves config defaults from project config. Called from PreRunE.
-func (o *gateOptions) Prepare(cmd *cobra.Command) error {
+func (o *Options) Prepare(cmd *cobra.Command) error {
 	eval := cmdctx.EvaluatorFromCmd(cmd)
 	if eval == nil {
 		return nil
@@ -57,7 +57,7 @@ func (o *gateOptions) Prepare(cmd *cobra.Command) error {
 }
 
 // BindFlags attaches the options to a Cobra command.
-func (o *gateOptions) BindFlags(cmd *cobra.Command) {
+func (o *Options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVar(&o.Policy, "policy", "", cliflags.WithDynamicDefaultHelp("CI failure policy mode: fail_on_any_violation, fail_on_new_violation, fail_on_overdue_upcoming"))
 	f.StringVar(&o.InPath, "in", o.InPath, "Path to evaluation JSON (required for fail_on_any_violation and fail_on_new_violation)")
@@ -71,7 +71,7 @@ func (o *gateOptions) BindFlags(cmd *cobra.Command) {
 
 // toConfig converts raw CLI options into a validated Config.
 // Standalone function — does not depend on cobra.
-func toConfig(o *gateOptions, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (config, error) {
+func toConfig(o *Options, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (config, error) {
 	policy, err := appconfig.ParseGatePolicy(o.Policy)
 	if err != nil {
 		return config{}, &ui.UserError{Err: fmt.Errorf("invalid policy: %w", err)}

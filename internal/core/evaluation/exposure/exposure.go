@@ -15,6 +15,7 @@ type Source struct {
 // Kind identifies the evidence mechanism (for example, identity or resource).
 type Kind string
 
+// Exposure evidence source kind constants.
 const (
 	SourceIdentity        Kind = "identity"
 	SourceResource        Kind = "resource"
@@ -45,6 +46,7 @@ type Audit struct {
 
 func (r Audit) String() string { return r.Source.String() }
 
+// SafeResult is a pre-built audit result indicating no exposure.
 var SafeResult = Audit{Exposed: false}
 
 // Grant pairs a scope (e.g. "*", "invoices/") with the statement ID that granted it.

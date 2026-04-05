@@ -23,7 +23,7 @@ type stubHasher struct {
 	failFile bool
 }
 
-func (h *stubHasher) HashDir(dir string, exts ...string) (string, error) {
+func (h *stubHasher) HashDir(_ string, _ ...string) (string, error) {
 	if h.failDir {
 		return "", os.ErrNotExist
 	}

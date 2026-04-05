@@ -12,14 +12,14 @@ import (
 )
 
 // renderOutput dispatches the UpcomingReport to the correct format adapter.
-func renderOutput(w io.Writer, format appcontracts.OutputFormat, out appupcoming.UpcomingReport, dueSoonThreshold time.Duration) error {
+func renderOutput(w io.Writer, format appcontracts.OutputFormat, out appupcoming.Report, dueSoonThreshold time.Duration) error {
 	if format.IsJSON() {
 		return jsonout.WriteUpcomingJSON(w, out)
 	}
 
 	report := textout.RenderUpcomingMarkdown(
 		toAdapterItems(out.Items),
-		toAdapterSummary(out.UpcomingSummary),
+		toAdapterSummary(out.Summary),
 		textout.UpcomingRenderOptions{
 			Now:              out.GeneratedAt,
 			DueSoonThreshold: dueSoonThreshold,
@@ -31,7 +31,7 @@ func renderOutput(w io.Writer, format appcontracts.OutputFormat, out appupcoming
 	return nil
 }
 
-func toAdapterItems(items []appupcoming.UpcomingSnapshot) []textout.UpcomingItem {
+func toAdapterItems(items []appupcoming.Snapshot) []textout.UpcomingItem {
 	out := make([]textout.UpcomingItem, len(items))
 	for i, item := range items {
 		out[i] = textout.UpcomingItem{
@@ -49,7 +49,7 @@ func toAdapterItems(items []appupcoming.UpcomingSnapshot) []textout.UpcomingItem
 	return out
 }
 
-func toAdapterSummary(s appupcoming.UpcomingSummary) textout.UpcomingSummary {
+func toAdapterSummary(s appupcoming.Summary) textout.UpcomingSummary {
 	return textout.UpcomingSummary{
 		Overdue: s.Overdue,
 		DueNow:  s.DueNow,

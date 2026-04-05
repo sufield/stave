@@ -13,7 +13,9 @@ import (
 // Edition defines the build flavor of the application.
 type Edition string
 
+// Build edition constants.
 const (
+	// EditionProd constants.
 	EditionProd Edition = "production"
 	EditionDev  Edition = "dev"
 )

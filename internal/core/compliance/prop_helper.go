@@ -9,6 +9,7 @@ import (
 // ObjectLockMode represents the S3 Object Lock retention mode.
 type ObjectLockMode int
 
+// S3 Object Lock retention mode values.
 const (
 	ObjectLockModeUnset      ObjectLockMode = iota
 	ObjectLockModeCompliance                // strongest — nobody can delete before retention expires

@@ -35,7 +35,7 @@ func TestOutputPipeline_MarshalError(t *testing.T) {
 
 	p := &OutputPipeline{
 		Marshaler: &outputMarshalerStub{err: sentinel},
-		Enricher: func(r evaluation.Audit) (appcontracts.EnrichedResult, error) {
+		Enricher: func(_ evaluation.Audit) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, nil
 		},
 	}
@@ -57,7 +57,7 @@ func TestOutputPipeline_CancelledContext(t *testing.T) {
 
 	p := &OutputPipeline{
 		Marshaler: &outputMarshalerStub{data: []byte(`{}`)},
-		Enricher: func(r evaluation.Audit) (appcontracts.EnrichedResult, error) {
+		Enricher: func(_ evaluation.Audit) (appcontracts.EnrichedResult, error) {
 			return appcontracts.EnrichedResult{}, nil
 		},
 	}

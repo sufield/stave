@@ -1,3 +1,4 @@
+// Package integrity provides manifest-based file integrity verification.
 package integrity
 
 import "errors"

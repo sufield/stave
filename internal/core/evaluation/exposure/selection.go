@@ -9,6 +9,7 @@ import (
 // Type represents the category of exposure.
 type Type string
 
+// Exposure type category constants.
 const (
 	TypeWebPublic        Type = "web_public"
 	TypeAuthenticated    Type = "authenticated_access"
@@ -24,6 +25,7 @@ const (
 // WriteScope represents the scope of write access.
 type WriteScope string
 
+// Write scope constants.
 const (
 	WriteScopeBlind WriteScope = "blind"
 	WriteScopeFull  WriteScope = "full"
@@ -33,6 +35,7 @@ const (
 // Higher values indicate more severe risk.
 type Priority int
 
+// Exposure severity priority ranking constants.
 const (
 	PriorityResourceRead  Priority = 100
 	PriorityResourceWrite Priority = 100
@@ -42,14 +45,14 @@ const (
 	PriorityWebPublic     Priority = 400
 )
 
-// exposureCandidate tracks the most severe finding identified during analysis.
-type exposureCandidate struct {
+// Candidate tracks the most severe finding identified during analysis.
+type Candidate struct {
 	priority Priority
 	finding  Classification
 }
 
 // consider updates the candidate if the provided priority is higher than the current one.
-func (c *exposureCandidate) consider(priority Priority, f Classification) {
+func (c *Candidate) consider(priority Priority, f Classification) {
 	if c.finding.ID == "" || priority > c.priority {
 		c.priority = priority
 		c.finding = f
@@ -73,12 +76,12 @@ type ReadExposureInput struct {
 }
 
 // SelectReadExposure selects the highest-priority read exposure finding.
-func SelectReadExposure(in ReadExposureInput) *exposureCandidate {
+func SelectReadExposure(in ReadExposureInput) *Candidate {
 	if !in.IsExternallyReadable || in.WriteAbsorbsRead {
 		return nil
 	}
 
-	best := &exposureCandidate{}
+	best := &Candidate{}
 
 	template := func(id kernel.ControlID, t Type, ev []string) Classification {
 		return Classification{
@@ -134,12 +137,12 @@ type WriteExposureInput struct {
 }
 
 // SelectWriteExposure selects the highest-priority write exposure finding.
-func SelectWriteExposure(in WriteExposureInput) *exposureCandidate {
+func SelectWriteExposure(in WriteExposureInput) *Candidate {
 	if !in.IsPubliclyWrite {
 		return nil
 	}
 
-	best := &exposureCandidate{}
+	best := &Candidate{}
 	actions := buildEffectiveActions(in.BaseActions, in.CanAlsoRead, in.CanAlsoList)
 
 	template := func(id kernel.ControlID, ev []string) Classification {

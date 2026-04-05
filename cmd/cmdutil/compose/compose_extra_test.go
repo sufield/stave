@@ -435,7 +435,7 @@ func TestPrepareEvaluationContext_BadFormat(t *testing.T) {
 
 // --- WarnGitDirty ---
 
-func TestWarnGitDirty_NilGit(t *testing.T) {
+func TestWarnGitDirty_NilGit(_ *testing.T) {
 	// Should not panic
 	WarnGitDirty(io.Discard, nil, "test")
 }

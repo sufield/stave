@@ -7,6 +7,7 @@ import (
 
 // --- Verify ---
 
+// Request is the input for the verify use case.
 type Request struct {
 	BeforeDir         string `json:"before_dir"`
 	AfterDir          string `json:"after_dir"`
@@ -16,6 +17,7 @@ type Request struct {
 	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
 }
 
+// VerifyResponse is the output of the verify use case.
 type VerifyResponse struct {
 	VerificationData any  `json:"verification_data"`
 	HasRemaining     bool `json:"has_remaining"`
@@ -27,7 +29,7 @@ type VerificationRunnerPort interface {
 	RunVerification(ctx context.Context, req Request) (VerifyResponse, error)
 }
 
-// Deps groups the port interfaces for the verify use case.
+// VerifyDeps groups the port interfaces for the verify use case.
 type VerifyDeps struct {
 	Runner VerificationRunnerPort
 }

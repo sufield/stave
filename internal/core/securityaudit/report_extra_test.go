@@ -41,7 +41,7 @@ func TestRecomputeSummary(t *testing.T) {
 	}
 }
 
-func TestRecomputeSummary_NilReceiver(t *testing.T) {
+func TestRecomputeSummary_NilReceiver(_ *testing.T) {
 	var r *Report
 	r.RecomputeSummary() // Should not panic.
 }
@@ -174,7 +174,7 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
-func TestNormalize_NilReceiver(t *testing.T) {
+func TestNormalize_NilReceiver(_ *testing.T) {
 	var r *Report
 	r.Normalize() // Should not panic.
 }

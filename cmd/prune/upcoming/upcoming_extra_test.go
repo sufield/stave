@@ -48,7 +48,7 @@ func TestParsePositiveDuration_DaySuffix(t *testing.T) {
 }
 
 func TestToAdapterItems(t *testing.T) {
-	items := []appupcoming.UpcomingSnapshot{
+	items := []appupcoming.Snapshot{
 		{
 			ControlID: "CTL.A.001",
 			AssetID:   "bucket-1",
@@ -68,7 +68,7 @@ func TestToAdapterItems(t *testing.T) {
 }
 
 func TestToAdapterSummary(t *testing.T) {
-	s := appupcoming.UpcomingSummary{
+	s := appupcoming.Summary{
 		Overdue: 1,
 		DueNow:  2,
 		DueSoon: 3,
@@ -82,7 +82,7 @@ func TestToAdapterSummary(t *testing.T) {
 }
 
 func TestRenderOutput_JSON(t *testing.T) {
-	report := appupcoming.UpcomingReport{}
+	report := appupcoming.Report{}
 	var buf bytes.Buffer
 	err := renderOutput(&buf, appcontracts.FormatJSON, report, 24*time.Hour)
 	if err != nil {

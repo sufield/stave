@@ -10,9 +10,9 @@ import (
 	"github.com/sufield/stave/internal/profile"
 )
 
-// Reporter writes a ProfileReport to the given writer.
+// Reporter writes a profile Report to the given writer.
 type Reporter interface {
-	Write(w io.Writer, report profile.ProfileReport, meta ReportMeta) error
+	Write(w io.Writer, report profile.Report, meta ReportMeta) error
 }
 
 // ReportMeta holds contextual information rendered in the report header.

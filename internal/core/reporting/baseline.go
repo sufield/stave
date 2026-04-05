@@ -23,12 +23,14 @@ type BaselineWriterPort interface {
 	WriteBaseline(ctx context.Context, path string, findings []BaselineFinding, createdAt time.Time, sourcePath string) error
 }
 
+// BaselineSaveDeps represents a baselinesavedeps value.
 type BaselineSaveDeps struct {
 	Loader EvaluationLoaderPort
 	Writer BaselineWriterPort
 	Clock  ports.Clock
 }
 
+// BaselineCheckDeps represents a baselinecheckdeps value.
 type BaselineCheckDeps struct {
 	EvalLoader     EvaluationLoaderPort
 	BaselineLoader BaselineLoaderPort
@@ -187,6 +189,7 @@ func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved
 
 // --- Baseline Types ---
 
+// BaselineSaveRequest represents a baselinesaverequest value.
 type BaselineSaveRequest struct {
 	EvaluationPath string     `json:"evaluation_path"`
 	OutputPath     string     `json:"output_path"`
@@ -195,12 +198,14 @@ type BaselineSaveRequest struct {
 	Force          bool       `json:"force,omitempty"`
 }
 
+// BaselineSaveResponse represents a baselinesaveresponse value.
 type BaselineSaveResponse struct {
 	OutputPath    string    `json:"output_path"`
 	FindingsCount int       `json:"findings_count"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+// BaselineCheckRequest represents a baselinecheckrequest value.
 type BaselineCheckRequest struct {
 	EvaluationPath string `json:"evaluation_path"`
 	BaselinePath   string `json:"baseline_path"`
@@ -208,6 +213,7 @@ type BaselineCheckRequest struct {
 	Sanitize       bool   `json:"sanitize,omitempty"`
 }
 
+// BaselineCheckResponse represents a baselinecheckresponse value.
 type BaselineCheckResponse struct {
 	BaselineFile     string               `json:"baseline_file"`
 	Evaluation       string               `json:"evaluation"`
@@ -218,6 +224,7 @@ type BaselineCheckResponse struct {
 	HasNew           bool                 `json:"has_new"`
 }
 
+// BaselineCheckSummary represents a baselinechecksummary value.
 type BaselineCheckSummary struct {
 	BaselineFindings int `json:"baseline_findings"`
 	CurrentFindings  int `json:"current_findings"`
@@ -225,6 +232,7 @@ type BaselineCheckSummary struct {
 	ResolvedFindings int `json:"resolved_findings"`
 }
 
+// BaselineFinding represents a baselinefinding value.
 type BaselineFinding struct {
 	ControlID   string `json:"control_id"`
 	ControlName string `json:"control_name"`

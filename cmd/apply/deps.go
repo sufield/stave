@@ -52,7 +52,7 @@ type Builder struct {
 // NewBuilder constructs a Builder with sensible defaults for crypto.
 // Adapter factories (NewFindingWriter, NewCtlRepo, NewStdinObsRepo)
 // must be set by the caller before calling Build.
-func NewBuilder(logger *slog.Logger, opts *Options, params applyParams, sio standardIO) *Builder {
+func NewBuilder(logger *slog.Logger, opts *Options, params applyParams, sio StandardIO) *Builder {
 	return &Builder{
 		Logger:    logger,
 		Stdout:    sio.Stdout,

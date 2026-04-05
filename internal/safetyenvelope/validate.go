@@ -53,7 +53,6 @@ func validateRaw(kind, version string, data []byte) error {
 	return nil
 }
 
-// formatDiagnostics builds a single error from schema validation diagnostics.
 // DefaultMaxValidationErrors is the conservative default for how many schema
 // validation errors are shown before truncating. Override via SetMaxValidationErrors.
 const DefaultMaxValidationErrors = 3

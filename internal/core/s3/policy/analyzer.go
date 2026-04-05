@@ -136,7 +136,7 @@ func analyzeExternalAccess(res *Assessment, state *analysisState, stmt Statement
 	res.HasExternalAccess = true
 
 	mask, _ := stmt.ResolveActions()
-	if mask.has(actionWrite) || mask.has(actionDelete) || mask.has(actionACLWrite) {
+	if mask.has(ActionWrite) || mask.has(ActionDelete) || mask.has(actionACLWrite) {
 		res.HasExternalWrite = true
 	}
 
@@ -156,8 +156,8 @@ func analyzeExternalAccess(res *Assessment, state *analysisState, stmt Statement
 
 type analysisState struct {
 	weakestScope kernel.NetworkScope
-	publicPerms  actionMask
-	authPerms    actionMask
+	publicPerms  ActionMask
+	authPerms    ActionMask
 	seenAccounts map[string]struct{}
 }
 
@@ -170,16 +170,16 @@ func (s *analysisState) updateWeakestScope(scope kernel.NetworkScope) {
 func (r *Assessment) applyMasks(state *analysisState) {
 	r.EffectiveNetworkScope = state.weakestScope
 
-	r.AllowsPublicRead = state.publicPerms.has(actionRead)
-	r.AllowsPublicList = state.publicPerms.has(actionList)
-	r.AllowsPublicWrite = state.publicPerms.has(actionWrite)
-	r.AllowsPublicDelete = state.publicPerms.has(actionDelete)
+	r.AllowsPublicRead = state.publicPerms.has(ActionRead)
+	r.AllowsPublicList = state.publicPerms.has(ActionList)
+	r.AllowsPublicWrite = state.publicPerms.has(ActionWrite)
+	r.AllowsPublicDelete = state.publicPerms.has(ActionDelete)
 	r.AllowsPublicACLWrite = state.publicPerms.has(actionACLWrite)
 	r.AllowsPublicACLRead = state.publicPerms.has(actionACLRead)
 
-	r.AllowsAuthenticatedRead = state.authPerms.has(actionRead)
-	r.AllowsAuthenticatedList = state.authPerms.has(actionList)
-	r.AllowsAuthenticatedWrite = state.authPerms.has(actionWrite)
+	r.AllowsAuthenticatedRead = state.authPerms.has(ActionRead)
+	r.AllowsAuthenticatedList = state.authPerms.has(ActionList)
+	r.AllowsAuthenticatedWrite = state.authPerms.has(ActionWrite)
 	r.AllowsAuthenticatedACLWrite = state.authPerms.has(actionACLWrite)
 	r.AllowsAuthenticatedACLRead = state.authPerms.has(actionACLRead)
 }

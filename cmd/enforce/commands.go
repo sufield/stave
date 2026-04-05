@@ -16,22 +16,39 @@ import (
 
 // Factory functions for individual enforcement commands.
 
+// NewGenerateCmd constructs the generatecmd component.
 func NewGenerateCmd() *cobra.Command { return generate.NewCmd() }
+
+// NewDiffCmd constructs the diffcmd component.
 func NewDiffCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	return diff.NewCmd(loadSnapshots)
 }
+
+// NewFixCmd constructs the fixcmd component.
 func NewFixCmd(deps fix.Deps) *cobra.Command {
 	return fix.NewFixCmd(deps)
 }
+
+// NewFixLoopCmd constructs the fixloopcmd component.
 func NewFixLoopCmd(deps fix.LoopDeps) *cobra.Command {
 	return fix.NewFixLoopCmd(deps)
 }
+
+// NewGateCmd constructs the gatecmd component.
 func NewGateCmd(deps gate.Deps) *cobra.Command {
 	return gate.NewCmd(deps)
 }
-func NewCiDiffCmd(deps cidiff.Deps) *cobra.Command     { return cidiff.NewCmd(deps) }
+
+// NewCiDiffCmd constructs the cidiffcmd component.
+func NewCiDiffCmd(deps cidiff.Deps) *cobra.Command { return cidiff.NewCmd(deps) }
+
+// NewBaselineCmd constructs the baselinecmd component.
 func NewBaselineCmd(deps baseline.Deps) *cobra.Command { return baseline.NewCmd(deps) }
-func NewStatusCmd() *cobra.Command                     { return status.NewCmd() }
+
+// NewStatusCmd constructs the statuscmd component.
+func NewStatusCmd() *cobra.Command { return status.NewCmd() }
+
+// NewGraphCmd constructs the graphcmd component.
 func NewGraphCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	return graph.NewCmd(newCtlRepo, loadSnapshots)
 }

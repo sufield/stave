@@ -8,13 +8,13 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func mapRiskItems(items risk.ThresholdItems) []UpcomingSnapshot {
+func mapRiskItems(items risk.ThresholdItems) []Snapshot {
 	if len(items) == 0 {
 		return nil
 	}
-	out := make([]UpcomingSnapshot, len(items))
+	out := make([]Snapshot, len(items))
 	for i, d := range items {
-		out[i] = UpcomingSnapshot{
+		out[i] = Snapshot{
 			DueAt:          d.DueAt,
 			Status:         d.Status,
 			ControlID:      d.ControlID,
@@ -29,11 +29,11 @@ func mapRiskItems(items risk.ThresholdItems) []UpcomingSnapshot {
 	return out
 }
 
-func sanitizeItems(s kernel.Sanitizer, items []UpcomingSnapshot) []UpcomingSnapshot {
+func sanitizeItems(s kernel.Sanitizer, items []Snapshot) []Snapshot {
 	if s == nil || len(items) == 0 {
 		return items
 	}
-	out := make([]UpcomingSnapshot, len(items))
+	out := make([]Snapshot, len(items))
 	for i, item := range items {
 		item.AssetID = asset.ID(s.ID(string(item.AssetID)))
 		out[i] = item
@@ -41,7 +41,7 @@ func sanitizeItems(s kernel.Sanitizer, items []UpcomingSnapshot) []UpcomingSnaps
 	return out
 }
 
-func summarizeUpcoming(items []UpcomingSnapshot, dueSoonThreshold time.Duration) UpcomingSummary {
+func summarizeUpcoming(items []Snapshot, dueSoonThreshold time.Duration) Summary {
 	// Convert to risk.ThresholdItems for canonical summarization.
 	riskItems := make(risk.ThresholdItems, len(items))
 	for i, item := range items {
@@ -51,7 +51,7 @@ func summarizeUpcoming(items []UpcomingSnapshot, dueSoonThreshold time.Duration)
 		}
 	}
 	s := riskItems.Summarize(dueSoonThreshold)
-	return UpcomingSummary{
+	return Summary{
 		Overdue: s.Overdue,
 		DueNow:  s.DueNow,
 		DueSoon: s.DueSoon,

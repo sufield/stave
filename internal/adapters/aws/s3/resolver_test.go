@@ -77,6 +77,6 @@ func TestResolverUnknownAction(t *testing.T) {
 	}
 }
 
-func TestResolverImplementsInterface(t *testing.T) {
+func TestResolverImplementsInterface(_ *testing.T) {
 	var _ risk.PermissionResolver = (*Resolver)(nil)
 }

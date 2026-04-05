@@ -15,6 +15,7 @@ type ReportEvaluationLoaderPort interface {
 	LoadEvaluation(ctx context.Context, path string) (*safetyenvelope.Evaluation, error)
 }
 
+// ReportDeps represents a reportdeps value.
 type ReportDeps struct {
 	Loader ReportEvaluationLoaderPort
 }
@@ -38,6 +39,7 @@ type EnforceTemplateGeneratorPort interface {
 	GenerateTemplate(ctx context.Context, req EnforceRequest) (EnforceResponse, error)
 }
 
+// EnforceDeps represents a enforcedeps value.
 type EnforceDeps struct {
 	Generator EnforceTemplateGeneratorPort
 }
@@ -61,6 +63,7 @@ type PromptGeneratorPort interface {
 	GeneratePrompt(ctx context.Context, req PromptFromFindingRequest) (PromptFromFindingResponse, error)
 }
 
+// PromptFromFindingDeps represents a promptfromfindingdeps value.
 type PromptFromFindingDeps struct {
 	Generator PromptGeneratorPort
 }
@@ -85,6 +88,7 @@ func PromptFromFinding(ctx context.Context, req PromptFromFindingRequest, deps P
 
 // --- Prompt Types ---
 
+// PromptFromFindingRequest represents a promptfromfindingrequest value.
 type PromptFromFindingRequest struct {
 	EvaluationFile  string `json:"evaluation_file"`
 	AssetID         string `json:"asset_id"`
@@ -92,6 +96,7 @@ type PromptFromFindingRequest struct {
 	ObservationsDir string `json:"observations_dir,omitempty"`
 }
 
+// PromptFromFindingResponse represents a promptfromfindingresponse value.
 type PromptFromFindingResponse struct {
 	Rendered   string   `json:"rendered"`
 	FindingIDs []string `json:"finding_ids"`
@@ -100,6 +105,7 @@ type PromptFromFindingResponse struct {
 
 // --- Report Types ---
 
+// ReportRequest represents a reportrequest value.
 type ReportRequest struct {
 	InputFile    string `json:"input_file"`
 	TemplateFile string `json:"template_file,omitempty"`
@@ -107,12 +113,14 @@ type ReportRequest struct {
 	Quiet        bool   `json:"quiet,omitempty"`
 }
 
+// ReportResponse represents a reportresponse value.
 type ReportResponse struct {
 	EvaluationData *safetyenvelope.Evaluation `json:"evaluation_data"`
 }
 
 // --- CI Diff Types ---
 
+// CIDiffRequest represents a cidiffrequest value.
 type CIDiffRequest struct {
 	CurrentPath  string `json:"current_path"`
 	BaselinePath string `json:"baseline_path"`
@@ -120,6 +128,7 @@ type CIDiffRequest struct {
 	Sanitize     bool   `json:"sanitize,omitempty"`
 }
 
+// CIDiffResponse represents a cidiffresponse value.
 type CIDiffResponse struct {
 	CurrentEvaluation  string            `json:"current_evaluation"`
 	BaselineEvaluation string            `json:"baseline_evaluation"`
@@ -130,6 +139,7 @@ type CIDiffResponse struct {
 	HasNew             bool              `json:"has_new"`
 }
 
+// CIDiffSummary represents a cidiffsummary value.
 type CIDiffSummary struct {
 	BaselineFindings int `json:"baseline_findings"`
 	CurrentFindings  int `json:"current_findings"`
@@ -139,6 +149,7 @@ type CIDiffSummary struct {
 
 // --- Enforce Types ---
 
+// EnforceRequest represents a enforcerequest value.
 type EnforceRequest struct {
 	InputPath string `json:"input_path"`
 	OutDir    string `json:"out_dir,omitempty"`
@@ -146,6 +157,7 @@ type EnforceRequest struct {
 	DryRun    bool   `json:"dry_run,omitempty"`
 }
 
+// EnforceResponse represents a enforceresponse value.
 type EnforceResponse struct {
 	OutputFile string   `json:"output_file"`
 	Targets    []string `json:"targets"`

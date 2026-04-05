@@ -1,3 +1,4 @@
+// Package identity provides unique run identifier generation.
 package identity
 
 import (

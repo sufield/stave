@@ -18,6 +18,7 @@ import (
 // Framework represents a normalized compliance standard (e.g., "nist_800_53").
 type Framework string
 
+// Supported compliance framework identifiers.
 const (
 	FrameworkNIST   Framework = "nist_800_53"
 	FrameworkCISAWS Framework = "cis_aws_v1.4.0"

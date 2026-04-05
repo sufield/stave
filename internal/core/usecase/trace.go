@@ -7,6 +7,7 @@ import (
 
 // --- Trace ---
 
+// TraceRequest is the input for the trace use case.
 type TraceRequest struct {
 	ControlID       string `json:"control_id"`
 	ControlsDir     string `json:"controls_dir,omitempty"`
@@ -14,6 +15,7 @@ type TraceRequest struct {
 	AssetID         string `json:"asset_id"`
 }
 
+// TraceResponse is the output of the trace use case.
 type TraceResponse struct {
 	TraceData any `json:"trace_data"`
 }

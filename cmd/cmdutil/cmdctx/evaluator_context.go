@@ -1,3 +1,4 @@
+// Package cmdctx provides evaluation-level context propagation.
 package cmdctx
 
 import (

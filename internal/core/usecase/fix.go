@@ -7,11 +7,13 @@ import (
 
 // --- Fix ---
 
+// FixRequest is the input for the fix use case.
 type FixRequest struct {
 	InputPath  string `json:"input_path"`
 	FindingRef string `json:"finding_ref"`
 }
 
+// FixResponse is the output of the fix use case.
 type FixResponse struct {
 	Data any `json:"data"`
 }
@@ -21,7 +23,7 @@ type FindingLoaderPort interface {
 	LoadFindingWithPlan(ctx context.Context, inputPath, findingRef string) (any, error)
 }
 
-// Deps groups the port interfaces for the fix use case.
+// FixDeps groups the port interfaces for the fix use case.
 type FixDeps struct {
 	Loader FindingLoaderPort
 }
@@ -56,6 +58,7 @@ type LoopDeps struct {
 
 // --- Fix Loop ---
 
+// FixLoopRequest is the input for the fix-loop use case.
 type FixLoopRequest struct {
 	BeforeDir         string `json:"before_dir"`
 	AfterDir          string `json:"after_dir"`
@@ -66,6 +69,7 @@ type FixLoopRequest struct {
 	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
 }
 
+// FixLoopResponse is the output of the fix-loop use case.
 type FixLoopResponse struct {
 	ReportData    any  `json:"report_data"`
 	HasViolations bool `json:"has_violations"`

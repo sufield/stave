@@ -3,7 +3,9 @@ package evaluation
 // ActionSeverity classifies the urgency of a response to an evaluation result.
 type ActionSeverity string
 
+// ActionPass and related constants.
 const (
+	// ActionPass constants.
 	ActionPass ActionSeverity = "pass"
 	ActionWarn ActionSeverity = "warn"
 	ActionFail ActionSeverity = "fail"

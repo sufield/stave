@@ -5,7 +5,9 @@ import "strings"
 // Score quantifies policy risk from 0 (Safe) to 100 (Catastrophic).
 type Score int
 
+// ScoreSafe and related constants.
 const (
+	// ScoreSafe constants.
 	ScoreSafe         Score = 0
 	ScoreInfo         Score = 10
 	ScoreWarning      Score = 40
@@ -16,7 +18,9 @@ const (
 // Permission is a bitmask representing generic resource capabilities.
 type Permission uint32
 
+// PermRead and related constants.
 const (
+	// PermRead constants.
 	PermRead Permission = 1 << iota
 	PermWrite
 	PermList

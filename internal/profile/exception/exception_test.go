@@ -96,13 +96,13 @@ exceptions:
 }
 
 func TestApplyExceptions_ValidException(t *testing.T) {
-	results := []profile.ProfileResult{
+	results := []profile.Result{
 		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
 		{Outcome: compliance.Outcome{ControlID: "CONTROLS.001", Pass: true, Severity: policy.SeverityHigh}},
 		{Outcome: compliance.Outcome{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
 	}
 
-	excs := []ExceptionConfig{{
+	excs := []Config{{
 		ControlID:       "ACCESS.001",
 		Bucket:          "my-bucket",
 		Rationale:       "CloudFront OAI",
@@ -128,13 +128,13 @@ func TestApplyExceptions_ValidException(t *testing.T) {
 }
 
 func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
-	results := []profile.ProfileResult{
+	results := []profile.Result{
 		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
 		{Outcome: compliance.Outcome{ControlID: "CONTROLS.001", Pass: false, Severity: policy.SeverityHigh}},
 		{Outcome: compliance.Outcome{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
 	}
 
-	excs := []ExceptionConfig{{
+	excs := []Config{{
 		ControlID:       "ACCESS.001",
 		Bucket:          "my-bucket",
 		Rationale:       "CloudFront OAI",
@@ -166,7 +166,7 @@ func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 }
 
 func TestApplyExceptions_NoExceptions(t *testing.T) {
-	results := []profile.ProfileResult{
+	results := []profile.Result{
 		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false}},
 	}
 	acks := ApplyExceptions(nil, results)
@@ -176,10 +176,10 @@ func TestApplyExceptions_NoExceptions(t *testing.T) {
 }
 
 func TestApplyExceptions_AlreadyPassing(t *testing.T) {
-	results := []profile.ProfileResult{
+	results := []profile.Result{
 		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: true}},
 	}
-	excs := []ExceptionConfig{{
+	excs := []Config{{
 		ControlID:       "ACCESS.001",
 		Bucket:          "my-bucket",
 		Rationale:       "test",

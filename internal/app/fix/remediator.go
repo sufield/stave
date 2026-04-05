@@ -20,5 +20,8 @@ type Remediator interface {
 // Use this for automated pipelines and headless execution.
 type NopRemediator struct{}
 
+// ConfirmFix implements the confirmfix operation.
 func (NopRemediator) ConfirmFix(string, string) bool { return true }
-func (NopRemediator) LogProgress(string)             {}
+
+// LogProgress implements the logprogress operation.
+func (NopRemediator) LogProgress(string) {}

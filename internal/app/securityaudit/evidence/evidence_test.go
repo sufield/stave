@@ -119,7 +119,7 @@ func TestFindRepoRootWith_NoGoMod(t *testing.T) {
 	}
 }
 
-func TestFindRepoRootWith_EmptyStart(t *testing.T) {
+func TestFindRepoRootWith_EmptyStart(_ *testing.T) {
 	// When start is empty, uses getwd
 	root, err := findRepoRootWith("", os.Getwd, os.Stat)
 	// May or may not find go.mod depending on cwd, just ensure no panic.
@@ -130,7 +130,7 @@ func TestFindRepoRootWith_EmptyStart(t *testing.T) {
 func TestFindRepoRootWith_GetwdError(t *testing.T) {
 	_, err := findRepoRootWith("", func() (string, error) {
 		return "", os.ErrNotExist
-	}, func(s string) (fs.FileInfo, error) {
+	}, func(_ string) (fs.FileInfo, error) {
 		return nil, os.ErrNotExist
 	})
 	if err == nil {

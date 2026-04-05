@@ -5,47 +5,48 @@ import (
 	"strings"
 )
 
-// actionMask uses bit-flags to represent categories of IAM actions.
-type actionMask uint8
+// ActionMask uses bit-flags to represent categories of IAM actions.
+type ActionMask uint8
 
+// IAM action category bitmask constants.
 const (
-	actionRead actionMask = 1 << iota
-	actionList
-	actionWrite
-	actionDelete
+	ActionRead ActionMask = 1 << iota
+	ActionList
+	ActionWrite
+	ActionDelete
 	actionACLRead
 	actionACLWrite
 
-	actionAll = actionRead | actionList | actionWrite | actionDelete | actionACLRead | actionACLWrite
+	actionAll = ActionRead | ActionList | ActionWrite | ActionDelete | actionACLRead | actionACLWrite
 )
 
 // has checks if the mask contains a specific flag.
-func (m actionMask) has(flag actionMask) bool {
+func (m ActionMask) has(flag ActionMask) bool {
 	return m&flag != 0
 }
 
 // actionRegistry maps common S3 actions to their functional categories.
-var actionRegistry = map[string]actionMask{
+var actionRegistry = map[string]ActionMask{
 	wildcard:   actionAll,
 	s3Wildcard: actionAll,
 
-	actionGetObject:          actionRead,
-	actionListBucket:         actionList,
-	actionListBucketVersions: actionList,
-	actionPutObject:          actionWrite,
-	actionPutObjectACL:       actionWrite | actionACLWrite,
-	actionPutBucketPolicy:    actionWrite,
-	actionDeleteObject:       actionDelete,
-	actionDeleteBucket:       actionDelete,
+	actionGetObject:          ActionRead,
+	actionListBucket:         ActionList,
+	actionListBucketVersions: ActionList,
+	actionPutObject:          ActionWrite,
+	actionPutObjectACL:       ActionWrite | actionACLWrite,
+	actionPutBucketPolicy:    ActionWrite,
+	actionDeleteObject:       ActionDelete,
+	actionDeleteBucket:       ActionDelete,
 	actionPutBucketACL:       actionACLWrite,
 	actionGetBucketACL:       actionACLRead,
 	actionGetObjectACL:       actionACLRead,
 }
 
 // ResolveActions aggregates all actions in a statement into a single bitmask.
-func (s Statement) ResolveActions() (actionMask, bool) {
+func (s Statement) ResolveActions() (ActionMask, bool) {
 	var (
-		mask            actionMask
+		mask            ActionMask
 		hasFullWildcard bool
 	)
 	for _, action := range s.Action {
@@ -60,19 +61,19 @@ func (s Statement) ResolveActions() (actionMask, bool) {
 }
 
 // classifyAction identifies the category of an individual IAM action string.
-func classifyAction(action string) (actionMask, bool) {
+func classifyAction(action string) (ActionMask, bool) {
 	if mask, ok := actionRegistry[action]; ok {
 		return mask, isWildcardAction(action)
 	}
 	switch {
 	case strings.HasPrefix(action, actionPrefixGet):
-		return actionRead, false
+		return ActionRead, false
 	case strings.HasPrefix(action, actionPrefixList):
-		return actionList, false
+		return ActionList, false
 	case strings.HasPrefix(action, actionPrefixPut):
-		return actionWrite, false
+		return ActionWrite, false
 	case strings.HasPrefix(action, actionPrefixDelete):
-		return actionDelete, false
+		return ActionDelete, false
 	default:
 		return 0, false
 	}
@@ -82,14 +83,14 @@ func classifyAction(action string) (actionMask, bool) {
 // or ACL-write access.
 func isWriteAction(action string) bool {
 	mask, _ := classifyAction(strings.ToLower(action))
-	return mask.has(actionWrite) || mask.has(actionDelete) || mask.has(actionACLWrite)
+	return mask.has(ActionWrite) || mask.has(ActionDelete) || mask.has(actionACLWrite)
 }
 
 // GrantsReadAccess reports whether the statement's actions include object read
 // capability (s3:GetObject, s3:*, or *).
 func (s Statement) GrantsReadAccess() bool {
 	mask, _ := s.ResolveActions()
-	return mask.has(actionRead)
+	return mask.has(ActionRead)
 }
 
 // hasWildcardResource reports whether any resource matches all S3 objects.

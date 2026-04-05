@@ -11,6 +11,7 @@ import (
 // Constants are ordered by iota so that Gte is a simple integer comparison.
 type Severity int
 
+// Severity level constants ordered from least to most critical.
 const (
 	SeverityNone     Severity = iota
 	SeverityInfo              // 1

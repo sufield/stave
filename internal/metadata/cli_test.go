@@ -30,7 +30,7 @@ func TestDocsRef_WithEnvURL(t *testing.T) {
 	}
 }
 
-func TestIssuesRef(t *testing.T) {
+func TestIssuesRef(_ *testing.T) {
 	// Just verify it doesn't panic and returns a string
 	got := IssuesRef()
 	_ = got

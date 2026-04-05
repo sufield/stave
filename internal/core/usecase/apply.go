@@ -1,3 +1,5 @@
+// Package usecase provides application-layer orchestration for stave commands
+// including apply, fix, gate, verify, and trace operations.
 package usecase
 
 import (
@@ -7,6 +9,7 @@ import (
 
 // --- Apply ---
 
+// ApplyRequest is the input for the apply use case.
 type ApplyRequest struct {
 	ControlsDir        string   `json:"controls_dir,omitempty"`
 	ObservationsDir    string   `json:"observations_dir,omitempty"`
@@ -24,6 +27,7 @@ type ApplyRequest struct {
 	IncludeAll         bool     `json:"include_all,omitempty"`
 }
 
+// ApplyResponse is the output of the apply use case.
 type ApplyResponse struct {
 	EvaluationData any      `json:"evaluation_data"`
 	HasViolations  bool     `json:"has_violations"`

@@ -168,7 +168,7 @@ func TestStrategyFor(t *testing.T) {
 
 type testDigester struct{}
 
-func (d *testDigester) Digest(items []string, sep byte) kernel.Digest {
+func (d *testDigester) Digest(_ []string, _ byte) kernel.Digest {
 	return kernel.Digest("sha256:testhash")
 }
 

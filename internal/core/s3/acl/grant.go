@@ -10,6 +10,7 @@ import (
 // Permission represents an S3 ACL permission string.
 type Permission string
 
+// S3 ACL permission constants.
 const (
 	ACLPermRead        Permission = "READ"
 	ACLPermWrite       Permission = "WRITE"

@@ -1,3 +1,5 @@
+// Package exposure implements the inspect exposure command that analyzes
+// S3 bucket exposure through public read and write access paths.
 package exposure
 
 import (

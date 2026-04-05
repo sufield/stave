@@ -21,6 +21,7 @@ import (
 // Format represents a validated graph output format.
 type Format string
 
+// Supported graph output formats.
 const (
 	FormatDot  Format = "dot"
 	FormatJSON Format = "json"
@@ -137,6 +138,8 @@ func coverageControlIDs(controls []policy.ControlDefinition) []kernel.ControlID 
 	return ids
 }
 
+// CoverageEdges computes edges between controls and assets where the control's
+// predicate matches the asset, returning the edges and a set of covered asset IDs.
 func CoverageEdges(
 	controls []policy.ControlDefinition,
 	assetMap map[asset.ID]asset.Asset,

@@ -1,3 +1,4 @@
+// Package plan provides snapshot retention plan execution.
 package plan
 
 import (

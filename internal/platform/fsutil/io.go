@@ -24,7 +24,7 @@ const DefaultMaxInputFileBytes int64 = 256 << 20
 
 // maxInputFileBytes is the active safety limit. Starts at the default and can
 // be overridden once at startup via SetMaxInputFileBytes.
-var maxInputFileBytes int64 = DefaultMaxInputFileBytes
+var maxInputFileBytes = DefaultMaxInputFileBytes
 
 // SetMaxInputFileBytes overrides the input file safety limit. Call this once
 // during CLI bootstrap, before any file reads. Values <= 0 are ignored.
@@ -231,7 +231,7 @@ func SafeOpenAppend(path string, opts WriteOptions) (*os.File, error) {
 // maxParentWalk is a safety cap to prevent infinite loops on malformed paths.
 const maxParentWalk = 16
 
-// checkSymlinkSafety checks the target and its first existing ancestor for symlinks.
+// CheckSymlinkSafety checks the target and its first existing ancestor for symlinks.
 // Callers that obtain a file handle should also use verifyHandle for TOCTOU-safe
 // confirmation.
 func CheckSymlinkSafety(path string) error {

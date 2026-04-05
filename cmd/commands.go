@@ -172,7 +172,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 	ciCmd.AddCommand(enforce.NewBaselineCmd(baseline.Deps{
 		SaveDeps: reporting.BaselineSaveDeps{
 			Loader: &infrabaseline.EvaluationLoader{},
-			Writer: &infrabaseline.BaselineWriter{
+			Writer: &infrabaseline.Writer{
 				OpenFile: func(path string) (*os.File, error) {
 					return fileout.OpenOutputFile(path, baselineFileOpts)
 				},
@@ -181,7 +181,7 @@ func wireCISubtree(ciCmd *cobra.Command, p *compose.Provider) {
 		},
 		CheckDeps: reporting.BaselineCheckDeps{
 			EvalLoader:     &infrabaseline.EvaluationLoader{},
-			BaselineLoader: &infrabaseline.BaselineLoader{},
+			BaselineLoader: &infrabaseline.Loader{},
 			Clock:          ports.RealClock{},
 		},
 	}))

@@ -61,8 +61,8 @@ type ObservationDeltaSummary struct {
 	total    int
 }
 
-// CONTRACT: Summary total must always equal the sum of Added, Removed, and Modified.
 // Increment updates summary counters for a single change type.
+// CONTRACT: Summary total must always equal the sum of Added, Removed, and Modified.
 func (s *ObservationDeltaSummary) Increment(changeType ChangeType) {
 	switch changeType {
 	case ChangeAdded:
@@ -77,18 +77,22 @@ func (s *ObservationDeltaSummary) Increment(changeType ChangeType) {
 	s.total++
 }
 
+// Added returns the count of added assets.
 func (s ObservationDeltaSummary) Added() int {
 	return s.added
 }
 
+// Removed returns the count of removed assets.
 func (s ObservationDeltaSummary) Removed() int {
 	return s.removed
 }
 
+// Modified returns the count of modified assets.
 func (s ObservationDeltaSummary) Modified() int {
 	return s.modified
 }
 
+// Total returns the total count of changed assets.
 func (s ObservationDeltaSummary) Total() int {
 	return s.total
 }
@@ -97,6 +101,7 @@ func (s ObservationDeltaSummary) matchesChangeCount(changeCount int) bool {
 	return s.total == s.added+s.removed+s.modified && s.total == changeCount
 }
 
+// MarshalJSON implements json.Marshaler for the summary.
 func (s ObservationDeltaSummary) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Added    int `json:"added"`

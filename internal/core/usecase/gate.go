@@ -10,6 +10,7 @@ import (
 
 // --- Gate ---
 
+// GateRequest is the input for the CI gate use case.
 type GateRequest struct {
 	Policy            string        `json:"policy"`
 	EvaluationPath    string        `json:"evaluation_path,omitempty"`
@@ -20,6 +21,7 @@ type GateRequest struct {
 	Now               *time.Time    `json:"now,omitempty"`
 }
 
+// GateResponse is the output of the CI gate use case.
 type GateResponse struct {
 	Policy            string    `json:"policy"`
 	Passed            bool      `json:"pass"`

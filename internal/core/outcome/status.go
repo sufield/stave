@@ -10,6 +10,7 @@ import (
 // Status represents the result of a check or evaluation.
 type Status int
 
+// Check result status constants.
 const (
 	Unknown Status = iota
 	Pass

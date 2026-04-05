@@ -148,12 +148,12 @@ func TestMoveSnapshotFile_RejectsSourceSymlink(t *testing.T) {
 	}
 
 	tmp := t.TempDir()
-	real := filepath.Join(tmp, "real.json")
-	if err := os.WriteFile(real, []byte(`{"ok":true}`), 0o644); err != nil {
-		t.Fatalf("write real: %v", err)
+	realFile := filepath.Join(tmp, "realFile.json")
+	if err := os.WriteFile(realFile, []byte(`{"ok":true}`), 0o644); err != nil {
+		t.Fatalf("write realFile: %v", err)
 	}
 	src := filepath.Join(tmp, "link.json")
-	if err := os.Symlink(real, src); err != nil {
+	if err := os.Symlink(realFile, src); err != nil {
 		t.Fatalf("symlink: %v", err)
 	}
 	dst := filepath.Join(tmp, "dst.json")

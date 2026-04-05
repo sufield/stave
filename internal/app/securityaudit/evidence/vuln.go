@@ -48,12 +48,14 @@ type vulnFallbackEnvelope struct {
 	GeneratedAt  string         `json:"generated_at"`
 }
 
+// DefaultVulnProvider represents a defaultvulnprovider value.
 type DefaultVulnProvider struct {
 	RunGovulncheck VulnerabilityScanner
 	ReadFile       func(path string) ([]byte, error)
 	StatFile       func(string) (fs.FileInfo, error)
 }
 
+// Resolve implements the resolve operation.
 func (p DefaultVulnProvider) Resolve(ctx context.Context, req Params) (VulnerabilitySnapshot, error) {
 	if shouldAttemptLiveCheck(req) {
 		live, liveErr := executeGovulncheck(ctx, req.Cwd, p.RunGovulncheck, req.Now)

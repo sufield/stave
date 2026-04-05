@@ -31,10 +31,12 @@ func Doctor(ctx context.Context, req DoctorRequest, deps DoctorDeps) (DoctorResp
 
 // --- Status ---
 
+// StatusRequest is the input for the project status check.
 type StatusRequest struct {
 	Dir string `json:"dir,omitempty"`
 }
 
+// StatusResponse is the output of the project status check.
 type StatusResponse struct {
 	StateData   any    `json:"state_data"`
 	NextCommand string `json:"next_command,omitempty"`

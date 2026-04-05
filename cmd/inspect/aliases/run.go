@@ -9,8 +9,8 @@ import (
 	domainpredicate "github.com/sufield/stave/internal/core/predicate"
 )
 
-// AliasesOutput is the JSON output of the aliases inspector.
-type AliasesOutput struct {
+// Output is the JSON output of the aliases inspector.
+type Output struct {
 	Aliases            []predicates.AliasInfo `json:"aliases"`
 	SupportedOperators []string               `json:"supported_operators"`
 }
@@ -25,7 +25,7 @@ func run(cmd *cobra.Command, category string) error {
 		opStrings[i] = string(op)
 	}
 
-	output := AliasesOutput{
+	output := Output{
 		Aliases:            aliasInfos,
 		SupportedOperators: opStrings,
 	}

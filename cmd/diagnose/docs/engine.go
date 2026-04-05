@@ -1,3 +1,5 @@
+// Package docs provides the diagnose docs subcommand engine that renders
+// diagnostic documentation from control definitions.
 package docs
 
 import (

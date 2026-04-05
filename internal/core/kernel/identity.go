@@ -24,7 +24,7 @@ type AWSAccountARN string
 // ObservationSourceType identifies the extraction method that produced an observation.
 type ObservationSourceType string
 
-// Canonical source types supported by built-in adapters.
+// SourceTypeAWSS3Snapshot is the canonical source type for AWS S3 snapshot observations.
 const SourceTypeAWSS3Snapshot ObservationSourceType = "aws-s3-snapshot"
 
 func (t ObservationSourceType) String() string { return string(t) }

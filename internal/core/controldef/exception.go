@@ -1,9 +1,10 @@
+package controldef
+
 // exception.go provides finding-level exception functionality.
 // Unlike exemptions (which skip entire assets), exceptions silence
 // specific control+asset pairs with an audit trail and expiry date.
 // Excepted findings are still evaluated but partitioned into a separate
 // output array — nothing is silently dropped.
-package controldef
 
 import (
 	"fmt"

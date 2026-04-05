@@ -55,18 +55,29 @@ func NewDefaultProvider() *Provider {
 	}
 }
 
-// Factory types for narrow dependency injection. Commands accept these
-// instead of *Provider so their dependencies are explicit.
-type (
-	ObsRepoFactory       = func() (appcontracts.ObservationRepository, error)
-	CtlRepoFactory       = func() (appcontracts.ControlRepository, error)
-	SnapshotRepoFactory  = func() (appcontracts.SnapshotReader, error)
-	CELEvaluatorFactory  = func() (policy.PredicateEval, error)
-	FindingWriterFactory = func(appcontracts.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
-	SnapshotLoader       = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
-	ControlLoaderFunc    = func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
-	AssetLoaderFunc      = func(ctx context.Context, obsDir, ctlDir string) (Assets, error)
-)
+// ObsRepoFactory creates an observation repository for loading snapshots.
+type ObsRepoFactory = func() (appcontracts.ObservationRepository, error)
+
+// CtlRepoFactory creates a control repository for loading control definitions.
+type CtlRepoFactory = func() (appcontracts.ControlRepository, error)
+
+// SnapshotRepoFactory creates a snapshot reader for loading observations.
+type SnapshotRepoFactory = func() (appcontracts.SnapshotReader, error)
+
+// CELEvaluatorFactory creates a CEL predicate evaluator.
+type CELEvaluatorFactory = func() (policy.PredicateEval, error)
+
+// FindingWriterFactory creates a finding marshaler for the given output format.
+type FindingWriterFactory = func(appcontracts.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
+
+// SnapshotLoader loads observation snapshots from a directory.
+type SnapshotLoader = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
+
+// ControlLoaderFunc loads control definitions from a directory.
+type ControlLoaderFunc = func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
+
+// AssetLoaderFunc loads assets from observation and control directories.
+type AssetLoaderFunc = func(ctx context.Context, obsDir, ctlDir string) (Assets, error)
 
 // --- Provider Repository Methods ---
 

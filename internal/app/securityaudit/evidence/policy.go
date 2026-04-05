@@ -30,6 +30,7 @@ type filesystemDeclaration struct {
 	GeneratedAt string   `json:"generated_at"`
 }
 
+// DefaultPolicyInspector represents a defaultpolicyinspector value.
 type DefaultPolicyInspector struct {
 	ReadFile     func(path string) ([]byte, error)
 	StatFile     func(string) (fs.FileInfo, error)
@@ -38,6 +39,7 @@ type DefaultPolicyInspector struct {
 	WalkDir      func(string, WalkFunc) error
 }
 
+// Inspect implements the inspect operation.
 func (d DefaultPolicyInspector) Inspect(_ context.Context, req Params) (PolicyInspectionSnapshot, error) {
 	root, err := findRepoRootWith(req.Cwd, func() (string, error) { return req.Cwd, nil }, d.StatFile)
 	if err != nil {

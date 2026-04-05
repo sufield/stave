@@ -41,6 +41,8 @@ const (
 	FlagControlsShort = "i"
 )
 
+// DynamicDefaultHelpSuffix is appended to flag help text when the default
+// value may be resolved from environment variables, project config, or user config.
 const DynamicDefaultHelpSuffix = " Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in."
 
 // GlobalFlags represents the state of persistent flags registered at the root.

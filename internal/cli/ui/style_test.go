@@ -57,7 +57,7 @@ func TestCanColor_CachesTTYCheckPerWriter(t *testing.T) {
 	})
 
 	calls := 0
-	detectTTY = func(f *os.File) bool {
+	detectTTY = func(_ *os.File) bool {
 		calls++
 		return false
 	}

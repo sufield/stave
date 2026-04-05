@@ -222,7 +222,7 @@ func extractBucketName(snap asset.Snapshot) string {
 	return "unknown"
 }
 
-func extractAccountID(snap asset.Snapshot) string {
+func extractAccountID(_ asset.Snapshot) string {
 	// Try to extract from ARN: arn:aws:s3:::bucket → no account.
 	// For now return a placeholder; real extraction depends on extractor.
 	return "000000000000"

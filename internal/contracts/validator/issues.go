@@ -16,6 +16,7 @@ import (
 // DiagnosticCategory identifies specific classes of schema failures.
 type DiagnosticCategory string
 
+// Schema diagnostic category constants.
 const (
 	CatAdditionalProperties DiagnosticCategory = "additional_properties"
 	CatRequired             DiagnosticCategory = "required"

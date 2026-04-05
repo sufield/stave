@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// DefaultBuildInfoProvider represents a defaultbuildinfoprovider value.
 type DefaultBuildInfoProvider struct{}
 
 type buildInfoModule struct {
@@ -30,6 +31,7 @@ type buildInfoPayload struct {
 	Generated string            `json:"generated_at"`
 }
 
+// Collect implements the collect operation.
 func (DefaultBuildInfoProvider) Collect(now time.Time) (BuildInfoSnapshot, error) {
 	out := BuildInfoSnapshot{
 		Settings: map[string]string{},

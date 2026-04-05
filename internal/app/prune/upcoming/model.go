@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// Item represents a single upcoming snapshot action item.
-type UpcomingSnapshot struct {
+// Snapshot represents a single upcoming snapshot action item.
+type Snapshot struct {
 	DueAt          time.Time
 	Status         risk.ThresholdStatus
 	ControlID      kernel.ControlID
@@ -21,8 +21,8 @@ type UpcomingSnapshot struct {
 	Remaining      time.Duration
 }
 
-// UpcomingSummary holds aggregate counts for upcoming items by status.
-type UpcomingSummary struct {
+// Summary holds aggregate counts for upcoming items by status.
+type Summary struct {
 	Overdue int
 	DueNow  int
 	DueSoon int
@@ -30,15 +30,15 @@ type UpcomingSummary struct {
 	Total   int
 }
 
-// UpcomingReport is the JSON-serializable output for the upcoming command.
-type UpcomingReport struct {
-	GeneratedAt       time.Time          `json:"generated_at"`
-	ControlsDir       string             `json:"controls_dir"`
-	Observations      string             `json:"observations_dir"`
-	MaxUnsafeDuration string             `json:"max_unsafe"`
-	DueSoon           string             `json:"due_soon"`
-	UpcomingSummary   UpcomingSummary    `json:"summary"`
-	Items             []UpcomingSnapshot `json:"items"`
+// Report is the JSON-serializable output for the upcoming command.
+type Report struct {
+	GeneratedAt       time.Time  `json:"generated_at"`
+	ControlsDir       string     `json:"controls_dir"`
+	Observations      string     `json:"observations_dir"`
+	MaxUnsafeDuration string     `json:"max_unsafe"`
+	DueSoon           string     `json:"due_soon"`
+	Summary           Summary    `json:"summary"`
+	Items             []Snapshot `json:"items"`
 }
 
 // FilterCriteria holds filter rules for upcoming action items.

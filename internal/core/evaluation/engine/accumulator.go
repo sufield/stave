@@ -48,6 +48,7 @@ func (a *Accumulator) TrackExemption(id asset.ID) bool {
 	return a.exemptAssets.Add(id)
 }
 
+// AddSkippedControl records a control that was skipped during evaluation.
 func (a *Accumulator) AddSkippedControl(id kernel.ControlID, name, reason string) {
 	a.skippedByCtl = append(a.skippedByCtl, evaluation.SkippedControl{
 		ControlID:   id,
@@ -56,6 +57,7 @@ func (a *Accumulator) AddSkippedControl(id kernel.ControlID, name, reason string
 	})
 }
 
+// AddExemptedAsset records an asset that was exempted from evaluation.
 func (a *Accumulator) AddExemptedAsset(id asset.ID, pattern, reason string) {
 	a.exemptedByAst = append(a.exemptedByAst, asset.ExemptedAsset{
 		ID:      id,
@@ -64,10 +66,12 @@ func (a *Accumulator) AddExemptedAsset(id asset.ID, pattern, reason string) {
 	})
 }
 
+// AddRow appends an observation row to the accumulator.
 func (a *Accumulator) AddRow(row evaluation.Observation) {
 	a.rows = append(a.rows, row)
 }
 
+// AddFindings appends non-nil findings to the accumulator.
 func (a *Accumulator) AddFindings(findings []*evaluation.Finding) {
 	for _, f := range findings {
 		if f != nil {

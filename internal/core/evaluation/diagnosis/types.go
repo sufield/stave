@@ -11,7 +11,9 @@ import (
 // Scenario represents the category of the diagnostic result.
 type Scenario string
 
+// ScenarioExpectedNone and related constants.
 const (
+	// ScenarioExpectedNone constants.
 	ScenarioExpectedNone      Scenario = "expected_violations_none"
 	ScenarioViolationEvidence Scenario = "violation_evidence"
 	ScenarioEmptyFindings     Scenario = "empty_findings"

@@ -60,7 +60,7 @@ func AuditGitStatus(baseDir string, watchPaths []string) *evaluation.GitInfo {
 
 // WarnGitDirty logs a warning if the repository is dirty.
 // Callers should skip this call entirely when in quiet mode.
-func WarnGitDirty(stderr io.Writer, git *evaluation.GitInfo, label string) {
+func WarnGitDirty(_ io.Writer, git *evaluation.GitInfo, label string) {
 	if git == nil || !git.Dirty {
 		return
 	}

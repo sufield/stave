@@ -5,6 +5,7 @@ import "github.com/sufield/stave/internal/core/kernel"
 // Signal defines the severity of a diagnostic issue.
 type Signal string
 
+// Diagnostic signal severity levels.
 const (
 	SignalError Signal = "error"
 	SignalWarn  Signal = "warning"

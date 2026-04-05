@@ -34,6 +34,7 @@ func deriveConfigKeys() []string {
 	return keys
 }
 
+// TierKeyPrefix is the key prefix for snapshot retention tier configuration.
 const TierKeyPrefix = "snapshot_retention_tiers."
 
 // ParsedKey represents a validated config key reference.
@@ -263,7 +264,7 @@ func fieldByYAMLTag(v reflect.Value, tag string) (reflect.Value, bool) {
 	return reflect.Value{}, false
 }
 
-func structFieldNameByYAMLTag(cfg *ProjectConfig, yamlKey string) string {
+func structFieldNameByYAMLTag(_ *ProjectConfig, yamlKey string) string {
 	t := reflect.TypeFor[ProjectConfig]()
 	for field := range t.Fields() {
 		tag := strings.Split(field.Tag.Get("yaml"), ",")[0]

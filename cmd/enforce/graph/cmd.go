@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
+// NewCmd constructs the graph command group with its coverage subcommand.
 func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
 	graphCmd := &cobra.Command{
 		Use:   "graph",

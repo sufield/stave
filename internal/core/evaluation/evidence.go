@@ -76,11 +76,11 @@ type SourceEvidence struct {
 type DriftPattern string
 
 const (
-	// DriftPersistent: Asset has been unsafe since the very first observation.
+	// DriftPersistent indicates the asset has been unsafe since the very first observation.
 	DriftPersistent DriftPattern = "persistent"
-	// DriftDegraded: Asset was safe initially but has since entered an unsafe state.
+	// DriftDegraded indicates the asset was safe initially but has since entered an unsafe state.
 	DriftDegraded DriftPattern = "degraded"
-	// DriftIntermittent: Asset has toggled between safe and unsafe multiple times.
+	// DriftIntermittent indicates the asset has toggled between safe and unsafe multiple times.
 	DriftIntermittent DriftPattern = "intermittent"
 )
 

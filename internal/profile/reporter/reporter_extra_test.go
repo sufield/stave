@@ -59,10 +59,10 @@ func TestFilterBySeverity(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestTextReporter_PassingReport(t *testing.T) {
-	report := profile.ProfileReport{
+	report := profile.Report{
 		ProfileName: "HIPAA Security Rule",
 		Pass:        true,
-		Results:     []profile.ProfileResult{},
+		Results:     []profile.Result{},
 		Counts:      map[policy.Severity]int{},
 		FailCounts:  map[policy.Severity]int{},
 	}
@@ -81,10 +81,10 @@ func TestTextReporter_PassingReport(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestTextReporter_CompoundFindings(t *testing.T) {
-	report := profile.ProfileReport{
+	report := profile.Report{
 		ProfileName: "HIPAA Security Rule",
 		Pass:        false,
-		CompoundFindings: []compound.CompoundFinding{
+		CompoundFindings: []compound.Finding{
 			{
 				ID:         "COMPOUND.001",
 				Severity:   policy.SeverityCritical,
@@ -92,7 +92,7 @@ func TestTextReporter_CompoundFindings(t *testing.T) {
 				Message:    "Multiple critical failures compound risk",
 			},
 		},
-		Results:    []profile.ProfileResult{},
+		Results:    []profile.Result{},
 		Counts:     map[policy.Severity]int{},
 		FailCounts: map[policy.Severity]int{},
 	}
@@ -111,7 +111,7 @@ func TestTextReporter_CompoundFindings(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestTextReporter_Acknowledged(t *testing.T) {
-	report := profile.ProfileReport{
+	report := profile.Report{
 		ProfileName: "HIPAA Security Rule",
 		Pass:        true,
 		Acknowledged: []profile.AcknowledgedEntry{
@@ -131,7 +131,7 @@ func TestTextReporter_Acknowledged(t *testing.T) {
 				InvalidReason:  "exception expired",
 			},
 		},
-		Results:    []profile.ProfileResult{},
+		Results:    []profile.Result{},
 		Counts:     map[policy.Severity]int{},
 		FailCounts: map[policy.Severity]int{},
 	}

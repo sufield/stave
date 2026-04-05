@@ -9,6 +9,7 @@ import (
 // TrustBoundary classifies the network/identity boundary of an access exposure.
 type TrustBoundary int
 
+// Trust boundary classification constants.
 const (
 	BoundaryUnknown      TrustBoundary = iota
 	BoundaryExternal                   // Reachable by anyone (public or authenticated cloud users)

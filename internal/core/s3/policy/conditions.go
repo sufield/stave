@@ -174,6 +174,6 @@ type ConditionAnalysis struct {
 }
 
 // IsNetworkScoped reports whether any network-scoping condition is present.
-func (c ConditionAnalysis) IsNetworkScoped() bool {
-	return c.HasIPCondition || c.HasVPCCondition || c.HasOrgCondition
+func (ca ConditionAnalysis) IsNetworkScoped() bool {
+	return ca.HasIPCondition || ca.HasVPCCondition || ca.HasOrgCondition
 }
