@@ -80,32 +80,32 @@ func (sc StatementContext) Evaluate() StatementAssessment {
 		return StatementAssessment{}
 	}
 
-	res := StatementAssessment{}
+	assessment := StatementAssessment{}
 
 	// 1. Evaluate Public Risk
 	if sc.IsPublic && !sc.IsNetworkScoped {
-		res.IsPublic = true
+		assessment.IsPublic = true
 		// Critical: Any form of public modification
 		if sc.Permissions.Overlap(PermWrite | PermAdminWrite | PermDelete) {
-			res.Score = ScoreCritical
-			res.Findings = append(res.Findings, "Unrestricted Public Write/Admin Access")
+			assessment.Score = ScoreCritical
+			assessment.Findings = append(assessment.Findings, "Unrestricted Public Write/Admin Access")
 		} else if sc.Permissions.Has(PermRead) {
 			// Warning: Public Read
-			res.Score = ScoreWarning
-			res.Findings = append(res.Findings, "Unrestricted Public Read Access")
+			assessment.Score = ScoreWarning
+			assessment.Findings = append(assessment.Findings, "Unrestricted Public Read Access")
 		}
 	}
 
 	// 2. Evaluate Authenticated Risk
 	// High risk if any authenticated user in the cloud provider has full control
 	if sc.IsAuthenticated && !sc.IsPublic && sc.Permissions == PermFullControl {
-		if ScoreWarning > res.Score {
-			res.Score = ScoreWarning
+		if ScoreWarning > assessment.Score {
+			assessment.Score = ScoreWarning
 		}
-		res.Findings = append(res.Findings, "Full Admin access granted to all Authenticated Users")
+		assessment.Findings = append(assessment.Findings, "Full Admin access granted to all Authenticated Users")
 	}
 
-	return res
+	return assessment
 }
 
 // UpdateReport merges a statement result into the main report.

@@ -185,8 +185,8 @@ func (s *runSession) evaluateControl(
 		if timeline.CurrentlyUnsafe() {
 			s.acc.unsafeAssets.Add(assetID)
 		}
-		row, findings := strategy.Evaluate(timeline, s.now, s.identityIdx)
-		s.acc.AddRow(row)
+		observation, findings := strategy.Evaluate(timeline, s.now, s.identityIdx)
+		s.acc.AddRow(observation)
 		s.acc.AddFindings(findings)
 	}
 }

@@ -20,12 +20,12 @@ func WriteOutput(w, stderr io.Writer, out Output, format appcontracts.OutputForm
 		for i, id := range out.FindingIDs {
 			findingIDs[i] = string(id)
 		}
-		res := Result{
+		promptResult := Result{
 			Prompt:     out.Rendered,
 			FindingIDs: findingIDs,
 			AssetID:    out.AssetID,
 		}
-		return jsonutil.WriteIndented(w, res)
+		return jsonutil.WriteIndented(w, promptResult)
 	}
 
 	if _, err := fmt.Fprint(w, out.Rendered); err != nil {

@@ -34,21 +34,21 @@ func EvaluatePrefixExposureForRow(
 }
 
 func (e *prefixEvaluator) evaluate() (evaluation.Observation, []evaluation.Finding) {
-	row := newPrefixExposureRow(e.timeline, e.ctl)
+	prefixRow := newPrefixExposureRow(e.timeline, e.ctl)
 
 	// 1. Validate Control Configuration
 	allowed, protected := prefixExposureSets(e.ctl)
 
 	if protected.Empty() {
-		return e.configIssue(row, msgMissingProtectedPrefixes(), valNotConfigured)
+		return e.configIssue(prefixRow, msgMissingProtectedPrefixes(), valNotConfigured)
 	}
 
 	if conflict := allowed.Overlap(protected); conflict != nil {
-		return e.overlapIssue(row, conflict)
+		return e.overlapIssue(prefixRow, conflict)
 	}
 
 	// 2. Evaluate Asset Facts
-	return e.assetExposure(row, protected)
+	return e.assetExposure(prefixRow, protected)
 }
 
 func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) evaluation.Observation {
@@ -71,12 +71,12 @@ func (e *prefixEvaluator) assetExposure(
 	var findings []evaluation.Finding
 
 	for _, prefix := range protected.Prefixes() {
-		res := facts.CheckExposure(prefix)
-		if !res.Exposed {
+		exposureResult := facts.CheckExposure(prefix)
+		if !exposureResult.Exposed {
 			continue
 		}
 
-		evidence := res.String()
+		evidence := exposureResult.String()
 		findings = append(findings, *NewFinding(e.ctl, e.timeline, FindingContext{
 			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{

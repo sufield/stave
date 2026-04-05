@@ -83,11 +83,11 @@ func validateObservationContent(v *contractvalidator.Validator, data []byte) (*R
 	if err != nil {
 		return nil, err
 	}
-	result := &Report{Diagnostics: issues}
+	validationReport := &Report{Diagnostics: issues}
 	if !issues.HasErrors() && !issues.HasWarnings() {
-		result.Summary.SnapshotsLoaded = 1
+		validationReport.Summary.SnapshotsLoaded = 1
 	}
-	return result, nil
+	return validationReport, nil
 }
 
 func validateControlContent(v *contractvalidator.Validator, data []byte) (*Report, error) {
@@ -98,9 +98,9 @@ func validateControlContent(v *contractvalidator.Validator, data []byte) (*Repor
 	if issues == nil {
 		issues = diag.NewResult()
 	}
-	result := &Report{Diagnostics: issues}
+	validationReport := &Report{Diagnostics: issues}
 	if !issues.HasErrors() && !issues.HasWarnings() {
-		result.Summary.ControlsLoaded = 1
+		validationReport.Summary.ControlsLoaded = 1
 	}
-	return result, nil
+	return validationReport, nil
 }

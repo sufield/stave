@@ -105,7 +105,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 
 func (e *EvaluateRun) loadEvaluationArtifacts(ctx context.Context, cfg LoadConfig) IntentEvaluationResult {
 	intent := NewIntentEvaluation(e.ObservationRepo, e.ControlRepo)
-	result := intent.LoadArtifacts(ctx, IntentEvaluationConfig{
+	loadedArtifacts := intent.LoadArtifacts(ctx, IntentEvaluationConfig{
 		ControlsDir:       cfg.ControlsDir,
 		ObservationsDir:   cfg.ObservationsDir,
 		RequireControls:   cfg.PreloadedControls == nil,
@@ -115,7 +115,7 @@ func (e *EvaluateRun) loadEvaluationArtifacts(ctx context.Context, cfg LoadConfi
 	})
 	// Preloaded controls take precedence over disk-loaded controls.
 	if cfg.PreloadedControls != nil {
-		result.Controls = cfg.PreloadedControls
+		loadedArtifacts.Controls = cfg.PreloadedControls
 	}
-	return result
+	return loadedArtifacts
 }
