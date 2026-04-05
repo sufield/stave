@@ -16,44 +16,44 @@ const (
 	ConfidenceInconclusive ConfidenceLevel = "inconclusive"
 )
 
-// SafetyStatus classifies the high-level security posture based on evaluation results.
-type SafetyStatus string
+// Posture classifies the high-level security posture based on evaluation results.
+type Posture string
 
 const (
-	StatusSafe       SafetyStatus = "SAFE"
-	StatusBorderline SafetyStatus = "BORDERLINE"
-	StatusUnsafe     SafetyStatus = "UNSAFE"
+	PostureSafe       Posture = "SAFE"
+	PostureBorderline Posture = "BORDERLINE"
+	PostureUnsafe     Posture = "UNSAFE"
 )
 
-// ClassifySafetyStatus derives posture from violation counts and approaching risks.
-func ClassifySafetyStatus(violations int, upcoming risk.ThresholdItems) SafetyStatus {
+// DerivePosture derives posture from violation counts and approaching risks.
+func DerivePosture(violations int, upcoming risk.ThresholdItems) Posture {
 	if violations > 0 {
-		return StatusUnsafe
+		return PostureUnsafe
 	}
 	if upcoming.HasAnyRisk() {
-		return StatusBorderline
+		return PostureBorderline
 	}
-	return StatusSafe
+	return PostureSafe
 }
 
-// Decision represents the final outcome of a control check against a resource.
-type Decision string
+// Verdict represents the final outcome of a control check against a resource.
+type Verdict string
 
 const (
-	DecisionViolation     Decision = "VIOLATION"
-	DecisionPass          Decision = "PASS"
-	DecisionInconclusive  Decision = "INCONCLUSIVE"
-	DecisionNotApplicable Decision = "NOT_APPLICABLE"
-	DecisionSkipped       Decision = "SKIPPED"
+	VerdictViolation     Verdict = "VIOLATION"
+	VerdictPass          Verdict = "PASS"
+	VerdictInconclusive  Verdict = "INCONCLUSIVE"
+	VerdictNotApplicable Verdict = "NOT_APPLICABLE"
+	VerdictSkipped       Verdict = "SKIPPED"
 )
 
 // Row captures the granular result for a single control/asset pairing.
-type Row struct {
+type Observation struct {
 	ControlID   kernel.ControlID   `json:"control_id"`
 	AssetID     asset.ID           `json:"asset_id"`
 	AssetType   kernel.AssetType   `json:"asset_type"`
 	AssetDomain kernel.AssetDomain `json:"asset_domain"`
-	Decision    Decision           `json:"decision"`
+	Verdict    Verdict           `json:"decision"`
 	Confidence  ConfidenceLevel    `json:"confidence"`
 	Evidence    *Evidence          `json:"evidence,omitempty"`
 	WhyNow      string             `json:"why_now,omitempty"`
@@ -65,7 +65,7 @@ func (r *Row) MarkInconclusive(reason string) {
 	if r == nil {
 		return
 	}
-	r.Decision = DecisionInconclusive
+	r.Verdict = VerdictInconclusive
 	r.Confidence = ConfidenceInconclusive
 	r.Reason = reason
 }
@@ -88,7 +88,7 @@ type SkippedControl struct {
 type Audit struct {
 	Run              RunInfo               `json:"run"`
 	Summary          Summary               `json:"summary"`
-	SafetyStatus     SafetyStatus          `json:"safety_status"`
+	Posture     Posture          `json:"safety_status"`
 	AtRisk           risk.ThresholdItems   `json:"at_risk,omitempty"`
 	Findings         []Finding             `json:"findings"`
 	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`

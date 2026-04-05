@@ -189,7 +189,7 @@ func TestReporter_ReportApply_Pass(t *testing.T) {
 	}
 
 	policy := evaluation.ResponsePolicy{}
-	res := EvaluateResult{SafetyStatus: evaluation.StatusSafe}
+	res := EvaluateResult{Posture: evaluation.PostureSafe}
 	err := r.ReportApply(res, policy)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -209,7 +209,7 @@ func TestReporter_ReportApply_Fail(t *testing.T) {
 
 	policy := evaluation.ResponsePolicy{}
 	res := EvaluateResult{
-		SafetyStatus:    evaluation.StatusUnsafe,
+		Posture:    evaluation.PostureUnsafe,
 		DiagnoseCommand: "stave diagnose",
 		NextSteps:       []string{"fix it"},
 	}
@@ -229,7 +229,7 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 	}
 
 	policy := evaluation.ResponsePolicy{}
-	res := EvaluateResult{SafetyStatus: evaluation.StatusSafe}
+	res := EvaluateResult{Posture: evaluation.PostureSafe}
 	err := r.ReportApply(res, policy)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -528,8 +528,8 @@ func TestNewReadinessRunner(t *testing.T) {
 
 func TestEvaluateResult_Defaults(t *testing.T) {
 	res := EvaluateResult{}
-	if res.SafetyStatus != "" {
-		t.Fatalf("expected empty status, got %q", res.SafetyStatus)
+	if res.Posture != "" {
+		t.Fatalf("expected empty status, got %q", res.Posture)
 	}
 	if res.DiagnoseCommand != "" {
 		t.Fatal("expected empty command")

@@ -249,7 +249,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.DecisionPass {
+		if row.Decision != evaluation.VerdictPass {
 			t.Errorf("decision=%s, want PASS", row.Decision)
 		}
 		if len(findings) != 0 {
@@ -276,7 +276,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.DecisionViolation {
+		if row.Decision != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
 		}
 		if len(findings) != 1 {
@@ -294,7 +294,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.DecisionViolation {
+		if row.Decision != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
 		}
 		if len(findings) != 1 {
@@ -312,7 +312,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.DecisionViolation {
+		if row.Decision != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
 		}
 		if len(findings) != 1 {
@@ -330,7 +330,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.DecisionViolation {
+		if row.Decision != evaluation.VerdictViolation {
 			t.Errorf("decision=%s, want VIOLATION", row.Decision)
 		}
 		if len(findings) != 1 {

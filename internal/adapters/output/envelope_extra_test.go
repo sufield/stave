@@ -18,7 +18,7 @@ func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
 		},
 		Result: evaluation.Audit{
 			Summary:      evaluation.Summary{AssetsEvaluated: 5},
-			SafetyStatus: evaluation.StatusSafe,
+			Posture: evaluation.PostureSafe,
 		},
 		// Findings is nil
 	}
@@ -42,7 +42,7 @@ func TestBuildSafetyEnvelopeFromEnriched_WithFindings(t *testing.T) {
 				AssetsEvaluated: 1,
 				Violations:      1,
 			},
-			SafetyStatus: evaluation.StatusUnsafe,
+			Posture: evaluation.PostureUnsafe,
 		},
 		Findings: []appcontracts.EnrichedFinding{
 			{Finding: evaluation.Finding{ControlID: "CTL.A.001", AssetID: "bucket-1"}},

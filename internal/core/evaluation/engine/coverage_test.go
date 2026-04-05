@@ -129,13 +129,13 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 }
 
 func TestEvaluationRowMarkInconclusive(t *testing.T) {
-	row := evaluation.Row{
-		Decision:   evaluation.DecisionPass,
+	row := evaluation.Observation{
+		Verdict:   evaluation.VerdictPass,
 		Confidence: evaluation.ConfidenceHigh,
 	}
 	row.MarkInconclusive("insufficient observations")
-	if row.Decision != evaluation.DecisionInconclusive {
-		t.Fatalf("decision=%s, want %s", row.Decision, evaluation.DecisionInconclusive)
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Fatalf("decision=%s, want %s", row.Verdict, evaluation.VerdictInconclusive)
 	}
 	if row.Confidence != evaluation.ConfidenceInconclusive {
 		t.Fatalf("confidence=%s, want %s", row.Confidence, evaluation.ConfidenceInconclusive)

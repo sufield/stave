@@ -243,7 +243,7 @@ func TestCompareVerificationFindings_MixedDiff(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ConfidenceLevel and Decision constants
+// ConfidenceLevel and Verdict constants
 // ---------------------------------------------------------------------------
 
 func TestConfidenceLevelConstants(t *testing.T) {
@@ -262,20 +262,20 @@ func TestConfidenceLevelConstants(t *testing.T) {
 }
 
 func TestDecisionConstants(t *testing.T) {
-	if DecisionViolation != "VIOLATION" {
-		t.Fatal("DecisionViolation")
+	if VerdictViolation != "VIOLATION" {
+		t.Fatal("VerdictViolation")
 	}
-	if DecisionPass != "PASS" {
-		t.Fatal("DecisionPass")
+	if VerdictPass != "PASS" {
+		t.Fatal("VerdictPass")
 	}
-	if DecisionInconclusive != "INCONCLUSIVE" {
-		t.Fatal("DecisionInconclusive")
+	if VerdictInconclusive != "INCONCLUSIVE" {
+		t.Fatal("VerdictInconclusive")
 	}
-	if DecisionNotApplicable != "NOT_APPLICABLE" {
-		t.Fatal("DecisionNotApplicable")
+	if VerdictNotApplicable != "NOT_APPLICABLE" {
+		t.Fatal("VerdictNotApplicable")
 	}
-	if DecisionSkipped != "SKIPPED" {
-		t.Fatal("DecisionSkipped")
+	if VerdictSkipped != "SKIPPED" {
+		t.Fatal("VerdictSkipped")
 	}
 }
 
@@ -293,18 +293,18 @@ func TestControlSourceModeConstants(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ClassifySafetyStatus
+// DerivePosture
 // ---------------------------------------------------------------------------
 
 func TestClassifySafetyStatus_Constants(t *testing.T) {
-	if StatusSafe != "SAFE" {
-		t.Fatal("StatusSafe")
+	if PostureSafe != "SAFE" {
+		t.Fatal("PostureSafe")
 	}
-	if StatusBorderline != "BORDERLINE" {
-		t.Fatal("StatusBorderline")
+	if PostureBorderline != "BORDERLINE" {
+		t.Fatal("PostureBorderline")
 	}
-	if StatusUnsafe != "UNSAFE" {
-		t.Fatal("StatusUnsafe")
+	if PostureUnsafe != "UNSAFE" {
+		t.Fatal("PostureUnsafe")
 	}
 }
 

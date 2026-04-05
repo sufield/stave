@@ -58,8 +58,8 @@ func TestExposure_MissingProtectedPrefixes(t *testing.T) {
 	tl := exposureTimeline(t, nil)
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
-	if row.Decision != evaluation.DecisionViolation {
-		t.Fatalf("expected Violation for missing protected prefixes, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected Violation for missing protected prefixes, got %v", row.Verdict)
 	}
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
@@ -75,8 +75,8 @@ func TestExposure_OverlappingPrefixes(t *testing.T) {
 	tl := exposureTimeline(t, nil)
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
-	if row.Decision != evaluation.DecisionViolation {
-		t.Fatalf("expected Violation for overlapping prefixes, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected Violation for overlapping prefixes, got %v", row.Verdict)
 	}
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
@@ -89,8 +89,8 @@ func TestExposure_NoEvidence_IsViolation(t *testing.T) {
 	tl := exposureTimeline(t, map[string]any{})
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
-	if row.Decision != evaluation.DecisionViolation {
-		t.Fatalf("expected Violation for missing evidence, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected Violation for missing evidence, got %v", row.Verdict)
 	}
 	if len(findings) == 0 {
 		t.Fatal("expected findings for missing evidence")
@@ -110,8 +110,8 @@ func TestPrefixExposureStrategy_Evaluate_ConfigIssue(t *testing.T) {
 	s := &prefixExposureStrategy{ctl: ctl}
 	row, findings := s.Evaluate(tl, now, nil)
 
-	if row.Decision != evaluation.DecisionViolation {
-		t.Fatalf("expected Violation for config issue, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected Violation for config issue, got %v", row.Verdict)
 	}
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
@@ -133,8 +133,8 @@ func TestNewPrefixExposureRow(t *testing.T) {
 	if row.AssetID != "bucket-1" {
 		t.Fatalf("AssetID = %v", row.AssetID)
 	}
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("default decision should be Pass, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("default decision should be Pass, got %v", row.Verdict)
 	}
 }
 

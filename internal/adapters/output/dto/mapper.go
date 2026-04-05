@@ -11,7 +11,7 @@ func FromEvaluation(e *safetyenvelope.Evaluation) ResultDTO {
 		Kind:              string(e.Kind),
 		Run:               fromRunInfo(e.Run),
 		Summary:           fromSummary(e.Summary),
-		SafetyStatus:      e.SafetyStatus,
+		Posture:      e.Posture,
 		AtRisk:            fromAtRiskItems(e.AtRisk),
 		Findings:          fromFindings(e.Findings),
 		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),

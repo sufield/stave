@@ -29,7 +29,7 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 			AttackSurface:   1,
 			Violations:      0,
 		},
-		SafetyStatus: evaluation.StatusSafe,
+		Posture: evaluation.PostureSafe,
 		Findings:     []remediation.Finding{},
 	})
 
@@ -53,8 +53,8 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 	if dto.Summary.AssetsEvaluated != 3 {
 		t.Errorf("Summary.AssetsEvaluated = %d", dto.Summary.AssetsEvaluated)
 	}
-	if dto.SafetyStatus != evaluation.StatusSafe {
-		t.Errorf("SafetyStatus = %q", dto.SafetyStatus)
+	if dto.Posture != evaluation.PostureSafe {
+		t.Errorf("Posture = %q", dto.Posture)
 	}
 	if len(dto.Findings) != 0 {
 		t.Errorf("len(Findings) = %d", len(dto.Findings))

@@ -11,56 +11,56 @@ func TestClassifySafetyStatus(t *testing.T) {
 		name       string
 		violations int
 		risks      []risk.ThresholdItem
-		want       SafetyStatus
+		want       Posture
 	}{
 		{
 			name:       "no violations nil risks",
 			violations: 0,
 			risks:      nil,
-			want:       StatusSafe,
+			want:       PostureSafe,
 		},
 		{
 			name:       "no violations empty risks",
 			violations: 0,
 			risks:      []risk.ThresholdItem{},
-			want:       StatusSafe,
+			want:       PostureSafe,
 		},
 		{
 			name:       "no violations upcoming risk",
 			violations: 0,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusUpcoming}},
-			want:       StatusBorderline,
+			want:       PostureBorderline,
 		},
 		{
 			name:       "no violations due now risk",
 			violations: 0,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusDueNow}},
-			want:       StatusBorderline,
+			want:       PostureBorderline,
 		},
 		{
 			name:       "no violations overdue risk",
 			violations: 0,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusOverdue}},
-			want:       StatusBorderline,
+			want:       PostureBorderline,
 		},
 		{
 			name:       "violations with risks",
 			violations: 3,
 			risks:      []risk.ThresholdItem{{Status: risk.StatusUpcoming}},
-			want:       StatusUnsafe,
+			want:       PostureUnsafe,
 		},
 		{
 			name:       "violations nil risks",
 			violations: 1,
 			risks:      nil,
-			want:       StatusUnsafe,
+			want:       PostureUnsafe,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ClassifySafetyStatus(tt.violations, tt.risks)
+			got := DerivePosture(tt.violations, tt.risks)
 			if got != tt.want {
-				t.Fatalf("ClassifySafetyStatus(%d, %v) = %q, want %q", tt.violations, tt.risks, got, tt.want)
+				t.Fatalf("DerivePosture(%d, %v) = %q, want %q", tt.violations, tt.risks, got, tt.want)
 			}
 		})
 	}

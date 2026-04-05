@@ -1,7 +1,3 @@
-// Package dto provides output data transfer objects that decouple
-// JSON wire format from domain types. Field names and json tags
-// MUST match the current wire format exactly to preserve golden test
-// compatibility.
 package dto
 
 import (
@@ -86,28 +82,6 @@ type RemediationSpecDTO struct {
 	Example     string `json:"example,omitempty"`
 }
 
-// RemediationPlanDTO mirrors evaluation.RemediationPlan.
-type RemediationPlanDTO struct {
-	ID             string                 `json:"id"`
-	Target         RemediationTargetDTO   `json:"target"`
-	Preconditions  []string               `json:"preconditions,omitempty"`
-	Actions        []RemediationActionDTO `json:"actions,omitempty"`
-	ExpectedEffect string                 `json:"expected_effect,omitempty"`
-}
-
-// RemediationTargetDTO mirrors evaluation.RemediationTarget.
-type RemediationTargetDTO struct {
-	AssetID   asset.ID         `json:"asset_id"`
-	AssetType kernel.AssetType `json:"asset_type"`
-}
-
-// RemediationActionDTO mirrors evaluation.RemediationAction.
-type RemediationActionDTO struct {
-	ActionType evaluation.RemediationActionType `json:"action_type"`
-	Path       string                           `json:"path"`
-	Value      any                              `json:"value,omitempty"`
-}
-
 // ExceptedFindingDTO mirrors evaluation.ExceptedFinding.
 type ExceptedFindingDTO struct {
 	ControlID kernel.ControlID `json:"control_id"`
@@ -130,60 +104,7 @@ type ExemptedAssetDTO struct {
 	Reason  string   `json:"reason"`
 }
 
-// RunInfoDTO mirrors evaluation.RunInfo.
-type RunInfoDTO struct {
-	StaveVersion      string          `json:"tool_version"`
-	Offline           bool            `json:"offline"`
-	Now               time.Time       `json:"now"`
-	MaxUnsafeDuration kernel.Duration `json:"max_unsafe"`
-	Snapshots         int             `json:"snapshots"`
-	InputHashes       *InputHashesDTO `json:"input_hashes,omitempty"`
-	PackHash          kernel.Digest   `json:"pack_hash,omitempty"`
-}
-
-// InputHashesDTO mirrors evaluation.InputHashes.
-type InputHashesDTO struct {
-	Files   map[string]kernel.Digest `json:"files"`
-	Overall kernel.Digest            `json:"overall"`
-}
-
-// SummaryDTO mirrors evaluation.Summary.
-type SummaryDTO struct {
-	AssetsEvaluated int `json:"assets_evaluated"`
-	AttackSurface   int `json:"attack_surface"`
-	Violations      int `json:"violations"`
-}
-
-// RemediationGroupDTO mirrors remediation.Group.
-type RemediationGroupDTO struct {
-	AssetID              asset.ID           `json:"asset_id"`
-	AssetType            kernel.AssetType   `json:"asset_type"`
-	RemediationPlan      RemediationPlanDTO `json:"fix_plan"`
-	ContributingControls []kernel.ControlID `json:"contributing_controls"`
-	FindingCount         int                `json:"finding_count"`
-}
-
-// ExtensionsDTO mirrors evaluation.Extensions.
-type ExtensionsDTO struct {
-	SelectedSource      string             `json:"selected_controls_source,omitempty"`
-	ContextName         string             `json:"context_name,omitempty"`
-	ResolvedPaths       map[string]string  `json:"resolved_paths,omitempty"`
-	EnabledPacks        []string           `json:"enabled_control_packs,omitempty"`
-	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
-	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
-	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
-	Git                 *GitMetadataDTO    `json:"git,omitempty"`
-}
-
-// GitMetadataDTO mirrors evaluation.GitMetadata.
-type GitMetadataDTO struct {
-	RepoRoot string   `json:"repo_root,omitempty"`
-	Head     string   `json:"head_commit,omitempty"`
-	Dirty    bool     `json:"dirty"`
-	Modified []string `json:"modified_paths,omitempty"`
-}
-
-// RowDTO mirrors evaluation.Row.
+// RowDTO mirrors evaluation.Observation.
 type RowDTO struct {
 	ControlID  kernel.ControlID           `json:"control_id"`
 	AssetID    asset.ID                   `json:"asset_id"`
@@ -206,20 +127,4 @@ type AtRiskItemDTO struct {
 	RemainingHours float64          `json:"remaining_hours"`
 	FirstUnsafeAt  time.Time        `json:"first_unsafe_at"`
 	ThresholdHours float64          `json:"threshold_hours"`
-}
-
-// ResultDTO is the top-level evaluation output envelope content.
-type ResultDTO struct {
-	SchemaVersion     kernel.Schema           `json:"schema_version"`
-	Kind              string                  `json:"kind"`
-	Run               RunInfoDTO              `json:"run"`
-	Summary           SummaryDTO              `json:"summary"`
-	SafetyStatus      evaluation.SafetyStatus `json:"safety_status"`
-	AtRisk            []AtRiskItemDTO         `json:"at_risk,omitempty"`
-	Findings          []FindingDTO            `json:"findings"`
-	ExceptedFindings  []ExceptedFindingDTO    `json:"excepted_findings,omitempty"`
-	RemediationGroups []RemediationGroupDTO   `json:"remediation_groups,omitempty"`
-	Skipped           []SkippedControlDTO     `json:"skipped,omitempty"`
-	ExemptedAssets    []ExemptedAssetDTO      `json:"exempted_assets,omitempty"`
-	Extensions        *ExtensionsDTO          `json:"extensions,omitempty"`
 }

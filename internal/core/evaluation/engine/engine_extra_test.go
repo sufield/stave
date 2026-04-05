@@ -66,7 +66,7 @@ func TestAccumulatorAddExemptedAsset(t *testing.T) {
 
 func TestAccumulatorAddRow(t *testing.T) {
 	acc := NewAccumulator(0)
-	acc.AddRow(evaluation.Row{ControlID: "CTL.A.001", AssetID: "res-1"})
+	acc.AddRow(evaluation.Observation{ControlID: "CTL.A.001", AssetID: "res-1"})
 	if len(acc.rows) != 1 {
 		t.Fatalf("len = %d", len(acc.rows))
 	}
@@ -100,9 +100,9 @@ func TestNewControlRowAndFinalize(t *testing.T) {
 		t.Fatalf("AssetID = %v", row.AssetID)
 	}
 
-	row = finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh)
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("Decision = %v", row.Decision)
+	row = finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("Verdict = %v", row.Verdict)
 	}
 	if row.Confidence != evaluation.ConfidenceHigh {
 		t.Fatalf("Confidence = %v", row.Confidence)
@@ -239,8 +239,8 @@ func TestUnsupportedStrategy(t *testing.T) {
 
 	s := &unsupportedStrategy{ctl: ctl}
 	row, findings := s.Evaluate(tl, time.Now(), nil)
-	if row.Decision != evaluation.DecisionSkipped {
-		t.Fatalf("Decision = %v", row.Decision)
+	if row.Verdict != evaluation.VerdictSkipped {
+		t.Fatalf("Verdict = %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatal("unsupported should have no findings")

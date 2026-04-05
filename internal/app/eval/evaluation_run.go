@@ -74,9 +74,9 @@ func NewEvaluateRun(
 	}
 }
 
-// Execute runs the evaluation and returns the Result alongside SafetyStatus
+// Execute runs the evaluation and returns the Result alongside Posture
 // without writing output. The caller is responsible for output rendering.
-func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluation.Audit, evaluation.SafetyStatus, error) {
+func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluation.Audit, evaluation.Posture, error) {
 	preflight := e.loadEvaluationArtifacts(ctx, cfg.LoadConfig)
 	if preflight.HasErrors() {
 		return evaluation.Audit{}, "", preflight.FirstError()
@@ -100,7 +100,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		return evaluation.Audit{}, "", fmt.Errorf("evaluation failed: %w", err)
 	}
 
-	return result, result.SafetyStatus, nil
+	return result, result.Posture, nil
 }
 
 func (e *EvaluateRun) loadEvaluationArtifacts(ctx context.Context, cfg LoadConfig) IntentEvaluationResult {

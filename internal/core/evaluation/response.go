@@ -22,11 +22,11 @@ type ResponsePolicy struct {
 }
 
 // Decide returns the appropriate response action for the given safety status.
-func (p ResponsePolicy) Decide(status SafetyStatus) ResponseAction {
+func (p ResponsePolicy) Decide(status Posture) ResponseAction {
 	switch status {
-	case StatusSafe:
+	case PostureSafe:
 		return ResponseAction{Severity: ActionPass}
-	case StatusBorderline:
+	case PostureBorderline:
 		if p.StrictBorderline {
 			return ResponseAction{Severity: ActionFail}
 		}

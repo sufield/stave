@@ -169,12 +169,12 @@ func (s *runSession) evaluateControl(
 			if s.acc.TrackExemption(assetID) {
 				s.acc.AddExemptedAsset(assetID, rule.Pattern, rule.Reason)
 			}
-			s.acc.AddRow(evaluation.Row{
+			s.acc.AddRow(evaluation.Observation{
 				ControlID:   ctl.ID,
 				AssetID:     assetID,
 				AssetType:   timeline.Asset().Type,
 				AssetDomain: timeline.Asset().Type.Domain(),
-				Decision:    evaluation.DecisionSkipped,
+				Verdict:    evaluation.VerdictSkipped,
 				Confidence:  evaluation.ConfidenceHigh,
 				Reason:      rule.Reason,
 			})
@@ -200,7 +200,7 @@ func (s *runSession) buildResult() evaluation.Audit {
 		return cmp.Compare(a.ID, b.ID)
 	})
 	// Sort rows for deterministic output (by control_id, then asset_id).
-	slices.SortFunc(s.acc.rows, func(a, b evaluation.Row) int {
+	slices.SortFunc(s.acc.rows, func(a, b evaluation.Observation) int {
 		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
@@ -215,7 +215,7 @@ func (s *runSession) buildResult() evaluation.Audit {
 		Now:                     s.now,
 		PredicateEval:           s.runner.CELEvaluator,
 	})
-	status := evaluation.ClassifySafetyStatus(len(regularFindings), upcoming)
+	status := evaluation.DerivePosture(len(regularFindings), upcoming)
 
 	return evaluation.Audit{
 		Run: evaluation.RunInfo{
@@ -232,7 +232,7 @@ func (s *runSession) buildResult() evaluation.Audit {
 			AttackSurface:   len(s.acc.unsafeAssets),
 			Violations:      len(regularFindings),
 		},
-		SafetyStatus:     status,
+		Posture:     status,
 		AtRisk:           upcoming,
 		Findings:         regularFindings,
 		ExceptedFindings: exceptedFindings,

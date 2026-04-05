@@ -28,12 +28,12 @@ type prefixEvaluator struct {
 func EvaluatePrefixExposureForRow(
 	timeline *asset.Timeline,
 	ctl *policy.ControlDefinition,
-) (evaluation.Row, []evaluation.Finding) {
+) (evaluation.Observation, []evaluation.Finding) {
 	e := prefixEvaluator{timeline: timeline, ctl: ctl}
 	return e.evaluate()
 }
 
-func (e *prefixEvaluator) evaluate() (evaluation.Row, []evaluation.Finding) {
+func (e *prefixEvaluator) evaluate() (evaluation.Observation, []evaluation.Finding) {
 	row := newPrefixExposureRow(e.timeline, e.ctl)
 
 	// 1. Validate Control Configuration
@@ -51,22 +51,22 @@ func (e *prefixEvaluator) evaluate() (evaluation.Row, []evaluation.Finding) {
 	return e.assetExposure(row, protected)
 }
 
-func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) evaluation.Row {
+func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) evaluation.Observation {
 	resType := t.Asset().Type
-	return evaluation.Row{
+	return evaluation.Observation{
 		ControlID:   ctl.ID,
 		AssetID:     t.ID,
 		AssetType:   resType,
 		AssetDomain: resType.Domain(),
-		Decision:    evaluation.DecisionPass,
+		Verdict:    evaluation.VerdictPass,
 		Confidence:  evaluation.ConfidenceHigh,
 	}
 }
 
 func (e *prefixEvaluator) assetExposure(
-	row evaluation.Row,
+	row evaluation.Observation,
 	protected policy.PrefixSet,
-) (evaluation.Row, []evaluation.Finding) {
+) (evaluation.Observation, []evaluation.Finding) {
 	facts := exposure.SummarizeAccess(e.timeline.Asset().Properties)
 	var findings []evaluation.Finding
 
@@ -87,7 +87,7 @@ func (e *prefixEvaluator) assetExposure(
 	}
 
 	if len(findings) > 0 {
-		row.Decision = evaluation.DecisionViolation
+		row.Verdict = evaluation.VerdictViolation
 	}
 
 	return row, findings
@@ -96,11 +96,11 @@ func (e *prefixEvaluator) assetExposure(
 // --- Configuration Error Helpers ---
 
 func (e *prefixEvaluator) configIssue(
-	row evaluation.Row,
+	row evaluation.Observation,
 	why string,
 	reasonCode string,
-) (evaluation.Row, []evaluation.Finding) {
-	row.Decision = evaluation.DecisionViolation
+) (evaluation.Observation, []evaluation.Finding) {
+	row.Verdict = evaluation.VerdictViolation
 	f := NewFinding(e.ctl, e.timeline, FindingContext{
 		Reason: why,
 		Misconfigs: []policy.Misconfiguration{
@@ -111,10 +111,10 @@ func (e *prefixEvaluator) configIssue(
 }
 
 func (e *prefixEvaluator) overlapIssue(
-	row evaluation.Row,
+	row evaluation.Observation,
 	c *policy.PrefixConflict,
-) (evaluation.Row, []evaluation.Finding) {
-	row.Decision = evaluation.DecisionViolation
+) (evaluation.Observation, []evaluation.Finding) {
+	row.Verdict = evaluation.VerdictViolation
 	f := NewFinding(e.ctl, e.timeline, FindingContext{
 		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
 		Misconfigs: []policy.Misconfiguration{

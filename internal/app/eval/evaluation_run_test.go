@@ -140,7 +140,7 @@ func TestEvaluateRunExecute(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
 		}
-		if status == evaluation.StatusSafe {
+		if status == evaluation.PostureSafe {
 			t.Fatal("expected non-safe status")
 		}
 		if m.marshalCalls != 1 {
