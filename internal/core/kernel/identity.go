@@ -20,3 +20,14 @@ type AWSAccountID string
 
 // AWSAccountARN is a full AWS IAM ARN (e.g., "arn:aws:iam::123456789012:root").
 type AWSAccountARN string
+
+// ObservationSourceType identifies the extraction method that produced an observation.
+type ObservationSourceType string
+
+// Canonical source types supported by built-in adapters.
+const SourceTypeAWSS3Snapshot ObservationSourceType = "aws-s3-snapshot"
+
+func (t ObservationSourceType) String() string { return string(t) }
+
+// IsEmpty reports whether the source type is unset.
+func (t ObservationSourceType) IsEmpty() bool { return t == "" }

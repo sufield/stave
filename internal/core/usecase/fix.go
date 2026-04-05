@@ -5,6 +5,17 @@ import (
 	"fmt"
 )
 
+// --- Fix ---
+
+type FixRequest struct {
+	InputPath  string `json:"input_path"`
+	FindingRef string `json:"finding_ref"`
+}
+
+type FixResponse struct {
+	Data any `json:"data"`
+}
+
 // FindingLoaderPort loads a finding by its selector from an evaluation file.
 type FindingLoaderPort interface {
 	LoadFindingWithPlan(ctx context.Context, inputPath, findingRef string) (any, error)
@@ -41,6 +52,23 @@ type FixLoopRunnerPort interface {
 // LoopDeps groups the port interfaces for the fix-loop use case.
 type LoopDeps struct {
 	Runner FixLoopRunnerPort
+}
+
+// --- Fix Loop ---
+
+type FixLoopRequest struct {
+	BeforeDir         string `json:"before_dir"`
+	AfterDir          string `json:"after_dir"`
+	ControlsDir       string `json:"controls_dir,omitempty"`
+	OutDir            string `json:"out_dir,omitempty"`
+	MaxUnsafeDuration string `json:"max_unsafe_duration,omitempty"`
+	NowTime           string `json:"now_time,omitempty"`
+	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
+}
+
+type FixLoopResponse struct {
+	ReportData    any  `json:"report_data"`
+	HasViolations bool `json:"has_violations"`
 }
 
 // FixLoop runs the full remediation verification lifecycle.

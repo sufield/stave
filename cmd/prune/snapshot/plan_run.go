@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/retention"
@@ -24,6 +25,16 @@ func listPlanFiles(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFact
 		}
 	}
 	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
+}
+
+// listSnapshotFilesRecursive identifies snapshot files by traversing the directory tree.
+// It requires an explicit SnapshotReader to avoid reliance on global providers.
+func listSnapshotFilesRecursive(ctx context.Context, loader appcontracts.SnapshotReader, dir string, excludeDirs []string) ([]appcontracts.SnapshotFile, error) {
+	files, err := pruner.ListSnapshotFilesRecursiveWithLoader(ctx, dir, excludeDirs, loader)
+	if err != nil {
+		return nil, fmt.Errorf("listing snapshots in %q: %w", dir, err)
+	}
+	return files, nil
 }
 
 func resolvePlanRetentionConfig(eval *appconfig.Evaluator) (map[string]retention.Tier, []retention.Rule, string, error) {

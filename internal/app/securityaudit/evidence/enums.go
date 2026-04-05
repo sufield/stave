@@ -77,3 +77,7 @@ func ParseVulnSource(s string) (VulnSource, error) {
 		return "", fmt.Errorf("unsupported --vuln-source %q (supported: hybrid, local, ci)", s)
 	}
 }
+
+type DefaultDiagnosticsService struct {
+	Run func(cwd, binaryPath, staveVersion string)
+}

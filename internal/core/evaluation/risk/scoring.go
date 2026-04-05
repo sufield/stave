@@ -1,5 +1,7 @@
 package risk
 
+import "strings"
+
 // Score quantifies policy risk from 0 (Safe) to 100 (Catastrophic).
 type Score int
 
@@ -115,4 +117,19 @@ func (r *Report) UpdateReport(res StatementAssessment) {
 		r.IsPublic = true
 	}
 	r.Findings = append(r.Findings, res.Findings...)
+}
+
+// PermissionResolver maps a single action string to its Permission bits.
+// Implementations handle vendor-specific lookup (exact match, prefix, trie).
+type PermissionResolver interface {
+	Resolve(action string) Permission
+}
+
+// NormalizeActions lowercases and trims all action strings.
+func NormalizeActions(actions []string) []string {
+	out := make([]string, len(actions))
+	for i, a := range actions {
+		out[i] = strings.ToLower(strings.TrimSpace(a))
+	}
+	return out
 }
