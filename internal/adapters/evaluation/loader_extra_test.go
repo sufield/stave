@@ -71,7 +71,7 @@ func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 			Snapshots:         2,
 		},
 		Summary:      evaluation.Summary{AssetsEvaluated: 1},
-		SafetyStatus: evaluation.StatusSafe,
+		Posture: evaluation.PostureSafe,
 		Findings:     []remediation.Finding{},
 	})
 	data, err := json.Marshal(env)

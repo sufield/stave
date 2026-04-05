@@ -112,10 +112,10 @@ func TestDeriveConfidenceLevel(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestRowMarkInconclusive(t *testing.T) {
-	r := &Row{Decision: DecisionPass, Confidence: ConfidenceHigh}
+	r := &Row{Verdict: VerdictPass, Confidence: ConfidenceHigh}
 	r.MarkInconclusive("test reason")
-	if r.Decision != DecisionInconclusive {
-		t.Fatalf("Decision = %v", r.Decision)
+	if r.Verdict != VerdictInconclusive {
+		t.Fatalf("Verdict = %v", r.Verdict)
 	}
 	if r.Confidence != ConfidenceInconclusive {
 		t.Fatalf("Confidence = %v", r.Confidence)
@@ -202,15 +202,15 @@ func TestTrendMetric(t *testing.T) {
 func TestResponsePolicyDecide(t *testing.T) {
 	tests := []struct {
 		strict bool
-		status SafetyStatus
+		status Posture
 		want   ActionSeverity
 	}{
-		{false, StatusSafe, ActionPass},
-		{false, StatusBorderline, ActionWarn},
-		{false, StatusUnsafe, ActionFail},
-		{true, StatusSafe, ActionPass},
-		{true, StatusBorderline, ActionFail},
-		{true, StatusUnsafe, ActionFail},
+		{false, PostureSafe, ActionPass},
+		{false, PostureBorderline, ActionWarn},
+		{false, PostureUnsafe, ActionFail},
+		{true, PostureSafe, ActionPass},
+		{true, PostureBorderline, ActionFail},
+		{true, PostureUnsafe, ActionFail},
 	}
 	for _, tt := range tests {
 		p := ResponsePolicy{StrictBorderline: tt.strict}

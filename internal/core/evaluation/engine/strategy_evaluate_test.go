@@ -71,8 +71,8 @@ func TestUnsafeStateStrategy_SafeAsset(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("expected Pass, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("expected Pass, got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))
@@ -97,8 +97,8 @@ func TestUnsafeStateStrategy_UnsafeExceedsThreshold(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionViolation {
-		t.Fatalf("expected Violation, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected Violation, got %v", row.Verdict)
 	}
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
@@ -123,8 +123,8 @@ func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("expected Pass (below threshold), got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("expected Pass (below threshold), got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))
@@ -154,8 +154,8 @@ func TestUnsafeDurationStrategy_SafeAsset(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("expected Pass, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("expected Pass, got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))
@@ -180,8 +180,8 @@ func TestUnsafeDurationStrategy_ViolationExceedsThreshold(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionViolation {
-		t.Fatalf("expected Violation, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected Violation, got %v", row.Verdict)
 	}
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(findings))
@@ -206,8 +206,8 @@ func TestUnsafeDurationStrategy_InconclusiveInsufficientCoverage(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionInconclusive {
-		t.Fatalf("expected Inconclusive (insufficient coverage), got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Fatalf("expected Inconclusive (insufficient coverage), got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings for inconclusive, got %d", len(findings))
@@ -234,8 +234,8 @@ func TestUnsafeDurationStrategy_SafeWithAdequateCoverage(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("expected Pass with adequate coverage, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("expected Pass with adequate coverage, got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))
@@ -266,8 +266,8 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionPass {
-		t.Fatalf("expected Pass (disabled recurrence), got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Fatalf("expected Pass (disabled recurrence), got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))
@@ -293,8 +293,8 @@ func TestUnsupportedStrategy_ReturnsSkipped(t *testing.T) {
 	s := &unsupportedStrategy{ctl: ctl}
 
 	row, findings := s.Evaluate(tl, now, nil)
-	if row.Decision != evaluation.DecisionSkipped {
-		t.Fatalf("expected Skipped, got %v", row.Decision)
+	if row.Verdict != evaluation.VerdictSkipped {
+		t.Fatalf("expected Skipped, got %v", row.Verdict)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))

@@ -21,7 +21,7 @@ type strategyDeps interface {
 
 // strategy defines how different control types analyze a timeline.
 type strategy interface {
-	Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding)
+	Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding)
 }
 
 // Compile-time interface assertions.
@@ -56,12 +56,12 @@ type unsafeStateStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
 	if t.CurrentlySafe() {
-		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
+		return finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 	}
 
 	if t.MissingUnsafeTimestamps() {
@@ -85,10 +85,10 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids Ide
 			Identities:      ids.At(t.LastSeenUnsafeAt()),
 			PredicateParser: s.deps.predicateParser(),
 		})
-		return finalizeRow(row, evaluation.DecisionViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
+		return finalizeRow(row, evaluation.VerdictViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
 	}
 
-	return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
+	return finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 }
 
 type unsafeDurationStrategy struct {
@@ -96,7 +96,7 @@ type unsafeDurationStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
@@ -118,7 +118,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 			PredicateParser: s.deps.predicateParser(),
 		})
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-		return finalizeRow(row, evaluation.DecisionViolation, confidence), []*evaluation.Finding{finding}
+		return finalizeRow(row, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
 	}
 
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
@@ -133,7 +133,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 
 	// 3. Adequate coverage and no violation => PASS
 	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-	return finalizeRow(row, evaluation.DecisionPass, confidence), nil
+	return finalizeRow(row, evaluation.VerdictPass, confidence), nil
 }
 
 // --- Recurrence Strategy ---
@@ -143,19 +143,19 @@ type unsafeRecurrenceStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 
 	if !p.Enabled() {
 		row.Reason = "missing recurrence parameters"
-		return finalizeRow(row, evaluation.DecisionPass, evaluation.ConfidenceHigh), nil
+		return finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 	}
 
 	// 1. Violation Check
 	if findings := EvaluateRecurrenceForControl(t, s.ctl, now); len(findings) > 0 {
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
-		return finalizeRow(row, evaluation.DecisionViolation, confidence), findings
+		return finalizeRow(row, evaluation.VerdictViolation, confidence), findings
 	}
 
 	// 2. Coverage Check
@@ -166,7 +166,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ 
 	}
 
 	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
-	return finalizeRow(row, evaluation.DecisionPass, confidence), nil
+	return finalizeRow(row, evaluation.VerdictPass, confidence), nil
 }
 
 // --- Specialized Strategies ---
@@ -175,7 +175,7 @@ type prefixExposureStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
+func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
 	row, findings := EvaluatePrefixExposureForRow(t, s.ctl)
 	return row, wrapInPointers(findings)
 }
@@ -184,17 +184,17 @@ type unsupportedStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Row, []*evaluation.Finding) {
+func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
 	row := newControlRow(s.ctl, t)
 	row.Reason = "type not evaluatable: " + s.ctl.Type.String()
-	return finalizeRow(row, evaluation.DecisionSkipped, evaluation.ConfidenceHigh), nil
+	return finalizeRow(row, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
 }
 
 // --- Internal Helpers ---
 
-func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.Row {
+func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.Observation {
 	resType := t.Asset().Type
-	return evaluation.Row{
+	return evaluation.Observation{
 		ControlID:   ctl.ID,
 		AssetID:     t.ID,
 		AssetType:   resType,
@@ -202,8 +202,8 @@ func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.
 	}
 }
 
-func finalizeRow(r evaluation.Row, d evaluation.Decision, c evaluation.ConfidenceLevel) evaluation.Row {
-	r.Decision = d
+func finalizeRow(r evaluation.Observation, d evaluation.Verdict, c evaluation.ConfidenceLevel) evaluation.Observation {
+	r.Verdict = d
 	r.Confidence = c
 	return r
 }

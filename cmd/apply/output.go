@@ -26,7 +26,7 @@ type Reporter struct {
 // ReportApply prints the outcome of an evaluation and returns an error
 // when the response policy indicates failure.
 func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.ResponsePolicy) error {
-	action := policy.Decide(res.SafetyStatus)
+	action := policy.Decide(res.Posture)
 
 	switch action.Severity {
 	case evaluation.ActionPass:

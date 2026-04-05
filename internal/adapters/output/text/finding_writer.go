@@ -122,7 +122,7 @@ func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.E
 	}
 }
 
-func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation.Row) {
+func (w *FindingWriter) writeViolationDomainSummary(d *drawer, rows []evaluation.Observation) {
 	domainCounts := GroupViolationsByDomain(rows)
 	if len(domainCounts) == 0 {
 		return

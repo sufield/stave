@@ -16,14 +16,14 @@ type DomainCount struct {
 }
 
 // GroupViolationsByDomain aggregates violation rows into sorted counts by asset domain.
-func GroupViolationsByDomain(rows []evaluation.Row) []DomainCount {
+func GroupViolationsByDomain(rows []evaluation.Observation) []DomainCount {
 	if len(rows) == 0 {
 		return nil
 	}
 
 	counts := make(map[kernel.AssetDomain]int, len(rows)/10)
 	for i := range rows {
-		if rows[i].Decision != evaluation.DecisionViolation {
+		if rows[i].Decision != evaluation.VerdictViolation {
 			continue
 		}
 

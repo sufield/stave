@@ -1159,7 +1159,7 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 	}
 
 	row := result.Rows[0]
-	if row.Decision != evaluation.DecisionInconclusive {
+	if row.Decision != evaluation.VerdictInconclusive {
 		t.Errorf("Expected INCONCLUSIVE decision, got %s", row.Decision)
 	}
 	if row.Confidence != evaluation.ConfidenceInconclusive {
@@ -1218,7 +1218,7 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 	}
 
 	row := result.Rows[0]
-	if row.Decision != evaluation.DecisionInconclusive {
+	if row.Decision != evaluation.VerdictInconclusive {
 		t.Errorf("Expected INCONCLUSIVE (not PASS) for disappearing resource, got %s", row.Decision)
 	}
 }
@@ -1275,7 +1275,7 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 	}
 
 	row := result.Rows[0]
-	if row.Decision != evaluation.DecisionInconclusive {
+	if row.Decision != evaluation.VerdictInconclusive {
 		t.Errorf("Expected INCONCLUSIVE for incomplete window, got %s", row.Decision)
 	}
 }
@@ -1349,7 +1349,7 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 	}
 
 	row := result.Rows[0]
-	if row.Decision != evaluation.DecisionPass {
+	if row.Decision != evaluation.VerdictPass {
 		t.Errorf("Expected PASS for adequate coverage + safe, got %s (reason: %s)", row.Decision, row.Reason)
 	}
 	if row.Confidence != evaluation.ConfidenceHigh {
@@ -1425,7 +1425,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		}
 
 		row := result.Rows[0]
-		if row.Decision == evaluation.DecisionInconclusive {
+		if row.Decision == evaluation.VerdictInconclusive {
 			t.Errorf("Got INCONCLUSIVE (reason: %s), expected PASS with high confidence", row.Reason)
 		} else if row.Confidence != evaluation.ConfidenceHigh {
 			t.Errorf("Expected high confidence (MaxGap 10h <= 12h), got %s", row.Confidence)
@@ -1501,7 +1501,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		// This will be INCONCLUSIVE, not medium confidence.
 
 		// Let me fix this test - we need MaxGap to be between 6h and 12h
-		if row.Decision == evaluation.DecisionInconclusive {
+		if row.Decision == evaluation.VerdictInconclusive {
 			// This is expected because MaxGap = 14h > 12h
 			return
 		}
@@ -1675,7 +1675,7 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 
 	// Only closed episodes are counted for recurrence.
 	// With this fixture, archived count stays below limit, so sparse coverage makes it inconclusive.
-	if row.Decision != evaluation.DecisionInconclusive {
+	if row.Decision != evaluation.VerdictInconclusive {
 		t.Errorf("Expected INCONCLUSIVE (open episode not counted), got %s", row.Decision)
 	}
 
@@ -1762,7 +1762,7 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 	row := result.Rows[0]
 
 	// Only 1 episode in window (the open one), should be PASS (limit = 3)
-	if row.Decision != evaluation.DecisionPass {
+	if row.Decision != evaluation.VerdictPass {
 		t.Errorf("Expected PASS (only 1 open episode in window < limit 3), got %s", row.Decision)
 	}
 
