@@ -40,14 +40,12 @@ func NewEvaluator(controls []policy.ControlDefinition, maxUnsafe time.Duration, 
 	for i := range controls {
 		_ = controls[i].Prepare()
 	}
-	return &testEvaluator{
-		runner: engine.Runner{
-			Controls:          controls,
-			MaxUnsafeDuration: maxUnsafe,
-			Clock:             clock,
-			CELEvaluator:      testCELEvaluator(),
-		},
-	}
+	r := engine.NewRunner()
+	r.Controls = controls
+	r.MaxUnsafeDuration = maxUnsafe
+	r.Clock = clock
+	r.CELEvaluator = testCELEvaluator()
+	return &testEvaluator{runner: *r}
 }
 
 type testEvaluator struct {

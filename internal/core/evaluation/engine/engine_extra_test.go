@@ -252,7 +252,7 @@ func TestUnsupportedStrategy(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestRunnerMaxGapThreshold(t *testing.T) {
-	r := &Runner{}
+	r := NewRunner()
 	if got := r.maxGapThreshold(); got != DefaultMaxGapThreshold {
 		t.Fatalf("default = %v", got)
 	}
