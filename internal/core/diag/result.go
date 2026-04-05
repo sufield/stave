@@ -5,120 +5,120 @@ import (
 	"strings"
 )
 
-// Report groups diagnostic issues and provides aggregate inquiry helpers.
-type Report struct {
-	Issues []Diagnostic `json:"issues"`
+// Assessment groups security findings and provides aggregate analysis helpers.
+type Assessment struct {
+	Findings []Finding `json:"findings"`
 }
 
-// NewResult creates an empty diagnostic result.
-func NewResult() *Report {
-	return &Report{Issues: make([]Diagnostic, 0)}
+// NewAssessment creates an empty security assessment.
+func NewAssessment() *Assessment {
+	return &Assessment{Findings: make([]Finding, 0)}
 }
 
-// Add appends a single issue.
-func (r *Report) Add(issue Diagnostic) {
-	if r == nil {
+// Record adds a single security finding to the assessment.
+func (a *Assessment) Record(finding Finding) {
+	if a == nil {
 		return
 	}
-	r.Issues = append(r.Issues, issue)
+	a.Findings = append(a.Findings, finding)
 }
 
-// AddAll appends multiple issues.
-func (r *Report) AddAll(issues []Diagnostic) {
-	if r == nil || len(issues) == 0 {
+// RecordAll appends multiple findings.
+func (a *Assessment) RecordAll(findings []Finding) {
+	if a == nil || len(findings) == 0 {
 		return
 	}
-	r.Issues = append(r.Issues, issues...)
+	a.Findings = append(a.Findings, findings...)
 }
 
-// Merge appends issues from another result.
-func (r *Report) Merge(other *Report) {
-	if r == nil || other == nil || len(other.Issues) == 0 {
+// Merge appends findings from another assessment.
+func (a *Assessment) Merge(other *Assessment) {
+	if a == nil || other == nil || len(other.Findings) == 0 {
 		return
 	}
-	r.Issues = append(r.Issues, other.Issues...)
+	a.Findings = append(a.Findings, other.Findings...)
 }
 
-// HasErrors reports whether any issue is error severity.
-func (r *Report) HasErrors() bool {
-	if r == nil {
+// Failed reports whether any finding has error severity.
+func (a *Assessment) Failed() bool {
+	if a == nil {
 		return false
 	}
-	for _, issue := range r.Issues {
-		if issue.Signal == SignalError {
+	for _, f := range a.Findings {
+		if f.Severity == SeverityError {
 			return true
 		}
 	}
 	return false
 }
 
-// HasWarnings reports whether any issue is warning severity.
-func (r *Report) HasWarnings() bool {
-	if r == nil {
+// HasWarnings reports whether any finding has warning severity.
+func (a *Assessment) HasWarnings() bool {
+	if a == nil {
 		return false
 	}
-	for _, issue := range r.Issues {
-		if issue.Signal == SignalWarn {
+	for _, f := range a.Findings {
+		if f.Severity == SeverityWarn {
 			return true
 		}
 	}
 	return false
 }
 
-// Errors returns only error-level issues.
-func (r *Report) Errors() []Diagnostic {
-	return r.filter(SignalError)
+// Errors returns only error-level findings.
+func (a *Assessment) Errors() []Finding {
+	return a.filter(SeverityError)
 }
 
-// Warnings returns only warning-level issues.
-func (r *Report) Warnings() []Diagnostic {
-	return r.filter(SignalWarn)
+// Warnings returns only warning-level findings.
+func (a *Assessment) Warnings() []Finding {
+	return a.filter(SeverityWarn)
 }
 
-func (r *Report) filter(signal Signal) []Diagnostic {
-	if r == nil {
+func (a *Assessment) filter(sev Severity) []Finding {
+	if a == nil {
 		return nil
 	}
-	filtered := make([]Diagnostic, 0, len(r.Issues))
-	for _, issue := range r.Issues {
-		if issue.Signal == signal {
-			filtered = append(filtered, issue)
+	filtered := make([]Finding, 0, len(a.Findings))
+	for _, f := range a.Findings {
+		if f.Severity == sev {
+			filtered = append(filtered, f)
 		}
 	}
 	return filtered
 }
 
 // Error implements error for interoperability with Go error handling.
-func (r *Report) Error() string {
-	if r == nil || len(r.Issues) == 0 {
-		return "validation failed: 0 errors, 0 warnings"
+func (a *Assessment) Error() string {
+	if a == nil || len(a.Findings) == 0 {
+		return "security assessment passed: 0 errors, 0 warnings"
 	}
 
 	var errs, warns int
-	for _, iss := range r.Issues {
-		switch iss.Signal {
-		case SignalError:
+	for _, f := range a.Findings {
+		switch f.Severity {
+		case SeverityError:
 			errs++
-		case SignalWarn:
+		case SeverityWarn:
 			warns++
 		}
 	}
 
-	summary := fmt.Sprintf("validation failed: %d errors, %d warnings", errs, warns)
-	if first := r.firstIssueSummary(); first != "" {
+	summary := fmt.Sprintf("security assessment failed: %d errors, %d warnings", errs, warns)
+	if first := a.firstFindingSummary(); first != "" {
 		return summary + ": " + first
 	}
 	return summary
 }
 
-func (r *Report) firstIssueSummary() string {
-	if r == nil || len(r.Issues) == 0 {
+func (a *Assessment) firstFindingSummary() string {
+	if a == nil || len(a.Findings) == 0 {
 		return ""
 	}
-	issue := r.Issues[0]
+	f := a.Findings[0]
 
-	path, hasPath := issue.Evidence.Get("path")
-	msg := strings.TrimSpace(issue.Message)
+	path, hasPath := f.Resource.Get("path")
+	msg := strings.TrimSpace(f.Message)
 	switch {
 	case msg != "" && hasPath:
 		return fmt.Sprintf("%s (%s)", msg, path)
@@ -127,6 +127,6 @@ func (r *Report) firstIssueSummary() string {
 	case hasPath:
 		return path
 	default:
-		return string(issue.Code)
+		return string(f.RuleID)
 	}
 }

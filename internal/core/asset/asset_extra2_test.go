@@ -415,7 +415,7 @@ func TestCheckDurationFeasibility_InsufficientSpan(t *testing.T) {
 
 	found := false
 	for _, issue := range issues {
-		if issue.Code == "SPAN_LESS_THAN_MAX_UNSAFE" {
+		if issue.RuleID == "SPAN_LESS_THAN_MAX_UNSAFE" {
 			found = true
 		}
 	}

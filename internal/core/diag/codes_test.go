@@ -2,47 +2,47 @@ package diag
 
 import "testing"
 
-func TestCodes_NotEmpty(t *testing.T) {
-	// Verify canonical codes are non-empty strings.
-	codes := []Code{
-		CodeControlLoadFailed,
-		CodeObservationLoadFailed,
-		CodeControlMissingID,
-		CodeSchemaViolation,
-		CodeUnsupportedSchemaVersion,
-		CodeNoControls,
-		CodeNoSnapshots,
-		CodeSingleSnapshot,
-		CodeInvalidMaxUnsafe,
-		CodeInvalidNowTime,
+func TestRuleIDs_NotEmpty(t *testing.T) {
+	// Verify canonical rule IDs are non-empty strings.
+	rules := []RuleID{
+		RuleControlLoadFailed,
+		RuleObservationLoadFailed,
+		RuleControlMissingID,
+		RuleSchemaViolation,
+		RuleUnsupportedSchemaVersion,
+		RuleNoControls,
+		RuleNoSnapshots,
+		RuleSingleSnapshot,
+		RuleInvalidMaxUnsafe,
+		RuleInvalidNowTime,
 	}
-	for _, c := range codes {
-		if c == "" {
-			t.Fatal("found empty code constant")
+	for _, r := range rules {
+		if r == "" {
+			t.Fatal("found empty rule ID constant")
 		}
 	}
 }
 
-func TestCodes_Unique(t *testing.T) {
-	codes := []Code{
-		CodeControlLoadFailed, CodeObservationLoadFailed,
-		CodeControlMissingID, CodeControlMissingName, CodeControlMissingDesc,
-		CodeControlUndefinedParam, CodeControlBadDurationParam, CodeNowBeforeSnapshots,
-		CodeNoControls, CodeControlBadIDFormat, CodeControlBadSeverity,
-		CodeControlBadType, CodeControlEmptyPredicate, CodeControlUnsupportedOperator,
-		CodeControlNeverMatches, CodeNoSnapshots, CodeSingleSnapshot,
-		CodeDuplicateAssetID, CodeSnapshotsUnsorted, CodeDuplicateTimestamp,
-		CodeSpanLessThanMaxUnsafe, CodeAssetIDReusedTypes, CodeAssetSingleAppearance,
-		CodeAmbiguousTags,
-		CodeSchemaViolation, CodeUnsupportedSchemaVersion,
-		CodeInvalidMaxUnsafe, CodeInvalidNowTime,
-		CodePackRegistryLoadFailed, CodeProjectConfigLoadFailed, CodeUnknownControlPack,
+func TestRuleIDs_Unique(t *testing.T) {
+	rules := []RuleID{
+		RuleControlLoadFailed, RuleObservationLoadFailed,
+		RuleControlMissingID, RuleControlMissingName, RuleControlMissingDesc,
+		RuleControlUndefinedParam, RuleControlBadDurationParam, RuleNowBeforeSnapshots,
+		RuleNoControls, RuleControlBadIDFormat, RuleControlBadSeverity,
+		RuleControlBadType, RuleControlEmptyPredicate, RuleControlUnsupportedOperator,
+		RuleControlNeverMatches, RuleNoSnapshots, RuleSingleSnapshot,
+		RuleDuplicateAssetID, RuleSnapshotsUnsorted, RuleDuplicateTimestamp,
+		RuleSpanLessThanMaxUnsafe, RuleAssetIDReusedTypes, RuleAssetSingleAppearance,
+		RuleAmbiguousTags,
+		RuleSchemaViolation, RuleUnsupportedSchemaVersion,
+		RuleInvalidMaxUnsafe, RuleInvalidNowTime,
+		RulePackRegistryLoadFailed, RuleProjectConfigLoadFailed, RuleUnknownControlPack,
 	}
-	seen := make(map[Code]bool, len(codes))
-	for _, c := range codes {
-		if seen[c] {
-			t.Fatalf("duplicate code: %s", c)
+	seen := make(map[RuleID]bool, len(rules))
+	for _, r := range rules {
+		if seen[r] {
+			t.Fatalf("duplicate rule ID: %s", r)
 		}
-		seen[c] = true
+		seen[r] = true
 	}
 }

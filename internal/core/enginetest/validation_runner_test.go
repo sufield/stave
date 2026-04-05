@@ -62,46 +62,46 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 
 			hasBadDuration := false
 			for _, issue := range issues {
-				if issue.Code == diag.CodeControlBadDurationParam {
+				if issue.RuleID == diag.RuleControlBadDurationParam {
 					hasBadDuration = true
 				}
 			}
 
 			if tt.wantError && !hasBadDuration {
-				t.Errorf("expected %s error for params %v, got none", diag.CodeControlBadDurationParam, tt.params)
+				t.Errorf("expected %s error for params %v, got none", diag.RuleControlBadDurationParam, tt.params)
 			}
 			if !tt.wantError && hasBadDuration {
-				t.Errorf("unexpected %s error for params %v", diag.CodeControlBadDurationParam, tt.params)
+				t.Errorf("unexpected %s error for params %v", diag.RuleControlBadDurationParam, tt.params)
 			}
 		})
 	}
 }
 
 func TestValidationCodesUnique(t *testing.T) {
-	codes := []diag.Code{
-		diag.CodeControlLoadFailed,
-		diag.CodeObservationLoadFailed,
-		diag.CodeControlMissingID,
-		diag.CodeControlMissingName,
-		diag.CodeControlMissingDesc,
-		diag.CodeControlUndefinedParam,
-		diag.CodeControlBadDurationParam,
-		diag.CodeNowBeforeSnapshots,
-		diag.CodeNoControls,
-		diag.CodeControlBadIDFormat,
-		diag.CodeControlBadType,
-		diag.CodeControlEmptyPredicate,
-		diag.CodeControlNeverMatches,
-		diag.CodeNoSnapshots,
-		diag.CodeSingleSnapshot,
-		diag.CodeDuplicateAssetID,
-		diag.CodeSnapshotsUnsorted,
-		diag.CodeDuplicateTimestamp,
-		diag.CodeSpanLessThanMaxUnsafe,
-		diag.CodeAssetIDReusedTypes,
-		diag.CodeAssetSingleAppearance,
+	codes := []diag.RuleID{
+		diag.RuleControlLoadFailed,
+		diag.RuleObservationLoadFailed,
+		diag.RuleControlMissingID,
+		diag.RuleControlMissingName,
+		diag.RuleControlMissingDesc,
+		diag.RuleControlUndefinedParam,
+		diag.RuleControlBadDurationParam,
+		diag.RuleNowBeforeSnapshots,
+		diag.RuleNoControls,
+		diag.RuleControlBadIDFormat,
+		diag.RuleControlBadType,
+		diag.RuleControlEmptyPredicate,
+		diag.RuleControlNeverMatches,
+		diag.RuleNoSnapshots,
+		diag.RuleSingleSnapshot,
+		diag.RuleDuplicateAssetID,
+		diag.RuleSnapshotsUnsorted,
+		diag.RuleDuplicateTimestamp,
+		diag.RuleSpanLessThanMaxUnsafe,
+		diag.RuleAssetIDReusedTypes,
+		diag.RuleAssetSingleAppearance,
 	}
-	seen := make(map[diag.Code]struct{})
+	seen := make(map[diag.RuleID]struct{})
 	for _, c := range codes {
 		if _, exists := seen[c]; exists {
 			t.Errorf("duplicate validation code: %s", c)

@@ -35,7 +35,7 @@ func TestGoldenSchemaFiles_ObservationsAccepted(t *testing.T) {
 			if err != nil {
 				t.Fatalf("validate %s: %v", entry.Name(), err)
 			}
-			if result.HasErrors() {
+			if result.Failed() {
 				t.Errorf("golden file %s rejected by validator:\n%s", entry.Name(), result)
 			}
 		})
@@ -72,7 +72,7 @@ func TestGoldenSchemaFiles_ControlsAccepted(t *testing.T) {
 			if err != nil {
 				t.Fatalf("validate %s: %v", entry.Name(), err)
 			}
-			if result.HasErrors() {
+			if result.Failed() {
 				t.Errorf("golden file %s rejected by validator:\n%s", entry.Name(), result)
 			}
 		})
@@ -109,7 +109,7 @@ func TestGhostSchemaVersions_Rejected(t *testing.T) {
 			if err != nil {
 				t.Fatalf("validate error: %v", err)
 			}
-			if !result.HasErrors() && !result.HasWarnings() {
+			if !result.Failed() && !result.HasWarnings() {
 				t.Errorf("ghost version %q was accepted — expected rejection", tc.version)
 			}
 		})
@@ -134,7 +134,7 @@ func TestGhostSchemaVersions_Rejected(t *testing.T) {
 			if err != nil {
 				t.Fatalf("validate error: %v", err)
 			}
-			if !result.HasErrors() && !result.HasWarnings() {
+			if !result.Failed() && !result.HasWarnings() {
 				t.Errorf("ghost version %q was accepted — expected rejection", tc.version)
 			}
 		})

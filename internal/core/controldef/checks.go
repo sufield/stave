@@ -38,15 +38,15 @@ func (p UnsafePredicate) MissingParamReferences(params ControlParams) []string {
 // CheckEffectiveness identifies controls that never triggered across the
 // provided dataset. This is a diagnostic tool to find misconfigured or
 // obsolete rules.
-func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) []diag.Diagnostic {
+func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) []diag.Finding {
 	if eval == nil {
 		return nil
 	}
 
-	var issues []diag.Diagnostic
+	var issues []diag.Finding
 	for _, ctl := range controls {
 		if !isTriggered(ctl, snapshots, eval) {
-			issues = append(issues, diag.New(diag.CodeControlNeverMatches).
+			issues = append(issues, diag.New(diag.RuleControlNeverMatches).
 				Warning().
 				Action("Check predicate field paths or verify if all resources are currently safe.").
 				WithMap(ctl.issueContext(nil)).

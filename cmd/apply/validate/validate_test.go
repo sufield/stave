@@ -146,7 +146,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 func TestOutputAndExit_Clean(t *testing.T) {
 	// No errors, no warnings → exit 0
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{}},
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{}},
 		Summary: appvalidation.Summary{
 			ControlsLoaded:          2,
 			SnapshotsLoaded:         3,
@@ -174,11 +174,11 @@ func TestOutputAndExit_Clean(t *testing.T) {
 func TestOutputAndExit_Errors(t *testing.T) {
 	// Has errors → exit 2
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				Code:   diag.CodeControlMissingID,
-				Signal: diag.SignalError,
-				Action: "Add id field",
+				RuleID:   diag.RuleControlMissingID,
+				Severity: diag.SeverityError,
+				Action:   "Add id field",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -206,16 +206,16 @@ func TestOutputAndExit_Errors(t *testing.T) {
 func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	// Warnings only, no errors → exit 2
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				Code:   diag.CodeSingleSnapshot,
-				Signal: diag.SignalWarn,
-				Action: "Add more snapshots",
+				RuleID:   diag.RuleSingleSnapshot,
+				Severity: diag.SeverityWarn,
+				Action:   "Add more snapshots",
 			},
 			{
-				Code:   diag.CodeSpanLessThanMaxUnsafe,
-				Signal: diag.SignalWarn,
-				Action: "Reduce max-unsafe",
+				RuleID:   diag.RuleSpanLessThanMaxUnsafe,
+				Severity: diag.SeverityWarn,
+				Action:   "Reduce max-unsafe",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -243,16 +243,16 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	// Has both errors and warnings → exit 2 (errors take precedence)
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				Code:   diag.CodeControlMissingID,
-				Signal: diag.SignalError,
-				Action: "Add id field",
+				RuleID:   diag.RuleControlMissingID,
+				Severity: diag.SeverityError,
+				Action:   "Add id field",
 			},
 			{
-				Code:   diag.CodeSingleSnapshot,
-				Signal: diag.SignalWarn,
-				Action: "Add more snapshots",
+				RuleID:   diag.RuleSingleSnapshot,
+				Severity: diag.SeverityWarn,
+				Action:   "Add more snapshots",
 			},
 		}},
 		Summary: appvalidation.Summary{
@@ -282,11 +282,11 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = false
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				Code:   diag.CodeSingleSnapshot,
-				Signal: diag.SignalWarn,
-				Evidence: kernel.NewSanitizableMap(map[string]string{
+				RuleID:   diag.RuleSingleSnapshot,
+				Severity: diag.SeverityWarn,
+				Resource: kernel.NewSanitizableMap(map[string]string{
 					"snapshot_count": "1",
 				}),
 				Action: "Add more snapshots",
@@ -312,8 +312,8 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 	if !strings.Contains(output, `"valid": true`) {
 		t.Errorf("expected JSON to contain 'valid': true, got %s", output)
 	}
-	if !strings.Contains(output, `"code": "SINGLE_SNAPSHOT"`) {
-		t.Errorf("expected JSON to contain warning code, got %s", output)
+	if !strings.Contains(output, `"rule_id": "SINGLE_SNAPSHOT"`) {
+		t.Errorf("expected JSON to contain warning rule_id, got %s", output)
 	}
 
 	// Should return warnings error
@@ -329,12 +329,12 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	opts.Observations = "./observations"
 
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				Code:   diag.CodeObservationLoadFailed,
-				Signal: diag.SignalError,
-				Action: "Check observations",
-				Evidence: kernel.NewSanitizableMap(map[string]string{
+				RuleID:   diag.RuleObservationLoadFailed,
+				Severity: diag.SeverityError,
+				Action:   "Check observations",
+				Resource: kernel.NewSanitizableMap(map[string]string{
 					"directory": "./observations",
 				}),
 			},
@@ -360,12 +360,12 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	opts.FixHints = true
 
 	result := &appvalidation.Report{
-		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
 			{
-				Code:    "INVALID_MAX_UNSAFE",
-				Signal:  diag.SignalError,
-				Action:  "Use valid duration",
-				Command: "stave validate --max-unsafe 168h",
+				RuleID:   "INVALID_MAX_UNSAFE",
+				Severity: diag.SeverityError,
+				Action:   "Use valid duration",
+				Command:  "stave validate --max-unsafe 168h",
 			},
 		}},
 	}

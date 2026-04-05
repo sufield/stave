@@ -2,95 +2,95 @@ package diag
 
 import "github.com/sufield/stave/internal/core/kernel"
 
-// Signal defines the severity of a diagnostic issue.
-type Signal string
+// Severity defines the severity of a security finding.
+type Severity string
 
-// Diagnostic signal severity levels.
+// Finding severity levels.
 const (
-	SignalError Signal = "error"
-	SignalWarn  Signal = "warning"
-	SignalInfo  Signal = "info"
+	SeverityError Severity = "error"
+	SeverityWarn  Severity = "warning"
+	SeverityInfo  Severity = "info"
 )
 
-// Diagnostic is the canonical diagnostic finding shape across validation flows.
-type Diagnostic struct {
-	Code     Code                  `json:"code"`
-	Signal   Signal                `json:"signal"`
+// Finding is the canonical security finding shape across validation flows.
+type Finding struct {
+	RuleID   RuleID                `json:"rule_id"`
+	Severity Severity              `json:"severity"`
 	Message  string                `json:"message,omitempty"`
 	Action   string                `json:"action"`
-	Evidence kernel.SanitizableMap `json:"evidence"`
+	Resource kernel.SanitizableMap `json:"resource"`
 	Command  string                `json:"command,omitempty"`
 }
 
-// Builder provides fluent issue construction.
+// Builder provides fluent finding construction.
 type Builder struct {
-	issue Diagnostic
+	finding Finding
 }
 
-// New starts a new issue builder with a required code.
-func New(code Code) *Builder {
+// New starts a new finding builder with a required rule ID.
+func New(rule RuleID) *Builder {
 	return &Builder{
-		issue: Diagnostic{
-			Code:     code,
-			Signal:   SignalError,
-			Evidence: kernel.NewSanitizableMap(nil),
+		finding: Finding{
+			RuleID:   rule,
+			Severity: SeverityError,
+			Resource: kernel.NewSanitizableMap(nil),
 		},
 	}
 }
 
-// Error sets the issue signal to error severity.
+// Error sets the finding severity to error.
 func (b *Builder) Error() *Builder {
-	b.issue.Signal = SignalError
+	b.finding.Severity = SeverityError
 	return b
 }
 
-// Warning sets the issue signal to warning severity.
+// Warning sets the finding severity to warning.
 func (b *Builder) Warning() *Builder {
-	b.issue.Signal = SignalWarn
+	b.finding.Severity = SeverityWarn
 	return b
 }
 
-// Msg sets the human-readable issue message.
+// Msg sets the human-readable finding message.
 func (b *Builder) Msg(message string) *Builder {
-	b.issue.Message = message
+	b.finding.Message = message
 	return b
 }
 
 // Action sets the recommended remediation action.
 func (b *Builder) Action(action string) *Builder {
-	b.issue.Action = action
+	b.finding.Action = action
 	return b
 }
 
-// Command sets the suggested CLI command to resolve the issue.
+// Command sets the suggested CLI command to resolve the finding.
 func (b *Builder) Command(command string) *Builder {
-	b.issue.Command = command
+	b.finding.Command = command
 	return b
 }
 
-// With adds a non-sensitive evidence entry.
+// With adds a non-sensitive resource entry.
 func (b *Builder) With(key, value string) *Builder {
-	b.issue.Evidence.Set(key, value)
+	b.finding.Resource.Set(key, value)
 	return b
 }
 
-// WithMap merges non-sensitive evidence entries.
+// WithMap merges non-sensitive resource entries.
 func (b *Builder) WithMap(values map[string]string) *Builder {
 	for key, value := range values {
-		b.issue.Evidence.Set(key, value)
+		b.finding.Resource.Set(key, value)
 	}
 	return b
 }
 
-// WithSensitive adds a sensitive evidence entry.
+// WithSensitive adds a sensitive resource entry.
 func (b *Builder) WithSensitive(key, value string) *Builder {
-	b.issue.Evidence.SetSensitive(key, value)
+	b.finding.Resource.SetSensitive(key, value)
 	return b
 }
 
-// Build returns the finalized issue.
-func (b *Builder) Build() Diagnostic {
-	issue := b.issue
-	issue.Evidence = b.issue.Evidence.Clone()
-	return issue
+// Build returns the finalized finding.
+func (b *Builder) Build() Finding {
+	finding := b.finding
+	finding.Resource = b.finding.Resource.Clone()
+	return finding
 }

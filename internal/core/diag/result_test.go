@@ -2,268 +2,268 @@ package diag
 
 import "testing"
 
-func TestNewResult_Empty(t *testing.T) {
-	r := NewResult()
-	if r == nil {
-		t.Fatal("NewResult returned nil")
+func TestNewAssessment_Empty(t *testing.T) {
+	a := NewAssessment()
+	if a == nil {
+		t.Fatal("NewAssessment returned nil")
 	}
-	if len(r.Issues) != 0 {
-		t.Fatalf("new result has %d issues, want 0", len(r.Issues))
-	}
-}
-
-func TestResult_Add(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Msg("bad schema").Build())
-	if len(r.Issues) != 1 {
-		t.Fatalf("after Add: len=%d, want 1", len(r.Issues))
+	if len(a.Findings) != 0 {
+		t.Fatalf("new assessment has %d findings, want 0", len(a.Findings))
 	}
 }
 
-func TestResult_Add_NilReceiver(_ *testing.T) {
-	var r *Report
+func TestAssessment_Record(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Msg("bad schema").Build())
+	if len(a.Findings) != 1 {
+		t.Fatalf("after Record: len=%d, want 1", len(a.Findings))
+	}
+}
+
+func TestAssessment_Record_NilReceiver(_ *testing.T) {
+	var a *Assessment
 	// Should not panic.
-	r.Add(New(CodeSchemaViolation).Build())
+	a.Record(New(RuleSchemaViolation).Build())
 }
 
-func TestResult_AddAll(t *testing.T) {
-	r := NewResult()
-	issues := []Diagnostic{
-		New(CodeSchemaViolation).Error().Build(),
-		New(CodeNoControls).Warning().Build(),
+func TestAssessment_RecordAll(t *testing.T) {
+	a := NewAssessment()
+	findings := []Finding{
+		New(RuleSchemaViolation).Error().Build(),
+		New(RuleNoControls).Warning().Build(),
 	}
-	r.AddAll(issues)
-	if len(r.Issues) != 2 {
-		t.Fatalf("after AddAll: len=%d, want 2", len(r.Issues))
-	}
-}
-
-func TestResult_AddAll_NilReceiver(_ *testing.T) {
-	var r *Report
-	r.AddAll([]Diagnostic{New(CodeSchemaViolation).Build()})
-}
-
-func TestResult_AddAll_EmptySlice(t *testing.T) {
-	r := NewResult()
-	r.AddAll(nil)
-	if len(r.Issues) != 0 {
-		t.Fatalf("after AddAll(nil): len=%d, want 0", len(r.Issues))
+	a.RecordAll(findings)
+	if len(a.Findings) != 2 {
+		t.Fatalf("after RecordAll: len=%d, want 2", len(a.Findings))
 	}
 }
 
-func TestResult_Merge(t *testing.T) {
-	r1 := NewResult()
-	r1.Add(New(CodeSchemaViolation).Error().Build())
-	r2 := NewResult()
-	r2.Add(New(CodeNoControls).Warning().Build())
-	r2.Add(New(CodeNoSnapshots).Warning().Build())
+func TestAssessment_RecordAll_NilReceiver(_ *testing.T) {
+	var a *Assessment
+	a.RecordAll([]Finding{New(RuleSchemaViolation).Build()})
+}
 
-	r1.Merge(r2)
-	if len(r1.Issues) != 3 {
-		t.Fatalf("after Merge: len=%d, want 3", len(r1.Issues))
+func TestAssessment_RecordAll_EmptySlice(t *testing.T) {
+	a := NewAssessment()
+	a.RecordAll(nil)
+	if len(a.Findings) != 0 {
+		t.Fatalf("after RecordAll(nil): len=%d, want 0", len(a.Findings))
 	}
 }
 
-func TestResult_Merge_NilReceiver(_ *testing.T) {
-	var r *Report
-	other := NewResult()
-	other.Add(New(CodeSchemaViolation).Build())
-	r.Merge(other) // Should not panic.
-}
+func TestAssessment_Merge(t *testing.T) {
+	a1 := NewAssessment()
+	a1.Record(New(RuleSchemaViolation).Error().Build())
+	a2 := NewAssessment()
+	a2.Record(New(RuleNoControls).Warning().Build())
+	a2.Record(New(RuleNoSnapshots).Warning().Build())
 
-func TestResult_Merge_NilOther(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Build())
-	r.Merge(nil)
-	if len(r.Issues) != 1 {
-		t.Fatalf("after Merge(nil): len=%d, want 1", len(r.Issues))
+	a1.Merge(a2)
+	if len(a1.Findings) != 3 {
+		t.Fatalf("after Merge: len=%d, want 3", len(a1.Findings))
 	}
 }
 
-func TestResult_Merge_EmptyOther(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Build())
-	r.Merge(NewResult())
-	if len(r.Issues) != 1 {
-		t.Fatalf("after Merge(empty): len=%d, want 1", len(r.Issues))
+func TestAssessment_Merge_NilReceiver(_ *testing.T) {
+	var a *Assessment
+	other := NewAssessment()
+	other.Record(New(RuleSchemaViolation).Build())
+	a.Merge(other) // Should not panic.
+}
+
+func TestAssessment_Merge_NilOther(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Build())
+	a.Merge(nil)
+	if len(a.Findings) != 1 {
+		t.Fatalf("after Merge(nil): len=%d, want 1", len(a.Findings))
 	}
 }
 
-func TestResult_HasErrors(t *testing.T) {
+func TestAssessment_Merge_EmptyOther(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Build())
+	a.Merge(NewAssessment())
+	if len(a.Findings) != 1 {
+		t.Fatalf("after Merge(empty): len=%d, want 1", len(a.Findings))
+	}
+}
+
+func TestAssessment_Failed(t *testing.T) {
 	tests := []struct {
-		name   string
-		issues []Diagnostic
-		want   bool
+		name     string
+		findings []Finding
+		want     bool
 	}{
-		{"no issues", nil, false},
-		{"warning only", []Diagnostic{New(CodeNoControls).Warning().Build()}, false},
-		{"error present", []Diagnostic{New(CodeSchemaViolation).Error().Build()}, true},
-		{"mixed", []Diagnostic{
-			New(CodeNoControls).Warning().Build(),
-			New(CodeSchemaViolation).Error().Build(),
+		{"no findings", nil, false},
+		{"warning only", []Finding{New(RuleNoControls).Warning().Build()}, false},
+		{"error present", []Finding{New(RuleSchemaViolation).Error().Build()}, true},
+		{"mixed", []Finding{
+			New(RuleNoControls).Warning().Build(),
+			New(RuleSchemaViolation).Error().Build(),
 		}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewResult()
-			r.AddAll(tt.issues)
-			if got := r.HasErrors(); got != tt.want {
-				t.Fatalf("HasErrors()=%v, want %v", got, tt.want)
+			a := NewAssessment()
+			a.RecordAll(tt.findings)
+			if got := a.Failed(); got != tt.want {
+				t.Fatalf("Failed()=%v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestResult_HasErrors_NilReceiver(t *testing.T) {
-	var r *Report
-	if r.HasErrors() {
-		t.Fatal("nil receiver HasErrors should return false")
+func TestAssessment_Failed_NilReceiver(t *testing.T) {
+	var a *Assessment
+	if a.Failed() {
+		t.Fatal("nil receiver Failed should return false")
 	}
 }
 
-func TestResult_HasWarnings(t *testing.T) {
+func TestAssessment_HasWarnings(t *testing.T) {
 	tests := []struct {
-		name   string
-		issues []Diagnostic
-		want   bool
+		name     string
+		findings []Finding
+		want     bool
 	}{
-		{"no issues", nil, false},
-		{"error only", []Diagnostic{New(CodeSchemaViolation).Error().Build()}, false},
-		{"warning present", []Diagnostic{New(CodeNoControls).Warning().Build()}, true},
+		{"no findings", nil, false},
+		{"error only", []Finding{New(RuleSchemaViolation).Error().Build()}, false},
+		{"warning present", []Finding{New(RuleNoControls).Warning().Build()}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewResult()
-			r.AddAll(tt.issues)
-			if got := r.HasWarnings(); got != tt.want {
+			a := NewAssessment()
+			a.RecordAll(tt.findings)
+			if got := a.HasWarnings(); got != tt.want {
 				t.Fatalf("HasWarnings()=%v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestResult_HasWarnings_NilReceiver(t *testing.T) {
-	var r *Report
-	if r.HasWarnings() {
+func TestAssessment_HasWarnings_NilReceiver(t *testing.T) {
+	var a *Assessment
+	if a.HasWarnings() {
 		t.Fatal("nil receiver HasWarnings should return false")
 	}
 }
 
-func TestResult_Errors(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Build())
-	r.Add(New(CodeNoControls).Warning().Build())
-	r.Add(New(CodeControlLoadFailed).Error().Build())
+func TestAssessment_Errors(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Build())
+	a.Record(New(RuleNoControls).Warning().Build())
+	a.Record(New(RuleControlLoadFailed).Error().Build())
 
-	errs := r.Errors()
+	errs := a.Errors()
 	if len(errs) != 2 {
 		t.Fatalf("Errors() len=%d, want 2", len(errs))
 	}
 	for _, e := range errs {
-		if e.Signal != SignalError {
-			t.Fatalf("Errors() returned signal=%q", e.Signal)
+		if e.Severity != SeverityError {
+			t.Fatalf("Errors() returned severity=%q", e.Severity)
 		}
 	}
 }
 
-func TestResult_Warnings(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Build())
-	r.Add(New(CodeNoControls).Warning().Build())
+func TestAssessment_Warnings(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Build())
+	a.Record(New(RuleNoControls).Warning().Build())
 
-	warns := r.Warnings()
+	warns := a.Warnings()
 	if len(warns) != 1 {
 		t.Fatalf("Warnings() len=%d, want 1", len(warns))
 	}
-	if warns[0].Signal != SignalWarn {
-		t.Fatalf("Warnings() returned signal=%q", warns[0].Signal)
+	if warns[0].Severity != SeverityWarn {
+		t.Fatalf("Warnings() returned severity=%q", warns[0].Severity)
 	}
 }
 
-func TestResult_Filter_NilReceiver(t *testing.T) {
-	var r *Report
-	if errs := r.Errors(); errs != nil {
+func TestAssessment_Filter_NilReceiver(t *testing.T) {
+	var a *Assessment
+	if errs := a.Errors(); errs != nil {
 		t.Fatalf("nil receiver Errors() should return nil, got %v", errs)
 	}
-	if warns := r.Warnings(); warns != nil {
+	if warns := a.Warnings(); warns != nil {
 		t.Fatalf("nil receiver Warnings() should return nil, got %v", warns)
 	}
 }
 
-func TestResult_Error_NoIssues(t *testing.T) {
-	r := NewResult()
-	got := r.Error()
-	want := "validation failed: 0 errors, 0 warnings"
+func TestAssessment_Error_NoFindings(t *testing.T) {
+	a := NewAssessment()
+	got := a.Error()
+	want := "security assessment passed: 0 errors, 0 warnings"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
 }
 
-func TestResult_Error_NilReceiver(t *testing.T) {
-	var r *Report
-	got := r.Error()
-	want := "validation failed: 0 errors, 0 warnings"
+func TestAssessment_Error_NilReceiver(t *testing.T) {
+	var a *Assessment
+	got := a.Error()
+	want := "security assessment passed: 0 errors, 0 warnings"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
 }
 
-func TestResult_Error_WithIssues(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Msg("bad field").With("path", "/dsl_version").Build())
-	r.Add(New(CodeNoControls).Warning().Build())
+func TestAssessment_Error_WithFindings(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Msg("bad field").With("path", "/dsl_version").Build())
+	a.Record(New(RuleNoControls).Warning().Build())
 
-	got := r.Error()
-	// Should contain counts and first issue summary.
+	got := a.Error()
+	// Should contain counts and first finding summary.
 	if got == "" {
 		t.Fatal("Error() should not be empty")
 	}
 	// Check counts.
-	wantPrefix := "validation failed: 1 errors, 1 warnings"
+	wantPrefix := "security assessment failed: 1 errors, 1 warnings"
 	if len(got) < len(wantPrefix) || got[:len(wantPrefix)] != wantPrefix {
 		t.Fatalf("Error()=%q, want prefix %q", got, wantPrefix)
 	}
 }
 
-func TestResult_Error_FirstIssueSummary_MessageAndPath(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Msg("missing field").With("path", "/version").Build())
-	got := r.Error()
+func TestAssessment_Error_FirstFindingSummary_MessageAndPath(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Msg("missing field").With("path", "/version").Build())
+	got := a.Error()
 	// Should contain "missing field (/version)"
 	if got == "" {
 		t.Fatal("empty")
 	}
-	want := "validation failed: 1 errors, 0 warnings: missing field (/version)"
+	want := "security assessment failed: 1 errors, 0 warnings: missing field (/version)"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
 }
 
-func TestResult_Error_FirstIssueSummary_MessageOnly(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Msg("something wrong").Build())
-	got := r.Error()
-	want := "validation failed: 1 errors, 0 warnings: something wrong"
+func TestAssessment_Error_FirstFindingSummary_MessageOnly(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Msg("something wrong").Build())
+	got := a.Error()
+	want := "security assessment failed: 1 errors, 0 warnings: something wrong"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
 }
 
-func TestResult_Error_FirstIssueSummary_PathOnly(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().With("path", "/foo").Build())
-	got := r.Error()
-	want := "validation failed: 1 errors, 0 warnings: /foo"
+func TestAssessment_Error_FirstFindingSummary_PathOnly(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().With("path", "/foo").Build())
+	got := a.Error()
+	want := "security assessment failed: 1 errors, 0 warnings: /foo"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
 }
 
-func TestResult_Error_FirstIssueSummary_CodeOnly(t *testing.T) {
-	r := NewResult()
-	r.Add(New(CodeSchemaViolation).Error().Build())
-	got := r.Error()
-	want := "validation failed: 1 errors, 0 warnings: SCHEMA_VIOLATION"
+func TestAssessment_Error_FirstFindingSummary_RuleIDOnly(t *testing.T) {
+	a := NewAssessment()
+	a.Record(New(RuleSchemaViolation).Error().Build())
+	got := a.Error()
+	want := "security assessment failed: 1 errors, 0 warnings: SCHEMA_VIOLATION"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}

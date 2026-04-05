@@ -67,9 +67,9 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	req.Report.Summary.SnapshotsChecked = val.Summary.SnapshotsLoaded
 	req.Report.Summary.AssetObservationsChecked = val.Summary.AssetObservationsLoaded
 
-	for _, issue := range readinessDiagnostics(val).Issues {
+	for _, issue := range readinessDiagnostics(val).Findings {
 		req.Report.RecordIssue(validation.Check{
-			Name:    string(issue.Code),
+			Name:    string(issue.RuleID),
 			Status:  readinessIssueStatus(issue),
 			Message: issue.Action,
 			Fix:     issue.Action,
@@ -79,15 +79,15 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	return nil
 }
 
-func readinessDiagnostics(val validation.Status) *diag.Report {
+func readinessDiagnostics(val validation.Status) *diag.Assessment {
 	if val.Diagnostics != nil {
 		return val.Diagnostics
 	}
-	return diag.NewResult()
+	return diag.NewAssessment()
 }
 
-func readinessIssueStatus(issue diag.Diagnostic) outcome.Status {
-	if issue.Signal == diag.SignalError {
+func readinessIssueStatus(issue diag.Finding) outcome.Status {
+	if issue.Severity == diag.SeverityError {
 		return outcome.Fail
 	}
 	return outcome.Warn

@@ -1,48 +1,48 @@
 package diag
 
-// Code is a typed diagnostic code for validation and contract diagnostics.
-type Code string
+// RuleID is a typed identifier for a security rule that was evaluated.
+type RuleID string
 
-// Canonical issue codes for validation and contract diagnostics.
+// Canonical rule IDs for validation and contract diagnostics.
 const (
 	// Errors (blocking) - loading failures
-	CodeControlLoadFailed     Code = "CONTROL_LOAD_FAILED"
-	CodeObservationLoadFailed Code = "OBSERVATION_LOAD_FAILED"
+	RuleControlLoadFailed     RuleID = "CONTROL_LOAD_FAILED"
+	RuleObservationLoadFailed RuleID = "OBSERVATION_LOAD_FAILED"
 
 	// Errors (blocking) - structural issues
-	CodeControlMissingID        Code = "CONTROL_MISSING_ID"
-	CodeControlMissingName      Code = "CONTROL_MISSING_NAME"
-	CodeControlMissingDesc      Code = "CONTROL_MISSING_DESCRIPTION"
-	CodeControlUndefinedParam   Code = "CONTROL_UNDEFINED_PARAM"
-	CodeControlBadDurationParam Code = "CONTROL_BAD_DURATION_PARAM"
-	CodeNowBeforeSnapshots      Code = "NOW_BEFORE_SNAPSHOTS"
+	RuleControlMissingID        RuleID = "CONTROL_MISSING_ID"
+	RuleControlMissingName      RuleID = "CONTROL_MISSING_NAME"
+	RuleControlMissingDesc      RuleID = "CONTROL_MISSING_DESCRIPTION"
+	RuleControlUndefinedParam   RuleID = "CONTROL_UNDEFINED_PARAM"
+	RuleControlBadDurationParam RuleID = "CONTROL_BAD_DURATION_PARAM"
+	RuleNowBeforeSnapshots      RuleID = "NOW_BEFORE_SNAPSHOTS"
 
 	// Warnings (non-blocking)
-	CodeNoControls                 Code = "NO_CONTROLS"
-	CodeControlBadIDFormat         Code = "CONTROL_BAD_ID_FORMAT"
-	CodeControlBadSeverity         Code = "CONTROL_BAD_SEVERITY"
-	CodeControlBadType             Code = "CONTROL_BAD_TYPE"
-	CodeControlEmptyPredicate      Code = "CONTROL_EMPTY_PREDICATE"
-	CodeControlUnsupportedOperator Code = "CONTROL_UNSUPPORTED_OPERATOR"
-	CodeControlNeverMatches        Code = "CONTROL_NEVER_MATCHES"
-	CodeNoSnapshots                Code = "NO_SNAPSHOTS"
-	CodeSingleSnapshot             Code = "SINGLE_SNAPSHOT"
-	CodeDuplicateAssetID           Code = "DUPLICATE_ASSET_ID"
-	CodeSnapshotsUnsorted          Code = "SNAPSHOTS_UNSORTED"
-	CodeDuplicateTimestamp         Code = "DUPLICATE_TIMESTAMP"
-	CodeSpanLessThanMaxUnsafe      Code = "SPAN_LESS_THAN_MAX_UNSAFE"
-	CodeAssetIDReusedTypes         Code = "ASSET_ID_REUSED_TYPES"
-	CodeAssetSingleAppearance      Code = "ASSET_SINGLE_APPEARANCE"
-	CodeAmbiguousTags              Code = "AMBIGUOUS_TAGS"
+	RuleNoControls                 RuleID = "NO_CONTROLS"
+	RuleControlBadIDFormat         RuleID = "CONTROL_BAD_ID_FORMAT"
+	RuleControlBadSeverity         RuleID = "CONTROL_BAD_SEVERITY"
+	RuleControlBadType             RuleID = "CONTROL_BAD_TYPE"
+	RuleControlEmptyPredicate      RuleID = "CONTROL_EMPTY_PREDICATE"
+	RuleControlUnsupportedOperator RuleID = "CONTROL_UNSUPPORTED_OPERATOR"
+	RuleControlNeverMatches        RuleID = "CONTROL_NEVER_MATCHES"
+	RuleNoSnapshots                RuleID = "NO_SNAPSHOTS"
+	RuleSingleSnapshot             RuleID = "SINGLE_SNAPSHOT"
+	RuleDuplicateAssetID           RuleID = "DUPLICATE_ASSET_ID"
+	RuleSnapshotsUnsorted          RuleID = "SNAPSHOTS_UNSORTED"
+	RuleDuplicateTimestamp         RuleID = "DUPLICATE_TIMESTAMP"
+	RuleSpanLessThanMaxUnsafe      RuleID = "SPAN_LESS_THAN_MAX_UNSAFE"
+	RuleAssetIDReusedTypes         RuleID = "ASSET_ID_REUSED_TYPES"
+	RuleAssetSingleAppearance      RuleID = "ASSET_SINGLE_APPEARANCE"
+	RuleAmbiguousTags              RuleID = "AMBIGUOUS_TAGS"
 
 	// Contract/schema validation.
-	CodeSchemaViolation          Code = "SCHEMA_VIOLATION"
-	CodeUnsupportedSchemaVersion Code = "UNSUPPORTED_SCHEMA_VERSION"
+	RuleSchemaViolation          RuleID = "SCHEMA_VIOLATION"
+	RuleUnsupportedSchemaVersion RuleID = "UNSUPPORTED_SCHEMA_VERSION"
 
 	// CLI parameter validation.
-	CodeInvalidMaxUnsafe        Code = "INVALID_MAX_UNSAFE"
-	CodeInvalidNowTime          Code = "INVALID_NOW_TIME"
-	CodePackRegistryLoadFailed  Code = "PACK_REGISTRY_LOAD_FAILED"
-	CodeProjectConfigLoadFailed Code = "PROJECT_CONFIG_LOAD_FAILED"
-	CodeUnknownControlPack      Code = "UNKNOWN_CONTROL_PACK"
+	RuleInvalidMaxUnsafe        RuleID = "INVALID_MAX_UNSAFE"
+	RuleInvalidNowTime          RuleID = "INVALID_NOW_TIME"
+	RulePackRegistryLoadFailed  RuleID = "PACK_REGISTRY_LOAD_FAILED"
+	RuleProjectConfigLoadFailed RuleID = "PROJECT_CONFIG_LOAD_FAILED"
+	RuleUnknownControlPack      RuleID = "UNKNOWN_CONTROL_PACK"
 )

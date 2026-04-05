@@ -69,7 +69,7 @@ func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 		return err
 	}
 
-	for _, issue := range diagnostics.Issues {
+	for _, issue := range diagnostics.Findings {
 		if err := printIssue(r.Writer, issue); err != nil {
 			return err
 		}
@@ -124,18 +124,18 @@ func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 	return err
 }
 
-func printIssue(w io.Writer, issue diag.Diagnostic) error {
+func printIssue(w io.Writer, issue diag.Finding) error {
 	level := "WARNING"
-	if issue.Signal == diag.SignalError {
+	if issue.Severity == diag.SeverityError {
 		level = "ERROR"
 	}
 
-	if _, err := fmt.Fprintln(w, ui.SeverityLabel(level, string(issue.Code), w)); err != nil {
+	if _, err := fmt.Fprintln(w, ui.SeverityLabel(level, string(issue.RuleID), w)); err != nil {
 		return err
 	}
 
-	for _, key := range issue.Evidence.Keys() {
-		if _, err := fmt.Fprintf(w, "  %s=%s\n", key, issue.Evidence.Sanitized(key)); err != nil {
+	for _, key := range issue.Resource.Keys() {
+		if _, err := fmt.Fprintf(w, "  %s=%s\n", key, issue.Resource.Sanitized(key)); err != nil {
 			return err
 		}
 	}
@@ -156,14 +156,14 @@ func printIssue(w io.Writer, issue diag.Diagnostic) error {
 // --- Data Models (DTOs) ---
 
 // Report is a clean DTO that maps the internal service result to the external
-// output format. diag.Diagnostic is the stable public contract for validation issues.
+// output format. diag.Finding is the stable public contract for validation issues.
 type Report struct {
-	SchemaVersion kernel.Schema     `json:"schema_version"`
-	Valid         bool              `json:"valid"`
-	Errors        []diag.Diagnostic `json:"errors,omitempty"`
-	Warnings      []diag.Diagnostic `json:"warnings,omitempty"`
-	FixHints      []string          `json:"fix_hints,omitempty"`
-	Summary       ReportSummary     `json:"summary"`
+	SchemaVersion kernel.Schema  `json:"schema_version"`
+	Valid         bool           `json:"valid"`
+	Errors        []diag.Finding `json:"errors,omitempty"`
+	Warnings      []diag.Finding `json:"warnings,omitempty"`
+	FixHints      []string       `json:"fix_hints,omitempty"`
+	Summary       ReportSummary  `json:"summary"`
 }
 
 // ReportSummary is the summary section of the validation report.
@@ -197,9 +197,9 @@ func buildReport(res *appvalidation.Report, includeHints bool, hc hintContext) R
 
 // --- Helpers ---
 
-func diagnosticsOf(result *appvalidation.Report) *diag.Report {
+func diagnosticsOf(result *appvalidation.Report) *diag.Assessment {
 	if result == nil || result.Diagnostics == nil {
-		return diag.NewResult()
+		return diag.NewAssessment()
 	}
 	return result.Diagnostics
 }

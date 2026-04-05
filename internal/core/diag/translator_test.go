@@ -13,7 +13,7 @@ func (e testExternalError) Description() string { return e.desc }
 func (e testExternalError) Code() string        { return e.code }
 
 func TestTranslator_TranslateWithPrefix(t *testing.T) {
-	translator := NewTranslator(CodeSchemaViolation,
+	translator := NewTranslator(RuleSchemaViolation,
 		WithDefaultAction("Fix input to match schema"),
 		WithPathPrefix("controls.yaml"),
 	)
@@ -26,39 +26,39 @@ func TestTranslator_TranslateWithPrefix(t *testing.T) {
 		},
 	})
 
-	if result == nil || len(result.Issues) != 1 {
-		t.Fatalf("issue count=%d, want 1", len(result.Issues))
+	if result == nil || len(result.Findings) != 1 {
+		t.Fatalf("finding count=%d, want 1", len(result.Findings))
 	}
-	issue := result.Issues[0]
-	if issue.Code != CodeSchemaViolation {
-		t.Fatalf("code=%q, want %q", issue.Code, CodeSchemaViolation)
+	finding := result.Findings[0]
+	if finding.RuleID != RuleSchemaViolation {
+		t.Fatalf("rule_id=%q, want %q", finding.RuleID, RuleSchemaViolation)
 	}
-	if issue.Signal != SignalError {
-		t.Fatalf("signal=%q, want %q", issue.Signal, SignalError)
+	if finding.Severity != SeverityError {
+		t.Fatalf("severity=%q, want %q", finding.Severity, SeverityError)
 	}
-	if got := issue.Message; got != "missing required field" {
+	if got := finding.Message; got != "missing required field" {
 		t.Fatalf("message=%q, want %q", got, "missing required field")
 	}
-	if got := issue.Action; got == "" {
+	if got := finding.Action; got == "" {
 		t.Fatal("action should not be empty")
 	}
-	if path, ok := issue.Evidence.Get("path"); !ok || path != "controls.yaml: /dsl_version" {
-		t.Fatalf("path evidence=%q ok=%v", path, ok)
+	if path, ok := finding.Resource.Get("path"); !ok || path != "controls.yaml: /dsl_version" {
+		t.Fatalf("path resource=%q ok=%v", path, ok)
 	}
 }
 
 func TestTranslator_DefaultActionFallback(t *testing.T) {
-	translator := NewTranslator(CodeSchemaViolation,
+	translator := NewTranslator(RuleSchemaViolation,
 		WithDefaultAction("Fix input to match schema"),
 	)
 
-	issue := translator.TranslateOne(testExternalError{
+	finding := translator.TranslateOne(testExternalError{
 		field: "/x",
 		desc:  "unknown schema violation",
 		code:  "custom",
 	})
 
-	if issue.Action != "Fix input to match schema" {
-		t.Fatalf("action=%q, want fallback action", issue.Action)
+	if finding.Action != "Fix input to match schema" {
+		t.Fatalf("action=%q, want fallback action", finding.Action)
 	}
 }

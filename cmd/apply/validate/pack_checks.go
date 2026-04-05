@@ -10,11 +10,11 @@ import (
 )
 
 // PackConfigIssues checks for unknown control pack names in the project config.
-func PackConfigIssues() []diag.Diagnostic {
+func PackConfigIssues() []diag.Finding {
 	cfg, ok, cfgErr := projconfig.FindProjectConfig()
 	if cfgErr != nil {
-		return []diag.Diagnostic{
-			diag.New(diag.CodeProjectConfigLoadFailed).
+		return []diag.Finding{
+			diag.New(diag.RuleProjectConfigLoadFailed).
 				Error().
 				Action("Check stave.yaml for syntax errors").
 				WithSensitive("error", cfgErr.Error()).
@@ -26,8 +26,8 @@ func PackConfigIssues() []diag.Diagnostic {
 	}
 	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
-		return []diag.Diagnostic{
-			diag.New(diag.CodePackRegistryLoadFailed).
+		return []diag.Finding{
+			diag.New(diag.RulePackRegistryLoadFailed).
 				Error().
 				Action("Reinstall Stave binary or verify embedded registry integrity").
 				WithSensitive("error", err.Error()).
@@ -39,7 +39,7 @@ func PackConfigIssues() []diag.Diagnostic {
 	for _, name := range known {
 		knownSet[name] = struct{}{}
 	}
-	var issues []diag.Diagnostic
+	var issues []diag.Finding
 	for _, raw := range cfg.EnabledControlPacks {
 		name := strings.TrimSpace(raw)
 		if name == "" {
@@ -48,7 +48,7 @@ func PackConfigIssues() []diag.Diagnostic {
 		if _, ok := knownSet[name]; ok {
 			continue
 		}
-		issues = append(issues, diag.New(diag.CodeUnknownControlPack).
+		issues = append(issues, diag.New(diag.RuleUnknownControlPack).
 			Error().
 			Action(fmt.Sprintf("Use a configured pack name: %s", strings.Join(known, ", "))).
 			With("pack", name).

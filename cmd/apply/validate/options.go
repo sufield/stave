@@ -173,7 +173,7 @@ func (o *options) logEnvironment() {
 type validateParams struct {
 	maxUnsafe *time.Duration
 	nowTime   time.Time
-	issues    []diag.Diagnostic
+	issues    []diag.Finding
 }
 
 // parseParams converts raw strings from options into structured domain values.

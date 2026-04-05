@@ -138,7 +138,7 @@ func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot,
 	if err != nil {
 		return asset.Snapshot{}, "", fmt.Errorf("schema validation error: %w", err)
 	}
-	if issues.HasErrors() || issues.HasWarnings() {
+	if issues.Failed() || issues.HasWarnings() {
 		return asset.Snapshot{}, "", fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 

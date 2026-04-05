@@ -2,48 +2,48 @@ package diag
 
 import "testing"
 
-func TestNewTranslator_EmptyDefaultCode(t *testing.T) {
+func TestNewTranslator_EmptyDefaultRule(t *testing.T) {
 	tr := NewTranslator("")
-	if tr.defaultCode != CodeSchemaViolation {
-		t.Fatalf("empty default code should fallback to %q, got %q", CodeSchemaViolation, tr.defaultCode)
+	if tr.defaultRule != RuleSchemaViolation {
+		t.Fatalf("empty default rule should fallback to %q, got %q", RuleSchemaViolation, tr.defaultRule)
 	}
 }
 
-func TestNewTranslator_WhitespaceDefaultCode(t *testing.T) {
+func TestNewTranslator_WhitespaceDefaultRule(t *testing.T) {
 	tr := NewTranslator("  ")
-	if tr.defaultCode != CodeSchemaViolation {
-		t.Fatalf("whitespace default code should fallback to %q, got %q", CodeSchemaViolation, tr.defaultCode)
+	if tr.defaultRule != RuleSchemaViolation {
+		t.Fatalf("whitespace default rule should fallback to %q, got %q", RuleSchemaViolation, tr.defaultRule)
 	}
 }
 
-func TestNewTranslator_CustomCode(t *testing.T) {
-	tr := NewTranslator(CodeControlLoadFailed)
-	if tr.defaultCode != CodeControlLoadFailed {
-		t.Fatalf("defaultCode=%q, want %q", tr.defaultCode, CodeControlLoadFailed)
+func TestNewTranslator_CustomRule(t *testing.T) {
+	tr := NewTranslator(RuleControlLoadFailed)
+	if tr.defaultRule != RuleControlLoadFailed {
+		t.Fatalf("defaultRule=%q, want %q", tr.defaultRule, RuleControlLoadFailed)
 	}
 }
 
-func TestTranslator_MapCode_KnownCodes(t *testing.T) {
-	tr := NewTranslator(CodeControlLoadFailed)
+func TestTranslator_MapRule_KnownCodes(t *testing.T) {
+	tr := NewTranslator(RuleControlLoadFailed)
 	knownCodes := []string{"required", "type", "enum", "additional_properties"}
 	for _, code := range knownCodes {
-		got := tr.mapCode(code)
-		if got != CodeSchemaViolation {
-			t.Fatalf("mapCode(%q)=%q, want %q", code, got, CodeSchemaViolation)
+		got := tr.mapRule(code)
+		if got != RuleSchemaViolation {
+			t.Fatalf("mapRule(%q)=%q, want %q", code, got, RuleSchemaViolation)
 		}
 	}
 }
 
-func TestTranslator_MapCode_UnknownCode(t *testing.T) {
-	tr := NewTranslator(CodeControlLoadFailed)
-	got := tr.mapCode("something_else")
-	if got != CodeControlLoadFailed {
-		t.Fatalf("mapCode(unknown)=%q, want %q", got, CodeControlLoadFailed)
+func TestTranslator_MapRule_UnknownCode(t *testing.T) {
+	tr := NewTranslator(RuleControlLoadFailed)
+	got := tr.mapRule("something_else")
+	if got != RuleControlLoadFailed {
+		t.Fatalf("mapRule(unknown)=%q, want %q", got, RuleControlLoadFailed)
 	}
 }
 
 func TestTranslator_DeriveAction_AllKnownCodes(t *testing.T) {
-	tr := NewTranslator(CodeSchemaViolation)
+	tr := NewTranslator(RuleSchemaViolation)
 
 	tests := []struct {
 		code  string
@@ -71,7 +71,7 @@ func TestTranslator_DeriveAction_AllKnownCodes(t *testing.T) {
 }
 
 func TestTranslator_DeriveAction_UnknownCodeNoDefault(t *testing.T) {
-	tr := NewTranslator(CodeSchemaViolation)
+	tr := NewTranslator(RuleSchemaViolation)
 	got := tr.deriveAction("custom", "field")
 	want := "Correct the schema violation in your YAML/JSON file."
 	if got != want {
@@ -80,49 +80,49 @@ func TestTranslator_DeriveAction_UnknownCodeNoDefault(t *testing.T) {
 }
 
 func TestTranslator_TranslateOne_EmptyFieldWithPrefix(t *testing.T) {
-	tr := NewTranslator(CodeSchemaViolation, WithPathPrefix("obs.json"))
-	issue := tr.TranslateOne(testExternalError{
+	tr := NewTranslator(RuleSchemaViolation, WithPathPrefix("obs.json"))
+	finding := tr.TranslateOne(testExternalError{
 		field: "",
 		desc:  "invalid format",
 		code:  "type",
 	})
-	path, ok := issue.Evidence.Get("path")
+	path, ok := finding.Resource.Get("path")
 	if !ok || path != "obs.json" {
 		t.Fatalf("path=%q ok=%v, want obs.json", path, ok)
 	}
 }
 
 func TestTranslator_TranslateOne_EmptyFieldNoPrefix(t *testing.T) {
-	tr := NewTranslator(CodeSchemaViolation)
-	issue := tr.TranslateOne(testExternalError{
+	tr := NewTranslator(RuleSchemaViolation)
+	finding := tr.TranslateOne(testExternalError{
 		field: "",
 		desc:  "invalid format",
 		code:  "type",
 	})
-	_, ok := issue.Evidence.Get("path")
+	_, ok := finding.Resource.Get("path")
 	if ok {
-		t.Fatal("path evidence should not be set when both field and prefix are empty")
+		t.Fatal("path resource should not be set when both field and prefix are empty")
 	}
 }
 
 func TestTranslator_Translate_Empty(t *testing.T) {
-	tr := NewTranslator(CodeSchemaViolation)
+	tr := NewTranslator(RuleSchemaViolation)
 	result := tr.Translate(nil)
 	if result == nil {
 		t.Fatal("result should not be nil for empty input")
 	}
-	if len(result.Issues) != 0 {
-		t.Fatalf("len=%d, want 0", len(result.Issues))
+	if len(result.Findings) != 0 {
+		t.Fatalf("len=%d, want 0", len(result.Findings))
 	}
 }
 
 func TestTranslator_Translate_Multiple(t *testing.T) {
-	tr := NewTranslator(CodeSchemaViolation)
+	tr := NewTranslator(RuleSchemaViolation)
 	result := tr.Translate([]ExternalError{
 		testExternalError{field: "/a", desc: "err1", code: "required"},
 		testExternalError{field: "/b", desc: "err2", code: "enum"},
 	})
-	if len(result.Issues) != 2 {
-		t.Fatalf("len=%d, want 2", len(result.Issues))
+	if len(result.Findings) != 2 {
+		t.Fatalf("len=%d, want 2", len(result.Findings))
 	}
 }

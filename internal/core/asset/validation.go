@@ -153,10 +153,10 @@ func (t *snapshotTimeline) FormatLatest() string {
 }
 
 // ValidateAll runs all snapshot validation checks using a pre-computed context.
-func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Diagnostic {
+func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Finding {
 	if s.IsEmpty() {
-		return []diag.Diagnostic{
-			diag.New(diag.CodeNoSnapshots).
+		return []diag.Finding{
+			diag.New(diag.RuleNoSnapshots).
 				Warning().
 				Action("Add observation JSON files to the directory").
 				Build(),
@@ -164,7 +164,7 @@ func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Di
 	}
 
 	ctx := s.analyze()
-	var issues []diag.Diagnostic
+	var issues []diag.Finding
 
 	issues = append(issues, s.checkStructural()...)
 	issues = append(issues, s.checkTagSanity()...)
@@ -176,9 +176,9 @@ func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Di
 }
 
 // checkStructural validates per-snapshot structure (duplicate IDs).
-func (s Snapshots) checkStructural() (issues []diag.Diagnostic) {
+func (s Snapshots) checkStructural() (issues []diag.Finding) {
 	if s.IsSingle() {
-		issues = append(issues, diag.New(diag.CodeSingleSnapshot).
+		issues = append(issues, diag.New(diag.RuleSingleSnapshot).
 			Warning().
 			Action("Add at least 2 snapshots to enable duration tracking").
 			WithMap(map[string]string{
@@ -192,7 +192,7 @@ func (s Snapshots) checkStructural() (issues []diag.Diagnostic) {
 		for _, r := range snap.Assets {
 			assetID := r.ID.String()
 			if _, exists := seen[assetID]; exists {
-				issues = append(issues, diag.New(diag.CodeDuplicateAssetID).
+				issues = append(issues, diag.New(diag.RuleDuplicateAssetID).
 					Warning().
 					Action("Ensure each asset has a unique ID within a snapshot").
 					WithMap(map[string]string{
@@ -209,7 +209,7 @@ func (s Snapshots) checkStructural() (issues []diag.Diagnostic) {
 }
 
 // checkTagSanity validates case-insensitive key conflicts in asset tags.
-func (s Snapshots) checkTagSanity() (issues []diag.Diagnostic) {
+func (s Snapshots) checkTagSanity() (issues []diag.Finding) {
 	for _, snap := range s {
 		for _, r := range snap.Assets {
 			tags := r.Tags()
@@ -217,7 +217,7 @@ func (s Snapshots) checkTagSanity() (issues []diag.Diagnostic) {
 				continue
 			}
 			for _, c := range tags.Conflicts() {
-				issues = append(issues, diag.New(diag.CodeAmbiguousTags).
+				issues = append(issues, diag.New(diag.RuleAmbiguousTags).
 					Warning().
 					Action(fmt.Sprintf("Use a single casing for tag key %q (kept %q, discarded %s)",
 						c.Key, c.Kept, formatQuoted(c.Discarded))).
@@ -234,9 +234,9 @@ func (s Snapshots) checkTagSanity() (issues []diag.Diagnostic) {
 }
 
 // checkTimeSanity validates time ordering and uniqueness.
-func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []diag.Diagnostic) {
+func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []diag.Finding) {
 	if unsorted, ok := s.FindFirstUnsortedPair(); ok {
-		issues = append(issues, diag.New(diag.CodeSnapshotsUnsorted).
+		issues = append(issues, diag.New(diag.RuleSnapshotsUnsorted).
 			Warning().
 			Action("Sort snapshots by captured_at or check for timestamp errors").
 			WithMap(unsorted.Evidence()).
@@ -249,7 +249,7 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 
 	if ctx.timeline.HasDuplicates() {
 		for _, ts := range ctx.timeline.DuplicateTimes() {
-			issues = append(issues, diag.New(diag.CodeDuplicateTimestamp).
+			issues = append(issues, diag.New(diag.RuleDuplicateTimestamp).
 				Warning().
 				Action("Each snapshot should have a unique captured_at timestamp").
 				WithMap(map[string]string{
@@ -266,9 +266,9 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 	return
 }
 
-func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTimeline) diag.Diagnostic {
+func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTimeline) diag.Finding {
 	latest := timeline.FormatLatest()
-	issue := diag.New(diag.CodeNowBeforeSnapshots).
+	issue := diag.New(diag.RuleNowBeforeSnapshots).
 		Error().
 		Action("Set --now >= latest snapshot timestamp").
 		WithMap(map[string]string{
@@ -281,7 +281,7 @@ func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTim
 }
 
 // checkIdentityConsistency validates asset identity across snapshots.
-func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.Diagnostic) {
+func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.Finding) {
 	var reusedTypeIDs []ID
 	for id, types := range ctx.assetTypes {
 		if types.IsInconsistent() {
@@ -293,7 +293,7 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.D
 	})
 	for _, id := range reusedTypeIDs {
 		types := ctx.assetTypes[id]
-		issues = append(issues, diag.New(diag.CodeAssetIDReusedTypes).
+		issues = append(issues, diag.New(diag.RuleAssetIDReusedTypes).
 			Warning().
 			Action("Use unique asset IDs for different asset types").
 			WithMap(map[string]string{
@@ -314,7 +314,7 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.D
 			return strings.Compare(a.String(), b.String())
 		})
 		for _, id := range singleAppearanceIDs {
-			issues = append(issues, diag.New(diag.CodeAssetSingleAppearance).
+			issues = append(issues, diag.New(diag.RuleAssetSingleAppearance).
 				Warning().
 				Action("Duration tracking requires asset to appear in multiple snapshots").
 				WithMap(map[string]string{
@@ -328,13 +328,13 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.D
 }
 
 // checkDurationFeasibility checks if the snapshot span covers the threshold.
-func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.Duration) (issues []diag.Diagnostic) {
+func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.Duration) (issues []diag.Finding) {
 	if !s.IsMultiSnapshot() || maxUnsafe <= 0 || ctx == nil || ctx.timeline == nil {
 		return
 	}
 
 	if ctx.timeline.hasInsufficientSpan(maxUnsafe) {
-		issue := diag.New(diag.CodeSpanLessThanMaxUnsafe).
+		issue := diag.New(diag.RuleSpanLessThanMaxUnsafe).
 			Warning().
 			Action("Add older snapshots or reduce --max-unsafe").
 			WithMap(map[string]string{

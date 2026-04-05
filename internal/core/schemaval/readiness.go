@@ -67,7 +67,7 @@ func (r *Report) RecordIssue(issue Check) {
 
 // Status contains diagnostics and summary counts from a validation run.
 type Status struct {
-	Diagnostics *diag.Report
+	Diagnostics *diag.Assessment
 	Summary     struct {
 		ControlsLoaded          int
 		SnapshotsLoaded         int

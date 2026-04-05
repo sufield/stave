@@ -65,7 +65,7 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 	params := opts.parseParams()
 	if len(params.issues) > 0 {
 		// If flag parsing itself generated diagnostic issues
-		result := &appvalidation.Report{Diagnostics: &diag.Report{Issues: params.issues}}
+		result := &appvalidation.Report{Diagnostics: &diag.Assessment{Findings: params.issues}}
 		if err := rep.Write(result, opts.hintCtx()); err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 	}
 
 	// Add dynamic issues (e.g. checking project config packs)
-	result.Diagnostics.AddAll(PackConfigIssues())
+	result.Diagnostics.RecordAll(PackConfigIssues())
 
 	// Write Output
 	if err := rep.Write(result, opts.hintCtx()); err != nil {
