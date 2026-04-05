@@ -3,6 +3,7 @@ package reporting
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sufield/stave/internal/safetyenvelope"
 )
@@ -80,4 +81,73 @@ func PromptFromFinding(ctx context.Context, req PromptFromFindingRequest, deps P
 		return PromptFromFindingResponse{}, fmt.Errorf("prompt-from-finding: %w", err)
 	}
 	return resp, nil
+}
+
+// --- Prompt Types ---
+
+type PromptFromFindingRequest struct {
+	EvaluationFile  string `json:"evaluation_file"`
+	AssetID         string `json:"asset_id"`
+	ControlsDir     string `json:"controls_dir,omitempty"`
+	ObservationsDir string `json:"observations_dir,omitempty"`
+}
+
+type PromptFromFindingResponse struct {
+	Rendered   string   `json:"rendered"`
+	FindingIDs []string `json:"finding_ids"`
+	AssetID    string   `json:"asset_id"`
+}
+
+// --- Report Types ---
+
+type ReportRequest struct {
+	InputFile    string `json:"input_file"`
+	TemplateFile string `json:"template_file,omitempty"`
+	Format       string `json:"format,omitempty"`
+	Quiet        bool   `json:"quiet,omitempty"`
+}
+
+type ReportResponse struct {
+	EvaluationData *safetyenvelope.Evaluation `json:"evaluation_data"`
+}
+
+// --- CI Diff Types ---
+
+type CIDiffRequest struct {
+	CurrentPath  string `json:"current_path"`
+	BaselinePath string `json:"baseline_path"`
+	FailOnNew    bool   `json:"fail_on_new"`
+	Sanitize     bool   `json:"sanitize,omitempty"`
+}
+
+type CIDiffResponse struct {
+	CurrentEvaluation  string            `json:"current_evaluation"`
+	BaselineEvaluation string            `json:"baseline_evaluation"`
+	ComparedAt         time.Time         `json:"compared_at"`
+	Summary            CIDiffSummary     `json:"summary"`
+	NewFindings        []BaselineFinding `json:"new"`
+	ResolvedFindings   []BaselineFinding `json:"resolved"`
+	HasNew             bool              `json:"has_new"`
+}
+
+type CIDiffSummary struct {
+	BaselineFindings int `json:"baseline_findings"`
+	CurrentFindings  int `json:"current_findings"`
+	NewFindings      int `json:"new_findings"`
+	ResolvedFindings int `json:"resolved_findings"`
+}
+
+// --- Enforce Types ---
+
+type EnforceRequest struct {
+	InputPath string `json:"input_path"`
+	OutDir    string `json:"out_dir,omitempty"`
+	Mode      string `json:"mode"`
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+
+type EnforceResponse struct {
+	OutputFile string   `json:"output_file"`
+	Targets    []string `json:"targets"`
+	DryRun     bool     `json:"dry_run,omitempty"`
 }
