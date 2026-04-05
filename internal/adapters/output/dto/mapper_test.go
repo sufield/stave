@@ -29,8 +29,8 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 			AttackSurface:   1,
 			Violations:      0,
 		},
-		Posture: evaluation.PostureSafe,
-		Findings:     []remediation.Finding{},
+		Posture:  evaluation.PostureSafe,
+		Findings: []remediation.Finding{},
 	})
 
 	dto := FromEvaluation(env)

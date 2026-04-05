@@ -58,7 +58,7 @@ func newPrefixExposureRow(t *asset.Timeline, ctl *policy.ControlDefinition) eval
 		AssetID:     t.ID,
 		AssetType:   resType,
 		AssetDomain: resType.Domain(),
-		Verdict:    evaluation.VerdictPass,
+		Verdict:     evaluation.VerdictPass,
 		Confidence:  evaluation.ConfidenceHigh,
 	}
 }

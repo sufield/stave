@@ -209,7 +209,7 @@ func TestReporter_ReportApply_Fail(t *testing.T) {
 
 	policy := evaluation.ResponsePolicy{}
 	res := EvaluateResult{
-		Posture:    evaluation.PostureUnsafe,
+		Posture:         evaluation.PostureUnsafe,
 		DiagnoseCommand: "stave diagnose",
 		NextSteps:       []string{"fix it"},
 	}

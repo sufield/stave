@@ -130,7 +130,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 
 func TestEvaluationRowMarkInconclusive(t *testing.T) {
 	row := evaluation.Observation{
-		Verdict:   evaluation.VerdictPass,
+		Verdict:    evaluation.VerdictPass,
 		Confidence: evaluation.ConfidenceHigh,
 	}
 	row.MarkInconclusive("insufficient observations")

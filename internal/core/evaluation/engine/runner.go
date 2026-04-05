@@ -174,7 +174,7 @@ func (s *runSession) evaluateControl(
 				AssetID:     assetID,
 				AssetType:   timeline.Asset().Type,
 				AssetDomain: timeline.Asset().Type.Domain(),
-				Verdict:    evaluation.VerdictSkipped,
+				Verdict:     evaluation.VerdictSkipped,
 				Confidence:  evaluation.ConfidenceHigh,
 				Reason:      rule.Reason,
 			})
@@ -232,13 +232,13 @@ func (s *runSession) buildResult() evaluation.Audit {
 			AttackSurface:   len(s.acc.unsafeAssets),
 			Violations:      len(regularFindings),
 		},
-		Posture:     status,
+		Posture:          status,
 		AtRisk:           upcoming,
 		Findings:         regularFindings,
 		ExceptedFindings: exceptedFindings,
 		Skipped:          s.acc.skippedByCtl,
 		ExemptedAssets:   s.acc.exemptedByAst,
-		Rows:             s.acc.rows,
+		Observations:     s.acc.rows,
 	}
 }
 

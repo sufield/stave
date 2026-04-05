@@ -70,9 +70,9 @@ func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 		},
-		Summary:      evaluation.Summary{AssetsEvaluated: 1},
-		Posture: evaluation.PostureSafe,
-		Findings:     []remediation.Finding{},
+		Summary:  evaluation.Summary{AssetsEvaluated: 1},
+		Posture:  evaluation.PostureSafe,
+		Findings: []remediation.Finding{},
 	})
 	data, err := json.Marshal(env)
 	if err != nil {

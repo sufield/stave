@@ -77,7 +77,7 @@ func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation.Audit, enriched []remediation.Finding) {
 	d.ln("Violations")
 	d.ln("----------")
-	w.writeViolationDomainSummary(d, result.Rows)
+	w.writeViolationDomainSummary(d, result.Observations)
 
 	if d.err != nil {
 		return

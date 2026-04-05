@@ -47,13 +47,13 @@ const (
 	VerdictSkipped       Verdict = "SKIPPED"
 )
 
-// Row captures the granular result for a single control/asset pairing.
+// Observation captures the granular result for a single control/asset pairing.
 type Observation struct {
 	ControlID   kernel.ControlID   `json:"control_id"`
 	AssetID     asset.ID           `json:"asset_id"`
 	AssetType   kernel.AssetType   `json:"asset_type"`
 	AssetDomain kernel.AssetDomain `json:"asset_domain"`
-	Verdict    Verdict           `json:"decision"`
+	Verdict     Verdict            `json:"decision"`
 	Confidence  ConfidenceLevel    `json:"confidence"`
 	Evidence    *Evidence          `json:"evidence,omitempty"`
 	WhyNow      string             `json:"why_now,omitempty"`
@@ -61,7 +61,7 @@ type Observation struct {
 }
 
 // MarkInconclusive shifts a row to an inconclusive state with a specific explanation.
-func (r *Row) MarkInconclusive(reason string) {
+func (r *Observation) MarkInconclusive(reason string) {
 	if r == nil {
 		return
 	}
@@ -88,14 +88,14 @@ type SkippedControl struct {
 type Audit struct {
 	Run              RunInfo               `json:"run"`
 	Summary          Summary               `json:"summary"`
-	Posture     Posture          `json:"safety_status"`
+	Posture          Posture               `json:"safety_status"`
 	AtRisk           risk.ThresholdItems   `json:"at_risk,omitempty"`
 	Findings         []Finding             `json:"findings"`
 	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`
 	Skipped          []SkippedControl      `json:"skipped,omitempty"`
 	ExemptedAssets   []asset.ExemptedAsset `json:"exempted_assets,omitempty"`
 	Metadata         Metadata              `json:"-"`
-	Rows             []Row                 `json:"rows,omitempty"` // populated if --explain is used
+	Observations     []Observation         `json:"rows,omitempty"` // populated if --explain is used
 }
 
 // FindFinding retrieves a finding for a specific control/asset pair, returning nil if not found.
