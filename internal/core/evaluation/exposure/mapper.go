@@ -1,6 +1,8 @@
 package exposure
 
 import (
+	"strings"
+
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/maps"
 )
@@ -37,14 +39,20 @@ func buildGrants(pe maps.Value) Grants {
 
 	grants := make(Grants, 0, len(scopes))
 	for _, scope := range scopes {
-		source, ok := sources[scope]
-		if !ok || source == "" {
+		sourceID := sources[scope]
+		if !isTraceable(sourceID) {
 			continue
 		}
 		grants = append(grants, Grant{
 			Scope:    kernel.ObjectPrefix(scope),
-			SourceID: kernel.StatementID(source),
+			SourceID: kernel.StatementID(sourceID),
 		})
 	}
 	return grants
+}
+
+// isTraceable reports whether a source ID is non-empty — a grant without
+// a traceable source is a ghost grant that cannot be audited.
+func isTraceable(id string) bool {
+	return strings.TrimSpace(id) != ""
 }
