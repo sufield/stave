@@ -1,94 +1,34 @@
 {
-  "schema_version": "out.v0.1",
-  "kind": "evaluation",
-  "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
-    "input_hashes": {
-      "files": {
-        "2026-01-01T000000Z.json": "03cfa9feca5af82a5d95748c57f976533592cd3954b15ba6b98f2cd916cf17b5",
-        "2026-01-11T000000Z.json": "1d4a969cad13dd870952f02caa31e8e53048787f9446a3ea5efdd533dacf6f44"
-      },
-      "overall": "f1f42f4fc481dc3d879df761dd57757a23052fb898d969e7cc9c999626abdd4b"
-    },
-    "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8"
-  },
-  "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
-    "violations": 1
-  },
-  "safety_status": "UNSAFE",
   "at_risk": [
     {
-      "control_id": "CTL.ID.KUBE.001",
       "asset_id": "k8s:ClusterRoleBinding/system-admin-binding",
       "asset_type": "k8s.clusterrolebinding",
-      "status": "OVERDUE",
+      "control_id": "CTL.ID.KUBE.001",
       "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
       "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
       "threshold_hours": 168
     },
     {
-      "control_id": "CTL.ID.KUBE.001",
       "asset_id": "k8s:ClusterRoleBinding/system-backup-binding",
       "asset_type": "k8s.clusterrolebinding",
-      "status": "OVERDUE",
+      "control_id": "CTL.ID.KUBE.001",
       "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
       "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
       "threshold_hours": 168
     },
     {
-      "control_id": "CTL.ID.KUBE.001",
       "asset_id": "k8s:ClusterRoleBinding/user-admin-binding",
       "asset_type": "k8s.clusterrolebinding",
-      "status": "OVERDUE",
+      "control_id": "CTL.ID.KUBE.001",
       "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
       "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
       "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "control_id": "CTL.ID.KUBE.001",
-      "control_name": "Cluster-Admin Binding Detected",
-      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
-      "asset_id": "k8s:ClusterRoleBinding/user-admin-binding",
-      "asset_type": "k8s.clusterrolebinding",
-      "asset_vendor": "kubernetes",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "binds_to_cluster_admin",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "posture_drift": {
-        "pattern": "persistent",
-        "episode_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
-      }
     }
   ],
   "exempted_assets": [
@@ -103,17 +43,63 @@
       "reason": "System-managed cluster admin bindings"
     }
   ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-25-ignore-wildcard/controls",
-      "observations": "testdata/e2e/e2e-25-ignore-wildcard/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
+  "findings": [
+    {
+      "asset_id": "k8s:ClusterRoleBinding/user-admin-binding",
+      "asset_type": "k8s.clusterrolebinding",
+      "asset_vendor": "kubernetes",
+      "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
+      "control_id": "CTL.ID.KUBE.001",
+      "control_name": "Cluster-Admin Binding Detected",
+      "control_severity": "critical",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "binds_to_cluster_admin",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240,
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "episode_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
+      }
     }
+  ],
+  "kind": "evaluation",
+  "posture": "UNSAFE",
+  "run": {
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "03cfa9feca5af82a5d95748c57f976533592cd3954b15ba6b98f2cd916cf17b5",
+        "2026-01-11T000000Z.json": "1d4a969cad13dd870952f02caa31e8e53048787f9446a3ea5efdd533dacf6f44"
+      },
+      "overall": "f1f42f4fc481dc3d879df761dd57757a23052fb898d969e7cc9c999626abdd4b"
+    },
+    "max_unsafe": "7d",
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "pack_hash": "5569c0ea77304ab6bb5c1e932ad299b037790563f57a4cf579136136d930d1a8",
+    "snapshots": 2
+  },
+  "schema_version": "out.v0.1",
+  "summary": {
+    "assets_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 1
   }
 }

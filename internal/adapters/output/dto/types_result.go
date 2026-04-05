@@ -57,7 +57,7 @@ type ResultDTO struct {
 	Kind              string                `json:"kind"`
 	Run               RunInfoDTO            `json:"run"`
 	Summary           SummaryDTO            `json:"summary"`
-	Posture           evaluation.Posture    `json:"safety_status"`
+	Posture           evaluation.Posture    `json:"posture"`
 	AtRisk            []AtRiskItemDTO       `json:"at_risk,omitempty"`
 	Findings          []FindingDTO          `json:"findings"`
 	ExceptedFindings  []ExceptedFindingDTO  `json:"excepted_findings,omitempty"`

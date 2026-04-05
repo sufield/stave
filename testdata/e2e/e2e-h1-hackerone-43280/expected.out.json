@@ -1,12 +1,8 @@
 {
-  "schema_version": "out.v0.1",
+  "findings": [],
   "kind": "evaluation",
+  "posture": "SAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2015-01-18T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2015-01-11T000000Z.json": "75c361166b798790fc0469b89f4af059ba2371205f09840d6ea809a6d89ac099",
@@ -14,26 +10,16 @@
       },
       "overall": "191d94d1833e9ba590732373ea20a41d80d3013d5d1bc84c89b1a6ded02d8edc"
     },
-    "pack_hash": "7fecf54b24c5d39cbc5fde80d979fb9e165bb2a765cfa650dabd241dc5f30042"
+    "max_unsafe": "7d",
+    "now": "2015-01-18T00:00:00Z",
+    "offline": true,
+    "pack_hash": "7fecf54b24c5d39cbc5fde80d979fb9e165bb2a765cfa650dabd241dc5f30042",
+    "snapshots": 2
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 0,
     "violations": 0
-  },
-  "safety_status": "SAFE",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-hackerone-43280/controls",
-      "observations": "testdata/e2e/e2e-h1-hackerone-43280/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

@@ -40,7 +40,7 @@ type Evaluation struct {
 	Kind              EnvelopeKind                 `json:"kind"`
 	Run               evaluation.RunInfo           `json:"run"`
 	Summary           evaluation.Summary           `json:"summary"`
-	Posture           evaluation.Posture           `json:"safety_status"`
+	Posture           evaluation.Posture           `json:"posture"`
 	AtRisk            risk.ThresholdItems          `json:"at_risk,omitempty"`
 	Findings          []remediation.Finding        `json:"findings"`
 	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`

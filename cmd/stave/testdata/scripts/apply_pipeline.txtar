@@ -3,7 +3,7 @@
 # JSON output with violations (exit 3)
 ! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
 stdout '"schema_version": "out.v0.1"'
-stdout '"safety_status": "UNSAFE"'
+stdout '"posture": "UNSAFE"'
 stdout '"findings"'
 stdout '"control_id": "CTL.S3.PUBLIC.001"'
 stdout '"evidence"'
@@ -20,7 +20,7 @@ stdout 'results'
 
 # Clean evaluation (exit 0)
 exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json
-stdout '"safety_status": "SAFE"'
+stdout '"posture": "SAFE"'
 stdout '"violations": 0'
 
 # Dry-run mode

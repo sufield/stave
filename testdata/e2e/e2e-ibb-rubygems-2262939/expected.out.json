@@ -1,12 +1,8 @@
 {
-  "schema_version": "out.v0.1",
+  "findings": [],
   "kind": "evaluation",
+  "posture": "SAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2023-12-05T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2023-11-24T000000Z.json": "a3858bb017d27e19bb5f9ac5aa15250f6f38dc086e003e845fbb08d6ee1a9f22",
@@ -14,26 +10,16 @@
       },
       "overall": "7ea0abb2f852a962b5afad846ebbda2659e856c6e2fd43fbff20465c0195afa6"
     },
-    "pack_hash": "7cef7e4bfcb30561dd4b9fe677f2d69627c02ad5326508c40efe7ca416a75efd"
+    "max_unsafe": "7d",
+    "now": "2023-12-05T00:00:00Z",
+    "offline": true,
+    "pack_hash": "7cef7e4bfcb30561dd4b9fe677f2d69627c02ad5326508c40efe7ca416a75efd",
+    "snapshots": 2
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 2,
     "attack_surface": 0,
     "violations": 0
-  },
-  "safety_status": "SAFE",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-ibb-rubygems-2262939/controls",
-      "observations": "testdata/e2e/e2e-ibb-rubygems-2262939/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

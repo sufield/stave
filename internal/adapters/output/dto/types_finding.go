@@ -110,7 +110,7 @@ type RowDTO struct {
 	AssetID    asset.ID                   `json:"asset_id"`
 	AssetType  kernel.AssetType           `json:"asset_type"`
 	Domain     kernel.AssetDomain         `json:"asset_domain"`
-	Decision   evaluation.Verdict         `json:"decision"`
+	Verdict    evaluation.Verdict         `json:"verdict"`
 	Confidence evaluation.ConfidenceLevel `json:"confidence"`
 	Evidence   *EvidenceDTO               `json:"evidence,omitempty"`
 	WhyNow     string                     `json:"why_now,omitempty"`

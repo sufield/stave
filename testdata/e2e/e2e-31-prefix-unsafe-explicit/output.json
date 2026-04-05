@@ -21,7 +21,7 @@
     "attack_surface": 1,
     "violations": 1
   },
-  "safety_status": "UNSAFE",
+  "posture": "UNSAFE",
   "findings": [
     {
       "control_id": "CTL.EXP.VISIBILITY.003",
@@ -66,7 +66,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b38698b234a0f0f83a00da454616a70f2c8d7fe0",
+      "head_commit": "f558035355450d117c6a6581651e133bf5bdf32b",
       "dirty": false
     }
   }

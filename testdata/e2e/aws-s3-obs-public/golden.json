@@ -14,7 +14,7 @@
     "attack_surface": 1,
     "violations": 6
   },
-  "safety_status": "UNSAFE",
+  "posture": "UNSAFE",
   "at_risk": [
     {
       "control_id": "CTL.S3.NETWORK.VPC.001",

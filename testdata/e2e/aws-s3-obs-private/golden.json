@@ -14,7 +14,7 @@
     "attack_surface": 1,
     "violations": 4
   },
-  "safety_status": "UNSAFE",
+  "posture": "UNSAFE",
   "findings": [
     {
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",

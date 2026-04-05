@@ -1,12 +1,8 @@
 {
-  "schema_version": "out.v0.1",
+  "findings": [],
   "kind": "evaluation",
+  "posture": "SAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "36c8bdbe4da5b775788861552f818d1553d89c5cfd9e53e486b62abe43c3071f",
@@ -14,15 +10,13 @@
       },
       "overall": "b44ffb8bdc799ad5140208503431ad1fe52b7fda714808f4ca83fc3811124f21"
     },
-    "pack_hash": "d8222bbe0facc787bd3a16948417daa6cb404e76f94cabf1f8221b6fbc9b8551"
+    "max_unsafe": "7d",
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "pack_hash": "d8222bbe0facc787bd3a16948417daa6cb404e76f94cabf1f8221b6fbc9b8551",
+    "snapshots": 2
   },
-  "summary": {
-    "assets_evaluated": 0,
-    "attack_surface": 0,
-    "violations": 0
-  },
-  "safety_status": "SAFE",
-  "findings": [],
+  "schema_version": "out.v0.1",
   "skipped": [
     {
       "control_id": "CTL.EXP.OWNERSHIP.001",
@@ -30,17 +24,9 @@
       "reason": "type not evaluatable: ownership_required"
     }
   ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-07-owner-missing/controls",
-      "observations": "testdata/e2e/e2e-07-owner-missing/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
+  "summary": {
+    "assets_evaluated": 0,
+    "attack_surface": 0,
+    "violations": 0
   }
 }
