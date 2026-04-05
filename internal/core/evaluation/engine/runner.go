@@ -17,22 +17,28 @@ import (
 )
 
 // Runner executes evaluation logic over snapshots.
+//
+// Fields are grouped by concern:
+//   - Infrastructure: long-lived services (Logger, Clock, Hasher, CELEvaluator)
+//   - Policy: the rules being evaluated (Controls, Exemptions, Exceptions)
+//   - Thresholds: per-run parameters from CLI flags (MaxUnsafeDuration, MaxGapThreshold)
 type Runner struct {
-	Logger            *slog.Logger
-	Controls          []policy.ControlDefinition
-	MaxUnsafeDuration time.Duration
-	// MaxGapThreshold controls when sparse observations become INCONCLUSIVE.
-	// If zero, defaultRunnerMaxGapThreshold is used.
-	MaxGapThreshold time.Duration
-	Confidence      evaluation.ConfidenceCalculator
+	// Infrastructure — stateless services injected at construction.
+	Logger          *slog.Logger
 	Clock           ports.Clock
 	Hasher          ports.Digester
-	Exemptions      *policy.ExemptionConfig
-	Exceptions      *policy.ExceptionConfig
+	CELEvaluator    policy.PredicateEval
 	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	// CELEvaluator evaluates predicates using the CEL engine.
-	// Required — the built-in predicate evaluator has been removed.
-	CELEvaluator policy.PredicateEval
+	Confidence      evaluation.ConfidenceCalculator
+
+	// Policy — the ruleset for this evaluation run.
+	Controls   []policy.ControlDefinition
+	Exemptions *policy.ExemptionConfig
+	Exceptions *policy.ExceptionConfig
+
+	// Thresholds — per-run parameters, typically from CLI flags.
+	MaxUnsafeDuration time.Duration
+	MaxGapThreshold   time.Duration // If zero, defaultRunnerMaxGapThreshold is used.
 }
 
 // Compile-time check: Runner satisfies strategyDeps.
