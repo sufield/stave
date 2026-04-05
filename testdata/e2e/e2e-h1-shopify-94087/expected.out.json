@@ -1,125 +1,100 @@
 {
-  "schema_version": "out.v0.1",
-  "kind": "evaluation",
-  "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2015-10-23T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
-    "input_hashes": {
-      "files": {
-        "2015-10-15T000000Z.json": "99b05023a2b08cbee7dce6c988b48adb46250acb8f3e2c3f811231e0df38ef51",
-        "2015-10-23T000000Z.json": "2d802047129cfbe02ad04d2b6b18368905ebacd7596a3deede2602022e3d8aa2"
-      },
-      "overall": "9048beaeee1c1b1c4dcbc46b74d6e984f76af8a53444f626ab695989ff5f4f01"
-    },
-    "pack_hash": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025"
-  },
-  "summary": {
-    "assets_evaluated": 1,
-    "attack_surface": 1,
-    "violations": 2
-  },
-  "safety_status": "UNSAFE",
   "at_risk": [
     {
-      "control_id": "CTL.S3.ENCRYPT.004",
       "asset_id": "shopify-merchant-assets",
       "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
+      "control_id": "CTL.S3.ENCRYPT.004",
       "due_at": "2015-10-22T00:00:00Z",
-      "remaining_hours": -24,
       "first_unsafe_at": "2015-10-15T00:00:00Z",
+      "remaining_hours": -24,
+      "status": "OVERDUE",
       "threshold_hours": 168
     },
     {
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "asset_id": "shopify-merchant-assets",
       "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "due_at": "2015-10-22T00:00:00Z",
-      "remaining_hours": -24,
       "first_unsafe_at": "2015-10-15T00:00:00Z",
+      "remaining_hours": -24,
+      "status": "OVERDUE",
       "threshold_hours": 168
     }
   ],
   "findings": [
     {
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
       "asset_id": "shopify-merchant-assets",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
       "evidence": {
         "first_unsafe_at": "2015-10-15T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-23T00:00:00Z",
-        "unsafe_duration_hours": 192,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "storage.encryption.algorithm",
             "actual_value": "[SANITIZED]",
             "operator": "ne",
+            "property": "storage.encryption.algorithm",
             "unsafe_value": "aws:kms"
           },
           {
-            "property": "storage.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
+            "property": "storage.kind",
             "unsafe_value": "bucket"
           },
           {
-            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "ne",
+            "property": "storage.tags.data-classification",
             "unsafe_value": "non-sensitive"
           },
           {
-            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "ne",
+            "property": "storage.tags.data-classification",
             "unsafe_value": "public"
           },
           {
-            "property": "storage.tags.data-classification",
             "actual_value": "[SANITIZED]",
             "operator": "present",
+            "property": "storage.tags.data-classification",
             "unsafe_value": true
           }
         ],
         "root_causes": [
           "general"
         ],
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 192,
         "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-15T00:00:00Z."
       },
       "posture_drift": {
-        "pattern": "persistent",
-        "episode_count": 1
+        "episode_count": 1,
+        "pattern": "persistent"
       },
       "remediation": {
-        "description": "Resource data is not encrypted at rest.",
-        "action": "Enable server-side encryption using a managed key."
+        "action": "Enable server-side encryption using a managed key.",
+        "description": "Resource data is not encrypted at rest."
       }
     },
     {
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
-      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
-      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
       "asset_id": "shopify-merchant-assets",
       "asset_type": "aws_s3_bucket",
       "asset_vendor": "aws",
+      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
       "evidence": {
         "first_unsafe_at": "2015-10-15T00:00:00Z",
         "last_seen_unsafe_at": "2015-10-23T00:00:00Z",
-        "unsafe_duration_hours": 192,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
-            "property": "identities",
             "actual_value": "[SANITIZED]",
             "operator": "any_match",
+            "property": "identities",
             "unsafe_value": {
               "all": [
                 {
@@ -150,50 +125,61 @@
             }
           },
           {
-            "property": "storage.kind",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
+            "property": "storage.kind",
             "unsafe_value": "bucket"
           },
           {
-            "property": "storage.tags.tenant_mode",
             "actual_value": "[SANITIZED]",
             "operator": "eq",
+            "property": "storage.tags.tenant_mode",
             "unsafe_value": "shared"
           },
           {
-            "property": "storage.tags.tenant_prefix",
             "actual_value": "[SANITIZED]",
             "operator": "present",
+            "property": "storage.tags.tenant_prefix",
             "unsafe_value": true
           }
         ],
         "root_causes": [
           "general"
         ],
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 192,
         "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2015-10-15T00:00:00Z."
       },
       "posture_drift": {
-        "pattern": "persistent",
-        "episode_count": 1
+        "episode_count": 1,
+        "pattern": "persistent"
       },
       "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
       }
     }
   ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-94087/controls",
-      "observations": "testdata/e2e/e2e-h1-shopify-94087/observations"
+  "kind": "evaluation",
+  "posture": "UNSAFE",
+  "run": {
+    "input_hashes": {
+      "files": {
+        "2015-10-15T000000Z.json": "99b05023a2b08cbee7dce6c988b48adb46250acb8f3e2c3f811231e0df38ef51",
+        "2015-10-23T000000Z.json": "2d802047129cfbe02ad04d2b6b18368905ebacd7596a3deede2602022e3d8aa2"
+      },
+      "overall": "9048beaeee1c1b1c4dcbc46b74d6e984f76af8a53444f626ab695989ff5f4f01"
     },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
+    "max_unsafe": "7d",
+    "now": "2015-10-23T00:00:00Z",
+    "offline": true,
+    "pack_hash": "3609d3ccc6d44ae3b90ec49530b51572d239b1394af157d0f0a39a7f024cc025",
+    "snapshots": 2
+  },
+  "schema_version": "out.v0.1",
+  "summary": {
+    "assets_evaluated": 1,
+    "attack_surface": 1,
+    "violations": 2
   }
 }

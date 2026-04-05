@@ -1,12 +1,61 @@
 {
-  "schema_version": "out.v0.1",
+  "at_risk": [
+    {
+      "asset_id": "shared-upload-bucket",
+      "asset_type": "aws_s3_bucket",
+      "control_id": "CTL.S3.ACCESS.003",
+      "due_at": "2026-01-08T00:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -72,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "asset_id": "shared-upload-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "control_description": "S3 buckets must not grant write or delete permissions to external AWS accounts. Cross-account read access may be acceptable for analytics or auditing, but write access from external accounts creates data integrity and supply chain risks.\n",
+      "control_id": "CTL.S3.ACCESS.003",
+      "control_name": "No External Write Access",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.access.has_external_write",
+            "unsafe_value": true
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "storage.kind",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 240,
+        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "episode_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
+      }
+    }
+  ],
   "kind": "evaluation",
+  "posture": "UNSAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "284816f53d6a0af2e3a1fc06e01e6168b7e9c199f9926c1f371aa0c3c2bba573",
@@ -14,79 +63,16 @@
       },
       "overall": "6602d5b7af3ffc8f122cc4713604ed751163333c562f1aff9c8182e0c09df12e"
     },
-    "pack_hash": "5ca7f82f6ac5637a86b20ebaf619f2fd8db717792144900b537378860a1edd6a"
+    "max_unsafe": "7d",
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "pack_hash": "5ca7f82f6ac5637a86b20ebaf619f2fd8db717792144900b537378860a1edd6a",
+    "snapshots": 2
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 1
-  },
-  "safety_status": "UNSAFE",
-  "at_risk": [
-    {
-      "control_id": "CTL.S3.ACCESS.003",
-      "asset_id": "shared-upload-bucket",
-      "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "control_id": "CTL.S3.ACCESS.003",
-      "control_name": "No External Write Access",
-      "control_description": "S3 buckets must not grant write or delete permissions to external AWS accounts. Cross-account read access may be acceptable for analytics or auditing, but write access from external accounts creates data integrity and supply chain risks.\n",
-      "asset_id": "shared-upload-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "storage.access.has_external_write",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "why_now": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "episode_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
-      }
-    }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-external-write/controls",
-      "observations": "testdata/e2e/e2e-s3-external-write/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

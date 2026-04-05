@@ -6,7 +6,7 @@ stdout '"schema_version": "out.v0.1"'
 stdout '"kind": "evaluation"'
 stdout '"summary"'
 stdout '"findings"'
-stdout '"safety_status"'
+stdout '"posture"'
 
 # apply with violations produces findings array
 ! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input

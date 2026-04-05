@@ -1,12 +1,139 @@
 {
-  "schema_version": "out.v0.1",
+  "at_risk": [
+    {
+      "asset_id": "learn2-khanacademy-cname-ref",
+      "asset_type": "s3_bucket_reference",
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "due_at": "2022-11-08T00:00:00Z",
+      "first_unsafe_at": "2022-11-01T00:00:00Z",
+      "remaining_hours": -24,
+      "status": "OVERDUE",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "asset_id": "learn2-khanacademy-cname-ref",
+      "asset_type": "s3_bucket_reference",
+      "asset_vendor": "aws",
+      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "evidence": {
+        "first_unsafe_at": "2022-11-01T00:00:00Z",
+        "last_seen_unsafe_at": "2022-11-09T00:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "s3_ref.bucket_exists",
+            "unsafe_value": false
+          },
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "s3_ref.bucket_owned",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "threshold_hours": 168,
+        "unsafe_duration_hours": 192,
+        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2022-11-01T00:00:00Z."
+      },
+      "fix_plan": {
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "id": "fix-b6aa58c6b933ff2c",
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "target": {
+          "asset_id": "learn2-khanacademy-cname-ref",
+          "asset_type": "s3_bucket_reference"
+        }
+      },
+      "posture_drift": {
+        "episode_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Restrict access to authorized principals only.",
+        "description": "Resource is exposed to the public internet."
+      }
+    }
+  ],
   "kind": "evaluation",
+  "posture": "UNSAFE",
+  "remediation_groups": [
+    {
+      "asset_id": "learn2-khanacademy-cname-ref",
+      "asset_type": "s3_bucket_reference",
+      "contributing_controls": [
+        "CTL.S3.BUCKET.TAKEOVER.001"
+      ],
+      "finding_count": 1,
+      "fix_plan": {
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "id": "fix-b6aa58c6b933ff2c",
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "target": {
+          "asset_id": "learn2-khanacademy-cname-ref",
+          "asset_type": "s3_bucket_reference"
+        }
+      }
+    }
+  ],
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2022-11-09T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2022-11-01T000000Z.json": "91a1d72d66469e893c2c001d0f34797ee730786aaa19b4c078fba6cabf2503f9",
@@ -14,157 +141,16 @@
       },
       "overall": "29d041a3e3efb89c57d31e8875aba0eaf174b9d26ca566a3c2ad613790ad2f13"
     },
-    "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e"
+    "max_unsafe": "7d",
+    "now": "2022-11-09T00:00:00Z",
+    "offline": true,
+    "pack_hash": "7bf215c30ede67f208b873df06900343273f618007838d0d4b09d4937c11162e",
+    "snapshots": 2
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 1
-  },
-  "safety_status": "UNSAFE",
-  "at_risk": [
-    {
-      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
-      "asset_id": "learn2-khanacademy-cname-ref",
-      "asset_type": "s3_bucket_reference",
-      "status": "OVERDUE",
-      "due_at": "2022-11-08T00:00:00Z",
-      "remaining_hours": -24,
-      "first_unsafe_at": "2022-11-01T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
-      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
-      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
-      "asset_id": "learn2-khanacademy-cname-ref",
-      "asset_type": "s3_bucket_reference",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2022-11-01T00:00:00Z",
-        "last_seen_unsafe_at": "2022-11-09T00:00:00Z",
-        "unsafe_duration_hours": 192,
-        "threshold_hours": 168,
-        "misconfigurations": [
-          {
-            "property": "s3_ref.bucket_exists",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "s3_ref.bucket_owned",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "why_now": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2022-11-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "episode_count": 1
-      },
-      "remediation": {
-        "description": "Resource is exposed to the public internet.",
-        "action": "Restrict access to authorized principals only."
-      },
-      "fix_plan": {
-        "id": "fix-b6aa58c6b933ff2c",
-        "target": {
-          "asset_id": "learn2-khanacademy-cname-ref",
-          "asset_type": "s3_bucket_reference"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
-      }
-    }
-  ],
-  "remediation_groups": [
-    {
-      "asset_id": "learn2-khanacademy-cname-ref",
-      "asset_type": "s3_bucket_reference",
-      "fix_plan": {
-        "id": "fix-b6aa58c6b933ff2c",
-        "target": {
-          "asset_id": "learn2-khanacademy-cname-ref",
-          "asset_type": "s3_bucket_reference"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths."
-      },
-      "contributing_controls": [
-        "CTL.S3.BUCKET.TAKEOVER.001"
-      ],
-      "finding_count": 1
-    }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-khanacademy-1777077/controls",
-      "observations": "testdata/e2e/e2e-h1-khanacademy-1777077/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

@@ -1,12 +1,59 @@
 {
-  "schema_version": "out.v0.1",
+  "at_risk": [
+    {
+      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+      "asset_type": "storage_bucket",
+      "control_id": "CTL.EXP.DURATION.001",
+      "due_at": "2026-01-01T01:00:00Z",
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "remaining_hours": -1,
+      "status": "OVERDUE",
+      "threshold_hours": 1
+    }
+  ],
+  "findings": [
+    {
+      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
+      "control_id": "CTL.EXP.DURATION.001",
+      "control_name": "Unsafe Exposure Duration Bound",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-01T02:00:00Z",
+        "misconfigurations": [
+          {
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "property": "public",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "threshold_hours": 1,
+        "unsafe_duration_hours": 2,
+        "why_now": "Asset has been unsafe for 2 hours (threshold: 1 hours). Unsafe since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "episode_count": 1,
+        "pattern": "persistent"
+      },
+      "remediation": {
+        "action": "Review the misconfigured properties and revert to compliant values.",
+        "description": "Resource configuration deviates from security baseline."
+      },
+      "source": {
+        "file": "main.tf",
+        "line": 42
+      }
+    }
+  ],
   "kind": "evaluation",
+  "posture": "UNSAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2026-01-01T02:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 3,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "cc25d337baee67dac85830c7e6610d03a76409aeb2534f39d25ec3a38dd65a22",
@@ -15,77 +62,16 @@
       },
       "overall": "8e1d9a20634ecc5c9509fbdcbbd7643b4ebbdcfe58981a2a40f6d5b0013de538"
     },
-    "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db"
+    "max_unsafe": "7d",
+    "now": "2026-01-01T02:00:00Z",
+    "offline": true,
+    "pack_hash": "7bcf15e5ea903b200455d21a403d99dce695b2006b42a82173fc30bc44a616db",
+    "snapshots": 3
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 1,
     "violations": 1
-  },
-  "safety_status": "UNSAFE",
-  "at_risk": [
-    {
-      "control_id": "CTL.EXP.DURATION.001",
-      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
-      "asset_type": "storage_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-01T01:00:00Z",
-      "remaining_hours": -1,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 1
-    }
-  ],
-  "findings": [
-    {
-      "control_id": "CTL.EXP.DURATION.001",
-      "control_name": "Unsafe Exposure Duration Bound",
-      "control_description": "An asset must not remain unsafe beyond the configured time window.",
-      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
-      "asset_type": "storage_bucket",
-      "asset_vendor": "aws",
-      "source": {
-        "file": "main.tf",
-        "line": 42
-      },
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-01T02:00:00Z",
-        "unsafe_duration_hours": 2,
-        "threshold_hours": 1,
-        "misconfigurations": [
-          {
-            "property": "public",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "why_now": "Asset has been unsafe for 2 hours (threshold: 1 hours). Unsafe since 2026-01-01T00:00:00Z."
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "episode_count": 1
-      },
-      "remediation": {
-        "description": "Resource configuration deviates from security baseline.",
-        "action": "Review the misconfigured properties and revert to compliant values."
-      }
-    }
-  ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-27-breach-disc-disappears/controls",
-      "observations": "testdata/e2e/e2e-27-breach-disc-disappears/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

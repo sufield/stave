@@ -1,12 +1,8 @@
 {
-  "schema_version": "out.v0.1",
+  "findings": [],
   "kind": "evaluation",
+  "posture": "SAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2024-03-01T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2024-02-21T000000Z.json": "9eaf2c96883ce09cb1d2bee72767118d7af33d74ece9175ac03e349982c77f4b",
@@ -14,26 +10,16 @@
       },
       "overall": "9d9bf25f0be5e4f67f6ed42356418867e54aa0fb4daf97ada79f74cb6e1ecf39"
     },
-    "pack_hash": "6e85ef08d91147eaac68ff3f995e0b5fb568e5a856d7278878eda53edc661380"
+    "max_unsafe": "7d",
+    "now": "2024-03-01T00:00:00Z",
+    "offline": true,
+    "pack_hash": "6e85ef08d91147eaac68ff3f995e0b5fb568e5a856d7278878eda53edc661380",
+    "snapshots": 2
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 0,
     "violations": 0
-  },
-  "safety_status": "SAFE",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-mozilla-2383486/controls",
-      "observations": "testdata/e2e/e2e-h1-mozilla-2383486/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

@@ -53,7 +53,7 @@ type Observation struct {
 	AssetID     asset.ID           `json:"asset_id"`
 	AssetType   kernel.AssetType   `json:"asset_type"`
 	AssetDomain kernel.AssetDomain `json:"asset_domain"`
-	Verdict     Verdict            `json:"decision"`
+	Verdict     Verdict            `json:"verdict"`
 	Confidence  ConfidenceLevel    `json:"confidence"`
 	Evidence    *Evidence          `json:"evidence,omitempty"`
 	WhyNow      string             `json:"why_now,omitempty"`
@@ -88,14 +88,14 @@ type SkippedControl struct {
 type Audit struct {
 	Run              RunInfo               `json:"run"`
 	Summary          Summary               `json:"summary"`
-	Posture          Posture               `json:"safety_status"`
+	Posture          Posture               `json:"posture"`
 	AtRisk           risk.ThresholdItems   `json:"at_risk,omitempty"`
 	Findings         []Finding             `json:"findings"`
 	ExceptedFindings []ExceptedFinding     `json:"excepted_findings,omitempty"`
 	Skipped          []SkippedControl      `json:"skipped,omitempty"`
 	ExemptedAssets   []asset.ExemptedAsset `json:"exempted_assets,omitempty"`
 	Metadata         Metadata              `json:"-"`
-	Observations     []Observation         `json:"rows,omitempty"` // populated if --explain is used
+	Observations     []Observation         `json:"observations,omitempty"` // populated if --explain is used
 }
 
 // FindFinding retrieves a finding for a specific control/asset pair, returning nil if not found.

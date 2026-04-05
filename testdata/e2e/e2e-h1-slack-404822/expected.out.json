@@ -1,12 +1,8 @@
 {
-  "schema_version": "out.v0.1",
+  "findings": [],
   "kind": "evaluation",
+  "posture": "SAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2019-02-23T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2018-09-03T000000Z.json": "ceee371e748349d0d964a865fb6b6267b06aaaebe192b87d6805c57968874b57",
@@ -14,26 +10,16 @@
       },
       "overall": "2ca264339aa8d7d2a16057b342b68a331c2806c75f6210e00430770503a07efb"
     },
-    "pack_hash": "bd2e76a3b45e32eebbb773c360e0e715d8956ec7de54e8a5038edcc09dcb8f27"
+    "max_unsafe": "7d",
+    "now": "2019-02-23T00:00:00Z",
+    "offline": true,
+    "pack_hash": "bd2e76a3b45e32eebbb773c360e0e715d8956ec7de54e8a5038edcc09dcb8f27",
+    "snapshots": 2
   },
+  "schema_version": "out.v0.1",
   "summary": {
     "assets_evaluated": 1,
     "attack_surface": 0,
     "violations": 0
-  },
-  "safety_status": "SAFE",
-  "findings": [],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-slack-404822/controls",
-      "observations": "testdata/e2e/e2e-h1-slack-404822/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
   }
 }

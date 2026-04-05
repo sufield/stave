@@ -1,12 +1,8 @@
 {
-  "schema_version": "out.v0.1",
+  "findings": [],
   "kind": "evaluation",
+  "posture": "SAFE",
   "run": {
-    "tool_version": "0.0.3",
-    "offline": true,
-    "now": "2026-01-11T00:00:00Z",
-    "max_unsafe": "7d",
-    "snapshots": 2,
     "input_hashes": {
       "files": {
         "2026-01-01T000000Z.json": "f4d92bf18b592775b02d8126c9440b4c37165a342a7ab625f5f4ef190ac93fdb",
@@ -14,15 +10,13 @@
       },
       "overall": "efead7098f84a1e064f5d3ec773ee58835603d1793aeaff405ba33fbe5153475"
     },
-    "pack_hash": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f"
+    "max_unsafe": "7d",
+    "now": "2026-01-11T00:00:00Z",
+    "offline": true,
+    "pack_hash": "f6e08b33a0a5bf36714060eeffe01783f353ac1a54caf7bfa92f907ed4f7265f",
+    "snapshots": 2
   },
-  "summary": {
-    "assets_evaluated": 0,
-    "attack_surface": 0,
-    "violations": 0
-  },
-  "safety_status": "SAFE",
-  "findings": [],
+  "schema_version": "out.v0.1",
   "skipped": [
     {
       "control_id": "CTL.TP.PLATFORM.001",
@@ -30,17 +24,9 @@
       "reason": "type not evaluatable: authorization_boundary"
     }
   ],
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "testdata/e2e/e2e-09-platform-boundary/controls",
-      "observations": "testdata/e2e/e2e-09-platform-boundary/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "be108a394c4c5a3e7081cd0511a76b1c9b67ef73",
-      "dirty": false
-    }
+  "summary": {
+    "assets_evaluated": 0,
+    "attack_surface": 0,
+    "violations": 0
   }
 }
