@@ -22,11 +22,13 @@ var (
 	ErrNoConfigDir = errors.New("could not resolve a config directory or user home")
 )
 
+// Defaults holds the default directory paths for a context.
 type Defaults struct {
 	ControlsDir     string `yaml:"controls_dir,omitempty"`
 	ObservationsDir string `yaml:"observations_dir,omitempty"`
 }
 
+// Context holds the configuration for a named project context.
 type Context struct {
 	ProjectRoot   string   `yaml:"project_root"`
 	ProjectConfig string   `yaml:"project_config,omitempty"`

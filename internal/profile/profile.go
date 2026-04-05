@@ -15,8 +15,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ProfileControl binds an control to a profile with optional overrides.
-type ProfileControl struct {
+// Control binds an control to a profile with optional overrides.
+type Control struct {
 	// ControlID references a registered control.
 	ControlID kernel.ControlID
 
@@ -35,26 +35,26 @@ type Profile struct {
 	ID          string
 	Name        string
 	Description string
-	Controls    []ProfileControl
+	Controls    []Control
 }
 
-// ProfileResult extends an control Result with profile-level metadata.
-type ProfileResult struct {
+// Result extends an control Result with profile-level metadata.
+type Result struct {
 	compliance.Outcome
 	ComplianceRef string `json:"compliance_ref,omitempty"`
 	Rationale     string `json:"rationale,omitempty"`
 }
 
-// ProfileReport is the output of evaluating a profile against a snapshot.
-type ProfileReport struct {
-	ProfileID        string                     `json:"profile_id"`
-	ProfileName      string                     `json:"profile_name"`
-	Pass             bool                       `json:"pass"`
-	CompoundFindings []compound.CompoundFinding `json:"compound_findings,omitempty"`
-	Acknowledged     []AcknowledgedEntry        `json:"acknowledged,omitempty"`
-	Results          []ProfileResult            `json:"results"`
-	Counts           map[policy.Severity]int    `json:"counts"`
-	FailCounts       map[policy.Severity]int    `json:"fail_counts"`
+// Report is the output of evaluating a profile against a snapshot.
+type Report struct {
+	ProfileID        string                  `json:"profile_id"`
+	ProfileName      string                  `json:"profile_name"`
+	Pass             bool                    `json:"pass"`
+	CompoundFindings []compound.Finding      `json:"compound_findings,omitempty"`
+	Acknowledged     []AcknowledgedEntry     `json:"acknowledged,omitempty"`
+	Results          []Result                `json:"results"`
+	Counts           map[policy.Severity]int `json:"counts"`
+	FailCounts       map[policy.Severity]int `json:"fail_counts"`
 }
 
 // AcknowledgedEntry surfaces an exception in the report.
@@ -75,10 +75,10 @@ type AcknowledgedEntry struct {
 // When p.Controls is empty the profile discovers its controls from the
 // registries using each control's ComplianceProfiles() metadata — no
 // hardcoded list required.
-func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.ControlCatalog) (ProfileReport, error) {
+func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.ControlCatalog) (Report, error) {
 	controls := p.Controls
 	if len(controls) == 0 {
-		controls = discoverProfileControls(p.ID, registries)
+		controls = discoverControls(p.ID, registries)
 	}
 
 	// Collect all control IDs for profile validation.
@@ -87,13 +87,13 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 		ids[i] = c.ControlID
 	}
 	if err := compliance.ValidateProfile(ids); err != nil {
-		return ProfileReport{}, fmt.Errorf("profile %s: %w", p.ID, err)
+		return Report{}, fmt.Errorf("profile %s: %w", p.ID, err)
 	}
 
 	// Build lookup from all registries.
 	lookup := buildLookup(registries)
 
-	var results []ProfileResult
+	var results []Result
 	for _, ctrl := range controls {
 		ctl := lookup[ctrl.ControlID]
 		if ctl == nil {
@@ -108,7 +108,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 			r.Severity = *ctrl.SeverityOverride
 		}
 
-		results = append(results, ProfileResult{
+		results = append(results, Result{
 			Outcome:       r,
 			ComplianceRef: ctrl.ComplianceRef,
 			Rationale:     ctrl.Rationale,
@@ -144,7 +144,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 		allPass = false
 	}
 
-	return ProfileReport{
+	return Report{
 		ProfileID:        p.ID,
 		ProfileName:      p.Name,
 		Pass:             allPass,
@@ -155,14 +155,14 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 	}, nil
 }
 
-// discoverProfileControls builds the ProfileControl list by querying all
+// discoverControls builds the Control list by querying all
 // registries for controls that declare membership in the given profile.
-func discoverProfileControls(profileID string, registries []*compliance.ControlCatalog) []ProfileControl {
-	var controls []ProfileControl
+func discoverControls(profileID string, registries []*compliance.ControlCatalog) []Control {
+	var controls []Control
 	for _, reg := range registries {
 		for _, ctrl := range reg.ByProfile(profileID) {
 			def := ctrl.Def()
-			pc := ProfileControl{
+			pc := Control{
 				ControlID:     def.ID(),
 				ComplianceRef: def.ComplianceRefs()[profileID],
 				Rationale:     def.ProfileRationale(profileID),

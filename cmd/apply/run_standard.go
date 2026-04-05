@@ -18,7 +18,7 @@ type evalContext struct {
 	Provider          *compose.Provider
 	Opts              *Options
 	Params            applyParams
-	IO                standardIO
+	IO                StandardIO
 	Plan              *appeval.EvaluationPlan
 	Runtime           *ui.Runtime
 	Logger            *slog.Logger
@@ -27,7 +27,7 @@ type evalContext struct {
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *Options, params applyParams, sio standardIO, cfg RunConfig) error {
+func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provider, opts *Options, params applyParams, sio StandardIO, cfg RunConfig) error {
 	pc, pcErr := resolveProjectContext()
 	if pcErr != nil {
 		return decorateError(pcErr)

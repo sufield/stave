@@ -101,7 +101,7 @@ func TestSeverity_UnmarshalYAML_BadInput(t *testing.T) {
 
 type stubDigester struct{}
 
-func (s *stubDigester) Digest(items []string, sep byte) kernel.Digest {
+func (s *stubDigester) Digest(_ []string, _ byte) kernel.Digest {
 	return kernel.Digest("sha256:stub")
 }
 

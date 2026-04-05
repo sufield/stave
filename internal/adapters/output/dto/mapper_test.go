@@ -243,14 +243,14 @@ func TestFromFindings_EmptySlice(t *testing.T) {
 }
 
 func TestMapSlice_NilInput(t *testing.T) {
-	result := mapSlice[int, string](nil, func(i int) string { return "" })
+	result := mapSlice[int, string](nil, func(_ int) string { return "" })
 	if result != nil {
 		t.Errorf("mapSlice(nil, ...) = %v, want nil", result)
 	}
 }
 
 func TestMapSlice_EmptyInput(t *testing.T) {
-	result := mapSlice([]int{}, func(i int) string { return "x" })
+	result := mapSlice([]int{}, func(_ int) string { return "x" })
 	if len(result) != 0 {
 		t.Errorf("mapSlice([], ...) = %v, want empty", result)
 	}

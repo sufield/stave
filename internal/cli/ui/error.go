@@ -1,4 +1,4 @@
-// Error envelope format and exit code mapping.
+// Package ui provides error envelope format, exit code mapping, and user-facing output helpers.
 package ui
 
 import (
@@ -23,7 +23,9 @@ const (
 // ErrorCode is a stable string identifier for categories of failures.
 type ErrorCode string
 
+// CodeIOError and related constants.
 const (
+	// CodeIOError constants.
 	CodeIOError               ErrorCode = "IO_ERROR"
 	CodeParseError            ErrorCode = "PARSE_ERROR"
 	CodeSchemaError           ErrorCode = "SCHEMA_ERROR"

@@ -24,7 +24,7 @@ func FuzzEvaluate(f *testing.F) {
 
 	eval := NewEvaluator(nil, s3resolver.NewResolver())
 
-	f.Fuzz(func(t *testing.T, input string) {
+	f.Fuzz(func(_ *testing.T, input string) {
 		doc, _ := Parse(input)
 		eval.Evaluate(doc)
 	})

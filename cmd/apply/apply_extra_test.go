@@ -510,8 +510,8 @@ func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {
 // --- NewReadinessRunner ---
 
 func TestNewReadinessRunner(t *testing.T) {
-	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
-		return func(maxUnsafe time.Duration, now time.Time) (validation.Status, error) {
+	factory := func(_, _ string, _ bool) ReadinessValidator {
+		return func(_ time.Duration, _ time.Time) (validation.Status, error) {
 			return validation.Status{}, nil
 		}
 	}

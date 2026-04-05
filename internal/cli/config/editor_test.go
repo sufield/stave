@@ -31,7 +31,7 @@ func (s *stubSetStore) LoadOrCreate() (*stubConfig, string, error) {
 	return s.cfg, s.path, nil
 }
 
-func (s *stubSetStore) CurrentValue(cfg *stubConfig, key, path string) (string, bool) {
+func (s *stubSetStore) CurrentValue(cfg *stubConfig, key, _ string) (string, bool) {
 	v, ok := cfg.Values[key]
 	return v, ok
 }
@@ -44,7 +44,7 @@ func (s *stubSetStore) Set(cfg *stubConfig, key, value string) error {
 	return nil
 }
 
-func (s *stubSetStore) Write(path string, cfg *stubConfig) error {
+func (s *stubSetStore) Write(_ string, _ *stubConfig) error {
 	s.writeCalled = true
 	return s.writeErr
 }
@@ -71,7 +71,7 @@ func (s *stubDeleteStore) Delete(cfg *stubConfig, key string) error {
 	return nil
 }
 
-func (s *stubDeleteStore) Write(path string, cfg *stubConfig) error {
+func (s *stubDeleteStore) Write(_ string, _ *stubConfig) error {
 	s.writeCalled = true
 	return s.writeErr
 }

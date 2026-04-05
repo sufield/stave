@@ -24,12 +24,12 @@ func fixtureMeta() ReportMeta {
 	}
 }
 
-func fixtureReport() profile.ProfileReport {
-	return profile.ProfileReport{
+func fixtureReport() profile.Report {
+	return profile.Report{
 		ProfileID:   "hipaa",
 		ProfileName: "HIPAA Security Rule",
 		Pass:        false,
-		Results: []profile.ProfileResult{
+		Results: []profile.Result{
 			{
 				Outcome: compliance.Outcome{
 					Pass:           false,

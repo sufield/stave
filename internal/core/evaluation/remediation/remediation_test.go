@@ -14,13 +14,13 @@ import (
 
 type stubIDGen struct{}
 
-func (stubIDGen) GenerateID(prefix string, components ...string) string {
+func (stubIDGen) GenerateID(prefix string, _ ...string) string {
 	return prefix + "stub"
 }
 
 type stubDigester struct{}
 
-func (stubDigester) Digest(components []string, sep byte) kernel.Digest {
+func (stubDigester) Digest(_ []string, _ byte) kernel.Digest {
 	return "stubhash0123456789abcdef"
 }
 

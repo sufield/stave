@@ -9,6 +9,7 @@ import (
 // NetworkScope defines the network-level access boundary of a policy grant.
 type NetworkScope int
 
+// Network-level access boundary scope constants.
 const (
 	NetworkScopeUnknown       NetworkScope = iota
 	NetworkScopePublic                     // no network condition

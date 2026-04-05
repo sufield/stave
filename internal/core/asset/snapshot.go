@@ -47,24 +47,29 @@ type GeneratedBy struct {
 // Snapshots is an ordered collection of observation snapshots.
 type Snapshots []Snapshot
 
+// IsEmpty reports whether the collection has no snapshots.
 func (s Snapshots) IsEmpty() bool {
 	return len(s) == 0
 }
 
+// IsSingle reports whether the collection has exactly one snapshot.
 func (s Snapshots) IsSingle() bool {
 	return len(s) == 1
 }
 
+// IsMultiSnapshot reports whether the collection has more than one snapshot.
 func (s Snapshots) IsMultiSnapshot() bool {
 	return len(s) > 1
 }
 
-type unsortedPair struct {
+// UnsortedPair identifies a pair of snapshots that violates chronological order.
+type UnsortedPair struct {
 	snapshotAt  time.Time
 	comesBefore time.Time
 }
 
-func (p unsortedPair) Evidence() map[string]string {
+// Evidence implements the evidence operation.
+func (p UnsortedPair) Evidence() map[string]string {
 	return map[string]string{
 		"snapshot_at":  p.snapshotAt.Format(time.RFC3339),
 		"comes_before": p.comesBefore.Format(time.RFC3339),
@@ -72,30 +77,30 @@ func (p unsortedPair) Evidence() map[string]string {
 }
 
 // FindFirstUnsortedPair finds the first snapshot pair that violates chronological order.
-func (s Snapshots) FindFirstUnsortedPair() (unsortedPair, bool) {
+func (s Snapshots) FindFirstUnsortedPair() (UnsortedPair, bool) {
 	for i := 1; i < len(s); i++ {
 		if s[i].CapturedAt.Before(s[i-1].CapturedAt) {
-			return unsortedPair{
+			return UnsortedPair{
 				snapshotAt:  s[i].CapturedAt,
 				comesBefore: s[i-1].CapturedAt,
 			}, true
 		}
 	}
-	return unsortedPair{}, false
+	return UnsortedPair{}, false
 }
 
 // TemporalBounds returns the earliest and latest CapturedAt timestamps.
-func (s Snapshots) TemporalBounds() (min, max time.Time) {
+func (s Snapshots) TemporalBounds() (earliest, latest time.Time) {
 	if len(s) == 0 {
 		return
 	}
-	min, max = s[0].CapturedAt, s[0].CapturedAt
+	earliest, latest = s[0].CapturedAt, s[0].CapturedAt
 	for _, snap := range s {
-		if snap.CapturedAt.Before(min) {
-			min = snap.CapturedAt
+		if snap.CapturedAt.Before(earliest) {
+			earliest = snap.CapturedAt
 		}
-		if snap.CapturedAt.After(max) {
-			max = snap.CapturedAt
+		if snap.CapturedAt.After(latest) {
+			latest = snap.CapturedAt
 		}
 	}
 	return

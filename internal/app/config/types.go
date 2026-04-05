@@ -26,6 +26,7 @@ const (
 // Layer identifies the source of a configuration value.
 type Layer int
 
+// Configuration provenance layer constants.
 const (
 	LayerDefault       Layer = iota // built-in default value
 	LayerUserConfig                 // user config (~/.config/stave/config.yaml)

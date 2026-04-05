@@ -15,6 +15,7 @@ type DiagnoseDetailPort interface {
 	RunDetail(ctx context.Context, controlsDir, observationsDir, controlID, assetID string) (any, error)
 }
 
+// DiagnoseDeps represents a diagnosedeps value.
 type DiagnoseDeps struct {
 	Runner DiagnoseRunnerPort
 	Detail DiagnoseDetailPort
@@ -43,6 +44,7 @@ func Diagnose(ctx context.Context, req DiagnoseRequest, deps DiagnoseDeps) (Diag
 
 // --- Diagnose Types ---
 
+// DiagnoseRequest represents a diagnoserequest value.
 type DiagnoseRequest struct {
 	ControlsDir       string   `json:"controls_dir,omitempty"`
 	ObservationsDir   string   `json:"observations_dir,omitempty"`
@@ -55,6 +57,7 @@ type DiagnoseRequest struct {
 	AssetID           string   `json:"asset_id,omitempty"`
 }
 
+// DiagnoseResponse represents a diagnoseresponse value.
 type DiagnoseResponse struct {
 	ReportData   any  `json:"report_data"`
 	IsDetailMode bool `json:"is_detail_mode,omitempty"`

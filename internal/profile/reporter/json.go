@@ -10,15 +10,15 @@ import (
 // JSONReporter writes a structured JSON report.
 type JSONReporter struct{}
 
-// jsonReport wraps ProfileReport with metadata and disclaimer.
+// jsonReport wraps Report with metadata and disclaimer.
 type jsonReport struct {
-	Meta       ReportMeta            `json:"meta"`
-	Report     profile.ProfileReport `json:"report"`
-	Disclaimer string                `json:"disclaimer"`
+	Meta       ReportMeta     `json:"meta"`
+	Report     profile.Report `json:"report"`
+	Disclaimer string         `json:"disclaimer"`
 }
 
 // Write renders the report as indented JSON.
-func (JSONReporter) Write(w io.Writer, report profile.ProfileReport, meta ReportMeta) error {
+func (JSONReporter) Write(w io.Writer, report profile.Report, meta ReportMeta) error {
 	out := jsonReport{
 		Meta:       meta,
 		Report:     report,

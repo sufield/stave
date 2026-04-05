@@ -20,7 +20,7 @@ func TestResult_Add(t *testing.T) {
 	}
 }
 
-func TestResult_Add_NilReceiver(t *testing.T) {
+func TestResult_Add_NilReceiver(_ *testing.T) {
 	var r *Report
 	// Should not panic.
 	r.Add(New(CodeSchemaViolation).Build())
@@ -38,7 +38,7 @@ func TestResult_AddAll(t *testing.T) {
 	}
 }
 
-func TestResult_AddAll_NilReceiver(t *testing.T) {
+func TestResult_AddAll_NilReceiver(_ *testing.T) {
 	var r *Report
 	r.AddAll([]Diagnostic{New(CodeSchemaViolation).Build()})
 }
@@ -64,7 +64,7 @@ func TestResult_Merge(t *testing.T) {
 	}
 }
 
-func TestResult_Merge_NilReceiver(t *testing.T) {
+func TestResult_Merge_NilReceiver(_ *testing.T) {
 	var r *Report
 	other := NewResult()
 	other.Add(New(CodeSchemaViolation).Build())

@@ -1,3 +1,5 @@
+// Package contextcmd implements the stave config context subcommands for
+// creating, listing, selecting, showing, and deleting named project contexts.
 package contextcmd
 
 import (
@@ -15,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
+// NewContextCmd constructs the context command group with its subcommands.
 func NewContextCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "context",

@@ -1,3 +1,5 @@
+// Package apply provides application-layer support for the apply command
+// including user guidance and hint generation.
 package apply
 
 import (

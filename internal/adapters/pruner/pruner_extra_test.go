@@ -56,7 +56,7 @@ func TestListSnapshotFilesFlat_NilMetadataLoader(t *testing.T) {
 
 func TestListSnapshotFilesFlat_NonexistentDir(t *testing.T) {
 	_, err := ListSnapshotFilesFlat(context.Background(), "/nonexistent", ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) { return time.Time{}, nil },
+		MetadataLoader: func(_, _ string) (time.Time, error) { return time.Time{}, nil },
 	})
 	if err == nil {
 		t.Fatal("expected error for nonexistent directory")
@@ -76,7 +76,7 @@ func TestListSnapshotFilesFlat_SortsByCapturedAt(t *testing.T) {
 	}
 
 	files, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) {
+		MetadataLoader: func(_, name string) (time.Time, error) {
 			switch name {
 			case "obs-a.json":
 				return base.Add(3 * time.Hour), nil
@@ -122,7 +122,7 @@ func TestListSnapshotFilesFlat_SkipsDirectoriesAndNonJSON(t *testing.T) {
 	}
 
 	files, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MetadataLoader: func(_, _ string) (time.Time, error) { return base, nil },
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -139,7 +139,7 @@ func TestListSnapshotFilesFlat_MetadataLoaderError(t *testing.T) {
 	}
 
 	_, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) {
+		MetadataLoader: func(_, name string) (time.Time, error) {
 			return time.Time{}, fmt.Errorf("parse error")
 		},
 	})
@@ -162,7 +162,7 @@ func TestListSnapshotFilesFlat_CancelledContext(t *testing.T) {
 	cancel() // Cancel immediately.
 
 	_, err := ListSnapshotFilesFlat(ctx, dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MetadataLoader: func(_, name string) (time.Time, error) { return base, nil },
 	})
 	if err == nil {
 		t.Fatal("expected context cancellation error")
@@ -198,7 +198,7 @@ func TestListSnapshotFilesRecursive_SkipsUnderscoreDirs(t *testing.T) {
 	}
 
 	files, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MetadataLoader: func(_, name string) (time.Time, error) { return base, nil },
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -294,7 +294,7 @@ func TestSnapshotLimitError(t *testing.T) {
 	}
 }
 
-func TestIsSnapshotFile(t *testing.T) {
+func TestIsSnapshotFile(_ *testing.T) {
 	// We can only test this indirectly through ListSnapshotFilesFlat behavior.
 	// Non-JSON files should be skipped, which is tested above.
 }

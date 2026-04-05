@@ -15,6 +15,7 @@ import (
 // EnvelopeKind identifies the type of output envelope.
 type EnvelopeKind string
 
+// Output envelope kind constants.
 const (
 	KindEvaluation   EnvelopeKind = "evaluation"
 	KindVerification EnvelopeKind = "verification"

@@ -1,4 +1,4 @@
-// Package scrub provides snapshot-level scrubbing of sensitive data.
+// Package sanitize provides snapshot-level scrubbing of sensitive data.
 // It applies scrub profiles to observation snapshots before persistence
 // or display, removing or sanitizing sensitive property values.
 //

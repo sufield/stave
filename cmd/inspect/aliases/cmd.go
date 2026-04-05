@@ -1,3 +1,5 @@
+// Package aliases implements the inspect aliases command that lists
+// predicate aliases and supported operators.
 package aliases
 
 import (

@@ -8,8 +8,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// standardIO holds resolved IO and format state for the standard apply path.
-type standardIO struct {
+// StandardIO holds resolved IO and format state for the standard apply path.
+type StandardIO struct {
 	Stdout    io.Writer
 	Stderr    io.Writer
 	Stdin     io.Reader
@@ -19,13 +19,13 @@ type standardIO struct {
 }
 
 // ResolveStandardIO extracts IO and format state for the standard apply path.
-func ResolveStandardIO(o *Options, cs cobraState) (standardIO, error) {
+func ResolveStandardIO(o *Options, cs cobraState) (StandardIO, error) {
 	format, err := compose.ResolveFormatValuePure(o.Format, cs.FormatChanged, false)
 	if err != nil {
-		return standardIO{}, err
+		return StandardIO{}, err
 	}
 	quiet := cs.GlobalFlags.Quiet || isMachineFormat(format)
-	return standardIO{
+	return StandardIO{
 		Stdout:    compose.ResolveStdout(cs.Stdout, quiet, format),
 		Stderr:    cs.Stderr,
 		Stdin:     cs.Stdin,

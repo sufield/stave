@@ -8,12 +8,14 @@ import (
 	"time"
 )
 
+// DefaultCrosswalkResolver represents a defaultcrosswalkresolver value.
 type DefaultCrosswalkResolver struct {
 	ReadFile  func(path string) ([]byte, error)
 	ResolveFn func(raw []byte, frameworks, checkIDs []string, now time.Time) (CrosswalkResult, error)
 	StatFile  func(string) (fs.FileInfo, error)
 }
 
+// Resolve implements the resolve operation.
 func (d DefaultCrosswalkResolver) Resolve(
 	_ context.Context,
 	req Params,

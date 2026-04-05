@@ -8,6 +8,7 @@ import (
 // SBOMFormat identifies the SBOM output standard.
 type SBOMFormat string
 
+// SBOMFormatSPDX values.
 const (
 	SBOMFormatSPDX      SBOMFormat = "spdx"
 	SBOMFormatCycloneDX SBOMFormat = "cyclonedx"
@@ -16,6 +17,7 @@ const (
 // VulnSource identifies the vulnerability evidence strategy.
 type VulnSource string
 
+// VulnSourceHybrid values.
 const (
 	VulnSourceHybrid VulnSource = "hybrid"
 	VulnSourceLocal  VulnSource = "local"
@@ -25,6 +27,7 @@ const (
 // VulnSourceUsed identifies the actual evidence source outcome (vs VulnSource which is the strategy).
 type VulnSourceUsed string
 
+// VulnSourceUsedLive values.
 const (
 	VulnSourceUsedLive       VulnSourceUsed = "local_live_check"
 	VulnSourceUsedFailed     VulnSourceUsed = "live_check_failed"
@@ -37,6 +40,7 @@ const (
 // Values are either named tokens or RFC3339 timestamps from file stat.
 type VulnFreshness string
 
+// FreshnessUnknown values.
 const (
 	FreshnessUnknown VulnFreshness = "unknown"
 	FreshnessLive    VulnFreshness = "live"
@@ -78,6 +82,7 @@ func ParseVulnSource(s string) (VulnSource, error) {
 	}
 }
 
+// DefaultDiagnosticsService represents a defaultdiagnosticsservice value.
 type DefaultDiagnosticsService struct {
 	Run func(cwd, binaryPath, staveVersion string)
 }

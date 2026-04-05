@@ -30,6 +30,7 @@ type File struct {
 // Action represents the fate of a snapshot file in a retention plan.
 type Action string
 
+// Snapshot retention plan action constants.
 const (
 	ActionKeep    Action = "KEEP"
 	ActionPrune   Action = "PRUNE"
@@ -39,6 +40,7 @@ const (
 // Mode represents the execution mode of a retention plan.
 type Mode string
 
+// Snapshot plan execution mode constants.
 const (
 	ModePreview Mode = "PREVIEW"
 	ModePrune   Mode = "PRUNE"

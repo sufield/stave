@@ -13,7 +13,7 @@ import (
 func TestRunDoctorChecksReportsPasses(t *testing.T) {
 	dir := t.TempDir()
 	lookPath := func(file string) (string, error) { return "/usr/bin/" + file, nil }
-	getenv := func(key string) string { return "" }
+	getenv := func(_ string) string { return "" }
 
 	checks, ok := doctor.Run(&doctor.Context{
 		Cwd:        dir,
@@ -56,7 +56,7 @@ func TestRunDoctorChecksReportsPasses(t *testing.T) {
 
 func TestRunDoctorChecksReportsWarnings(t *testing.T) {
 	dir := t.TempDir()
-	lookPath := func(file string) (string, error) { return "", errors.New("not found") }
+	lookPath := func(_ string) (string, error) { return "", errors.New("not found") }
 	getenv := func(key string) string {
 		if key == "HTTP_PROXY" {
 			return "http://proxy.example.com:8080"

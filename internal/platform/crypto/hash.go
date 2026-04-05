@@ -13,8 +13,8 @@ import (
 
 // Compile-time interface guards.
 var (
-	_ ports.Digester          = (*sha256Hasher)(nil)
-	_ ports.IdentityGenerator = (*sha256Hasher)(nil)
+	_ ports.Digester          = (*SHA256Hasher)(nil)
+	_ ports.IdentityGenerator = (*SHA256Hasher)(nil)
 )
 
 // HashBytes returns the SHA-256 hex digest of data.
@@ -53,15 +53,17 @@ func HashDelimited(parts []string, sep byte) kernel.Digest {
 // NewHasher returns the default ports.Digester and ports.IdentityGenerator
 // implementation. This is the single point of change if the hashing
 // algorithm is swapped.
-func NewHasher() *sha256Hasher { return &sha256Hasher{} }
+func NewHasher() *SHA256Hasher { return &SHA256Hasher{} }
 
-// sha256Hasher implements ports.Digester and ports.IdentityGenerator using SHA-256.
-type sha256Hasher struct{}
+// SHA256Hasher implements ports.Digester and ports.IdentityGenerator using SHA-256.
+type SHA256Hasher struct{}
 
-func (*sha256Hasher) Digest(components []string, sep byte) kernel.Digest {
+// Digest hashes components with a delimiter byte separator.
+func (*SHA256Hasher) Digest(components []string, sep byte) kernel.Digest {
 	return HashDelimited(components, sep)
 }
 
-func (*sha256Hasher) GenerateID(prefix string, components ...string) string {
+// GenerateID produces a stable identifier from a prefix and components.
+func (*SHA256Hasher) GenerateID(prefix string, components ...string) string {
 	return StableID(prefix, strings.Join(components, "|"))
 }

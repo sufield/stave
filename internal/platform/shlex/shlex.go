@@ -1,3 +1,5 @@
+// Package shlex provides POSIX-like shell word splitting with support
+// for single quotes, double quotes, and backslash escapes.
 package shlex
 
 import (
@@ -5,6 +7,7 @@ import (
 	"strings"
 )
 
+// Sentinel errors for malformed shell input.
 var (
 	ErrUnclosedSingleQuote = errors.New("unclosed single quote")
 	ErrUnclosedDoubleQuote = errors.New("unclosed double quote")

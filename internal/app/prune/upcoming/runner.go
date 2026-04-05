@@ -34,7 +34,7 @@ type OutputMetadata struct {
 type Runner struct{}
 
 // Run computes upcoming action items and returns the assembled output.
-func (r *Runner) Run(cfg EvalConfig, meta OutputMetadata) (UpcomingReport, error) {
+func (r *Runner) Run(cfg EvalConfig, meta OutputMetadata) (Report, error) {
 	riskItems := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                cfg.Controls,
 		Snapshots:               cfg.Snapshots,
@@ -49,13 +49,13 @@ func (r *Runner) Run(cfg EvalConfig, meta OutputMetadata) (UpcomingReport, error
 	}
 	summary := summarizeUpcoming(items, cfg.DueSoon)
 
-	output := UpcomingReport{
+	output := Report{
 		GeneratedAt:       cfg.Now,
 		ControlsDir:       meta.ControlsDir,
 		Observations:      meta.ObservationsDir,
 		MaxUnsafeDuration: meta.MaxUnsafeDurationRaw,
 		DueSoon:           meta.DueSoonRaw,
-		UpcomingSummary:   summary,
+		Summary:           summary,
 		Items:             items,
 	}
 	return output, nil

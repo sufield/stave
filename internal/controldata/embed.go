@@ -9,4 +9,6 @@ package controldata
 import "embed"
 
 //go:embed embedded/s3/**/*.yaml
+
+// FS provides read-only access to the embedded built-in control YAML files.
 var FS embed.FS

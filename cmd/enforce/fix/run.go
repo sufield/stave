@@ -46,7 +46,7 @@ type Request struct {
 
 // Run delegates to the app-layer fix service.
 func (r *Runner) Run(ctx context.Context, req Request) error {
-	return r.service.Fix(ctx, appfix.FixRequest{
+	return r.service.Fix(ctx, appfix.Request{
 		InputPath:  req.InputPath,
 		FindingRef: req.FindingRef,
 		Stdout:     req.Stdout,

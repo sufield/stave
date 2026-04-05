@@ -13,6 +13,7 @@ import (
 // Severity represents the severity of a lint diagnostic.
 type Severity string
 
+// Lint diagnostic severity levels.
 const (
 	SeverityError Severity = "error"
 	SeverityWarn  Severity = "warn"
@@ -138,7 +139,7 @@ var forbiddenFields = map[string]bool{
 
 func (l *Linter) walkDeterminism(path string, n *yaml.Node) []Diagnostic {
 	var diags []Diagnostic
-	walk(n, func(k, v *yaml.Node) {
+	walk(n, func(k, _ *yaml.Node) {
 		key := strings.ToLower(strings.TrimSpace(k.Value))
 		if forbiddenFields[key] {
 			diags = append(diags, newDiag(path, k.Line, k.Column, "CTL_NONDETERMINISTIC_FIELD",

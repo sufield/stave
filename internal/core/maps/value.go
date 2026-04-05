@@ -1,3 +1,5 @@
+// Package maps provides typed map accessor helpers for extracting values
+// from unstructured adapter payloads.
 package maps
 
 import "strings"
@@ -7,7 +9,7 @@ type Node struct {
 	data any
 }
 
-// ParseMap creates a typed parser wrapper over a raw map payload.
+// Wrap creates a typed parser wrapper over a raw map payload.
 func Wrap(m map[string]any) Node {
 	return Node{data: m}
 }

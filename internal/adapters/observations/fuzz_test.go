@@ -22,7 +22,7 @@ func FuzzLoadSnapshotFromReader(f *testing.F) {
 
 	loader := NewObservationLoader()
 
-	f.Fuzz(func(t *testing.T, input string) {
+	f.Fuzz(func(_ *testing.T, input string) {
 		loader.LoadSnapshotFromReader(context.Background(), strings.NewReader(input), "fuzz")
 	})
 }

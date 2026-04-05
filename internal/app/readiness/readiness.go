@@ -8,6 +8,8 @@ import (
 	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
+// AssessReadiness runs prerequisite, control-source, and validation checks
+// and returns a readiness report summarizing any issues found.
 func AssessReadiness(in validation.Input) (validation.Report, error) {
 	report := validation.NewReport(in.ControlsDir, in.ObservationsDir)
 	recordPrereqIssues(report, in.PrereqChecks)

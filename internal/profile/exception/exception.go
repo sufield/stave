@@ -17,8 +17,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ExceptionConfig represents a single acknowledged exception declaration.
-type ExceptionConfig struct {
+// Config represents a single acknowledged exception declaration.
+type Config struct {
 	ControlID        kernel.ControlID   `yaml:"control_id" json:"control_id"`
 	Bucket           string             `yaml:"bucket" json:"bucket"`
 	Rationale        string             `yaml:"rationale" json:"rationale"`
@@ -70,12 +70,12 @@ func (d Date) String() string {
 
 // StaveConfig is the top-level stave.yaml structure (only exceptions parsed).
 type StaveConfig struct {
-	Exceptions []ExceptionConfig `yaml:"exceptions"`
+	Exceptions []Config `yaml:"exceptions"`
 }
 
 // LoadExceptions loads exception declarations from a stave.yaml file.
 // Returns nil with no error if the file does not exist.
-func LoadExceptions(path string) ([]ExceptionConfig, error) {
+func LoadExceptions(path string) ([]Config, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // path from user config
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -98,7 +98,7 @@ func LoadExceptions(path string) ([]ExceptionConfig, error) {
 	return cfg.Exceptions, nil
 }
 
-func validateException(exc ExceptionConfig) error {
+func validateException(exc Config) error {
 	if strings.TrimSpace(string(exc.ControlID)) == "" {
 		return fmt.Errorf("control_id is required")
 	}
@@ -145,13 +145,13 @@ type CompensatingControl struct {
 // ApplyExceptions processes exception declarations against profile results.
 // It modifies results in place: valid exceptions change FAIL to ACKNOWLEDGED.
 // Returns the list of acknowledged results for reporting.
-func ApplyExceptions(exceptions []ExceptionConfig, results []profile.ProfileResult) []AcknowledgedResult {
+func ApplyExceptions(exceptions []Config, results []profile.Result) []AcknowledgedResult {
 	if len(exceptions) == 0 {
 		return nil
 	}
 
 	// Build result lookup.
-	resultMap := make(map[kernel.ControlID]*profile.ProfileResult)
+	resultMap := make(map[kernel.ControlID]*profile.Result)
 	for i := range results {
 		resultMap[results[i].ControlID] = &results[i]
 	}

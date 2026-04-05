@@ -10,6 +10,7 @@ type DocsSearcherPort interface {
 	SearchDocs(ctx context.Context, req DocsSearchRequest) (DocsSearchResponse, error)
 }
 
+// DocsSearchDeps represents a docssearchdeps value.
 type DocsSearchDeps struct {
 	Searcher DocsSearcherPort
 }
@@ -37,6 +38,7 @@ type DocsOpenerPort interface {
 	OpenDoc(ctx context.Context, req DocsOpenRequest) (DocsOpenResponse, error)
 }
 
+// DocsOpenDeps represents a docsopendeps value.
 type DocsOpenDeps struct {
 	Opener DocsOpenerPort
 }
@@ -58,6 +60,7 @@ func DocsOpen(ctx context.Context, req DocsOpenRequest, deps DocsOpenDeps) (Docs
 
 // --- Docs Search Types ---
 
+// DocsSearchRequest represents a docssearchrequest value.
 type DocsSearchRequest struct {
 	Query         string   `json:"query"`
 	Root          string   `json:"root,omitempty"`
@@ -66,6 +69,7 @@ type DocsSearchRequest struct {
 	CaseSensitive bool     `json:"case_sensitive,omitempty"`
 }
 
+// DocsSearchHit represents a docssearchhit value.
 type DocsSearchHit struct {
 	Path    string `json:"path"`
 	Line    int    `json:"line"`
@@ -73,6 +77,7 @@ type DocsSearchHit struct {
 	Snippet string `json:"snippet"`
 }
 
+// DocsSearchResponse represents a docssearchresponse value.
 type DocsSearchResponse struct {
 	Query    string          `json:"query"`
 	Total    int             `json:"total"`
@@ -82,12 +87,14 @@ type DocsSearchResponse struct {
 
 // --- Docs Open Types ---
 
+// DocsOpenRequest represents a docsopenrequest value.
 type DocsOpenRequest struct {
 	Topic string   `json:"topic"`
 	Root  string   `json:"root,omitempty"`
 	Paths []string `json:"paths,omitempty"`
 }
 
+// DocsOpenResponse represents a docsopenresponse value.
 type DocsOpenResponse struct {
 	Topic   string `json:"topic"`
 	Path    string `json:"path"`

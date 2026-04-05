@@ -1,3 +1,6 @@
+// Package verify implements the apply verify subcommand that compares
+// before and after evaluation snapshots to detect resolved, remaining,
+// and newly introduced violations.
 package verify
 
 import (

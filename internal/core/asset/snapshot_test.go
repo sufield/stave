@@ -15,20 +15,20 @@ func TestSnapshots_TemporalBounds(t *testing.T) {
 		{CapturedAt: t1},
 		{CapturedAt: t3},
 	}
-	min, max := s.TemporalBounds()
-	if !min.Equal(t1) {
-		t.Errorf("min = %v, want %v", min, t1)
+	earliest, latest := s.TemporalBounds()
+	if !earliest.Equal(t1) {
+		t.Errorf("earliest = %v, want %v", earliest, t1)
 	}
-	if !max.Equal(t3) {
-		t.Errorf("max = %v, want %v", max, t3)
+	if !latest.Equal(t3) {
+		t.Errorf("latest = %v, want %v", latest, t3)
 	}
 }
 
 func TestSnapshots_TemporalBounds_Empty(t *testing.T) {
 	var s Snapshots
-	min, max := s.TemporalBounds()
-	if !min.IsZero() || !max.IsZero() {
-		t.Errorf("expected zero times for empty snapshots, got min=%v max=%v", min, max)
+	earliest, latest := s.TemporalBounds()
+	if !earliest.IsZero() || !latest.IsZero() {
+		t.Errorf("expected zero times for empty snapshots, got earliest=%v latest=%v", earliest, latest)
 	}
 }
 

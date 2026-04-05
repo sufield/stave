@@ -1,3 +1,4 @@
+// Package version provides build version information for the stave binary.
 package version
 
 // String is the build version. Release builds override it with ldflags:

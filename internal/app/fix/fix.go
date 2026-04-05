@@ -40,15 +40,15 @@ func NewService(clock ports.Clock, planner *remediation.Planner) *Service {
 	}
 }
 
-// FixRequest defines the parameters for a single-finding fix operation.
-type FixRequest struct {
+// Request defines the parameters for a single-finding fix operation.
+type Request struct {
 	InputPath  string
 	FindingRef string // Format: <control_id>@<asset_id>
 	Stdout     io.Writer
 }
 
 // Fix reads an evaluation artifact and generates a remediation plan for one finding.
-func (s *Service) Fix(ctx context.Context, req FixRequest) error {
+func (s *Service) Fix(ctx context.Context, req Request) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}

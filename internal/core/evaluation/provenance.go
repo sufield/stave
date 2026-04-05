@@ -14,7 +14,9 @@ type Metadata struct {
 // ControlSourceMode identifies how controls were selected for evaluation.
 type ControlSourceMode string
 
+// ControlSourceDir and related constants.
 const (
+	// ControlSourceDir constants.
 	ControlSourceDir   ControlSourceMode = "dir"
 	ControlSourcePacks ControlSourceMode = "packs"
 )

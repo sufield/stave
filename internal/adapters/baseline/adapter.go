@@ -1,3 +1,5 @@
+// Package baseline provides adapters for loading and writing baseline
+// artifacts used in CI drift detection.
 package baseline
 
 import (
@@ -34,11 +36,11 @@ func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]rep
 	return entriesToDomain(entries), nil
 }
 
-// BaselineLoader loads a persisted baseline artifact.
-type BaselineLoader struct{}
+// Loader loads a persisted baseline artifact.
+type Loader struct{}
 
 // LoadBaseline loads a saved baseline artifact.
-func (l *BaselineLoader) LoadBaseline(ctx context.Context, path string) ([]reporting.BaselineFinding, error) {
+func (l *Loader) LoadBaseline(ctx context.Context, path string) ([]reporting.BaselineFinding, error) {
 	loader := &evaljson.Loader{}
 	base, err := loader.LoadBaselineFromFile(ctx, fsutil.CleanUserPath(path), kernel.KindBaseline)
 	if err != nil {
@@ -47,13 +49,13 @@ func (l *BaselineLoader) LoadBaseline(ctx context.Context, path string) ([]repor
 	return entriesToDomain(base.Findings), nil
 }
 
-// BaselineWriter persists a baseline artifact to disk.
-type BaselineWriter struct {
+// Writer persists a baseline artifact to disk.
+type Writer struct {
 	OpenFile FileOpener
 }
 
 // WriteBaseline writes a baseline snapshot to disk.
-func (w *BaselineWriter) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) error {
+func (w *Writer) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) error {
 	baseline := evaluation.Baseline{
 		SchemaVersion:    kernel.SchemaBaseline,
 		Kind:             kernel.KindBaseline,

@@ -12,13 +12,13 @@ func TestRunInit_Success(t *testing.T) {
 		CaptureCadence: "daily",
 	}
 	deps := InitDeps{
-		ValidateInputs: func(rawDir, profile, cadence string) (string, error) {
+		ValidateInputs: func(_, _, _ string) (string, error) {
 			return "/tmp/project", nil
 		},
-		Plan: func(baseDir string, overwrite bool, opts ScaffoldOptions) (ScaffoldResult, error) {
+		Plan: func(_ string, _ bool, _ ScaffoldOptions) (ScaffoldResult, error) {
 			return ScaffoldResult{}, nil
 		},
-		Scaffold: func(baseDir string, overwrite bool, opts ScaffoldOptions) (ScaffoldResult, error) {
+		Scaffold: func(_ string, _ bool, _ ScaffoldOptions) (ScaffoldResult, error) {
 			return ScaffoldResult{
 				Dirs:    []string{"controls", "observations"},
 				Created: []string{"stave.yaml"},
@@ -50,14 +50,14 @@ func TestRunInit_DryRun(t *testing.T) {
 		DryRun: true,
 	}
 	deps := InitDeps{
-		ValidateInputs: func(rawDir, profile, cadence string) (string, error) {
+		ValidateInputs: func(_, _, _ string) (string, error) {
 			return "/tmp/project", nil
 		},
-		Plan: func(baseDir string, overwrite bool, opts ScaffoldOptions) (ScaffoldResult, error) {
+		Plan: func(_ string, _ bool, _ ScaffoldOptions) (ScaffoldResult, error) {
 			planCalled = true
 			return ScaffoldResult{Dirs: []string{"controls"}}, nil
 		},
-		Scaffold: func(baseDir string, overwrite bool, opts ScaffoldOptions) (ScaffoldResult, error) {
+		Scaffold: func(_ string, _ bool, _ ScaffoldOptions) (ScaffoldResult, error) {
 			scaffoldCalled = true
 			return ScaffoldResult{}, nil
 		},
@@ -199,7 +199,7 @@ func TestRunInit_PassesOptions(t *testing.T) {
 	deps := InitDeps{
 		ValidateInputs: func(string, string, string) (string, error) { return "/tmp", nil },
 		Plan:           func(string, bool, ScaffoldOptions) (ScaffoldResult, error) { return ScaffoldResult{}, nil },
-		Scaffold: func(baseDir string, overwrite bool, opts ScaffoldOptions) (ScaffoldResult, error) {
+		Scaffold: func(_ string, _ bool, opts ScaffoldOptions) (ScaffoldResult, error) {
 			capturedOpts = opts
 			return ScaffoldResult{}, nil
 		},

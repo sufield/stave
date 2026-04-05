@@ -174,6 +174,7 @@ func ShouldShowWorkflowHandoff(args []string) bool {
 	return true
 }
 
+// WorkflowHandoffRequest represents a workflowhandoffrequest value.
 type WorkflowHandoffRequest struct {
 	Args        []string
 	ProjectRoot string
@@ -197,6 +198,7 @@ func (r *Runtime) PrintWorkflowHandoff(req WorkflowHandoffRequest) {
 	_, _ = fmt.Fprintf(r.stderr(), "Next workflow start: %s\n", next)
 }
 
+// IsStderrTTY constructs the isstderrtty component.
 func IsStderrTTY() bool {
 	return IsTerminal(os.Stderr)
 }

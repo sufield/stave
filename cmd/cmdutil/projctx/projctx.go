@@ -16,7 +16,9 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+// Project context constants.
 const (
+	// SessionFileRel constants.
 	SessionFileRel = ".stave/session.json"
 	InferMaxDepth  = 3
 )

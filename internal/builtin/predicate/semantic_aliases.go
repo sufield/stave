@@ -1,4 +1,4 @@
-// semantic_aliases.go provides named shorthand predicates for common S3
+// Package predicate provides named shorthand predicates for common S3
 // security conditions. Instead of writing verbose field-level predicate
 // rules in every control, authors reference a semantic alias like
 // "s3.is_public_readable" and the engine expands it into the full
@@ -21,6 +21,7 @@ import (
 
 // ── Alias Name Constants ──────────────────────────────────
 
+// Semantic alias names for S3 security predicates.
 const (
 	S3IsPublicReadable               = "s3.is_public_readable"
 	S3IsPublicWritable               = "s3.is_public_writable"
@@ -45,6 +46,7 @@ const (
 
 // ── Categories ────────────────────────────────────────────
 
+// Alias categories for grouping predicates in the inspector output.
 const (
 	CategoryPublicExposure      = "Public Exposure"
 	CategoryLatentExposure      = "Latent Exposure"

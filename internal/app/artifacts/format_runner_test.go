@@ -41,7 +41,7 @@ func TestFormatterRun_FormatWrites(t *testing.T) {
 	result, err := f.Run(context.Background(), FormatConfig{
 		Target:   dir,
 		ReadFile: os.ReadFile,
-		WriteFile: func(p string, data []byte) error {
+		WriteFile: func(_ string, data []byte) error {
 			written = data
 			return nil
 		},

@@ -9,6 +9,7 @@ import (
 // PrincipalScope defines the identity boundary of an access grant or exposure.
 type PrincipalScope int
 
+// Identity boundary scope constants for access grants and exposures.
 const (
 	ScopeUnknown PrincipalScope = iota
 	ScopeNotApplicable

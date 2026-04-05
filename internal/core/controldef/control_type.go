@@ -9,6 +9,7 @@ import (
 // ControlType represents a canonical check logic category.
 type ControlType int
 
+// Canonical control type constants.
 const (
 	TypeUnknown               ControlType = iota
 	TypeUnsafeState                       // 1

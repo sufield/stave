@@ -36,6 +36,7 @@ type releaseBundleParams struct {
 	ReleaseBundleDir string
 }
 
+// DefaultBinaryInspector represents a defaultbinaryinspector value.
 type DefaultBinaryInspector struct {
 	SignatureVerifier ports.Verifier
 	HashFile          func(path string) (kernel.Digest, error)
@@ -43,6 +44,7 @@ type DefaultBinaryInspector struct {
 	StatFile          func(string) (fs.FileInfo, error)
 }
 
+// Inspect implements the inspect operation.
 func (d DefaultBinaryInspector) Inspect(req Params, buildInfo BuildInfoSnapshot) (BinaryInspectionSnapshot, error) {
 	path := strings.TrimSpace(req.BinaryPath)
 	if path == "" {

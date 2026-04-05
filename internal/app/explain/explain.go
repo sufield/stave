@@ -1,3 +1,4 @@
+// Package explain provides control explanation and documentation lookup.
 package explain
 
 import (

@@ -2,6 +2,7 @@ package setup
 
 // --- Init Project ---
 
+// InitRequest is the input for initializing a new stave project.
 type InitRequest struct {
 	Dir               string `json:"dir,omitempty"`
 	Profile           string `json:"profile,omitempty"`
@@ -11,6 +12,7 @@ type InitRequest struct {
 	Force             bool   `json:"force,omitempty"`
 }
 
+// InitResponse is the output after initializing a project.
 type InitResponse struct {
 	BaseDir string   `json:"base_dir"`
 	Dirs    []string `json:"dirs"`

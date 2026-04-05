@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func defaultPackRegistry(t *testing.T) *pack.PackIndex {
+func defaultPackRegistry(t *testing.T) *pack.Index {
 	t.Helper()
 	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {

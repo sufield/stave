@@ -13,6 +13,7 @@ const propertiesPathPrefix = "properties."
 // Category identifies the architectural layer of a security violation.
 type Category int
 
+// Security violation category constants.
 const (
 	CategoryUnknown Category = iota
 	// CategoryIdentity represents violations in IAM, RBAC, or Principal-based policies.

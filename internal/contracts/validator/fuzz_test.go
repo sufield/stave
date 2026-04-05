@@ -17,7 +17,7 @@ func FuzzValidateObservationJSON(f *testing.F) {
 
 	v := New()
 
-	f.Fuzz(func(t *testing.T, data []byte) {
+	f.Fuzz(func(_ *testing.T, data []byte) {
 		v.ValidateObservationJSON(data)
 	})
 }
@@ -44,7 +44,7 @@ unsafe_predicate:
 
 	v := New()
 
-	f.Fuzz(func(t *testing.T, data []byte) {
+	f.Fuzz(func(_ *testing.T, data []byte) {
 		v.ValidateControlYAML(data)
 	})
 }

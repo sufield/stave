@@ -19,7 +19,7 @@ func TestRealClock_Now(t *testing.T) {
 	}
 }
 
-func TestRealClock_ImplementsClock(t *testing.T) {
+func TestRealClock_ImplementsClock(_ *testing.T) {
 	var _ Clock = RealClock{}
 }
 
@@ -39,6 +39,6 @@ func TestFixedClock_Now(t *testing.T) {
 	}
 }
 
-func TestFixedClock_ImplementsClock(t *testing.T) {
+func TestFixedClock_ImplementsClock(_ *testing.T) {
 	var _ Clock = FixedClock(time.Now())
 }

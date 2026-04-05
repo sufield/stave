@@ -6,7 +6,6 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 )
 
-// NewCmd constructs the inspect compliance command.
 // options holds the raw CLI flag values for the compliance command.
 type options struct {
 	File       string
@@ -14,6 +13,7 @@ type options struct {
 	CheckIDs   []string
 }
 
+// NewCmd constructs the inspect compliance command.
 func NewCmd() *cobra.Command {
 	opts := &options{}
 

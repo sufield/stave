@@ -11,6 +11,7 @@ import (
 // ReportFormat identifies a supported security-audit output format.
 type ReportFormat string
 
+// Supported security-audit report output formats.
 const (
 	ReportFormatJSON     ReportFormat = "json"
 	ReportFormatMarkdown ReportFormat = "markdown"
@@ -29,6 +30,7 @@ func AllReportFormats() []string {
 // Pillar identifies the enterprise category for an audit check.
 type Pillar string
 
+// Enterprise audit pillar constants.
 const (
 	PillarSupplyChain Pillar = "supply_chain"
 	PillarRuntime     Pillar = "runtime_behavior_permissions"
@@ -98,6 +100,7 @@ type ArtifactManifest struct {
 
 // --- Artifact Filenames ---
 
+// Standard artifact filenames within a security audit bundle.
 const (
 	ArtifactBuildInfo        = "build_info.json"
 	ArtifactSBOMSPDX         = "sbom.spdx.json"
@@ -118,6 +121,7 @@ type CheckID string
 // String implements fmt.Stringer.
 func (c CheckID) String() string { return string(c) }
 
+// V1 security audit check identifiers.
 const (
 	CheckBuildInfoPresent   CheckID = "SC.BUILDINFO.PRESENT"
 	CheckSBOMGenerated      CheckID = "SC.SBOM.GENERATED"

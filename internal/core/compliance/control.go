@@ -1,3 +1,6 @@
+// Package compliance implements S3 compliance controls that evaluate asset
+// snapshots against security policies for access control, encryption,
+// logging, versioning, and retention.
 package compliance
 
 import (

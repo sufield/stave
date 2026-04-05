@@ -15,7 +15,9 @@ import (
 // ThresholdStatus represents urgency for when an unsafe threshold is due.
 type ThresholdStatus string
 
+// StatusOverdue and related constants.
 const (
+	// StatusOverdue constants.
 	StatusOverdue  ThresholdStatus = "OVERDUE"
 	StatusDueNow   ThresholdStatus = "DUE_NOW"
 	StatusUpcoming ThresholdStatus = "UPCOMING"

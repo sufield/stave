@@ -6,24 +6,32 @@ type OutputKind string
 
 func (k OutputKind) String() string { return string(k) }
 
+// Output document kind constants.
 const (
-	// --- Reporting Kinds ---
+	// KindRemediationReport identifies a remediation report document.
 	KindRemediationReport OutputKind = "remediation_report"
 
-	// --- Baseline & Compliance Kinds ---
-	KindBaseline      OutputKind = "baseline"
+	// KindBaseline identifies a baseline snapshot document.
+	KindBaseline OutputKind = "baseline"
+	// KindBaselineCheck identifies a baseline check result document.
 	KindBaselineCheck OutputKind = "baseline_check"
-	KindEnforcement   OutputKind = "enforcement"
-	KindGateCheck     OutputKind = "gate_check"
+	// KindEnforcement identifies an enforcement result document.
+	KindEnforcement OutputKind = "enforcement"
+	// KindGateCheck identifies a gate check result document.
+	KindGateCheck OutputKind = "gate_check"
 
-	// --- Observation & State Kinds ---
+	// KindObservationDelta identifies an observation delta document.
 	KindObservationDelta OutputKind = "observation_delta"
-	KindSnapshotArchive  OutputKind = "snapshot_archive"
-	KindSnapshotPlan     OutputKind = "snapshot_plan"
-	KindSnapshotPrune    OutputKind = "snapshot_prune"
-	KindSnapshotQuality  OutputKind = "snapshot_quality"
+	// KindSnapshotArchive identifies a snapshot archive document.
+	KindSnapshotArchive OutputKind = "snapshot_archive"
+	// KindSnapshotPlan identifies a snapshot plan document.
+	KindSnapshotPlan OutputKind = "snapshot_plan"
+	// KindSnapshotPrune identifies a snapshot prune result document.
+	KindSnapshotPrune OutputKind = "snapshot_prune"
+	// KindSnapshotQuality identifies a snapshot quality report document.
+	KindSnapshotQuality OutputKind = "snapshot_quality"
 
-	// --- Continuous Integration Kinds ---
+	// KindCIDiff identifies a CI diff result document.
 	KindCIDiff OutputKind = "ci_diff"
 )
 

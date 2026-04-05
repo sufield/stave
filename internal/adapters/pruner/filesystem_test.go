@@ -21,7 +21,7 @@ func TestListSnapshotFilesFlat_RejectsExcessiveFileCount(t *testing.T) {
 	}
 
 	_, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MetadataLoader: func(_, _ string) (time.Time, error) { return base, nil },
 		MaxFiles:       3,
 	})
 	if err == nil {
@@ -43,7 +43,7 @@ func TestListSnapshotFilesFlat_AcceptsWithinLimit(t *testing.T) {
 	}
 
 	files, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) {
+		MetadataLoader: func(_, name string) (time.Time, error) {
 			return base.Add(time.Duration(name[4]-'0') * time.Hour), nil
 		},
 		MaxFiles: 3,
@@ -71,7 +71,7 @@ func TestListSnapshotFilesRecursive_RejectsExcessiveFileCount(t *testing.T) {
 	}
 
 	_, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
+		MetadataLoader: func(_, _ string) (time.Time, error) { return base, nil },
 		MaxFiles:       3,
 	})
 	if err == nil {

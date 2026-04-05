@@ -4,6 +4,7 @@ package exposure
 // visibility resolution and exposure classification.
 type Permission uint32
 
+// Internal permission bitmask constants for exposure classification.
 const (
 	PermRead Permission = 1 << iota
 	PermWrite
@@ -21,6 +22,7 @@ func (p Permission) Has(target Permission) bool { return p&target != 0 }
 // EvidenceCategory provides type safety for tracking why an exposure was flagged.
 type EvidenceCategory string
 
+// Evidence category constants for tracking exposure sources.
 const (
 	EvIdentityRead      EvidenceCategory = "identity_read"
 	EvResourceRead      EvidenceCategory = "resource_read"

@@ -10,9 +10,9 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// CompoundFinding represents a risk that emerges from the combination
+// Finding represents a risk that emerges from the combination
 // of multiple invariant results.
-type CompoundFinding struct {
+type Finding struct {
 	// ID uniquely identifies this compound risk (e.g. "COMPOUND.001").
 	ID string `json:"id"`
 
@@ -26,8 +26,8 @@ type CompoundFinding struct {
 	Message string `json:"message"`
 }
 
-// CompoundRule defines a single compound risk detection pattern.
-type CompoundRule struct {
+// Rule defines a single compound risk detection pattern.
+type Rule struct {
 	// ID uniquely identifies this rule.
 	ID string
 
@@ -46,11 +46,11 @@ type CompoundRule struct {
 
 // Detect runs all rules against the result set and returns any compound findings.
 // It is a pure function: no I/O, no global state.
-func Detect(rules []CompoundRule, results []compliance.Outcome) []CompoundFinding {
-	var findings []CompoundFinding
+func Detect(rules []Rule, results []compliance.Outcome) []Finding {
+	var findings []Finding
 	for _, rule := range rules {
 		if rule.Matches(results) {
-			findings = append(findings, CompoundFinding{
+			findings = append(findings, Finding{
 				ID:         rule.ID,
 				Severity:   rule.Severity,
 				TriggerIDs: rule.TriggerIDs,

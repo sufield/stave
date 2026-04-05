@@ -11,7 +11,9 @@ import (
 // Effect represents the Allow or Deny status of a policy statement.
 type Effect string
 
+// EffectAllow and related constants.
 const (
+	// EffectAllow constants.
 	EffectAllow Effect = "Allow"
 	EffectDeny  Effect = "Deny"
 )

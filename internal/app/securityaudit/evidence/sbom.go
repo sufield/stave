@@ -73,8 +73,10 @@ type cycloneDXHash struct {
 
 // --- Generator ---
 
+// DefaultSBOMGenerator represents a defaultsbomgenerator value.
 type DefaultSBOMGenerator struct{}
 
+// Generate implements the generate operation.
 func (DefaultSBOMGenerator) Generate(input BuildInfoSnapshot, format SBOMFormat, now time.Time) (SBOMSnapshot, error) {
 	modules := make([]BuildModuleSnapshot, 0, len(input.Deps)+1)
 	if input.Main.Path != "" {
