@@ -15,7 +15,7 @@ type hintContext struct {
 	ObservationsDir string
 }
 
-type hintFunc func(issue diag.Issue, ctx hintContext) string
+type hintFunc func(issue diag.Diagnostic, ctx hintContext) string
 
 // hintByCode maps diagnostic codes to functions that suggest a fix command.
 // Immutable after init — do not modify at runtime.
@@ -34,7 +34,7 @@ var hintByCode = map[diag.Code]hintFunc{
 
 // collectHints derives unique command hints for a diagnostic result.
 // Hints are sorted for deterministic output.
-func collectHints(result *diag.Result, ctx hintContext) []string {
+func collectHints(result *diag.Report, ctx hintContext) []string {
 	if result == nil || len(result.Issues) == 0 {
 		return nil
 	}
@@ -65,7 +65,7 @@ func collectHints(result *diag.Result, ctx hintContext) []string {
 	return hints
 }
 
-func hintForIssue(issue diag.Issue, ctx hintContext) string {
+func hintForIssue(issue diag.Diagnostic, ctx hintContext) string {
 	if builder, ok := hintByCode[issue.Code]; ok {
 		return builder(issue, ctx)
 	}
@@ -80,7 +80,7 @@ func hintForIssue(issue diag.Issue, ctx hintContext) string {
 
 // --- Specific Hint Builders ---
 
-func hintGenerateControl(issue diag.Issue, ctx hintContext) string {
+func hintGenerateControl(issue diag.Diagnostic, ctx hintContext) string {
 	if ctx.ControlsDir == "" {
 		return ""
 	}
@@ -97,11 +97,11 @@ func hintGenerateControl(issue diag.Issue, ctx hintContext) string {
 	)
 }
 
-func hintCreateObservations(_ diag.Issue, _ hintContext) string {
+func hintCreateObservations(_ diag.Diagnostic, _ hintContext) string {
 	return "Place observation JSON files in the observations directory. See 'stave explain' for required fields."
 }
 
-func hintDiagnoseObservations(_ diag.Issue, ctx hintContext) string {
+func hintDiagnoseObservations(_ diag.Diagnostic, ctx hintContext) string {
 	if ctx.ControlsDir == "" || ctx.ObservationsDir == "" {
 		return "stave diagnose"
 	}
@@ -111,7 +111,7 @@ func hintDiagnoseObservations(_ diag.Issue, ctx hintContext) string {
 	)
 }
 
-func hintValidateCoverage(_ diag.Issue, ctx hintContext) string {
+func hintValidateCoverage(_ diag.Diagnostic, ctx hintContext) string {
 	if ctx.ControlsDir == "" || ctx.ObservationsDir == "" {
 		return "stave validate"
 	}
@@ -121,7 +121,7 @@ func hintValidateCoverage(_ diag.Issue, ctx hintContext) string {
 	)
 }
 
-func hintExplainControl(issue diag.Issue, ctx hintContext) string {
+func hintExplainControl(issue diag.Diagnostic, ctx hintContext) string {
 	controlID := issue.Evidence.Sanitized("control_id")
 	if controlID == "" {
 		if path, ok := issue.Evidence.Get("path"); ok {

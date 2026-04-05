@@ -16,7 +16,7 @@ import (
 func TestWriteFindings_BareJSON(t *testing.T) {
 	w := NewFindingWriter(false)
 	enricher := remediation.NewPlanner()
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,

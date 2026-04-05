@@ -40,7 +40,7 @@ func NewRun(
 
 // Execute loads data and runs domain validation.
 // App layer handles file I/O; domain handles validation logic.
-func (v *Run) Execute(ctx context.Context, cfg Config) (*Result, error) {
+func (v *Run) Execute(ctx context.Context, cfg Config) (*Report, error) {
 	controls, ctlErr := appcontracts.LoadControls(ctx, v.ControlRepo, cfg.ControlsDir)
 	if ctlErr != nil {
 		return nil, fmt.Errorf("load controls from %s: %w", cfg.ControlsDir, ctlErr)

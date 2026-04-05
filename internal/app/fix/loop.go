@@ -41,7 +41,7 @@ type LoopDeps struct {
 
 // evaluationState holds the result and snapshot count from one evaluation run.
 type evaluationState struct {
-	Result    *evaluation.Result
+	Result    *evaluation.Audit
 	Snapshots int
 }
 

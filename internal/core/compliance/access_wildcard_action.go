@@ -38,8 +38,8 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket for wildcard Allow statements.
-func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, _ S3Properties) *Result {
+func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, _ S3Properties) *Outcome {
 		policyJSON := extractPolicyJSON(a)
 		stmts, err := ParsePolicyStatements(policyJSON)
 		if err != nil || len(stmts) == 0 {
@@ -47,7 +47,7 @@ func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) Result {
 		}
 
 		for _, s := range stmts {
-			if s.IsAllow() && s.HasWildcardAction() {
+			if s.GrantsWildcardActions() {
 				sid := s.Sid
 				if sid == "" {
 					sid = "(unnamed)"

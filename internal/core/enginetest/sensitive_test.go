@@ -14,7 +14,7 @@ func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
 	})
 	evidence.SetSensitive("error", "parse error at /secret/path")
 
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Code:     diag.CodeControlBadDurationParam,
 		Signal:   diag.SignalError,
 		Evidence: evidence,
@@ -45,7 +45,7 @@ func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
 }
 
 func TestIssue_MarshalJSON_NonSensitiveEvidence(t *testing.T) {
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Code:   diag.CodeSingleSnapshot,
 		Signal: diag.SignalWarn,
 		Evidence: kernel.NewSanitizableMap(map[string]string{

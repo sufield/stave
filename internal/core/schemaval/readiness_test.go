@@ -56,7 +56,7 @@ func TestReport_Issues_Empty(t *testing.T) {
 
 func TestReport_RecordIssue_Fail(t *testing.T) {
 	r := NewReport("", "")
-	r.RecordIssue(Issue{
+	r.RecordIssue(Check{
 		Name:    "schema check",
 		Status:  outcome.Fail,
 		Message: "schema invalid",
@@ -83,7 +83,7 @@ func TestReport_RecordIssue_Fail(t *testing.T) {
 
 func TestReport_RecordIssue_Warn(t *testing.T) {
 	r := NewReport("", "")
-	r.RecordIssue(Issue{
+	r.RecordIssue(Check{
 		Name:   "minor warning",
 		Status: outcome.Warn,
 	})
@@ -101,7 +101,7 @@ func TestReport_RecordIssue_Warn(t *testing.T) {
 
 func TestReport_RecordIssue_Pass(t *testing.T) {
 	r := NewReport("", "")
-	r.RecordIssue(Issue{
+	r.RecordIssue(Check{
 		Name:   "all good",
 		Status: outcome.Pass,
 	})
@@ -119,7 +119,7 @@ func TestReport_RecordIssue_Pass(t *testing.T) {
 
 func TestReport_Issues_ReturnsDefensiveCopy(t *testing.T) {
 	r := NewReport("", "")
-	r.RecordIssue(Issue{Name: "original", Status: outcome.Pass})
+	r.RecordIssue(Check{Name: "original", Status: outcome.Pass})
 
 	issues := r.Issues()
 	issues[0].Name = "mutated"
@@ -132,10 +132,10 @@ func TestReport_Issues_ReturnsDefensiveCopy(t *testing.T) {
 
 func TestReport_MultipleIssues(t *testing.T) {
 	r := NewReport("/c", "/o")
-	r.RecordIssue(Issue{Name: "fail1", Status: outcome.Fail})
-	r.RecordIssue(Issue{Name: "warn1", Status: outcome.Warn})
-	r.RecordIssue(Issue{Name: "fail2", Status: outcome.Fail})
-	r.RecordIssue(Issue{Name: "pass1", Status: outcome.Pass})
+	r.RecordIssue(Check{Name: "fail1", Status: outcome.Fail})
+	r.RecordIssue(Check{Name: "warn1", Status: outcome.Warn})
+	r.RecordIssue(Check{Name: "fail2", Status: outcome.Fail})
+	r.RecordIssue(Check{Name: "pass1", Status: outcome.Pass})
 
 	if r.Ready {
 		t.Fatal("should not be ready with fail issues")

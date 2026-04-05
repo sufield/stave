@@ -89,16 +89,16 @@ func NewReadinessValidator(
 	newCtlRepo compose.CtlRepoFactory,
 	ctlDir, obsDir string,
 	sanitize bool,
-	extraChecks func() []diag.Issue,
-) func(time.Duration, time.Time) (validation.Result, error) {
-	return func(maxUnsafeDuration time.Duration, now time.Time) (validation.Result, error) {
+	extraChecks func() []diag.Diagnostic,
+) func(time.Duration, time.Time) (validation.Status, error) {
+	return func(maxUnsafeDuration time.Duration, now time.Time) (validation.Status, error) {
 		obsRepo, err := newObsRepo()
 		if err != nil {
-			return validation.Result{}, err
+			return validation.Status{}, err
 		}
 		ctlRepo, err := newCtlRepo()
 		if err != nil {
-			return validation.Result{}, err
+			return validation.Status{}, err
 		}
 
 		runner := appvalidation.NewRun(obsRepo, ctlRepo)
@@ -111,7 +111,7 @@ func NewReadinessValidator(
 			PredicateParser:   ctlyaml.ParsePredicate,
 		})
 		if err != nil {
-			return validation.Result{}, err
+			return validation.Status{}, err
 		}
 
 		if extraChecks != nil {
@@ -123,8 +123,8 @@ func NewReadinessValidator(
 }
 
 // toValidationResult converts an app-layer validation result to the domain type.
-func toValidationResult(result *appvalidation.Result) validation.Result {
-	return validation.Result{
+func toValidationResult(result *appvalidation.Report) validation.Status {
+	return validation.Status{
 		Diagnostics: result.Diagnostics,
 		Summary: struct {
 			ControlsLoaded          int

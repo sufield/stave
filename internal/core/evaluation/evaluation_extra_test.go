@@ -55,11 +55,11 @@ func TestSortFindings(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Result.FindFinding
+// Audit.FindFinding
 // ---------------------------------------------------------------------------
 
 func TestResultFindFinding(t *testing.T) {
-	r := &Result{
+	r := &Audit{
 		Findings: []Finding{
 			{ControlID: "CTL.A.001", AssetID: "bucket-1"},
 			{ControlID: "CTL.B.002", AssetID: "bucket-2"},

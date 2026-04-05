@@ -7,8 +7,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func testRegistry() *Registry {
-	return NewRegistry(EmbeddedFS(), "embedded", WithAliasResolver(predicate.ResolverFunc()))
+func testRegistry() *ControlStore {
+	return NewControlStore(EmbeddedFS(), "embedded", WithAliasResolver(predicate.ResolverFunc()))
 }
 
 func TestLoadAll(t *testing.T) {

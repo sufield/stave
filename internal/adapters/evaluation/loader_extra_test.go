@@ -18,7 +18,7 @@ import (
 
 func TestLoader_LoadFromFile_ValidJSON(t *testing.T) {
 	dir := t.TempDir()
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
@@ -46,7 +46,7 @@ func TestLoader_LoadFromFile_ValidJSON(t *testing.T) {
 }
 
 func TestLoader_LoadFromReader_ValidJSON(t *testing.T) {
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Summary: evaluation.Summary{Violations: 3},
 	}
 	data, _ := json.Marshal(result)

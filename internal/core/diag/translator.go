@@ -63,10 +63,10 @@ func NewTranslator(defaultCode Code, opts ...Option) *Translator {
 	return t
 }
 
-// Translate converts external diagnostics into a Result.
-func (t *Translator) Translate(externalErrors []ExternalError) *Result {
+// Translate converts external diagnostics into a Report.
+func (t *Translator) Translate(externalErrors []ExternalError) *Report {
 	result := NewResult()
-	issues := make([]Issue, 0, len(externalErrors))
+	issues := make([]Diagnostic, 0, len(externalErrors))
 	for _, externalErr := range externalErrors {
 		issues = append(issues, t.TranslateOne(externalErr))
 	}
@@ -75,7 +75,7 @@ func (t *Translator) Translate(externalErrors []ExternalError) *Result {
 }
 
 // TranslateOne converts one external diagnostic into a canonical issue.
-func (t *Translator) TranslateOne(externalErr ExternalError) Issue {
+func (t *Translator) TranslateOne(externalErr ExternalError) Diagnostic {
 	field := strings.TrimSpace(externalErr.Field())
 	fullPath := field
 	if t.pathPrefix != "" {

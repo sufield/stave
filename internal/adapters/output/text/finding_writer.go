@@ -52,7 +52,7 @@ func (w *FindingWriter) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	return buf.Bytes(), nil
 }
 
-func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Result) {
+func (w *FindingWriter) writeHeader(d *drawer, result evaluation.Audit) {
 	d.ln("Evaluation Results")
 	d.ln("==================")
 	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n\n",
@@ -74,7 +74,7 @@ func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 }
 
 // writeViolationsFromEnriched renders violation output from pre-enriched findings.
-func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation.Result, enriched []remediation.Finding) {
+func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result evaluation.Audit, enriched []remediation.Finding) {
 	d.ln("Violations")
 	d.ln("----------")
 	w.writeViolationDomainSummary(d, result.Rows)

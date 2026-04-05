@@ -132,7 +132,7 @@ type FindingAssetSummary struct {
 }
 
 // TraceRenderer abstracts rendering of a predicate evaluation trace.
-// Implemented by *trace.Result, giving compile-time safety where
+// Implemented by *trace.Audit, giving compile-time safety where
 // callers previously type-asserted Raw.(any).
 type TraceRenderer interface {
 	RenderText(w io.Writer) error
@@ -143,14 +143,14 @@ type TraceRenderer interface {
 // the trace package from the domain layer. Populated by the service layer.
 type FindingTrace struct {
 	// Raw holds the serializable trace tree. The service layer sets this
-	// to the trace.Result value; renderers call RenderText/RenderJSON.
+	// to the trace.Audit value; renderers call RenderText/RenderJSON.
 	Raw TraceRenderer `json:"-"`
 	// FinalResult indicates whether the predicate matched.
 	FinalResult bool `json:"final_result"`
 }
 
 // ControlProvider resolves an control definition by ID.
-// The Result aggregate depends on this interface rather than a concrete
+// The Audit aggregate depends on this interface rather than a concrete
 // collection, keeping the lookup contract in the domain while allowing
 // any backing store (slice, map, repository) to satisfy it.
 type ControlProvider interface {
@@ -173,7 +173,7 @@ type FindingTraceBuilder interface {
 }
 
 // FindingDetailRequest holds the inputs for building a finding detail
-// from within the Result aggregate.
+// from within the Audit aggregate.
 type FindingDetailRequest struct {
 	ControlID    kernel.ControlID
 	AssetID      asset.ID

@@ -243,7 +243,7 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 
 func TestPrintReadinessIssue(t *testing.T) {
 	var buf bytes.Buffer
-	issue := validation.Issue{
+	issue := validation.Check{
 		Name:    "controls",
 		Status:  outcome.Pass,
 		Message: "found 5 controls",
@@ -268,7 +268,7 @@ func TestPrintReadinessIssue(t *testing.T) {
 
 func TestPrintReadinessIssue_NoFixOrCommand(t *testing.T) {
 	var buf bytes.Buffer
-	issue := validation.Issue{
+	issue := validation.Check{
 		Name:    "obs",
 		Status:  outcome.Pass,
 		Message: "found 3 snapshots",
@@ -462,7 +462,7 @@ func TestFilterSnapshots_EmptyQuiet(t *testing.T) {
 
 func TestFinalizeProfileEvaluation_NoFindings(t *testing.T) {
 	var stderr bytes.Buffer
-	result := evaluation.Result{Findings: nil}
+	result := evaluation.Audit{Findings: nil}
 	err := finalizeProfileEvaluation(&stderr, false, result, nil, "ctl", "input")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -474,7 +474,7 @@ func TestFinalizeProfileEvaluation_NoFindings(t *testing.T) {
 
 func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
 	var stderr bytes.Buffer
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Findings: []evaluation.Finding{{ControlID: "CTL.TEST.001"}},
 	}
 	err := finalizeProfileEvaluation(&stderr, false, result, nil, "ctl", "input")
@@ -485,7 +485,7 @@ func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
 
 func TestFinalizeProfileEvaluation_Quiet(t *testing.T) {
 	var stderr bytes.Buffer
-	result := evaluation.Result{Findings: nil}
+	result := evaluation.Audit{Findings: nil}
 	err := finalizeProfileEvaluation(&stderr, true, result, nil, "ctl", "input")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -511,8 +511,8 @@ func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {
 
 func TestNewReadinessRunner(t *testing.T) {
 	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
-		return func(maxUnsafe time.Duration, now time.Time) (validation.Result, error) {
-			return validation.Result{}, nil
+		return func(maxUnsafe time.Duration, now time.Time) (validation.Status, error) {
+			return validation.Status{}, nil
 		}
 	}
 	runner := NewReadinessRunner(factory)

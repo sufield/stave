@@ -103,9 +103,9 @@ type runSession struct {
 }
 
 // Evaluate processes snapshots and returns findings for unsafe duration violations.
-func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (evaluation.Result, error) {
+func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (evaluation.Audit, error) {
 	if e.Clock == nil {
-		return evaluation.Result{}, errors.New("precondition failed: Runner.Evaluate requires non-nil Clock")
+		return evaluation.Audit{}, errors.New("precondition failed: Runner.Evaluate requires non-nil Clock")
 	}
 	var opt EvaluateOptions
 	if len(opts) > 0 {
@@ -114,7 +114,7 @@ func (e *Runner) Evaluate(snapshots []asset.Snapshot, opts ...EvaluateOptions) (
 	sorted := e.normalizeSnapshots(snapshots)
 	timelinesPerInv, err := BuildTimelinesPerControl(e.Controls, sorted, e.CELEvaluator)
 	if err != nil {
-		return evaluation.Result{}, fmt.Errorf("build timelines: %w", err)
+		return evaluation.Audit{}, fmt.Errorf("build timelines: %w", err)
 	}
 	assetHint := 0
 	if len(sorted) > 0 {
@@ -187,8 +187,8 @@ func (s *runSession) evaluateControl(
 	}
 }
 
-// buildResult sorts accumulated data, computes risk, and constructs the final Result.
-func (s *runSession) buildResult() evaluation.Result {
+// buildResult sorts accumulated data, computes risk, and constructs the final Audit.
+func (s *runSession) buildResult() evaluation.Audit {
 	// Sort findings for deterministic output.
 	evaluation.SortFindings(s.acc.findings)
 	// Sort exempted assets for deterministic output.
@@ -213,7 +213,7 @@ func (s *runSession) buildResult() evaluation.Result {
 	})
 	status := evaluation.ClassifySafetyStatus(len(regularFindings), upcoming)
 
-	return evaluation.Result{
+	return evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,

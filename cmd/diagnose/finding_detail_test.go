@@ -103,7 +103,7 @@ func TestRunnerDetailMode_SuccessJSON(t *testing.T) {
 			},
 		},
 	}
-	result := &evaluation.Result{
+	result := &evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{
 				ControlID:          "CTL.TEST.A.001",

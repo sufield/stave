@@ -21,14 +21,14 @@ func TestResult_Add(t *testing.T) {
 }
 
 func TestResult_Add_NilReceiver(t *testing.T) {
-	var r *Result
+	var r *Report
 	// Should not panic.
 	r.Add(New(CodeSchemaViolation).Build())
 }
 
 func TestResult_AddAll(t *testing.T) {
 	r := NewResult()
-	issues := []Issue{
+	issues := []Diagnostic{
 		New(CodeSchemaViolation).Error().Build(),
 		New(CodeNoControls).Warning().Build(),
 	}
@@ -39,8 +39,8 @@ func TestResult_AddAll(t *testing.T) {
 }
 
 func TestResult_AddAll_NilReceiver(t *testing.T) {
-	var r *Result
-	r.AddAll([]Issue{New(CodeSchemaViolation).Build()})
+	var r *Report
+	r.AddAll([]Diagnostic{New(CodeSchemaViolation).Build()})
 }
 
 func TestResult_AddAll_EmptySlice(t *testing.T) {
@@ -65,7 +65,7 @@ func TestResult_Merge(t *testing.T) {
 }
 
 func TestResult_Merge_NilReceiver(t *testing.T) {
-	var r *Result
+	var r *Report
 	other := NewResult()
 	other.Add(New(CodeSchemaViolation).Build())
 	r.Merge(other) // Should not panic.
@@ -92,13 +92,13 @@ func TestResult_Merge_EmptyOther(t *testing.T) {
 func TestResult_HasErrors(t *testing.T) {
 	tests := []struct {
 		name   string
-		issues []Issue
+		issues []Diagnostic
 		want   bool
 	}{
 		{"no issues", nil, false},
-		{"warning only", []Issue{New(CodeNoControls).Warning().Build()}, false},
-		{"error present", []Issue{New(CodeSchemaViolation).Error().Build()}, true},
-		{"mixed", []Issue{
+		{"warning only", []Diagnostic{New(CodeNoControls).Warning().Build()}, false},
+		{"error present", []Diagnostic{New(CodeSchemaViolation).Error().Build()}, true},
+		{"mixed", []Diagnostic{
 			New(CodeNoControls).Warning().Build(),
 			New(CodeSchemaViolation).Error().Build(),
 		}, true},
@@ -115,7 +115,7 @@ func TestResult_HasErrors(t *testing.T) {
 }
 
 func TestResult_HasErrors_NilReceiver(t *testing.T) {
-	var r *Result
+	var r *Report
 	if r.HasErrors() {
 		t.Fatal("nil receiver HasErrors should return false")
 	}
@@ -124,12 +124,12 @@ func TestResult_HasErrors_NilReceiver(t *testing.T) {
 func TestResult_HasWarnings(t *testing.T) {
 	tests := []struct {
 		name   string
-		issues []Issue
+		issues []Diagnostic
 		want   bool
 	}{
 		{"no issues", nil, false},
-		{"error only", []Issue{New(CodeSchemaViolation).Error().Build()}, false},
-		{"warning present", []Issue{New(CodeNoControls).Warning().Build()}, true},
+		{"error only", []Diagnostic{New(CodeSchemaViolation).Error().Build()}, false},
+		{"warning present", []Diagnostic{New(CodeNoControls).Warning().Build()}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestResult_HasWarnings(t *testing.T) {
 }
 
 func TestResult_HasWarnings_NilReceiver(t *testing.T) {
-	var r *Result
+	var r *Report
 	if r.HasWarnings() {
 		t.Fatal("nil receiver HasWarnings should return false")
 	}
@@ -181,7 +181,7 @@ func TestResult_Warnings(t *testing.T) {
 }
 
 func TestResult_Filter_NilReceiver(t *testing.T) {
-	var r *Result
+	var r *Report
 	if errs := r.Errors(); errs != nil {
 		t.Fatalf("nil receiver Errors() should return nil, got %v", errs)
 	}
@@ -200,7 +200,7 @@ func TestResult_Error_NoIssues(t *testing.T) {
 }
 
 func TestResult_Error_NilReceiver(t *testing.T) {
-	var r *Result
+	var r *Report
 	got := r.Error()
 	want := "validation failed: 0 errors, 0 warnings"
 	if got != want {

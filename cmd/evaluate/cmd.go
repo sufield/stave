@@ -204,8 +204,8 @@ func validateSchema(version kernel.Schema) error {
 	return nil
 }
 
-func allRegistries() []*compliance.Registry {
-	return []*compliance.Registry{
+func allRegistries() []*compliance.ControlCatalog {
+	return []*compliance.ControlCatalog{
 		compliance.ControlRegistry,
 	}
 }

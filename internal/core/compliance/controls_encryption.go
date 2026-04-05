@@ -25,8 +25,8 @@ func init() {
 }
 
 // Evaluate checks that encryption.at_rest_enabled is true for every S3 bucket.
-func (ctl *controlsEncryption) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
+func (ctl *controlsEncryption) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
 		if !props.Encryption.AtRestEnabled {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: server-side encryption is not enabled — data at rest is unprotected", a.ID),

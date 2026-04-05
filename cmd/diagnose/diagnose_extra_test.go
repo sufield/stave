@@ -14,7 +14,7 @@ import (
 
 func TestPresenter_RenderReport_Template(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: diagnosis.ScenarioEmptyFindings, Signal: "signal1", Evidence: "ev1", Action: "act1"},
 		},
 		Summary: diagnosis.Summary{

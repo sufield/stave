@@ -93,7 +93,7 @@ func TestResolveSpec_DefaultFallback(t *testing.T) {
 
 func TestPlannerEnrichFindings(t *testing.T) {
 	p := NewPlanner()
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1", AssetType: "aws_s3_bucket"},
 		},

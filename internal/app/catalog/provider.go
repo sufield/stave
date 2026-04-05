@@ -13,10 +13,10 @@ type ControlProvider interface {
 	Load(ctx context.Context) ([]policy.ControlDefinition, error)
 }
 
-// BuiltInLoader loads all built-in controls. Satisfied by builtin.Registry.All.
+// BuiltInLoader loads all built-in controls. Satisfied by builtin.ControlStore.All.
 type BuiltInLoader func() ([]policy.ControlDefinition, error)
 
-// FilteredLoader loads built-in controls matching selectors. Satisfied by builtin.Registry.Filtered.
+// FilteredLoader loads built-in controls matching selectors. Satisfied by builtin.ControlStore.Filtered.
 type FilteredLoader func(selectors []any) ([]policy.ControlDefinition, error)
 
 // NewBuiltInProvider creates a provider that loads from embedded controls.

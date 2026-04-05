@@ -2,7 +2,6 @@ package compliance
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -30,8 +29,8 @@ func init() {
 }
 
 // Evaluate checks that encryption uses aws:kms with a non-AWS-managed key.
-func (ctl *controlsKmsCmk) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
+func (ctl *controlsKmsCmk) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
 		if !props.Encryption.AtRestEnabled {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: encryption is not enabled — CMK requirement cannot be met without SSE", a.ID),
@@ -40,7 +39,7 @@ func (ctl *controlsKmsCmk) Evaluate(snap asset.Snapshot) Result {
 			return &r
 		}
 
-		if !strings.EqualFold(props.Encryption.Algorithm, "aws:kms") {
+		if !props.Encryption.IsKMS() {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: encryption algorithm is %q, not aws:kms — SSE-KMS with CMK is required for HIPAA", a.ID, props.Encryption.Algorithm),
 				"Change the default encryption to SSE-KMS (aws:kms) with a customer-managed CMK.",
@@ -57,7 +56,7 @@ func (ctl *controlsKmsCmk) Evaluate(snap asset.Snapshot) Result {
 			return &r
 		}
 
-		if strings.EqualFold(keyID, awsManagedS3KeyAlias) || strings.HasSuffix(strings.ToLower(keyID), "/"+strings.ToLower(awsManagedS3KeyAlias)) {
+		if props.Encryption.IsAWSManagedKey() {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: SSE-KMS uses the AWS-managed key (%s). CMK required for key revocation during breach response — AWS-managed keys cannot be revoked", a.ID, awsManagedS3KeyAlias),
 				"Replace the AWS-managed key with a customer-managed CMK. Create a KMS key with key rotation enabled, then set it as the bucket's default encryption key.",

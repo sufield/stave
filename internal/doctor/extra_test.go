@@ -33,7 +33,7 @@ func TestCheck_String(t *testing.T) {
 }
 
 func TestRegistry_Run_NilRegistry(t *testing.T) {
-	var r *Registry
+	var r *CheckSuite
 	checks, ok := r.Run(nil)
 	if !ok {
 		t.Error("nil registry should return success=true")
@@ -44,7 +44,7 @@ func TestRegistry_Run_NilRegistry(t *testing.T) {
 }
 
 func TestRegistry_Run_EmptyRegistry(t *testing.T) {
-	r := NewRegistry()
+	r := NewCheckSuite()
 	checks, ok := r.Run(nil)
 	if !ok {
 		t.Error("empty registry should return success=true")
@@ -55,7 +55,7 @@ func TestRegistry_Run_EmptyRegistry(t *testing.T) {
 }
 
 func TestRegistry_Run_AllPass(t *testing.T) {
-	r := NewRegistry(
+	r := NewCheckSuite(
 		func(*Context) Check { return Check{Name: "a", Status: outcome.Pass, Message: "ok"} },
 		func(*Context) Check { return Check{Name: "b", Status: outcome.Warn, Message: "warning"} },
 	)
@@ -69,7 +69,7 @@ func TestRegistry_Run_AllPass(t *testing.T) {
 }
 
 func TestRegistry_Run_SkipsEmptyName(t *testing.T) {
-	r := NewRegistry(
+	r := NewCheckSuite(
 		func(*Context) Check { return Check{} }, // empty name, should be skipped
 		func(*Context) Check { return Check{Name: "a", Status: outcome.Pass} },
 	)

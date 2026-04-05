@@ -24,7 +24,7 @@ func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.ProjectConfig)
 		return appeval.ProjectConfigInput{}, nil
 	}
 
-	builtinRegistry := ctlbuiltin.NewRegistry(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
+	builtinRegistry := ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
 
 	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {

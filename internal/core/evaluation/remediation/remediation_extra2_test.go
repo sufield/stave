@@ -160,7 +160,7 @@ func (p *stubControlProvider) FindByID(id kernel.ControlID) *policy.ControlDefin
 }
 
 func TestBuildFindingDetail_NotFound(t *testing.T) {
-	r := &evaluation.Result{}
+	r := &evaluation.Audit{}
 	_, err := BuildFindingDetail(r, evaluation.FindingDetailRequest{
 		ControlID: "CTL.NOPE",
 		AssetID:   "bucket-nope",
@@ -184,7 +184,7 @@ func TestBuildFindingDetail_Found(t *testing.T) {
 		},
 	}
 
-	r := &evaluation.Result{
+	r := &evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{
 				ControlID:          "CTL.A.001",
@@ -224,7 +224,7 @@ func TestBuildFindingDetail_Found(t *testing.T) {
 }
 
 func TestBuildFindingDetail_NoControlProvider(t *testing.T) {
-	r := &evaluation.Result{
+	r := &evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{
 				ControlID:       "CTL.A.001",

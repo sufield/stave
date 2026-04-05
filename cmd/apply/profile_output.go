@@ -13,14 +13,14 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
-func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Result) error {
+func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation.Audit) error {
 	marshaler, err := r.newFindingWriter(cfg.OutputFormat, false)
 	if err != nil {
 		return err
 	}
 
 	enricher := remediation.NewPlanner()
-	enrichFn := func(res evaluation.Result) (appcontracts.EnrichedResult, error) {
+	enrichFn := func(res evaluation.Audit) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, cfg.Sanitizer, res)
 	}
 
@@ -32,7 +32,7 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result evaluation
 }
 
 // finalizeProfileEvaluation reports warnings and returns the appropriate exit error.
-func finalizeProfileEvaluation(stderr io.Writer, quiet bool, results evaluation.Result, snapshots []asset.Snapshot, ctlDir, inputFile string) error {
+func finalizeProfileEvaluation(stderr io.Writer, quiet bool, results evaluation.Audit, snapshots []asset.Snapshot, ctlDir, inputFile string) error {
 	unprovable := asset.CountUnprovablySafe(snapshots)
 	if unprovable > 0 && !quiet {
 		if _, err := fmt.Fprintf(stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", unprovable); err != nil {

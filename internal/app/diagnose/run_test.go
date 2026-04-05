@@ -144,7 +144,7 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 		ControlRepo:     &mockCtlRepo{controls: simpleControls()},
 	}
 
-	prev := &evaluation.Result{
+	prev := &evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.TEST.001", AssetID: "bucket-1"},
 		},

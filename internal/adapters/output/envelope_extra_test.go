@@ -16,7 +16,7 @@ func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		},
-		Result: evaluation.Result{
+		Result: evaluation.Audit{
 			Summary:      evaluation.Summary{AssetsEvaluated: 5},
 			SafetyStatus: evaluation.StatusSafe,
 		},
@@ -37,7 +37,7 @@ func TestBuildSafetyEnvelopeFromEnriched_WithFindings(t *testing.T) {
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		},
-		Result: evaluation.Result{
+		Result: evaluation.Audit{
 			Summary: evaluation.Summary{
 				AssetsEvaluated: 1,
 				Violations:      1,

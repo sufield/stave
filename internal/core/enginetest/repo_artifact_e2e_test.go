@@ -53,7 +53,7 @@ func artifactSnapshot(assets ...asset.Asset) []asset.Snapshot {
 
 func loadRepoArtifactControl(t *testing.T) []policy.ControlDefinition {
 	t.Helper()
-	reg := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded",
+	reg := builtin.NewControlStore(builtin.EmbeddedFS(), "embedded",
 		builtin.WithAliasResolver(predicate.ResolverFunc()))
 	all, err := reg.All()
 	if err != nil {
@@ -143,7 +143,7 @@ func TestRepoArtifact_TrueNegative_FullyPrivate(t *testing.T) {
 
 // --- Assertion helpers ---
 
-func assertArtifactFinding(t *testing.T, result evaluation.Result, assetID string) {
+func assertArtifactFinding(t *testing.T, result evaluation.Audit, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlRepoArtifact && f.AssetID == asset.ID(assetID) {
@@ -153,7 +153,7 @@ func assertArtifactFinding(t *testing.T, result evaluation.Result, assetID strin
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlRepoArtifact, assetID, len(result.Findings))
 }
 
-func assertNoArtifactFinding(t *testing.T, result evaluation.Result, assetID string) {
+func assertNoArtifactFinding(t *testing.T, result evaluation.Audit, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlRepoArtifact && f.AssetID == asset.ID(assetID) {

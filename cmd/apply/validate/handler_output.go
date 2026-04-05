@@ -25,7 +25,7 @@ type Reporter struct {
 
 // Write outputs the validation result based on reporter configuration.
 // Returns an error if result is nil.
-func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
+func (r *Reporter) Write(result *appvalidation.Report, hc hintContext) error {
 	if result == nil {
 		return errNilResult
 	}
@@ -44,7 +44,7 @@ func (r *Reporter) Write(result *appvalidation.Result, hc hintContext) error {
 
 // ExitStatus determines if the validation should result in a CLI error.
 // Returns an error if result is nil.
-func (r *Reporter) ExitStatus(result *appvalidation.Result) error {
+func (r *Reporter) ExitStatus(result *appvalidation.Report) error {
 	if result == nil {
 		return errNilResult
 	}
@@ -62,7 +62,7 @@ func (r *Reporter) ExitStatus(result *appvalidation.Result) error {
 
 // --- Internal Presentation Logic ---
 
-func (r *Reporter) writeText(res *appvalidation.Result, report Report) error {
+func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 	diagnostics := diagnosticsOf(res)
 
 	if err := printHeader(r.Writer, res.Valid(), len(report.Errors), len(report.Warnings)); err != nil {
@@ -124,7 +124,7 @@ func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 	return err
 }
 
-func printIssue(w io.Writer, issue diag.Issue) error {
+func printIssue(w io.Writer, issue diag.Diagnostic) error {
 	level := "WARNING"
 	if issue.Signal == diag.SignalError {
 		level = "ERROR"
@@ -156,14 +156,14 @@ func printIssue(w io.Writer, issue diag.Issue) error {
 // --- Data Models (DTOs) ---
 
 // Report is a clean DTO that maps the internal service result to the external
-// output format. diag.Issue is the stable public contract for validation issues.
+// output format. diag.Diagnostic is the stable public contract for validation issues.
 type Report struct {
-	SchemaVersion kernel.Schema `json:"schema_version"`
-	Valid         bool          `json:"valid"`
-	Errors        []diag.Issue  `json:"errors,omitempty"`
-	Warnings      []diag.Issue  `json:"warnings,omitempty"`
-	FixHints      []string      `json:"fix_hints,omitempty"`
-	Summary       ReportSummary `json:"summary"`
+	SchemaVersion kernel.Schema     `json:"schema_version"`
+	Valid         bool              `json:"valid"`
+	Errors        []diag.Diagnostic `json:"errors,omitempty"`
+	Warnings      []diag.Diagnostic `json:"warnings,omitempty"`
+	FixHints      []string          `json:"fix_hints,omitempty"`
+	Summary       ReportSummary     `json:"summary"`
 }
 
 // ReportSummary is the summary section of the validation report.
@@ -174,7 +174,7 @@ type ReportSummary struct {
 	IdentityObservationsChecked int `json:"identity_observations_checked"`
 }
 
-func buildReport(res *appvalidation.Result, includeHints bool, hc hintContext) Report {
+func buildReport(res *appvalidation.Report, includeHints bool, hc hintContext) Report {
 	d := diagnosticsOf(res)
 	report := Report{
 		SchemaVersion: kernel.SchemaValidate,
@@ -197,7 +197,7 @@ func buildReport(res *appvalidation.Result, includeHints bool, hc hintContext) R
 
 // --- Helpers ---
 
-func diagnosticsOf(result *appvalidation.Result) *diag.Result {
+func diagnosticsOf(result *appvalidation.Report) *diag.Report {
 	if result == nil || result.Diagnostics == nil {
 		return diag.NewResult()
 	}

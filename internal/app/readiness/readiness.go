@@ -23,7 +23,7 @@ func AssessReadiness(in validation.Input) (validation.Report, error) {
 	return *report, nil
 }
 
-func recordPrereqIssues(report *validation.Report, checks []validation.Issue) {
+func recordPrereqIssues(report *validation.Report, checks []validation.Check) {
 	for _, check := range checks {
 		if check.Status == outcome.Pass {
 			continue
@@ -36,7 +36,7 @@ func recordControlSourceIssue(report *validation.Report, in validation.Input) {
 	if !in.HasEnabledControlPacks || !in.ControlsFlagSet {
 		return
 	}
-	report.RecordIssue(validation.Issue{
+	report.RecordIssue(validation.Check{
 		Name:    "control-source-selection",
 		Status:  outcome.Fail,
 		Message: "cannot combine explicit --controls with enabled_control_packs",
@@ -66,7 +66,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	req.Report.Summary.AssetObservationsChecked = val.Summary.AssetObservationsLoaded
 
 	for _, issue := range readinessDiagnostics(val).Issues {
-		req.Report.RecordIssue(validation.Issue{
+		req.Report.RecordIssue(validation.Check{
 			Name:    string(issue.Code),
 			Status:  readinessIssueStatus(issue),
 			Message: issue.Action,
@@ -77,14 +77,14 @@ func recordValidationIssues(req readinessValidationRequest) error {
 	return nil
 }
 
-func readinessDiagnostics(val validation.Result) *diag.Result {
+func readinessDiagnostics(val validation.Status) *diag.Report {
 	if val.Diagnostics != nil {
 		return val.Diagnostics
 	}
 	return diag.NewResult()
 }
 
-func readinessIssueStatus(issue diag.Issue) outcome.Status {
+func readinessIssueStatus(issue diag.Diagnostic) outcome.Status {
 	if issue.Signal == diag.SignalError {
 		return outcome.Fail
 	}

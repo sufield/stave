@@ -11,7 +11,7 @@ import (
 // ValidateStrict performs deep integrity checks on the registry.
 // It verifies all referenced control files exist and that no embedded YAML
 // files are orphaned (present on disk but missing from index metadata).
-func (r *Registry) ValidateStrict(fsys embed.FS) error {
+func (r *PackIndex) ValidateStrict(fsys embed.FS) error {
 	for id, ref := range r.controls {
 		refPath := normalizeControlFSPath(ref.Path)
 		if refPath == "" {

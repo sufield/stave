@@ -11,7 +11,7 @@ import (
 
 func TestWriteDiagnosis(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{},
+		Issues: []diagnosis.Insight{},
 	}
 	var buf bytes.Buffer
 	err := WriteDiagnosis(&buf, report)

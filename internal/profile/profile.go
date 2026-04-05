@@ -40,7 +40,7 @@ type Profile struct {
 
 // ProfileResult extends an control Result with profile-level metadata.
 type ProfileResult struct {
-	compliance.Result
+	compliance.Outcome
 	ComplianceRef string `json:"compliance_ref,omitempty"`
 	Rationale     string `json:"rationale,omitempty"`
 }
@@ -75,7 +75,7 @@ type AcknowledgedEntry struct {
 // When p.Controls is empty the profile discovers its controls from the
 // registries using each control's ComplianceProfiles() metadata — no
 // hardcoded list required.
-func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Registry) (ProfileReport, error) {
+func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.ControlCatalog) (ProfileReport, error) {
 	controls := p.Controls
 	if len(controls) == 0 {
 		controls = discoverProfileControls(p.ID, registries)
@@ -109,7 +109,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 		}
 
 		results = append(results, ProfileResult{
-			Result:        r,
+			Outcome:       r,
 			ComplianceRef: ctrl.ComplianceRef,
 			Rationale:     ctrl.Rationale,
 		})
@@ -124,9 +124,9 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 	})
 
 	// Detect compound risks from the raw control results.
-	rawResults := make([]compliance.Result, len(results))
+	rawResults := make([]compliance.Outcome, len(results))
 	for i, r := range results {
-		rawResults[i] = r.Result
+		rawResults[i] = r.Outcome
 	}
 	compoundFindings := compound.Detect(compound.DefaultRules(), rawResults)
 
@@ -157,7 +157,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Regist
 
 // discoverProfileControls builds the ProfileControl list by querying all
 // registries for controls that declare membership in the given profile.
-func discoverProfileControls(profileID string, registries []*compliance.Registry) []ProfileControl {
+func discoverProfileControls(profileID string, registries []*compliance.ControlCatalog) []ProfileControl {
 	var controls []ProfileControl
 	for _, reg := range registries {
 		for _, ctrl := range reg.ByProfile(profileID) {
@@ -176,7 +176,7 @@ func discoverProfileControls(profileID string, registries []*compliance.Registry
 	return controls
 }
 
-func buildLookup(registries []*compliance.Registry) map[kernel.ControlID]compliance.Control {
+func buildLookup(registries []*compliance.ControlCatalog) map[kernel.ControlID]compliance.Control {
 	lookup := make(map[kernel.ControlID]compliance.Control)
 	for _, reg := range registries {
 		for _, ctl := range reg.All() {

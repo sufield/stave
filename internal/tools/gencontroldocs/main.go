@@ -31,7 +31,7 @@ func main() {
 	check := flag.Bool("check", false, "check mode: exit 1 if output is stale")
 	flag.Parse()
 
-	registry := ctlbuiltin.NewRegistry(
+	registry := ctlbuiltin.NewControlStore(
 		ctlbuiltin.EmbeddedFS(), "embedded",
 		ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()),
 	)

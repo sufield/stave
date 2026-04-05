@@ -27,8 +27,8 @@ func init() {
 }
 
 // Evaluate checks that the bucket policy contains a Deny non-TLS statement.
-func (ctl *controlsDenyNonTLS) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, _ S3Properties) *Result {
+func (ctl *controlsDenyNonTLS) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, _ S3Properties) *Outcome {
 		policyJSON := extractPolicyJSON(a)
 		stmts, err := ParsePolicyStatements(policyJSON)
 		if err != nil {

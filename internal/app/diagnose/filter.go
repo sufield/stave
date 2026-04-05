@@ -34,7 +34,7 @@ func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
 	needle := strings.ToLower(strings.TrimSpace(f.SignalContains))
 
 	filtered := *report
-	filtered.Issues = make([]diagnosis.Issue, 0, len(report.Issues))
+	filtered.Issues = make([]diagnosis.Insight, 0, len(report.Issues))
 
 	for _, issue := range report.Issues {
 		if matchesFilter(issue, caseSet, needle) {
@@ -45,7 +45,7 @@ func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
 	return &filtered
 }
 
-func matchesFilter(issue diagnosis.Issue, caseSet map[string]struct{}, needle string) bool {
+func matchesFilter(issue diagnosis.Insight, caseSet map[string]struct{}, needle string) bool {
 	if len(caseSet) > 0 {
 		if _, ok := caseSet[string(issue.Case)]; !ok {
 			return false

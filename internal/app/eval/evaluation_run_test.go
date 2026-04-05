@@ -52,7 +52,7 @@ func (s *marshalerStub) MarshalFindings(enriched appcontracts.EnrichedResult) ([
 	return []byte(`{"ok":true}`), nil
 }
 
-func testEnrichFn(result evaluation.Result) (appcontracts.EnrichedResult, error) {
+func testEnrichFn(result evaluation.Audit) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
 		Findings:       []appcontracts.EnrichedFinding{},

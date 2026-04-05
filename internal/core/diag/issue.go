@@ -11,8 +11,8 @@ const (
 	SignalInfo  Signal = "info"
 )
 
-// Issue is the canonical diagnostic finding shape across validation flows.
-type Issue struct {
+// Diagnostic is the canonical diagnostic finding shape across validation flows.
+type Diagnostic struct {
 	Code     Code                  `json:"code"`
 	Signal   Signal                `json:"signal"`
 	Message  string                `json:"message,omitempty"`
@@ -23,13 +23,13 @@ type Issue struct {
 
 // Builder provides fluent issue construction.
 type Builder struct {
-	issue Issue
+	issue Diagnostic
 }
 
 // New starts a new issue builder with a required code.
 func New(code Code) *Builder {
 	return &Builder{
-		issue: Issue{
+		issue: Diagnostic{
 			Code:     code,
 			Signal:   SignalError,
 			Evidence: kernel.NewSanitizableMap(nil),
@@ -88,7 +88,7 @@ func (b *Builder) WithSensitive(key, value string) *Builder {
 }
 
 // Build returns the finalized issue.
-func (b *Builder) Build() Issue {
+func (b *Builder) Build() Diagnostic {
 	issue := b.issue
 	issue.Evidence = b.issue.Evidence.Clone()
 	return issue

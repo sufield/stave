@@ -7,24 +7,24 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// Registry holds controls indexed by their unique ID.
+// ControlCatalog holds controls indexed by their unique ID.
 // It is not safe for concurrent use during registration; register
 // all controls during init before concurrent Evaluate calls.
-type Registry struct {
+type ControlCatalog struct {
 	controls map[kernel.ControlID]Control
 	order    []kernel.ControlID // insertion order for deterministic iteration
 }
 
-// NewRegistry returns an empty Registry.
-func NewRegistry() *Registry {
-	return &Registry{
+// NewRegistry returns an empty ControlCatalog.
+func NewRegistry() *ControlCatalog {
+	return &ControlCatalog{
 		controls: make(map[kernel.ControlID]Control),
 	}
 }
 
 // Register adds an control to the registry. Returns an error if an
 // control with the same ID is already registered.
-func (r *Registry) Register(ctl Control) error {
+func (r *ControlCatalog) Register(ctl Control) error {
 	id := ctl.Def().ID()
 	if _, exists := r.controls[id]; exists {
 		return fmt.Errorf("control %q already registered", id)
@@ -35,19 +35,19 @@ func (r *Registry) Register(ctl Control) error {
 }
 
 // MustRegister calls Register and panics on error. Use during init.
-func (r *Registry) MustRegister(ctl Control) {
+func (r *ControlCatalog) MustRegister(ctl Control) {
 	if err := r.Register(ctl); err != nil {
 		panic(err)
 	}
 }
 
 // Lookup returns the control with the given ID, or nil if not found.
-func (r *Registry) Lookup(id kernel.ControlID) Control {
+func (r *ControlCatalog) Lookup(id kernel.ControlID) Control {
 	return r.controls[id]
 }
 
 // All returns all registered controls in registration order.
-func (r *Registry) All() []Control {
+func (r *ControlCatalog) All() []Control {
 	out := make([]Control, len(r.order))
 	for i, id := range r.order {
 		out[i] = r.controls[id]
@@ -57,7 +57,7 @@ func (r *Registry) All() []Control {
 
 // ByProfile returns all controls that declare membership in the given
 // compliance profile, in registration order.
-func (r *Registry) ByProfile(profile string) []Control {
+func (r *ControlCatalog) ByProfile(profile string) []Control {
 	var out []Control
 	for _, id := range r.order {
 		ctrl := r.controls[id]
@@ -69,7 +69,7 @@ func (r *Registry) ByProfile(profile string) []Control {
 }
 
 // Len returns the number of registered controls.
-func (r *Registry) Len() int {
+func (r *ControlCatalog) Len() int {
 	return len(r.controls)
 }
 

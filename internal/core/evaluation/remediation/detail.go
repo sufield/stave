@@ -15,7 +15,7 @@ var ErrFindingNotFound = errors.New("finding not found")
 // BuildFindingDetail composes evidence, predicate traces, and remediation plans
 // into a comprehensive detail view for a specific violation.
 // The gen parameter assigns stable IDs to remediation plans at this boundary.
-func BuildFindingDetail(r *evaluation.Result, req evaluation.FindingDetailRequest, gen ports.IdentityGenerator) (*evaluation.FindingDetail, error) {
+func BuildFindingDetail(r *evaluation.Audit, req evaluation.FindingDetailRequest, gen ports.IdentityGenerator) (*evaluation.FindingDetail, error) {
 	violation := r.FindFinding(req.ControlID, req.AssetID)
 	if violation == nil {
 		return nil, fmt.Errorf("%w: control %q asset %q", ErrFindingNotFound, req.ControlID, req.AssetID)

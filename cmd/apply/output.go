@@ -110,7 +110,7 @@ func readinessNextCommand(report validation.Report) string {
 		report.ControlsDir, report.ObservationsDir)
 }
 
-func printReadinessIssue(w io.Writer, issue validation.Issue) error {
+func printReadinessIssue(w io.Writer, issue validation.Check) error {
 	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", issue.Status.String(), issue.Name, issue.Message); err != nil {
 		return err
 	}

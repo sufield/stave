@@ -44,8 +44,8 @@ func resolveOptions(opts []Option) options {
 	return o
 }
 
-// DiagnosticsResult converts engine-level diagnostics into a domain diag.Result.
-func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Result {
+// DiagnosticsResult converts engine-level diagnostics into a domain diag.Report.
+func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Report {
 	o := resolveOptions(opts)
 
 	externalErrors := make([]diag.ExternalError, 0, len(diags))
@@ -68,7 +68,7 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 }
 
 // ValidateControlYAML validates a control document against its contract schema.
-func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Result, error) {
+func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Report, error) {
 	return v.validateDocument(raw, docConfig{
 		Unmarshal:     yaml.Unmarshal,
 		FormatName:    "YAML",
@@ -81,7 +81,7 @@ func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Resul
 }
 
 // ValidateObservationJSON validates an observation against its contract schema.
-func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Result, error) {
+func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Report, error) {
 	return v.validateDocument(raw, docConfig{
 		Unmarshal:     json.Unmarshal,
 		FormatName:    "JSON",
@@ -107,7 +107,7 @@ type docConfig struct {
 	DefaultAction string
 }
 
-func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) (*diag.Result, error) {
+func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) (*diag.Report, error) {
 	o := resolveOptions(opts)
 
 	var partial struct {
@@ -172,7 +172,7 @@ func (e schemaError) Field() string       { return e.path }
 func (e schemaError) Description() string { return e.desc }
 func (e schemaError) Code() string        { return e.code }
 
-func syntaxErrorResult(fmtName string, err error) *diag.Result {
+func syntaxErrorResult(fmtName string, err error) *diag.Report {
 	result := diag.NewResult()
 	result.Add(
 		diag.New(diag.CodeSchemaViolation).
@@ -184,7 +184,7 @@ func syntaxErrorResult(fmtName string, err error) *diag.Result {
 	return result
 }
 
-func missingFieldResult(field, action string) *diag.Result {
+func missingFieldResult(field, action string) *diag.Report {
 	result := diag.NewResult()
 	result.Add(
 		diag.New(diag.CodeSchemaViolation).
@@ -197,7 +197,7 @@ func missingFieldResult(field, action string) *diag.Result {
 	return result
 }
 
-func unsupportedVersionResult(version string, supported []string, action string) *diag.Result {
+func unsupportedVersionResult(version string, supported []string, action string) *diag.Report {
 	result := diag.NewResult()
 	result.Add(
 		diag.New(diag.CodeUnsupportedSchemaVersion).

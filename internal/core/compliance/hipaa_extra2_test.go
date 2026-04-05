@@ -48,7 +48,7 @@ func TestDefinition_ProfileSeverityOverride(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Registry.ByProfile
+// ControlCatalog.ByProfile
 // ---------------------------------------------------------------------------
 
 func TestRegistry_ByProfile(t *testing.T) {

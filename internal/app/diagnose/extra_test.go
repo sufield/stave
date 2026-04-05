@@ -13,7 +13,7 @@ import (
 
 func TestFilter_Apply_ByCasesOnly(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: diagnosis.ScenarioEmptyFindings, Signal: "info"},
 			{Case: diagnosis.ScenarioViolationEvidence, Signal: "warn"},
 		},
@@ -30,7 +30,7 @@ func TestFilter_Apply_ByCasesOnly(t *testing.T) {
 
 func TestFilter_Apply_BySignalOnly(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: "a", Signal: "WARNING: something"},
 			{Case: "b", Signal: "INFO: ok"},
 		},
@@ -44,7 +44,7 @@ func TestFilter_Apply_BySignalOnly(t *testing.T) {
 
 func TestFilter_Apply_TrimmedCases(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: "a", Signal: "x"},
 		},
 	}

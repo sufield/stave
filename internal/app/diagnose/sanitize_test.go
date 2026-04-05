@@ -13,7 +13,7 @@ func (stubSanitizer) ID(id string) string { return "REDACTED" }
 
 func TestSanitizeDiagnosisReport(t *testing.T) {
 	r := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{
 				Case:     "violation_evidence",
 				Signal:   "test",

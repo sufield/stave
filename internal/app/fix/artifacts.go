@@ -126,7 +126,7 @@ type EnvelopeBuilder struct {
 }
 
 // BuildEvaluation creates a compliant safety envelope from a raw evaluation result.
-func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Result) (*safetyenvelope.Evaluation, error) {
+func (b *EnvelopeBuilder) BuildEvaluation(result evaluation.Audit) (*safetyenvelope.Evaluation, error) {
 	enricher := remediation.NewPlanner()
 	enriched, err := appeval.Enrich(enricher, b.Sanitizer, result)
 	if err != nil {

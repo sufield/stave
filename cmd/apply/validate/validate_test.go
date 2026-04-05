@@ -145,8 +145,8 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 // TestOutputAndExit_Clean tests Reporter with a clean validation result (no errors or warnings).
 func TestOutputAndExit_Clean(t *testing.T) {
 	// No errors, no warnings → exit 0
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{}},
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{}},
 		Summary: appvalidation.Summary{
 			ControlsLoaded:          2,
 			SnapshotsLoaded:         3,
@@ -173,8 +173,8 @@ func TestOutputAndExit_Clean(t *testing.T) {
 // TestOutputAndExit_Errors tests Reporter with validation errors (should return exit code 2).
 func TestOutputAndExit_Errors(t *testing.T) {
 	// Has errors → exit 2
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
 			{
 				Code:   diag.CodeControlMissingID,
 				Signal: diag.SignalError,
@@ -205,8 +205,8 @@ func TestOutputAndExit_Errors(t *testing.T) {
 // TestOutputAndExit_WarningsOnly tests Reporter with only warnings (should return exit code 2).
 func TestOutputAndExit_WarningsOnly(t *testing.T) {
 	// Warnings only, no errors → exit 2
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
 			{
 				Code:   diag.CodeSingleSnapshot,
 				Signal: diag.SignalWarn,
@@ -242,8 +242,8 @@ func TestOutputAndExit_WarningsOnly(t *testing.T) {
 // TestOutputAndExit_ErrorsAndWarnings tests Reporter with both errors and warnings (errors take precedence, exit code 2).
 func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 	// Has both errors and warnings → exit 2 (errors take precedence)
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
 			{
 				Code:   diag.CodeControlMissingID,
 				Signal: diag.SignalError,
@@ -281,8 +281,8 @@ func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
 func TestOutputAndExit_JSONOutput(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = false
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
 			{
 				Code:   diag.CodeSingleSnapshot,
 				Signal: diag.SignalWarn,
@@ -328,8 +328,8 @@ func TestWriteValidationText_WithFixHints(t *testing.T) {
 	opts.Controls = "./controls"
 	opts.Observations = "./observations"
 
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
 			{
 				Code:   diag.CodeObservationLoadFailed,
 				Signal: diag.SignalError,
@@ -359,8 +359,8 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	opts := newOptions()
 	opts.FixHints = true
 
-	result := &appvalidation.Result{
-		Diagnostics: &diag.Result{Issues: []diag.Issue{
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Report{Issues: []diag.Diagnostic{
 			{
 				Code:    "INVALID_MAX_UNSAFE",
 				Signal:  diag.SignalError,

@@ -8,7 +8,7 @@ import (
 	ctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 )
 
-func testRegistry(t *testing.T) *Registry {
+func testRegistry(t *testing.T) *PackIndex {
 	t.Helper()
 	reg, err := NewEmbeddedRegistry()
 	if err != nil {
@@ -70,7 +70,7 @@ func TestResolveEnabledPacksDedupSorted(t *testing.T) {
 }
 
 func TestNewRegistry_RejectsEmptyPacks(t *testing.T) {
-	_, err := NewRegistry([]byte("version: v1\npacks: {}\n"))
+	_, err := NewPackIndex([]byte("version: v1\npacks: {}\n"))
 	if err == nil {
 		t.Fatal("expected error for empty packs")
 	}
@@ -80,7 +80,7 @@ func TestNewRegistry_RejectsEmptyPacks(t *testing.T) {
 }
 
 func TestNewRegistry_RejectsUndefinedControlReference(t *testing.T) {
-	_, err := NewRegistry([]byte(`
+	_, err := NewPackIndex([]byte(`
 version: v1
 packs:
   s3/public-exposure:
@@ -109,7 +109,7 @@ func TestRegistryValidateStrict(t *testing.T) {
 }
 
 func TestRegistryValidateStrict_MissingFile(t *testing.T) {
-	reg, err := NewRegistry([]byte(`
+	reg, err := NewPackIndex([]byte(`
 version: v1
 packs:
   s3/public-exposure:
@@ -122,7 +122,7 @@ controls:
     summary: Public access blocked
 `))
 	if err != nil {
-		t.Fatalf("NewRegistry error: %v", err)
+		t.Fatalf("NewPackIndex error: %v", err)
 	}
 	err = reg.ValidateStrict(ctl.EmbeddedFS())
 	if err == nil {

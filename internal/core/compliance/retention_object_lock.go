@@ -27,10 +27,10 @@ func init() {
 
 // Evaluate checks Object Lock status and mode, returning severity based
 // on the actual lock configuration rather than a hardcoded value.
-func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
+func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
 		if !props.ObjectLock.Enabled {
-			r := Result{
+			r := Outcome{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityCritical,
@@ -45,7 +45,7 @@ func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 		case ObjectLockModeCompliance:
 			return nil // strongest protection, pass
 		case ObjectLockModeGovernance:
-			r := Result{
+			r := Outcome{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityHigh,
@@ -56,7 +56,7 @@ func (ctl *retentionObjectLock) Evaluate(snap asset.Snapshot) Result {
 			return &r
 		default:
 			// Object Lock enabled but mode not set or unrecognized
-			r := Result{
+			r := Outcome{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityHigh,

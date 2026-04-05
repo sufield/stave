@@ -12,7 +12,7 @@ import (
 
 // EvalLoadFunc loads an evaluation result from a file path.
 // Injected by the cmd layer (typically backed by evaljson.NewLoader).
-type EvalLoadFunc func(path string) (*evaluation.Result, error)
+type EvalLoadFunc func(path string) (*evaluation.Audit, error)
 
 // Output contains the assembled prompt and metadata.
 type Output struct {

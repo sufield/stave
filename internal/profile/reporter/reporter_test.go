@@ -31,7 +31,7 @@ func fixtureReport() profile.ProfileReport {
 		Pass:        false,
 		Results: []profile.ProfileResult{
 			{
-				Result: compliance.Result{
+				Outcome: compliance.Outcome{
 					Pass:           false,
 					ControlID:      "CONTROLS.001.STRICT",
 					Severity:       policy.SeverityCritical,
@@ -43,7 +43,7 @@ func fixtureReport() profile.ProfileReport {
 				Rationale:     "CMK required for key revocation during breach response",
 			},
 			{
-				Result: compliance.Result{
+				Outcome: compliance.Outcome{
 					Pass:           false,
 					ControlID:      "AUDIT.001",
 					Severity:       policy.SeverityCritical,
@@ -55,7 +55,7 @@ func fixtureReport() profile.ProfileReport {
 				Rationale:     "All PHI access must be logged — logs cannot be obtained retroactively",
 			},
 			{
-				Result: compliance.Result{
+				Outcome: compliance.Outcome{
 					Pass:           false,
 					ControlID:      "ACCESS.002",
 					Severity:       policy.SeverityHigh,
@@ -67,7 +67,7 @@ func fixtureReport() profile.ProfileReport {
 				Rationale:     "Least privilege — no wildcard actions",
 			},
 			{
-				Result: compliance.Result{
+				Outcome: compliance.Outcome{
 					Pass:      true,
 					ControlID: "CONTROLS.002",
 					Severity:  policy.SeverityMedium,

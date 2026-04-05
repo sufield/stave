@@ -6,7 +6,7 @@ func Explain(input Input) Report {
 	summary := input.Summarize()
 	s := newSession(input, summary.TotalAssets)
 
-	var issues []Issue
+	var issues []Insight
 	if len(input.Findings) == 0 {
 		issues = s.diagnoseMissingFindings()
 	} else {

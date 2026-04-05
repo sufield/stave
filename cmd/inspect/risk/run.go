@@ -21,7 +21,7 @@ type Output struct {
 	NormalizedActions []string              `json:"normalized_actions"`
 	Permissions       domainrisk.Permission `json:"permissions"`
 	PermissionCheck   PermissionCheck       `json:"permission_check"`
-	StatementResult   domainrisk.Result     `json:"statement_result"`
+	StatementResult   domainrisk.Audit      `json:"statement_result"`
 	Report            domainrisk.Report     `json:"report"`
 }
 

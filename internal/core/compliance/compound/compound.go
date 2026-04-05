@@ -41,12 +41,12 @@ type CompoundRule struct {
 	Message string
 
 	// Matches returns true when the result set triggers this compound risk.
-	Matches func(results []compliance.Result) bool
+	Matches func(results []compliance.Outcome) bool
 }
 
 // Detect runs all rules against the result set and returns any compound findings.
 // It is a pure function: no I/O, no global state.
-func Detect(rules []CompoundRule, results []compliance.Result) []CompoundFinding {
+func Detect(rules []CompoundRule, results []compliance.Outcome) []CompoundFinding {
 	var findings []CompoundFinding
 	for _, rule := range rules {
 		if rule.Matches(results) {
@@ -61,10 +61,10 @@ func Detect(rules []CompoundRule, results []compliance.Result) []CompoundFinding
 	return findings
 }
 
-// --- Result lookup helpers ---
+// --- Outcome lookup helpers ---
 
 // resultFailed returns true if the given invariant ID has a failing result.
-func resultFailed(results []compliance.Result, id kernel.ControlID) bool {
+func resultFailed(results []compliance.Outcome, id kernel.ControlID) bool {
 	for _, r := range results {
 		if r.ControlID == id {
 			return !r.Pass
@@ -74,7 +74,7 @@ func resultFailed(results []compliance.Result, id kernel.ControlID) bool {
 }
 
 // resultPassed returns true if the given invariant ID has a passing result.
-func resultPassed(results []compliance.Result, id kernel.ControlID) bool {
+func resultPassed(results []compliance.Outcome, id kernel.ControlID) bool {
 	for _, r := range results {
 		if r.ControlID == id {
 			return r.Pass

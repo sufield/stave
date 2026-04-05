@@ -16,7 +16,7 @@ import (
 func TestWriteFindings_EmptyFindings(t *testing.T) {
 	w := NewFindingWriter()
 	enricher := remediation.NewPlanner()
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -62,7 +62,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	firstUnsafe := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.2.0",
 			Now:               now,
@@ -163,7 +163,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 	w := NewFindingWriter()
 	enricher := remediation.NewPlanner()
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -246,7 +246,7 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 	w := NewFindingWriter()
 	enricher := remediation.NewPlanner()
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
 			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),

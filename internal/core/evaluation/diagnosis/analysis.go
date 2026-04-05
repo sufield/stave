@@ -39,8 +39,8 @@ func newSession(input Input, totalAssets int) *session {
 }
 
 // diagnoseMissingFindings determines why zero violations were detected.
-func (s *session) diagnoseMissingFindings() []Issue {
-	var issues []Issue
+func (s *session) diagnoseMissingFindings() []Insight {
+	var issues []Insight
 
 	// 1. Temporal Constraints
 	if tsIssue := checkTimeSpan(s.input); tsIssue != nil {
@@ -56,13 +56,13 @@ func (s *session) diagnoseMissingFindings() []Issue {
 	return issues
 }
 
-func (s *session) diagnoseMatchCoverage() []Issue {
-	var issues []Issue
+func (s *session) diagnoseMatchCoverage() []Insight {
+	var issues []Insight
 	uniqueMatches := s.countUniqueMatches()
 
 	// Global match failure
 	if uniqueMatches == 0 && s.totalAssets > 0 {
-		issues = append(issues, Issue{
+		issues = append(issues, Insight{
 			Case:     ScenarioEmptyFindings,
 			Signal:   msgNoPredicateMatches,
 			Evidence: fmt.Sprintf("0/%d unique resources matched any predicate across %d controls", s.totalAssets, len(s.input.Controls)),
@@ -75,7 +75,7 @@ func (s *session) diagnoseMatchCoverage() []Issue {
 	for _, ctl := range s.input.Controls {
 		stat, ok := s.stats[ctl.ID]
 		if ok && len(stat.matchedAssetIDs) == 0 && s.totalAssets > 0 {
-			issues = append(issues, Issue{
+			issues = append(issues, Insight{
 				Case:     ScenarioExpectedNone,
 				Signal:   fmt.Sprintf("No resources matched predicate for %s", ctl.ID),
 				Evidence: fmt.Sprintf("0/%d resources matched: %s", s.totalAssets, extractFieldPath(ctl.UnsafePredicate)),
@@ -87,14 +87,14 @@ func (s *session) diagnoseMatchCoverage() []Issue {
 	return issues
 }
 
-func (s *session) diagnoseThresholdGaps() []Issue {
-	var issues []Issue
+func (s *session) diagnoseThresholdGaps() []Insight {
+	var issues []Insight
 	maxStreak, ctlID := s.globalMaxStreak()
 
 	// Case: Matches found, but none long enough to trigger a violation.
 	// Stave uses strict ">" so duration must exceed --max-unsafe, not equal it.
 	if maxStreak > 0 && maxStreak <= s.input.MaxUnsafeDuration {
-		issues = append(issues, Issue{
+		issues = append(issues, Insight{
 			Case:   ScenarioEmptyFindings,
 			Signal: msgMatchesUnderThreshold,
 			Evidence: fmt.Sprintf("Max observed streak: %s (control %s); threshold: %s",
@@ -106,7 +106,7 @@ func (s *session) diagnoseThresholdGaps() []Issue {
 
 	// Case: Logic-reset check
 	if detectAnyReset(s.input) {
-		issues = append(issues, Issue{
+		issues = append(issues, Insight{
 			Case:     ScenarioEmptyFindings,
 			Signal:   msgAssetsResetBeforeMax,
 			Evidence: "Unsafe streaks were reset when resources became safe",
@@ -118,12 +118,12 @@ func (s *session) diagnoseThresholdGaps() []Issue {
 }
 
 // diagnoseExistingFindings explains existing findings (e.g., skew, resets).
-func (s *session) diagnoseExistingFindings(maxCapturedAt time.Time) []Issue {
+func (s *session) diagnoseExistingFindings(maxCapturedAt time.Time) []Insight {
 	if len(s.input.Snapshots) == 0 {
 		return nil
 	}
 
-	var issues []Issue
+	var issues []Insight
 
 	if skew := buildNowSkewIssue(s.input.Now, maxCapturedAt); skew != nil {
 		issues = append(issues, *skew)

@@ -57,7 +57,7 @@ func encryptSnapshot(assets ...asset.Asset) []asset.Snapshot {
 
 func loadEncryptControls(t *testing.T) []policy.ControlDefinition {
 	t.Helper()
-	reg := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded",
+	reg := builtin.NewControlStore(builtin.EmbeddedFS(), "embedded",
 		builtin.WithAliasResolver(predicate.ResolverFunc()))
 	all, err := reg.All()
 	if err != nil {
@@ -92,7 +92,7 @@ func encryptEvaluator(t *testing.T) *testEvaluator {
 
 // --- Assertion helpers ---
 
-func assertHasEncryptFinding(t *testing.T, result evaluation.Result, controlID kernel.ControlID, assetID string) {
+func assertHasEncryptFinding(t *testing.T, result evaluation.Audit, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {
@@ -102,7 +102,7 @@ func assertHasEncryptFinding(t *testing.T, result evaluation.Result, controlID k
 	t.Errorf("expected finding %s for asset %s, got %d findings", controlID, assetID, len(result.Findings))
 }
 
-func assertNoEncryptFinding(t *testing.T, result evaluation.Result, controlID kernel.ControlID, assetID string) {
+func assertNoEncryptFinding(t *testing.T, result evaluation.Audit, controlID kernel.ControlID, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == controlID && f.AssetID == asset.ID(assetID) {

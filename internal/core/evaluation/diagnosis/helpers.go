@@ -20,9 +20,9 @@ func fmtd(d time.Duration) string {
 	return kernel.FormatDuration(d)
 }
 
-func checkTimeSpan(input Input) *Issue {
+func checkTimeSpan(input Input) *Insight {
 	if len(input.Snapshots) < 2 {
-		return &Issue{
+		return &Insight{
 			Case:     ScenarioExpectedNone,
 			Signal:   msgInsufficientSnapshots,
 			Evidence: fmt.Sprintf("Only %d snapshot(s); need at least 2 to compute duration", len(input.Snapshots)),
@@ -34,7 +34,7 @@ func checkTimeSpan(input Input) *Issue {
 	span := snapshots[len(snapshots)-1].CapturedAt.Sub(snapshots[0].CapturedAt)
 
 	if span < input.MaxUnsafeDuration {
-		return &Issue{
+		return &Insight{
 			Case:   ScenarioExpectedNone,
 			Signal: msgTimeSpanShorterThanThreshold,
 			Evidence: fmt.Sprintf("Snapshots span %s; threshold is %s",
@@ -47,12 +47,12 @@ func checkTimeSpan(input Input) *Issue {
 	return nil
 }
 
-func buildNowSkewIssue(now, maxCapturedAt time.Time) *Issue {
+func buildNowSkewIssue(now, maxCapturedAt time.Time) *Insight {
 	if now.IsZero() || maxCapturedAt.IsZero() || !now.Before(maxCapturedAt) {
 		return nil
 	}
 
-	return &Issue{
+	return &Insight{
 		Case:   ScenarioViolationEvidence,
 		Signal: msgSkewedEvaluationTime,
 		Evidence: fmt.Sprintf("--now=%s but latest captured_at=%s",
@@ -62,15 +62,15 @@ func buildNowSkewIssue(now, maxCapturedAt time.Time) *Issue {
 	}
 }
 
-func buildTopFindingIssues(findings []DiagnosticFinding, limit int) []Issue {
+func buildTopFindingIssues(findings []DiagnosticFinding, limit int) []Insight {
 	count := min(len(findings), limit)
 	if count <= 0 {
 		return nil
 	}
 
-	entries := make([]Issue, 0, count)
+	entries := make([]Insight, 0, count)
 	for _, f := range findings[:count] {
-		entries = append(entries, Issue{
+		entries = append(entries, Insight{
 			Case:    ScenarioViolationEvidence,
 			Signal:  msgContinuousUnsafeStreak,
 			AssetID: f.AssetID,

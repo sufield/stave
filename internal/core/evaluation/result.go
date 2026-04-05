@@ -84,8 +84,8 @@ type SkippedControl struct {
 	Reason      string           `json:"reason"`
 }
 
-// Result is the root aggregate of an evaluation execution.
-type Result struct {
+// Audit is the root aggregate of an evaluation execution.
+type Audit struct {
 	Run              RunInfo               `json:"run"`
 	Summary          Summary               `json:"summary"`
 	SafetyStatus     SafetyStatus          `json:"safety_status"`
@@ -99,7 +99,7 @@ type Result struct {
 }
 
 // FindFinding retrieves a finding for a specific control/asset pair, returning nil if not found.
-func (r *Result) FindFinding(ctlID kernel.ControlID, astID asset.ID) *Finding {
+func (r *Audit) FindFinding(ctlID kernel.ControlID, astID asset.ID) *Finding {
 	for i := range r.Findings {
 		if r.Findings[i].ControlID == ctlID && r.Findings[i].AssetID == astID {
 			return &r.Findings[i]

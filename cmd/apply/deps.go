@@ -161,7 +161,7 @@ func (b *Builder) buildAdapters() (adapters, error) {
 // into findings with remediation plans. Pure function — no closure over builder state.
 func buildEnrichFn(sanitizer kernel.Sanitizer) appcontracts.EnrichFunc {
 	enricher := remediation.NewPlanner()
-	return func(result evaluation.Result) (appcontracts.EnrichedResult, error) {
+	return func(result evaluation.Audit) (appcontracts.EnrichedResult, error) {
 		return appeval.Enrich(enricher, sanitizer, result)
 	}
 }

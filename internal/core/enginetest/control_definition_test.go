@@ -14,7 +14,7 @@ import (
 func TestControlDefinitionValidate_ValidControlHasNoIssues(t *testing.T) {
 	ctl := validControlForValidationTests()
 
-	issues := policy.ValidateControlDefinition(&ctl)
+	issues := ctl.Validate()
 	if len(issues) != 0 {
 		t.Fatalf("validate() issues = %d, want 0: %#v", len(issues), issues)
 	}
@@ -26,7 +26,7 @@ func TestControlDefinitionValidate_RequiredFields(t *testing.T) {
 	ctl.Name = ""
 	ctl.Description = ""
 
-	issues := policy.ValidateControlDefinition(&ctl)
+	issues := ctl.Validate()
 	if len(issues) != 3 {
 		t.Fatalf("validate() issues = %d, want 3", len(issues))
 	}
@@ -40,7 +40,7 @@ func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *t
 	ctl := validControlForValidationTests()
 	ctl.ID = "not-an-control-id"
 
-	issues := policy.ValidateControlDefinition(&ctl)
+	issues := ctl.Validate()
 	if len(issues) != 1 {
 		t.Fatalf("validate() issues = %d, want 1", len(issues))
 	}
@@ -67,7 +67,7 @@ func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
 	ctl := validControlForValidationTests()
 	ctl.Type = policy.ControlType(999)
 
-	issues := policy.ValidateControlDefinition(&ctl)
+	issues := ctl.Validate()
 	if len(issues) != 1 {
 		t.Fatalf("validate() issues = %d, want 1", len(issues))
 	}
@@ -87,7 +87,7 @@ func TestControlDefinitionValidate_EmptyPredicateWarning(t *testing.T) {
 	ctl := validControlForValidationTests()
 	ctl.UnsafePredicate = policy.UnsafePredicate{}
 
-	issues := policy.ValidateControlDefinition(&ctl)
+	issues := ctl.Validate()
 	if len(issues) != 1 {
 		t.Fatalf("validate() issues = %d, want 1", len(issues))
 	}
@@ -112,7 +112,7 @@ func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t 
 		"defined_param": true,
 	})
 
-	issues := policy.ValidateControlDefinition(&ctl)
+	issues := ctl.Validate()
 	if len(issues) != 2 {
 		t.Fatalf("validate() issues = %d, want 2", len(issues))
 	}
@@ -181,7 +181,7 @@ func TestControlDefinitionValidate_MaxUnsafeDurationParam(t *testing.T) {
 			ctl := validControlForValidationTests()
 			ctl.Params = tt.params
 
-			issues := policy.ValidateControlDefinition(&ctl)
+			issues := ctl.Validate()
 			if len(issues) != tt.wantIssueCount {
 				t.Fatalf("validate() issues = %d, want %d", len(issues), tt.wantIssueCount)
 			}
@@ -227,7 +227,7 @@ func validControlForValidationTests() policy.ControlDefinition {
 	}
 }
 
-func assertIssueCodeAndSignal(t *testing.T, issue diag.Issue, wantCode diag.Code, wantSignal diag.Signal) {
+func assertIssueCodeAndSignal(t *testing.T, issue diag.Diagnostic, wantCode diag.Code, wantSignal diag.Signal) {
 	t.Helper()
 	if issue.Code != wantCode {
 		t.Fatalf("issue code = %q, want %q", issue.Code, wantCode)

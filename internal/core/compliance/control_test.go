@@ -127,14 +127,14 @@ func TestDefinition_FailResult(t *testing.T) {
 	}
 }
 
-// --- Registry tests ---
+// --- ControlCatalog tests ---
 
 // stubControl implements Control for testing.
 type stubControl struct {
 	Definition
 }
 
-func (s *stubControl) Evaluate(_ asset.Snapshot) Result {
+func (s *stubControl) Evaluate(_ asset.Snapshot) Outcome {
 	return s.PassResult()
 }
 

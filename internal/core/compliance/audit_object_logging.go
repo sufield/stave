@@ -25,8 +25,8 @@ func init() {
 	})
 }
 
-func (ctl *auditObjectLogging) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
+func (ctl *auditObjectLogging) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
 		if !props.Logging.ObjectLevelLogging.Enabled {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: CloudTrail S3 object-level data event logging is not enabled — no forensic evidence for PHI access", a.ID),

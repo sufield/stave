@@ -40,7 +40,7 @@ func writeEvalFile(t *testing.T, dir string) string {
 	return path
 }
 
-func testLoadEval(path string) (*evaluation.Result, error) {
+func testLoadEval(path string) (*evaluation.Audit, error) {
 	return (&evaljson.Loader{}).LoadFromFile(path)
 }
 
@@ -196,7 +196,7 @@ func TestNewRunnerRunJSON(t *testing.T) {
 
 func TestNewRunnerRunLoadError(t *testing.T) {
 	dctx := diagprompt.DiagnosticContext{
-		LoadEval: func(string) (*evaluation.Result, error) {
+		LoadEval: func(string) (*evaluation.Audit, error) {
 			return nil, fmt.Errorf("simulated load error")
 		},
 		BuildPrompt: testBuildPrompt,

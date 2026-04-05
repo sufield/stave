@@ -98,7 +98,7 @@ func RunVerify(deps Deps, req Request) error {
 // --- Internal ---
 
 type evalResult struct {
-	result        *evaluation.Result
+	result        *evaluation.Audit
 	snapshotCount int
 }
 

@@ -36,16 +36,16 @@ func (s Source) String() string {
 	return string(s.Kind) + ":" + string(s.ID)
 }
 
-// Result captures whether a prefix is publicly exposed and, if so,
+// Audit captures whether a prefix is publicly exposed and, if so,
 // the evidence source that proved it.
-type Result struct {
+type Audit struct {
 	Exposed bool
 	Source  Source
 }
 
-func (r Result) String() string { return r.Source.String() }
+func (r Audit) String() string { return r.Source.String() }
 
-var SafeResult = Result{Exposed: false}
+var SafeResult = Audit{Exposed: false}
 
 // Grant pairs a scope (e.g. "*", "invoices/") with the statement ID that granted it.
 type Grant struct {
@@ -106,22 +106,22 @@ func (f Facts) LacksEvidence() bool {
 }
 
 // CheckExposure determines whether a protected prefix is effectively publicly readable.
-func (f Facts) CheckExposure(prefix kernel.ObjectPrefix) Result {
+func (f Facts) CheckExposure(prefix kernel.ObjectPrefix) Audit {
 	// Rule 1: Explicit identity grants take precedence.
 	if f.IdentityAllowsPublicRead() {
 		if grant := f.IdentityGrants.FindMatch(prefix); grant != nil {
-			return Result{Exposed: true, Source: grant.Evidence()}
+			return Audit{Exposed: true, Source: grant.Evidence()}
 		}
 	}
 
 	// Rule 2: Resource-bound access can expose the entire asset.
 	if f.ResourceAllowsPublicRead() {
-		return Result{Exposed: true, Source: NewSource(SourceResource, "")}
+		return Audit{Exposed: true, Source: NewSource(SourceResource, "")}
 	}
 
 	// Rule 3: Fail closed on missing evidence.
 	if f.LacksEvidence() {
-		return Result{Exposed: true, Source: NewSource(SourceMissingEvidence, "")}
+		return Audit{Exposed: true, Source: NewSource(SourceMissingEvidence, "")}
 	}
 
 	return SafeResult

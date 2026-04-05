@@ -65,20 +65,20 @@ func ResolveActions(actions []string, resolver PermissionResolver) Permission {
 	return total
 }
 
-// Result represents the risk contribution of a single statement.
-type Result struct {
+// Audit represents the risk contribution of a single statement.
+type Audit struct {
 	Score    Score
 	Findings []string
 	IsPublic bool
 }
 
 // Evaluate analyzes the context to determine the risk level.
-func (sc StatementContext) Evaluate() Result {
+func (sc StatementContext) Evaluate() Audit {
 	if !sc.IsAllow {
-		return Result{}
+		return Audit{}
 	}
 
-	res := Result{}
+	res := Audit{}
 
 	// 1. Evaluate Public Risk
 	if sc.IsPublic && !sc.IsNetworkScoped {
@@ -107,7 +107,7 @@ func (sc StatementContext) Evaluate() Result {
 }
 
 // UpdateReport merges a statement result into the main report.
-func (r *Report) UpdateReport(res Result) {
+func (r *Report) UpdateReport(res Audit) {
 	if res.Score > r.Score {
 		r.Score = res.Score
 	}

@@ -24,10 +24,10 @@ func init() {
 	})
 }
 
-func (ctl *accessEndpointPolicy) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
+func (ctl *accessEndpointPolicy) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
 		vep := props.Network.VPCEndpointPolicy
-		if !vep.Present || !vep.Attached {
+		if !vep.IsEnforced() {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: no VPC endpoint policy attached — endpoint uses default full-access policy", a.ID),
 				"Attach a VPC endpoint policy that restricts which S3 bucket ARNs are reachable through the endpoint.",

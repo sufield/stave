@@ -153,9 +153,9 @@ func (t *snapshotTimeline) FormatLatest() string {
 }
 
 // ValidateAll runs all snapshot validation checks using a pre-computed context.
-func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Issue {
+func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Diagnostic {
 	if s.IsEmpty() {
-		return []diag.Issue{
+		return []diag.Diagnostic{
 			diag.New(diag.CodeNoSnapshots).
 				Warning().
 				Action("Add observation JSON files to the directory").
@@ -164,7 +164,7 @@ func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Is
 	}
 
 	ctx := s.analyze()
-	var issues []diag.Issue
+	var issues []diag.Diagnostic
 
 	issues = append(issues, s.checkStructural()...)
 	issues = append(issues, s.checkTagSanity()...)
@@ -176,7 +176,7 @@ func (s Snapshots) ValidateAll(now time.Time, maxUnsafe time.Duration) []diag.Is
 }
 
 // checkStructural validates per-snapshot structure (duplicate IDs).
-func (s Snapshots) checkStructural() (issues []diag.Issue) {
+func (s Snapshots) checkStructural() (issues []diag.Diagnostic) {
 	if s.IsSingle() {
 		issues = append(issues, diag.New(diag.CodeSingleSnapshot).
 			Warning().
@@ -209,7 +209,7 @@ func (s Snapshots) checkStructural() (issues []diag.Issue) {
 }
 
 // checkTagSanity validates case-insensitive key conflicts in asset tags.
-func (s Snapshots) checkTagSanity() (issues []diag.Issue) {
+func (s Snapshots) checkTagSanity() (issues []diag.Diagnostic) {
 	for _, snap := range s {
 		for _, r := range snap.Assets {
 			tags := r.Tags()
@@ -234,7 +234,7 @@ func (s Snapshots) checkTagSanity() (issues []diag.Issue) {
 }
 
 // checkTimeSanity validates time ordering and uniqueness.
-func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []diag.Issue) {
+func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []diag.Diagnostic) {
 	if unsorted, ok := s.FindFirstUnsortedPair(); ok {
 		issues = append(issues, diag.New(diag.CodeSnapshotsUnsorted).
 			Warning().
@@ -266,7 +266,7 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 	return
 }
 
-func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTimeline) diag.Issue {
+func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTimeline) diag.Diagnostic {
 	latest := timeline.FormatLatest()
 	issue := diag.New(diag.CodeNowBeforeSnapshots).
 		Error().
@@ -281,7 +281,7 @@ func (s Snapshots) createNowPrecedenceError(now time.Time, timeline *snapshotTim
 }
 
 // checkIdentityConsistency validates asset identity across snapshots.
-func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.Issue) {
+func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.Diagnostic) {
 	var reusedTypeIDs []ID
 	for id, types := range ctx.assetTypes {
 		if types.IsInconsistent() {
@@ -328,7 +328,7 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.I
 }
 
 // checkDurationFeasibility checks if the snapshot span covers the threshold.
-func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.Duration) (issues []diag.Issue) {
+func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.Duration) (issues []diag.Diagnostic) {
 	if !s.IsMultiSnapshot() || maxUnsafe <= 0 || ctx == nil || ctx.timeline == nil {
 		return
 	}
