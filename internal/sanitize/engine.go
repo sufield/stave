@@ -120,3 +120,91 @@ func (s *Sanitizer) sanitizeRaw(raw string) string {
 	}
 	return "SANITIZED_" + crypto.ShortToken(raw)
 }
+
+// --- Snapshot-level scrubbing ---
+
+// Snapshot returns a copy of the snapshot with sensitive properties removed.
+// Retains boolean fields needed for evaluation, removes raw policy/ACL/tag data.
+func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
+	if s == nil {
+		return snap
+	}
+	out := asset.Snapshot{
+		SchemaVersion: snap.SchemaVersion,
+		GeneratedBy:   snap.GeneratedBy,
+		CapturedAt:    snap.CapturedAt,
+	}
+	out.Assets = make([]asset.Asset, len(snap.Assets))
+	for i, a := range snap.Assets {
+		out.Assets[i] = s.scrubAsset(a)
+	}
+	if len(snap.Identities) > 0 {
+		out.Identities = make([]asset.CloudIdentity, len(snap.Identities))
+		for i, id := range snap.Identities {
+			out.Identities[i] = s.scrubIdentity(id)
+		}
+	}
+	return out
+}
+
+// ScrubMap returns a deep copy of a properties map with keys removed or
+// sanitized according to the profile. Nested maps are recursed.
+func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]any {
+	if props == nil {
+		return nil
+	}
+	out := make(map[string]any, len(props))
+	for k, v := range props {
+		if profile.ShouldRemove(k) {
+			continue
+		}
+		if profile.ShouldSanitize(k) {
+			out[k] = s.scrubValue(v)
+			continue
+		}
+		if nested, ok := v.(map[string]any); ok {
+			out[k] = s.ScrubMap(nested, profile)
+			continue
+		}
+		out[k] = v
+	}
+	return out
+}
+
+func (s *Sanitizer) scrubAsset(a asset.Asset) asset.Asset {
+	return asset.Asset{
+		ID:         asset.ID(s.ID(string(a.ID))),
+		Type:       a.Type,
+		Vendor:     a.Vendor,
+		Source:     s.scrubSource(a.Source),
+		Properties: s.ScrubMap(a.Properties, AssetProfile()),
+	}
+}
+
+func (s *Sanitizer) scrubIdentity(id asset.CloudIdentity) asset.CloudIdentity {
+	return asset.CloudIdentity{
+		ID:         asset.ID(s.ID(string(id.ID))),
+		Type:       id.Type,
+		Vendor:     id.Vendor,
+		Source:     s.scrubSource(id.Source),
+		Properties: s.ScrubMap(id.Properties, IdentityProfile()),
+	}
+}
+
+func (s *Sanitizer) scrubSource(src *asset.SourceRef) *asset.SourceRef {
+	if src == nil {
+		return nil
+	}
+	return &asset.SourceRef{
+		File: s.Path(src.File),
+		Line: src.Line,
+	}
+}
+
+func (s *Sanitizer) scrubValue(v any) string {
+	str, ok := v.(string)
+	if !ok {
+		return "[SANITIZED]"
+	}
+	return s.ID(str)
+}

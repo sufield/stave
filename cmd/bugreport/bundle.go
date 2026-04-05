@@ -21,7 +21,6 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/sanitize"
-	"github.com/sufield/stave/internal/sanitize/scrub"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
@@ -103,9 +102,8 @@ func (g *Generator) addCoreArtifacts(bundle *bundleWriter, cfg Config) error {
 
 func (g *Generator) addScrubDemo(bundle *bundleWriter) error {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
-	sc := scrub.NewScrubber(s)
 
-	demo := sc.ScrubSnapshot(asset.Snapshot{
+	demo := s.Snapshot(asset.Snapshot{
 		SchemaVersion: kernel.SchemaObservation,
 		CapturedAt:    g.Clock.Now(),
 		Assets: []asset.Asset{
@@ -185,9 +183,9 @@ func SanitizeLogTail(data []byte, maxLines int) []byte {
 	if len(tail) == 0 {
 		return tail
 	}
-	sanitized := []byte(scrub.SanitizedValue)
-	tail = scrub.AKIAPattern.ReplaceAll(tail, sanitized)
-	tail = scrub.URLCredPattern.ReplaceAll(tail, []byte("${1}"+scrub.SanitizedValue+"@"))
+	sanitized := []byte(sanitize.SanitizedValue)
+	tail = sanitize.AKIAPattern.ReplaceAll(tail, sanitized)
+	tail = sanitize.URLCredPattern.ReplaceAll(tail, []byte("${1}"+sanitize.SanitizedValue+"@"))
 	return tail
 }
 

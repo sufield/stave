@@ -11,7 +11,7 @@ import (
 
 	"testing"
 
-	"github.com/sufield/stave/internal/sanitize/scrub"
+	"github.com/sufield/stave/internal/sanitize"
 
 	"github.com/spf13/cobra"
 )
@@ -55,8 +55,8 @@ func TestRedactCredentialFormats(t *testing.T) {
 	}, "\n"))
 
 	sanitized := []byte("[SANITIZED]")
-	result := scrub.AKIAPattern.ReplaceAll(in, sanitized)
-	result = scrub.URLCredPattern.ReplaceAll(result, []byte("${1}[SANITIZED]@"))
+	result := sanitize.AKIAPattern.ReplaceAll(in, sanitized)
+	result = sanitize.URLCredPattern.ReplaceAll(result, []byte("${1}[SANITIZED]@"))
 	out := string(result)
 	if strings.Contains(out, "AKIAABCDEFGHIJKLMNOP") {
 		t.Fatalf("AKIA key should be redacted, got:\n%s", out)
