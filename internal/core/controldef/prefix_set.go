@@ -99,9 +99,9 @@ func normalizePrefixes(raw []string) []kernel.ObjectPrefix {
 	}
 
 	// 4. Convert to ObjectPrefix
-	result := make([]kernel.ObjectPrefix, len(clean))
+	normalized := make([]kernel.ObjectPrefix, len(clean))
 	for i, p := range clean {
-		result[i] = kernel.ObjectPrefix(p)
+		normalized[i] = kernel.ObjectPrefix(p)
 	}
-	return result
+	return normalized
 }

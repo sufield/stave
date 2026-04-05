@@ -222,13 +222,13 @@ func (p ControlParams) paramStringSlice(key string) []string {
 	case []string:
 		return s
 	case []any:
-		res := make([]string, 0, len(s))
+		values := make([]string, 0, len(s))
 		for _, item := range s {
 			if str, ok := item.(string); ok {
-				res = append(res, str)
+				values = append(values, str)
 			}
 		}
-		return res
+		return values
 	default:
 		return nil
 	}

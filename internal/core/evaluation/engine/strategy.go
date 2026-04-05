@@ -212,9 +212,9 @@ func wrapInPointers(findings []evaluation.Finding) []*evaluation.Finding {
 	if len(findings) == 0 {
 		return nil
 	}
-	res := make([]*evaluation.Finding, len(findings))
+	evaluatedFindings := make([]*evaluation.Finding, len(findings))
 	for i := range findings {
-		res[i] = &findings[i]
+		evaluatedFindings[i] = &findings[i]
 	}
-	return res
+	return evaluatedFindings
 }

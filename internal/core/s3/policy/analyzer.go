@@ -69,7 +69,7 @@ func Parse(policyJSON string) (*Document, error) {
 
 // Assess performs a comprehensive security analysis in a single pass.
 func (d *Document) Assess() Assessment {
-	res := Assessment{
+	policyAssessment := Assessment{
 		PublicStatements:   []kernel.StatementID{},
 		ExternalAccountIDs: []kernel.AWSAccountID{},
 	}
@@ -79,7 +79,7 @@ func (d *Document) Assess() Assessment {
 
 	for i, stmt := range d.statements {
 		if stmt.EnforcesHTTPS() {
-			res.EnforcesHTTPS = true
+			policyAssessment.EnforcesHTTPS = true
 		}
 
 		if !stmt.GrantsAccess() {
@@ -90,25 +90,25 @@ func (d *Document) Assess() Assessment {
 
 		// Cross-account analysis
 		if scope == kernel.ScopeAccount {
-			analyzeExternalAccess(&res, state, stmt)
+			analyzeExternalAccess(&policyAssessment, state, stmt)
 			continue
 		}
 
 		// Network condition analysis
 		condition := stmt.ConditionAnalysis()
 		if condition.IsNetworkScoped() {
-			res.HasNetworkCondition = true
-			res.HasIPCondition = res.HasIPCondition || condition.HasIPCondition
-			res.HasVPCCondition = res.HasVPCCondition || condition.HasVPCCondition
+			policyAssessment.HasNetworkCondition = true
+			policyAssessment.HasIPCondition = policyAssessment.HasIPCondition || condition.HasIPCondition
+			policyAssessment.HasVPCCondition = policyAssessment.HasVPCCondition || condition.HasVPCCondition
 		}
 		state.updateWeakestScope(condition.ResolveNetworkScope())
 
 		// Action analysis
 		mask, _ := stmt.ResolveActions()
 		if mask != 0 {
-			res.PublicStatements = append(res.PublicStatements, stmt.StatementID(i))
+			policyAssessment.PublicStatements = append(policyAssessment.PublicStatements, stmt.StatementID(i))
 		}
-		res.HasWildcardActions = res.HasWildcardActions || stmt.HasWildcardActionsOnWildcardResources()
+		policyAssessment.HasWildcardActions = policyAssessment.HasWildcardActions || stmt.HasWildcardActionsOnWildcardResources()
 
 		// Permission accumulation by scope
 		switch {
@@ -121,8 +121,8 @@ func (d *Document) Assess() Assessment {
 		}
 	}
 
-	res.applyMasks(state)
-	return res
+	policyAssessment.applyMasks(state)
+	return policyAssessment
 }
 
 // analyzeExternalAccess extracts cross-account ARNs and tracks unique

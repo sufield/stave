@@ -57,8 +57,8 @@ type ThresholdItems []ThresholdItem
 // CountOverdue returns the number of items with OVERDUE status.
 func (it ThresholdItems) CountOverdue() int {
 	count := 0
-	for _, item := range it {
-		if item.Status == StatusOverdue {
+	for _, threshold := range it {
+		if threshold.Status == StatusOverdue {
 			count++
 		}
 	}
@@ -94,9 +94,9 @@ func (it ThresholdItems) Filter(c ThresholdFilter) ThresholdItems {
 	}
 
 	out := make(ThresholdItems, 0, len(it))
-	for _, item := range it {
-		if c.matches(item) {
-			out = append(out, item)
+	for _, threshold := range it {
+		if c.matches(threshold) {
+			out = append(out, threshold)
 		}
 	}
 	return out
@@ -128,14 +128,14 @@ func (c ThresholdFilter) matches(item ThresholdItem) bool {
 func (it ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSummary {
 	var s ThresholdSummary
 	s.Total = len(it)
-	for _, item := range it {
-		switch item.Status {
+	for _, threshold := range it {
+		switch threshold.Status {
 		case StatusOverdue:
 			s.Overdue++
 		case StatusDueNow:
 			s.DueNow++
 		default:
-			if item.Remaining > 0 && item.Remaining <= dueSoonThreshold {
+			if threshold.Remaining > 0 && threshold.Remaining <= dueSoonThreshold {
 				s.DueSoon++
 			} else {
 				s.Later++

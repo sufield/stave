@@ -8,7 +8,7 @@ import (
 func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOverrides) EffectiveVisibility {
 	mask := resolveMask(identity, resource, gov)
 
-	res := EffectiveVisibility{
+	visibility := EffectiveVisibility{
 		Read:       mask.Has(PermRead),
 		Write:      mask.Has(PermWrite),
 		List:       mask.Has(PermList),
@@ -19,11 +19,11 @@ func ResolveEffectiveVisibility(identity, resource Visibility, gov GovernanceOve
 
 	// Latency: Would this be public if Governance didn't block it?
 	rawPublicRead := identity.Public.Read || resource.Public.Read
-	res.IsLatent = rawPublicRead && !res.Read
+	visibility.IsLatent = rawPublicRead && !visibility.Read
 
-	res.PrincipalScope = resolvePrincipalScope(identity, resource, mask)
+	visibility.PrincipalScope = resolvePrincipalScope(identity, resource, mask)
 
-	return res
+	return visibility
 }
 
 // BuildVisibilityResult constructs the flattened "Fact" structure used for storage/diagnostics.
@@ -36,7 +36,7 @@ func BuildVisibilityResult(identity, resource Visibility, gov GovernanceOverride
 // This allows callers that already have the EffectiveVisibility (e.g. ResolveBucketAccess)
 // to avoid a redundant ResolveEffectiveVisibility call.
 func buildVisibilityFromEffective(identity, resource Visibility, gov GovernanceOverrides, effective EffectiveVisibility) VisibilityResult {
-	res := VisibilityResult{
+	visibilityResult := VisibilityResult{
 		// Governance Status
 		IdentityExposureBlocked: gov.BlockIdentityBoundPublicAccess,
 		ResourceExposureBlocked: gov.BlockResourceBoundPublicAccess,
@@ -63,11 +63,11 @@ func buildVisibilityFromEffective(identity, resource Visibility, gov GovernanceO
 	}
 
 	// Authenticated Access (Post-Governance)
-	res.AuthenticatedRead = resolveAuthField(identity.Authenticated.Read, resource.Authenticated.Read, gov)
-	res.AuthenticatedWrite = resolveAuthField(identity.Authenticated.Write, resource.Authenticated.Write, gov)
-	res.AuthenticatedAdmin = resolveAuthField(identity.Authenticated.Admin, resource.Authenticated.Admin, gov)
+	visibilityResult.AuthenticatedRead = resolveAuthField(identity.Authenticated.Read, resource.Authenticated.Read, gov)
+	visibilityResult.AuthenticatedWrite = resolveAuthField(identity.Authenticated.Write, resource.Authenticated.Write, gov)
+	visibilityResult.AuthenticatedAdmin = resolveAuthField(identity.Authenticated.Admin, resource.Authenticated.Admin, gov)
 
-	return res
+	return visibilityResult
 }
 
 // --- Internal Posture Logic ---
