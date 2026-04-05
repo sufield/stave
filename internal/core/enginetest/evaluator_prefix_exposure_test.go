@@ -249,8 +249,8 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.VerdictPass {
-			t.Errorf("decision=%s, want PASS", row.Decision)
+		if row.Verdict != evaluation.VerdictPass {
+			t.Errorf("decision=%s, want PASS", row.Verdict)
 		}
 		if len(findings) != 0 {
 			t.Errorf("findings=%d, want 0", len(findings))
@@ -276,8 +276,8 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.VerdictViolation {
-			t.Errorf("decision=%s, want VIOLATION", row.Decision)
+		if row.Verdict != evaluation.VerdictViolation {
+			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
 		}
 		if len(findings) != 1 {
 			t.Fatalf("findings=%d, want 1", len(findings))
@@ -294,8 +294,8 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.VerdictViolation {
-			t.Errorf("decision=%s, want VIOLATION", row.Decision)
+		if row.Verdict != evaluation.VerdictViolation {
+			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
 		}
 		if len(findings) != 1 {
 			t.Fatalf("findings=%d, want 1", len(findings))
@@ -312,8 +312,8 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.VerdictViolation {
-			t.Errorf("decision=%s, want VIOLATION", row.Decision)
+		if row.Verdict != evaluation.VerdictViolation {
+			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
 		}
 		if len(findings) != 1 {
 			t.Fatalf("findings=%d, want 1", len(findings))
@@ -330,8 +330,8 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(timeline, &policyInv)
 
-		if row.Decision != evaluation.VerdictViolation {
-			t.Errorf("decision=%s, want VIOLATION", row.Decision)
+		if row.Verdict != evaluation.VerdictViolation {
+			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
 		}
 		if len(findings) != 1 {
 			t.Fatalf("findings=%d, want 1", len(findings))

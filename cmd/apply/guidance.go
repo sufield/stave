@@ -16,7 +16,7 @@ const (
 
 // EvaluateResult provides structured execution outcomes and CLI guidance.
 type EvaluateResult struct {
-	Posture    evaluation.Posture
+	Posture         evaluation.Posture
 	DiagnoseCommand string   // full CLI command for copy-paste
 	NextSteps       []string // nil when safe
 }
@@ -31,7 +31,7 @@ func BuildEvaluateResult(status evaluation.Posture, controlsDir, observationsDir
 
 	hint := BuildDiagnoseHint(controlsDir, observationsDir)
 	return EvaluateResult{
-		Posture:    status,
+		Posture:         status,
 		DiagnoseCommand: hint,
 		NextSteps: []string{
 			fmt.Sprintf(stepDiagnose, hint),

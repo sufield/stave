@@ -26,7 +26,7 @@ const (
 type EvaluationRequest struct {
 	Run              evaluation.RunInfo
 	Summary          evaluation.Summary
-	Posture     evaluation.Posture
+	Posture          evaluation.Posture
 	AtRisk           risk.ThresholdItems
 	Findings         []remediation.Finding
 	Skipped          []evaluation.SkippedControl
@@ -40,7 +40,7 @@ type Evaluation struct {
 	Kind              EnvelopeKind                 `json:"kind"`
 	Run               evaluation.RunInfo           `json:"run"`
 	Summary           evaluation.Summary           `json:"summary"`
-	Posture      evaluation.Posture      `json:"safety_status"`
+	Posture           evaluation.Posture           `json:"safety_status"`
 	AtRisk            risk.ThresholdItems          `json:"at_risk,omitempty"`
 	Findings          []remediation.Finding        `json:"findings"`
 	ExceptedFindings  []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
@@ -58,7 +58,7 @@ func NewEvaluation(req EvaluationRequest) *Evaluation {
 		Kind:             KindEvaluation,
 		Run:              req.Run,
 		Summary:          req.Summary,
-		Posture:     req.Posture,
+		Posture:          req.Posture,
 		AtRisk:           req.AtRisk,
 		Findings:         emptyIfNil(req.Findings),
 		ExceptedFindings: emptyIfNil(req.ExceptedFindings),

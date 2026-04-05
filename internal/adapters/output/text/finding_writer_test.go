@@ -184,20 +184,20 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 				AssetVendor:        kernel.Vendor("aws"),
 			},
 		},
-		Rows: []evaluation.Observation{
+		Observations: []evaluation.Observation{
 			{
 				ControlID:   "CTL.S3.PUBLIC.001",
 				AssetID:     "res-1",
 				AssetType:   kernel.AssetType("storage_bucket"),
 				AssetDomain: "aws_s3",
-				Decision:    evaluation.VerdictViolation,
+				Verdict:     evaluation.VerdictViolation,
 			},
 			{
 				ControlID:   "CTL.UNKNOWN.001",
 				AssetID:     "res-2",
 				AssetType:   kernel.AssetType(""),
 				AssetDomain: "",
-				Decision:    evaluation.VerdictViolation,
+				Verdict:     evaluation.VerdictViolation,
 			},
 		},
 	}

@@ -23,7 +23,7 @@ func GroupViolationsByDomain(rows []evaluation.Observation) []DomainCount {
 
 	counts := make(map[kernel.AssetDomain]int, len(rows)/10)
 	for i := range rows {
-		if rows[i].Decision != evaluation.VerdictViolation {
+		if rows[i].Verdict != evaluation.VerdictViolation {
 			continue
 		}
 

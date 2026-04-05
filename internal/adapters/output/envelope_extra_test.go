@@ -17,7 +17,7 @@ func TestBuildSafetyEnvelopeFromEnriched_NilFindings(t *testing.T) {
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		},
 		Result: evaluation.Audit{
-			Summary:      evaluation.Summary{AssetsEvaluated: 5},
+			Summary: evaluation.Summary{AssetsEvaluated: 5},
 			Posture: evaluation.PostureSafe,
 		},
 		// Findings is nil

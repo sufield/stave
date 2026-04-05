@@ -1154,13 +1154,13 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 	}
 
 	// Check the row decision
-	if len(result.Rows) != 1 {
-		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+	if len(result.Observations) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 	}
 
-	row := result.Rows[0]
-	if row.Decision != evaluation.VerdictInconclusive {
-		t.Errorf("Expected INCONCLUSIVE decision, got %s", row.Decision)
+	row := result.Observations[0]
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Errorf("Expected INCONCLUSIVE decision, got %s", row.Verdict)
 	}
 	if row.Confidence != evaluation.ConfidenceInconclusive {
 		t.Errorf("Expected inconclusive confidence, got %s", row.Confidence)
@@ -1213,13 +1213,13 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 	result := evaluator.Evaluate(snapshots)
 
 	// Should be INCONCLUSIVE due to large gap (48h > 12h threshold)
-	if len(result.Rows) != 1 {
-		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+	if len(result.Observations) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 	}
 
-	row := result.Rows[0]
-	if row.Decision != evaluation.VerdictInconclusive {
-		t.Errorf("Expected INCONCLUSIVE (not PASS) for disappearing resource, got %s", row.Decision)
+	row := result.Observations[0]
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Errorf("Expected INCONCLUSIVE (not PASS) for disappearing resource, got %s", row.Verdict)
 	}
 }
 
@@ -1270,13 +1270,13 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 	result := evaluator.Evaluate(snapshots)
 
 	// Should be INCONCLUSIVE (10 days < 90 day window)
-	if len(result.Rows) != 1 {
-		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+	if len(result.Observations) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 	}
 
-	row := result.Rows[0]
-	if row.Decision != evaluation.VerdictInconclusive {
-		t.Errorf("Expected INCONCLUSIVE for incomplete window, got %s", row.Decision)
+	row := result.Observations[0]
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Errorf("Expected INCONCLUSIVE for incomplete window, got %s", row.Verdict)
 	}
 }
 
@@ -1344,13 +1344,13 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 	result := evaluator.Evaluate(snapshots)
 
 	// Should be PASS (adequate coverage with gaps <= 12h, safe asset)
-	if len(result.Rows) != 1 {
-		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+	if len(result.Observations) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 	}
 
-	row := result.Rows[0]
-	if row.Decision != evaluation.VerdictPass {
-		t.Errorf("Expected PASS for adequate coverage + safe, got %s (reason: %s)", row.Decision, row.Reason)
+	row := result.Observations[0]
+	if row.Verdict != evaluation.VerdictPass {
+		t.Errorf("Expected PASS for adequate coverage + safe, got %s (reason: %s)", row.Verdict, row.Reason)
 	}
 	if row.Confidence != evaluation.ConfidenceHigh {
 		t.Errorf("Expected high confidence, got %s", row.Confidence)
@@ -1420,12 +1420,12 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		evaluator := NewEvaluator(controls, 168*time.Hour, clock)
 		result := evaluator.Evaluate(snapshots)
 
-		if len(result.Rows) != 1 {
-			t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+		if len(result.Observations) != 1 {
+			t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 		}
 
-		row := result.Rows[0]
-		if row.Decision == evaluation.VerdictInconclusive {
+		row := result.Observations[0]
+		if row.Verdict == evaluation.VerdictInconclusive {
 			t.Errorf("Got INCONCLUSIVE (reason: %s), expected PASS with high confidence", row.Reason)
 		} else if row.Confidence != evaluation.ConfidenceHigh {
 			t.Errorf("Expected high confidence (MaxGap 10h <= 12h), got %s", row.Confidence)
@@ -1487,11 +1487,11 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		evaluator := NewEvaluator(controls, 168*time.Hour, clock)
 		result := evaluator.Evaluate(snapshots)
 
-		if len(result.Rows) != 1 {
-			t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+		if len(result.Observations) != 1 {
+			t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 		}
 
-		row := result.Rows[0]
+		row := result.Observations[0]
 		// MaxGap = 14h (Jan 1 10:00 -> Jan 2 00:00), which is > 6h (25% of 24h) and <= 12h (50% of 24h)
 		// Wait, let me recalculate: 10h gap is > 6h but the second gap is 14h which is > 12h INCONCLUSIVE threshold
 		// Actually, the MaxGap is computed from consecutive observations:
@@ -1501,7 +1501,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		// This will be INCONCLUSIVE, not medium confidence.
 
 		// Let me fix this test - we need MaxGap to be between 6h and 12h
-		if row.Decision == evaluation.VerdictInconclusive {
+		if row.Verdict == evaluation.VerdictInconclusive {
 			// This is expected because MaxGap = 14h > 12h
 			return
 		}
@@ -1574,13 +1574,13 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 		result1 := evaluator.Evaluate(snapshots)
 		result2 := evaluator.Evaluate(snapshots)
 
-		if len(result1.Rows) != len(result2.Rows) {
+		if len(result1.Observations) != len(result2.Observations) {
 			t.Fatal("Results differ between runs")
 		}
 
-		if result1.Rows[0].Confidence != result2.Rows[0].Confidence {
+		if result1.Observations[0].Confidence != result2.Observations[0].Confidence {
 			t.Errorf("Confidence not deterministic: %s vs %s",
-				result1.Rows[0].Confidence, result2.Rows[0].Confidence)
+				result1.Observations[0].Confidence, result2.Observations[0].Confidence)
 		}
 	})
 }
@@ -1667,16 +1667,16 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 	result := evaluator.Evaluate(snapshots)
 
 	// Should have 1 row
-	if len(result.Rows) != 1 {
-		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+	if len(result.Observations) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 	}
 
-	row := result.Rows[0]
+	row := result.Observations[0]
 
 	// Only closed episodes are counted for recurrence.
 	// With this fixture, archived count stays below limit, so sparse coverage makes it inconclusive.
-	if row.Decision != evaluation.VerdictInconclusive {
-		t.Errorf("Expected INCONCLUSIVE (open episode not counted), got %s", row.Decision)
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Errorf("Expected INCONCLUSIVE (open episode not counted), got %s", row.Verdict)
 	}
 
 	// No violation finding should be produced.
@@ -1755,15 +1755,15 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	if len(result.Rows) != 1 {
-		t.Fatalf("Expected 1 row, got %d", len(result.Rows))
+	if len(result.Observations) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(result.Observations))
 	}
 
-	row := result.Rows[0]
+	row := result.Observations[0]
 
 	// Only 1 episode in window (the open one), should be PASS (limit = 3)
-	if row.Decision != evaluation.VerdictPass {
-		t.Errorf("Expected PASS (only 1 open episode in window < limit 3), got %s", row.Decision)
+	if row.Verdict != evaluation.VerdictPass {
+		t.Errorf("Expected PASS (only 1 open episode in window < limit 3), got %s", row.Verdict)
 	}
 
 	// Should have 0 findings

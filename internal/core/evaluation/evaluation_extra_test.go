@@ -108,11 +108,11 @@ func TestDeriveConfidenceLevel(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Row.MarkInconclusive
+// Observation.MarkInconclusive
 // ---------------------------------------------------------------------------
 
 func TestRowMarkInconclusive(t *testing.T) {
-	r := &Row{Verdict: VerdictPass, Confidence: ConfidenceHigh}
+	r := &Observation{Verdict: VerdictPass, Confidence: ConfidenceHigh}
 	r.MarkInconclusive("test reason")
 	if r.Verdict != VerdictInconclusive {
 		t.Fatalf("Verdict = %v", r.Verdict)
@@ -125,7 +125,7 @@ func TestRowMarkInconclusive(t *testing.T) {
 	}
 
 	// Nil receiver is safe
-	var nilRow *Row
+	var nilRow *Observation
 	nilRow.MarkInconclusive("safe") // should not panic
 }
 
