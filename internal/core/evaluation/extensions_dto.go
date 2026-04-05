@@ -7,46 +7,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// Metadata holds typed metadata for an evaluation run.
-// It is the internal domain representation of the evaluation context.
-type Metadata struct {
-	ContextName   string            `json:"context_name"`
-	ControlSource ControlSourceInfo `json:"control_source"`
-	Git           *GitInfo          `json:"git,omitempty"`
-	ResolvedPaths ResolvedPaths     `json:"resolved_paths"`
-}
-
-// ControlSourceMode identifies how controls were selected for evaluation.
-type ControlSourceMode string
-
-const (
-	ControlSourceDir   ControlSourceMode = "dir"
-	ControlSourcePacks ControlSourceMode = "packs"
-)
-
-type ControlSourceInfo struct {
-	Source             ControlSourceMode  `json:"source"`
-	EnabledPacks       []kernel.PackName  `json:"enabled_packs,omitempty"`
-	ResolvedControlIDs []kernel.ControlID `json:"resolved_control_ids,omitempty"`
-	RegistryVersion    string             `json:"registry_version,omitempty"`
-	RegistryHash       kernel.Digest      `json:"registry_hash,omitempty"`
-}
-
-type GitInfo struct {
-	RepoRoot  FilePath   `json:"repo_root,omitempty"`
-	Head      string     `json:"head,omitempty"`
-	Dirty     bool       `json:"dirty"`
-	DirtyList []FilePath `json:"dirty_list,omitempty"`
-}
-
-type ResolvedPaths struct {
-	Controls     string `json:"controls"`
-	Observations string `json:"observations"`
-}
-
-// --- Output Projection (DTOs) ---
-
 // Extensions represents the typed JSON structure for the out.v0.1 extensions block.
+// This is the stable external contract — internal Metadata is projected into it.
 type Extensions struct {
 	SelectedSource      string             `json:"selected_controls_source,omitempty"`
 	ContextName         string             `json:"context_name,omitempty"`
@@ -58,7 +20,7 @@ type Extensions struct {
 	Git                 *GitMetadata       `json:"git,omitempty"`
 }
 
-// GitMetadata captures git repository state at evaluation time.
+// GitMetadata is the external (JSON-stable) representation of git state.
 type GitMetadata struct {
 	RepoRoot string   `json:"repo_root,omitempty"`
 	Head     string   `json:"head_commit,omitempty"`
