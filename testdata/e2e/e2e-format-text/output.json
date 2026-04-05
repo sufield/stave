@@ -22,7 +22,7 @@ Violations
    Evidence:
      First unsafe: 2026-01-01 00:00:00 UTC
      Last seen:    2026-01-11 00:00:00 UTC
-     Duration:     240h (SLA: 168h)
+     Duration:     240h (threshold: 168h)
      Why now:      Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z.
    Remediation:
      Resource configuration deviates from security baseline.
