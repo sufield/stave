@@ -18,11 +18,11 @@ type Input struct {
 
 // Output is the JSON output of risk analysis.
 type Output struct {
-	NormalizedActions []string              `json:"normalized_actions"`
-	Permissions       domainrisk.Permission `json:"permissions"`
-	PermissionCheck   PermissionCheck       `json:"permission_check"`
-	StatementResult   domainrisk.Audit      `json:"statement_result"`
-	Report            domainrisk.Report     `json:"report"`
+	NormalizedActions []string                       `json:"normalized_actions"`
+	Permissions       domainrisk.Permission          `json:"permissions"`
+	PermissionCheck   PermissionCheck                `json:"permission_check"`
+	StatementResult   domainrisk.StatementAssessment `json:"statement_result"`
+	Report            domainrisk.Report              `json:"report"`
 }
 
 // PermissionCheck exercises Permission.Has and Permission.Overlap.
