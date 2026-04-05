@@ -2,43 +2,43 @@ package maps
 
 import "strings"
 
-// Value wraps raw adapter maps and provides typed extraction helpers.
-type Value struct {
+// Node wraps raw adapter maps and provides typed extraction helpers.
+type Node struct {
 	data any
 }
 
 // ParseMap creates a typed parser wrapper over a raw map payload.
-func ParseMap(m map[string]any) Value {
-	return Value{data: m}
+func Wrap(m map[string]any) Node {
+	return Node{data: m}
 }
 
 // IsMissing reports whether the wrapped value is absent.
-func (v Value) IsMissing() bool {
+func (v Node) IsMissing() bool {
 	return v.data == nil
 }
 
 // Get returns a child value by key from the wrapped map.
-func (v Value) Get(key string) Value {
-	return Value{data: v.asMap()[key]}
+func (v Node) Get(key string) Node {
+	return Node{data: v.asMap()[key]}
 }
 
 // GetMap reads a nested map key and returns a new parser wrapper.
-func (v Value) GetMap(key string) Value {
+func (v Node) GetMap(key string) Node {
 	next, _ := v.asMap()[key].(map[string]any)
-	return Value{data: next}
+	return Node{data: next}
 }
 
 // GetPath reads nested keys from dot notation, for example "a.b.c".
-func (v Value) GetPath(path string) Value {
+func (v Node) GetPath(path string) Node {
 	if strings.TrimSpace(path) == "" {
-		return Value{}
+		return Node{}
 	}
 
 	current := v
 	for part := range strings.SplitSeq(path, ".") {
 		part = strings.TrimSpace(part)
 		if part == "" {
-			return Value{}
+			return Node{}
 		}
 		current = current.Get(part)
 		if current.IsMissing() {
@@ -49,24 +49,24 @@ func (v Value) GetPath(path string) Value {
 }
 
 // Bool interprets the wrapped value as bool.
-func (v Value) Bool() bool {
+func (v Node) Bool() bool {
 	val, _ := v.data.(bool)
 	return val
 }
 
 // String interprets the wrapped value as string and trims surrounding whitespace.
-func (v Value) String() string {
+func (v Node) String() string {
 	val, _ := v.data.(string)
 	return strings.TrimSpace(val)
 }
 
 // Any returns the wrapped raw value.
-func (v Value) Any() any {
+func (v Node) Any() any {
 	return v.data
 }
 
 // StringSlice reads and normalizes the wrapped value as []string.
-func (v Value) StringSlice() []string {
+func (v Node) StringSlice() []string {
 	var raw []string
 
 	switch items := v.data.(type) {
@@ -94,7 +94,7 @@ func (v Value) StringSlice() []string {
 }
 
 // StringMap reads and normalizes the wrapped value as map[string]string.
-func (v Value) StringMap() map[string]string {
+func (v Node) StringMap() map[string]string {
 	switch entries := v.data.(type) {
 	case map[string]any:
 		return stringMapFromAny(entries)
@@ -140,7 +140,7 @@ func normalizeStringMapEntry(key, value string) (normalizedKey, normalizedValue 
 	return normalizedKey, normalizedValue, true
 }
 
-func (v Value) asMap() map[string]any {
+func (v Node) asMap() map[string]any {
 	m, _ := v.data.(map[string]any)
 	if m == nil {
 		return map[string]any{}

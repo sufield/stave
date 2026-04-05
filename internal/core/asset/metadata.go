@@ -3,8 +3,8 @@ package asset
 import "github.com/sufield/stave/internal/core/maps"
 
 // Metadata provides a typed view over vendor-specific asset properties.
-func (r Asset) Metadata() maps.Value {
-	return maps.ParseMap(r.Properties)
+func (r Asset) Metadata() maps.Node {
+	return maps.Wrap(r.Properties)
 }
 
 // ExternalID returns a secondary identifier provided by the infrastructure.
