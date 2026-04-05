@@ -3,7 +3,7 @@ package logging
 import (
 	"strings"
 
-	"github.com/sufield/stave/internal/sanitize/scrub"
+	"github.com/sufield/stave/internal/sanitize"
 )
 
 // isSensitiveKey reports whether a flag name indicates its value is sensitive.
@@ -24,7 +24,7 @@ func isSensitiveKey(key string) bool {
 	}
 
 	// Exact match against known sensitive flag names.
-	if _, ok := scrub.SensitiveArgNames[norm]; ok {
+	if _, ok := sanitize.SensitiveArgNames[norm]; ok {
 		return true
 	}
 
@@ -33,7 +33,7 @@ func isSensitiveKey(key string) bool {
 		return r == '_' || r == '-' || r == '.' || r == ':'
 	})
 	for _, t := range tokens {
-		if _, ok := scrub.SensitiveTokens[t]; ok {
+		if _, ok := sanitize.SensitiveTokens[t]; ok {
 			return true
 		}
 	}
@@ -51,14 +51,14 @@ func SanitizeArgs(args []string) []string {
 
 		if name, _, hasEq := strings.Cut(arg, "="); hasEq {
 			if isSensitiveKey(name) {
-				result[i] = name + "=" + scrub.SanitizedValue
+				result[i] = name + "=" + sanitize.SanitizedValue
 			}
 			continue
 		}
 
 		if isSensitiveKey(arg) {
 			if i+1 < len(args) && !isLikelyFlagToken(args[i+1]) {
-				result[i+1] = scrub.SanitizedValue
+				result[i+1] = sanitize.SanitizedValue
 				i++
 			}
 		}

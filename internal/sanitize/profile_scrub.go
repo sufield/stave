@@ -6,7 +6,7 @@
 // "sensitive data" across the entire CLI: credential patterns, sensitive flag
 // names, and property keys are all defined here and imported by the logging
 // and bug-report subsystems.
-package scrub
+package sanitize
 
 import "regexp"
 
