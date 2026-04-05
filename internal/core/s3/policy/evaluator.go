@@ -33,7 +33,7 @@ func (e *Evaluator) Evaluate(doc *Document) risk.Report {
 	report := risk.Report{}
 
 	for _, stmt := range doc.statements {
-		if !stmt.Effect.IsAllow() {
+		if !stmt.GrantsAccess() {
 			continue
 		}
 

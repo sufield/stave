@@ -82,7 +82,7 @@ func (d *Document) Assess() Assessment {
 			res.EnforcesHTTPS = true
 		}
 
-		if !stmt.Effect.IsAllow() {
+		if !stmt.GrantsAccess() {
 			continue
 		}
 
