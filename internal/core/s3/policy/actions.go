@@ -85,6 +85,13 @@ func isWriteAction(action string) bool {
 	return mask.has(actionWrite) || mask.has(actionDelete) || mask.has(actionACLWrite)
 }
 
+// GrantsReadAccess reports whether the statement's actions include object read
+// capability (s3:GetObject, s3:*, or *).
+func (s Statement) GrantsReadAccess() bool {
+	mask, _ := s.ResolveActions()
+	return mask.has(actionRead)
+}
+
 // hasWildcardResource reports whether any resource matches all S3 objects.
 func hasWildcardResource(resources []string) bool {
 	return slices.ContainsFunc(resources, isWildcardResource)

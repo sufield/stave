@@ -26,7 +26,7 @@ func (d *Document) AnalyzeScopes() PrefixScopeAnalysis {
 		if !stmt.IsPubliclyExposed() {
 			continue
 		}
-		if !hasPublicReadAction(stmt.Action) {
+		if !stmt.GrantsReadAccess() {
 			continue
 		}
 
@@ -45,17 +45,6 @@ func (d *Document) AnalyzeScopes() PrefixScopeAnalysis {
 	}
 
 	return analysis
-}
-
-// hasPublicReadAction checks for S3 actions that expose object data.
-func hasPublicReadAction(actions []string) bool {
-	for _, action := range actions {
-		a := strings.ToLower(action)
-		if isWildcardAction(a) || a == actionGetObject {
-			return true
-		}
-	}
-	return false
 }
 
 // parseObjectPrefix converts an AWS S3 ARN into a kernel.ObjectPrefix.
