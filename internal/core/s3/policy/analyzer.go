@@ -101,7 +101,7 @@ func (d *Document) Assess() Assessment {
 			res.HasIPCondition = res.HasIPCondition || condition.HasIPCondition
 			res.HasVPCCondition = res.HasVPCCondition || condition.HasVPCCondition
 		}
-		state.updateWeakestScope(resolveConditionScope(condition))
+		state.updateWeakestScope(condition.ResolveNetworkScope())
 
 		// Action analysis
 		mask, _ := stmt.ResolveActions()

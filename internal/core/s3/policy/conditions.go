@@ -1,6 +1,10 @@
 package policy
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 // --- Condition operator classification ---
 
@@ -103,4 +107,19 @@ func (op condOperator) isEffective(values []string) bool {
 		return false
 	}
 	return false
+}
+
+// ResolveNetworkScope maps condition flags to a high-level network boundary.
+// Precedence: vpc > ip > org > public.
+func (ca ConditionAnalysis) ResolveNetworkScope() kernel.NetworkScope {
+	switch {
+	case ca.HasVPCCondition:
+		return kernel.NetworkScopeVPCRestricted
+	case ca.HasIPCondition:
+		return kernel.NetworkScopeIPRestricted
+	case ca.HasOrgCondition:
+		return kernel.NetworkScopeOrgRestricted
+	default:
+		return kernel.NetworkScopePublic
+	}
 }
