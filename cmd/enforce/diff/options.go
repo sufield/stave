@@ -35,7 +35,7 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format (text|json)")
-	f.StringSliceVar(&o.ChangeTypes, "change-type", nil, "Filter changes: added, removed, modified")
+	f.StringSliceVar(&o.ChangeTypes, "change-type", nil, "Filter changes: PROVISIONED, DECOMMISSIONED, RECONFIGURED")
 	f.StringSliceVar(&o.AssetTypes, "asset-type", nil, "Filter by asset type")
 	f.StringVar(&o.AssetID, "asset-id", "", "Filter by asset ID substring")
 }
@@ -78,21 +78,21 @@ func buildFilter(o *Options) (asset.FilterOptions, error) {
 	}, nil
 }
 
-// parseChangeTypes validates and converts raw strings to asset.ChangeType values.
-func parseChangeTypes(raw []string) ([]asset.ChangeType, error) {
+// parseChangeTypes validates and converts raw strings to asset.DriftType values.
+func parseChangeTypes(raw []string) ([]asset.DriftType, error) {
 	if len(raw) == 0 {
 		return nil, nil
 	}
-	out := make([]asset.ChangeType, 0, len(raw))
+	out := make([]asset.DriftType, 0, len(raw))
 	for _, s := range raw {
-		val := strings.ToLower(strings.TrimSpace(s))
+		val := strings.ToUpper(strings.TrimSpace(s))
 		if val == "" {
 			continue
 		}
-		ct := asset.ChangeType(val)
+		ct := asset.DriftType(val)
 		if !ct.IsValid() {
 			return nil, &ui.UserError{
-				Err: fmt.Errorf("invalid --change-type %q (supported: added, removed, modified)", s),
+				Err: fmt.Errorf("invalid --change-type %q (supported: PROVISIONED, DECOMMISSIONED, RECONFIGURED)", s),
 			}
 		}
 		out = append(out, ct)

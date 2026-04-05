@@ -57,7 +57,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2017-07-25T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,
@@ -103,7 +103,7 @@
         ],
         "threshold_hours": 168,
         "unsafe_duration_hours": 192,
-        "temporal_risk": "Asset has been unsafe for 192 hours (threshold: 168 hours). Unsafe since 2017-07-25T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 192 hours (SLA: 168 hours). Exposed since 2017-07-25T00:00:00Z."
       },
       "posture_drift": {
         "episode_count": 1,

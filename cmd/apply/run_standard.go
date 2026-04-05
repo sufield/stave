@@ -63,5 +63,5 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, p *compose.Provi
 	}
 
 	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
-	return rep.ReportApply(results, evaluation.ResponsePolicy{})
+	return rep.ReportApply(results, evaluation.EnforcementPolicy{})
 }

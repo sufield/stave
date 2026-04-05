@@ -92,9 +92,9 @@ func writeDiagnosisItem(w io.Writer, index int, diag diagnosis.Insight) error {
 	writef("\n[%d] %s\n", index+1, diag.Case)
 	writef("    Signal: %s\n", diag.Signal)
 	writef("    Evidence: %s\n", diag.Evidence)
-	writef("    Action: %s\n", diag.Action)
+	writef("    Remediation: %s\n", diag.Action)
 	if diag.Command != "" {
-		writef("    Command: %s\n", diag.Command)
+		writef("    FixCommand: %s\n", diag.Command)
 	}
 	return err
 }

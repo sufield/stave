@@ -188,7 +188,7 @@ func TestReporter_ReportApply_Pass(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 	}
 
-	policy := evaluation.ResponsePolicy{}
+	policy := evaluation.EnforcementPolicy{}
 	res := EvaluateResult{SecurityState: evaluation.StateCompliant}
 	err := r.ReportApply(res, policy)
 	if err != nil {
@@ -207,7 +207,7 @@ func TestReporter_ReportApply_Fail(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 	}
 
-	policy := evaluation.ResponsePolicy{}
+	policy := evaluation.EnforcementPolicy{}
 	res := EvaluateResult{
 		SecurityState:   evaluation.StateNonCompliant,
 		DiagnoseCommand: "stave diagnose",
@@ -228,7 +228,7 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 		Quiet:   true,
 	}
 
-	policy := evaluation.ResponsePolicy{}
+	policy := evaluation.EnforcementPolicy{}
 	res := EvaluateResult{SecurityState: evaluation.StateCompliant}
 	err := r.ReportApply(res, policy)
 	if err != nil {

@@ -37,7 +37,7 @@ type PrefixExposureAccess struct {
 // BucketAccess is the domain aggregate that owns all access computation
 // for a single bucket. Both the extractor and snapshot paths converge here.
 type BucketAccess struct {
-	Visibility        VisibilityResult
+	Exposure          ResourceExposure
 	Governance        GovernanceOverrides
 	CrossAccount      CrossAccountAccess
 	NetworkScope      NetworkScopeAccess
@@ -61,20 +61,20 @@ type BucketAccessInput struct {
 }
 
 // ResolveBucketAccess computes the full BucketAccess aggregate from raw inputs.
-// It resolves effective visibility once and uses it for both the VisibilityResult
+// It resolves access once and uses it for both the ResourceExposure
 // projection and the computed Scope/TrustBoundary fields.
 func ResolveBucketAccess(in BucketAccessInput) BucketAccess {
-	effective := ResolveEffectiveVisibility(in.Identity, in.Resource, in.Gov)
+	resolved := ResolveAccess(in.Identity, in.Resource, in.Gov)
 	return BucketAccess{
-		Visibility:        buildVisibilityFromEffective(in.Identity, in.Resource, in.Gov, effective),
+		Exposure:          buildExposureFromResolved(in.Identity, in.Resource, in.Gov, resolved),
 		Governance:        in.Gov,
 		CrossAccount:      in.CrossAccount,
 		NetworkScope:      in.NetworkScope,
 		ACLFullControl:    in.ACLFullControl,
 		PrefixExposure:    in.PrefixExposure,
 		HasWildcardPolicy: in.HasWildcardPolicy,
-		Scope:             effective.PrincipalScope,
-		TrustBoundary:     resolveTrustBoundary(effective.PrincipalScope, in.CrossAccount),
+		Scope:             resolved.PrincipalScope,
+		TrustBoundary:     resolveTrustBoundary(resolved.PrincipalScope, in.CrossAccount),
 	}
 }
 

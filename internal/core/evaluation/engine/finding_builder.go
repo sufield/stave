@@ -16,7 +16,7 @@ type FindingContext struct {
 // and the specific situational evidence (FindingContext).
 func NewFinding(
 	ctl *policy.ControlDefinition,
-	t *asset.Timeline,
+	t *asset.ExposureLifecycle,
 	ctx FindingContext,
 ) *evaluation.Finding {
 	f := newBaseFinding(ctl, t)
@@ -28,7 +28,7 @@ func NewFinding(
 }
 
 // newBaseFinding returns a Finding pre-populated with control and asset metadata.
-func newBaseFinding(ctl *policy.ControlDefinition, t *asset.Timeline) *evaluation.Finding {
+func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *evaluation.Finding {
 	a := t.Asset()
 	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
 	f.AssetID = t.ID

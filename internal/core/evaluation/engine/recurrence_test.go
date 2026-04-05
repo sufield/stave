@@ -27,21 +27,21 @@ func recurrenceControl(id string, limit, windowDays int) *policy.ControlDefiniti
 	return ctl
 }
 
-func recurrenceTimeline(t *testing.T, episodes []struct{ start, end time.Time }) *asset.Timeline {
+func recurrenceTimeline(t *testing.T, episodes []struct{ start, end time.Time }) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
-		t.Fatalf("NewTimeline: %v", err)
+		t.Fatalf("NewExposureLifecycle: %v", err)
 	}
 
 	for _, ep := range episodes {
 		// Record unsafe start
-		if err := tl.RecordObservation(ep.start, true); err != nil {
+		if err := tl.RecordCheck(ep.start, true); err != nil {
 			t.Fatalf("RecordObservation(unsafe): %v", err)
 		}
 		// Record safe end (closes the episode)
-		if err := tl.RecordObservation(ep.end, false); err != nil {
+		if err := tl.RecordCheck(ep.end, false); err != nil {
 			t.Fatalf("RecordObservation(safe): %v", err)
 		}
 	}
@@ -107,8 +107,8 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	ctl := recurrenceControl("CTL.REC.001", 2, 7)
 
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl, _ := asset.NewTimeline(a)
-	_ = tl.RecordObservation(base, false)
+	tl, _ := asset.NewExposureLifecycle(a)
+	_ = tl.RecordCheck(base, false)
 
 	stats := RecurrenceStats{
 		Count: 3,

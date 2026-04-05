@@ -53,7 +53,7 @@ func (ctl *ControlDefinition) issueContext(extra map[string]string) map[string]s
 
 // newIssue starts a diagnostic builder pre-populated with control context.
 func (ctl *ControlDefinition) newIssue(code diag.RuleID, extra map[string]string) *diag.Builder {
-	return diag.New(code).WithMap(ctl.issueContext(extra))
+	return diag.NewFinding(code).Attributes(ctl.issueContext(extra))
 }
 
 // --- Validation rules (methods for encapsulation) ---
@@ -65,7 +65,7 @@ func (ctl *ControlDefinition) validateIdentity() []diag.Finding {
 	return []diag.Finding{
 		ctl.newIssue(diag.RuleControlMissingID, nil).
 			Error().
-			Action("Add a unique 'id' (e.g., CTL.S3.PUBLIC.001) to the control definition").
+			Remediation("Add a unique 'id' (e.g., CTL.S3.PUBLIC.001) to the control definition").
 			Build(),
 	}
 }
@@ -75,13 +75,13 @@ func (ctl *ControlDefinition) validateDocumentation() []diag.Finding {
 	if strings.TrimSpace(ctl.Name) == "" {
 		issues = append(issues, ctl.newIssue(diag.RuleControlMissingName, nil).
 			Error().
-			Action("Assign a descriptive 'name' to the control for reporting").
+			Remediation("Assign a descriptive 'name' to the control for reporting").
 			Build())
 	}
 	if strings.TrimSpace(ctl.Description) == "" {
 		issues = append(issues, ctl.newIssue(diag.RuleControlMissingDesc, nil).
 			Error().
-			Action("Provide a 'description' explaining the security impact of this control").
+			Remediation("Provide a 'description' explaining the security impact of this control").
 			Build())
 	}
 	return issues
@@ -95,8 +95,8 @@ func (ctl *ControlDefinition) validateIDFormat() []diag.Finding {
 		return []diag.Finding{
 			ctl.newIssue(diag.RuleControlBadIDFormat, nil).
 				Warning().
-				Action("Align ID with standard format: CTL.<PROVIDER>.<CATEGORY>.<SEQ>").
-				WithSensitive("error", err.Error()).
+				Remediation("Align ID with standard format: CTL.<PROVIDER>.<CATEGORY>.<SEQ>").
+				SensitiveAttribute("error", err.Error()).
 				Build(),
 		}
 	}
@@ -110,7 +110,7 @@ func (ctl *ControlDefinition) validateSeverity() []diag.Finding {
 	return []diag.Finding{
 		ctl.newIssue(diag.RuleControlBadSeverity, map[string]string{"severity": ctl.Severity.String()}).
 			Warning().
-			Action("Use a valid severity: info, low, medium, high, or critical").
+			Remediation("Use a valid severity: info, low, medium, high, or critical").
 			Build(),
 	}
 }
@@ -122,7 +122,7 @@ func (ctl *ControlDefinition) validateType() []diag.Finding {
 	return []diag.Finding{
 		ctl.newIssue(diag.RuleControlBadType, map[string]string{"type": ctl.Type.String()}).
 			Warning().
-			Action("Specify a supported control type (e.g., unsafe_state, unsafe_duration)").
+			Remediation("Specify a supported control type (e.g., unsafe_state, unsafe_duration)").
 			Build(),
 	}
 }
@@ -134,7 +134,7 @@ func (ctl *ControlDefinition) validatePredicate() []diag.Finding {
 	return []diag.Finding{
 		ctl.newIssue(diag.RuleControlEmptyPredicate, nil).
 			Warning().
-			Action("Define at least one rule under 'any' or 'all' in the unsafe_predicate").
+			Remediation("Define at least one rule under 'any' or 'all' in the unsafe_predicate").
 			Build(),
 	}
 }
@@ -151,7 +151,7 @@ func (ctl *ControlDefinition) validateOperators() []diag.Finding {
 				"operator": string(rule.Op),
 			}).
 				Warning().
-				Action(fmt.Sprintf("Replace unsupported operator %q with a valid one (eq, ne, in, etc.)", rule.Op)).
+				Remediation(fmt.Sprintf("Replace unsupported operator %q with a valid one (eq, ne, in, etc.)", rule.Op)).
 				Build())
 		}
 	})
@@ -167,7 +167,7 @@ func (ctl *ControlDefinition) validateParameters() []diag.Finding {
 	for _, p := range missing {
 		issues = append(issues, ctl.newIssue(diag.RuleControlUndefinedParam, map[string]string{"param": p}).
 			Error().
-			Action(fmt.Sprintf("Define parameter %q in the control's 'params' section", p)).
+			Remediation(fmt.Sprintf("Define parameter %q in the control's 'params' section", p)).
 			Build())
 	}
 	return issues
@@ -188,7 +188,7 @@ func (ctl *ControlDefinition) validateDuration() []diag.Finding {
 		return []diag.Finding{
 			ctl.newIssue(diag.RuleControlBadDurationParam, map[string]string{"param": durationKey}).
 				Error().
-				Action("Provide a valid duration (e.g., '30d') for max_unsafe_duration").
+				Remediation("Provide a valid duration (e.g., '30d') for max_unsafe_duration").
 				Build(),
 		}
 	}
@@ -197,8 +197,8 @@ func (ctl *ControlDefinition) validateDuration() []diag.Finding {
 		return []diag.Finding{
 			ctl.newIssue(diag.RuleControlBadDurationParam, map[string]string{"param": durationKey, "value": raw}).
 				Error().
-				Action("Use valid duration units: 'h' for hours or 'd' for days").
-				WithSensitive("error", err.Error()).
+				Remediation("Use valid duration units: 'h' for hours or 'd' for days").
+				SensitiveAttribute("error", err.Error()).
 				Build(),
 		}
 	}

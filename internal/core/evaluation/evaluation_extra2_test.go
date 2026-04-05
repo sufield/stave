@@ -172,18 +172,18 @@ func TestSortBaselineEntries(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ActionSeverity constants
+// EnforcementLevel constants
 // ---------------------------------------------------------------------------
 
-func TestActionSeverityConstants(t *testing.T) {
-	if ActionPass != "pass" {
-		t.Fatal("ActionPass")
+func TestEnforcementLevelConstants(t *testing.T) {
+	if LevelAllow != "ALLOW" {
+		t.Fatal("LevelAllow")
 	}
-	if ActionWarn != "warn" {
-		t.Fatal("ActionWarn")
+	if LevelAdvisory != "ADVISORY" {
+		t.Fatal("LevelAdvisory")
 	}
-	if ActionFail != "fail" {
-		t.Fatal("ActionFail")
+	if LevelBlock != "BLOCK" {
+		t.Fatal("LevelBlock")
 	}
 }
 
@@ -247,16 +247,16 @@ func TestCompareVerificationFindings_MixedDiff(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestConfidenceLevelConstants(t *testing.T) {
-	if ConfidenceHigh != "high" {
+	if ConfidenceHigh != "HIGH" {
 		t.Fatal("ConfidenceHigh")
 	}
-	if ConfidenceMedium != "medium" {
+	if ConfidenceMedium != "MEDIUM" {
 		t.Fatal("ConfidenceMedium")
 	}
-	if ConfidenceLow != "low" {
+	if ConfidenceLow != "LOW" {
 		t.Fatal("ConfidenceLow")
 	}
-	if ConfidenceInconclusive != "inconclusive" {
+	if ConfidenceInconclusive != "INCONCLUSIVE" {
 		t.Fatal("ConfidenceInconclusive")
 	}
 }

@@ -49,7 +49,7 @@ func TestBuildTimelinesPerControl_Basic(t *testing.T) {
 	if !ok {
 		t.Fatal("missing asset timeline")
 	}
-	if tl.CurrentlyUnsafe() {
+	if tl.IsExposed() {
 		t.Fatal("asset should be safe")
 	}
 }
@@ -76,7 +76,7 @@ func TestBuildTimelinesPerControl_UnsafePredicate(t *testing.T) {
 		t.Fatal(err)
 	}
 	tl := timelines["CTL.A.001"]["bucket-1"]
-	if !tl.CurrentlyUnsafe() {
+	if !tl.IsExposed() {
 		t.Fatal("asset should be unsafe")
 	}
 }
@@ -99,7 +99,7 @@ func TestBuildTimelinesPerControl_NilEvaluator(t *testing.T) {
 		t.Fatal(err)
 	}
 	tl := timelines["CTL.A.001"]["bucket-1"]
-	if tl.CurrentlyUnsafe() {
+	if tl.IsExposed() {
 		t.Fatal("nil evaluator should default to safe")
 	}
 }
@@ -308,11 +308,11 @@ func TestRunnerEvaluate_BasicViolation(t *testing.T) {
 
 func TestCoverageValidator(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl, _ := asset.NewTimeline(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Single observation
-	_ = tl.RecordObservation(base, false)
+	_ = tl.RecordCheck(base, false)
 
 	cv := CoverageValidator{MinRequiredSpan: 24 * time.Hour}
 	reason, ok := cv.IsSufficient(tl)
@@ -326,11 +326,11 @@ func TestCoverageValidator(t *testing.T) {
 
 func TestCoverageValidator_Sufficient(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl, _ := asset.NewTimeline(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	_ = tl.RecordObservation(base, false)
-	_ = tl.RecordObservation(base.Add(48*time.Hour), false)
+	_ = tl.RecordCheck(base, false)
+	_ = tl.RecordCheck(base.Add(48*time.Hour), false)
 
 	cv := CoverageValidator{MinRequiredSpan: 24 * time.Hour}
 	_, ok := cv.IsSufficient(tl)

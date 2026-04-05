@@ -154,7 +154,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "high",
       "control_compliance": {
@@ -207,7 +207,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "high",
       "posture_drift": {
@@ -267,7 +267,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "high",
       "posture_drift": {
@@ -309,7 +309,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "low",
       "posture_drift": {
@@ -345,7 +345,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "control_compliance": {
@@ -448,7 +448,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "exposure": {
@@ -522,7 +522,7 @@
         "root_causes": [
           "identity"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "exposure": {
@@ -596,7 +596,7 @@
         "root_causes": [
           "identity"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "exposure": {
@@ -670,7 +670,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "high",
       "exposure": {
@@ -762,7 +762,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 168 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "high",
       "exposure": {

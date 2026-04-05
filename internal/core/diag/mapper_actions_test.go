@@ -2,29 +2,29 @@ package diag
 
 import "testing"
 
-func TestNewTranslator_EmptyDefaultRule(t *testing.T) {
-	tr := NewTranslator("")
+func TestNewMapper_EmptyDefaultRule(t *testing.T) {
+	tr := NewMapper("")
 	if tr.defaultRule != RuleSchemaViolation {
 		t.Fatalf("empty default rule should fallback to %q, got %q", RuleSchemaViolation, tr.defaultRule)
 	}
 }
 
-func TestNewTranslator_WhitespaceDefaultRule(t *testing.T) {
-	tr := NewTranslator("  ")
+func TestNewMapper_WhitespaceDefaultRule(t *testing.T) {
+	tr := NewMapper("  ")
 	if tr.defaultRule != RuleSchemaViolation {
 		t.Fatalf("whitespace default rule should fallback to %q, got %q", RuleSchemaViolation, tr.defaultRule)
 	}
 }
 
-func TestNewTranslator_CustomRule(t *testing.T) {
-	tr := NewTranslator(RuleControlLoadFailed)
+func TestNewMapper_CustomRule(t *testing.T) {
+	tr := NewMapper(RuleControlLoadFailed)
 	if tr.defaultRule != RuleControlLoadFailed {
 		t.Fatalf("defaultRule=%q, want %q", tr.defaultRule, RuleControlLoadFailed)
 	}
 }
 
 func TestTranslator_MapRule_KnownCodes(t *testing.T) {
-	tr := NewTranslator(RuleControlLoadFailed)
+	tr := NewMapper(RuleControlLoadFailed)
 	knownCodes := []string{"required", "type", "enum", "additional_properties"}
 	for _, code := range knownCodes {
 		got := tr.mapRule(code)
@@ -35,7 +35,7 @@ func TestTranslator_MapRule_KnownCodes(t *testing.T) {
 }
 
 func TestTranslator_MapRule_UnknownCode(t *testing.T) {
-	tr := NewTranslator(RuleControlLoadFailed)
+	tr := NewMapper(RuleControlLoadFailed)
 	got := tr.mapRule("something_else")
 	if got != RuleControlLoadFailed {
 		t.Fatalf("mapRule(unknown)=%q, want %q", got, RuleControlLoadFailed)
@@ -43,7 +43,7 @@ func TestTranslator_MapRule_UnknownCode(t *testing.T) {
 }
 
 func TestTranslator_DeriveAction_AllKnownCodes(t *testing.T) {
-	tr := NewTranslator(RuleSchemaViolation)
+	tr := NewMapper(RuleSchemaViolation)
 
 	tests := []struct {
 		code  string
@@ -62,26 +62,26 @@ func TestTranslator_DeriveAction_AllKnownCodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.code+"/"+tt.field, func(t *testing.T) {
-			got := tr.deriveAction(tt.code, tt.field)
+			got := tr.deriveRemediation(tt.code, tt.field)
 			if got != tt.want {
-				t.Fatalf("deriveAction(%q, %q)=%q, want %q", tt.code, tt.field, got, tt.want)
+				t.Fatalf("deriveRemediation(%q, %q)=%q, want %q", tt.code, tt.field, got, tt.want)
 			}
 		})
 	}
 }
 
 func TestTranslator_DeriveAction_UnknownCodeNoDefault(t *testing.T) {
-	tr := NewTranslator(RuleSchemaViolation)
-	got := tr.deriveAction("custom", "field")
-	want := "Correct the schema violation in your YAML/JSON file."
+	tr := NewMapper(RuleSchemaViolation)
+	got := tr.deriveRemediation("custom", "field")
+	want := "Correct the schema violation in your policy file."
 	if got != want {
-		t.Fatalf("deriveAction(custom)=%q, want %q", got, want)
+		t.Fatalf("deriveRemediation(custom)=%q, want %q", got, want)
 	}
 }
 
 func TestTranslator_TranslateOne_EmptyFieldWithPrefix(t *testing.T) {
-	tr := NewTranslator(RuleSchemaViolation, WithPathPrefix("obs.json"))
-	finding := tr.TranslateOne(testExternalError{
+	tr := NewMapper(RuleSchemaViolation, WithPathPrefix("obs.json"))
+	finding := tr.MapOne(testRawIssue{
 		field: "",
 		desc:  "invalid format",
 		code:  "type",
@@ -93,8 +93,8 @@ func TestTranslator_TranslateOne_EmptyFieldWithPrefix(t *testing.T) {
 }
 
 func TestTranslator_TranslateOne_EmptyFieldNoPrefix(t *testing.T) {
-	tr := NewTranslator(RuleSchemaViolation)
-	finding := tr.TranslateOne(testExternalError{
+	tr := NewMapper(RuleSchemaViolation)
+	finding := tr.MapOne(testRawIssue{
 		field: "",
 		desc:  "invalid format",
 		code:  "type",
@@ -106,8 +106,8 @@ func TestTranslator_TranslateOne_EmptyFieldNoPrefix(t *testing.T) {
 }
 
 func TestTranslator_Translate_Empty(t *testing.T) {
-	tr := NewTranslator(RuleSchemaViolation)
-	result := tr.Translate(nil)
+	tr := NewMapper(RuleSchemaViolation)
+	result := tr.Map(nil)
 	if result == nil {
 		t.Fatal("result should not be nil for empty input")
 	}
@@ -117,10 +117,10 @@ func TestTranslator_Translate_Empty(t *testing.T) {
 }
 
 func TestTranslator_Translate_Multiple(t *testing.T) {
-	tr := NewTranslator(RuleSchemaViolation)
-	result := tr.Translate([]ExternalError{
-		testExternalError{field: "/a", desc: "err1", code: "required"},
-		testExternalError{field: "/b", desc: "err2", code: "enum"},
+	tr := NewMapper(RuleSchemaViolation)
+	result := tr.Map([]RawIssue{
+		testRawIssue{field: "/a", desc: "err1", code: "required"},
+		testRawIssue{field: "/b", desc: "err2", code: "enum"},
 	})
 	if len(result.Findings) != 2 {
 		t.Fatalf("len=%d, want 2", len(result.Findings))

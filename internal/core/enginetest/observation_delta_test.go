@@ -27,15 +27,15 @@ func TestComputeObservationDelta_DetectsChanges(t *testing.T) {
 		},
 	}
 
-	diff := asset.ComputeObservationDelta(prev, curr)
-	if diff.Summary.Added() != 1 {
-		t.Errorf("Added = %d, want 1", diff.Summary.Added())
+	diff := asset.ComputeDrift(prev, curr)
+	if diff.Summary.Provisioned() != 1 {
+		t.Errorf("Added = %d, want 1", diff.Summary.Provisioned())
 	}
-	if diff.Summary.Removed() != 1 {
-		t.Errorf("Removed = %d, want 1", diff.Summary.Removed())
+	if diff.Summary.Decommissioned() != 1 {
+		t.Errorf("Removed = %d, want 1", diff.Summary.Decommissioned())
 	}
-	if diff.Summary.Modified() != 1 {
-		t.Errorf("Modified = %d, want 1", diff.Summary.Modified())
+	if diff.Summary.Reconfigured() != 1 {
+		t.Errorf("Modified = %d, want 1", diff.Summary.Reconfigured())
 	}
 	if diff.SchemaVersion != kernel.SchemaDiff {
 		t.Errorf("SchemaVersion = %q, want %q", diff.SchemaVersion, kernel.SchemaDiff)
@@ -76,9 +76,9 @@ func TestLatestTwoSnapshots(t *testing.T) {
 		{CapturedAt: t1},
 		{CapturedAt: t3},
 	}
-	prev, curr, err := asset.LatestTwoSnapshots(in)
+	prev, curr, err := asset.GetStateTransition(in)
 	if err != nil {
-		t.Fatalf("LatestTwoSnapshots returned error: %v", err)
+		t.Fatalf("GetStateTransition returned error: %v", err)
 	}
 	if !prev.CapturedAt.Equal(t2) {
 		t.Errorf("prev.CapturedAt = %v, want %v", prev.CapturedAt, t2)
@@ -90,21 +90,21 @@ func TestLatestTwoSnapshots(t *testing.T) {
 
 func TestLatestTwoSnapshots_InsufficientSnapshots(t *testing.T) {
 	in := []asset.Snapshot{{}}
-	_, _, err := asset.LatestTwoSnapshots(in)
+	_, _, err := asset.GetStateTransition(in)
 	if err == nil {
 		t.Fatal("expected error for insufficient snapshots")
 	}
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
-	changes := []asset.Diff{
-		{ChangeType: asset.ChangeAdded},
-		{ChangeType: asset.ChangeAdded},
-		{ChangeType: asset.ChangeRemoved},
-		{ChangeType: asset.ChangeModified},
+	changes := []asset.AssetChange{
+		{Action: asset.DriftProvisioned},
+		{Action: asset.DriftProvisioned},
+		{Action: asset.DriftDecommissioned},
+		{Action: asset.DriftReconfigured},
 	}
-	s := asset.SummarizeDeltaChanges(changes)
-	if s.Added() != 2 || s.Removed() != 1 || s.Modified() != 1 || s.Total() != 4 {
+	s := asset.SummarizeDrift(changes)
+	if s.Provisioned() != 2 || s.Decommissioned() != 1 || s.Reconfigured() != 1 || s.Total() != 4 {
 		t.Errorf("unexpected summary: %+v", s)
 	}
 }

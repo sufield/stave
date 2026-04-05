@@ -17,7 +17,7 @@ type CoverageValidator struct {
 // IsSufficient checks if the provided timeline meets the coverage criteria.
 // It returns (explanation, true) if coverage is sufficient.
 // If coverage is insufficient, it returns (reason, false).
-func (v CoverageValidator) IsSufficient(t *asset.Timeline) (string, bool) {
+func (v CoverageValidator) IsSufficient(t *asset.ExposureLifecycle) (string, bool) {
 	if t == nil {
 		return "no timeline data provided", false
 	}

@@ -46,8 +46,8 @@ func collectHints(result *diag.Assessment, ctx hintContext) []string {
 		var h string
 
 		// Priority 1: use the explicit command embedded in the issue
-		if issue.Command != "" {
-			h = issue.Command
+		if issue.FixCommand != "" {
+			h = issue.FixCommand
 		} else {
 			// Priority 2: use the registry-based builder
 			h = hintForIssue(issue, ctx)

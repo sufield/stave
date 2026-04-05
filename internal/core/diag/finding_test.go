@@ -3,7 +3,7 @@ package diag
 import "testing"
 
 func TestNew_DefaultsToError(t *testing.T) {
-	b := New(RuleSchemaViolation)
+	b := NewFinding(RuleSchemaViolation)
 	finding := b.Build()
 	if finding.Severity != SeverityError {
 		t.Fatalf("default severity=%q, want %q", finding.Severity, SeverityError)
@@ -14,35 +14,35 @@ func TestNew_DefaultsToError(t *testing.T) {
 }
 
 func TestBuilder_Warning(t *testing.T) {
-	finding := New(RuleNoSnapshots).Warning().Build()
+	finding := NewFinding(RuleNoSnapshots).Warning().Build()
 	if finding.Severity != SeverityWarn {
 		t.Fatalf("severity=%q, want %q", finding.Severity, SeverityWarn)
 	}
 }
 
 func TestBuilder_Msg(t *testing.T) {
-	finding := New(RuleNoControls).Msg("no controls found").Build()
+	finding := NewFinding(RuleNoControls).Message("no controls found").Build()
 	if finding.Message != "no controls found" {
 		t.Fatalf("message=%q, want %q", finding.Message, "no controls found")
 	}
 }
 
 func TestBuilder_Action(t *testing.T) {
-	finding := New(RuleNoControls).Action("add controls").Build()
-	if finding.Action != "add controls" {
-		t.Fatalf("action=%q, want %q", finding.Action, "add controls")
+	finding := NewFinding(RuleNoControls).Remediation("add controls").Build()
+	if finding.Remediation != "add controls" {
+		t.Fatalf("action=%q, want %q", finding.Remediation, "add controls")
 	}
 }
 
 func TestBuilder_Command(t *testing.T) {
-	finding := New(RuleNoControls).Command("stave init").Build()
-	if finding.Command != "stave init" {
-		t.Fatalf("command=%q, want %q", finding.Command, "stave init")
+	finding := NewFinding(RuleNoControls).FixCommand("stave init").Build()
+	if finding.FixCommand != "stave init" {
+		t.Fatalf("command=%q, want %q", finding.FixCommand, "stave init")
 	}
 }
 
 func TestBuilder_With(t *testing.T) {
-	finding := New(RuleSchemaViolation).With("path", "/foo").Build()
+	finding := NewFinding(RuleSchemaViolation).Attribute("path", "/foo").Build()
 	v, ok := finding.Resource.Get("path")
 	if !ok || v != "/foo" {
 		t.Fatalf("resource path=%q ok=%v, want /foo true", v, ok)
@@ -51,7 +51,7 @@ func TestBuilder_With(t *testing.T) {
 
 func TestBuilder_WithMap(t *testing.T) {
 	m := map[string]string{"a": "1", "b": "2"}
-	finding := New(RuleSchemaViolation).WithMap(m).Build()
+	finding := NewFinding(RuleSchemaViolation).Attributes(m).Build()
 	for k, want := range m {
 		got, ok := finding.Resource.Get(k)
 		if !ok || got != want {
@@ -61,7 +61,7 @@ func TestBuilder_WithMap(t *testing.T) {
 }
 
 func TestBuilder_WithSensitive(t *testing.T) {
-	finding := New(RuleSchemaViolation).WithSensitive("secret", "hunter2").Build()
+	finding := NewFinding(RuleSchemaViolation).SensitiveAttribute("secret", "hunter2").Build()
 	raw, ok := finding.Resource.Get("secret")
 	if !ok || raw != "hunter2" {
 		t.Fatalf("raw resource secret=%q ok=%v", raw, ok)
@@ -74,11 +74,11 @@ func TestBuilder_WithSensitive(t *testing.T) {
 }
 
 func TestBuilder_Build_ClonesResource(t *testing.T) {
-	b := New(RuleSchemaViolation).With("key", "val1")
+	b := NewFinding(RuleSchemaViolation).Attribute("key", "val1")
 	finding1 := b.Build()
 
 	// Mutate builder after first build.
-	b.With("key", "val2")
+	b.Attribute("key", "val2")
 	finding2 := b.Build()
 
 	v1, _ := finding1.Resource.Get("key")
@@ -95,12 +95,12 @@ func TestBuilder_Build_ClonesResource(t *testing.T) {
 }
 
 func TestBuilder_Fluent(t *testing.T) {
-	finding := New(RuleControlLoadFailed).
+	finding := NewFinding(RuleControlLoadFailed).
 		Error().
-		Msg("load failed").
-		Action("fix the file").
-		Command("stave validate").
-		With("file", "test.yaml").
+		Message("load failed").
+		Remediation("fix the file").
+		FixCommand("stave validate").
+		Attribute("file", "test.yaml").
 		Build()
 
 	if finding.RuleID != RuleControlLoadFailed {
@@ -112,11 +112,11 @@ func TestBuilder_Fluent(t *testing.T) {
 	if finding.Message != "load failed" {
 		t.Fatalf("msg=%q", finding.Message)
 	}
-	if finding.Action != "fix the file" {
-		t.Fatalf("action=%q", finding.Action)
+	if finding.Remediation != "fix the file" {
+		t.Fatalf("action=%q", finding.Remediation)
 	}
-	if finding.Command != "stave validate" {
-		t.Fatalf("command=%q", finding.Command)
+	if finding.FixCommand != "stave validate" {
+		t.Fatalf("command=%q", finding.FixCommand)
 	}
 	f, _ := finding.Resource.Get("file")
 	if f != "test.yaml" {

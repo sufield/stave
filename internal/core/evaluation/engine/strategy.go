@@ -21,7 +21,7 @@ type strategyDeps interface {
 
 // strategy defines how different control types analyze a timeline.
 type strategy interface {
-	Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding)
+	Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding)
 }
 
 // Compile-time interface assertions.
@@ -56,34 +56,34 @@ type unsafeStateStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
-	if t.CurrentlySafe() {
+	if t.IsSecure() {
 		return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 	}
 
-	if t.MissingUnsafeTimestamps() {
+	if t.MissingExposureTimestamps() {
 		observation.MarkInconclusive("missing timestamps")
 		return observation, nil
 	}
 
-	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
+	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
 	if threshErr != nil {
 		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		observation.MarkInconclusive("threshold check error")
 		return observation, nil
 	}
 	if exceeds {
-		observation.TemporalRisk = t.FormatUnsafeSummary(maxUnsafe, now)
+		observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
-			Timeline:        t,
-			Control:         s.ctl,
-			Threshold:       maxUnsafe,
-			Now:             now,
-			Identities:      ids.At(t.LastSeenUnsafeAt()),
-			PredicateParser: s.deps.predicateParser(),
+			ExposureLifecycle: t,
+			Control:           s.ctl,
+			Threshold:         maxUnsafe,
+			Now:               now,
+			Identities:        ids.At(t.LastObservedAt()),
+			PredicateParser:   s.deps.predicateParser(),
 		})
 		return finalizeRow(observation, evaluation.VerdictViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
 	}
@@ -96,26 +96,26 @@ type unsafeDurationStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
 	// 1. Violation Check (Always takes precedence)
-	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
+	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
 	if threshErr != nil {
 		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		observation.MarkInconclusive("threshold check error")
 		return observation, nil
 	}
 	if exceeds {
-		observation.TemporalRisk = t.FormatUnsafeSummary(maxUnsafe, now)
+		observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
-			Timeline:        t,
-			Control:         s.ctl,
-			Threshold:       maxUnsafe,
-			Now:             now,
-			Identities:      ids.At(t.LastSeenUnsafeAt()),
-			PredicateParser: s.deps.predicateParser(),
+			ExposureLifecycle: t,
+			Control:           s.ctl,
+			Threshold:         maxUnsafe,
+			Now:               now,
+			Identities:        ids.At(t.LastObservedAt()),
+			PredicateParser:   s.deps.predicateParser(),
 		})
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
@@ -143,7 +143,7 @@ type unsafeRecurrenceStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 
@@ -175,7 +175,7 @@ type prefixExposureStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+func (s *prefixExposureStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation, findings := EvaluatePrefixExposureForRow(t, s.ctl)
 	return observation, wrapInPointers(findings)
 }
@@ -184,7 +184,7 @@ type unsupportedStrategy struct {
 	ctl *policy.ControlDefinition
 }
 
-func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+func (s *unsupportedStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
 	observation.Reason = "type not evaluatable: " + s.ctl.Type.String()
 	return finalizeRow(observation, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
@@ -192,7 +192,7 @@ func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ Identit
 
 // --- Internal Helpers ---
 
-func newControlRow(ctl *policy.ControlDefinition, t *asset.Timeline) evaluation.ResourceCheck {
+func newControlRow(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) evaluation.ResourceCheck {
 	resType := t.Asset().Type
 	return evaluation.ResourceCheck{
 		ControlID:   ctl.ID,

@@ -112,3 +112,33 @@ func (ts TagSet) HasConflicts() bool {
 func (ts TagSet) Conflicts() []TagConflict {
 	return slices.Clone(ts.conflicts)
 }
+
+// --- tag normalization helpers ---
+
+type tagKey string
+
+func (k tagKey) normalize() tagKey {
+	return tagKey(strings.ToLower(strings.TrimSpace(string(k))))
+}
+
+func (k tagKey) isDiscardable() bool {
+	return k == ""
+}
+
+func (k tagKey) string() string {
+	return string(k)
+}
+
+type tagValue string
+
+func (v tagValue) normalize() tagValue {
+	return tagValue(strings.ToLower(strings.TrimSpace(string(v))))
+}
+
+func (v tagValue) isDiscardable() bool {
+	return v == ""
+}
+
+func (v tagValue) string() string {
+	return string(v)
+}

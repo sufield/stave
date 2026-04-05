@@ -196,27 +196,27 @@ func TestTrendMetric(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// ResponsePolicy
+// EnforcementPolicy
 // ---------------------------------------------------------------------------
 
-func TestResponsePolicyDecide(t *testing.T) {
+func TestEnforcementPolicyEvaluate(t *testing.T) {
 	tests := []struct {
 		strict bool
 		status SecurityState
-		want   ActionSeverity
+		want   EnforcementLevel
 	}{
-		{false, StateCompliant, ActionPass},
-		{false, StateAtRisk, ActionWarn},
-		{false, StateNonCompliant, ActionFail},
-		{true, StateCompliant, ActionPass},
-		{true, StateAtRisk, ActionFail},
-		{true, StateNonCompliant, ActionFail},
+		{false, StateCompliant, LevelAllow},
+		{false, StateAtRisk, LevelAdvisory},
+		{false, StateNonCompliant, LevelBlock},
+		{true, StateCompliant, LevelAllow},
+		{true, StateAtRisk, LevelBlock},
+		{true, StateNonCompliant, LevelBlock},
 	}
 	for _, tt := range tests {
-		p := ResponsePolicy{TreatAtRiskAsFailure: tt.strict}
-		got := p.Decide(tt.status)
-		if got.Severity != tt.want {
-			t.Errorf("Decide(strict=%v, %v) = %v, want %v", tt.strict, tt.status, got.Severity, tt.want)
+		p := EnforcementPolicy{StrictMode: tt.strict}
+		got := p.Evaluate(tt.status)
+		if got.Signal != tt.want {
+			t.Errorf("Evaluate(strict=%v, %v) = %v, want %v", tt.strict, tt.status, got.Signal, tt.want)
 		}
 	}
 }
@@ -269,12 +269,12 @@ func TestBaselineEntryKey(t *testing.T) {
 
 func TestComputePostureDrift_SafeTimeline(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	if err := tl.RecordObservation(base, false); err != nil {
+	if err := tl.RecordCheck(base, false); err != nil {
 		t.Fatal(err)
 	}
 	if d := ComputePostureDrift(tl); d != nil {
@@ -284,15 +284,15 @@ func TestComputePostureDrift_SafeTimeline(t *testing.T) {
 
 func TestComputePostureDrift_Persistent(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(time.Hour), true); err != nil {
+	if err := tl.RecordCheck(base.Add(time.Hour), true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -310,19 +310,19 @@ func TestComputePostureDrift_Persistent(t *testing.T) {
 
 func TestComputePostureDrift_Degraded(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	// First safe, then unsafe
-	if err := tl.RecordObservation(base, false); err != nil {
+	if err := tl.RecordCheck(base, false); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(time.Hour), true); err != nil {
+	if err := tl.RecordCheck(base.Add(time.Hour), true); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(2*time.Hour), true); err != nil {
+	if err := tl.RecordCheck(base.Add(2*time.Hour), true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -337,19 +337,19 @@ func TestComputePostureDrift_Degraded(t *testing.T) {
 
 func TestComputePostureDrift_Intermittent(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
 		t.Fatal(err)
 	}
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	// unsafe -> safe -> unsafe
-	if err := tl.RecordObservation(base, true); err != nil {
+	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(time.Hour), false); err != nil {
+	if err := tl.RecordCheck(base.Add(time.Hour), false); err != nil {
 		t.Fatal(err)
 	}
-	if err := tl.RecordObservation(base.Add(2*time.Hour), true); err != nil {
+	if err := tl.RecordCheck(base.Add(2*time.Hour), true); err != nil {
 		t.Fatal(err)
 	}
 

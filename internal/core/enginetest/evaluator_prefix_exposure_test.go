@@ -211,7 +211,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		return ctl
 	}
 
-	makeTimeline := func(storage map[string]any) *asset.Timeline {
+	makeTimeline := func(storage map[string]any) *asset.ExposureLifecycle {
 		resource := asset.Asset{
 			ID:     "res:aws:s3:bucket:example-bucket",
 			Type:   kernel.AssetType("storage_bucket"),
@@ -220,11 +220,11 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 				"storage": storage,
 			},
 		}
-		timeline, err := asset.NewTimeline(resource)
+		timeline, err := asset.NewExposureLifecycle(resource)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := timeline.RecordObservation(now, true); err != nil {
+		if err := timeline.RecordCheck(now, true); err != nil {
 			t.Fatal(err)
 		}
 		return timeline

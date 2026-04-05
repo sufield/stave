@@ -44,7 +44,7 @@
           "identity"
         ],
         "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "fix_plan": {
         "actions": [
@@ -111,7 +111,7 @@
           "resource"
         ],
         "unsafe_duration_hours": 240,
-        "temporal_risk": "Asset has been unsafe for 240 hours (threshold: 0 hours). Unsafe since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "fix_plan": {
         "actions": [

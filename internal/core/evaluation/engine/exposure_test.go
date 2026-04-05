@@ -30,19 +30,19 @@ func exposureControl(id string, protected, allowed []string) *policy.ControlDefi
 	return ctl
 }
 
-func exposureTimeline(t *testing.T, props map[string]any) *asset.Timeline {
+func exposureTimeline(t *testing.T, props map[string]any) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{
 		ID:         "bucket-1",
 		Type:       kernel.AssetType("s3_bucket"),
 		Properties: props,
 	}
-	tl, err := asset.NewTimeline(a)
+	tl, err := asset.NewExposureLifecycle(a)
 	if err != nil {
-		t.Fatalf("NewTimeline: %v", err)
+		t.Fatalf("NewExposureLifecycle: %v", err)
 	}
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	if err := tl.RecordObservation(base, false); err != nil {
+	if err := tl.RecordCheck(base, false); err != nil {
 		t.Fatalf("RecordObservation: %v", err)
 	}
 	return tl

@@ -25,11 +25,11 @@ type Reporter struct {
 
 // ReportApply prints the outcome of an evaluation and returns an error
 // when the response policy indicates failure.
-func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.ResponsePolicy) error {
-	action := policy.Decide(res.SecurityState)
+func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.EnforcementPolicy) error {
+	outcome := policy.Evaluate(res.SecurityState)
 
-	switch action.Severity {
-	case evaluation.ActionPass:
+	switch outcome.Signal {
+	case evaluation.LevelAllow:
 		if !r.Quiet {
 			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations found."); err != nil {
 				return err
@@ -37,7 +37,7 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.ResponsePol
 		}
 		return nil
 
-	case evaluation.ActionWarn:
+	case evaluation.LevelAdvisory:
 		if !r.Quiet {
 			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations, but at-risk assets detected."); err != nil {
 				return err
@@ -48,7 +48,7 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.ResponsePol
 		}
 		return nil
 
-	default: // ActionFail
+	default: // LevelBlock
 		if !r.Quiet {
 			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 			r.Runtime.PrintNextSteps(res.NextSteps...)

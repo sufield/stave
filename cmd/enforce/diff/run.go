@@ -64,18 +64,18 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 	return writeOutput(r.Stdout, cfg.Format, delta)
 }
 
-func (r *runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.ObservationDelta, error) {
+func (r *runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.InfrastructureDrift, error) {
 	snapshots, err := r.LoadSnapshots(ctx, dir)
 	if err != nil {
-		return asset.ObservationDelta{}, fmt.Errorf("loading snapshots: %w", err)
+		return asset.InfrastructureDrift{}, fmt.Errorf("loading snapshots: %w", err)
 	}
 	if len(snapshots) < 2 {
-		return asset.ObservationDelta{}, fmt.Errorf("need at least 2 snapshots in %s for diff", dir)
+		return asset.InfrastructureDrift{}, fmt.Errorf("need at least 2 snapshots in %s for diff", dir)
 	}
 
-	prev, curr, err := asset.LatestTwoSnapshots(snapshots)
+	prev, curr, err := asset.GetStateTransition(snapshots)
 	if err != nil {
-		return asset.ObservationDelta{}, fmt.Errorf("select latest snapshots: %w", err)
+		return asset.InfrastructureDrift{}, fmt.Errorf("select latest snapshots: %w", err)
 	}
-	return asset.ComputeObservationDelta(prev, curr).ApplyFilter(filter), nil
+	return asset.ComputeDrift(prev, curr).ApplyFilter(filter), nil
 }

@@ -2,7 +2,7 @@
 
 # Snapshot diff
 exec stave snapshot diff --observations observations --format json
-stdout 'from_captured'
+stdout 'start_time'
 
 # Snapshot quality
 exec stave snapshot quality --observations observations --now 2026-01-11T00:00:00Z

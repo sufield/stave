@@ -139,13 +139,13 @@ func printIssue(w io.Writer, issue diag.Finding) error {
 			return err
 		}
 	}
-	if issue.Action != "" {
-		if _, err := fmt.Fprintf(w, "  Fix: %s\n", issue.Action); err != nil {
+	if issue.Remediation != "" {
+		if _, err := fmt.Fprintf(w, "  Fix: %s\n", issue.Remediation); err != nil {
 			return err
 		}
 	}
-	if issue.Command != "" {
-		if _, err := fmt.Fprintf(w, "  Example: %s\n", issue.Command); err != nil {
+	if issue.FixCommand != "" {
+		if _, err := fmt.Fprintf(w, "  Example: %s\n", issue.FixCommand); err != nil {
 			return err
 		}
 	}

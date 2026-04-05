@@ -46,10 +46,10 @@ func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot
 	var issues []diag.Finding
 	for _, ctl := range controls {
 		if !isTriggered(ctl, snapshots, eval) {
-			issues = append(issues, diag.New(diag.RuleControlNeverMatches).
+			issues = append(issues, diag.NewFinding(diag.RuleControlNeverMatches).
 				Warning().
-				Action("Check predicate field paths or verify if all resources are currently safe.").
-				WithMap(ctl.issueContext(nil)).
+				Remediation("Check predicate field paths or verify if all resources are currently safe.").
+				Attributes(ctl.issueContext(nil)).
 				Build())
 		}
 	}

@@ -834,35 +834,35 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 	// Scenario: unsafe (5 days) -> safe -> unsafe (1 day)
 	// Current episode is only 1 day, should NOT violate 48h threshold.
 	snapshots := []asset.Snapshot{
-		// asset.Episode 1: Jan 1 - unsafe
+		// asset.ExposureWindow 1: Jan 1 - unsafe
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 1 continues: Jan 5 - still unsafe (5 days total)
+		// asset.ExposureWindow 1 continues: Jan 5 - still unsafe (5 days total)
 		{
 			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 1 ends: Jan 6 - safe
+		// asset.ExposureWindow 1 ends: Jan 6 - safe
 		{
 			CapturedAt: mustParseTime("2026-01-06T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
-		// asset.Episode 2 starts: Jan 10 - unsafe again
+		// asset.ExposureWindow 2 starts: Jan 10 - unsafe again
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 2: Jan 11 - still unsafe (1 day in current episode)
+		// asset.ExposureWindow 2: Jan 11 - still unsafe (1 day in current episode)
 		{
 			CapturedAt: mustParseTime("2026-01-11T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -878,7 +878,7 @@ func TestEvaluator_DurationFromCurrentEpisode(t *testing.T) {
 
 	// Current episode is only 24h (Jan 10 -> Jan 11), which is < 48h threshold.
 	// If duration were computed from first-ever unsafe (Jan 1), it would be 10 days = 240h.
-	// asset.Episode-based duration should NOT trigger a violation.
+	// asset.ExposureWindow-based duration should NOT trigger a violation.
 	if result.Summary.Violations != 0 {
 		t.Errorf("Expected 0 violations (current episode is only 24h < 48h threshold), got %d", result.Summary.Violations)
 	}
@@ -905,28 +905,28 @@ func TestEvaluator_DurationFromCurrentEpisode_Violation(t *testing.T) {
 	// Scenario: unsafe (1 day) -> safe -> unsafe (3 days)
 	// Current episode is 3 days, should violate 48h threshold.
 	snapshots := []asset.Snapshot{
-		// asset.Episode 1: Jan 1 - unsafe
+		// asset.ExposureWindow 1: Jan 1 - unsafe
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 1 ends: Jan 2 - safe
+		// asset.ExposureWindow 1 ends: Jan 2 - safe
 		{
 			CapturedAt: mustParseTime("2026-01-02T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
-		// asset.Episode 2 starts: Jan 10 - unsafe again
+		// asset.ExposureWindow 2 starts: Jan 10 - unsafe again
 		{
 			CapturedAt: mustParseTime("2026-01-10T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 2: Jan 13 - still unsafe (3 days = 72h in current episode)
+		// asset.ExposureWindow 2: Jan 13 - still unsafe (3 days = 72h in current episode)
 		{
 			CapturedAt: mustParseTime("2026-01-13T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -1606,32 +1606,32 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 
 	// Create snapshots spanning ~60 days with all episodes within 90-day window:
 	// Evaluated at Mar 15, window starts Dec 15 (90 days back)
-	// - asset.Episode 1: Jan 15-20 (completed, in window)
-	// - asset.Episode 2: Feb 10-15 (completed, in window)
-	// - asset.Episode 3: Mar 10 onwards (still open at end-of-input, in window)
+	// - asset.ExposureWindow 1: Jan 15-20 (completed, in window)
+	// - asset.ExposureWindow 2: Feb 10-15 (completed, in window)
+	// - asset.ExposureWindow 3: Mar 10 onwards (still open at end-of-input, in window)
 	snapshots := []asset.Snapshot{
-		// asset.Episode 1 start
+		// asset.ExposureWindow 1 start
 		{
 			CapturedAt: mustParseTime("2026-01-15T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 1 end
+		// asset.ExposureWindow 1 end
 		{
 			CapturedAt: mustParseTime("2026-01-20T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
-		// asset.Episode 2 start
+		// asset.ExposureWindow 2 start
 		{
 			CapturedAt: mustParseTime("2026-02-10T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 2 end
+		// asset.ExposureWindow 2 end
 		{
 			CapturedAt: mustParseTime("2026-02-15T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -1645,14 +1645,14 @@ func TestEvaluator_RecurrenceOpenEpisode(t *testing.T) {
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
-		// asset.Episode 3 start (still open at end-of-input)
+		// asset.ExposureWindow 3 start (still open at end-of-input)
 		{
 			CapturedAt: mustParseTime("2026-03-10T00:00:00Z"),
 			Assets: []asset.Asset{
 				{ID: "bucket", Properties: map[string]any{"public": true}},
 			},
 		},
-		// asset.Episode 3 still open
+		// asset.ExposureWindow 3 still open
 		{
 			CapturedAt: mustParseTime("2026-03-15T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -1705,11 +1705,11 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 	}
 
 	// Create snapshots with:
-	// - asset.Episode 1: Jan 1-5 (outside 30-day window from Apr 10)
-	// - asset.Episode 2: currently open starting Apr 1
+	// - asset.ExposureWindow 1: Jan 1-5 (outside 30-day window from Apr 10)
+	// - asset.ExposureWindow 2: currently open starting Apr 1
 	// Only 1 episode in window (open), should not trigger violation (limit = 3)
 	snapshots := []asset.Snapshot{
-		// asset.Episode 1 (outside window)
+		// asset.ExposureWindow 1 (outside window)
 		{
 			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
 			Assets: []asset.Asset{
@@ -1735,7 +1735,7 @@ func TestEvaluator_RecurrenceOpenEpisodeNotCounted(t *testing.T) {
 				{ID: "bucket", Properties: map[string]any{"public": false}},
 			},
 		},
-		// asset.Episode 2 (open, in window)
+		// asset.ExposureWindow 2 (open, in window)
 		{
 			CapturedAt: mustParseTime("2026-04-01T00:00:00Z"),
 			Assets: []asset.Asset{

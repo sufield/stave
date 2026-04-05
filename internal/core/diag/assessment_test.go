@@ -14,7 +14,7 @@ func TestNewAssessment_Empty(t *testing.T) {
 
 func TestAssessment_Record(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Msg("bad schema").Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Message("bad schema").Build())
 	if len(a.Findings) != 1 {
 		t.Fatalf("after Record: len=%d, want 1", len(a.Findings))
 	}
@@ -23,14 +23,14 @@ func TestAssessment_Record(t *testing.T) {
 func TestAssessment_Record_NilReceiver(_ *testing.T) {
 	var a *Assessment
 	// Should not panic.
-	a.Record(New(RuleSchemaViolation).Build())
+	a.Record(NewFinding(RuleSchemaViolation).Build())
 }
 
 func TestAssessment_RecordAll(t *testing.T) {
 	a := NewAssessment()
 	findings := []Finding{
-		New(RuleSchemaViolation).Error().Build(),
-		New(RuleNoControls).Warning().Build(),
+		NewFinding(RuleSchemaViolation).Error().Build(),
+		NewFinding(RuleNoControls).Warning().Build(),
 	}
 	a.RecordAll(findings)
 	if len(a.Findings) != 2 {
@@ -40,7 +40,7 @@ func TestAssessment_RecordAll(t *testing.T) {
 
 func TestAssessment_RecordAll_NilReceiver(_ *testing.T) {
 	var a *Assessment
-	a.RecordAll([]Finding{New(RuleSchemaViolation).Build()})
+	a.RecordAll([]Finding{NewFinding(RuleSchemaViolation).Build()})
 }
 
 func TestAssessment_RecordAll_EmptySlice(t *testing.T) {
@@ -53,10 +53,10 @@ func TestAssessment_RecordAll_EmptySlice(t *testing.T) {
 
 func TestAssessment_Merge(t *testing.T) {
 	a1 := NewAssessment()
-	a1.Record(New(RuleSchemaViolation).Error().Build())
+	a1.Record(NewFinding(RuleSchemaViolation).Error().Build())
 	a2 := NewAssessment()
-	a2.Record(New(RuleNoControls).Warning().Build())
-	a2.Record(New(RuleNoSnapshots).Warning().Build())
+	a2.Record(NewFinding(RuleNoControls).Warning().Build())
+	a2.Record(NewFinding(RuleNoSnapshots).Warning().Build())
 
 	a1.Merge(a2)
 	if len(a1.Findings) != 3 {
@@ -67,13 +67,13 @@ func TestAssessment_Merge(t *testing.T) {
 func TestAssessment_Merge_NilReceiver(_ *testing.T) {
 	var a *Assessment
 	other := NewAssessment()
-	other.Record(New(RuleSchemaViolation).Build())
+	other.Record(NewFinding(RuleSchemaViolation).Build())
 	a.Merge(other) // Should not panic.
 }
 
 func TestAssessment_Merge_NilOther(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Build())
+	a.Record(NewFinding(RuleSchemaViolation).Build())
 	a.Merge(nil)
 	if len(a.Findings) != 1 {
 		t.Fatalf("after Merge(nil): len=%d, want 1", len(a.Findings))
@@ -82,7 +82,7 @@ func TestAssessment_Merge_NilOther(t *testing.T) {
 
 func TestAssessment_Merge_EmptyOther(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Build())
+	a.Record(NewFinding(RuleSchemaViolation).Build())
 	a.Merge(NewAssessment())
 	if len(a.Findings) != 1 {
 		t.Fatalf("after Merge(empty): len=%d, want 1", len(a.Findings))
@@ -96,11 +96,11 @@ func TestAssessment_Failed(t *testing.T) {
 		want     bool
 	}{
 		{"no findings", nil, false},
-		{"warning only", []Finding{New(RuleNoControls).Warning().Build()}, false},
-		{"error present", []Finding{New(RuleSchemaViolation).Error().Build()}, true},
+		{"warning only", []Finding{NewFinding(RuleNoControls).Warning().Build()}, false},
+		{"error present", []Finding{NewFinding(RuleSchemaViolation).Error().Build()}, true},
 		{"mixed", []Finding{
-			New(RuleNoControls).Warning().Build(),
-			New(RuleSchemaViolation).Error().Build(),
+			NewFinding(RuleNoControls).Warning().Build(),
+			NewFinding(RuleSchemaViolation).Error().Build(),
 		}, true},
 	}
 	for _, tt := range tests {
@@ -128,8 +128,8 @@ func TestAssessment_HasWarnings(t *testing.T) {
 		want     bool
 	}{
 		{"no findings", nil, false},
-		{"error only", []Finding{New(RuleSchemaViolation).Error().Build()}, false},
-		{"warning present", []Finding{New(RuleNoControls).Warning().Build()}, true},
+		{"error only", []Finding{NewFinding(RuleSchemaViolation).Error().Build()}, false},
+		{"warning present", []Finding{NewFinding(RuleNoControls).Warning().Build()}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -151,9 +151,9 @@ func TestAssessment_HasWarnings_NilReceiver(t *testing.T) {
 
 func TestAssessment_Errors(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Build())
-	a.Record(New(RuleNoControls).Warning().Build())
-	a.Record(New(RuleControlLoadFailed).Error().Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Build())
+	a.Record(NewFinding(RuleNoControls).Warning().Build())
+	a.Record(NewFinding(RuleControlLoadFailed).Error().Build())
 
 	errs := a.Errors()
 	if len(errs) != 2 {
@@ -168,8 +168,8 @@ func TestAssessment_Errors(t *testing.T) {
 
 func TestAssessment_Warnings(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Build())
-	a.Record(New(RuleNoControls).Warning().Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Build())
+	a.Record(NewFinding(RuleNoControls).Warning().Build())
 
 	warns := a.Warnings()
 	if len(warns) != 1 {
@@ -193,7 +193,7 @@ func TestAssessment_Filter_NilReceiver(t *testing.T) {
 func TestAssessment_Error_NoFindings(t *testing.T) {
 	a := NewAssessment()
 	got := a.Error()
-	want := "security assessment passed: 0 errors, 0 warnings"
+	want := "security assessment passed: no issues identified"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
@@ -202,7 +202,7 @@ func TestAssessment_Error_NoFindings(t *testing.T) {
 func TestAssessment_Error_NilReceiver(t *testing.T) {
 	var a *Assessment
 	got := a.Error()
-	want := "security assessment passed: 0 errors, 0 warnings"
+	want := "security assessment passed: no issues identified"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
@@ -210,8 +210,8 @@ func TestAssessment_Error_NilReceiver(t *testing.T) {
 
 func TestAssessment_Error_WithFindings(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Msg("bad field").With("path", "/dsl_version").Build())
-	a.Record(New(RuleNoControls).Warning().Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Message("bad field").Attribute("path", "/dsl_version").Build())
+	a.Record(NewFinding(RuleNoControls).Warning().Build())
 
 	got := a.Error()
 	// Should contain counts and first finding summary.
@@ -227,13 +227,13 @@ func TestAssessment_Error_WithFindings(t *testing.T) {
 
 func TestAssessment_Error_FirstFindingSummary_MessageAndPath(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Msg("missing field").With("path", "/version").Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Message("missing field").Attribute("path", "/version").Build())
 	got := a.Error()
 	// Should contain "missing field (/version)"
 	if got == "" {
 		t.Fatal("empty")
 	}
-	want := "security assessment failed: 1 errors, 0 warnings: missing field (/version)"
+	want := "security assessment failed: 1 errors, 0 warnings | First Finding: missing field (/version)"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
@@ -241,9 +241,9 @@ func TestAssessment_Error_FirstFindingSummary_MessageAndPath(t *testing.T) {
 
 func TestAssessment_Error_FirstFindingSummary_MessageOnly(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Msg("something wrong").Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Message("something wrong").Build())
 	got := a.Error()
-	want := "security assessment failed: 1 errors, 0 warnings: something wrong"
+	want := "security assessment failed: 1 errors, 0 warnings | First Finding: something wrong"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
@@ -251,9 +251,9 @@ func TestAssessment_Error_FirstFindingSummary_MessageOnly(t *testing.T) {
 
 func TestAssessment_Error_FirstFindingSummary_PathOnly(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().With("path", "/foo").Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Attribute("path", "/foo").Build())
 	got := a.Error()
-	want := "security assessment failed: 1 errors, 0 warnings: /foo"
+	want := "security assessment failed: 1 errors, 0 warnings | First Finding: /foo"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
@@ -261,9 +261,9 @@ func TestAssessment_Error_FirstFindingSummary_PathOnly(t *testing.T) {
 
 func TestAssessment_Error_FirstFindingSummary_RuleIDOnly(t *testing.T) {
 	a := NewAssessment()
-	a.Record(New(RuleSchemaViolation).Error().Build())
+	a.Record(NewFinding(RuleSchemaViolation).Error().Build())
 	got := a.Error()
-	want := "security assessment failed: 1 errors, 0 warnings: SCHEMA_VIOLATION"
+	want := "security assessment failed: 1 errors, 0 warnings | First Finding: SCHEMA_VIOLATION"
 	if got != want {
 		t.Fatalf("Error()=%q, want %q", got, want)
 	}
