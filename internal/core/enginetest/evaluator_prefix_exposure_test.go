@@ -92,14 +92,14 @@ func TestCheckExposure(t *testing.T) {
 	tests := []struct {
 		name     string
 		prefix   kernel.ObjectPrefix
-		facts    exposure.Facts
+		facts    exposure.AccessSummary
 		wantPub  bool
 		wantEvid string
 	}{
 		{
 			name:   "identity grants public read",
 			prefix: "invoices/",
-			facts: exposure.Facts{
+			facts: exposure.AccessSummary{
 				HasIdentityEvidence: true,
 				IdentityGrants:      exposure.Grants{{Scope: kernel.ObjectPrefix("invoices/"), SourceID: "AllowPublic"}},
 			},
@@ -109,7 +109,7 @@ func TestCheckExposure(t *testing.T) {
 		{
 			name:   "identity blocked",
 			prefix: "invoices/",
-			facts: exposure.Facts{
+			facts: exposure.AccessSummary{
 				HasIdentityEvidence: true,
 				IdentityGrants:      exposure.Grants{{Scope: kernel.WildcardPrefix}},
 				IdentityReadBlocked: true,
@@ -119,7 +119,7 @@ func TestCheckExposure(t *testing.T) {
 		{
 			name:   "resource grants public read",
 			prefix: "invoices/",
-			facts: exposure.Facts{
+			facts: exposure.AccessSummary{
 				HasResourceEvidence: true,
 				ResourceReadAll:     true,
 			},
@@ -129,7 +129,7 @@ func TestCheckExposure(t *testing.T) {
 		{
 			name:   "resource blocked",
 			prefix: "invoices/",
-			facts: exposure.Facts{
+			facts: exposure.AccessSummary{
 				HasResourceEvidence: true,
 				ResourceReadAll:     true,
 				ResourceReadBlocked: true,
@@ -139,7 +139,7 @@ func TestCheckExposure(t *testing.T) {
 		{
 			name:     "missing evidence fail-closed",
 			prefix:   "invoices/",
-			facts:    exposure.Facts{},
+			facts:    exposure.AccessSummary{},
 			wantPub:  true,
 			wantEvid: "missing_evidence",
 		},

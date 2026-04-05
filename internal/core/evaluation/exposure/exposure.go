@@ -76,8 +76,8 @@ func (gs Grants) FindMatch(prefix kernel.ObjectPrefix) *Grant {
 	return nil
 }
 
-// Facts contains normalized evidence used for prefix exposure checks.
-type Facts struct {
+// AccessSummary contains normalized evidence used for prefix exposure checks.
+type AccessSummary struct {
 	HasIdentityEvidence bool
 	HasResourceEvidence bool
 
@@ -91,22 +91,22 @@ type Facts struct {
 }
 
 // IdentityAllowsPublicRead reports whether identity-bound evidence permits public read.
-func (f Facts) IdentityAllowsPublicRead() bool {
+func (f AccessSummary) IdentityAllowsPublicRead() bool {
 	return f.HasIdentityEvidence && !f.IdentityReadBlocked
 }
 
 // ResourceAllowsPublicRead reports whether resource-bound evidence permits public read.
-func (f Facts) ResourceAllowsPublicRead() bool {
+func (f AccessSummary) ResourceAllowsPublicRead() bool {
 	return f.HasResourceEvidence && f.ResourceReadAll && !f.ResourceReadBlocked
 }
 
 // LacksEvidence reports whether neither identity nor resource evidence is available.
-func (f Facts) LacksEvidence() bool {
+func (f AccessSummary) LacksEvidence() bool {
 	return !f.HasIdentityEvidence && !f.HasResourceEvidence
 }
 
 // CheckExposure determines whether a protected prefix is effectively publicly readable.
-func (f Facts) CheckExposure(prefix kernel.ObjectPrefix) Audit {
+func (f AccessSummary) CheckExposure(prefix kernel.ObjectPrefix) Audit {
 	// Rule 1: Explicit identity grants take precedence.
 	if f.IdentityAllowsPublicRead() {
 		if grant := f.IdentityGrants.FindMatch(prefix); grant != nil {

@@ -8,7 +8,10 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// BuildTimelinesPerControl constructs chronological timelines for each asset across all controls.
+// BuildTimelinesPerControl constructs chronological timelines for each asset
+// across all controls. The outer loop iterates snapshots (time), the middle
+// loop iterates assets, and the inner loop evaluates each control's predicate
+// to record whether the asset was unsafe at that point in time.
 func BuildTimelinesPerControl(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
@@ -21,32 +24,46 @@ func BuildTimelinesPerControl(
 	}
 
 	for _, snap := range snapshots {
-		captureTime := snap.CapturedAt
-
 		for _, a := range snap.Assets {
-			for _, ctl := range controls {
-				timelines := timelinesByControl[ctl.ID]
-
-				t, exists := timelines[a.ID]
-				if !exists {
-					var err error
-					t, err = asset.NewTimeline(a)
-					if err != nil {
-						return nil, fmt.Errorf("build timeline for control %s: %w", ctl.ID, err)
-					}
-					timelines[a.ID] = t
-				}
-
-				isUnsafe := checkUnsafe(ctl, a, snap, celEval)
-				if err := t.RecordObservation(captureTime, isUnsafe); err != nil {
-					return nil, fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
-				}
-				t.SetAsset(a)
+			if err := recordAssetObservation(a, snap, controls, celEval, timelinesByControl); err != nil {
+				return nil, err
 			}
 		}
 	}
 
 	return timelinesByControl, nil
+}
+
+// recordAssetObservation evaluates a single asset against all controls at one
+// point in time, updating the corresponding timelines. Extracted from the
+// triple-nested loop to reduce indentation and clarify the per-asset logic.
+func recordAssetObservation(
+	a asset.Asset,
+	snap asset.Snapshot,
+	controls []policy.ControlDefinition,
+	celEval policy.PredicateEval,
+	timelinesByControl map[kernel.ControlID]map[asset.ID]*asset.Timeline,
+) error {
+	for _, ctl := range controls {
+		timelines := timelinesByControl[ctl.ID]
+
+		t, exists := timelines[a.ID]
+		if !exists {
+			var err error
+			t, err = asset.NewTimeline(a)
+			if err != nil {
+				return fmt.Errorf("build timeline for control %s: %w", ctl.ID, err)
+			}
+			timelines[a.ID] = t
+		}
+
+		isUnsafe := checkUnsafe(ctl, a, snap, celEval)
+		if err := t.RecordObservation(snap.CapturedAt, isUnsafe); err != nil {
+			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
+		}
+		t.SetAsset(a)
+	}
+	return nil
 }
 
 // checkUnsafe evaluates an asset against a control predicate using the CEL evaluator.

@@ -67,7 +67,7 @@ func (e *prefixEvaluator) assetExposure(
 	row evaluation.Row,
 	protected policy.PrefixSet,
 ) (evaluation.Row, []evaluation.Finding) {
-	facts := exposure.FactsFromStorage(e.timeline.Asset().Properties)
+	facts := exposure.SummarizeAccess(e.timeline.Asset().Properties)
 	var findings []evaluation.Finding
 
 	for _, prefix := range protected.Prefixes() {

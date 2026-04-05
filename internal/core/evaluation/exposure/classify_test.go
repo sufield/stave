@@ -417,10 +417,10 @@ func TestGovernanceOverrides_IsHardened(t *testing.T) {
 	}
 }
 
-// --- Facts tests ---
+// --- AccessSummary tests ---
 
 func TestFacts_CheckExposure_IdentityGrant(t *testing.T) {
-	facts := Facts{
+	facts := AccessSummary{
 		HasIdentityEvidence: true,
 		IdentityGrants:      Grants{{Scope: kernel.WildcardPrefix, SourceID: "stmt-1"}},
 	}
@@ -434,7 +434,7 @@ func TestFacts_CheckExposure_IdentityGrant(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_Resource(t *testing.T) {
-	facts := Facts{
+	facts := AccessSummary{
 		HasResourceEvidence: true,
 		ResourceReadAll:     true,
 	}
@@ -448,7 +448,7 @@ func TestFacts_CheckExposure_Resource(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
-	result := Facts{}.CheckExposure(kernel.ObjectPrefix("any-prefix"))
+	result := AccessSummary{}.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if !result.Exposed {
 		t.Error("expected exposed when missing evidence")
 	}
@@ -458,7 +458,7 @@ func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_Safe(t *testing.T) {
-	facts := Facts{HasIdentityEvidence: true}
+	facts := AccessSummary{HasIdentityEvidence: true}
 	result := facts.CheckExposure(kernel.ObjectPrefix("no-matching-prefix"))
 	if result.Exposed {
 		t.Error("expected safe when no grants match")
@@ -466,7 +466,7 @@ func TestFacts_CheckExposure_Safe(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_IdentityBlocked(t *testing.T) {
-	facts := Facts{
+	facts := AccessSummary{
 		HasIdentityEvidence: true,
 		IdentityReadBlocked: true,
 		IdentityGrants:      Grants{{Scope: kernel.WildcardPrefix, SourceID: "stmt-1"}},
@@ -478,7 +478,7 @@ func TestFacts_CheckExposure_IdentityBlocked(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_ResourceBlocked(t *testing.T) {
-	facts := Facts{
+	facts := AccessSummary{
 		HasResourceEvidence: true,
 		ResourceReadAll:     true,
 		ResourceReadBlocked: true,
@@ -490,10 +490,10 @@ func TestFacts_CheckExposure_ResourceBlocked(t *testing.T) {
 }
 
 func TestFacts_LacksEvidence(t *testing.T) {
-	if !(Facts{}).LacksEvidence() {
+	if !(AccessSummary{}).LacksEvidence() {
 		t.Error("expected lacks evidence")
 	}
-	if (Facts{HasIdentityEvidence: true}).LacksEvidence() {
+	if (AccessSummary{HasIdentityEvidence: true}).LacksEvidence() {
 		t.Error("expected has evidence")
 	}
 }
@@ -565,7 +565,7 @@ func TestFactsFromStorage_Grants(t *testing.T) {
 			},
 		},
 	}
-	facts := FactsFromStorage(props)
+	facts := SummarizeAccess(props)
 	if len(facts.IdentityGrants) != 2 {
 		t.Fatalf("expected 2 grants, got %d", len(facts.IdentityGrants))
 	}
@@ -575,7 +575,7 @@ func TestFactsFromStorage_Grants(t *testing.T) {
 }
 
 func TestFactsFromStorage_Empty(t *testing.T) {
-	facts := FactsFromStorage(map[string]any{})
+	facts := SummarizeAccess(map[string]any{})
 	if facts.IdentityGrants != nil {
 		t.Error("expected nil grants for missing storage")
 	}
@@ -592,7 +592,7 @@ func TestFactsFromStorage_OrphanedScope(t *testing.T) {
 			},
 		},
 	}
-	facts := FactsFromStorage(props)
+	facts := SummarizeAccess(props)
 	if len(facts.IdentityGrants) != 1 {
 		t.Fatalf("expected 1 grant (orphan skipped), got %d", len(facts.IdentityGrants))
 	}
@@ -612,7 +612,7 @@ func TestFactsFromStorage_AllScopesOrphaned(t *testing.T) {
 			},
 		},
 	}
-	facts := FactsFromStorage(props)
+	facts := SummarizeAccess(props)
 	if len(facts.IdentityGrants) != 0 {
 		t.Fatalf("expected 0 grants (all orphaned), got %d", len(facts.IdentityGrants))
 	}
