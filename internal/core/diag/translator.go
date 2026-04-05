@@ -12,9 +12,9 @@ type ExternalError interface {
 	Code() string
 }
 
-// Translator converts external validation diagnostics into canonical issues.
+// Translator converts external validation diagnostics into canonical findings.
 type Translator struct {
-	defaultCode   Code
+	defaultRule   RuleID
 	defaultAction string
 	pathPrefix    string
 }
@@ -22,7 +22,7 @@ type Translator struct {
 // Option configures a Translator during construction.
 type Option func(*Translator)
 
-// WithDefaultAction returns an Option that sets a fallback action for unmapped codes.
+// WithDefaultAction returns an Option that sets a fallback action for unmapped rules.
 func WithDefaultAction(action string) Option {
 	return func(t *Translator) {
 		t.defaultAction = strings.TrimSpace(action)
@@ -36,46 +36,46 @@ func WithPathPrefix(prefix string) Option {
 	}
 }
 
-var schemaViolationCodes = map[string]struct{}{
+var schemaViolationRules = map[string]struct{}{
 	"required":              {},
 	"type":                  {},
 	"enum":                  {},
 	"additional_properties": {},
 }
 
-var schemaActionByCode = map[string]func(string) string{
+var schemaActionByRule = map[string]func(string) string{
 	"required":              requiredFieldAction,
 	"type":                  expectedTypeAction,
 	"enum":                  enumAction,
 	"additional_properties": additionalPropertiesAction,
 }
 
-// NewTranslator creates a translator with a fallback canonical code and optional configuration.
-func NewTranslator(defaultCode Code, opts ...Option) *Translator {
-	code := Code(strings.TrimSpace(string(defaultCode)))
-	if code == "" {
-		code = CodeSchemaViolation
+// NewTranslator creates a translator with a fallback rule ID and optional configuration.
+func NewTranslator(defaultRule RuleID, opts ...Option) *Translator {
+	rule := RuleID(strings.TrimSpace(string(defaultRule)))
+	if rule == "" {
+		rule = RuleSchemaViolation
 	}
-	t := &Translator{defaultCode: code}
+	t := &Translator{defaultRule: rule}
 	for _, opt := range opts {
 		opt(t)
 	}
 	return t
 }
 
-// Translate converts external diagnostics into a Report.
-func (t *Translator) Translate(externalErrors []ExternalError) *Report {
-	diagnosticReport := NewResult()
-	diagnostics := make([]Diagnostic, 0, len(externalErrors))
+// Translate converts external diagnostics into an Assessment.
+func (t *Translator) Translate(externalErrors []ExternalError) *Assessment {
+	assessment := NewAssessment()
+	findings := make([]Finding, 0, len(externalErrors))
 	for _, externalErr := range externalErrors {
-		diagnostics = append(diagnostics, t.TranslateOne(externalErr))
+		findings = append(findings, t.TranslateOne(externalErr))
 	}
-	diagnosticReport.AddAll(diagnostics)
-	return diagnosticReport
+	assessment.RecordAll(findings)
+	return assessment
 }
 
-// TranslateOne converts one external diagnostic into a canonical issue.
-func (t *Translator) TranslateOne(externalErr ExternalError) Diagnostic {
+// TranslateOne converts one external diagnostic into a canonical finding.
+func (t *Translator) TranslateOne(externalErr ExternalError) Finding {
 	field := strings.TrimSpace(externalErr.Field())
 	fullPath := field
 	if t.pathPrefix != "" {
@@ -87,7 +87,7 @@ func (t *Translator) TranslateOne(externalErr ExternalError) Diagnostic {
 	}
 
 	extCode := strings.ToLower(strings.TrimSpace(externalErr.Code()))
-	builder := New(t.mapCode(extCode)).
+	builder := New(t.mapRule(extCode)).
 		Error().
 		Msg(strings.TrimSpace(externalErr.Description())).
 		Action(t.deriveAction(extCode, field))
@@ -97,15 +97,15 @@ func (t *Translator) TranslateOne(externalErr ExternalError) Diagnostic {
 	return builder.Build()
 }
 
-func (t *Translator) mapCode(extCode string) Code {
-	if _, ok := schemaViolationCodes[extCode]; ok {
-		return CodeSchemaViolation
+func (t *Translator) mapRule(extCode string) RuleID {
+	if _, ok := schemaViolationRules[extCode]; ok {
+		return RuleSchemaViolation
 	}
-	return t.defaultCode
+	return t.defaultRule
 }
 
 func (t *Translator) deriveAction(extCode, field string) string {
-	if builder, ok := schemaActionByCode[extCode]; ok {
+	if builder, ok := schemaActionByRule[extCode]; ok {
 		return builder(field)
 	}
 	if t.defaultAction != "" {

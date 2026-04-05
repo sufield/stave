@@ -77,10 +77,10 @@ func TestCheckControlEffectiveness(t *testing.T) {
 	if len(issues) != 1 {
 		t.Fatalf("issue count = %d, want 1 (%v)", len(issues), issues)
 	}
-	if issues[0].Code != diag.CodeControlNeverMatches {
-		t.Fatalf("issue code = %q, want %q", issues[0].Code, diag.CodeControlNeverMatches)
+	if issues[0].RuleID != diag.RuleControlNeverMatches {
+		t.Fatalf("issue code = %q, want %q", issues[0].RuleID, diag.RuleControlNeverMatches)
 	}
-	if got, _ := issues[0].Evidence.Get("control_id"); got != "CTL.NEVER" {
+	if got, _ := issues[0].Resource.Get("control_id"); got != "CTL.NEVER" {
 		t.Fatalf("control_id evidence = %q, want CTL.NEVER", got)
 	}
 }

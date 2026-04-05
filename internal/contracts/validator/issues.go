@@ -45,8 +45,8 @@ func resolveOptions(opts []Option) options {
 	return o
 }
 
-// DiagnosticsResult converts engine-level diagnostics into a domain diag.Report.
-func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Report {
+// DiagnosticsResult converts engine-level diagnostics into a domain diag.Assessment.
+func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Assessment {
 	o := resolveOptions(opts)
 
 	externalErrors := make([]diag.ExternalError, 0, len(diags))
@@ -62,14 +62,14 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 		})
 	}
 
-	return diag.NewTranslator(diag.CodeSchemaViolation,
+	return diag.NewTranslator(diag.RuleSchemaViolation,
 		diag.WithDefaultAction(action),
 		diag.WithPathPrefix(o.pathPrefix),
 	).Translate(externalErrors)
 }
 
 // ValidateControlYAML validates a control document against its contract schema.
-func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Report, error) {
+func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Assessment, error) {
 	return v.validateDocument(raw, docConfig{
 		Unmarshal:     yaml.Unmarshal,
 		FormatName:    "YAML",
@@ -82,7 +82,7 @@ func (v *Validator) ValidateControlYAML(raw []byte, opts ...Option) (*diag.Repor
 }
 
 // ValidateObservationJSON validates an observation against its contract schema.
-func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Report, error) {
+func (v *Validator) ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Assessment, error) {
 	return v.validateDocument(raw, docConfig{
 		Unmarshal:     json.Unmarshal,
 		FormatName:    "JSON",
@@ -108,7 +108,7 @@ type docConfig struct {
 	DefaultAction string
 }
 
-func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) (*diag.Report, error) {
+func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) (*diag.Assessment, error) {
 	o := resolveOptions(opts)
 
 	var partial struct {
@@ -173,10 +173,10 @@ func (e schemaError) Field() string       { return e.path }
 func (e schemaError) Description() string { return e.desc }
 func (e schemaError) Code() string        { return e.code }
 
-func syntaxErrorResult(fmtName string, err error) *diag.Report {
-	result := diag.NewResult()
-	result.Add(
-		diag.New(diag.CodeSchemaViolation).
+func syntaxErrorResult(fmtName string, err error) *diag.Assessment {
+	result := diag.NewAssessment()
+	result.Record(
+		diag.New(diag.RuleSchemaViolation).
 			Error().
 			Action(fmt.Sprintf("Fix %s syntax errors", fmtName)).
 			WithSensitive("error", fmt.Sprintf("invalid %s: %v", fmtName, err)).
@@ -185,10 +185,10 @@ func syntaxErrorResult(fmtName string, err error) *diag.Report {
 	return result
 }
 
-func missingFieldResult(field, action string) *diag.Report {
-	result := diag.NewResult()
-	result.Add(
-		diag.New(diag.CodeSchemaViolation).
+func missingFieldResult(field, action string) *diag.Assessment {
+	result := diag.NewAssessment()
+	result.Record(
+		diag.New(diag.RuleSchemaViolation).
 			Error().
 			Action(action).
 			With("path", field).
@@ -198,10 +198,10 @@ func missingFieldResult(field, action string) *diag.Report {
 	return result
 }
 
-func unsupportedVersionResult(version string, supported []string, action string) *diag.Report {
-	result := diag.NewResult()
-	result.Add(
-		diag.New(diag.CodeUnsupportedSchemaVersion).
+func unsupportedVersionResult(version string, supported []string, action string) *diag.Assessment {
+	result := diag.NewAssessment()
+	result.Record(
+		diag.New(diag.RuleUnsupportedSchemaVersion).
 			Error().
 			Action(action).
 			With("version", version).

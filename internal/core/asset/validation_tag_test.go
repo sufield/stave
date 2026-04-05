@@ -31,19 +31,19 @@ func TestValidateAllWarnsOnAmbiguousTagKeys(t *testing.T) {
 	issues := snapshots.ValidateAll(time.Now().UTC(), 0)
 
 	for _, issue := range issues {
-		if issue.Code != diag.CodeAmbiguousTags {
+		if issue.RuleID != diag.RuleAmbiguousTags {
 			continue
 		}
-		gotResourceID, _ := issue.Evidence.Get("asset_id")
+		gotResourceID, _ := issue.Resource.Get("asset_id")
 		if got := gotResourceID; got != "r-1" {
 			t.Fatalf("asset_id evidence = %q, want r-1", got)
 		}
-		gotConflict, _ := issue.Evidence.Get("conflict")
+		gotConflict, _ := issue.Resource.Get("conflict")
 		if !strings.Contains(gotConflict, "env") {
 			t.Fatalf("conflict evidence = %q, want to contain env", gotConflict)
 		}
 		return
 	}
 
-	t.Fatalf("expected %s issue, got: %v", diag.CodeAmbiguousTags, issues)
+	t.Fatalf("expected %s issue, got: %v", diag.RuleAmbiguousTags, issues)
 }

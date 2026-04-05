@@ -28,13 +28,13 @@ type Summary struct {
 
 // Report contains validation issues plus computed summary counts.
 type Report struct {
-	Diagnostics *diag.Report
+	Diagnostics *diag.Assessment
 	Summary     Summary
 }
 
 // Valid returns true if there are no error diagnostics.
 func (r *Report) Valid() bool {
-	return !r.ensureDiagnostics().HasErrors()
+	return !r.ensureDiagnostics().Failed()
 }
 
 // HasWarnings returns true if there are warning diagnostics.
@@ -42,12 +42,12 @@ func (r *Report) HasWarnings() bool {
 	return r.ensureDiagnostics().HasWarnings()
 }
 
-func (r *Report) ensureDiagnostics() *diag.Report {
+func (r *Report) ensureDiagnostics() *diag.Assessment {
 	if r == nil {
-		return diag.NewResult()
+		return diag.NewAssessment()
 	}
 	if r.Diagnostics == nil {
-		r.Diagnostics = diag.NewResult()
+		r.Diagnostics = diag.NewAssessment()
 	}
 	return r.Diagnostics
 }
@@ -63,26 +63,26 @@ func ValidateLoaded(input Input) Report {
 		summary.IdentityObservationsLoaded += len(snap.Identities)
 	}
 
-	issues := diag.NewResult()
+	issues := diag.NewAssessment()
 
 	// 1. Validate controls.
 	if len(input.Controls) == 0 {
-		issues.Add(diag.New(diag.CodeNoControls).
+		issues.Record(diag.New(diag.RuleNoControls).
 			Warning().
 			Action("Add control YAML files to the directory").
 			Build())
 	} else {
 		for i := range input.Controls {
-			issues.AddAll(input.Controls[i].Validate())
+			issues.RecordAll(input.Controls[i].Validate())
 		}
 	}
 
 	// 2. Validate snapshots.
-	issues.AddAll(asset.Snapshots(input.Snapshots).ValidateAll(input.NowTime, input.MaxUnsafeDuration))
+	issues.RecordAll(asset.Snapshots(input.Snapshots).ValidateAll(input.NowTime, input.MaxUnsafeDuration))
 
 	// 3. Cross-model consistency checks.
 	if len(input.Controls) > 0 && len(input.Snapshots) > 0 {
-		issues.AddAll(policy.CheckEffectiveness(input.Controls, input.Snapshots, input.PredicateEval))
+		issues.RecordAll(policy.CheckEffectiveness(input.Controls, input.Snapshots, input.PredicateEval))
 	}
 
 	return Report{

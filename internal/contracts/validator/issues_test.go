@@ -43,11 +43,11 @@ func TestDiagnosticsResult_FiltersUnknownInNonStrict(t *testing.T) {
 		{Path: "/b", Message: "missing property 'y'", Kind: &kind.Required{Missing: []string{"y"}}},
 	}
 	nonStrict := DiagnosticsResult(diags, "Fix schema violations", false)
-	if len(nonStrict.Issues) != 1 {
-		t.Fatalf("non-strict issues=%d want 1", len(nonStrict.Issues))
+	if len(nonStrict.Findings) != 1 {
+		t.Fatalf("non-strict issues=%d want 1", len(nonStrict.Findings))
 	}
 	strict := DiagnosticsResult(diags, "Fix schema violations", true)
-	if len(strict.Issues) != 2 {
-		t.Fatalf("strict issues=%d want 2", len(strict.Issues))
+	if len(strict.Findings) != 2 {
+		t.Fatalf("strict issues=%d want 2", len(strict.Findings))
 	}
 }

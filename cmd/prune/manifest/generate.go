@@ -108,7 +108,7 @@ func (r *GenerateRunner) collectHashes(ctx context.Context, dir string) (map[eva
 		if validateErr != nil {
 			return nil, 0, fmt.Errorf("validating schema for %q: %w", path, validateErr)
 		}
-		if issues.HasErrors() || issues.HasWarnings() {
+		if issues.Failed() || issues.HasWarnings() {
 			skipped++
 			continue
 		}

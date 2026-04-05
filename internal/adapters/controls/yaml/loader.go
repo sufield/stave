@@ -106,7 +106,7 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("schema validation error: %w", err)
 	}
-	if issues.HasErrors() || issues.HasWarnings() {
+	if issues.Failed() || issues.HasWarnings() {
 		return policy.ControlDefinition{}, fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 

@@ -21,7 +21,7 @@ func TestSnapshotsCheckTimeSanity_DedupesDuplicateTimestamps(t *testing.T) {
 
 	dupCount := 0
 	for _, issue := range issues {
-		if issue.Code == diag.CodeDuplicateTimestamp {
+		if issue.RuleID == diag.RuleDuplicateTimestamp {
 			dupCount++
 		}
 	}
@@ -54,7 +54,7 @@ func TestSnapshotsCheckIdentityConsistency_DeterministicOrdering(t *testing.T) {
 
 	var orderedIDs []string
 	for _, issue := range issues {
-		id, _ := issue.Evidence.Get("asset_id")
+		id, _ := issue.Resource.Get("asset_id")
 		if id != "" {
 			orderedIDs = append(orderedIDs, id)
 		}
@@ -85,15 +85,15 @@ func TestSnapshotsCheckTimeSanity_ReportsFirstUnsortedPair(t *testing.T) {
 	var gotSnapshotAt, gotComesBefore string
 	var found bool
 	for _, issue := range issues {
-		if issue.Code == diag.CodeSnapshotsUnsorted {
-			gotSnapshotAt, _ = issue.Evidence.Get("snapshot_at")
-			gotComesBefore, _ = issue.Evidence.Get("comes_before")
+		if issue.RuleID == diag.RuleSnapshotsUnsorted {
+			gotSnapshotAt, _ = issue.Resource.Get("snapshot_at")
+			gotComesBefore, _ = issue.Resource.Get("comes_before")
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Fatalf("expected %s issue, got: %v", diag.CodeSnapshotsUnsorted, issues)
+		t.Fatalf("expected %s issue, got: %v", diag.RuleSnapshotsUnsorted, issues)
 	}
 	if gotSnapshotAt != "2026-01-10T00:00:00Z" {
 		t.Fatalf("snapshot_at=%q, want %q", gotSnapshotAt, "2026-01-10T00:00:00Z")
@@ -115,19 +115,19 @@ func TestSnapshotsCheckTimeSanity_ReportsNowBeforeLatest(t *testing.T) {
 
 	var nowIssueFound bool
 	for _, issue := range issues {
-		if issue.Code != diag.CodeNowBeforeSnapshots {
+		if issue.RuleID != diag.RuleNowBeforeSnapshots {
 			continue
 		}
 		nowIssueFound = true
 		if issue.Command != "stave validate --now 2026-01-12T00:00:00Z" {
 			t.Fatalf("command=%q", issue.Command)
 		}
-		latest, _ := issue.Evidence.Get("latest_snapshot")
+		latest, _ := issue.Resource.Get("latest_snapshot")
 		if latest != "2026-01-12T00:00:00Z" {
 			t.Fatalf("latest_snapshot=%q", latest)
 		}
 	}
 	if !nowIssueFound {
-		t.Fatalf("expected %s issue, got: %v", diag.CodeNowBeforeSnapshots, issues)
+		t.Fatalf("expected %s issue, got: %v", diag.RuleNowBeforeSnapshots, issues)
 	}
 }

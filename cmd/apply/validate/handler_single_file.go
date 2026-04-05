@@ -89,7 +89,7 @@ func NewReadinessValidator(
 	newCtlRepo compose.CtlRepoFactory,
 	ctlDir, obsDir string,
 	sanitize bool,
-	extraChecks func() []diag.Diagnostic,
+	extraChecks func() []diag.Finding,
 ) func(time.Duration, time.Time) (validation.Status, error) {
 	return func(maxUnsafeDuration time.Duration, now time.Time) (validation.Status, error) {
 		obsRepo, err := newObsRepo()
@@ -115,7 +115,7 @@ func NewReadinessValidator(
 		}
 
 		if extraChecks != nil {
-			result.Diagnostics.AddAll(extraChecks())
+			result.Diagnostics.RecordAll(extraChecks())
 		}
 
 		return toValidationResult(result), nil

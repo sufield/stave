@@ -31,9 +31,9 @@ func TestControlDefinitionValidate_RequiredFields(t *testing.T) {
 		t.Fatalf("validate() issues = %d, want 3", len(issues))
 	}
 
-	assertIssueCodeAndSignal(t, issues[0], diag.CodeControlMissingID, diag.SignalError)
-	assertIssueCodeAndSignal(t, issues[1], diag.CodeControlMissingName, diag.SignalError)
-	assertIssueCodeAndSignal(t, issues[2], diag.CodeControlMissingDesc, diag.SignalError)
+	assertIssueCodeAndSignal(t, issues[0], diag.RuleControlMissingID, diag.SeverityError)
+	assertIssueCodeAndSignal(t, issues[1], diag.RuleControlMissingName, diag.SeverityError)
+	assertIssueCodeAndSignal(t, issues[2], diag.RuleControlMissingDesc, diag.SeverityError)
 }
 
 func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *testing.T) {
@@ -46,15 +46,15 @@ func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *t
 	}
 
 	issue := issues[0]
-	assertIssueCodeAndSignal(t, issue, diag.CodeControlBadIDFormat, diag.SignalWarn)
+	assertIssueCodeAndSignal(t, issue, diag.RuleControlBadIDFormat, diag.SeverityWarn)
 
-	if got, ok := issue.Evidence.Get("control_id"); !ok || got != ctl.ID.String() {
+	if got, ok := issue.Resource.Get("control_id"); !ok || got != ctl.ID.String() {
 		t.Fatalf("evidence control_id = %q (ok=%v), want %q", got, ok, ctl.ID)
 	}
-	if got := issue.Evidence.Sanitized("error"); got != kernel.Redacted {
+	if got := issue.Resource.Sanitized("error"); got != kernel.Redacted {
 		t.Fatalf("sanitized error = %q, want %q", got, kernel.Redacted)
 	}
-	rawErr, ok := issue.Evidence.Get("error")
+	rawErr, ok := issue.Resource.Get("error")
 	if !ok {
 		t.Fatalf("expected raw error evidence key")
 	}
@@ -73,9 +73,9 @@ func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
 	}
 
 	issue := issues[0]
-	assertIssueCodeAndSignal(t, issue, diag.CodeControlBadType, diag.SignalWarn)
+	assertIssueCodeAndSignal(t, issue, diag.RuleControlBadType, diag.SeverityWarn)
 
-	if got, ok := issue.Evidence.Get("type"); !ok || got != "unknown" {
+	if got, ok := issue.Resource.Get("type"); !ok || got != "unknown" {
 		t.Fatalf("evidence type = %q (ok=%v), want %q for unknown type", got, ok, "unknown")
 	}
 	if !strings.Contains(issue.Action, "supported control type") {
@@ -92,7 +92,7 @@ func TestControlDefinitionValidate_EmptyPredicateWarning(t *testing.T) {
 		t.Fatalf("validate() issues = %d, want 1", len(issues))
 	}
 
-	assertIssueCodeAndSignal(t, issues[0], diag.CodeControlEmptyPredicate, diag.SignalWarn)
+	assertIssueCodeAndSignal(t, issues[0], diag.RuleControlEmptyPredicate, diag.SeverityWarn)
 }
 
 func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t *testing.T) {
@@ -119,8 +119,8 @@ func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t 
 
 	gotParams := make([]string, 0, len(issues))
 	for _, issue := range issues {
-		assertIssueCodeAndSignal(t, issue, diag.CodeControlUndefinedParam, diag.SignalError)
-		param, ok := issue.Evidence.Get("param")
+		assertIssueCodeAndSignal(t, issue, diag.RuleControlUndefinedParam, diag.SeverityError)
+		param, ok := issue.Resource.Get("param")
 		if !ok {
 			t.Fatalf("undefined param issue missing evidence.param")
 		}
@@ -190,17 +190,17 @@ func TestControlDefinitionValidate_MaxUnsafeDurationParam(t *testing.T) {
 			}
 
 			issue := issues[0]
-			assertIssueCodeAndSignal(t, issue, diag.CodeControlBadDurationParam, diag.SignalError)
+			assertIssueCodeAndSignal(t, issue, diag.RuleControlBadDurationParam, diag.SeverityError)
 
-			if got, ok := issue.Evidence.Get("param"); !ok || got != "max_unsafe_duration" {
+			if got, ok := issue.Resource.Get("param"); !ok || got != "max_unsafe_duration" {
 				t.Fatalf("evidence param = %q (ok=%v), want %q", got, ok, "max_unsafe_duration")
 			}
 
 			if tt.wantSensitiveErrKey {
-				if got := issue.Evidence.Sanitized("error"); got != kernel.Redacted {
+				if got := issue.Resource.Sanitized("error"); got != kernel.Redacted {
 					t.Fatalf("sanitized error = %q, want %q", got, kernel.Redacted)
 				}
-				if raw, ok := issue.Evidence.Get("error"); !ok || raw == "" {
+				if raw, ok := issue.Resource.Get("error"); !ok || raw == "" {
 					t.Fatalf("expected raw sensitive error key to be set")
 				}
 			}
@@ -227,12 +227,12 @@ func validControlForValidationTests() policy.ControlDefinition {
 	}
 }
 
-func assertIssueCodeAndSignal(t *testing.T, issue diag.Diagnostic, wantCode diag.Code, wantSignal diag.Signal) {
+func assertIssueCodeAndSignal(t *testing.T, issue diag.Finding, wantCode diag.RuleID, wantSignal diag.Severity) {
 	t.Helper()
-	if issue.Code != wantCode {
-		t.Fatalf("issue code = %q, want %q", issue.Code, wantCode)
+	if issue.RuleID != wantCode {
+		t.Fatalf("issue code = %q, want %q", issue.RuleID, wantCode)
 	}
-	if issue.Signal != wantSignal {
-		t.Fatalf("issue signal = %q, want %q", issue.Signal, wantSignal)
+	if issue.Severity != wantSignal {
+		t.Fatalf("issue signal = %q, want %q", issue.Severity, wantSignal)
 	}
 }

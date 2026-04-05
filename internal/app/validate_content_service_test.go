@@ -43,7 +43,7 @@ unknown_field: true
 	if err != nil {
 		t.Fatalf("strict validate error: %v", err)
 	}
-	if len(nonStrict.Diagnostics.Issues) == 0 {
+	if len(nonStrict.Diagnostics.Findings) == 0 {
 		t.Fatal("expected contract validation to return issues for this payload")
 	}
 }

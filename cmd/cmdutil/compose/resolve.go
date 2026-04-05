@@ -57,11 +57,11 @@ func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (ap
 }
 
 // ResolveNowDiag parses a --now flag value and returns a diagnostic issue on failure.
-// Use this instead of inline ParseRFC3339 + diag.Diagnostic construction.
-func ResolveNowDiag(raw string) (time.Time, *diag.Diagnostic) {
+// Use this instead of inline ParseRFC3339 + diag.Finding construction.
+func ResolveNowDiag(raw string) (time.Time, *diag.Finding) {
 	t, err := cliflags.ParseRFC3339(raw, "--now")
 	if err != nil {
-		issue := diag.New(diag.CodeInvalidNowTime).
+		issue := diag.New(diag.RuleInvalidNowTime).
 			Error().
 			Action("Use RFC3339 format").
 			Command("stave validate --now 2026-01-15T00:00:00Z").
@@ -74,11 +74,11 @@ func ResolveNowDiag(raw string) (time.Time, *diag.Diagnostic) {
 }
 
 // ResolveDurationDiag parses a duration flag value and returns a diagnostic issue on failure.
-// Use this instead of inline kernel.ParseDuration + diag.Diagnostic construction.
-func ResolveDurationDiag(raw string) (*time.Duration, *diag.Diagnostic) {
+// Use this instead of inline kernel.ParseDuration + diag.Finding construction.
+func ResolveDurationDiag(raw string) (*time.Duration, *diag.Finding) {
 	dur, err := kernel.ParseDuration(raw)
 	if err != nil {
-		issue := diag.New(diag.CodeInvalidMaxUnsafe).
+		issue := diag.New(diag.RuleInvalidMaxUnsafe).
 			Error().
 			Action("Use format like 168h, 7d, or 1d12h").
 			Command("stave validate --max-unsafe 168h").

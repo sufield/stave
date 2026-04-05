@@ -84,7 +84,7 @@ func validateObservationContent(v *contractvalidator.Validator, data []byte) (*R
 		return nil, err
 	}
 	validationReport := &Report{Diagnostics: issues}
-	if !issues.HasErrors() && !issues.HasWarnings() {
+	if !issues.Failed() && !issues.HasWarnings() {
 		validationReport.Summary.SnapshotsLoaded = 1
 	}
 	return validationReport, nil
@@ -96,10 +96,10 @@ func validateControlContent(v *contractvalidator.Validator, data []byte) (*Repor
 		return nil, err
 	}
 	if issues == nil {
-		issues = diag.NewResult()
+		issues = diag.NewAssessment()
 	}
 	validationReport := &Report{Diagnostics: issues}
-	if !issues.HasErrors() && !issues.HasWarnings() {
+	if !issues.Failed() && !issues.HasWarnings() {
 		validationReport.Summary.ControlsLoaded = 1
 	}
 	return validationReport, nil

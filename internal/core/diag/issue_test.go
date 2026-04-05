@@ -3,99 +3,99 @@ package diag
 import "testing"
 
 func TestNew_DefaultsToError(t *testing.T) {
-	b := New(CodeSchemaViolation)
-	issue := b.Build()
-	if issue.Signal != SignalError {
-		t.Fatalf("default signal=%q, want %q", issue.Signal, SignalError)
+	b := New(RuleSchemaViolation)
+	finding := b.Build()
+	if finding.Severity != SeverityError {
+		t.Fatalf("default severity=%q, want %q", finding.Severity, SeverityError)
 	}
-	if issue.Code != CodeSchemaViolation {
-		t.Fatalf("code=%q, want %q", issue.Code, CodeSchemaViolation)
+	if finding.RuleID != RuleSchemaViolation {
+		t.Fatalf("rule_id=%q, want %q", finding.RuleID, RuleSchemaViolation)
 	}
 }
 
 func TestBuilder_Warning(t *testing.T) {
-	issue := New(CodeNoSnapshots).Warning().Build()
-	if issue.Signal != SignalWarn {
-		t.Fatalf("signal=%q, want %q", issue.Signal, SignalWarn)
+	finding := New(RuleNoSnapshots).Warning().Build()
+	if finding.Severity != SeverityWarn {
+		t.Fatalf("severity=%q, want %q", finding.Severity, SeverityWarn)
 	}
 }
 
 func TestBuilder_Msg(t *testing.T) {
-	issue := New(CodeNoControls).Msg("no controls found").Build()
-	if issue.Message != "no controls found" {
-		t.Fatalf("message=%q, want %q", issue.Message, "no controls found")
+	finding := New(RuleNoControls).Msg("no controls found").Build()
+	if finding.Message != "no controls found" {
+		t.Fatalf("message=%q, want %q", finding.Message, "no controls found")
 	}
 }
 
 func TestBuilder_Action(t *testing.T) {
-	issue := New(CodeNoControls).Action("add controls").Build()
-	if issue.Action != "add controls" {
-		t.Fatalf("action=%q, want %q", issue.Action, "add controls")
+	finding := New(RuleNoControls).Action("add controls").Build()
+	if finding.Action != "add controls" {
+		t.Fatalf("action=%q, want %q", finding.Action, "add controls")
 	}
 }
 
 func TestBuilder_Command(t *testing.T) {
-	issue := New(CodeNoControls).Command("stave init").Build()
-	if issue.Command != "stave init" {
-		t.Fatalf("command=%q, want %q", issue.Command, "stave init")
+	finding := New(RuleNoControls).Command("stave init").Build()
+	if finding.Command != "stave init" {
+		t.Fatalf("command=%q, want %q", finding.Command, "stave init")
 	}
 }
 
 func TestBuilder_With(t *testing.T) {
-	issue := New(CodeSchemaViolation).With("path", "/foo").Build()
-	v, ok := issue.Evidence.Get("path")
+	finding := New(RuleSchemaViolation).With("path", "/foo").Build()
+	v, ok := finding.Resource.Get("path")
 	if !ok || v != "/foo" {
-		t.Fatalf("evidence path=%q ok=%v, want /foo true", v, ok)
+		t.Fatalf("resource path=%q ok=%v, want /foo true", v, ok)
 	}
 }
 
 func TestBuilder_WithMap(t *testing.T) {
 	m := map[string]string{"a": "1", "b": "2"}
-	issue := New(CodeSchemaViolation).WithMap(m).Build()
+	finding := New(RuleSchemaViolation).WithMap(m).Build()
 	for k, want := range m {
-		got, ok := issue.Evidence.Get(k)
+		got, ok := finding.Resource.Get(k)
 		if !ok || got != want {
-			t.Fatalf("evidence[%q]=%q ok=%v, want %q", k, got, ok, want)
+			t.Fatalf("resource[%q]=%q ok=%v, want %q", k, got, ok, want)
 		}
 	}
 }
 
 func TestBuilder_WithSensitive(t *testing.T) {
-	issue := New(CodeSchemaViolation).WithSensitive("secret", "hunter2").Build()
-	raw, ok := issue.Evidence.Get("secret")
+	finding := New(RuleSchemaViolation).WithSensitive("secret", "hunter2").Build()
+	raw, ok := finding.Resource.Get("secret")
 	if !ok || raw != "hunter2" {
-		t.Fatalf("raw evidence secret=%q ok=%v", raw, ok)
+		t.Fatalf("raw resource secret=%q ok=%v", raw, ok)
 	}
 	// Sanitized access should mask the value.
-	sanitized := issue.Evidence.Sanitized("secret")
+	sanitized := finding.Resource.Sanitized("secret")
 	if sanitized == "hunter2" {
 		t.Fatal("sanitized should not return raw sensitive value")
 	}
 }
 
-func TestBuilder_Build_ClonesEvidence(t *testing.T) {
-	b := New(CodeSchemaViolation).With("key", "val1")
-	issue1 := b.Build()
+func TestBuilder_Build_ClonesResource(t *testing.T) {
+	b := New(RuleSchemaViolation).With("key", "val1")
+	finding1 := b.Build()
 
 	// Mutate builder after first build.
 	b.With("key", "val2")
-	issue2 := b.Build()
+	finding2 := b.Build()
 
-	v1, _ := issue1.Evidence.Get("key")
-	v2, _ := issue2.Evidence.Get("key")
+	v1, _ := finding1.Resource.Get("key")
+	v2, _ := finding2.Resource.Get("key")
 	if v1 == v2 {
-		t.Fatal("Build should clone evidence; mutations should not propagate")
+		t.Fatal("Build should clone resource; mutations should not propagate")
 	}
 	if v1 != "val1" {
-		t.Fatalf("issue1 evidence key=%q, want val1", v1)
+		t.Fatalf("finding1 resource key=%q, want val1", v1)
 	}
 	if v2 != "val2" {
-		t.Fatalf("issue2 evidence key=%q, want val2", v2)
+		t.Fatalf("finding2 resource key=%q, want val2", v2)
 	}
 }
 
 func TestBuilder_Fluent(t *testing.T) {
-	issue := New(CodeControlLoadFailed).
+	finding := New(RuleControlLoadFailed).
 		Error().
 		Msg("load failed").
 		Action("fix the file").
@@ -103,23 +103,23 @@ func TestBuilder_Fluent(t *testing.T) {
 		With("file", "test.yaml").
 		Build()
 
-	if issue.Code != CodeControlLoadFailed {
-		t.Fatalf("code=%q", issue.Code)
+	if finding.RuleID != RuleControlLoadFailed {
+		t.Fatalf("rule_id=%q", finding.RuleID)
 	}
-	if issue.Signal != SignalError {
-		t.Fatalf("signal=%q", issue.Signal)
+	if finding.Severity != SeverityError {
+		t.Fatalf("severity=%q", finding.Severity)
 	}
-	if issue.Message != "load failed" {
-		t.Fatalf("msg=%q", issue.Message)
+	if finding.Message != "load failed" {
+		t.Fatalf("msg=%q", finding.Message)
 	}
-	if issue.Action != "fix the file" {
-		t.Fatalf("action=%q", issue.Action)
+	if finding.Action != "fix the file" {
+		t.Fatalf("action=%q", finding.Action)
 	}
-	if issue.Command != "stave validate" {
-		t.Fatalf("command=%q", issue.Command)
+	if finding.Command != "stave validate" {
+		t.Fatalf("command=%q", finding.Command)
 	}
-	f, _ := issue.Evidence.Get("file")
+	f, _ := finding.Resource.Get("file")
 	if f != "test.yaml" {
-		t.Fatalf("evidence file=%q", f)
+		t.Fatalf("resource file=%q", f)
 	}
 }

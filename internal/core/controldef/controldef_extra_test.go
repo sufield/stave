@@ -140,7 +140,7 @@ func TestValidateControlDefinitionBadIDFormat(t *testing.T) {
 	issues := ctl.Validate()
 	hasBadID := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_ID_FORMAT" {
+		if issue.RuleID == "CONTROL_BAD_ID_FORMAT" {
 			hasBadID = true
 		}
 	}
@@ -162,7 +162,7 @@ func TestValidateControlDefinitionBadSeverity(t *testing.T) {
 	issues := ctl.Validate()
 	hasBadSev := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_SEVERITY" {
+		if issue.RuleID == "CONTROL_BAD_SEVERITY" {
 			hasBadSev = true
 		}
 	}
@@ -184,7 +184,7 @@ func TestValidateControlDefinitionBadType(t *testing.T) {
 	issues := ctl.Validate()
 	hasBadType := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_TYPE" {
+		if issue.RuleID == "CONTROL_BAD_TYPE" {
 			hasBadType = true
 		}
 	}
@@ -202,7 +202,7 @@ func TestValidateControlDefinitionEmptyPredicate(t *testing.T) {
 	issues := ctl.Validate()
 	hasEmptyPred := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_EMPTY_PREDICATE" {
+		if issue.RuleID == "CONTROL_EMPTY_PREDICATE" {
 			hasEmptyPred = true
 		}
 	}
@@ -225,7 +225,7 @@ func TestValidateControlDefinitionUnsupportedOperator(t *testing.T) {
 	issues := ctl.Validate()
 	hasUnsupportedOp := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_UNSUPPORTED_OPERATOR" {
+		if issue.RuleID == "CONTROL_UNSUPPORTED_OPERATOR" {
 			hasUnsupportedOp = true
 		}
 	}
@@ -248,7 +248,7 @@ func TestValidateControlDefinitionUndefinedParam(t *testing.T) {
 	issues := ctl.Validate()
 	hasUndefined := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_UNDEFINED_PARAM" {
+		if issue.RuleID == "CONTROL_UNDEFINED_PARAM" {
 			hasUndefined = true
 		}
 	}
@@ -270,7 +270,7 @@ func TestValidateControlDefinitionBadDurationParam(t *testing.T) {
 	issues := ctl.Validate()
 	hasBadDur := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_DURATION_PARAM" {
+		if issue.RuleID == "CONTROL_BAD_DURATION_PARAM" {
 			hasBadDur = true
 		}
 	}
@@ -292,7 +292,7 @@ func TestValidateControlDefinitionEmptyDurationParam(t *testing.T) {
 	issues := ctl.Validate()
 	hasBadDur := false
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_DURATION_PARAM" {
+		if issue.RuleID == "CONTROL_BAD_DURATION_PARAM" {
 			hasBadDur = true
 		}
 	}
@@ -313,7 +313,7 @@ func TestValidateControlDefinitionValidDuration(t *testing.T) {
 	}
 	issues := ctl.Validate()
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_DURATION_PARAM" {
+		if issue.RuleID == "CONTROL_BAD_DURATION_PARAM" {
 			t.Fatal("should not have CONTROL_BAD_DURATION_PARAM for valid duration")
 		}
 	}
@@ -331,7 +331,7 @@ func TestValidateControlDefinitionSeverityNoneAccepted(t *testing.T) {
 	}
 	issues := ctl.Validate()
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_SEVERITY" {
+		if issue.RuleID == "CONTROL_BAD_SEVERITY" {
 			t.Fatal("SeverityNone should be accepted")
 		}
 	}
@@ -349,7 +349,7 @@ func TestValidateControlDefinitionTypeUnknownAccepted(t *testing.T) {
 	}
 	issues := ctl.Validate()
 	for _, issue := range issues {
-		if issue.Code == "CONTROL_BAD_TYPE" {
+		if issue.RuleID == "CONTROL_BAD_TYPE" {
 			t.Fatal("TypeUnknown should be accepted")
 		}
 	}
