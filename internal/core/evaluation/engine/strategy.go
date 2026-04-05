@@ -57,26 +57,26 @@ type unsafeStateStrategy struct {
 }
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
-	row := newControlRow(s.ctl, t)
+	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
 	if t.CurrentlySafe() {
-		return finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
+		return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 	}
 
 	if t.MissingUnsafeTimestamps() {
-		row.MarkInconclusive("missing timestamps")
-		return row, nil
+		observation.MarkInconclusive("missing timestamps")
+		return observation, nil
 	}
 
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
 	if threshErr != nil {
 		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
-		row.MarkInconclusive("threshold check error")
-		return row, nil
+		observation.MarkInconclusive("threshold check error")
+		return observation, nil
 	}
 	if exceeds {
-		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
+		observation.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
 			Timeline:        t,
 			Control:         s.ctl,
@@ -85,10 +85,10 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.Timeline, now time.Time, ids Ide
 			Identities:      ids.At(t.LastSeenUnsafeAt()),
 			PredicateParser: s.deps.predicateParser(),
 		})
-		return finalizeRow(row, evaluation.VerdictViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
+		return finalizeRow(observation, evaluation.VerdictViolation, evaluation.ConfidenceHigh), []*evaluation.Finding{finding}
 	}
 
-	return finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
+	return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 }
 
 type unsafeDurationStrategy struct {
@@ -97,18 +97,18 @@ type unsafeDurationStrategy struct {
 }
 
 func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
-	row := newControlRow(s.ctl, t)
+	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.maxUnsafeDurationFor(s.ctl)
 
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsUnsafeThreshold(now, maxUnsafe)
 	if threshErr != nil {
 		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
-		row.MarkInconclusive("threshold check error")
-		return row, nil
+		observation.MarkInconclusive("threshold check error")
+		return observation, nil
 	}
 	if exceeds {
-		row.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
+		observation.WhyNow = t.FormatUnsafeSummary(maxUnsafe, now)
 		finding := CreateDurationFinding(DurationFindingInput{
 			Timeline:        t,
 			Control:         s.ctl,
@@ -118,7 +118,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 			PredicateParser: s.deps.predicateParser(),
 		})
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-		return finalizeRow(row, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
+		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
 	}
 
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
@@ -127,13 +127,13 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.Timeline, now time.Time, ids 
 		MaxAllowedGap:   s.deps.maxGapThreshold(),
 	}
 	if reason, ok := coverage.IsSufficient(t); !ok {
-		row.MarkInconclusive(reason)
-		return row, nil
+		observation.MarkInconclusive(reason)
+		return observation, nil
 	}
 
 	// 3. Adequate coverage and no violation => PASS
 	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-	return finalizeRow(row, evaluation.VerdictPass, confidence), nil
+	return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 }
 
 // --- Recurrence Strategy ---
@@ -144,29 +144,29 @@ type unsafeRecurrenceStrategy struct {
 }
 
 func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.Timeline, now time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
-	row := newControlRow(s.ctl, t)
+	observation := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 
 	if !p.Enabled() {
-		row.Reason = "missing recurrence parameters"
-		return finalizeRow(row, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
+		observation.Reason = "missing recurrence parameters"
+		return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 	}
 
 	// 1. Violation Check
 	if findings := EvaluateRecurrenceForControl(t, s.ctl, now); len(findings) > 0 {
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
-		return finalizeRow(row, evaluation.VerdictViolation, confidence), findings
+		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
 	}
 
 	// 2. Coverage Check
 	coverage := CoverageValidator{MinRequiredSpan: p.WindowDuration()}
 	if reason, ok := coverage.IsSufficient(t); !ok {
-		row.MarkInconclusive(reason)
-		return row, nil
+		observation.MarkInconclusive(reason)
+		return observation, nil
 	}
 
 	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
-	return finalizeRow(row, evaluation.VerdictPass, confidence), nil
+	return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 }
 
 // --- Specialized Strategies ---
@@ -176,8 +176,8 @@ type prefixExposureStrategy struct {
 }
 
 func (s *prefixExposureStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
-	row, findings := EvaluatePrefixExposureForRow(t, s.ctl)
-	return row, wrapInPointers(findings)
+	observation, findings := EvaluatePrefixExposureForRow(t, s.ctl)
+	return observation, wrapInPointers(findings)
 }
 
 type unsupportedStrategy struct {
@@ -185,9 +185,9 @@ type unsupportedStrategy struct {
 }
 
 func (s *unsupportedStrategy) Evaluate(t *asset.Timeline, _ time.Time, _ IdentityIndex) (evaluation.Observation, []*evaluation.Finding) {
-	row := newControlRow(s.ctl, t)
-	row.Reason = "type not evaluatable: " + s.ctl.Type.String()
-	return finalizeRow(row, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
+	observation := newControlRow(s.ctl, t)
+	observation.Reason = "type not evaluatable: " + s.ctl.Type.String()
+	return finalizeRow(observation, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
 }
 
 // --- Internal Helpers ---

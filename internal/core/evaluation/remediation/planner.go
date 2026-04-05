@@ -45,12 +45,12 @@ func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 func (p *Planner) EnrichFindings(result evaluation.Audit) []Finding {
 	enriched := make([]Finding, len(result.Findings))
 	for i, f := range result.Findings {
-		item := Finding{
+		findingWithPlan := Finding{
 			Finding:         f,
 			RemediationSpec: resolveSpec(f),
 		}
-		item.RemediationPlan = p.PlanFor(item)
-		enriched[i] = item
+		findingWithPlan.RemediationPlan = p.PlanFor(findingWithPlan)
+		enriched[i] = findingWithPlan
 	}
 	return enriched
 }

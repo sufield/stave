@@ -30,8 +30,8 @@ func (d *Document) AnalyzeScopes() PrefixScopeAnalysis {
 			continue
 		}
 
-		for _, res := range stmt.Resource {
-			prefix := parseObjectPrefix(res)
+		for _, resource := range stmt.Resource {
+			prefix := parseObjectPrefix(resource)
 			if prefix == "" {
 				continue
 			}
