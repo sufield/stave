@@ -35,15 +35,15 @@ func filterAssetDiffs(changes []Diff, opt FilterOptions) []Diff {
 	assetTypes := buildAssetTypeSet(opt.AssetTypes)
 	assetID := strings.TrimSpace(opt.AssetID)
 
-	result := make([]Diff, 0, len(changes))
+	filteredChanges := make([]Diff, 0, len(changes))
 	for _, change := range changes {
 		if matchesChangeType(change.ChangeType, changeTypes) &&
 			matchesAssetType(change, assetTypes) &&
 			matchesID(change, assetID) {
-			result = append(result, change)
+			filteredChanges = append(filteredChanges, change)
 		}
 	}
-	return result
+	return filteredChanges
 }
 
 func buildChangeTypeSet(types []ChangeType) map[ChangeType]struct{} {

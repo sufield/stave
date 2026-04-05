@@ -15,10 +15,10 @@ type ResponseAction struct {
 }
 
 // ResponsePolicy maps safety statuses to response actions.
-// StrictBorderline causes BORDERLINE to be treated as a failure
+// TreatBorderlineAsFailure causes BORDERLINE to be treated as a failure
 // (useful for CI pipelines that require a clean bill of health).
 type ResponsePolicy struct {
-	StrictBorderline bool
+	TreatBorderlineAsFailure bool
 }
 
 // Decide returns the appropriate response action for the given safety status.
@@ -27,7 +27,7 @@ func (p ResponsePolicy) Decide(status Posture) ResponseAction {
 	case PostureSafe:
 		return ResponseAction{Severity: ActionPass}
 	case PostureBorderline:
-		if p.StrictBorderline {
+		if p.TreatBorderlineAsFailure {
 			return ResponseAction{Severity: ActionFail}
 		}
 		return ResponseAction{Severity: ActionWarn}

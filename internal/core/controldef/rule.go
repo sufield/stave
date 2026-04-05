@@ -30,20 +30,20 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 		return nil
 	}
 
-	var results []Misconfiguration
+	var misconfigurations []Misconfiguration
 	for i := range p.Any {
-		results = p.Any[i].collect(ctx, results)
+		misconfigurations = p.Any[i].collect(ctx, misconfigurations)
 	}
 	for i := range p.All {
-		results = p.All[i].collect(ctx, results)
+		misconfigurations = p.All[i].collect(ctx, misconfigurations)
 	}
 
-	if len(results) == 0 {
+	if len(misconfigurations) == 0 {
 		return nil
 	}
 
 	// Sort by Property, Operator, then UnsafeValue for fully deterministic output.
-	slices.SortFunc(results, func(a, b Misconfiguration) int {
+	slices.SortFunc(misconfigurations, func(a, b Misconfiguration) int {
 		if n := cmp.Compare(a.Property.String(), b.Property.String()); n != 0 {
 			return n
 		}
@@ -55,7 +55,7 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 
 	// Remove adjacent duplicates (same property checked multiple times in a logic tree).
 	// Uses fmt.Sprint for UnsafeValue since it is type any and may not be comparable with ==.
-	return slices.CompactFunc(results, func(a, b Misconfiguration) bool {
+	return slices.CompactFunc(misconfigurations, func(a, b Misconfiguration) bool {
 		return a.Property.String() == b.Property.String() &&
 			a.Operator == b.Operator &&
 			fmt.Sprint(a.UnsafeValue) == fmt.Sprint(b.UnsafeValue)
@@ -63,21 +63,21 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 }
 
 // collect appends discovered misconfigurations and returns the updated slice.
-func (r *PredicateRule) collect(ctx *EvalContext, results []Misconfiguration) []Misconfiguration {
+func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfiguration) []Misconfiguration {
 	for i := range r.Any {
-		results = r.Any[i].collect(ctx, results)
+		misconfigurations = r.Any[i].collect(ctx, misconfigurations)
 	}
 	for i := range r.All {
-		results = r.All[i].collect(ctx, results)
+		misconfigurations = r.All[i].collect(ctx, misconfigurations)
 	}
 
 	if r.Field.IsZero() {
-		return results
+		return misconfigurations
 	}
 
 	val, _ := resolvePropertyValue(ctx.Properties, r.Field.Parts())
 
-	return append(results, Misconfiguration{
+	return append(misconfigurations, Misconfiguration{
 		Property:    predicate.NewFieldPath(r.Field.TrimPrefix(propertiesPathPrefix)),
 		ActualValue: val,
 		Operator:    r.Op,

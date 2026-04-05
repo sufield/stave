@@ -213,7 +213,7 @@ func TestResponsePolicyDecide(t *testing.T) {
 		{true, PostureUnsafe, ActionFail},
 	}
 	for _, tt := range tests {
-		p := ResponsePolicy{StrictBorderline: tt.strict}
+		p := ResponsePolicy{TreatBorderlineAsFailure: tt.strict}
 		got := p.Decide(tt.status)
 		if got.Severity != tt.want {
 			t.Errorf("Decide(strict=%v, %v) = %v, want %v", tt.strict, tt.status, got.Severity, tt.want)
