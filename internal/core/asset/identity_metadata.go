@@ -7,8 +7,8 @@ import (
 )
 
 // Metadata provides a typed view over identity properties.
-func (id CloudIdentity) Metadata() maps.Value {
-	return maps.ParseMap(id.Map())
+func (id CloudIdentity) Metadata() maps.Node {
+	return maps.Wrap(id.Map())
 }
 
 // Owner returns the identity owner value when present.

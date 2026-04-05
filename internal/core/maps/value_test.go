@@ -2,10 +2,10 @@ package maps
 
 import "testing"
 
-var zeroValue Value
+var zeroValue Node
 
 func TestParseMap_Get(t *testing.T) {
-	v := ParseMap(map[string]any{"a": "hello", "b": 42})
+	v := Wrap(map[string]any{"a": "hello", "b": 42})
 	if v.Get("a").String() != "hello" {
 		t.Fatalf("got %q", v.Get("a").String())
 	}
@@ -18,20 +18,20 @@ func TestValue_IsMissing(t *testing.T) {
 	if !zeroValue.IsMissing() {
 		t.Fatal("zero value should be missing")
 	}
-	if (Value{data: "x"}).IsMissing() {
+	if (Node{data: "x"}).IsMissing() {
 		t.Fatal("non-nil should not be missing")
 	}
 }
 
 func TestValue_GetMap(t *testing.T) {
-	v := ParseMap(map[string]any{
+	v := Wrap(map[string]any{
 		"nested": map[string]any{"key": "val"},
 		"notmap": "string",
 	})
 	if v.GetMap("nested").Get("key").String() != "val" {
 		t.Fatal("expected nested value")
 	}
-	// GetMap on a non-map key returns Value wrapping a typed nil map,
+	// GetMap on a non-map key returns Node wrapping a typed nil map,
 	// which is not IsMissing (typed nil != untyped nil). It is empty though.
 	if v.GetMap("notmap").Get("anything").String() != "" {
 		t.Fatal("non-map should have no children")
@@ -42,7 +42,7 @@ func TestValue_GetMap(t *testing.T) {
 }
 
 func TestValue_GetPath(t *testing.T) {
-	v := ParseMap(map[string]any{
+	v := Wrap(map[string]any{
 		"a": map[string]any{
 			"b": map[string]any{
 				"c": "deep",
@@ -70,13 +70,13 @@ func TestValue_GetPath(t *testing.T) {
 }
 
 func TestValue_Bool(t *testing.T) {
-	if !(Value{data: true}).Bool() {
+	if !(Node{data: true}).Bool() {
 		t.Fatal("expected true")
 	}
-	if (Value{data: false}).Bool() {
+	if (Node{data: false}).Bool() {
 		t.Fatal("expected false")
 	}
-	if (Value{data: "true"}).Bool() {
+	if (Node{data: "true"}).Bool() {
 		t.Fatal("string should not parse as bool")
 	}
 	if (zeroValue).Bool() {
@@ -85,13 +85,13 @@ func TestValue_Bool(t *testing.T) {
 }
 
 func TestValue_String(t *testing.T) {
-	if (Value{data: "hello"}).String() != "hello" {
+	if (Node{data: "hello"}).String() != "hello" {
 		t.Fatal("expected hello")
 	}
-	if (Value{data: "  trimmed  "}).String() != "trimmed" {
+	if (Node{data: "  trimmed  "}).String() != "trimmed" {
 		t.Fatal("expected trimmed")
 	}
-	if (Value{data: 42}).String() != "" {
+	if (Node{data: 42}).String() != "" {
 		t.Fatal("non-string should return empty")
 	}
 	if (zeroValue).String() != "" {
@@ -100,7 +100,7 @@ func TestValue_String(t *testing.T) {
 }
 
 func TestValue_Any(t *testing.T) {
-	if (Value{data: 42}).Any() != 42 {
+	if (Node{data: 42}).Any() != 42 {
 		t.Fatal("expected 42")
 	}
 	if (zeroValue).Any() != nil {
@@ -110,28 +110,28 @@ func TestValue_Any(t *testing.T) {
 
 func TestValue_StringSlice(t *testing.T) {
 	t.Run("from []any", func(t *testing.T) {
-		v := Value{data: []any{"a", "b", "c"}}
+		v := Node{data: []any{"a", "b", "c"}}
 		got := v.StringSlice()
 		if len(got) != 3 || got[0] != "a" || got[2] != "c" {
 			t.Fatalf("got %v", got)
 		}
 	})
 	t.Run("from []string", func(t *testing.T) {
-		v := Value{data: []string{"x", "y"}}
+		v := Node{data: []string{"x", "y"}}
 		got := v.StringSlice()
 		if len(got) != 2 || got[0] != "x" {
 			t.Fatalf("got %v", got)
 		}
 	})
 	t.Run("trims and filters", func(t *testing.T) {
-		v := Value{data: []any{"  a  ", "", "  ", "b"}}
+		v := Node{data: []any{"  a  ", "", "  ", "b"}}
 		got := v.StringSlice()
 		if len(got) != 2 || got[0] != "a" || got[1] != "b" {
 			t.Fatalf("got %v", got)
 		}
 	})
 	t.Run("non-string items skipped", func(t *testing.T) {
-		v := Value{data: []any{"a", 42, "b"}}
+		v := Node{data: []any{"a", 42, "b"}}
 		got := v.StringSlice()
 		if len(got) != 2 {
 			t.Fatalf("got %v", got)
@@ -143,7 +143,7 @@ func TestValue_StringSlice(t *testing.T) {
 		}
 	})
 	t.Run("wrong type returns nil", func(t *testing.T) {
-		if (Value{data: 42}).StringSlice() != nil {
+		if (Node{data: 42}).StringSlice() != nil {
 			t.Fatal("expected nil for int")
 		}
 	})
@@ -151,7 +151,7 @@ func TestValue_StringSlice(t *testing.T) {
 
 func TestValue_StringMap(t *testing.T) {
 	t.Run("from map[string]any", func(t *testing.T) {
-		v := Value{data: map[string]any{"k": "v", "num": 42}}
+		v := Node{data: map[string]any{"k": "v", "num": 42}}
 		got := v.StringMap()
 		if got["k"] != "v" {
 			t.Fatalf("got %v", got)
@@ -161,28 +161,28 @@ func TestValue_StringMap(t *testing.T) {
 		}
 	})
 	t.Run("from map[string]string", func(t *testing.T) {
-		v := Value{data: map[string]string{"a": "b"}}
+		v := Node{data: map[string]string{"a": "b"}}
 		got := v.StringMap()
 		if got["a"] != "b" {
 			t.Fatalf("got %v", got)
 		}
 	})
 	t.Run("trims keys and values", func(t *testing.T) {
-		v := Value{data: map[string]any{" k ": " v "}}
+		v := Node{data: map[string]any{" k ": " v "}}
 		got := v.StringMap()
 		if got["k"] != "v" {
 			t.Fatalf("got %v", got)
 		}
 	})
 	t.Run("skips empty keys and values", func(t *testing.T) {
-		v := Value{data: map[string]any{"": "v", "k": "", "  ": "v2"}}
+		v := Node{data: map[string]any{"": "v", "k": "", "  ": "v2"}}
 		got := v.StringMap()
 		if len(got) != 0 {
 			t.Fatalf("expected empty, got %v", got)
 		}
 	})
 	t.Run("wrong type returns empty", func(t *testing.T) {
-		got := (Value{data: 42}).StringMap()
+		got := (Node{data: 42}).StringMap()
 		if len(got) != 0 {
 			t.Fatalf("expected empty, got %v", got)
 		}

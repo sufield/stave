@@ -9,7 +9,7 @@ import (
 
 // SummarizeAccess extracts prefix exposure facts from storage properties.
 func SummarizeAccess(props map[string]any) AccessSummary {
-	pe := maps.ParseMap(props).GetPath("storage.prefix_exposure")
+	pe := maps.Wrap(props).GetPath("storage.prefix_exposure")
 	if pe.IsMissing() {
 		return AccessSummary{}
 	}
@@ -29,7 +29,7 @@ func SummarizeAccess(props map[string]any) AccessSummary {
 // buildGrants maps parallel property structures into a slice of Grant objects.
 // Scopes without a corresponding non-empty source are skipped to prevent
 // ghost grants with empty StatementIDs.
-func buildGrants(pe maps.Value) Grants {
+func buildGrants(pe maps.Node) Grants {
 	scopes := pe.Get("identity_read_scopes").StringSlice()
 	sources := pe.Get("identity_source_by_scope").StringMap()
 
