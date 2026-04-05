@@ -175,8 +175,8 @@ func TestEvaluate_DenyReturnsEmpty(t *testing.T) {
 
 func TestUpdateReport(t *testing.T) {
 	r := &Report{}
-	r.UpdateReport(Audit{Score: ScoreWarning, Findings: []string{"A"}, IsPublic: true})
-	r.UpdateReport(Audit{Score: ScoreCritical, Findings: []string{"B"}})
+	r.UpdateReport(StatementAssessment{Score: ScoreWarning, Findings: []string{"A"}, IsPublic: true})
+	r.UpdateReport(StatementAssessment{Score: ScoreCritical, Findings: []string{"B"}})
 
 	if r.Score != ScoreCritical {
 		t.Errorf("expected critical, got %d", r.Score)
