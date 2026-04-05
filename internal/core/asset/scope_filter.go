@@ -168,13 +168,13 @@ func FilterSnapshots(predicate *ScopeFilter, snapshots []Snapshot) []Snapshot {
 		return snapshots
 	}
 
-	result := make([]Snapshot, 0, len(snapshots))
+	scopedSnapshots := make([]Snapshot, 0, len(snapshots))
 	for _, snap := range snapshots {
 		if filtered, ok := snap.FilteredBy(predicate); ok {
-			result = append(result, filtered)
+			scopedSnapshots = append(scopedSnapshots, filtered)
 		}
 	}
-	return result
+	return scopedSnapshots
 }
 
 // FilteredBy returns a snapshot with assets retained by the given predicate.

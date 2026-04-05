@@ -30,8 +30,8 @@ func (c *resolutionContext) principalScope() kernel.PrincipalScope {
 
 // readEvidence finds the most relevant evidence path for a read exposure.
 func (c *resolutionContext) readEvidence() []string {
-	if ev := c.evidence.Get(EvIdentityRead); len(ev) > 0 {
-		return ev
+	if evidence := c.evidence.Get(EvIdentityRead); len(evidence) > 0 {
+		return evidence
 	}
 	return c.evidence.Get(EvResourceRead)
 }
