@@ -27,17 +27,27 @@ func (v CoverageValidator) IsSufficient(t *asset.Timeline) (string, bool) {
 		return "no observation snapshots found", false
 	}
 
-	// 1. Check total duration of observations
-	if stats.CoverageSpan() < v.MinRequiredSpan {
+	if v.auditWindowTooShort(stats) {
 		return fmt.Sprintf("observation span %s is less than required %s",
 			stats.CoverageSpan(), v.MinRequiredSpan), false
 	}
 
-	// 2. Check for large gaps in the data
-	if v.MaxAllowedGap > 0 && stats.MaxGap() > v.MaxAllowedGap {
+	if v.hasBlindSpots(stats) {
 		return fmt.Sprintf("maximum observation gap %s exceeds threshold %s",
 			stats.MaxGap(), v.MaxAllowedGap), false
 	}
 
 	return "", true
+}
+
+// auditWindowTooShort reports whether the observation span is shorter than
+// the minimum required for a confident evaluation.
+func (v CoverageValidator) auditWindowTooShort(stats asset.ObservationStats) bool {
+	return stats.CoverageSpan() < v.MinRequiredSpan
+}
+
+// hasBlindSpots reports whether the data contains gaps large enough to
+// miss a state change, making the evaluation unreliable.
+func (v CoverageValidator) hasBlindSpots(stats asset.ObservationStats) bool {
+	return v.MaxAllowedGap > 0 && stats.MaxGap() > v.MaxAllowedGap
 }
