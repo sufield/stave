@@ -39,7 +39,7 @@ func (l List) Assess() Assessment {
 
 	for _, g := range l.grants {
 		aud := g.Audience()
-		if aud == AudiencePrivate {
+		if !aud.IsExternal() {
 			continue
 		}
 		perms[aud] |= g.Permissions()

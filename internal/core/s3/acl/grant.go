@@ -30,6 +30,10 @@ const (
 	AudienceAuthenticatedOnly
 )
 
+// IsExternal reports whether this audience expands the blast radius
+// beyond the resource owner (public internet or any authenticated AWS user).
+func (a Audience) IsExternal() bool { return a != AudiencePrivate }
+
 // String returns the canonical text label for the audience.
 func (a Audience) String() string {
 	switch a {
