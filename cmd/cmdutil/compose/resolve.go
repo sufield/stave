@@ -57,8 +57,8 @@ func ResolveFormatValuePure(raw string, formatChanged bool, isJSONMode bool) (ap
 }
 
 // ResolveNowDiag parses a --now flag value and returns a diagnostic issue on failure.
-// Use this instead of inline ParseRFC3339 + diag.Issue construction.
-func ResolveNowDiag(raw string) (time.Time, *diag.Issue) {
+// Use this instead of inline ParseRFC3339 + diag.Diagnostic construction.
+func ResolveNowDiag(raw string) (time.Time, *diag.Diagnostic) {
 	t, err := cliflags.ParseRFC3339(raw, "--now")
 	if err != nil {
 		issue := diag.New(diag.CodeInvalidNowTime).
@@ -74,8 +74,8 @@ func ResolveNowDiag(raw string) (time.Time, *diag.Issue) {
 }
 
 // ResolveDurationDiag parses a duration flag value and returns a diagnostic issue on failure.
-// Use this instead of inline kernel.ParseDuration + diag.Issue construction.
-func ResolveDurationDiag(raw string) (*time.Duration, *diag.Issue) {
+// Use this instead of inline kernel.ParseDuration + diag.Diagnostic construction.
+func ResolveDurationDiag(raw string) (*time.Duration, *diag.Diagnostic) {
 	dur, err := kernel.ParseDuration(raw)
 	if err != nil {
 		issue := diag.New(diag.CodeInvalidMaxUnsafe).

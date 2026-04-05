@@ -21,7 +21,7 @@ var ErrNoFindings = errors.New("input JSON does not contain evaluation findings"
 type Loader struct{}
 
 // LoadFromFile loads an evaluation result from a JSON file.
-func (l *Loader) LoadFromFile(path string) (*evaluation.Result, error) {
+func (l *Loader) LoadFromFile(path string) (*evaluation.Audit, error) {
 	path = fsutil.CleanUserPath(path)
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
@@ -31,7 +31,7 @@ func (l *Loader) LoadFromFile(path string) (*evaluation.Result, error) {
 }
 
 // LoadFromReader loads an evaluation result from an io.Reader.
-func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Result, error) {
+func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Audit, error) {
 	data, err := fsutil.LimitedReadAll(r, sourceName)
 	if err != nil {
 		return nil, fmt.Errorf("reading evaluation from %s: %w", sourceName, err)
@@ -40,8 +40,8 @@ func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Res
 }
 
 // parseResult is the shared unmarshaling path for both file and reader loading.
-func (l *Loader) parseResult(data []byte, source string) (*evaluation.Result, error) {
-	var result evaluation.Result
+func (l *Loader) parseResult(data []byte, source string) (*evaluation.Audit, error) {
+	var result evaluation.Audit
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("failed to load output file %s: invalid JSON: %w", source, err)
 	}

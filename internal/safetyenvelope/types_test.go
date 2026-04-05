@@ -60,7 +60,7 @@ func TestNewVerification_NormalizesSlices(t *testing.T) {
 
 func TestNewDiagnose_DoesNotMutateInput(t *testing.T) {
 	in := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{
 				Case:     diagnosis.ScenarioEmptyFindings,
 				Signal:   "signal",

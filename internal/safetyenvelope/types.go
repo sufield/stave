@@ -156,14 +156,14 @@ func NewDiagnose(report *diagnosis.Report) *Diagnose {
 	if report == nil {
 		return &Diagnose{
 			SchemaVersion: kernel.SchemaDiagnose,
-			Report:        &diagnosis.Report{Issues: []diagnosis.Issue{}},
+			Report:        &diagnosis.Report{Issues: []diagnosis.Insight{}},
 		}
 	}
 
 	cp := *report
-	cp.Issues = append([]diagnosis.Issue(nil), report.Issues...)
+	cp.Issues = append([]diagnosis.Insight(nil), report.Issues...)
 	if cp.Issues == nil {
-		cp.Issues = []diagnosis.Issue{}
+		cp.Issues = []diagnosis.Insight{}
 	}
 
 	return &Diagnose{

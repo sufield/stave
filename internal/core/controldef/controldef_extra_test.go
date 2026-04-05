@@ -113,7 +113,7 @@ func TestCatalogPackHashEmpty(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestValidateControlDefinitionNil(t *testing.T) {
-	issues := ValidateControlDefinition(nil)
+	issues := (*ControlDefinition)(nil).Validate()
 	if len(issues) != 0 {
 		t.Fatalf("nil control should produce no issues, got %d", len(issues))
 	}
@@ -121,7 +121,7 @@ func TestValidateControlDefinitionNil(t *testing.T) {
 
 func TestValidateControlDefinitionMissingMetadata(t *testing.T) {
 	ctl := &ControlDefinition{}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	// Should have issues for missing ID, name, description, and empty predicate
 	if len(issues) < 3 {
 		t.Fatalf("expected at least 3 issues for empty control, got %d", len(issues))
@@ -137,7 +137,7 @@ func TestValidateControlDefinitionBadIDFormat(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasBadID := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_ID_FORMAT" {
@@ -159,7 +159,7 @@ func TestValidateControlDefinitionBadSeverity(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasBadSev := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_SEVERITY" {
@@ -181,7 +181,7 @@ func TestValidateControlDefinitionBadType(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasBadType := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_TYPE" {
@@ -199,7 +199,7 @@ func TestValidateControlDefinitionEmptyPredicate(t *testing.T) {
 		Name:        "test",
 		Description: "test desc",
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasEmptyPred := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_EMPTY_PREDICATE" {
@@ -222,7 +222,7 @@ func TestValidateControlDefinitionUnsupportedOperator(t *testing.T) {
 			},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasUnsupportedOp := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_UNSUPPORTED_OPERATOR" {
@@ -245,7 +245,7 @@ func TestValidateControlDefinitionUndefinedParam(t *testing.T) {
 			},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasUndefined := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_UNDEFINED_PARAM" {
@@ -267,7 +267,7 @@ func TestValidateControlDefinitionBadDurationParam(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasBadDur := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_DURATION_PARAM" {
@@ -289,7 +289,7 @@ func TestValidateControlDefinitionEmptyDurationParam(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	hasBadDur := false
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_DURATION_PARAM" {
@@ -311,7 +311,7 @@ func TestValidateControlDefinitionValidDuration(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_DURATION_PARAM" {
 			t.Fatal("should not have CONTROL_BAD_DURATION_PARAM for valid duration")
@@ -329,7 +329,7 @@ func TestValidateControlDefinitionSeverityNoneAccepted(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_SEVERITY" {
 			t.Fatal("SeverityNone should be accepted")
@@ -347,7 +347,7 @@ func TestValidateControlDefinitionTypeUnknownAccepted(t *testing.T) {
 			Any: []PredicateRule{{Field: predicate.NewFieldPath("f"), Op: predicate.OpEq, Value: Bool(true)}},
 		},
 	}
-	issues := ValidateControlDefinition(ctl)
+	issues := ctl.Validate()
 	for _, issue := range issues {
 		if issue.Code == "CONTROL_BAD_TYPE" {
 			t.Fatal("TypeUnknown should be accepted")

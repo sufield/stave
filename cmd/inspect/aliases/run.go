@@ -16,7 +16,7 @@ type AliasesOutput struct {
 }
 
 func run(cmd *cobra.Command, category string) error {
-	registry := predicates.DefaultRegistry()
+	registry := predicates.DefaultAliasRegistry()
 	aliasInfos := registry.ListAliasInfo(category)
 
 	supported := domainpredicate.ListSupported()

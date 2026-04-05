@@ -5,8 +5,8 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
-func newBuiltinRegistry() *Registry {
-	return &Registry{entries: builtinAliases()}
+func newBuiltinAliasRegistry() *AliasRegistry {
+	return &AliasRegistry{entries: builtinAliases()}
 }
 
 func builtinAliases() map[string]aliasEntry {

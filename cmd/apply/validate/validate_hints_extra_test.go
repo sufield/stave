@@ -38,7 +38,7 @@ func TestShellQuote_ShellChars(t *testing.T) {
 }
 
 func TestHintGenerateControl(t *testing.T) {
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Code:     diag.CodeNoControls,
 		Evidence: kernel.NewSanitizableMap(map[string]string{"control_id": "CTL.TEST.001"}),
 	}
@@ -53,7 +53,7 @@ func TestHintGenerateControl(t *testing.T) {
 }
 
 func TestHintGenerateControl_EmptyControlsDir(t *testing.T) {
-	issue := diag.Issue{Code: diag.CodeNoControls}
+	issue := diag.Diagnostic{Code: diag.CodeNoControls}
 	ctx := hintContext{}
 	got := hintGenerateControl(issue, ctx)
 	if got != "" {
@@ -62,7 +62,7 @@ func TestHintGenerateControl_EmptyControlsDir(t *testing.T) {
 }
 
 func TestHintGenerateControl_NoControlID(t *testing.T) {
-	issue := diag.Issue{Code: diag.CodeNoControls}
+	issue := diag.Diagnostic{Code: diag.CodeNoControls}
 	ctx := hintContext{ControlsDir: "controls"}
 	got := hintGenerateControl(issue, ctx)
 	if !strings.Contains(got, "EXAMPLE.CONTROL.ID") {
@@ -71,7 +71,7 @@ func TestHintGenerateControl_NoControlID(t *testing.T) {
 }
 
 func TestHintDiagnoseObservations(t *testing.T) {
-	issue := diag.Issue{Code: diag.CodeSnapshotsUnsorted}
+	issue := diag.Diagnostic{Code: diag.CodeSnapshotsUnsorted}
 	ctx := hintContext{ControlsDir: "controls", ObservationsDir: "observations"}
 	got := hintDiagnoseObservations(issue, ctx)
 	if !strings.Contains(got, "stave diagnose") {
@@ -83,7 +83,7 @@ func TestHintDiagnoseObservations(t *testing.T) {
 }
 
 func TestHintDiagnoseObservations_NoDirs(t *testing.T) {
-	issue := diag.Issue{}
+	issue := diag.Diagnostic{}
 	ctx := hintContext{}
 	got := hintDiagnoseObservations(issue, ctx)
 	if got != "stave diagnose" {
@@ -92,7 +92,7 @@ func TestHintDiagnoseObservations_NoDirs(t *testing.T) {
 }
 
 func TestHintValidateCoverage(t *testing.T) {
-	issue := diag.Issue{Code: diag.CodeSpanLessThanMaxUnsafe}
+	issue := diag.Diagnostic{Code: diag.CodeSpanLessThanMaxUnsafe}
 	ctx := hintContext{ControlsDir: "controls", ObservationsDir: "observations"}
 	got := hintValidateCoverage(issue, ctx)
 	if !strings.Contains(got, "stave validate") {
@@ -104,7 +104,7 @@ func TestHintValidateCoverage(t *testing.T) {
 }
 
 func TestHintValidateCoverage_NoDirs(t *testing.T) {
-	issue := diag.Issue{}
+	issue := diag.Diagnostic{}
 	ctx := hintContext{}
 	got := hintValidateCoverage(issue, ctx)
 	if got != "stave validate" {
@@ -113,7 +113,7 @@ func TestHintValidateCoverage_NoDirs(t *testing.T) {
 }
 
 func TestHintExplainControl(t *testing.T) {
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Code:     diag.CodeControlUndefinedParam,
 		Evidence: kernel.NewSanitizableMap(map[string]string{"control_id": "CTL.TEST.001"}),
 	}
@@ -128,7 +128,7 @@ func TestHintExplainControl(t *testing.T) {
 }
 
 func TestHintExplainControl_FromPath(t *testing.T) {
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Evidence: kernel.NewSanitizableMap(map[string]string{"path": "controls/s3/CTL.S3.PUBLIC.001.yaml"}),
 	}
 	ctx := hintContext{ControlsDir: "controls/s3"}
@@ -139,7 +139,7 @@ func TestHintExplainControl_FromPath(t *testing.T) {
 }
 
 func TestHintExplainControl_NoID(t *testing.T) {
-	issue := diag.Issue{}
+	issue := diag.Diagnostic{}
 	ctx := hintContext{ControlsDir: "controls"}
 	got := hintExplainControl(issue, ctx)
 	if got != "" {
@@ -148,7 +148,7 @@ func TestHintExplainControl_NoID(t *testing.T) {
 }
 
 func TestHintExplainControl_NoDirs(t *testing.T) {
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Evidence: kernel.NewSanitizableMap(map[string]string{"control_id": "CTL.TEST.001"}),
 	}
 	ctx := hintContext{}
@@ -162,7 +162,7 @@ func TestHintExplainControl_NoDirs(t *testing.T) {
 }
 
 func TestHintForIssue_KnownCode(t *testing.T) {
-	issue := diag.Issue{Code: diag.CodeNoControls}
+	issue := diag.Diagnostic{Code: diag.CodeNoControls}
 	ctx := hintContext{ControlsDir: "controls"}
 	got := hintForIssue(issue, ctx)
 	if !strings.Contains(got, "stave generate") {
@@ -171,7 +171,7 @@ func TestHintForIssue_KnownCode(t *testing.T) {
 }
 
 func TestHintForIssue_UnknownCodeWithPath(t *testing.T) {
-	issue := diag.Issue{
+	issue := diag.Diagnostic{
 		Code:     diag.Code("UNKNOWN"),
 		Evidence: kernel.NewSanitizableMap(map[string]string{"path": "controls/test.yaml"}),
 	}
@@ -183,7 +183,7 @@ func TestHintForIssue_UnknownCodeWithPath(t *testing.T) {
 }
 
 func TestHintForIssue_UnknownCodeNoPath(t *testing.T) {
-	issue := diag.Issue{Code: diag.Code("UNKNOWN")}
+	issue := diag.Diagnostic{Code: diag.Code("UNKNOWN")}
 	ctx := hintContext{}
 	got := hintForIssue(issue, ctx)
 	if got != "" {
@@ -199,15 +199,15 @@ func TestCollectHints_Nil(t *testing.T) {
 }
 
 func TestCollectHints_Empty(t *testing.T) {
-	got := collectHints(&diag.Result{}, hintContext{})
+	got := collectHints(&diag.Report{}, hintContext{})
 	if got != nil {
 		t.Fatalf("expected nil for empty result, got: %v", got)
 	}
 }
 
 func TestCollectHints_Dedupes(t *testing.T) {
-	result := &diag.Result{
-		Issues: []diag.Issue{
+	result := &diag.Report{
+		Issues: []diag.Diagnostic{
 			{Code: diag.CodeNoControls},
 			{Code: diag.CodeNoControls},
 		},
@@ -220,8 +220,8 @@ func TestCollectHints_Dedupes(t *testing.T) {
 }
 
 func TestCollectHints_UsesExplicitCommand(t *testing.T) {
-	result := &diag.Result{
-		Issues: []diag.Issue{
+	result := &diag.Report{
+		Issues: []diag.Diagnostic{
 			{Command: "stave custom-command"},
 		},
 	}
@@ -232,8 +232,8 @@ func TestCollectHints_UsesExplicitCommand(t *testing.T) {
 }
 
 func TestCollectHints_Sorted(t *testing.T) {
-	result := &diag.Result{
-		Issues: []diag.Issue{
+	result := &diag.Report{
+		Issues: []diag.Diagnostic{
 			{Command: "z-command"},
 			{Command: "a-command"},
 			{Command: "m-command"},

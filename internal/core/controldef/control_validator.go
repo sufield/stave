@@ -10,40 +10,34 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
-// validationRule defines a functional signature for checking specific aspects of a control.
-type validationRule func(*ControlDefinition) []diag.Issue
-
-// ValidateControlDefinition performs a comprehensive logical and structural
-// audit of a control's configuration.
-func ValidateControlDefinition(ctl *ControlDefinition) []diag.Issue {
+// Validate performs a comprehensive logical and structural audit of a
+// control's configuration. Returns nil if the control is valid.
+func (ctl *ControlDefinition) Validate() []diag.Diagnostic {
 	if ctl == nil {
 		return nil
 	}
 
-	// Define the pipeline of rules. Order matters if one check depends on another,
-	// though these are designed to be mostly independent.
-	rules := []validationRule{
-		validateRequiredMetadata,
-		validateIdentityFormat,
-		validateSeverityLevel,
-		validateControlCategory,
-		validatePredicateStructure,
-		validateOperatorAvailability,
-		validateParameterIntegrity,
-		validateTemporalConstraints,
+	rules := []func() []diag.Diagnostic{
+		ctl.validateIdentity,
+		ctl.validateDocumentation,
+		ctl.validateIDFormat,
+		ctl.validateSeverity,
+		ctl.validateType,
+		ctl.validatePredicate,
+		ctl.validateOperators,
+		ctl.validateParameters,
+		ctl.validateDuration,
 	}
 
-	var issues []diag.Issue
+	var issues []diag.Diagnostic
 	for _, rule := range rules {
-		if found := rule(ctl); len(found) > 0 {
-			issues = append(issues, found...)
-		}
+		issues = append(issues, rule()...)
 	}
 	return issues
 }
 
-// buildIssueContext generates the standard diagnostic evidence map.
-func buildIssueContext(ctl *ControlDefinition, extra map[string]string) map[string]string {
+// issueContext generates the standard diagnostic evidence map for this control.
+func (ctl *ControlDefinition) issueContext(extra map[string]string) map[string]string {
 	ctx := make(map[string]string, 2+len(extra))
 	if ctl.ID != "" {
 		ctx["control_id"] = ctl.ID.String()
@@ -57,50 +51,51 @@ func buildIssueContext(ctl *ControlDefinition, extra map[string]string) map[stri
 	return ctx
 }
 
-// validateRequiredMetadata ensures the control has the basic identifying info.
-func validateRequiredMetadata(ctl *ControlDefinition) []diag.Issue {
-	var issues []diag.Issue
-	ctx := buildIssueContext(ctl, nil)
+// newIssue starts a diagnostic builder pre-populated with control context.
+func (ctl *ControlDefinition) newIssue(code diag.Code, extra map[string]string) *diag.Builder {
+	return diag.New(code).WithMap(ctl.issueContext(extra))
+}
 
-	if ctl.ID == "" {
-		issues = append(issues, diag.New(diag.CodeControlMissingID).
+// --- Validation rules (methods for encapsulation) ---
+
+func (ctl *ControlDefinition) validateIdentity() []diag.Diagnostic {
+	if ctl.ID != "" {
+		return nil
+	}
+	return []diag.Diagnostic{
+		ctl.newIssue(diag.CodeControlMissingID, nil).
 			Error().
 			Action("Add a unique 'id' (e.g., CTL.S3.PUBLIC.001) to the control definition").
-			WithMap(ctx).
-			Build())
+			Build(),
 	}
+}
 
+func (ctl *ControlDefinition) validateDocumentation() []diag.Diagnostic {
+	var issues []diag.Diagnostic
 	if strings.TrimSpace(ctl.Name) == "" {
-		issues = append(issues, diag.New(diag.CodeControlMissingName).
+		issues = append(issues, ctl.newIssue(diag.CodeControlMissingName, nil).
 			Error().
 			Action("Assign a descriptive 'name' to the control for reporting").
-			WithMap(ctx).
 			Build())
 	}
-
 	if strings.TrimSpace(ctl.Description) == "" {
-		issues = append(issues, diag.New(diag.CodeControlMissingDesc).
+		issues = append(issues, ctl.newIssue(diag.CodeControlMissingDesc, nil).
 			Error().
 			Action("Provide a 'description' explaining the security impact of this control").
-			WithMap(ctx).
 			Build())
 	}
-
 	return issues
 }
 
-// validateIdentityFormat checks if the ID matches the kernel's naming convention.
-func validateIdentityFormat(ctl *ControlDefinition) []diag.Issue {
+func (ctl *ControlDefinition) validateIDFormat() []diag.Diagnostic {
 	if ctl.ID == "" {
 		return nil
 	}
-
 	if err := kernel.ValidateControlIDFormat(ctl.ID.String()); err != nil {
-		return []diag.Issue{
-			diag.New(diag.CodeControlBadIDFormat).
+		return []diag.Diagnostic{
+			ctl.newIssue(diag.CodeControlBadIDFormat, nil).
 				Warning().
 				Action("Align ID with standard format: CTL.<PROVIDER>.<CATEGORY>.<SEQ>").
-				WithMap(buildIssueContext(ctl, nil)).
 				WithSensitive("error", err.Error()).
 				Build(),
 		}
@@ -108,127 +103,104 @@ func validateIdentityFormat(ctl *ControlDefinition) []diag.Issue {
 	return nil
 }
 
-// validateSeverityLevel ensures the severity is within the supported enum range.
-func validateSeverityLevel(ctl *ControlDefinition) []diag.Issue {
+func (ctl *ControlDefinition) validateSeverity() []diag.Diagnostic {
 	if ctl.Severity == SeverityNone || ctl.Severity.IsValid() {
 		return nil
 	}
-
-	return []diag.Issue{
-		diag.New(diag.CodeControlBadSeverity).
+	return []diag.Diagnostic{
+		ctl.newIssue(diag.CodeControlBadSeverity, map[string]string{"severity": ctl.Severity.String()}).
 			Warning().
 			Action("Use a valid severity: info, low, medium, high, or critical").
-			WithMap(buildIssueContext(ctl, map[string]string{"severity": ctl.Severity.String()})).
 			Build(),
 	}
 }
 
-// validateControlCategory ensures the control logic type is recognized.
-func validateControlCategory(ctl *ControlDefinition) []diag.Issue {
+func (ctl *ControlDefinition) validateType() []diag.Diagnostic {
 	if ctl.Type == TypeUnknown || ctl.Type.IsValid() {
 		return nil
 	}
-
-	return []diag.Issue{
-		diag.New(diag.CodeControlBadType).
+	return []diag.Diagnostic{
+		ctl.newIssue(diag.CodeControlBadType, map[string]string{"type": ctl.Type.String()}).
 			Warning().
 			Action("Specify a supported control type (e.g., unsafe_state, unsafe_duration)").
-			WithMap(buildIssueContext(ctl, map[string]string{"type": ctl.Type.String()})).
 			Build(),
 	}
 }
 
-// validatePredicateStructure ensures the logic tree isn't empty.
-func validatePredicateStructure(ctl *ControlDefinition) []diag.Issue {
-	if len(ctl.UnsafePredicate.Any) == 0 && len(ctl.UnsafePredicate.All) == 0 {
-		return []diag.Issue{
-			diag.New(diag.CodeControlEmptyPredicate).
-				Warning().
-				Action("Define at least one rule under 'any' or 'all' in the unsafe_predicate").
-				WithMap(buildIssueContext(ctl, nil)).
-				Build(),
-		}
+func (ctl *ControlDefinition) validatePredicate() []diag.Diagnostic {
+	if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
+		return nil
 	}
-	return nil
+	return []diag.Diagnostic{
+		ctl.newIssue(diag.CodeControlEmptyPredicate, nil).
+			Warning().
+			Action("Define at least one rule under 'any' or 'all' in the unsafe_predicate").
+			Build(),
+	}
 }
 
-// validateOperatorAvailability checks if the logic operators exist in the engine.
-func validateOperatorAvailability(ctl *ControlDefinition) []diag.Issue {
-	var issues []diag.Issue
-
-	// We use the Walk method defined in previous steps to visit all nodes.
+func (ctl *ControlDefinition) validateOperators() []diag.Diagnostic {
+	var issues []diag.Diagnostic
 	ctl.UnsafePredicate.Walk(func(rule PredicateRule) {
-		// A rule with no field is a logical wrapper (any/all), skip it.
 		if rule.Field.IsZero() {
 			return
 		}
-
 		if !predicate.IsSupported(rule.Op) {
-			issues = append(issues, diag.New(diag.CodeControlUnsupportedOperator).
+			issues = append(issues, ctl.newIssue(diag.CodeControlUnsupportedOperator, map[string]string{
+				"field":    rule.Field.String(),
+				"operator": string(rule.Op),
+			}).
 				Warning().
 				Action(fmt.Sprintf("Replace unsupported operator %q with a valid one (eq, ne, in, etc.)", rule.Op)).
-				WithMap(buildIssueContext(ctl, map[string]string{
-					"field":    rule.Field.String(),
-					"operator": string(rule.Op),
-				})).
 				Build())
 		}
 	})
 	return issues
 }
 
-// validateParameterIntegrity ensures all 'ValueFromParam' entries exist in the params map.
-func validateParameterIntegrity(ctl *ControlDefinition) []diag.Issue {
+func (ctl *ControlDefinition) validateParameters() []diag.Diagnostic {
 	missing := ctl.UnsafePredicate.MissingParamReferences(ctl.Params)
 	if len(missing) == 0 {
 		return nil
 	}
-
-	issues := make([]diag.Issue, 0, len(missing))
+	issues := make([]diag.Diagnostic, 0, len(missing))
 	for _, p := range missing {
-		issues = append(issues, diag.New(diag.CodeControlUndefinedParam).
+		issues = append(issues, ctl.newIssue(diag.CodeControlUndefinedParam, map[string]string{"param": p}).
 			Error().
 			Action(fmt.Sprintf("Define parameter %q in the control's 'params' section", p)).
-			WithMap(buildIssueContext(ctl, map[string]string{"param": p})).
 			Build())
 	}
 	return issues
 }
 
-// validateTemporalConstraints checks if max_unsafe_duration is a valid duration string.
-func validateTemporalConstraints(ctl *ControlDefinition) []diag.Issue {
+func (ctl *ControlDefinition) validateDuration() []diag.Diagnostic {
 	const durationKey = "max_unsafe_duration"
 
 	if !ctl.Params.HasKey(durationKey) {
 		return nil
 	}
-
-	// Optimization: If the control state indicates it's already prepared/validated, skip.
 	if ctl.Prepared.Ready && ctl.Prepared.HasMaxUnsafeDuration {
 		return nil
 	}
 
 	raw := ctl.Params.paramString(durationKey)
 	if raw == "" {
-		return []diag.Issue{
-			diag.New(diag.CodeControlBadDurationParam).
+		return []diag.Diagnostic{
+			ctl.newIssue(diag.CodeControlBadDurationParam, map[string]string{"param": durationKey}).
 				Error().
 				Action("Provide a valid duration (e.g., '30d') for max_unsafe_duration").
-				WithMap(buildIssueContext(ctl, map[string]string{"param": durationKey})).
 				Build(),
 		}
 	}
 
 	if _, err := kernel.ParseDuration(raw); err != nil {
-		return []diag.Issue{
-			diag.New(diag.CodeControlBadDurationParam).
+		return []diag.Diagnostic{
+			ctl.newIssue(diag.CodeControlBadDurationParam, map[string]string{"param": durationKey, "value": raw}).
 				Error().
 				Action("Use valid duration units: 'h' for hours or 'd' for days").
-				WithMap(buildIssueContext(ctl, map[string]string{"param": durationKey, "value": raw})).
 				WithSensitive("error", err.Error()).
 				Build(),
 		}
 	}
-
 	return nil
 }

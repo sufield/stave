@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-// Result groups diagnostic issues and provides aggregate inquiry helpers.
-type Result struct {
-	Issues []Issue `json:"issues"`
+// Report groups diagnostic issues and provides aggregate inquiry helpers.
+type Report struct {
+	Issues []Diagnostic `json:"issues"`
 }
 
 // NewResult creates an empty diagnostic result.
-func NewResult() *Result {
-	return &Result{Issues: make([]Issue, 0)}
+func NewResult() *Report {
+	return &Report{Issues: make([]Diagnostic, 0)}
 }
 
 // Add appends a single issue.
-func (r *Result) Add(issue Issue) {
+func (r *Report) Add(issue Diagnostic) {
 	if r == nil {
 		return
 	}
@@ -24,7 +24,7 @@ func (r *Result) Add(issue Issue) {
 }
 
 // AddAll appends multiple issues.
-func (r *Result) AddAll(issues []Issue) {
+func (r *Report) AddAll(issues []Diagnostic) {
 	if r == nil || len(issues) == 0 {
 		return
 	}
@@ -32,7 +32,7 @@ func (r *Result) AddAll(issues []Issue) {
 }
 
 // Merge appends issues from another result.
-func (r *Result) Merge(other *Result) {
+func (r *Report) Merge(other *Report) {
 	if r == nil || other == nil || len(other.Issues) == 0 {
 		return
 	}
@@ -40,7 +40,7 @@ func (r *Result) Merge(other *Result) {
 }
 
 // HasErrors reports whether any issue is error severity.
-func (r *Result) HasErrors() bool {
+func (r *Report) HasErrors() bool {
 	if r == nil {
 		return false
 	}
@@ -53,7 +53,7 @@ func (r *Result) HasErrors() bool {
 }
 
 // HasWarnings reports whether any issue is warning severity.
-func (r *Result) HasWarnings() bool {
+func (r *Report) HasWarnings() bool {
 	if r == nil {
 		return false
 	}
@@ -66,20 +66,20 @@ func (r *Result) HasWarnings() bool {
 }
 
 // Errors returns only error-level issues.
-func (r *Result) Errors() []Issue {
+func (r *Report) Errors() []Diagnostic {
 	return r.filter(SignalError)
 }
 
 // Warnings returns only warning-level issues.
-func (r *Result) Warnings() []Issue {
+func (r *Report) Warnings() []Diagnostic {
 	return r.filter(SignalWarn)
 }
 
-func (r *Result) filter(signal Signal) []Issue {
+func (r *Report) filter(signal Signal) []Diagnostic {
 	if r == nil {
 		return nil
 	}
-	filtered := make([]Issue, 0, len(r.Issues))
+	filtered := make([]Diagnostic, 0, len(r.Issues))
 	for _, issue := range r.Issues {
 		if issue.Signal == signal {
 			filtered = append(filtered, issue)
@@ -89,7 +89,7 @@ func (r *Result) filter(signal Signal) []Issue {
 }
 
 // Error implements error for interoperability with Go error handling.
-func (r *Result) Error() string {
+func (r *Report) Error() string {
 	if r == nil || len(r.Issues) == 0 {
 		return "validation failed: 0 errors, 0 warnings"
 	}
@@ -111,7 +111,7 @@ func (r *Result) Error() string {
 	return summary
 }
 
-func (r *Result) firstIssueSummary() string {
+func (r *Report) firstIssueSummary() string {
 	if r == nil || len(r.Issues) == 0 {
 		return ""
 	}

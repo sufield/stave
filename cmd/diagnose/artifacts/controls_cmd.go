@@ -219,7 +219,7 @@ Exit Codes:
 // Filesystem mode delegates to the injected repo factory.
 func buildControlProvider(cfg catalog.ListConfig, filters []string, newCtlRepo compose.CtlRepoFactory) (catalog.ControlProvider, error) {
 	if cfg.UseBuiltIn {
-		registry := builtin.NewRegistry(
+		registry := builtin.NewControlStore(
 			builtin.EmbeddedFS(), "embedded",
 			builtin.WithAliasResolver(predicates.ResolverFunc()),
 		)

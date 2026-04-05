@@ -136,7 +136,7 @@ func TestEnrich_WithSanitizer(t *testing.T) {
 	s := sanitize.New(sanitize.WithIDSanitization(true))
 	enricher := remediation.NewPlanner()
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Run: evaluation.RunInfo{
 			InputHashes: &evaluation.InputHashes{
 				Files: map[evaluation.FilePath]kernel.Digest{

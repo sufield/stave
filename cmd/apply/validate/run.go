@@ -65,7 +65,7 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 	params := opts.parseParams()
 	if len(params.issues) > 0 {
 		// If flag parsing itself generated diagnostic issues
-		result := &appvalidation.Result{Diagnostics: &diag.Result{Issues: params.issues}}
+		result := &appvalidation.Report{Diagnostics: &diag.Report{Issues: params.issues}}
 		if err := rep.Write(result, opts.hintCtx()); err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func runValidateProject(cmd *cobra.Command, deps validateDeps, rt *ui.Runtime, r
 	return exitErr
 }
 
-func executeValidateRun(cmd *cobra.Command, deps validateDeps, params validateParams, opts *options) (*appvalidation.Result, error) {
+func executeValidateRun(cmd *cobra.Command, deps validateDeps, params validateParams, opts *options) (*appvalidation.Report, error) {
 	// Setup Repositories
 	obsLoader, err := deps.NewObsRepo()
 	if err != nil {

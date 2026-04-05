@@ -91,7 +91,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		AssetID:      asset.ID("res:aws:s3:bucket:test-bucket"),
 		Controls:     policy.ControlDefinitions{ctl},
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
-		Result:       &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		Result:       &evaluation.Audit{Findings: []evaluation.Finding{violation}},
 		TraceBuilder: &apptrace.Builder{},
 		IDGen:        crypto.NewHasher(),
 	})
@@ -162,7 +162,7 @@ func TestBuildFindingDetail_NotFound(t *testing.T) {
 		AssetID:   asset.ID("nonexistent"),
 		Controls:  nil,
 		Snapshots: nil,
-		Result:    &evaluation.Result{},
+		Result:    &evaluation.Audit{},
 		IDGen:     crypto.NewHasher(),
 	})
 	if err == nil {
@@ -186,7 +186,7 @@ func TestBuildFindingDetail_NoControlDefinition(t *testing.T) {
 		AssetID:   asset.ID("res:test"),
 		Controls:  nil,
 		Snapshots: nil,
-		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		Result:    &evaluation.Audit{Findings: []evaluation.Finding{violation}},
 		IDGen:     crypto.NewHasher(),
 	})
 	if err != nil {
@@ -221,7 +221,7 @@ func TestBuildFindingDetail_NoMatchingSnapshot(t *testing.T) {
 		AssetID:   asset.ID("res:missing"),
 		Controls:  policy.ControlDefinitions{ctl},
 		Snapshots: []asset.Snapshot{}, // no snapshots
-		Result:    &evaluation.Result{Findings: []evaluation.Finding{violation}},
+		Result:    &evaluation.Audit{Findings: []evaluation.Finding{violation}},
 		IDGen:     crypto.NewHasher(),
 	})
 	if err != nil {

@@ -23,7 +23,7 @@ func compound001() CompoundRule {
 		Message: "Public access with overly broad IAM permissions — the S3 + IAM " +
 			"lateral movement pattern present in the majority of documented AWS breaches. " +
 			"Remediate both before addressing lower-severity findings.",
-		Matches: func(results []compliance.Result) bool {
+		Matches: func(results []compliance.Outcome) bool {
 			return resultFailed(results, "ACCESS.001") && resultFailed(results, "ACCESS.002")
 		},
 	}
@@ -38,7 +38,7 @@ func compound002() CompoundRule {
 		Message: "Encryption at rest is configured but the bucket is publicly " +
 			"accessible. Encryption provides no confidentiality benefit while " +
 			"public access is enabled.",
-		Matches: func(results []compliance.Result) bool {
+		Matches: func(results []compliance.Outcome) bool {
 			return resultFailed(results, "ACCESS.001") && resultPassed(results, "CONTROLS.001")
 		},
 	}
@@ -54,7 +54,7 @@ func compound003() CompoundRule {
 			"does not restrict which bucket ARNs are reachable. This creates a " +
 			"wormhole: any principal on the VPC can reach any S3 bucket in any " +
 			"account via the endpoint, bypassing firewall controls.",
-		Matches: func(results []compliance.Result) bool {
+		Matches: func(results []compliance.Outcome) bool {
 			return resultPassed(results, "ACCESS.003") && resultFailed(results, "ACCESS.006")
 		},
 	}

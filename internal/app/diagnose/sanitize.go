@@ -15,14 +15,14 @@ func SanitizeDiagnosisReport(s kernel.IDSanitizer, r *diagnosis.Report) *diagnos
 		return nil
 	}
 	out := *r
-	out.Issues = make([]diagnosis.Issue, len(r.Issues))
+	out.Issues = make([]diagnosis.Insight, len(r.Issues))
 	for i, d := range r.Issues {
 		out.Issues[i] = sanitizeDiagnosisIssue(s, d)
 	}
 	return &out
 }
 
-func sanitizeDiagnosisIssue(s kernel.IDSanitizer, d diagnosis.Issue) diagnosis.Issue {
+func sanitizeDiagnosisIssue(s kernel.IDSanitizer, d diagnosis.Insight) diagnosis.Insight {
 	if d.AssetID == "" {
 		return d
 	}

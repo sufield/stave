@@ -76,10 +76,10 @@ func NewEvaluateRun(
 
 // Execute runs the evaluation and returns the Result alongside SafetyStatus
 // without writing output. The caller is responsible for output rendering.
-func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluation.Result, evaluation.SafetyStatus, error) {
+func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluation.Audit, evaluation.SafetyStatus, error) {
 	preflight := e.loadEvaluationArtifacts(ctx, cfg.LoadConfig)
 	if preflight.HasErrors() {
-		return evaluation.Result{}, "", preflight.FirstError()
+		return evaluation.Audit{}, "", preflight.FirstError()
 	}
 
 	result, err := Evaluate(EvaluateInput{
@@ -97,7 +97,7 @@ func (e *EvaluateRun) Execute(ctx context.Context, cfg EvaluateConfig) (evaluati
 		Metadata:          cfg.Metadata,
 	})
 	if err != nil {
-		return evaluation.Result{}, "", fmt.Errorf("evaluation failed: %w", err)
+		return evaluation.Audit{}, "", fmt.Errorf("evaluation failed: %w", err)
 	}
 
 	return result, result.SafetyStatus, nil

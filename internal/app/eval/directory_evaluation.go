@@ -26,7 +26,7 @@ type DirectoryEvaluationRequest struct {
 }
 
 // RunDirectoryEvaluation loads snapshots and evaluates them against controls.
-func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Result, int, error) {
+func RunDirectoryEvaluation(req DirectoryEvaluationRequest) (*evaluation.Audit, int, error) {
 	if req.ObservationLoader == nil {
 		return nil, 0, fmt.Errorf("observation loader is required")
 	}

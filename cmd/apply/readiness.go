@@ -18,7 +18,7 @@ import (
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.
-type ReadinessValidator func(maxUnsafe time.Duration, now time.Time) (validation.Result, error)
+type ReadinessValidator func(maxUnsafe time.Duration, now time.Time) (validation.Status, error)
 
 // ReadinessValidatorFactory creates the validation function used during assessment.
 type ReadinessValidatorFactory func(ctlDir, obsDir string, sanitize bool) ReadinessValidator
@@ -38,7 +38,7 @@ type ReadinessConfig struct {
 
 	ControlsFlagSet        bool
 	HasEnabledControlPacks bool
-	PrereqChecks           []validation.Issue
+	PrereqChecks           []validation.Check
 }
 
 // ReadinessRunner orchestrates the readiness assessment workflow.
@@ -111,7 +111,7 @@ func runDryRun(ctx context.Context, p *compose.Provider, cfg ReadinessConfig) er
 	return runner.Execute(cfg)
 }
 
-func doctorPrereqs() ([]validation.Issue, error) {
+func doctorPrereqs() ([]validation.Check, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("resolve working directory: %w", err)

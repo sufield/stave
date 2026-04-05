@@ -46,9 +46,9 @@ type Pack struct {
 	Controls    []kernel.ControlID `json:"controls"`
 }
 
-// Registry holds pre-processed pack data. Use NewRegistry for testing
+// PackIndex holds pre-processed pack data. Use NewPackIndex for testing
 // or the package-level functions for production (backed by embedded data).
-type Registry struct {
+type PackIndex struct {
 	version   string
 	hash      kernel.Digest
 	packs     map[string]Pack
@@ -57,8 +57,8 @@ type Registry struct {
 	controls map[string]ControlRef
 }
 
-// NewRegistry parses YAML data into a Registry with all packs pre-sorted.
-func NewRegistry(data []byte) (*Registry, error) {
+// NewPackIndex parses YAML data into a PackIndex with all packs pre-sorted.
+func NewPackIndex(data []byte) (*PackIndex, error) {
 	var idx registryIndex
 	if err := yaml.Unmarshal(data, &idx); err != nil {
 		return nil, fmt.Errorf("parse registry: %w", err)
@@ -67,7 +67,7 @@ func NewRegistry(data []byte) (*Registry, error) {
 		return nil, ErrEmptyRegistry
 	}
 
-	r := &Registry{
+	r := &PackIndex{
 		version:   strings.TrimSpace(idx.Version),
 		hash:      crypto.HashBytes(data),
 		packs:     make(map[string]Pack, len(idx.Packs)),
@@ -86,7 +86,7 @@ func NewRegistry(data []byte) (*Registry, error) {
 	return r, nil
 }
 
-func (r *Registry) loadPacks(specs map[string]packSpec) error {
+func (r *PackIndex) loadPacks(specs map[string]packSpec) error {
 	for name, spec := range specs {
 		ids := slices.Clone(spec.Controls)
 		slices.Sort(ids)
@@ -108,7 +108,7 @@ func (r *Registry) loadPacks(specs map[string]packSpec) error {
 }
 
 // ListPacks returns all available packs in stable name order.
-func (r *Registry) ListPacks() []Pack {
+func (r *PackIndex) ListPacks() []Pack {
 	out := make([]Pack, len(r.packNames))
 	for i, name := range r.packNames {
 		out[i] = clonePack(r.packs[name])
@@ -117,12 +117,12 @@ func (r *Registry) ListPacks() []Pack {
 }
 
 // PackNames returns all pack names in stable order.
-func (r *Registry) PackNames() []string {
+func (r *PackIndex) PackNames() []string {
 	return slices.Clone(r.packNames)
 }
 
 // LookupPack returns one pack by name.
-func (r *Registry) LookupPack(name string) (Pack, bool) {
+func (r *PackIndex) LookupPack(name string) (Pack, bool) {
 	p, ok := r.packs[strings.TrimSpace(name)]
 	if !ok {
 		return Pack{}, false
@@ -131,7 +131,7 @@ func (r *Registry) LookupPack(name string) (Pack, bool) {
 }
 
 // ResolveEnabledPacks expands packs into de-duplicated, sorted control IDs.
-func (r *Registry) ResolveEnabledPacks(names []string) ([]kernel.ControlID, error) {
+func (r *PackIndex) ResolveEnabledPacks(names []string) ([]kernel.ControlID, error) {
 	seen := make(map[kernel.ControlID]struct{})
 	var ids []kernel.ControlID
 	for _, raw := range names {
@@ -155,32 +155,32 @@ func (r *Registry) ResolveEnabledPacks(names []string) ([]kernel.ControlID, erro
 }
 
 // Version returns the registry version string.
-func (r *Registry) Version() string {
+func (r *PackIndex) Version() string {
 	return r.version
 }
 
 // Hash returns the SHA-256 hex digest of the raw registry bytes.
-func (r *Registry) Hash() kernel.Digest {
+func (r *PackIndex) Hash() kernel.Digest {
 	return r.hash
 }
 
 // RegistryVersion returns the version string. Satisfies appcontracts.PackRegistry.
-func (r *Registry) RegistryVersion() (string, error) {
+func (r *PackIndex) RegistryVersion() (string, error) {
 	return r.version, nil
 }
 
 // RegistryHash returns the hash as a string. Satisfies appcontracts.PackRegistry.
-func (r *Registry) RegistryHash() (string, error) {
+func (r *PackIndex) RegistryHash() (string, error) {
 	return string(r.hash), nil
 }
 
 // ControlRefs returns the raw control metadata map.
-func (r *Registry) ControlRefs() map[string]ControlRef {
+func (r *PackIndex) ControlRefs() map[string]ControlRef {
 	return maps.Clone(r.controls)
 }
 
 // VerifyNoOrphans checks fsys under root for YAML files not referenced by index metadata.
-func (r *Registry) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error) {
+func (r *PackIndex) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error) {
 	root = path.Clean(strings.TrimSpace(root))
 	referenced := make(map[string]struct{}, len(r.controls))
 
@@ -215,12 +215,12 @@ func (r *Registry) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error)
 }
 
 // NewEmbeddedRegistry creates a registry from the bundled embedded index.yaml.
-func NewEmbeddedRegistry() (*Registry, error) {
+func NewEmbeddedRegistry() (*PackIndex, error) {
 	data, err := embeddedRegistryFS.ReadFile("embedded/index.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("read embedded pack registry: %w", err)
 	}
-	return NewRegistry(data)
+	return NewPackIndex(data)
 }
 
 func clonePack(p Pack) Pack {

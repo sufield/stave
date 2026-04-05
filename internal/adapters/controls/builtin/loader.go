@@ -15,10 +15,10 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// Registry manages the lifecycle and retrieval of embedded control definitions.
+// ControlStore manages the lifecycle and retrieval of embedded control definitions.
 // It loads controls lazily on first access and returns cloned slices to prevent
 // callers from mutating the shared cache.
-type Registry struct {
+type ControlStore struct {
 	fsys          fs.FS
 	root          string
 	aliasResolver policy.AliasResolver
@@ -29,28 +29,28 @@ type Registry struct {
 	once  sync.Once
 }
 
-// NewRegistry creates a registry backed by the given filesystem.
+// NewControlStore creates a registry backed by the given filesystem.
 // Pass any fs.FS (embed.FS, fstest.MapFS, os.DirFS) for testing flexibility.
-func NewRegistry(fsys fs.FS, root string, opts ...RegistryOption) *Registry {
-	r := &Registry{fsys: fsys, root: root}
+func NewControlStore(fsys fs.FS, root string, opts ...StoreOption) *ControlStore {
+	r := &ControlStore{fsys: fsys, root: root}
 	for _, o := range opts {
 		o(r)
 	}
 	return r
 }
 
-// RegistryOption configures optional behavior for the builtin registry.
-type RegistryOption func(*Registry)
+// StoreOption configures optional behavior for the builtin registry.
+type StoreOption func(*ControlStore)
 
 // WithAliasResolver sets the predicate alias resolver used to expand
 // unsafe_predicate_alias fields in embedded control definitions.
-func WithAliasResolver(resolver policy.AliasResolver) RegistryOption {
-	return func(r *Registry) { r.aliasResolver = resolver }
+func WithAliasResolver(resolver policy.AliasResolver) StoreOption {
+	return func(r *ControlStore) { r.aliasResolver = resolver }
 }
 
 // All returns all control definitions. It performs a lazy load on the first
 // call and returns a shallow clone of the cache for subsequent calls.
-func (r *Registry) All() ([]policy.ControlDefinition, error) {
+func (r *ControlStore) All() ([]policy.ControlDefinition, error) {
 	r.once.Do(func() {
 		r.mu.Lock()
 		defer r.mu.Unlock()
@@ -67,7 +67,7 @@ func (r *Registry) All() ([]policy.ControlDefinition, error) {
 }
 
 // Filtered returns controls matching at least one selector.
-func (r *Registry) Filtered(selectors []Selector) ([]policy.ControlDefinition, error) {
+func (r *ControlStore) Filtered(selectors []Selector) ([]policy.ControlDefinition, error) {
 	all, err := r.All()
 	if err != nil || len(selectors) == 0 {
 		return all, err
@@ -79,7 +79,7 @@ func (r *Registry) Filtered(selectors []Selector) ([]policy.ControlDefinition, e
 
 // --- Internal implementation ---
 
-func (r *Registry) load() ([]policy.ControlDefinition, error) {
+func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 	var controls []policy.ControlDefinition
 	idSources := make(map[kernel.ControlID]string)
 
@@ -119,7 +119,7 @@ func (r *Registry) load() ([]policy.ControlDefinition, error) {
 	return controls, nil
 }
 
-func (r *Registry) unmarshal(path string, data []byte) (policy.ControlDefinition, error) {
+func (r *ControlStore) unmarshal(path string, data []byte) (policy.ControlDefinition, error) {
 	ctl, err := controlyaml.UnmarshalControlDefinition(data)
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("parsing YAML in %q: %w", path, err)
@@ -134,7 +134,7 @@ func (r *Registry) unmarshal(path string, data []byte) (policy.ControlDefinition
 }
 
 // resolveAlias expands unsafe_predicate_alias into unsafe_predicate.
-func (r *Registry) resolveAlias(ctl *policy.ControlDefinition) error {
+func (r *ControlStore) resolveAlias(ctl *policy.ControlDefinition) error {
 	alias := strings.TrimSpace(ctl.UnsafePredicateAlias)
 	if alias == "" {
 		return nil
@@ -150,7 +150,7 @@ func (r *Registry) resolveAlias(ctl *policy.ControlDefinition) error {
 	return nil
 }
 
-func (r *Registry) isYAML(path string) bool {
+func (r *ControlStore) isYAML(path string) bool {
 	return strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")
 }
 

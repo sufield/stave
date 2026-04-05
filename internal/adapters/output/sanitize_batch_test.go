@@ -178,7 +178,7 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 func TestRedactedDiagnosticJSON_NoSensitivePatterns(t *testing.T) {
 	r := sanitize.New(sanitize.WithIDSanitization(true))
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{
 				Case:     "violation_evidence",
 				Signal:   "Continuous unsafe streak",

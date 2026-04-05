@@ -17,8 +17,8 @@ const (
 	ScenarioEmptyFindings     Scenario = "empty_findings"
 )
 
-// Issue represents a single diagnostic finding.
-type Issue struct {
+// Insight represents a single diagnostic finding.
+type Insight struct {
 	Case     Scenario `json:"case"`
 	Signal   string   `json:"signal"`
 	Evidence string   `json:"evidence"`
@@ -43,8 +43,8 @@ type Summary struct {
 
 // Report is the top-level container for a diagnostic run.
 type Report struct {
-	Issues  []Issue `json:"diagnostics"`
-	Summary Summary `json:"summary"`
+	Issues  []Insight `json:"diagnostics"`
+	Summary Summary   `json:"summary"`
 }
 
 // DiagnosticFinding is a lightweight view of an evaluation finding,

@@ -26,8 +26,8 @@ func init() {
 }
 
 // Evaluate checks that versioning.enabled is true for every S3 bucket.
-func (ctl *controlsVersioning) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
+func (ctl *controlsVersioning) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
 		if !props.Versioning.Enabled {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: versioning is not enabled — accidental or malicious deletions cannot be recovered", a.ID),

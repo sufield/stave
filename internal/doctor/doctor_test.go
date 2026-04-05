@@ -11,7 +11,7 @@ import (
 )
 
 func TestRun_UsesConfiguredChecksAndHasFail(t *testing.T) {
-	reg := NewRegistry(
+	reg := NewCheckSuite(
 		func(*Context) Check { return Check{Name: "ok", Status: outcome.Pass} },
 		func(*Context) Check { return Check{} }, // skipped
 		func(*Context) Check { return Check{Name: "bad", Status: outcome.Fail} },

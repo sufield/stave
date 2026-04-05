@@ -97,9 +97,9 @@ exceptions:
 
 func TestApplyExceptions_ValidException(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
-		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: true, Severity: policy.SeverityHigh}},
-		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
+		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
+		{Outcome: compliance.Outcome{ControlID: "CONTROLS.001", Pass: true, Severity: policy.SeverityHigh}},
+		{Outcome: compliance.Outcome{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
 	}
 
 	excs := []ExceptionConfig{{
@@ -129,9 +129,9 @@ func TestApplyExceptions_ValidException(t *testing.T) {
 
 func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
-		{Result: compliance.Result{ControlID: "CONTROLS.001", Pass: false, Severity: policy.SeverityHigh}},
-		{Result: compliance.Result{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
+		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false, Severity: policy.SeverityCritical, Finding: "BPA disabled"}},
+		{Outcome: compliance.Outcome{ControlID: "CONTROLS.001", Pass: false, Severity: policy.SeverityHigh}},
+		{Outcome: compliance.Outcome{ControlID: "AUDIT.001", Pass: true, Severity: policy.SeverityCritical}},
 	}
 
 	excs := []ExceptionConfig{{
@@ -167,7 +167,7 @@ func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 
 func TestApplyExceptions_NoExceptions(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: false}},
+		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false}},
 	}
 	acks := ApplyExceptions(nil, results)
 	if len(acks) != 0 {
@@ -177,7 +177,7 @@ func TestApplyExceptions_NoExceptions(t *testing.T) {
 
 func TestApplyExceptions_AlreadyPassing(t *testing.T) {
 	results := []profile.ProfileResult{
-		{Result: compliance.Result{ControlID: "ACCESS.001", Pass: true}},
+		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: true}},
 	}
 	excs := []ExceptionConfig{{
 		ControlID:       "ACCESS.001",

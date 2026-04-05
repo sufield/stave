@@ -12,12 +12,12 @@ type Control interface {
 	// Def returns the control's metadata definition.
 	Def() Definition
 
-	// Evaluate runs the control against a snapshot and returns a Result.
-	Evaluate(snap asset.Snapshot) Result
+	// Evaluate runs the control against a snapshot and returns a Outcome.
+	Evaluate(snap asset.Snapshot) Outcome
 }
 
-// Result captures the outcome of evaluating a single control against a snapshot.
-type Result struct {
+// Outcome captures the outcome of evaluating a single control against a snapshot.
+type Outcome struct {
 	// Pass is true when the control holds (no violation detected).
 	Pass bool `json:"pass"`
 
@@ -147,19 +147,19 @@ func (d Definition) ProfileSeverityOverride(profile string) (policy.Severity, bo
 	return s, ok
 }
 
-// PassResult returns a passing Result for this definition.
-func (d Definition) PassResult() Result {
-	return Result{
+// PassResult returns a passing Outcome for this definition.
+func (d Definition) PassResult() Outcome {
+	return Outcome{
 		Pass:      true,
 		ControlID: d.id,
 		Severity:  d.severity,
 	}
 }
 
-// FailResult returns a failing Result for this definition with the given
+// FailResult returns a failing Outcome for this definition with the given
 // finding description and remediation steps.
-func (d Definition) FailResult(finding, remediation string) Result {
-	return Result{
+func (d Definition) FailResult(finding, remediation string) Outcome {
+	return Outcome{
 		Pass:           false,
 		ControlID:      d.id,
 		Severity:       d.severity,

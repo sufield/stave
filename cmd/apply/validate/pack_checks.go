@@ -10,10 +10,10 @@ import (
 )
 
 // PackConfigIssues checks for unknown control pack names in the project config.
-func PackConfigIssues() []diag.Issue {
+func PackConfigIssues() []diag.Diagnostic {
 	cfg, ok, cfgErr := projconfig.FindProjectConfig()
 	if cfgErr != nil {
-		return []diag.Issue{
+		return []diag.Diagnostic{
 			diag.New(diag.CodeProjectConfigLoadFailed).
 				Error().
 				Action("Check stave.yaml for syntax errors").
@@ -26,7 +26,7 @@ func PackConfigIssues() []diag.Issue {
 	}
 	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
-		return []diag.Issue{
+		return []diag.Diagnostic{
 			diag.New(diag.CodePackRegistryLoadFailed).
 				Error().
 				Action("Reinstall Stave binary or verify embedded registry integrity").
@@ -39,7 +39,7 @@ func PackConfigIssues() []diag.Issue {
 	for _, name := range known {
 		knownSet[name] = struct{}{}
 	}
-	var issues []diag.Issue
+	var issues []diag.Diagnostic
 	for _, raw := range cfg.EnabledControlPacks {
 		name := strings.TrimSpace(raw)
 		if name == "" {

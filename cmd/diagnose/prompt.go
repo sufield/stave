@@ -164,7 +164,7 @@ func runPromptFromFinding(cmd *cobra.Command, opts promptFromFindingOpts) error 
 	dctx := diagprompt.DiagnosticContext{
 		ControlsByID:   ctlByID,
 		AssetPropsJSON: assetPropsJSON,
-		LoadEval: func(path string) (*evaluation.Result, error) {
+		LoadEval: func(path string) (*evaluation.Audit, error) {
 			return (&evaljson.Loader{}).LoadFromFile(path)
 		},
 		BuildPrompt: buildPromptAdapter,

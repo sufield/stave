@@ -141,7 +141,7 @@ func findResets(snapshots []asset.Snapshot, unsafeIdx *unsafeIndex, filter map[a
 
 // detectStreakResets finds assets that became safe between unsafe periods.
 // Only examines assets with existing findings.
-func detectStreakResets(input Input) []Issue {
+func detectStreakResets(input Input) []Insight {
 	if len(input.Snapshots) < 2 {
 		return nil
 	}
@@ -156,9 +156,9 @@ func detectStreakResets(input Input) []Issue {
 
 	events := findResets(snaps, idx, violated)
 
-	issues := make([]Issue, 0, len(events))
+	issues := make([]Insight, 0, len(events))
 	for _, e := range events {
-		issues = append(issues, Issue{
+		issues = append(issues, Insight{
 			Case:    ScenarioViolationEvidence,
 			Signal:  "Streak reset detected",
 			AssetID: e.assetID,

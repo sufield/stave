@@ -146,21 +146,44 @@ func normalizeStringList(raw json.RawMessage) []string {
 	return nil
 }
 
+// IAM condition operators and keys used in policy guardrail detection.
+const (
+	condOpBool               = "Bool"
+	condOpNumericGreaterThan = "NumericGreaterThan"
+	condOpStringNotEquals    = "StringNotEquals"
+
+	condKeySecureTransport = "aws:SecureTransport"
+	condKeySignatureAge    = "s3:signatureAge"
+	condKeyAuthType        = "s3:authType"
+)
+
+// conditionValue navigates the nested Condition map: Condition[operator][key].
+// Returns the value and true if both levels exist, or (nil, false) otherwise.
+func (s PolicyStatement) conditionValue(operator, key string) (any, bool) {
+	cond, ok := s.Condition.(map[string]any)
+	if !ok {
+		return nil, false
+	}
+	block, ok := cond[operator].(map[string]any)
+	if !ok {
+		return nil, false
+	}
+	val, ok := block[key]
+	return val, ok
+}
+
+// IsDeny reports whether this statement has Effect "Deny" (case-insensitive).
+func (s PolicyStatement) IsDeny() bool {
+	return strings.EqualFold(s.Effect, "Deny")
+}
+
 // IsDenyNonTLS reports whether this statement denies access when
 // aws:SecureTransport is false (i.e. enforces TLS).
 func (s PolicyStatement) IsDenyNonTLS() bool {
 	if !s.IsDeny() {
 		return false
 	}
-	cond, ok := s.Condition.(map[string]any)
-	if !ok {
-		return false
-	}
-	boolBlock, ok := cond["Bool"].(map[string]any)
-	if !ok {
-		return false
-	}
-	val, ok := boolBlock["aws:SecureTransport"]
+	val, ok := s.conditionValue(condOpBool, condKeySecureTransport)
 	if !ok {
 		return false
 	}
@@ -173,26 +196,13 @@ func (s PolicyStatement) IsDenyNonTLS() bool {
 	return false
 }
 
-// IsDeny reports whether this statement has Effect "Deny" (case-insensitive).
-func (s PolicyStatement) IsDeny() bool {
-	return strings.EqualFold(s.Effect, "Deny")
-}
-
 // HasSignatureAgeGuardrail reports whether this statement denies requests
 // where s3:signatureAge exceeds a threshold (presigned URL age limit).
 func (s PolicyStatement) HasSignatureAgeGuardrail() bool {
 	if !s.IsDeny() {
 		return false
 	}
-	cond, ok := s.Condition.(map[string]any)
-	if !ok {
-		return false
-	}
-	block, ok := cond["NumericGreaterThan"].(map[string]any)
-	if !ok {
-		return false
-	}
-	_, ok = block["s3:signatureAge"]
+	_, ok := s.conditionValue(condOpNumericGreaterThan, condKeySignatureAge)
 	return ok
 }
 
@@ -202,20 +212,31 @@ func (s PolicyStatement) HasAuthTypeGuardrail() bool {
 	if !s.IsDeny() {
 		return false
 	}
-	cond, ok := s.Condition.(map[string]any)
-	if !ok {
-		return false
-	}
-	block, ok := cond["StringNotEquals"].(map[string]any)
-	if !ok {
-		return false
-	}
-	val, ok := block["s3:authType"]
+	val, ok := s.conditionValue(condOpStringNotEquals, condKeyAuthType)
 	if !ok {
 		return false
 	}
 	str, ok := val.(string)
 	return ok && strings.EqualFold(str, "REST-HEADER")
+}
+
+// RestrictsPresignedURLAccess reports whether this statement constrains
+// presigned URL usage via signature age limits or auth type requirements.
+func (s PolicyStatement) RestrictsPresignedURLAccess() bool {
+	return s.HasSignatureAgeGuardrail() || s.HasAuthTypeGuardrail()
+}
+
+// IsPublicListGrant reports whether this statement allows a wildcard principal
+// to list bucket contents (s3:ListBucket). This enables full key enumeration,
+// defeating any object-key obscurity approach.
+func (s PolicyStatement) IsPublicListGrant() bool {
+	return s.IsAllow() && s.HasWildcardPrincipal() && s.HasAction("s3:ListBucket")
+}
+
+// GrantsWildcardActions reports whether this statement allows wildcard actions
+// (s3:* or *), granting more permissions than intended.
+func (s PolicyStatement) GrantsWildcardActions() bool {
+	return s.IsAllow() && s.HasWildcardAction()
 }
 
 func isWildcard(v any) bool {

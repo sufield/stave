@@ -58,20 +58,25 @@ func (ctl *ControlDefinition) Prepare() error {
 	if ctl.Prepared.Ready {
 		return nil
 	}
+
+	// Non-failable params — always parse.
+	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
+	ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
+
+	// Failable param — duration parsing.
+	// Mark Ready regardless: recurrence and prefix exposure are valid even
+	// if the duration fails. The error is returned for the loader to report.
+	ctl.Prepared.Ready = true
+
 	if raw := ctl.Params.paramString("max_unsafe_duration"); raw != "" {
 		d, err := kernel.ParseDuration(raw)
 		if err != nil {
-			ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
-			ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
-			ctl.Prepared.Ready = true
 			return fmt.Errorf("invalid max_unsafe_duration %q: %w", raw, err)
 		}
 		ctl.Prepared.MaxUnsafeDuration = d
 		ctl.Prepared.HasMaxUnsafeDuration = true
 	}
-	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
-	ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
-	ctl.Prepared.Ready = true
+
 	return nil
 }
 
@@ -114,11 +119,8 @@ func (ctl *ControlDefinition) ExposurePrefixes() PrefixExposureParams {
 }
 
 // ensurePrepared lazily calls Prepare() on first access.
-// Follows the same pattern as ExceptionConfig.ShouldExcept (exception.go:104-106).
+// Thread-safe via sync.Once inside Prepare().
 func (ctl *ControlDefinition) ensurePrepared() {
-	if ctl.Prepared.Ready {
-		return
-	}
 	_ = ctl.Prepare()
 }
 

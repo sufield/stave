@@ -19,7 +19,7 @@ import (
 type Config struct {
 	ControlsDir       string
 	ObservationsDir   string
-	PreviousResult    *evaluation.Result // Optional: pre-loaded evaluation result (resolved by cmd layer).
+	PreviousResult    *evaluation.Audit // Optional: pre-loaded evaluation result (resolved by cmd layer).
 	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
 	PredicateParser   func(any) (*policy.UnsafePredicate, error)
@@ -138,7 +138,7 @@ func (d *Run) loadArtifacts(
 func (d *Run) resolveResult(
 	cfg Config,
 	artifacts artifacts,
-) (*evaluation.Result, error) {
+) (*evaluation.Audit, error) {
 	if cfg.PreviousResult != nil {
 		return cfg.PreviousResult, nil
 	}

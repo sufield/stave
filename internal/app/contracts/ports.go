@@ -61,7 +61,7 @@ func LoadSnapshots(ctx context.Context, repo ObservationRepository, dir string) 
 // "marshal" pipeline steps. Marshalers should read ExemptedAssets and Run
 // from this struct (not from Result) because they are pre-sanitized.
 type EnrichedResult struct {
-	Result         evaluation.Result
+	Result         evaluation.Audit
 	Findings       []EnrichedFinding
 	ExemptedAssets []asset.ExemptedAsset
 	Run            evaluation.RunInfo
@@ -75,7 +75,7 @@ type FindingMarshaler interface {
 
 // EnrichFunc produces an EnrichedResult from an evaluation result.
 // Implementations close over the enricher and sanitizer.
-type EnrichFunc func(result evaluation.Result) (EnrichedResult, error)
+type EnrichFunc func(result evaluation.Audit) (EnrichedResult, error)
 
 // ContentHasher computes reproducible digests over file system paths.
 // Canonical definition lives in core/ports; this alias preserves backward

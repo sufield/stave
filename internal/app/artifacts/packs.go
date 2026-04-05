@@ -12,7 +12,7 @@ import (
 
 // PackRunner handles the inspection of built-in control packs.
 type PackRunner struct {
-	Registry *packs.Registry
+	Registry *packs.PackIndex
 }
 
 // NewPackRunner initializes a runner with an embedded pack registry.

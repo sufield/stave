@@ -203,7 +203,7 @@ func TestHIPAAControl_AuditObjectLevel(t *testing.T) {
 
 func loadAllControls(t *testing.T) map[kernel.ControlID]policy.ControlDefinition {
 	t.Helper()
-	ctlReg := NewRegistry(EmbeddedFS(), "embedded", WithAliasResolver(predicate.ResolverFunc()))
+	ctlReg := NewControlStore(EmbeddedFS(), "embedded", WithAliasResolver(predicate.ResolverFunc()))
 	controls, err := ctlReg.All()
 	if err != nil {
 		t.Fatalf("All: %v", err)

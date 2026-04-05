@@ -54,7 +54,7 @@ func tenantSnapshotWithIdentities(a asset.Asset, identities []asset.CloudIdentit
 
 func loadTenantControls(t *testing.T) []policy.ControlDefinition {
 	t.Helper()
-	reg := builtin.NewRegistry(builtin.EmbeddedFS(), "embedded",
+	reg := builtin.NewControlStore(builtin.EmbeddedFS(), "embedded",
 		builtin.WithAliasResolver(predicate.ResolverFunc()))
 	all, err := reg.All()
 	if err != nil {
@@ -78,7 +78,7 @@ func tenantEvaluator(t *testing.T) *testEvaluator {
 	)
 }
 
-func assertHasTenantFinding(t *testing.T, result evaluation.Result, assetID string) {
+func assertHasTenantFinding(t *testing.T, result evaluation.Audit, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.TENANT.ISOLATION.001" && f.AssetID == asset.ID(assetID) {
@@ -88,7 +88,7 @@ func assertHasTenantFinding(t *testing.T, result evaluation.Result, assetID stri
 	t.Errorf("expected finding CTL.S3.TENANT.ISOLATION.001 for asset %s, got %d findings", assetID, len(result.Findings))
 }
 
-func assertNoTenantFinding(t *testing.T, result evaluation.Result, assetID string) {
+func assertNoTenantFinding(t *testing.T, result evaluation.Audit, assetID string) {
 	t.Helper()
 	for _, f := range result.Findings {
 		if f.ControlID == "CTL.S3.TENANT.ISOLATION.001" && f.AssetID == asset.ID(assetID) {

@@ -58,8 +58,8 @@ func fixtureSnapshot() asset.Snapshot {
 	}
 }
 
-func allRegistries() []*compliance.Registry {
-	return []*compliance.Registry{
+func allRegistries() []*compliance.ControlCatalog {
+	return []*compliance.ControlCatalog{
 		compliance.ControlRegistry,
 	}
 }

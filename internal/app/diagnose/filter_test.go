@@ -8,7 +8,7 @@ import (
 
 func TestFilter_Apply_NoFiltersReturnsOriginal(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
 		},
 	}
@@ -20,7 +20,7 @@ func TestFilter_Apply_NoFiltersReturnsOriginal(t *testing.T) {
 
 func TestFilter_Apply_ByCaseAndSignal(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: diagnosis.ScenarioExpectedNone, Signal: "threshold too high"},
 			{Case: diagnosis.ScenarioEmptyFindings, Signal: "no predicate matches"},
 			{Case: diagnosis.ScenarioViolationEvidence, Signal: "streak evidence available"},

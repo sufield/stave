@@ -46,7 +46,7 @@ func TestRemediationPlanner_EnrichFindings_SpecMapping(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := evaluation.Result{
+			result := evaluation.Audit{
 				Findings: []evaluation.Finding{
 					{
 						ControlID: kernel.ControlID(tt.controlID),
@@ -79,7 +79,7 @@ func TestRemediationPlanner_YAMLRemediationPrecedence(t *testing.T) {
 		Action:      "Enable S3 Public Access Block (all four settings).",
 	}
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{
 				ControlID:          "CTL.S3.PUBLIC.001",
@@ -112,7 +112,7 @@ func TestRemediationPlanner_YAMLExampleFieldFlowsThrough(t *testing.T) {
 		Example:     "{\n  \"storage\": {\n    \"visibility\": {\n      \"public_read\": false\n    }\n  }\n}\n",
 	}
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{
 				ControlID:          "CTL.S3.PUBLIC.001",
@@ -137,7 +137,7 @@ func TestRemediationPlanner_FallbackWhenNoYAMLRemediation(t *testing.T) {
 	planner := remediation.NewPlanner()
 
 	// Finding without ControlRemediation should fall back to prefix mapping
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{
 				ControlID: "CTL.S3.PUBLIC.001",
@@ -160,7 +160,7 @@ func TestRemediationPlanner_FallbackWhenNoYAMLRemediation(t *testing.T) {
 func TestRemediationPlanner_EnrichFindings(t *testing.T) {
 	planner := remediation.NewPlanner()
 
-	result := evaluation.Result{
+	result := evaluation.Audit{
 		Findings: []evaluation.Finding{
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1"},
 			{ControlID: "CTL.S3.ENCRYPT.001", AssetID: "bucket-2"},

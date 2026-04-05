@@ -146,7 +146,7 @@ func TestRunnerBuildAppConfig(t *testing.T) {
 
 func TestPresenterRenderReport_BareJSON(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{
+		Issues: []diagnosis.Insight{
 			{Case: diagnosis.ScenarioEmptyFindings, Signal: "s", Evidence: "e", Action: "a"},
 		},
 		Summary: diagnosis.Summary{
@@ -187,7 +187,7 @@ func TestPresenterRenderReport_BareJSON(t *testing.T) {
 
 func TestPresenterRenderReport_Branches(t *testing.T) {
 	report := &diagnosis.Report{
-		Issues: []diagnosis.Issue{},
+		Issues: []diagnosis.Insight{},
 		Summary: diagnosis.Summary{
 			TotalSnapshots:     1,
 			TotalAssets:        1,

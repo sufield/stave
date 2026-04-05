@@ -58,7 +58,7 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 					Any: []policy.PredicateRule{{Field: predicate.NewFieldPath("properties.x"), Op: predicate.OpEq, Value: policy.Bool(true)}},
 				},
 			}
-			issues := policy.ValidateControlDefinition(&ctl)
+			issues := ctl.Validate()
 
 			hasBadDuration := false
 			for _, issue := range issues {

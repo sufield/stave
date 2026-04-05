@@ -28,15 +28,15 @@ func init() {
 }
 
 // Evaluate checks every S3 bucket asset in the snapshot for complete BPA enablement.
-func (ctl *accessBlockPublic) Evaluate(snap asset.Snapshot) Result {
-	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Result {
-		if props.Controls.PublicAccessBlock.Present && props.Controls.PublicAccessBlock.AllEnabled() {
+func (ctl *accessBlockPublic) Evaluate(snap asset.Snapshot) Outcome {
+	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
+		if props.Controls.IsPublicAccessFullyBlocked() {
 			return nil
 		}
 
 		// Check account-level BPA as a mitigating factor.
 		if props.Controls.AccountPublicAccessFullyBlocked {
-			r := Result{
+			r := Outcome{
 				Pass:           false,
 				ControlID:      ctl.ID(),
 				Severity:       policy.SeverityLow,

@@ -139,7 +139,7 @@ func TestRegistry_AliasResolverFunc(t *testing.T) {
 }
 
 func TestRegistry_ListAliasInfo(t *testing.T) {
-	infos := DefaultRegistry().ListAliasInfo("")
+	infos := DefaultAliasRegistry().ListAliasInfo("")
 	if len(infos) == 0 {
 		t.Fatal("expected alias info entries")
 	}

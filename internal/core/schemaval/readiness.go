@@ -7,9 +7,9 @@ import (
 	"github.com/sufield/stave/internal/core/outcome"
 )
 
-// Issue describes a validation finding with severity and suggested fix.
-// Consolidates the former PrereqCheck and Issue types into a single model.
-type Issue struct {
+// Check describes a validation finding with severity and suggested fix.
+// Consolidates the former PrereqCheck and Check types into a single model.
+type Check struct {
 	Name    string         `json:"name"`
 	Status  outcome.Status `json:"status"`
 	Message string         `json:"message"`
@@ -34,7 +34,7 @@ type Report struct {
 	ControlsDir     string  `json:"controls_dir"`
 	ObservationsDir string  `json:"observations_dir"`
 	Summary         Summary `json:"summary"`
-	issues          []Issue
+	issues          []Check
 }
 
 // NewReport returns a Report initialized for success.
@@ -47,14 +47,14 @@ func NewReport(controlsDir, observationsDir string) *Report {
 }
 
 // Issues returns a copy of the recorded issues to prevent external mutation.
-func (r *Report) Issues() []Issue {
-	out := make([]Issue, len(r.issues))
+func (r *Report) Issues() []Check {
+	out := make([]Check, len(r.issues))
 	copy(out, r.issues)
 	return out
 }
 
 // RecordIssue appends an issue and updates Ready and Summary counters.
-func (r *Report) RecordIssue(issue Issue) {
+func (r *Report) RecordIssue(issue Check) {
 	switch issue.Status {
 	case outcome.Fail:
 		r.Ready = false
@@ -65,9 +65,9 @@ func (r *Report) RecordIssue(issue Issue) {
 	r.issues = append(r.issues, issue)
 }
 
-// Result contains diagnostics and summary counts from a validation run.
-type Result struct {
-	Diagnostics *diag.Result
+// Status contains diagnostics and summary counts from a validation run.
+type Status struct {
+	Diagnostics *diag.Report
 	Summary     struct {
 		ControlsLoaded          int
 		SnapshotsLoaded         int
@@ -83,6 +83,6 @@ type Input struct {
 	Now                    time.Time
 	ControlsFlagSet        bool
 	HasEnabledControlPacks bool
-	PrereqChecks           []Issue
-	Validate               func(maxUnsafeDuration time.Duration, now time.Time) (Result, error)
+	PrereqChecks           []Check
+	Validate               func(maxUnsafeDuration time.Duration, now time.Time) (Status, error)
 }

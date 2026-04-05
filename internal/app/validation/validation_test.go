@@ -11,23 +11,23 @@ import (
 )
 
 func TestResult_Valid_NilResult(t *testing.T) {
-	var r *Result
+	var r *Report
 	if !r.Valid() {
-		t.Error("nil Result should be valid")
+		t.Error("nil Report should be valid")
 	}
 }
 
 func TestResult_Valid_NoDiagnostics(t *testing.T) {
-	r := &Result{}
+	r := &Report{}
 	if !r.Valid() {
-		t.Error("empty Result should be valid")
+		t.Error("empty Report should be valid")
 	}
 }
 
 func TestResult_HasWarnings_NilResult(t *testing.T) {
-	var r *Result
+	var r *Report
 	if r.HasWarnings() {
-		t.Error("nil Result should have no warnings")
+		t.Error("nil Report should have no warnings")
 	}
 }
 

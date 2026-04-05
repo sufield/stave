@@ -7,7 +7,7 @@ import (
 
 // FindingEnricher enriches raw evaluation findings with remediation guidance.
 type FindingEnricher interface {
-	EnrichFindings(evaluation.Result) []Finding
+	EnrichFindings(evaluation.Audit) []Finding
 }
 
 // Finding pairs a raw violation with its associated remediation guidance.

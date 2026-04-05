@@ -29,7 +29,7 @@ func (depsMarshalerStub) MarshalFindings(appcontracts.EnrichedResult) ([]byte, e
 	return []byte(`{}`), nil
 }
 
-func depsEnrichFn(result evaluation.Result) (appcontracts.EnrichedResult, error) {
+func depsEnrichFn(result evaluation.Audit) (appcontracts.EnrichedResult, error) {
 	return appcontracts.EnrichedResult{
 		Result:         result,
 		Findings:       []appcontracts.EnrichedFinding{},

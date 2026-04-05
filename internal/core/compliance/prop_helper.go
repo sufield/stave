@@ -54,11 +54,30 @@ type S3Properties struct {
 	PolicyJSON string // top-level policy_json
 }
 
+// ACLsDisabled reports whether bucket ownership is set to BucketOwnerEnforced,
+// which disables all ACLs and ensures only IAM policies govern access.
+func (p S3Properties) ACLsDisabled() bool {
+	return p.Ownership == "BucketOwnerEnforced"
+}
+
 // S3Encryption holds encryption configuration.
 type S3Encryption struct {
 	AtRestEnabled  bool
 	Algorithm      string
 	KMSMasterKeyID string
+}
+
+// IsKMS reports whether the encryption algorithm is SSE-KMS (aws:kms).
+func (e S3Encryption) IsKMS() bool {
+	return strings.EqualFold(e.Algorithm, "aws:kms")
+}
+
+// IsAWSManagedKey reports whether the KMS key is the AWS-managed default
+// (alias/aws/s3) rather than a customer-managed key.
+func (e S3Encryption) IsAWSManagedKey() bool {
+	id := strings.ToLower(e.KMSMasterKeyID)
+	alias := strings.ToLower(awsManagedS3KeyAlias)
+	return id == alias || strings.HasSuffix(id, "/"+alias)
 }
 
 // S3Versioning holds versioning configuration.
@@ -72,6 +91,12 @@ type S3Access struct {
 	HasIPCondition  bool
 }
 
+// IsNetworkRestricted reports whether the bucket has at least one network-level
+// access restriction (VPC endpoint condition or IP condition).
+func (a S3Access) IsNetworkRestricted() bool {
+	return a.HasVPCCondition || a.HasIPCondition
+}
+
 // S3Network holds network configuration.
 type S3Network struct {
 	VPCEndpointPolicy S3VPCEndpointPolicy
@@ -82,6 +107,11 @@ type S3VPCEndpointPolicy struct {
 	Present             bool
 	Attached            bool
 	IsDefaultFullAccess bool
+}
+
+// IsEnforced reports whether a VPC endpoint policy is present and attached.
+func (vep S3VPCEndpointPolicy) IsEnforced() bool {
+	return vep.Present && vep.Attached
 }
 
 // S3Logging holds logging configuration.
@@ -107,6 +137,12 @@ type S3ObjectLock struct {
 type S3Controls struct {
 	PublicAccessBlock               S3BlockPublicAccessConfig
 	AccountPublicAccessFullyBlocked bool
+}
+
+// IsPublicAccessFullyBlocked reports whether the bucket's Public Access Block
+// is present and all four flags are enabled.
+func (c S3Controls) IsPublicAccessFullyBlocked() bool {
+	return c.PublicAccessBlock.Present && c.PublicAccessBlock.AllEnabled()
 }
 
 // S3BlockPublicAccessConfig holds the four BPA flags.
@@ -202,12 +238,12 @@ func isS3Bucket(a asset.Asset) bool {
 }
 
 // evaluateS3Buckets filters a snapshot to S3 buckets, parses properties,
-// and calls fn for each one. Returns the first non-pass Result from fn,
+// and calls fn for each one. Returns the first non-pass Outcome from fn,
 // or the Definition's PassResult if all buckets pass.
 //
 // This eliminates the repeated loop+filter+parse boilerplate across
 // all S3 compliance controls.
-func (d Definition) evaluateS3Buckets(snap asset.Snapshot, fn func(asset.Asset, S3Properties) *Result) Result {
+func (d Definition) evaluateS3Buckets(snap asset.Snapshot, fn func(asset.Asset, S3Properties) *Outcome) Outcome {
 	for _, a := range snap.Assets {
 		if !isS3Bucket(a) {
 			continue

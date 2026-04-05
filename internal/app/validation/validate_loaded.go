@@ -26,23 +26,23 @@ type Summary struct {
 	IdentityObservationsLoaded int
 }
 
-// Result contains validation issues plus computed summary counts.
-type Result struct {
-	Diagnostics *diag.Result
+// Report contains validation issues plus computed summary counts.
+type Report struct {
+	Diagnostics *diag.Report
 	Summary     Summary
 }
 
 // Valid returns true if there are no error diagnostics.
-func (r *Result) Valid() bool {
+func (r *Report) Valid() bool {
 	return !r.ensureDiagnostics().HasErrors()
 }
 
 // HasWarnings returns true if there are warning diagnostics.
-func (r *Result) HasWarnings() bool {
+func (r *Report) HasWarnings() bool {
 	return r.ensureDiagnostics().HasWarnings()
 }
 
-func (r *Result) ensureDiagnostics() *diag.Result {
+func (r *Report) ensureDiagnostics() *diag.Report {
 	if r == nil {
 		return diag.NewResult()
 	}
@@ -53,7 +53,7 @@ func (r *Result) ensureDiagnostics() *diag.Result {
 }
 
 // ValidateLoaded runs domain validation over already-loaded inputs.
-func ValidateLoaded(input Input) Result {
+func ValidateLoaded(input Input) Report {
 	summary := Summary{
 		ControlsLoaded:  len(input.Controls),
 		SnapshotsLoaded: len(input.Snapshots),
@@ -73,7 +73,7 @@ func ValidateLoaded(input Input) Result {
 			Build())
 	} else {
 		for i := range input.Controls {
-			issues.AddAll(policy.ValidateControlDefinition(&input.Controls[i]))
+			issues.AddAll(input.Controls[i].Validate())
 		}
 	}
 
@@ -85,7 +85,7 @@ func ValidateLoaded(input Input) Result {
 		issues.AddAll(policy.CheckEffectiveness(input.Controls, input.Snapshots, input.PredicateEval))
 	}
 
-	return Result{
+	return Report{
 		Diagnostics: issues,
 		Summary:     summary,
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func defaultPackRegistry(t *testing.T) *pack.Registry {
+func defaultPackRegistry(t *testing.T) *pack.PackIndex {
 	t.Helper()
 	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {
@@ -58,7 +58,7 @@ func TestResolveProjectConfig_UnknownPack(t *testing.T) {
 func TestResolveProjectConfig_LoadsEnabledPack(t *testing.T) {
 	got, err := ResolveProjectConfig(ProjectConfigInput{
 		EnabledControlPacks: []string{"s3/public-exposure"},
-		BuiltinLoader:       builtin.NewRegistry(builtin.EmbeddedFS(), "embedded", builtin.WithAliasResolver(predicate.ResolverFunc())).All,
+		BuiltinLoader:       builtin.NewControlStore(builtin.EmbeddedFS(), "embedded", builtin.WithAliasResolver(predicate.ResolverFunc())).All,
 		PackRegistry:        defaultPackRegistry(t),
 	})
 	if err != nil {

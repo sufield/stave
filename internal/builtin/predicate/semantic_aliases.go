@@ -83,17 +83,17 @@ func (e *UnknownAliasError) Error() string {
 	return fmt.Sprintf("unknown alias %q", e.Name)
 }
 
-// ── Registry ──────────────────────────────────────────────
+// ── AliasRegistry ──────────────────────────────────────────────
 
-// Registry is a multi-service alias registry. Aliases are grouped by
+// AliasRegistry is a multi-service alias registry. Aliases are grouped by
 // service internally but maintain a flat naming convention (e.g.
 // "s3.is_public_readable") for the public API.
-type Registry struct {
+type AliasRegistry struct {
 	entries map[string]aliasEntry
 }
 
 // Resolve returns a deep copy of the expanded predicate for an alias.
-func (r *Registry) Resolve(name string) (policy.UnsafePredicate, error) {
+func (r *AliasRegistry) Resolve(name string) (policy.UnsafePredicate, error) {
 	entry, ok := r.entries[name]
 	if !ok {
 		return policy.UnsafePredicate{}, r.suggestError(name)
@@ -103,7 +103,7 @@ func (r *Registry) Resolve(name string) (policy.UnsafePredicate, error) {
 
 // ListAliases returns alias names in sorted order. Pass "" for all
 // aliases, or a category name to filter.
-func (r *Registry) ListAliases(category string) []string {
+func (r *AliasRegistry) ListAliases(category string) []string {
 	out := make([]string, 0, len(r.entries))
 	for name, entry := range r.entries {
 		if category == "" || entry.Category == category {
@@ -124,7 +124,7 @@ type AliasInfo struct {
 
 // ListAliasInfo returns full metadata for all aliases matching the
 // category filter. Pass "" for all.
-func (r *Registry) ListAliasInfo(category string) []AliasInfo {
+func (r *AliasRegistry) ListAliasInfo(category string) []AliasInfo {
 	out := make([]AliasInfo, 0, len(r.entries))
 	for name, entry := range r.entries {
 		if category == "" || entry.Category == category {
@@ -150,7 +150,7 @@ func (r *Registry) ListAliasInfo(category string) []AliasInfo {
 
 // AliasResolverFunc returns a policy.AliasResolver backed by this
 // registry, suitable for WithAliasResolver in the control loader.
-func (r *Registry) AliasResolverFunc() policy.AliasResolver {
+func (r *AliasRegistry) AliasResolverFunc() policy.AliasResolver {
 	return func(name string) (policy.UnsafePredicate, bool) {
 		pred, err := r.Resolve(name)
 		return pred, err == nil
@@ -159,26 +159,26 @@ func (r *Registry) AliasResolverFunc() policy.AliasResolver {
 
 // ── Default (built-in) registry ──────────────────────────────────────
 
-var defaultRegistry = newBuiltinRegistry()
+var defaultAliasRegistry = newBuiltinAliasRegistry()
 
-// DefaultRegistry returns the built-in registry instance.
-func DefaultRegistry() *Registry { return defaultRegistry }
+// DefaultAliasRegistry returns the built-in registry instance.
+func DefaultAliasRegistry() *AliasRegistry { return defaultAliasRegistry }
 
 // Resolve looks up an alias by name in the default built-in registry.
 func Resolve(name string) (policy.UnsafePredicate, error) {
-	return defaultRegistry.Resolve(name)
+	return defaultAliasRegistry.Resolve(name)
 }
 
 // ListAliases returns alias names from the default registry. Pass ""
 // for all aliases, or a category name to filter.
 func ListAliases(category string) []string {
-	return defaultRegistry.ListAliases(category)
+	return defaultAliasRegistry.ListAliases(category)
 }
 
 // ResolverFunc returns a policy.AliasResolver backed by the default
 // built-in registry.
 func ResolverFunc() policy.AliasResolver {
-	return defaultRegistry.AliasResolverFunc()
+	return defaultAliasRegistry.AliasResolverFunc()
 }
 
 // ── Integrity check ───────────────────────────────────────
@@ -188,7 +188,7 @@ func ResolverFunc() policy.AliasResolver {
 // instead of relying on init()-time panics.
 func ValidateAliases() error {
 	var errs []error
-	for name, entry := range defaultRegistry.entries {
+	for name, entry := range defaultAliasRegistry.entries {
 		if err := validateEntry(name, entry); err != nil {
 			errs = append(errs, err)
 		}
@@ -266,7 +266,7 @@ func cloneRule(r policy.PredicateRule) policy.PredicateRule {
 
 // ── Fuzzy suggestion ──────────────────────────────────────
 
-func (r *Registry) suggestError(name string) *UnknownAliasError {
+func (r *AliasRegistry) suggestError(name string) *UnknownAliasError {
 	best := ""
 	bestDist := -1
 	for candidate := range r.entries {

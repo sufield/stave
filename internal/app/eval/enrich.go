@@ -15,7 +15,7 @@ import (
 // EnrichedResult suitable for passing to a FindingMarshaler. All metadata
 // that needs sanitization (findings, exempted assets, input hashes) is
 // handled here so marshalers receive clean data.
-func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) (appcontracts.EnrichedResult, error) {
+func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Audit) (appcontracts.EnrichedResult, error) {
 	findings, err := PrepareFindings(enricher, sanitizer, result)
 	if err != nil {
 		return appcontracts.EnrichedResult{}, err
@@ -37,7 +37,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 // PrepareFindings enriches findings from the result and optionally sanitizes them.
 // If sanitizer is nil, sanitization is skipped.
 // Returns an error if enricher is nil.
-func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Result) ([]appcontracts.EnrichedFinding, error) {
+func PrepareFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result evaluation.Audit) ([]appcontracts.EnrichedFinding, error) {
 	if enricher == nil {
 		return nil, fmt.Errorf("enricher must not be nil")
 	}
