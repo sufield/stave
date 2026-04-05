@@ -29,6 +29,17 @@ func Doctor(ctx context.Context, req DoctorRequest, deps DoctorDeps) (DoctorResp
 	return resp, nil
 }
 
+// --- Status ---
+
+type StatusRequest struct {
+	Dir string `json:"dir,omitempty"`
+}
+
+type StatusResponse struct {
+	StateData   any    `json:"state_data"`
+	NextCommand string `json:"next_command,omitempty"`
+}
+
 // StatusScannerPort scans project state and recommends a next action.
 type StatusScannerPort interface {
 	ScanStatus(ctx context.Context, req StatusRequest) (StatusResponse, error)

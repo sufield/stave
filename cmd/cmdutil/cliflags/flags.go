@@ -248,3 +248,7 @@ func ResolveNowEnv(cmd *cobra.Command, current string) string {
 func AllThresholdStatuses() []string {
 	return []string{"OVERDUE", "DUE_NOW", "UPCOMING"}
 }
+
+// DefaultControlsDir is the conventional default path for control definitions.
+// Used as the flag default across all commands that accept --controls.
+const DefaultControlsDir = "controls/s3"

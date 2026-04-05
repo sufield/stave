@@ -1,6 +1,9 @@
 package s3
 
-import "github.com/sufield/stave/internal/core/evaluation/risk"
+import (
+	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 type trieNode struct {
 	children map[byte]*trieNode
@@ -66,4 +69,12 @@ func (r *Resolver) insert(key string, perm risk.Permission) {
 	}
 	node.terminal = true
 	node.perm = perm
+}
+
+// SourceTypeAWSS3Snapshot identifies observations produced by S3 snapshot extraction.
+const SourceTypeAWSS3Snapshot = kernel.SourceTypeAWSS3Snapshot
+
+// ARN returns the full S3 ARN for a bucket: "arn:aws:s3:::<name>".
+func ARN(ref kernel.BucketRef) string {
+	return "arn:aws:s3:::" + ref.Name()
 }

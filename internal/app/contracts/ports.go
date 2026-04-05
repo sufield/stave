@@ -56,6 +56,16 @@ func LoadSnapshots(ctx context.Context, repo ObservationRepository, dir string) 
 	return result, nil
 }
 
+// EnrichedFinding pairs a raw evaluation finding with its remediation guidance.
+// This is the port-boundary type used in EnrichedResult. It mirrors the
+// fields of remediation.Finding without importing that core package, keeping
+// the contracts layer free of business-logic dependencies.
+type EnrichedFinding struct {
+	evaluation.Finding
+	RemediationSpec policy.RemediationSpec      `json:"remediation"`
+	RemediationPlan *evaluation.RemediationPlan `json:"fix_plan,omitempty"`
+}
+
 // EnrichedResult holds evaluation output together with enriched findings
 // and fully-sanitized metadata. Boundary type between the "enrich" and
 // "marshal" pipeline steps. Marshalers should read ExemptedAssets and Run

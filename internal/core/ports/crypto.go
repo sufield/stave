@@ -21,3 +21,9 @@ type IdentityGenerator interface {
 	// GenerateID creates a stable string ID by combining a prefix with unique data.
 	GenerateID(prefix string, components ...string) string
 }
+
+// ContentHasher computes reproducible digests over file system paths.
+type ContentHasher interface {
+	HashDir(path string, exts ...string) (string, error)
+	HashFile(path string) (string, error)
+}

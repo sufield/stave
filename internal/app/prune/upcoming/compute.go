@@ -3,7 +3,9 @@ package upcoming
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func mapRiskItems(items risk.ThresholdItems) []UpcomingSnapshot {
@@ -23,6 +25,18 @@ func mapRiskItems(items risk.ThresholdItems) []UpcomingSnapshot {
 			Threshold:      d.Threshold,
 			Remaining:      d.Remaining,
 		}
+	}
+	return out
+}
+
+func sanitizeItems(s kernel.Sanitizer, items []UpcomingSnapshot) []UpcomingSnapshot {
+	if s == nil || len(items) == 0 {
+		return items
+	}
+	out := make([]UpcomingSnapshot, len(items))
+	for i, item := range items {
+		item.AssetID = asset.ID(s.ID(string(item.AssetID)))
+		out[i] = item
 	}
 	return out
 }
