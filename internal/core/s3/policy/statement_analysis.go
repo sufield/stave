@@ -18,6 +18,12 @@ func (s Statement) ConditionAnalysis() ConditionAnalysis {
 	return analyzeCondition(s.decodeRaw(s.Condition))
 }
 
+// GrantsAccess reports whether this statement contributes to the reachable
+// attack surface (i.e., it is an Allow, not a Deny or empty effect).
+func (s Statement) GrantsAccess() bool {
+	return s.Effect.IsAllow()
+}
+
 // IsPubliclyExposed reports whether this is an Allow statement with a public principal.
 func (s Statement) IsPubliclyExposed() bool {
 	return s.Effect.IsAllow() && s.PrincipalScope().IsPublic()
